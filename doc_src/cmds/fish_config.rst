@@ -38,7 +38,7 @@ Available subcommands for the ``theme`` command:
 - ``demo`` displays some sample text in the current theme.
 - ``dump`` prints the current theme in a loadable format.
 - ``list`` lists the names of the available sample themes.
-- ``save`` saves the current prompt to :ref:`universal variables <variables-universal>`.
+- ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
 - ``show`` shows what the given sample theme (or all) would look like.
 
 The themes are loaded from the theme directory shipped with fish or a ``themes`` directory in the fish configuration directory (typically ``~/.config/fish/themes``).

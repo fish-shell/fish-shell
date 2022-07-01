@@ -1,37 +1,37 @@
 # Completion for SOPS (Secrets OPerationS)
 
 function __fish_sops_no_subcommand --description "Test if there is a subcommand given"
-  not __fish_sops_print_remaining_args
+    not __fish_sops_print_remaining_args
 end
 
 function __fish_sops_print_remaining_args --description "Print remaining argument given"
-  set -l cmd (commandline -poc) (commandline -ct)
-  set -e cmd[1]
-  set -l opts d/decrypt e/encrypt r/rotate i/in-place s/show-master-keys v/version
-  set -a opts extract ignore-mac verbose enable-local-keyservice
-  set -a opts k/kms= p/pgp= a/age=
-  set -a opts gcp-kms= aws-profile= azure-kv= hc-vault-transit= input-type= output-type=
-  set -a opts add-gcp-kms= rm-gcp-kms= add-azure-kv= rm-azure-kv= add-kms= rm-kms=
-  set -a opts add-hc-vault-transit= rm-hc-vault-transit= add-age= rm-age= add-pgp= rm-pgp=
-  set -a opts unencrypted-suffix= encrypted-suffix= unencrypted-regex= encrypted-regex=
-  set -a opts config= encryption-context= set= shamir-secret-sharing-threshold= output= keyservice=
-  argparse -s $opts -- $cmd 2>/dev/null
-  if test -n "$argv"
-    and not string match -qr '^-' $argv[1]
-    string join0 -- $argv
-    return 0
-  else
-    return 1
-  end
+    set -l cmd (commandline -poc) (commandline -ct)
+    set -e cmd[1]
+    set -l opts d/decrypt e/encrypt r/rotate i/in-place s/show-master-keys v/version
+    set -a opts extract ignore-mac verbose enable-local-keyservice
+    set -a opts k/kms= p/pgp= a/age=
+    set -a opts gcp-kms= aws-profile= azure-kv= hc-vault-transit= input-type= output-type=
+    set -a opts add-gcp-kms= rm-gcp-kms= add-azure-kv= rm-azure-kv= add-kms= rm-kms=
+    set -a opts add-hc-vault-transit= rm-hc-vault-transit= add-age= rm-age= add-pgp= rm-pgp=
+    set -a opts unencrypted-suffix= encrypted-suffix= unencrypted-regex= encrypted-regex=
+    set -a opts config= encryption-context= set= shamir-secret-sharing-threshold= output= keyservice=
+    argparse -s $opts -- $cmd 2>/dev/null
+    if test -n "$argv"
+        and not string match -qr '^-' $argv[1]
+        string join0 -- $argv
+        return 0
+    else
+        return 1
+    end
 end
 
 function __fish_sops_commands --description "Test if argument(s) match a sops command"
-  set -l args (__fish_sops_print_remaining_args | string split0)
-  if string match -qr $argv $args[1]
-    return 0
-  else
-    return 1
-  end
+    set -l args (__fish_sops_print_remaining_args | string split0)
+    if string match -qr $argv $args[1]
+        return 0
+    else
+        return 1
+    end
 end
 
 # Primary commands

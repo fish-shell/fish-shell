@@ -18,7 +18,7 @@ expect_prompt()
 
 # Hack: NetBSD's sleep likes quitting when waking up
 # (but also does so under /bin/sh)
-testproc="sleep 500" if platform.system() != "NetBSD" else "cat"
+testproc = "sleep 500" if platform.system() != "NetBSD" else "cat"
 sendline(testproc)
 sendline("set -l foo bar; echo $foo")
 expect_str("")

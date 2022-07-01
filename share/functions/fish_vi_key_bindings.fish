@@ -153,8 +153,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset 'd,' begin-selection repeat-jump-reverse kill-selection end-selection
 
     bind -s --preset -m insert s delete-char repaint-mode
-    bind -s --preset -m insert S kill-whole-line repaint-mode
-    bind -s --preset -m insert cc kill-whole-line repaint-mode
+    bind -s --preset -m insert S kill-inner-line repaint-mode
+    bind -s --preset -m insert cc kill-inner-line repaint-mode
     bind -s --preset -m insert C kill-line repaint-mode
     bind -s --preset -m insert c\$ kill-line repaint-mode
     bind -s --preset -m insert c\^ backward-kill-line repaint-mode

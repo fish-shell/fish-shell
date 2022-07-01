@@ -37,3 +37,22 @@ function waiter --on-process-exit $pid
 end
 # (Solaris' false exits with 255, not 1)
 # CHECK: exited PROCESS_EXIT {{\d+}} {{1|255}}
+
+# Regression test for #9002
+sleep 1 &
+set p1 $last_pid
+
+sleep 2 &
+set p2 $last_pid
+
+function p1_cb --on-process-exit $p1
+    echo "P1 over"
+end
+
+function p2_cb --on-process-exit $p2
+    echo "P2 over"
+end
+
+wait
+# CHECK: P1 over
+# CHECK: P2 over

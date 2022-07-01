@@ -719,6 +719,7 @@ set -S PWD
 #CHECK: $PWD: set in global scope, exported, with 1 elements
 #CHECK: Variable is read-only
 #CHECK: $PWD[1]: |{{.*}}|
+#CHECK: $PWD: originally inherited as |{{.*}}|
 
 set -ql history
 echo $status
@@ -905,3 +906,18 @@ echo $status
 set --query
 echo $status
 # CHECK: 255
+
+set -U status
+# CHECKERR: set: Tried to modify the special variable 'status' with the wrong scope
+set -S status
+# CHECK: $status: set in global scope, unexported, with 1 elements
+# CHECK: Variable is read-only
+# CHECK: $status[1]: |2|
+
+# See that we show inherited variables correctly:
+foo=bar $FISH -c 'set foo 1 2 3; set --show foo'
+# CHECK: $foo: set in global scope, exported, with 3 elements
+# CHECK: $foo[1]: |1|
+# CHECK: $foo[2]: |2|
+# CHECK: $foo[3]: |3|
+# CHECK: $foo: originally inherited as |bar|

@@ -169,6 +169,11 @@ class lru_cache_t {
         return &where->second.value;
     }
 
+    /// \return true if we contain a value for a key.
+    bool contains(const wcstring &key) const {
+        return this->node_map.find(key) != this->node_map.end();
+    }
+
     // Evicts the node for a given key, returning true if a node was evicted.
     bool evict_node(const wcstring &key) {
         auto where = this->node_map.find(key);

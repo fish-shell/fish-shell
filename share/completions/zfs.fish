@@ -441,7 +441,7 @@ complete -c zfs -x -n '__fish_zfs_using_command list' -d 'Dataset whose properti
 complete -c zfs -x -n '__fish_zfs_using_command set; and __fish_is_nth_token 2' -d 'Property to set' -a '(__fish_complete_zfs_rw_properties)'
 complete -c zfs -x -n '__fish_zfs_using_command set; and __fish_is_nth_token 3' -d 'Dataset whose property to set' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 # set property value completions
-complete -c zfs -x -n '__fish_zfs_using_command set; and __fish_is_nth_token 2' -a '(__fish_zfs_complete_property_values (fish_nth_token 2))'
+complete -c zfs -x -n '__fish_zfs_using_command set; and __fish_is_nth_token 2' -a '(__fish_zfs_complete_property_values (__fish_nth_token 2))'
 
 # get completions
 complete -c zfs -f -n '__fish_zfs_using_command get' -s r -d 'Operate recursively on datasets'

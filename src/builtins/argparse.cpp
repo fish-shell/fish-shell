@@ -353,11 +353,6 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
         return STATUS_INVALID_ARGS;
     }
 
-    if (opts.options.empty()) {
-        streams.err.append_format(_(L"%ls: No option specs were provided\n"), cmd);
-        return STATUS_INVALID_ARGS;
-    }
-
     return STATUS_CMD_OK;
 }
 
@@ -428,9 +423,13 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
 
     if (opts.print_help) return STATUS_CMD_OK;
 
-    if (argc == w.woptind || std::wcscmp(L"--", argv[w.woptind - 1]) == 0) {
+    if (std::wcscmp(L"--", argv[w.woptind - 1]) == 0) {
+        --w.woptind;
+    }
+
+    if (argc == w.woptind) {
         // The user didn't specify any option specs.
-        streams.err.append_format(_(L"%ls: No option specs were provided\n"), cmd);
+        streams.err.append_format(_(L"%ls: Missing -- separator\n"), cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -629,9 +628,9 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
 // This function mimics the `wgetopt_long()` usage found elsewhere in our other builtin commands.
 // It's different in that the short and long option structures are constructed dynamically based on
 // arguments provided to the `argparse` command.
-static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t &args,
+static int argparse_parse_args(argparse_cmd_opts_t &opts, const wchar_t **argv, int argc,
                                parser_t &parser, io_streams_t &streams) {
-    if (args.empty()) return STATUS_CMD_OK;
+    if (argc <= 1) return STATUS_CMD_OK;
 
     // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't
     // reorder.
@@ -643,12 +642,6 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     assert(!long_options.empty() && long_options.back().name == nullptr);
 
     const wchar_t *cmd = opts.name.c_str();
-    int argc = static_cast<int>(args.size());
-
-    // We need to convert our wcstring_list_t to a <wchar_t **> that can be used by wgetopt_long().
-    // This ensures the memory for the data structure is freed when we leave this scope.
-    null_terminated_array_t<wchar_t> argv_container(args);
-    auto argv = argv_container.get();
 
     int optind;
     int retval = argparse_parse_flags(parser, opts, short_options.c_str(), long_options.data(), cmd,
@@ -732,14 +725,13 @@ maybe_t<int> builtin_argparse(parser_t &parser, io_streams_t &streams, const wch
         return STATUS_CMD_OK;
     }
 
-    wcstring_list_t args;
-    args.push_back(opts.name);
-    while (optind < argc) args.push_back(argv[optind++]);
-
     retval = parse_exclusive_args(opts, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    retval = argparse_parse_args(opts, args, parser, streams);
+    // wgetopt expects the first argument to be the command, and skips it.
+    // if optind was 0 we'd already have returned.
+    assert(optind > 0 && "Optind is 0?");
+    retval = argparse_parse_args(opts, &argv[optind - 1], argc - optind + 1, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     retval = check_min_max_args_constraints(opts, parser, streams);

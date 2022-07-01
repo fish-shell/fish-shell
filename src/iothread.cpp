@@ -57,9 +57,6 @@ struct thread_pool_t : noncopyable_t, nonmovable_t {
 
         /// The number of threads which are waiting for more work.
         size_t waiting_threads{0};
-
-        /// A flag indicating we should not process new requests.
-        bool drain{false};
     };
 
     /// Data which needs to be atomically accessed.
@@ -107,28 +104,7 @@ struct thread_pool_t : noncopyable_t, nonmovable_t {
 static thread_pool_t &s_io_thread_pool = *(new thread_pool_t(1, IO_MAX_THREADS));
 
 /// A queue of "things to do on the main thread."
-struct main_thread_queue_t : noncopyable_t {
-    // Functions to invoke as the completion callback from debounce.
-    std::vector<void_function_t> completions;
-
-    // iothread_perform_on_main requests.
-    // Note this contains pointers to structs that are stack-allocated on the requesting thread.
-    std::vector<void_function_t> requests;
-
-    /// Transfer ownership of ourselves to a new queue and return it.
-    /// 'this' is left empty.
-    main_thread_queue_t take() {
-        main_thread_queue_t result;
-        std::swap(result.completions, this->completions);
-        std::swap(result.requests, this->requests);
-        return result;
-    }
-
-    // Moving is allowed, but not copying.
-    main_thread_queue_t() = default;
-    main_thread_queue_t(main_thread_queue_t &&) = default;
-    main_thread_queue_t &operator=(main_thread_queue_t &&) = default;
-};
+using main_thread_queue_t = std::vector<void_function_t>;
 static owning_lock<main_thread_queue_t> s_main_thread_queue;
 
 /// \return the signaller for completions and main thread requests.
@@ -203,9 +179,7 @@ int thread_pool_t::perform(void_function_t &&func, bool cant_wait) {
         auto data = pool.req_data.acquire();
         data->request_queue.push(std::move(req));
         FLOGF(iothread, L"enqueuing work item (count is %lu)", data->request_queue.size());
-        if (data->drain) {
-            // Do nothing here.
-        } else if (data->waiting_threads >= data->request_queue.size()) {
+        if (data->waiting_threads >= data->request_queue.size()) {
             // There's enough waiting threads, wake one up.
             wakeup_thread = true;
         } else if (cant_wait || data->total_threads < pool.max_threads) {
@@ -249,46 +223,12 @@ void iothread_service_main_with_timeout(uint64_t timeout_usec) {
     }
 }
 
-/// At the moment, this function is only used in the test suite and in a
-/// drain-all-threads-before-fork compatibility mode that no architecture requires, so it's OK that
-/// it's terrible.
-int iothread_drain_all() {
-    ASSERT_IS_MAIN_THREAD();
-    ASSERT_IS_NOT_FORKED_CHILD();
-
-    int thread_count;
-    auto &pool = s_io_thread_pool;
-    // Set the drain flag.
-    {
-        auto data = pool.req_data.acquire();
-        assert(!data->drain && "Should not be draining already");
-        data->drain = true;
-        thread_count = data->total_threads;
-    }
-
-    // Wake everyone up.
-    pool.queue_cond.notify_all();
-
-    double now = timef();
-
+/// At the moment, this function is only used in the test suite.
+void iothread_drain_all() {
     // Nasty polling via select().
-    while (pool.req_data.acquire()->total_threads > 0) {
+    while (s_io_thread_pool.req_data.acquire()->total_threads > 0) {
         iothread_service_main_with_timeout(1000);
     }
-
-    // Clear the drain flag.
-    // Even though we released the lock, nobody should have added a new thread while the drain flag
-    // is set.
-    {
-        auto data = pool.req_data.acquire();
-        assert(data->total_threads == 0 && "Should be no threads");
-        assert(data->drain && "Should be draining");
-        data->drain = false;
-    }
-
-    double after = timef();
-    FLOGF(iothread, "Drained %d thread(s) in %.02f msec", thread_count, 1000 * (after - now));
-    return thread_count;
 }
 
 // Service the main thread queue, by invoking any functions enqueued for the main thread.
@@ -300,39 +240,14 @@ void iothread_service_main() {
 
     // Move the queue to a local variable.
     // Note the s_main_thread_queue lock is not held after this.
-    main_thread_queue_t queue = s_main_thread_queue.acquire()->take();
+    main_thread_queue_t queue;
+    s_main_thread_queue.acquire()->swap(queue);
 
     // Perform each completion in order.
-    for (const void_function_t &func : queue.completions) {
+    for (const void_function_t &func : queue) {
         // ensure we don't invoke empty functions, that raises an exception
         if (func) func();
     }
-
-    // Perform each main thread request.
-    for (const void_function_t &func : queue.requests) {
-        if (func) func();
-    }
-}
-
-void iothread_perform_on_main(const void_function_t &func) {
-    if (is_main_thread()) {
-        func();
-        return;
-    }
-
-    // Make a new request. Note we are synchronous, so our closure can use references instead of
-    // copying.
-    std::promise<void> wait_until_done;
-    auto handler = [&] {
-        func();
-        wait_until_done.set_value();
-    };
-    // Append it. Ensure we don't hold the lock after.
-    s_main_thread_queue.acquire()->requests.emplace_back(std::move(handler));
-
-    // Tell the signaller and then wait until our future is set.
-    get_notify_signaller().post();
-    wait_until_done.get_future().wait();
 }
 
 bool make_detached_pthread(void *(*func)(void *), void *param) {
@@ -501,7 +416,7 @@ uint64_t debounce_t::perform(std::function<void()> handler) {
 
 // static
 void debounce_t::enqueue_main_thread_result(std::function<void()> func) {
-    s_main_thread_queue.acquire()->completions.push_back(std::move(func));
+    s_main_thread_queue.acquire()->push_back(std::move(func));
     get_notify_signaller().post();
 }
 

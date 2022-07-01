@@ -187,7 +187,6 @@ static void guess_emoji_width(const environment_t &vars) {
 
 /// React to modifying the given variable.
 void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
-    ASSERT_IS_MAIN_THREAD();
     // Do nothing if not yet fully initialized.
     if (!s_var_dispatch_table) return;
 
@@ -438,21 +437,24 @@ static void update_fish_color_support(const environment_t &vars) {
 }
 
 // Try to initialize the terminfo/curses subsystem using our fallback terminal name. Do not set
-// `TERM` to our fallback. We're only doing this in the hope of getting a minimally functional
+// `TERM` to our fallback. We're only doing this in the hope of getting a functional
 // shell. If we launch an external command that uses TERM it should get the same value we were
 // given, if any.
 static void initialize_curses_using_fallbacks(const environment_t &vars) {
-    const wchar_t *const fallbacks[] = {L"ansi", L"dumb"};
+    // xterm-256color is the most used terminal type by a massive margin,
+    // especially counting terminals that are mostly compatible.
+    const wchar_t *const fallbacks[] = {L"xterm-256color", L"xterm", L"ansi", L"dumb"};
 
+    wcstring termstr = L"";
     auto term_var = vars.get(L"TERM");
-    if (term_var.missing_or_empty()) {
-        return;
+    if (!term_var.missing_or_empty()) {
+        termstr = term_var->as_string();
     }
 
     for (const wchar_t *fallback : fallbacks) {
         // If $TERM is already set to the fallback name we're about to use there isn't any point in
         // seeing if the fallback name can be used.
-        if (term_var->as_string() == fallback) {
+        if (termstr == fallback) {
             continue;
         }
 

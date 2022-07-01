@@ -2,6 +2,11 @@ function isolated-tmux-start
     set -l tmpdir (mktemp -d)
     cd $tmpdir
 
+    # macOS lacks the tmux-256color terminfo, use screen-256color instead.
+    if test (uname) = Darwin
+        echo 'set -g default-terminal "screen-256color"'
+    end >./.tmux.conf
+
     function isolated-tmux --inherit-variable tmpdir
         # tmux can't handle session sockets in paths that are too long, and macOS has a very long
         # $TMPDIR, so use a relative path - except macOS doesn't have `realpath --relative-to`...
@@ -11,7 +16,7 @@ function isolated-tmux-start
             echo "error: isolated-tmux must always be run from the same directory." >&2
             return 1
         end
-        tmux -S .tmux-socket -f /dev/null $argv
+        tmux -S .tmux-socket -f .tmux.conf $argv
     end
 
     function isolated-tmux-cleanup --on-event fish_exit --inherit-variable tmpdir

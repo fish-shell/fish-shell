@@ -33,7 +33,7 @@ The following options are available:
     Run this function when the specified named event is emitted. Fish internally generates named events, for example,when showing the prompt. Custom events can be emitted using the :ref:`emit <cmd-emit>` command.
 
 **-v** *VARIABLE_NAME* or **--on-variable** *VARIABLE_NAME*
-    Run this function when the variable *VARIABLE_NAME* changes value. Note that :program:`fish`` makes no guarantees on any particular timing or even that the function will be run for every single ``set``. Rather it will be run when the variable has been set at least once, possibly skipping some values or being run when the variable has been set to the same value (except for universal variables set in other shells - only changes in the value will be picked up for those).
+    Run this function when the variable *VARIABLE_NAME* changes value. Note that :program:`fish` makes no guarantees on any particular timing or even that the function will be run for every single ``set``. Rather it will be run when the variable has been set at least once, possibly skipping some values or being run when the variable has been set to the same value (except for universal variables set in other shells - only changes in the value will be picked up for those).
 
 **-j** *PID* or **--on-job-exit** *PID*
     Run this function when the job containing a child process with the given process identifier *PID* exits. Instead of a PID, the string 'caller' can be specified. This is only allowed when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
@@ -67,6 +67,8 @@ By using one of the event handler switches, a function can be made to run automa
 - ``fish_exit`` is emitted right before fish exits.
 
 - ``fish_cancel``, which is emitted when a commandline is cleared (used for terminal-shell integration).
+
+Functions may not be named the same as a reserved keyword. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
 
 Example
 -------

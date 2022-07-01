@@ -1,6 +1,7 @@
-function __kitty_completions
-    # Send all words up to the one before the cursor
-    commandline -cop | kitty +complete fish
+function __ksi_completions
+    set --local ct (commandline --current-token)
+    set --local tokens (commandline --tokenize --cut-at-cursor --current-process)
+    printf "%s\n" $tokens $ct | command kitty +complete fish2
 end
 
-complete -f -c kitty -a "(__kitty_completions)"
+complete -f -c kitty -a "(__ksi_completions)"

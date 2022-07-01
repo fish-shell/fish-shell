@@ -26,7 +26,10 @@ The ``fish_git_prompt`` function displays information about the current git repo
 
 There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the ``git config`` command, while fish variables can be set as usual with the :ref:`set <cmd-set>` command.
 
-- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of untracked files, dirty files, unpushed/unpulled commits, and more. In large repositories, this can take a lot of time, so it you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
+- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
+  In large repositories, this can take a lot of time, so it you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
+
+  Because counting untracked files requires a lot of time, the number of untracked files is only shown if enabled via ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles``.
 
 - ``$__fish_git_prompt_showdirtystate`` or the git option ``bash.showDirtyState`` can be set to show if the repository is "dirty", i.e. has uncommitted changes.
 
@@ -77,10 +80,8 @@ A number of variables set characters and color used as indicators. Many of these
 - ``$__fish_git_prompt_color_bare`` - the color to use for a bare repository - one without a working tree
 - ``$__fish_git_prompt_color_merging`` - the color when a merge/rebase/revert/bisect or cherry-pick is in progress
 
-Some variables are only used in some modes, like when informative status is enabled:
-
-- ``$__fish_git_prompt_char_cleanstate`` (✔) - the character to be used when nothing else applies
-- ``$__fish_git_prompt_color_cleanstate``
+- ``$__fish_git_prompt_char_cleanstate`` (✔ in informative mode) - the character to be used when nothing else applies
+- ``$__fish_git_prompt_color_cleanstate`` (no default)
 
 Variables used with ``showdirtystate``:
 
@@ -112,8 +113,10 @@ Variables used with ``showupstream`` (also implied by informative status):
 
 Colors used with ``showcolorhints``:
 
-- ``$__fish_git_prompt_color_branch`` (green) - the color of the branch
+- ``$__fish_git_prompt_color_branch`` (green) - the color of the branch if nothing else applies
 - ``$__fish_git_prompt_color_branch_detached`` (red) the color of the branch if it's detached (e.g. a commit is checked out)
+- ``$__fish_git_prompt_color_branch_dirty`` (no default) the color of the branch if it's dirty and not detached
+- ``$__fish_git_prompt_color_branch_staged`` (no default) the color of the branch if it just has something staged and is otherwise clean
 - ``$__fish_git_prompt_color_flags`` (--bold blue) - the default color for dirty/staged/stashed/untracked state
 
 Note that all colors can also have a corresponding ``_done`` color. For example, the contents of ``$__fish_git_prompt_color_upstream_done`` is printed right _after_ the upstream.

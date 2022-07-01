@@ -88,7 +88,11 @@ cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
 %if 0%{?__builddir:1}
 cd %__builddir
 %endif
-make test SHOW_INTERACTIVE_LOG=1
+# Fedora uses __cmake_builddir
+%if 0%{?__cmake_builddir:1}
+cd %__cmake_builddir
+%endif
+make fish_run_tests
 
 %clean
 rm -rf $RPM_BUILD_ROOT

@@ -17,7 +17,7 @@ complete -x -c string -n 'test (count (commandline -opc)) -ge 2' -n 'string matc
 complete -x -c string -n 'test (count (commandline -opc)) -ge 2' -n 'string match -qr split0\?\$ -- (commandline -opc)[2]' -s f -l fields -a "(seq 1 10)" -d "Specify fields"
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2' -n 'string match -qr split0\?\$ -- (commandline -opc)[2]' -s r -l right -d "Split right-to-left"
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2' -n 'string match -qr split0\?\$ -- (commandline -opc)[2]' -s n -l no-empty -d "Empty results excluded"
-complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a 'collect'
+complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a collect
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2' -n 'string match -qr collect\$ -- (commandline -opc)[2]' -s N -l no-trim-newlines -d "Don't trim trailing newlines"
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2' -n 'string match -qr collect\$ -- (commandline -opc)[2]' -s a -l allow-empty -d "Always print empty argument"
 

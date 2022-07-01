@@ -46,4 +46,3 @@ complete --condition '__fish_seen_subcommand_from config' --command lxc --no-fil
 
 set -l subcommands_taking_name console copy delete exec export info move pause publish rename restart restore shell snapshot start stop
 complete --condition "__fish_seen_subcommand_from $subcommands_taking_name" --command lxc --no-files --arguments "(__fish_lxc_list_containers)"
-

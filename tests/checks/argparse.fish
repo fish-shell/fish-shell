@@ -1,15 +1,16 @@
 #RUN: %fish %s
 ##########
 
-set -g LANG C
+# NOTE: This uses argparse, which touches the local variables.
+# Any call that isn't an error should be enclosed in a begin/end block!
 
 # Start by verifying a bunch of error conditions.
 # These are *argparse* errors, and therefore bugs in the script,
 # so they print a stack trace.
 
-# No args is an error
+# No args (not even --) is an error
 argparse
-#CHECKERR: argparse: No option specs were provided
+#CHECKERR: argparse: Missing -- separator
 #CHECKERR: checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse
 #CHECKERR: ^
@@ -23,13 +24,14 @@ argparse h/help
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 
-# Flags but no option specs is an error
-argparse -s -- hello
-#CHECKERR: argparse: No option specs were provided
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
-#CHECKERR: argparse -s -- hello
-#CHECKERR: ^
-#CHECKERR: (Type 'help argparse' for related documentation)
+# Flags but no option specs is not an error
+begin
+    argparse -s -- hello
+    echo $status
+    # CHECK: 0
+    set -l
+    # CHECK: argv hello
+end
 
 # Invalid option specs
 argparse h-
@@ -67,7 +69,10 @@ argparse h-help=x
 begin
     argparse --name min-max --min-args 1 h/help --
     #CHECKERR: min-max: expected >= 1 arguments; got 0
+    argparse --name min-max --min-args 1 --
+    #CHECKERR: min-max: expected >= 1 arguments; got 0
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1
+    argparse --name min-max --min-args 1 --max-args 3 -- arg1
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2
     argparse --name min-max --min-args 1 --max-args 3 h/help -- --help arg1 arg2 arg3
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2 -h arg3 arg4
@@ -75,6 +80,8 @@ begin
     argparse --name min-max --max-args 1 h/help --
     argparse --name min-max --max-args 1 h/help -- arg1
     argparse --name min-max --max-args 1 h/help -- arg1 arg2
+    #CHECKERR: min-max: expected <= 1 arguments; got 2
+    argparse --name min-max --max-args 1 -- arg1 arg2
     #CHECKERR: min-max: expected <= 1 arguments; got 2
 end
 
@@ -278,7 +285,7 @@ and echo unxpected argparse return status >&2
 # CHECKERR: argparse: Value 'a1' for flag 'm' is not an integer
 
 # Check the exit status from argparse validation
-argparse 'm#max!set | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
+argparse 'm#max!set -l | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
 set -l saved_status $status
 test $saved_status -eq 57
 and echo expected argparse return status $saved_status

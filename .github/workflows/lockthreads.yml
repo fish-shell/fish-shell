@@ -7,8 +7,14 @@ on:
 #   min 0-59 ┘ │  │ │ └ weekday 0-6
 #    hour 0-23 ┘  │ └ month 1-12
 #                 └ day 1-31
+permissions:
+  contents: read
+
 jobs:
   lock:
+    permissions:
+      issues: write  # for dessant/lock-threads to lock issues
+      pull-requests: write  # for dessant/lock-threads to lock PRs
     runs-on: ubuntu-latest
     steps:
       - uses: dessant/lock-threads@v2

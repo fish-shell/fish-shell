@@ -139,6 +139,7 @@ static constexpr const input_function_metadata_t input_function_metadata[] = {
     {L"insert-line-over", readline_cmd_t::insert_line_over},
     {L"insert-line-under", readline_cmd_t::insert_line_under},
     {L"kill-bigword", readline_cmd_t::kill_bigword},
+    {L"kill-inner-line", readline_cmd_t::kill_inner_line},
     {L"kill-line", readline_cmd_t::kill_line},
     {L"kill-selection", readline_cmd_t::kill_selection},
     {L"kill-whole-line", readline_cmd_t::kill_whole_line},
@@ -274,15 +275,12 @@ void input_mapping_set_t::add(wcstring sequence, const wchar_t *command, const w
     input_mapping_set_t::add(std::move(sequence), &command, 1, mode, sets_mode, user);
 }
 
-static relaxed_atomic_bool_t s_input_initialized{false};
-
 /// Set up arrays used by readch to detect escape sequences for special keys and perform related
 /// initializations for our input subsystem.
 void init_input() {
     ASSERT_IS_MAIN_THREAD();
-    if (s_input_initialized) return;
-    s_input_initialized = true;
 
+    if (s_terminfo_mappings.is_set()) return;
     s_terminfo_mappings = create_input_terminfo();
 
     auto input_mapping = input_mappings();
@@ -904,7 +902,7 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
 }
 
 bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq) {
-    assert(s_input_initialized);
+    assert(s_terminfo_mappings.is_set());
     for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
         if (name == m.name) {
             // Found the mapping.
@@ -922,8 +920,7 @@ bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq) {
 }
 
 bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
-    assert(s_input_initialized);
-
+    assert(s_terminfo_mappings.is_set());
     for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
         if (m.seq && seq == str2wcstring(*m.seq)) {
             out_name->assign(m.name);
@@ -935,8 +932,7 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
 }
 
 wcstring_list_t input_terminfo_get_names(bool skip_null) {
-    assert(s_input_initialized);
-
+    assert(s_terminfo_mappings.is_set());
     wcstring_list_t result;
     const auto &mappings = *s_terminfo_mappings;
     result.reserve(mappings.size());

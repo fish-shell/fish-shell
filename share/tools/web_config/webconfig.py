@@ -64,7 +64,7 @@ def find_executable(exe, paths=()):
 
 
 def isMacOS10_12_5_OrLater():
-    """ Return whether this system is macOS 10.12.5 or a later version. """
+    """Return whether this system is macOS 10.12.5 or a later version."""
     try:
         return [int(x) for x in platform.mac_ver()[0].split(".")] >= [10, 12, 5]
     except ValueError:
@@ -72,7 +72,7 @@ def isMacOS10_12_5_OrLater():
 
 
 def is_wsl():
-    """ Return whether we are running under the Windows Subsystem for Linux """
+    """Return whether we are running under the Windows Subsystem for Linux"""
     if "linux" in platform.system().lower() and os.access("/proc/version", os.R_OK):
         with open("/proc/version", "r") as f:
             # Find 'Microsoft' for wsl1 and 'microsoft' for wsl2
@@ -82,22 +82,24 @@ def is_wsl():
 
 
 def is_sailfish_os():
-    """ Return whether we are running on Sailfish OS """
-    if "linux" in platform.system().lower() and os.access("/etc/sailfish-release", os.R_OK):
+    """Return whether we are running on Sailfish OS"""
+    if "linux" in platform.system().lower() and os.access(
+        "/etc/sailfish-release", os.R_OK
+    ):
         with open("/etc/sailfish-release", "r") as f:
             # Find 'ID=sailfishos'
             if "sailfishos" in f.read():
                 return True
-    return False 
+    return False
 
 
 def is_termux():
-    """ Return whether we are running under the Termux application for Android"""
+    """Return whether we are running under the Termux application for Android"""
     return "com.termux" in os.environ["PATH"] and find_executable("termux-open-url")
 
 
 def is_chromeos_garcon():
-    """ Return whether we are running in Chrome OS and the browser can't see local files """
+    """Return whether we are running in Chrome OS and the browser can't see local files"""
     # In Crostini Chrome OS Linux, the default browser opens URLs in Chrome
     # running outside the linux VM. This browser does not have access to the
     # Linux filesystem. This uses Garcon, see for example
@@ -139,6 +141,7 @@ def escape_fish_cmd(text):
     escaped = text.replace("\\", "\\\\").replace("'", "\\'")
     return "'" + escaped + "'"
 
+
 def strip_one_layer(text, char):
     # Strip the text from one layer of a given character
     if text[-1] == char:
@@ -177,7 +180,7 @@ bindings_blacklist = set(["self-insert", "'begin;end'"])
 
 
 def parse_one_color(comp):
-    """ A basic function to parse a single color value like 'FFA000' """
+    """A basic function to parse a single color value like 'FFA000'"""
     if comp in named_colors:
         # Named color
         return named_colors[comp]
@@ -193,7 +196,7 @@ def parse_one_color(comp):
 
 
 def better_color(c1, c2):
-    """ Indicate which color is "better", i.e. prefer term256 colors """
+    """Indicate which color is "better", i.e. prefer term256 colors"""
     if not c2:
         return c1
     if not c1:
@@ -241,7 +244,7 @@ def parse_color(color_str):
             skip = len("-b")
             if comp[len("-b=")] in ["=", " "]:
                 skip += 1
-            c = comp[skip :]
+            c = comp[skip:]
             parsed_c = parse_one_color(c)
             if better_color(background_color, parsed_c) == parsed_c:
                 background_color = c
@@ -260,6 +263,7 @@ def parse_color(color_str):
         "dim": dim,
         "reverse": reverse,
     }
+
 
 def unparse_color(col):
     """A basic function to return the fish version of a color dict"""
@@ -281,6 +285,7 @@ def unparse_color(col):
     if col["background"]:
         ret += " --background=" + col["background"]
     return ret
+
 
 def parse_bool(val):
     val = val.lower()
@@ -589,11 +594,11 @@ def get_special_ansi_escapes():
             print("WARNING: Rebuild python with curses headers!")
 
             g_special_escapes_dict = {
-                'exit_attribute_mode': '\x1b(B\x1b[m',
-                'bold': '\x1b[1m',
-                'underline': '\x1b[4m'
+                "exit_attribute_mode": "\x1b(B\x1b[m",
+                "bold": "\x1b[1m",
+                "underline": "\x1b[4m",
             }
-            
+
     return g_special_escapes_dict
 
 
@@ -723,7 +728,7 @@ def ansi_to_html(val):
 
 
 class FishVar:
-    """ A class that represents a variable """
+    """A class that represents a variable"""
 
     def __init__(self, name, value):
         self.name = name
@@ -742,7 +747,7 @@ class FishVar:
 
 
 class FishBinding:
-    """A class that represents keyboard binding """
+    """A class that represents keyboard binding"""
 
     def __init__(self, command, raw_binding, readable_binding, description=None):
         self.command = command
@@ -769,7 +774,7 @@ class FishBinding:
 
 
 class BindingParser:
-    """ Class to parse codes for bind command """
+    """Class to parse codes for bind command"""
 
     # TODO: What does snext and sprevious mean ?
     readable_keys = {
@@ -788,13 +793,13 @@ class BindingParser:
     }
 
     def set_buffer(self, buffer):
-        """ Sets code to parse """
+        """Sets code to parse"""
 
         self.buffer = buffer or b""
         self.index = 0
 
     def get_char(self):
-        """ Gets next character from buffer """
+        """Gets next character from buffer"""
         if self.index >= len(self.buffer):
             return "\0"
         c = self.buffer[self.index]
@@ -802,17 +807,17 @@ class BindingParser:
         return c
 
     def unget_char(self):
-        """ Goes back by one character for parsing """
+        """Goes back by one character for parsing"""
 
         self.index -= 1
 
     def end(self):
-        """ Returns true if reached end of buffer """
+        """Returns true if reached end of buffer"""
 
         return self.index >= len(self.buffer)
 
     def parse_control_sequence(self):
-        """ Parses terminal specifiec control sequences """
+        """Parses terminal specifiec control sequences"""
 
         result = ""
         c = self.get_char()
@@ -868,7 +873,7 @@ class BindingParser:
         return result
 
     def get_readable_binding(self):
-        """ Gets a readable representation of binding """
+        """Gets a readable representation of binding"""
 
         try:
             result = BindingParser.readable_keys[self.buffer.lower()]
@@ -947,7 +952,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.wfile.write(txt.encode("utf-8"))
 
     def do_get_colors(self, path=None):
-        """ Read the colors from a .theme file in path, or the current shell if no path has been given """
+        """Read the colors from a .theme file in path, or the current shell if no path has been given"""
         # Looks for fish_color_*.
         # Returns an array of lists [color_name, color_description, color_value]
         result = []
@@ -1010,20 +1015,22 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         extrainfo = {}
         for line in out.split("\n"):
             # Ignore empty lines
-            if not line: continue
+            if not line:
+                continue
             # Lines starting with "#" can contain metadata.
             if line.startswith("#"):
-                if not ":" in line: continue
+                if not ":" in line:
+                    continue
                 key, value = line.split(":", maxsplit=1)
                 key = key.strip("# '")
                 value = value.strip(" '\"")
                 # Only use keys we know
-                if not key in ("name", "preferred_background", "url"): continue
+                if not key in ("name", "preferred_background", "url"):
+                    continue
                 if key == "preferred_background":
                     if value not in named_colors and not value.startswith("#"):
                         value = "#" + value
                 extrainfo[key] = value
-
 
             for match in re.finditer(r"^fish_(pager_)?color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(2, 3)]
@@ -1057,7 +1064,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return out.strip().split(", ")
 
     def do_get_variable_names(self, cmd):
-        " Given a command like 'set -U' return all the variable names "
+        "Given a command like 'set -U' return all the variable names"
         out, err = run_fish_cmd(cmd)
         return out.split("\n")
 
@@ -1091,7 +1098,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         ]
 
     def do_get_bindings(self):
-        """ Get key bindings """
+        """Get key bindings"""
 
         # Running __fish_config_interactive print fish greeting and
         # loads key bindings
@@ -1206,20 +1213,36 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return True
 
     def do_set_prompt_function(self, prompt_func):
-        cmd = "functions -e fish_right_prompt; " + prompt_func + "\n" + "funcsave fish_prompt && funcsave fish_right_prompt 2>/dev/null"
+        cmd = (
+            "functions -e fish_right_prompt; "
+            + prompt_func
+            + "\n"
+            + "funcsave fish_prompt && funcsave fish_right_prompt 2>/dev/null"
+        )
         out, err = run_fish_cmd(cmd)
         return len(err) == 0
 
     def do_get_prompt(self, prompt_function_text, extras_dict):
         # Return the prompt output by the given command
-        cmd = prompt_function_text + '\n builtin cd "' + initial_wd + '" \n false \n fish_prompt\n'
+        cmd = (
+            prompt_function_text
+            + '\n builtin cd "'
+            + initial_wd
+            + '" \n false \n fish_prompt\n'
+        )
         prompt_demo_ansi, err = run_fish_cmd(cmd)
         prompt_demo_html = ansi_to_html(prompt_demo_ansi)
         right_demo_ansi, err = run_fish_cmd(
-            "functions -e fish_right_prompt; " + prompt_function_text + '\n builtin cd "' + initial_wd + '" \n false \n functions -q fish_right_prompt && fish_right_prompt\n'
+            "functions -e fish_right_prompt; "
+            + prompt_function_text
+            + '\n builtin cd "'
+            + initial_wd
+            + '" \n false \n functions -q fish_right_prompt && fish_right_prompt\n'
         )
         right_demo_html = ansi_to_html(right_demo_ansi)
-        prompt_demo_font_size = self.font_size_for_ansi_prompt(prompt_demo_ansi + right_demo_ansi)
+        prompt_demo_font_size = self.font_size_for_ansi_prompt(
+            prompt_demo_ansi + right_demo_ansi
+        )
         result = {
             "function": prompt_function_text,
             "demo": prompt_demo_html,
@@ -1233,7 +1256,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_current_prompt(self):
         # Return the current prompt. We run 'false' to demonstrate how the
         # prompt shows the command status (#1624).
-        prompt_func, err = run_fish_cmd("functions fish_prompt; functions fish_right_prompt")
+        prompt_func, err = run_fish_cmd(
+            "functions fish_prompt; functions fish_right_prompt"
+        )
         result = self.do_get_prompt(
             prompt_func.strip(),
             {"name": "Current"},
@@ -1391,20 +1416,25 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # The rest in alphabetical order.
             curcolors, curinfo = self.do_get_colors()
             defcolors, definfo = self.do_get_colors("themes/fish default.theme")
-            curinfo.update({ "theme": "Current", "colors": curcolors})
-            definfo.update({ "theme": "fish default", "colors": defcolors})
+            curinfo.update({"theme": "Current", "colors": curcolors})
+            definfo.update({"theme": "fish default", "colors": defcolors})
             output = [curinfo, definfo]
 
-            confighome = os.environ["XDG_CONFIG_HOME"] if "XDG_CONFIG_HOME" in os.environ else os.path.expanduser("~")
+            confighome = (
+                os.environ["XDG_CONFIG_HOME"]
+                if "XDG_CONFIG_HOME" in os.environ
+                else os.path.expanduser("~")
+            )
             paths = list(glob.iglob(os.path.join(confighome, "fish", "themes/*.theme")))
             paths.extend(list(glob.iglob("themes/*.theme")))
             paths.sort(key=str.casefold)
 
             for p in paths:
                 theme = os.path.splitext(os.path.basename(p))[0]
-                if any(theme == d["theme"] for d in output): continue
+                if any(theme == d["theme"] for d in output):
+                    continue
                 out, outinfo = self.do_get_colors(p)
-                outinfo.update({ "theme": theme, "colors": out })
+                outinfo.update({"theme": theme, "colors": out})
                 output.append(outinfo)
         elif p == "/functions/":
             output = self.do_get_functions()
@@ -1571,11 +1601,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.write_to_wfile(json.dumps(output))
 
     def log_request(self, code="-", size="-"):
-        """ Disable request logging """
+        """Disable request logging"""
         pass
 
     def log_error(self, format, *args):
-        if format == "code %d, message %s" and hasattr(self, 'path'):
+        if format == "code %d, message %s" and hasattr(self, "path"):
             # This appears to be a send_error() message
             # We want to include the path (if we have one)
             (code, msg) = args
@@ -1688,6 +1718,10 @@ esc = get_special_ansi_escapes()
 print(
     "Web config started at %s%s%s"
     % (esc["underline"], fileurl, esc["exit_attribute_mode"])
+)
+print(
+    "If that doesn't work, try opening %s%s%s"
+    % (esc["underline"], url, esc["exit_attribute_mode"])
 )
 print("%sHit ENTER to stop.%s" % (esc["bold"], esc["exit_attribute_mode"]))
 

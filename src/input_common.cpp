@@ -152,7 +152,6 @@ maybe_t<char_event_t> input_event_queue_t::try_pop() {
 }
 
 char_event_t input_event_queue_t::readch() {
-    ASSERT_IS_MAIN_THREAD();
     wchar_t res{};
     mbstate_t state = {};
     for (;;) {

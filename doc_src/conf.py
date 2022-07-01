@@ -112,6 +112,9 @@ pygments_style = None
 html_theme_path = ["."]
 html_theme = "python_docs_theme"
 
+# Shared styles across all doc versions.
+html_css_files = ["/docs/shared/style.css"]
+
 # Don't add a weird "_sources" directory
 html_copy_source = False
 
@@ -131,11 +134,11 @@ html_sidebars = {"**": ["globaltoc.html", "searchbox.html", "localtoc.html"]}
 # The default font is "GNU FreeSans" or something which I've never heard of.
 # Make this something that might actually be installed.
 latex_elements = {
-    'fontpkg': r'''
+    "fontpkg": r"""
     \setmainfont{Noto Serif}
     \setsansfont{Noto Sans}
     \setmonofont{Noto Sans Mono}
-    ''',
+    """,
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -153,22 +156,23 @@ latex_documents = [
 
 # The default pdflatex doesn't handle unicode.
 # Switch to an engine that does (why pdflatex still exists and is still the default? I don't know)
-latex_engine = 'xelatex'
+latex_engine = "xelatex"
 
 # -- Options for manual page output ------------------------------------------
 
 
 def get_command_description(path, name):
-    """ Return the description for a command, by parsing its synopsis line """
+    """Return the description for a command, by parsing its synopsis line"""
     with open(path) as opened:
         for line in opened:
-            if line.startswith(name + ' - '):
-                _, desc = line.split(' - ', 1)
+            if line.startswith(name + " - "):
+                _, desc = line.split(" - ", 1)
                 return desc.strip()
-            elif line.startswith('``' + name + '`` - '):
-                _, desc = line.split('`` - ', 1)
-                return desc.strip('`')
+            elif line.startswith("``" + name + "`` - "):
+                _, desc = line.split("`` - ", 1)
+                return desc.strip("`")
     raise SphinxWarning("No description in file %s" % os.path.basename(path))
+
 
 # Newer sphinxen apparently create another subdirectory which breaks our man lookup.
 # Unbreak it (#7996)
@@ -236,6 +240,6 @@ epub_exclude_files = ["search.html"]
 # Enable smart-quotes
 # default action is 'qDe': quotes, Dashes, ellipsis. Skip dashes for --options
 smartquotes = True
-smartquotes_action = 'qe'
+smartquotes_action = "qe"
 
-linkcheck_ignore = [r'https://github.com/fish-shell/fish-shell/issues/\d+']
+linkcheck_ignore = [r"https://github.com/fish-shell/fish-shell/issues/\d+"]

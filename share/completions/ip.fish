@@ -298,27 +298,27 @@ function __fish_complete_ip
                                         end
                                         # TODO: Moar
                                 end
-                            case show save flush # These take the same args
-                                switch $cmd[-2]
-                                    case dev
-                                        __fish_ip_device
-                                    case scope
-                                        __fish_ip_scope
-                                    case to
-                                        # Prefix
-                                    case label
-                                        # Label-pattern
-                                    case '*'
-                                        printf '%s\t%s\n' up "Only active devices" \
-                                            dev "Limit to a certain device" \
-                                            scope "Limit scope" \
-                                            to "Limit prefix" \
-                                            label "Limit by label" \
-                                            dynamic "(Ipv6 only) Limit to dynamic addresses" \
-                                            permanent "(Ipv6 only) Limit to permanent addresses"
-                                        __fish_ip_device
-                                        # TODO: Moar
-                                end
+                        end
+                    case show save flush # These take the same args
+                        switch $cmd[-2]
+                            case dev
+                                __fish_ip_device
+                            case scope
+                                __fish_ip_scope
+                            case to
+                                # Prefix
+                            case label
+                                # Label-pattern
+                            case '*'
+                                printf '%s\t%s\n' up "Only active devices" \
+                                    dev "Limit to a certain device" \
+                                    scope "Limit scope" \
+                                    to "Limit prefix" \
+                                    label "Limit by label" \
+                                    dynamic "(Ipv6 only) Limit to dynamic addresses" \
+                                    permanent "(Ipv6 only) Limit to permanent addresses"
+                                __fish_ip_device
+                                # TODO: Moar
                         end
                 end
             end

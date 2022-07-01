@@ -10,4 +10,3 @@ complete -c optimus-manager -l print-startup -d 'Print the GPU mode that will be
 complete -c optimus-manager -l unset-temp-config -d 'Undo --temp-config (unset temp config path)'
 complete -c optimus-manager -l no-confirm -d 'Do not ask for confirmation and skip all warnings when switching GPUs'
 complete -c optimus-manager -l cleanup -d 'Remove auto-generated configuration files left over by the daemon'
-

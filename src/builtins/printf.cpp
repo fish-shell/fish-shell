@@ -108,100 +108,6 @@ struct builtin_printf_state_t {
 
 static bool is_octal_digit(wchar_t c) { return iswdigit(c) && c < L'8'; }
 
-static int hex_to_bin(const wchar_t &c) {
-    switch (c) {
-        case L'0': {
-            return 0;
-        }
-        case L'1': {
-            return 1;
-        }
-        case L'2': {
-            return 2;
-        }
-        case L'3': {
-            return 3;
-        }
-        case L'4': {
-            return 4;
-        }
-        case L'5': {
-            return 5;
-        }
-        case L'6': {
-            return 6;
-        }
-        case L'7': {
-            return 7;
-        }
-        case L'8': {
-            return 8;
-        }
-        case L'9': {
-            return 9;
-        }
-        case L'a':
-        case L'A': {
-            return 10;
-        }
-        case L'b':
-        case L'B': {
-            return 11;
-        }
-        case L'c':
-        case L'C': {
-            return 12;
-        }
-        case L'd':
-        case L'D': {
-            return 13;
-        }
-        case L'e':
-        case L'E': {
-            return 14;
-        }
-        case L'f':
-        case L'F': {
-            return 15;
-        }
-        default: {
-            return -1;
-        }
-    }
-}
-
-static int octal_to_bin(wchar_t c) {
-    switch (c) {
-        case L'0': {
-            return 0;
-        }
-        case L'1': {
-            return 1;
-        }
-        case L'2': {
-            return 2;
-        }
-        case L'3': {
-            return 3;
-        }
-        case L'4': {
-            return 4;
-        }
-        case L'5': {
-            return 5;
-        }
-        case L'6': {
-            return 6;
-        }
-        case L'7': {
-            return 7;
-        }
-        default: {
-            return -1;
-        }
-    }
-}
-
 void builtin_printf_state_t::nonfatal_error(const wchar_t *fmt, ...) {
     // Don't error twice.
     if (early_exit) return;
@@ -263,6 +169,12 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
         } else {
             // This isn't entirely fatal - the value should still be printed.
             this->nonfatal_error(_(L"%ls: value not completely converted (can't convert '%ls')"), s, end);
+            // Warn about octal numbers as they can be confusing.
+            // Do it if the unconverted digit is a valid hex digit,
+            // because it could also be an "0x" -> "0" typo.
+            if (*s == L'0' && iswxdigit(*end)) {
+                this->nonfatal_error(_(L"Hint: a leading '0' without an 'x' indicates an octal number"), s, end);
+            }
         }
     }
 }
@@ -366,7 +278,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
     if (*p == L'x') {
         // A hexadecimal \xhh escape sequence must have 1 or 2 hex. digits.
         for (esc_length = 0, ++p; esc_length < 2 && iswxdigit(*p); ++esc_length, ++p)
-            esc_value = esc_value * 16 + hex_to_bin(*p);
+            esc_value = esc_value * 16 + convert_digit(*p, 16);
         if (esc_length == 0) this->fatal_error(_(L"missing hexadecimal number in escape"));
         this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
     } else if (is_octal_digit(*p)) {
@@ -375,7 +287,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
         // Wrap mod 256, which matches historic behavior.
         for (esc_length = 0, p += octal_0 && *p == L'0'; esc_length < 3 && is_octal_digit(*p);
              ++esc_length, ++p)
-            esc_value = esc_value * 8 + octal_to_bin(*p);
+            esc_value = esc_value * 8 + convert_digit(*p, 8);
         this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
     } else if (*p && std::wcschr(L"\"\\abcefnrtv", *p)) {
         print_esc_char(*p++);
@@ -391,7 +303,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
                 }
                 break;
             }
-            uni_value = uni_value * 16 + hex_to_bin(*p);
+            uni_value = uni_value * 16 + convert_digit(*p, 16);
             p++;
         }
 

@@ -53,6 +53,11 @@ end
 
 set failed
 
+# The test here looks wrong, but False sets exit status to 0, which is what we want
+if python3 -c 'import sys; exit(sys.version_info > (3, 5))'
+    say red "pexpect tests disabled: python3 is too old"
+    set pexpect_files_to_test
+end
 if not python3 -c 'import pexpect'
     say red "pexpect tests disabled: `python3 -c 'import pexpect'` failed"
     set pexpect_files_to_test

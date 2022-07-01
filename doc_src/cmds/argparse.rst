@@ -64,10 +64,11 @@ If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns ze
 
 The ``or return`` means that the function returns ``argparse``'s status if it failed, so if it goes on ``argparse`` succeeded.
 
-The ``--`` argument is required. You do not have to include any arguments after the ``--`` but you must include the ``--``. For example, this is acceptable::
+The ``--`` argument is required. You do not have to include any option specifications or arguments after the ``--`` but you must include the ``--``. For example, this is acceptable::
 
-    set -l argv
+    set -l argv foo
     argparse 'h/help' 'n/name' -- $argv
+    argparse --min-args=1 -- $argv
 
 But this is not::
 

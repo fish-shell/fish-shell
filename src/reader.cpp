@@ -504,6 +504,9 @@ struct autosuggestion_t {
     // The string which was searched for.
     wcstring search_string{};
 
+    // The list of completions which may need loading.
+    wcstring_list_t needs_load{};
+
     // Whether the autosuggestion should be case insensitive.
     // This is true for file-generated autosuggestions, but not for history.
     bool icase{false};
@@ -737,6 +740,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Access the parser.
     parser_t &parser() { return *parser_ref; }
     const parser_t &parser() const { return *parser_ref; }
+
+    /// Convenience cover over exec_count().
+    uint64_t exec_count() const { return parser().libdata().exec_count; }
 
     reader_data_t(std::shared_ptr<parser_t> parser, std::shared_ptr<history_t> hist,
                   reader_config_t &&conf)
@@ -1486,6 +1492,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::yank_pop:
         case rl::backward_kill_line:
         case rl::kill_whole_line:
+        case rl::kill_inner_line:
         case rl::kill_word:
         case rl::kill_bigword:
         case rl::backward_kill_word:
@@ -1780,19 +1787,22 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
         if (std::wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
 
         // Try normal completions.
-        completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
-        completion_list_t completions = complete(search_string, complete_flags, ctx);
-        completions_sort_and_prioritize(&completions, complete_flags);
+        completion_request_options_t complete_flags = completion_request_options_t::autosuggest();
+        wcstring_list_t needs_load;
+        completion_list_t completions = complete(search_string, complete_flags, ctx, &needs_load);
+
+        autosuggestion_t result{};
+        result.search_string = search_string;
+        result.needs_load = std::move(needs_load);
+        result.icase = true;  // normal completions are case-insensitive.
         if (!completions.empty()) {
+            completions_sort_and_prioritize(&completions, complete_flags);
             const completion_t &comp = completions.at(0);
             size_t cursor = cursor_pos;
-            wcstring suggestion = completion_apply_to_command_line(
+            result.text = completion_apply_to_command_line(
                 comp.completion, comp.flags, search_string, &cursor, true /* append only */);
-            // Normal completions are case-insensitive.
-            return autosuggestion_t{std::move(suggestion), search_string, true /* icase */};
         }
-
-        return nothing;
+        return result;
     };
 }
 
@@ -1808,10 +1818,28 @@ bool reader_data_t::can_autosuggest() const {
 // Called after an autosuggestion has been computed on a background thread.
 void reader_data_t::autosuggest_completed(autosuggestion_t result) {
     ASSERT_IS_MAIN_THREAD();
-    if (result.search_string == in_flight_autosuggest_request)
+    if (result.search_string == in_flight_autosuggest_request) {
         in_flight_autosuggest_request.clear();
-    if (!result.empty() && can_autosuggest() && result.search_string == command_line.text() &&
-        string_prefixes_string_case_insensitive(result.search_string, result.text)) {
+    }
+    if (result.search_string != command_line.text()) {
+        // This autosuggestion is stale.
+        return;
+    }
+    // Maybe load completions for commands discovered by this autosuggestion.
+    bool loaded_new = false;
+    for (const wcstring &to_load : result.needs_load) {
+        if (complete_load(to_load, this->parser())) {
+            FLOGF(complete, "Autosuggest found new completions for %ls, restarting",
+                  to_load.c_str());
+            loaded_new = true;
+        }
+    }
+    if (loaded_new) {
+        // We loaded new completions for this command.
+        // Re-do our autosuggestion.
+        this->update_autosuggestion();
+    } else if (!result.empty() && can_autosuggest() &&
+               string_prefixes_string_case_insensitive(result.search_string, result.text)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
         autosuggestion = std::move(result);
         if (this->is_repaint_needed()) {
@@ -2895,9 +2923,7 @@ void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loo
     // Ensure that `commandline` inside the completions gets the current state.
     update_commandline_state();
 
-    completion_request_flags_t complete_flags = {completion_request_t::descriptions,
-                                                 completion_request_t::fuzzy_match};
-    rls.comp = complete(buffcpy, complete_flags, parser_ref->context());
+    rls.comp = complete(buffcpy, completion_request_options_t::normal(), parser_ref->context());
 
     // User-supplied completions may have changed the commandline - prevent buffer
     // overflow.
@@ -2935,6 +2961,7 @@ uint64_t reader_status_count() { return status_count; }
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
+    parser.assert_can_execute();
     reader_config_t conf;
     conf.complete_ok = true;
     conf.highlight_ok = true;
@@ -2958,9 +2985,12 @@ static int read_i(parser_t &parser) {
     while (!check_exit_loop_maybe_warning(data.get())) {
         ++run_count;
 
-        maybe_t<wcstring> tmp = data->readline(0);
-        if (tmp && !tmp->empty()) {
-            const wcstring command = tmp.acquire();
+        if (maybe_t<wcstring> mcmd = data->readline(0)) {
+            const wcstring command = mcmd.acquire();
+            if (command.empty()) {
+                continue;
+            }
+
             data->update_buff_pos(&data->command_line, 0);
             data->command_line.clear();
             data->command_line_changed(&data->command_line);
@@ -2990,6 +3020,10 @@ static int read_i(parser_t &parser) {
                 // Reset the warning.
                 data->did_warn_for_bg_jobs = false;
             }
+
+            // Apply any command line update from this command or fish_postexec, etc.
+            // See #8807.
+            data->apply_commandline_state_changes();
         }
     }
     reader_pop();
@@ -3093,6 +3127,10 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     };
     command_handler_t empty_handler = {};
 
+    // We repaint our prompt if fstat reports the tty as having changed.
+    // But don't react to tty changes that we initiated, because of commands or
+    // on-variable events (e.g. for fish_bind_mode). See #3481.
+    uint64_t last_exec_count = exec_count();
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
         auto evt = inputter.read_char(allow_commands ? normal_handler : empty_handler);
@@ -3105,6 +3143,11 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
             continue;
         } else {
             accumulated_chars.push_back(evt.get_char());
+        }
+
+        if (last_exec_count != exec_count()) {
+            last_exec_count = exec_count();
+            screen.save_status();
         }
     }
 
@@ -3120,6 +3163,12 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
         // Since we handled a normal character, we don't have a last command.
         rls.last_cmd.reset();
     }
+
+    if (last_exec_count != exec_count()) {
+        last_exec_count = exec_count();
+        screen.save_status();
+    }
+
     return event_needing_handling;
 }
 
@@ -3302,9 +3351,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             kill(el, begin - buff, len, KILL_PREPEND, rls.last_cmd != rl::backward_kill_line);
             break;
         }
-        case rl::kill_whole_line: {
-            // We match the emacs behavior here: "kills the entire line including the following
-            // newline".
+        case rl::kill_whole_line:  // We match the emacs behavior here: "kills the entire line
+                                   // including the following newline".
+        case rl::kill_inner_line:  // Do not kill the following newline
+        {
             editable_line_t *el = active_edit_line();
             const wchar_t *buff = el->text().c_str();
 
@@ -3319,16 +3369,27 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
             // Push end forwards to just past the next newline, or just past the last char.
             size_t end = el->position();
-            while (buff[end] != L'\0') {
-                end++;
-                if (buff[end - 1] == L'\n') {
+            for (;; end++) {
+                if (buff[end] == L'\0') {
+                    if (c == rl::kill_whole_line && begin > 0) {
+                        // We are on the last line. Delete the newline in the beginning to clear
+                        // this line.
+                        begin--;
+                    }
+                    break;
+                }
+                if (buff[end] == L'\n') {
+                    if (c == rl::kill_whole_line) {
+                        end++;
+                    }
                     break;
                 }
             }
+
             assert(end >= begin);
 
             if (end > begin) {
-                kill(el, begin, end - begin, KILL_APPEND, rls.last_cmd != rl::kill_whole_line);
+                kill(el, begin, end - begin, KILL_APPEND, rls.last_cmd != c);
             }
             break;
         }

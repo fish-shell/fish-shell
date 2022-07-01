@@ -478,7 +478,7 @@ static void test_format() {
     for (int j = -129; j <= 129; j++) {
         char buff1[128], buff2[128];
         format_long_safe(buff1, j);
-        sprintf(buff2, "%d", j);
+        snprintf(buff2, 128, "%d", j);
         do_test(!std::strcmp(buff1, buff2));
 
         wchar_t wbuf1[128], wbuf2[128];
@@ -490,7 +490,7 @@ static void test_format() {
     long q = LONG_MIN;
     char buff1[128], buff2[128];
     format_long_safe(buff1, q);
-    sprintf(buff2, "%ld", q);
+    snprintf(buff2, 128, "%ld", q);
     do_test(!std::strcmp(buff1, buff2));
 }
 
@@ -788,19 +788,6 @@ static void test_tokenizer() {
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 }
 
-// Little function that runs in a background thread, bouncing to the main.
-static int test_iothread_thread_call(std::atomic<int> *addr) {
-    int before = *addr;
-    iothread_perform_on_main([=]() { *addr += 1; });
-    int after = *addr;
-
-    // Must have incremented it at least once.
-    if (before >= after) {
-        err(L"Failed to increment from background thread");
-    }
-    return after;
-}
-
 static void test_fd_monitor() {
     say(L"Testing fd_monitor");
 
@@ -935,17 +922,24 @@ static void test_fd_monitor() {
 
 static void test_iothread() {
     say(L"Testing iothreads");
-    std::unique_ptr<std::atomic<int>> int_ptr = make_unique<std::atomic<int>>(0);
-    int iterations = 64;
+    std::atomic<int> shared_int{0};
+    const int iterations = 64;
+    std::promise<void> prom;
     for (int i = 0; i < iterations; i++) {
-        iothread_perform([&]() { test_iothread_thread_call(int_ptr.get()); });
+        iothread_perform([&] {
+            int newv = 1 + shared_int.fetch_add(1, std::memory_order_relaxed);
+            if (newv == iterations) {
+                prom.set_value();
+            }
+        });
     }
-    iothread_drain_all();
+    auto status = prom.get_future().wait_for(std::chrono::seconds(64));
 
     // Should have incremented it once per thread.
-    do_test(*int_ptr == iterations);
-    if (*int_ptr != iterations) {
-        say(L"Expected int to be %d, but instead it was %d", iterations, int_ptr->load());
+    do_test(status == std::future_status::ready);
+    do_test(shared_int == iterations);
+    if (shared_int != iterations) {
+        say(L"Expected int to be %d, but instead it was %d", iterations, shared_int.load());
     }
 }
 
@@ -3216,7 +3210,7 @@ static void test_complete() {
 
     auto parser = parser_t::principal_parser().shared();
 
-    auto do_complete = [&](const wcstring &cmd, completion_request_flags_t flags) {
+    auto do_complete = [&](const wcstring &cmd, completion_request_options_t flags) {
         return complete(cmd, flags, operation_context_t{parser, vars, no_cancel});
     };
 
@@ -3254,7 +3248,9 @@ static void test_complete() {
     completions_sort_and_prioritize(&completions);
     do_test(completions.empty());
 
-    completions = do_complete(L"$1", completion_request_t::fuzzy_match);
+    completion_request_options_t fuzzy_options{};
+    fuzzy_options.fuzzy_match = true;
+    completions = do_complete(L"$1", fuzzy_options);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 3);
     do_test(completions.at(0).completion == L"$Bar1");
@@ -3394,7 +3390,7 @@ static void test_complete() {
     do_test(completions.at(0).completion == L"stfile");
     completions = do_complete(L"something abc=stfile", {});
     do_test(completions.empty());
-    completions = do_complete(L"something abc=stfile", completion_request_t::fuzzy_match);
+    completions = do_complete(L"something abc=stfile", fuzzy_options);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"abc=testfile");
 
@@ -3566,7 +3562,7 @@ static void test_completion_insertions() {
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
                                                const environment_t &vars, long line) {
     completion_list_t comps =
-        complete(command, completion_request_t::autosuggestion, operation_context_t{vars});
+        complete(command, completion_request_options_t::autosuggest(), operation_context_t{vars});
 
     bool expects_error = (expected == L"<error>");
 
@@ -3754,8 +3750,8 @@ static void test_autosuggest_suggest_special() {
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
-    completion_list_t comps =
-        complete(command, completion_request_t::autosuggestion, operation_context_t::empty());
+    completion_list_t comps = complete(command, completion_request_options_t::autosuggest(),
+                                       operation_context_t::empty());
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;
@@ -4427,21 +4423,6 @@ void history_tests_t::test_history_races() {
     }
 
     say(L"Testing history race conditions");
-
-    // It appears TSAN and ASAN's allocators do not release their locks properly in atfork, so
-    // allocating with multiple threads risks deadlock. Drain threads before running under ASAN.
-    // TODO: stop forking with these tests.
-    bool needs_thread_drain = false;
-#if __SANITIZE_ADDRESS__
-    needs_thread_drain |= true;
-#endif
-#if defined(__has_feature)
-    needs_thread_drain |= __has_feature(thread_sanitizer) || __has_feature(address_sanitizer);
-#endif
-
-    if (needs_thread_drain) {
-        iothread_drain_all();
-    }
 
     // Test concurrent history writing.
     // How many concurrent writers we have

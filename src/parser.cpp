@@ -36,7 +36,8 @@ static wcstring user_presentable_path(const wcstring &path, const environment_t 
     return replace_home_directory_with_tilde(path, vars);
 }
 
-parser_t::parser_t(std::shared_ptr<env_stack_t> vars) : variables(std::move(vars)) {
+parser_t::parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal)
+    : variables(std::move(vars)), is_principal_(is_principal) {
     assert(variables.get() && "Null variables in parser initializer");
     int cwd = open_cloexec(".", O_RDONLY);
     if (cwd < 0) {
@@ -46,17 +47,17 @@ parser_t::parser_t(std::shared_ptr<env_stack_t> vars) : variables(std::move(vars
     libdata().cwd_fd = std::make_shared<const autoclose_fd_t>(cwd);
 }
 
-parser_t::parser_t() : parser_t(env_stack_t::principal_ref()) {}
-
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;
 
-const std::shared_ptr<parser_t> parser_t::principal{new parser_t()};
-
 parser_t &parser_t::principal_parser() {
-    ASSERT_IS_MAIN_THREAD();
+    static const std::shared_ptr<parser_t> principal{
+        new parser_t(env_stack_t::principal_ref(), true)};
+    principal->assert_can_execute();
     return *principal;
 }
+
+void parser_t::assert_can_execute() const { ASSERT_IS_MAIN_THREAD(); }
 
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
     int res = vars().set(key, mode, std::move(vals));
@@ -547,7 +548,7 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
     // Note this only happens in interactive sessions. In non-interactive sessions, SIGINT will
     // cause fish to exit.
     if (int sig = signal_check_cancel()) {
-        if (this == principal.get() && block_list.empty()) {
+        if (is_principal_ && block_list.empty()) {
             signal_clear_cancel();
         } else {
             return proc_status_t::from_signal(sig);

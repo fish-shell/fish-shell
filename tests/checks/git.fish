@@ -3,6 +3,8 @@
 # e.g. the fish_git_prompt variable handlers test `status is-interactive`.
 #REQUIRES: command -v git
 
+set -g fish (status fish-path)
+
 # Tests run from git (e.g. git rebase --exec 'ninja test'...) inherit a weird git environment.
 # Ensure that no git environment variables are inherited.
 for varname in (set -x | string match 'GIT_*' | string replace -r ' .*' '')
@@ -40,6 +42,9 @@ touch foo
 complete -C'git add '
 #CHECK: foo	Untracked file
 
+complete -C'git add :'
+#CHECK: :/:foo	Untracked file
+
 git config alias.s status
 complete 'git s --s'
 # CHECK --short
@@ -54,8 +59,15 @@ echo # the git prompt doesn't print a newline
 set -g __fish_git_prompt_show_informative_status 1
 fish_git_prompt
 echo
+#CHECK: (newbranch|✔)
+
+# Informative mode only shows untracked files if explicitly told.
+set -g __fish_git_prompt_showuntrackedfiles 1
+fish_git_prompt
+echo
 #CHECK: (newbranch|…1)
 set -e __fish_git_prompt_show_informative_status
+set -e __fish_git_prompt_showuntrackedfiles
 
 # Confirm the mode changes back
 fish_git_prompt
@@ -124,3 +136,8 @@ test "$(complete -C'git re ')" = "$(complete -C'git restore --staged ')"
 or begin
     echo -- Oops re completes unlike restore --staged
 end
+
+$fish -c 'complete -C "git -C ./.gi"'
+# CHECK: ./.git/	Directory
+
+$fish -c 'complete -C "git diff -c"'

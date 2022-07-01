@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <mutex>
 #include <set>
 #include <utility>
@@ -200,8 +201,7 @@ wcstring_list_t null_environment_t::get_names(env_mode_flags_t flags) const {
 }
 
 /// Set up the USER and HOME variable.
-static void setup_user() {
-    auto &vars = env_stack_t::globals();
+static void setup_user(env_stack_t &vars) {
     auto uid = geteuid();
     auto user_var = vars.get(L"USER");
     struct passwd userinfo;
@@ -218,8 +218,8 @@ static void setup_user() {
                 // The uid matches but we still might need to set $HOME.
                 if (vars.get(L"HOME").missing_or_empty()) {
                     if (userinfo.pw_dir) {
-                        const wcstring dir = str2wcstring(userinfo.pw_dir);
-                        vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
+                        vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT,
+                                     str2wcstring(userinfo.pw_dir));
                     } else {
                         vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
                     }
@@ -239,8 +239,7 @@ static void setup_user() {
         // This is okay with common `su` and `sudo` because they set $HOME.
         if (vars.get(L"HOME").missing_or_empty()) {
             if (userinfo.pw_dir) {
-                const wcstring dir = str2wcstring(userinfo.pw_dir);
-                vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
+                vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, str2wcstring(userinfo.pw_dir));
             } else {
                 // We cannot get $HOME. This triggers warnings for history and config.fish already,
                 // so it isn't necessary to warn here as well.
@@ -286,6 +285,12 @@ static void setup_path() {
     }
 }
 
+static std::map<wcstring, wcstring> inheriteds;
+
+const std::map<wcstring, wcstring> &env_get_inherited() {
+    return inheriteds;
+}
+
 void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_paths) {
     env_stack_t &vars = env_stack_t::principal();
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins
@@ -302,9 +307,11 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
             if (!electric_var_t::for_name(key_and_val)) {
                 vars.set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
             }
+            inheriteds[key] = L"";
         } else {
             key.assign(key_and_val, 0, eql);
             val.assign(key_and_val, eql + 1, wcstring::npos);
+            inheriteds[key] = val;
             if (!electric_var_t::for_name(key)) {
                 // fish_user_paths should not be exported; attempting to re-import it from
                 // a value we previously (due to user error) exported will cause impossibly
@@ -332,7 +339,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // Set $USER, $HOME and $EUID
     // This involves going to passwd and stuff.
     vars.set_one(L"EUID", ENV_GLOBAL, to_string(static_cast<unsigned long long>(geteuid())));
-    setup_user();
+    setup_user(vars);
 
     wcstring user_config_dir;
     path_get_config(user_config_dir);
@@ -1133,7 +1140,6 @@ maybe_t<int> env_stack_impl_t::try_set_electric(const wcstring &key, const query
 /// Set a universal variable, inheriting as applicable from the given old variable.
 void env_stack_impl_t::set_universal(const wcstring &key, wcstring_list_t val,
                                      const query_t &query) {
-    ASSERT_IS_MAIN_THREAD();
     auto oldvar = uvars()->get(key);
     // Resolve whether or not to export.
     bool exports = false;

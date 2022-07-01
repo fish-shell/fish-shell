@@ -49,7 +49,7 @@ function fish_add_path --description "Add paths to the PATH"
         # Ignore non-existing paths
         if not test -d "$p"
             # path does not exist
-            if set -q _flag_verbose;
+            if set -q _flag_verbose
                 # print a message in verbose mode
                 printf (_ "Skipping non-existent path: %s\n") "$p"
             end

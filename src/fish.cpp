@@ -253,9 +253,9 @@ static void read_init(parser_t &parser, const struct config_paths_t &paths) {
     }
 }
 
-static int run_command_list(parser_t &parser, std::vector<std::string> *cmds,
+static int run_command_list(parser_t &parser, const std::vector<std::string> &cmds,
                             const io_chain_t &io) {
-    for (const auto &cmd : *cmds) {
+    for (const auto &cmd : cmds) {
         wcstring cmd_wcs = str2wcstring(cmd);
         // Parse into an ast and detect errors.
         parse_error_list_t errors;
@@ -274,8 +274,6 @@ static int run_command_list(parser_t &parser, std::vector<std::string> *cmds,
             wcstring sb;
             parser.get_backtrace(cmd_wcs, errors, sb);
             std::fwprintf(stderr, L"%ls", sb.c_str());
-            // Note: We do not return here because that's how it historically worked.
-            // return 1;
         }
     }
 
@@ -516,12 +514,11 @@ int main(int argc, char **argv) {
         read_init(parser, paths);
     }
 
-    if (opts.is_interactive_session && opts.no_config && !opts.no_exec) {
+    if (is_interactive_session() && opts.no_config && !opts.no_exec) {
         // If we have no config, we default to the default key bindings.
         parser.vars().set_one(L"fish_key_bindings", ENV_UNEXPORT, L"fish_default_key_bindings");
         if (function_exists(L"fish_default_key_bindings", parser)) {
-            std::vector<std::string> cmd{"fish_default_key_bindings"};
-            run_command_list(parser, &cmd, {});
+            run_command_list(parser, {"fish_default_key_bindings"}, {});
         }
     }
 
@@ -545,8 +542,11 @@ int main(int argc, char **argv) {
 
     // Run post-config commands specified as arguments, if any.
     if (!opts.postconfig_cmds.empty()) {
-        res = run_command_list(parser, &opts.postconfig_cmds, {});
+        res = run_command_list(parser, opts.postconfig_cmds, {});
     }
+
+    // Clear signals in case we were interrupted (#9024).
+    signal_clear_cancel();
 
     if (!opts.batch_cmds.empty()) {
         // Run the commands specified as arguments, if any.
@@ -563,7 +563,7 @@ int main(int argc, char **argv) {
             list.push_back(str2wcstring(*ptr));
         }
         parser.vars().set(L"argv", ENV_DEFAULT, std::move(list));
-        res = run_command_list(parser, &opts.batch_cmds, {});
+        res = run_command_list(parser, opts.batch_cmds, {});
         parser.libdata().exit_current_script = false;
     } else if (my_optind == argc) {
         // Implicitly interactive mode.

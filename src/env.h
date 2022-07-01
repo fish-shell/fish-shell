@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -311,4 +312,7 @@ wcstring env_get_runtime_path();
 void setenv_lock(const char *name, const char *value, int overwrite);
 void unsetenv_lock(const char *name);
 
+/// Returns the originally inherited variables and their values.
+/// This is a simple key->value map and not e.g. cut into paths.
+const std::map<wcstring, wcstring> &env_get_inherited();
 #endif

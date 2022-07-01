@@ -95,3 +95,27 @@ printf '%d\n' 15.1
 # CHECKERR: 15.1: value not completely converted (can't convert '.1')
 echo $status
 # CHECK: 1
+
+printf '%d\n' 07
+# CHECK: 7
+echo $status
+# CHECK: 0
+printf '%d\n' 08
+# CHECK: 0
+# CHECKERR: 08: value not completely converted (can't convert '8')
+# CHECKERR: Hint: a leading '0' without an 'x' indicates an octal number
+echo $status
+# CHECK: 1
+
+printf '%d\n' 0f
+# CHECK: 0
+# CHECKERR: 0f: value not completely converted (can't convert 'f')
+# CHECKERR: Hint: a leading '0' without an 'x' indicates an octal number
+echo $status
+# CHECK: 1
+
+printf '%d\n' 0g
+# CHECK: 0
+# CHECKERR: 0g: value not completely converted (can't convert 'g')
+echo $status
+# CHECK: 1

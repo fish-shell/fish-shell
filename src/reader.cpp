@@ -1026,8 +1026,8 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 }
 
 bool reader_data_t::select_char_after_cursor() {
-    auto val = vars().get(L"fish_select_char_after_cursor");
-    return !val || val->as_string() == L"1";
+    auto val = vars().get(L"fish_cursor_selection_mode");
+    return !val || val->as_string() == L"inclusive";
 }
 
 /// Update the cursor position.

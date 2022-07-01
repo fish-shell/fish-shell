@@ -6,6 +6,7 @@ This release of fish introduces the following small enhancements:
 - Cursor shaping for Vi mode is enabled by default in tmux, and will be used if the outer terminal is capable (:issue:`8981`).
 - ``printf`` returns a better error when used with arguments interpreted as octal numbers (:issue:`9035`).
 - New completions for ``qdbus`` (:issue:`9031:`) and ``reflector`` (:issue:`9027`), and improvements to some completions.
+- ``history merge`` when in private mode is now an error, rather than wiping out other sessions' history (:issue:`9050`).
 
 This release also fixes a number of problems identified in fish 3.5.0.
 

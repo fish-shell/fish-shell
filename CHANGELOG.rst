@@ -15,6 +15,7 @@ This release also fixes a number of problems identified in fish 3.5.0.
 - ``status fish-path`` on Linux-based platforms could print the path with a " (deleted)" suffix (such as ``/usr/bin/fish (deleted)``), which is now removed (:issue:`9019`).
 - Cancelling an initial command (from fish's ``--init-command`` option) with :kbd:`Control-C` no longer prevents configuration scripts from running (:issue:`9024`).
 - The job summary contained extra blank lines if the prompt used multiple lines, which is now fixed (:issue:`9044`).
+- Using special input functions in bindings, in combination with ``and``/``or`` conditionals, no longer crashes (:issue:`9051`).
 
 --------------
 

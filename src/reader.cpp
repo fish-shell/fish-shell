@@ -681,6 +681,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// The history search.
     reader_history_search_t history_search{};
 
+    /// The cursor selection mode.
+    cursor_selection_mode_t cursor_selection_mode{cursor_selection_mode_t::exclusive};
+
     /// The selection data. If this is not none, then we have an active selection.
     maybe_t<selection_data_t> selection{};
 
@@ -780,8 +783,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
           inputter(*parser_ref, conf.in),
           history(std::move(hist)) {}
 
-    /// Whether the selection should always include the character after the cursor.
-    bool select_char_after_cursor();
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
 
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
@@ -1048,11 +1049,6 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
     return full_line;
 }
 
-bool reader_data_t::select_char_after_cursor() {
-    auto val = vars().get(L"fish_cursor_selection_mode");
-    return !val || val->as_string() == L"inclusive";
-}
-
 /// Update the cursor position.
 void reader_data_t::update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos) {
     if (new_pos) {
@@ -1062,10 +1058,12 @@ void reader_data_t::update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos
     if (el == &command_line && selection.has_value()) {
         if (selection->begin <= buff_pos) {
             selection->start = selection->begin;
-            selection->stop = buff_pos + (select_char_after_cursor() ? 1 : 0);
+            selection->stop =
+                buff_pos + (cursor_selection_mode == cursor_selection_mode_t::inclusive ? 1 : 0);
         } else {
             selection->start = buff_pos;
-            selection->stop = selection->begin + (select_char_after_cursor() ? 1 : 0);
+            selection->stop = selection->begin +
+                              (cursor_selection_mode == cursor_selection_mode_t::inclusive ? 1 : 0);
         }
     }
 }
@@ -2677,6 +2675,14 @@ void reader_change_history(const wcstring &name) {
     }
 }
 
+void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode) {
+    // We don't need to _change_ if we're not initialized yet.
+    reader_data_t *data = current_data_or_null();
+    if (data) {
+        data->cursor_selection_mode = selection_mode;
+    }
+}
+
 static bool check_autosuggestion_enabled(const env_stack_t &vars) {
     if (auto val = vars.get(L"fish_autosuggestion_enabled")) {
         return val->as_string() != L"0";
@@ -3971,7 +3977,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             size_t pos = command_line.position();
             selection->begin = pos;
             selection->start = pos;
-            selection->stop = pos + (select_char_after_cursor() ? 1 : 0);
+            selection->stop =
+                pos + (cursor_selection_mode == cursor_selection_mode_t::inclusive ? 1 : 0);
             break;
         }
 

@@ -149,6 +149,18 @@ void restore_term_mode();
 /// Change the history file for the current command reading context.
 void reader_change_history(const wcstring &name);
 
+/// Strategy for determining how the selection behaves.
+enum class cursor_selection_mode_t : uint8_t {
+    /// The character at/after the cursor is excluded.
+    /// This is most useful with a line cursor shape.
+    exclusive,
+    /// The character at/after the cursor is included.
+    /// This is most useful with a block or underscore cursor shape.
+    inclusive,
+};
+
+void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode);
+
 /// Enable or disable autosuggestions based on the associated variable.
 void reader_set_autosuggestion_enabled(const env_stack_t &vars);
 

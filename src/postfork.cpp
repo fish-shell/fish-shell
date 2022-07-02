@@ -543,6 +543,14 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                        actual_cmd);
             break;
         }
+#ifdef EBADARCH
+        case EBADARCH: {
+            FLOGF_SAFE(exec,
+                       "Failed to execute process '%s': Bad CPU type in executable.",
+                       actual_cmd);
+            break;
+        }
+#endif
         default: {
             char errnum_buff[64];
             format_long_safe(errnum_buff, err);

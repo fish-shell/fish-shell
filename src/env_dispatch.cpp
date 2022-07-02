@@ -214,6 +214,13 @@ static void handle_fish_history_change(const env_stack_t &vars) {
     reader_change_history(history_session_id(vars));
 }
 
+static void handle_fish_cursor_selection_mode_change(const env_stack_t &vars) {
+    auto mode = vars.get(L"fish_cursor_selection_mode");
+    reader_change_cursor_selection_mode(mode && mode->as_string() == L"inclusive"
+                                            ? cursor_selection_mode_t::inclusive
+                                            : cursor_selection_mode_t::exclusive);
+}
+
 void handle_autosuggestion_change(const env_stack_t &vars) {
     reader_set_autosuggestion_enabled(vars);
 }
@@ -327,6 +334,8 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"TZ", handle_tz_change);
     var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
     var_dispatch_table->add(L"fish_trace", handle_fish_trace);
+    var_dispatch_table->add(L"fish_cursor_selection_mode",
+                            handle_fish_cursor_selection_mode_change);
 
     // This std::move is required to avoid a build error on old versions of libc++ (#5801),
     // but it causes a different warning under newer versions of GCC (observed under GCC 9.3.0,

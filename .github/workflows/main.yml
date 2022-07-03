@@ -36,7 +36,7 @@ jobs:
       run: |
         make test
 
-  ubuntu-32bit-vendored-pcre2:
+  ubuntu-32bit-fetched-pcre2:
 
     runs-on: ubuntu-latest
 

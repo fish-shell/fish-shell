@@ -148,7 +148,7 @@ Compiling fish requires:
 -  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
 -  CMake (version 3.5 or later)
 -  a curses implementation such as ncurses (headers and libraries)
--  PCRE2 (headers and libraries) - a copy is included with fish
+-  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support
 
 Sphinx is also optionally required to build the documentation from a

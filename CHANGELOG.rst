@@ -17,6 +17,7 @@ Interactive improvements
 ------------------------
 - Cancelling an initial command via control-C no longer prevents configuration scripts from running (:issue:`9024`).
 - If the terminal definition for $TERM can't be used, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
+- The new environment variable ``$fish_cursor_selection_mode`` can be used to configure whether the command line selection includes (``inclusive``) the character under the cursor or not (``exclusive``). The new default is ``exclusive``. Use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

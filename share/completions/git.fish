@@ -507,12 +507,12 @@ function __fish_git_rev_files
 
     # List files in $rev's index, skipping the "tree ..." header, but appending
     # the parent path, which git does not include in the output (and fish requires)
-    printf "$path%s\n" (git show $rev:$path | sed '1,2d')
+    printf "$path%s\n" (__fish_git show $rev:$path | sed '1,2d')
 end
 
 # Provides __fish_git_rev_files completions for the current token
 function __fish_git_complete_rev_files
-    set -l split (string split -m 1 ":" (commandline -ot))
+    set -l split (string split -m 1 ":" -- (commandline -ot))
     set -l rev $split[1]
     set -l path $split[2]
 
@@ -1451,7 +1451,7 @@ complete -f -c git -n '__fish_git_using_command init' -l bare -d 'Create a bare 
 ### log
 complete -c git -n __fish_git_needs_command -a shortlog -d 'Show commit shortlog'
 complete -c git -n __fish_git_needs_command -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log' -a '(git ls-files)'
+complete -c git -n '__fish_git_using_command log' -a '(__fish_git ls-files)'
 complete -c git -n '__fish_git_using_command log' -n 'not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command log' -l follow -d 'Continue listing file history beyond renames'
 complete -c git -n '__fish_git_using_command log' -l no-decorate -d 'Don\'t print ref names'
@@ -1724,7 +1724,7 @@ complete -c git -n '__fish_git_using_command mergetool' -s O -d 'Process files i
 
 ### mv
 complete -c git -n __fish_git_needs_command -a mv -d 'Move or rename a file, a directory, or a symlink'
-complete -f -c git -n '__fish_git_using_command mv' -a '(git ls-files)'
+complete -f -c git -n '__fish_git_using_command mv' -a '(__fish_git ls-files)'
 complete -f -c git -n '__fish_git_using_command mv' -s f -l force -d 'Force rename/moving even if target exists'
 complete -f -c git -n '__fish_git_using_command mv' -s k -d 'Skip rename/move which can lead to error'
 complete -f -c git -n '__fish_git_using_command mv' -s n -l dry-run -d 'Only show what would happen'

@@ -28,16 +28,37 @@ else()
 endif()
 
 set(FISH_USE_SYSTEM_PCRE2 ${USE_SYS_PCRE2_DEFAULT} CACHE BOOL
-  "Use PCRE2 from the system, instead of bundled with fish")
+  "Use PCRE2 from the system, instead of fetching and building it")
 
 if(FISH_USE_SYSTEM_PCRE2)
   set(PCRE2_LIB "${SYS_PCRE2_LIB}")
   set(PCRE2_INCLUDE_DIR "${SYS_PCRE2_INCLUDE_DIR}")
   message(STATUS "Using system PCRE2 library ${PCRE2_INCLUDE_DIR}")
 else()
-  message(STATUS "Using bundled PCRE2 library")
-  add_subdirectory(pcre2 EXCLUDE_FROM_ALL)
-  set(PCRE2_INCLUDE_DIR ${CMAKE_BINARY_DIR}/pcre2)
+  include(FetchContent RESULT_VARIABLE HAVE_FetchContent)
+  if (${HAVE_FetchContent} STREQUAL "NOTFOUND")
+    message(FATAL_ERROR "Please install PCRE2 headers, or CMake >= 3.11 so I can download PCRE")
+  endif()
+  set(CMAKE_TLS_VERIFY true)
+  set(PCRE2_REPO "https://github.com/PhilipHazel/pcre2.git")
+
+  message(STATUS "Fetching and configuring PCRE2 from ${PCRE2_REPO}")
+  Set(FETCHCONTENT_QUIET FALSE)
+  FetchContent_Declare(
+    pcre2
+    GIT_REPOSITORY ${PCRE2_REPO}
+    GIT_TAG "72669190cb947f0cac1d038a8bb1820da59ef447" # tag: pcre2-10.36
+    GIT_PROGRESS TRUE
+  )
+  # Don't try FetchContent_MakeAvailable, there's no way to add EXCLUDE_FROM_ALL
+  # so we end up installing all of PCRE2 including its headers, man pages, etc.
+  FetchContent_GetProperties(pcre2)
+  if (NOT pcre2_POPULATED)
+    FetchContent_Populate(pcre2)
+    add_subdirectory(${pcre2_SOURCE_DIR} ${pcre2_BINARY_DIR} EXCLUDE_FROM_ALL)
+  endif()
+
+  set(PCRE2_INCLUDE_DIR ${pcre2_BINARY_DIR})
   set(PCRE2_LIB pcre2-${PCRE2_WIDTH})
 
   # Disable -Wunused-macros inside PCRE2, as it is noisy.

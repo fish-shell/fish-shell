@@ -42,7 +42,7 @@ Other improvements
 
 For distributors
 ----------------
-- *Placeholder text*
+- The vendored PCRE2 sources have been removed. It is recommended to declare PCRE2 as a dependency when packaging fish. If the CMake variable FISH_USE_SYSTEM_PCRE2 is false, fish will now download and build PCRE2 from the official repo (:issue:`8355`). Note this variable defaults to true if PCRE2 is found installed on the system.
 
 --------------
 

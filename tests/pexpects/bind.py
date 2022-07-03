@@ -292,6 +292,16 @@ send("echo git@github.com:fish-shell/fish-shell")
 send("\x17\x17\x17\r")
 expect_prompt("git@", unmatched="ctrl-w does not stop at @")
 
+sendline("abbr --add foo 'echo foonanana'")
+expect_prompt()
+sendline("bind ' ' expand-abbr or self-insert")
+expect_prompt()
+send("foo ")
+expect_str("echo foonanana")
+send(" banana\r")
+expect_str(" banana\r")
+expect_prompt("foonanana banana")
+
 # Ensure that nul can be bound properly (#3189).
 send("bind -k nul 'echo nul seen'\r")
 expect_prompt()

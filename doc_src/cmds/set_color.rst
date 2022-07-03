@@ -32,7 +32,7 @@ The following options are available:
     Sets the background color.
 
 **-c** or **--print-colors**
-    Prints a list of the 16 named colors.
+    Prints the given colors or a colored list of the 16 named colors.
 
 **-o** or **--bold**
     Sets bold mode.

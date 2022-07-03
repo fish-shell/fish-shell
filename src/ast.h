@@ -16,7 +16,7 @@ namespace ast {
 /**
  * This defines the fish abstract syntax tree.
  * The fish ast is a tree data structure. The nodes of the tree
- * are divided into three types:
+ * are divided into three categories:
  *
  * - leaf nodes refer to a range of source, and have no child nodes.
  * - branch nodes have ONLY child nodes, and no other fields.
@@ -28,9 +28,6 @@ namespace ast {
 
 struct node_t;
 
-// Our node categories.
-// Note these are not stored directly in a node; they are provided in the Category static constexpr
-// variable in each node.
 enum class category_t : uint8_t {
     branch,
     leaf,

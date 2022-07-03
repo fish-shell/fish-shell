@@ -66,3 +66,7 @@ builtin history -t merge
 # Now do a history command that should succeed so we exit with a zero,
 # success, status.
 builtin history save
+
+set -g fish_private_mode 1
+builtin history merge
+#CHECKERR: history: can't merge history in private mode

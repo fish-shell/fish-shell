@@ -269,6 +269,9 @@ static int handle_flag_1(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
+using flag_handler_t = int (*)(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                               const wgetopter_t &w, options_t *opts);
+
 static int handle_flag_N(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->no_newline_valid) {
@@ -537,7 +540,7 @@ static int handle_flag_V(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static int handle_flag_w(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->width_valid) {
-        long width  = fish_wcstol(w.woptarg);
+        long width = fish_wcstol(w.woptarg);
         if (width < 0) {
             string_error(streams, _(L"%ls: Invalid width value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
@@ -617,12 +620,30 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"width", required_argument, nullptr, 'w'},
                                               {}};
 
-static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
-    {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
-    {'f', handle_flag_f}, {'g', handle_flag_g}, {'i', handle_flag_i}, {'l', handle_flag_l},
-    {'m', handle_flag_m}, {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r},
-    {'s', handle_flag_s}, {'V', handle_flag_V}, {'v', handle_flag_v}, {'w', handle_flag_w},
-    {1, handle_flag_1}};
+static flag_handler_t get_handler_for_flag(char c) {
+    // clang-format off
+    switch (c) {
+        case 'N': return handle_flag_N;
+        case 'a': return handle_flag_a;
+        case 'c': return handle_flag_c;
+        case 'e': return handle_flag_e;
+        case 'f': return handle_flag_f;
+        case 'g': return handle_flag_g;
+        case 'i': return handle_flag_i;
+        case 'l': return handle_flag_l;
+        case 'm': return handle_flag_m;
+        case 'n': return handle_flag_n;
+        case 'q': return handle_flag_q;
+        case 'r': return handle_flag_r;
+        case 's': return handle_flag_s;
+        case 'V': return handle_flag_V;
+        case 'v': return handle_flag_v;
+        case 'w': return handle_flag_w;
+        case 1 : return handle_flag_1;
+        default: return nullptr;
+    }
+    // clang-format on
+}
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, const wchar_t **argv,
@@ -633,9 +654,8 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, co
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
-        auto fn = flag_to_function.find(opt);
-        if (fn != flag_to_function.end()) {
-            int retval = fn->second(argv, parser, streams, w, opts);
+        if (auto fn = get_handler_for_flag(opt)) {
+            int retval = fn(argv, parser, streams, w, opts);
             if (retval != STATUS_CMD_OK) return retval;
         } else if (opt == ':') {
             streams.err.append(L"string ");  // clone of string_error

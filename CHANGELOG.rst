@@ -21,7 +21,6 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
-- The :kbd:`Shift-Space` binding for CSI u now works correctly (:issue:`9054`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -29,7 +28,6 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
-- A regression in 3.5.0 caused completions for ``git -C`` to print errors, which has been fixed.
 
 
 Improved terminal support

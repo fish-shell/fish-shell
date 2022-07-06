@@ -28,7 +28,7 @@ function __fish_whatis_current_token -d "Show man page entries or function descr
 
     printf "%s\n" $desc
 
-    string repeat \n --count=(math (count (fish_prompt)) - 1)
+    string repeat -N \n --count=(math (count (fish_prompt)) - 1)
 
     commandline -f repaint
 end

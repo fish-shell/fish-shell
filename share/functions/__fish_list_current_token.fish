@@ -15,7 +15,7 @@ function __fish_list_current_token -d "List contents of token under the cursor i
         end
     end
 
-    string repeat \n --count=(math (count (fish_prompt)) - 1)
+    string repeat -N \n --count=(math (count (fish_prompt)) - 1)
 
     commandline -f repaint
 end

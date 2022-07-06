@@ -198,3 +198,16 @@ test (path resolve link) = (pwd -P)/link
 and echo link resolves to link
 # CHECK: link resolves to link
 
+
+echo bananana >> foo
+test (math abs (date +%s) - (path mtime foo)) -lt 20
+or echo MTIME IS BOGUS
+
+sleep 2
+
+set -l mtime (path mtime --relative foo)
+test $mtime -ge 1
+or echo mtime is too small
+
+test $mtime -lt 20
+or echo mtime is too large

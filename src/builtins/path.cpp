@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <ctime>
 #include <string>
 #include <utility>
 #include <vector>
@@ -159,6 +160,7 @@ struct options_t {  //!OCLINT(too many fields)
     bool perm_valid = false;
     bool type_valid = false;
     bool invert_valid = false;
+    bool relative_valid = false;
     bool reverse_valid = false;
     bool key_valid = false;
     bool unique_valid = false;
@@ -179,6 +181,7 @@ struct options_t {  //!OCLINT(too many fields)
     path_perm_flags_t perm = 0;
 
     bool invert = false;
+    bool relative = false;
     bool reverse = false;
 
     const wchar_t *arg1 = nullptr;
@@ -307,6 +310,16 @@ static int handle_flag_perms(const wchar_t **argv, parser_t &parser, io_streams_
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_R(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->relative_valid) {
+        opts->relative = true;
+        return STATUS_CMD_OK;
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 static int handle_flag_r(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->reverse_valid) {
@@ -398,6 +411,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
         short_opts.append(L"fld");
     }
     if (opts->invert_valid) short_opts.append(L"v");
+    if (opts->relative_valid) short_opts.append(L"R");
     if (opts->reverse_valid) short_opts.append(L"r");
     if (opts->unique_valid) short_opts.append(L"u");
     return short_opts;
@@ -413,6 +427,7 @@ static const struct woption long_options[] = {
                                               {L"perm", required_argument, nullptr, 'p'},
                                               {L"type", required_argument, nullptr, 't'},
                                               {L"invert", no_argument, nullptr, 'v'},
+                                              {L"relative", no_argument, nullptr, 'R'},
                                               {L"reverse", no_argument, nullptr, 'r'},
                                               {L"unique", no_argument, nullptr, 'u'},
                                               {L"key", required_argument, nullptr, 1},
@@ -427,6 +442,7 @@ static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function
     {'l', handle_flag_l}, {'d', handle_flag_d},
     {'l', handle_flag_l}, {'d', handle_flag_d},
     {'u', handle_flag_u}, {1, handle_flag_key},
+    {'R', handle_flag_R},
 };
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
@@ -584,6 +600,39 @@ static bool filter_path(options_t opts, const wcstring &path) {
 
     // No filters failed.
     return true;
+}
+
+static int path_mtime(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    options_t opts;
+    opts.relative_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    struct stat buf;
+
+    time_t t = std::time(nullptr);
+
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in);
+    while (const wcstring *arg = aiter.nextstr()) {
+        auto ret = !wstat(*arg, &buf);
+
+        if (ret) {
+            if (!opts.relative) {
+                path_out(streams, opts, to_string(buf.st_mtime));
+            } else {
+                path_out(streams, opts, to_string(t - buf.st_mtime));
+            }
+
+            if (buf.st_mtime > 0) {
+                if (opts.quiet) return STATUS_CMD_OK;
+                n_transformed++;
+            }
+        }
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 static int path_normalize(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
@@ -868,6 +917,7 @@ static constexpr const struct path_subcommand {
     {L"extension", &path_extension},
     {L"filter", &path_filter},
     {L"is", &path_is},
+    {L"mtime", &path_mtime},
     {L"normalize", &path_normalize},
     {L"resolve", &path_resolve},
     {L"sort", &path_sort},

@@ -22,7 +22,7 @@ Description
 
 When an interactive fish starts, it executes fish_greeting and displays its output.
 
-The default fish_greeting is a function that prints a variable of the same name (``$fish_greeting``), so you can also just change that if you just want to change the text.
+The default fish_greeting is a function that prints a variable of the same name (``$fish_greeting``), so you can also just change that if you just want to change the text. See also the :ref:`FAQ: change greeting message <faq-fish_greeting>`
 
 While you could also just put ``echo`` calls into config.fish, fish_greeting takes care of only being used in interactive shells, so it won't be used e.g. with ``scp`` (which executes a shell), which prevents some errors.
 

@@ -119,6 +119,8 @@ check_struct_has_member("struct stat" st_mtimespec.tv_nsec "sys/stat.h"
     HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC LANGUAGE CXX)
 check_struct_has_member("struct stat" st_mtim.tv_nsec "sys/stat.h" HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC
     LANGUAGE CXX)
+check_struct_has_member("struct stat" st_mtim.tv_sec "sys/stat.h" HAVE_STRUCT_STAT_ST_MTIM_TV_SEC
+    LANGUAGE CXX)
 check_include_file_cxx(sys/ioctl.h HAVE_SYS_IOCTL_H)
 check_include_file_cxx(sys/select.h HAVE_SYS_SELECT_H)
 

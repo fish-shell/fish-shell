@@ -619,10 +619,15 @@ static int path_mtime(parser_t &parser, io_streams_t &streams, int argc, const w
         auto ret = !wstat(*arg, &buf);
 
         if (ret) {
+#if HAVE_STRUCT_STAT_ST_MTIM_TV_SEC
+            auto mtim = buf.st_mtim.tv_sec;
+#else
+            auto mtim = buf.st_mtime;
+#endif
             if (!opts.relative) {
-                path_out(streams, opts, to_string(buf.st_mtim.tv_sec));
+                path_out(streams, opts, to_string(mtim));
             } else {
-                path_out(streams, opts, to_string(t - buf.st_mtim.tv_sec));
+                path_out(streams, opts, to_string(t - mtim));
             }
 
             if (buf.st_mtime > 0) {

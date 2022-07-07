@@ -620,9 +620,9 @@ static int path_mtime(parser_t &parser, io_streams_t &streams, int argc, const w
 
         if (ret) {
             if (!opts.relative) {
-                path_out(streams, opts, to_string(buf.st_mtime));
+                path_out(streams, opts, to_string(buf.st_mtim.tv_sec));
             } else {
-                path_out(streams, opts, to_string(t - buf.st_mtime));
+                path_out(streams, opts, to_string(t - buf.st_mtim.tv_sec));
             }
 
             if (buf.st_mtime > 0) {

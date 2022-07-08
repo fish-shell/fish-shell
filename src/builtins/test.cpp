@@ -65,6 +65,10 @@ enum token_t {
     test_string_equal,      // "=", true if strings are identical
     test_string_not_equal,  // "!=", true if strings are not identical
 
+    test_file_newer, // f1 -nt f2, true if f1 exists and is newer than f2, or there is no f2
+    test_file_older, // f1 -ot f2, true if f2 exists and f1 does not, or f1 is older than f2
+    test_file_same,  // f1 -ef f2, true if f1 and f2 exist and refer to same file
+
     test_number_equal,          // "-eq", true if numbers are equal
     test_number_not_equal,      // "-ne", true if numbers are not equal
     test_number_greater,        // "-gt", true if first number is larger than second
@@ -152,6 +156,9 @@ static const token_info_t *token_for_string(const wcstring &str) {
         {L"-z", {test_string_z, UNARY_PRIMARY}},
         {L"=", {test_string_equal, BINARY_PRIMARY}},
         {L"!=", {test_string_not_equal, BINARY_PRIMARY}},
+        {L"-nt", {test_file_newer, BINARY_PRIMARY}},
+        {L"-ot", {test_file_older, BINARY_PRIMARY}},
+        {L"-ef", {test_file_same, BINARY_PRIMARY}},
         {L"-eq", {test_number_equal, BINARY_PRIMARY}},
         {L"-ne", {test_number_not_equal, BINARY_PRIMARY}},
         {L"-gt", {test_number_greater, BINARY_PRIMARY}},
@@ -741,6 +748,15 @@ static bool binary_primary_evaluate(test_expressions::token_t token, const wcstr
         }
         case test_string_not_equal: {
             return left != right;
+        }
+        case test_file_newer: {
+            return file_id_for_path(right).older_than(file_id_for_path(left));
+        }
+        case test_file_older: {
+            return file_id_for_path(left).older_than(file_id_for_path(right));
+        }
+        case test_file_same: {
+            return file_id_for_path(left) == file_id_for_path(right);
         }
         case test_number_equal: {
             return parse_number(left, &ln, errors) && parse_number(right, &rn, errors) &&

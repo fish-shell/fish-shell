@@ -862,6 +862,22 @@ static int compare(T a, T b) {
     return 0;
 }
 
+/// \return true if \param rhs has higher mtime seconds than this file_id_t.
+/// If identical, nanoseconds are compared.
+bool file_id_t::older_than(const file_id_t &rhs) const {
+    int ret = compare(mod_seconds, rhs.mod_seconds);
+    if (!ret) ret = compare(mod_nanoseconds, rhs.mod_nanoseconds);
+    switch (ret) {
+        case -1:
+            return true;
+        case 1:
+        case 0:
+            return false;
+        default:
+            DIE("unreachable");
+    }
+}
+
 int file_id_t::compare_file_id(const file_id_t &rhs) const {
     // Compare each field, stopping when we get to a non-equal field.
     int ret = 0;

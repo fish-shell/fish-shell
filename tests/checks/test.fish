@@ -59,3 +59,37 @@ test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: {{.*}}test.fish (line {{\d+}}):
 # CHECKERR: test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: ^
+
+touch -m -t 197001010000.00 epoch
+touch -m -t 190212112045.40 old
+touch -m -t 190212112045.39 oldest
+touch -m -t 203801080314.07 newest
+test oldest -ot old || echo bad ot
+test newest -nt old || echo bad nt
+test old -ot oldest && echo bad ot
+test epoch -nt newest && echo bad nt
+
+for file in epoch old oldest newest
+    test $file -nt nonexist && echo good nt || echo bad nt;
+end
+#CHECK: good nt
+#CHECK: good nt
+#CHECK: good nt
+#CHECK: good nt
+
+for file in epoch old oldest newest
+    test nonexist -ot $file && echo good ot || echo bad ot;
+end
+#CHECK: good ot
+#CHECK: good ot
+#CHECK: good ot
+#CHECK: good ot
+
+ln -sf epoch epochlink
+test epoch -ef epochlink && echo good ef || echo bad ef
+#CHECK: good ef
+
+test epoch -ef old && echo bad ef || echo good ef
+#CHECK: good ef
+
+rm -f epoch old oldest newest epochlink

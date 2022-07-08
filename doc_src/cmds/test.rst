@@ -86,6 +86,18 @@ Operators for files and directories
 **-x** *FILE*
      Returns true if *FILE* is marked as executable.
 
+Operators to compare files and directories
+------------------------------------------
+
+*FILE1* **-nt** *FILE2*
+     Returns true if *FILE1* is newer than *FILE2*, or *FILE1* exists and *FILE2* does not.
+
+*FILE1* **-ot** *FILE2*
+     Returns true if *FILE1* is older than *FILE2*, or *FILE2* exists and *FILE1* does not.
+
+*FILE1* **-ef** *FILE1*
+     Returns true if *FILE1* and *FILE2* refer to the same file.
+
 Operators for text strings
 --------------------------
 

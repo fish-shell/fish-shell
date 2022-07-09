@@ -854,10 +854,10 @@ class string_matcher_t {
     explicit string_matcher_t(const options_t &opts_) : opts(opts_) {}
 
     virtual ~string_matcher_t() = default;
-    virtual bool report_matches(const wcstring &arg, io_streams_t &streams) = 0;
+    virtual void report_matches(const wcstring &arg, io_streams_t &streams) = 0;
     int match_count() const { return total_matched; }
 
-    virtual void clear_capture_vars() {}
+    virtual void import_captures(env_stack_t &) {}
 };
 
 class wildcard_matcher_t final : public string_matcher_t {
@@ -883,7 +883,7 @@ class wildcard_matcher_t final : public string_matcher_t {
 
     ~wildcard_matcher_t() override = default;
 
-    bool report_matches(const wcstring &arg, io_streams_t &streams) override {
+    void report_matches(const wcstring &arg, io_streams_t &streams) override {
         // Note: --all is a no-op for glob matching since the pattern is always matched
         // against the entire argument.
         bool match;
@@ -905,7 +905,6 @@ class wildcard_matcher_t final : public string_matcher_t {
                 }
             }
         }
-        return true;
     }
 };
 
@@ -939,20 +938,47 @@ static bool validate_capture_group_names(const wcstring_list_t &capture_group_na
     return true;
 }
 
-class pcre2_matcher_t final : public string_matcher_t {
+class regex_matcher_t final : public string_matcher_t {
     using regex_t = re::regex_t;
+    using match_data_t = re::match_data_t;
     using match_range_t = re::match_range_t;
-    regex_t regex;
-    env_stack_t &vars;
-    bool imported_vars = false;
+
+    // The regex to match against.
+    const regex_t regex_;
+
+    // Match data associated with the regex.
+    match_data_t match_data_;
+
+    // map from group name to matched substrings, for the first argument.
+    std::map<wcstring, wcstring_list_t> first_match_captures_;
+
+    void populate_captures_from_match(const wcstring &subject) {
+        for (auto &kv : first_match_captures_) {
+            const auto &name = kv.first;
+            wcstring_list_t &vals = kv.second;
+
+            // If there are multiple named groups and --all was used, we need to ensure that
+            // the indexes are always in sync between the variables. If an optional named
+            // group didn't match but its brethren did, we need to make sure to put
+            // *something* in the resulting array, and unfortunately fish doesn't support
+            // empty/null members so we're going to have to use an empty string as the
+            // sentinel value.
+            if (maybe_t<wcstring> capture =
+                    regex_.substring_for_group(match_data_, name, subject)) {
+                vals.push_back(capture.acquire());
+            } else if (this->opts.all) {
+                vals.emplace_back();
+            }
+        }
+    }
 
     enum class match_result_t {
         no_match = 0,
         match = 1,
     };
 
-    match_result_t report_match(const wcstring &arg, const re::match_data_t &md,
-                                maybe_t<match_range_t> mrange, io_streams_t &streams) const {
+    match_result_t report_match(const wcstring &arg, maybe_t<match_range_t> mrange,
+                                io_streams_t &streams) const {
         if (!mrange.has_value()) {
             if (opts.invert_match && !opts.quiet) {
                 if (opts.index) {
@@ -974,9 +1000,9 @@ class pcre2_matcher_t final : public string_matcher_t {
         }
 
         // If we have groups-only, we skip the first match, which is the full one.
-        size_t group_count = md.matched_capture_group_count();
+        size_t group_count = match_data_.matched_capture_group_count();
         for (size_t j = (opts.entire || opts.groups_only ? 1 : 0); j < group_count; j++) {
-            maybe_t<match_range_t> cg = this->regex.group(md, j);
+            maybe_t<match_range_t> cg = this->regex_.group(match_data_, j);
             if (cg.has_value() && !opts.quiet) {
                 if (opts.index) {
                     streams.out.append_format(L"%lu %lu", cg->begin + 1, cg->end - cg->begin);
@@ -990,100 +1016,49 @@ class pcre2_matcher_t final : public string_matcher_t {
         return opts.invert_match ? match_result_t::no_match : match_result_t::match;
     }
 
-    class regex_importer_t {
-       private:
-        // map from group name to its matched substrings.
-        std::map<wcstring, wcstring_list_t> matches_;
-        env_stack_t &vars_;
-        const re::regex_t &regex_;
-        const bool all_flag_;
-        bool do_import_{false};
-
-       public:
-        regex_importer_t(env_stack_t &vars, const re::regex_t &regex, bool all_flag)
-            : vars_(vars), regex_(regex), all_flag_(all_flag) {
-            for (const wcstring &name : regex_.capture_group_names()) {
-                matches_.emplace(name, wcstring_list_t{});
-            }
-        }
-
-        /// This member function should be called each time a match is found
-        void import_vars(const re::match_data_t &md, const wcstring &subject) {
-            do_import_ = true;
-            for (auto &kv : matches_) {
-                const wcstring &name = kv.first;
-                wcstring_list_t &vals = kv.second;
-
-                // If there are multiple named groups and --all was used, we need to ensure that
-                // the indexes are always in sync between the variables. If an optional named
-                // group didn't match but its brethren did, we need to make sure to put
-                // *something* in the resulting array, and unfortunately fish doesn't support
-                // empty/null members so we're going to have to use an empty string as the
-                // sentinel value.
-                if (maybe_t<wcstring> capture = regex_.substring_for_group(md, name, subject)) {
-                    vals.push_back(capture.acquire());
-                } else if (all_flag_) {
-                    vals.emplace_back();
-                }
-            }
-        }
-
-        ~regex_importer_t() {
-            if (!do_import_) return;
-            for (auto &kv : matches_) {
-                const wcstring &name = kv.first;
-                wcstring_list_t &value = kv.second;
-                vars_.set(name, ENV_DEFAULT, std::move(value));
-            }
-        }
-    };
-
    public:
-    pcre2_matcher_t(regex_t regex, const options_t &opts, env_stack_t &vars)
-        : string_matcher_t(opts), regex(std::move(regex)), vars(vars) {}
-
-    ~pcre2_matcher_t() override = default;
-
-    bool report_matches(const wcstring &arg, io_streams_t &streams) override {
-        using namespace re;
-        regex_importer_t var_importer(vars, this->regex, opts.all);
-
-        match_data_t md = this->regex.prepare();
-        auto rc = report_match(arg, md, this->regex.match(md, arg), streams);
-
-        // We only import variables for the *first matching argument*
-        bool do_var_import = (rc == match_result_t::match && !imported_vars);
-        if (do_var_import) {
-            var_importer.import_vars(md, arg);
-            imported_vars = true;
+    regex_matcher_t(regex_t regex, const options_t &opts)
+        : string_matcher_t(opts), regex_(std::move(regex)), match_data_(regex_.prepare()) {
+        // Populate first_match_captures_ with the capture group names and empty lists.
+        for (const wcstring &name : regex_.capture_group_names()) {
+            first_match_captures_.emplace(name, wcstring_list_t{});
         }
-
-        switch (rc) {
-            case match_result_t::no_match:
-                return true;
-            case match_result_t::match:
-                total_matched++;
-        }
-
-        if (opts.invert_match) return true;
-
-        // Report any additional matches.
-        if (opts.all) {
-            while (auto mr = this->regex.match(md, arg)) {
-                auto rc = this->report_match(arg, md, mr, streams);
-                if (rc == match_result_t::match && do_var_import) {
-                    var_importer.import_vars(md, arg);
-                }
-            }
-        }
-        return true;
     }
 
-    /// Override to clear our capture variables if we had no match.
-    void clear_capture_vars() override {
-        assert(!imported_vars && "Should not already have imported variables");
-        for (const wcstring &name : regex.capture_group_names()) {
-            vars.set_empty(name, ENV_DEFAULT);
+    ~regex_matcher_t() override = default;
+
+    void report_matches(const wcstring &arg, io_streams_t &streams) override {
+        using namespace re;
+
+        match_data_.reset();
+        auto rc = report_match(arg, this->regex_.match(match_data_, arg), streams);
+
+        bool populate_captures = false;
+        if (rc == match_result_t::match) {
+            // We only populate captures for the *first matching argument*.
+            populate_captures = (total_matched == 0);
+            total_matched++;
+        }
+
+        if (populate_captures) {
+            this->populate_captures_from_match(arg);
+        }
+
+        // Report any additional matches.
+        if (!opts.invert_match && opts.all) {
+            while (auto mr = this->regex_.match(match_data_, arg)) {
+                auto rc = this->report_match(arg, mr, streams);
+                if (rc == match_result_t::match && populate_captures) {
+                    this->populate_captures_from_match(arg);
+                }
+            }
+        }
+    }
+
+    void import_captures(env_stack_t &vars) override {
+        for (auto &kv : first_match_captures_) {
+            const wcstring &name = kv.first;
+            vars.set(name, ENV_DEFAULT, std::move(kv.second));
         }
     }
 };
@@ -1136,21 +1111,18 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, const
         if (!re || !validate_capture_group_names(re->capture_group_names(), streams)) {
             return STATUS_INVALID_ARGS;
         }
-        matcher = make_unique<pcre2_matcher_t>(re.acquire(), opts, parser.vars());
+        matcher = make_unique<regex_matcher_t>(re.acquire(), opts);
     }
 
     assert(matcher && "Should have a matcher");
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        if (!matcher->report_matches(*arg, streams)) {
-            return STATUS_INVALID_ARGS;
+        matcher->report_matches(*arg, streams);
+        if (opts.quiet && matcher->match_count() > 0) {
+            break;
         }
-        if (opts.quiet && matcher->match_count() > 0) return STATUS_CMD_OK;
     }
-
-    if (matcher->match_count() == 0) {
-        matcher->clear_capture_vars();
-    }
+    matcher->import_captures(parser.vars());
 
     return matcher->match_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
@@ -1230,7 +1202,7 @@ class string_replacer_t {
     virtual bool replace_matches(const wcstring &arg, bool want_newline) = 0;
 };
 
-class literal_replacer_t : public string_replacer_t {
+class literal_replacer_t final : public string_replacer_t {
     const wcstring pattern;
     const wcstring replacement;
     size_t patlen;
@@ -1268,7 +1240,7 @@ static maybe_t<wcstring> interpret_escapes(const wcstring &arg) {
     return result;
 }
 
-class regex_replacer_t : public string_replacer_t {
+class regex_replacer_t final : public string_replacer_t {
     re::regex_t regex;
     maybe_t<wcstring> replacement;
 

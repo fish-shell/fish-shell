@@ -1,22 +1,34 @@
+complete touch -d "change file access and modification times"
+# common options
+complete touch -s a -d "change access time (atime)"
+complete touch -s m -d "change modification time (mtime)"
+complete touch -s t -d "use specified time [[CC]YY]MMDDhhmm[.SS]"
+
 if touch --version 2>/dev/null >/dev/null # GNU
-    complete -c touch -s a -d "Change access time"
-    complete -c touch -s B -l backward -x -d "Set date back"
-    complete -c touch -s c -l no-create -d "Do not create file"
-    complete -c touch -s d -l date -x -d "Set date"
-    complete -c touch -s f -l forward -x -d "Set date forward"
-    complete -c touch -s m -d "Change modification time"
-    complete -c touch -s r -l reference -d "Use this files times"
-    complete -c touch -s t -d "Set date"
-    complete -c touch -l time -x -d "Set time"
-    complete -c touch -l help -d "Display help and exit"
-    complete -c touch -l version -d "Display version and exit"
-else # OS X
-    complete -c touch -s A -d "Adjust access and modification time stamps by specified VALUE" -r
-    complete -c touch -s a -d "Change access time of file"
-    complete -c touch -s c -d "Don't create file if it doesn't exist"
-    complete -c touch -s f -d "Attempt to force the update, even when permission don't permit"
-    complete -c touch -s h -d "Change times of the symlink ranther than the file. Implies `-c'"
-    complete -c touch -s m -d "Change modification time of file"
-    complete -c touch -s r -d "Use access and modifications times from specified file rather than current time of day"
-    complete -c touch -s t -d "Change access and modifications times to specified file rather than current time of day"
+    complete touch -s B -l backward -x -d "set date back"
+    complete touch -s c -l no-create -d "don't create file if it doesn't exist"
+    complete touch -s d -l date -x -d "set to specified YYYY-MM-DDThh:mm:SS[.frac][tz]"
+    complete touch -s f -l forward -x -d "set date forward"
+    complete touch -s r -l reference -d "use times from specified reference file"
+    # TODO these may require that = but builtin complete doesn't seem to infer it should
+    # use = here
+    complete touch -l time -x -d "change specified kind of timestamp" -a \
+    "atime\t'change access time (atime) only'
+    access\t'change access time (atime) only'
+    use\t'change access time (atime) only'
+    mtime\t'change modification time (mtime) only'
+    modify\t'change modification time (mtime) only'"
+    complete touch -l help -d "display help"
+    complete touch -l version -d "display version"
+else # not GNU
+    set -l uname (uname -s)
+    contains $uname Darwin DragonFly FreeBSD
+    and complete touch -s A -d "adjust timestamps by relative value [-][hh]mm]SS" -x
+    contains $uname Darwin DragonFly FreeBSD NetBSD
+    and complete touch -s h -d "act on symbolic links themselves"
+    contains $uname Darwin DragonFly FreeBSD OpenBSD SunOS
+    and complete touch -s d -d "set to specified YYYY-MM-DDThh:mm:SS[.frac][tz]" -x
+    # common BSD options
+    complete touch -s c -d "don't create file if it doesn't exist"
+    complete touch -s r -d "use times from specified reference file" -r
 end

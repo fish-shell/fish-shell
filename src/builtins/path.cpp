@@ -7,7 +7,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <glob.h>
 #include <string>
 #include <utility>
 #include <vector>

@@ -6,7 +6,7 @@ set(PCRE2_SHOW_REPORT OFF CACHE BOOL "Show the final configuration report")
 set(PCRE2_BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(PCRE2_BUILD_PCRE2GREP OFF CACHE BOOL "Build pcre2grep")
 
-set(PCRE2_MIN_VERSION 10.21)
+set(PCRE2_MIN_VERSION 10.35)
 
 # Look for a system-installed PCRE2.
 find_library(SYS_PCRE2_LIB pcre2-${PCRE2_WIDTH})
@@ -49,6 +49,7 @@ else()
     GIT_REPOSITORY ${PCRE2_REPO}
     GIT_TAG "72669190cb947f0cac1d038a8bb1820da59ef447" # tag: pcre2-10.36
     GIT_PROGRESS TRUE
+    GIT_SHALLOW 1
   )
   # Don't try FetchContent_MakeAvailable, there's no way to add EXCLUDE_FROM_ALL
   # so we end up installing all of PCRE2 including its headers, man pages, etc.

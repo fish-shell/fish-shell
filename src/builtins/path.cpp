@@ -1,6 +1,8 @@
 // Implementation of the path builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "path.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

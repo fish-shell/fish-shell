@@ -32,7 +32,6 @@ struct flags_t {
 /// Flags for substituting a regex.
 struct sub_flags_t {
     bool global{};    // perform multiple substitutions?
-    bool literal{};   // $1 is literal, not a capture reference
     bool extended{};  // apply PCRE2 extended backslash escapes?
 };
 

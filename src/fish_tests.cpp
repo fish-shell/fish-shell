@@ -6817,12 +6817,6 @@ static void test_re_substitute() {
     do_test(res && *res == L"AA123qqqZZ AA123qqqZZ");
     do_test(repl_count == 2);
 
-    sflags.literal = true;
-    res = re->substitute(subj, repl, sflags, 0, nullptr, &repl_count);
-    do_test(res && *res == L"AA$1qqqZZ AA$1qqqZZ");
-    do_test(repl_count == 2);
-
-    sflags.literal = false;
     sflags.extended = true;
     res = re->substitute(subj, L"\\x21", sflags, 0, nullptr, &repl_count);  // \x21 = !
     do_test(res && *res == L"AA!ZZ AA!ZZ");

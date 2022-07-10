@@ -237,7 +237,6 @@ maybe_t<wcstring> regex_t::substitute(const wcstring &subject, const wcstring &r
     uint32_t options = PCRE2_SUBSTITUTE_UNSET_EMPTY        // don't error on unmatched
                        | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH  // return required length on overflow
                        | (flags.global ? PCRE2_SUBSTITUTE_GLOBAL : 0)      // replace multiple
-                       | (flags.literal ? PCRE2_SUBSTITUTE_LITERAL : 0)    // respect $1, etc.
                        | (flags.extended ? PCRE2_SUBSTITUTE_EXTENDED : 0)  // backslash escapes
         ;
     size_t bufflen = stack_bufflen;

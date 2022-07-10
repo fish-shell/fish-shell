@@ -9,12 +9,12 @@ Group:                  System/Shells
 URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
-BuildRequires:          ncurses-devel gettext gcc-c++ xz
+BuildRequires:          ncurses-devel gettext gcc-c++ xz pcre2-devel
 
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3
 %else
-BuildRequires: cmake pcre2-devel
+BuildRequires: cmake
 %endif
 
 %if 0%{?suse_version}
@@ -53,9 +53,6 @@ is simple but incompatible with other shell languages.
 %setup -q -n %{name}-@VERSION@
 
 %build
-# CMake macros define -DBUILD_SHARED_LIBS:BOOL=ON, which breaks the
-# bundled PCRE2 static library.
-EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DBUILD_SHARED_LIBS:BOOL=OFF"
 # CMake macros define the wrong sysconfdir arguments
 EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir}"
 %if 0%{?rhel} && 0%{?rhel} < 8

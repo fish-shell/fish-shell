@@ -610,27 +610,21 @@ static int path_mtime(parser_t &parser, io_streams_t &streams, int argc, const w
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    struct stat buf;
 
     time_t t = std::time(nullptr);
 
     arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
-        auto ret = !wstat(*arg, &buf);
+        auto ret = file_id_for_path(*arg);
 
-        if (ret) {
-#if HAVE_STRUCT_STAT_ST_MTIM_TV_SEC
-            auto mtim = buf.st_mtim.tv_sec;
-#else
-            auto mtim = buf.st_mtime;
-#endif
+        if (ret != kInvalidFileID) {
             if (!opts.relative) {
-                path_out(streams, opts, to_string(mtim));
+                path_out(streams, opts, to_string(ret.change_seconds));
             } else {
-                path_out(streams, opts, to_string(t - mtim));
+                path_out(streams, opts, to_string(t - ret.change_seconds));
             }
 
-            if (buf.st_mtime > 0) {
+            if (ret.change_seconds > 0) {
                 if (opts.quiet) return STATUS_CMD_OK;
                 n_transformed++;
             }

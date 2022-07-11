@@ -244,7 +244,7 @@ Examples
 
 ``path mtime`` returns the last modification time ("mtime" in unix jargon) of the given paths, in seconds since the unix epoch (the beginning of the 1st of January 1970).
 
-With ``--relative`` (or ``-R``), it prints the number of seconds since the modification time.
+With ``--relative`` (or ``-R``), it prints the number of seconds since the modification time. It only reads the current time once at start, so in case multiple paths are given the times are all relative to the *start* of ``path mtime -R`` running.
 
 It returns 0 if any path had an mtime greater than 0.
 

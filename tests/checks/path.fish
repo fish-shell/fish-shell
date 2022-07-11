@@ -199,6 +199,11 @@ and echo link resolves to link
 # CHECK: link resolves to link
 
 
+# path mtime
+# These tests deal with *time*, so we have to account
+# for slow systems (like CI).
+# So we should only test with a lot of slack.
+
 echo bananana >> foo
 test (math abs (date +%s) - (path mtime foo)) -lt 20
 or echo MTIME IS BOGUS

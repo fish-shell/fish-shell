@@ -28,6 +28,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+  - choose
 
 
 Improved terminal support

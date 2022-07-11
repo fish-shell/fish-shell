@@ -9,6 +9,7 @@ This release of fish introduces the following small enhancements:
 - The error message when launching a command that is built for the wrong architecture on macOS is more helpful (:issue:`9052`).
 - Added completions for:
   - ``expect`` (:issue:`9060`)
+  = ``navi`` (:issue:`9064`)
   - ``qdbus`` (:issue:`9031`)
   - ``reflector`` (:issue:`9027`)
 - Improvements to some completions.

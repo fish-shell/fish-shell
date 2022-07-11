@@ -28,6 +28,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+  - navi
 
 
 Improved terminal support

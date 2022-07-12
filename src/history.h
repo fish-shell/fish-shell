@@ -262,9 +262,6 @@ class history_search_t {
     /// If deduping, the items we've seen.
     std::unordered_set<wcstring> deduper_;
 
-    /// return whether we are case insensitive.
-    bool ignores_case() const { return flags_ & history_search_ignore_case; }
-
     /// return whether we deduplicate items.
     bool dedup() const { return !(flags_ & history_search_no_dedup); }
 
@@ -280,6 +277,9 @@ class history_search_t {
 
     /// Returns the current search result item contents. asserts if there is no current item.
     const wcstring &current_string() const;
+
+    /// return whether we are case insensitive.
+    bool ignores_case() const { return flags_ & history_search_ignore_case; }
 
     /// Construct from a history pointer; the caller is responsible for ensuring the history stays
     /// alive.

@@ -12,6 +12,8 @@
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../parser.h"
+#include "../path.h"
 #include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
@@ -99,7 +101,7 @@ maybe_t<int> builtin_realpath(parser_t &parser, io_streams_t &streams, const wch
             return STATUS_CMD_ERROR;
         }
     } else {
-        wcstring absolute_arg = string_prefixes_string(L"/", arg) ? arg : wgetcwd() + L"/" + arg;
+        wcstring absolute_arg = string_prefixes_string(L"/", arg) ? arg : path_apply_working_directory(arg, parser.vars().get_pwd_slash());
         streams.out.append(normalize_path(absolute_arg, /* allow leading double slashes */ false));
     }
 

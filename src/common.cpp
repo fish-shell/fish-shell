@@ -1900,7 +1900,17 @@ std::string get_executable_path(const char *argv0) {
     }
     if (len > 0) {
         buff[len] = '\0';
-        return std::string(buff);
+        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
+        // then linux adds a " (deleted)" suffix.
+        // If that's not a valid path, let's remove that awkward suffix.
+        std::string buffstr{buff};
+        if (access(buff, F_OK)) {
+            auto dellen = const_strlen(" (deleted)");
+            if (buffstr.size() > dellen && buffstr.compare(buffstr.size() - dellen, dellen, " (deleted)") == 0) {
+                buffstr = buffstr.substr(0, buffstr.size() - const_strlen(" (deleted)"));
+            }
+        }
+        return buffstr;
     }
 #endif
 

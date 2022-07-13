@@ -4,6 +4,7 @@ fish 3.5.1 (released ???)
 This release of fish introduces the following small enhancements:
 
 - Cursor shaping for Vi mode is enabled by default in tmux, and will be used if the outer terminal is capable (:issue:`8981`).
+- ``printf`` returns a better error when used with arguments interpreted as octal numbers (:issue:`9035`).
 
 This release also fixes a number of problems identified in fish 3.5.0.
 

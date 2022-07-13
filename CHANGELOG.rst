@@ -1,10 +1,10 @@
 fish 3.5.1 (released ???)
 ====================================
 
-This release of fish fixes the following problems identified in fish 3.5.0:
+This release of fish fixes a number of problems identified in fish 3.5.0.
 
-- A change in the completion script for ``git`` caused problems when completing ``git blame`` or ``git -C``, which has been fixed (:issue:`9053`).
-- On terminals that emit a CSI u sequence for :kbd:`Shift-Space`, fish inserts a space instead of printing an error. (:issue:`9054`).
+- Completing ``git blame`` or ``git -C`` works correctly (:issue:`9053`).
+- On terminals that emit a ``CSI u`` sequence for :kbd:`Shift-Space`, fish inserts a space instead of printing an error. (:issue:`9054`).
 
 --------------
 

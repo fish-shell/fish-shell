@@ -347,6 +347,13 @@ class reader_history_search_t {
         token      // searching by token
     };
 
+    struct match_t {
+        /// The text of the match.
+        wcstring text;
+        /// The offset of the current search string in this match.
+        size_t offset;
+    };
+
    private:
     /// The type of search performed.
     mode_t mode_{inactive};
@@ -355,7 +362,7 @@ class reader_history_search_t {
     history_search_t search_;
 
     /// The ordered list of matches. This may grow long.
-    std::vector<wcstring> matches_;
+    std::vector<match_t> matches_;
 
     /// A set of new items to skip, corresponding to matches_ and anything added in skip().
     std::set<wcstring> skips_;
@@ -363,30 +370,42 @@ class reader_history_search_t {
     /// Index into our matches list.
     size_t match_index_{0};
 
+    /// The offset of the current token in the command line. Only non-zero for a token search.
+    size_t token_offset_{0};
+
     /// Adds the given match if we haven't seen it before.
-    void add_if_new(wcstring text) {
-        if (add_skip(text)) {
-            matches_.push_back(std::move(text));
+    void add_if_new(match_t match) {
+        if (add_skip(match.text)) {
+            matches_.push_back(std::move(match));
         }
     }
 
     /// Attempt to append matches from the current history item.
     /// \return true if something was appended.
     bool append_matches_from_search() {
+        auto find = [this](const wcstring &haystack, const wcstring &needle) {
+            if (search_.ignores_case()) {
+                return ifind(haystack, needle);
+            }
+            return haystack.find(needle);
+        };
         const size_t before = matches_.size();
         wcstring text = search_.current_string();
+        const wcstring &needle = search_string();
         if (mode_ == line || mode_ == prefix) {
-            add_if_new(std::move(text));
+            size_t offset = find(text, needle);
+            assert(offset != wcstring::npos && "Should have found a match in the search result");
+            add_if_new({std::move(text), offset});
         } else if (mode_ == token) {
-            const wcstring &needle = search_string();
             tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
 
-            wcstring_list_t local_tokens;
+            std::vector<match_t> local_tokens;
             while (auto token = tok.next()) {
                 if (token->type != token_type_t::string) continue;
                 wcstring text = tok.text_of(*token);
-                if (text.find(needle) != wcstring::npos) {
-                    local_tokens.emplace_back(std::move(text));
+                size_t offset = find(text, needle);
+                if (offset != wcstring::npos) {
+                    local_tokens.push_back({std::move(text), offset});
                 }
             }
 
@@ -454,13 +473,22 @@ class reader_history_search_t {
     void go_to_end() { match_index_ = 0; }
 
     /// \return the current search result.
-    const wcstring &current_result() const {
+    const match_t &current_result() const {
         assert(match_index_ < matches_.size() && "Invalid match index");
         return matches_.at(match_index_);
     }
 
     /// \return the string we are searching for.
     const wcstring &search_string() const { return search_.original_term(); }
+
+    /// \return the range of the original search string in the new command line.
+    maybe_t<source_range_t> search_range_if_active() const {
+        if (!active() || is_at_end()) {
+            return {};
+        }
+        return {{static_cast<source_offset_t>(token_offset_ + current_result().offset),
+                 static_cast<source_offset_t>(search_string().length())}};
+    }
 
     /// \return whether we are at the end (most recent) of our search.
     bool is_at_end() const { return match_index_ == 0; }
@@ -470,12 +498,14 @@ class reader_history_search_t {
     bool add_skip(const wcstring &str) { return skips_.insert(str).second; }
 
     /// Reset, beginning a new line or token mode search.
-    void reset_to_mode(const wcstring &text, const std::shared_ptr<history_t> &hist, mode_t mode) {
+    void reset_to_mode(const wcstring &text, const std::shared_ptr<history_t> &hist, mode_t mode,
+                       size_t token_offset) {
         assert(mode != inactive && "mode cannot be inactive in this setter");
         skips_ = {text};
-        matches_ = {text};
+        matches_ = {{text, 0}};
         match_index_ = 0;
         mode_ = mode;
+        token_offset_ = token_offset;
         history_search_flags_t flags = history_search_no_dedup;
         // Make the search case-insensitive unless we have an uppercase character.
         wcstring low = wcstolower(text);
@@ -492,6 +522,7 @@ class reader_history_search_t {
         skips_.clear();
         match_index_ = 0;
         mode_ = inactive;
+        token_offset_ = 0;
         search_ = history_search_t();
     }
 };
@@ -594,9 +625,9 @@ struct layout_data_t {
     /// String containing the autosuggestion.
     wcstring autosuggestion{};
 
-    /// String containing the history search. If non-empty, then highlight the found range within
-    /// the text.
-    wcstring history_search_text{};
+    /// The matching range of the command line from a history search. If non-empty, then highlight
+    /// the range within the text.
+    maybe_t<source_range_t> history_search_range{};
 
     /// The result of evaluating the left, mode and right prompt commands.
     /// That is, this the text of the prompts, not the commands to produce them.
@@ -709,9 +740,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Expand abbreviations at the current cursor position, minus backtrack_amt.
     bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
-
-    /// \return the string used for history search, or an empty string if none.
-    wcstring history_search_text_if_active() const;
 
     /// \return true if the command line has changed and repainting is needed. If \p colors is not
     /// null, then also return true if the colors have changed.
@@ -1057,7 +1085,8 @@ bool reader_data_t::is_repaint_needed(const std::vector<highlight_spec_t> *mcolo
            check(selection != last.selection, L"selection") ||
            check(focused_on_pager != last.focused_on_pager, L"focus") ||
            check(command_line.position() != last.position, L"position") ||
-           check(history_search_text_if_active() != last.history_search_text, L"history search") ||
+           check(history_search.search_range_if_active() != last.history_search_range,
+                 L"history search") ||
            check(autosuggestion.text != last.autosuggestion, L"autosuggestion") ||
            check(left_prompt_buff != last.left_prompt_buff, L"left_prompt") ||
            check(mode_prompt_buff != last.mode_prompt_buff, L"mode_prompt") ||
@@ -1079,7 +1108,7 @@ layout_data_t reader_data_t::make_layout_data(maybe_t<highlight_list_t> mcolors)
     result.position = focused_on_pager ? pager.cursor_position() : command_line.position();
     result.selection = selection;
     result.focused_on_pager = (active_edit_line() == &pager.search_field_line);
-    result.history_search_text = history_search_text_if_active();
+    result.history_search_range = history_search.search_range_if_active();
     result.autosuggestion = autosuggestion.text;
     result.left_prompt_buff = left_prompt_buff;
     result.mode_prompt_buff = mode_prompt_buff;
@@ -1110,14 +1139,10 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
     std::vector<highlight_spec_t> colors = data.colors;
 
     // Highlight any history search.
-    if (!conf.in_silent_mode && !data.history_search_text.empty()) {
-        const wcstring &needle = data.history_search_text;
-        const wcstring &haystack = cmd_line->text();
-        size_t match_pos = ifind(haystack, needle);
-        if (match_pos != wcstring::npos) {
-            for (size_t i = 0; i < needle.size(); i++) {
-                colors.at(match_pos + i).background = highlight_role_t::search_match;
-            }
+    if (!conf.in_silent_mode && data.history_search_range) {
+        for (size_t i = data.history_search_range->start; i < data.history_search_range->end();
+             i++) {
+            colors.at(i).background = highlight_role_t::search_match;
         }
     }
 
@@ -2392,7 +2417,7 @@ void reader_data_t::replace_current_token(wcstring &&new_token) {
 /// Apply the history search to the command line.
 void reader_data_t::update_command_line_from_history_search() {
     wcstring new_text = history_search.is_at_end() ? history_search.search_string()
-                                                   : history_search.current_result();
+                                                   : history_search.current_result().text;
     editable_line_t *el = active_edit_line();
     if (command_line_has_transient_edit) {
         el->undo();
@@ -2537,13 +2562,6 @@ static parser_test_error_bits_t reader_shell_test(const parser_t &parser, const 
         reader_schedule_prompt_repaint();
     }
     return res;
-}
-
-wcstring reader_data_t::history_search_text_if_active() const {
-    if (!history_search.active() || history_search.is_at_end()) {
-        return wcstring{};
-    }
-    return history_search.search_string();
 }
 
 void reader_data_t::highlight_complete(highlight_result_t result) {
@@ -3571,15 +3589,15 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     parse_util_token_extent(buff, el->position(), &begin, &end, nullptr, nullptr);
                     if (begin) {
                         wcstring token(begin, end);
-                        history_search.reset_to_mode(token, history,
-                                                     reader_history_search_t::token);
+                        history_search.reset_to_mode(token, history, reader_history_search_t::token,
+                                                     begin - buff);
                     } else {
                         // No current token, refuse to do a token search.
                         history_search.reset();
                     }
                 } else {
                     // Searching by line.
-                    history_search.reset_to_mode(el->text(), history, mode);
+                    history_search.reset_to_mode(el->text(), history, mode, 0);
 
                     // Skip the autosuggestion in the history unless it was truncated.
                     const wcstring &suggest = autosuggestion.text;

@@ -25,6 +25,12 @@ struct source_range_t {
         assert(start + length >= start && "Overflow");
         return start + length;
     }
+
+    bool operator==(const source_range_t &rhs) const {
+        return start == rhs.start && length == rhs.length;
+    }
+
+    bool operator!=(const source_range_t &rhs) const { return !(*this == rhs); }
 };
 
 // IMPORTANT: If the following enum table is modified you must also update token_enum_map below.

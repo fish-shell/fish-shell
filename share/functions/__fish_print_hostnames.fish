@@ -8,13 +8,13 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     # `/etc/hosts` for portability reasons.
 
     begin
-        test -r /etc/hosts && read -z </etc/hosts
+        test -r /etc/hosts && read -z </etc/hosts | string replace -r '#.*$' ''
         or type -q getent && getent hosts 2>/dev/null
     end |
-        # Ignore comments, own IP addresses (127.*, 0.0[.0[.0]], ::1), non-host IPs (fe00::*, ff00::*),
+        # Ignore own IP addresses (127.*, 0.0[.0[.0]], ::1), non-host IPs (fe00::*, ff00::*),
         # and leading/trailing whitespace. Split results on whitespace to handle multiple aliases for
         # one IP.
-        string replace -irf '^\s*?(?!(?:#|0\.|127\.|ff0|fe0|::1))\S+\s*(.*?)\s*$' '$1' |
+        string replace -irf '^\s*?(?!(?:0\.|127\.|ff0|fe0|::1))\S+\s*(.*?)\s*$' '$1' |
         string split ' '
 
     # Print nfs servers from /etc/fstab

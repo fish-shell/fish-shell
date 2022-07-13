@@ -1,11 +1,16 @@
 fish 3.5.1 (released ???)
 ====================================
 
-This release of fish fixes a number of problems identified in fish 3.5.0.
+This release of fish introduces the following small enhancements:
+
+- Cursor shaping for Vi mode is enabled by default in tmux, and will be used if the outer terminal is capable (:issue:`8981`).
+
+This release also fixes a number of problems identified in fish 3.5.0.
 
 - Completing ``git blame`` or ``git -C`` works correctly (:issue:`9053`).
 - On terminals that emit a ``CSI u`` sequence for :kbd:`Shift-Space`, fish inserts a space instead of printing an error. (:issue:`9054`).
 - ``status fish-path`` on Linux-based platforms could print the path with a " (deleted)" suffix (such as ``/usr/bin/fish (deleted)``), which is now removed (:issue:`9019`).
+
 
 --------------
 

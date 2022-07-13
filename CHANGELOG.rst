@@ -9,13 +9,11 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
-- When fish was upgraded on linux, ``status fish-path`` would print the path with a " (deleted)" (e.g. ``/usr/bin/fish (deleted)``). That suffix will now be removed so the path should be correct again (:issue:`9018`).
 - ``argparse`` can now be used without option specifications, to allow using --min-args, --max-args or for commands that take no options (but might in future) (:issue:`9006`).
 - ``set --show`` now shows when a variable was inherited from fish's parent process, which should help with debugging (:issue:`9029`).
 
 Interactive improvements
 ------------------------
-- Cancelling an initial command via control-C no longer prevents configuration scripts from running (:issue:`9024`).
 - If the terminal definition for $TERM can't be used, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
 - The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text.
 
@@ -33,7 +31,6 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- Cursor shaping for vi-mode is now also enabled by default in tmux, and will happen if tmux decides the outer terminal is capable (:issue:`8981`).
 
 Other improvements
 ------------------

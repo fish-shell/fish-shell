@@ -6,57 +6,97 @@
 #include "global_safety.h"
 #include "wcstringutil.h"
 
-static relaxed_atomic_t<uint64_t> k_abbrs_next_order{0};
-
-abbreviation_t::abbreviation_t(wcstring replacement, abbrs_position_t position, bool from_universal)
-    : replacement(std::move(replacement)),
+abbreviation_t::abbreviation_t(wcstring name, wcstring replacement, abbrs_position_t position,
+                               bool from_universal)
+    : name(std::move(name)),
+      replacement(std::move(replacement)),
       position(position),
-      from_universal(from_universal),
-      order(++k_abbrs_next_order) {}
+      from_universal(from_universal) {}
 
-acquired_lock<abbrs_map_t> abbrs_get_map() {
-    static owning_lock<std::unordered_map<wcstring, abbreviation_t>> abbrs;
+acquired_lock<abbrs_set_t> abbrs_get_set() {
+    static owning_lock<abbrs_set_t> abbrs;
     return abbrs.acquire();
 }
 
-maybe_t<wcstring> abbrs_expand(const wcstring &token, abbrs_position_t position) {
-    auto abbrs = abbrs_get_map();
-    auto iter = abbrs->find(token);
-    maybe_t<wcstring> result{};
-    if (iter != abbrs->end()) {
-        const abbreviation_t &abbr = iter->second;
-        // Expand only if the positions are "compatible."
-        if (abbr.position == position || abbr.position == abbrs_position_t::anywhere) {
-            result = abbr.replacement;
+maybe_t<wcstring> abbrs_set_t::expand(const wcstring &token, abbrs_position_t position) const {
+    // Later abbreviations take precedence so walk backwards.
+    for (auto it = abbrs_.rbegin(); it != abbrs_.rend(); ++it) {
+        const abbreviation_t &abbr = *it;
+        // Expand only if the abbreviation expands anywhere or in the given position.
+        if (!(abbr.position == position || abbr.position == abbrs_position_t::anywhere)) {
+            continue;
+        }
+
+        // Expand only if the name matches.
+        if (token != abbr.name) {
+            continue;
+        }
+
+        return abbr.replacement;
+    }
+    return none();
+}
+
+void abbrs_set_t::add(abbreviation_t &&abbr) {
+    assert(!abbr.name.empty() && "Invalid name");
+    bool inserted = used_names_.insert(abbr.name).second;
+    if (!inserted) {
+        // Name was already used, do a linear scan to find it.
+        auto where = std::find_if(abbrs_.begin(), abbrs_.end(), [&](const abbreviation_t &other) {
+            return other.name == abbr.name;
+        });
+        assert(where != abbrs_.end() && "Abbreviation not found though its name was present");
+        abbrs_.erase(where);
+    }
+    abbrs_.push_back(std::move(abbr));
+}
+
+void abbrs_set_t::rename(const wcstring &old_name, const wcstring &new_name) {
+    bool erased = this->used_names_.erase(old_name) > 0;
+    bool inserted = this->used_names_.insert(new_name).second;
+    assert(erased && inserted && "Old name not found or new name already present");
+    (void)erased;
+    (void)inserted;
+    for (auto &abbr : abbrs_) {
+        if (abbr.name == old_name) {
+            abbr.name = new_name;
+            break;
         }
     }
-    return result;
 }
 
-wcstring_list_t abbrs_get_keys() {
-    auto abbrs = abbrs_get_map();
-    wcstring_list_t keys;
-    keys.reserve(abbrs->size());
-    for (const auto &kv : *abbrs) {
-        keys.push_back(kv.first);
+bool abbrs_set_t::erase(const wcstring &name) {
+    bool erased = this->used_names_.erase(name) > 0;
+    if (!erased) {
+        return false;
     }
-    return keys;
+    for (auto it = abbrs_.begin(); it != abbrs_.end(); ++it) {
+        if (it->name == name) {
+            abbrs_.erase(it);
+            return true;
+        }
+    }
+    assert(false && "Unable to find named abbreviation");
+    return false;
 }
 
-void abbrs_import_from_uvars(const std::unordered_map<wcstring, env_var_t> &uvars) {
-    auto abbrs = abbrs_get_map();
+void abbrs_set_t::import_from_uvars(const std::unordered_map<wcstring, env_var_t> &uvars) {
     const wchar_t *const prefix = L"_fish_abbr_";
     size_t prefix_len = wcslen(prefix);
-    wcstring name;
     const bool from_universal = true;
     for (const auto &kv : uvars) {
         if (string_prefixes_string(prefix, kv.first)) {
             wcstring escaped_name = kv.first.substr(prefix_len);
+            wcstring name;
             if (unescape_string(escaped_name, &name, unescape_flags_t{}, STRING_STYLE_VAR)) {
                 wcstring replacement = join_strings(kv.second.as_list(), L' ');
-                abbrs->emplace(name, abbreviation_t{std::move(replacement),
-                                                    abbrs_position_t::command, from_universal});
+                this->add(abbreviation_t{std::move(name), std::move(replacement),
+                                         abbrs_position_t::command, from_universal});
             }
         }
     }
+}
+
+maybe_t<wcstring> abbrs_expand(const wcstring &token, abbrs_position_t position) {
+    return abbrs_get_set()->expand(token, position);
 }

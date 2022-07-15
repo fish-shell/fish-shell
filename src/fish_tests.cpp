@@ -2467,13 +2467,12 @@ static void test_ifind_fuzzy() {
 
 static void test_abbreviations() {
     say(L"Testing abbreviations");
-
     {
-        auto abbrs = abbrs_get_map();
-        abbrs->emplace(L"gc", L"git checkout");
-        abbrs->emplace(L"foo", L"bar");
-        abbrs->emplace(L"gx", L"git checkout");
-        abbrs->emplace(L"yin", abbreviation_t(L"yang", abbrs_position_t::anywhere));
+        auto abbrs = abbrs_get_set();
+        abbrs->add(abbreviation_t(L"gc", L"git checkout"));
+        abbrs->add(abbreviation_t(L"foo", L"bar"));
+        abbrs->add(abbreviation_t(L"gx", L"git checkout"));
+        abbrs->add(abbreviation_t(L"yin", L"yang", abbrs_position_t::anywhere));
     }
 
     auto cmd = abbrs_position_t::command;
@@ -2547,6 +2546,19 @@ static void test_abbreviations() {
     if (result != L"command yang") {
         err(L"command yin incorrectly expanded on line %ld to '%ls'", (long)__LINE__,
             result->c_str());
+    }
+
+    // Renaming works.
+    {
+        auto abbrs = abbrs_get_set();
+        do_test(!abbrs->has_name(L"gcc"));
+        do_test(abbrs->has_name(L"gc"));
+        abbrs->rename(L"gc", L"gcc");
+        do_test(abbrs->has_name(L"gcc"));
+        do_test(!abbrs->has_name(L"gc"));
+        do_test(!abbrs->erase(L"gc"));
+        do_test(abbrs->erase(L"gcc"));
+        do_test(!abbrs->erase(L"gcc"));
     }
 }
 
@@ -3507,7 +3519,7 @@ static void test_complete() {
 
     // Test abbreviations.
     function_add(L"testabbrsonetwothreefour", func_props);
-    abbrs_get_map()->emplace(L"testabbrsonetwothreezero", L"expansion");
+    abbrs_get_set()->add(abbreviation_t(L"testabbrsonetwothreezero", L"expansion"));
     completions = complete(L"testabbrsonetwothree", {}, parser->context());
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"four");
@@ -3515,6 +3527,7 @@ static void test_complete() {
     // Abbreviations should not have a space after them.
     do_test(completions.at(1).completion == L"zero");
     do_test((completions.at(1).flags & COMPLETE_NO_SPACE) != 0);
+    abbrs_get_set()->erase(L"testabbrsonetwothreezero");
 
     // Test wraps.
     do_test(comma_join(complete_get_wrap_targets(L"wrapper1")).empty());

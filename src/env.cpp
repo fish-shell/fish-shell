@@ -456,7 +456,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
 
         // Import any abbreviations from uvars.
         // Note we do not dynamically react to changes.
-        abbrs_import_from_uvars(table);
+        abbrs_get_set()->import_from_uvars(table);
     }
 }
 

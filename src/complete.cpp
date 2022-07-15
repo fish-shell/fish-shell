@@ -669,18 +669,24 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
 }
 
 void completer_t::complete_abbr(const wcstring &cmd) {
-    // Copy the map, so we don't hold the lock across the call to complete_strings.
-    abbrs_map_t abbrs = *abbrs_get_map();
+    // Copy the list of names and descriptions so as not to hold the lock across the call to
+    // complete_strings.
     completion_list_t possible_comp;
-    possible_comp.reserve(abbrs.size());
-    for (const auto &kv : abbrs) {
-        possible_comp.emplace_back(kv.first);
+    std::unordered_map<wcstring, wcstring> descs;
+    {
+        auto abbrs = abbrs_get_set();
+        for (const auto &abbr : abbrs->list()) {
+            if (!abbr.is_regex()) {
+                possible_comp.emplace_back(abbr.name);
+                descs[abbr.name] = abbr.replacement;
+            }
+        }
     }
 
     auto desc_func = [&](const wcstring &key) {
-        auto iter = abbrs.find(key);
-        assert(iter != abbrs.end() && "Abbreviation not found");
-        return format_string(ABBR_DESC, iter->second.replacement.c_str());
+        auto iter = descs.find(key);
+        assert(iter != descs.end() && "Abbreviation not found");
+        return format_string(ABBR_DESC, iter->second.c_str());
     };
     this->complete_strings(cmd, desc_func, possible_comp, COMPLETE_NO_SPACE);
 }

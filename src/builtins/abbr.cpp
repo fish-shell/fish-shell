@@ -73,10 +73,9 @@ struct abbr_options_t {
 
 // Print abbreviations in a fish-script friendly way.
 static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
-    const auto abbrs = abbrs_get_map();
-    for (const auto &kv : *abbrs) {
-        wcstring name = escape_string(kv.first);
-        const auto &abbr = kv.second;
+    const auto abbrs = abbrs_get_set();
+    for (const auto &abbr : abbrs->list()) {
+        wcstring name = escape_string(abbr.name);
         wcstring value = escape_string(abbr.replacement);
         const wchar_t *scope = (abbr.from_universal ? L"-U " : L"");
         streams.out.append_format(L"abbr -a %ls-- %ls %ls\n", scope, name.c_str(), value.c_str());
@@ -92,9 +91,9 @@ static int abbr_list(const abbr_options_t &opts, io_streams_t &streams) {
                                   opts.args.front().c_str());
         return STATUS_INVALID_ARGS;
     }
-    const auto abbrs = abbrs_get_map();
-    for (const auto &kv : *abbrs) {
-        wcstring name = escape_string(kv.first);
+    const auto abbrs = abbrs_get_set();
+    for (const auto &abbr : abbrs->list()) {
+        wcstring name = escape_string(abbr.name);
         name.push_back(L'\n');
         streams.out.append(name);
     }
@@ -121,38 +120,29 @@ static int abbr_rename(const abbr_options_t &opts, io_streams_t &streams) {
             new_name.c_str());
         return STATUS_INVALID_ARGS;
     }
-    auto abbrs = abbrs_get_map();
+    auto abbrs = abbrs_get_set();
 
-    auto old_iter = abbrs->find(old_name);
-    if (old_iter == abbrs->end()) {
+    if (!abbrs->has_name(old_name)) {
         streams.err.append_format(_(L"%ls %ls: No abbreviation named %ls\n"), CMD, subcmd,
                                   old_name.c_str());
         return STATUS_CMD_ERROR;
     }
-
-    // Cannot overwrite an abbreviation.
-    auto new_iter = abbrs->find(new_name);
-    if (new_iter != abbrs->end()) {
+    if (abbrs->has_name(new_name)) {
         streams.err.append_format(
             _(L"%ls %ls: Abbreviation %ls already exists, cannot rename %ls\n"), CMD, subcmd,
             new_name.c_str(), old_name.c_str());
         return STATUS_INVALID_ARGS;
     }
-
-    abbreviation_t abbr = std::move(old_iter->second);
-    abbrs->erase(old_iter);
-    bool inserted = abbrs->insert(std::make_pair(std::move(new_name), std::move(abbr))).second;
-    assert(inserted && "Should have successfully inserted");
-    (void)inserted;
+    abbrs->rename(old_name, new_name);
     return STATUS_CMD_OK;
 }
 
 // Test if any args is an abbreviation.
 static int abbr_query(const abbr_options_t &opts, io_streams_t &) {
     // Return success if any of our args matches an abbreviation.
-    const auto abbrs = abbrs_get_map();
+    const auto abbrs = abbrs_get_set();
     for (const auto &arg : opts.args) {
-        if (abbrs->find(arg) != abbrs->end()) {
+        if (abbrs->has_name(arg)) {
             return STATUS_CMD_OK;
         }
     }
@@ -177,18 +167,16 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
             name.c_str());
         return STATUS_INVALID_ARGS;
     }
-    abbreviation_t abbr{L""};
+    wcstring replacement;
     for (auto iter = opts.args.begin() + 1; iter != opts.args.end(); ++iter) {
-        if (!abbr.replacement.empty()) abbr.replacement.push_back(L' ');
-        abbr.replacement.append(*iter);
+        if (!replacement.empty()) replacement.push_back(L' ');
+        replacement.append(*iter);
     }
-    if (opts.position) {
-        abbr.position = *opts.position;
-    }
+    abbrs_position_t position = opts.position ? *opts.position : abbrs_position_t::command;
+    abbreviation_t abbr{name, std::move(replacement), position};
 
     // Note historically we have allowed overwriting existing abbreviations.
-    auto abbrs = abbrs_get_map();
-    (*abbrs)[name] = std::move(abbr);
+    abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
 
@@ -201,13 +189,10 @@ static int abbr_erase(const abbr_options_t &opts, io_streams_t &) {
 
     // Erase each. If any is not found, return ENV_NOT_FOUND which is historical.
     int result = STATUS_CMD_OK;
-    auto abbrs = abbrs_get_map();
+    auto abbrs = abbrs_get_set();
     for (const auto &arg : opts.args) {
-        auto iter = abbrs->find(arg);
-        if (iter == abbrs->end()) {
+        if (!abbrs->erase(arg)) {
             result = ENV_NOT_FOUND;
-        } else {
-            abbrs->erase(iter);
         }
     }
     return result;
@@ -219,7 +204,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1 };
+    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
@@ -244,7 +229,6 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case NON_OPTION_ARGUMENT:
-                // Non-option argument.
                 // If --add is specified (or implied by specifying no other commands), all
                 // unrecognized options after the *second* non-option argument are considered part
                 // of the abbreviation expansion itself, rather than options to the abbr command.

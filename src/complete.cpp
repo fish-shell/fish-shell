@@ -1436,11 +1436,12 @@ void completer_t::escape_opening_brackets(const wcstring &argument) {
         if (comp.flags & COMPLETE_REPLACES_TOKEN) continue;
         comp.flags |= COMPLETE_REPLACES_TOKEN;
         comp.flags |= COMPLETE_DONT_ESCAPE_TILDES;  // See #9073.
+        // We are grafting a completion that is expected to be escaped later. This will break
+        // if the original completion doesn't want escaping.  Happily, this is only the case
+        // for username completion and variable name completion. They shouldn't end up here
+        // anyway because they won't contain '['.
         if (comp.flags & COMPLETE_DONT_ESCAPE) {
-            // If the completion won't be escaped, we need to do it here.
-            // Currently, this will probably never happen since COMPLETE_DONT_ESCAPE
-            // is only set for user or variable names which cannot contain '['.
-            unescaped_argument = escape_string(unescaped_argument, ESCAPE_ALL);
+            FLOG(warning, L"unexpected completion flag");
         }
         comp.completion = unescaped_argument + comp.completion;
     }

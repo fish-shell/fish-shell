@@ -1435,8 +1435,7 @@ void completer_t::escape_opening_brackets(const wcstring &argument) {
     for (completion_t &comp : completions.get_list()) {
         if (comp.flags & COMPLETE_REPLACES_TOKEN) continue;
         comp.flags |= COMPLETE_REPLACES_TOKEN;
-        // if path contains tilde and the bracket is unescaped. Don't escape the tilde.
-        comp.flags |= COMPLETE_DONT_ESCAPE_TILDES;
+        comp.flags |= COMPLETE_DONT_ESCAPE_TILDES;  // See #9073.
         if (comp.flags & COMPLETE_DONT_ESCAPE) {
             // If the completion won't be escaped, we need to do it here.
             // Currently, this will probably never happen since COMPLETE_DONT_ESCAPE

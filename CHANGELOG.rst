@@ -8,11 +8,13 @@ This release of fish introduces the following small enhancements:
 - ``history merge`` when in private mode is now an error, rather than wiping out other sessions' history (:issue:`9050`).
 - The error message when launching a command that is built for the wrong architecture on macOS is more helpful (:issue:`9052`).
 - Added completions for:
+
   - ``choose`` (:issue:`9065`)
   - ``expect`` (:issue:`9060`)
-  = ``navi`` (:issue:`9064`)
+  - ``navi`` (:issue:`9064`)
   - ``qdbus`` (:issue:`9031`)
   - ``reflector`` (:issue:`9027`)
+
 - Improvements to some completions.
 
 This release also fixes a number of problems identified in fish 3.5.0.

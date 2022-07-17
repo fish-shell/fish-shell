@@ -1,8 +1,9 @@
 fish 3.6.0 (released ???)
 ===================================
 
-Notable improvements and fixes
+Notable improvements and fixes 
 ------------------------------
+- ``test`` aka ``[``: implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
 
 Deprecations and removed features
 ---------------------------------

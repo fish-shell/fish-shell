@@ -145,11 +145,6 @@ struct file_id_t {
     dev_t device{static_cast<dev_t>(-1LL)};
     ino_t inode{static_cast<ino_t>(-1LL)};
     uint64_t size{static_cast<uint64_t>(-1LL)};
-    /* some platforms handle negative time_t
-       values to represent WW1-era dates, initialize ancient
-       for the sake of comparisons.
-       tv_nsec's meaningful values are REALLY [0, 999999999]
-       this nanosecond component we'll initialize at 0. */
     time_t change_seconds{std::numeric_limits<time_t>::min()};
     long change_nanoseconds{-1};
     time_t mod_seconds{std::numeric_limits<time_t>::min()};

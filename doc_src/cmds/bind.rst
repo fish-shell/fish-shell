@@ -196,6 +196,9 @@ The following special input functions are available:
     move one word to the right; or if at the end of the commandline, accept one word
     from the current autosuggestion.
 
+``history-pager``
+    invoke the searchable pager on history (incremental search).
+
 ``history-search-backward``
     search the history for the previous match
 

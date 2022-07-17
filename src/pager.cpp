@@ -377,6 +377,7 @@ void pager_t::refilter_completions() {
 }
 
 void pager_t::set_completions(const completion_list_t &raw_completions) {
+    selected_completion_idx = PAGER_SELECTION_NONE;
     // Get completion infos out of it.
     unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
@@ -498,7 +499,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         // these are the "past the last value".
         progress_text =
             format_string(_(L"rows %lu to %lu of %lu"), start_row + 1, stop_row, row_count);
-    } else if (completion_infos.empty() && !unfiltered_completion_infos.empty()) {
+    } else if (search_field_shown && completion_infos.empty()) {
         // Everything is filtered.
         progress_text = _(L"(no matches)");
     }

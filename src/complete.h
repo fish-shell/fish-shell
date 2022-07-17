@@ -45,6 +45,8 @@ enum {
     COMPLETE_DONT_SORT = 1 << 5,
     /// This completion looks to have the same string as an existing argument.
     COMPLETE_DUPLICATES_ARGUMENT = 1 << 6,
+    /// This completes not just a token but replaces the entire commandline.
+    COMPLETE_REPLACES_COMMANDLINE = 1 << 7,
 };
 using complete_flags_t = uint8_t;
 

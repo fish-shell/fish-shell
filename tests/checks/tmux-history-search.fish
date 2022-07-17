@@ -10,6 +10,7 @@ isolated-tmux send-keys 'true needle' Enter
 tmux-sleep
 isolated-tmux send-keys 'true hay ee hay' Enter
 # CHECK: prompt 1> true hay ee hay
+tmux-sleep
 isolated-tmux send-keys C-p C-a M-f M-f M-f M-.
 # CHECK: prompt 2> true hay needle hay
 tmux-sleep

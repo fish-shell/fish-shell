@@ -132,3 +132,14 @@ abbr --query banana --position anywhere
 echo $status
 # CHECKERR: abbr: --position option requires --add
 # CHECK: 2
+
+# Erase all abbreviations
+abbr --erase (abbr --list)
+abbr --show
+# Should be no output
+
+abbr --add nonregex_name foo
+abbr --add regex_name --regex 'A[0-9]B' bar
+abbr --show
+# CHECK: abbr -a -- nonregex_name foo
+# CHECK: abbr -a -- regex_name --regex 'A[0-9]B' bar

@@ -2468,11 +2468,15 @@ static void test_ifind_fuzzy() {
 static void test_abbreviations() {
     say(L"Testing abbreviations");
     {
+        auto literal_abbr = [](const wchar_t *name, const wchar_t *repl,
+                               abbrs_position_t pos = abbrs_position_t::command) {
+            return abbreviation_t(name, name /* key */, repl, pos);
+        };
         auto abbrs = abbrs_get_set();
-        abbrs->add(abbreviation_t(L"gc", L"git checkout"));
-        abbrs->add(abbreviation_t(L"foo", L"bar"));
-        abbrs->add(abbreviation_t(L"gx", L"git checkout"));
-        abbrs->add(abbreviation_t(L"yin", L"yang", abbrs_position_t::anywhere));
+        abbrs->add(literal_abbr(L"gc", L"git checkout"));
+        abbrs->add(literal_abbr(L"foo", L"bar"));
+        abbrs->add(literal_abbr(L"gx", L"git checkout"));
+        abbrs->add(literal_abbr(L"yin", L"yang", abbrs_position_t::anywhere));
     }
 
     auto cmd = abbrs_position_t::command;
@@ -3519,7 +3523,7 @@ static void test_complete() {
 
     // Test abbreviations.
     function_add(L"testabbrsonetwothreefour", func_props);
-    abbrs_get_set()->add(abbreviation_t(L"testabbrsonetwothreezero", L"expansion"));
+    abbrs_get_set()->add(abbreviation_t(L"somename", L"testabbrsonetwothreezero", L"expansion"));
     completions = complete(L"testabbrsonetwothree", {}, parser->context());
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"four");

@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "maybe.h"
+#include "re.h"
 
 class env_var_t;
 
@@ -22,19 +23,33 @@ struct abbreviation_t {
     // This is used as the token to match unless we have a regex.
     wcstring name{};
 
+    /// The key (recognized token) - either a literal or a regex pattern.
+    wcstring key{};
+
+    /// If set, use this regex to recognize tokens.
+    /// If unset, the key is to be interpreted literally.
+    /// Note that the fish interface enforces that regexes match the entire token;
+    /// we accomplish this by surrounding the regex in ^ and $.
+    maybe_t<re::regex_t> regex{};
+
     // Replacement string.
     wcstring replacement{};
 
-    // Expansion position.
+    /// Expansion position.
     abbrs_position_t position{abbrs_position_t::command};
 
-    // Mark if we came from a universal variable.
+    /// Mark if we came from a universal variable.
     bool from_universal{};
 
     // \return true if this is a regex abbreviation.
-    bool is_regex() const { return false; }
+    bool is_regex() const { return this->regex.has_value(); }
 
-    explicit abbreviation_t(wcstring name, wcstring replacement,
+    // \return true if we match a token.
+    bool matches(const wcstring &token) const;
+
+    // Construct from a name, a key which matches a token, a replacement token, a position, and
+    // whether we are derived from a universal variable.
+    explicit abbreviation_t(wcstring name, wcstring key, wcstring replacement,
                             abbrs_position_t position = abbrs_position_t::command,
                             bool from_universal = false);
 

@@ -677,8 +677,8 @@ void completer_t::complete_abbr(const wcstring &cmd) {
         auto abbrs = abbrs_get_set();
         for (const auto &abbr : abbrs->list()) {
             if (!abbr.is_regex()) {
-                possible_comp.emplace_back(abbr.name);
-                descs[abbr.name] = abbr.replacement;
+                possible_comp.emplace_back(abbr.key);
+                descs[abbr.key] = abbr.replacement;
             }
         }
     }

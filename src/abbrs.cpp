@@ -6,12 +6,21 @@
 #include "global_safety.h"
 #include "wcstringutil.h"
 
-abbreviation_t::abbreviation_t(wcstring name, wcstring replacement, abbrs_position_t position,
-                               bool from_universal)
+abbreviation_t::abbreviation_t(wcstring name, wcstring key, wcstring replacement,
+                               abbrs_position_t position, bool from_universal)
     : name(std::move(name)),
+      key(std::move(key)),
       replacement(std::move(replacement)),
       position(position),
       from_universal(from_universal) {}
+
+bool abbreviation_t::matches(const wcstring &token) const {
+    if (this->is_regex()) {
+        return this->regex->match(token).has_value();
+    } else {
+        return this->key == token;
+    }
+}
 
 acquired_lock<abbrs_set_t> abbrs_get_set() {
     static owning_lock<abbrs_set_t> abbrs;
@@ -28,7 +37,7 @@ maybe_t<wcstring> abbrs_set_t::expand(const wcstring &token, abbrs_position_t po
         }
 
         // Expand only if the name matches.
-        if (token != abbr.name) {
+        if (!abbr.matches(token)) {
             continue;
         }
 
@@ -89,8 +98,9 @@ void abbrs_set_t::import_from_uvars(const std::unordered_map<wcstring, env_var_t
             wcstring escaped_name = kv.first.substr(prefix_len);
             wcstring name;
             if (unescape_string(escaped_name, &name, unescape_flags_t{}, STRING_STYLE_VAR)) {
+                wcstring key = name;
                 wcstring replacement = join_strings(kv.second.as_list(), L' ');
-                this->add(abbreviation_t{std::move(name), std::move(replacement),
+                this->add(abbreviation_t{std::move(name), std::move(key), std::move(replacement),
                                          abbrs_position_t::command, from_universal});
             }
         }

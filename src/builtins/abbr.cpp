@@ -22,6 +22,7 @@
 #include "../common.h"
 #include "../env.h"
 #include "../io.h"
+#include "../re.h"
 #include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"
@@ -37,6 +38,7 @@ struct abbr_options_t {
     bool list{};
     bool erase{};
     bool query{};
+    maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
 
     wcstring_list_t args;
@@ -55,7 +57,6 @@ struct abbr_options_t {
                                       join_strings(cmds, L", ").c_str());
             return false;
         }
-
         // If run with no options, treat it like --add if we have arguments,
         // or --show if we do not have any arguments.
         if (cmds.empty()) {
@@ -65,6 +66,10 @@ struct abbr_options_t {
 
         if (!add && position.has_value()) {
             streams.err.append_format(_(L"%ls: --position option requires --add\n"), CMD);
+            return false;
+        }
+        if (!add && regex_pattern.has_value()) {
+            streams.err.append_format(_(L"%ls: --regex option requires --add\n"), CMD);
             return false;
         }
         return true;
@@ -78,7 +83,16 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         wcstring name = escape_string(abbr.name);
         wcstring value = escape_string(abbr.replacement);
         const wchar_t *scope = (abbr.from_universal ? L"-U " : L"");
-        streams.out.append_format(L"abbr -a %ls-- %ls %ls\n", scope, name.c_str(), value.c_str());
+        // Literal abbreviations share both name and key.
+        // Regex abbreviations have a pattern separate from the name.
+        if (!abbr.is_regex()) {
+            streams.out.append_format(L"abbr -a %ls-- %ls %ls\n", scope, name.c_str(),
+                                      value.c_str());
+        } else {
+            wcstring pattern = escape_string(abbr.key);
+            streams.out.append_format(L"abbr -a %ls-- %ls --regex %ls %ls\n", scope, name.c_str(),
+                                      pattern.c_str(), value.c_str());
+        }
     }
     return STATUS_CMD_OK;
 }
@@ -167,15 +181,39 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
             name.c_str());
         return STATUS_INVALID_ARGS;
     }
+
+    maybe_t<re::regex_t> regex;
+    wcstring key;
+    if (!opts.regex_pattern.has_value()) {
+        // The name plays double-duty as the token to replace.
+        key = name;
+    } else {
+        key = *opts.regex_pattern;
+        re::re_error_t error{};
+        // Compile the regex as given; if that succeeds then wrap it in our ^$ so it matches the
+        // entire token.
+        if (!re::regex_t::try_compile(*opts.regex_pattern, re::flags_t{}, &error)) {
+            streams.err.append_format(_(L"%ls: Regular expression compile error: %ls\n"), CMD,
+                                      error.message().c_str());
+            streams.err.append_format(L"%ls: %ls\n", CMD, opts.regex_pattern->c_str());
+            streams.err.append_format(L"%ls: %*ls\n", CMD, static_cast<int>(error.offset), L"^");
+            return STATUS_INVALID_ARGS;
+        }
+        wcstring anchored = re::make_anchored(*opts.regex_pattern);
+        regex = re::regex_t::try_compile(anchored, re::flags_t{}, &error);
+        assert(regex.has_value() && "Anchored compilation should have succeeded");
+    }
+
     wcstring replacement;
     for (auto iter = opts.args.begin() + 1; iter != opts.args.end(); ++iter) {
         if (!replacement.empty()) replacement.push_back(L' ');
         replacement.append(*iter);
     }
     abbrs_position_t position = opts.position ? *opts.position : abbrs_position_t::command;
-    abbreviation_t abbr{name, std::move(replacement), position};
 
     // Note historically we have allowed overwriting existing abbreviations.
+    abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
+    abbr.regex = std::move(regex);
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
@@ -212,6 +250,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     static const wchar_t *const short_options = L"-arseqgUh";
     static const struct woption long_options[] = {{L"add", no_argument, 'a'},
                                                   {L"position", required_argument, 'p'},
+                                                  {L"regex", required_argument, REGEX_SHORT},
                                                   {L"rename", no_argument, 'r'},
                                                   {L"erase", no_argument, 'e'},
                                                   {L"query", no_argument, 'q'},
@@ -260,6 +299,16 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 }
                 break;
             }
+            case REGEX_SHORT: {
+                if (opts.regex_pattern.has_value()) {
+                    streams.err.append_format(_(L"%ls: Cannot specify multiple regex patterns\n"),
+                                              CMD);
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.regex_pattern = w.woptarg;
+                break;
+            }
+
             case 'r':
                 opts.rename = true;
                 break;

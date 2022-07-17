@@ -59,3 +59,14 @@ expect_str(r"<beta2 >")
 
 send(r"echo alpha ?")
 expect_str(r"<echo beta2 >")
+
+# Support regex.
+sendline(r"abbr alpha --regex 'A[0-9]+Z' beta3")
+send(r"A123Z ?")
+expect_str(r"<beta3 >")
+send(r"AZ ?")
+expect_str(r"<AZ >")
+send(r"QA123Z ?")
+expect_str(r"<QA123Z >")
+send(r"A0000000000000000000009Z ?")
+expect_str(r"<beta3 >")

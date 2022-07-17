@@ -24,6 +24,7 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
+- New special input function ``history-pager`` (:kbd:``Control-R``) opens the command history in the searchable pager (incremental search) (:issue:`602`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

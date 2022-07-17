@@ -85,8 +85,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     bind --preset $argv \ed kill-word
 
-    # Let ctrl+r search history if there is something in the commandline.
-    bind --preset $argv \cr 'commandline | string length -q; and commandline -f history-search-backward'
+    bind --preset $argv \cr history-pager
 
     # term-specific special bindings
     switch "$TERM"

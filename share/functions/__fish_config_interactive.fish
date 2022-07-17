@@ -48,7 +48,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_cwd_root red
 
         # Background color for search matches
-        __init_uvar fish_color_search_match --background=111
+        __init_uvar fish_color_search_match --background=brblack
 
         # Background color for selections
         __init_uvar fish_color_selection white --bold --background=brblack

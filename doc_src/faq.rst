@@ -142,7 +142,7 @@ You can also use ``fish_config`` on the commandline, like::
 
 How do I change the greeting message?
 -------------------------------------
-Change the value of the variable ``fish_greeting`` or create a ``fish_greeting`` function. For example, to remove the greeting use::
+Change the value of the variable ``fish_greeting`` or create a :ref:`fish_greeting <cmd-fish_greeting>` function. For example, to remove the greeting use::
 
     set -U fish_greeting
 
@@ -150,7 +150,7 @@ Or if you prefer not to use a universal variable, use::
 
     set -g fish_greeting
 
-in config.fish.
+in :ref:`config.fish <configuration>`.
 
 How do I run a command from history?
 ------------------------------------

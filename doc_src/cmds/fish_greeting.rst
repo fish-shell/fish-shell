@@ -29,6 +29,12 @@ While you could also just put ``echo`` calls into config.fish, fish_greeting tak
 Example
 -------
 
+To just empty the text, with the default greeting function::
+
+  set -U fish_greeting
+
+or ``set -g fish_greeting`` in :ref:`config.fish <configuration>`.
+
 A simple greeting:
 
 ::

@@ -618,15 +618,13 @@ static int path_mtime(parser_t &parser, io_streams_t &streams, int argc, const w
         auto ret = file_id_for_path(*arg);
 
         if (ret != kInvalidFileID) {
+            if (opts.quiet) return STATUS_CMD_OK;
+            n_transformed++;
+
             if (!opts.relative) {
                 path_out(streams, opts, to_string(ret.change_seconds));
             } else {
                 path_out(streams, opts, to_string(t - ret.change_seconds));
-            }
-
-            if (ret.change_seconds > 0) {
-                if (opts.quiet) return STATUS_CMD_OK;
-                n_transformed++;
             }
         }
     }

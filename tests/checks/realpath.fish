@@ -72,6 +72,19 @@ else
     echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
 end
 
+# But the $PWD is still resolved
+set -l oldpwd $PWD
+cd $XDG_DATA_HOME/fish-symlink
+set -l real_path (builtin realpath -s $data_home_realpath/fish-symlink)
+set -l expected_real_path "$data_home_realpath/fish-symlink"
+if test "$real_path" = "$expected_real_path"
+    echo "fish-symlink handled correctly"
+    # CHECK: fish-symlink handled correctly
+else
+    echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
+end
+cd $oldpwd
+
 set -l real_path (builtin realpath -s .)
 set -l expected_real_path (pwd -P) # Physical working directory.
 if test "$real_path" = "$expected_real_path"

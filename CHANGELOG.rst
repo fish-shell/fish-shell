@@ -12,6 +12,7 @@ Scripting improvements
 ----------------------
 - ``argparse`` can now be used without option specifications, to allow using --min-args, --max-args or for commands that take no options (but might in future) (:issue:`9006`).
 - ``set --show`` now shows when a variable was inherited from fish's parent process, which should help with debugging (:issue:`9029`).
+- ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`).
 
 Interactive improvements
 ------------------------

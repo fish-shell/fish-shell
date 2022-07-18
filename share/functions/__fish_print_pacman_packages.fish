@@ -12,7 +12,7 @@ function __fish_print_pacman_packages
         set -l cache_file $xdg_cache_home/.pac-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set -l age (path mtime -R -- $cache_file)
             set -l max_age 250
             if test $age -lt $max_age
                 return

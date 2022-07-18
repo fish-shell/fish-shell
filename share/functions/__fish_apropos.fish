@@ -33,10 +33,7 @@ if test $status -eq 0 -a (count $sysver) -eq 3
         set -l age $max_age
 
         if test -f "$whatis"
-            # Some people use GNU tools on macOS, and GNU stat works differently.
-            # However it's currently guaranteed that the macOS stat is in /usr/bin,
-            # so we use that explicitly.
-            set age (math (date +%s) - (/usr/bin/stat -f %m $whatis))
+            set age (path mtime -R -- $whatis)
         end
 
         MANPATH="$dir" apropos "^$argv"

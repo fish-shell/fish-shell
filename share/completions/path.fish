@@ -5,6 +5,7 @@ complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a basename -d 'G
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a dirname -d 'Give dirname for given paths'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a extension -d 'Give extension for given paths'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a change-extension -d 'Change extension for given paths'
+complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a mtime -d 'Show modification time'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a normalize -d 'Normalize given paths (remove ./, resolve ../ against other components..)'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a resolve -d 'Normalize given paths and resolve symlinks'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a filter -d 'Print paths that match a filter'
@@ -22,6 +23,7 @@ complete -f -c path -n "test (count (commandline -opc)) -ge 2; and contains -- (
 complete -f -c path -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] filter is" -s r -d "Filter readable paths"
 complete -f -c path -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] filter is" -s w -d "Filter writable paths"
 complete -f -c path -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] filter is" -s x -d "Filter executable paths"
+complete -f -c path -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] mtime" -s R -l relative -d "Show seconds since the modification time"
 complete -f -c path -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sort" \
     -l key -x -a 'basename\t"Sort only by basename" dirname\t"Sort only by dirname" path\t"Sort by full path"'
 complete -f -c path -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sort" -s u -l unique -d 'Only leave the first of each run with the same key'

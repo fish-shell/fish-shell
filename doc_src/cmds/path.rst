@@ -17,6 +17,7 @@ Synopsis
     path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE]
         [-d] [-f] [-l] [-r] [-w] [-x]
         [(-p | --perm) PERMISSION] [PATH ...]
+    path mtime GENERAL_OPTIONS [(-R | --relative)] [PATH ...]
     path normalize GENERAL_OPTIONS [PATH ...]
     path resolve GENERAL_OPTIONS [PATH ...]
     path change-extension GENERAL_OPTIONS EXTENSION [PATH ...]
@@ -233,6 +234,40 @@ Examples
    # /usr/argagagji does not, so this returns a status of 1 (false). It also prints nothing.
    >_ path is -fx /bin/sh
    # /bin/sh is usually an executable file, so this returns true.
+
+"mtime" subcommand
+-----------------------
+
+::
+
+    path mtime [-z | --null-in] [-Z | --null-out] [-q | --quiet] [-R | --relative] [PATH ...]
+
+``path mtime`` returns the last modification time ("mtime" in unix jargon) of the given paths, in seconds since the unix epoch (the beginning of the 1st of January 1970).
+
+With ``--relative`` (or ``-R``), it prints the number of seconds since the modification time. It only reads the current time once at start, so in case multiple paths are given the times are all relative to the *start* of ``path mtime -R`` running.
+
+If you want to know if a file is newer or older than another file, consider using ``test -nt`` instead. See :ref:`the test documentation <cmd-test>`.
+
+It returns 0 if reading mtime for any path succeeded.
+
+Examples
+^^^^^^^^
+
+::
+
+    >_ date +%s
+    # This prints the current time as seconds since the epoch
+    1657217847
+
+    >_ path mtime /etc/
+    1657213796
+
+    >_ path mtime -R /etc/
+    4078
+    # So /etc/ on this system was last modified a little over an hour ago
+
+    # This is the same as
+    >_ math (date +%s) - (path mtime /etc/)
 
 "normalize" subcommand
 -----------------------

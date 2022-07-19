@@ -48,7 +48,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_cwd_root red
 
         # Background color for search matches
-        __init_uvar fish_color_search_match --background=brblack
+        __init_uvar fish_color_search_match bryellow --background=brblack
 
         # Background color for selections
         __init_uvar fish_color_selection white --bold --background=brblack
@@ -58,7 +58,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_cancel -r
 
         # Pager colors
-        __init_uvar fish_pager_color_prefix cyan --bold --underline
+        __init_uvar fish_pager_color_prefix normal --bold --underline
         __init_uvar fish_pager_color_completion normal
         __init_uvar fish_pager_color_description B3A06D yellow -i
         __init_uvar fish_pager_color_progress brwhite --background=cyan

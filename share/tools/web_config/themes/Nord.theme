@@ -30,3 +30,5 @@ fish_pager_color_progress brwhite --background=cyan
 fish_pager_color_selected_background --background=brblack
 fish_color_option eceff4
 fish_color_keyword 81a1c1
+fish_color_host_remote yellow
+fish_color_status red

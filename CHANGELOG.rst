@@ -45,6 +45,36 @@ For distributors
 
 --------------
 
+fish 3.5.1 (released July 20, 2022)
+===================================
+
+This release of fish introduces the following small enhancements:
+
+- Cursor shaping for Vi mode is enabled by default in tmux, and will be used if the outer terminal is capable (:issue:`8981`).
+- ``printf`` returns a better error when used with arguments interpreted as octal numbers (:issue:`9035`).
+- ``history merge`` when in private mode is now an error, rather than wiping out other sessions' history (:issue:`9050`).
+- The error message when launching a command that is built for the wrong architecture on macOS is more helpful (:issue:`9052`).
+- Added completions for:
+
+  - ``choose`` (:issue:`9065`)
+  - ``expect`` (:issue:`9060`)
+  - ``navi`` (:issue:`9064`)
+  - ``qdbus`` (:issue:`9031`)
+  - ``reflector`` (:issue:`9027`)
+
+- Improvements to some completions.
+
+This release also fixes a number of problems identified in fish 3.5.0.
+
+- Completing ``git blame`` or ``git -C`` works correctly (:issue:`9053`).
+- On terminals that emit a ``CSI u`` sequence for :kbd:`Shift-Space`, fish inserts a space instead of printing an error. (:issue:`9054`).
+- ``status fish-path`` on Linux-based platforms could print the path with a " (deleted)" suffix (such as ``/usr/bin/fish (deleted)``), which is now removed (:issue:`9019`).
+- Cancelling an initial command (from fish's ``--init-command`` option) with :kbd:`Control-C` no longer prevents configuration scripts from running (:issue:`9024`).
+- The job summary contained extra blank lines if the prompt used multiple lines, which is now fixed (:issue:`9044`).
+- Using special input functions in bindings, in combination with ``and``/``or`` conditionals, no longer crashes (:issue:`9051`).
+
+--------------
+
 fish 3.5.0 (released June 16, 2022)
 ===================================
 

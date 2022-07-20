@@ -1,5 +1,5 @@
-fish 3.5.1 (released ???)
-====================================
+fish 3.5.1 (released July 20, 2022)
+===================================
 
 This release of fish introduces the following small enhancements:
 

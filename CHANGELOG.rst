@@ -30,6 +30,7 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
+  - ``zig`` (:issue:`9083`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

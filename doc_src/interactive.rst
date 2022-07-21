@@ -412,27 +412,31 @@ Command mode
 
 Command mode is also known as normal mode.
 
-- :kbd:`H` moves the cursor left.
+- :kbd:`h` moves the cursor left.
 
-- :kbd:`L` moves the cursor right.
+- :kbd:`l` moves the cursor right.
 
-- :kbd:`I` enters :ref:`insert mode <vi-mode-insert>` at the current cursor position.
+- :kbd:`k` and :kbd:`j` search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the :ref:`history <history-search>` section for more information on history searching. In multi-line commands, they move the cursor up and down respectively.
 
-- :kbd:`V` enters :ref:`visual mode <vi-mode-visual>` at the current cursor position.
+- :kbd:`i` enters :ref:`insert mode <vi-mode-insert>` at the current cursor position.
 
-- :kbd:`A` enters :ref:`insert mode <vi-mode-insert>` after the current cursor position.
+- :kbd:`Shift`\ +\ :kbd:`R` enters :ref:`insert mode <vi-mode-insert>` at the beginning of the line.
+
+- :kbd:`v` enters :ref:`visual mode <vi-mode-visual>` at the current cursor position.
+
+- :kbd:`a` enters :ref:`insert mode <vi-mode-insert>` after the current cursor position.
 
 - :kbd:`Shift`\ +\ :kbd:`A` enters :ref:`insert mode <vi-mode-insert>` at the end of the line.
 
 - :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
-- :kbd:`D`\ +\ :kbd:`D` deletes the current line and moves it to the :ref:`killring`.
+- :kbd:`d`\ +\ :kbd:`d` deletes the current line and moves it to the :ref:`killring`.
 
 - :kbd:`Shift`\ +\ :kbd:`D` deletes text after the current cursor position and moves it to the :ref:`killring`.
 
-- :kbd:`P` pastes text from the :ref:`killring`.
+- :kbd:`p` pastes text from the :ref:`killring`.
 
-- :kbd:`U` search history backwards.
+- :kbd:`u` undoes the most recent edit of the command line.
 
 - :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the :ref:`history <history-search>` section for more information on history searching.
 
@@ -454,23 +458,29 @@ Visual mode
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) extend the selection backward/forward by one character.
 
-- :kbd:`B` and :kbd:`W` extend the selection backward/forward by one word.
+- :kbd:`h` moves the cursor left.
 
-- :kbd:`D` and :kbd:`X` move the selection to the :ref:`killring` and enter :ref:`command mode <vi-mode-command>`.
+- :kbd:`l` moves the cursor right.
+
+- :kbd:`k` moves the cursor up.
+
+- :kbd:`j` moves the cursor down.
+
+- :kbd:`b` and :kbd:`w` extend the selection backward/forward by one word.
+
+- :kbd:`d` and :kbd:`x` move the selection to the :ref:`killring` and enter :ref:`command mode <vi-mode-command>`.
 
 - :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`C` enter :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`c` and :kbd:`s` remove the selection and switch to insert mode
+- :kbd:`c` and :kbd:`s` remove the selection and switch to insert mode.
 
-- :kbd:`d` and :kbd:`x` remove the selection and switch to normal mode
+- :kbd:`X` moves the entire line to the :ref:`killring`, and enters :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`X` removes the entire line and switches to normal mode
+- :kbd:`y` copies the selection to the :ref:`killring`, and enters :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`y` copies the selection and switches to normal mode
+- :kbd:`~` toggles the case (upper/lower) on the selection, and enters :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`~` toggles the case (upper/lower) on the selection and switches to normal mode
-
-- :kbd:`"*y` copies the selection to the clipboard and switches to normal mode
+- :kbd:`"*y` copies the selection to the clipboard, and enters :ref:`command mode <vi-mode-command>`.
 
 .. _custom-binds:
 

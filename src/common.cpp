@@ -1865,7 +1865,11 @@ std::string get_executable_path(const char *argv0) {
     //
     // (this is broken on NetBSD, while /proc works, so we use that)
     size_t buff_size = sizeof buff;
+    #if defined(__NetBSD__)
+    int name[] = {CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_PATHNAME};
+    #else
     int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+    #endif
     int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
     if (result != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");

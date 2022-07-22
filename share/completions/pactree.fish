@@ -1,4 +1,4 @@
-complete -c pactree -xa "(pacman -Sl | cut --delim ' ' --fields 2- | tr ' ' \t | sort)"
+complete -c pactree -xa "(pacman -Sl | string replace -r '(\S+) *(\S+) *(.*)' '$2\t$3')"
 complete -c pactree -s b -l dbpath -d 'Set an alternate database location' -xa '(__fish_complete_directories)'
 complete -c pactree -s c -l color -d 'Colorize output'
 complete -c pactree -s d -l depth -d 'Limit the depth of recursion' -x

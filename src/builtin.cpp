@@ -339,7 +339,6 @@ static maybe_t<int> builtin_false(parser_t &parser, io_streams_t &streams, const
 
 static maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
-    UNUSED(streams);
     for (int i = 1; i < builtin_count_args(argv); i++) {
         streams.out.append(_(argv[i]));
     }

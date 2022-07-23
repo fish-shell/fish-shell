@@ -96,7 +96,7 @@ void binary_semaphore_t::wait() {
             auto amt = read(fd, &ignored, sizeof ignored);
             if (amt == 1) break;
             // EAGAIN should only be returned in TSan case.
-            if (amt < 0 && errno != EINTR && errno != EAGAIN) die(L"read");
+            if (amt < 0 && errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK) die(L"read");
         }
     }
 }

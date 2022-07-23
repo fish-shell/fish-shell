@@ -68,7 +68,7 @@ ssize_t io_buffer_t::read_once(int fd, acquired_lock<separated_buffer_t> &buffer
     do {
         amt = read(fd, bytes, sizeof bytes);
     } while (amt < 0 && errno == EINTR);
-    if (amt < 0 && errno != EAGAIN) {
+    if (amt < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
         wperror(L"read");
     } else if (amt > 0) {
         buffer->append(bytes, static_cast<size_t>(amt));
@@ -116,7 +116,7 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
             // select() reported us as readable; read a bit.
             auto buffer = buffer_.acquire();
             ssize_t ret = read_once(fd.fd(), buffer);
-            done = (ret == 0 || (ret < 0 && errno != EAGAIN));
+            done = (ret == 0 || (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK));
         } else if (shutdown_fillthread_) {
             // Here our caller asked us to shut down; read while we keep getting data.
             // This will stop when the fd is closed or if we get EAGAIN.

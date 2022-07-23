@@ -175,7 +175,7 @@ bool fd_event_signaller_t::try_consume() const {
     do {
         ret = read(read_fd(), buff, sizeof buff);
     } while (ret < 0 && errno == EINTR);
-    if (ret < 0 && errno != EAGAIN) {
+    if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
         wperror(L"read");
     }
     return ret > 0;
@@ -193,7 +193,7 @@ void fd_event_signaller_t::post() {
         ret = write(write_fd(), &c, sizeof c);
     } while (ret < 0 && errno == EINTR);
     // EAGAIN occurs if either the pipe buffer is full or the eventfd overflows (very unlikely).
-    if (ret < 0 && errno != EAGAIN) {
+    if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
         wperror(L"write");
     }
 }

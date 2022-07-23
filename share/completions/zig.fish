@@ -42,9 +42,62 @@ complete -x -c zig -n __fish_use_subcommand -a version -d "Print version number"
 complete -x -c zig -n __fish_use_subcommand -a zen -d "Print Zen of Zig"
 
 # General options
-complete -x -c zig -s h -l help -d "Print command-specific usage"
+complete -x -c zig -n "not __fish_seen_subcommand_from env help targets version zen" -s h -l help -d "Print command-specific usage"
 
 # Command-specific options
+
+## Steps
+complete -x -c zig -n "__fish_seen_subcommand_from build && __fish_prev_arg_in build" -a "
+    install\t'Copy build artifacts (default)'
+    uninstall\t'Remove build artifacts'
+    run\t'Run the app'
+    test\t'Run unit tests'
+    "
+
+## General options
+complete -r -c zig -n "__fish_seen_subcommand_from build" -s p -l prefix -d "Override default install prefix"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-lib-dir -d "Override default library directory path"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-exe-dir -d "Override default executable directory path"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-include-dir -d "Override default include directory path"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l sysroot -d "Set the system root directory"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l search-prefix -d "Add the search path"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l libc -d "Provide a file which specifies libc paths"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fdarling -d "Integrate with system-installed Darling"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-darling -d "Don't integrate with system-installed Darling (default)"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fqemu -d "Integrate with system-installed QEMU"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-qemu -d "Don't integrate with system-installed QEMU (default)"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l glibc-runtimes -d "Enhances QEMU integration"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o frosetta -d "Rely on Rosetta"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-rosetta -d "Don't rely on Rosetta (default)"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fwasmtime -d "Integrate with system-installed Wasmtime"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-wasmtime -d "Don't integrate with system-installed Wasmtime (default)"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fwine -d "Integrate with system-installed Wine"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-wine -d "Don't integrate with system-installed Wine (default)"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose -d "Print commands before executing them"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -l color -a "auto off on" -d "Enable/Disable colored error messages"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l prominent-compile-errors -d "Output human-readable compile errors"
+
+## Project-specific options
+complete -x -c zig -n "__fish_seen_subcommand_from build" -o Dtarget -d "Specify the compilation target"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -o Dcpu -d "Specify CPU features to add/subtract"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -o Drelease-safe -a "true false" -d "Optimizations on and safety on"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -o Drelease-fast -a "true false" -d "Optimizations on and safety off"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -o Drelease-small -a "true false" -d "Size optimizations on and safety off"
+
+## Advanced options
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l build-file -d "Override path to `build.zig`"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l cache-dir -d "Override path to zig cache directory"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l zig-lib-dir -d "Override path to Zig lib directory"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -l debug-log -d "Enable debugging the compiler"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-tokenize -d "Enable compiler debug output for tokenization"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-ast -d "Enable compiler debug output for parsing into an AST"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-link -d "Enable compiler debug output for linking"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-air -d "Enable compiler debug output for Zig AIR"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-llvm-ir -d "Enable compiler debug output for LLVM IR"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-cimport -d "Enable compiler debug output for C imports"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-cc -d "Enable compiler debug output for C compilation"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-llvm-cpu-features -d "Enable compiler debug output for LLVM CPU features"
+
 complete -x -c zig -n "__fish_seen_subcommand_from ast-check" -l color -a "auto off on" -d "Enable/Disable colored error messages"
 complete -c zig -n "__fish_seen_subcommand_from ast-check" -s t -d "Output ZIR in text form to stdout"
 
@@ -176,7 +229,16 @@ complete -x -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" 
 complete -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -o dynamic -d "Force output to be dynamically linked"
 complete -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -o static -d "Force output to be statically linked"
 complete -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -o Bsymbolic -d "Bind global references locally"
-complete -x -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -l subsystem -d "The Windows subsystem to the linker (Windows)"
+complete -x -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -l subsystem -a "
+    console\t'Win32 console application'
+    windows\t'Windows application'
+    posix\t'Application that runs with the POSIX subsystem'
+    native\t'Kernel mode drivers'
+    efi_application\t'The EFI subsystem'
+    efi_boot_service_driver\t'The EFI subsystem'
+    efi_rom\t'The EFI subsystem'
+    efi_runtime_driver\t'The EFI subsystem'
+    " -d "The Windows subsystem to the linker (Windows)"
 complete -x -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -l stack -d "Override default stack size"
 complete -x -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -l image-base -d "Set base address for executable image"
 complete -x -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -o framework -d "Link against framework (Darwin)"

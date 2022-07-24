@@ -2,9 +2,9 @@ function __fish_is_zfs_feature_enabled -a feature target -d "Returns 0 if the gi
     set -l pool (string replace -r '/.*' '' -- $target)
     set -l feature_name ""
     if test -z "$pool"
-        set feature_name (zpool get -H all | string match -r "\s$feature\s")
+        set feature_name (zpool get -H all 2>/dev/null | string match -r "\s$feature\s")
     else
-        set feature_name (zpool get -H all $pool | string match -r "$pool\s$feature\s")
+        set feature_name (zpool get -H all $pool 2>/dev/null | string match -r "$pool\s$feature\s")
     end
     if test $status -ne 0 # No such feature
         return 1

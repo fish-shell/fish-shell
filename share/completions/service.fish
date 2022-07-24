@@ -4,7 +4,7 @@ complete -c service -n "__fish_is_nth_token 1" -xa "(__fish_print_service_names)
 # as found in __fish_print_service_names.fish
 if test -d /run/systemd/system # Systemd systems
     complete -c service -n 'not __fish_is_nth_token 1' -xa "start stop restart status enable disable"
-else if type -f rc-service 2>/dev/null # OpenRC (Gentoo)
+else if command -sq rc-service # OpenRC (Gentoo)
     complete -c service -n 'not __fish_is_nth_token 1' -xa "start stop restart"
 else if test -d /etc/init.d # SysV on Debian and other linuxen
     complete -c service -n 'not __fish_is_nth_token 1' -xa "start stop --full-restart"

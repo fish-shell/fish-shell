@@ -3295,7 +3295,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // The user typed complete more than once in a row. If we are not yet fully
                 // disclosed, then become so; otherwise cycle through our available completions.
                 if (current_page_rendering.remaining_to_disclose > 0) {
-                    pager.set_fully_disclosed(true);
+                    pager.set_fully_disclosed();
                 } else {
                     select_completion_in_direction(c == rl::complete ? selection_motion_t::next
                                                                      : selection_motion_t::prev);
@@ -3311,7 +3311,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Toggle search, and begin navigating if we are now searching.
                 bool sfs = pager.is_search_field_shown();
                 pager.set_search_field_shown(!sfs);
-                pager.set_fully_disclosed(true);
+                pager.set_fully_disclosed();
                 if (pager.is_search_field_shown() && !is_navigating_pager_contents()) {
                     select_completion_in_direction(selection_motion_t::south);
                 }

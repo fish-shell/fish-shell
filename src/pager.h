@@ -186,7 +186,7 @@ class pager_t {
     bool is_navigating_contents() const;
 
     // Become fully disclosed.
-    void set_fully_disclosed(bool flag);
+    void set_fully_disclosed();
 
     // Position of the cursor.
     size_t cursor_position() const;

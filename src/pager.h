@@ -157,6 +157,8 @@ class pager_t {
     // Indicates the row and column for the given rendering. Returns -1 if no selection.
     size_t get_selected_row(const page_rendering_t &rendering) const;
     size_t get_selected_column(const page_rendering_t &rendering) const;
+    // Indicates the row assuming we render this many rows. Returns -1 if no selection.
+    size_t get_selected_row(size_t rows) const;
 
     // Produces a rendering of the completions, at the given term size.
     page_rendering_t render() const;

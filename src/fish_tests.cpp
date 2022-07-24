@@ -2539,6 +2539,11 @@ static void test_pager_navigation() {
         // East goes back.
         {selection_motion_t::east, 0},
 
+        {selection_motion_t::west, 15},
+        {selection_motion_t::west, 11},
+        {selection_motion_t::east, 15},
+        {selection_motion_t::east, 0},
+
         // "Next" motion goes down the column.
         {selection_motion_t::next, 1},
         {selection_motion_t::next, 2},

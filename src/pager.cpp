@@ -754,7 +754,7 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
     }
 
     // Ensure our suggested row start is not past the selected row.
-    size_t row_containing_selection = this->get_selected_row(rendering);
+    size_t row_containing_selection = this->get_selected_row(rendering.rows);
     if (suggested_row_start > row_containing_selection) {
         suggested_row_start = row_containing_selection;
     }
@@ -826,17 +826,24 @@ const completion_t *pager_t::selected_completion(const page_rendering_t &renderi
 size_t pager_t::get_selected_row(const page_rendering_t &rendering) const {
     if (rendering.rows == 0) return PAGER_SELECTION_NONE;
 
-    return selected_completion_idx == PAGER_SELECTION_NONE
+    return rendering.selected_completion_idx == PAGER_SELECTION_NONE
                ? PAGER_SELECTION_NONE
-               : selected_completion_idx % rendering.rows;
+               : rendering.selected_completion_idx % rendering.rows;
+}
+
+size_t pager_t::get_selected_row(size_t rows) const {
+    if (rows == 0) return PAGER_SELECTION_NONE;
+
+    return selected_completion_idx == PAGER_SELECTION_NONE ? PAGER_SELECTION_NONE
+                                                           : selected_completion_idx % rows;
 }
 
 size_t pager_t::get_selected_column(const page_rendering_t &rendering) const {
     if (rendering.rows == 0) return PAGER_SELECTION_NONE;
 
-    return selected_completion_idx == PAGER_SELECTION_NONE
+    return rendering.selected_completion_idx == PAGER_SELECTION_NONE
                ? PAGER_SELECTION_NONE
-               : selected_completion_idx / rendering.rows;
+               : rendering.selected_completion_idx / rendering.rows;
 }
 
 void pager_t::clear() {

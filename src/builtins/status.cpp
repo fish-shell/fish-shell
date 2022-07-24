@@ -455,12 +455,30 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
         }
         case STATUS_FISH_PATH: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd);
-            auto real = wrealpath(str2wcstring(get_executable_path("fish")));
-            if (real) {
-                streams.out.append(*real);
-                streams.out.push_back(L'\n');
+            auto path = str2wcstring(get_executable_path("fish"));
+            if (path.empty()) {
+                streams.err.append_format(L"%ls: Could not get executable path: '%s'\n", cmd, std::strerror(errno));
+                break;
+            }
+
+            if (path[0] == L'/') {
+                // This is an absolute path, we can canonicalize it.
+                auto real = wrealpath(path);
+                if (real && waccess(*real, F_OK)) {
+                    streams.out.append(*real);
+                    streams.out.push_back(L'\n');
+                } else {
+                    // realpath did not work, just append the path
+                    // - maybe this was obtained via $PATH?
+                    streams.out.append(path);
+                    streams.out.push_back(L'\n');
+                }
             } else {
-                streams.err.append_format(L"%ls: realpath failed: '%s'\n", cmd, std::strerror(errno));
+                // This is a relative path, it depends on where fish's parent process
+                // was when it started it and its idea of $PATH.
+                // The best we can do is to print it directly and hope it works.
+                streams.out.append(path);
+                streams.out.push_back(L'\n');
             }
             break;
         }

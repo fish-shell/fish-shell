@@ -460,7 +460,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
                 streams.out.append(*real);
                 streams.out.push_back(L'\n');
             } else {
-                streams.err.append_format(L"realpath failed: '%s'\n", cmd, std::strerror(errno));
+                streams.err.append_format(L"%ls: realpath failed: '%s'\n", cmd, std::strerror(errno));
             }
             break;
         }

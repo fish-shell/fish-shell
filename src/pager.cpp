@@ -778,11 +778,17 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
 
 size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const {
     // No completions -> no selection.
-    if (completion_infos.empty() || rows == 0 || cols == 0) {
+    if (completion_infos.empty()) {
         return PAGER_SELECTION_NONE;
     }
 
     size_t result = selected_completion_idx;
+    if (result == 0) {
+        return result;
+    }
+    if (rows == 0 || cols == 0) {
+        return PAGER_SELECTION_NONE;
+    }
     if (result != PAGER_SELECTION_NONE) {
         // If the selected completion is beyond the last selection, go left by columns until it's
         // within it. This is how we implement "column memory".

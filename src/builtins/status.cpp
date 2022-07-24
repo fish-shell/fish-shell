@@ -4,6 +4,7 @@
 #include "status.h"
 
 #include <cstddef>
+#include <cstring>
 #include <cwchar>
 #include <string>
 
@@ -453,9 +454,14 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
             break;
         }
         case STATUS_FISH_PATH: {
-            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            streams.out.append(str2wcstring(get_executable_path("fish")));
-            streams.out.push_back(L'\n');
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd);
+            auto real = wrealpath(str2wcstring(get_executable_path("fish")));
+            if (real) {
+                streams.out.append(*real);
+                streams.out.push_back(L'\n');
+            } else {
+                streams.err.append_format(L"realpath failed: '%s'\n", cmd, std::strerror(errno));
+            }
             break;
         }
     }

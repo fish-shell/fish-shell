@@ -268,6 +268,16 @@ IF (NOT LIBATOMIC_NOT_NEEDED)
     set(ATOMIC_LIBRARY "atomic")
 endif()
 
+check_cxx_source_compiles("
+#include <sys/wait.h>
+
+int main() {
+    static_assert(WEXITSTATUS(0x007f) == 0x7f);
+    return 0;
+}
+"
+HAVE_WAITSTATUS_SIGNAL_RET)
+
 IF (APPLE)
     # Check if mbrtowc implementation attempts to encode invalid UTF-8 sequences
     # Known culprits: at least some versions of macOS (confirmed Snow Leopard and Yosemite)

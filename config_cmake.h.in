@@ -103,6 +103,9 @@
 /* Define to 1 if you have the `wcstod_l' function. */
 #cmakedefine HAVE_WCSTOD_L 1
 
+/* Define to 1 if the status that wait returns and WEXITSTATUS expects is signal and then ret instead of the other way around. */
+#cmakedefine HAVE_WAITSTATUS_SIGNAL_RET 1
+
 /* Define to 1 if the winsize struct and TIOCGWINSZ macro exist */
 #cmakedefine HAVE_WINSIZE 1
 

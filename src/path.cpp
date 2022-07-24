@@ -6,7 +6,6 @@
 #include "path.h"
 
 #include <errno.h>
-#include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #if defined(__linux__)

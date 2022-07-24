@@ -944,18 +944,15 @@ static void redirect_tty_after_sighup() {
 
 /// Give up control of terminal.
 static void term_donate(bool quiet = false) {
-    while (true) {
-        if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
-            if (errno == EIO) redirect_tty_output();
-            if (errno != EINTR) {
-                if (!quiet) {
-                    FLOGF(warning, _(L"Could not set terminal mode for new job"));
-                    wperror(L"tcsetattr");
-                }
-                break;
+    while (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
+        if (errno == EIO) redirect_tty_output();
+        if (errno != EINTR) {
+            if (!quiet) {
+                FLOGF(warning, _(L"Could not set terminal mode for new job"));
+                wperror(L"tcsetattr");
             }
-        } else
             break;
+        }
     }
 }
 
@@ -982,16 +979,13 @@ void term_copy_modes() {
 /// Grab control of terminal.
 static void term_steal() {
     term_copy_modes();
-    while (true) {
-        if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
-            if (errno == EIO) redirect_tty_output();
-            if (errno != EINTR) {
-                FLOGF(warning, _(L"Could not set terminal mode for shell"));
-                perror("tcsetattr");
-                break;
-            }
-        } else
+    while (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
+        if (errno == EIO) redirect_tty_output();
+        if (errno != EINTR) {
+            FLOGF(warning, _(L"Could not set terminal mode for shell"));
+            perror("tcsetattr");
             break;
+        }
     }
 
     termsize_container_t::shared().invalidate_tty();

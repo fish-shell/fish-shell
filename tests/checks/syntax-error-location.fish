@@ -44,14 +44,14 @@ $fish -c 'echo "ok $(echo still ok)syntax error: \x"' 2>| string replace -r '.*'
 # CHECK: <echo "ok $(echo still ok)syntax error: \x">
 # CHECK: <                         ^>
 
-echo "function error" >$TMPDIR/error.fish
-$fish -c "set -g fish_function_path $(string escape $TMPDIR); error"
-# CHECKERR: ~/temp/error.fish (line 1): Missing end to balance this function definition
-# CHECKERR: function error
+echo "function this_should_be_an_error" >$TMPDIR/this_should_be_an_error.fish
+$fish -c "set -g fish_function_path $(string escape $TMPDIR); this_should_be_an_error"
+# CHECKERR: ~/temp/this_should_be_an_error.fish (line 1): Missing end to balance this function definition
+# CHECKERR: function this_should_be_an_error
 # CHECKERR: ^
-# CHECKERR: from sourcing file ~/temp/error.fish
-# CHECKERR: source: Error while reading file '{{.*}}/error.fish'
-# CHECKERR: fish: Unknown command: error
+# CHECKERR: from sourcing file ~/temp/this_should_be_an_error.fish
+# CHECKERR: source: Error while reading file '{{.*}}/this_should_be_an_error.fish'
+# CHECKERR: fish: Unknown command: this_should_be_an_error
 # CHECKERR: fish:
-# CHECKERR: set -g fish_function_path {{.*}}; error
+# CHECKERR: set -g fish_function_path {{.*}}; this_should_be_an_error
 # CHECKERR: ^

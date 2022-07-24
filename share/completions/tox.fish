@@ -30,6 +30,6 @@ complete -c tox -l hashseed -r -d "Set PYTHONHASHSEED to SEED before running com
 complete -c tox -l force-dep -r -d "Force dependency version"
 complete -c tox -l sitepackages -d "Override sitepackages setting to True in all envs"
 complete -c tox -l alwayscopy -d "Override alwayscopy setting to True in all envs"
-complete -c tox -l no-provision -r -d "Do not perform provision but write JSON metadata to this file"
+complete -c tox -l no-provision -d "Do not perform provision but write JSON metadata to this file"
 complete -c tox -s s -l skip-missing-interpreters -f -r -a "config true false" -d "Don't fail tests for missing interpreters"
 complete -c tox -l workdir -r -d "Tox working directory"

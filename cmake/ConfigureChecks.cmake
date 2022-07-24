@@ -272,7 +272,7 @@ check_cxx_source_compiles("
 #include <sys/wait.h>
 
 int main() {
-    static_assert(WEXITSTATUS(0x007f) == 0x7f);
+    static_assert(WEXITSTATUS(0x007f) == 0x7f, \"This is our message we need to add because C++ is terrible\");
     return 0;
 }
 "

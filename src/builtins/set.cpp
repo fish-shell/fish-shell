@@ -430,8 +430,7 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     sort(names.begin(), names.end());
 
     for (const auto &key : names) {
-        const wcstring e_key = escape_string(key, 0);
-        streams.out.append(e_key);
+        streams.out.append(key);
 
         if (!names_only) {
             wcstring val;

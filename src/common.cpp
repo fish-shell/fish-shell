@@ -883,6 +883,8 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
     const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
     const bool no_qmark = feature_test(features_t::qmark_noglob);
+    const bool symbolic = static_cast<bool>(flags & ESCAPE_SYMBOLIC) && (MB_CUR_MAX > 1);
+    assert((!symbolic || !escape_printables) && "symbolic implies escape-no-printables");
 
     bool need_escape = false;
     bool need_complex_escape = false;
@@ -911,47 +913,57 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
             wchar_t c = *in;
             switch (c) {
                 case L'\t': {
-                    out += L'\\';
-                    out += L't';
+                    if (symbolic)
+                        out += L'␉';
+                    else
+                        out += L"\\t";
                     need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\n': {
-                    out += L'\\';
-                    out += L'n';
+                    if (symbolic)
+                        out += L'␤';
+                    else
+                        out += L"\\n";
                     need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\b': {
-                    out += L'\\';
-                    out += L'b';
+                    if (symbolic)
+                        out += L'␈';
+                    else
+                        out += L"\\b";
                     need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\r': {
-                    out += L'\\';
-                    out += L'r';
+                    if (symbolic)
+                        out += L'␍';
+                    else
+                        out += L"\\r";
                     need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\x1B': {
-                    out += L'\\';
-                    out += L'e';
+                    if (symbolic)
+                        out += L'␛';
+                    else
+                        out += L"\\e";
                     need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\x7F': {
-                    out += L'\\';
-                    out += L'x';
-                    out += L'7';
-                    out += L'f';
+                    if (symbolic)
+                        out += L'␡';
+                    else
+                        out += L"\\x7f";
                     need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\\':
                 case L'\'': {
                     need_escape = need_complex_escape = true;
-                    if (escape_printables || c == L'\\') out += L'\\';
+                    if (escape_printables || (c == L'\\' && !symbolic)) out += L'\\';
                     out += *in;
                     break;
                 }
@@ -1000,6 +1012,11 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 default: {
                     if (*in >= 0 && *in < 32) {
                         need_escape = need_complex_escape = true;
+
+                        if (symbolic) {
+                            out += L'\u2400' + *in;
+                            break;
+                        }
 
                         if (*in < 27 && *in != 0) {
                             out += L'\\';

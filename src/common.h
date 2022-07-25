@@ -148,7 +148,9 @@ enum {
     /// string.
     ESCAPE_NO_QUOTED = 1 << 1,
     /// Do not escape tildes.
-    ESCAPE_NO_TILDE = 1 << 2
+    ESCAPE_NO_TILDE = 1 << 2,
+    /// Replace nonprintable control characters with Unicode symbols.
+    ESCAPE_SYMBOLIC = 1 << 3
 };
 typedef unsigned int escape_flags_t;
 

@@ -65,9 +65,9 @@ enum token_t {
     test_string_equal,      // "=", true if strings are identical
     test_string_not_equal,  // "!=", true if strings are not identical
 
-    test_file_newer, // f1 -nt f2, true if f1 exists and is newer than f2, or there is no f2
-    test_file_older, // f1 -ot f2, true if f2 exists and f1 does not, or f1 is older than f2
-    test_file_same,  // f1 -ef f2, true if f1 and f2 exist and refer to same file
+    test_file_newer,  // f1 -nt f2, true if f1 exists and is newer than f2, or there is no f2
+    test_file_older,  // f1 -ot f2, true if f2 exists and f1 does not, or f1 is older than f2
+    test_file_same,   // f1 -ef f2, true if f1 and f2 exist and refer to same file
 
     test_number_equal,          // "-eq", true if numbers are equal
     test_number_not_equal,      // "-ne", true if numbers are not equal

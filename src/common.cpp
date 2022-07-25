@@ -1863,11 +1863,11 @@ std::string get_executable_path(const char *argv0) {
     // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1
     // returns the value for the current process.
     size_t buff_size = sizeof buff;
-    #if defined(__NetBSD__)
+#if defined(__NetBSD__)
     int name[] = {CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_PATHNAME};
-    #else
+#else
     int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
-    #endif
+#endif
     int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
     if (result != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");

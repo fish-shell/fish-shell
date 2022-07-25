@@ -306,8 +306,7 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
             }
 
             if (in_private_mode(parser.vars())) {
-                streams.err.append_format(
-                                          _(L"%ls: can't merge history in private mode\n"), cmd);
+                streams.err.append_format(_(L"%ls: can't merge history in private mode\n"), cmd);
                 status = STATUS_INVALID_ARGS;
                 break;
             }

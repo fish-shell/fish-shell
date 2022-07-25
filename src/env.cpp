@@ -287,9 +287,7 @@ static void setup_path() {
 
 static std::map<wcstring, wcstring> inheriteds;
 
-const std::map<wcstring, wcstring> &env_get_inherited() {
-    return inheriteds;
-}
+const std::map<wcstring, wcstring> &env_get_inherited() { return inheriteds; }
 
 void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_paths) {
     env_stack_t &vars = env_stack_t::principal();

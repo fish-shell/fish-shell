@@ -754,7 +754,8 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
                 case readline_cmd_t::func_or: {
                     // If previous function has correct status, we keep reading tokens
                     if (evt.get_readline() == readline_cmd_t::func_and) {
-                        // Don't return immediately, we might need to handle it here - like self-insert.
+                        // Don't return immediately, we might need to handle it here - like
+                        // self-insert.
                         if (function_status_) continue;
                     } else {
                         if (!function_status_) continue;

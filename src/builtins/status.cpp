@@ -457,7 +457,8 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd);
             auto path = str2wcstring(get_executable_path("fish"));
             if (path.empty()) {
-                streams.err.append_format(L"%ls: Could not get executable path: '%s'\n", cmd, std::strerror(errno));
+                streams.err.append_format(L"%ls: Could not get executable path: '%s'\n", cmd,
+                                          std::strerror(errno));
                 break;
             }
 

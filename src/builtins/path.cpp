@@ -37,7 +37,7 @@ static void path_error(io_streams_t &streams, const wchar_t *fmt, ...) {
 }
 
 static void path_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *subcmd,
-                                  const wchar_t *opt) {
+                                const wchar_t *opt) {
     path_error(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
     builtin_print_error_trailer(parser, streams.err, L"path");
 }
@@ -115,7 +115,8 @@ class arg_iterator_t {
     }
 
    public:
-    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams, bool split_null)
+    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams,
+                   bool split_null)
         : argv_(argv), argidx_(argidx), have_split_(split_null), streams_(streams) {}
 
     const wcstring *nextstr() {
@@ -135,11 +136,11 @@ class arg_iterator_t {
 enum {
     TYPE_BLOCK = 1 << 0,  /// A block device
     TYPE_DIR = 1 << 1,    /// A directory
-    TYPE_FILE = 1 << 2,     /// A regular file
-    TYPE_LINK = 1 << 3,  /// A link
-    TYPE_CHAR = 1 << 4,  /// A character device
-    TYPE_FIFO = 1 << 5,  /// A fifo
-    TYPE_SOCK = 1 << 6,  /// A socket
+    TYPE_FILE = 1 << 2,   /// A regular file
+    TYPE_LINK = 1 << 3,   /// A link
+    TYPE_CHAR = 1 << 4,   /// A character device
+    TYPE_FIFO = 1 << 5,   /// A fifo
+    TYPE_SOCK = 1 << 6,   /// A socket
 };
 typedef uint32_t path_type_flags_t;
 
@@ -190,8 +191,7 @@ struct options_t {  //!OCLINT(too many fields)
 static void path_out(io_streams_t &streams, const options_t &opts, const wcstring &str) {
     if (!opts.quiet) {
         if (!opts.null_out) {
-            streams.out.append_with_separation(str,
-                                               separation_type_t::explicitly);
+            streams.out.append_with_separation(str, separation_type_t::explicitly);
         } else {
             streams.out.append(str);
             streams.out.push_back(L'\0');
@@ -261,7 +261,6 @@ static int handle_flag_t(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
-
 static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->perm_valid) {
@@ -299,7 +298,7 @@ static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &s
 }
 
 static int handle_flag_perms(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
-                             const wgetopter_t &w, options_t *opts, path_perm_flags_t perm ) {
+                             const wgetopter_t &w, options_t *opts, path_perm_flags_t perm) {
     if (opts->perm_valid) {
         if (!opts->have_perm) opts->perm = 0;
         opts->have_perm = true;
@@ -387,7 +386,7 @@ static int handle_flag_u(const wchar_t **argv, parser_t &parser, io_streams_t &s
 }
 
 static int handle_flag_key(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
-                         const wgetopter_t &w, options_t *opts) {
+                           const wgetopter_t &w, options_t *opts) {
     UNUSED(argv);
     UNUSED(parser);
     UNUSED(streams);
@@ -420,8 +419,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust the completions in share/completions/ when options change
-static const struct woption long_options[] = {
-                                              {L"quiet", no_argument, nullptr, 'q'},
+static const struct woption long_options[] = {{L"quiet", no_argument, nullptr, 'q'},
                                               {L"null-in", no_argument, nullptr, 'z'},
                                               {L"null-out", no_argument, nullptr, 'Z'},
                                               {L"perm", required_argument, nullptr, 'p'},
@@ -434,14 +432,10 @@ static const struct woption long_options[] = {
                                               {}};
 
 static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function = {
-    {'q', handle_flag_q}, {'v', handle_flag_v},
-    {'z', handle_flag_z}, {'Z', handle_flag_Z},
-    {'t', handle_flag_t}, {'p', handle_flag_p},
-    {'r', handle_flag_r}, {'w', handle_flag_w},
-    {'x', handle_flag_x}, {'f', handle_flag_f},
-    {'l', handle_flag_l}, {'d', handle_flag_d},
-    {'l', handle_flag_l}, {'d', handle_flag_d},
-    {'u', handle_flag_u}, {1, handle_flag_key},
+    {'q', handle_flag_q}, {'v', handle_flag_v}, {'z', handle_flag_z}, {'Z', handle_flag_Z},
+    {'t', handle_flag_t}, {'p', handle_flag_p}, {'r', handle_flag_r}, {'w', handle_flag_w},
+    {'x', handle_flag_x}, {'f', handle_flag_f}, {'l', handle_flag_l}, {'d', handle_flag_d},
+    {'l', handle_flag_l}, {'d', handle_flag_d}, {'u', handle_flag_u}, {1, handle_flag_key},
     {'R', handle_flag_R},
 };
 
@@ -492,7 +486,7 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, co
 }
 
 static int path_transform(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv,
-                            wcstring (*func)(wcstring)) {
+                          wcstring (*func)(wcstring)) {
     options_t opts;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
@@ -515,7 +509,6 @@ static int path_transform(parser_t &parser, io_streams_t &streams, int argc, con
 
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
-
 
 static int path_basename(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     return path_transform(parser, streams, argc, argv, wbasename);
@@ -636,26 +629,26 @@ static int path_normalize(parser_t &parser, io_streams_t &streams, int argc, con
     return path_transform(parser, streams, argc, argv, normalize_helper);
 }
 
-static maybe_t<size_t> find_extension (const wcstring &path) {
-        // The extension belongs to the basename,
-        // if there is a "." before the last component it doesn't matter.
-        // e.g. ~/.config/fish/conf.d/foo
-        // does not have an extension! The ".d" here is not a file extension for "foo".
-        // And "~/.config" doesn't have an extension either - the ".config" is the filename.
-        wcstring filename = wbasename(path);
+static maybe_t<size_t> find_extension(const wcstring &path) {
+    // The extension belongs to the basename,
+    // if there is a "." before the last component it doesn't matter.
+    // e.g. ~/.config/fish/conf.d/foo
+    // does not have an extension! The ".d" here is not a file extension for "foo".
+    // And "~/.config" doesn't have an extension either - the ".config" is the filename.
+    wcstring filename = wbasename(path);
 
-        // "." and ".." aren't really *files* and therefore don't have an extension.
-        if (filename == L"." || filename == L"..") return none();
+    // "." and ".." aren't really *files* and therefore don't have an extension.
+    if (filename == L"." || filename == L"..") return none();
 
-        // If we don't have a "." or the "." is the first in the filename,
-        // we do not have an extension
-        size_t pos = filename.find_last_of(L'.');
-        if (pos == wcstring::npos || pos == 0) {
-            return none();
-        }
+    // If we don't have a "." or the "." is the first in the filename,
+    // we do not have an extension
+    size_t pos = filename.find_last_of(L'.');
+    if (pos == wcstring::npos || pos == 0) {
+        return none();
+    }
 
-        // Convert pos back to what it would be in the original path.
-        return pos + path.size() - filename.size();
+    // Convert pos back to what it would be in the original path.
+    return pos + path.size() - filename.size();
 }
 
 static int path_extension(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
@@ -687,7 +680,8 @@ static int path_extension(parser_t &parser, io_streams_t &streams, int argc, con
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
-static int path_change_extension(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+static int path_change_extension(parser_t &parser, io_streams_t &streams, int argc,
+                                 const wchar_t **argv) {
     options_t opts;
     int optind;
     int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
@@ -741,7 +735,7 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
                 next = path_apply_working_directory(*arg, parser.vars().get_pwd_slash());
             }
             auto rest = wbasename(next);
-            while(!next.empty() && next != L"/") {
+            while (!next.empty() && next != L"/") {
                 next = wdirname(next);
                 real = wrealpath(next);
                 if (real) {
@@ -782,16 +776,12 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    auto keyfunc = +[] (const wcstring &x) {
-        return wbasename(x);
-    };
+    auto keyfunc = +[](const wcstring &x) { return wbasename(x); };
     if (opts.have_key) {
         if (std::wcscmp(opts.key, L"basename") == 0) {
             // Do nothing, this is the default
         } else if (std::wcscmp(opts.key, L"dirname") == 0) {
-            keyfunc = +[] (const wcstring &x) {
-                return wdirname(x);
-            };
+            keyfunc = +[](const wcstring &x) { return wdirname(x); };
         } else if (std::wcscmp(opts.key, L"path") == 0) {
             // Act as if --key hadn't been given.
             opts.have_key = false;
@@ -816,30 +806,27 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
 
         // We use a stable sort here, and also explicit < and >,
         // to avoid changing the order so you can chain calls.
-        std::stable_sort(list.begin(), list.end(),
-                  [&](const wcstring &a, const wcstring &b) {
-                      if (!opts.reverse)
-                          return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) < 0);
-                      else
-                          return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) > 0);
-                  });
+        std::stable_sort(list.begin(), list.end(), [&](const wcstring &a, const wcstring &b) {
+            if (!opts.reverse)
+                return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) < 0);
+            else
+                return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) > 0);
+        });
         if (opts.unique) {
-            list.erase(std::unique(list.begin(), list.end(),
-                              [&](const wcstring &a, const wcstring &b) {
-                                  return key[a] == key[b];
-                              }),
-                       list.end());
+            list.erase(
+                std::unique(list.begin(), list.end(),
+                            [&](const wcstring &a, const wcstring &b) { return key[a] == key[b]; }),
+                list.end());
         }
     } else {
         // Without --key, we just sort by the entire path,
         // so we have no need to transform and such.
-        std::stable_sort(list.begin(), list.end(),
-                  [&](const wcstring &a, const wcstring &b) {
-                      if (!opts.reverse)
-                          return (wcsfilecmp_glob(a.c_str(), b.c_str()) < 0);
-                      else
-                          return (wcsfilecmp_glob(a.c_str(), b.c_str()) > 0);
-                  });
+        std::stable_sort(list.begin(), list.end(), [&](const wcstring &a, const wcstring &b) {
+            if (!opts.reverse)
+                return (wcsfilecmp_glob(a.c_str(), b.c_str()) < 0);
+            else
+                return (wcsfilecmp_glob(a.c_str(), b.c_str()) > 0);
+        });
         if (opts.unique) {
             list.erase(std::unique(list.begin(), list.end()), list.end());
         }
@@ -855,7 +842,8 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
 
 // All strings are taken to be filenames, and if they match the type/perms/etc (and exist!)
 // they are passed along.
-static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv, bool is_is) {
+static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv,
+                       bool is_is) {
     options_t opts;
     opts.type_valid = true;
     opts.perm_valid = true;
@@ -908,7 +896,7 @@ static constexpr const struct path_subcommand {
                    const wchar_t **argv);                 //!OCLINT(unused param)
 } path_subcommands[] = {
     // TODO: Which operations do we want?
-    {L"basename", &path_basename},
+    {L"basename", &path_basename},  //
     {L"change-extension", &path_change_extension},
     {L"dirname", &path_dirname},
     {L"extension", &path_extension},

@@ -83,14 +83,12 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
         streams.out.append(L" --preset");
     }
     if (bind_mode != DEFAULT_BIND_MODE) {
-        const wcstring emode = escape_string(bind_mode, ESCAPE_ALL);
         streams.out.append(L" -M ");
-        streams.out.append(emode);
+        streams.out.append(escape_string(bind_mode));
     }
     if (!sets_mode.empty() && sets_mode != bind_mode) {
-        const wcstring esets_mode = escape_string(sets_mode, ESCAPE_ALL);
         streams.out.append(L" -m ");
-        streams.out.append(esets_mode);
+        streams.out.append(escape_string(sets_mode));
     }
 
     // Append the name.
@@ -100,15 +98,14 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
         streams.out.append_format(L" -k %ls", tname.c_str());
     } else {
         // No key name, so no -k; we show the escape sequence directly.
-        const wcstring eseq = escape_string(seq, ESCAPE_ALL);
+        const wcstring eseq = escape_string(seq);
         streams.out.append_format(L" %ls", eseq.c_str());
     }
 
     // Now show the list of commands.
     for (const auto &ecmd : ecmds) {
-        const wcstring escaped_ecmd = escape_string(ecmd, ESCAPE_ALL);
         streams.out.push_back(' ');
-        streams.out.append(escaped_ecmd);
+        streams.out.append(escape_string(ecmd));
     }
     streams.out.push_back(L'\n');
 
@@ -171,7 +168,7 @@ bool builtin_bind_t::get_terminfo_sequence(const wcstring &seq, wcstring *out_se
         return true;
     }
 
-    wcstring eseq = escape_string(seq, 0);
+    wcstring eseq = escape_string(seq, ESCAPE_NO_PRINTABLES);
     if (!opts->silent) {
         if (errno == ENOENT) {
             streams.err.append_format(_(L"%ls: No key with name '%ls' found\n"), L"bind",
@@ -283,7 +280,7 @@ bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, io_strea
         }
 
         if (!list_one(seq, opts->bind_mode, opts->user, opts->preset, streams)) {
-            wcstring eseq = escape_string(argv[optind], 0);
+            wcstring eseq = escape_string(argv[optind], ESCAPE_NO_PRINTABLES);
             if (!opts->silent) {
                 if (opts->use_terminfo) {
                     streams.err.append_format(_(L"%ls: No binding found for key '%ls'\n"), cmd,

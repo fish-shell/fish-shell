@@ -222,7 +222,7 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
                 // We can't quote the arguments because we print this in quotes.
                 // As a special-case, add the empty argument as "".
                 if (!arg.empty()) {
-                    args_str.append(escape_string(arg, ESCAPE_ALL | ESCAPE_NO_QUOTED));
+                    args_str.append(escape_string(arg, ESCAPE_NO_QUOTED));
                 } else {
                     args_str.append(L"\"\"");
                 }

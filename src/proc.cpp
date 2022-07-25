@@ -557,7 +557,7 @@ wcstring summary_command(const job_ref_t &j, const process_ptr_t &p = nullptr) {
 
     // Command.
     buffer.push_back(L' ');
-    buffer.append(escape_string(j->command(), ESCAPE_ALL));
+    buffer.append(escape_string(j->command()));
 
     if (!p) {
         // No process, we are summarizing the whole job.
@@ -567,17 +567,17 @@ wcstring summary_command(const job_ref_t &j, const process_ptr_t &p = nullptr) {
         // Arguments are the signal name and description.
         int sig = p->status.signal_code();
         buffer.push_back(L' ');
-        buffer.append(escape_string(sig2wcs(sig), ESCAPE_ALL));
+        buffer.append(escape_string(sig2wcs(sig)));
 
         buffer.push_back(L' ');
-        buffer.append(escape_string(signal_get_desc(sig), ESCAPE_ALL));
+        buffer.append(escape_string(signal_get_desc(sig)));
 
         // If we have multiple processes, we also append the pid and argv.
         if (j->processes.size() > 1) {
             append_format(buffer, L" %d", p->pid);
 
             buffer.push_back(L' ');
-            buffer.append(escape_string(p->argv0(), ESCAPE_ALL));
+            buffer.append(escape_string(p->argv0()));
         }
     }
     return buffer;

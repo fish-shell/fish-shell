@@ -545,7 +545,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
             if (i >= 50 && i < vals.size() - 50) continue;
         }
         const wcstring value = vals[i];
-        const wcstring escaped_val = escape_string(value, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+        const wcstring escaped_val = escape_string(value, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
         streams.out.append_format(_(L"$%ls[%d]: |%ls|\n"), var_name, i + 1, escaped_val.c_str());
     }
 }
@@ -569,7 +569,7 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
             auto inherited = inheriteds.find(name);
             if (inherited != inheriteds.end()) {
                 const wcstring escaped_val =
-                    escape_string(inherited->second, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+                    escape_string(inherited->second, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
                 streams.out.append_format(_(L"$%ls: originally inherited as |%ls|\n"), name.c_str(),
                                           escaped_val.c_str());
             }
@@ -597,7 +597,7 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
             auto inherited = inheriteds.find(arg);
             if (inherited != inheriteds.end()) {
                 const wcstring escaped_val =
-                    escape_string(inherited->second, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+                    escape_string(inherited->second, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
                 streams.out.append_format(_(L"$%ls: originally inherited as |%ls|\n"), arg,
                                           escaped_val.c_str());
             }
@@ -738,12 +738,9 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, c
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, split->varname.c_str());
         auto pos = split->varname.find(L'=');
         if (pos != wcstring::npos) {
-            streams.err.append_format(
-                L"%ls: Did you mean `set %ls %ls`?", cmd,
-                escape_string(split->varname.substr(0, pos), ESCAPE_ALL, STRING_STYLE_SCRIPT)
-                    .c_str(),
-                escape_string(split->varname.substr(pos + 1), ESCAPE_ALL, STRING_STYLE_SCRIPT)
-                    .c_str());
+            streams.err.append_format(L"%ls: Did you mean `set %ls %ls`?", cmd,
+                                      escape_string(split->varname.substr(0, pos)).c_str(),
+                                      escape_string(split->varname.substr(pos + 1)).c_str());
         }
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;

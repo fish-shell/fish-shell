@@ -152,7 +152,7 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
             path = L"stdin";
         }
         shadows_scope = props->shadow_scope ? L"scope-shadowing" : L"no-scope-shadowing";
-        description = escape_string(props->description, ESCAPE_NO_QUOTED);
+        description = escape_string(props->description, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
     }
 
     if (metadata_as_comments) {

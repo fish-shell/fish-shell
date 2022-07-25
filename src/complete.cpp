@@ -564,7 +564,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     }
 
     wcstring lookup_cmd(L"__fish_describe_command ");
-    lookup_cmd.append(escape_string(cmd, ESCAPE_ALL));
+    lookup_cmd.append(escape_string(cmd));
 
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
@@ -722,7 +722,7 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
         ctx.parser->set_last_statuses(status);
     }
 
-    this->complete_strings(escape_string(str, ESCAPE_ALL), const_desc(desc), possible_comp, flags);
+    this->complete_strings(escape_string(str), const_desc(desc), possible_comp, flags);
 }
 
 static size_t leading_dash_count(const wchar_t *str) {
@@ -1721,11 +1721,11 @@ completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_
 /// wcstring, but only if \c argument isn't an empty string.
 static void append_switch(wcstring &out, wchar_t opt, const wcstring &arg) {
     if (arg.empty()) return;
-    append_format(out, L" -%lc %ls", opt, escape_string(arg, ESCAPE_ALL).c_str());
+    append_format(out, L" -%lc %ls", opt, escape_string(arg).c_str());
 }
 static void append_switch(wcstring &out, const wcstring &opt, const wcstring &arg) {
     if (arg.empty()) return;
-    append_format(out, L" --%ls %ls", opt.c_str(), escape_string(arg, ESCAPE_ALL).c_str());
+    append_format(out, L" --%ls %ls", opt.c_str(), escape_string(arg).c_str());
 }
 static void append_switch(wcstring &out, wchar_t opt) { append_format(out, L" -%lc", opt); }
 static void append_switch(wcstring &out, const wcstring &opt) {
@@ -1753,7 +1753,7 @@ static wcstring completion2string(const completion_key_t &key, const complete_en
         append_switch(out, L'p', cmd);
     else {
         out.append(L" ");
-        out.append(escape_string(cmd, ESCAPE_ALL));
+        out.append(escape_string(cmd));
     }
 
     switch (o.type) {
@@ -1833,7 +1833,7 @@ wcstring complete_print(const wcstring &cmd) {
         if (!cmd.empty() && src != cmd) continue;
         for (const wcstring &target : entry.second) {
             out.append(L"complete ");
-            out.append(escape_string(src, ESCAPE_ALL));
+            out.append(escape_string(src));
             append_switch(out, L"wraps", target);
             out.append(L"\n");
         }

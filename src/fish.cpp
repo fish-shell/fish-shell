@@ -223,8 +223,7 @@ static void source_config_in_directory(parser_t &parser, const wcstring &dir) {
     // test and the execution of the 'source' command. However, that is not a security problem in
     // this context so we ignore it.
     const wcstring config_pathname = dir + L"/config.fish";
-    const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
-    const wcstring escaped_pathname = escaped_dir + L"/config.fish";
+    const wcstring escaped_pathname = escape_string(dir) + L"/config.fish";
     if (waccess(config_pathname, R_OK) != 0) {
         FLOGF(config, L"not sourcing %ls (not readable or does not exist)",
               escaped_pathname.c_str());

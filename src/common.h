@@ -138,11 +138,12 @@ enum {
 };
 typedef unsigned int unescape_flags_t;
 
-// Flags for the escape_string() and escape_string() functions. These are only applicable when the
-// escape style is "script" (i.e., STRING_STYLE_SCRIPT).
+// Flags for the escape_string() function. These are only applicable when the escape style is
+// "script" (i.e., STRING_STYLE_SCRIPT).
 enum {
-    /// Escape all characters, including magic characters like the semicolon.
-    ESCAPE_ALL = 1 << 0,
+    /// Do not escape special fish syntax characters like the semicolon. Only escape nonprintable
+    /// characters and backslashes.
+    ESCAPE_NO_PRINTABLES = 1 << 0,
     /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
     /// string.
     ESCAPE_NO_QUOTED = 1 << 1,
@@ -477,9 +478,9 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 /// \param in The string to be escaped
 /// \param flags Flags to control the escaping
 /// \return The escaped string
-wcstring escape_string(const wchar_t *in, escape_flags_t flags,
+wcstring escape_string(const wchar_t *in, escape_flags_t flags = 0,
                        escape_string_style_t style = STRING_STYLE_SCRIPT);
-wcstring escape_string(const wcstring &in, escape_flags_t flags,
+wcstring escape_string(const wcstring &in, escape_flags_t flags = 0,
                        escape_string_style_t style = STRING_STYLE_SCRIPT);
 
 /// Escape a string so that it may be inserted into a double-quoted string.

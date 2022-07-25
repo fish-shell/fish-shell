@@ -405,7 +405,7 @@ static void test_escape_crazy() {
             random_string.push_back((random() % ESCAPE_TEST_CHAR) + 1);
         }
 
-        escaped_string = escape_string(random_string, ESCAPE_ALL);
+        escaped_string = escape_string(random_string);
         unescaped_success = unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
 
         if (!unescaped_success) {
@@ -418,10 +418,9 @@ static void test_escape_crazy() {
         }
     }
 
-    // Verify that not using `ESCAPE_ALL` also escapes backslashes so we don't regress on issue
-    // #3892.
+    // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
     random_string = L"line 1\\n\nline 2";
-    escaped_string = escape_string(random_string, ESCAPE_NO_QUOTED);
+    escaped_string = escape_string(random_string, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
     unescaped_success = unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
     if (!unescaped_success) {
         err(L"Failed to unescape string <%ls>", escaped_string.c_str());
@@ -5775,7 +5774,7 @@ static void run_one_string_test(const wchar_t *const *argv_raw, int expected_rc,
 
     wcstring args;
     for (const wcstring &arg : argv_list) {
-        args += escape_string(arg, ESCAPE_ALL) + L' ';
+        args += escape_string(arg) + L' ';
     }
     args.resize(args.size() - 1);
 
@@ -5785,8 +5784,7 @@ static void run_one_string_test(const wchar_t *const *argv_raw, int expected_rc,
             args.c_str(), expected_rc, got.c_str());
     } else if (outs.contents() != expected_out) {
         err(L"Test failed on line %lu: [%ls]: expected [%ls] but got [%ls]", __LINE__, args.c_str(),
-            escape_string(expected_out, ESCAPE_ALL).c_str(),
-            escape_string(outs.contents(), ESCAPE_ALL).c_str());
+            escape_string(expected_out).c_str(), escape_string(outs.contents()).c_str());
     }
 }
 

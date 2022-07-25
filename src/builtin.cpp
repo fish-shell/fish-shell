@@ -149,11 +149,11 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
                         wcstring *error_message) {
     // This won't ever work if no_exec is set.
     if (no_exec()) return;
-    const wcstring name_esc = escape_string(name, ESCAPE_ALL);
+    const wcstring name_esc = escape_string(name);
     wcstring cmd = format_string(L"__fish_print_help %ls ", name_esc.c_str());
     io_chain_t ios;
     if (error_message) {
-        cmd.append(escape_string(*error_message, ESCAPE_ALL));
+        cmd.append(escape_string(*error_message));
         // If it's an error, redirect the output of __fish_print_help to stderr
         ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO));
     }

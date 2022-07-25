@@ -1330,8 +1330,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
         fish_title_command = L"fish_title";
         if (!cmd.empty()) {
             fish_title_command.append(L" ");
-            fish_title_command.append(
-                escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
+            fish_title_command.append(escape_string(cmd, ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
         }
     }
 
@@ -1650,8 +1649,8 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         wcstring sb(buff, begin - buff);
 
         if (do_escape) {
-            wcstring escaped = escape_string(
-                val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
+            wcstring escaped =
+                escape_string(val, ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
             move_cursor = escaped.size();
         } else {
@@ -2858,8 +2857,7 @@ expand_result_t::result_t reader_data_t::try_expand_wildcard(wcstring wc, size_t
         } else {
             complete_flags_t tildeflag =
                 (match.flags & COMPLETE_DONT_ESCAPE_TILDES) ? ESCAPE_NO_TILDE : 0;
-            joined.append(
-                escape_string(match.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED | tildeflag));
+            joined.append(escape_string(match.completion, ESCAPE_NO_QUOTED | tildeflag));
         }
         joined.push_back(L' ');
     }

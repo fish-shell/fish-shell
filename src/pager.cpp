@@ -310,7 +310,8 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
         comp_t *comp_info = &result.at(i);
 
         // Append the single completion string. We may later merge these into multiple.
-        comp_info->comp.push_back(escape_string(comp.completion, ESCAPE_NO_QUOTED));
+        comp_info->comp.push_back(
+            escape_string(comp.completion, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED));
 
         // Append the mangled description.
         comp_info->desc = comp.description;

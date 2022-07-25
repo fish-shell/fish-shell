@@ -29,7 +29,7 @@ void trace_argv(const parser_t &parser, const wchar_t *command, const wcstring_l
     }
     for (const wcstring &arg : argv) {
         trace_text.push_back(L' ');
-        trace_text.append(escape_string(arg, ESCAPE_ALL));
+        trace_text.append(escape_string(arg));
     }
     trace_text.push_back(L'\n');
     log_extra_to_flog_file(trace_text);

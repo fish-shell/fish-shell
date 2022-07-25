@@ -297,7 +297,7 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         wcstring buffer = handler->function_name;
         for (const wcstring &arg : event.arguments) {
             buffer.push_back(L' ');
-            buffer.append(escape_string(arg, ESCAPE_ALL));
+            buffer.append(escape_string(arg));
         }
 
         // Event handlers are not part of the main flow of code, so they are marked as

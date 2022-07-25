@@ -766,7 +766,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         buffer = L"fish_command_not_found";
         for (const wcstring &arg : event_args) {
             buffer.push_back(L' ');
-            buffer.append(escape_string(arg, ESCAPE_ALL));
+            buffer.append(escape_string(arg));
         }
         auto prev_statuses = parser->get_last_statuses();
 
@@ -781,7 +781,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         error = _(L"Unknown command:");
         if (!event_args.empty()) {
             error.push_back(L' ');
-            error.append(escape_string(event_args[0], ESCAPE_ALL));
+            error.append(escape_string(event_args[0]));
         }
     }
 

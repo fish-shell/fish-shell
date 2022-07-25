@@ -294,19 +294,18 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
     // But if the function name starts with a -, we'll need to output it after all the options.
     bool defer_function_name = (name.at(0) == L'-');
     if (!defer_function_name) {
-        out.append(escape_string(name, ESCAPE_ALL));
+        out.append(escape_string(name));
     }
 
     // Output wrap targets.
     for (const wcstring &wrap : complete_get_wrap_targets(name)) {
         out.append(L" --wraps=");
-        out.append(escape_string(wrap, ESCAPE_ALL));
+        out.append(escape_string(wrap));
     }
 
     if (!desc.empty()) {
-        wcstring esc_desc = escape_string(desc, ESCAPE_ALL);
         out.append(L" --description ");
-        out.append(esc_desc);
+        out.append(escape_string(desc));
     }
 
     if (!this->shadow_scope) {
@@ -358,7 +357,7 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
     // Output the function name if we deferred it.
     if (defer_function_name) {
         out.append(L" -- ");
-        out.append(escape_string(name, ESCAPE_ALL));
+        out.append(escape_string(name));
     }
 
     // Output any inherited variables as `set -l` lines.
@@ -367,9 +366,8 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
         // so we do what fish_indent would.
         append_format(out, L"\n    set -l %ls", kv.first.c_str());
         for (const auto &arg : kv.second) {
-            wcstring earg = escape_string(arg, ESCAPE_ALL);
             out.push_back(L' ');
-            out.append(earg);
+            out.append(escape_string(arg));
         }
     }
     out.push_back('\n');

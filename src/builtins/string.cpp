@@ -705,9 +705,8 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, cons
     // Currently, only the script style supports options.
     // Ignore them for other styles for now.
     escape_flags_t flags = 0;
-    if (opts.escape_style == STRING_STYLE_SCRIPT) {
-        flags = ESCAPE_ALL;
-        if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
+    if (opts.escape_style == STRING_STYLE_SCRIPT && opts.no_quoted) {
+        flags |= ESCAPE_NO_QUOTED;
     }
 
     int nesc = 0;

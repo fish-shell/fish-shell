@@ -869,7 +869,7 @@ wcstring escape_string_for_double_quotes(wcstring in) {
 static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
                                  escape_flags_t flags) {
     const wchar_t *in = orig_in;
-    const bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
+    const bool escape_printables = !(flags & ESCAPE_NO_PRINTABLES);
     const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
     const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
     const bool no_qmark = feature_test(features_t::qmark_noglob);
@@ -981,7 +981,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                     bool char_is_normal = (c == L'~' && no_tilde) || (c == L'?' && no_qmark);
                     if (!char_is_normal) {
                         need_escape = true;
-                        if (escape_all) out += L'\\';
+                        if (escape_printables) out += L'\\';
                     }
                     out += *in;
                     break;
@@ -1016,7 +1016,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     }
 
     // Use quoted escaping if possible, since most people find it easier to read.
-    if (!no_quoted && need_escape && !need_complex_escape && escape_all) {
+    if (!no_quoted && need_escape && !need_complex_escape && escape_printables) {
         wchar_t single_quote = L'\'';
         out.clear();
         out.reserve(2 + in_len);

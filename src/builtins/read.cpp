@@ -380,7 +380,7 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     }
 
     if (opts.prompt_str) {
-        opts.prompt_cmd = L"echo " + escape_string(opts.prompt_str, ESCAPE_ALL);
+        opts.prompt_cmd = L"echo " + escape_string(opts.prompt_str);
         opts.prompt = opts.prompt_cmd.c_str();
     } else if (!opts.prompt) {
         opts.prompt = DEFAULT_READ_PROMPT;

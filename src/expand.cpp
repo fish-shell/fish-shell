@@ -154,7 +154,7 @@ wcstring expand_escape_variable(const env_var_t &var) {
             buff.append(el);
             buff.append(L"'");
         } else {
-            buff.append(escape_string(el, 1));
+            buff.append(escape_string(el));
         }
     }
 
@@ -169,7 +169,7 @@ wcstring expand_escape_string(const wcstring &el) {
         buff.append(el);
         buff.append(L"'");
     } else {
-        buff.append(escape_string(el, 1));
+        buff.append(escape_string(el));
     }
     return buff;
 }
@@ -770,7 +770,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
     }
 
     for (const wcstring &sub_item : sub_res) {
-        wcstring sub_item2 = escape_string(sub_item, ESCAPE_ALL);
+        wcstring sub_item2 = escape_string(sub_item);
         for (const completion_t &tail_item : tail_expand) {
             wcstring whole_item;
             whole_item.reserve(paren_begin + 1 + sub_item2.size() + 1 +

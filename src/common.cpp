@@ -988,10 +988,10 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 }
 
                 default: {
-                    if (*in < 32) {
+                    if (*in >= 0 && *in < 32) {
                         need_escape = need_complex_escape = true;
 
-                        if (*in < 27 && *in > 0) {
+                        if (*in < 27 && *in != 0) {
                             out += L'\\';
                             out += L'c';
                             out += L'a' + *in - 1;

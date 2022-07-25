@@ -277,6 +277,6 @@ complete -c zig -n "__fish_seen_subcommand_from fmt" -l stdin -d "Use stdin and 
 complete -c zig -n "__fish_seen_subcommand_from fmt" -l check -d "Check if the input is formatted"
 complete -c zig -n "__fish_seen_subcommand_from fmt" -l ast-check -d "Run `zig ast-check` on every file"
 
-complete -x -c zig -n "__fish_seen_subcommand_from cc c++" -a "(__fish_complete_zig_cc_and_cpp)"
+complete -c zig -n "__fish_seen_subcommand_from cc c++" -a "(__fish_complete_zig_cc_and_cpp)"
 
 complete -x -c zig -n "__fish_seen_subcommand_from libc" -o target -d "Specify the compilation target"

@@ -989,12 +989,12 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
 
                 default: {
                     if (*in < 32) {
+                        need_escape = need_complex_escape = true;
+
                         if (*in < 27 && *in > 0) {
                             out += L'\\';
                             out += L'c';
                             out += L'a' + *in - 1;
-
-                            need_escape = need_complex_escape = true;
                             break;
                         }
 
@@ -1003,7 +1003,6 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                         out += L'x';
                         out += ((*in > 15) ? L'1' : L'0');
                         out += tmp > 9 ? L'a' + (tmp - 10) : L'0' + tmp;
-                        need_escape = need_complex_escape = true;
                     } else {
                         out += *in;
                     }

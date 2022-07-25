@@ -941,7 +941,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L'\\':
                 case L'\'': {
                     need_escape = need_complex_escape = true;
-                    out += L'\\';
+                    if (escape_printables || c == L'\\') out += L'\\';
                     out += *in;
                     break;
                 }

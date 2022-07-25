@@ -553,7 +553,7 @@ set --show var1
 #CHECK: $var1: set in local scope, unexported, with 0 elements
 #CHECK: $var1: set in global scope, unexported, with 2 elements
 #CHECK: $var1[1]: |goodbye|
-#CHECK: $var1[2]: |and don\'t come back|
+#CHECK: $var1[2]: |and don't come back|
 #CHECK: $var1: set in universal scope, unexported, with 1 elements
 #CHECK: $var1[1]: |hello|
 

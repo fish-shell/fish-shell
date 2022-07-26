@@ -335,6 +335,11 @@ void editable_line_t::end_edit_group() {
     }
 }
 
+// Make the search case-insensitive unless we have an uppercase character.
+static history_search_flags_t smartcase_flags(const wcstring &query) {
+    return query == wcstolower(query) ? history_search_ignore_case : 0;
+}
+
 namespace {
 
 /// Encapsulation of the reader's history search functionality.
@@ -506,10 +511,7 @@ class reader_history_search_t {
         match_index_ = 0;
         mode_ = mode;
         token_offset_ = token_offset;
-        history_search_flags_t flags = history_search_no_dedup;
-        // Make the search case-insensitive unless we have an uppercase character.
-        wcstring low = wcstolower(text);
-        if (low == text) flags |= history_search_ignore_case;
+        history_search_flags_t flags = history_search_no_dedup | smartcase_flags(text);
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
             hist, text,

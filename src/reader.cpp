@@ -4263,7 +4263,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                 // End paging upon inserting into the normal command line.
                 if (el == &command_line) {
                     pager.clear();
-                    command_line_has_transient_edit = false;
                 }
             } else {
                 // This can happen if the user presses a control char we don't recognize. No

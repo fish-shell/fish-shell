@@ -734,6 +734,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Do what we need to do whenever our command line changes.
     void command_line_changed(const editable_line_t *el);
+    void maybe_refilter_pager(const editable_line_t *el);
 
     /// Do what we need to do whenever our pager selection changes.
     void pager_selection_changed();
@@ -1199,6 +1200,12 @@ void reader_data_t::command_line_changed(const editable_line_t *el) {
     update_commandline_state();
 }
 
+void reader_data_t::maybe_refilter_pager(const editable_line_t *el) {
+    if (el == &this->pager.search_field_line) {
+        command_line_changed(el);
+    }
+}
+
 void reader_data_t::pager_selection_changed() {
     ASSERT_IS_MAIN_THREAD();
 
@@ -1590,19 +1597,13 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
         command_line_has_transient_edit = false;
         suppress_autosuggestion = false;
     }
-    // The pager needs to be refiltered.
-    if (el == &this->pager.search_field_line) {
-        command_line_changed(el);
-    }
+    maybe_refilter_pager(el);
 }
 
 void reader_data_t::push_edit(editable_line_t *el, edit_t &&edit) {
     el->push_edit(std::move(edit));
     el->undo_history.may_coalesce = false;
-    // The pager needs to be refiltered.
-    if (el == &this->pager.search_field_line) {
-        command_line_changed(el);
-    }
+    maybe_refilter_pager(el);
 }
 
 void reader_data_t::erase_substring(editable_line_t *el, size_t offset, size_t length) {
@@ -4078,6 +4079,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     pager.clear();
                 }
                 update_buff_pos(el);
+                maybe_refilter_pager(el);
             } else {
                 flash();
             }

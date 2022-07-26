@@ -2175,8 +2175,6 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     // Update the pager data.
     pager.set_prefix(prefix);
     pager.set_completions(surviving_completions);
-    // Invalidate our rendering.
-    current_page_rendering = page_rendering_t();
     // Modify the command line to reflect the new pager.
     pager_selection_changed();
     return false;

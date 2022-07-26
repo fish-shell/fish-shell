@@ -388,6 +388,7 @@ void pager_t::set_completions(const completion_list_t &raw_completions) {
 
     // Refilter them.
     this->refilter_completions();
+    have_unrendered_completions = true;
 }
 
 void pager_t::set_prefix(const wcstring &pref) { prefix = pref; }
@@ -575,6 +576,7 @@ page_rendering_t pager_t::render() const {
 }
 
 bool pager_t::rendering_needs_update(const page_rendering_t &rendering) const {
+    if (have_unrendered_completions) return true;
     // Common case is no pager.
     if (this->empty() && rendering.screen_data.empty()) return false;
 
@@ -589,9 +591,10 @@ bool pager_t::rendering_needs_update(const page_rendering_t &rendering) const {
            (rendering.remaining_to_disclose > 0 && this->fully_disclosed);
 }
 
-void pager_t::update_rendering(page_rendering_t *rendering) const {
+void pager_t::update_rendering(page_rendering_t *rendering) {
     if (rendering_needs_update(*rendering)) {
         *rendering = this->render();
+        have_unrendered_completions = false;
     }
 }
 

@@ -116,6 +116,10 @@ class pager_t {
     // The unfiltered list. Note there's a lot of duplication here.
     comp_info_list_t unfiltered_completion_infos;
 
+    // This tracks if the completion list has been changed since we last rendered. If yes,
+    // then we definitely need to re-render.
+    bool have_unrendered_completions = false;
+
     wcstring prefix;
 
     bool completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst,
@@ -167,7 +171,7 @@ class pager_t {
     bool rendering_needs_update(const page_rendering_t &rendering) const;
 
     // Updates the rendering.
-    void update_rendering(page_rendering_t *rendering) const;
+    void update_rendering(page_rendering_t *rendering);
 
     // Indicates if there are no completions, and therefore nothing to render.
     bool empty() const;

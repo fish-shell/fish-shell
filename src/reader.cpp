@@ -174,8 +174,8 @@ static constexpr long kHighlightTimeoutForExecutionMs = 250;
 /// Get the debouncer for autosuggestions and background highlighting.
 /// These are deliberately leaked to avoid shutdown dtor registration.
 static debounce_t &debounce_autosuggestions() {
-    const long kAutosuggetTimeoutMs = 500;
-    static auto res = new debounce_t(kAutosuggetTimeoutMs);
+    const long kAutosuggestTimeoutMs = 500;
+    static auto res = new debounce_t(kAutosuggestTimeoutMs);
     return *res;
 }
 

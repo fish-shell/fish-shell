@@ -33,6 +33,8 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
+  - ``firefox``
+  - ``firefox-developer-edition``
   - ``zig`` (:issue:`9083`)
 
 Improved terminal support

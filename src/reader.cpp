@@ -1578,7 +1578,6 @@ void reader_data_t::delete_char(bool backward) {
 void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     if (str.empty()) return;
 
-    command_line_has_transient_edit = false;
     if (!history_search.active() && want_to_coalesce_insertion_of(*el, str)) {
         el->insert_coalesce(str);
         assert(el->undo_history.may_coalesce);
@@ -1587,7 +1586,10 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
         el->undo_history.may_coalesce = el->undo_history.try_coalesce || (str.size() == 1);
     }
 
-    if (el == &command_line) suppress_autosuggestion = false;
+    if (el == &command_line) {
+        command_line_has_transient_edit = false;
+        suppress_autosuggestion = false;
+    }
     // The pager needs to be refiltered.
     if (el == &this->pager.search_field_line) {
         command_line_changed(el);

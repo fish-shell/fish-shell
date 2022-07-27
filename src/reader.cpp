@@ -570,6 +570,7 @@ struct highlight_result_t {
 struct history_pager_result_t {
     completion_list_t matched_commands;
     size_t final_index;
+    bool have_more_results;
 };
 
 /// readline_loop_state_t encapsulates the state used in a readline loop.
@@ -1248,9 +1249,10 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
             item.str(), L"", string_fuzzy_match_t::exact_match(),
             COMPLETE_REPLACES_COMMANDLINE | COMPLETE_DONT_ESCAPE | COMPLETE_DONT_SORT});
     }
+    size_t last_index = search.current_index();
     if (direction == history_search_direction_t::forward)
         std::reverse(completions.begin(), completions.end());
-    return {completions, search.current_index()};
+    return {completions, last_index, search.go_to_next_match(direction)};
 }
 
 void reader_data_t::fill_history_pager(bool new_search, history_search_direction_t direction) {
@@ -1283,6 +1285,8 @@ void reader_data_t::fill_history_pager(bool new_search, history_search_direction
                 shared_this->history_pager_history_index_start = index;
                 shared_this->history_pager_history_index_end = result.final_index;
             }
+            shared_this->pager.extra_progress_text =
+                result.have_more_results ? _(L"Search again for more results") : L"";
             shared_this->pager.set_completions(result.matched_commands);
             shared_this->select_completion_in_direction(selection_motion_t::next, true);
             shared_this->super_highlight_me_plenty();

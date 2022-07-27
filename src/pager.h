@@ -142,6 +142,9 @@ class pager_t {
     // The text of the search field.
     editable_line_t search_field_line;
 
+    // Extra text to display at the bottom of the pager.
+    wcstring extra_progress_text{};
+
     // Sets the set of completions.
     void set_completions(const completion_list_t &raw_completions);
 

@@ -509,6 +509,12 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         // Everything is filtered.
         progress_text = _(L"(no matches)");
     }
+    if (!extra_progress_text.empty()) {
+        if (!progress_text.empty()) {
+            progress_text += L". ";
+        }
+        progress_text += extra_progress_text;
+    }
 
     if (!progress_text.empty()) {
         line_t &line = rendering->screen_data.add_line();
@@ -869,6 +875,7 @@ void pager_t::clear() {
     fully_disclosed = false;
     search_field_shown = false;
     search_field_line.clear();
+    extra_progress_text.clear();
 }
 
 void pager_t::set_search_field_shown(bool flag) { this->search_field_shown = flag; }

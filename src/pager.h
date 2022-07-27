@@ -121,6 +121,7 @@ class pager_t {
     bool have_unrendered_completions = false;
 
     wcstring prefix;
+    bool highlight_prefix = false;
 
     bool completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst,
                               page_rendering_t *rendering, size_t suggested_start_row) const;
@@ -145,7 +146,7 @@ class pager_t {
     void set_completions(const completion_list_t &raw_completions);
 
     // Sets the prefix.
-    void set_prefix(const wcstring &pref);
+    void set_prefix(const wcstring &pref, bool highlight = true);
 
     // Sets the terminal size.
     void set_term_size(termsize_t ts);

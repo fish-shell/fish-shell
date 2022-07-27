@@ -3741,7 +3741,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             this->history_pager_history_index_end = 0;
             // Update the pager data.
             pager.set_search_field_shown(true);
-            pager.set_prefix(L"");
+            pager.set_prefix(MB_CUR_MAX > 1 ? L"► " : L"> ", false /* highlight */);
             // Update the search field, which triggers the actual history search.
             insert_string(&pager.search_field_line, command_line.text());
             break;

@@ -153,7 +153,10 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
 
     highlight_role_t bg_role = modify_role(highlight_role_t::pager_background);
     highlight_spec_t bg = {highlight_role_t::normal, bg_role};
-    highlight_spec_t prefix_col = {modify_role(highlight_role_t::pager_prefix), bg_role};
+    highlight_spec_t prefix_col = {
+        modify_role(highlight_prefix ? highlight_role_t::pager_prefix
+                                     : highlight_role_t::pager_completion),
+        bg_role};
     highlight_spec_t comp_col = {modify_role(highlight_role_t::pager_completion), bg_role};
     highlight_spec_t desc_col = {modify_role(highlight_role_t::pager_description), bg_role};
 
@@ -392,7 +395,10 @@ void pager_t::set_completions(const completion_list_t &raw_completions) {
     have_unrendered_completions = true;
 }
 
-void pager_t::set_prefix(const wcstring &pref) { prefix = pref; }
+void pager_t::set_prefix(const wcstring &pref, bool highlight) {
+    prefix = pref;
+    highlight_prefix = highlight;
+}
 
 void pager_t::set_term_size(termsize_t ts) {
     available_term_width = ts.width > 0 ? ts.width : 0;
@@ -858,6 +864,7 @@ void pager_t::clear() {
     unfiltered_completion_infos.clear();
     completion_infos.clear();
     prefix.clear();
+    highlight_prefix = false;
     selected_completion_idx = PAGER_SELECTION_NONE;
     fully_disclosed = false;
     search_field_shown = false;

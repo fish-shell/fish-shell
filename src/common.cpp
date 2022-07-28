@@ -70,7 +70,7 @@
 #endif
 #endif
 #if defined(__APPLE__)
-#include <libproc.h>
+#include <mach-o/dyld.h>
 #endif
 
 struct termios shell_modes;

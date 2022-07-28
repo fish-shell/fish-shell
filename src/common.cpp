@@ -1856,15 +1856,21 @@ bool valid_func_name(const wcstring &str) {
 
 /// Return the path to the current executable. This needs to be realpath'd.
 std::string get_executable_path(const char *argv0) {
+    static std::string result;
+    if (!result.empty()) return result;
     char buff[PATH_MAX];
+    std::string buffstr;
 #ifdef __APPLE__
     // On OS X use it's proprietary API to get the path to the executable.
     // This is basically grabbing exec_path after argc, argv, envp, ...: for us
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buff_size = sizeof buff;
-    if (_NSGetExecutablePath(buff, &buff_size) == 0) return std::string(buff);
+    if (_NSGetExecutablePath(buff, &buff_size) == 0) {
+        buffstr = buff;
+    }
 #else
-size_t buff_size = sizeof buff;
+    size_t buff_size = sizeof buff;
+#endif
 #if defined(__BSD__) && defined(KERN_PROC_PATHNAME)
     // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
     // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1
@@ -1874,13 +1880,14 @@ size_t buff_size = sizeof buff;
 #else
     int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
 #endif
-    int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
-    if (result != 0) {
+    int ret = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
+    if (ret != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
     } else {
-        return std::string(buff);
+        buffstr = buff;
+        return result;
     }
-#elif (defined(__linux__) || defined(sun) || defined(__sun))
+#endif
     ssize_t len;
     len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
     if (len == -1) {
@@ -1891,7 +1898,7 @@ size_t buff_size = sizeof buff;
         // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
         // then linux adds a " (deleted)" suffix.
         // If that's not a valid path, let's remove that awkward suffix.
-        std::string buffstr = {buff};
+        buffstr = buff;
         if (access(buff, F_OK)) {
             auto dellen = const_strlen(" (deleted)");
             if (buffstr.size() > dellen &&
@@ -1901,10 +1908,7 @@ size_t buff_size = sizeof buff;
         }
         return buffstr;
     }
-#else
-    static std::string result;
-    if (!result.empty()) return result;
-    std::string strargv0 = ((argv0) ? argv0 : ""), buffstr;
+    std::string strargv0 = ((argv0) ? argv0 : "");
     struct stat st;
     if (!strargv0.empty()) {
         if (strargv0[0] == '/') {
@@ -1926,7 +1930,6 @@ size_t buff_size = sizeof buff;
                 buffstr = std::string(pwd) + "/" + strargv0;
             }
         }
-        return buffstr;
     }
 #ifdef __OpenBSD__
     // kd variable is necessary for kvm_getfiles() first argument; RTFM.
@@ -1955,15 +1958,8 @@ size_t buff_size = sizeof buff;
     if (realpath(buffstr.c_str(), buff)) {
         buffstr = buff;
     }
-    result = buffstr;
+    result = ((!buffstr.empty()) ? buffstr : "fish");
     return result;
-#endif
-#endif
-
-    // Just return argv0, which probably won't work (i.e. it's not an absolute path or a path
-    // relative to the working directory, but instead something the caller found via $PATH). We'll
-    // eventually fall back to the compile time paths.
-    return std::string(argv0 ? argv0 : "");
 }
 
 /// Return a path to a directory where we can store temporary files.

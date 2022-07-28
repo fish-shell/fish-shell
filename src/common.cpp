@@ -56,8 +56,14 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // Keep after "common.h"
+#if defined(__OpenBSD__)
+#include <kvm.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#else
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
+#endif
 #endif
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -65,6 +71,7 @@
 
 struct termios shell_modes;
 
+extern 
 const wcstring g_empty_string{};
 
 /// This allows us to notice when we've forked.
@@ -1849,46 +1856,60 @@ bool valid_func_name(const wcstring &str) {
 
 /// Return the path to the current executable. This needs to be realpath'd.
 std::string get_executable_path(const char *argv0) {
+    static std::string result;
+    if (!result.empty()) return result;
     char buff[PATH_MAX];
-
+    std::string buffstr;
 #ifdef __APPLE__
     // On OS X use it's proprietary API to get the path to the executable.
     // This is basically grabbing exec_path after argc, argv, envp, ...: for us
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
-    uint32_t buffSize = sizeof buff;
-    if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
-#elif defined(__BSD__) && defined(KERN_PROC_PATHNAME)
+    uint32_t buff_size = sizeof buff;
+    if (_NSGetExecutablePath(buff, &buff_size) == 0) {
+        char path[PATH_MAX];
+        if (realpath(buff, path)) {
+            result = path;
+            return result;
+        }
+    }
+    result = "fish";
+    return result;
+#else
+    size_t buff_size = sizeof buff;
+#endif
+#if defined(__BSD__) && defined(KERN_PROC_PATHNAME)
     // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
     // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1
     // returns the value for the current process.
-    size_t buff_size = sizeof buff;
 #if defined(__NetBSD__)
-    int name[] = {CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_PATHNAME};
+    int name[] = {CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME};
 #else
     int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
 #endif
-    int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
-    if (result != 0) {
+    int ret = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
+    if (ret != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
     } else {
-        return std::string(buff);
+        char path[PATH_MAX];
+        if (realpath(buff, path)) {
+            result = path;
+            return result;
+        }
     }
-#else
-    // On other unixes, fall back to the Linux-ish /proc/ directory
+    result = "fish";
+    return result;
+#endif
     ssize_t len;
     len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
     if (len == -1) {
-        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // other BSDs
-        if (len == -1) {
-            len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
-        }
+        len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
     }
     if (len > 0) {
         buff[len] = '\0';
         // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
         // then linux adds a " (deleted)" suffix.
         // If that's not a valid path, let's remove that awkward suffix.
-        std::string buffstr{buff};
+        buffstr = buff;
         if (access(buff, F_OK)) {
             auto dellen = const_strlen(" (deleted)");
             if (buffstr.size() > dellen &&
@@ -1896,14 +1917,61 @@ std::string get_executable_path(const char *argv0) {
                 buffstr = buffstr.substr(0, buffstr.size() - dellen);
             }
         }
-        return buffstr;
+        result = buffstr;
+        return result;
     }
+    std::string strargv0 = ((argv0) ? argv0 : "");
+    struct stat st;
+    if (!strargv0.empty()) {
+        if (strargv0[0] == '/') {
+            buffstr = strargv0;
+        } else if (strargv0.find('/') == std::string::npos) {
+            const char *penv = getenv("PATH");
+            if (penv && *penv) {
+                std::vector<std::string> env = split_string(penv, ':');
+                for (std::size_t i = 0; i < env.size(); i++) {
+                    buffstr = env[i] + "/" + strargv0;
+                    if (!stat(buffstr.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
+                        break;
+                    }
+                }
+            }
+        } else {
+            const char *pwd = getenv("PWD");
+            if (pwd && *pwd) {
+                buffstr = std::string(pwd) + "/" + strargv0;
+            }
+        }
+    }
+    buffstr.resize(buff_size, '\0');
+    buffstr[buff_size] = '\0';
+    if (realpath(buffstr.c_str(), buff)) {
+        buffstr = buff;
+    }
+#ifdef __OpenBSD__
+    // kd variable is necessary for kvm_getfiles() first argument; RTFM.
+    kvm_t *kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, nullptr);
+    if (!kd) { result = "fish"; return result; }
+    int cntp = 0;
+    bool ok = false;
+    kinfo_file *kif = nullptr;
+    if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
+        if (!stat(buffstr.c_str(), &st)) {
+            for (int i = 0; i < cntp; i++) {
+                if (kif[i].fd_fd == KERN_FILE_TEXT) {
+                    if (st.st_dev == (dev_t)kif[i].va_fsid && st.st_ino == (ino_t)kif[i].va_fileid) {
+                        ok = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    kvm_close(kd);
+    if (!ok) { result = "fish"; return result; }
 #endif
-
-    // Just return argv0, which probably won't work (i.e. it's not an absolute path or a path
-    // relative to the working directory, but instead something the caller found via $PATH). We'll
-    // eventually fall back to the compile time paths.
-    return std::string(argv0 ? argv0 : "");
+    result = ((!buffstr.empty()) ? buffstr : "fish");
+    return result;
 }
 
 /// Return a path to a directory where we can store temporary files.

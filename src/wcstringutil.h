@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "common.h"
 #include "expand.h"

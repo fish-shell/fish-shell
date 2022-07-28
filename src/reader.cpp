@@ -2493,7 +2493,7 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
     if (pos > command_line_len) pos = command_line_len;  //!OCLINT(parameter reassignment)
     update_buff_pos(&command_line, pos);
 
-    // Clear history search and pager contents.
+    // Clear history search.
     history_search.reset();
 }
 

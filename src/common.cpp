@@ -1868,9 +1868,6 @@ std::string get_executable_path(const char *argv0) {
     uint32_t buff_size = sizeof buff;
     if (_NSGetExecutablePath(buff, &buff_size) == 0) return std::string(buff);
 #elif defined(__BSD__) && defined(KERN_PROC_PATHNAME)
-#else
-    size_t buff_size = sizeof buff;
-#if defined(__BSD__) && defined(KERN_PROC_PATHNAME)
     // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
     // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1
     // returns the value for the current process.

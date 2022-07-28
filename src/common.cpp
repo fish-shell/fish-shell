@@ -1885,59 +1885,63 @@ size_t buff_size = sizeof buff;
         return std::string(buff);
     }
 #elif defined(__OpenBSD__)
-    int cntp = 0;
-    struct stat st;
+    static bool init;
     std::string path;
-    bool ok = false;
-    kinfo_file *kif = nullptr;
-    static kvm_t *kd = nullptr;
-    char errbuf[_POSIX2_LINE_MAX];
-    const char *pwd = nullptr, *penv = nullptr;
-    if (!std::string(argv0).empty()) {
-        if (argv0[0] == '/') {
-            path = argv0;
-        } else if (std::string(argv0).find('/') == std::string::npos) {
-            penv = getenv("PATH");
-            if (penv && *penv) {
-                wcstring wenv = str2wcstring(penv);
-                wcstring_list_t env = split_string(wenv, L':');
-                for (std::size_t i = 0; i < env.size(); i++) {
-                    path = wcs2string(env[i].c_str(), env[i].length()) + "/" + argv0;
-                    if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
-                        break;
+    if (!init) {
+        int cntp = 0;
+        struct stat st;
+        bool ok = false;
+        kinfo_file *kif = nullptr;
+        static kvm_t *kd = nullptr;
+        char errbuf[_POSIX2_LINE_MAX];
+        const char *pwd = nullptr, *penv = nullptr;
+        if (!std::string(argv0).empty()) {
+            if (argv0[0] == '/') {
+                path = argv0;
+            } else if (std::string(argv0).find('/') == std::string::npos) {
+                penv = getenv("PATH");
+                if (penv && *penv) {
+                    wcstring wenv = str2wcstring(penv);
+                    wcstring_list_t env = split_string(wenv, L':');
+                    for (std::size_t i = 0; i < env.size(); i++) {
+                        path = wcs2string(env[i].c_str(), env[i].length()) + "/" + argv0;
+                        if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
+                            break;
+                        }
                     }
                 }
-            }
-        } else {
-            pwd = getenv("PWD");
-            if (pwd && *pwd) {
-                path = std::string(pwd) + "/" + std::string(argv0);
-            }
-        }
-    }
-    if (path.empty()) return "fish";
-    kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
-    if (!kd) return "fish";
-    if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
-        for (int i = 0; i < cntp; i++) {
-            if (kif[i].fd_fd == KERN_FILE_TEXT) {
-                if (!stat(path.c_str(), &st)) {
-                    if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
-                        ok = true;
-                        break;
-                    }
+            } else {
+                pwd = getenv("PWD");
+                if (pwd && *pwd) {
+                    path = std::string(pwd) + "/" + std::string(argv0);
                 }
             }
         }
+        if (path.empty()) return "fish";
+        kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
+        if (!kd) return "fish";
+        if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
+            for (int i = 0; i < cntp; i++) {
+                if (kif[i].fd_fd == KERN_FILE_TEXT) {
+                    if (!stat(path.c_str(), &st)) {
+                        if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
+                            ok = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (!ok) path.clear();
+        kvm_close(kd);
+        path.resize(buff_size, '\0');
+        path[buff_size] = '\0';
+        if (realpath(path.c_str(), buff)) {
+            path = buff;
+        }
     }
-    if (!ok) { path.clear(); }
-    kvm_close(kd);
-    path.resize(buff_size, '\0');
-    path[buff_size] = '\0';
-    if (realpath(path.c_str(), buff)) {
-        path = buff;
-    }
-    static std::string result = buff;
+    init = true;
+    static std::string result = path;
     return (!result.empty()) ? result : "fish";
 #else
     // On other unixes, fall back to the Linux-ish /proc/ directory

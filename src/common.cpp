@@ -1860,17 +1860,15 @@ bool valid_func_name(const wcstring &str) {
 
 /// Return the path to the current executable. This needs to be realpath'd.
 std::string get_executable_path(const char *argv0) {
-#ifdef __APPLE__
-    // Note: _NSGetExecutablePath() is proprietary and might return a symlink.
-    // Use the open source Darwin / XNU kernel proc_pidpath() function instead.
-    // This is basically grabbing exec_path after argc, argv, envp, ...: for us.
-    // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
-    // The buffer must have the exact size of macro PROC_PIDPATHINFO_MAXSIZE.
-    char buff[PROC_PIDPATHINFO_MAXSIZE]; 
-    uint32_t buff_size = sizeof buff;
-    if (proc_pidpath(getpid(), buff, buff_size) > 0) return std::string(buff);
-#else
     char buff[PATH_MAX];
+#ifdef __APPLE__
+    // On OS X use it's proprietary API to get the path to the executable.
+    // This is basically grabbing exec_path after argc, argv, envp, ...: for us
+    // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
+    uint32_t buff_size = sizeof buff;
+    if (_NSGetExecutablePath(buff, &buff_size) == 0) return std::string(buff);
+#elif defined(__BSD__) && defined(KERN_PROC_PATHNAME)
+#else
     size_t buff_size = sizeof buff;
 #if defined(__BSD__) && defined(KERN_PROC_PATHNAME)
     // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
@@ -1888,39 +1886,83 @@ std::string get_executable_path(const char *argv0) {
         return std::string(buff);
     }
 #elif defined(__OpenBSD__)
+    int cntp = 0;
+    struct stat st;
+    std::string path;
     bool ok = false;
-    std::string narrow;
+    char exe[buff_size];
+    kinfo_file *kif = nullptr;
     static kvm_t *kd = nullptr;
-    wcstring wargv0 = str2wcstring(argv0);
-    // not sure if I am doing this right??
-    null_environment_t vars = null_environment_t();
-    auto path = path_get_path(wargv0, vars);
-    if (path) {
-        int cntp = 0;
-        struct stat st;
-        kinfo_file *kif = nullptr;
-        char errbuf[_POSIX2_LINE_MAX];
-        narrow = wcs2string(*path); 
-        kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
-        if (kd) {
-            if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
-                for (int i = 0; i < cntp; i++) {
-                    if (kif[i].fd_fd == KERN_FILE_TEXT) {
-                        if (!stat(narrow.c_str(), &st)) {
-                            if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
-                                ok = true;
-                                break;
-                            }
-                        }
+    char errbuf[_POSIX2_LINE_MAX];
+    const char *pwd = nullptr, *cwd = nullptr, *penv = nullptr;
+    if (!std::string(argv0).empty()) {
+        if (argv0[0] == '/') {
+            path = argv0;
+            goto finish1;
+        } else if (std::string(argv0).find('/') == std::string::npos) {
+            penv = getenv("PATH");
+            if (penv && *penv) {
+                wcstring wenv = str2wcstring(penv);
+                wcstring_list_t env = split_string(wenv, L':');
+                for (std::size_t i = 0; i < env.size(); i++) {
+                    path = wcs2string(env[i].c_str(), env[i].length()) + "/" + argv0;
+                    if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
+                        goto finish2;
+                    }
+                    path.clear();
+                }
+            }
+        }
+        pwd = getenv("PWD");
+        if (pwd && *pwd) {
+            path = std::string(pwd) + "/" + std::string(argv0);
+            if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
+                goto finish2;
+            } else {
+                goto fallback;
+            }
+        } else {
+            fallback:
+            cwd = getcwd(exe, buff_size);
+            if (cwd && *cwd) {
+                path = std::string(cwd) + "/" + std::string(argv0);
+            }
+        }
+        finish1:
+        if (!path.empty()) {
+            if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
+                finish2:
+                if (realpath(path.c_str(), exe)) {
+                    path = exe;
+                    goto finish3;
+                }
+            }
+        }
+    }
+    finish3:
+    if (path.empty()) goto finish4;
+    kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
+    if (!kd) { path.clear(); goto finish4; }
+    if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
+        for (int i = 0; i < cntp; i++) {
+            if (kif[i].fd_fd == KERN_FILE_TEXT) {
+                if (!stat(path.c_str(), &st)) {
+                    if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
+                        ok = true;
+                        break;
                     }
                 }
             }
-            kvm_close(kd);
         }
     }
-    narrow[buff_size] = '\0';
-    strcpy(buff, narrow.substr(0, buff_size).c_str());
-    return ((ok) ? std::string(buff)  : "fish");
+    if (!ok) { path.clear(); }
+    kvm_close(kd);
+    finish4:
+    path.resize(buff_size, '\0');
+    path[buff_size] = '\0';
+    strcpy(buff, path.c_str());
+    static std::string result = buff;
+    return (!result.empty()) ? result : "fish";
 #else
     // On other unixes, fall back to the Linux-ish /proc/ directory
     ssize_t len;

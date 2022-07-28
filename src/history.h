@@ -280,6 +280,9 @@ class history_search_t {
     /// Returns the current search result item contents. asserts if there is no current item.
     const wcstring &current_string() const;
 
+    /// Returns the index of the current history item.
+    size_t current_index() const;
+
     /// return whether we are case insensitive.
     bool ignores_case() const { return flags_ & history_search_ignore_case; }
 
@@ -287,8 +290,13 @@ class history_search_t {
     /// alive.
     history_search_t(history_t *hist, const wcstring &str,
                      enum history_search_type_t type = history_search_type_t::contains,
-                     history_search_flags_t flags = 0)
-        : history_(hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
+                     history_search_flags_t flags = 0, size_t starting_index = 0)
+        : history_(hist),
+          orig_term_(str),
+          canon_term_(str),
+          search_type_(type),
+          flags_(flags),
+          current_index_(starting_index) {
         if (ignores_case()) {
             std::transform(canon_term_.begin(), canon_term_.end(), canon_term_.begin(), towlower);
         }
@@ -297,8 +305,8 @@ class history_search_t {
     /// Construct from a shared_ptr. TODO: this should be the only constructor.
     history_search_t(const std::shared_ptr<history_t> &hist, const wcstring &str,
                      enum history_search_type_t type = history_search_type_t::contains,
-                     history_search_flags_t flags = 0)
-        : history_search_t(hist.get(), str, type, flags) {}
+                     history_search_flags_t flags = 0, size_t starting_index = 0)
+        : history_search_t(hist.get(), str, type, flags, starting_index) {}
 
     /** Default constructor. */
     history_search_t() = default;

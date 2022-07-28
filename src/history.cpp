@@ -677,6 +677,8 @@ const history_item_t &history_search_t::current_item() const {
 
 const wcstring &history_search_t::current_string() const { return this->current_item().str(); }
 
+size_t history_search_t::current_index() const { return this->current_index_; }
+
 void history_impl_t::clear_file_state() {
     // Erase everything we know about our file.
     file_contents.reset();

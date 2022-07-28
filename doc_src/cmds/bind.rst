@@ -197,7 +197,7 @@ The following special input functions are available:
     from the current autosuggestion.
 
 ``history-pager``
-    invoke the searchable pager on history (incremental search).
+    invoke the searchable pager on history (incremental search); or if the history pager is already active, search further backwards in time.
 
 ``history-search-backward``
     search the history for the previous match
@@ -252,7 +252,7 @@ The following special input functions are available:
     only execute the next function if the previous succeeded (note: only some functions report success)
 
 ``pager-toggle-search``
-    toggles the search field if the completions pager is visible.
+    toggles the search field if the completions pager is visible; or if used after ``history-pager``, search forwards in time.
 
 ``prevd-or-backward-word``
     if the commandline is empty, then move backward in the directory history, otherwise move one word to the left

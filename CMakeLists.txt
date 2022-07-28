@@ -168,7 +168,7 @@ endfunction(FISH_LINK_DEPS_AND_SIGN)
 # Define libfish.a.
 add_library(fishlib STATIC ${FISH_SRCS} ${FISH_BUILTIN_SRCS})
 execute_process(COMMAND sh "-c" "find /usr/lib/libkvm.a 2> /dev/null" OUTPUT_VARIABLE KVM_LIBRARY)
-string(REPLACE "\n" "" KVM_LIB ${KVM_LIBRARY})
+string(REPLACE "\n" "" KVM_LIB "${KVM_LIBRARY}")
 target_sources(fishlib PRIVATE ${FISH_HEADERS})
 target_link_libraries(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}

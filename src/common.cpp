@@ -1867,10 +1867,12 @@ std::string get_executable_path(const char *argv0) {
     uint32_t buff_size = sizeof buff;
     if (_NSGetExecutablePath(buff, &buff_size) == 0) {
         if (realpath(buff, buff)) {
-            result = ((buff && *buff) ? buffstr : "fish");
+            result = buff;
             return result;
         }
     }
+    result = "fish";
+    return result;
 #else
     size_t buff_size = sizeof buff;
 #endif
@@ -1888,10 +1890,12 @@ std::string get_executable_path(const char *argv0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
     } else {
         if (realpath(buff, buff)) {
-            result = ((buff && *buff) ? buffstr : "fish");
+            result = buff;
             return result;
         }
     }
+    result = "fish";
+    return result;
 #endif
     ssize_t len;
     len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux

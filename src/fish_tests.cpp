@@ -2002,12 +2002,12 @@ static void test_lru() {
     for (int i = 0; i < total_nodes; i++) {
         do_test(cache.size() == size_t(std::min(i, 16)));
         do_test(cache.values() == expected_values);
-        if (i < 4) expected_evicted.emplace_backstd::to_wstring(i), i);
+        if (i < 4) expected_evicted.emplace_back(std::to_wstring(i), i);
         // Adding the node the first time should work, and subsequent times should fail.
         do_test(cache.insertstd::to_wstring(i), i));
         do_test(!cache.insertstd::to_wstring(i), i + 1));
 
-        expected_values.emplace_backstd::to_wstring(i), i);
+        expected_values.emplace_back(std::to_wstring(i), i);
         while (expected_values.size() > test_lru_t::test_capacity) {
             expected_values.erase(expected_values.begin());
         }
@@ -2309,7 +2309,7 @@ static void test_expand_overflow() {
     wcstring_list_t vals;
     wcstring expansion;
     for (int i = 1; i <= 64; i++) {
-        vals.push_backstd::to_wstring(i));
+        vals.push_back(std::to_wstring(i));
         expansion.append(L"$bigvar");
     }
 

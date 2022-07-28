@@ -2004,8 +2004,8 @@ static void test_lru() {
         do_test(cache.values() == expected_values);
         if (i < 4) expected_evicted.emplace_back(std::to_wstring(i), i);
         // Adding the node the first time should work, and subsequent times should fail.
-        do_test(cache.insertstd::to_wstring(i), i));
-        do_test(!cache.insertstd::to_wstring(i), i + 1));
+        do_test(cache.insert(std::to_wstring(i), i));
+        do_test(!cache.insert(std::to_wstring(i), i + 1));
 
         expected_values.emplace_back(std::to_wstring(i), i);
         while (expected_values.size() > test_lru_t::test_capacity) {

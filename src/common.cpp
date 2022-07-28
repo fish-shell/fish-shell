@@ -1866,7 +1866,8 @@ std::string get_executable_path(const char *argv0) {
     // This is basically grabbing exec_path after argc, argv, envp, ...: for us.
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     // The buffer must have the exact size of macro PROC_PIDPATHINFO_MAXSIZE.
-    char buff[PROC_PIDPATHINFO_MAXSIZE]; uint32_t buff_size = sizeof buff;
+    char buff[PROC_PIDPATHINFO_MAXSIZE]; 
+    uint32_t buff_size = sizeof buff;
     if (proc_pidpath(getpid(), buff, buff_size) > 0) return std::string(buff);
 #else
     char buff[PATH_MAX];
@@ -1887,16 +1888,19 @@ std::string get_executable_path(const char *argv0) {
         return std::string(buff);
     }
 #elif defined(__OpenBSD__)
+    bool ok = false;
+    std::string narrow;
     static kvm_t *kd = nullptr;
-    std::string narrow; bool ok = false;
     wcstring wargv0 = str2wcstring(argv0);
     // not sure if I am doing this right??
     null_environment_t vars = null_environment_t();
     auto path = path_get_path(wargv0, vars);
     if (path) {
+        int cntp = 0;
+        struct stat st;
+        kinfo_file *kif = nullptr;
         char errbuf[_POSIX2_LINE_MAX];
-        kinfo_file *kif = nullptr; int cntp = 0;
-        narrow = wcs2string(*path); struct stat st; 
+        narrow = wcs2string(*path); 
         kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
         if (kd) {
             if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {

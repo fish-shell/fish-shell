@@ -1866,8 +1866,9 @@ std::string get_executable_path(const char *argv0) {
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buff_size = sizeof buff;
     if (_NSGetExecutablePath(buff, &buff_size) == 0) {
-        if (realpath(buff, buff)) {
-            result = buff;
+        char path[PATH_MAX];
+        if (realpath(buff, path)) {
+            result = path;
             return result;
         }
     }
@@ -1889,8 +1890,9 @@ std::string get_executable_path(const char *argv0) {
     if (ret != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
     } else {
-        if (realpath(buff, buff)) {
-            result = buff;
+        char path[PATH_MAX];
+        if (realpath(buff, path)) {
+            result = path;
             return result;
         }
     }

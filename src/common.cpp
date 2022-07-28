@@ -1,10 +1,6 @@
 // Various functions, mostly string utilities, that are used by most parts of fish.
 #include "config.h"
 
-#ifdef __OpenBSD__
-#include "path.h"
-#endif
-
 #ifdef HAVE_BACKTRACE_SYMBOLS
 #include <cxxabi.h>
 #endif
@@ -1887,39 +1883,34 @@ size_t buff_size = sizeof buff;
 #elif defined(__OpenBSD__)
     static std::string result;
     if (!result.empty()) return result;
-    int cntp = 0;
+    std::string strargv0 = ((argv0) ? argv0 : ""), path;
     struct stat st;
-    bool ok = false;
-    std::string path;
-    kinfo_file *kif = nullptr;
-    static kvm_t *kd = nullptr;
-    char errbuf[_POSIX2_LINE_MAX];
-    const char *pwd = nullptr, *penv = nullptr;
-    if (!std::string(argv0).empty()) {
-        if (argv0[0] == '/') {
-            path = argv0;
-        } else if (std::string(argv0).find('/') == std::string::npos) {
-            penv = getenv("PATH");
+    if (!strargv0.empty()) {
+        if (strargv0[0] == '/') {
+            path = strargv0;
+        } else if (path.find('/') == std::string::npos) {
+            const char *penv = getenv("PATH");
             if (penv && *penv) {
-                wcstring wenv = str2wcstring(penv);
-                wcstring_list_t env = split_string(wenv, L':');
+                std::vector<std::string> env = split_string(penv, ':');
                 for (std::size_t i = 0; i < env.size(); i++) {
-                    path = wcs2string(env[i].c_str(), env[i].length()) + "/" + argv0;
+                    path = env[i] + "/" + strargv0;
                     if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
                         break;
                     }
                 }
             }
         } else {
-            pwd = getenv("PWD");
+            const char *pwd = getenv("PWD");
             if (pwd && *pwd) {
-                path = std::string(pwd) + "/" + std::string(argv0);
+                path = std::string(pwd) + "/" + strargv0;
             }
         }
     }
-    if (path.empty()) { result = "fish"; return result; }
-    kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
+    kvm_t *kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, nullptr);
     if (!kd) { result = "fish"; return result; }
+    int cntp = 0;
+    bool ok = false;
+    kinfo_file *kif = nullptr;
     if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
         for (int i = 0; i < cntp; i++) {
             if (kif[i].fd_fd == KERN_FILE_TEXT) {
@@ -1932,14 +1923,14 @@ size_t buff_size = sizeof buff;
             }
         }
     }
-    if (!ok) path.clear();
     kvm_close(kd);
+    if (!ok) { result = "fish"; return result; }
     path.resize(buff_size, '\0');
     path[buff_size] = '\0';
     if (realpath(path.c_str(), buff)) {
         path = buff;
     }
-    result = (!path.empty()) ? path : "fish";
+    result = path;
     return result;
 #else
     // On other unixes, fall back to the Linux-ish /proc/ directory

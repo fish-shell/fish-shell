@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
+#include <vector>
 #include <utility>
 
 #include "common.h"
@@ -119,6 +120,7 @@ inline maybe_t<string_fuzzy_match_t> string_fuzzy_match_string(const wcstring &s
 
 /// Split a string by a separator character.
 wcstring_list_t split_string(const wcstring &val, wchar_t sep);
+std::vector<std::string> split_string(const std::string &val, char sep);
 
 /// Split a string by runs of any of the separator characters provided in \p seps.
 /// Note the delimiters are the characters in \p seps, not \p seps itself.
@@ -133,15 +135,6 @@ wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps,
 /// Join a list of strings by a separator character.
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
-// prevents 'ambiguous' compiler error in OpenBSD clang
-#ifndef __OpenBSD__
-inline wcstring to_wcstring(long x) {
-    wchar_t buff[64];
-    format_long_safe(buff, x);
-    return wcstring(buff);
-}
-#endif
-
 inline wcstring to_wcstring(unsigned long long x) {
     wchar_t buff[64];
     format_ullong_safe(buff, x);
@@ -150,6 +143,11 @@ inline wcstring to_wcstring(unsigned long long x) {
 
 // prevents 'ambiguous' compiler error in OpenBSD clang
 #ifndef __OpenBSD__
+inline wcstring to_wcstring(long x) {
+    wchar_t buff[64];
+    format_long_safe(buff, x);
+    return wcstring(buff);
+}
 inline wcstring to_wcstring(int x) { return to_wcstring(static_cast<long>(x)); }
 inline wcstring to_wcstring(size_t x) { return to_wcstring(static_cast<unsigned long long>(x)); }
 #endif

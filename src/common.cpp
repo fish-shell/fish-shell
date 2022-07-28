@@ -1866,7 +1866,13 @@ std::string get_executable_path(const char *argv0) {
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buff_size = sizeof buff;
     if (_NSGetExecutablePath(buff, &buff_size) == 0) {
-        buffstr = buff;
+        buffstr.resize(buff_size, '\0');
+        buffstr[buff_size] = '\0';
+        if (realpath(buffstr.c_str(), buff)) {
+            buffstr = buff;
+        }
+        result = ((!buffstr.empty()) ? buffstr : "fish");
+        return result;
     }
 #else
     size_t buff_size = sizeof buff;
@@ -1884,7 +1890,12 @@ std::string get_executable_path(const char *argv0) {
     if (ret != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
     } else {
-        buffstr = buff;
+        buffstr.resize(buff_size, '\0');
+        buffstr[buff_size] = '\0';
+        if (realpath(buffstr.c_str(), buff)) {
+            buffstr = buff;
+        }
+        result = ((!buffstr.empty()) ? buffstr : "fish");
         return result;
     }
 #endif
@@ -1906,14 +1917,15 @@ std::string get_executable_path(const char *argv0) {
                 buffstr = buffstr.substr(0, buffstr.size() - dellen);
             }
         }
-        return buffstr;
+        result = buffstr;
+        return result;
     }
     std::string strargv0 = ((argv0) ? argv0 : "");
     struct stat st;
     if (!strargv0.empty()) {
         if (strargv0[0] == '/') {
             buffstr = strargv0;
-        } else if (buffstr.find('/') == std::string::npos) {
+        } else if (strargv0.find('/') == std::string::npos) {
             const char *penv = getenv("PATH");
             if (penv && *penv) {
                 std::vector<std::string> env = split_string(penv, ':');
@@ -1931,6 +1943,11 @@ std::string get_executable_path(const char *argv0) {
             }
         }
     }
+    buffstr.resize(buff_size, '\0');
+    buffstr[buff_size] = '\0';
+    if (realpath(buffstr.c_str(), buff)) {
+        buffstr = buff;
+    }
 #ifdef __OpenBSD__
     // kd variable is necessary for kvm_getfiles() first argument; RTFM.
     kvm_t *kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, nullptr);
@@ -1942,7 +1959,7 @@ std::string get_executable_path(const char *argv0) {
         if (!stat(buffstr.c_str(), &st)) {
             for (int i = 0; i < cntp; i++) {
                 if (kif[i].fd_fd == KERN_FILE_TEXT) {
-                    if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
+                    if (st.st_dev == (dev_t)kif[i].va_fsid && st.st_ino == (ino_t)kif[i].va_fileid) {
                         ok = true;
                         break;
                     }
@@ -1953,11 +1970,6 @@ std::string get_executable_path(const char *argv0) {
     kvm_close(kd);
     if (!ok) { result = "fish"; return result; }
 #endif
-    buffstr.resize(buff_size, '\0');
-    buffstr[buff_size] = '\0';
-    if (realpath(buffstr.c_str(), buff)) {
-        buffstr = buff;
-    }
     result = ((!buffstr.empty()) ? buffstr : "fish");
     return result;
 }

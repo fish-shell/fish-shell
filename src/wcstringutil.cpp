@@ -256,6 +256,20 @@ wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
     return out;
 }
 
+std::vector<std::string> split_string(const std::string &val, char sep) {
+    std::vector<std::string> out;
+    size_t pos = 0, end = val.size();
+    while (pos <= end) {
+        size_t next_pos = val.find(sep, pos);
+        if (next_pos == wcstring::npos) {
+            next_pos = end;
+        }
+        out.emplace_back(val, pos, next_pos - pos);
+        pos = next_pos + 1;  // skip the separator, or skip past the end
+    }
+    return out;
+}
+
 wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps, size_t max_results) {
     wcstring_list_t out;
     size_t end = val.size();

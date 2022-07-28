@@ -4345,7 +4345,7 @@ void history_tests_t::test_history() {
     size_t i, max = 100;
     for (i = 1; i <= max; i++) {
         // Generate a value.
-        wcstring value = wcstring(L"test item ") + to_string(i);
+        wcstring value = wcstring(L"test item ") + std::to_wstring(i);
 
         // Maybe add some backslashes.
         if (i % 3 == 0) value.append(L"(slashies \\\\\\ slashies)");
@@ -4994,9 +4994,9 @@ static void check_function_help(const wchar_t *src) {
         count += (node.type == Type);
     }
     if (count == 0) {
-        err(L"Failed to find node of type '%ls'", ast_type_to_string(Type));
+        err(L"Failed to find node of type '%ls'", ast_type_std::to_wstring(Type));
     } else if (count > 1) {
-        err(L"Found too many nodes of type '%ls'", ast_type_to_string(Type));
+        err(L"Found too many nodes of type '%ls'", ast_type_std::to_wstring(Type));
     }
 }
 

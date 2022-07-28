@@ -1866,13 +1866,10 @@ std::string get_executable_path(const char *argv0) {
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buff_size = sizeof buff;
     if (_NSGetExecutablePath(buff, &buff_size) == 0) {
-        buffstr.resize(buff_size, '\0');
-        buffstr[buff_size] = '\0';
-        if (realpath(buffstr.c_str(), buff)) {
-            buffstr = buff;
+        if (realpath(buff, buff)) {
+            result = ((buff && *buff) ? buffstr : "fish");
+            return result;
         }
-        result = ((!buffstr.empty()) ? buffstr : "fish");
-        return result;
     }
 #else
     size_t buff_size = sizeof buff;
@@ -1890,13 +1887,10 @@ std::string get_executable_path(const char *argv0) {
     if (ret != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
     } else {
-        buffstr.resize(buff_size, '\0');
-        buffstr[buff_size] = '\0';
-        if (realpath(buffstr.c_str(), buff)) {
-            buffstr = buff;
+        if (realpath(buff, buff)) {
+            result = ((buff && *buff) ? buffstr : "fish");
+            return result;
         }
-        result = ((!buffstr.empty()) ? buffstr : "fish");
-        return result;
     }
 #endif
     ssize_t len;

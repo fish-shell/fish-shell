@@ -1890,15 +1890,13 @@ std::string get_executable_path(const char *argv0) {
     struct stat st;
     std::string path;
     bool ok = false;
-    char exe[buff_size];
     kinfo_file *kif = nullptr;
     static kvm_t *kd = nullptr;
     char errbuf[_POSIX2_LINE_MAX];
-    const char *pwd = nullptr, *cwd = nullptr, *penv = nullptr;
+    const char *pwd = nullptr, *penv = nullptr;
     if (!std::string(argv0).empty()) {
         if (argv0[0] == '/') {
             path = argv0;
-            goto finish1;
         } else if (std::string(argv0).find('/') == std::string::npos) {
             penv = getenv("PATH");
             if (penv && *penv) {
@@ -1907,42 +1905,20 @@ std::string get_executable_path(const char *argv0) {
                 for (std::size_t i = 0; i < env.size(); i++) {
                     path = wcs2string(env[i].c_str(), env[i].length()) + "/" + argv0;
                     if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
-                        goto finish2;
+                        break;
                     }
-                    path.clear();
                 }
-            }
-        }
-        pwd = getenv("PWD");
-        if (pwd && *pwd) {
-            path = std::string(pwd) + "/" + std::string(argv0);
-            if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
-                goto finish2;
-            } else {
-                goto fallback;
             }
         } else {
-            fallback:
-            cwd = getcwd(exe, buff_size);
-            if (cwd && *cwd) {
-                path = std::string(cwd) + "/" + std::string(argv0);
-            }
-        }
-        finish1:
-        if (!path.empty()) {
-            if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
-                finish2:
-                if (realpath(path.c_str(), exe)) {
-                    path = exe;
-                    goto finish3;
-                }
+            pwd = getenv("PWD");
+            if (pwd && *pwd) {
+                path = std::string(pwd) + "/" + std::string(argv0);
             }
         }
     }
-    finish3:
-    if (path.empty()) goto finish4;
+    if (path.empty()) return "fish";
     kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
-    if (!kd) { path.clear(); goto finish4; }
+    if (!kd) return "fish";
     if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
         for (int i = 0; i < cntp; i++) {
             if (kif[i].fd_fd == KERN_FILE_TEXT) {
@@ -1957,10 +1933,11 @@ std::string get_executable_path(const char *argv0) {
     }
     if (!ok) { path.clear(); }
     kvm_close(kd);
-    finish4:
     path.resize(buff_size, '\0');
     path[buff_size] = '\0';
-    strcpy(buff, path.c_str());
+    if (realpath(path.c_str(), buff)) {
+        path = buff;
+    }
     static std::string result = buff;
     return (!result.empty()) ? result : "fish";
 #else

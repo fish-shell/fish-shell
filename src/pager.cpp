@@ -750,7 +750,10 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
     // rendering.cols is the first suggested visible completion; add the visible completion
     // count to that to get the last one.
     size_t visible_row_count = rendering.row_end - rendering.row_start;
-    if (visible_row_count == 0 || selected_completion_idx == PAGER_SELECTION_NONE) {
+    if (visible_row_count == 0) {
+        return true;  // this happens if there was no room to draw the pager
+    }
+    if (selected_completion_idx == PAGER_SELECTION_NONE) {
         return true;  // this should never happen but be paranoid
     }
 

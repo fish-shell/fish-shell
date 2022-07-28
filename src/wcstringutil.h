@@ -119,6 +119,7 @@ inline maybe_t<string_fuzzy_match_t> string_fuzzy_match_string(const wcstring &s
 
 /// Split a string by a separator character.
 wcstring_list_t split_string(const wcstring &val, wchar_t sep);
+std::vector<std::string> split_string(const std::string &val, char sep);
 
 /// Split a string by runs of any of the separator characters provided in \p seps.
 /// Note the delimiters are the characters in \p seps, not \p seps itself.

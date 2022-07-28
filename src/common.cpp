@@ -1936,9 +1936,9 @@ size_t buff_size = sizeof buff;
     bool ok = false;
     kinfo_file *kif = nullptr;
     if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
-        for (int i = 0; i < cntp; i++) {
-            if (kif[i].fd_fd == KERN_FILE_TEXT) {
-                if (!stat(buffstr.c_str(), &st)) {
+        if (!stat(buffstr.c_str(), &st)) {
+            for (int i = 0; i < cntp; i++) {
+                if (kif[i].fd_fd == KERN_FILE_TEXT) {
                     if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
                         ok = true;
                         break;

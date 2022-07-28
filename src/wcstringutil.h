@@ -6,6 +6,7 @@
 #include <cstring>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "common.h"
 #include "expand.h"

@@ -1880,21 +1880,42 @@ size_t buff_size = sizeof buff;
     } else {
         return std::string(buff);
     }
-#elif defined(__OpenBSD__)
+#elif (defined(__linux__) || defined(sun) || defined(__sun))
+    ssize_t len;
+    len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
+    if (len == -1) {
+        len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
+    }
+    if (len > 0) {
+        buff[len] = '\0';
+        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
+        // then linux adds a " (deleted)" suffix.
+        // If that's not a valid path, let's remove that awkward suffix.
+        std::string buffstr = {buff};
+        if (access(buff, F_OK)) {
+            auto dellen = const_strlen(" (deleted)");
+            if (buffstr.size() > dellen &&
+                buffstr.compare(buffstr.size() - dellen, dellen, " (deleted)") == 0) {
+                buffstr = buffstr.substr(0, buffstr.size() - dellen);
+            }
+        }
+        return buffstr;
+    }
+#else
     static std::string result;
     if (!result.empty()) return result;
-    std::string strargv0 = ((argv0) ? argv0 : ""), path;
+    std::string strargv0 = ((argv0) ? argv0 : ""), buffstr;
     struct stat st;
     if (!strargv0.empty()) {
         if (strargv0[0] == '/') {
-            path = strargv0;
-        } else if (path.find('/') == std::string::npos) {
+            buffstr = strargv0;
+        } else if (buffstr.find('/') == std::string::npos) {
             const char *penv = getenv("PATH");
             if (penv && *penv) {
                 std::vector<std::string> env = split_string(penv, ':');
                 for (std::size_t i = 0; i < env.size(); i++) {
-                    path = env[i] + "/" + strargv0;
-                    if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
+                    buffstr = env[i] + "/" + strargv0;
+                    if (!stat(buffstr.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
                         break;
                     }
                 }
@@ -1902,10 +1923,13 @@ size_t buff_size = sizeof buff;
         } else {
             const char *pwd = getenv("PWD");
             if (pwd && *pwd) {
-                path = std::string(pwd) + "/" + strargv0;
+                buffstr = std::string(pwd) + "/" + strargv0;
             }
         }
+        return buffstr;
     }
+#ifdef __OpenBSD__
+    // kd variable is necessary for kvm_getfiles() first argument; RTFM.
     kvm_t *kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, nullptr);
     if (!kd) { result = "fish"; return result; }
     int cntp = 0;
@@ -1914,7 +1938,7 @@ size_t buff_size = sizeof buff;
     if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
         for (int i = 0; i < cntp; i++) {
             if (kif[i].fd_fd == KERN_FILE_TEXT) {
-                if (!stat(path.c_str(), &st)) {
+                if (!stat(buffstr.c_str(), &st)) {
                     if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
                         ok = true;
                         break;
@@ -1925,38 +1949,14 @@ size_t buff_size = sizeof buff;
     }
     kvm_close(kd);
     if (!ok) { result = "fish"; return result; }
-    path.resize(buff_size, '\0');
-    path[buff_size] = '\0';
-    if (realpath(path.c_str(), buff)) {
-        path = buff;
+#endif
+    buffstr.resize(buff_size, '\0');
+    buffstr[buff_size] = '\0';
+    if (realpath(buffstr.c_str(), buff)) {
+        buffstr = buff;
     }
-    result = path;
+    result = buffstr;
     return result;
-#else
-    // On other unixes, fall back to the Linux-ish /proc/ directory
-    ssize_t len;
-    len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
-    if (len == -1) {
-        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // other BSDs
-        if (len == -1) {
-            len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
-        }
-    }
-    if (len > 0) {
-        buff[len] = '\0';
-        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
-        // then linux adds a " (deleted)" suffix.
-        // If that's not a valid path, let's remove that awkward suffix.
-        std::string buffstr{buff};
-        if (access(buff, F_OK)) {
-            auto dellen = const_strlen(" (deleted)");
-            if (buffstr.size() > dellen &&
-                buffstr.compare(buffstr.size() - dellen, dellen, " (deleted)") == 0) {
-                buffstr = buffstr.substr(0, buffstr.size() - dellen);
-            }
-        }
-        return buffstr;
-    }
 #endif
 #endif
 

@@ -133,22 +133,6 @@ wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps,
 /// Join a list of strings by a separator character.
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
-inline wcstring to_string(long x) {
-    wchar_t buff[64];
-    format_long_safe(buff, x);
-    return wcstring(buff);
-}
-
-inline wcstring to_string(unsigned long long x) {
-    wchar_t buff[64];
-    format_ullong_safe(buff, x);
-    return wcstring(buff);
-}
-
-inline wcstring to_string(int x) { return to_string(static_cast<long>(x)); }
-
-inline wcstring to_string(size_t x) { return to_string(static_cast<unsigned long long>(x)); }
-
 inline bool bool_from_string(const std::string &x) {
     if (x.empty()) return false;
     switch (x.front()) {

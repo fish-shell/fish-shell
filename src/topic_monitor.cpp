@@ -17,7 +17,7 @@ wcstring generation_list_t::describe() const {
         if (gen == invalid_generation) {
             result.append(L"-1");
         } else {
-            result.append(to_string(gen));
+            result.append(std::to_wstring(gen));
         }
     }
     return result;

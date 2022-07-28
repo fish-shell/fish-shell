@@ -820,7 +820,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
                     nnonempty++;
                 }
                 if (!opts.quiet) {
-                    streams.out.append(to_string(max));
+                    streams.out.append(std::to_wstring(max));
                     streams.out.append(L'\n');
                 } else if (nnonempty > 0) {
                     return STATUS_CMD_OK;
@@ -832,7 +832,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
                 nnonempty++;
             }
             if (!opts.quiet) {
-                streams.out.append(to_string(n));
+                streams.out.append(std::to_wstring(n));
                 streams.out.append(L'\n');
             } else if (nnonempty > 0) {
                 return STATUS_CMD_OK;

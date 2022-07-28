@@ -1,6 +1,10 @@
 // Various functions, mostly string utilities, that are used by most parts of fish.
 #include "config.h"
 
+#ifdef __OpenBSD__
+#include "path.h"
+#endif
+
 #ifdef HAVE_BACKTRACE_SYMBOLS
 #include <cxxabi.h>
 #endif
@@ -56,15 +60,22 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // Keep after "common.h"
+#if defined(__OpenBSD__)
+#include <kvm.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#else
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
+#endif
 #if defined(__APPLE__)
-#include <mach-o/dyld.h>
+#include <libproc.h>
 #endif
 
 struct termios shell_modes;
 
+extern 
 const wcstring g_empty_string{};
 
 /// This allows us to notice when we've forked.
@@ -1849,21 +1860,23 @@ bool valid_func_name(const wcstring &str) {
 
 /// Return the path to the current executable. This needs to be realpath'd.
 std::string get_executable_path(const char *argv0) {
-    char buff[PATH_MAX];
-
 #ifdef __APPLE__
-    // On OS X use it's proprietary API to get the path to the executable.
-    // This is basically grabbing exec_path after argc, argv, envp, ...: for us
+    // Note: _NSGetExecutablePath() is proprietary and might return a symlink.
+    // Use the open source Darwin / XNU kernel proc_pidpath() function instead.
+    // This is basically grabbing exec_path after argc, argv, envp, ...: for us.
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
-    uint32_t buffSize = sizeof buff;
-    if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
-#elif defined(__BSD__) && defined(KERN_PROC_PATHNAME)
+    // The buffer must have the exact size of macro PROC_PIDPATHINFO_MAXSIZE.
+    char buff[PROC_PIDPATHINFO_MAXSIZE]; uint32_t buff_size = sizeof buff;
+    if (proc_pidpath(getpid(), buff, buff_size) > 0) return std::string(buff);
+#else
+    char buff[PATH_MAX];
+    size_t buff_size = sizeof buff;
+#if defined(__BSD__) && defined(KERN_PROC_PATHNAME)
     // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
     // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1
     // returns the value for the current process.
-    size_t buff_size = sizeof buff;
 #if defined(__NetBSD__)
-    int name[] = {CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_PATHNAME};
+    int name[] = {CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME};
 #else
     int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
 #endif
@@ -1873,6 +1886,37 @@ std::string get_executable_path(const char *argv0) {
     } else {
         return std::string(buff);
     }
+#elif defined(__OpenBSD__)
+    static kvm_t *kd = nullptr;
+    std::string narrow; bool ok = false;
+    wcstring wargv0 = str2wcstring(argv0);
+    // not sure if I am doing this right??
+    null_environment_t vars = null_environment_t();
+    auto path = path_get_path(wargv0, vars);
+    if (path) {
+        char errbuf[_POSIX2_LINE_MAX];
+        kinfo_file *kif = nullptr; int cntp = 0;
+        narrow = wcs2string(*path); struct stat st; 
+        kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
+        if (kd) {
+            if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
+                for (int i = 0; i < cntp; i++) {
+                    if (kif[i].fd_fd == KERN_FILE_TEXT) {
+                        if (!stat(narrow.c_str(), &st)) {
+                            if (st.st_dev == (dev_t)kif[i].va_fsid || st.st_ino == (ino_t)kif[i].va_fileid) {
+                                ok = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            kvm_close(kd);
+        }
+    }
+    narrow[buff_size] = '\0';
+    strcpy(buff, narrow.substr(0, buff_size).c_str());
+    return ((ok) ? std::string(buff)  : "fish");
 #else
     // On other unixes, fall back to the Linux-ish /proc/ directory
     ssize_t len;
@@ -1898,6 +1942,7 @@ std::string get_executable_path(const char *argv0) {
         }
         return buffstr;
     }
+#endif
 #endif
 
     // Just return argv0, which probably won't work (i.e. it's not an absolute path or a path

@@ -4994,9 +4994,9 @@ static void check_function_help(const wchar_t *src) {
         count += (node.type == Type);
     }
     if (count == 0) {
-        err(L"Failed to find node of type '%ls'", ast_type_std::to_wstring(Type));
+        err(L"Failed to find node of type '%ls'", ast_type_to_string(Type));
     } else if (count > 1) {
-        err(L"Found too many nodes of type '%ls'", ast_type_std::to_wstring(Type));
+        err(L"Found too many nodes of type '%ls'", ast_type_to_string(Type));
     }
 }
 

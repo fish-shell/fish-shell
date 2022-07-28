@@ -89,8 +89,8 @@ termsize_t termsize_container_t::updating(parser_t &parser) {
 void termsize_container_t::set_columns_lines_vars(termsize_t val, parser_t &parser) {
     const bool saved = setting_env_vars_;
     setting_env_vars_ = true;
-    parser.set_var_and_fire(L"COLUMNS", ENV_GLOBAL, std::to_wstring(val.width));
-    parser.set_var_and_fire(L"LINES", ENV_GLOBAL, std::to_wstring(val.height));
+    parser.set_var_and_fire(L"COLUMNS", ENV_GLOBAL, to_wcstring(val.width));
+    parser.set_var_and_fire(L"LINES", ENV_GLOBAL, to_wcstring(val.height));
     setting_env_vars_ = saved;
 }
 

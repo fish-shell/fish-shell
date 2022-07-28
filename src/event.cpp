@@ -535,8 +535,8 @@ event_t event_t::process_exit(pid_t pid, int status) {
     evt.desc.param1.pid = pid;
     evt.arguments.reserve(3);
     evt.arguments.push_back(L"PROCESS_EXIT");
-    evt.arguments.push_back(std::to_wstring(pid));
-    evt.arguments.push_back(std::to_wstring(status));
+    evt.arguments.push_back(to_wcstring(pid));
+    evt.arguments.push_back(to_wcstring(status));
     return evt;
 }
 
@@ -546,7 +546,7 @@ event_t event_t::job_exit(pid_t pgid, internal_job_id_t jid) {
     evt.desc.param1.jobspec = {pgid, jid};
     evt.arguments.reserve(3);
     evt.arguments.push_back(L"JOB_EXIT");
-    evt.arguments.push_back(std::to_wstring(pgid));
+    evt.arguments.push_back(to_wcstring(pgid));
     evt.arguments.push_back(L"0");  // historical
     return evt;
 }
@@ -557,7 +557,7 @@ event_t event_t::caller_exit(uint64_t internal_job_id, int job_id) {
     evt.desc.param1.caller_id = internal_job_id;
     evt.arguments.reserve(3);
     evt.arguments.push_back(L"JOB_EXIT");
-    evt.arguments.push_back(std::to_wstring(job_id));
+    evt.arguments.push_back(to_wcstring(job_id));
     evt.arguments.push_back(L"0");  // historical
     return evt;
 }

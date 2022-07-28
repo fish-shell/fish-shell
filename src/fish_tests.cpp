@@ -2002,12 +2002,12 @@ static void test_lru() {
     for (int i = 0; i < total_nodes; i++) {
         do_test(cache.size() == size_t(std::min(i, 16)));
         do_test(cache.values() == expected_values);
-        if (i < 4) expected_evicted.emplace_back(std::to_wstring(i), i);
+        if (i < 4) expected_evicted.emplace_back(to_wcstring(i), i);
         // Adding the node the first time should work, and subsequent times should fail.
-        do_test(cache.insert(std::to_wstring(i), i));
-        do_test(!cache.insert(std::to_wstring(i), i + 1));
+        do_test(cache.insert(to_wcstring(i), i));
+        do_test(!cache.insert(to_wcstring(i), i + 1));
 
-        expected_values.emplace_back(std::to_wstring(i), i);
+        expected_values.emplace_back(to_wcstring(i), i);
         while (expected_values.size() > test_lru_t::test_capacity) {
             expected_values.erase(expected_values.begin());
         }
@@ -2309,7 +2309,7 @@ static void test_expand_overflow() {
     wcstring_list_t vals;
     wcstring expansion;
     for (int i = 1; i <= 64; i++) {
-        vals.push_back(std::to_wstring(i));
+        vals.push_back(to_wcstring(i));
         expansion.append(L"$bigvar");
     }
 
@@ -2821,7 +2821,7 @@ static bool run_one_test_test(int expected, const wcstring_list_t &lst, bool bra
     maybe_t<int> result = builtin_test(parser, streams, cargv.get());
 
     if (result != expected) {
-        std::wstring got = result ? std::to_wstring(result.value()) : L"nothing";
+        std::wstring got = result ? to_wcstring(result.value()) : L"nothing";
         err(L"expected builtin_test() to return %d, got %s", expected, got.c_str());
     }
     return result == expected;
@@ -4345,7 +4345,7 @@ void history_tests_t::test_history() {
     size_t i, max = 100;
     for (i = 1; i <= max; i++) {
         // Generate a value.
-        wcstring value = wcstring(L"test item ") + std::to_wstring(i);
+        wcstring value = wcstring(L"test item ") + to_wcstring(i);
 
         // Maybe add some backslashes.
         if (i % 3 == 0) value.append(L"(slashies \\\\\\ slashies)");
@@ -5779,7 +5779,7 @@ static void run_one_string_test(const wchar_t *const *argv_raw, int expected_rc,
     args.resize(args.size() - 1);
 
     if (rc != expected_rc) {
-        std::wstring got = rc ? std::to_wstring(rc.value()) : L"nothing";
+        std::wstring got = rc ? to_wcstring(rc.value()) : L"nothing";
         err(L"Test failed on line %lu: [%ls]: expected return code %d but got %s", __LINE__,
             args.c_str(), expected_rc, got.c_str());
     } else if (outs.contents() != expected_out) {
@@ -6342,7 +6342,7 @@ void test_layout_cache() {
 
     // Verify prompt layout cache.
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
-        wcstring input = std::to_wstring(i);
+        wcstring input = to_wcstring(i);
         do_test(!seqs.find_prompt_layout(input));
         seqs.add_prompt_layout({input, huge, input, {{}, i, 0}});
         do_test(seqs.find_prompt_layout(input)->layout.max_line_width == i);
@@ -6351,11 +6351,11 @@ void test_layout_cache() {
     size_t expected_evictee = 3;
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         if (i != expected_evictee)
-            do_test(seqs.find_prompt_layout(std::to_wstring(i))->layout.max_line_width == i);
+            do_test(seqs.find_prompt_layout(to_wcstring(i))->layout.max_line_width == i);
     }
 
     seqs.add_prompt_layout({L"whatever", huge, L"whatever", {{}, 100, 0}});
-    do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
+    do_test(!seqs.find_prompt_layout(to_wcstring(expected_evictee)));
     do_test(seqs.find_prompt_layout(L"whatever", huge)->layout.max_line_width == 100);
 }
 

@@ -2520,7 +2520,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
         timepoint_t time_after = timef();
         double duration = time_after - time_before;
         long duration_ms = std::round(duration * 1000);
-        parser.vars().set_one(ENV_CMD_DURATION, ENV_UNEXPORT, std::to_wstring(duration_ms));
+        parser.vars().set_one(ENV_CMD_DURATION, ENV_UNEXPORT, to_wcstring(duration_ms));
     }
 
     term_steal();

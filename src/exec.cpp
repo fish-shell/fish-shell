@@ -249,7 +249,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
             if (shlvl_var) {
                 long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
                 if (!errno && shlvl > 0) {
-                    shlvl_str = std::to_wstring(shlvl - 1);
+                    shlvl_str = to_wcstring(shlvl - 1);
                 }
             }
             vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, std::move(shlvl_str));
@@ -1115,7 +1115,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
     // a pgroup, so error out before setting last_pid.
     if (!j->is_foreground()) {
         if (maybe_t<pid_t> last_pid = j->get_last_pid()) {
-            parser.vars().set_one(L"last_pid", ENV_GLOBAL, std::to_wstring(*last_pid));
+            parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_wcstring(*last_pid));
         } else {
             parser.vars().set_empty(L"last_pid", ENV_GLOBAL);
         }

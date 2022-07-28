@@ -336,7 +336,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
 
     // Set $USER, $HOME and $EUID
     // This involves going to passwd and stuff.
-    vars.set_one(L"EUID", ENV_GLOBAL, std::to_wstring(static_cast<unsigned long long>(geteuid())));
+    vars.set_one(L"EUID", ENV_GLOBAL, to_wcstring(static_cast<unsigned long long>(geteuid())));
     setup_user(vars);
 
     wcstring user_config_dir;
@@ -364,7 +364,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     vars.set_one(L"FISH_VERSION", ENV_GLOBAL, version);
 
     // Set the $fish_pid variable.
-    vars.set_one(L"fish_pid", ENV_GLOBAL, std::to_wstring(getpid()));
+    vars.set_one(L"fish_pid", ENV_GLOBAL, to_wcstring(getpid()));
 
     // Set the $hostname variable
     wcstring hostname = L"fish";
@@ -381,7 +381,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
             // diagnostic?
             long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
             if (!errno && shlvl_i >= 0) {
-                nshlvl_str = std::to_wstring(shlvl_i + 1);
+                nshlvl_str = to_wcstring(shlvl_i + 1);
             }
         }
         vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
@@ -411,9 +411,9 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // Initialize termsize variables.
     auto termsize = termsize_container_t::shared().initialize(vars);
     if (vars.get(L"COLUMNS").missing_or_empty())
-        vars.set_one(L"COLUMNS", ENV_GLOBAL, std::to_wstring(termsize.width));
+        vars.set_one(L"COLUMNS", ENV_GLOBAL, to_wcstring(termsize.width));
     if (vars.get(L"LINES").missing_or_empty())
-        vars.set_one(L"LINES", ENV_GLOBAL, std::to_wstring(termsize.height));
+        vars.set_one(L"LINES", ENV_GLOBAL, to_wcstring(termsize.height));
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
@@ -751,18 +751,18 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
         wcstring_list_t result;
         result.reserve(js.pipestatus.size());
         for (int i : js.pipestatus) {
-            result.push_back(std::to_wstring(i));
+            result.push_back(to_wcstring(i));
         }
         return env_var_t(L"pipestatus", std::move(result));
     } else if (key == L"status") {
         const auto &js = perproc_data().statuses;
-        return env_var_t(L"status", std::to_wstring(js.status));
+        return env_var_t(L"status", to_wcstring(js.status));
     } else if (key == L"status_generation") {
         auto status_generation = reader_status_count();
-        return env_var_t(L"status_generation", std::to_wstring(status_generation));
+        return env_var_t(L"status_generation", to_wcstring(status_generation));
     } else if (key == L"fish_kill_signal") {
         const auto &js = perproc_data().statuses;
-        return env_var_t(L"fish_kill_signal", std::to_wstring(js.kill_signal));
+        return env_var_t(L"fish_kill_signal", to_wcstring(js.kill_signal));
     } else if (key == L"umask") {
         // note umask() is an absurd API: you call it to set the value and it returns the old
         // value. Thus we have to call it twice, to reset the value. The env_lock protects

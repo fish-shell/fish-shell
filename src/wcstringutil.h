@@ -133,6 +133,27 @@ wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps,
 /// Join a list of strings by a separator character.
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
+// prevents 'ambiguous' compiler error in OpenBSD clang
+#ifndef __OpenBSD__
+inline wcstring to_wcstring(long x) {
+    wchar_t buff[64];
+    format_long_safe(buff, x);
+    return wcstring(buff);
+}
+#endif
+
+inline wcstring to_wcstring(unsigned long long x) {
+    wchar_t buff[64];
+    format_ullong_safe(buff, x);
+    return wcstring(buff);
+}
+
+// prevents 'ambiguous' compiler error in OpenBSD clang
+#ifndef __OpenBSD__
+inline wcstring to_wcstring(int x) { return to_wcstring(static_cast<long>(x)); }
+inline wcstring to_wcstring(size_t x) { return to_wcstring(static_cast<unsigned long long>(x)); }
+#endif
+
 inline bool bool_from_string(const std::string &x) {
     if (x.empty()) return false;
     switch (x.front()) {

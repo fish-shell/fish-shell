@@ -1867,9 +1867,8 @@ std::string get_executable_path(const char *argv0) {
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buff_size = sizeof buff;
     if (_NSGetExecutablePath(buff, &buff_size) == 0) return std::string(buff);
-#elif defined(__BSD__) && defined(KERN_PROC_PATHNAME)
 #else
-    size_t buff_size = sizeof buff;
+size_t buff_size = sizeof buff;
 #if defined(__BSD__) && defined(KERN_PROC_PATHNAME)
     // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
     // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1
@@ -1886,19 +1885,19 @@ std::string get_executable_path(const char *argv0) {
         return std::string(buff);
     }
 #elif defined(__OpenBSD__)
+    static std::string result;
+    if (!result.empty()) return result;
     int cntp = 0;
     struct stat st;
-    std::string path;
     bool ok = false;
-    char exe[buff_size];
+    std::string path;
     kinfo_file *kif = nullptr;
     static kvm_t *kd = nullptr;
     char errbuf[_POSIX2_LINE_MAX];
-    const char *pwd = nullptr, *cwd = nullptr, *penv = nullptr;
+    const char *pwd = nullptr, *penv = nullptr;
     if (!std::string(argv0).empty()) {
         if (argv0[0] == '/') {
             path = argv0;
-            goto finish1;
         } else if (std::string(argv0).find('/') == std::string::npos) {
             penv = getenv("PATH");
             if (penv && *penv) {
@@ -1907,42 +1906,20 @@ std::string get_executable_path(const char *argv0) {
                 for (std::size_t i = 0; i < env.size(); i++) {
                     path = wcs2string(env[i].c_str(), env[i].length()) + "/" + argv0;
                     if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
-                        goto finish2;
+                        break;
                     }
-                    path.clear();
                 }
-            }
-        }
-        pwd = getenv("PWD");
-        if (pwd && *pwd) {
-            path = std::string(pwd) + "/" + std::string(argv0);
-            if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
-                goto finish2;
-            } else {
-                goto fallback;
             }
         } else {
-            fallback:
-            cwd = getcwd(exe, buff_size);
-            if (cwd && *cwd) {
-                path = std::string(cwd) + "/" + std::string(argv0);
-            }
-        }
-        finish1:
-        if (!path.empty()) {
-            if (!stat(path.c_str(), &st) && (st.st_mode & S_IXUSR) && (st.st_mode & S_IFREG)) {
-                finish2:
-                if (realpath(path.c_str(), exe)) {
-                    path = exe;
-                    goto finish3;
-                }
+            pwd = getenv("PWD");
+            if (pwd && *pwd) {
+                path = std::string(pwd) + "/" + std::string(argv0);
             }
         }
     }
-    finish3:
-    if (path.empty()) goto finish4;
+    if (path.empty()) { result = "fish"; return result; }
     kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, errbuf); 
-    if (!kd) { path.clear(); goto finish4; }
+    if (!kd) { result = "fish"; return result; }
     if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, getpid(), sizeof(struct kinfo_file), &cntp))) {
         for (int i = 0; i < cntp; i++) {
             if (kif[i].fd_fd == KERN_FILE_TEXT) {
@@ -1955,14 +1932,15 @@ std::string get_executable_path(const char *argv0) {
             }
         }
     }
-    if (!ok) { path.clear(); }
+    if (!ok) path.clear();
     kvm_close(kd);
-    finish4:
     path.resize(buff_size, '\0');
     path[buff_size] = '\0';
-    strcpy(buff, path.c_str());
-    static std::string result = buff;
-    return (!result.empty()) ? result : "fish";
+    if (realpath(path.c_str(), buff)) {
+        path = buff;
+    }
+    result = (!path.empty()) ? path : "fish";
+    return result;
 #else
     // On other unixes, fall back to the Linux-ish /proc/ directory
     ssize_t len;

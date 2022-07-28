@@ -846,7 +846,7 @@ static void expand_home_directory(wcstring &input, const environment_t &vars) {
 /// Expand the %self escape. Note this can only come at the beginning of the string.
 static void expand_percent_self(wcstring &input) {
     if (!input.empty() && input.front() == PROCESS_EXPAND_SELF) {
-        input.replace(0, 1, std::to_wstring(getpid()));
+        input.replace(0, 1, to_wcstring(getpid()));
     }
 }
 

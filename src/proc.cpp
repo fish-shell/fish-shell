@@ -463,9 +463,9 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 
 /// Generate process_exit events for any completed processes in \p j.
 static void generate_process_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
-    // Historically we have avoided generating events for jobs from event handlers, as an event
-    // handler may itself produce a new event.
-    if (!j->from_event_handler()) {
+    // Historically we have avoided generating events for foreground jobs from event handlers, as an
+    // event handler may itself produce a new event.
+    if (!j->from_event_handler() || !j->is_foreground()) {
         for (const auto &p : j->processes) {
             if (p->pid > 0 && p->completed && !p->posted_proc_exit) {
                 p->posted_proc_exit = true;
@@ -477,8 +477,8 @@ static void generate_process_exit_events(const job_ref_t &j, std::vector<event_t
 
 /// Given a job that has completed, generate job_exit and caller_exit events.
 static void generate_job_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
-    // Generate proc and job exit events, except for jobs originating in event handlers.
-    if (!j->from_event_handler()) {
+    // Generate proc and job exit events, except for foreground jobs originating in event handlers.
+    if (!j->from_event_handler() || !j->is_foreground()) {
         // job_exit events.
         if (j->posts_job_exit_events()) {
             if (auto last_pid = j->get_last_pid()) {

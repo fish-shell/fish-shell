@@ -71,7 +71,6 @@
 
 struct termios shell_modes;
 
-extern 
 const wcstring g_empty_string{};
 
 /// This allows us to notice when we've forked.

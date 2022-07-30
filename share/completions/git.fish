@@ -334,8 +334,12 @@ function __fish_git_files
                     # If this contains newlines or tabs,
                     # there is nothing we can do, but that's a general issue with scripted completions.
                     set file (string trim -c \" -- $file)
-                    # First the relative filename.
-                    printf '%s\t%s\n' "$file" $d
+                    # The relative filename.
+                    if string match -q './*' -- (commandline -ct)
+                        printf './%s\t%s\n' $file $d
+                    else
+                        printf '%s\t%s\n' "$file" $d
+                    end
                     # Now from repo root.
                     # Only do this if the filename isn't a simple child,
                     # or the current token starts with ":"

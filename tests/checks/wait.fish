@@ -56,3 +56,14 @@ end
 wait
 # CHECK: P1 over
 # CHECK: P2 over
+
+# Events for background jobs from event handlers (#9096)
+function __test_background_job_exit_event --on-variable trigger_var
+    sleep .1 &
+    function callback --on-process-exit (jobs --last --pid)
+        echo -n "Callback called"
+    end
+end
+set trigger_var 123
+sleep .5
+# CHECK: Callback called

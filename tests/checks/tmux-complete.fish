@@ -48,3 +48,23 @@ isolated-tmux send-keys C-l foo2 Space BTab b BSpace b Escape
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 3> foo2 aa
+
+# Check that down-or-search works even when the pager is not selected.
+isolated-tmux send-keys C-u foo2 Space Tab
+tmux-sleep
+isolated-tmux send-keys Down
+tmux-sleep
+isolated-tmux capture-pane -p
+# Also check that we show an autosuggestion.
+# CHECK: prompt 3> foo2 aabc aabc
+# CHECK: aabc{{ *}}aaBd
+
+# Check that a larger-than-screen completion does not break down-or-search.
+isolated-tmux send-keys C-u 'complete -c foo4 -f -a "
+    a-long-arg-\"$(seq $LINES | string pad -c_ --width $COLUMNS)\"
+    b-short-arg"' Enter C-l foo4 Space Tab Tab Down
+tmux-sleep
+isolated-tmux capture-pane -p | head -1
+# The second one is the autosuggestion. Maybe we should turn them off for this test.
+# TODO there should be a prefix ("prompt 4> foo4") but we fail to draw that in this case.
+# CHECK: {{.*}} b-short-arg a-long-arg{{.*}}

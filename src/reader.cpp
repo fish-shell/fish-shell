@@ -1978,7 +1978,7 @@ void reader_data_t::update_autosuggestion() {
     // This is also the main mechanism by which readline commands that don't change the command line
     // text avoid recomputing the autosuggestion.
     const editable_line_t &el = command_line;
-    if (!autosuggestion.empty() &&
+    if (autosuggestion.text.size() > el.text().size() &&
         (autosuggestion.icase
              ? string_prefixes_string_case_insensitive(el.text(), autosuggestion.text)
              : string_prefixes_string(el.text(), autosuggestion.text))) {
@@ -2913,7 +2913,7 @@ void reader_data_t::update_commandline_state() const {
     snapshot->cursor_pos = this->command_line.position();
     snapshot->history = this->history;
     snapshot->selection = this->get_selection();
-    snapshot->pager_mode = !this->current_page_rendering.screen_data.empty();
+    snapshot->pager_mode = !this->pager.empty();
     snapshot->pager_fully_disclosed = this->current_page_rendering.remaining_to_disclose == 0;
     snapshot->search_mode = this->history_search.active();
     snapshot->initialized = true;

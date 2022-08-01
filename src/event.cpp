@@ -304,7 +304,8 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         scoped_push<bool> interactive{&ld.is_interactive, false};
         auto prev_statuses = parser.get_last_statuses();
 
-        FLOGF(event, L"Firing event '%ls'", event.desc.str_param1.c_str());
+        FLOGF(event, L"Firing event '%ls' to handler '%ls'", event.desc.str_param1.c_str(),
+              handler->function_name.c_str());
         block_t *b = parser.push_block(block_t::event_block(event));
         parser.eval(buffer, io_chain_t());
         parser.pop_block(b);

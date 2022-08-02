@@ -490,7 +490,7 @@ function __fish_git_files
                     set file (string replace -- "$root/" ":/:" "$root/$relfile")
                 end
 
-                if test "$root/$relfile" = (pwd -P)/$relfile
+                if test "$root/$relfile" -ef "$relfile"
                     and not string match -q ':*' -- (commandline -ct)
                     set file $relfile
                 end

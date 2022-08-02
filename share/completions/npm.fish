@@ -58,7 +58,7 @@ function __fish_complete_npm -d "Complete the commandline using npm's 'completio
         set -lx COMP_POINT (commandline -C)
         # If the cursor is after the last word, the empty token will disappear in the expansion
         # Readd it
-        if test (commandline -ct) = ""
+        if test -z (commandline -ct)
             set COMP_CWORD (math $COMP_CWORD + 1)
             set COMP_LINE $COMP_LINE ""
         end

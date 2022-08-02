@@ -64,7 +64,7 @@ function cdh --description "Menu based cd command"
     # Ask the user which directory from their history they want to cd to.
     set -l msg (_ 'Select directory by letter or number: ')
     read -l -p "echo '$msg'" choice
-    if test "$choice" = ""
+    if test -z "$choice"
         return 0
     else if string match -q -r '^[a-z]$' $choice
         # Convert the letter to an index number.

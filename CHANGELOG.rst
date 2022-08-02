@@ -34,6 +34,7 @@ Completions
 - Added completions for:
 
   - ``zig`` (:issue:`9083`)
+- The ``help`` command have completion for default fish commands.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

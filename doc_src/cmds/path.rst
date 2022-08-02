@@ -280,6 +280,8 @@ Examples
 
 Unlike ``realpath`` or ``path resolve``, it does not make the paths absolute. It also does not resolve any symlinks. As such it can operate on non-existent paths.
 
+Because it operates on paths as strings and doesn't resolve symlinks, it works sort of like ``pwd -L`` and ``cd``. E.g. ``path normalize link/..`` will return ``.``, just like ``cd link; cd ..`` would return to the current directory. For a physical view of the filesystem, see ``path resolve``.
+
 Leading "./" components are usually removed. But when a path starts with ``-``, ``path normalize`` will add it instead to avoid confusion with options.
 
 It returns 0 if any normalization was done, i.e. any given path wasn't in canonical form.
@@ -310,9 +312,11 @@ Examples
 
     path resolve [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
-``path resolve`` returns the normalized, physical and absolute versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components. Then it turns that path into the absolute path starting from the filesystem root "/".
+``path resolve`` returns the normalized, physical and absolute versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/", collapses "../" with earlier components and removes "." components. Then it turns that path into the absolute path starting from the filesystem root "/".
 
 It is similar to ``realpath``, as it creates the "real", canonical version of the path. However, for paths that can't be resolved, e.g. if they don't exist or form a symlink loop, it will resolve as far as it can and normalize the rest.
+
+Because it resolves symlinks, it works sort of like ``pwd -P``. E.g. ``path resolve link/..`` will return the parent directory of what the link points to, just like ``cd link; cd (pwd -P)/..`` would go to it. For a logical view of the filesystem, see ``path resolve``.
 
 It returns 0 if any normalization or resolution was done, i.e. any given path wasn't in canonical form.
 

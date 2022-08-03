@@ -16,18 +16,9 @@ set -l plugin_commands install license list uninstall update
 set -l snapshot_commands delete list pop push restore save
 
 function __fish_print_vagrant_state
-    # Find a .vagrant file/directory above $PWD
-    set -l root
-    set -l dir (pwd -P)
-    while test $dir != /
-        if test -d $dir.vagrant -o -f $dir.vagrant
-            echo $dir.vagrant
-            return 0
-        end
-        # Go up one directory
-        set dir (string replace -r '[^/]*/?$' '' $dir)
+    for dir in (__fish_parent_directories $PWD)
+        string match '*/.vagrant' $dir && break
     end
-    return 1
 end
 
 function __fish_vagrant_machines

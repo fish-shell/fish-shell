@@ -1493,29 +1493,6 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, con
     return appended > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
-// Helper function to abstract the repeat logic from string_repeat
-// returns the to_repeat string, repeated count times.
-static wcstring wcsrepeat(const wcstring &to_repeat, size_t count) {
-    wcstring repeated;
-    repeated.reserve(to_repeat.length() * count);
-
-    for (size_t j = 0; j < count; j++) {
-        repeated += to_repeat;
-    }
-
-    return repeated;
-}
-
-// Helper function to abstract the repeat until logic from string_repeat
-// returns the to_repeat string, repeated until max char has been reached.
-static wcstring wcsrepeat_until(const wcstring &to_repeat, size_t max) {
-    if (to_repeat.length() == 0) return {};
-    size_t count = max / to_repeat.length();
-    size_t mod = max % to_repeat.length();
-
-    return wcsrepeat(to_repeat, count) + to_repeat.substr(0, mod);
-}
-
 static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     opts.count_valid = true;
@@ -1525,32 +1502,84 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
+    if (opts.max == 0 && opts.count == 0) {
+        // XXX: This used to be allowed, but returned 1.
+        // Keep it that way for now instead of adding an error.
+        // streams.err.append(L"Count or max must be greater than zero");
+        return STATUS_CMD_ERROR;
+    }
 
     bool all_empty = true;
     bool first = true;
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *word = aiter.nextstr()) {
+        // If the string is empty, there is nothing to repeat.
+        if (word->empty()) {
+            continue;
+        }
+
+        all_empty = false;
+        if (opts.quiet) {
+            // Early out if we can - see #7495.
+            return STATUS_CMD_OK;
+        }
+
         if (!first && !opts.quiet) {
             streams.out.append(L'\n');
         }
         first = false;
-        const bool limit_repeat =
-            (opts.max > 0 && word->length() * opts.count > static_cast<size_t>(opts.max)) ||
-            !opts.count;
-        const wcstring repeated =
-            limit_repeat ? wcsrepeat_until(*word, opts.max) : wcsrepeat(*word, opts.count);
-        if (!repeated.empty()) {
-            all_empty = false;
-            if (opts.quiet) {
-                // Early out if we can - see #7495.
-                return STATUS_CMD_OK;
-            }
+
+        auto &w = *word;
+
+        // The maximum size of the string is either the "max" characters,
+        // or it's the "count" repetitions, whichever ends up lower.
+        size_t max = opts.max;
+        if (max == 0 || (opts.count > 0 && w.length() * opts.count < max)) {
+            max = w.length() * opts.count;
         }
 
-        // Append if not quiet.
-        if (!opts.quiet) {
-            streams.out.append(repeated);
+        // Reserve a string to avoid writing constantly.
+        // The 1500 here is a total gluteal extraction, but 500 seems to perform slightly worse.
+        const size_t chunk_size = 1500;
+        // The + word length is so we don't have to hit the chunk size exactly,
+        // which would require us to restart in the middle of the string.
+        // E.g. imagine repeating "12345678". The first chunk is hit after a last "1234",
+        // so we would then have to restart by appending "5678", which requires a substring.
+        // So let's not bother.
+        //
+        // Unless of course we don't even print the entire word, in which case we just need max.
+        wcstring chunk;
+        chunk.reserve(std::min(chunk_size + w.length(), max));
+
+        for (size_t i = max; i > 0; i -= w.length()) {
+            // Build up the chunk.
+            if (i >= w.length()) {
+                chunk.append(w);
+            } else {
+                chunk.append(w.substr(0, i));
+                break;
+            }
+            if (chunk.length() >= chunk_size) {
+                // We hit the chunk size, write it repeatedly until we can't anymore.
+                streams.out.append(chunk);
+                while (i >= chunk.length()) {
+                    streams.out.append(chunk);
+                    // We can easily be asked to write *a lot* of data,
+                    // so we need to check every so often if the pipe has been closed.
+                    // If we didn't, running `string repeat -n LARGENUMBER foo | pv`
+                    // and pressing ctrl-c seems to hang.
+                    if (streams.out.flush_and_check_error() != STATUS_CMD_OK) {
+                        return STATUS_CMD_ERROR;
+                    }
+                    i -= chunk.length();
+                }
+                chunk.clear();
+            }
+        }
+        // Flush the remainder.
+        if (!chunk.empty()) {
+            streams.out.append(chunk);
         }
     }
 

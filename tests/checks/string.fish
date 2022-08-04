@@ -504,6 +504,32 @@ string repeat -n3 ""
 or echo string repeat empty string failed
 # CHECK: string repeat empty string failed
 
+# See that we hit the expected length
+# First with "max", i.e. maximum number of characters
+string repeat -m 5000 aab | string length
+# CHECK: 5000
+string repeat -m 5000 ab | string length
+# CHECK: 5000
+string repeat -m 5000 a | string length
+# CHECK: 5000
+string repeat -m 17 aab | string length
+# CHECK: 17
+string repeat -m 17 ab | string length
+# CHECK: 17
+string repeat -m 17 a | string length
+# CHECK: 17
+# Then with "count", i.e. number of repetitions.
+# (these are count * length long)
+string repeat -n 17 aab | string length
+# CHECK: 51
+string repeat -n 17 ab | string length
+# CHECK: 34
+string repeat -n 17 a | string length
+# CHECK: 17
+# And a more tricksy case with a long string that we truncate.
+string repeat -m 5 (string repeat -n 500000000 aaaaaaaaaaaaaaaaaa) | string length
+# CHECK: 5
+
 # Test equivalent matches with/without the --entire, --regex, and --invert flags.
 string match -e x abc dxf xyz jkx x z
 or echo exit 1

@@ -648,6 +648,16 @@ void format_long_safe(wchar_t buff[64], long val) {
     }
 }
 
+void format_llong_safe(wchar_t buff[64], long long val) {
+    unsigned long long uval = absolute_value(val);
+    if (val >= 0) {
+        format_safe_impl(buff, 64, uval);
+    } else {
+        buff[0] = '-';
+        format_safe_impl(buff + 1, 63, uval);
+    }
+}
+
 void format_ullong_safe(wchar_t buff[64], unsigned long long val) {
     return format_safe_impl(buff, 64, val);
 }

@@ -139,6 +139,12 @@ inline wcstring to_string(long x) {
     return wcstring(buff);
 }
 
+inline wcstring to_string(long long x) {
+    wchar_t buff[64];
+    format_llong_safe(buff, x);
+    return wcstring(buff);
+}
+
 inline wcstring to_string(unsigned long long x) {
     wchar_t buff[64];
     format_ullong_safe(buff, x);

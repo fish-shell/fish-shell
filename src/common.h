@@ -329,6 +329,7 @@ void format_size_safe(char buff[128], unsigned long long sz);
 /// Writes out a long safely.
 void format_long_safe(char buff[64], long val);
 void format_long_safe(wchar_t buff[64], long val);
+void format_llong_safe(wchar_t buff[64], long long val);
 void format_ullong_safe(wchar_t buff[64], unsigned long long val);
 
 /// "Narrows" a wide character string. This just grabs any ASCII characters and trunactes.

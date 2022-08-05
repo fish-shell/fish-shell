@@ -1,0 +1,1 @@
+kind completion fish | source

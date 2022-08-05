@@ -33,6 +33,7 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
+  - ``kind`` (:issue:`9110`)
   - ``zig`` (:issue:`9083`)
 
 Improved terminal support

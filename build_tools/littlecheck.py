@@ -202,6 +202,7 @@ class TestFailure(object):
         self.diff = diff
         self.lines = lines
         self.checks = checks
+        self.signal = None
 
     def message(self):
         fields = self.testrun.config.colors()
@@ -226,6 +227,11 @@ class TestFailure(object):
             )
         filemsg = "" if self.testrun.config.progress else " in {name}"
         fmtstrs = ["{RED}Failure{RESET}" + filemsg + ":", ""]
+        if self.signal:
+            fmtstrs += [
+                "  Process was killed by signal {BOLD}" + self.signal + "{RESET}",
+                ""
+            ]
         if self.line and self.check:
             fmtstrs += [
                 "  The {check_type} on line {input_lineno} wants:",
@@ -433,6 +439,12 @@ class TestRun(object):
         for i in checkq[::-1]:
             usedchecks.append(i)
 
+        # If we have no more output, there's no reason to give
+        # SCREENFULS of text.
+        # So we truncate the check list.
+        if len(usedchecks) > len(usedlines):
+            usedchecks = usedchecks[:len(usedlines) + 5]
+
         # Do a SequenceMatch! This gives us a diff-like thing.
         diff = SequenceMatcher(a=usedlines, b=usedchecks, autojunk=False)
         # If there's a mismatch or still lines or checkers, we have a failure.
@@ -501,7 +513,34 @@ class TestRun(object):
             # Trim a trailing newline
             if outfail.error_annotation_lines[-1].text == "\n":
                 del outfail.error_annotation_lines[-1]
-        return outfail if outfail else errfail
+        failure = outfail if outfail else errfail
+
+        if failure and status < 0:
+            # Process was killed by a signal and failed,
+            # add a message.
+            import signal
+            # Unfortunately strsignal only exists in python 3.8+,
+            # and signal.signals is 3.5+.
+            if hasattr(signal, "Signals"):
+                try:
+                    sig = signal.Signals(-status)
+                    failure.signal = sig.name + " (" + signal.strsignal(sig.value) + ")"
+                except ValueError:
+                    failure.signal = str(-status)
+            else:
+                # No easy way to get the full list,
+                # make up a dict.
+                signals = {
+                    signal.SIGABRT: "SIGABRT",
+                    signal.SIGBUS: "SIGBUS",
+                    signal.SIGFPE: "SIGFPE",
+                    signal.SIGILL: "SIGILL",
+                    signal.SIGSEGV: "SIGSEGV",
+                    signal.SIGTERM: "SIGTERM",
+                }
+                failure.signal = signals.get(-status, str(-status))
+
+        return failure
 
 
 class CheckCmd(object):
@@ -723,6 +762,8 @@ def main():
         subs["s"] = path
         starttime = datetime.datetime.now()
         ret = check_path(path, subs, config, TestFailure.print_message)
+        if ret is SKIP:
+            skip_count += 1
         if not ret:
             failed = True
         elif config.progress:
@@ -731,7 +772,6 @@ def main():
             reason = "ok"
             color = "{GREEN}"
             if ret is SKIP:
-                skip_count += 1
                 reason = "SKIPPED"
                 color = "{BLUE}"
             print(

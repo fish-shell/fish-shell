@@ -35,6 +35,7 @@ Completions
 
   - ``firefox``
   - ``firefox-developer-edition``
+  - ``kind`` (:issue:`9110`)
   - ``zig`` (:issue:`9083`)
 
 Improved terminal support

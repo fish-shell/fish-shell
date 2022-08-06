@@ -86,6 +86,12 @@ function help --description 'Show help for the fish shell'
                 set fish_browser $cmd[1]
             end
 
+            # Try and see if powershell.exe is an option to avoid UNC path error
+            # https://ss64.com/nt/cmd.html Launching CMD/batch files from a UNC path
+            if type -q powershell.exe
+                set fish_browser powershell.exe
+            end
+
             if type -q wsl-open
                 set fish_browser wsl-open
             end
@@ -224,8 +230,11 @@ function help --description 'Show help for the fish shell'
         end
     end
 
-    # cmd.exe needs more coaxing.
+    # cmd.exe and powershell needs more coaxing.
     if string match -qr 'cmd\.exe$' -- $fish_browser[1]
+        # The space before the /c is to prevent msys2 from expanding it to a path
+        $fish_browser " /c" start $page_url
+    else if string match -qr 'powershell\.exe$' -- $fish_browser[1]
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
         # If browser is known to be graphical, put into background

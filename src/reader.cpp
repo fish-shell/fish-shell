@@ -1347,8 +1347,30 @@ void reader_data_t::pager_selection_changed() {
     }
 }
 
+/// Expand an abbreviation replacer, which means either returning its literal replacement or running
+/// its function. \return the replacement string, or none to skip it.
+maybe_t<wcstring> expand_replacer(const wcstring &token, const abbrs_replacer_t &repl,
+                                  parser_t &parser) {
+    if (!repl.is_function) {
+        // Literal replacement cannot fail.
+        return repl.replacement;
+    }
+
+    wcstring cmd = escape_string(repl.replacement);
+    cmd.push_back(L' ');
+    cmd.append(escape_string(token));
+
+    wcstring_list_t outputs{};
+    int ret = exec_subshell(cmd, parser, outputs, false /* not apply_exit_status */);
+    if (ret != STATUS_CMD_OK) {
+        return none();
+    }
+    return join_strings(outputs, L'\n');
+}
+
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
-maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, size_t cursor_pos) {
+maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, size_t cursor_pos,
+                                                     parser_t &parser) {
     // Get the surrounding command substitution.
     const wchar_t *const buff = cmdline.c_str();
     const wchar_t *cmdsub_begin = nullptr, *cmdsub_end = nullptr;
@@ -1400,14 +1422,17 @@ maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, si
         leaf_is_command ? abbrs_position_t::command : abbrs_position_t::anywhere;
 
     // Now we can expand the abbreviation.
-    maybe_t<edit_t> result{};
-    if (auto abbreviation = abbrs_expand(leaf->source(subcmd), expand_position)) {
-        // There was an abbreviation! Replace the token in the full command. Maintain the
-        // relative position of the cursor.
-        source_range_t r = leaf->source_range();
-        result = edit_t(subcmd_offset + r.start, r.length, abbreviation.acquire());
+    // Find the first which succeeds.
+    wcstring token = leaf->source(subcmd);
+    auto replacers = abbrs_match(token, expand_position);
+    for (const auto &replacer : replacers) {
+        if (auto replacement = expand_replacer(token, replacer, parser)) {
+            // Replace the token in the full command. Maintain the relative position of the cursor.
+            source_range_t r = leaf->source_range();
+            return edit_t(subcmd_offset + r.start, r.length, replacement.acquire());
+        }
     }
-    return result;
+    return none();
 }
 
 /// Expand abbreviations at the current cursor position, minus the given cursor backtrack. This may
@@ -1419,9 +1444,9 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
 
     if (conf.expand_abbrev_ok && el == &command_line) {
         // Try expanding abbreviations.
+        this->update_commandline_state();
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
-
-        if (auto edit = reader_expand_abbreviation_at_cursor(el->text(), cursor_pos)) {
+        if (auto edit = reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, parser())) {
             push_edit(el, std::move(*edit));
             update_buff_pos(el);
             result = true;

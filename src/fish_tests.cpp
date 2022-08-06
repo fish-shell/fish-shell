@@ -2479,22 +2479,35 @@ static void test_abbreviations() {
         abbrs->add(literal_abbr(L"yin", L"yang", abbrs_position_t::anywhere));
     }
 
-    auto cmd = abbrs_position_t::command;
-    if (abbrs_expand(L"", cmd)) err(L"Unexpected success with empty abbreviation");
-    if (abbrs_expand(L"nothing", cmd)) err(L"Unexpected success with missing abbreviation");
+    // Helper to expand an abbreviation, enforcing we have no more than one result.
+    auto abbr_expand_1 = [](const wcstring &token, abbrs_position_t pos) -> maybe_t<wcstring> {
+        auto result = abbrs_match(token, pos);
+        if (result.size() > 1) {
+            err(L"abbreviation expansion for %ls returned more than 1 result", token.c_str());
+        }
+        if (result.empty()) {
+            return none();
+        }
+        return result.front().replacement;
+    };
 
-    auto mresult = abbrs_expand(L"gc", cmd);
+    auto cmd = abbrs_position_t::command;
+    if (abbr_expand_1(L"", cmd)) err(L"Unexpected success with empty abbreviation");
+    if (abbr_expand_1(L"nothing", cmd)) err(L"Unexpected success with missing abbreviation");
+
+    auto mresult = abbr_expand_1(L"gc", cmd);
     if (!mresult) err(L"Unexpected failure with gc abbreviation");
     if (*mresult != L"git checkout") err(L"Wrong abbreviation result for gc");
 
-    mresult = abbrs_expand(L"foo", cmd);
+    mresult = abbr_expand_1(L"foo", cmd);
     if (!mresult) err(L"Unexpected failure with foo abbreviation");
     if (*mresult != L"bar") err(L"Wrong abbreviation result for foo");
 
     maybe_t<wcstring> result;
     auto expand_abbreviation_in_command = [](const wcstring &cmdline,
                                              size_t cursor_pos) -> maybe_t<wcstring> {
-        if (auto edit = reader_expand_abbreviation_at_cursor(cmdline, cursor_pos)) {
+        if (auto edit = reader_expand_abbreviation_at_cursor(cmdline, cursor_pos,
+                                                             parser_t::principal_parser())) {
             wcstring cmdline_expanded = cmdline;
             std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
             apply_edit(&cmdline_expanded, &colors, *edit);

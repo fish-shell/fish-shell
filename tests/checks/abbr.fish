@@ -133,6 +133,22 @@ echo $status
 # CHECKERR: abbr: --position option requires --add
 # CHECK: 2
 
+abbr --query banana --function
+echo $status
+# CHECKERR: abbr: --function option requires --add
+# CHECK: 2
+
+abbr --add peach --function invalid/function/name
+echo $status
+# CHECKERR: abbr: Invalid function name: invalid/function/name
+# CHECK: 2
+
+# Function names cannot contain spaces, to prevent confusion with fish script.
+abbr --add peach --function 'no space allowed'
+echo $status
+# CHECKERR: abbr: Invalid function name: no space allowed
+# CHECK: 2
+
 # Erase all abbreviations
 abbr --erase (abbr --list)
 abbr --show

@@ -38,8 +38,12 @@ struct abbr_options_t {
     bool list{};
     bool erase{};
     bool query{};
+    bool function{};
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
+
+    bool expand_on_entry{};
+    bool expand_on_execute{};
 
     wcstring_list_t args;
 
@@ -72,6 +76,21 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --regex option requires --add\n"), CMD);
             return false;
         }
+        if (!add && function) {
+            streams.err.append_format(_(L"%ls: --function option requires --add\n"), CMD);
+            return false;
+        }
+        if (!add && (expand_on_entry || expand_on_execute)) {
+            streams.err.append_format(_(L"%ls: --expand-on option requires --add\n"), CMD);
+            return false;
+        }
+
+        // If no expand-on is specified, expand on both entry and execute, to match historical
+        // behavior.
+        if (add && !expand_on_entry && !expand_on_execute) {
+            expand_on_entry = true;
+            expand_on_execute = true;
+        }
         return true;
     }
 };
@@ -79,20 +98,36 @@ struct abbr_options_t {
 // Print abbreviations in a fish-script friendly way.
 static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
     const auto abbrs = abbrs_get_set();
+    wcstring_list_t comps{};
     for (const auto &abbr : abbrs->list()) {
-        wcstring name = escape_string(abbr.name);
-        wcstring value = escape_string(abbr.replacement);
-        const wchar_t *scope = (abbr.from_universal ? L"-U " : L"");
-        // Literal abbreviations share both name and key.
+        comps.clear();
+        comps.push_back(L"abbr -a");
+        if (abbr.from_universal) comps.push_back(L"-U");
+        comps.push_back(L"--");
+        // Literal abbreviations have the name and key as the same.
         // Regex abbreviations have a pattern separate from the name.
-        if (!abbr.is_regex()) {
-            streams.out.append_format(L"abbr -a %ls-- %ls %ls\n", scope, name.c_str(),
-                                      value.c_str());
-        } else {
-            wcstring pattern = escape_string(abbr.key);
-            streams.out.append_format(L"abbr -a %ls-- %ls --regex %ls %ls\n", scope, name.c_str(),
-                                      pattern.c_str(), value.c_str());
+        comps.push_back(escape_string(abbr.name));
+        if (abbr.is_regex()) {
+            comps.push_back(L"--regex");
+            comps.push_back(escape_string(abbr.key));
         }
+        // The default is to expand on both entry and execute.
+        // Add flags if we're not the default.
+        if (!(abbr.expand_on_entry && abbr.expand_on_execute)) {
+            if (abbr.expand_on_entry) {
+                comps.push_back(L"--expand-on entry");
+            }
+            if (abbr.expand_on_execute) {
+                comps.push_back(L"--expand-on execute");
+            }
+        }
+        if (abbr.replacement_is_function) {
+            comps.push_back(L"--function");
+        }
+        comps.push_back(escape_string(abbr.replacement));
+        wcstring result = join_strings(comps, L' ');
+        result.push_back(L'\n');
+        streams.out.append(result);
     }
     return STATUS_CMD_OK;
 }
@@ -209,11 +244,21 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
         if (!replacement.empty()) replacement.push_back(L' ');
         replacement.append(*iter);
     }
+    // Abbreviation function names disallow spaces.
+    // This is to prevent accidental usage of e.g. `--function 'string replace'`
+    if (opts.function &&
+        (!valid_func_name(replacement) || replacement.find(L' ') != wcstring::npos)) {
+        streams.err.append_format(_(L"%ls: Invalid function name: %ls\n"), CMD,
+                                  replacement.c_str());
+        return STATUS_INVALID_ARGS;
+    }
+
     abbrs_position_t position = opts.position ? *opts.position : abbrs_position_t::command;
 
     // Note historically we have allowed overwriting existing abbreviations.
     abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
     abbr.regex = std::move(regex);
+    abbr.replacement_is_function = opts.function;
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
@@ -242,24 +287,27 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT };
+    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, EXPAND_ON_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
-    static const wchar_t *const short_options = L"-arseqgUh";
-    static const struct woption long_options[] = {{L"add", no_argument, 'a'},
-                                                  {L"position", required_argument, 'p'},
-                                                  {L"regex", required_argument, REGEX_SHORT},
-                                                  {L"rename", no_argument, 'r'},
-                                                  {L"erase", no_argument, 'e'},
-                                                  {L"query", no_argument, 'q'},
-                                                  {L"show", no_argument, 's'},
-                                                  {L"list", no_argument, 'l'},
-                                                  {L"global", no_argument, 'g'},
-                                                  {L"universal", no_argument, 'U'},
-                                                  {L"help", no_argument, 'h'},
-                                                  {}};
+    static const wchar_t *const short_options = L"-afrseqgUh";
+    static const struct woption long_options[] = {
+        {L"add", no_argument, 'a'},
+        {L"position", required_argument, 'p'},
+        {L"regex", required_argument, REGEX_SHORT},
+        {L"expand-on", required_argument, EXPAND_ON_SHORT},
+        {L"function", no_argument, 'f'},
+        {L"rename", no_argument, 'r'},
+        {L"erase", no_argument, 'e'},
+        {L"query", no_argument, 'q'},
+        {L"show", no_argument, 's'},
+        {L"list", no_argument, 'l'},
+        {L"global", no_argument, 'g'},
+        {L"universal", no_argument, 'U'},
+        {L"help", no_argument, 'h'},
+        {}};
 
     int argc = builtin_count_args(argv);
     int opt;
@@ -308,7 +356,22 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 opts.regex_pattern = w.woptarg;
                 break;
             }
-
+            case EXPAND_ON_SHORT: {
+                if (!wcscmp(w.woptarg, L"entry")) {
+                    opts.expand_on_entry = true;
+                } else if (!wcscmp(w.woptarg, L"execute")) {
+                    opts.expand_on_execute = true;
+                } else {
+                    streams.err.append_format(_(L"%ls: Invalid expand-on '%ls'\nexpand-on must be "
+                                                L"one of: entry, execute.\n"),
+                                              CMD, w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+                break;
+            }
+            case 'f':
+                opts.function = true;
+                break;
             case 'r':
                 opts.rename = true;
                 break;

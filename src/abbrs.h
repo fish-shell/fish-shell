@@ -32,8 +32,11 @@ struct abbreviation_t {
     /// we accomplish this by surrounding the regex in ^ and $.
     maybe_t<re::regex_t> regex{};
 
-    // Replacement string.
+    /// Replacement string.
     wcstring replacement{};
+
+    /// If set, the replacement is a function name.
+    bool replacement_is_function{};
 
     /// Expansion position.
     abbrs_position_t position{abbrs_position_t::command};
@@ -41,11 +44,17 @@ struct abbreviation_t {
     /// Mark if we came from a universal variable.
     bool from_universal{};
 
+    /// Whether this abbrevation expands after entry (before execution).
+    bool expand_on_entry{true};
+
+    /// Whether this abbrevation expands on execution.
+    bool expand_on_execute{true};
+
     // \return true if this is a regex abbreviation.
     bool is_regex() const { return this->regex.has_value(); }
 
-    // \return true if we match a token.
-    bool matches(const wcstring &token) const;
+    // \return true if we match a token at a given position.
+    bool matches(const wcstring &token, abbrs_position_t position) const;
 
     // Construct from a name, a key which matches a token, a replacement token, a position, and
     // whether we are derived from a universal variable.
@@ -56,11 +65,24 @@ struct abbreviation_t {
     abbreviation_t() = default;
 };
 
+/// The result of an abbreviation expansion.
+struct abbrs_replacer_t {
+    /// The string to use to replace the incoming token, either literal or as a function name.
+    wcstring replacement;
+
+    /// If true, treat 'replacement' as the name of a function.
+    bool is_function;
+};
+using abbrs_replacer_list_t = std::vector<abbrs_replacer_t>;
+
 class abbrs_set_t {
    public:
-    /// \return the replacement value for a abbreviation token, if any.
+    /// \return the list of replacers for an input token, in priority order.
     /// The \p position is given to describe where the token was found.
-    maybe_t<wcstring> expand(const wcstring &token, abbrs_position_t position) const;
+    abbrs_replacer_list_t match(const wcstring &token, abbrs_position_t position) const;
+
+    /// \return whether we would have at least one replacer for a given token.
+    bool has_match(const wcstring &token, abbrs_position_t position) const;
 
     /// Add an abbreviation. Any abbreviation with the same name is replaced.
     void add(abbreviation_t &&abbr);
@@ -94,8 +116,10 @@ class abbrs_set_t {
 /// \return the global mutable set of abbreviations.
 acquired_lock<abbrs_set_t> abbrs_get_set();
 
-/// \return the replacement value for a abbreviation token, if any, using the global set.
+/// \return the list of replacers for an input token, in priority order, using the global set.
 /// The \p position is given to describe where the token was found.
-maybe_t<wcstring> abbrs_expand(const wcstring &token, abbrs_position_t position);
+inline abbrs_replacer_list_t abbrs_match(const wcstring &token, abbrs_position_t position) {
+    return abbrs_get_set()->match(token, position);
+}
 
 #endif

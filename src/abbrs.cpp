@@ -14,7 +14,11 @@ abbreviation_t::abbreviation_t(wcstring name, wcstring key, wcstring replacement
       position(position),
       from_universal(from_universal) {}
 
-bool abbreviation_t::matches(const wcstring &token) const {
+bool abbreviation_t::matches(const wcstring &token, abbrs_position_t position) const {
+    // We must either expands anywhere, or in the given position.
+    if (this->position != position && this->position != abbrs_position_t::anywhere) {
+        return false;
+    }
     if (this->is_regex()) {
         return this->regex->match(token).has_value();
     } else {
@@ -27,23 +31,25 @@ acquired_lock<abbrs_set_t> abbrs_get_set() {
     return abbrs.acquire();
 }
 
-maybe_t<wcstring> abbrs_set_t::expand(const wcstring &token, abbrs_position_t position) const {
+abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t position) const {
+    abbrs_replacer_list_t result{};
     // Later abbreviations take precedence so walk backwards.
     for (auto it = abbrs_.rbegin(); it != abbrs_.rend(); ++it) {
         const abbreviation_t &abbr = *it;
-        // Expand only if the abbreviation expands anywhere or in the given position.
-        if (!(abbr.position == position || abbr.position == abbrs_position_t::anywhere)) {
-            continue;
+        if (abbr.matches(token, position)) {
+            result.push_back(abbrs_replacer_t{abbr.replacement, abbr.replacement_is_function});
         }
-
-        // Expand only if the name matches.
-        if (!abbr.matches(token)) {
-            continue;
-        }
-
-        return abbr.replacement;
     }
-    return none();
+    return result;
+}
+
+bool abbrs_set_t::has_match(const wcstring &token, abbrs_position_t position) const {
+    for (const auto &abbr : abbrs_) {
+        if (abbr.matches(token, position)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void abbrs_set_t::add(abbreviation_t &&abbr) {
@@ -105,8 +111,4 @@ void abbrs_set_t::import_from_uvars(const std::unordered_map<wcstring, env_var_t
             }
         }
     }
-}
-
-maybe_t<wcstring> abbrs_expand(const wcstring &token, abbrs_position_t position) {
-    return abbrs_get_set()->expand(token, position);
 }

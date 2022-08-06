@@ -261,9 +261,11 @@ bool fish_is_unwinding_for_exit();
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
                                             const wcstring &autosuggestion);
 
-/// Expand abbreviations at the given cursor position. Exposed for testing purposes only.
-/// \return none if no abbreviations were expanded, otherwise the new command line.
-maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, size_t cursor_pos);
+/// Expand at most one abbreviation at the given cursor position. Use the parser to run any
+/// abbreviations which want function calls.
+/// \return none if no abbreviations were expanded, otherwise the resulting edit.
+maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, size_t cursor_pos,
+                                                     parser_t &parser);
 
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,

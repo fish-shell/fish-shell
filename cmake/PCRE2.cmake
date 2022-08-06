@@ -54,6 +54,12 @@ else()
   # so we end up installing all of PCRE2 including its headers, man pages, etc.
   FetchContent_GetProperties(pcre2)
   if (NOT pcre2_POPULATED)
+    # If GIT_WORK_TREE is set (by user or by git itself with e.g. git rebase), it
+    # will override the git directory which CMake tries to apply in FetchContent_Populate,
+    # resulting in a failed checkout.
+    # Ensure it is not set.
+    unset(ENV{GIT_WORK_TREE})
+    unset(ENV{GIT_DIR})
     FetchContent_Populate(pcre2)
     add_subdirectory(${pcre2_SOURCE_DIR} ${pcre2_BINARY_DIR} EXCLUDE_FROM_ALL)
   endif()

@@ -23,7 +23,7 @@ if cp --version 2>/dev/null >/dev/null # GNU cp
     complete -c cp -f -l no-preserve -r -d "Don't preserve ATTRIBUTES" -xa "mode ownership timestamps links all"
     complete -c cp -l parents -d "Use full source file name under DIRECTORY"
     complete -c cp -s r -s R -l recursive -d "Copy directories recursively"
-    complete -c cp -l reflink -d "Control clone/CoW copies" -xa "always auto never"
+    complete -c cp -l reflink -d "Control clone/CoW copies" -a "always auto never"
     complete -c cp -l remove-destination -d "First remove existing destination files"
     complete -c cp -f -l sparse -r -d "Control creation of sparse files" -xa "always auto never"
     complete -c cp -s s -l symbolic-link -d "Make symbolic links instead of copying"

@@ -19,7 +19,7 @@ function prompt_pwd --description 'short CWD for the prompt'
 
     set -l fulldirs 0
     set -ql _flag_D
-    and set fish_prompt_pwd_full_dirs $_flag_D
+    and set -l fish_prompt_pwd_full_dirs $_flag_D
 
     set -q fish_prompt_pwd_full_dirs
     or set -l fish_prompt_pwd_full_dirs 1

@@ -42,8 +42,7 @@ struct abbr_options_t {
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
 
-    bool expand_on_entry{};
-    bool expand_on_execute{};
+    bool quiet{};
 
     wcstring_list_t args;
 
@@ -80,16 +79,9 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --function option requires --add\n"), CMD);
             return false;
         }
-        if (!add && (expand_on_entry || expand_on_execute)) {
-            streams.err.append_format(_(L"%ls: --expand-on option requires --add\n"), CMD);
+        if (!add && quiet) {
+            streams.err.append_format(_(L"%ls: --quiet option requires --add\n"), CMD);
             return false;
-        }
-
-        // If no expand-on is specified, expand on both entry and execute, to match historical
-        // behavior.
-        if (add && !expand_on_entry && !expand_on_execute) {
-            expand_on_entry = true;
-            expand_on_execute = true;
         }
         return true;
     }
@@ -111,15 +103,8 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
             comps.push_back(L"--regex");
             comps.push_back(escape_string(abbr.key));
         }
-        // The default is to expand on both entry and execute.
-        // Add flags if we're not the default.
-        if (!(abbr.expand_on_entry && abbr.expand_on_execute)) {
-            if (abbr.expand_on_entry) {
-                comps.push_back(L"--expand-on entry");
-            }
-            if (abbr.expand_on_execute) {
-                comps.push_back(L"--expand-on execute");
-            }
+        if (abbr.is_quiet) {
+            comps.push_back(L"--quiet");
         }
         if (abbr.replacement_is_function) {
             comps.push_back(L"--function");
@@ -259,6 +244,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
     abbr.regex = std::move(regex);
     abbr.replacement_is_function = opts.function;
+    abbr.is_quiet = opts.quiet;
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
@@ -287,27 +273,26 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, EXPAND_ON_SHORT };
+    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, EXPAND_ON_SHORT, QUIET_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
     static const wchar_t *const short_options = L"-afrseqgUh";
-    static const struct woption long_options[] = {
-        {L"add", no_argument, 'a'},
-        {L"position", required_argument, 'p'},
-        {L"regex", required_argument, REGEX_SHORT},
-        {L"expand-on", required_argument, EXPAND_ON_SHORT},
-        {L"function", no_argument, 'f'},
-        {L"rename", no_argument, 'r'},
-        {L"erase", no_argument, 'e'},
-        {L"query", no_argument, 'q'},
-        {L"show", no_argument, 's'},
-        {L"list", no_argument, 'l'},
-        {L"global", no_argument, 'g'},
-        {L"universal", no_argument, 'U'},
-        {L"help", no_argument, 'h'},
-        {}};
+    static const struct woption long_options[] = {{L"add", no_argument, 'a'},
+                                                  {L"position", required_argument, 'p'},
+                                                  {L"regex", required_argument, REGEX_SHORT},
+                                                  {L"quiet", no_argument, QUIET_SHORT},
+                                                  {L"function", no_argument, 'f'},
+                                                  {L"rename", no_argument, 'r'},
+                                                  {L"erase", no_argument, 'e'},
+                                                  {L"query", no_argument, 'q'},
+                                                  {L"show", no_argument, 's'},
+                                                  {L"list", no_argument, 'l'},
+                                                  {L"global", no_argument, 'g'},
+                                                  {L"universal", no_argument, 'U'},
+                                                  {L"help", no_argument, 'h'},
+                                                  {}};
 
     int argc = builtin_count_args(argv);
     int opt;
@@ -356,17 +341,8 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 opts.regex_pattern = w.woptarg;
                 break;
             }
-            case EXPAND_ON_SHORT: {
-                if (!wcscmp(w.woptarg, L"entry")) {
-                    opts.expand_on_entry = true;
-                } else if (!wcscmp(w.woptarg, L"execute")) {
-                    opts.expand_on_execute = true;
-                } else {
-                    streams.err.append_format(_(L"%ls: Invalid expand-on '%ls'\nexpand-on must be "
-                                                L"one of: entry, execute.\n"),
-                                              CMD, w.woptarg);
-                    return STATUS_INVALID_ARGS;
-                }
+            case QUIET_SHORT: {
+                opts.quiet = true;
                 break;
             }
             case 'f':

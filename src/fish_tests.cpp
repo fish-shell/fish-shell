@@ -2481,7 +2481,7 @@ static void test_abbreviations() {
 
     // Helper to expand an abbreviation, enforcing we have no more than one result.
     auto abbr_expand_1 = [](const wcstring &token, abbrs_position_t pos) -> maybe_t<wcstring> {
-        auto result = abbrs_match(token, pos);
+        auto result = abbrs_match(token, pos, abbrs_phase_t::any);
         if (result.size() > 1) {
             err(L"abbreviation expansion for %ls returned more than 1 result", token.c_str());
         }
@@ -2506,8 +2506,8 @@ static void test_abbreviations() {
     maybe_t<wcstring> result;
     auto expand_abbreviation_in_command = [](const wcstring &cmdline,
                                              size_t cursor_pos) -> maybe_t<wcstring> {
-        if (auto edit = reader_expand_abbreviation_at_cursor(cmdline, cursor_pos,
-                                                             parser_t::principal_parser())) {
+        if (auto edit = reader_expand_abbreviation_at_cursor(
+                cmdline, cursor_pos, abbrs_phase_t::noisy, parser_t::principal_parser())) {
             wcstring cmdline_expanded = cmdline;
             std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
             apply_edit(&cmdline_expanded, &colors, *edit);

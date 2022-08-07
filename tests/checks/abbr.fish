@@ -159,3 +159,17 @@ abbr --add regex_name --regex 'A[0-9]B' bar
 abbr --show
 # CHECK: abbr -a -- nonregex_name foo
 # CHECK: abbr -a -- regex_name --regex 'A[0-9]B' bar
+abbr --erase (abbr --list)
+
+abbr --add bogus --position never stuff
+# CHECKERR: abbr: Invalid position 'never'
+# CHECKERR: Position must be one of: command, anywhere.
+
+abbr --add bogus --position anywhere --position command stuff
+# CHECKERR: abbr: Cannot specify multiple positions
+
+abbr --add quiet-abbr --quiet foo1
+abbr --add loud-abbr foo2
+abbr --show
+# CHECK: abbr -a -- quiet-abbr --quiet foo1
+# CHECK: abbr -a -- loud-abbr foo2

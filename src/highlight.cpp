@@ -1336,7 +1336,7 @@ static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t de
 
     // Abbreviations
     if (!is_valid && abbreviation_ok)
-        is_valid = abbrs_get_set()->has_match(cmd, abbrs_position_t::command);
+        is_valid = abbrs_get_set()->has_match(cmd, abbrs_position_t::command, abbrs_phase_t::any);
 
     // Regular commands
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, vars).has_value();

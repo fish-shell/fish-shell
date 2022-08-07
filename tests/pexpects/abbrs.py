@@ -68,17 +68,18 @@ send(r"A123Z ?")
 expect_str(r"<beta3 >")
 send(r"AZ ?")
 expect_str(r"<AZ >")
-send(r"QA123Z ?")
+send(r"QA123Z ?")  # fails as the regex must match the entire string
 expect_str(r"<QA123Z >")
 send(r"A0000000000000000000009Z ?")
 expect_str(r"<beta3 >")
 
 # Support functions. Here anything in between @@ is uppercased, except 'nope'.
 sendline(
-    r"""function uppercaser;
+    r"""function uppercaser
             string match --quiet '*nope*' $argv[1] && return 1
             string trim --chars @ $argv | string upper
-        end"""
+        end
+    """.strip()
 )
 expect_prompt()
 sendline(r"abbr uppercaser --regex '@.+@' --function uppercaser")
@@ -100,6 +101,23 @@ expect_str(r"<@nope@ >")
 sendline(r"abbr --erase uppercaser2")
 expect_prompt()
 
+# Abbreviations which cause the command line to become incomplete or invalid
+# are visibly expanded, even if they are quiet.
+sendline(r"abbr openparen --position anywhere --quiet '('")
+expect_prompt()
+sendline(r"abbr closeparen --position anywhere --quiet ')'")
+expect_prompt()
+sendline(r"echo openparen")
+expect_str(r"echo (")
+send(r"?")
+expect_str(r"<echo (>")
+sendline(r"echo closeparen")
+expect_str(r"echo )")
+send(r"?")
+expect_str(r"<echo )>")
+sendline(r"echo openparen seq 5 closeparen")
+expect_prompt(r"1 2 3 4 5")
+
 # Verify that 'commandline' is accurate.
 # Abbreviation functions cannot usefully change the command line, but they can read it.
 sendline(
@@ -107,12 +125,30 @@ sendline(
             set -g last_cmdline (commandline)
             set -g last_cursor (commandline --cursor)
             false
-        end"""
+        end
+    """.strip()
 )
 expect_prompt()
 sendline(r"abbr check_cmdline --regex '@.+@' --function check_cmdline")
 expect_prompt()
 send(r"@abc@ ?")
 expect_str(r"<@abc@ >")
-sendline(r"echo $last_cursor - $last_cmdline")
-expect_prompt(r"6 - @abc@ ")
+sendline(r"echo $last_cursor : $last_cmdline")
+expect_prompt(r"6 : @abc@ ")
+
+
+# Again but now we stack them. Noisy abbreviations expand first, then quiet ones.
+sendline(r"""function strip_percents; string trim --chars % -- $argv; end""")
+expect_prompt()
+sendline(r"""function do_upper; string upper -- $argv; end""")
+expect_prompt()
+
+sendline(r"abbr noisy1 --regex '%.+%' --function strip_percents --position anywhere")
+expect_prompt()
+
+sendline(r"abbr quiet1 --regex 'a.+z' --function do_upper --quiet --position anywhere")
+expect_prompt()
+# The noisy abbr strips the %
+# The quiet one sees a token starting with 'a' and ending with 'z' and uppercases it.
+sendline(r"echo %abcdez%")
+expect_prompt(r"ABCDEZ")

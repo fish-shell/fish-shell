@@ -527,7 +527,7 @@ string repeat -n 17 ab | string length
 string repeat -n 17 a | string length
 # CHECK: 17
 # And a more tricksy case with a long string that we truncate.
-string repeat -m 5 (string repeat -n 500000000 aaaaaaaaaaaaaaaaaa) | string length
+string repeat -m 5 (string repeat -n 500000 aaaaaaaaaaaaaaaaaa) | string length
 # CHECK: 5
 
 # Test equivalent matches with/without the --entire, --regex, and --invert flags.

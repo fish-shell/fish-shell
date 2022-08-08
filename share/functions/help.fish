@@ -81,14 +81,6 @@ function help --description 'Show help for the fish shell'
             # like wsl-open which we'll check in a minute.
             if test -f /proc/version
                 and string match -riq 'Microsoft|WSL|MSYS|MINGW' </proc/version
-                and set -l cmd (command -s cmd.exe /mnt/c/Windows/System32/cmd.exe)
-                # Use the first of these.
-                set fish_browser $cmd[1]
-            end
-
-            # Try and see if powershell.exe is an option to avoid UNC path error
-            # https://ss64.com/nt/cmd.html Launching CMD/batch files from a UNC path
-            if type -q powershell.exe
                 and set -l cmd (command -s powershell.exe cmd.exe /mnt/c/Windows/System32/cmd.exe)
                 # Use the first of these.
                 set fish_browser $cmd[1]

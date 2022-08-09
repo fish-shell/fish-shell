@@ -16,6 +16,7 @@
 #include "fallback.h"
 #include "flog.h"
 #include "highlight.h"
+#include "operation_context.h"
 #include "pager.h"
 #include "reader.h"
 #include "screen.h"
@@ -75,8 +76,10 @@ static size_t divide_round_up(size_t numer, size_t denom) {
 /// \param max the maximum space that may be used for printing
 /// \param has_more if this flag is true, this is not the entire string, and the string should be
 /// ellipsized even if the string fits but takes up the whole space.
-static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max, bool has_more,
-                        line_t *line) {
+template <typename Func>
+static typename std::enable_if<
+    std::is_convertible<Func, std::function<highlight_spec_t(size_t)>>::value, size_t>::type
+print_max(const wcstring &str, Func color, size_t max, bool has_more, line_t *line) {
     size_t remaining = max;
     for (size_t i = 0; i < str.size(); i++) {
         wchar_t c = str.at(i);
@@ -91,13 +94,13 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
 
         wchar_t ellipsis = get_ellipsis_char();
         if ((width_c == remaining) && (has_more || i + 1 < str.size())) {
-            line->append(ellipsis, color);
+            line->append(ellipsis, color(i));
             int ellipsis_width = fish_wcwidth(ellipsis);
             remaining -= std::min(remaining, size_t(ellipsis_width));
             break;
         }
 
-        line->append(c, color);
+        line->append(c, color(i));
         assert(remaining >= width_c);
         remaining -= width_c;
     }
@@ -105,6 +108,12 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
     // return how much we consumed
     assert(remaining <= max);
     return max - remaining;
+}
+
+static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max, bool has_more,
+                        line_t *line) {
+    return print_max(
+        str, [=](size_t) -> highlight_spec_t { return color; }, max, has_more, line);
 }
 
 /// Print the specified item using at the specified amount of space.
@@ -171,8 +180,14 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         }
 
         comp_remaining -= print_max(prefix, prefix_col, comp_remaining, !comp.empty(), &line_data);
-        comp_remaining -=
-            print_max(comp, comp_col, comp_remaining, i + 1 < c->comp.size(), &line_data);
+        comp_remaining -= print_max(
+            comp,
+            [&](size_t i) -> highlight_spec_t {
+                if (c->colors.empty()) return comp_col;  // Not a shell command.
+                if (selected) return comp_col;  // Rendered in reverse video, so avoid highlighting.
+                return i < c->colors.size() ? c->colors[i] : c->colors.back();
+            },
+            comp_remaining, i + 1 < c->comp.size(), &line_data);
     }
 
     size_t desc_remaining = width - comp_width + comp_remaining;
@@ -315,6 +330,21 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
         // Append the single completion string. We may later merge these into multiple.
         comp_info->comp.push_back(escape_string(
             comp.completion, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED | ESCAPE_SYMBOLIC));
+        if (comp.replaces_commandline()
+            // HACK We want to render a full shell command, with syntax highlighting.  Above we
+            // escape nonprintables, which might make the rendered command longer than the original
+            // completion. In that case we get wrong colors.  However this should only happen in
+            // contrived cases, since our symbolic escaping uses a single character to represent
+            // newline and tab characters; other nonprintables are extremely rare in a command
+            // line. It will only be common for single-byte locales where we don't
+            // use Unicode characters for escaping, so just disable those here.
+            // We should probably fix this by first highlighting the original completion, and
+            // then writing a variant of escape_string() that adjusts highlighting according
+            // so it matches the escaped string.
+            && MB_CUR_MAX > 1) {
+            highlight_shell(comp.completion, comp_info->colors, operation_context_t::empty());
+            assert(comp_info->comp.back().size() >= comp_info->colors.size());
+        }
 
         // Append the mangled description.
         comp_info->desc = comp.description;

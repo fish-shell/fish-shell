@@ -88,6 +88,9 @@ class completion_t {
     /// \return whether this replaces its token.
     bool replaces_token() const { return flags & COMPLETE_REPLACES_TOKEN; }
 
+    /// \return whether this replaces the entire commandline.
+    bool replaces_commandline() const { return flags & COMPLETE_REPLACES_COMMANDLINE; }
+
     /// \return the completion's match rank. Lower ranks are better completions.
     uint32_t rank() const { return match.rank(); }
 

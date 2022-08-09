@@ -61,6 +61,8 @@ enum class selection_motion_t {
 // How many rows we will show in the "initial" pager.
 #define PAGER_UNDISCLOSED_MAX_ROWS 4
 
+struct highlight_spec_t;
+
 class pager_t {
     size_t available_term_width{0};
     size_t available_term_height{0};
@@ -87,6 +89,8 @@ class pager_t {
         wcstring desc{};
         /// The representative completion.
         completion_t representative{L""};
+        /// The per-character highlighting, used when this is a full shell command.
+        std::vector<highlight_spec_t> colors{};
         /// On-screen width of the completion string.
         size_t comp_width{0};
         /// On-screen width of the description information.

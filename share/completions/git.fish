@@ -732,8 +732,9 @@ function __fish_git_aliases
         begin
             set -l name (string replace -r '^.*\.' '' -- $key)
             # Only use the first line of the value as the description.
-            set -l val (printf '%s\n' $value)[1]
-            printf "%s\t%s\n" $name "Alias for $val"
+            # Also shorten it to 35 chars.
+            set -l val (printf '%s\n' $value | string replace -r '^(.{0,35}).+' '$1..')[1]
+            printf "%s\t%s\n" $name "Alias: $val"
         end
     end
 end

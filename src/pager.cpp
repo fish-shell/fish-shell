@@ -425,7 +425,15 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         this->available_term_height - 1 -
         (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
     if (!this->fully_disclosed) {
-        term_height = std::min(term_height, static_cast<size_t>(PAGER_UNDISCLOSED_MAX_ROWS));
+        // We disclose between half and the entirety of the terminal height,
+        // but at least 4 rows.
+        //
+        // We do this so we show a useful amount but don't force fish to
+        // THE VERY TOP, which is jarring.
+        term_height = std::min(term_height,
+                               std::max(term_height / 2,
+                                        static_cast<size_t>(PAGER_UNDISCLOSED_MAX_ROWS))
+                               );
     }
 
     size_t row_count = divide_round_up(lst.size(), cols);

@@ -188,7 +188,7 @@ class token_stream_t {
             // Skip invalid tokens that have a zero length, especially if they are at EOF.
             if (subtoken_offset < result.source_length) {
                 result.source_start += subtoken_offset;
-                result.source_length -= subtoken_offset;
+                result.source_length = token.error_length;
             }
         }
 

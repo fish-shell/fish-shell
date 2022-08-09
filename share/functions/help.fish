@@ -48,7 +48,7 @@ function help --description 'Show help for the fish shell'
 
             # If we are in a graphical environment, check if there is a graphical
             # browser to use instead.
-            if test -n "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o -z "$XAUTHORITY"\)
+            if test -n "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o -z "$XAUTHORITY" \)
                 for i in $graphical_browsers
                     if type -q -f $i
                         set fish_browser $i
@@ -81,7 +81,7 @@ function help --description 'Show help for the fish shell'
             # like wsl-open which we'll check in a minute.
             if test -f /proc/version
                 and string match -riq 'Microsoft|WSL|MSYS|MINGW' </proc/version
-                and set -l cmd (command -s cmd.exe /mnt/c/Windows/System32/cmd.exe)
+                and set -l cmd (command -s powershell.exe cmd.exe /mnt/c/Windows/System32/cmd.exe)
                 # Use the first of these.
                 set fish_browser $cmd[1]
             end
@@ -224,11 +224,10 @@ function help --description 'Show help for the fish shell'
         end
     end
 
-    # cmd.exe needs more coaxing.
-    if string match -qr 'cmd\.exe$' -- $fish_browser[1]
+    # cmd.exe and powershell needs more coaxing.
+    if string match -qr 'powershell\.exe$|cmd\.exe$' -- $fish_browser[1]
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
-        # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
             case htmlview x-www-browser

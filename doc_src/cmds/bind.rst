@@ -249,7 +249,7 @@ The following special input functions are available:
     or if at the end of the commandline, accept one word from the current autosuggestion.
 
 ``or``
-    only execute the next function if the previous succeeded (note: only some functions report success)
+    only execute the next function if the previous did not succeed (note: only some functions report failure)
 
 ``pager-toggle-search``
     toggles the search field if the completions pager is visible; or if used after ``history-pager``, search forwards in time.

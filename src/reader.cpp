@@ -846,6 +846,10 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
+    // Handle readline_cmd_t::execute. This may mean inserting a newline if the command is
+    // unfinished.
+    void handle_execute(readline_loop_state_t &rls);
+
     void clear_pager();
     void select_completion_in_direction(selection_motion_t dir,
                                         bool force_selection_change = false);
@@ -2642,12 +2646,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     return eval_res;
 }
 
-static parser_test_error_bits_t reader_shell_test(const parser_t &parser, const wcstring &b) {
-    wcstring bstr = b;
-
-    // Append a newline, to act as a statement terminator.
-    bstr.push_back(L'\n');
-
+static parser_test_error_bits_t reader_shell_test(const parser_t &parser, const wcstring &bstr) {
     parse_error_list_t errors;
     parser_test_error_bits_t res =
         parse_util_detect_errors(bstr, &errors, true /* do accept incomplete */);
@@ -3563,118 +3562,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
-            // Evaluate. If the current command is unfinished, or if the charater is escaped
-            // using a backslash, insert a newline.
         case rl::execute: {
-            // If the user hits return while navigating the pager, it only clears the pager.
-            if (is_navigating_pager_contents()) {
-                clear_pager();
-                break;
-            }
-
-            // Delete any autosuggestion.
-            autosuggestion.clear();
-
-            // The user may have hit return with pager contents, but while not navigating them.
-            // Clear the pager in that event.
-            clear_pager();
-
-            // We only execute the command line.
-            editable_line_t *el = &command_line;
-
-            // Allow backslash-escaped newlines.
-            bool continue_on_next_line = false;
-            if (el->position() >= el->size()) {
-                // We're at the end of the text and not in a comment (issue #1225).
-                continue_on_next_line =
-                    is_backslashed(el->text(), el->position()) && !text_ends_in_comment(el->text());
-            } else {
-                // Allow mid line split if the following character is whitespace (issue #613).
-                if (is_backslashed(el->text(), el->position()) &&
-                    iswspace(el->text().at(el->position()))) {
-                    continue_on_next_line = true;
-                    // Check if the end of the line is backslashed (issue #4467).
-                } else if (is_backslashed(el->text(), el->size()) &&
-                           !text_ends_in_comment(el->text())) {
-                    // Move the cursor to the end of the line.
-                    el->set_position(el->size());
-                    continue_on_next_line = true;
-                }
-            }
-            // If the conditions are met, insert a new line at the position of the cursor.
-            if (continue_on_next_line) {
-                insert_char(el, L'\n');
-                break;
-            }
-
-            // See if this command is valid.
-            parser_test_error_bits_t command_test_result = 0;
-            if (conf.syntax_check_ok) {
-                command_test_result = reader_shell_test(parser(), el->text());
-            }
-            if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
-                // This command is valid, but an abbreviation may make it invalid. If so, we
-                // will have to test again.
-                if (expand_abbreviation_as_necessary(0)) {
-                    // Trigger syntax highlighting as we are likely about to execute this command.
-                    this->super_highlight_me_plenty();
-                    if (conf.syntax_check_ok) {
-                        command_test_result = reader_shell_test(parser(), el->text());
-                    }
-                }
-            }
-
-            if (command_test_result == 0) {
-                // Finished command, execute it. Don't add items in silent mode (#7230).
-                wcstring text = command_line.text();
-                if (text.empty()) {
-                    // Here the user just hit return. Make a new prompt, don't remove ephemeral
-                    // items.
-                    rls.finished = true;
-                    break;
-                }
-
-                // Historical behavior is to trim trailing spaces.
-                // However, escaped spaces ('\ ') should not be trimmed (#7661)
-                // This can be done by counting pre-trailing '\'
-                // If there's an odd number, this must be an escaped space.
-                while (!text.empty() && text.back() == L' ' &&
-                       count_preceding_backslashes(text, text.size() - 1) % 2 == 0) {
-                    text.pop_back();
-                }
-
-                if (history && !conf.in_silent_mode) {
-                    // Remove ephemeral items - even if the text is empty
-                    history->remove_ephemeral_items();
-
-                    if (!text.empty()) {
-                        // Mark this item as ephemeral if there is a leading space (#615).
-                        history_persistence_mode_t mode;
-                        if (text.front() == L' ') {
-                            // Leading spaces are ephemeral (#615).
-                            mode = history_persistence_mode_t::ephemeral;
-                        } else if (in_private_mode(vars)) {
-                            // Private mode means in-memory only.
-                            mode = history_persistence_mode_t::memory;
-                        } else {
-                            mode = history_persistence_mode_t::disk;
-                        }
-                        history_t::add_pending_with_file_detection(history, text, vars.snapshot(),
-                                                                   mode);
-                    }
-                }
-
-                rls.finished = true;
-                update_buff_pos(&command_line, command_line.size());
-            } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
-                // We are incomplete, continue editing.
-                insert_char(el, L'\n');
-            } else {
-                // Result must be some combination including an error. The error message will
-                // already be printed, all we need to do is repaint.
-                event_fire_generic(parser(), L"fish_posterror", {el->text()});
-                screen.reset_abandoning_line(termsize_last().width);
-            }
+            this->handle_execute(rls);
             break;
         }
 
@@ -4245,6 +4134,118 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::func_and: {
             DIE("should have been handled by inputter_t::readch");
         }
+    }
+}
+
+void reader_data_t::handle_execute(readline_loop_state_t &rls) {
+    // Evaluate. If the current command is unfinished, or if the charater is escaped
+    // using a backslash, insert a newline.
+    // If the user hits return while navigating the pager, it only clears the pager.
+    if (is_navigating_pager_contents()) {
+        clear_pager();
+        return;
+    }
+
+    // Delete any autosuggestion.
+    autosuggestion.clear();
+
+    // The user may have hit return with pager contents, but while not navigating them.
+    // Clear the pager in that event.
+    clear_pager();
+
+    // We only execute the command line.
+    editable_line_t *el = &command_line;
+
+    // Allow backslash-escaped newlines.
+    bool continue_on_next_line = false;
+    if (el->position() >= el->size()) {
+        // We're at the end of the text and not in a comment (issue #1225).
+        continue_on_next_line =
+            is_backslashed(el->text(), el->position()) && !text_ends_in_comment(el->text());
+    } else {
+        // Allow mid line split if the following character is whitespace (issue #613).
+        if (is_backslashed(el->text(), el->position()) && iswspace(el->text().at(el->position()))) {
+            continue_on_next_line = true;
+            // Check if the end of the line is backslashed (issue #4467).
+        } else if (is_backslashed(el->text(), el->size()) && !text_ends_in_comment(el->text())) {
+            // Move the cursor to the end of the line.
+            el->set_position(el->size());
+            continue_on_next_line = true;
+        }
+    }
+    // If the conditions are met, insert a new line at the position of the cursor.
+    if (continue_on_next_line) {
+        insert_char(el, L'\n');
+        return;
+    }
+
+    // See if this command is valid.
+    parser_test_error_bits_t command_test_result = 0;
+    if (conf.syntax_check_ok) {
+        command_test_result = reader_shell_test(parser(), el->text());
+    }
+    if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
+        // This command is valid, but an abbreviation may make it invalid. If so, we
+        // will have to test again.
+        if (expand_abbreviation_as_necessary(0)) {
+            // Trigger syntax highlighting as we are likely about to execute this command.
+            this->super_highlight_me_plenty();
+            if (conf.syntax_check_ok) {
+                command_test_result = reader_shell_test(parser(), el->text());
+            }
+        }
+    }
+
+    if (command_test_result == 0) {
+        // Finished command, execute it. Don't add items in silent mode (#7230).
+        wcstring text = command_line.text();
+        if (text.empty()) {
+            // Here the user just hit return. Make a new prompt, don't remove ephemeral
+            // items.
+            rls.finished = true;
+            return;
+        }
+
+        // Historical behavior is to trim trailing spaces.
+        // However, escaped spaces ('\ ') should not be trimmed (#7661)
+        // This can be done by counting pre-trailing '\'
+        // If there's an odd number, this must be an escaped space.
+        while (!text.empty() && text.back() == L' ' &&
+               count_preceding_backslashes(text, text.size() - 1) % 2 == 0) {
+            text.pop_back();
+        }
+
+        if (history && !conf.in_silent_mode) {
+            // Remove ephemeral items - even if the text is empty
+            history->remove_ephemeral_items();
+
+            if (!text.empty()) {
+                // Mark this item as ephemeral if there is a leading space (#615).
+                history_persistence_mode_t mode;
+                if (text.front() == L' ') {
+                    // Leading spaces are ephemeral (#615).
+                    mode = history_persistence_mode_t::ephemeral;
+                } else if (in_private_mode(this->vars())) {
+                    // Private mode means in-memory only.
+                    mode = history_persistence_mode_t::memory;
+                } else {
+                    mode = history_persistence_mode_t::disk;
+                }
+                history_t::add_pending_with_file_detection(history, text, this->vars().snapshot(),
+                                                           mode);
+            }
+        }
+
+        rls.finished = true;
+        update_buff_pos(&command_line, command_line.size());
+    } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
+        // We are incomplete, continue editing.
+        insert_char(el, L'\n');
+    } else {
+        // Result must be some combination including an error. The error message will
+        // already be printed, all we need to do is repaint.
+        event_fire_generic(parser(), L"fish_posterror", {el->text()});
+        screen.reset_abandoning_line(termsize_last().width);
     }
 }
 

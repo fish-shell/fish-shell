@@ -316,7 +316,7 @@ Examples
 
 It is similar to ``realpath``, as it creates the "real", canonical version of the path. However, for paths that can't be resolved, e.g. if they don't exist or form a symlink loop, it will resolve as far as it can and normalize the rest.
 
-Because it resolves symlinks, it works sort of like ``pwd -P``. E.g. ``path resolve link/..`` will return the parent directory of what the link points to, just like ``cd link; cd (pwd -P)/..`` would go to it. For a logical view of the filesystem, see ``path resolve``.
+Because it resolves symlinks, it works sort of like ``pwd -P``. E.g. ``path resolve link/..`` will return the parent directory of what the link points to, just like ``cd link; cd (pwd -P)/..`` would go to it. For a logical view of the filesystem, see ``path normalize``.
 
 It returns 0 if any normalization or resolution was done, i.e. any given path wasn't in canonical form.
 

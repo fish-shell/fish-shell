@@ -6,6 +6,7 @@ try:
     from html import escape as escape_html
 except ImportError:
     from cgi import escape as escape_html
+import errno
 import glob
 import multiprocessing.pool
 import operator
@@ -1670,12 +1671,18 @@ while PORT <= 9000:
         httpd = FishConfigTCPServer((HOST, PORT), Handler)
         # Success
         break
-    except socket.error:
-        err_type, err_value = sys.exc_info()[:2]
-        # str(err_value) handles Python3 correctly
-        if "Address already in use" not in str(err_value):
-            print(str(err_value))
-            break
+    except (OSError, socket.error) as e:
+        if e.errno == errno.EAFNOSUPPORT and HOST == "::":
+            print("Ipv6 seems to be unavailable, trying ipv4")
+            # We can't do ipv6, let's try v4.
+            HOST = "127.0.0.1"
+            PORT = 8000
+            # Override the class address_family variable (yes, this is a hack)
+            FishConfigTCPServer.address_family = socket.AF_INET
+            continue
+        if e.errno != errno.EADDRINUSE:
+            print(str(e))
+            sys.exit(-1)
     PORT += 1
 
 if PORT > 9000:

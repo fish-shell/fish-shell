@@ -22,6 +22,7 @@ Interactive improvements
 - The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text.
 - The new environment variable ``$fish_cursor_selection_mode`` can be used to configure whether the command line selection includes (``inclusive``) the character under the cursor or not (``exclusive``). The new default is ``exclusive``. Use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
 - process-exit and job-exit events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
+- Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

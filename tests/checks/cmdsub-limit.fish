@@ -72,3 +72,15 @@ or echo expected status 122, saw $saved_status >&2
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
 #CHECKERR: echo this will fail (string repeat --max 513 b) to output anything
 #CHECKERR:                     ^
+
+
+# Check that it's reset to the default when unset
+begin
+    set -l fish_read_limit 5
+    echo (string repeat -n 10 a)
+    # CHECKERR: {{.*}}cmdsub-limit.fish (line {{\d+}}): Too much data emitted by command substitution so it was discarded
+    # CHECKERR: echo (string repeat -n 10 a)
+    # CHECKERR: ^
+end
+echo (string repeat -n 10 a)
+# CHECK: aaaaaaaaaa

@@ -56,6 +56,12 @@
 #include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+
+// Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
+// fish_read_limit variable.
+constexpr size_t DEFAULT_READ_BYTE_LIMIT = 100 * 1024 * 1024;
+size_t read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
+
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem. These are only the variables we're possibly interested in.
 static const wcstring locale_variables[] = {
@@ -299,6 +305,8 @@ static void handle_read_limit_change(const environment_t &vars) {
         } else {
             read_byte_limit = limit;
         }
+    } else {
+        read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
     }
 }
 
@@ -671,7 +679,3 @@ static void init_locale(const environment_t &vars) {
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title() { return can_set_term_title; }
-
-// Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
-// fish_read_limit variable.
-size_t read_byte_limit = 100 * 1024 * 1024;

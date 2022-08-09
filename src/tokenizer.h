@@ -68,6 +68,7 @@ struct tok_t {
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
     source_offset_t error_offset_within_token{SOURCE_OFFSET_INVALID};
+    source_offset_t error_length{0};
 
     // If an error, this is the error code.
     tokenizer_error_t error{tokenizer_error_t::none};
@@ -107,7 +108,7 @@ class tokenizer_t : noncopyable_t {
     bool continue_line_after_comment{false};
 
     tok_t call_error(tokenizer_error_t error_type, const wchar_t *token_start,
-                     const wchar_t *error_loc, maybe_t<size_t> token_length = {});
+                     const wchar_t *error_loc, maybe_t<size_t> token_length = {}, size_t error_len = 0);
     tok_t read_string();
 
    public:

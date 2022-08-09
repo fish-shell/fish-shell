@@ -57,7 +57,7 @@ const wchar_t *tokenizer_get_error_message(tokenizer_error_t err) {
 
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token_start,
-                              const wchar_t *error_loc, maybe_t<size_t> token_length) {
+                              const wchar_t *error_loc, maybe_t<size_t> token_length, size_t error_len) {
     assert(error_type != tokenizer_error_t::none && "tokenizer_error_t::none passed to call_error");
     assert(error_loc >= token_start && "Invalid error location");
     assert(this->token_cursor >= token_start && "Invalid buff location");
@@ -77,6 +77,7 @@ tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token
     // If we are passed a token_length, then use it; otherwise infer it from the buffer.
     result.length = token_length ? *token_length : this->token_cursor - token_start;
     result.error_offset_within_token = error_loc - token_start;
+    result.error_length = error_len;
     return result;
 }
 
@@ -197,11 +198,11 @@ tok_t tokenizer_t::read_string() {
         } else if (c == L')') {
             if (!expecting.empty() && expecting.back() == L'}') {
                 return this->call_error(tokenizer_error_t::expected_bclose_found_pclose,
-                                        this->token_cursor, this->token_cursor, 1);
+                                        this->token_cursor, this->token_cursor, 1, 1);
             }
             if (paran_offsets.empty()) {
                 return this->call_error(tokenizer_error_t::closing_unopened_subshell,
-                                        this->token_cursor, this->token_cursor, 1);
+                                        this->token_cursor, this->token_cursor, 1, 1);
             }
             paran_offsets.pop_back();
             if (paran_offsets.empty()) {
@@ -224,7 +225,7 @@ tok_t tokenizer_t::read_string() {
         } else if (c == L'}') {
             if (!expecting.empty() && expecting.back() == L')') {
                 return this->call_error(tokenizer_error_t::expected_pclose_found_bclose,
-                                        this->token_cursor, this->token_cursor, 1);
+                                        this->token_cursor, this->token_cursor, 1, 1);
             }
             if (brace_offsets.empty()) {
                 return this->call_error(tokenizer_error_t::closing_unopened_brace,
@@ -254,7 +255,7 @@ tok_t tokenizer_t::read_string() {
             if (const wchar_t *error_loc = process_opening_quote(c)) {
                 if (!this->accept_unfinished) {
                     return this->call_error(tokenizer_error_t::unterminated_quote, buff_start,
-                                            error_loc);
+                                            error_loc, none(), 1);
                 }
                 break;
             }
@@ -277,24 +278,28 @@ tok_t tokenizer_t::read_string() {
     }
 
     if (!this->accept_unfinished && (mode != tok_modes::regular_text)) {
+        // These are all "unterminated", so the only char we can mark as an error
+        // is the opener (the closing char could be anywhere!)
+        //
+        // (except for char_escape, which is one long by definition)
         if (mode & tok_modes::char_escape) {
             return this->call_error(tokenizer_error_t::unterminated_escape, buff_start,
-                                    this->token_cursor - 1, 1);
+                                    this->token_cursor - 1, none(), 1);
         } else if (mode & tok_modes::array_brackets) {
             return this->call_error(tokenizer_error_t::unterminated_slice, buff_start,
-                                    this->start + slice_offset);
+                                    this->start + slice_offset, none(), 1);
         } else if (mode & tok_modes::subshell) {
             assert(!paran_offsets.empty());
             size_t offset_of_open_paran = paran_offsets.back();
 
             return this->call_error(tokenizer_error_t::unterminated_subshell, buff_start,
-                                    this->start + offset_of_open_paran);
+                                    this->start + offset_of_open_paran, none(), 1);
         } else if (mode & tok_modes::curly_braces) {
             assert(!brace_offsets.empty());
             size_t offset_of_open_brace = brace_offsets.back();
 
             return this->call_error(tokenizer_error_t::unterminated_brace, buff_start,
-                                    this->start + offset_of_open_brace);
+                                    this->start + offset_of_open_brace, none(), 1);
         } else {
             DIE("Unknown non-regular-text mode");
         }
@@ -591,7 +596,7 @@ maybe_t<tok_t> tokenizer_t::next() {
             } else if (this->token_cursor[1] == L'&') {
                 // |& is a bashism; in fish it's &|.
                 return this->call_error(tokenizer_error_t::invalid_pipe_ampersand,
-                                        this->token_cursor, this->token_cursor, 2);
+                                        this->token_cursor, this->token_cursor, 2, 2);
             } else {
                 auto pipe = pipe_or_redir_t::from_string(this->token_cursor);
                 assert(pipe.has_value() && pipe->is_pipe &&
@@ -612,7 +617,9 @@ maybe_t<tok_t> tokenizer_t::next() {
             if (!redir_or_pipe || redir_or_pipe->fd < 0) {
                 return this->call_error(tokenizer_error_t::invalid_redirect, this->token_cursor,
                                         this->token_cursor,
-                                        redir_or_pipe ? redir_or_pipe->consumed : 0);
+                                        redir_or_pipe ? redir_or_pipe->consumed : 0,
+                                        redir_or_pipe ? redir_or_pipe->consumed : 0
+                                        );
             }
             result.emplace(redir_or_pipe->token_type());
             result->offset = start_pos;
@@ -634,7 +641,10 @@ maybe_t<tok_t> tokenizer_t::next() {
                 // tokenizer error.
                 if (redir_or_pipe->is_pipe && redir_or_pipe->fd == 0) {
                     return this->call_error(tokenizer_error_t::invalid_pipe, error_location,
-                                            error_location, redir_or_pipe->consumed);
+                                            error_location,
+                                            redir_or_pipe->consumed,
+                                            redir_or_pipe->consumed
+                                            );
                 }
                 result.emplace(redir_or_pipe->token_type());
                 result->offset = start_pos;

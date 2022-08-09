@@ -98,13 +98,13 @@ static void append_syntax_error(parse_error_list_t *errors, size_t source_start,
 /// Append a cmdsub error to the given error list. But only do so if the error hasn't already been
 /// recorded. This is needed because command substitution is a recursive process and some errors
 /// could consequently be recorded more than once.
-static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start, const wchar_t *fmt,
+static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start, size_t source_end, const wchar_t *fmt,
                                 ...) {
     if (!errors) return;
 
     parse_error_t error;
     error.source_start = source_start;
-    error.source_length = 0;
+    error.source_length = source_end - source_start + 1;
     error.code = parse_error_cmdsubst;
 
     va_list va;
@@ -672,7 +672,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
                 err = L"Unknown error while evaluating command substitution";
                 break;
         }
-        append_cmdsub_error(errors, paren_begin, _(err));
+        append_cmdsub_error(errors, paren_begin, paren_end, _(err));
         return expand_result_t::make_error(subshell_status);
     }
 
@@ -955,7 +955,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t
                 }
                 return expand_result_t::ok;
             case 1:
-                append_cmdsub_error(errors, start, L"Command substitutions not allowed");
+                append_cmdsub_error(errors, start, end, L"Command substitutions not allowed");
                 /* intentionally falls through */
             case -1:
             default:

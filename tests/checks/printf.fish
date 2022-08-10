@@ -119,3 +119,18 @@ printf '%d\n' 0g
 # CHECKERR: 0g: value not completely converted (can't convert 'g')
 echo $status
 # CHECK: 1
+
+# Test that we ignore options
+printf -a
+printf --foo
+# CHECK: -a--foo
+echo
+
+set -l helpvar --help
+printf $helpvar
+echo
+# CHECK: --help
+
+printf --help
+echo
+# CHECK: --help

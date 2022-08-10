@@ -649,19 +649,10 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, con
 maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    help_only_cmd_opts_t opts;
 
-    int optind;
-    int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    argv++;
+    argc--;
 
-    if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
-    }
-
-    argc -= optind;
-    argv += optind;
     if (argc < 1) {
         return STATUS_INVALID_ARGS;
     }

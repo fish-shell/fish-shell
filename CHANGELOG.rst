@@ -15,6 +15,7 @@ Scripting improvements
 - ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`).
 - ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
 - The read limit is now restored to the default when $fish_read_limit is unset (:issue:`9129`).
+- ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
 
 Interactive improvements
 ------------------------

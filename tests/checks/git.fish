@@ -35,7 +35,7 @@ git config --local alias.re 'restore --staged'
 
 complete -C'git ' | grep '^add'\t
 # (note: actual tab character in the check here)
-#CHECK: add	Add file contents to the index
+#CHECK: add	Add file contents to the staging area
 
 touch foo
 

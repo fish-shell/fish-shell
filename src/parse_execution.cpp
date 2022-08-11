@@ -736,7 +736,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         // ELOOP
         // ENAMETOOLONG
         return this->report_error(
-            STATUS_NOT_EXECUTABLE, statement,
+            STATUS_NOT_EXECUTABLE, statement.command,
             _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
     }
 
@@ -791,7 +791,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
     // Here we want to report an error (so it shows a backtrace).
     // If the handler printed text, that's already shown, so error will be empty.
-    return this->report_error(STATUS_CMD_UNKNOWN, statement, error.c_str());
+    return this->report_error(STATUS_CMD_UNKNOWN, statement.command, error.c_str());
 }
 
 end_execution_reason_t parse_execution_context_t::expand_command(
@@ -825,7 +825,7 @@ end_execution_reason_t parse_execution_context_t::expand_command(
     // Complain if the resulting expansion was empty, or expanded to an empty string.
     // For no-exec it's okay, as we can't really perform the expansion.
     if (out_cmd->empty() && !no_exec()) {
-        return this->report_error(STATUS_ILLEGAL_CMD, statement,
+        return this->report_error(STATUS_ILLEGAL_CMD, statement.command,
                                   _(L"The expanded command was empty."));
     }
     return end_execution_reason_t::ok;

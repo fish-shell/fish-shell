@@ -15,6 +15,8 @@ Description
 
 ``true`` sets the exit status to 0.
 
+**:** (a single colon) is an alias for the ``true`` command.
+
 See Also
 --------
 

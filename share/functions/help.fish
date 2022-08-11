@@ -127,6 +127,10 @@ function help --description 'Show help for the fish shell'
     switch "$fish_help_item"
         case "."
             set fish_help_page "cmds/source.html"
+        case ":"
+            set fish_help_page "cmds/true.html"
+        case "["
+            set fish_help_page "cmds/test.html"
         case globbing
             set fish_help_page "language.html#expand"
         case 'completion-*'

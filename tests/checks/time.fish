@@ -41,7 +41,7 @@ not time true
 $fish -c 'time true&'
 #CHECKERR: fish: {{.*}}
 #CHECKERR: time true&
-#CHECKERR: ^
+#CHECKERR: ^~~~~~~~~^
 
 $fish -c 'not time true&'
 #CHECKERR: fish: {{.*}}

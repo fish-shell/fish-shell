@@ -27,7 +27,7 @@ echo '
 
 # CHECK: <fish: Command substitutions not allowed>
 # CHECK: <(true one)>
-# CHECK: <^>
+# CHECK: <^~~~~~~~~^>
 
 $fish -c 'echo "unfinished "(subshell' 2>| string replace -r '.*' '<$0>'
 # CHECK: <fish: Unexpected end of string, expecting ')'>
@@ -48,10 +48,10 @@ echo "function this_should_be_an_error" >$TMPDIR/this_should_be_an_error.fish
 $fish -c "set -g fish_function_path $(string escape $TMPDIR); this_should_be_an_error"
 # CHECKERR: ~/temp/this_should_be_an_error.fish (line 1): Missing end to balance this function definition
 # CHECKERR: function this_should_be_an_error
-# CHECKERR: ^
+# CHECKERR: ^~~~~~~^
 # CHECKERR: from sourcing file ~/temp/this_should_be_an_error.fish
 # CHECKERR: source: Error while reading file '{{.*}}/this_should_be_an_error.fish'
 # CHECKERR: fish: Unknown command: this_should_be_an_error
 # CHECKERR: fish:
 # CHECKERR: set -g fish_function_path {{.*}}; this_should_be_an_error
-# CHECKERR: ^
+# CHECKERR:                                   ^~~~~~~~~~~~~~~~~~~~~~^

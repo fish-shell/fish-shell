@@ -19,7 +19,7 @@ echo $status
 echo "begin; echo oops" | $fish -n
 #CHECKERR: fish: Missing end to balance this begin
 #CHECKERR: begin; echo oops
-#CHECKERR: ^
+#CHECKERR: ^~~~^
 echo $status
 #CHECK: 127
 

@@ -23,4 +23,4 @@ echo $status
 # CHECK: 124
 # CHECKERR: {{.*}} No matches for wildcard '*gibberishgibberishgibberish*'. {{.*}}
 # CHECKERR: echo *gibberishgibberishgibberish*
-# CHECKERR:      ^
+# CHECKERR:      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~^

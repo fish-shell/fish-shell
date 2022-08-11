@@ -556,7 +556,7 @@ for PWD in foo bar
 end
 # CHECKERR: {{.*}}/basic.fish (line {{\d+}}): for: PWD: cannot overwrite read-only variable
 # CHECKERR: for PWD in foo bar
-# CHECKERR: ^
+# CHECKERR:     ^~^
 # XXX FIXME carat should point at PWD
 
 $fish -c 'echo \xtest'

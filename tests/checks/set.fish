@@ -473,7 +473,7 @@ for a,b in y 1 z 3
 end
 # CHECKERR: {{.*}} for: a,b: invalid variable name. See `help identifiers`
 # CHECKERR: for a,b in y 1 z 3
-# CHECKERR:     ^
+# CHECKERR:     ^~^
 
 # Global vs Universal Unspecified Scopes
 set -U __fish_test_global_vs_universal universal

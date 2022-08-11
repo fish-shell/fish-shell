@@ -109,8 +109,7 @@ for status in a b c
 end
 #CHECKERR: {{.*}}loops.fish (line {{\d+}}): for: status: cannot overwrite read-only variable
 #CHECKERR: for status in a b c
-#CHECKERR: ^
-# XXX FIXME this should point at `status`
+#CHECKERR:     ^~~~~^
 
 # "That goes for non-electric ones as well (#5548)"
 for hostname in a b c
@@ -118,8 +117,7 @@ for hostname in a b c
 end
 #CHECKERR: {{.*}}loops.fish (line {{\d+}}): for: hostname: cannot overwrite read-only variable
 #CHECKERR: for hostname in a b c
-#CHECKERR: ^
-# XXX FIXME this should point at `for`
+#CHECKERR:     ^~~~~~~^
 
 # For loop control vars available outside the for block
 begin

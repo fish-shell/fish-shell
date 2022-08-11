@@ -324,8 +324,8 @@ $fish -c 'echo {}}'
 #CHECKERR: fish: Unexpected '}' for unopened brace expansion
 #CHECKERR: echo {}}
 #CHECKERR: ^
-$fish -c 'command (asd)'
-#CHECKERR: fish: Command substitutions not allowed
-#CHECKERR: command (asd)
-#CHECKERR: ^
+printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)
+#CHECK: <fish: Command substitutions not allowed>
+#CHECK: <command (asd)>
+#CHECK: <        ^~~~^>
 true

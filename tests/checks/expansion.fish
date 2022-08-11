@@ -329,3 +329,8 @@ printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)
 #CHECK: <command (asd)>
 #CHECK: <        ^~~~^>
 true
+
+printf '<%s>\n' ($fish -c 'echo "$abc["' 2>&1)
+#CHECK: <fish: Invalid index value>
+#CHECK: <echo "$abc[">
+#CHECK: <           ^>

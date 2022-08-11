@@ -64,7 +64,20 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
         }
     }
     result.append(this->text);
-    if (skip_caret || source_start >= src.size() || source_start + source_length > src.size()) {
+
+    size_t start = source_start;
+    size_t len = source_length;
+    if (start >= src.size()) {
+        // If we are past the source, we clamp it to the end.
+        start = src.size() - 1;
+        len = 0;
+    }
+
+    if (start + len > src.size()) {
+        len = src.size() - source_start;
+    }
+
+    if (skip_caret) {
         return result;
     }
 
@@ -74,28 +87,27 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     // Look for a newline prior to source_start. If we don't find one, start at the beginning of
     // the string; otherwise start one past the newline. Note that source_start may itself point
     // at a newline; we want to find the newline before it.
-    if (source_start > 0) {
-        size_t newline = src.find_last_of(L'\n', source_start - 1);
+    if (start > 0) {
+        size_t newline = src.find_last_of(L'\n', start - 1);
         if (newline != wcstring::npos) {
             line_start = newline + 1;
         }
     }
-
     // Look for the newline after the source range. If the source range itself includes a
     // newline, that's the one we want, so start just before the end of the range.
     size_t last_char_in_range =
-        (source_length == 0 ? source_start : source_start + source_length - 1);
+        (len == 0 ? start : start + len - 1);
     size_t line_end = src.find(L'\n', last_char_in_range);
     if (line_end == wcstring::npos) {
         line_end = src.size();
     }
 
     assert(line_end >= line_start);
-    assert(source_start >= line_start);
+    assert(start >= line_start);
 
     // Don't include the caret and line if we're interactive and this is the first line, because
     // then it's obvious.
-    bool interactive_skip_caret = is_interactive && source_start == 0;
+    bool interactive_skip_caret = is_interactive && start == 0;
     if (interactive_skip_caret) {
         return result;
     }
@@ -107,13 +119,13 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     // Append the caret line. The input source may include tabs; for that reason we
     // construct a "caret line" that has tabs in corresponding positions.
     wcstring caret_space_line;
-    caret_space_line.reserve(source_start - line_start);
-    for (size_t i = line_start; i < source_start; i++) {
+    caret_space_line.reserve(start - line_start);
+    for (size_t i = line_start; i < start; i++) {
         wchar_t wc = src.at(i);
         if (wc == L'\t') {
             caret_space_line.push_back(L'\t');
         } else if (wc == L'\n') {
-            // It's possible that the source_start points at a newline itself. In that case,
+            // It's possible that the start points at a newline itself. In that case,
             // pretend it's a space. We only expect this to be at the end of the string.
             caret_space_line.push_back(L' ');
         } else {
@@ -126,12 +138,12 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     result.push_back(L'\n');
     result.append(caret_space_line);
     result.push_back(L'^');
-    if (source_length > 1) {
+    if (len > 1) {
         // Add a squiggle under the error location.
         // We do it like this
         //               ^~~^
         // With a "^" under the start and end, and squiggles in-between.
-        auto width = fish_wcswidth(src.c_str() + source_start, source_length);
+        auto width = fish_wcswidth(src.c_str() + start, len);
         if (width >= 2) {
             // Subtract one for each of the carets - this is important in case
             // the starting char has a width of > 1.

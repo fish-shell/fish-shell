@@ -1225,7 +1225,10 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         }
 
         if (parse_errors) {
-            parse_error_offset_source_start(&new_errors, source_start);
+            // The expansion errors here go from the *command* onwards,
+            // so we need to offset them by the *command* offset,
+            // excluding the decoration.
+            parse_error_offset_source_start(&new_errors, dst.command.source_range().start);
             vec_append(*parse_errors, std::move(new_errors));
         }
     }

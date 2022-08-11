@@ -32,7 +32,7 @@ echo noclobber &>>?$tmpdir/file.txt
 eval "echo foo |& false"
 #CHECKERR: {{.*}} |& is not valid. In fish, use &| to pipe both stdout and stderr.
 #CHECKERR: echo foo |& false
-#CHECKERR:          ^
+#CHECKERR:          ^^
 
 # Ensure that redirection empty data still creates the file.
 rm -f $tmpdir/file.txt

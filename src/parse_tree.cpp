@@ -132,7 +132,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
         //               ^~~^
         // With a "^" under the start and end, and squiggles in-between.
         auto width = fish_wcswidth(src.c_str() + source_start, source_length);
-        if (width > 2) {
+        if (width >= 2) {
             // Subtract one for each of the carets - this is important in case
             // the starting char has a width of > 1.
             result.append(width - 2, L'~');

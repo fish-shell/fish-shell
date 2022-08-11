@@ -1,4 +1,4 @@
-# RUN: %fish %s
+#RUN: %fish -C 'set -l fish %fish' %s
 function complete_test_alpha1
     echo $argv
 end
@@ -499,3 +499,32 @@ complete -C'oooops '
 # CHECK: oops
 echo $oops
 # CHECK: 1
+
+
+# See that we load completions only if the command exists in $PATH,
+# as a workaround for #3117.
+
+# We need a completion script that runs the command,
+# and prints something simple, and isn't already used above.
+#
+# Currently, tr fits the bill (it does `tr --version` to check for GNUisms)
+begin
+    $fish -c "complete -C'tr -'" | string match -- '-d*'
+    # CHECK: -d{{\t.*}}
+end
+
+set -l tmpdir (mktemp -d)
+cd $tmpdir
+begin
+    touch tr
+    chmod +x tr
+    set -l PATH
+    complete -C'./tr -' | string match -- -d
+    or echo No match for relative
+    # CHECK: No match for relative
+    complete -c tr | string length -q
+    or echo Empty completions
+    # CHECK: Empty completions
+end
+
+rm -r $tmpdir

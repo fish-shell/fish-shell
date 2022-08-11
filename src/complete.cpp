@@ -821,9 +821,11 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, &path, &cmd, ctx.vars);
 
-    // Use cmd_orig here for paths, as it is potentially pathed.
+    // Don't use cmd_orig here for paths. It's potentially pathed,
+    // so that command might exist, but the completion script
+    // won't be using it.
     bool cmd_exists = builtin_exists(cmd) || function_exists_no_autoload(cmd) ||
-                      path_get_path(cmd_orig, ctx.vars).has_value();
+                      path_get_path(cmd, ctx.vars).has_value();
     if (!cmd_exists) {
         // Do not load custom completions if the command does not exist
         // This prevents errors caused during the execution of completion providers for

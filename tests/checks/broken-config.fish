@@ -9,7 +9,7 @@ begin
     # CHECKERR: fish: Unknown command: syntax-error
     # CHECKERR: ~//fish/config.fish (line {{\d+}}):
     # CHECKERR: syntax-error
-    # CHECKERR: ^
+    # CHECKERR: ^~~~~~~~~~~^
     # CHECKERR: from sourcing file ~//fish/config.fish
     # CHECKERR: called during startup
 

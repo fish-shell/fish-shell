@@ -1,6 +1,5 @@
-# Main file for fish command completions. This file contains various
-# common helper functions for the command completions. All actual
-# completions are located in the completions subdirectory.
+# This file does some internal fish setup.
+# It is not recommended to remove or edit it.
 #
 # Set default field separators
 #

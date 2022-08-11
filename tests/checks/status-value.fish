@@ -7,7 +7,7 @@ echo $status
 # CHECK: 123
 # CHECKERR: {{.*}} The expanded command was empty.
 # CHECKERR: $empty_var
-# CHECKERR: ^
+# CHECKERR: ^~~~~~~~~^
 
 # Failed expansions
 echo "$abc["

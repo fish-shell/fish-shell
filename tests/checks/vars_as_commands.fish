@@ -4,11 +4,11 @@
 $EMPTY_VARIABLE
 #CHECKERR: {{.*}}checks/vars_as_commands.fish (line {{\d+}}): The expanded command was empty.
 #CHECKERR: $EMPTY_VARIABLE
-#CHECKERR: ^
+#CHECKERR: ^~~~~~~~~~~~~~^
 "$EMPTY_VARIABLE"
 #CHECKERR: {{.*}}checks/vars_as_commands.fish (line {{\d+}}): The expanded command was empty.
 #CHECKERR: "$EMPTY_VARIABLE"
-#CHECKERR: ^
+#CHECKERR: ^~~~~~~~~~~~~~~~^
 
 set CMD1 echo basic command as variable
 $CMD1

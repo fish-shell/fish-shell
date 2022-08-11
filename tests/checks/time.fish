@@ -46,4 +46,5 @@ $fish -c 'time true&'
 $fish -c 'not time true&'
 #CHECKERR: fish: {{.*}}
 #CHECKERR: not time true&
-#CHECKERR: ^
+#FIXME: This error marks the entire statement. Would be cool to mark just `time true&`.
+#CHECKERR: ^~~~~~~~~~~~~^

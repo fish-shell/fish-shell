@@ -15,7 +15,7 @@ echo $status
 # CHECK: 121
 # CHECKERR: {{.*}} Invalid index value
 # CHECKERR: echo "$abc["
-# CHECKERR:             ^
+# CHECKERR:            ^
 
 # Failed wildcards
 echo *gibberishgibberishgibberish*

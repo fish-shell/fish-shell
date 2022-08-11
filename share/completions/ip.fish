@@ -177,7 +177,7 @@ end
 
 function __fish_ip_device
     command ip -o link show | while read -l a b c
-        printf '%s\t%s\n' (string replace ':' '' -- $b) Device
+        printf '%s\t%s\n' (string replace -r '(@.*)?:' '' -- $b) Device
     end
 end
 

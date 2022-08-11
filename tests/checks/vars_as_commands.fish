@@ -47,4 +47,9 @@ echo 'echo foo; and $status' | $fish --no-config
 echo 'set -l status_cmd true; if $status_cmd; echo Heck yes this is true; end' | $fish --no-config
 #CHECK: Heck yes this is true
 
+foo=bar $NONEXISTENT -c 'set foo 1 2 3; set --show foo'
+#CHECKERR: {{.*}}checks/vars_as_commands.fish (line {{\d+}}): The expanded command was empty.
+#CHECKERR: foo=bar $NONEXISTENT -c 'set foo 1 2 3; set --show foo'
+#CHECKERR:         ^~~~~~~~~~~^
+
 exit 0

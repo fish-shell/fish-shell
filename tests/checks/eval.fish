@@ -31,7 +31,7 @@ echo $status
 # CHECK: 123
 # CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): The expanded command was empty.
 # CHECKERR: ""
-# CHECKERR: ^
+# CHECKERR: ^^
 
 function empty
 end

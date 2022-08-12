@@ -44,14 +44,17 @@ parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err) {
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix,
                                              bool is_interactive, bool skip_caret) const {
     wcstring result = prefix;
+    // Some errors don't have their message passed in, so we construct them here.
+    // This affects e.g. `eval "a=(foo)"`
     switch (code) {
         default:
             if (skip_caret && this->text.empty()) return L"";
+            result.append(this->text);
             break;
         case parse_error_andor_in_pipeline:
             append_format(result, INVALID_PIPELINE_CMD_ERR_MSG,
                           src.substr(this->source_start, this->source_length).c_str());
-            return result;
+            break;
         case parse_error_bare_variable_assignment: {
             wcstring assignment_src = src.substr(this->source_start, this->source_length);
             maybe_t<size_t> equals_pos = variable_assignment_equals_pos(assignment_src);
@@ -60,10 +63,9 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
             wcstring value = assignment_src.substr(*equals_pos + 1);
             append_format(result, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, variable.c_str(),
                           value.c_str());
-            return result;
+            break;
         }
     }
-    result.append(this->text);
 
     size_t start = source_start;
     size_t len = source_length;

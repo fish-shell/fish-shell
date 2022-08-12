@@ -87,10 +87,16 @@ complete -C'a=b envxalias '
 # Eval invalid grammar to allow fish to parse this file
 eval 'a=(echo b)'
 # CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a (echo b)'.
+# CHECKERR: a=(echo b)
+# CHECKERR: ^~~~~~~~~^
 eval ': | a=b'
 # CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.
+# CHECKERR: : | a=b
+# CHECKERR:     ^~^
 eval 'not a=b'
 # CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.
+# CHECKERR: not a=b
+# CHECKERR:     ^~^
 
 complete -c foo -xa '$a'
 a=b complete -C'foo '

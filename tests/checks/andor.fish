@@ -4,9 +4,13 @@ set -xl LANG C # uniform quotes
 
 eval 'true | and'
 # CHECKERR: {{.*}}: The 'and' command can not be used in a pipeline
+# CHECKERR: true | and
+# CHECKERR:        ^~^
 
 eval 'true | or'
 # CHECKERR: {{.*}}: The 'or' command can not be used in a pipeline
+# CHECKERR: true | or
+# CHECKERR:        ^^
 
 # Verify and/or behavior with if and while
 if false; or true

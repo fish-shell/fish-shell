@@ -32,10 +32,10 @@
 #include "../wildcard.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
-// How many bytes we read() at once.
-// Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
-// This should be about the size of a line.
-#define STRING_CHUNK_SIZE 128
+// Empirically determined.
+// This is probably down to some pipe buffer or some such,
+// but too small means we need to call `read(2)` and str2wcstring a lot.
+#define STRING_CHUNK_SIZE 1024
 
 namespace {
 

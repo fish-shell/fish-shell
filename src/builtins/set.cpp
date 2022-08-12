@@ -167,6 +167,19 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
+                // Specifically detect `set -o` because people might be bringing over bashisms.
+                if (wcsncmp(argv[w.woptind - 1], L"-o", 2) == 0) {
+                    streams.err.append(L"Fish does not have shell options. See `help fish-for-bash-users`.\n");
+                    if (w.woptind < argc) {
+                        if (wcscmp(argv[w.woptind], L"vi") == 0) {
+                            // Tell the vi users how to get what they need.
+                            streams.err.append(L"To enable vi-mode, run `fish_vi_key_bindings`.\n");
+                        } else if (wcscmp(argv[w.woptind], L"ed") == 0) {
+                            // This should be enough for make ed users feel at home
+                            streams.err.append(L"?\n?\n?\n");
+                        }
+                    }
+                }
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }

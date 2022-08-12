@@ -446,3 +446,11 @@ By now it has become apparent that fish puts much more of a focus on its builtin
 - :ref:`status <cmd-status>` provides information about the shell status, e.g. if it's interactive or what the current linenumber is. This replaces ``$-`` and ``$BASH_LINENO`` and other variables.
 
 - ``seq(1)`` can be used as a replacement for ``{1..10}`` range expansion. If your OS doesn't ship a ``seq`` fish includes a replacement function.
+
+Other facilities
+----------------
+
+Bash has ``set -x`` or ``set -o xtrace`` to print all commands that are being executed. In fish, this would be enabled by setting :envvar:`fish_trace`.
+
+Or, if your intention is to *profile* how long each line of a script takes, you can use ``fish --profile`` - see the :ref:`page for the fish command <cmd-fish>`.
+

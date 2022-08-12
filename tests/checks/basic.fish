@@ -562,9 +562,9 @@ end
 $fish -c 'echo \xtest'
 # CHECKERR: fish: Invalid token '\xtest'
 # CHECKERR: echo \xtest
-# CHECKERR: ^
+# CHECKERR:      ^~~~~^
 
 $fish -c 'echo \utest'
 # CHECKERR: fish: Invalid token '\utest'
 # CHECKERR: echo \utest
-# CHECKERR: ^
+# CHECKERR:      ^~~~~^

@@ -9,12 +9,12 @@ $status
 
 # CHECK: <fish: The 'exec' command can not be used in a pipeline>
 # CHECK: <echo foo | exec grep # this exec is not allowed!>
-# CHECK: <           ^>
+# CHECK: <           ^~~~~~~~^>
 
 echo 'true | time false' | $fish 2>| string replace -r '(.*)' '<$1>'
 # CHECK: <fish: The 'time' command may only be at the beginning of a pipeline>
 # CHECK: <true | time false>
-# CHECK: <       ^>
+# CHECK: <       ^~~~~~~~~^>
 
 
 echo '
@@ -42,7 +42,7 @@ $fish -c 'echo "unfinished "$(subshell' 2>| string replace -r '.*' '<$0>'
 $fish -c 'echo "ok $(echo still ok)syntax error: \x"' 2>| string replace -r '.*' '<$0>'
 # CHECK: <fish: Invalid token '"ok $(echo still ok)syntax error: \x"'>
 # CHECK: <echo "ok $(echo still ok)syntax error: \x">
-# CHECK: <                         ^>
+# CHECK: <                         ^~~~~~~~~~~~~~~~^>
 
 echo "function this_should_be_an_error" >$TMPDIR/this_should_be_an_error.fish
 $fish -c "set -g fish_function_path $(string escape $TMPDIR); this_should_be_an_error"

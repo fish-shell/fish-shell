@@ -976,7 +976,7 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_
 
     if (flags & expand_flag::skip_variables) {
         for (auto &i : next) {
-            if (i == VARIABLE_EXPAND) {
+            if (i == VARIABLE_EXPAND || i == VARIABLE_EXPAND_SINGLE) {
                 i = L'$';
             }
         }

@@ -3,19 +3,48 @@ fish 3.6.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
-- ``test`` aka ``[``: implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
+- By default, :kbd:``Control-R`` now opens the command history in the pager, via the new special input function ``history-pager``.
 
 Deprecations and removed features
 ---------------------------------
 
 Scripting improvements
 ----------------------
-- ``argparse`` can now be used without option specifications, to allow using --min-args, --max-args or for commands that take no options (but might in future) (:issue:`9006`).
-- ``set --show`` now shows when a variable was inherited from fish's parent process, which should help with debugging (:issue:`9029`).
-- ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`).
+- ``test`` aka ``[``: implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
+- ``argparse`` can now be used without option specifications, to allow using --min-args, --max-args or for commands that take no options (but might in future) (:issue:`9006`)::
+
+    function my_copy
+        argparse --min-args 2 -- $argv
+        or return
+
+        cp $argv
+    end
+
+- ``set --show`` now shows when a variable was inherited from fish's parent process, which should help with debugging (:issue:`9029`)::
+
+    > set --show XDG_DATA_DIRS
+    $XDG_DATA_DIRS: set in global scope, exported, a path variable with 4 elements
+    $XDG_DATA_DIRS[1]: |/home/alfa/.local/share/flatpak/exports/share|
+    $XDG_DATA_DIRS[2]: |/var/lib/flatpak/exports/share|
+    $XDG_DATA_DIRS[3]: |/usr/local/share|
+    $XDG_DATA_DIRS[4]: |/usr/share|
+    $XDG_DATA_DIRS: originally inherited as |/home/alfa/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/|
+
+- ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
+
+    > touch foo
+    > sleep 10
+    > path mtime --relative foo
+    10
+
 - ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
 - The read limit is now restored to the default when $fish_read_limit is unset (:issue:`9129`).
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
+- Fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
+
+    checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
+    for a,b in y 1 z 3
+        ^~^
 
 Interactive improvements
 ------------------------
@@ -24,11 +53,11 @@ Interactive improvements
 - The new environment variable ``$fish_cursor_selection_mode`` can be used to configure whether the command line selection includes (``inclusive``) the character under the cursor or not (``exclusive``). The new default is ``exclusive``. Use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
 - process-exit and job-exit events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
 - Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`).
+- A crash when completing a token that contained both a potential glob and a quoted variable expansion was fixed (:issue:`9137`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
-- New special input function ``history-pager`` (:kbd:``Control-R``) opens the command history in the searchable pager (incremental search) (:issue:`602`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

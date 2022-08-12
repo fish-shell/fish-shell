@@ -362,6 +362,21 @@ function __fish_complete_ip
                                     gso_max_segs
                         end
                     case delete
+                        switch $cmd[-2]
+                            case delete
+                                __fish_ip_device
+                                echo dev
+                                echo group
+                            case dev
+                                __fish_ip_device
+                            case group
+                            case type
+                                __fish_ip_types
+                            case '*'
+                                if not set -q cmd[6]
+                                    echo type
+                                end
+                        end
                     case set
                         switch $cmd[-2]
                             case type
@@ -453,6 +468,7 @@ complete -f -c ip
 complete -f -c ip -a '(__fish_complete_ip)'
 complete -f -c ip -n "not __fish_seen_subcommand_from $ip_all_commands" -a "$ip_commands"
 # Yes, ip only takes options before "objects"
+complete -c ip -s h -l human -d "Output statistics with human readable values" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -s b -l batch -d "Read commands from file or stdin" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -l force -d "Don't terminate on errors in batch mode" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -s V -l Version -d "Print the version" -n "not __fish_seen_subcommand_from $ip_commands"
@@ -463,10 +479,17 @@ complete -c ip -f -s f -l family -d "The protocol family to use" -a "inet inet6 
 complete -c ip -f -s 4 -d "Short for --family inet" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s 6 -d "Short for --family inet6" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s B -d "Short for --family bridge" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s D -d "Short for --family decnet" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s I -d "Short for --family ipx" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s O -d "Short for --family link" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s M -d "Short for --family mpls" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s 0 -d "Short for --family link" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s o -l oneline -d "Output on one line" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s r -l resolve -d "Resolve names and print them instead of addresses" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s n -l net -l netns -d "Use specified network namespace" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s n -l netns -d "Use specified network namespace" -n "not __fish_seen_subcommand_from $ip_commands"
 complete -c ip -f -s a -l all -d "Execute command for all objects" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s c -l color -d "Configure color output" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s t -l timestamp -d "Display current time when using monitor" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -o ts -l tshort -d "Like -timestamp, but shorter format" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -o rc -l rcvbuf -d "Set the netlink socket receive buffer size" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -o iec -d "Print human readable rates in IEC units" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -o br -l brief -d "Print only basic information in a tabular format" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s j -l json -d "Output results in JSON" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -f -s p -l pretty -d "Output results in pretty JSON" -n "not __fish_seen_subcommand_from $ip_commands"

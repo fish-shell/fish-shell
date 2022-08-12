@@ -194,6 +194,7 @@ int fish_wcwidth(wchar_t wc) {
     int width = widechar_wcwidth(wc);
 
     switch (width) {
+        case widechar_non_character:
         case widechar_nonprint:
         case widechar_combining:
         case widechar_unassigned:

@@ -94,3 +94,14 @@ $fish --no-config -c 'echo $$ oh no syntax error' -c 'echo this works'
 $fish --no-config .
 # CHECKERR: error: Unable to read input file: Is a directory
 # CHECKERR: warning: Error while reading file .
+
+$fish --no-config -c 'echo notprinted; echo foo; a=b'
+# CHECKERR: fish: Unsupported use of '='. In fish, please use 'set a b'.
+# CHECKERR: echo notprinted; echo foo; a=b
+# CHECKERR:                            ^~^
+
+$fish --no-config -c 'echo notprinted | and true'
+# CHECKERR: fish: The 'and' command can not be used in a pipeline
+# CHECKERR: echo notprinted | and true
+# CHECKERR:                   ^~^
+

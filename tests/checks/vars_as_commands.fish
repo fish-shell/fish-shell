@@ -32,17 +32,17 @@ $CMD3 && echo $PWD
 echo 'if $status; echo foo; end' | $fish --no-config
 #CHECKERR: fish: $status is not valid as a command. See `help conditions`
 #CHECKERR: if $status; echo foo; end
-#CHECKERR: ^
+#CHECKERR:    ^~~~~~^
 echo 'not $status' | $fish --no-config
 #CHECKERR: fish: $status is not valid as a command. See `help conditions`
 #CHECKERR: not $status
-#CHECKERR: ^
+#CHECKERR:     ^~~~~~^
 
 # Script doesn't run at all.
 echo 'echo foo; and $status' | $fish --no-config
 #CHECKERR: fish: $status is not valid as a command. See `help conditions`
 #CHECKERR: echo foo; and $status
-#CHECKERR: ^
+#CHECKERR:               ^~~~~~^
 
 echo 'set -l status_cmd true; if $status_cmd; echo Heck yes this is true; end' | $fish --no-config
 #CHECK: Heck yes this is true

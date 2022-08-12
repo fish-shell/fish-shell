@@ -82,7 +82,7 @@ and echo matched
 $fish --no-config -c 'echo notprinted; echo foo | exec true; echo banana'
 # CHECKERR: fish: The 'exec' command can not be used in a pipeline
 # CHECKERR: echo notprinted; echo foo | exec true; echo banana
-# CHECKERR: ^
+# CHECKERR:                             ^~~~~~~~^
 
 # Running multiple command lists continues even if one has a syntax error.
 $fish --no-config -c 'echo $$ oh no syntax error' -c 'echo this works'

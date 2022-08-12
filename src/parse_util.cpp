@@ -809,12 +809,12 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
 }
 
 /// Append a syntax error to the given error list.
-static bool append_syntax_error(parse_error_list_t *errors, size_t source_location,
+static bool append_syntax_error(parse_error_list_t *errors, size_t source_location, size_t source_length,
                                 const wchar_t *fmt, ...) {
     if (!errors) return true;
     parse_error_t error;
     error.source_start = source_location;
-    error.source_length = 0;
+    error.source_length = source_length;
     error.code = parse_error_syntax;
 
     va_list va;
@@ -901,11 +901,11 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             }
             if (looks_like_variable) {
                 append_syntax_error(
-                    errors, global_after_dollar_pos,
+                    errors, global_after_dollar_pos, 1,
                     double_quotes ? ERROR_BRACKETED_VARIABLE_QUOTED1 : ERROR_BRACKETED_VARIABLE1,
                     truncate(var_name, var_err_len).c_str());
             } else {
-                append_syntax_error(errors, global_after_dollar_pos, ERROR_BAD_VAR_CHAR1, L'{');
+                append_syntax_error(errors, global_after_dollar_pos, 1, ERROR_BAD_VAR_CHAR1, L'{');
             }
             break;
         }
@@ -913,11 +913,11 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             // e.g.: echo foo"$"baz
             // These are only ever quotes, not command substitutions. Command substitutions are
             // handled earlier.
-            append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
+            append_syntax_error(errors, global_dollar_pos, 1, ERROR_NO_VAR_NAME);
             break;
         }
         case L'\0': {
-            append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
+            append_syntax_error(errors, global_dollar_pos, 1, ERROR_NO_VAR_NAME);
             break;
         }
         default: {
@@ -932,7 +932,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             // arguments we pass but that's harmless.
             const wchar_t *error_fmt = error_format_for_character(token_stop_char);
 
-            append_syntax_error(errors, global_after_dollar_pos, error_fmt, token_stop_char);
+            append_syntax_error(errors, global_after_dollar_pos, 1, error_fmt, token_stop_char);
             break;
         }
     }
@@ -957,8 +957,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
         wcstring unesc;
         if (!unescape_string(arg_src.c_str() + begin, end - begin, &unesc, UNESCAPE_SPECIAL)) {
             if (out_errors) {
-                append_syntax_error(out_errors, source_start + begin, L"Invalid token '%ls'",
-                                    arg_src.c_str());
+                append_syntax_error(out_errors, source_start + begin, end - begin,
+                                    L"Invalid token '%ls'", arg_src.c_str());
             }
             return 1;
         }
@@ -1006,7 +1006,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
             case -1: {
                 err |= PARSER_TEST_ERROR;
                 if (out_errors) {
-                    append_syntax_error(out_errors, source_start, L"Mismatched parenthesis");
+                    append_syntax_error(out_errors, source_start, 1, L"Mismatched parenthesis");
                 }
                 return err;
             }
@@ -1061,10 +1061,10 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
     if (!job_conj) return false;
 
     if (job_conj->parent->try_as<if_clause_t>()) {
-        errored = append_syntax_error(parse_errors, source_range->start,
+        errored = append_syntax_error(parse_errors, source_range->start, source_range->length,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
     } else if (job_conj->parent->try_as<while_header_t>()) {
-        errored = append_syntax_error(parse_errors, source_range->start,
+        errored = append_syntax_error(parse_errors, source_range->start, source_range->length,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
     } else if (const ast::job_list_t *jlist = job_conj->parent->try_as<ast::job_list_t>()) {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
@@ -1082,7 +1082,7 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
                     (deco->kw == parse_keyword_t::kw_and || deco->kw == parse_keyword_t::kw_or) &&
                     "Unexpected decorator keyword");
                 const wchar_t *deco_name = (deco->kw == parse_keyword_t::kw_and ? L"and" : L"or");
-                errored = append_syntax_error(parse_errors, deco->source_range().start,
+                errored = append_syntax_error(parse_errors, deco->source_range().start, deco->source_range().length,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, deco_name);
             }
         }
@@ -1099,6 +1099,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     using namespace ast;
     bool errored = false;
     auto source_start = dst.source_range().start;
+    auto source_length = dst.source_range().length;
     const statement_decoration_t decoration = dst.decoration();
 
     // Determine if the first argument is help.
@@ -1133,7 +1134,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
     if (is_in_pipeline && decoration == statement_decoration_t::exec) {
         errored =
-            append_syntax_error(parse_errors, source_start, INVALID_PIPELINE_CMD_ERR_MSG, L"exec");
+            append_syntax_error(parse_errors, source_start, source_length, INVALID_PIPELINE_CMD_ERR_MSG, L"exec");
     }
 
     // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
@@ -1144,13 +1145,13 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         // commands.
         const wcstring &command = dst.command.source(buff_src, storage);
         if (command == L"and" || command == L"or") {
-            errored = append_syntax_error(parse_errors, source_start, INVALID_PIPELINE_CMD_ERR_MSG,
+            errored = append_syntax_error(parse_errors, source_start, source_length, INVALID_PIPELINE_CMD_ERR_MSG,
                                           command.c_str());
         }
 
         // Similarly for time (#8841).
         if (command == L"time") {
-            errored = append_syntax_error(parse_errors, source_start, TIME_IN_PIPELINE_ERR_MSG);
+            errored = append_syntax_error(parse_errors, source_start, source_length, TIME_IN_PIPELINE_ERR_MSG);
         }
     }
 
@@ -1160,7 +1161,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     const wcstring &com = dst.command.source(buff_src, storage);
     if (com == L"$status") {
         errored =
-            append_syntax_error(parse_errors, source_start,
+            append_syntax_error(parse_errors, source_start, source_length,
                                 _(L"$status is not valid as a command. See `help conditions`"));
     }
 
@@ -1178,7 +1179,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 
         // Check that pipes are sound.
         if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
-            errored = append_syntax_error(parse_errors, source_start, INVALID_PIPELINE_CMD_ERR_MSG,
+            errored = append_syntax_error(parse_errors, source_start, source_length, INVALID_PIPELINE_CMD_ERR_MSG,
                                           command.c_str());
         }
 
@@ -1208,7 +1209,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 
             if (!found_loop) {
                 errored = append_syntax_error(
-                    parse_errors, source_start,
+                    parse_errors, source_start, source_length,
                     (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
             }
         }
@@ -1219,7 +1220,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
             if (expand_one(command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
                            parse_errors) &&
                 !builtin_exists(unexp_command)) {
-                errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
+                errored = append_syntax_error(parse_errors, source_start, source_length, UNKNOWN_BUILTIN_ERR_MSG,
                                               unexp_command.c_str());
             }
         }
@@ -1240,7 +1241,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 static bool detect_errors_in_block_redirection_list(
     const ast::argument_or_redirection_list_t &args_or_redirs, parse_error_list_t *out_errors) {
     if (const auto *first_arg = get_first_arg(args_or_redirs)) {
-        return append_syntax_error(out_errors, first_arg->source_range().start, END_ARG_ERR_MSG);
+        return append_syntax_error(out_errors, first_arg->source_range().start, first_arg->source_range().length, END_ARG_ERR_MSG);
     }
     return false;
 }

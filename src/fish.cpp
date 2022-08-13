@@ -48,7 +48,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "function.h"
 #include "future_feature_flags.h"
 #include "history.h"
-#include "intern.h"
 #include "io.h"
 #include "parse_util.h"
 #include "parser.h"
@@ -502,7 +501,6 @@ int main(int argc, char **argv) {
     }
     mutable_fish_features().set_from_string(opts.features);
     proc_init();
-    builtin_init();
     misc_init();
     reader_init();
 

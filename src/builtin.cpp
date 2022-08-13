@@ -71,7 +71,6 @@
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
-#include "intern.h"
 #include "io.h"
 #include "parse_constants.h"
 #include "parse_util.h"
@@ -428,13 +427,6 @@ ASSERT_SORTED_BY_NAME(builtin_datas);
 ///
 static const builtin_data_t *builtin_lookup(const wcstring &name) {
     return get_by_sorted_name(name.c_str(), builtin_datas);
-}
-
-/// Initialize builtin data.
-void builtin_init() {
-    for (const auto &builtin_data : builtin_datas) {
-        intern_static(builtin_data.name);
-    }
 }
 
 /// Is there a builtin command with the given name?

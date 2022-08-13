@@ -7083,7 +7083,6 @@ int main(int argc, char **argv) {
     set_main_thread();
     setup_fork_guards();
     proc_init();
-    builtin_init();
     env_init();
     misc_init();
     reader_init();

@@ -78,7 +78,6 @@ struct builtin_data_t {
 /// The send stuff to foreground message.
 #define FG_MSG _(L"Send job %d (%ls) to foreground\n")
 
-void builtin_init();
 bool builtin_exists(const wcstring &cmd);
 
 proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_streams_t &streams);

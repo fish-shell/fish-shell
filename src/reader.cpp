@@ -61,7 +61,6 @@
 #include "history.h"
 #include "input.h"
 #include "input_common.h"
-#include "intern.h"
 #include "io.h"
 #include "iothread.h"
 #include "kill.h"

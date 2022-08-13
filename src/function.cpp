@@ -25,7 +25,6 @@
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
-#include "intern.h"
 #include "parser.h"
 #include "parser_keywords.h"
 #include "reader.h"

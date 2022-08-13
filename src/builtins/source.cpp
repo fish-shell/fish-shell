@@ -13,7 +13,6 @@
 #include "../common.h"
 #include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
-#include "../intern.h"
 #include "../io.h"
 #include "../parser.h"
 #include "../proc.h"

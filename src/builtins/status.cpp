@@ -370,7 +370,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
         case STATUS_FILENAME: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             auto res = parser.current_filename();
-            wcstring fn = res ? res : L"";
+            wcstring fn = res ? *res : L"";
             if (!fn.empty() && opts.status_cmd == STATUS_DIRNAME) {
                 fn = wdirname(fn);
             } else if (!fn.empty() && opts.status_cmd == STATUS_BASENAME) {

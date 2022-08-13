@@ -522,7 +522,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
 
     std::string actual_cmd_str = wcs2string(p->actual_cmd);
     const char *actual_cmd = actual_cmd_str.c_str();
-    const wchar_t *file = parser.libdata().current_filename;
+    filename_ref_t file = parser.libdata().current_filename;
 
 #if FISH_USE_POSIX_SPAWN
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
@@ -544,7 +544,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
         // usleep(10000);
 
         FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'",
-              int(s_fork_count), *pid, actual_cmd, file ? file : L"<no file>");
+              int(s_fork_count), *pid, actual_cmd, file ? file->c_str() : L"<no file>");
 
         // these are all things do_fork() takes care of normally (for forked processes):
         p->pid = *pid;

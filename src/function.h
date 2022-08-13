@@ -44,9 +44,8 @@ struct function_properties_t {
     /// Whether the function was autoloaded.
     bool is_autoload{false};
 
-    /// The file from which the function was created (intern'd string), or nullptr if not from a
-    /// file.
-    const wchar_t *definition_file{};
+    /// The file from which the function was created, or nullptr if not from a file.
+    filename_ref_t definition_file{};
 
     /// \return the description, localized via _.
     const wchar_t *localized_description() const;

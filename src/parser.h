@@ -66,8 +66,8 @@ class block_t {
     const block_type_t block_type;
 
    public:
-    /// Name of file that created this block. This string is intern'd.
-    const wchar_t *src_filename{nullptr};
+    /// Name of file that created this block.
+    filename_ref_t src_filename{};
     /// Line number where this block was created.
     int src_lineno{0};
     /// Whether we should pop the environment variable stack when we're popped off of the block
@@ -83,7 +83,7 @@ class block_t {
 
     // If this is a source block, the source'd file, interned.
     // Otherwise nothing.
-    const wchar_t *sourced_file{};
+    filename_ref_t sourced_file{};
 
     // If this is an event block, the event. Otherwise ignored.
     maybe_t<event_t> event;
@@ -103,7 +103,7 @@ class block_t {
     static block_t if_block();
     static block_t event_block(event_t evt);
     static block_t function_block(wcstring name, wcstring_list_t args, bool shadows);
-    static block_t source_block(const wchar_t *src);
+    static block_t source_block(filename_ref_t src);
     static block_t for_block();
     static block_t while_block();
     static block_t switch_block();
@@ -201,8 +201,7 @@ struct library_data_t {
     size_t read_limit{0};
 
     /// The current filename we are evaluating, either from builtin source or on the command line.
-    /// This is an intern'd string.
-    const wchar_t *current_filename{};
+    filename_ref_t current_filename{};
 
     /// List of events that have been sent but have not yet been delivered because they are blocked.
     std::vector<shared_ptr<const event_t>> blocked_events{};
@@ -431,7 +430,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Returns the file currently evaluated by the parser. This can be different than
     /// reader_current_filename, e.g. if we are evaluating a function defined in a different file
     /// than the one curently read.
-    const wchar_t *current_filename() const;
+    filename_ref_t current_filename() const;
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).

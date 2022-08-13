@@ -134,7 +134,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
                 auto path = func->definition_file;
                 if (opts.path) {
                     if (path) {
-                        streams.out.append(path);
+                        streams.out.append(*path);
                         streams.out.append(L"\n");
                     }
                 } else if (!opts.short_output) {
@@ -146,8 +146,8 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
                     if (path) {
                         int line_number = func->definition_lineno();
                         wcstring comment;
-                        if (std::wcscmp(path, L"-") != 0) {
-                            append_format(comment, L"# Defined in %ls @ line %d\n", path,
+                        if (*path != L"-") {
+                            append_format(comment, L"# Defined in %ls @ line %d\n", path->c_str(),
                                           line_number);
                         } else {
                             append_format(comment, L"# Defined via `source`\n");
@@ -169,7 +169,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
                     streams.out.append_format(_(L"%ls is a function"), name);
                     auto path = func->definition_file;
                     if (path) {
-                        streams.out.append_format(_(L" (defined in %ls)"), path);
+                        streams.out.append_format(_(L" (defined in %ls)"), path->c_str());
                     }
                     streams.out.append(L"\n");
                 }

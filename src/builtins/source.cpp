@@ -43,7 +43,7 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, const wchar
     int fd = -1;
 
     struct stat buf;
-    const wchar_t *fn, *fn_intern;
+    filename_ref_t func_filename{};
 
     if (argc == optind || std::wcscmp(argv[optind], L"-") == 0) {
         if (streams.stdin_fd < 0) {
@@ -55,8 +55,7 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, const wchar
             // Don't implicitly read from the terminal.
             return STATUS_CMD_ERROR;
         }
-        fn = L"-";
-        fn_intern = fn;
+        func_filename = std::make_shared<wcstring>(L"-");
         fd = streams.stdin_fd;
     } else {
         opened_fd = autoclose_fd_t(wopen_cloexec(argv[optind], O_RDONLY));
@@ -83,13 +82,14 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, const wchar
             return STATUS_CMD_ERROR;
         }
 
-        fn_intern = intern(argv[optind]);
+        func_filename = std::make_shared<wcstring>(argv[optind]);
     }
     assert(fd >= 0 && "Should have a valid fd");
+    assert(func_filename && "Should have valid function filename");
 
-    const block_t *sb = parser.push_block(block_t::source_block(fn_intern));
+    const block_t *sb = parser.push_block(block_t::source_block(func_filename));
     auto &ld = parser.libdata();
-    scoped_push<const wchar_t *> filename_push{&ld.current_filename, fn_intern};
+    scoped_push<filename_ref_t> filename_push{&ld.current_filename, func_filename};
 
     // Construct argv from our null-terminated list.
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already
@@ -106,10 +106,9 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, const wchar
     parser.pop_block(sb);
 
     if (retval != STATUS_CMD_OK) {
-        wcstring esc = escape_string(fn_intern);
-        streams.err.append_format(
-            _(L"%ls: Error while reading file '%ls'\n"), cmd,
-            escape_string(fn_intern) == intern_static(L"-") ? L"<stdin>" : esc.c_str());
+        wcstring esc = escape_string(*func_filename);
+        streams.err.append_format(_(L"%ls: Error while reading file '%ls'\n"), cmd,
+                                  esc == L"-" ? L"<stdin>" : esc.c_str());
     } else {
         retval = parser.get_last_status();
     }

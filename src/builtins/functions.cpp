@@ -137,15 +137,15 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
 
 static int report_function_metadata(const wcstring &funcname, bool verbose, io_streams_t &streams,
                                     parser_t &parser, bool metadata_as_comments) {
-    const wchar_t *path = L"n/a";
+    wcstring path = L"n/a";
     const wchar_t *autoloaded = L"n/a";
     const wchar_t *shadows_scope = L"n/a";
     wcstring description = L"n/a";
     int line_number = 0;
 
     if (auto props = function_get_props_autoload(funcname, parser)) {
-        path = props->definition_file;
-        if (path) {
+        if (props->definition_file) {
+            path = *props->definition_file;
             autoloaded = props->is_autoload ? L"autoloaded" : L"not-autoloaded";
             line_number = props->definition_lineno();
         } else {
@@ -159,12 +159,12 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
         // "stdin" means it was defined interactively, "-" means it was defined via `source`.
         // Neither is useful information.
         wcstring comment;
-        if (!std::wcscmp(path, L"stdin")) {
+        if (path == L"stdin") {
             append_format(comment, L"# Defined interactively\n");
-        } else if (!std::wcscmp(path, L"-")) {
+        } else if (path == L"-") {
             append_format(comment, L"# Defined via `source`\n");
         } else {
-            append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
+            append_format(comment, L"# Defined in %ls @ line %d\n", path.c_str(), line_number);
         }
 
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
@@ -175,7 +175,7 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
             streams.out.append(comment);
         }
     } else {
-        streams.out.append_format(L"%ls\n", path);
+        streams.out.append_format(L"%ls\n", path.c_str());
         if (verbose) {
             streams.out.append_format(L"%ls\n", autoloaded);
             streams.out.append_format(L"%d\n", line_number);

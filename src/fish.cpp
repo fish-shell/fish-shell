@@ -585,13 +585,11 @@ int main(int argc, char **argv) {
             parser.vars().set(L"argv", ENV_DEFAULT, std::move(list));
 
             auto &ld = parser.libdata();
-            wcstring rel_filename = str2wcstring(file);
-            scoped_push<const wchar_t *> filename_push{&ld.current_filename,
-                                                       intern(rel_filename.c_str())};
+            filename_ref_t rel_filename = std::make_shared<wcstring>(str2wcstring(file));
+            scoped_push<filename_ref_t> filename_push{&ld.current_filename, rel_filename};
             res = reader_read(parser, fd.fd(), {});
             if (res) {
-                FLOGF(warning, _(L"Error while reading file %ls\n"),
-                      ld.current_filename ? ld.current_filename : _(L"Standard input"));
+                FLOGF(warning, _(L"Error while reading file %ls\n"), rel_filename->c_str());
             }
         }
     }

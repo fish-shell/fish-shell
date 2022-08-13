@@ -241,9 +241,9 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
             break;
         }
         case block_type_t::source: {
-            const wchar_t *source_dest = b.sourced_file;
+            const filename_ref_t &source_dest = b.sourced_file;
             append_format(trace, _(L"from sourcing file %ls\n"),
-                          user_presentable_path(source_dest, parser.vars()).c_str());
+                          user_presentable_path(*source_dest, parser.vars()).c_str());
             print_call_site = true;
             break;
         }
@@ -268,10 +268,10 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
 
     if (print_call_site) {
         // Print where the function is called.
-        const wchar_t *file = b.src_filename;
+        const auto &file = b.src_filename;
         if (file) {
             append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
-                          user_presentable_path(file, parser.vars()).c_str());
+                          user_presentable_path(*file, parser.vars()).c_str());
         } else if (parser.libdata().within_fish_init) {
             append_format(trace, _(L"\tcalled during startup\n"));
         }
@@ -377,7 +377,7 @@ int parser_t::get_lineno() const {
     return lineno;
 }
 
-const wchar_t *parser_t::current_filename() const {
+filename_ref_t parser_t::current_filename() const {
     for (const auto &b : block_list) {
         if (b.is_function_call()) {
             auto props = function_get_props(b.function_name);
@@ -415,7 +415,7 @@ wcstring parser_t::current_line() {
     }
 
     const int lineno = this->get_lineno();
-    const wchar_t *file = this->current_filename();
+    filename_ref_t file = this->current_filename();
 
     wcstring prefix;
 
@@ -423,7 +423,7 @@ wcstring parser_t::current_line() {
     if (!is_interactive() || is_function()) {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "),
-                          user_presentable_path(file, vars()).c_str(), lineno);
+                          user_presentable_path(*file, vars()).c_str(), lineno);
         } else if (libdata().within_fish_init) {
             append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
@@ -637,14 +637,15 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         }
 
         wcstring prefix;
-        const wchar_t *filename = this->current_filename();
+        filename_ref_t filename = this->current_filename();
         if (filename) {
             if (which_line > 0) {
-                prefix = format_string(_(L"%ls (line %lu): "),
-                                       user_presentable_path(filename, vars()).c_str(), which_line);
+                prefix =
+                    format_string(_(L"%ls (line %lu): "),
+                                  user_presentable_path(*filename, vars()).c_str(), which_line);
             } else {
                 prefix =
-                    format_string(_(L"%ls: "), user_presentable_path(filename, vars()).c_str());
+                    format_string(_(L"%ls: "), user_presentable_path(*filename, vars()).c_str());
             }
         } else {
             prefix = L"fish: ";
@@ -724,8 +725,8 @@ wcstring block_t::description() const {
     if (this->src_lineno >= 0) {
         append_format(result, L" (line %d)", this->src_lineno);
     }
-    if (this->src_filename != nullptr) {
-        append_format(result, L" (file %ls)", this->src_filename);
+    if (this->src_filename) {
+        append_format(result, L" (file %ls)", this->src_filename->c_str());
     }
     return result;
 }
@@ -747,9 +748,9 @@ block_t block_t::function_block(wcstring name, wcstring_list_t args, bool shadow
     return b;
 }
 
-block_t block_t::source_block(const wchar_t *src) {
+block_t block_t::source_block(filename_ref_t src) {
     block_t b{block_type_t::source};
-    b.sourced_file = src;
+    b.sourced_file = std::move(src);
     return b;
 }
 

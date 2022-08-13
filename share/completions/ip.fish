@@ -7,7 +7,8 @@
 set -l ip_commands link address addrlabel route rule neigh ntable tunnel tuntap maddr mroute mrule monitor xfrm netns l2tp tcp_metrics
 set -l ip_addr a ad add addr addre addres address
 set -l ip_link l li lin link
-set -l ip_all_commands $ip_commands $ip_addr $ip_link
+set -l ip_route r ro rou rout route
+set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_route
 
 function __fish_ip_commandwords
     set -l skip 0
@@ -415,6 +416,27 @@ function __fish_complete_ip
                         end
                     case show
                     case help
+                end
+            end
+        case route
+            if not set -q cmd[3]
+                printf '%s\t%s\n' add "Add new route" \
+                    change "Change route" \
+                    append "Append route" \
+                    replace "Change or add new route" \
+                    delete "Delete route" \
+                    show "List routes" \
+                    flush "Flush routing tables" \
+                    get "Get a single route" \
+                    save "Save routing table to stdout" \
+                    showdump "Show saved routing table from stdin" \
+                    restore "Restore routing table from stdin"
+            else
+                # TODO: switch on $cmd[2] and complete subcommand specific arguments
+                # for now just complete device names when dev was the last token
+                switch $cmd[-2]
+                    case dev
+                        __fish_ip_device
                 end
             end
         case netns

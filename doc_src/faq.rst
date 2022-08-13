@@ -154,7 +154,7 @@ in :ref:`config.fish <configuration>`.
 
 How do I run a command from history?
 ------------------------------------
-Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches, or press :kbd:`Control`\ +\ :kbd:`R` to open the history in a searchable pager (and press :kbd:`Control`\ +\ :kbd:`S` to move to older history).
+Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches, or press :kbd:`Control`\ +\ :kbd:`R` to open the history in a searchable pager. In this pager you can press :kbd:`Control`\ +\ :kbd:`R` or :kbd:`Control`\ +\ :kbd:`S` to move to older or younger history respectively.
 
 Additional default key bindings include :kbd:`Control`\ +\ :kbd:`P` (up) and :kbd:`Control`\ +\ :kbd:`N` (down). See :ref:`Searchable command history <history-search>` for more information.
 

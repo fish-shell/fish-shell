@@ -80,9 +80,8 @@ static const struct woption long_options[] = {{L"export", no_argument, nullptr, 
                                               {}};
 
 // Hint for invalid path operation with a colon.
-#define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: You provided %d indexes but %d values\n")
-#define BUILTIN_SET_ERASE_NO_VAR _(L"%ls: Erase needs a variable name\n")
-#define BUILTIN_SET_ARRAY_BOUNDS_ERR _(L"%ls: Array index out of bounds\n")
+#define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: given %d indexes but %d values\n")
+#define BUILTIN_SET_ARRAY_BOUNDS_ERR _(L"%ls: array index out of bounds\n")
 #define BUILTIN_SET_UVAR_ERR \
     _(L"%ls: Universal variable '%ls' is shadowed by the global variable of the same name.\n")
 
@@ -193,9 +192,8 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
     return STATUS_CMD_OK;
 }
 
-static int validate_cmd_opts(const wchar_t *cmd,
-                             const set_cmd_opts_t &opts,  //!OCLINT(npath complexity)
-                             int argc, parser_t &parser, io_streams_t &streams) {
+static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts, int argc,
+                             const wchar_t * argv[], parser_t &parser, io_streams_t &streams) {
     // Can't query and erase or list.
     if (opts.query && (opts.erase || opts.list)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
@@ -247,7 +245,7 @@ static int validate_cmd_opts(const wchar_t *cmd,
     }
 
     if (argc == 0 && opts.erase) {
-        streams.err.append_format(BUILTIN_SET_ERASE_NO_VAR, cmd);
+        streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[-1]);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
@@ -821,7 +819,7 @@ maybe_t<int> builtin_set(parser_t &parser, io_streams_t &streams, const wchar_t 
         return STATUS_CMD_OK;
     }
 
-    retval = validate_cmd_opts(cmd, opts, argc, parser, streams);
+    retval = validate_cmd_opts(cmd, opts, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.query) {

@@ -83,7 +83,7 @@ static const struct woption long_options[] = {{L"export", no_argument, nullptr, 
 #define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: given %d indexes but %d values\n")
 #define BUILTIN_SET_ARRAY_BOUNDS_ERR _(L"%ls: array index out of bounds\n")
 #define BUILTIN_SET_UVAR_ERR \
-    _(L"%ls: Universal variable '%ls' is shadowed by the global variable of the same name.\n")
+    _(L"%ls: successfully set universal '%ls'; but a global by that name shadows it\n")
 
 static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {

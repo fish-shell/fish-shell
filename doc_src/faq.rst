@@ -29,7 +29,7 @@ Use ``set -q var``.  For example, ``if set -q var; echo variable defined; end``.
         echo either variable defined
     end
 
-Keep in mind that a defined variabled could also be empty, either by having no elements (if set like ``set var``) or only empty elements (if set like ``set var ""``). Read on for how to deal with those.
+Keep in mind that a defined variable could also be empty, either by having no elements (if set like ``set var``) or only empty elements (if set like ``set var ""``). Read on for how to deal with those.
 
 
 How do I check whether a variable is not empty?

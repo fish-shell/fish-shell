@@ -4,17 +4,11 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
-    # Make sure this function is only run once.
-    if set -q __fish_config_interactive_done
-        return
-    end
-
     # For one-off upgrades of the fish version
     if not set -q __fish_initialized
         set -U __fish_initialized 0
     end
 
-    set -g __fish_config_interactive_done
     set -g __fish_active_key_bindings
 
     # usage: __init_uvar VARIABLE VALUES...
@@ -284,4 +278,6 @@ end" >$__fish_config_dir/config.fish
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.
     set __fish_initialized 3400
+
+    functions -e __fish_config_interactive
 end

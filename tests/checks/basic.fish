@@ -568,3 +568,9 @@ $fish -c 'echo \utest'
 # CHECKERR: fish: Invalid token '\utest'
 # CHECKERR: echo \utest
 # CHECKERR:      ^~~~~^
+
+printf '%s\n' "#!/bin/sh" 'echo $0' > $tmpdir/argv0.sh
+chmod +x $tmpdir/argv0.sh
+cd $tmpdir
+./argv0.sh
+# CHECK: ./argv0.sh

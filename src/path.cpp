@@ -55,9 +55,8 @@ static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {
-        wcstring abs_cmd = path_apply_working_directory(cmd, vars.get_pwd_slash());
-        int merr = test_path(abs_cmd);
-        return get_path_result_t{merr, std::move(abs_cmd)};
+        int merr = test_path(cmd);
+        return get_path_result_t{merr, cmd};
     }
 
     get_path_result_t best = noent_res;

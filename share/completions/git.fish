@@ -523,14 +523,6 @@ function __fish_git_complete_rev_files
     printf "$rev:%s\n" (__fish_git_rev_files $rev $path)
 end
 
-# This is the same logic used on $LANG in fish_job_summary. Print a pretty ellipse if we can,
-# returns the width.
-function __fish_git_ellipsis
-    string match -iqr 'utf.?8' -- $LANG && set -f str \u2026 || set -f str ..
-    printf %s $str
-    return (string length -V $str)
-end
-
 # Determines whether we can/should complete with __fish_git_rev_files
 function __fish_git_needs_rev_files
     # git (as of 2.20) accepts the rev:path syntax for a number of subcommands,
@@ -615,7 +607,7 @@ function __fish_git_config_keys
     # With -z, key and value are separated by space, not "="
     __fish_git config -lz | while read -lz key value
         # Print only first line of value(with an ellipsis) if multiline
-        printf '%s\t%s\n' $key (string replace \n (__fish_git_ellipsis)\n -- $value)[1]
+        printf '%s\t%s\n' $key (string shorten -N -- $value)
     end
     # Print all recognized config keys; duplicates are not shown twice by fish
     printf '%s\n' (__fish_git help --config)[1..-2] # Last line is a footer; ignore it
@@ -739,10 +731,7 @@ function __fish_git_aliases
     __fish_git config -z --get-regexp '^alias\.' 2>/dev/null | while read -lz key value
         begin
             set -l name (string replace -r '^.*\.' '' -- $key)
-            # Only use the first line of the value as the description.
-            # Also shorten it to 35/36 chars depending on how wide the ellipsis is.
-            set -f ellipsis (__fish_git_ellipsis)
-            set -l val (printf '%s\n' $value | string replace -r "^(.{0,$(math 37 - $status)}).+" '$1'$ellipsis)[1]
+            set -l val (string shorten --no-newline -m 36 -- $value)
             printf "%s\t%s\n" $name "alias: $val"
         end
     end

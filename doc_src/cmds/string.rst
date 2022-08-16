@@ -24,6 +24,8 @@ Synopsis
                   [-q | --quiet] [STRING ...]
     string replace [-a | --all] [-f | --filter] [-i | --ignore-case]
                    [-r | --regex] [-q | --quiet] PATTERN REPLACE [STRING ...]
+    string shorten [(-c | --char) CHARS] [(-m | --max) INTEGER] [(-N | --no-newline)]
+               [STRING ...]
     string split [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty] 
                  [-q | --quiet] [-r | --right] SEP [STRING ...]
     string split0 [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty]
@@ -152,8 +154,8 @@ Examples
    :start-after: BEGIN EXAMPLES
    :end-before: END EXAMPLES
 
-"pad" subcommand
-------------------
+"pad" and "shorten" subcommands
+---------------------------------
 
 .. include:: string-pad.rst
    :start-after: BEGIN SYNOPSIS
@@ -164,6 +166,18 @@ Examples
    :end-before: END DESCRIPTION
 
 .. include:: string-pad.rst
+   :start-after: BEGIN EXAMPLES
+   :end-before: END EXAMPLES
+
+.. include:: string-shorten.rst
+   :start-after: BEGIN SYNOPSIS
+   :end-before: END SYNOPSIS
+
+.. include:: string-shorten.rst
+   :start-after: BEGIN DESCRIPTION
+   :end-before: END DESCRIPTION
+
+.. include:: string-shorten.rst
    :start-after: BEGIN EXAMPLES
    :end-before: END EXAMPLES
 

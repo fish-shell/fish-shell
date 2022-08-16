@@ -832,3 +832,121 @@ printf \<
 printf my-password | string replace -ra . \*
 printf \>\n
 # CHECK: <***********>
+
+string shorten -m 3 foo
+# CHECK: foo
+string shorten -m 2 foo
+# CHECK: f…
+
+string shorten -m 5 foobar
+# CHECK: foob…
+
+# Char is longer than width, we truncate instead.
+string shorten -m 5 --char ........ foobar
+# CHECK: fooba
+
+string shorten --max 4 -c /// foobar
+# CHECK: f///
+
+string shorten --max 4 -c /// foobarnana
+# CHECK: f///
+
+string shorten --max 2 --chars "" foo
+# CHECK: fo
+
+string shorten foo foobar
+# CHECK: foo
+# CHECK: fo…
+
+# A weird case - our minimum width here is 1,
+# so everything that goes over the width becomes "x"
+for i in (seq 1 10)
+    math 2 ^ $i
+end | string shorten -c x
+# CHECK: 2
+# CHECK: 4
+# CHECK: 8
+# CHECK: x
+# CHECK: x
+# CHECK: x
+# CHECK: x
+# CHECK: x
+# CHECK: x
+# CHECK: x
+
+string shorten -N -cx bar\nfooo
+# CHECK: barx
+
+# Shorten and emoji width.
+begin
+    # \U1F4A9 was widened in unicode 9, so it's affected
+    # by $fish_emoji_width
+    # "…" isn't and always has width 1.
+    #
+    # "abcde" has width 5, we have a total width of 6,
+    # so we need to overwrite the "e" with our ellipsis.
+    fish_emoji_width=1 string shorten --max=5 -- abcde💩
+    # CHECK: abcd…
+    # This fits assuming the poo fits in one column
+    fish_emoji_width=1 string shorten --max=6 -- abcde💩
+    # CHECK: abcde💩
+
+    # This has a total width of 7 (assuming double-wide poo),
+    # so we need to add the ellipsis on the "e"
+    fish_emoji_width=2 string shorten --max=5 -- abcde💩
+    # CHECK: abcd…
+    # This still doesn't fit!
+    fish_emoji_width=2 string shorten --max=6 -- abcde💩
+    # CHECK: abcde…
+    fish_emoji_width=2 string shorten --max=7 -- abcde💩
+    # CHECK: abcde💩
+end
+
+# See that colors aren't counted
+string shorten -m6 (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten | string escape
+# Renders like "strin…" in colors
+# Note that red sequence that we still pass on because it's width 0.
+# CHECK: \e\[34ms\e\[31mt\e\[1m\e\[37mrin\e\[31m…
+
+set -l str (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten
+for i in (seq 1 (string length -V -- $str))
+    set -l len (string shorten -m$i -- $str | string length -V)
+    test $len = $i
+    or echo Oopsie ellipsizing to $i failed
+end
+
+string shorten -m4 foobar\nbananarama
+# CHECK: foo…
+# CHECK: ban…
+
+# First line is empty and printed as-is
+# The other lines are truncated to the width of the first real line.
+printf '
+1. line
+2. another line
+3. third line' | string shorten
+# CHECK:
+# CHECK: 1. line
+# CHECK: 2. ano…
+# CHECK: 3. thi…
+
+printf '
+1. line
+2. another line
+3. third line' | string shorten --left
+# CHECK:
+# CHECK: 1. line
+# CHECK: …r line
+# CHECK: …d line
+
+string shorten -m12 -l (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)(set_color green)g(set_color yellow)-shorten | string escape
+# Renders like "…ing-shorten" with g in green and "-shorten" in yellow
+# Yes, that's a "red" escape before.
+# CHECK: …in\e\[31m\e\[32mg\e\[33m-shorten
+
+set -l str (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten
+for i in (seq 1 (string length -V -- $str))
+    set -l len (string shorten -m$i --left -- $str | string length -V)
+    test $len = $i
+    or echo Oopsie ellipsizing to $i failed
+end

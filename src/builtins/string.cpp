@@ -144,6 +144,7 @@ struct options_t {  //!OCLINT(too many fields)
     bool all_valid = false;
     bool char_to_pad_valid = false;
     bool chars_to_trim_valid = false;
+    bool chars_to_shorten_valid = false;
     bool count_valid = false;
     bool entire_valid = false;
     bool filter_valid = false;
@@ -205,9 +206,10 @@ struct options_t {  //!OCLINT(too many fields)
     escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
 };
 
-static size_t width_without_escapes(const wcstring &ins) {
+static size_t width_without_escapes(const wcstring &ins, size_t start_pos = 0) {
     ssize_t width = 0;
-    for (auto c : ins) {
+    for (size_t i = start_pos; i < ins.size(); i++) {
+        wchar_t c = ins[i];
         auto w = fish_wcwidth_visible(c);
         // We assume that this string is on its own line,
         // in which case a backslash can't bring us below 0.
@@ -218,7 +220,7 @@ static size_t width_without_escapes(const wcstring &ins) {
 
     // ANSI escape sequences like \e\[31m contain printable characters. Subtract their width
     // because they are not rendered.
-    size_t pos = 0;
+    size_t pos = start_pos;
     while ((pos = ins.find('\x1B', pos)) != std::string::npos) {
         auto len = escape_code_length(ins.c_str() + pos);
         if (len) {
@@ -294,7 +296,7 @@ static int handle_flag_a(const wchar_t **argv, parser_t &parser, io_streams_t &s
 
 static int handle_flag_c(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
-    if (opts->chars_to_trim_valid) {
+    if (opts->chars_to_trim_valid || opts->chars_to_shorten_valid) {
         opts->chars_to_trim = w.woptarg;
         return STATUS_CMD_OK;
     } else if (opts->char_to_pad_valid) {
@@ -557,6 +559,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->all_valid) short_opts.append(L"a");
     if (opts->char_to_pad_valid) short_opts.append(L"c:");
     if (opts->chars_to_trim_valid) short_opts.append(L"c:");
+    if (opts->chars_to_shorten_valid) short_opts.append(L"c:");
     if (opts->count_valid) short_opts.append(L"n:");
     if (opts->entire_valid) short_opts.append(L"e");
     if (opts->filter_valid) short_opts.append(L"f");
@@ -1655,6 +1658,166 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, const w
     return nsub > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    options_t opts;
+    opts.chars_to_shorten_valid = true;
+    opts.chars_to_trim = get_ellipsis_str();
+    opts.max_valid = true;
+    opts.no_newline_valid = true;
+    opts.quiet_valid = true;
+    opts.max = -1;
+    opts.left_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    // Find max width of strings and keep the inputs
+    size_t min_width = SIZE_MAX;
+    std::vector<wcstring> inputs;
+    wcstring ell = opts.chars_to_trim;
+
+    auto ell_width = fish_wcswidth(ell);
+
+    arg_iterator_t aiter_width(argv, optind, streams);
+    while (const wcstring *arg = aiter_width.nextstr()) {
+        // Visible width only makes sense line-wise.
+        // So either we have no-newlines (which means we shorten on the first newline),
+        // or we handle the lines separately.
+        auto splits = split_string(*arg, L'\n');
+        if (opts.no_newline && splits.size() > 1) {
+            wcstring str = !opts.left ? splits[0] : splits[splits.size() - 1];
+            str.append(ell);
+            ssize_t width = width_without_escapes(str);
+            if (width > 0 && (size_t)width < min_width) min_width = width;
+            inputs.push_back(str);
+        } else {
+            for (auto &input_string : splits) {
+                ssize_t width = width_without_escapes(input_string);
+                if (width > 0 && (size_t)width < min_width) min_width = width;
+                inputs.push_back(std::move(input_string));
+            }
+        }
+    }
+
+    // opts.max is signed for other subcommands,
+    // but we compare against .size() a bunch,
+    // this shuts the compiler up.
+    size_t ourmax = min_width;
+    if (opts.max > 0) {
+        ourmax = opts.max;
+    }
+
+    if (ell_width > (ssize_t)ourmax) {
+        // If we can't even print our ellipsis, we substitute nothing,
+        // truncating instead.
+        ell = L"";
+        ell_width = 0;
+    }
+
+    int nsub = 0;
+    // We could also error out here if the width of our ellipsis is larger
+    // than the target width.
+    // That seems excessive - specifically because the ellipsis on LANG=C
+    // is "..." (width 3!).
+
+    auto skip_escapes = [&](const wcstring &l, size_t pos) {
+        size_t totallen = 0;
+        while (l[pos + totallen] == L'\x1B') {
+            auto len = escape_code_length(l.c_str() + pos + totallen);
+            if (!len) break;
+            totallen += *len;
+        }
+        return totallen;
+    };
+
+    for (auto &line : inputs) {
+        size_t pos = 0;
+        size_t max = 0;
+        // Collect how much of the string we can use without going over the maximum.
+        if (opts.left) {
+            // Our strategy for keeping from the end.
+            // This is rather unoptimized - actually going *backwards*
+            // is extremely tricky because we would have to subtract escapes again.
+            // Also we need to avoid hacking combiners into bits.
+            // This should work for most cases considering the combiners typically have width 0.
+            wcstring out;
+            while (pos < line.size()) {
+                auto w = width_without_escapes(line, pos);
+                // If we're at the beginning and it fits, we sits.
+                //
+                // Otherwise we require it to fit the ellipsis
+                if ((w <= ourmax && pos == 0) || w + ell_width <= ourmax) {
+                    out = line.substr(pos);
+                    break;
+                }
+
+                auto skip = skip_escapes(line, pos);
+                pos += skip > 0 ? skip : 1;
+            }
+            if (opts.quiet && pos != 0) {
+                return STATUS_CMD_OK;
+            }
+
+            if (pos == 0) {
+                streams.out.append(line);
+                streams.out.append(L'\n');
+            } else {
+                // We have an ellipsis, construct our string and print it.
+                nsub++;
+                out = ell + out + L'\n';
+                streams.out.append(out);
+            }
+            continue;
+        } else {
+            // Going from the left.
+            // This is somewhat easier.
+            while (max <= ourmax && pos < line.size()) {
+                pos += skip_escapes(line, pos);
+                auto w = fish_wcwidth(line[pos]);
+                if (w <= 0 || max + w + ell_width <= ourmax) {
+                    // If it still fits, even if it is the last, we add it.
+                    max += w;
+                    pos++;
+                } else {
+                    // We're at the limit, so see if the entire string fits.
+                    auto max2 = max + w;
+                    auto pos2 = pos + 1;
+                    while (pos2 < line.size()) {
+                        pos2 += skip_escapes(line, pos2);
+                        max2 += fish_wcwidth(line[pos2]);
+                        pos2++;
+                    }
+
+                    if (max2 <= ourmax) {
+                        // We're at the end and everything fits,
+                        // no ellipsis.
+                        pos = pos2;
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (opts.quiet && pos != line.size()) {
+            return STATUS_CMD_OK;
+        }
+
+        if (pos == line.size()) {
+            streams.out.append(line);
+            streams.out.append(L'\n');
+        } else {
+            nsub++;
+            wcstring newl = line.substr(0, pos);
+            newl.append(ell);
+            newl.push_back(L'\n');
+            streams.out.append(newl);
+        }
+    }
+
+    // Return true if we have shortened something and false otherwise.
+    return nsub > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     opts.chars_to_trim_valid = true;
@@ -1744,12 +1907,12 @@ static constexpr const struct string_subcommand {
     int (*handler)(parser_t &, io_streams_t &, int argc,  //!OCLINT(unused param)
                    const wchar_t **argv);                 //!OCLINT(unused param)
 } string_subcommands[] = {
-    {L"collect", &string_collect}, {L"escape", &string_escape}, {L"join", &string_join},
-    {L"join0", &string_join0},     {L"length", &string_length}, {L"lower", &string_lower},
-    {L"match", &string_match},     {L"pad", &string_pad},       {L"repeat", &string_repeat},
-    {L"replace", &string_replace}, {L"split", &string_split},   {L"split0", &string_split0},
-    {L"sub", &string_sub},         {L"trim", &string_trim},     {L"unescape", &string_unescape},
-    {L"upper", &string_upper},
+    {L"collect", &string_collect},   {L"escape", &string_escape},   {L"join", &string_join},
+    {L"join0", &string_join0},       {L"length", &string_length},   {L"lower", &string_lower},
+    {L"match", &string_match},       {L"pad", &string_pad},         {L"repeat", &string_repeat},
+    {L"replace", &string_replace},   {L"shorten", &string_shorten}, {L"split", &string_split},
+    {L"split0", &string_split0},     {L"sub", &string_sub},         {L"trim", &string_trim},
+    {L"unescape", &string_unescape}, {L"upper", &string_upper},
 };
 ASSERT_SORTED_BY_NAME(string_subcommands);
 }  // namespace

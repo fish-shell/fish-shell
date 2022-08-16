@@ -56,3 +56,8 @@ complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a pad
 complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] pad" -s r -l right -d "Pad right instead of left"
 complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] pad" -s c -l char -x -d "Character to use for padding"
 complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] pad" -s w -l width -x -d "Integer width of the result, default is maximum width of inputs"
+complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a shorten
+complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] shorten" -s l -l left -d "Remove from the left on"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] shorten" -s c -l char -x -d "Characters to use as ellipsis"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] shorten" -s m -l max -x -d "Integer width of the result, default is minimum non-zero width of inputs"
+complete -f -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] shorten" -s N -l no-newline -d "Only keep one line of each input"

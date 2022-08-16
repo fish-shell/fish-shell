@@ -324,10 +324,10 @@ function fish_git_prompt --description "Prompt function for Git"
     end
 
     set b (string replace refs/heads/ '' -- $b)
-    set -q __fish_git_prompt_shorten_branch_char_suffix
-    or set -l __fish_git_prompt_shorten_branch_char_suffix "…"
-    if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"; and test (string length "$b") -gt $__fish_git_prompt_shorten_branch_len
-        set b (string sub -l "$__fish_git_prompt_shorten_branch_len" "$b")"$__fish_git_prompt_shorten_branch_char_suffix"
+    if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"
+        set -q __fish_git_prompt_shorten_branch_char_suffix
+        and set -l char -c "$__fish_git_prompt_shorten_branch_char_suffix"
+        set b (string shorten -m "$__fish_git_prompt_shorten_branch_len" $char -- "$b")
     end
     if test -n "$b"
         set b "$branch_color$b$branch_done"
@@ -486,8 +486,9 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
             if test $status -ne 0
                 # Shorten the sha ourselves to 8 characters - this should be good for most repositories,
                 # and even for large ones it should be good for most commits
+                # No need for an ellipsis.
                 if set -q sha
-                    set branch (string match -r '^.{8}' -- $sha)…
+                    set branch (string shorten -m8 -c "" -- $sha)
                 else
                     set branch unknown
                 end

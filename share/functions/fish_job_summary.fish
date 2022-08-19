@@ -24,16 +24,8 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
         return
     end
 
-    set -l ellipsis '...'
-    if string match -iqr 'utf.?8' -- $LANG
-        set ellipsis \u2026
-    end
-
     set -l max_cmd_len 32
-    if test (string length $cmd_line) -gt $max_cmd_len
-        set -l truncated_len (math $max_cmd_len - (string length $ellipsis))
-        set cmd_line (string trim (string sub -l $truncated_len $cmd_line))$ellipsis
-    end
+    set cmd_line (string shorten -m$max_cmd_len -- $cmd_line)
 
     if test $is_foreground -eq 0; and test $signal_or_end_name != STOPPED
         # Add a newline *before* our message so we get the message after the commandline.

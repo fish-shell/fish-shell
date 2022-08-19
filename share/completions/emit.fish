@@ -1,1 +1,1 @@
-complete -c emit -s h -l help -d "Display help"
+complete -c emit -s h -l help -d "Display help and exit"

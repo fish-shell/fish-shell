@@ -8,9 +8,9 @@ complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a upper
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a length
 complete -f -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] length" -s V -l visible -d "Use the visible width, excluding escape sequences"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a sub
-complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] sub" -s s -l start -xa "(seq 1 10)"
-complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] sub" -s e -l end -xa "(seq 1 10)"
-complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] sub" -s l -l length -xa "(seq 1 10)"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] sub" -s s -l start -xa "(seq 1 10)" -d "Sepcify start index"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] sub" -s e -l end -xa "(seq 1 10)" -d "Sepcify end index"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2" -n "contains -- (commandline -opc)[2] sub" -s l -l length -xa "(seq 1 10)" -d "Sepcify substring length"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a split
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a split0
 complete -x -c string -n 'test (count (commandline -opc)) -ge 2' -n 'string match -qr split0\?\$ -- (commandline -opc)[2]' -s m -l max -a "(seq 1 10)" -d "Specify maximum number of splits"

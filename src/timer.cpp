@@ -194,11 +194,7 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
     return output;
 };
 
-static std::vector<timer_snapshot_t> active_timers;
-
-static void pop_timer() {
-    auto t1 = active_timers.back();
-    active_timers.pop_back();
+static void timer_finished(const timer_snapshot_t &t1) {
     auto t2 = timer_snapshot_t::take();
 
     // Well, this is awkward. By defining `time` as a decorator and not a built-in, there's
@@ -209,6 +205,7 @@ static void pop_timer() {
 
 cleanup_t push_timer(bool enabled) {
     if (!enabled) return {[] {}};
-    active_timers.emplace_back(timer_snapshot_t::take());
-    return {[] { pop_timer(); }};
+
+    auto t1 = timer_snapshot_t::take();
+    return {[=] { timer_finished(t1); }};
 }

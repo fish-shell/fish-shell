@@ -214,8 +214,8 @@ extern const wcstring g_empty_string;
 /// stdio functions and should be writing the message to stderr rather than stdout. Second, if
 /// possible it is useful to provide additional context such as a stack backtrace.
 #undef assert
-#define assert(e) (e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, 0)
-#define assert_with_errno(e) (e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, errno)
+#define assert(e) likely(e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, 0)
+#define assert_with_errno(e) likely(e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, errno)
 #define DIE(msg) __fish_assert(msg, __FILE__, __LINE__, 0)
 #define DIE_WITH_ERRNO(msg) __fish_assert(msg, __FILE__, __LINE__, errno)
 /// This macro is meant to be used with functions that return zero on success otherwise return an

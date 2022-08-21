@@ -1,13 +1,23 @@
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "history_file.h"
 
+#include <ctype.h>
+#include <errno.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <cstdlib>
 #include <cstring>
+#include <cstdint>
+#include <cstdio>
+#include <cwchar>
+#include <utility>
 
 #include "common.h"
-#include "fds.h"
 #include "history.h"
 #include "path.h"
+#include "wutil.h"
 
 // Some forward declarations.
 static history_item_t decode_item_fish_2_0(const char *base, size_t len);

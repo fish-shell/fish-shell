@@ -4,11 +4,15 @@
 #define FISH_INPUT_H
 
 #include <stddef.h>
+#include <unistd.h>
 
+#include <functional>
+#include <memory>
 #include <vector>
 
 #include "common.h"
 #include "input_common.h"
+#include "maybe.h"
 
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 #define DEFAULT_BIND_MODE L"default"

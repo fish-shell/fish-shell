@@ -39,8 +39,8 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stdio.h>
+#include <stddef.h>
 
-#include <cstring>
 #include <cwchar>
 
 // This version of `getopt' appears to the caller like standard Unix `getopt' but it behaves

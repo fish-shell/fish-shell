@@ -1,12 +1,9 @@
 // String expansion functions. These functions perform several kinds of parameter expansion.
-// IWYU pragma: no_include <cstddef>
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <errno.h>
 #include <pwd.h>
 #include <stdarg.h>
-#include <stddef.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <wctype.h>
 
@@ -16,20 +13,11 @@
 #ifdef SunOS
 #include <procfs.h>
 #endif
-#ifdef __APPLE__
-#include <sys/time.h>  // Required to build with old SDK versions
-// proc.h needs to be included *after* time.h, this comment stops clang-format from reordering.
-#include <sys/proc.h>
-#else
-#include <dirent.h>
-#include <sys/stat.h>
-#endif
 
 #include <algorithm>
-#include <functional>
 #include <map>
-#include <memory>  // IWYU pragma: keep
-#include <type_traits>
+#include <memory>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -40,13 +28,10 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "history.h"
-#include "iothread.h"
+#include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_util.h"
-#include "parser.h"
 #include "path.h"
-#include "proc.h"
-#include "reader.h"
 #include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"

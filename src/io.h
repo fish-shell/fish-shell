@@ -1,23 +1,20 @@
 #ifndef FISH_IO_H
 #define FISH_IO_H
 
-#include <pthread.h>
 #include <stdarg.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include <unistd.h>
 
-#include <atomic>
+#include <cstdint>
+#include <cwchar>
 #include <future>
 #include <memory>
-#include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "common.h"
-#include "env.h"
 #include "fds.h"
-#include "flog.h"
 #include "global_safety.h"
-#include "maybe.h"
 #include "redirection.h"
 
 using std::shared_ptr;
@@ -238,7 +235,6 @@ class io_pipe_t final : public io_data_t {
 };
 
 class io_buffer_t;
-class io_chain_t;
 
 /// Represents filling an io_buffer_t. Very similar to io_pipe_t.
 class io_bufferfill_t final : public io_data_t {
@@ -274,8 +270,6 @@ class io_bufferfill_t final : public io_data_t {
     /// of the buffer. \return the buffer.
     static separated_buffer_t finish(std::shared_ptr<io_bufferfill_t> &&filler);
 };
-
-class output_stream_t;
 
 /// An io_buffer_t is a buffer which can populate itself by reading from an fd.
 /// It is not an io_data_t.

@@ -2,11 +2,9 @@
 #include "config.h"
 
 #include <errno.h>
-#include <wctype.h>
 
-#include <cwchar>
 #if HAVE_TERM_H
-#include <curses.h>
+#include <curses.h> // IWYU pragma: keep
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
@@ -14,7 +12,6 @@
 #include <termios.h>
 
 #include <algorithm>
-#include <atomic>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,10 +21,10 @@
 #include "env.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "global_safety.h"
 #include "input.h"
 #include "input_common.h"
-#include "io.h"
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"

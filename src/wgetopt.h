@@ -41,8 +41,6 @@ Cambridge, MA 02139, USA.  */
 #ifndef FISH_WGETOPT_H
 #define FISH_WGETOPT_H
 
-#include <stddef.h>
-
 /// Instanced getopt() wrapper.
 class wgetopter_t {
    public:

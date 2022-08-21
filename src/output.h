@@ -5,11 +5,14 @@
 #ifndef FISH_OUTPUT_H
 #define FISH_OUTPUT_H
 
-#include <stddef.h>
-
+#include <cstdint>
+#include <cstring>
+#include <cwchar>
+#include <string>
 #include <vector>
 
 #include "color.h"
+#include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 
 class env_var_t;

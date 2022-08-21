@@ -2,16 +2,17 @@
 #define FISH_ENV_UNIVERSAL_COMMON_H
 #include "config.h"  // IWYU pragma: keep
 
-#include <pthread.h>
-#include <stdio.h>
-
+#include <cstdint>
 #include <memory>
+#include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "common.h"
 #include "env.h"
 #include "fds.h"
+#include "maybe.h"
 #include "wutil.h"
 
 /// Callback data, reflecting a change in universal variables.

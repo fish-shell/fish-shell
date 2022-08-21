@@ -8,23 +8,27 @@
 
 #include <algorithm>
 #include <cwchar>
+#include <functional>
+#include <iterator>
 #include <memory>
+#include <string>
+#include <type_traits>
 #include <utility>
 
 #include "ast.h"
 #include "common.h"
+#include "complete.h"
 #include "env.h"
 #include "event.h"
 #include "expand.h"
+#include "fds.h" 
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "function.h"
 #include "job_group.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
-#include "parse_util.h"
 #include "proc.h"
-#include "reader.h"
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 

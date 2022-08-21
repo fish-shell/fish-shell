@@ -4,38 +4,33 @@
 #include <arpa/inet.h>  // IWYU pragma: keep
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 // We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
 // on a Linux system.
-#include <limits.h>
 #include <netinet/in.h>  // IWYU pragma: keep
 #include <sys/ioctl.h>   // IWYU pragma: keep
-#if !defined(__APPLE__) && !defined(__CYGWIN__)
-#include <pwd.h>
-#endif
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#include <cstring>
 #ifdef __CYGWIN__
 #include <sys/mman.h>
 #endif
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>  // IWYU pragma: keep
 #endif
-#include <signal.h>
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
+#include <pwd.h>
+#endif
 #include <sys/stat.h>
 #include <sys/time.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
-#include <unistd.h>
 
-#include <atomic>
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
 #include <cwchar>
-#include <map>
+#include <functional>
 #include <string>
-#include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 #include "common.h"
@@ -44,7 +39,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "path.h"
-#include "signal.h"
 #include "utf8.h"
 #include "util.h"  // IWYU pragma: keep
 #include "wcstringutil.h"

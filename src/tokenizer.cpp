@@ -10,13 +10,11 @@
 #include <wctype.h>
 
 #include <cwchar>
-#include <string>
-#include <type_traits>
+#include <vector>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
-#include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // _(s) is already wgettext(s).c_str(), so let's not convert back to wcstring

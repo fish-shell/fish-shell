@@ -10,21 +10,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <paths.h>
 #include <pthread.h>
 #include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wctype.h>
 
-#include <cstring>
-#include <cwchar>
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
@@ -35,21 +26,21 @@
 #endif
 
 #include <algorithm>
-#include <atomic>
-#include <memory>  // IWYU pragma: keep
-#include <type_traits>
+#include <csignal>
+#include <cstring>
+#include <cstdlib>
+#include <cwchar>
+#include <memory>
 
 #include "common.h"
-#include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "future_feature_flags.h"
 #include "global_safety.h"
 #include "iothread.h"
-#include "parser.h"
-#include "proc.h"
 #include "signal.h"
+#include "topic_monitor.h"
 #include "termsize.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
@@ -57,10 +48,10 @@
 
 // Keep after "common.h"
 #ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>
+#include <sys/sysctl.h> // IWYU pragma: keep
 #endif
 #if defined(__APPLE__)
-#include <mach-o/dyld.h>
+#include <mach-o/dyld.h> // IWYU pragma: keep
 #endif
 
 struct termios shell_modes;

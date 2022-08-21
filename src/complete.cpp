@@ -7,43 +7,45 @@
 
 #include "complete.h"
 
-#include <pthread.h>
 #include <pwd.h>
-#include <stddef.h>
 #include <wctype.h>
 
 #include <algorithm>
-#include <atomic>
+
 #include <cstddef>
 #include <cwchar>
 #include <forward_list>
 #include <functional>
 #include <iterator>
+#include <map>
 #include <memory>
-#include <numeric>
+#include <mutex>
 #include <set>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "autoload.h"
 #include "builtin.h"
 #include "common.h"
+#include "enum_set.h"
 #include "env.h"
 #include "exec.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "function.h"
+#include "global_safety.h"
 #include "history.h"
-#include "iothread.h"
+#include "maybe.h"
+#include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "parser_keywords.h"
 #include "path.h"
-#include "proc.h"
-#include "reader.h"
+#include "tokenizer.h"
 #include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"

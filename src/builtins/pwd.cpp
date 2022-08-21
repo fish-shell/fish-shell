@@ -3,12 +3,17 @@
 
 #include "pwd.h"
 
+#include <cerrno>
 #include <cstring>
+#include <string>
+#include <utility>
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep

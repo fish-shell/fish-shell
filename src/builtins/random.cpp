@@ -3,7 +3,6 @@
 
 #include "random.h"
 
-#include <algorithm>
 #include <cerrno>
 #include <cstdint>
 #include <cwchar>
@@ -13,6 +12,7 @@
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
 /// \return a random-seeded engine.

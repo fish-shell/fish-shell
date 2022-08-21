@@ -1,17 +1,18 @@
 // Functions for executing the eval builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <cerrno>
-#include <cstddef>
+#include <unistd.h>
+
+#include <memory>
+#include <utility>
 
 #include "../builtin.h"
 #include "../common.h"
-#include "../exec.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
-#include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
 /// Implementation of eval builtin.

@@ -2,17 +2,10 @@
 #ifndef FISH_PARSE_PRODUCTIONS_H
 #define FISH_PARSE_PRODUCTIONS_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include <sys/types.h>
-
-#include <deque>
 #include <memory>
-#include <vector>
 
 #include "ast.h"
 #include "common.h"
-#include "maybe.h"
 #include "parse_constants.h"
 #include "tokenizer.h"
 
@@ -50,10 +43,6 @@ const wchar_t *token_type_description(parse_token_type_t type);
 const wchar_t *keyword_description(parse_keyword_t type);
 
 parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err);
-
-namespace ast {
-class ast_t;
-}
 
 /// A type wrapping up a parse tree and the original source behind it.
 struct parsed_source_t : noncopyable_t, nonmovable_t {

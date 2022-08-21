@@ -3,16 +3,16 @@
 #ifndef FISH_FDS_H
 #define FISH_FDS_H
 
-#include "config.h"  // IWYU pragma: keep
+#include "config.h" // IWYU pragma: keep
 
-#include <poll.h>
-#include <sys/select.h>
+#include <poll.h> // IWYU pragma: keep
+#include <sys/select.h> // IWYU pragma: keep
 #include <sys/types.h>
 
-#include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <string>
-#include <vector>
+#include <utility>
 
 #include "common.h"
 #include "maybe.h"

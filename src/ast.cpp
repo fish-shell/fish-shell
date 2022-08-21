@@ -3,12 +3,18 @@
 #include "ast.h"
 
 #include <array>
+#include <algorithm>
+#include <cstdarg>
+#include <cstdlib>
+#include <string>
 
 #include "common.h"
+#include "enum_map.h"
 #include "flog.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
-#include "wutil.h"
+#include "tokenizer.h"
+#include "wutil.h" // IWYU pragma: keep
 
 namespace {
 

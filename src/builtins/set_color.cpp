@@ -3,11 +3,12 @@
 
 #include "set_color.h"
 
-#include <cstddef>
+#include <unistd.h>
+
 #include <cstdlib>
 
 #if HAVE_CURSES_H
-#include <curses.h>
+#include <curses.h> // IWYU pragma: keep
 #elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -19,7 +20,6 @@
 #include <ncurses/term.h>
 #endif
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -27,8 +27,10 @@
 #include "../color.h"
 #include "../common.h"
 #include "../env.h"
+#include "../fallback.h" // IWYU pragma: keep
+#include "../io.h"
+#include "../maybe.h"
 #include "../output.h"
-#include "../parser.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

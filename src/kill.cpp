@@ -6,12 +6,10 @@
 
 #include "kill.h"
 
-#include <stddef.h>
-
 #include <algorithm>
 #include <list>
-#include <memory>
 #include <string>
+#include <utility>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

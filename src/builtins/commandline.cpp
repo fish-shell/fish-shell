@@ -3,15 +3,19 @@
 
 #include "commandline.h"
 
+#include <algorithm>
 #include <cerrno>
-#include <cstddef>
-#include <cstdlib>
 #include <cwchar>
+#include <string>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
+#include "../io.h"
+#include "../maybe.h"
 #include "../input.h"
+#include "../input_common.h"
+#include "../parse_constants.h"
 #include "../parse_util.h"
 #include "../parser.h"
 #include "../proc.h"
@@ -19,8 +23,6 @@
 #include "../tokenizer.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
-
-class parser_t;
 
 /// Which part of the comandbuffer are we operating on.
 enum {

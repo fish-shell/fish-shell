@@ -3,14 +3,13 @@
 
 #include "contains.h"
 
-#include <unistd.h>
-
 #include <cwchar>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

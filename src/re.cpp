@@ -1,5 +1,8 @@
 #include "config.h"  // IWYU pragma: keep
 
+#include <algorithm>
+#include <cstdint>
+
 #include "re.h"
 
 #include "flog.h"

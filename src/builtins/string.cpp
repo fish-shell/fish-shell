@@ -6,15 +6,11 @@
 #include <climits>
 #include <cstdarg>
 #include <cstddef>
-#include <cstdint>
-#include <cstdlib>
 #include <cwchar>
 #include <cwctype>
-#include <functional>
-#include <iterator>
+#include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -23,6 +19,8 @@
 #include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../future_feature_flags.h"
+#include "../io.h"
+#include "../maybe.h"
 #include "../parse_util.h"
 #include "../parser.h"
 #include "../re.h"

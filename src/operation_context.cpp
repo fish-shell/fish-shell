@@ -1,8 +1,9 @@
 // Utilities for io redirection.
 #include "config.h"  // IWYU pragma: keep
 
-#include "operation_context.h"
+#include <utility>
 
+#include "operation_context.h"
 #include "env.h"
 
 bool no_cancel() { return false; }

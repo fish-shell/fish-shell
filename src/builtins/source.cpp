@@ -8,14 +8,19 @@
 #include <unistd.h>
 
 #include <cwchar>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
+#include "../fds.h"
 #include "../io.h"
+#include "../maybe.h"
+#include "../null_terminated_array.h"
 #include "../parser.h"
-#include "../proc.h"
 #include "../reader.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

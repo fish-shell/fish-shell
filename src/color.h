@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <string>
+#include <cstdint>
 
 #include "common.h"
 

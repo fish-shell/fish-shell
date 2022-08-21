@@ -4,51 +4,52 @@
 // performed have been massive.
 #include "config.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-#include <signal.h>
-#ifdef HAVE_SPAWN_H
-#include <spawn.h>
-#endif
 #include <paths.h>
 #include <stdio.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <cstring>
+#include <cstdint>
+#include <cstdlib>
 #include <functional>
+#include <initializer_list>
 #include <map>
 #include <memory>
-#include <stack>
 #include <string>
-#include <type_traits>
 #include <vector>
+#include <utility>
 
+#include "ast.h"
 #include "builtin.h"
 #include "common.h"
 #include "env.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "flog.h"
 #include "function.h"
+#include "global_safety.h"
 #include "io.h"
 #include "iothread.h"
 #include "job_group.h"
+#include "maybe.h"
 #include "null_terminated_array.h"
 #include "parse_tree.h"
 #include "parser.h"
-#include "path.h"
 #include "postfork.h"
 #include "proc.h"
 #include "reader.h"
 #include "redirection.h"
-#include "signal.h"
 #include "timer.h"
 #include "trace.h"
+#include "wait_handle.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 

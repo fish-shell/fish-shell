@@ -4,11 +4,10 @@
 #include "color.h"
 
 #include <algorithm>
-#include <cstddef>
+#include <iterator>
 #include <cstdint>
 #include <cstdlib>
 #include <cwchar>  // IWYU pragma: keep
-#include <cwctype>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

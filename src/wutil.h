@@ -2,19 +2,19 @@
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H
 
+#include "config.h" // IWYU pragma: keep
+
 #include <dirent.h>
-#include <locale.h>
 #include <stddef.h>
-#include <stdio.h>
+#include <stdint.h>
 #include <sys/types.h>
-#include <time.h>
-#include <wctype.h>
 
+#include <ctime>
+#include <functional>
+#include <limits>
+#include <locale>
+#include <memory>
 #include <string>
-
-#ifdef HAVE_XLOCALE_H
-#include <xlocale.h>
-#endif
 
 #include "common.h"
 #include "maybe.h"

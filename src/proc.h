@@ -5,23 +5,27 @@
 #define FISH_PROC_H
 #include "config.h"  // IWYU pragma: keep
 
-#include <signal.h>
-#include <stddef.h>
 #include <sys/time.h>  // IWYU pragma: keep
 #include <sys/wait.h>  // IWYU pragma: keep
-#include <unistd.h>
 
+#include <atomic>
+#include <cstdint>
+#include <cstdlib>
 #include <deque>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "common.h"
-#include "event.h"
-#include "global_safety.h"
-#include "io.h"
+#include "job_group.h"
+#include "maybe.h"
 #include "parse_tree.h"
+#include "redirection.h"
 #include "topic_monitor.h"
 #include "wait_handle.h"
+
+struct statuses_t;
 
 /// Types of processes.
 enum class process_type_t : uint8_t {
@@ -54,7 +58,6 @@ namespace ast {
 struct statement_t;
 }
 
-class job_group_t;
 using job_group_ref_t = std::shared_ptr<job_group_t>;
 
 /// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
@@ -235,7 +238,6 @@ class tty_transfer_t : nonmovable_t, noncopyable_t {
 ///
 /// If the process is of type process_type_t::function, argv is the argument vector, and argv[0] is
 /// the name of the shellscript function.
-class parser_t;
 class process_t : noncopyable_t {
    public:
     process_t();
@@ -342,6 +344,7 @@ class process_t : noncopyable_t {
 
 using process_ptr_t = std::unique_ptr<process_t>;
 using process_list_t = std::vector<process_ptr_t>;
+class parser_t;
 
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t : noncopyable_t {
@@ -548,7 +551,6 @@ void set_job_control_mode(job_control_t mode);
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If \p interactive is set, allow removing interactive jobs; otherwise skip them.
 /// \return whether text was printed to stdout.
-class parser_t;
 bool job_reap(parser_t &parser, bool interactive);
 
 /// \return the list of background jobs which we should warn the user about, if the user attempts to

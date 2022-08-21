@@ -6,29 +6,22 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <cstddef>
-#include <cwchar>
-#include <map>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
-#include "../complete.h"
 #include "../env.h"
 #include "../event.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../function.h"
 #include "../highlight.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../parser_keywords.h"
-#include "../proc.h"
-#include "../signal.h"
 #include "../termsize.h"
-#include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

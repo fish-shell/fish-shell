@@ -5,19 +5,18 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <cstring>
 #include <cwchar>
+#include <functional>
 
 #include "common.h"
-#include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fd_monitor.h"
-#include "iothread.h"
+#include "flog.h"
+#include "maybe.h"
 #include "path.h"
 #include "redirection.h"
 #include "wutil.h"  // IWYU pragma: keep

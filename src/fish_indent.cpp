@@ -23,18 +23,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <wctype.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <cstring>
+#include <cwctype>
 #include <cwchar>
 #include <memory>
-#include <stack>
 #include <string>
-#include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ast.h"
-#include "color.h"
 #include "common.h"
 #include "env.h"
 #include "expand.h"
@@ -42,12 +43,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fish_version.h"
 #include "flog.h"
 #include "future_feature_flags.h"
+#include "global_safety.h"
 #include "highlight.h"
+#include "maybe.h"
 #include "operation_context.h"
-#include "output.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "print_help.h"
+#include "tokenizer.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 

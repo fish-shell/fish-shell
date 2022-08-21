@@ -2,10 +2,7 @@
 #ifndef FISH_FUTURE_FEATURE_FLAGS_H
 #define FISH_FUTURE_FEATURE_FLAGS_H
 
-#include <assert.h>
-
 #include <atomic>
-#include <unordered_map>
 
 #include "common.h"
 

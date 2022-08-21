@@ -4,8 +4,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <memory>
+#include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "common.h"

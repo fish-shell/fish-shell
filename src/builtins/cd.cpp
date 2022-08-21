@@ -4,18 +4,23 @@
 #include "cd.h"
 
 #include <fcntl.h>
-#include <sys/stat.h>
+#include <unistd.h>
 
 #include <cerrno>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
+#include "../fds.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../path.h"
-#include "../proc.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
 /// The cd builtin. Changes the current directory to the one specified or to $HOME if none is

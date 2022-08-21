@@ -2,14 +2,12 @@
 #ifndef FISH_HISTORY_H
 #define FISH_HISTORY_H
 
-// IWYU pragma: no_include <cstddef>
-#include <pthread.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <wctype.h>
 
+#include <algorithm>
 #include <deque>
 #include <memory>
 #include <string>
@@ -19,6 +17,7 @@
 #include <vector>
 
 #include "common.h"
+#include "maybe.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 struct io_streams_t;

@@ -1,50 +1,42 @@
 // History functions, part of the user interface.
 #include "config.h"  // IWYU pragma: keep
 
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <pthread.h>
-#include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-#include <cstdint>
 #include <cstring>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 #include <sys/stat.h>
 #include <unistd.h>
-#include <wctype.h>
 
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <cwchar>
 #include <functional>
 #include <iterator>
 #include <map>
-#include <numeric>
 #include <random>
-#include <type_traits>
 #include <unordered_set>
 
 #include "ast.h"
 #include "common.h"
 #include "env.h"
+#include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "flog.h"
 #include "global_safety.h"
 #include "history.h"
 #include "history_file.h"
 #include "io.h"
 #include "iothread.h"
+#include "operation_context.h"
 #include "lru.h"
 #include "parse_constants.h"
 #include "parse_util.h"
-#include "parser.h"
 #include "path.h"
-#include "reader.h"
 #include "wcstringutil.h"
 #include "wildcard.h"  // IWYU pragma: keep
 #include "wutil.h"     // IWYU pragma: keep

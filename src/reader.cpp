@@ -13,37 +13,37 @@
 // end of the list is reached, at which point regular searching will commence.
 #include "config.h"
 
-// IWYU pragma: no_include <type_traits>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-#include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <time.h>
 
 #include <cstring>
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
-#include <sys/time.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
-#include <time.h>
 #include <unistd.h>
 #include <wctype.h>
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cctype>
+#include <cmath>
 #include <csignal>
+#include <cstdint>
+#include <cstdlib>
 #include <cwchar>
+#include <deque>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <set>
-#include <stack>
+#include <type_traits>
 
 #include "ast.h"
 #include "color.h"
@@ -54,6 +54,7 @@
 #include "exec.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "flog.h"
 #include "function.h"
 #include "global_safety.h"
@@ -64,9 +65,11 @@
 #include "io.h"
 #include "iothread.h"
 #include "kill.h"
+#include "operation_context.h"
 #include "output.h"
 #include "pager.h"
 #include "parse_constants.h"
+#include "parse_tree.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "proc.h"
@@ -76,6 +79,7 @@
 #include "termsize.h"
 #include "tokenizer.h"
 #include "wildcard.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Name of the variable that tells how long it took, in milliseconds, for the previous
@@ -3903,7 +3907,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (make_uppercase) {
                     chr = towupper(chr);
                 } else {
-                    chr = tolower(chr);
+                    chr = std::tolower(chr);
                 }
 
                 replacement.push_back(chr);
@@ -3935,7 +3939,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     if (make_uppercase) {
                         chr = towupper(chr);
                     } else {
-                        chr = tolower(chr);
+                        chr = std::tolower(chr);
                     }
 
                     replacement.push_back(chr);

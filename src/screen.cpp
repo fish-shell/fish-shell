@@ -4,21 +4,20 @@
 // keeping an internal representation of the current screen contents and trying to find the most
 // efficient way for transforming that to the desired screen content.
 //
-// IWYU pragma: no_include <cstddef>
 #include "config.h"
 
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
-#include <time.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <cstring>
 #include <cwchar>
 
 #if HAVE_CURSES_H
-#include <curses.h>
+#include <curses.h> // IWYU pragma: keep
 #elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -38,10 +37,12 @@
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
+#include "global_safety.h"
 #include "highlight.h"
 #include "output.h"
 #include "pager.h"
 #include "screen.h"
+#include "termsize.h"
 
 /// The number of characters to indent new blocks.
 #define INDENT_STEP 4u

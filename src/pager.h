@@ -4,15 +4,16 @@
 
 #include <stddef.h>
 
-#include <memory>
 #include <string>
 #include <vector>
 
 #include "common.h"
 #include "complete.h"
+#include "highlight.h"
 #include "reader.h"
 #include "screen.h"
-#include "termsize.h"
+
+struct termsize_t;
 
 #define PAGER_SELECTION_NONE static_cast<size_t>(-1)
 
@@ -60,8 +61,6 @@ enum class selection_motion_t {
 
 // How many rows we will show in the "initial" pager.
 #define PAGER_UNDISCLOSED_MAX_ROWS 4
-
-struct highlight_spec_t;
 
 class pager_t {
     size_t available_term_width{0};

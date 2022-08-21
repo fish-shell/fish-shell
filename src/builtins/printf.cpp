@@ -52,21 +52,22 @@
 
 #include "printf.h"
 
-#include <sys/types.h>
-
 #include <cerrno>
 #include <climits>
-#include <clocale>
 #include <cstdarg>
-#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 #include <cwchar>
 #include <cwctype>
+#include <locale>
+#ifdef HAVE_XLOCALE_H
+#include <xlocale.h>
+#endif
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../io.h"
+#include "../maybe.h"
 #include "../wcstringutil.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

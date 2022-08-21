@@ -3,17 +3,24 @@
 
 #include "status.h"
 
-#include <cstddef>
+#include <unistd.h>
+
+#include <algorithm>
+#include <cerrno>
 #include <cstring>
 #include <cwchar>
+#include <limits>
+#include <memory>
 #include <string>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../enum_map.h"
+#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../future_feature_flags.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../wgetopt.h"

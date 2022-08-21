@@ -6,26 +6,28 @@
 
 #include <dirent.h>
 #include <errno.h>
-#include <stddef.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cwchar>
-#include <memory>
+#include <functional>
 #include <string>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "common.h"
 #include "complete.h"
+#include "enum_set.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
+#include "maybe.h"
 #include "path.h"
-#include "reader.h"
 #include "wcstringutil.h"
-#include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Finds an internal (ANY_STRING, etc.) style wildcard, or wcstring::npos.

@@ -4,14 +4,16 @@
 #include "bg.h"
 
 #include <cerrno>
-#include <cstdlib>
+#include <deque>
 #include <memory>
+#include <sys/types.h>
 #include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../job_group.h"
 #include "../parser.h"
 #include "../proc.h"

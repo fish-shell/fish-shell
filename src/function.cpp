@@ -4,12 +4,9 @@
 //
 #include "config.h"  // IWYU pragma: keep
 
-// IWYU pragma: no_include <type_traits>
-#include <dirent.h>
-#include <pthread.h>
-#include <stddef.h>
-
 #include <algorithm>
+
+#include <cstdint>
 #include <cwchar>
 #include <map>
 #include <memory>
@@ -17,17 +14,20 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
+#include "ast.h"
 #include "autoload.h"
 #include "common.h"
+#include "complete.h"
 #include "env.h"
 #include "event.h"
-#include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "maybe.h"
+#include "parse_constants.h"
 #include "parser.h"
 #include "parser_keywords.h"
-#include "reader.h"
 #include "signal.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep

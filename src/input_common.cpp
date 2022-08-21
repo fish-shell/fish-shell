@@ -3,31 +3,26 @@
 
 #include <errno.h>
 #include <signal.h>
-#include <unistd.h>
-
-#include <cstring>
+#include <stdio.h>
+#include <sys/types.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/select.h>
-#include <sys/time.h>
-#include <sys/types.h>
 
+#include <algorithm>
+#include <climits>
+#include <cstring>
+#include <cstdlib>
 #include <cwchar>
 #include <deque>
-#include <list>
-#include <memory>
-#include <type_traits>
 #include <utility>
 
 #include "common.h"
 #include "env.h"
 #include "env_universal_common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "flog.h"
-#include "global_safety.h"
 #include "input_common.h"
 #include "iothread.h"
 #include "wutil.h"

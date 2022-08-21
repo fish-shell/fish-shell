@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <cstring>
+#include <algorithm>
 
 #include "flog.h"
 #include "wutil.h"

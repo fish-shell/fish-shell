@@ -9,13 +9,13 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wctype.h>
 
-#include <algorithm>
 #include <cwchar>
+#include <deque>
+#include <functional>
 #include <memory>
 #include <string>
-#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ast.h"
@@ -32,6 +32,7 @@
 #include "io.h"
 #include "job_group.h"
 #include "maybe.h"
+#include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
@@ -41,7 +42,6 @@
 #include "timer.h"
 #include "tokenizer.h"
 #include "trace.h"
-#include "util.h"
 #include "wildcard.h"
 #include "wutil.h"
 

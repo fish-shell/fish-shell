@@ -6,23 +6,29 @@
 #include <unistd.h>
 
 #include <cerrno>
-#include <cstddef>
-#include <cstdlib>
+#include <cwchar>
+#include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../complete.h"
+#include "../env.h"
 #include "../event.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../function.h"
 #include "../io.h"
+#include "../maybe.h"
+#include "../null_terminated_array.h"
 #include "../parser.h"
 #include "../parser_keywords.h"
+#include "../parse_tree.h"
 #include "../proc.h"
 #include "../signal.h"
+#include "../wait_handle.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

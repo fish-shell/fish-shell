@@ -3,21 +3,18 @@
 // library will call proc to create representations of the running jobs as needed.
 //
 // Some of the code in this file is based on code from the Glibc manual.
-// IWYU pragma: no_include <__bit_reference>
 #include "config.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
 #include <unistd.h>
-#include <wctype.h>
 
 #include <atomic>
 #include <cwchar>
 
 #if HAVE_TERM_H
-#include <curses.h>
+#include <curses.h> // IWYU pragma: keep
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
@@ -26,32 +23,29 @@
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
 #include <sys/time.h>  // IWYU pragma: keep
-#include <sys/types.h>
 #include <sys/wait.h>
 
 #include <algorithm>  // IWYU pragma: keep
+#include <cstring>
+#include <cstdio>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "common.h"
+#include "env.h"
+#include "fds.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "global_safety.h"
 #include "io.h"
 #include "job_group.h"
-#include "output.h"
-#include "parse_tree.h"
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "signal.h"
-#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// The signals that signify crashes to us.

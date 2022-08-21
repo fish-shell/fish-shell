@@ -3,14 +3,18 @@
 #define FISH_HIGHLIGHT_H
 
 #include <stddef.h>
-#include <stdint.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "color.h"
-#include "common.h"
-#include "env.h"
+#include "flog.h"
+
+class environment_t;
 
 /// Describes the role of a span of text.
 enum class highlight_role_t : uint8_t {

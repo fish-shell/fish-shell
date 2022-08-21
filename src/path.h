@@ -4,10 +4,10 @@
 #ifndef FISH_PATH_H
 #define FISH_PATH_H
 
-#include <stddef.h>
+#include <string>
 
 #include "common.h"
-#include "env.h"
+#include "maybe.h"
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.
@@ -39,11 +39,12 @@ dir_remoteness_t path_get_data_remoteness();
 /// Like path_get_data_remoteness but for the config directory.
 dir_remoteness_t path_get_config_remoteness();
 
+class env_stack_t;
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
-class env_stack_t;
 void path_emit_config_directory_messages(env_stack_t &vars);
 
+class environment_t;
 /// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
 /// \returns the path if found, none if not.
 maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars);

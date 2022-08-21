@@ -3,6 +3,7 @@
 #include "future_feature_flags.h"
 
 #include <cwchar>
+#include <string>
 
 #include "wcstringutil.h"
 

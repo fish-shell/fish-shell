@@ -3,11 +3,15 @@
 
 #include "autoload.h"
 
+#include <algorithm>
 #include <chrono>
+#include <functional>
+#include <utility>
+#include <vector>
 
 #include "common.h"
 #include "env.h"
-#include "exec.h"
+#include "io.h"
 #include "lru.h"
 #include "parser.h"
 #include "wutil.h"  // IWYU pragma: keep

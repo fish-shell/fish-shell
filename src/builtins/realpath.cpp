@@ -3,15 +3,15 @@
 
 #include "realpath.h"
 
-#include <cstdio>
-#include <cstdlib>
+#include <cerrno>
 #include <cstring>
-#include <cwchar>
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../path.h"
 #include "../wcstringutil.h"

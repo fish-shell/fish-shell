@@ -10,14 +10,18 @@
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif
+#include <sys/types.h>
+#include <termios.h>
 
 #include <algorithm>
-#include <atomic>
-#include <cmath>
+#include <cstdint>
+#include <cwchar>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep

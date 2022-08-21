@@ -7,7 +7,6 @@
 #include "common.h"
 
 class parser_t;
-class process_t;
 
 /// Trace an "argv": a list of arguments. Each argument is escaped.
 /// If \p command is not null, it is traced first (and not escaped)

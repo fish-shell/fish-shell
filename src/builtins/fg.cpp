@@ -3,16 +3,24 @@
 
 #include "fg.h"
 
+#include <termios.h>
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cwchar>
+#include <deque>
+#include <memory>
+#include <utility>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
+#include "../fds.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../job_group.h"
 #include "../parser.h"
 #include "../proc.h"

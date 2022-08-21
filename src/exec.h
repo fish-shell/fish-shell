@@ -2,12 +2,16 @@
 #ifndef FISH_EXEC_H
 #define FISH_EXEC_H
 
-#include <stddef.h>
+#include "config.h"
 
-#include <vector>
+#include <csignal>
+#include <memory>
 
-#include "common.h"
+#include "flog.h"
+#include "io.h"
 #include "proc.h"
+
+class parser_t;
 
 /// Execute the processes specified by \p j in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for

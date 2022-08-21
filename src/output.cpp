@@ -2,11 +2,10 @@
 #include "config.h"
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
 
-#include <cstring>
 #if HAVE_CURSES_H
-#include <curses.h>
+#include <curses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -17,10 +16,9 @@
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-#include <limits.h>
 
 #include <cwchar>
-#include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -29,6 +27,7 @@
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
+#include "maybe.h"
 #include "output.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep

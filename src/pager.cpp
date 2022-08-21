@@ -1,11 +1,13 @@
 #include "config.h"  // IWYU pragma: keep
 
-// IWYU pragma: no_include <cstddef>
 #include <stddef.h>
 #include <wctype.h>
 
 #include <algorithm>
+
+#include <cstdlib>
 #include <cwchar>
+#include <functional>
 #include <numeric>
 #include <type_traits>
 #include <unordered_map>
@@ -14,12 +16,14 @@
 #include "common.h"
 #include "complete.h"
 #include "fallback.h"
-#include "flog.h"
 #include "highlight.h"
+#include "maybe.h"
 #include "operation_context.h"
 #include "pager.h"
 #include "reader.h"
 #include "screen.h"
+#include "termsize.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 using comp_t = pager_t::comp_t;

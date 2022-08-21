@@ -4,13 +4,14 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <cassert>
+#include <cstddef>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "common.h"
-#include "env.h"
+#include "maybe.h"
 #include "wutil.h"
 
 class autoload_file_cache_t;

@@ -2,12 +2,20 @@
 
 #include "termsize.h"
 
+#include <unistd.h>
+
+#include "env.h"
+#include "flog.h"
 #include "maybe.h"
 #include "parser.h"
 #include "wcstringutil.h"
 #include "wutil.h"
 
+#include <cerrno>
+#include <climits>
+
 #ifdef HAVE_WINSIZE
+#include <sys/ioctl.h>
 #include <termios.h>
 #endif
 

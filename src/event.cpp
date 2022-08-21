@@ -4,21 +4,20 @@
 #include "event.h"
 
 #include <signal.h>
-#include <stddef.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <functional>
+#include <bitset>
 #include <memory>
 #include <string>
-#include <type_traits>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "input_common.h"
+#include "flog.h"
 #include "io.h"
+#include "maybe.h"
 #include "parser.h"
 #include "proc.h"
 #include "signal.h"

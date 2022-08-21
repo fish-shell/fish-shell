@@ -4,28 +4,25 @@
 #include <errno.h>
 #include <limits.h>
 #include <locale.h>
-#include <stddef.h>
-#include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <cwchar>
 
 #if HAVE_CURSES_H
-#include <curses.h>
+#include <curses.h> // IWYU pragma: keep
 #elif HAVE_NCURSES_H
-#include <ncurses.h>
+#include <ncurses.h> // IWYU pragma: keep
 #elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
+#include <ncurses/curses.h> // IWYU pragma: keep
 #endif
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-
-#include <assert.h>
 
 #include <algorithm>
 #include <functional>
@@ -38,8 +35,6 @@
 #include "complete.h"
 #include "env.h"
 #include "env_dispatch.h"
-#include "env_universal_common.h"
-#include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "function.h"
@@ -48,14 +43,13 @@
 #include "input_common.h"
 #include "maybe.h"
 #include "output.h"
-#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "screen.h"
 #include "termsize.h"
 #include "trace.h"
-#include "wutil.h"  // IWYU pragma: keep
-
+#include "wcstringutil.h"
+#include "wutil.h"
 
 // Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
 // fish_read_limit variable.

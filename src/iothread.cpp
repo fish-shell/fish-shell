@@ -2,28 +2,23 @@
 
 #include "iothread.h"
 
-#include <limits.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/select.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include <atomic>
-#include <condition_variable>
+#include <condition_variable> // IWYU pragma: keep
+#include <chrono>
 #include <functional>
-#include <future>
+#include <mutex>
+#include <vector>
 #include <queue>
-#include <thread>
 
 #include "common.h"
+#include "fallback.h"
 #include "fds.h"
 #include "flog.h"
-#include "global_safety.h"
-#include "wutil.h"
+#include "maybe.h"
 
 /// We just define a thread limit of 1024.
 #define IO_MAX_THREADS 1024

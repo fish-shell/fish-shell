@@ -5,40 +5,34 @@
 #include "config.h"
 
 // IWYU likes to recommend adding term.h when we want ncurses.h.
-// IWYU pragma: no_include term.h
-#include <dirent.h>  // IWYU pragma: keep
+// IWYU pragma: no_include "term.h"
 #include <errno.h>   // IWYU pragma: keep
 #include <fcntl.h>   // IWYU pragma: keep
 #include <limits.h>  // IWYU pragma: keep
-#include <stdarg.h>  // IWYU pragma: keep
-#include <stdio.h>   // IWYU pragma: keep
 #include <stdlib.h>
-#include <sys/stat.h>   // IWYU pragma: keep
-#include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
 #include <wctype.h>
 
-#include <algorithm>
 #include <cstring>
 #include <cwchar>
 #if HAVE_GETTEXT
 #include <libintl.h>
 #endif
+#if defined(TPARM_SOLARIS_KLUDGE)
 #if HAVE_CURSES_H
-#include <curses.h>
+#include <curses.h> // IWYU pragma: keep
 #elif HAVE_NCURSES_H
 #include <ncurses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
+#include <ncurses/curses.h> // IWYU pragma: keep
 #endif
 #if HAVE_TERM_H
 #include <term.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#endif
 #include <signal.h>  // IWYU pragma: keep
-
-#include <cwchar>  // IWYU pragma: keep
 
 #include "common.h"    // IWYU pragma: keep
 #include "fallback.h"  // IWYU pragma: keep
@@ -138,11 +132,11 @@ char *fish_gettext(const char *msgid) { return (char *)msgid; }
 char *fish_bindtextdomain(const char *domainname, const char *dirname) {
     UNUSED(domainname);
     UNUSED(dirname);
-    return NULL;
+    return nullptr;
 }
 char *fish_textdomain(const char *domainname) {
     UNUSED(domainname);
-    return NULL;
+    return nullptr;
 }
 #endif
 

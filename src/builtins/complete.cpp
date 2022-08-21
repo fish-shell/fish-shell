@@ -3,19 +3,21 @@
 
 #include "complete.h"
 
-#include <cstddef>
-#include <cwchar>
-#include <memory>
+#include <unistd.h>
+
+#include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "../builtin.h"
-#include "../color.h"
 #include "../common.h"
 #include "../complete.h"
 #include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../highlight.h"
+#include "../io.h"
+#include "../maybe.h"
 #include "../parse_constants.h"
 #include "../parse_util.h"
 #include "../parser.h"

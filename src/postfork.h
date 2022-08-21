@@ -5,16 +5,15 @@
 
 #include "config.h"
 
-#include <stddef.h>
-#include <unistd.h>
-
-#include "maybe.h"
 #ifdef HAVE_SPAWN_H
 #include <spawn.h>
 #endif
 #ifndef FISH_USE_POSIX_SPAWN
 #define FISH_USE_POSIX_SPAWN HAVE_SPAWN_H
 #endif
+
+#include "common.h"
+#include "maybe.h"
 
 class dup2_list_t;
 class job_t;

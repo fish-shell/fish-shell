@@ -3,11 +3,14 @@
 
 #include "emit.h"
 
+#include <utility>
+
 #include "../builtin.h"
 #include "../common.h"
 #include "../event.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
 /// Implementation of the builtin emit command, used to create events.

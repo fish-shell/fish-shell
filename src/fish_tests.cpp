@@ -1,42 +1,44 @@
 // Various bug and feature tests. Compiled and run by make test.
 #include "config.h"  // IWYU pragma: keep
 
-// IWYU pragma: no_include <cstring>
-// IWYU pragma: no_include <cstddef>
-#include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
-#include <math.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/select.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
 #include <sys/utsname.h>
-#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <wctype.h>
 
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cerrno>
+#include <clocale>
 #include <cmath>
 #include <cstring>
 #include <cwchar>
 #include <functional>
+#include <future>
+#include <initializer_list>
+#include <iterator>
+#include <limits>
+#include <list>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <thread>
+#include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -46,16 +48,18 @@
 #include "color.h"
 #include "common.h"
 #include "complete.h"
+#include "enum_set.h"
 #include "env.h"
 #include "env_universal_common.h"
-#include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "fd_monitor.h"
 #include "function.h"
 #include "future_feature_flags.h"
 #include "highlight.h"
 #include "history.h"
+#include "global_safety.h"
 #include "input.h"
 #include "input_common.h"
 #include "io.h"
@@ -63,6 +67,7 @@
 #include "kill.h"
 #include "lru.h"
 #include "maybe.h"
+#include "null_terminated_array.h"
 #include "operation_context.h"
 #include "pager.h"
 #include "parse_constants.h"
@@ -82,6 +87,7 @@
 #include "topic_monitor.h"
 #include "utf8.h"
 #include "util.h"
+#include "wait_handle.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -6629,8 +6635,8 @@ static void test_fd_event_signaller() {
 static void test_timer_format() {
     say(L"Testing timer format");
     // This test uses numeric output, so we need to set the locale.
-    char *saved_locale = strdup(setlocale(LC_NUMERIC, nullptr));
-    setlocale(LC_NUMERIC, "C");
+    char *saved_locale = strdup(std::setlocale(LC_NUMERIC, nullptr));
+    std::setlocale(LC_NUMERIC, "C");
     auto t1 = timer_snapshot_t::take();
     t1.cpu_fish.ru_utime.tv_usec = 0;
     t1.cpu_fish.ru_stime.tv_usec = 0;
@@ -6657,7 +6663,7 @@ Executed in  500.00 micros    fish         external
         err(L"Failed to format timer snapshot\nExpected: %ls\nActual:%ls\n", expected,
             actual.c_str());
     }
-    setlocale(LC_NUMERIC, saved_locale);
+    std::setlocale(LC_NUMERIC, saved_locale);
     free(saved_locale);
 }
 
@@ -7043,7 +7049,7 @@ void list_tests() {
 
 /// Main test.
 int main(int argc, char **argv) {
-    setlocale(LC_ALL, "");
+    std::setlocale(LC_ALL, "");
 
     if (argc >= 2 && std::strcmp(argv[1], "--list") == 0) {
         list_tests();

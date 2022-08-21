@@ -5,7 +5,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <atomic>
-#include <cassert>
 
 #include "common.h"
 

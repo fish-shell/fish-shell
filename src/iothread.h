@@ -2,14 +2,10 @@
 #ifndef FISH_IOTHREAD_H
 #define FISH_IOTHREAD_H
 
-#include <pthread.h>
-
 #include <cstdint>  // for uint64_t
 #include <functional>
 #include <memory>
-#include <type_traits>
-
-#include "maybe.h"
+#include <utility>
 
 /// \return the fd on which to listen for completion callbacks.
 int iothread_port();

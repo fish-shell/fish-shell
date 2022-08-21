@@ -10,19 +10,23 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <climits>
 #include <cmath>
 #include <cstdarg>
 #include <cstring>
 #include <cwchar>
 #include <cwctype>
+#include <map>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../fallback.h" // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

@@ -3,23 +3,18 @@
 
 #include "parse_tree.h"
 
-#include <stdarg.h>
 #include <stddef.h>
-#include <stdio.h>
 
-#include <algorithm>
 #include <cwchar>
 #include <string>
-#include <type_traits>
-#include <vector>
+#include <utility>
 
 #include "ast.h"
 #include "common.h"
 #include "fallback.h"
-#include "flog.h"
+#include "enum_map.h"
+#include "maybe.h"
 #include "parse_constants.h"
-#include "parse_tree.h"
-#include "proc.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 

@@ -15,18 +15,18 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cwchar>
+#include <limits>
 #include <list>
-#include <memory>
-#include <unordered_map>
-#include <unordered_set>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "common.h"
 #include "highlight.h"
+#include "maybe.h"
 #include "wcstringutil.h"
 
+class environment_t;
 class pager_t;
 class page_rendering_t;
 

@@ -1,10 +1,13 @@
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "job_group.h"
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "flog.h"
 #include "proc.h"
 
 // Basic thread safe sorted vector of job IDs in use.

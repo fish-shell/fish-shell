@@ -2,8 +2,6 @@
 #ifndef FISH_BUILTIN_SET_H
 #define FISH_BUILTIN_SET_H
 
-#include <cwchar>
-
 #include "../maybe.h"
 
 class parser_t;

@@ -5,12 +5,15 @@
 
 #include <sys/resource.h>
 
+#include <algorithm>
 #include <cerrno>
-#include <cstddef>
+#include <cwchar>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
+#include "../io.h"
+#include "../maybe.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

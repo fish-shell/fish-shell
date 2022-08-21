@@ -1,21 +1,19 @@
 // Functions for executing the jobs builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <sys/time.h>
-
 #include <cerrno>
-#include <cstddef>
+#include <deque>
+#include <memory>
 
 #include "../builtin.h"
 #include "../common.h"
-#include "../fallback.h"  // IWYU pragma: keep
+#include "../fallback.h" // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
-
-class parser_t;
 
 /// Print modes for the jobs builtin.
 enum {

@@ -3,31 +3,26 @@
 
 #include "set.h"
 
-#include <sys/stat.h>
-#include <unistd.h>
-
 #include <algorithm>
 #include <cerrno>
-#include <cstddef>
-#include <cstdlib>
-#include <cstring>
 #include <cwchar>
-#include <iterator>
+#include <functional>
+#include <map>
 #include <memory>
-#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../env.h"
 #include "../expand.h"
+#include "../event.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../history.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
-#include "../proc.h"
-#include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

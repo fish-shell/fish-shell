@@ -3,16 +3,20 @@
 #ifndef FISH_AST_H
 #define FISH_AST_H
 
-#include <array>
-#include <tuple>
+#include <cstddef>
+#include <cstdint>
+#include <initializer_list>
+#include <iterator>
+#include <memory>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
-#include "flog.h"
+#include "common.h"
+#include "maybe.h"
 #include "parse_constants.h"
-#include "tokenizer.h"
 
 namespace ast {
-
 /**
  * This defines the fish abstract syntax tree.
  * The fish ast is a tree data structure. The nodes of the tree

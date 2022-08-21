@@ -2,13 +2,20 @@
 #ifndef FISH_WCSTRINGUTIL_H
 #define FISH_WCSTRINGUTIL_H
 
+#include <limits.h>
+#include <stdint.h>
+
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
+#include <cwchar>
+#include <iterator>
+#include <limits>
 #include <string>
-#include <utility>
 
 #include "common.h"
 #include "expand.h"
+#include "maybe.h"
 
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);

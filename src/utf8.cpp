@@ -18,7 +18,6 @@
 #include "utf8.h"
 
 #include <stdint.h>  // IWYU pragma: keep
-#include <sys/types.h>
 
 #include <limits>
 #include <string>

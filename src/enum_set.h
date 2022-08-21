@@ -3,7 +3,6 @@
 
 #include <array>
 #include <bitset>
-#include <cassert>
 #include <iterator>
 
 /// A type (to specialize) that provides a count for an enum.

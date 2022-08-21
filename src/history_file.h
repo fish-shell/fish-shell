@@ -1,19 +1,18 @@
 #ifndef FISH_HISTORY_FILE_H
 #define FISH_HISTORY_FILE_H
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <sys/mman.h>
 
-#include <cassert>
 #include <ctime>
 #include <memory>
+#include <string>
 
 #include "common.h"
 #include "maybe.h"
 
 class history_item_t;
-class history_tests_t;
 
 // History file types.
 enum history_file_type_t { history_type_fish_2_0, history_type_fish_1_x };

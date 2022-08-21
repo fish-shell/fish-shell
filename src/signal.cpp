@@ -2,19 +2,19 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <stdio.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-#include <pthread.h>
+#include <unistd.h>
 
 #include <csignal>
+#include <cwchar>
+#include <mutex>
 
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "parser.h"
-#include "proc.h"
+#include "global_safety.h"
 #include "reader.h"
 #include "signal.h"
 #include "termsize.h"

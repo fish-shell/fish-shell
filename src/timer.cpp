@@ -4,21 +4,18 @@
 #include "timer.h"
 
 #include <string.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #include <algorithm>
-#include <cerrno>
 #include <chrono>
-#include <cstddef>
-#include <ctime>
+#include <cwchar>
+#include <functional>
+#include <string>
+#include <vector>
 
-#include "builtin.h"
 #include "common.h"
-#include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "io.h"
-#include "parser.h"
-#include "proc.h"
-#include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Measuring time is always complicated with many caveats. Quite apart from the typical

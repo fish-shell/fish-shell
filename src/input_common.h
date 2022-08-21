@@ -2,9 +2,12 @@
 #ifndef INPUT_COMMON_H
 #define INPUT_COMMON_H
 
-#include <stddef.h>
+#include <unistd.h>
 
-#include <queue>
+#include <cstdint>
+#include <deque>
+#include <string>
+#include <utility>
 
 #include "common.h"
 #include "maybe.h"

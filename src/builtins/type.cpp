@@ -5,19 +5,20 @@
 
 #include <unistd.h>
 
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
-#include "../complete.h"
+#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../function.h"
 #include "../highlight.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../path.h"
-#include "../signal.h"
-#include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

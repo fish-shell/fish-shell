@@ -5,11 +5,15 @@
 #ifndef FISH_COMPLETE_H
 #define FISH_COMPLETE_H
 
-#include <stdint.h>
+#include "config.h"  // IWYU pragma: keep
 
+#include <cstdint>
+#include <cstddef>
 #include <functional>
+#include <utility>
 #include <vector>
 
+//#include "expand.h"
 #include "common.h"
 #include "wcstringutil.h"
 
@@ -25,7 +29,6 @@ struct completion_mode_t {
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
 
-class environment_t;
 class parser_t;
 
 enum {
@@ -124,7 +127,6 @@ struct completion_request_options_t {
     }
 };
 
-class completion_t;
 using completion_list_t = std::vector<completion_t>;
 
 /// A completion receiver accepts completions. It is essentially a wrapper around std::vector with

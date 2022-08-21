@@ -5,20 +5,20 @@
 #include <fcntl.h>
 #include <paths.h>
 #include <signal.h>
-#include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <cstring>
-#include <memory>
 #ifdef HAVE_SPAWN_H
 #include <spawn.h>
 #endif
-#include <cwchar>
+#include <string>
+#include <vector>
 
 #include "common.h"
 #include "exec.h"
+#include "fds.h"
 #include "flog.h"
-#include "io.h"
 #include "iothread.h"
 #include "job_group.h"
 #include "postfork.h"

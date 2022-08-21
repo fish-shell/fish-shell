@@ -3,7 +3,6 @@
 
 #include "util.h"
 
-#include <errno.h>
 #include <stddef.h>
 #include <sys/time.h>
 #include <wctype.h>

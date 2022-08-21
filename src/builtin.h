@@ -2,13 +2,12 @@
 #ifndef FISH_BUILTIN_H
 #define FISH_BUILTIN_H
 
-#include <stddef.h>
-
 #include <vector>
 
 #include "common.h"
+#include "complete.h"
+#include "maybe.h"
 
-class completion_t;
 class parser_t;
 class proc_status_t;
 class output_stream_t;

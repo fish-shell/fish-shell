@@ -7,12 +7,14 @@
 #include <vector>
 
 #include "common.h"
-#include "parse_tree.h"
-#include "tokenizer.h"
+#include "maybe.h"
+#include "parse_constants.h"
 
 namespace ast {
-struct argument_t;
+    struct argument_t;
+    class ast_t;
 }
+struct tok_t;
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// \return the length of the slice starting at \p in, or 0 if there is no slice, or -1 on error.

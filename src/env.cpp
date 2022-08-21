@@ -12,14 +12,12 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <iterator>
 #include <map>
 #include <mutex>
 #include <set>
 #include <utility>
 #include <vector>
 
-#include "builtins/bind.h"
 #include "common.h"
 #include "env_dispatch.h"
 #include "env_universal_common.h"
@@ -31,6 +29,7 @@
 #include "history.h"
 #include "input.h"
 #include "kill.h"
+#include "null_terminated_array.h"
 #include "path.h"
 #include "proc.h"
 #include "reader.h"

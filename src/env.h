@@ -10,10 +10,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 #include "common.h"
 #include "maybe.h"
-#include "null_terminated_array.h"
+
+class owning_null_terminated_array_t;
 
 extern size_t read_byte_limit;
 extern bool curses_initialized;

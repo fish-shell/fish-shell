@@ -4,15 +4,13 @@
 #include "exit.h"
 
 #include <cerrno>
-#include <cstddef>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
-#include "../proc.h"
-#include "../reader.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 

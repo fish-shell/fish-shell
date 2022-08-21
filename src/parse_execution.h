@@ -4,12 +4,17 @@
 
 #include <stddef.h>
 
-#include "ast.h"
+#include <vector>
+
+#include "ast.h" // IWYU pragma: keep
 #include "common.h"
 #include "io.h"
+#include "maybe.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
 #include "proc.h"
+#include "redirection.h"
+
 
 class block_t;
 class operation_context_t;

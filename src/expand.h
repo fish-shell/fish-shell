@@ -7,8 +7,7 @@
 
 #include "config.h"
 
-#include <stddef.h>
-
+#include <initializer_list>
 #include <map>
 #include <string>
 #include <vector>
@@ -18,7 +17,6 @@
 #include "maybe.h"
 #include "parse_constants.h"
 
-class environment_t;
 class env_var_t;
 class environment_t;
 class operation_context_t;

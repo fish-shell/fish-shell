@@ -8,12 +8,15 @@
 
 #include <unistd.h>
 
-#include <map>
+#include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "common.h"
-#include "io.h"
+#include "global_safety.h"
+
+struct io_streams_t;
 
 /// The process id that is used to match any process id.
 #define EVENT_ANY_PID 0

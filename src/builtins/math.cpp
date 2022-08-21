@@ -3,11 +3,9 @@
 
 #include "math.h"
 
-#include <algorithm>
 #include <cerrno>
 #include <cmath>
-#include <cstddef>
-#include <cstring>
+#include <cwchar>
 #include <limits>
 #include <string>
 
@@ -15,6 +13,7 @@
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../tinyexpr.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep

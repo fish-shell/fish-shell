@@ -2,11 +2,13 @@
 
 #include "topic_monitor.h"
 
-#include <limits.h>
 #include <unistd.h>
+
+#include <cerrno>
 
 #include "flog.h"
 #include "iothread.h"
+#include "maybe.h"
 #include "wcstringutil.h"
 #include "wutil.h"
 

@@ -4,10 +4,12 @@
 
 #include <termios.h>
 
+
 #include <memory>
 
 #include "common.h"
 #include "global_safety.h"
+#include "maybe.h"
 
 /// A job ID, corresponding to what is printed in 'jobs'.
 /// 1 is the first valid job ID.
@@ -22,7 +24,6 @@ using job_id_t = int;
 /// they do not consume a job ID, they do not show up in job lists, and they do not have a pgid
 /// because they contain no external procs. Note that job_group_t is intended to eventually be
 /// shared between threads, and so must be thread safe.
-class job_t;
 class job_group_t;
 using job_group_ref_t = std::shared_ptr<job_group_t>;
 

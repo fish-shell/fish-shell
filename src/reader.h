@@ -5,19 +5,22 @@
 #define FISH_READER_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include <string>
+#include <memory>
 #include <vector>
+#include <utility>
 
 #include "common.h"
 #include "complete.h"
-#include "highlight.h"
+#include "maybe.h"
 #include "parse_constants.h"
 
+class env_stack_t;
 class environment_t;
 class history_t;
 class io_chain_t;
-class operation_context_t;
 class parser_t;
 
 /// An edit action that can be undone.

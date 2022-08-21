@@ -3,26 +3,30 @@
 #define FISH_PARSER_H
 
 #include <stddef.h>
-#include <unistd.h>
 
 #include <csignal>
+#include <cstdint>
+#include <deque>
 #include <list>
 #include <memory>
-#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "common.h"
+#include "env.h"
 #include "event.h"
 #include "expand.h"
+#include "job_group.h"
+#include "maybe.h"
 #include "operation_context.h"
 #include "parse_constants.h"
-#include "parse_execution.h"
 #include "parse_tree.h"
 #include "proc.h"
 #include "util.h"
 #include "wait_handle.h"
 
 class io_chain_t;
+class autoclose_fd_t;
 
 /// event_blockage_t represents a block on events.
 struct event_blockage_t {};
@@ -135,8 +139,6 @@ struct profile_item_t {
 };
 
 class parse_execution_context_t;
-class completion_t;
-struct event_t;
 
 /// Miscellaneous data used to avoid recursion and others.
 struct library_data_t {
@@ -204,7 +206,7 @@ struct library_data_t {
     filename_ref_t current_filename{};
 
     /// List of events that have been sent but have not yet been delivered because they are blocked.
-    std::vector<shared_ptr<const event_t>> blocked_events{};
+    std::vector<std::shared_ptr<const event_t>> blocked_events{};
 
     /// A stack of fake values to be returned by builtin_commandline. This is used by the completion
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
@@ -215,8 +217,6 @@ struct library_data_t {
     /// This is never null and never invalid.
     std::shared_ptr<const autoclose_fd_t> cwd_fd{};
 };
-
-class operation_context_t;
 
 /// The result of parser_t::eval family.
 struct eval_res_t {
@@ -282,7 +282,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     std::deque<profile_item_t> profile_items;
 
     /// Adds a job to the beginning of the job list.
-    void job_add(shared_ptr<job_t> job);
+    void job_add(std::shared_ptr<job_t> job);
 
     /// \return whether we are currently evaluating a function.
     bool is_function() const;

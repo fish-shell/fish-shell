@@ -22,11 +22,10 @@
 
 #include <unistd.h>
 
-#include <algorithm>
 #include <cerrno>
-#include <cstdlib>
 #include <cstring>
 #include <cwchar>
+#include <deque>
 #include <memory>
 #include <string>
 
@@ -66,12 +65,11 @@
 #include "builtins/type.h"
 #include "builtins/ulimit.h"
 #include "builtins/wait.h"
-#include "common.h"
 #include "complete.h"
-#include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "io.h"
+#include "null_terminated_array.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"

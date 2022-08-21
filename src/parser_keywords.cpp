@@ -3,6 +3,8 @@
 
 #include "parser_keywords.h"
 
+#include <cstddef>
+#include <iterator>
 #include <string>
 #include <unordered_set>
 

@@ -4,6 +4,7 @@
 #define FISH_TOKENIZER_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "common.h"
 #include "maybe.h"

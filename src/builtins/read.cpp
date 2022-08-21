@@ -3,34 +3,26 @@
 
 #include "read.h"
 
-#include <termios.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <cerrno>
-#include <climits>
-#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cwchar>
-#include <memory>
-#include <numeric>
 #include <string>
-#include <vector>
+#include <utility>
 
 #include "../builtin.h"
 #include "../common.h"
-#include "../complete.h"
 #include "../env.h"
-#include "../event.h"
 #include "../fallback.h"  // IWYU pragma: keep
-#include "../highlight.h"
-#include "../history.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
-#include "../proc.h"
 #include "../reader.h"
+#include "../tokenizer.h"
 #include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep

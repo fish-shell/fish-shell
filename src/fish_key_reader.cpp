@@ -8,10 +8,7 @@
 // Type "exit" or "quit" to terminate the program.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
 #include <getopt.h>
-#include <signal.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -19,7 +16,6 @@
 
 #include <cstring>
 #include <cwchar>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -29,6 +25,7 @@
 #include "fish_version.h"
 #include "input.h"
 #include "input_common.h"
+#include "maybe.h"
 #include "parser.h"
 #include "print_help.h"
 #include "proc.h"

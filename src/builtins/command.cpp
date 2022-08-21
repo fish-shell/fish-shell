@@ -3,14 +3,14 @@
 
 #include "command.h"
 
-#include <unistd.h>
-
 #include <string>
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../path.h"
 #include "../wgetopt.h"

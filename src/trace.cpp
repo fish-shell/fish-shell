@@ -1,6 +1,9 @@
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "trace.h"
+
+#include <deque>
+#include <string>
 
 #include "common.h"
 #include "flog.h"

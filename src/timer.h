@@ -3,15 +3,10 @@
 #define FISH_TIMER_H
 
 #include <sys/resource.h>
-#include <sys/time.h>
-#include <sys/types.h>
 
 #include <chrono>
 
 #include "common.h"
-
-class parser_t;
-struct io_streams_t;
 
 cleanup_t push_timer(bool enabled);
 

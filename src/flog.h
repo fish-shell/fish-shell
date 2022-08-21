@@ -4,19 +4,19 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <errno.h>
 #include <stdio.h>
 
+#include <cstdint>
 #include <string>
 #include <type_traits>
-#include <utility>
+#include <vector>
 
+#include "common.h"
 #include "global_safety.h"
 
 using wcstring = std::wstring;
 using wcstring_list_t = std::vector<wcstring>;
-
-template <typename T>
-class owning_lock;
 
 namespace flog_details {
 

@@ -1,6 +1,8 @@
 #ifndef FISH_OPERATION_CONTEXT_H
 #define FISH_OPERATION_CONTEXT_H
 
+#include <cstddef>
+#include <functional>
 #include <memory>
 
 #include "common.h"

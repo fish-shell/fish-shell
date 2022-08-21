@@ -18,37 +18,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #include "config.h"
 
-#include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
 #include <locale.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstring>
 #include <cwchar>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "builtin.h"
+#include "ast.h"
 #include "common.h"
 #include "env.h"
 #include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "function.h"
 #include "future_feature_flags.h"
+#include "global_safety.h"
 #include "history.h"
 #include "io.h"
+#include "maybe.h"
+#include "parse_constants.h"
+#include "parse_tree.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "path.h"

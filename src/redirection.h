@@ -1,6 +1,8 @@
 #ifndef FISH_REDIRECTION_H
 #define FISH_REDIRECTION_H
 
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "common.h"

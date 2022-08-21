@@ -5,17 +5,25 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <stdint.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <climits>
 #include <ctime>
+#include <cstdarg>
+#include <cwchar>
+#include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../path.h"
 #include "../util.h"
@@ -30,7 +38,7 @@
 
 static void path_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"path ");
-    va_list va;
+    std::va_list va;
     va_start(va, fmt);
     streams.err.append_formatv(fmt, va);
     va_end(va);

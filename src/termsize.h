@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "common.h"
+#include "maybe.h"
 #include "global_safety.h"
 
 class environment_t;

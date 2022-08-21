@@ -7,23 +7,28 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <libgen.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wctype.h>
 
+#ifdef HAVE_XLOCALE_H
+#include <xlocale.h>
+#endif
+
 #include <algorithm>
-#include <atomic>
 #include <cstring>
 #include <cwchar>
 #include <iterator>
+#include <locale>
+#include <mutex>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

@@ -5,9 +5,7 @@
 
 #include "argparse.h"
 
-#include <algorithm>
 #include <cerrno>
-#include <cstddef>
 #include <cstdint>
 #include <cwchar>
 #include <memory>
@@ -22,6 +20,7 @@
 #include "../exec.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../wcstringutil.h"
 #include "../wgetopt.h"  // IWYU pragma: keep

@@ -3,16 +3,24 @@
 
 #include "wait.h"
 
-#include <sys/wait.h>
-
 #include <algorithm>
+#include <cerrno>
+#include <csignal>
+#include <deque>
+#include <list>
+#include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../signal.h"
+#include "../topic_monitor.h"
 #include "../wait_handle.h"
 #include "../wgetopt.h"
 #include "../wutil.h"

@@ -4,14 +4,15 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <utility>
+#include <vector>
+
 // Needed for musl
 #include <sys/select.h>  // IWYU pragma: keep
 
 #include "common.h"
 #include "fds.h"
 #include "maybe.h"
-
-class fd_monitor_t;
 
 /// Each item added to fd_monitor_t is assigned a unique ID, which is not recycled.
 /// Items may have their callback triggered immediately by passing the ID.

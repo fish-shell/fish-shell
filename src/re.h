@@ -2,6 +2,10 @@
 #ifndef FISH_RE_H
 #define FISH_RE_H
 
+#include <cstddef>
+#include <memory>
+#include <utility>
+
 #include "common.h"
 #include "maybe.h"
 

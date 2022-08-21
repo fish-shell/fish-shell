@@ -6,16 +6,17 @@
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
-#include <cwchar>
+#include <memory>
 #include <string>
-#include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
+#include "../env.h"
 #include "../enum_map.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../history.h"
 #include "../io.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../reader.h"
 #include "../wgetopt.h"

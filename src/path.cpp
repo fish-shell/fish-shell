@@ -6,7 +6,6 @@
 #include "path.h"
 
 #include <errno.h>
-#include <sys/param.h>
 #include <sys/stat.h>
 #if defined(__linux__)
 #include <sys/statfs.h>
@@ -14,10 +13,8 @@
 #include <unistd.h>
 
 #include <cstring>
-#include <cwchar>
-#include <memory>
 #include <string>
-#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "common.h"

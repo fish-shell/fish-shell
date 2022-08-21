@@ -7,12 +7,12 @@
 #include "parse_util.h"
 
 #include <stdarg.h>
-#include <stdlib.h>
 
+#include <algorithm>
 #include <cwchar>
 #include <memory>
 #include <string>
-#include <type_traits>
+#include <utility>
 
 #include "ast.h"
 #include "builtin.h"
@@ -20,9 +20,9 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
+#include "operation_context.h"
 #include "parse_constants.h"
-#include "parse_util.h"
-#include "parser.h"
+#include "parse_tree.h"
 #include "tokenizer.h"
 #include "wcstringutil.h"
 #include "wildcard.h"

@@ -5,11 +5,10 @@
 #define FISH_FUNCTION_H
 
 #include <map>
-#include <vector>
+#include <memory>
+#include <string>
 
 #include "common.h"
-#include "env.h"
-#include "event.h"
 #include "parse_tree.h"
 
 class parser_t;

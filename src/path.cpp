@@ -28,8 +28,7 @@
 // PREFIX is defined at build time.
 const wcstring_list_t kDefaultPath({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
-static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_list_t &pathsv,
-                                            const environment_t &vars) {
+static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_list_t &pathsv) {
     const get_path_result_t noent_res{ENOENT, wcstring{}};
     get_path_result_t result{};
 
@@ -90,7 +89,7 @@ maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars) 
 
 get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &vars) {
     auto pathvar = vars.get(L"PATH");
-    return path_get_path_core(cmd, pathvar ? pathvar->as_list() : kDefaultPath, vars);
+    return path_get_path_core(cmd, pathvar ? pathvar->as_list() : kDefaultPath);
 }
 
 static bool path_is_executable(const std::string &path) {

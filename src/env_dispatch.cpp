@@ -255,33 +255,27 @@ static relaxed_atomic_bool_t g_use_posix_spawn{false};
 
 bool get_use_posix_spawn() { return g_use_posix_spawn; }
 
-extern "C" {
-const char *gnu_get_libc_version();
-}
-
-static bool allow_use_posix_spawn() {
+static constexpr bool allow_use_posix_spawn() {
+#if defined(FISH_USE_POSIX_SPAWN)
     // OpenBSD's posix_spawn returns status 127, instead of erroring with ENOEXEC, when faced with a
     // shebangless script. Disable posix_spawn on OpenBSD.
 #if defined(__OpenBSD__)
     return false;
-#endif
-    bool result = true;
-    // uClibc defines __GLIBC__.
-#if defined(__GLIBC__) && !defined(__UCLIBC__)
+#elif defined(__GLIBC__) && !defined(__UCLIBC__) // uClibc defines __GLIBC__
     // Disallow posix_spawn entirely on glibc < 2.24.
     // See #8021.
-    if (!__GLIBC_PREREQ(2, 24)) {
-        result = false;
-    }
+    return __GLIBC_PREREQ(2, 24) ? true : false;
+#else // !defined(__OpenBSD__)
+    return true;
 #endif
-    return result;
+#else // !defined(FISH_USE_POSIX_SPAWN)
+    return false;
+#endif
 }
 
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
-    // Note if the variable is missing or empty, we default to true if allowed.
-    if (!allow_use_posix_spawn()) {
-        g_use_posix_spawn = false;
-    } else if (auto var = vars.get(L"fish_use_posix_spawn")) {
+    // If the variable is missing or empty, we default to true if allowed.
+    if (auto var = vars.get(L"fish_use_posix_spawn")) {
         g_use_posix_spawn = var->empty() || bool_from_string(var->as_string());
     } else {
         g_use_posix_spawn = true;
@@ -334,7 +328,8 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"fish_autosuggestion_enabled", handle_autosuggestion_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
-    var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
+    if (allow_use_posix_spawn) var_dispatch_table->add(L"fish_use_posix_spawn",
+                                                       handle_fish_use_posix_spawn_change);
     var_dispatch_table->add(L"fish_trace", handle_fish_trace);
     var_dispatch_table->add(L"fish_cursor_selection_mode",
                             handle_fish_cursor_selection_mode_change);
@@ -359,7 +354,7 @@ static void run_inits(const environment_t &vars) {
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     handle_read_limit_change(vars);
-    handle_fish_use_posix_spawn_change(vars);
+    if (allow_use_posix_spawn) handle_fish_use_posix_spawn_change(vars);
     handle_fish_trace(vars);
 }
 

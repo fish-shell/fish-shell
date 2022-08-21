@@ -26,7 +26,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // PREFIX is defined at build time.
-const wcstring_list_t kDefaultPath({L"/bin", L"/usr/bin", PREFIX L"/bin"});
+static const wcstring_list_t kDefaultPath({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_list_t &pathsv) {
     const get_path_result_t noent_res{ENOENT, wcstring{}};

@@ -5,7 +5,7 @@ RUN yum install --assumeyes epel-release https://repo.ius.io/ius-release-el7.rpm
   && yum install --assumeyes \
     cmake3 \
     gcc-c++ \
-    git224-core \
+    git236 \
     ncurses-devel \
     ninja-build \
     python3 \

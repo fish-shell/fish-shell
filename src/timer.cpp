@@ -3,9 +3,9 @@
 
 #include "timer.h"
 
-#include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <algorithm>
 #include <chrono>
@@ -16,7 +16,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "wutil.h"  // IWYU pragma: keep
+#include "wutil.h"     // IWYU pragma: keep
 
 // Measuring time is always complicated with many caveats. Quite apart from the typical
 // gotchas faced by developers attempting to choose between monotonic vs non-monotonic and system vs

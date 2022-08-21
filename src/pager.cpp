@@ -1,10 +1,11 @@
 #include "config.h"  // IWYU pragma: keep
 
+#include "pager.h"
+
 #include <stddef.h>
 #include <wctype.h>
 
 #include <algorithm>
-
 #include <cstdlib>
 #include <cwchar>
 #include <functional>
@@ -19,7 +20,6 @@
 #include "highlight.h"
 #include "maybe.h"
 #include "operation_context.h"
-#include "pager.h"
 #include "reader.h"
 #include "screen.h"
 #include "termsize.h"
@@ -464,10 +464,9 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         //
         // We do this so we show a useful amount but don't force fish to
         // THE VERY TOP, which is jarring.
-        term_height = std::min(term_height,
-                               std::max(term_height / 2,
-                                        static_cast<size_t>(PAGER_UNDISCLOSED_MAX_ROWS))
-                               );
+        term_height =
+            std::min(term_height,
+                     std::max(term_height / 2, static_cast<size_t>(PAGER_UNDISCLOSED_MAX_ROWS)));
     }
 
     size_t row_count = divide_round_up(lst.size(), cols);

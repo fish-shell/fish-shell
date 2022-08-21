@@ -16,8 +16,8 @@
 #include "../builtin.h"
 #include "../common.h"
 #include "../env.h"
-#include "../expand.h"
 #include "../event.h"
+#include "../expand.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../history.h"
 #include "../io.h"
@@ -163,7 +163,8 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
             case '?': {
                 // Specifically detect `set -o` because people might be bringing over bashisms.
                 if (wcsncmp(argv[w.woptind - 1], L"-o", 2) == 0) {
-                    streams.err.append(L"Fish does not have shell options. See `help fish-for-bash-users`.\n");
+                    streams.err.append(
+                        L"Fish does not have shell options. See `help fish-for-bash-users`.\n");
                     if (w.woptind < argc) {
                         if (wcscmp(argv[w.woptind], L"vi") == 0) {
                             // Tell the vi users how to get what they need.
@@ -188,7 +189,7 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
 }
 
 static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts, int argc,
-                             const wchar_t * argv[], parser_t &parser, io_streams_t &streams) {
+                             const wchar_t *argv[], parser_t &parser, io_streams_t &streams) {
     // Can't query and erase or list.
     if (opts.query && (opts.erase || opts.list)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);

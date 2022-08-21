@@ -8,7 +8,7 @@
 #include <cstdlib>
 
 #if HAVE_CURSES_H
-#include <curses.h> // IWYU pragma: keep
+#include <curses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -27,7 +27,7 @@
 #include "../color.h"
 #include "../common.h"
 #include "../env.h"
-#include "../fallback.h" // IWYU pragma: keep
+#include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
 #include "../maybe.h"
 #include "../output.h"

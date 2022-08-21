@@ -2,8 +2,8 @@
 
 #include "ast.h"
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstdarg>
 #include <cstdlib>
 #include <string>
@@ -14,7 +14,7 @@
 #include "parse_constants.h"
 #include "parse_tree.h"
 #include "tokenizer.h"
-#include "wutil.h" // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 
 namespace {
 

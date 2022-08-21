@@ -11,7 +11,6 @@
 #include <wctype.h>
 
 #include <algorithm>
-
 #include <cstddef>
 #include <cwchar>
 #include <forward_list>

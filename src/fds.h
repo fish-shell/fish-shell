@@ -3,10 +3,10 @@
 #ifndef FISH_FDS_H
 #define FISH_FDS_H
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
-#include <poll.h> // IWYU pragma: keep
-#include <sys/select.h> // IWYU pragma: keep
+#include <poll.h>        // IWYU pragma: keep
+#include <sys/select.h>  // IWYU pragma: keep
 #include <sys/types.h>
 
 #include <cstdint>

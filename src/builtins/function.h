@@ -10,7 +10,7 @@ class parser_t;
 struct io_streams_t;
 
 namespace ast {
-    struct block_statement_t;
+struct block_statement_t;
 }
 
 maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,

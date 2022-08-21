@@ -25,8 +25,8 @@
 #include <sys/types.h>  // IWYU pragma: keep
 
 #include <algorithm>
-#include <cstring>
 #include <cstdio>
+#include <cstring>
 #include <cwchar>
 #include <functional>
 #include <string>

@@ -17,7 +17,7 @@
 #include <cwchar>
 
 #if HAVE_CURSES_H
-#include <curses.h> // IWYU pragma: keep
+#include <curses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H

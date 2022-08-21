@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#include "ast.h" // IWYU pragma: keep
+#include "ast.h"  // IWYU pragma: keep
 #include "common.h"
 #include "io.h"
 #include "maybe.h"
@@ -14,7 +14,6 @@
 #include "parse_tree.h"
 #include "proc.h"
 #include "redirection.h"
-
 
 class block_t;
 class operation_context_t;

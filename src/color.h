@@ -2,9 +2,9 @@
 #ifndef FISH_COLOR_H
 #define FISH_COLOR_H
 
+#include <cstdint>
 #include <cstring>
 #include <string>
-#include <cstdint>
 
 #include "common.h"
 

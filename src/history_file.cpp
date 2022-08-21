@@ -1,4 +1,4 @@
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #include "history_file.h"
 
@@ -7,10 +7,10 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <cstdlib>
-#include <cstring>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <cwchar>
 #include <utility>
 

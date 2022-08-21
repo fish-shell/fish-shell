@@ -27,8 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <cwctype>
 #include <cwchar>
+#include <cwctype>
 #include <memory>
 #include <string>
 #include <type_traits>

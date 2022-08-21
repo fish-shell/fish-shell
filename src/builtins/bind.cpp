@@ -11,12 +11,12 @@
 
 #include "../builtin.h"
 #include "../common.h"
-#include "../fallback.h" // IWYU pragma: keep
+#include "../fallback.h"  // IWYU pragma: keep
 #include "../input.h"
 #include "../io.h"
 #include "../maybe.h"
 #include "../wgetopt.h"
-#include "../wutil.h" // IWYU pragma: keep
+#include "../wutil.h"  // IWYU pragma: keep
 
 enum { BIND_INSERT, BIND_ERASE, BIND_KEY_NAMES, BIND_FUNCTION_NAMES };
 struct bind_cmd_opts_t {

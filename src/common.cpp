@@ -27,8 +27,8 @@
 
 #include <algorithm>
 #include <csignal>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <cwchar>
 #include <memory>
 
@@ -40,18 +40,18 @@
 #include "global_safety.h"
 #include "iothread.h"
 #include "signal.h"
-#include "topic_monitor.h"
 #include "termsize.h"
+#include "topic_monitor.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Keep after "common.h"
 #ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h> // IWYU pragma: keep
+#include <sys/sysctl.h>  // IWYU pragma: keep
 #endif
 #if defined(__APPLE__)
-#include <mach-o/dyld.h> // IWYU pragma: keep
+#include <mach-o/dyld.h>  // IWYU pragma: keep
 #endif
 
 struct termios shell_modes;

@@ -7,12 +7,12 @@
 #include <stdio.h>
 
 #include <atomic>
-#include <condition_variable> // IWYU pragma: keep
 #include <chrono>
+#include <condition_variable>  // IWYU pragma: keep
 #include <functional>
 #include <mutex>
-#include <vector>
 #include <queue>
+#include <vector>
 
 #include "common.h"
 #include "fallback.h"

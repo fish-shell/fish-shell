@@ -4,7 +4,6 @@
 
 #include <termios.h>
 
-
 #include <memory>
 
 #include "common.h"

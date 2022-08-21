@@ -38,8 +38,8 @@
 // Ave, Cambridge, MA 02139, USA.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stdio.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include <cwchar>
 

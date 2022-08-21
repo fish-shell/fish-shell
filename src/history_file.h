@@ -1,7 +1,7 @@
 #ifndef FISH_HISTORY_FILE_H
 #define FISH_HISTORY_FILE_H
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #include <sys/mman.h>
 

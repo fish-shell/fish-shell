@@ -20,8 +20,8 @@
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../fds.h"
 #include "../io.h"
-#include "../maybe.h"
 #include "../job_group.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../reader.h"

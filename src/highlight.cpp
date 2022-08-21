@@ -1,6 +1,8 @@
 // Functions for syntax highlighting.
 #include "config.h"  // IWYU pragma: keep
 
+#include "highlight.h"
+
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -24,11 +26,10 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
 #include "future_feature_flags.h"
-#include "highlight.h"
 #include "history.h"
 #include "maybe.h"
-#include "output.h"
 #include "operation_context.h"
+#include "output.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "path.h"

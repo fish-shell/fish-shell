@@ -20,11 +20,11 @@
 #endif
 #if defined(TPARM_SOLARIS_KLUDGE)
 #if HAVE_CURSES_H
-#include <curses.h> // IWYU pragma: keep
+#include <curses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_H
 #include <ncurses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h> // IWYU pragma: keep
+#include <ncurses/curses.h>  // IWYU pragma: keep
 #endif
 #if HAVE_TERM_H
 #include <term.h>  // IWYU pragma: keep

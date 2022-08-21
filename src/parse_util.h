@@ -11,9 +11,9 @@
 #include "parse_constants.h"
 
 namespace ast {
-    struct argument_t;
-    class ast_t;
-}
+struct argument_t;
+class ast_t;
+}  // namespace ast
 struct tok_t;
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]

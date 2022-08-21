@@ -4,8 +4,9 @@
 //
 #include "config.h"  // IWYU pragma: keep
 
-#include <algorithm>
+#include "function.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cwchar>
 #include <map>
@@ -23,7 +24,6 @@
 #include "env.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "function.h"
 #include "maybe.h"
 #include "parse_constants.h"
 #include "parser.h"

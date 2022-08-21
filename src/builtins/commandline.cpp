@@ -11,10 +11,10 @@
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
-#include "../io.h"
-#include "../maybe.h"
 #include "../input.h"
 #include "../input_common.h"
+#include "../io.h"
+#include "../maybe.h"
 #include "../parse_constants.h"
 #include "../parse_util.h"
 #include "../parser.h"

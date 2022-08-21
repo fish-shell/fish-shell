@@ -1,10 +1,10 @@
 /// fish logging
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #include "flog.h"
 
-#include <unistd.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <cstring>

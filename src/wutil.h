@@ -2,7 +2,7 @@
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H
 
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #include <dirent.h>
 #include <stddef.h>

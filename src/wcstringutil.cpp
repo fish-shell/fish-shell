@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "common.h"
-#include "fallback.h" // IWYU pragma: keep
+#include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 
 wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {

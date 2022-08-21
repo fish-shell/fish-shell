@@ -12,11 +12,11 @@
 #include <cwchar>
 
 #if HAVE_CURSES_H
-#include <curses.h> // IWYU pragma: keep
+#include <curses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_H
-#include <ncurses.h> // IWYU pragma: keep
+#include <ncurses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h> // IWYU pragma: keep
+#include <ncurses/curses.h>  // IWYU pragma: keep
 #endif
 #if HAVE_TERM_H
 #include <term.h>
@@ -261,14 +261,14 @@ static constexpr bool allow_use_posix_spawn() {
     // shebangless script. Disable posix_spawn on OpenBSD.
 #if defined(__OpenBSD__)
     return false;
-#elif defined(__GLIBC__) && !defined(__UCLIBC__) // uClibc defines __GLIBC__
+#elif defined(__GLIBC__) && !defined(__UCLIBC__)  // uClibc defines __GLIBC__
     // Disallow posix_spawn entirely on glibc < 2.24.
     // See #8021.
     return __GLIBC_PREREQ(2, 24) ? true : false;
-#else // !defined(__OpenBSD__)
+#else                                             // !defined(__OpenBSD__)
     return true;
 #endif
-#else // !defined(FISH_USE_POSIX_SPAWN)
+#else  // !defined(FISH_USE_POSIX_SPAWN)
     return false;
 #endif
 }
@@ -328,8 +328,9 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"fish_autosuggestion_enabled", handle_autosuggestion_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
-    if (allow_use_posix_spawn) var_dispatch_table->add(L"fish_use_posix_spawn",
-                                                       handle_fish_use_posix_spawn_change);
+    if (allow_use_posix_spawn) {
+        var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
+    }
     var_dispatch_table->add(L"fish_trace", handle_fish_trace);
     var_dispatch_table->add(L"fish_cursor_selection_mode",
                             handle_fish_cursor_selection_mode_change);

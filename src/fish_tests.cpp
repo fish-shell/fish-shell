@@ -19,8 +19,8 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <chrono>
 #include <cerrno>
+#include <chrono>
 #include <clocale>
 #include <cmath>
 #include <cstring>
@@ -53,13 +53,13 @@
 #include "env_universal_common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "fds.h"
 #include "fd_monitor.h"
+#include "fds.h"
 #include "function.h"
 #include "future_feature_flags.h"
+#include "global_safety.h"
 #include "highlight.h"
 #include "history.h"
-#include "global_safety.h"
 #include "input.h"
 #include "input_common.h"
 #include "io.h"

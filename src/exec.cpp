@@ -15,16 +15,16 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <cstring>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <initializer_list>
 #include <map>
 #include <memory>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "ast.h"
 #include "builtin.h"

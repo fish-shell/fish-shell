@@ -1,4 +1,4 @@
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #include "trace.h"
 

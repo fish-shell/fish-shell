@@ -55,7 +55,8 @@ const wchar_t *tokenizer_get_error_message(tokenizer_error_t err) {
 
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token_start,
-                              const wchar_t *error_loc, maybe_t<size_t> token_length, size_t error_len) {
+                              const wchar_t *error_loc, maybe_t<size_t> token_length,
+                              size_t error_len) {
     assert(error_type != tokenizer_error_t::none && "tokenizer_error_t::none passed to call_error");
     assert(error_loc >= token_start && "Invalid error location");
     assert(this->token_cursor >= token_start && "Invalid buff location");
@@ -616,8 +617,7 @@ maybe_t<tok_t> tokenizer_t::next() {
                 return this->call_error(tokenizer_error_t::invalid_redirect, this->token_cursor,
                                         this->token_cursor,
                                         redir_or_pipe ? redir_or_pipe->consumed : 0,
-                                        redir_or_pipe ? redir_or_pipe->consumed : 0
-                                        );
+                                        redir_or_pipe ? redir_or_pipe->consumed : 0);
             }
             result.emplace(redir_or_pipe->token_type());
             result->offset = start_pos;
@@ -639,10 +639,8 @@ maybe_t<tok_t> tokenizer_t::next() {
                 // tokenizer error.
                 if (redir_or_pipe->is_pipe && redir_or_pipe->fd == 0) {
                     return this->call_error(tokenizer_error_t::invalid_pipe, error_location,
-                                            error_location,
-                                            redir_or_pipe->consumed,
-                                            redir_or_pipe->consumed
-                                            );
+                                            error_location, redir_or_pipe->consumed,
+                                            redir_or_pipe->consumed);
                 }
                 result.emplace(redir_or_pipe->token_type());
                 result->offset = start_pos;

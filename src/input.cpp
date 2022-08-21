@@ -4,7 +4,7 @@
 #include <errno.h>
 
 #if HAVE_TERM_H
-#include <curses.h> // IWYU pragma: keep
+#include <curses.h>  // IWYU pragma: keep
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>

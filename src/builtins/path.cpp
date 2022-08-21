@@ -3,15 +3,15 @@
 
 #include "path.h"
 
+#include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <stdint.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <climits>
-#include <ctime>
 #include <cstdarg>
+#include <ctime>
 #include <cwchar>
 #include <map>
 #include <string>

@@ -20,23 +20,22 @@
 #include <siginfo.h>
 #endif
 #include <stdio.h>
-#include <time.h>
-
-#include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 #include <wctype.h>
 
 #include <algorithm>
 #include <atomic>
-#include <chrono>
 #include <cctype>
+#include <chrono>
 #include <cmath>
 #include <csignal>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <cwchar>
 #include <deque>
 #include <functional>
@@ -78,8 +77,8 @@
 #include "signal.h"
 #include "termsize.h"
 #include "tokenizer.h"
-#include "wildcard.h"
 #include "wcstringutil.h"
+#include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Name of the variable that tells how long it took, in milliseconds, for the previous

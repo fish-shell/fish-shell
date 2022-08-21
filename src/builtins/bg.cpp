@@ -3,18 +3,19 @@
 
 #include "bg.h"
 
+#include <sys/types.h>
+
 #include <cerrno>
 #include <deque>
 #include <memory>
-#include <sys/types.h>
 #include <vector>
 
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
-#include "../maybe.h"
 #include "../job_group.h"
+#include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../wutil.h"  // IWYU pragma: keep

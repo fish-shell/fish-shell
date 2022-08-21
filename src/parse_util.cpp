@@ -809,8 +809,8 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
 }
 
 /// Append a syntax error to the given error list.
-static bool append_syntax_error(parse_error_list_t *errors, size_t source_location, size_t source_length,
-                                const wchar_t *fmt, ...) {
+static bool append_syntax_error(parse_error_list_t *errors, size_t source_location,
+                                size_t source_length, const wchar_t *fmt, ...) {
     if (!errors) return true;
     parse_error_t error;
     error.source_start = source_location;
@@ -1082,7 +1082,8 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
                     (deco->kw == parse_keyword_t::kw_and || deco->kw == parse_keyword_t::kw_or) &&
                     "Unexpected decorator keyword");
                 const wchar_t *deco_name = (deco->kw == parse_keyword_t::kw_and ? L"and" : L"or");
-                errored = append_syntax_error(parse_errors, deco->source_range().start, deco->source_range().length,
+                errored = append_syntax_error(parse_errors, deco->source_range().start,
+                                              deco->source_range().length,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, deco_name);
             }
         }
@@ -1133,8 +1134,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     // Check that we don't try to pipe through exec.
     bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
     if (is_in_pipeline && decoration == statement_decoration_t::exec) {
-        errored =
-            append_syntax_error(parse_errors, source_start, source_length, INVALID_PIPELINE_CMD_ERR_MSG, L"exec");
+        errored = append_syntax_error(parse_errors, source_start, source_length,
+                                      INVALID_PIPELINE_CMD_ERR_MSG, L"exec");
     }
 
     // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
@@ -1145,13 +1146,14 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         // commands.
         const wcstring &command = dst.command.source(buff_src, storage);
         if (command == L"and" || command == L"or") {
-            errored = append_syntax_error(parse_errors, source_start, source_length, INVALID_PIPELINE_CMD_ERR_MSG,
-                                          command.c_str());
+            errored = append_syntax_error(parse_errors, source_start, source_length,
+                                          INVALID_PIPELINE_CMD_ERR_MSG, command.c_str());
         }
 
         // Similarly for time (#8841).
         if (command == L"time") {
-            errored = append_syntax_error(parse_errors, source_start, source_length, TIME_IN_PIPELINE_ERR_MSG);
+            errored = append_syntax_error(parse_errors, source_start, source_length,
+                                          TIME_IN_PIPELINE_ERR_MSG);
         }
     }
 
@@ -1179,8 +1181,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 
         // Check that pipes are sound.
         if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
-            errored = append_syntax_error(parse_errors, source_start, source_length, INVALID_PIPELINE_CMD_ERR_MSG,
-                                          command.c_str());
+            errored = append_syntax_error(parse_errors, source_start, source_length,
+                                          INVALID_PIPELINE_CMD_ERR_MSG, command.c_str());
         }
 
         // Check that we don't break or continue from outside a loop.
@@ -1220,8 +1222,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
             if (expand_one(command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
                            parse_errors) &&
                 !builtin_exists(unexp_command)) {
-                errored = append_syntax_error(parse_errors, source_start, source_length, UNKNOWN_BUILTIN_ERR_MSG,
-                                              unexp_command.c_str());
+                errored = append_syntax_error(parse_errors, source_start, source_length,
+                                              UNKNOWN_BUILTIN_ERR_MSG, unexp_command.c_str());
             }
         }
 
@@ -1241,7 +1243,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 static bool detect_errors_in_block_redirection_list(
     const ast::argument_or_redirection_list_t &args_or_redirs, parse_error_list_t *out_errors) {
     if (const auto *first_arg = get_first_arg(args_or_redirs)) {
-        return append_syntax_error(out_errors, first_arg->source_range().start, first_arg->source_range().length, END_ARG_ERR_MSG);
+        return append_syntax_error(out_errors, first_arg->source_range().start,
+                                   first_arg->source_range().length, END_ARG_ERR_MSG);
     }
     return false;
 }

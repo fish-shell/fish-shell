@@ -14,7 +14,7 @@
 #include <cwchar>
 
 #if HAVE_TERM_H
-#include <curses.h> // IWYU pragma: keep
+#include <curses.h>  // IWYU pragma: keep
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
@@ -27,17 +27,17 @@
 #include <sys/wait.h>
 
 #include <algorithm>  // IWYU pragma: keep
-#include <cstring>
 #include <cstdio>
+#include <cstring>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "common.h"
 #include "env.h"
-#include "fds.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "flog.h"
 #include "global_safety.h"
 #include "io.h"

@@ -21,8 +21,8 @@
 #include "env.h"
 #include "event.h"
 #include "expand.h"
-#include "fds.h" 
 #include "fallback.h"  // IWYU pragma: keep
+#include "fds.h"
 #include "flog.h"
 #include "function.h"
 #include "job_group.h"

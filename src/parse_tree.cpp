@@ -11,8 +11,8 @@
 
 #include "ast.h"
 #include "common.h"
-#include "fallback.h"
 #include "enum_map.h"
+#include "fallback.h"
 #include "maybe.h"
 #include "parse_constants.h"
 #include "tokenizer.h"
@@ -92,8 +92,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     }
     // Look for the newline after the source range. If the source range itself includes a
     // newline, that's the one we want, so start just before the end of the range.
-    size_t last_char_in_range =
-        (len == 0 ? start : start + len - 1);
+    size_t last_char_in_range = (len == 0 ? start : start + len - 1);
     size_t line_end = src.find(L'\n', last_char_in_range);
     if (line_end == wcstring::npos) {
         line_end = src.size();

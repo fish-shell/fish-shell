@@ -11,8 +11,8 @@
 
 #include "../builtin.h"
 #include "../common.h"
-#include "../env.h"
 #include "../enum_map.h"
+#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../history.h"
 #include "../io.h"

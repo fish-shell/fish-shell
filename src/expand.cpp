@@ -1,5 +1,5 @@
 // String expansion functions. These functions perform several kinds of parameter expansion.
-#include "config.h" // IWYU pragma: keep
+#include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
 #include <pwd.h>
@@ -83,8 +83,8 @@ static void append_syntax_error(parse_error_list_t *errors, size_t source_start,
 /// Append a cmdsub error to the given error list. But only do so if the error hasn't already been
 /// recorded. This is needed because command substitution is a recursive process and some errors
 /// could consequently be recorded more than once.
-static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start, size_t source_end, const wchar_t *fmt,
-                                ...) {
+static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start, size_t source_end,
+                                const wchar_t *fmt, ...) {
     if (!errors) return;
 
     parse_error_t error;

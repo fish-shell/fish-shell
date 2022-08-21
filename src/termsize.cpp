@@ -4,15 +4,15 @@
 
 #include <unistd.h>
 
+#include <cerrno>
+#include <climits>
+
 #include "env.h"
 #include "flog.h"
 #include "maybe.h"
 #include "parser.h"
 #include "wcstringutil.h"
 #include "wutil.h"
-
-#include <cerrno>
-#include <climits>
 
 #ifdef HAVE_WINSIZE
 #include <sys/ioctl.h>

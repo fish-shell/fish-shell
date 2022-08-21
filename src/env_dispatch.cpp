@@ -250,11 +250,6 @@ static void handle_curses_change(const environment_t &vars) {
     init_curses(vars);
 }
 
-/// Whether to use posix_spawn when possible.
-static relaxed_atomic_bool_t g_use_posix_spawn{false};
-
-bool get_use_posix_spawn() { return g_use_posix_spawn; }
-
 static constexpr bool allow_use_posix_spawn() {
 #if defined(FISH_USE_POSIX_SPAWN)
     // OpenBSD's posix_spawn returns status 127, instead of erroring with ENOEXEC, when faced with a
@@ -272,6 +267,10 @@ static constexpr bool allow_use_posix_spawn() {
     return false;
 #endif
 }
+
+/// Whether to use posix_spawn when possible.
+static relaxed_atomic_bool_t g_use_posix_spawn{false};
+bool get_use_posix_spawn() { return allow_use_posix_spawn() && g_use_posix_spawn; }
 
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
     // If the variable is missing or empty, we default to true if allowed.

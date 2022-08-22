@@ -270,7 +270,7 @@ static constexpr bool allow_use_posix_spawn() {
 
 /// Whether to use posix_spawn when possible.
 static relaxed_atomic_bool_t g_use_posix_spawn{false};
-bool get_use_posix_spawn() { return allow_use_posix_spawn() && g_use_posix_spawn; }
+bool get_use_posix_spawn() { return g_use_posix_spawn; }
 
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
     // If the variable is missing or empty, we default to true if allowed.
@@ -327,7 +327,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"fish_autosuggestion_enabled", handle_autosuggestion_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
-    if (allow_use_posix_spawn) {
+    if (allow_use_posix_spawn()) {
         var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
     }
     var_dispatch_table->add(L"fish_trace", handle_fish_trace);

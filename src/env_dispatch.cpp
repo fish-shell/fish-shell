@@ -271,7 +271,7 @@ static constexpr bool allow_use_posix_spawn() {
 
 static relaxed_atomic_bool_t g_use_posix_spawn{false};
 bool get_use_posix_spawn() {
-    assert(allow_use_posix_spawn() && "get_use_posix_spawn() called but not allowed");
+    assert(allow_use_posix_spawn() && g_use_posix_spawn && "get_use_posix_spawn() called but not allowed");
     return g_use_posix_spawn;
 }
 

@@ -298,8 +298,6 @@ class env_stack_t final : public environment_t {
     static env_stack_t &globals();
 };
 
-bool get_use_posix_spawn();
-
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 
 /// Returns true if we think the terminal supports setting its title.

@@ -43,6 +43,7 @@
 #include "input_common.h"
 #include "maybe.h"
 #include "output.h"
+#include "postfork.h"
 #include "proc.h"
 #include "reader.h"
 #include "screen.h"
@@ -268,10 +269,13 @@ static constexpr bool allow_use_posix_spawn() {
 #endif
 }
 
-/// Whether to use posix_spawn when possible.
 static relaxed_atomic_bool_t g_use_posix_spawn{false};
-bool get_use_posix_spawn() { return g_use_posix_spawn; }
+bool get_use_posix_spawn() {
+    assert(allow_use_posix_spawn() && "get_use_posix_spawn() called but not allowed");
+    return g_use_posix_spawn;
+}
 
+/// Whether to use posix_spawn when possible.
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
     // If the variable is missing or empty, we default to true if allowed.
     if (auto var = vars.get(L"fish_use_posix_spawn")) {
@@ -354,7 +358,7 @@ static void run_inits(const environment_t &vars) {
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     handle_read_limit_change(vars);
-    if (allow_use_posix_spawn) handle_fish_use_posix_spawn_change(vars);
+    if (allow_use_posix_spawn()) handle_fish_use_posix_spawn_change(vars);
     handle_fish_trace(vars);
 }
 

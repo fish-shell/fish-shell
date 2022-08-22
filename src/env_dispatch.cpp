@@ -43,7 +43,6 @@
 #include "input_common.h"
 #include "maybe.h"
 #include "output.h"
-#include "postfork.h"
 #include "proc.h"
 #include "reader.h"
 #include "screen.h"
@@ -251,8 +250,16 @@ static void handle_curses_change(const environment_t &vars) {
     init_curses(vars);
 }
 
-static constexpr bool allow_use_posix_spawn() {
-#if defined(FISH_USE_POSIX_SPAWN)
+/// Whether to use posix_spawn when possible.
+static relaxed_atomic_bool_t g_use_posix_spawn{false};
+
+bool get_use_posix_spawn() { return g_use_posix_spawn; }
+
+extern "C" {
+const char *gnu_get_libc_version();
+}
+
+static bool allow_use_posix_spawn() {
     // OpenBSD's posix_spawn returns status 127, instead of erroring with ENOEXEC, when faced with a
     // shebangless script. Disable posix_spawn on OpenBSD.
 #if defined(__OpenBSD__)
@@ -264,21 +271,14 @@ static constexpr bool allow_use_posix_spawn() {
 #else                                             // !defined(__OpenBSD__)
     return true;
 #endif
-#else  // !defined(FISH_USE_POSIX_SPAWN)
-    return false;
-#endif
+    return true;
 }
 
-static relaxed_atomic_bool_t g_use_posix_spawn{false};
-bool get_use_posix_spawn() {
-    assert(allow_use_posix_spawn() && g_use_posix_spawn && "get_use_posix_spawn() called but not allowed");
-    return g_use_posix_spawn;
-}
-
-/// Whether to use posix_spawn when possible.
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
-    // If the variable is missing or empty, we default to true if allowed.
-    if (auto var = vars.get(L"fish_use_posix_spawn")) {
+    // Note if the variable is missing or empty, we default to true if allowed.
+    if (!allow_use_posix_spawn()) {
+        g_use_posix_spawn = false;
+    } else if (auto var = vars.get(L"fish_use_posix_spawn")) {
         g_use_posix_spawn = var->empty() || bool_from_string(var->as_string());
     } else {
         g_use_posix_spawn = true;
@@ -331,9 +331,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"fish_autosuggestion_enabled", handle_autosuggestion_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
-    if (allow_use_posix_spawn()) {
-        var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
-    }
+    var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
     var_dispatch_table->add(L"fish_trace", handle_fish_trace);
     var_dispatch_table->add(L"fish_cursor_selection_mode",
                             handle_fish_cursor_selection_mode_change);
@@ -358,7 +356,7 @@ static void run_inits(const environment_t &vars) {
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     handle_read_limit_change(vars);
-    if (allow_use_posix_spawn()) handle_fish_use_posix_spawn_change(vars);
+    handle_fish_use_posix_spawn_change(vars);
     handle_fish_trace(vars);
 }
 

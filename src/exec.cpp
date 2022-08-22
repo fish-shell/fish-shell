@@ -30,7 +30,6 @@
 #include "builtin.h"
 #include "common.h"
 #include "env.h"
-#include "env_dispatch.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"

@@ -121,6 +121,20 @@ Functions
 ``bitand``, ``bitor`` and ``bitxor``
     perform bitwise operations.
     These will throw away any non-integer parts and interpret the rest as an int.
+
+    Note: ``bitnot`` and ``bitnand`` don't exist. This is because numbers in math don't really have a *width* in terms of bits,
+    and tehse operations necessarily care about leading zeroes.
+
+    If you need to negate a specific number you can do it with an xor with a mask, e.g.::
+
+      > math --base=hex bitxor 0x0F, 0xFF
+      0xF0
+
+      > math --base=hex bitxor 0x2, 0x3
+      # Here we mask with 0x3 == 0b111, so our number is 3 bits wide
+      # Only the 1 bit isn't set.
+      0x1
+
 ``ceil``
     round number up to nearest integer
 ``cos``

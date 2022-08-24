@@ -10,7 +10,6 @@ complete -c fish -s p -l profile -d "Output profiling information (excluding sta
 complete -c fish -l profile-startup -d "Output startup profiling information to a file" -r
 complete -c fish -s d -l debug -d "Specify debug categories" -x -a "(fish --print-debug-categories | string replace ' ' \t)"
 complete -c fish -s o -l debug-output -d "Where to direct debug output to" -rF
-complete -c fish -s D -l debug-stack-frames -d "Show specified # of frames with debug output" -x -a "(seq 128)\t\n"
 complete -c fish -s P -l private -d "Do not persist history"
 
 function __fish_complete_features

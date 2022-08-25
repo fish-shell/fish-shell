@@ -348,9 +348,18 @@ rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_sp
         auto var2 = vars.get(L"fish_color_valid_path");
         if (var2) {
             rgb_color_t result2 = parse_color(*var2, is_background);
-            if (result.is_normal())
+            if (result.is_normal()) {
                 result = result2;
-            else {
+            } else if (!result2.is_normal()) {
+                // Valid path has an actual color, use it and merge the modifiers.
+                auto rescol = result2;
+                rescol.set_bold(result.is_bold() || result2.is_bold());
+                rescol.set_underline(result.is_underline() || result2.is_underline());
+                rescol.set_italics(result.is_italics() || result2.is_italics());
+                rescol.set_dim(result.is_dim() || result2.is_dim());
+                rescol.set_reverse(result.is_reverse() || result2.is_reverse());
+                result = rescol;
+            } else {
                 if (result2.is_bold()) result.set_bold(true);
                 if (result2.is_underline()) result.set_underline(true);
                 if (result2.is_italics()) result.set_italics(true);

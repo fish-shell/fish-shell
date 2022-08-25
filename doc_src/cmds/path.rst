@@ -6,13 +6,13 @@ path - manipulate and check paths
 Synopsis
 --------
 
-::
+.. synopsis::
 
     path basename GENERAL_OPTIONS [PATH ...]
     path dirname GENERAL_OPTIONS  [PATH ...]
     path extension GENERAL_OPTIONS [PATH ...]
     path filter GENERAL_OPTIONS [-v | --invert]
-        [-d] [-f] [-l] [-r] [-w] [-x] \
+        [-d] [-f] [-l] [-r] [-w] [-x]
         [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH ...]
     path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE]
         [-d] [-f] [-l] [-r] [-w] [-x]
@@ -24,7 +24,8 @@ Synopsis
     path sort GENERAL_OPTIONS [-r | --reverse]
         [-u | --unique] [--key=basename|dirname|path] [PATH ...]
 
-    GENERAL_OPTIONS := [-z | --null-in] [-Z | --null-out] [-q | --quiet]
+    GENERAL_OPTIONS
+        [-z | --null-in] [-Z | --null-out] [-q | --quiet]
 
 Description
 -----------

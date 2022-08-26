@@ -1169,7 +1169,13 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
 
     // Highlight any history search.
     if (!conf.in_silent_mode && data.history_search_range) {
-        for (size_t i = data.history_search_range->start; i < data.history_search_range->end();
+        // std::min gets confused about types here.
+        size_t end = data.history_search_range->end();
+        if (colors.size() < end) {
+            end = colors.size();
+        }
+
+        for (size_t i = data.history_search_range->start; i < end;
              i++) {
             colors.at(i).background = highlight_role_t::search_match;
         }
@@ -1178,7 +1184,8 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
     // Apply any selection.
     if (data.selection.has_value()) {
         highlight_spec_t selection_color = {highlight_role_t::normal, highlight_role_t::selection};
-        for (size_t i = data.selection->start; i < std::min(selection->stop, colors.size()); i++) {
+        auto end = std::min(selection->stop, colors.size());
+        for (size_t i = data.selection->start; i < end; i++) {
             colors.at(i) = selection_color;
         }
     }

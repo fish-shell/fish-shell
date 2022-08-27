@@ -255,10 +255,6 @@ static relaxed_atomic_bool_t g_use_posix_spawn{false};
 
 bool get_use_posix_spawn() { return g_use_posix_spawn; }
 
-extern "C" {
-const char *gnu_get_libc_version();
-}
-
 static bool allow_use_posix_spawn() {
     // OpenBSD's posix_spawn returns status 127, instead of erroring with ENOEXEC, when faced with a
     // shebangless script. Disable posix_spawn on OpenBSD.

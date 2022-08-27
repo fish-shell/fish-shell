@@ -272,12 +272,6 @@ void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
     }
 }
 
-/// Move an object into a shared_ptr.
-template <typename T>
-std::shared_ptr<T> move_to_sharedptr(T &&v) {
-    return std::make_shared<T>(std::move(v));
-}
-
 /// A function type to check for cancellation.
 /// \return true if execution should cancel.
 using cancel_checker_t = std::function<bool()>;

@@ -19,7 +19,7 @@ function fish_prompt
         # We hash the physical PWD and turn that into a color. That means directories (usually) get different colors,
         # but every directory always gets the same color. It's deterministic.
         # We use cksum because 1. it's fast, 2. it's in POSIX, so it should be available everywhere.
-        set -l shas (pwd -P | cksum | string split -f1 ' ' | math --base=hex | string sub -s 3 | string match -ra ..)
+        set -l shas (pwd -P | cksum | string split -f1 ' ' | math --base=hex | string sub -s 3 | string pad -c 0 -w 6 | string match -ra ..)
         set -l col 0x$shas[1..3]
 
         # If the (simplified idea of) luminance is below 120 (out of 255), add some more.

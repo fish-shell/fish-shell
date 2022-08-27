@@ -1683,7 +1683,7 @@ void format_size_safe(char buff[128], unsigned long long sz) {
     size_t idx = 0;
     const char *const sz_name[] = {"kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", nullptr};
     if (sz < 1) {
-        strncpy(buff, "empty", buff_size);
+        strcpy(buff, "empty");
     } else if (sz < 1024) {
         append_ull(buff, sz, &idx, max_len);
         append_str(buff, "B", &idx, max_len);

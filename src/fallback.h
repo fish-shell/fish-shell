@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 // The following include must be kept despite what IWYU says. That's because of the interaction
-// between the weak linking of `wcsdup` and `wcscasecmp` via `#define`s below and the declarations
+// between the weak linking of `wcscasecmp` via `#define`s below and the declarations
 // in <wchar.h>. At least on OS X if we don't do this we get compilation errors do to the macro
 // substitution if wchar.h is included after this header.
 #include <cwchar>  // IWYU pragma: keep
@@ -75,14 +75,6 @@ char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, lon
 
 /// These functions are missing from Solaris 10, and only accessible from
 /// Solaris 11 in the std:: namespace.
-#ifndef HAVE_WCSDUP
-#ifdef HAVE_STD__WCSDUP
-using std::wcsdup;
-#else
-wchar_t *wcsdup(const wchar_t *in);
-#endif  // HAVE_STD__WCSDUP
-#endif  // HAVE_WCSDUP
-
 #ifndef HAVE_WCSCASECMP
 #ifdef HAVE_STD__WCSCASECMP
 using std::wcscasecmp;

@@ -61,9 +61,6 @@
 /* Define to 1 if you have the `std::wcscasecmp' function. */
 #cmakedefine HAVE_STD__WCSCASECMP 1
 
-/* Define to 1 if you have the `std::wcsdup' function. */
-#cmakedefine HAVE_STD__WCSDUP 1
-
 /* Define to 1 if you have the `std::wcsncasecmp' function. */
 #cmakedefine HAVE_STD__WCSNCASECMP 1
 
@@ -93,9 +90,6 @@
 
 /* Define to 1 if you have the `wcscasecmp' function. */
 #cmakedefine HAVE_WCSCASECMP 1
-
-/* Define to 1 if you have the `wcsdup' function. */
-#cmakedefine HAVE_WCSDUP 1
 
 /* Define to 1 if you have the `wcsncasecmp' function. */
 #cmakedefine HAVE_WCSNCASECMP 1

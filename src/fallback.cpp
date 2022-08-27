@@ -58,21 +58,10 @@ int fish_mkstemp_cloexec(char *name_template) {
     return result_fd;
 }
 
-/// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
+/// Fallback implementations of wcsncasecmp and wcscasecmp. On systems where these are not needed (e.g.
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
 // cppcheck-suppress unusedFunction
-[[gnu::unused]] static wchar_t *wcsdup_fallback(const wchar_t *in) {
-    size_t len = std::wcslen(in);
-    auto out = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * (len + 1)));
-    if (out == nullptr) {
-        return nullptr;
-    }
-
-    std::memcpy(out, in, sizeof(wchar_t) * (len + 1));
-    return out;
-}
-
 [[gnu::unused]] static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
         return *b == 0 ? 0 : -1;
@@ -98,12 +87,6 @@ int fish_mkstemp_cloexec(char *name_template) {
     if (diff != 0) return diff;
     return wcsncasecmp_fallback(a + 1, b + 1, count - 1);
 }
-
-#ifndef HAVE_WCSDUP
-#ifndef HAVE_STD__WCSDUP
-wchar_t *wcsdup(const wchar_t *in) { return wcsdup_fallback(in); }
-#endif
-#endif
 
 #ifndef HAVE_WCSCASECMP
 #ifndef HAVE_STD__WCSCASECMP

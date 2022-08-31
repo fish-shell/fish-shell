@@ -12,7 +12,6 @@
 #include <cwchar>
 #include <functional>
 #include <string>
-#include <vector>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

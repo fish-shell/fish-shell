@@ -68,3 +68,9 @@ isolated-tmux capture-pane -p | head -1
 # The second one is the autosuggestion. Maybe we should turn them off for this test.
 # TODO there should be a prefix ("prompt 4> foo4") but we fail to draw that in this case.
 # CHECK: {{.*}} b-short-arg a-long-arg{{.*}}
+
+# Check that completion pager followed by token search search inserts two separate tokens.
+isolated-tmux send-keys C-u echo Space old-arg Enter C-l foo2 Space Tab Tab M-.
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 5> foo2 aabc old-arg

@@ -2045,6 +2045,7 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
 void reader_data_t::clear_pager() {
     pager.clear();
     history_pager_active = false;
+    command_line_has_transient_edit = false;
 }
 
 void reader_data_t::select_completion_in_direction(selection_motion_t dir,

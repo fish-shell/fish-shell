@@ -26,6 +26,28 @@ end
 complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l package \
     -xa "(__fish_cargo_packages)"
 
+# Look up crates.io crates matching the the single argument provided to this function
+function __fish_cargo_search
+    if test (string length "$argv[1]") -le 2
+        # Don't waste time searching for strings with too many results to realistically
+        # provide a meaningful completion within our results limit.
+        return
+    end
+
+    # This doesn't do a prefix search, so bump up the limit a tiny bit to try and
+    # get enough results to show something.
+    cargo search --color never --quiet --limit 20 $argv[1] |
+        # Filter out placeholders and "... and xxx more crates"
+        string match -rvi '^\.\.\.|= "0.0.0"|# .*(reserved|yanked)' |
+        # Remove the version number and map the description
+        string replace -rf '^([^ ]+).*# (.*)' '$1\t$2'
+end
+
+# Complete possible crate names by search the crates.io index
+complete -c cargo -n '__fish_seen_subcommand_from add install' -n '__fish_is_nth_token 2' \
+    -a "(__fish_cargo_search (commandline -ct))"
+
+
 ## --- AUTO-GENERATED WITH `cargo complete fish` ---
 complete -c cargo -n __fish_use_subcommand -l explain -d 'Run `rustc --explain CODE`'
 complete -c cargo -n __fish_use_subcommand -l color -d 'Coloring: auto, always, never'

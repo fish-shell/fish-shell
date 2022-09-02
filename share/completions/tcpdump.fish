@@ -54,7 +54,7 @@ complete -c tcpdump -s v -d 'Produce (slightly more) verbose output'
 complete -c tcpdump -o vv -d 'Even more verbose output'
 complete -c tcpdump -o vvv -d 'Even more verbose output'
 complete -c tcpdump -s V -F -d 'Read a list of filenames from file'
-complete -c tcpdump -s w -F -d 'Write the raw packets to file'
+complete -c tcpdump -s w -F -d 'Write the raw packets to file' -r
 complete -c tcpdump -s W -d 'Limit the number of files created'
 complete -c tcpdump -s x -d 'Print the data of each packet in hex (minus link level header)'
 complete -c tcpdump -o xx -d 'Print the data of each packet in hex (including link level header)'

@@ -39,7 +39,7 @@ complete -c tcpdump -s O -l no-optimize -d 'Do not run the packet-matching code 
 complete -c tcpdump -s p -l no-promiscuous-mode -d 'Don\'t put the interface into promiscuous mode'
 complete -c tcpdump -s Q -l direction -x -a 'in out inout' -d 'Choose direction for which packets should be captured'
 complete -c tcpdump -s q -d 'Print less protocol information'
-complete -c tcpdump -s r -F -d 'Read packets from file'
+complete -c tcpdump -s r -F -d 'Read packets from file' -r
 complete -c tcpdump -s S -l absolute-tcp-sequence-numbers -d 'Print absolute TCP sequence numbers'
 complete -c tcpdump -s s -l snapshot-length -x -d 'Snarf snaplen bytes of data from each packet'
 complete -c tcpdump -s T -x -d 'Force packets to be interpreted the specified type'

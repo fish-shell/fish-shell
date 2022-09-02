@@ -28,7 +28,7 @@ complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l
 
 # Look up crates.io crates matching the the single argument provided to this function
 function __fish_cargo_search
-    if test (string length "$argv[1]") -le 2
+    if test (string length -- "$argv[1]") -le 2
         # Don't waste time searching for strings with too many results to realistically
         # provide a meaningful completion within our results limit.
         return
@@ -36,7 +36,7 @@ function __fish_cargo_search
 
     # This doesn't do a prefix search, so bump up the limit a tiny bit to try and
     # get enough results to show something.
-    cargo search --color never --quiet --limit 20 $argv[1] |
+    cargo search --color never --quiet --limit 20 -- $argv[1] 2>/dev/null |
         # Filter out placeholders and "... and xxx more crates"
         string match -rvi '^\.\.\.|= "0.0.0"|# .*(reserved|yanked)' |
         # Remove the version number and map the description

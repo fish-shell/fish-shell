@@ -26,7 +26,7 @@ function prompt_pwd --description 'short CWD for the prompt'
 
     for path in $argv
         # Replace $HOME with "~"
-        set -l realhome ~
+        set -l realhome (string escape --style=regex -- ~)
         set -l tmp (string replace -r '^'"$realhome"'($|/)' '~$1' $path)
 
         if test "$fish_prompt_pwd_dir_length" -eq 0

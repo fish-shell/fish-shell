@@ -68,6 +68,7 @@ Completions
 
   - ``firefox``
   - ``firefox-developer-edition``
+  - ``fortune``
   - ``kind`` (:issue:`9110`)
   - ``zig`` (:issue:`9083`)
   - ``sad``

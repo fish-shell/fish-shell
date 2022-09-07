@@ -39,7 +39,7 @@ complete -c tcpdump -s O -l no-optimize -d 'Do not run the packet-matching code 
 complete -c tcpdump -s p -l no-promiscuous-mode -d 'Don\'t put the interface into promiscuous mode'
 complete -c tcpdump -s Q -l direction -x -a 'in out inout' -d 'Choose direction for which packets should be captured'
 complete -c tcpdump -s q -d 'Print less protocol information'
-complete -c tcpdump -s r -F -d 'Read packets from file'
+complete -c tcpdump -s r -F -d 'Read packets from file' -r
 complete -c tcpdump -s S -l absolute-tcp-sequence-numbers -d 'Print absolute TCP sequence numbers'
 complete -c tcpdump -s s -l snapshot-length -x -d 'Snarf snaplen bytes of data from each packet'
 complete -c tcpdump -s T -x -d 'Force packets to be interpreted the specified type'
@@ -54,7 +54,7 @@ complete -c tcpdump -s v -d 'Produce (slightly more) verbose output'
 complete -c tcpdump -o vv -d 'Even more verbose output'
 complete -c tcpdump -o vvv -d 'Even more verbose output'
 complete -c tcpdump -s V -F -d 'Read a list of filenames from file'
-complete -c tcpdump -s w -F -d 'Write the raw packets to file'
+complete -c tcpdump -s w -F -d 'Write the raw packets to file' -r
 complete -c tcpdump -s W -d 'Limit the number of files created'
 complete -c tcpdump -s x -d 'Print the data of each packet in hex (minus link level header)'
 complete -c tcpdump -o xx -d 'Print the data of each packet in hex (including link level header)'

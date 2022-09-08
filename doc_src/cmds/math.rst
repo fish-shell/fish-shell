@@ -123,7 +123,7 @@ Functions
     These will throw away any non-integer parts and interpret the rest as an int.
 
     Note: ``bitnot`` and ``bitnand`` don't exist. This is because numbers in math don't really have a *width* in terms of bits,
-    and tehse operations necessarily care about leading zeroes.
+    and these operations necessarily care about leading zeroes.
 
     If you need to negate a specific number you can do it with an xor with a mask, e.g.::
 

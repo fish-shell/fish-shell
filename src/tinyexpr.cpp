@@ -114,7 +114,10 @@ struct state {
 
     [[nodiscard]] te_error_t error() const {
         if (type_ == TOK_END) return {TE_ERROR_NONE, 0};
-        te_error_t err{error_, static_cast<int>(next_ - start_) + 1};
+        // If we have an error position set, use that,
+        // otherwise the current position.
+        const wchar_t *tok = errpos_ ? errpos_ : next_;
+        te_error_t err{error_, static_cast<int>(tok - start_) + 1};
         if (error_ == TE_ERROR_NONE) {
             // If we're not at the end but there's no error, then that means we have a
             // superfluous token that we have no idea what to do with.
@@ -129,6 +132,7 @@ struct state {
 
     const wchar_t *start_;
     const wchar_t *next_;
+    const wchar_t *errpos_{nullptr};
 
     te_fun_t current_{NAN};
     void next_token();
@@ -520,8 +524,17 @@ double state::term() {
     auto ret = factor();
     while (type_ == TOK_INFIX && (current_ == mul || current_ == divide || current_ == fmod)) {
         auto fn = current_;
+        auto tok = next_;
         next_token();
-        ret = fn(ret, factor());
+        auto ret2 = factor();
+        if (ret2 == 0 && (fn == divide || fn == fmod)) {
+            // Division by zero (also for modulo)
+            type_ = TOK_ERROR;
+            error_ = TE_ERROR_DIV_BY_ZERO;
+            // Error position is the "/" or "%" sign for now
+            errpos_ = tok;
+        }
+        ret = fn(ret, ret2);
     }
     return ret;
 }

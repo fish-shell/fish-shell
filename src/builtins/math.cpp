@@ -177,6 +177,8 @@ static const wchar_t *math_describe_error(const te_error_t &error) {
             return _(L"Unexpected token");
         case TE_ERROR_LOGICAL_OPERATOR:
             return _(L"Logical operations are not supported, use `test` instead");
+        case TE_ERROR_DIV_BY_ZERO:
+            return _(L"Division by zero");
         case TE_ERROR_UNKNOWN:
             return _(L"Expression is bogus");
         default:

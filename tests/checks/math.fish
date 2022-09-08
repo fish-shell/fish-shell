@@ -151,9 +151,14 @@ not math -s 12
 not math 2^999999
 # CHECKERR: math: Error: Result is infinite
 # CHECKERR: '2^999999'
-not math 1 / 0
-# CHECKERR: math: Error: Result is infinite
-# CHECKERR: '1 / 0'
+printf '<%s>\n' (not math 1 / 0 2>&1)
+# CHECK: <math: Error: Division by zero>
+# CHECK: <'1 / 0'>
+# CHECK: <   ^>
+printf '<%s>\n' (math 1 % 0 - 5 2>&1)
+# CHECK: <math: Error: Division by zero>
+# CHECK: <'1 % 0 - 5'>
+# CHECK: <   ^>
 
 # Validate "x" as multiplier
 math 0x2 # Hex
@@ -259,8 +264,9 @@ math pow 2 x cos'(-pi)', 2
 # This used to take ages, see #8170.
 # If this test hangs, that's reintroduced!
 math 'ncr(0/0, 1)'
-# CHECKERR: math: Error: Result is infinite
+# CHECKERR: math: Error: Division by zero
 # CHECKERR: 'ncr(0/0, 1)'
+# CHECKERR:       ^
 
 # Variadic functions require at least one argument
 math min

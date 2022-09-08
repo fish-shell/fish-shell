@@ -15,3 +15,15 @@ expect_prompt()
 
 sendline("echo it worked")
 expect_prompt("it worked")
+
+# Regression test for #9181
+sendline("status job-control interactive")
+expect_prompt()
+sendline("$fish_test_helper abandon_tty")
+expect_prompt()
+sendline("echo cool")
+expect_prompt("cool")
+sendline("true ($fish_test_helper abandon_tty)")
+expect_prompt()
+sendline("echo even cooler")
+expect_prompt("even cooler")

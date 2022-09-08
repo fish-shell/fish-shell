@@ -2,6 +2,7 @@
 // programs, allowing fish to test its behavior.
 
 #include <fcntl.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -10,6 +11,27 @@
 #include <cstdlib>
 #include <cstring>
 #include <iterator>  // for std::begin/end
+
+static void abandon_tty() {
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+    // Both parent and child do the same thing.
+    pid_t child = pid ? pid : getpid();
+    if (setpgid(child, child)) {
+        perror("setpgid");
+        exit(EXIT_FAILURE);
+    }
+    // tcsetpgrp may fail in the parent if the child has already exited.
+    // This is the benign race.
+    (void)tcsetpgrp(STDIN_FILENO, child);
+    // Parent waits for child to exit.
+    if (pid > 0) {
+        waitpid(child, nullptr, 0);
+    }
+}
 
 static void become_foreground_then_print_stderr() {
     if (tcsetpgrp(STDOUT_FILENO, getpgrp()) < 0) {
@@ -192,6 +214,7 @@ struct fth_command_t {
 };
 
 static fth_command_t s_commands[] = {
+    {"abandon_tty", abandon_tty, "Create a new pgroup and transfer tty ownership to it"},
     {"become_foreground_then_print_stderr", become_foreground_then_print_stderr,
      "Claim the terminal (tcsetpgrp) and then print to stderr"},
     {"nohup_wait", nohup_wait, "Ignore SIGHUP and just wait"},

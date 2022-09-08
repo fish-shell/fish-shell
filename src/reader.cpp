@@ -4278,6 +4278,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     history_search.reset();
 
+    // It may happen that a command we ran when job control was disabled nevertheless stole the tty
+    // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
+    // unconditionally reclaim the tty. See #9181.
+    (void)tcsetpgrp(conf.in, getpgrp());
+
     // Get the current terminal modes. These will be restored when the function returns.
     struct termios old_modes {};
     if (tcgetattr(conf.in, &old_modes) == -1 && errno == EIO) redirect_tty_output();

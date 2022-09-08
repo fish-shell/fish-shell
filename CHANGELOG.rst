@@ -69,6 +69,7 @@ Interactive improvements
 - A crash when completing a token that contained both a potential glob and a quoted variable expansion was fixed (:issue:`9137`).
 - If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
 - ``prompt_pwd`` no longer accidentally overwrites a global or universal ``$fish_prompt_pwd_full_dirs`` when called with the ``-d`` or ``--full-length-dirs`` option (:issue:`9123`).
+- A bug which caused fish to freeze or exit after running a command which does not preserve the foreground process group was fixed (:issue:`9181`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

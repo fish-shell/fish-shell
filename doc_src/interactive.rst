@@ -301,7 +301,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Control`\ +\ :kbd:`L` clears and repaints the screen.
 
-- :kbd:`Control`\ +\ :kbd:`R` searches the history if there is something in the commandline. This is mainly to ease the transition from other shells, where ctrl+r initiates the history search.
+- :kbd:`Control`\ +\ :kbd:`R` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing :kbd:`Control`\ +\ :kbd:`R` again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
 
 - :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the :ref:`killring`.
 

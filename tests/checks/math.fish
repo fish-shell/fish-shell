@@ -254,6 +254,11 @@ math pow sin 3, 5
 # CHECKERR: 'pow sin 3, 5'
 # CHECKERR: ^
 
+math pow sin 3, 5 + 2
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: 'pow sin 3, 5 + 2'
+# CHECKERR:             ^~~~^
+
 math sin pow 3, 5
 # CHECK: -0.890009
 

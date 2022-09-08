@@ -109,6 +109,11 @@ not math 'ncr(1)'
 # CHECKERR: 'ncr(1)'
 # CHECKERR:       ^
 
+math "min()"
+# CHECKERR: math: Error: Too few arguments
+# CHECKERR: 'min()'
+# CHECKERR:      ^
+
 # There is no "blah" function.
 not math 'blah()'
 # CHECKERR: math: Error: Unknown function

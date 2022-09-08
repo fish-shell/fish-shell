@@ -461,7 +461,9 @@ double state::base() {
             if (type_ != TOK_ERROR || error_ == TE_ERROR_UNEXPECTED_TOKEN) {
                 // Otherwise we complain about the number of arguments *first*,
                 // a closing parenthesis should be more obvious.
-                error_ = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
+                //
+                // Vararg functions need at least one argument.
+                error_ = (i < arity || (arity == -1 && i == 0)) ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 type_ = TOK_ERROR;
                 if (first_err) {
                     errpos_ = first_err;

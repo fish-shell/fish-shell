@@ -433,7 +433,9 @@ double state::base() {
 
             std::vector<double> parameters;
             int i;
-            for (i = 0; arity < 0 || i < arity; i++) {
+            const wchar_t *first_err = nullptr;
+            for (i = 0; ; i++) {
+                if (i == arity) first_err = next_;
                 parameters.push_back(expr());
                 if (type_ != TOK_SEP) {
                     break;
@@ -461,6 +463,13 @@ double state::base() {
                 // a closing parenthesis should be more obvious.
                 error_ = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 type_ = TOK_ERROR;
+                if (first_err) {
+                    errpos_ = first_err;
+                    errlen_ = next_ - first_err;
+                    // TODO: Rationalize where we put the cursor exactly.
+                    // If we have a closing paren it's on it, if we don't it's before the number.
+                    if (type_ != TOK_CLOSE) errlen_++;
+                }
             }
             break;
         }

@@ -169,6 +169,10 @@ printf '<%s>\n' (math 1 % 0 - 5 2>&1)
 # CHECK: <math: Error: Division by zero>
 # CHECK: <'1 % 0 - 5'>
 # CHECK: <   ^>
+printf '<%s>\n' (math min 1 / 0, 5 2>&1)
+# CHECK: <math: Error: Division by zero>
+# CHECK: <'min 1 / 0, 5'>
+# CHECK: <       ^>
 
 # Validate "x" as multiplier
 math 0x2 # Hex

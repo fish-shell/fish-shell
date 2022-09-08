@@ -113,11 +113,11 @@ struct state {
     double eval() { return expr(); }
 
     [[nodiscard]] te_error_t error() const {
-        if (type_ == TOK_END) return {TE_ERROR_NONE, 0};
+        if (type_ == TOK_END) return {TE_ERROR_NONE, 0, 0};
         // If we have an error position set, use that,
         // otherwise the current position.
         const wchar_t *tok = errpos_ ? errpos_ : next_;
-        te_error_t err{error_, static_cast<int>(tok - start_) + 1};
+        te_error_t err{error_, static_cast<int>(tok - start_) + 1, errlen_};
         if (error_ == TE_ERROR_NONE) {
             // If we're not at the end but there's no error, then that means we have a
             // superfluous token that we have no idea what to do with.
@@ -133,6 +133,7 @@ struct state {
     const wchar_t *start_;
     const wchar_t *next_;
     const wchar_t *errpos_{nullptr};
+    int errlen_{0};
 
     te_fun_t current_{NAN};
     void next_token();
@@ -312,6 +313,9 @@ void state::next_token() {
                     // Our error is more specific, so it takes precedence.
                     type_ = TOK_ERROR;
                     error_ = TE_ERROR_UNKNOWN_FUNCTION;
+                    errpos_ = start + 1;
+                    errlen_ = next_ - start;
+
                 }
             } else {
                 /* Look for an operator or special character. */
@@ -533,6 +537,7 @@ double state::term() {
             error_ = TE_ERROR_DIV_BY_ZERO;
             // Error position is the "/" or "%" sign for now
             errpos_ = tok;
+            errlen_ = 1;
         }
         ret = fn(ret, ret2);
     }

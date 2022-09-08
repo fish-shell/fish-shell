@@ -44,6 +44,7 @@ typedef enum {
 typedef struct te_error_t {
     te_error_type_t type;
     int position;
+    int len;
 } te_error_t;
 
 /* Parses the input expression, evaluates it, and frees it. */

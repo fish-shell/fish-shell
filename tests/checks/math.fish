@@ -113,7 +113,7 @@ not math 'ncr(1)'
 not math 'blah()'
 # CHECKERR: math: Error: Unknown function
 # CHECKERR: 'blah()'
-# CHECKERR:    ^
+# CHECKERR:  ^~~^
 
 math n + 4
 # CHECKERR: math: Error: Unknown function
@@ -167,7 +167,7 @@ math 2x 4
 math 2 x4 # ERROR
 # CHECKERR: math: Error: Unknown function
 # CHECKERR: '2 x4'
-# CHECKERR:     ^
+# CHECKERR:    ^^
 math 0x 3
 # CHECK: 2
 # CHECK: 20

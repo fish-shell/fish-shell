@@ -383,7 +383,6 @@ double state::base() {
     /* <base>      =    <constant> | <function-0> {"(" ")"} | <function-1> <power> |
      * <function-X> "(" <expr> {"," <expr>} ")" | "(" <list> ")" */
 
-    auto previous = start_;
     auto next = next_;
     switch (type_) {
         case TOK_NUMBER: {
@@ -398,10 +397,10 @@ double state::base() {
                 error_ = TE_ERROR_MISSING_OPERATOR;
                 // The error should be given *between*
                 // the last two tokens.
-                // Since these are two separate numbers there is at least
-                // one space between.
-                start_ = previous;
-                next_ = next + 1;
+                errpos_ = next + 1;
+                // Go to the end of whitespace.
+                while (wcschr(L" \t\n\r", next++[0]));
+                errlen_ = next - errpos_;
             }
             return val;
         }

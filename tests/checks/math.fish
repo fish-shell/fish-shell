@@ -131,6 +131,11 @@ not math '2 + 2 4'
 # This regex to check whitespace - the error appears between the second 2 and the 4!
 # (right after the 2)
 # CHECKERR: {{^}}      ^
+printf '<%s>\n' (math '2 + 2      4' 2>&1)
+# CHECK: <math: Error: Missing operator>
+# CHECK: <'2 + 2      4'>
+# CHECK: <      ^~~~~^>
+
 not math '(1 2)'
 # CHECKERR: math: Error: Missing operator
 # CHECKERR: '(1 2)'

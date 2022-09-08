@@ -258,7 +258,12 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
     } else {
         streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error));
         streams.err.append_format(L"'%ls'\n", expression.c_str());
-        streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ", L"^");
+        if (error.len >= 2) {
+            wcstring tildes(error.len - 2, L'~');
+            streams.err.append_format(L"%*ls%ls%ls%ls\n", error.position - 1, L" ", L"^", tildes.c_str(), L"^");
+        } else {
+            streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ", L"^");
+        }
         retval = STATUS_CMD_ERROR;
     }
     return retval;

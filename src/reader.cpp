@@ -1175,8 +1175,7 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
             end = colors.size();
         }
 
-        for (size_t i = data.history_search_range->start; i < end;
-             i++) {
+        for (size_t i = data.history_search_range->start; i < end; i++) {
             colors.at(i).background = highlight_role_t::search_match;
         }
     }

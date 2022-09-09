@@ -37,7 +37,13 @@ Scripting improvements
     > path mtime --relative foo
     10
 
+- ``string`` gained a new ``shorten`` subcommand to shorten strings to a given visible width (:issue:`9156`)::
+
+    > string shorten -m10 "Hello this is a long string"
+    Hello thi…
+
 - ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
+- ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
 - The read limit is now restored to the default when $fish_read_limit is unset (:issue:`9129`).
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
 - Fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
@@ -46,14 +52,19 @@ Scripting improvements
     for a,b in y 1 z 3
         ^~^
 
+- ``math`` now actually handles division-by-zero while computing and gives it a bespoke error, as well as augmenting some errors with their extent (:issue:`9190`).
+- Fish calls external commands via the given path again instead of always making it absolute. This can be seen e.g. when you run a bash script and check ``$0`` (:issue:`9143`).
+
 Interactive improvements
 ------------------------
 - If the terminal definition for $TERM can't be used, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
 - The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text.
 - The new environment variable ``$fish_cursor_selection_mode`` can be used to configure whether the command line selection includes (``inclusive``) the character under the cursor or not (``exclusive``). The new default is ``exclusive``. Use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
 - process-exit and job-exit events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
-- Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`).
+- Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - A crash when completing a token that contained both a potential glob and a quoted variable expansion was fixed (:issue:`9137`).
+- If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
+- ``prompt_pwd`` no longer accidentally overwrites a global or universal ``$fish_prompt_pwd_full_dirs`` when called with the ``-d`` or ``--full-length-dirs`` option (:issue:`9123`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,6 +72,7 @@ New or improved bindings
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
+- The "Disco" sample prompt no longer prints an error in some working directories (:issue:`9164`). If you saved this prompt, you should run ``fish_config prompt save disco`` again.
 
 Completions
 ^^^^^^^^^^^

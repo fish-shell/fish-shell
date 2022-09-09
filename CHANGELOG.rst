@@ -52,7 +52,11 @@ Scripting improvements
     for a,b in y 1 z 3
         ^~^
 
-- ``math`` now actually handles division-by-zero while computing and gives it a bespoke error, as well as augmenting some errors with their extent (:issue:`9190`).
+- ``math`` now actually handles division-by-zero while computing and gives it a bespoke error, as well as augmenting some errors with their extent (:issue:`9190`). This changes behavior in some limited cases. E.g.::
+
+    math min 1 / 0, 5
+
+  would previously print "5" because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite. Instead, ``math`` will now error out.
 - Fish calls external commands via the given path again instead of always making it absolute. This can be seen e.g. when you run a bash script and check ``$0`` (:issue:`9143`).
 
 Interactive improvements

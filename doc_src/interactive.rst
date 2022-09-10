@@ -555,6 +555,8 @@ After a command has been executed, it is remembered in the history list. Any dup
 
 By pressing :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
+For more complicated searches, you can press :kbd:`Ctrl`\ +\ :kbd:`R` to open a pager that allows you to search the history. It shows a limited number of entries in one page, press :kbd:`Ctrl`\ +\ :kbd:`R` [#]_ again to move to the next page and :kbd:`Ctrl`\ +\ :kbd:`S` [#]_ to move to the previous page. You can change the text to refine your search.
+
 History searches are case-insensitive unless the search string contains an uppercase character. You can stop a search to edit your search string by pressing :kbd:`Esc` or :kbd:`Page Down`.
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history. It will still be available for recall until the next command is executed, but will not be stored on disk. This is to allow you to fix misspellings and such.
@@ -571,6 +573,9 @@ Examples:
 To search for previous entries containing the word 'make', type ``make`` in the console and press the up key.
 
 If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt`\ +\ :kbd:`↑` to search for previously typed words containing 'm'.
+
+.. [#] Or another binding that triggers the ``history-pager`` input function. See :ref:`bind <cmd-bind>` for a list.
+.. [#] Or another binding that triggers the ``pager-toggle-search`` input function.
 
 Navigating directories
 ----------------------

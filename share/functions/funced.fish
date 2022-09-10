@@ -120,7 +120,7 @@ function funced --description 'Edit function definition'
                 echo # add a line between the parse error and the prompt
                 set -l repeat
                 set -l prompt (_ 'Edit the file again? [Y/n]')
-                read -p "echo $prompt\  " response
+                read -P "$prompt " response
                 if test -z "$response"
                     or contains $response {Y,y}{E,e,}{S,s,}
                     continue

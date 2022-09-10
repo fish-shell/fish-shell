@@ -97,6 +97,7 @@ Other improvements
 ------------------
 - The css for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
 - The web-based configuration tool now works on systems that have ipv6 disabled (:issue:`3857`).
+- Aliases can ignore arguments by ending them with ``#``.
 
 
 For distributors

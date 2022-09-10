@@ -301,8 +301,6 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Control`\ +\ :kbd:`L` clears and repaints the screen.
 
-- :kbd:`Control`\ +\ :kbd:`R` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing :kbd:`Control`\ +\ :kbd:`R` again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
-
 - :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the :ref:`killring`.
 
 - :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents.
@@ -357,6 +355,8 @@ To enable emacs mode, use ``fish_default_key_bindings``. This is also the defaul
 - :kbd:`Control`\ +\ :kbd:`Z`, :kbd:`Control`\ +\ :kbd:`_` (:kbd:`Control`\ +\ :kbd:`/` on some terminals) undo the most recent edit of the line.
 
 - :kbd:`Alt`\ +\ :kbd:`/` reverts the most recent undo.
+
+- :kbd:`Control`\ +\ :kbd:`R` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing :kbd:`Control`\ +\ :kbd:`R` again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
 
 
 You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.

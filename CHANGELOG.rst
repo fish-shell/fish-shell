@@ -27,6 +27,7 @@ Interactive improvements
 - Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
 - Escape during history search restores the original commandline again (regressed in 3.6.0).
 - Using ``--help`` on builtins now respects the $MANPAGER variable in preference to $PAGER (:issue:`9488`).
+- Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

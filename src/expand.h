@@ -45,6 +45,10 @@ enum class expand_flag {
     /// Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if
     /// fuzzy_match is set.
     no_fuzzy_directories,
+    /// Allows matching a leading dot even if the wildcard does not contain one.
+    /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
+    /// match hidden files.
+    allow_nonliteral_leading_dot,
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
     /// working directories, and to use logical instead of physical paths.
     special_for_cd,

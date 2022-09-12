@@ -191,7 +191,8 @@ static wildcard_result_t wildcard_complete_internal(const wchar_t *const str, si
 
     // Maybe early out for hidden files. We require that the wildcard match these exactly (i.e. a
     // dot); ANY_STRING not allowed.
-    if (is_first_call && str[0] == L'.' && wc[0] != L'.') {
+    if (is_first_call && !params.expand_flags.get(expand_flag::allow_nonliteral_leading_dot) &&
+        str[0] == L'.' && wc[0] != L'.') {
         return wildcard_result_t::no_match;
     }
 

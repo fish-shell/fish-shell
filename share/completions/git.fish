@@ -2069,15 +2069,15 @@ complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_u
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a branch -d 'Create a new branch from a stash'
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a push -d 'Create a new stash with given files'
 
-complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_complete_stashes)'
-complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_complete_stashes)'
-complete -f -c git -n '__fish_git_stash_using_command drop' -a '(__fish_git_complete_stashes)'
-complete -f -c git -n '__fish_git_stash_using_command pop' -a '(__fish_git_complete_stashes)'
-complete -f -c git -n '__fish_git_stash_using_command show' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command apply' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command branch' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command drop' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command pop' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command show' -a '(__fish_git_complete_stashes)'
 
-complete -f -c git -n '__fish_git_stash_using_command push' -a '(__fish_git_files modified deleted modified-staged-deleted)'
-complete -f -c git -n '__fish_git_stash_using_command push' -s p -l patch -d 'Interactively select hunks'
-complete -f -c git -n '__fish_git_stash_using_command push' -s m -l message -d 'Add a description'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -a '(__fish_git_files modified deleted modified-staged-deleted)'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s p -l patch -d 'Interactively select hunks'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s m -l message -d 'Add a description'
 
 ### config
 complete -f -c git -n __fish_git_needs_command -a config -d 'Set and read git configuration variables'

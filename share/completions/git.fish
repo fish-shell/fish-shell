@@ -1159,7 +1159,7 @@ complete -f -c git -n '__fish_git_using_command apply' -n '__fish_git_contains_o
 complete -x -c git -n '__fish_git_using_command apply am' -s p -d 'Remove n leading path components'
 complete -x -c git -n '__fish_git_using_command apply am' -s C -d 'Ensure n that lines of surrounding context match'
 complete -f -c git -n '__fish_git_using_command apply' -l unidiff-zero -d 'Do not break on diffs generated using --unified=0'
-complete -f -c git -n '__fish_git_needs_command apply' -l apply -d 'Always apply patches'
+complete -f -c git -n '__fish_git_using_command apply' -l apply -d 'Always apply patches'
 complete -f -c git -n '__fish_git_using_command apply' -l no-add -d 'Ignore additions made by patches'
 complete -f -c git -n '__fish_git_using_command apply' -l allow-binary-replacement -l binary -d 'Also patch binaries'
 complete -F -c git -n '__fish_git_using_command apply' -l exclude -d 'Dont apply changes to files matching given pattern'

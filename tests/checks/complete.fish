@@ -531,6 +531,22 @@ begin
     # CHECK: Empty completions
 end
 
+rm -$f $tmpdir/*
+
+# Leading dots are not completed for default file completion,
+# but may be for custom command (e.g. git add).
+function dotty
+end
+function notty
+end
+complete -c dotty --no-files -a '(echo .a*)'
+touch .abc .def
+complete -C'notty '
+echo "Should be nothing"
+# CHECK: Should be nothing
+complete -C'dotty '
+# CHECK: .abc
+
 rm -r $tmpdir
 
 complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mktemp'

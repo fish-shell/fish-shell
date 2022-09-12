@@ -49,6 +49,7 @@ Interactive improvements
 - A longstanding issue where items in the pager would sometimes display without proper formatting has been fixed (:issue:`9617`).
 - The :kbd:`Alt` +\ :kbd:`l` binding, which lists the directory of the token under the cursor, correctly expands tilde (``~``) to the home directory (:issue:`9954`).
 - Various fish utilities that use an external pager will now try a selection of common pagers if the :envvar:`PAGER` environment variable is not set, or write the output to the screen without a pager if there is not one available (:issue:`10074`)
+- Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

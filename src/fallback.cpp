@@ -9,6 +9,7 @@
 #include <errno.h>   // IWYU pragma: keep
 #include <fcntl.h>   // IWYU pragma: keep
 #include <limits.h>  // IWYU pragma: keep
+#include <unistd.h>  // IWYU pragma: keep
 #include <wctype.h>
 
 #include <cwchar>

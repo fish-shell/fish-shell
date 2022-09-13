@@ -3,7 +3,6 @@
 
 #include "config.h"
 
-#include <stdint.h>
 // The following include must be kept despite what IWYU says. That's because of the interaction
 // between the weak linking of `wcscasecmp` via `#define`s below and the declarations
 // in <wchar.h>. At least on OS X if we don't do this we get compilation errors do to the macro

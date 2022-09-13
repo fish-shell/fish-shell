@@ -9,10 +9,10 @@
 #include <errno.h>   // IWYU pragma: keep
 #include <fcntl.h>   // IWYU pragma: keep
 #include <limits.h>  // IWYU pragma: keep
-#include <unistd.h>
 #include <wctype.h>
 
 #include <cwchar>
+#include <cstdlib>
 #if HAVE_GETTEXT
 #include <libintl.h>
 #endif

@@ -203,8 +203,15 @@ void undo_history_t::clear() {
     may_coalesce = false;
 }
 
-void apply_edit(wcstring *target, const edit_t &edit) {
-    target->replace(edit.offset, edit.length, edit.replacement);
+void apply_edit(wcstring *target, std::vector<highlight_spec_t> *colors, const edit_t &edit) {
+    size_t offset = edit.offset;
+    target->replace(offset, edit.length, edit.replacement);
+
+    // Now do the same to highlighting.
+    auto it = colors->begin() + offset;
+    colors->erase(it, it + edit.length);
+    highlight_spec_t last_color = offset < 1 ? highlight_spec_t{} : colors->at(offset - 1);
+    colors->insert(it, edit.replacement.size(), last_color);
 }
 
 /// Returns the number of characters left of the cursor that are removed by the
@@ -237,7 +244,7 @@ bool editable_line_t::undo() {
         edit_t inverse = edit_t(edit.offset, edit.replacement.size(), L"");
         inverse.replacement = edit.old;
         size_t old_position = edit.cursor_position_before_edit;
-        apply_edit(&text_, inverse);
+        apply_edit(&text_, &colors_, inverse);
         set_position(old_position);
         did_undo = true;
     }
@@ -250,7 +257,7 @@ bool editable_line_t::undo() {
 void editable_line_t::clear() {
     undo_history_.clear();
     if (empty()) return;
-    text_ = L"";
+    apply_edit(&text_, &colors_, edit_t(0, text_.length(), L""));
     set_position(0);
 }
 
@@ -261,7 +268,7 @@ void editable_line_t::push_edit(edit_t edit, bool allow_coalesce) {
         assert(edit.offset == position());
         edit_t &last_edit = undo_history_.edits.back();
         last_edit.replacement.append(edit.replacement);
-        apply_edit(&text_, edit);
+        apply_edit(&text_, &colors_, edit);
         set_position(position() + edit.replacement.size());
 
         assert(undo_history_.may_coalesce);
@@ -285,7 +292,7 @@ void editable_line_t::push_edit(edit_t edit, bool allow_coalesce) {
     }
     edit.cursor_position_before_edit = position();
     edit.old = text_.substr(edit.offset, edit.length);
-    apply_edit(&text_, edit);
+    apply_edit(&text_, &colors_, edit);
     set_position(cursor_position_after_edit(edit));
     assert(undo_history_.edits_applied == undo_history_.edits.size());
     undo_history_.may_coalesce =
@@ -306,7 +313,7 @@ bool editable_line_t::redo() {
         }
         last_group_id = edit.group_id;
         undo_history_.edits_applied++;
-        apply_edit(&text_, edit);
+        apply_edit(&text_, &colors_, edit);
         set_position(cursor_position_after_edit(edit));
         did_redo = true;
     }
@@ -790,12 +797,12 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Generate a new layout data from the current state of the world.
     /// If \p mcolors has a value, then apply it; otherwise extend existing colors.
-    layout_data_t make_layout_data(maybe_t<highlight_list_t> mcolors = none()) const;
+    layout_data_t make_layout_data() const;
 
     /// Generate a new layout data from the current state of the world, and paint with it.
     /// If \p mcolors has a value, then apply it; otherwise extend existing colors.
-    void layout_and_repaint(const wchar_t *reason, maybe_t<highlight_list_t> mcolors = none()) {
-        this->rendered_layout = make_layout_data(std::move(mcolors));
+    void layout_and_repaint(const wchar_t *reason) {
+        this->rendered_layout = make_layout_data();
         paint_layout(reason);
     }
 
@@ -1138,17 +1145,12 @@ bool reader_data_t::is_repaint_needed(const std::vector<highlight_spec_t> *mcolo
            check(pager.rendering_needs_update(current_page_rendering), L"pager");
 }
 
-layout_data_t reader_data_t::make_layout_data(maybe_t<highlight_list_t> mcolors) const {
+layout_data_t reader_data_t::make_layout_data() const {
     layout_data_t result{};
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;
     result.text = command_line.text();
-
-    if (mcolors.has_value()) {
-        result.colors = mcolors.acquire();
-    } else {
-        result.colors = rendered_layout.colors;
-    }
-
+    result.colors = command_line.colors();
+    assert(result.text.size() == result.colors.size());
     result.position = focused_on_pager ? pager.cursor_position() : command_line.position();
     result.selection = selection;
     result.focused_on_pager = (active_edit_line() == &pager.search_field_line);
@@ -1157,12 +1159,6 @@ layout_data_t reader_data_t::make_layout_data(maybe_t<highlight_list_t> mcolors)
     result.left_prompt_buff = left_prompt_buff;
     result.mode_prompt_buff = mode_prompt_buff;
     result.right_prompt_buff = right_prompt_buff;
-
-    // Ensure our color list has the same length as the command line, by extending it with the last
-    // color. This typically reduces redraws; e.g. if the user continues types into an argument, we
-    // guess it's still an argument, while the highlighting proceeds in the background.
-    highlight_spec_t last_color = result.colors.empty() ? highlight_spec_t{} : result.colors.back();
-    result.colors.resize(result.text.size(), last_color);
     return result;
 }
 
@@ -1704,7 +1700,8 @@ void reader_data_t::delete_char(bool backward) {
 /// Returns true if the string changed.
 void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     if (!str.empty()) {
-        el->push_edit(edit_t(el->position(), 0, str), !history_search.active());
+        el->push_edit(edit_t(el->position(), 0, str),
+                      !history_search.active() /* allow_coalesce */);
     }
 
     if (el == &command_line) {
@@ -1714,8 +1711,8 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     maybe_refilter_pager(el);
 }
 
-void reader_data_t::push_edit(editable_line_t *el, edit_t edit) {
-    el->push_edit(std::move(edit), false);
+void reader_data_t::push_edit(editable_line_t &el, edit_t edit) {
+    el->push_edit(std::move(edit), false /* allow_coalesce */);
     maybe_refilter_pager(el);
 }
 
@@ -2689,7 +2686,8 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
     if (result.text == command_line.text()) {
         assert(result.colors.size() == command_line.size());
         if (this->is_repaint_needed(&result.colors)) {
-            this->layout_and_repaint(L"highlight", std::move(result.colors));
+            command_line.set_colors(std::move(result.colors));
+            this->layout_and_repaint(L"highlight");
         }
     }
 }

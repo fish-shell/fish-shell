@@ -14,6 +14,7 @@
 
 #include "common.h"
 #include "complete.h"
+#include "highlight.h"
 #include "maybe.h"
 #include "parse_constants.h"
 
@@ -45,9 +46,9 @@ struct edit_t {
     bool operator==(const edit_t &other) const;
 };
 
-/// Modify a string according to the given edit.
+/// Modify a string and its syntax highlighting according to the given edit.
 /// Currently exposed for testing only.
-void apply_edit(wcstring *target, const edit_t &edit);
+void apply_edit(wcstring *target, std::vector<highlight_spec_t> *colors, const edit_t &edit);
 
 /// The history of all edits to some command line.
 struct undo_history_t {
@@ -82,6 +83,12 @@ class editable_line_t {
    public:
     const wcstring &text() const { return text_; }
 
+    const std::vector<highlight_spec_t> &colors() const { return colors_; }
+    void set_colors(std::vector<highlight_spec_t> colors) {
+        assert(colors.size() == size());
+        colors_ = std::move(colors);
+    }
+
     size_t position() const { return position_; }
     void set_position(size_t position) { position_ = position; }
 
@@ -115,6 +122,8 @@ class editable_line_t {
 
     /// The command line.
     wcstring text_;
+    /// Syntax highlighting.
+    std::vector<highlight_spec_t> colors_;
     /// The current position of the cursor in the command line.
     size_t position_ = 0;
 

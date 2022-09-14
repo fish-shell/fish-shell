@@ -2415,7 +2415,8 @@ static void test_abbreviations() {
                                              const environment_t &vars) -> maybe_t<wcstring> {
         if (auto edit = reader_expand_abbreviation_in_command(cmdline, cursor_pos, vars)) {
             wcstring cmdline_expanded = cmdline;
-            apply_edit(&cmdline_expanded, *edit);
+            std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
+            apply_edit(&cmdline_expanded, &colors, *edit);
             return cmdline_expanded;
         }
         return none_t();

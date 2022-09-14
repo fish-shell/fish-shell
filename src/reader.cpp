@@ -264,6 +264,13 @@ bool editable_line_t::undo() {
     return did_undo;
 }
 
+void editable_line_t::clear() {
+    undo_history.clear();
+    if (empty()) return;
+    set_text_bypassing_undo_history(L"");
+    set_position(0);
+}
+
 void editable_line_t::push_edit(edit_t &&edit) {
     // Assign a new group id or propagate the old one if we're in a logical grouping of edits
     if (edit_group_level_ != -1) {

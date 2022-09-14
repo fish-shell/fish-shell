@@ -107,12 +107,7 @@ class editable_line_t {
 
     wchar_t at(size_t idx) const { return text().at(idx); }
 
-    void clear() {
-        undo_history.clear();
-        if (empty()) return;
-        set_text_bypassing_undo_history(L"");
-        set_position(0);
-    }
+    void clear();
 
     /// Modify the commandline according to @edit. Most modifications to the
     /// text should pass through this function.

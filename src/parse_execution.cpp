@@ -735,9 +735,23 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         // but this mainly applies to EACCES. We could also feasibly get:
         // ELOOP
         // ENAMETOOLONG
+        if (err_code == ENOTDIR) {
+            // If the original command did not include a "/", assume we found it via $PATH.
+            auto src = get_source(statement.command);
+            if (src.find(L"/") == wcstring::npos) {
+                return this->report_error(
+                                          STATUS_NOT_EXECUTABLE, statement.command,
+                                          _(L"Unknown command. A component of '%ls' is not a directory. Check your $PATH."), cmd);
+            } else {
+                return this->report_error(
+                                          STATUS_NOT_EXECUTABLE, statement.command,
+                                          _(L"Unknown command. A component of '%ls' is not a directory."), cmd);
+            }
+        }
+
         return this->report_error(
-            STATUS_NOT_EXECUTABLE, statement.command,
-            _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
+                                  STATUS_NOT_EXECUTABLE, statement.command,
+                                  _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
     }
 
     // Handle unrecognized commands with standard command not found handler that can make better

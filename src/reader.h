@@ -81,8 +81,6 @@ struct undo_history_t {
 class editable_line_t {
    public:
     const wcstring &text() const { return text_; }
-    /// Set the text directly without maintaining undo invariants. Use with caution.
-    void set_text_bypassing_undo_history(wcstring &&text) { text_ = text; }
 
     size_t position() const { return position_; }
     void set_position(size_t position) { position_ = position; }

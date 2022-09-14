@@ -250,7 +250,7 @@ bool editable_line_t::undo() {
 void editable_line_t::clear() {
     undo_history_.clear();
     if (empty()) return;
-    set_text_bypassing_undo_history(L"");
+    text_ = L"";
     set_position(0);
 }
 

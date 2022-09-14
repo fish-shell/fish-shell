@@ -79,17 +79,6 @@ struct undo_history_t {
 
 /// Helper class for storing a command line.
 class editable_line_t {
-    /// The command line.
-    wcstring text_;
-    /// The current position of the cursor in the command line.
-    size_t position_ = 0;
-
-    /// The nesting level for atomic edits, so that recursive invocations of start_edit_group()
-    /// are not ended by one end_edit_group() call.
-    int32_t edit_group_level_ = -1;
-    /// Monotonically increasing edit group, ignored when edit_group_level_ is -1. Allowed to wrap.
-    uint32_t edit_group_id_ = -1;
-
    public:
     undo_history_t undo_history;
 
@@ -128,6 +117,18 @@ class editable_line_t {
     void begin_edit_group();
     /// End a logical grouping of command line edits that should be undone/redone together.
     void end_edit_group();
+
+   private:
+    /// The command line.
+    wcstring text_;
+    /// The current position of the cursor in the command line.
+    size_t position_ = 0;
+
+    /// The nesting level for atomic edits, so that recursive invocations of start_edit_group()
+    /// are not ended by one end_edit_group() call.
+    int32_t edit_group_level_ = -1;
+    /// Monotonically increasing edit group, ignored when edit_group_level_ is -1. Allowed to wrap.
+    uint32_t edit_group_id_ = -1;
 };
 
 /// Read commands from \c fd until encountering EOF.

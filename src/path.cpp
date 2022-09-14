@@ -43,6 +43,10 @@ static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_
         return S_ISREG(buff.st_mode) ? 0 : EACCES;
     };
 
+    if (cmd.empty()) {
+        return noent_res;
+    }
+
     // Commands cannot contain NUL byte.
     if (cmd.find(L'\0') != wcstring::npos) {
         return noent_res;

@@ -80,8 +80,6 @@ struct undo_history_t {
 /// Helper class for storing a command line.
 class editable_line_t {
    public:
-    undo_history_t undo_history;
-
     const wcstring &text() const { return text_; }
     /// Set the text directly without maintaining undo invariants. Use with caution.
     void set_text_bypassing_undo_history(wcstring &&text) { text_ = text; }
@@ -100,12 +98,7 @@ class editable_line_t {
 
     /// Modify the commandline according to @edit. Most modifications to the
     /// text should pass through this function.
-    void push_edit(edit_t &&edit);
-
-    /// Modify the commandline by inserting a string at the cursor.
-    /// Does not create a new undo point, but adds to the last edit which
-    /// must be an insertion, too.
-    void insert_coalesce(const wcstring &str);
+    void push_edit(edit_t &&edit, bool allow_coalesce);
 
     /// Undo the most recent edit that was not yet undone. Returns true on success.
     bool undo();
@@ -119,11 +112,16 @@ class editable_line_t {
     void end_edit_group();
 
    private:
+    /// Whether we want to append this string to the previous edit.
+    bool want_to_coalesce_insertion_of(const wcstring &str) const;
+
     /// The command line.
     wcstring text_;
     /// The current position of the cursor in the command line.
     size_t position_ = 0;
 
+    /// The history of all edits.
+    undo_history_t undo_history_;
     /// The nesting level for atomic edits, so that recursive invocations of start_edit_group()
     /// are not ended by one end_edit_group() call.
     int32_t edit_group_level_ = -1;

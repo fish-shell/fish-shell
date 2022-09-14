@@ -3880,11 +3880,11 @@ static void test_undo() {
     do_test(!line.undo());  // nothing to undo
     do_test(line.text().empty());
     do_test(line.position() == 0);
-    line.push_edit(edit_t(0, 0, L"a b c"));
+    line.push_edit(edit_t(0, 0, L"a b c"), true);
     do_test(line.text() == L"a b c");
     do_test(line.position() == 5);
     line.set_position(2);
-    line.push_edit(edit_t(2, 1, L"B"));  // replacement right of cursor
+    line.push_edit(edit_t(2, 1, L"B"), true);  // replacement right of cursor
     do_test(line.text() == L"a B c");
     line.undo();
     do_test(line.text() == L"a b c");
@@ -3895,7 +3895,7 @@ static void test_undo() {
 
     do_test(!line.redo());  // nothing to redo
 
-    line.push_edit(edit_t(0, 2, L""));  // deletion left of cursor
+    line.push_edit(edit_t(0, 2, L""), true);  // deletion left of cursor
     do_test(line.text() == L"B c");
     do_test(line.position() == 1);
     line.undo();
@@ -3905,27 +3905,23 @@ static void test_undo() {
     do_test(line.text() == L"B c");
     do_test(line.position() == 1);
 
-    line.push_edit(edit_t(0, line.size(), L"a b c"));  // replacement left and right of cursor
+    line.push_edit(edit_t(0, line.size(), L"a b c"), true);  // replacement left and right of cursor
     do_test(line.text() == L"a b c");
     do_test(line.position() == 5);
 
     say(L"Testing undoing coalesced edits.");
     line.clear();
-    line.push_edit(edit_t(line.position(), 0, L"a"));
-    line.insert_coalesce(L"b");
-    line.insert_coalesce(L"c");
-    do_test(line.undo_history.edits.size() == 1);
-    line.push_edit(edit_t(line.position(), 0, L" "));
-    do_test(line.undo_history.edits.size() == 2);
+    line.push_edit(edit_t(line.position(), 0, L"a"), true);
+    line.push_edit(edit_t(line.position(), 0, L"b"), true);
+    line.push_edit(edit_t(line.position(), 0, L"c"), true);
+    line.push_edit(edit_t(line.position(), 0, L" "), true);
     line.undo();
     line.undo();
     line.redo();
     do_test(line.text() == L"abc");
-    do_test(line.undo_history.edits.size() == 2);
     // This removes the space insertion from the history, but does not coalesce with the first edit.
-    line.push_edit(edit_t(line.position(), 0, L"d"));
-    do_test(line.undo_history.edits.size() == 2);
-    line.insert_coalesce(L"e");
+    line.push_edit(edit_t(line.position(), 0, L"d"), true);
+    line.push_edit(edit_t(line.position(), 0, L"e"), true);
     do_test(line.text() == L"abcde");
     line.undo();
     do_test(line.text() == L"abc");

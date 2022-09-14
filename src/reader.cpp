@@ -223,34 +223,17 @@ static size_t cursor_position_after_edit(const edit_t &edit) {
     return cursor > removed ? cursor - removed : 0;
 }
 
-/// Whether we want to append this string to the previous edit.
-static bool want_to_coalesce_insertion_of(const editable_line_t &el, const wcstring &str) {
-    // The previous edit must support coalescing.
-    if (!el.undo_history.may_coalesce) return false;
-    // Only consolidate single character inserts.
-    if (str.size() != 1) return false;
-    // Make an undo group after every space.
-    if (str.at(0) == L' ' && !el.undo_history.try_coalesce) return false;
-    assert(!el.undo_history.edits.empty());
-    const edit_t &last_edit = el.undo_history.edits.back();
-    // Don't add to the last edit if it deleted something.
-    if (last_edit.length != 0) return false;
-    // Must not have moved the cursor!
-    if (cursor_position_after_edit(last_edit) != el.position()) return false;
-    return true;
-}
-
 bool editable_line_t::undo() {
     bool did_undo = false;
     maybe_t<int> last_group_id{-1};
-    while (undo_history.edits_applied != 0) {
-        const edit_t &edit = undo_history.edits.at(undo_history.edits_applied - 1);
+    while (undo_history_.edits_applied != 0) {
+        const edit_t &edit = undo_history_.edits.at(undo_history_.edits_applied - 1);
         if (did_undo && (!edit.group_id.has_value() || edit.group_id != last_group_id)) {
             // We've restored all the edits in this logical undo group
             break;
         }
         last_group_id = edit.group_id;
-        undo_history.edits_applied--;
+        undo_history_.edits_applied--;
         edit_t inverse = edit_t(edit.offset, edit.replacement.size(), L"");
         inverse.replacement = edit.old;
         size_t old_position = edit.cursor_position_before_edit;
@@ -260,18 +243,31 @@ bool editable_line_t::undo() {
     }
 
     end_edit_group();
-    undo_history.may_coalesce = false;
+    undo_history_.may_coalesce = false;
     return did_undo;
 }
 
 void editable_line_t::clear() {
-    undo_history.clear();
+    undo_history_.clear();
     if (empty()) return;
     set_text_bypassing_undo_history(L"");
     set_position(0);
 }
 
-void editable_line_t::push_edit(edit_t &&edit) {
+void editable_line_t::push_edit(edit_t &&edit, bool allow_coalesce) {
+    bool is_insertion = edit.length == 0;
+    /// Coalescing insertion does not create a new undo entry but adds to the last insertion.
+    if (allow_coalesce && is_insertion && want_to_coalesce_insertion_of(edit.replacement)) {
+        assert(edit.offset == position());
+        edit_t &last_edit = undo_history_.edits.back();
+        last_edit.replacement.append(edit.replacement);
+        apply_edit(&text_, edit);
+        set_position(position() + edit.replacement.size());
+
+        assert(undo_history_.may_coalesce);
+        return;
+    }
+
     // Assign a new group id or propagate the old one if we're in a logical grouping of edits
     if (edit_group_level_ != -1) {
         edit.group_id = edit_group_id_;
@@ -279,42 +275,37 @@ void editable_line_t::push_edit(edit_t &&edit) {
 
     bool edit_does_nothing = edit.length == 0 && edit.replacement.empty();
     if (edit_does_nothing) return;
-    if (undo_history.edits_applied != undo_history.edits.size()) {
+    if (undo_history_.edits_applied != undo_history_.edits.size()) {
         // After undoing some edits, the user is making a new edit;
         // we are about to create a new edit branch.
         // Discard all edits that were undone because we only support
         // linear undo/redo, they will be unreachable.
-        undo_history.edits.erase(undo_history.edits.begin() + undo_history.edits_applied,
-                                 undo_history.edits.end());
+        undo_history_.edits.erase(undo_history_.edits.begin() + undo_history_.edits_applied,
+                                  undo_history_.edits.end());
     }
     edit.cursor_position_before_edit = position();
     edit.old = text_.substr(edit.offset, edit.length);
     apply_edit(&text_, edit);
     set_position(cursor_position_after_edit(edit));
-    assert(undo_history.edits_applied == undo_history.edits.size());
-    undo_history.edits_applied++;
-    undo_history.edits.emplace_back(edit);
-}
-
-void editable_line_t::insert_coalesce(const wcstring &str) {
-    edit_t &edit = undo_history.edits.back();
-    edit.replacement.append(str);
-    apply_edit(&text_, edit_t(position(), 0, str));
-    set_position(position() + str.size());
+    assert(undo_history_.edits_applied == undo_history_.edits.size());
+    undo_history_.may_coalesce =
+        is_insertion && (undo_history_.try_coalesce || edit.replacement.size() == 1);
+    undo_history_.edits_applied++;
+    undo_history_.edits.emplace_back(std::move(edit));
 }
 
 bool editable_line_t::redo() {
     bool did_redo = false;
 
     maybe_t<int> last_group_id{-1};
-    while (undo_history.edits_applied < undo_history.edits.size()) {
-        const edit_t &edit = undo_history.edits.at(undo_history.edits_applied);
+    while (undo_history_.edits_applied < undo_history_.edits.size()) {
+        const edit_t &edit = undo_history_.edits.at(undo_history_.edits_applied);
         if (did_redo && (!edit.group_id.has_value() || edit.group_id != last_group_id)) {
             // We've restored all the edits in this logical undo group
             break;
         }
         last_group_id = edit.group_id;
-        undo_history.edits_applied++;
+        undo_history_.edits_applied++;
         apply_edit(&text_, edit);
         set_position(cursor_position_after_edit(edit));
         did_redo = true;
@@ -327,9 +318,9 @@ bool editable_line_t::redo() {
 void editable_line_t::begin_edit_group() {
     if (++edit_group_level_ == 0) {
         // Indicate that the next change must trigger the creation of a new history item
-        undo_history.may_coalesce = false;
+        undo_history_.may_coalesce = false;
         // Indicate that future changes should be coalesced into the same edit if possible.
-        undo_history.try_coalesce = true;
+        undo_history_.try_coalesce = true;
         // Assign a logical edit group id to future edits in this group
         edit_group_id_ += 1;
     }
@@ -343,9 +334,26 @@ void editable_line_t::end_edit_group() {
     }
 
     if (--edit_group_level_ == -1) {
-        undo_history.try_coalesce = false;
-        undo_history.may_coalesce = false;
+        undo_history_.try_coalesce = false;
+        undo_history_.may_coalesce = false;
     }
+}
+
+/// Whether we want to append this string to the previous edit.
+bool editable_line_t::want_to_coalesce_insertion_of(const wcstring &str) const {
+    // The previous edit must support coalescing.
+    if (!undo_history_.may_coalesce) return false;
+    // Only consolidate single character inserts.
+    if (str.size() != 1) return false;
+    // Make an undo group after every space.
+    if (str.at(0) == L' ' && !undo_history_.try_coalesce) return false;
+    assert(!undo_history_.edits.empty());
+    const edit_t &last_edit = undo_history_.edits.back();
+    // Don't add to the last edit if it deleted something.
+    if (last_edit.length != 0) return false;
+    // Must not have moved the cursor!
+    if (cursor_position_after_edit(last_edit) != position()) return false;
+    return true;
 }
 
 // Make the search case-insensitive unless we have an uppercase character.
@@ -1696,13 +1704,7 @@ void reader_data_t::delete_char(bool backward) {
 /// Returns true if the string changed.
 void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     if (!str.empty()) {
-        if (!history_search.active() && want_to_coalesce_insertion_of(*el, str)) {
-            el->insert_coalesce(str);
-            assert(el->undo_history.may_coalesce);
-        } else {
-            el->push_edit(edit_t(el->position(), 0, str));
-            el->undo_history.may_coalesce = el->undo_history.try_coalesce || (str.size() == 1);
-        }
+        el->push_edit(edit_t(el->position(), 0, str), !history_search.active());
     }
 
     if (el == &command_line) {
@@ -1713,8 +1715,7 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
 }
 
 void reader_data_t::push_edit(editable_line_t *el, edit_t &&edit) {
-    el->push_edit(std::move(edit));
-    el->undo_history.may_coalesce = false;
+    el->push_edit(std::move(edit), false);
     maybe_refilter_pager(el);
 }
 
@@ -3048,7 +3049,7 @@ void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loo
             rls.complete_did_insert = false;
             size_t tok_off = static_cast<size_t>(token_begin - buff);
             size_t tok_len = static_cast<size_t>(token_end - token_begin);
-            el->push_edit(edit_t{tok_off, tok_len, std::move(wc_expanded)});
+            push_edit(el, edit_t{tok_off, tok_len, std::move(wc_expanded)});
             return;
     }
 

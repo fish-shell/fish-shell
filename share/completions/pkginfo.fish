@@ -1,5 +1,5 @@
 # completions for Python pkginfo
-if pkginfo --help | string match -qr Python
+if pkginfo --help 2>/dev/null | string match -qr Python
     complete -f -c pkginfo -s h -l help -d 'Print help'
     complete -x -c pkginfo -s m -l metadata-version -d 'Override metadata version'
     complete -x -c pkginfo -s f -l field -d 'Specify an output field (repeatable)'

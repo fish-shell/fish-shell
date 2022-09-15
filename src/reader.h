@@ -96,7 +96,7 @@ class editable_line_t {
 
     /// Modify the commandline according to @edit. Most modifications to the
     /// text should pass through this function.
-    void push_edit(edit_t &&edit, bool allow_coalesce);
+    void push_edit(edit_t edit, bool allow_coalesce);
 
     /// Undo the most recent edit that was not yet undone. Returns true on success.
     bool undo();

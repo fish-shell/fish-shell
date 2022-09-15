@@ -254,7 +254,7 @@ void editable_line_t::clear() {
     set_position(0);
 }
 
-void editable_line_t::push_edit(edit_t &&edit, bool allow_coalesce) {
+void editable_line_t::push_edit(edit_t edit, bool allow_coalesce) {
     bool is_insertion = edit.length == 0;
     /// Coalescing insertion does not create a new undo entry but adds to the last insertion.
     if (allow_coalesce && is_insertion && want_to_coalesce_insertion_of(edit.replacement)) {
@@ -830,7 +830,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void erase_substring(editable_line_t *el, size_t offset, size_t length);
     /// Replace the text of length @length at @offset by @replacement.
     void replace_substring(editable_line_t *el, size_t offset, size_t length, wcstring replacement);
-    void push_edit(editable_line_t *el, edit_t &&edit);
+    void push_edit(editable_line_t *el, edit_t edit);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
     /// highlighting, etc.
@@ -1714,7 +1714,7 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     maybe_refilter_pager(el);
 }
 
-void reader_data_t::push_edit(editable_line_t *el, edit_t &&edit) {
+void reader_data_t::push_edit(editable_line_t *el, edit_t edit) {
     el->push_edit(std::move(edit), false);
     maybe_refilter_pager(el);
 }

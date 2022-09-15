@@ -1511,8 +1511,12 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
 
     // Hack: fix autosuggestion by removing prefixing "and"s #6249.
     if (is_autosuggest) {
-        while (!tokens.empty() && parser_keywords_is_subcommand(tokens.front().get_source(cmdline)))
-            tokens.erase(tokens.begin());
+        tokens.erase(
+            std::remove_if(tokens.begin(), tokens.end(),
+                           [&cmdline](const tok_t &token) {
+                               return parser_keywords_is_subcommand(token.get_source(cmdline));
+                           }),
+            tokens.end());
     }
 
     // Consume variable assignments in tokens strictly before the cursor.

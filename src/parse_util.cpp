@@ -957,8 +957,15 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
         wcstring unesc;
         if (!unescape_string(arg_src.c_str() + begin, end - begin, &unesc, UNESCAPE_SPECIAL)) {
             if (out_errors) {
+                const wchar_t *fmt = L"Invalid token '%ls'";
+                if (arg_src.length() == 2 && arg_src[0] == L'\\' &&
+                        (arg_src[1] == L'c' || towlower(arg_src[1]) == L'u'
+                        || towlower(arg_src[1]) == L'x')) {
+                    fmt = L"Incomplete escape sequence '%ls'";
+                }
+
                 append_syntax_error(out_errors, source_start + begin, end - begin,
-                                    L"Invalid token '%ls'", arg_src.c_str());
+                                    fmt, arg_src.c_str());
             }
             return 1;
         }

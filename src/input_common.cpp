@@ -221,7 +221,7 @@ maybe_t<char_event_t> input_event_queue_t::readch_timed() {
     }
     // We are not prepared to handle a signal immediately; we only want to know if we get input on
     // our fd before the timeout. Use pselect to block all signals; we will handle signals
-    // before the next call to getch().
+    // before the next call to readch().
     sigset_t sigs;
     sigfillset(&sigs);
 

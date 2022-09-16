@@ -80,7 +80,7 @@ sendline(r"")
 expect_prompt()
 
 # As before but it comes after the ESC.
-# The signal will arrive while we are waiting in getch_timed().
+# The signal will arrive while we are waiting in readch_timed().
 send("abc\x1b")
 sleep(0.05)
 os.kill(sp.spawn.pid, signal.SIGUSR1)

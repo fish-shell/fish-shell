@@ -25,9 +25,8 @@ function isolated-tmux-start
     end
 
     function tmux-sleep
-        set -q CI
-        and sleep 1
-        or sleep .1
+        set -q CI && sleep 1
+        or sleep 0.3
     end
 
     set -l fish (status fish-path)

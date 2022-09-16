@@ -569,6 +569,24 @@ $fish -c 'echo \utest'
 # CHECKERR: echo \utest
 # CHECKERR:      ^~~~~^
 
+$fish -c 'echo \c'
+# CHECKERR: fish: Incomplete escape sequence '\c'
+# CHECKERR: echo \c
+# CHECKERR:      ^^
+
+$fish -c 'echo \C'
+# CHECK: C
+
+$fish -c 'echo \U'
+# CHECKERR: fish: Incomplete escape sequence '\U'
+# CHECKERR: echo \U
+# CHECKERR:      ^^
+
+$fish -c 'echo \x'
+# CHECKERR: fish: Incomplete escape sequence '\x'
+# CHECKERR: echo \x
+# CHECKERR:      ^^
+
 printf '%s\n' "#!/bin/sh" 'echo $0' > $tmpdir/argv0.sh
 chmod +x $tmpdir/argv0.sh
 cd $tmpdir

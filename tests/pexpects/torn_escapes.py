@@ -23,6 +23,8 @@ expect_prompt()
 # Set up a handler for SIGUSR1.
 sendline(r"set -g sigusr1_count 0")
 expect_prompt()
+sendline(r"set -g wacky_count 0")
+expect_prompt()
 
 sendline(
     r"""
@@ -38,7 +40,16 @@ sendline(
 expect_prompt()
 
 # Set up a wacky binding with an escape.
-sendline(r"function wacky_handler; echo Wacky Handler; end")
+sendline(
+    r"""
+    function wacky_handler
+        set wacky_count (math $wacky_count + 1);
+        echo Wacky Handler $wacky_count
+    end
+""".strip().replace(
+        "\n", os.linesep
+    )
+)
 expect_prompt()
 
 sendline(r"bind abc\edef wacky_handler")
@@ -52,7 +63,7 @@ expect_prompt()
 
 # Our wacky binding works.
 send("abc\x1bdef")
-expect_str(r"Wacky Handler")
+expect_str(r"Wacky Handler 1")
 sendline(r"")
 expect_prompt()
 
@@ -64,7 +75,7 @@ os.kill(sp.spawn.pid, signal.SIGUSR1)
 sleep(0.05)
 send("\x1bdef")
 expect_str(r"Got SIGUSR1 2")
-expect_str(r"Wacky Handler")
+expect_str(r"Wacky Handler 2")
 sendline(r"")
 expect_prompt()
 
@@ -76,6 +87,6 @@ os.kill(sp.spawn.pid, signal.SIGUSR1)
 sleep(0.05)
 send("def")
 expect_str(r"Got SIGUSR1 3")
-expect_str(r"Wacky Handler")
+expect_str(r"Wacky Handler 3")
 sendline(r"")
 expect_prompt()

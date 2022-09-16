@@ -239,6 +239,13 @@ maybe_t<char_event_t> input_event_queue_t::readch_timed() {
     FD_SET(in_, &fdset);
 
     int res = pselect(in_ + 1, &fdset, nullptr, nullptr, &timeout, &sigs);
+
+    // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
+    if (is_windows_subsystem_for_linux()) {
+        // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
+        pthread_sigmask(0, nullptr, &sigs);
+    }
+
     if (res > 0) {
         return readch();
     }

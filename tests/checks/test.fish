@@ -60,17 +60,24 @@ test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: ^
 
+# Test `test` date comparison logic for dates older than epoch
 touch -m -t 197001010000.00 epoch
 touch -m -t 190212112045.40 old
-touch -m -t 190212112045.39 oldest
+touch -m -t 190112112040.39 oldest
 touch -m -t 203801080314.07 newest
-test oldest -ot old || echo bad ot
-test newest -nt old || echo bad nt
-test old -ot oldest && echo bad ot
-test epoch -nt newest && echo bad nt
+
+if string match -qr '^(0|'(stat -c %Y epoch)')$' (stat -c %Y oldest)
+    # Filesystem does not support dates older than epoch, so silently skip this test - there's no
+    # guarantee that an FS supports pre-epoch timestamps and lxfs (virtual WSLv1 fs) doesn't.
+else
+    test oldest -ot old || echo bad ot 1
+    test newest -nt old || echo bad nt
+    test old -ot oldest && echo bad ot 2
+    test epoch -nt newest && echo bad nt
+end
 
 for file in epoch old oldest newest
-    test $file -nt nonexist && echo good nt || echo bad nt;
+    test $file -nt nonexist && echo good nt || echo $file: bad nt;
 end
 #CHECK: good nt
 #CHECK: good nt
@@ -78,7 +85,7 @@ end
 #CHECK: good nt
 
 for file in epoch old oldest newest
-    test nonexist -ot $file && echo good ot || echo bad ot;
+    test nonexist -ot $file && echo good ot || echo $file: bad ot;
 end
 #CHECK: good ot
 #CHECK: good ot

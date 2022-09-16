@@ -135,9 +135,10 @@ static void print_blocked_signals() {
         exit(EXIT_FAILURE);
     }
     // There is no obviously portable way to get the maximum number of signals.
+    // POSIX says sigqueue(2) can be used with signo 0 to validate the pid and signo parameters,
+    // but it is missing from OpenBSD and returns ENOSYS (not implemented) under WSL.
     // Here we limit it to 32 because strsignal on OpenBSD returns "Unknown signal" for anything
-    // above.
-    // NetBSD taps out at 63, Linux at 64.
+    // above, while NetBSD taps out at 63, and Linux at 64.
     for (int sig = 1; sig < 33; sig++) {
         if (sigismember(&sigs, sig)) {
             print_signal(sig);

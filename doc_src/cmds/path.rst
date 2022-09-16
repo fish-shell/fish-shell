@@ -393,7 +393,7 @@ Examples
 
 With ``--reverse`` or ``-r`` the sort is reversed.
 
-With ``--key=`` only the given path of the path is compared, e.g. ``--key=dirname`` causes only the dirname to be compared, ``--key=basename`` only the basename and ``--key=path`` causes the entire path to be compared (this is the default).
+With ``--key=`` only the given part of the path is compared, e.g. ``--key=dirname`` causes only the dirname to be compared, ``--key=basename`` only the basename and ``--key=path`` causes the entire path to be compared (this is the default).
 
 With ``--unique`` or ``-u`` the sort is deduplicated, meaning only the first of a run that have the same key is kept. So if you are sorting by basename, then only the first of each basename is used.
 
@@ -410,7 +410,7 @@ Examples
    2-bar
    10-foo
 
-   >_ path sort --invert 10-foo 2-bar
+   >_ path sort --reverse 10-foo 2-bar
    10-foo
    2-bar
 

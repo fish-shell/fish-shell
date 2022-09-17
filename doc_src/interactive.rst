@@ -77,8 +77,8 @@ Fish interprets the command line as it is typed and uses syntax highlighting to 
 
 Detected errors include:
 
-- Non existing commands.
-- Reading from or appending to a non existing file.
+- Non-existing commands.
+- Reading from or appending to a non-existing file.
 - Incorrect use of output redirects
 - Mismatched parenthesis
 
@@ -99,7 +99,7 @@ Or, to see all themes, right in your terminal::
 Syntax highlighting variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
+The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
 
 
 Example: to make errors highlighted and red, use::

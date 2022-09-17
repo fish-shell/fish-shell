@@ -94,7 +94,7 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 
 - ``__fish_print_filesystems`` prints a list of all known file systems. Currently, this is a static list, and not dependent on what file systems the host operating system actually understands.
 
-- ``__fish_print_hostnames`` prints a list of all known hostnames. This functions searches the fstab for nfs servers, ssh for known hosts and checks the ``/etc/hosts`` file.
+- ``__fish_print_hostnames`` prints a list of all known hostnames. This function searches the fstab for nfs servers, ssh for known hosts and checks the ``/etc/hosts`` file.
 
 - ``__fish_print_interfaces`` prints a list of all known network interfaces.
 

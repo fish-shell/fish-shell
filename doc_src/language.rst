@@ -178,7 +178,7 @@ The destination of a stream can be changed using something called *redirection*.
 
 As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same destination. For example, ``echo hello &> all_output.txt`` redirects both stdout and stderr to the file ``all_output.txt``. This is equivalent to ``echo hello > all_output.txt 2>&1``.
 
-Any arbitrary file descriptor can used in a redirection by prefixing the redirection with the FD number.
+Any arbitrary file descriptor can be used in a redirection by prefixing the redirection with the FD number.
 
 - To redirect the input of descriptor N, use ``N<DESTINATION``.
 - To redirect the output of descriptor N, use ``N>DESTINATION``.
@@ -592,7 +592,7 @@ Command substitution
 
 The output of a command (or an entire :ref:`pipeline <pipes>`) can be used as the arguments to another command.
 
-When you write a command in parenthesis like ``outercommand (innercommand)``, the ``innercommand`` will be executed first. Its output will be taken and each line given as a separate argument to ``outercommand``, which will then be executed. [#]_
+When you write a command in parentheses like ``outercommand (innercommand)``, the ``innercommand`` will be executed first. Its output will be taken and each line given as a separate argument to ``outercommand``, which will then be executed. [#]_
 
 A command substitution can have a dollar sign before the opening parenthesis like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines.
 
@@ -1544,7 +1544,7 @@ For a list of all builtins, functions and commands shipped with fish, see the :r
 Shell variable and function names
 ---------------------------------
 
-The names given to variables and functions (so called "identifiers") have to follow certain rules:
+The names given to variables and functions (so-called "identifiers") have to follow certain rules:
 
 - A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
@@ -1660,6 +1660,6 @@ For more information on how to define new event handlers, see the documentation 
 Debugging fish scripts
 ----------------------
 
-Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using :ref:`printf <cmd-printf>` and :ref:`set <cmd-set>`. As another example, you can run :ref:`status print-stack-trace <cmd-status>` to see how this breakpoint was reached. To resume normal execution of the script, simply type :ref:`exit <cmd-exit>` or :kbd:`Control`\ +\ :kbd:`D`.
+Fish includes a built-in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using :ref:`printf <cmd-printf>` and :ref:`set <cmd-set>`. As another example, you can run :ref:`status print-stack-trace <cmd-status>` to see how this breakpoint was reached. To resume normal execution of the script, simply type :ref:`exit <cmd-exit>` or :kbd:`Control`\ +\ :kbd:`D`.
 
 To start a debug session simply run the builtin command :ref:`breakpoint <cmd-breakpoint>` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.

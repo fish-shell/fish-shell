@@ -136,7 +136,7 @@ Functions
       0x1
 
 ``ceil``
-    round number up to nearest integer
+    round number up to the nearest integer
 ``cos``
     the cosine
 ``cosh``
@@ -146,7 +146,7 @@ Functions
 ``fac``
     factorial - also known as ``x!`` (``x * (x - 1) * (x - 2) * ... * 1``)
 ``floor``
-    round number down to nearest integer
+    round number down to the nearest integer
 ``ln``
     the base-e logarithm
 ``log`` or ``log10``

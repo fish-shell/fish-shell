@@ -273,25 +273,12 @@ __attribute__((always_inline)) static inline bool compare_completions_by_tilde(
 }
 
 /// Unique the list of completions, without perturbing their order.
-static void dedup_completions_retaining_order(completion_list_t *comps) {
-    struct ref_hash_t {
-        size_t operator()(const wcstring &val) const {
-            return std::hash<const wcstring>()(val);
-        }
-    };
-
-    struct ref_equal_t {
-        bool operator()(const wcstring &lhs, const wcstring &rhs) const {
-            return lhs == rhs;
-        }
-    };
-
-    std::unordered_set<std::reference_wrapper<const wcstring>, ref_hash_t, ref_equal_t> seen;
+static void unique_completions_retaining_order(completion_list_t *comps) {
+    std::unordered_set<wcstring> seen;
     seen.reserve(comps->size());
     auto pred = [&seen](const completion_t &c) {
         // Remove (return true) if insertion fails.
-        auto r = std::reference_wrapper<const wcstring>(c.completion);
-        bool inserted = seen.insert(r).second;
+        bool inserted = seen.insert(c.completion).second;
         return !inserted;
     };
     comps->erase(std::remove_if(comps->begin(), comps->end(), pred), comps->end());
@@ -312,7 +299,7 @@ void completions_sort_and_prioritize(completion_list_t *comps, completion_reques
                  comps->end());
 
     // Deduplicate both sorted and unsorted results.
-    dedup_completions_retaining_order(comps);
+    unique_completions_retaining_order(comps);
 
     // Sort, provided COMPLETE_DONT_SORT isn't set.
     // Here we do not pass suppress_exact, so that exact matches appear first.

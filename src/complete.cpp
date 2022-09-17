@@ -303,9 +303,7 @@ void completions_sort_and_prioritize(completion_list_t *comps, completion_reques
 
     // Sort, provided COMPLETE_DONT_SORT isn't set.
     // Here we do not pass suppress_exact, so that exact matches appear first.
-    stable_sort(comps->begin(), comps->end(), [&](const completion_t &a, const completion_t &b) {
-        return a.rank() < b.rank() || natural_compare_completions(a, b);
-    });
+    stable_sort(comps->begin(), comps->end(), natural_compare_completions);
 
     // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
     // arguments, and penalize files that end in tilde - they're frequently autosave files from e.g.

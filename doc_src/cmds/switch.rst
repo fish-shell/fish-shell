@@ -19,7 +19,7 @@ Each ``case`` command is given one or more parameters. The first ``case`` comman
 
 Note that fish does not fall through on case statements. Only the first matching case is executed.
 
-Note that :ref:`break <cmd-break>` cannot be used to exit a case statement early like in other languages. It can only be used in loops.
+Note that :ref:`break <cmd-break>` cannot be used to exit a case/switch block early like in other languages. It can only be used in loops.
 
 Note that command substitutions in a case statement will be evaluated even if its body is not taken. All substitutions, including command substitutions, must be performed before the value can be compared against the parameter.
 

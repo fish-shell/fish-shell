@@ -7,7 +7,7 @@ This is a description of the design principles that have been used to design fis
 
 1. Everything that can be done in other shell languages should be possible to do in fish, though fish may rely on external commands in doing so.
 
-2. Fish should be user friendly, but not at the expense of expressiveness. Most tradeoffs between power and ease of use can be avoided with careful design.
+2. Fish should be user-friendly, but not at the expense of expressiveness. Most tradeoffs between power and ease of use can be avoided with careful design.
 
 3. Whenever possible without breaking the above goals, fish should follow POSIX.
 

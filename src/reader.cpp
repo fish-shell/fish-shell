@@ -1711,7 +1711,7 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     maybe_refilter_pager(el);
 }
 
-void reader_data_t::push_edit(editable_line_t &el, edit_t edit) {
+void reader_data_t::push_edit(editable_line_t *el, edit_t edit) {
     el->push_edit(std::move(edit), false /* allow_coalesce */);
     maybe_refilter_pager(el);
 }

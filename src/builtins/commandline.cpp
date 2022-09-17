@@ -142,6 +142,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     bool tokenize = false;
 
     bool cursor_mode = false;
+    bool selection_start_mode = false;
+    bool selection_end_mode = false;
     bool line_mode = false;
     bool search_mode = false;
     bool paging_mode = false;
@@ -152,7 +154,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     const auto &ld = parser.libdata();
 
-    static const wchar_t *const short_options = L":abijpctforhI:CLSsP";
+    static const wchar_t *const short_options = L":abijpctforhI:CBELSsP";
     static const struct woption long_options[] = {{L"append", no_argument, nullptr, 'a'},
                                                   {L"insert", no_argument, nullptr, 'i'},
                                                   {L"replace", no_argument, nullptr, 'r'},
@@ -167,6 +169,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                                                   {L"help", no_argument, nullptr, 'h'},
                                                   {L"input", required_argument, nullptr, 'I'},
                                                   {L"cursor", no_argument, nullptr, 'C'},
+                                                  {L"selection-start", no_argument, nullptr, 'B'},
+                                                  {L"selection-end", no_argument, nullptr, 'E'},
                                                   {L"line", no_argument, nullptr, 'L'},
                                                   {L"search-mode", no_argument, nullptr, 'S'},
                                                   {L"paging-mode", no_argument, nullptr, 'P'},
@@ -227,6 +231,14 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 cursor_mode = true;
                 break;
             }
+            case 'B': {
+                selection_start_mode = true;
+                break;
+            }
+            case 'E': {
+                selection_end_mode = true;
+                break;
+            }
             case 'L': {
                 line_mode = true;
                 break;
@@ -274,7 +286,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
         // Check for invalid switch combinations.
         if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode ||
-            search_mode || paging_mode) {
+            search_mode || paging_mode || selection_start_mode || selection_end_mode) {
             streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
@@ -324,6 +336,12 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     // Check for invalid switch combinations.
+    if ((selection_start_mode || selection_end_mode) && (argc - w.woptind)) {
+        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
     if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc - w.woptind > 1)) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -377,6 +395,24 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     if (paging_full_mode) {
         auto state = commandline_get_state();
         return (state.pager_mode && state.pager_fully_disclosed) ? 0 : 1;
+    }
+
+    if (selection_start_mode) {
+        if (!rstate.selection) {
+            return STATUS_CMD_ERROR;
+        }
+        source_offset_t start = rstate.selection->start;
+        streams.out.append_format(L"%lu\n", static_cast<unsigned long>(start));
+        return STATUS_CMD_OK;
+    }
+
+    if (selection_end_mode) {
+        if (!rstate.selection) {
+            return STATUS_CMD_ERROR;
+        }
+        source_offset_t end = rstate.selection->end();
+        streams.out.append_format(L"%lu\n", static_cast<unsigned long>(end));
+        return STATUS_CMD_OK;
     }
 
     // At this point we have (nearly) exhausted the options which always operate on the true command

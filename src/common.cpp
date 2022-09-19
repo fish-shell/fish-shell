@@ -1372,7 +1372,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     if (unescape_special && input_position == 0 &&
                         !std::wcscmp(input, PROCESS_EXPAND_SELF_STR)) {
                         to_append_or_none = PROCESS_EXPAND_SELF;
-                        input_position += PROCESS_EXPAND_SELF_STR_LEN - 1;  // skip over 'self's
+                        input_position += const_strlen(PROCESS_EXPAND_SELF_STR) - 1;  // skip over 'self's
                     }
                     break;
                 }

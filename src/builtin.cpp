@@ -224,7 +224,8 @@ static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, con
 
 // How many bytes we read() at once.
 // Since this is just for counting, it can be massive.
-#define COUNT_CHUNK_SIZE (512 * 256)
+constexpr int COUNT_CHUNK_SIZE = 512 * 256;
+
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
 static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
@@ -413,7 +414,7 @@ static constexpr builtin_data_t builtin_datas[] = {
 };
 ASSERT_SORTED_BY_NAME(builtin_datas);
 
-#define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
+constexpr int BUILTIN_COUNT = sizeof builtin_datas / sizeof *builtin_datas;
 
 /// Look up a builtin_data_t for a specified builtin
 ///

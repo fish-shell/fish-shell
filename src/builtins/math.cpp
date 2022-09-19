@@ -19,7 +19,7 @@
 #include "../wutil.h"  // IWYU pragma: keep
 
 // The maximum number of points after the decimal that we'll print.
-static constexpr int kDefaultScale = 6;
+constexpr int kDefaultScale = 6;
 
 // The end of the range such that every integer is representable as a double.
 // i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).

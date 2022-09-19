@@ -52,21 +52,21 @@
 //   Newlines are replaced by \n. Backslashes are replaced by \\.
 
 // This is the history session ID we use by default if the user has not set env var fish_history.
-#define DFLT_FISH_HISTORY_SESSION_ID L"fish"
+constexpr const wchar_t DFLT_FISH_HISTORY_SESSION_ID[] = L"fish";
 
 // When we rewrite the history, the number of items we keep.
-#define HISTORY_SAVE_MAX (1024 * 256)
+constexpr int HISTORY_SAVE_MAX = 1024 * 256;
 
 // Default buffer size for flushing to the history file.
-#define HISTORY_OUTPUT_BUFFER_SIZE (64 * 1024)
+constexpr int HISTORY_OUTPUT_BUFFER_SIZE = 64 * 1024;
 
 // The file access mode we use for creating history files
-static constexpr int history_file_mode = 0600;
+constexpr int history_file_mode = 0600;
 
 // How many times we retry to save
 // Saving may fail if the file is modified in between our opening
 // the file and taking the lock
-static constexpr int max_save_tries = 1024;
+constexpr int max_save_tries = 1024;
 
 namespace {
 

@@ -14,8 +14,8 @@
 #include "input_common.h"
 #include "maybe.h"
 
-#define FISH_BIND_MODE_VAR L"fish_bind_mode"
-#define DEFAULT_BIND_MODE L"default"
+constexpr wchar_t FISH_BIND_MODE_VAR[]  = L"fish_bind_mode";
+constexpr wchar_t DEFAULT_BIND_MODE[]= L"default";
 
 class event_queue_peeker_t;
 class parser_t;

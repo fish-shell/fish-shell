@@ -121,11 +121,11 @@ static bool should_test_function(const char *func_name, bool default_on = true) 
 }
 
 /// The number of tests to run.
-#define ESCAPE_TEST_COUNT 100000
+constexpr int ESCAPE_TEST_COUNT = 100000;
 /// The average length of strings to unescape.
-#define ESCAPE_TEST_LENGTH 100
+constexpr int ESCAPE_TEST_LENGTH = 100;
 /// The highest character number of character to try and escape.
-#define ESCAPE_TEST_CHAR 4000
+constexpr int ESCAPE_TEST_CHAR = 4000;
 
 /// Number of encountered errors.
 static int err_count = 0;
@@ -3928,8 +3928,8 @@ static void test_undo() {
     do_test(line.text() == L"abc");
 }
 
-#define UVARS_PER_THREAD 8
-#define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
+constexpr int UVARS_PER_THREAD = 8;
+constexpr const wchar_t UVARS_TEST_PATH[] = L"test/fish_uvars_test/varsfile.txt";
 
 static int test_universal_helper(int x) {
     callback_data_list_t callbacks;

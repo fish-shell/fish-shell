@@ -133,8 +133,7 @@ struct expand_result_t {
 };
 
 /// The string represented by PROCESS_EXPAND_SELF
-#define PROCESS_EXPAND_SELF_STR L"%self"
-#define PROCESS_EXPAND_SELF_STR_LEN 5
+constexpr const wchar_t PROCESS_EXPAND_SELF_STR[] = L"%self";
 
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable

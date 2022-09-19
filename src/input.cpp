@@ -32,7 +32,7 @@
 #include "wutil.h"   // IWYU pragma: keep
 
 /// A name for our own key mapping for nul.
-static const wchar_t *k_nul_mapping_name = L"nul";
+constexpr const wchar_t k_nul_mapping_name[] = L"nul";
 
 /// Struct representing a keybinding. Returned by input_get_mappings.
 struct input_mapping_t {
@@ -72,7 +72,7 @@ struct terminfo_mapping_t {
     terminfo_mapping_t(const wchar_t *name, std::string s) : name(name), seq(std::move(s)) {}
 };
 
-static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS;
+constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS;
 
 /// Input function metadata. This list should be kept in sync with the key code list in
 /// input_common.h.

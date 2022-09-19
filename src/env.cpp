@@ -38,19 +38,19 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Some configuration path environment variables.
-#define FISH_DATADIR_VAR L"__fish_data_dir"
-#define FISH_SYSCONFDIR_VAR L"__fish_sysconf_dir"
-#define FISH_HELPDIR_VAR L"__fish_help_dir"
-#define FISH_BIN_DIR L"__fish_bin_dir"
-#define FISH_CONFIG_DIR L"__fish_config_dir"
-#define FISH_USER_DATA_DIR L"__fish_user_data_dir"
+constexpr const wchar_t FISH_DATADIR_VAR[] = L"__fish_data_dir";
+constexpr const wchar_t FISH_SYSCONFDIR_VAR[] = L"__fish_sysconf_dir";
+constexpr const wchar_t FISH_HELPDIR_VAR[] = L"__fish_help_dir";
+constexpr const wchar_t FISH_BIN_DIR[] = L"__fish_bin_dir";
+constexpr const wchar_t FISH_CONFIG_DIR[] = L"__fish_config_dir";
+constexpr const wchar_t FISH_USER_DATA_DIR[] = L"__fish_user_data_dir";
 
 /// At init, we read all the environment variables from this array.
 extern char **environ;
 
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
-static constexpr wchar_t PATH_ARRAY_SEP = L':';
-static constexpr wchar_t NONPATH_ARRAY_SEP = L' ';
+constexpr wchar_t PATH_ARRAY_SEP = L':';
+constexpr wchar_t NONPATH_ARRAY_SEP = L' ';
 
 bool curses_initialized = false;
 

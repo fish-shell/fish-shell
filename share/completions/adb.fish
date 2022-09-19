@@ -146,6 +146,7 @@ complete -n '__fish_seen_subcommand_from uninstall' -c adb -s k -d 'Keep the dat
 complete -n '__fish_seen_subcommand_from uninstall' -c adb -f -a "(__fish_adb_list_uninstallable_packages)"
 
 # devices
+complete -n '__fish_seen_subcommand_from devices' -c adb -f
 complete -n '__fish_seen_subcommand_from devices' -c adb -s l -d 'Also list device qualifiers'
 
 # disconnect
@@ -183,3 +184,36 @@ complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick
 complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'
 complete -n '__fish_seen_subcommand_from pull' -c adb -f -a "(__fish_adb_completion_for_pull)" -d 'File on device'
 complete -n '__fish_seen_subcommand_from push' -c adb -f -a "(__fish_adb_completion_for_push)" -d 'File on device'
+
+# logcat
+complete -n '__fish_seen_subcommand_from logcat' -c adb -f
+# general options
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s L -l last -d 'Dump logs from prior to last reboot from pstore'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s b -l buffer -d ' Request alternate ring buffer(s)' -xa '(__fish_complete_list,  "echo main\nsystem\nradio\nevents\ncrash\ndefault\nall")'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s c -l clear -d 'Clear (flush) the entire log and exit'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s d -d 'Dump the log and then exit (don\'t block)'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -l pid -d 'Only print the logs for the given PID'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -l wrap -d 'Sleep for 2 hours or when buffer about to wrap whichever comes first'
+# formatting
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s v -l format -d 'Sets log print format verb and adverbs' -xa ' brief help long process raw tag thread threadtime time color descriptive epoch monotonic printable uid usec UTC year zone'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s D -l dividers -d 'Print dividers between each log buffer'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s B -l binary -d 'Output the log in binary'
+# outfile files
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s f -l file -d 'Log to file instead of stdout' 
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s r -l rotate-kbytes -d 'Rotate log every kbytes, requires -f'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s n -l rotate-count -d 'Sets number of rotated logs to keep, default 4'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -l id -d ' If the signature <id> for logging to file changes, then clear the associated files and continue'
+# logd control
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s g -l buffer-size -d 'Get the size of the ring buffers within logd'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s G -l buffer-size -d 'Set size of a ring buffer in logd'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s S -l statistics -d 'Output statistics'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s p -l prune -d 'Print prune rules'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s P -l prune -d 'Set prune rules'
+# filtering
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s s -d 'Set default filter to silent'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s e -l regex -d 'Only print lines where the log message matches'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s m -l max-count -d 'Quit after print <count> lines'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -l print -d 'Print all message even if they do not matches, requires --regex and --max-count'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -l uid -d 'Only display log messages from UIDs present in the comma separate list <uids>'
+
+

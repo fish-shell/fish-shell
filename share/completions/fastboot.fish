@@ -69,4 +69,8 @@ complete -n '__fish_seen_subcommand_from erase' -c fastboot -f -a "(__fish_fastb
 complete -n '__fish_seen_subcommand_from flashing' -c fastboot -f -a "lock unlock lock_critical unlock_critical get_unlock_ability"
 
 # reboot
-complete -n '__fish_seen_subcommand_from reboot' -c fastboot -xa 'bootloader fastboot edl'
+complete -n '__fish_seen_subcommand_from reboot' -c fastboot -xa 'bootloader fastboot'
+
+# oem
+complete -n '__fish_seen_subcommand_from oem' -c fastboot -xa 'device-info lock unlock edl'
+

@@ -39,9 +39,9 @@
 
 /// Characters which make a string unclean if they are the first character of the string. See \c
 /// expand_is_clean().
-constexpr const wchar_t UNCLEAN_FIRST[] = L"~%";
+#define UNCLEAN_FIRST L"~%"
 /// Unclean characters. See \c expand_is_clean().
-constexpr const wchar_t UNCLEAN[] = L"$*?\\\"'({})";
+#define UNCLEAN L"$*?\\\"'({})"
 
 static void remove_internal_separator(wcstring *s, bool conv);
 

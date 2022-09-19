@@ -26,7 +26,7 @@
 #define NOCLOB_ERROR _(L"The file '%ls' already exists")
 
 /// Base open mode to pass to calls to open.
-constexpr int OPEN_MASK = 0666;
+#define OPEN_MASK 0666
 
 /// Provide the fd monitor used for background fillthread operations.
 static fd_monitor_t &fd_monitor() {

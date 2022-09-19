@@ -19,7 +19,7 @@
 struct io_streams_t;
 
 /// The process id that is used to match any process id.
-constexpr int EVENT_ANY_PID = 0;
+#define EVENT_ANY_PID 0
 
 /// Enumeration of event types.
 enum class event_type_t {

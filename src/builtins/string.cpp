@@ -34,7 +34,7 @@
 // Empirically determined.
 // This is probably down to some pipe buffer or some such,
 // but too small means we need to call `read(2)` and str2wcstring a lot.
-constexpr int STRING_CHUNK_SIZE = 1024;
+#define STRING_CHUNK_SIZE 1024
 
 namespace {
 

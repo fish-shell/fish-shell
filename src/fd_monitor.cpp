@@ -14,7 +14,7 @@
 #include "iothread.h"
 #include "wutil.h"
 
-constexpr uint64_t kUsecPerMsec = 1000;
+static constexpr uint64_t kUsecPerMsec = 1000;
 
 fd_monitor_t::fd_monitor_t() = default;
 

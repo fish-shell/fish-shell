@@ -189,7 +189,7 @@ complete -n '__fish_seen_subcommand_from push' -c adb -f -a "(__fish_adb_complet
 complete -n '__fish_seen_subcommand_from logcat' -c adb -f
 # general options
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s L -l last -d 'Dump logs from prior to last reboot from pstore'
-complete -n '__fish_seen_subcommand_from logcat' -c adb -s b -l buffer -d ' Request alternate ring buffer(s)' -xa '(__fish_complete_list,  "echo main\nsystem\nradio\nevents\ncrash\ndefault\nall")'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s b -l buffer -d ' Request alternate ring buffer(s)' -xa '(__fish_complete_list ,  "echo main\nsystem\nradio\nevents\ncrash\ndefault\nall")'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s c -l clear -d 'Clear (flush) the entire log and exit'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s d -d 'Dump the log and then exit (don\'t block)'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l pid -d 'Only print the logs for the given PID'
@@ -199,7 +199,7 @@ complete -n '__fish_seen_subcommand_from logcat' -c adb -s v -l format -d 'Sets 
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s D -l dividers -d 'Print dividers between each log buffer'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s B -l binary -d 'Output the log in binary'
 # outfile files
-complete -n '__fish_seen_subcommand_from logcat' -c adb -s f -l file -d 'Log to file instead of stdout' 
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s f -l file -d 'Log to file instead of stdout'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s r -l rotate-kbytes -d 'Rotate log every kbytes, requires -f'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s n -l rotate-count -d 'Sets number of rotated logs to keep, default 4'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l id -d ' If the signature <id> for logging to file changes, then clear the associated files and continue'

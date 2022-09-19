@@ -55,16 +55,16 @@
 #endif  // Haiku
 
 /// Error message.
-#define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
+constexpr const wchar_t PARSE_ERR[] = L"Unable to parse universal variable message: '%ls'";
 
 /// Small note about not editing ~/.fishd manually. Inserted at the top of all .fishd files.
-#define SAVE_MSG "# This file contains fish universal variable definitions.\n"
+constexpr const char SAVE_MSG[] = "# This file contains fish universal variable definitions.\n";
 
 /// Version for fish 3.0
 #define UVARS_VERSION_3_0 "3.0"
 
 // Maximum file size we'll read.
-static constexpr size_t k_max_read_size = 16 * 1024 * 1024;
+constexpr size_t k_max_read_size = 16 * 1024 * 1024;
 
 // Fields used in fish 2.x uvars.
 namespace fish2x_uvars {
@@ -211,11 +211,11 @@ static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &
 }
 
 /// Encoding of a null string.
-static const wchar_t *const ENV_NULL = L"\x1d";
+constexpr const wchar_t ENV_NULL[] = L"\x1d";
 
 /// Character used to separate arrays in universal variables file.
 /// This is 30, the ASCII record separator.
-static const wchar_t UVAR_ARRAY_SEP = 0x1e;
+constexpr const wchar_t UVAR_ARRAY_SEP = 0x1e;
 
 /// Decode a serialized universal variable value into a list.
 static wcstring_list_t decode_serialized(const wcstring &val) {
@@ -869,7 +869,7 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
 }
 
 /// Maximum length of hostname. Longer hostnames are truncated.
-#define HOSTNAME_LEN 255
+constexpr int HOSTNAME_LEN = 255;
 
 /// Function to get an identifier based on the hostname.
 bool get_hostname_identifier(wcstring &result) {
@@ -898,8 +898,8 @@ class universal_notifier_shmem_poller_t final : public universal_notifier_t {
         uint32_t universal_variable_seed;
     };
 
-#define SHMEM_MAGIC_NUMBER 0xF154
-#define SHMEM_VERSION_CURRENT 1000
+constexpr int SHMEM_MAGIC_NUMBER = 0xF154;
+constexpr int SHMEM_VERSION_CURRENT = 1000;
 
    private:
     long long last_change_time{0};

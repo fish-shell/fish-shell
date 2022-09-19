@@ -24,12 +24,12 @@
 
 #include "common.h"
 
-#define _NXT 0x80
-#define _SEQ2 0xc0
-#define _SEQ3 0xe0
-#define _SEQ4 0xf0
+constexpr char _NXT = 0x80;
+constexpr char _SEQ2 = 0xc0;
+constexpr char _SEQ3 = 0xe0;
+constexpr char _SEQ4 = 0xf0;
 
-#define _BOM 0xfeff
+constexpr uint16_t _BOM = 0xfeff;
 
 // We can tweak the following typedef to allow us to simulate Windows-style 16 bit wchar's on Unix.
 using utf8_wchar_t = wchar_t;

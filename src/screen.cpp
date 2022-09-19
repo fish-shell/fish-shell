@@ -45,7 +45,7 @@
 #include "termsize.h"
 
 /// The number of characters to indent new blocks.
-#define INDENT_STEP 4u
+constexpr uint32_t INDENT_STEP = 4U;
 
 /// RAII class to begin and end buffering around an outputter.
 namespace {

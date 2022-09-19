@@ -189,13 +189,13 @@ struct parse_error_t {
     wcstring describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive,
                                   bool skip_caret) const;
 };
-typedef std::vector<parse_error_t> parse_error_list_t;
+using parse_error_list_t = std::vector<parse_error_t>;
 
 wcstring token_type_user_presentable_description(parse_token_type_t type,
                                                  parse_keyword_t keyword = parse_keyword_t::none);
 
 // Special source_start value that means unknown.
-#define SOURCE_LOCATION_UNKNOWN (static_cast<size_t>(-1))
+constexpr size_t SOURCE_LOCATION_UNKNOWN = static_cast<size_t>(-1);
 
 /// Helper function to offset error positions by the given amount. This is used when determining
 /// errors in a substring of a larger source buffer.
@@ -209,7 +209,7 @@ enum class pipeline_position_t : uint8_t {
 };
 
 /// Maximum number of function calls.
-#define FISH_MAX_STACK_DEPTH 128
+constexpr int FISH_MAX_STACK_DEPTH = 128;
 
 /// Error message on a function that calls itself immediately.
 #define INFINITE_FUNC_RECURSION_ERR_MSG \

@@ -55,34 +55,34 @@
 #endif
 
 // Common string type.
-typedef std::wstring wcstring;
-typedef std::vector<wcstring> wcstring_list_t;
+using wcstring = std::wstring;
+using wcstring_list_t = std::vector<wcstring>;
 
 struct termsize_t;
 
 // Highest legal ASCII value.
-#define ASCII_MAX 127u
+constexpr char ASCII_MAX = 127U;
 
 // Highest legal 16-bit Unicode value.
-#define UCS2_MAX 0xFFFFu
+constexpr uint16_t UCS2_MAX = 0xFFFF;
 
 // Highest legal byte value.
-#define BYTE_MAX 0xFFu
+constexpr uint8_t BYTE_MAX = 0xFF;
 
 // Unicode BOM value.
-#define UTF8_BOM_WCHAR 0xFEFFu
+constexpr uint16_t UTF8_BOM_WCHAR = 0xFEFF;
 
 // Use Unicode "noncharacters" for internal characters as much as we can. This
 // gives us 32 "characters" for internal use that we can guarantee should not
 // appear in our input stream. See http://www.unicode.org/faq/private_use.html.
-#define RESERVED_CHAR_BASE static_cast<wchar_t>(0xFDD0)
-#define RESERVED_CHAR_END static_cast<wchar_t>(0xFDF0)
+constexpr wchar_t RESERVED_CHAR_BASE = static_cast<wchar_t>(0xFDD0);
+constexpr wchar_t RESERVED_CHAR_END = static_cast<wchar_t>(0xFDF0);
 // Split the available noncharacter values into two ranges to ensure there are
 // no conflicts among the places we use these special characters.
-#define EXPAND_RESERVED_BASE RESERVED_CHAR_BASE
-#define EXPAND_RESERVED_END (EXPAND_RESERVED_BASE + 16)
-#define WILDCARD_RESERVED_BASE EXPAND_RESERVED_END
-#define WILDCARD_RESERVED_END (WILDCARD_RESERVED_BASE + 16)
+constexpr wchar_t EXPAND_RESERVED_BASE = RESERVED_CHAR_BASE;
+constexpr wchar_t EXPAND_RESERVED_END = (EXPAND_RESERVED_BASE + 16);
+constexpr wchar_t WILDCARD_RESERVED_BASE = EXPAND_RESERVED_END;
+constexpr wchar_t WILDCARD_RESERVED_END = (WILDCARD_RESERVED_BASE + 16);
 // Make sure the ranges defined above don't exceed the range for noncharacters.
 // This is to make sure we didn't do something stupid in subdividing the
 // Unicode range for our needs.
@@ -102,8 +102,8 @@ struct termsize_t;
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-#define ENCODE_DIRECT_BASE static_cast<wchar_t>(0xF600)
-#define ENCODE_DIRECT_END (ENCODE_DIRECT_BASE + 256)
+constexpr wchar_t ENCODE_DIRECT_BASE = static_cast<wchar_t>(0xF600);
+constexpr wchar_t ENCODE_DIRECT_END = (ENCODE_DIRECT_BASE + 256);
 
 // NAME_MAX is not defined on Solaris
 #if !defined(NAME_MAX)
@@ -140,7 +140,7 @@ enum {
     UNESCAPE_INCOMPLETE = 1 << 1,      // allow incomplete escape sequences
     UNESCAPE_NO_BACKSLASHES = 1 << 2,  // don't handle backslash escapes
 };
-typedef unsigned int unescape_flags_t;
+using unescape_flags_t = unsigned int;
 
 // Flags for the escape_string() function. These are only applicable when the escape style is
 // "script" (i.e., STRING_STYLE_SCRIPT).
@@ -156,7 +156,7 @@ enum {
     /// Replace nonprintable control characters with Unicode symbols.
     ESCAPE_SYMBOLIC = 1 << 3
 };
-typedef unsigned int escape_flags_t;
+using escape_flags_t = unsigned int;
 
 /// A user-visible job ID.
 using job_id_t = int;
@@ -300,7 +300,7 @@ std::string wcs2string(const wchar_t *in, size_t len);
 void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver);
 
 // Check if we are running in the test mode, where we should suppress error output
-#define TESTS_PROGRAM_NAME L"(ignore)"
+constexpr const wchar_t TESTS_PROGRAM_NAME[] = L"(ignore)";
 bool should_suppress_stderr_for_tests();
 
 /// Branch prediction hints. Idea borrowed from Linux kernel. Just used for asserts.
@@ -637,7 +637,7 @@ enum {
 
 // Custom hash function used by unordered_map/unordered_set when key is const
 #ifndef CONST_WCSTRING_HASH
-#define CONST_WCSTRING_HASH 1
+#define CONST_WCSTRING_HASH
 namespace std {
 template <>
 struct hash<const wcstring> {

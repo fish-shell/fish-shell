@@ -19,9 +19,9 @@
 
 // The first fd in the "high range." fds below this are allowed to be used directly by users in
 // redirections, e.g. >&3
-const int k_first_high_fd = 10;
-static constexpr uint64_t kUsecPerMsec = 1000;
-static constexpr uint64_t kUsecPerSec [[gnu::unused]] = 1000 * kUsecPerMsec;
+constexpr int k_first_high_fd = 10;
+constexpr uint64_t  kUsecPerMsec = 1000;
+constexpr uint64_t kUsecPerSec [[gnu::unused]] = 1000 * kUsecPerMsec;
 
 void autoclose_fd_t::close() {
     if (fd_ < 0) return;

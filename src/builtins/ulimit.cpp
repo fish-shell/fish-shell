@@ -81,7 +81,7 @@ static const struct resource_t resource_arr[] = {
 
 /// This is likely to be the same as RLIMIT_INFINITY, but it shouldn't get used
 /// in the same context (that is, compared to the result of a getrlimit call).
-#define RLIMIT_UNKNOWN -1
+constexpr int RLIMIT_UNKNOWN = -1;
 
 /// Get the implicit multiplication factor for the specified resource limit.
 static int get_multiplier(int what) {

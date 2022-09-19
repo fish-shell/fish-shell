@@ -550,7 +550,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
 
     // Hacky support for %self which must be an unquoted literal argument.
     if (buffstr == PROCESS_EXPAND_SELF_STR) {
-        std::fill_n(colors, std::wcslen(PROCESS_EXPAND_SELF_STR), highlight_role_t::operat);
+        std::fill_n(colors, const_strlen(PROCESS_EXPAND_SELF_STR), highlight_role_t::operat);
         return;
     }
 

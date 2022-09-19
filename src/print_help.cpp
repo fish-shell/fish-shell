@@ -10,15 +10,14 @@
 
 #include "common.h"
 
-#define CMD_LEN 1024
-
-#define HELP_ERR "Could not show help message\n"
+constexpr int CMD_LEN = 1024;
+constexpr char HELP_ERR[] = "Could not show help message\n";
 
 void print_help(const char *c, int fd) {
     char cmd[CMD_LEN];
     int printed = snprintf(cmd, CMD_LEN, "fish -c '__fish_print_help %s >&%d'", c, fd);
 
     if (printed < CMD_LEN && system(cmd) == -1) {
-        write_loop(2, HELP_ERR, std::strlen(HELP_ERR));
+        write_loop(2, HELP_ERR, const_strlen(HELP_ERR));
     }
 }

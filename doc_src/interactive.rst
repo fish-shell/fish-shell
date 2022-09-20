@@ -199,7 +199,7 @@ To avoid needless typing, a frequently-run command like ``git checkout`` can be 
 
 After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
 
-This is an alternative to aliases, and has the advantage that you see the actual command before using it, and the actual command will be stored in history.
+This is an alternative to aliases, and has the advantage that you see the actual command before using it, and the actual command will be stored in history. Moreover, while aliases do not work with `sudo` which is an external command, abbreviations work correctly because they are expanded before the whole command line is executed.
 
 .. _title:
 

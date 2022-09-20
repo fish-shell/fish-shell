@@ -293,7 +293,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the :ref:`history <history-search>` section for more information on history searching.
 
-- :kbd:`Control`\ +\ :kbd:`C` cancels the entire line.
+- :kbd:`Control`\ +\ :kbd:`C` interrupt/kill whatever is running (SIGINT).
 
 - :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
 

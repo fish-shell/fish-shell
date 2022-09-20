@@ -76,7 +76,7 @@ static const wchar_t *C_(const wcstring &s) {
 static const wcstring &C_(const wcstring &s) { return s; }
 #endif
 
-/// Struct describing a completion option entry.
+/// Struct describing a completion rule for options to a command.
 ///
 /// If option is empty, the comp field must not be empty and contains a list of arguments to the
 /// command.
@@ -92,13 +92,13 @@ namespace {
 struct complete_entry_opt_t {
     // Text of the option (like 'foo').
     wcstring option;
-    // Type of the option: args-oly, short, single_long, or double_long.
+    // Type of the option: args-only, short, single_long, or double_long.
     complete_option_type_t type;
-    // Arguments to the option.
+    // Arguments to the option; may be a subshell expression expanded at evaluation time.
     wcstring comp;
     // Description of the completion.
     wcstring desc;
-    // Conditions under which to use the option.
+    // Conditions under which to use the option, expanded and evaluated at completion time.
     wcstring_list_t condition;
     // Determines how completions should be performed on the argument after the switch.
     completion_mode_t result_mode;
@@ -125,7 +125,7 @@ struct complete_entry_opt_t {
 static relaxed_atomic_t<unsigned int> k_complete_order{0};
 
 /// Struct describing a command completion.
-using option_list_t = std::forward_list<complete_entry_opt_t>;
+using option_list_t = std::vector<complete_entry_opt_t>;
 class completion_entry_t {
    public:
     /// List of all options.
@@ -139,15 +139,17 @@ class completion_entry_t {
     const option_list_t &get_options() const { return options; }
 
     /// Adds an option.
-    void add_option(complete_entry_opt_t &&opt) { options.push_front(std::move(opt)); }
+    void add_option(complete_entry_opt_t &&opt) { options.push_back(std::move(opt)); }
 
     /// Remove all completion options in the specified entry that match the specified short / long
     /// option strings. Returns true if it is now empty and should be deleted, false if it's not
     /// empty.
     bool remove_option(const wcstring &option, complete_option_type_t type) {
-        this->options.remove_if([&](const complete_entry_opt_t &opt) {
-            return opt.option == option && opt.type == type;
-        });
+        options.erase(std::remove_if(options.begin(), options.end(),
+                                     [&](const complete_entry_opt_t &opt) {
+                                         return opt.option == option && opt.type == type;
+                                     }),
+                      options.end());
         return this->options.empty();
     }
 

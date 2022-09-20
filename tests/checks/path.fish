@@ -217,6 +217,8 @@ or echo mtime is too small
 test $mtime -lt 20
 or echo mtime is too large
 
-touch -m -t 197001020000.00 epoch
-path mtime epoch
-# CHECK: 82800
+touch -m -t 197001020000 epoch
+set -l epochtime (path mtime epoch)
+# Allow for timezone shenanigans
+test $epochtime -gt 0 -a $epochtime -lt 180000
+or echo Oops not mtime

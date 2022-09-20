@@ -55,8 +55,8 @@ complete
 # CHECK: complete --no-files complete_test_alpha1 -a '(commandline)'
 # CHECK: complete --no-files complete_test_alpha2
 # CHECK: complete --no-files complete_test_alpha3
-# CHECK: complete --force-files t -l fileoption
 # CHECK: complete --no-files t -a '(t)'
+# CHECK: complete --force-files t -l fileoption
 # CHECK: complete -p '/complete test/beta1' -s Z -d 'desc, desc'
 # CHECK: complete --require-parameter 'complete test beta2' -d desc\ \'\ desc2\ \[ -a 'foo bar'
 # CHECK: complete --exclusive complete_test_beta2 -o test -n false
@@ -368,8 +368,8 @@ complete -c banana
 # "-c" is optional
 complete banana -a bar
 complete banana
-#CHECK: complete banana -a bar
 #CHECK: complete banana -a '1 2 3'
+#CHECK: complete banana -a bar
 
 # "-a" ain't
 complete banana bar

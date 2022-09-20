@@ -61,17 +61,14 @@ test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: ^
 
 # Test `test` date comparison logic for dates older than epoch
-touch -m -t 197001010000.00 epoch
-touch -m -t 190212112045.40 old
-touch -m -t 190112112040.39 oldest
-touch -m -t 203801080314.07 newest
+touch -m -t 197001010000 epoch
+touch -m -t 190212112045 old
+touch -m -t 190112112040 oldest
+touch -m -t 203801080314 newest
 
-# XXX: This workaround only works w/ GNU `stat`. There is no great portable way of getting mtime.
-if string match -qr -- "GNU coreutils" "$(stat --version 2>/dev/null)" && \
-    string match -qr -- '^(0|'(stat -c %Y epoch)')$' (stat -c %Y oldest)
-    # Filesystem does not support dates older than epoch, so silently skip this test - there's no
-    # guarantee that an FS supports pre-epoch timestamps and lxfs (virtual WSLv1 fs) doesn't.
-else
+# Some filesystem do not support dates older than epoch, so silently skip this test - there's no
+# guarantee that an FS supports pre-epoch timestamps and lxfs (virtual WSLv1 fs) doesn't.
+if not path mtime oldest epoch | string match -qr -- '^[^-]'
     test oldest -ot old || echo bad ot 1
     test newest -nt old || echo bad nt
     test old -ot oldest && echo bad ot 2

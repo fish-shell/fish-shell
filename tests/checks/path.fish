@@ -216,3 +216,7 @@ or echo mtime is too small
 
 test $mtime -lt 20
 or echo mtime is too large
+
+touch -m -t 197001020000.00 epoch
+path mtime epoch
+# CHECK: 82800

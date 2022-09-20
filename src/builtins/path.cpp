@@ -623,9 +623,9 @@ static int path_mtime(parser_t &parser, io_streams_t &streams, int argc, const w
             n_transformed++;
 
             if (!opts.relative) {
-                path_out(streams, opts, to_string(ret.change_seconds));
+                path_out(streams, opts, to_string(ret.mod_seconds));
             } else {
-                path_out(streams, opts, to_string(t - ret.change_seconds));
+                path_out(streams, opts, to_string(t - ret.mod_seconds));
             }
         }
     }

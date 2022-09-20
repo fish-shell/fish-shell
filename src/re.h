@@ -136,7 +136,7 @@ class regex_t : noncopyable_t {
                                  re_error_t *out_error = nullptr,
                                  int *out_repl_count = nullptr) const;
 
-    regex_t(regex_t &&other) = default;
+    regex_t(regex_t &&) = default;
     regex_t &operator=(regex_t &&) = default;
     ~regex_t() = default;
 

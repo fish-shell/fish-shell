@@ -5,6 +5,7 @@
 # This is the case for at least Cygwin and Newlib.
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
 include(CheckCXXCompilerFlag)
+include(CMakePushCheckState)
 
 if(APPLE)
     check_cxx_compiler_flag("-Werror=unguarded-availability" REQUIRES_UNGUARDED_AVAILABILITY)
@@ -30,6 +31,25 @@ check_cxx_compiler_flag("-Werror=redundant-move" HAS_REDUNDANT_MOVE)
 if (HAS_REDUNDANT_MOVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wredundant-move")
 endif()
+
+# Defeat bogus warnings about missing field initializers for `var{}` initialization.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    cmake_push_check_state()
+    list(APPEND CMAKE_REQUIRED_FLAGS "-W")
+    check_cxx_source_compiles("
+    struct sr_t { int x; };
+    int main(void) {
+        sr_t sr{};
+        return sr.x;
+    }"
+    EMPTY_VALUE_INIT_ACCEPTED
+    FAIL_REGEX "-Wmissing-field-initializers"
+    )
+    if (NOT EMPTY_VALUE_INIT_ACCEPTED)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers")
+    endif()
+    cmake_pop_check_state()
+  endif()
 
 # Disable static destructors if we can.
 check_cxx_compiler_flag("-fno-c++-static-destructors" DISABLE_STATIC_DESTRUCTORS)
@@ -79,7 +99,6 @@ include(CheckIncludeFiles)
 include(CheckStructHasMember)
 include(CheckCXXSourceCompiles)
 include(CheckTypeSize)
-include(CMakePushCheckState)
 check_cxx_symbol_exists(backtrace_symbols execinfo.h HAVE_BACKTRACE_SYMBOLS)
 
 # workaround for lousy mtime precision on a Linux kernel

@@ -76,6 +76,7 @@ Resolved in 3.6.0
 - Fish calls external commands via the given path again instead of always making it absolute. This can be seen e.g. when you run a bash script and check ``$0`` (:issue:`9143`).
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
 - ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
+- On 32-bit systems, globs like ``*`` might fail to print certain files, due to missing large file support. This has been fixed by enabling large file support.
 
 Completions
 ^^^^^^^^^^^

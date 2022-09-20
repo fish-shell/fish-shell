@@ -22,8 +22,8 @@
 
 #include <string>
 
-constexpr int UTF8_IGNORE_ERROR = 0x01;
-constexpr int UTF8_SKIP_BOM = 0x02;
+#define UTF8_IGNORE_ERROR 0x01
+#define UTF8_SKIP_BOM 0x02
 
 /// Convert a string between UTF8 and UCS-2/4 (depending on size of wchar_t). Returns true if
 /// successful, storing the result of the conversion in *result*.

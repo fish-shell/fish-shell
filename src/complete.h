@@ -27,7 +27,7 @@ struct completion_mode_t {
 };
 
 /// Character that separates the completion and description on programmable completions.
-constexpr char PROG_COMPLETE_SEP = L'\t';
+#define PROG_COMPLETE_SEP L'\t'
 
 class parser_t;
 

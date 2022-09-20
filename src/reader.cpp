@@ -83,47 +83,47 @@
 
 // Name of the variable that tells how long it took, in milliseconds, for the previous
 // interactive command to complete.
-constexpr const wchar_t ENV_CMD_DURATION[] = L"CMD_DURATION";
+#define ENV_CMD_DURATION L"CMD_DURATION"
 
 /// Maximum length of prefix string when printing completion list. Longer prefixes will be
 /// ellipsized.
-constexpr int PREFIX_MAX_LEN = 9;
+#define PREFIX_MAX_LEN 9
 
 /// A simple prompt for reading shell commands that does not rely on fish specific commands, meaning
 /// it will work even if fish is not installed. This is used by read_i.
-constexpr const wchar_t DEFAULT_PROMPT[] = L"echo -n \"$USER@$hostname $PWD \"'> '";
+#define DEFAULT_PROMPT L"echo -n \"$USER@$hostname $PWD \"'> '"
 
 /// The name of the function that prints the fish prompt.
-constexpr const wchar_t LEFT_PROMPT_FUNCTION_NAME[] = L"fish_prompt";
+#define LEFT_PROMPT_FUNCTION_NAME L"fish_prompt"
 
 /// The name of the function that prints the fish right prompt (RPROMPT).
-constexpr const wchar_t RIGHT_PROMPT_FUNCTION_NAME[] = L"fish_right_prompt";
+#define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
 
 /// The name of the function to use in place of the left prompt if we're in the debugger context.
-constexpr const wchar_t DEBUG_PROMPT_FUNCTION_NAME[] = L"fish_breakpoint_prompt";
+#define DEBUG_PROMPT_FUNCTION_NAME L"fish_breakpoint_prompt"
 
 /// The name of the function for getting the input mode indicator.
-constexpr const wchar_t MODE_PROMPT_FUNCTION_NAME[] = L"fish_mode_prompt";
+#define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
 /// The default title for the reader. This is used by reader_readline.
-constexpr const wchar_t DEFAULT_TITLE[] = L"echo (status current-command) \" \" $PWD";
+#define DEFAULT_TITLE L"echo (status current-command) \" \" $PWD"
 
 /// The maximum number of characters to read from the keyboard without repainting. Note that this
 /// readahead will only occur if new characters are available for reading, fish will never block for
 /// more input without repainting.
-constexpr size_t READAHEAD_MAX = 256;
+static constexpr size_t READAHEAD_MAX = 256;
 
 /// When tab-completing with a wildcard, we expand the wildcard up to this many results.
 /// If expansion would exceed this many results, beep and do nothing.
-constexpr size_t TAB_COMPLETE_WILDCARD_MAX_EXPANSION = 256;
+static const size_t TAB_COMPLETE_WILDCARD_MAX_EXPANSION = 256;
 
 /// A mode for calling the reader_kill function. In this mode, the new string is appended to the
 /// current contents of the kill buffer.
-constexpr int KILL_APPEND = 0;
+#define KILL_APPEND 0
 
 /// A mode for calling the reader_kill function. In this mode, the new string is prepended to the
 /// current contents of the kill buffer.
-constexpr int KILL_PREPEND = 1;
+#define KILL_PREPEND 1
 
 enum class jump_direction_t { forward, backward };
 enum class jump_precision_t { till, to };
@@ -169,7 +169,7 @@ static operation_context_t get_bg_context(const std::shared_ptr<environment_t> &
 /// typed. But we do not want it to block forever - e.g. it may hang on determining if an arbitrary
 /// argument is a path. This is how long we'll wait (in milliseconds) before giving up and
 /// performing a no-io syntax highlighting. See #7418, #5912.
-constexpr long kHighlightTimeoutForExecutionMs = 250;
+static constexpr long kHighlightTimeoutForExecutionMs = 250;
 
 /// Get the debouncer for autosuggestions and background highlighting.
 /// These are deliberately leaked to avoid shutdown dtor registration.

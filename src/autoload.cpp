@@ -17,7 +17,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// The time before we'll recheck an autoloaded file.
-const int kAutoloadStalenessInterval = 15;
+static const int kAutoloadStalenessInterval = 15;
 
 /// Represents a file that we might want to autoload.
 namespace {

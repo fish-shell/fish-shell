@@ -15,7 +15,7 @@
 
 struct termsize_t;
 
-constexpr size_t PAGER_SELECTION_NONE = static_cast<size_t>(-1);
+#define PAGER_SELECTION_NONE static_cast<size_t>(-1)
 
 /// Represents rendering from the pager.
 class page_rendering_t {
@@ -56,11 +56,11 @@ enum class selection_motion_t {
 };
 
 // The space between adjacent completions.
-constexpr const wchar_t PAGER_SPACER_STRING[] = L"  ";
-constexpr int PAGER_SPACER_STRING_WIDTH = const_strlen(PAGER_SPACER_STRING);
+#define PAGER_SPACER_STRING L"  "
+#define PAGER_SPACER_STRING_WIDTH 2
 
 // How many rows we will show in the "initial" pager.
-constexpr int PAGER_UNDISCLOSED_MAX_ROWS = 4;
+#define PAGER_UNDISCLOSED_MAX_ROWS 4
 
 class pager_t {
     size_t available_term_width{0};

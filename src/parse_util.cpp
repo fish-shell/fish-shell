@@ -43,7 +43,7 @@
 #define TIME_IN_PIPELINE_ERR_MSG _(L"The 'time' command may only be at the beginning of a pipeline")
 
 /// Maximum length of a variable name to show in error reports before truncation
-constexpr int var_err_len = 16;
+static constexpr int var_err_len = 16;
 
 int parse_util_lineno(const wcstring &str, size_t offset) {
     // Return the line number of position offset, starting with 1.

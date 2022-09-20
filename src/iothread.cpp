@@ -21,7 +21,7 @@
 #include "maybe.h"
 
 /// We just define a thread limit of 1024.
-constexpr int IO_MAX_THREADS = 1024;
+#define IO_MAX_THREADS 1024
 
 // iothread has a thread pool. Sometimes there's no work to do, but extant threads wait around for a
 // while (on a condition variable) in case new work comes soon. However condition variables are not
@@ -29,9 +29,9 @@ constexpr int IO_MAX_THREADS = 1024;
 // See https://github.com/google/sanitizers/issues/1259
 // When using TSan, disable the wait-around feature.
 #ifdef FISH_TSAN_WORKAROUNDS
-constexpr int IO_WAIT_FOR_WORK_DURATION_MS = 0;
+#define IO_WAIT_FOR_WORK_DURATION_MS 0
 #else
-constexpr int IO_WAIT_FOR_WORK_DURATION_MS = 500;
+#define IO_WAIT_FOR_WORK_DURATION_MS 500
 #endif
 
 using void_function_t = std::function<void()>;

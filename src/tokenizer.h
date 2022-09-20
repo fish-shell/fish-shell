@@ -26,17 +26,17 @@ enum class token_type_t : uint8_t {
 
 /// Flag telling the tokenizer to accept incomplete parameters, i.e. parameters with mismatching
 /// parenthesis, etc. This is useful for tab-completion.
-constexpr int TOK_ACCEPT_UNFINISHED =  1;
+#define TOK_ACCEPT_UNFINISHED 1
 
 /// Flag telling the tokenizer not to remove comments. Useful for syntax highlighting.
-constexpr int TOK_SHOW_COMMENTS  = 2;
+#define TOK_SHOW_COMMENTS 2
 
 /// Ordinarily, the tokenizer ignores newlines following a newline, or a semicolon. This flag tells
 /// the tokenizer to return each of them as a separate END.
-constexpr int TOK_SHOW_BLANK_LINES = 4;
+#define TOK_SHOW_BLANK_LINES 4
 
 /// Make an effort to continue after an error.
-constexpr int TOK_CONTINUE_AFTER_ERROR = 8;
+#define TOK_CONTINUE_AFTER_ERROR 8
 
 using tok_flags_t = unsigned int;
 

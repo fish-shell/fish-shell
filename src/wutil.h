@@ -176,7 +176,7 @@ struct dir_t {
 };
 
 #ifndef HASH_FILE_ID
-#define HASH_FILE_ID
+#define HASH_FILE_ID 1
 namespace std {
 template <>
 struct hash<file_id_t> {

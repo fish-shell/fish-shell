@@ -34,7 +34,7 @@
 // How many bytes we read() at once.
 // We use PATH_MAX here so we always get at least one path,
 // and so we can automatically detect NULL-separated input.
-constexpr int PATH_CHUNK_SIZE = PATH_MAX;
+#define PATH_CHUNK_SIZE PATH_MAX
 
 static void path_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"path ");

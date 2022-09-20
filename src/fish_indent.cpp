@@ -56,7 +56,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 // The number of spaces per indent isn't supposed to be configurable.
 // See discussion at https://github.com/fish-shell/fish-shell/pull/6790
-constexpr int SPACES_PER_INDENT = 4;
+#define SPACES_PER_INDENT 4
 
 static bool dump_parse_tree = false;
 static int ret = 0;

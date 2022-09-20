@@ -247,7 +247,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
 /// Bash uses 128 bytes for its chunk size. Very informal testing I did suggested that a smaller
 /// chunk size performed better. However, we're going to use the bash value under the assumption
 /// they've done more extensive testing.
-constexpr int READ_CHUNK_SIZE = 128;
+#define READ_CHUNK_SIZE 128
 
 /// Read from the fd in chunks until we see newline or null, as requested, is seen. This is only
 /// used when the fd is seekable (so not from a tty or pipe) and we're not reading a specific number

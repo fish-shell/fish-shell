@@ -30,16 +30,16 @@ using comp_t = pager_t::comp_t;
 using comp_info_list_t = std::vector<comp_t>;
 
 /// The minimum width (in characters) the terminal must to show completions at all.
-constexpr int PAGER_MIN_WIDTH = 16;
+#define PAGER_MIN_WIDTH 16
 
 /// Minimum height to show completions
-constexpr int PAGER_MIN_HEIGHT = 4;
+#define PAGER_MIN_HEIGHT 4
 
 /// The maximum number of columns of completion to attempt to fit onto the screen.
-constexpr int PAGER_MAX_COLS = 6;
+#define PAGER_MAX_COLS 6
 
 /// Width of the search field.
-constexpr int PAGER_SEARCH_FIELD_WIDTH = 12;
+#define PAGER_SEARCH_FIELD_WIDTH 12
 
 /// Text we use for the search field.
 #define SEARCH_FIELD_PROMPT _(L"search: ")

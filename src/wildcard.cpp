@@ -474,7 +474,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
-    if (is_windows_subsystem_for_linux() &&
+    if (executables_only && is_windows_subsystem_for_linux() &&
         string_suffixes_string_case_insensitive(L".dll", filename)) {
         return false;
     }

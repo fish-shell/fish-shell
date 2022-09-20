@@ -500,6 +500,21 @@ complete -C'oooops '
 echo $oops
 # CHECK: 1
 
+# Validate that completions are generated in the same order as the rules/calls to `complete` were
+# defined.
+
+function foo_to_complete
+end
+
+# Generate completions with `-k` to observe that sort order is preserved
+complete -c foo_to_complete -kf -a "opt_b_2 opt_b_1"
+complete -c foo_to_complete -kf -a "opt_a_1 opt_a_2"
+
+complete -C"foo_to_complete "
+# CHECK: opt_b_2
+# CHECK: opt_b_1
+# CHECK: opt_a_1
+# CHECK: opt_a_2
 
 # See that we load completions only if the command exists in $PATH,
 # as a workaround for #3117.

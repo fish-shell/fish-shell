@@ -53,7 +53,7 @@ struct te_fun_t {
 
     bool operator==(fn_2 fn) const { return arity_ == 2 && fun2 == fn; }
 
-    [[nodiscard]] int arity() const { return arity_; }
+    __warn_unused int arity() const { return arity_; }
 
     double operator()() const {
         assert(arity_ == 0);
@@ -112,7 +112,7 @@ struct state {
     explicit state(const wchar_t *expr) : start_{expr}, next_{expr} { next_token(); }
     double eval() { return expr(); }
 
-    [[nodiscard]] te_error_t error() const {
+    __warn_unused te_error_t error() const {
         if (type_ == TOK_END) return {TE_ERROR_NONE, 0, 0};
         // If we have an error position set, use that,
         // otherwise the current position.
@@ -315,7 +315,6 @@ void state::next_token() {
                     error_ = TE_ERROR_UNKNOWN_FUNCTION;
                     errpos_ = start + 1;
                     errlen_ = next_ - start;
-
                 }
             } else {
                 /* Look for an operator or special character. */
@@ -398,8 +397,11 @@ double state::base() {
                 // The error should be given *between*
                 // the last two tokens.
                 errpos_ = next + 1;
-                // Go to the end of whitespace.
-                while (wcschr(L" \t\n\r", next++[0]));
+                // Go to the end of whitespace and then one more.
+                while (wcschr(L" \t\n\r", next[0])) {
+                    next++;
+                }
+                next++;
                 errlen_ = next - errpos_;
             }
             return val;
@@ -434,7 +436,7 @@ double state::base() {
             std::vector<double> parameters;
             int i;
             const wchar_t *first_err = nullptr;
-            for (i = 0; ; i++) {
+            for (i = 0;; i++) {
                 if (i == arity) first_err = next_;
                 parameters.push_back(expr());
                 if (type_ != TOK_SEP) {
@@ -463,7 +465,8 @@ double state::base() {
                 // a closing parenthesis should be more obvious.
                 //
                 // Vararg functions need at least one argument.
-                error_ = (i < arity || (arity == -1 && i == 0)) ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
+                error_ = (i < arity || (arity == -1 && i == 0)) ? TE_ERROR_TOO_FEW_ARGS
+                                                                : TE_ERROR_TOO_MANY_ARGS;
                 type_ = TOK_ERROR;
                 if (first_err) {
                     errpos_ = first_err;

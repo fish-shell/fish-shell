@@ -78,12 +78,10 @@ end
 #CHECK: good nt
 #CHECK: good nt
 #CHECK: good nt
-#CHECK: good nt
 
 for file in epoch old newest
     test nonexist -ot $file && echo good ot || echo $file: bad ot;
 end
-#CHECK: good ot
 #CHECK: good ot
 #CHECK: good ot
 #CHECK: good ot

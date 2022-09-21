@@ -437,7 +437,8 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     sort(names.begin(), names.end());
 
     for (const auto &key : names) {
-        streams.out.append(key);
+        wcstring out;
+        out.append(key);
 
         if (!names_only) {
             wcstring val;
@@ -460,14 +461,15 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                     shorten = true;
                     val.resize(60);
                 }
-                streams.out.append(L" ");
-                streams.out.append(val);
+                out.push_back(L' ');
+                out.append(val);
 
-                if (shorten) streams.out.push_back(get_ellipsis_char());
+                if (shorten) out.push_back(get_ellipsis_char());
             }
         }
 
-        streams.out.append(L"\n");
+        out.push_back(L'\n');
+        streams.out.append(out);
     }
 
     return STATUS_CMD_OK;

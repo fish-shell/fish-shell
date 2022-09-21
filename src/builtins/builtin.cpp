@@ -101,11 +101,8 @@ maybe_t<int> builtin_builtin(parser_t &parser, io_streams_t &streams, const wcha
         wcstring_list_t names = builtin_get_names();
         std::sort(names.begin(), names.end());
 
-        for (const auto &name : names) {
-            auto el = name.c_str();
-
-            streams.out.append(el);
-            streams.out.append(L"\n");
+        for (auto &name : names) {
+            streams.out.append(name + L"\n");
         }
     }
 

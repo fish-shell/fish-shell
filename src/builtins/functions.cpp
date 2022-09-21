@@ -286,9 +286,8 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
 
             streams.out.append(reformat_for_screen(buff, termsize_last()));
         } else {
-            for (const auto &name : names) {
-                streams.out.append(name.c_str());
-                streams.out.append(L"\n");
+            for (auto &name : names) {
+                streams.out.append(name + L"\n");
             }
         }
 

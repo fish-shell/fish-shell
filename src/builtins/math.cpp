@@ -252,8 +252,7 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
             streams.err.append_format(L"'%ls'\n", expression.c_str());
             retval = STATUS_CMD_ERROR;
         } else {
-            streams.out.append(format_double(v, opts));
-            streams.out.push_back(L'\n');
+            streams.out.append(format_double(v, opts) + L"\n");
         }
     } else {
         streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error));

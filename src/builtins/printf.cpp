@@ -84,6 +84,10 @@ struct builtin_printf_state_t {
     // Whether we should stop outputting. This gets set in the case of an error, and also with the
     // \c escape.
     bool early_exit;
+    // Our output buffer, so we don't write() constantly.
+    // Our strategy is simple:
+    // We print once per argument, and we flush the buffer before the error.
+    wcstring buff;
 
     explicit builtin_printf_state_t(io_streams_t &s)
         : streams(s), exit_code(0), early_exit(false) {}
@@ -113,6 +117,12 @@ void builtin_printf_state_t::nonfatal_error(const wchar_t *fmt, ...) {
     // Don't error twice.
     if (early_exit) return;
 
+    // If we have output, write it so it appears first.
+    if (!buff.empty()) {
+        streams.out.append(buff);
+        buff.clear();
+    }
+
     va_list va;
     va_start(va, fmt);
     wcstring errstr = vformat_string(fmt, va);
@@ -129,6 +139,12 @@ void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
     // Don't error twice.
     if (early_exit) return;
 
+    // If we have output, write it so it appears first.
+    if (!buff.empty()) {
+        streams.out.append(buff);
+        buff.clear();
+    }
+
     va_list va;
     va_start(va, fmt);
     wcstring errstr = vformat_string(fmt, va);
@@ -143,7 +159,7 @@ void builtin_printf_state_t::append_output(wchar_t c) {
     // Don't output if we're done.
     if (early_exit) return;
 
-    streams.out.push_back(c);
+    buff.push_back(c);
 }
 
 void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...) {
@@ -154,7 +170,7 @@ void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...) {
     va_start(va, fmt);
     wcstring tmp = vformat_string(fmt, va);
     va_end(va);
-    streams.out.append(tmp);
+    buff.append(tmp);
 }
 
 void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end, int errcode) {
@@ -682,6 +698,10 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar
         args_used = state.print_formatted(format, argc, argv);
         argc -= args_used;
         argv += args_used;
+        if (!state.buff.empty()) {
+            streams.out.append(state.buff);
+            state.buff.clear();
+        }
     } while (args_used > 0 && argc > 0 && !state.early_exit);
 
 #if defined(HAVE_USELOCALE) || defined(__GLIBC__)

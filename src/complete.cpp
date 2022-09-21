@@ -856,7 +856,10 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
     // the lock because callouts (like the condition) may add or remove completions. See issue 2.
     for (const option_list_t &options : all_options) {
         size_t short_opt_pos = short_option_pos(str, options);
-        bool last_option_requires_param = false, use_common = true;
+        // We want last_option_requires_param to default to false but distinguish between when
+        // a previous completion has set it to false and when it has its default value.
+        maybe_t<bool> last_option_requires_param = none();
+        bool use_common = true;
         if (use_switches) {
             if (str[0] == L'-') {
                 // Check if we are entering a combined option and argument (like --color=auto or
@@ -866,16 +869,27 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
                     if (o.type == option_type_short) {
                         if (short_opt_pos == wcstring::npos) continue;
                         if (o.option.at(0) != str.at(short_opt_pos)) continue;
-                        last_option_requires_param = o.result_mode.requires_param;
                         arg = str.c_str() + short_opt_pos + 1;
                     } else {
                         arg = param_match2(&o, str.c_str());
                     }
-                    if (arg != nullptr && this->condition_test(o.condition)) {
-                        if (o.result_mode.requires_param) use_common = false;
-                        if (o.result_mode.no_files) use_files = false;
-                        if (o.result_mode.force_files) has_force = true;
-                        complete_from_args(arg, o.comp, o.localized_desc(), o.flags);
+
+                    if (this->condition_test(o.condition)) {
+                        if (o.type == option_type_short) {
+                            // Only override a true last_option_requires_param value with a false one
+                            if (last_option_requires_param.has_value()) {
+                                last_option_requires_param =
+                                    last_option_requires_param && o.result_mode.requires_param;
+                            } else {
+                                last_option_requires_param = o.result_mode.requires_param;
+                            }
+                        }
+                        if (arg != nullptr) {
+                            if (o.result_mode.requires_param) use_common = false;
+                            if (o.result_mode.no_files) use_files = false;
+                            if (o.result_mode.force_files) has_force = true;
+                            complete_from_args(arg, o.comp, o.localized_desc(), o.flags);
+                        }
                     }
                 }
             } else if (popt[0] == L'-') {
@@ -932,6 +946,11 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
             continue;
         }
 
+        // Set a default value for last_option_requires_param only if one hasn't been set
+        if (!last_option_requires_param.has_value()) {
+            last_option_requires_param = false;
+        }
+
         // Now we try to complete an option itself
         for (const complete_entry_opt_t &o : options) {
             // If this entry is for the base command, check if any of the arguments match.
@@ -958,7 +977,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
                     // Only complete when the last short option has no parameter yet..
                     if (short_opt_pos + 1 != str.size()) continue;
                     // .. and it does not require one ..
-                    if (last_option_requires_param) continue;
+                    if (*last_option_requires_param) continue;
                     // .. and the option is not already there.
                     if (str.find(optchar) != wcstring::npos) continue;
                 }

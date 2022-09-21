@@ -416,14 +416,14 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
                     // we need to unescape the command line. See #1127.
                     unescape_string_in_place(&faux_cmdline_with_completion, UNESCAPE_DEFAULT);
                 }
-                streams.out.append(faux_cmdline_with_completion);
 
                 // Append any description.
                 if (!next.description.empty()) {
-                    streams.out.push_back(L'\t');
-                    streams.out.append(next.description);
+                    faux_cmdline_with_completion.push_back(L'\t');
+                    faux_cmdline_with_completion.append(next.description);
                 }
-                streams.out.push_back(L'\n');
+                faux_cmdline_with_completion.push_back(L'\n');
+                streams.out.append(faux_cmdline_with_completion);
             }
 
             parser.libdata().builtin_complete_current_commandline = false;

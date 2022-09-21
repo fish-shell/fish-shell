@@ -858,7 +858,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
         size_t short_opt_pos = short_option_pos(str, options);
         // We want last_option_requires_param to default to false but distinguish between when
         // a previous completion has set it to false and when it has its default value.
-        maybe_t<bool> last_option_requires_param = none();
+        maybe_t<bool> last_option_requires_param{};
         bool use_common = true;
         if (use_switches) {
             if (str[0] == L'-') {

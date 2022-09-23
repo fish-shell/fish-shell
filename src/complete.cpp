@@ -69,8 +69,9 @@
 /// since it can occur, and should not be translated. (Gettext returns the version information as
 /// the response).
 #ifdef HAVE_GETTEXT
-static const wchar_t *C_(const wcstring &s) {
-    return s.empty() ? L"" : wgettext(s.c_str()).c_str();
+static const wcstring &C_(const wcstring &s) {
+    static wcstring empty;
+    return s.empty() ? empty : wgettext(s.c_str());
 }
 #else
 static const wcstring &C_(const wcstring &s) { return s; }

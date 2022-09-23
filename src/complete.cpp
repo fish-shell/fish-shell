@@ -92,14 +92,14 @@ namespace {
 struct complete_entry_opt_t {
     /// Text of the option (like 'foo').
     wcstring option;
-    /// Type of the option: args_only, short, single_long, or double_long.
-    complete_option_type_t type;
     /// Arguments to the option.
     wcstring comp;
     /// Description of the completion.
     wcstring desc;
     /// Conditions under which to use the option.
     wcstring_list_t conditions;
+    /// Type of the option: args_only, short, single_long, or double_long.
+    complete_option_type_t type;
     /// Determines how completions should be performed on the argument after the switch.
     completion_mode_t result_mode;
     /// Completion flags.

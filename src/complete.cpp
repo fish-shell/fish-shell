@@ -70,8 +70,7 @@
 /// the response).
 #ifdef HAVE_GETTEXT
 static const wcstring &C_(const wcstring &s) {
-    static wcstring empty;
-    return s.empty() ? empty : wgettext(s.c_str());
+    return s.empty() ? g_empty_string : wgettext(s.c_str());
 }
 #else
 static const wcstring &C_(const wcstring &s) { return s; }

@@ -106,7 +106,7 @@ struct complete_entry_opt_t {
     /// Completion flags.
     complete_flags_t flags;
 
-    wcstring localized_desc() const { return C_(desc); }
+    const wcstring &localized_desc() const { return C_(desc); }
 
     size_t expected_dash_count() const {
         switch (this->type) {

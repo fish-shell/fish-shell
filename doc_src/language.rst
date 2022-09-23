@@ -1534,10 +1534,54 @@ Fish includes a number of commands in the shell directly. We call these "builtin
 - :ref:`argparse <cmd-argparse>` for parsing function arguments
 - :ref:`source <cmd-source>` to read a script in the current shell (so changes to variables stay) and :ref:`eval <cmd-eval>` to execute a string as script
 - :ref:`random <cmd-random>` to get random numbers or pick a random element from a list
+- :ref:`read <cmd-read>` for reading from a pipe or the terminal
 
 For a list of all builtins, use ``builtin -n``.
 
 For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
+
+Querying for user input
+-----------------------
+
+Sometimes, you want to ask the user for input, for instance to confirm something. This can be done with the :ref:`read <cmd-read>` builtin.
+
+Let's make up an example. This function will :ref:`glob <expand-wildcard>` the files in all the directories it gets as :ref:`arguments <variables-argv>`, and :ref:`if <syntax-conditional>` there are :ref:`more than five <cmd-test>` it will ask the user if it is supposed to show them, but only if it is connected to a terminal::
+
+    function show_files
+        # This will glob on all arguments. Any non-directories will be ignored.
+        set -l files $argv/*
+
+        # If there are more than 5 files
+        if test (count $files) -gt 5
+            # and both stdin (for reading input) and stdout (for writing the prompt)
+            # are terminals
+            and isatty stdin
+            and isatty stdout
+            # Keep asking until we get a valid response
+            while read --nchars 1 -l response --prompt-str="Are you sure? (y/n)"
+                  or return 1 # if the read was aborted with ctrl-c/ctrl-d
+                switch $response
+                    case y Y
+                        echo Okay
+                        # We break out of the while and go on with the function
+                        break
+                    case n N
+                        # We return from the function without printing
+                        echo Not showing
+                        return 1
+                    case '*'
+                        # We go through the while loop and ask again
+                        echo Not valid input
+                        continue
+                end
+            end
+        end
+
+        # And now we print the files
+        printf '%s\n' $files
+    end
+
+If you run this as ``show_files /``, it will most likely ask you until you press Y/y or N/n. If you run this as ``show_files / | cat``, it will print the files without asking. If you run this as ``show_files .``, it might just print something without asking because there are fewer than five files.
 
 .. _identifiers:
 

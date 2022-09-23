@@ -90,19 +90,19 @@ static const wcstring &C_(const wcstring &s) { return s; }
 /// switch.
 namespace {
 struct complete_entry_opt_t {
-    // Text of the option (like 'foo').
+    /// Text of the option (like 'foo').
     wcstring option;
-    // Type of the option: args-oly, short, single_long, or double_long.
+    /// Type of the option: args_only, short, single_long, or double_long.
     complete_option_type_t type;
-    // Arguments to the option.
+    /// Arguments to the option.
     wcstring comp;
-    // Description of the completion.
+    /// Description of the completion.
     wcstring desc;
-    // Conditions under which to use the option.
-    wcstring_list_t condition;
-    // Determines how completions should be performed on the argument after the switch.
+    /// Conditions under which to use the option.
+    wcstring_list_t conditions;
+    /// Determines how completions should be performed on the argument after the switch.
     completion_mode_t result_mode;
-    // Completion flags.
+    /// Completion flags.
     complete_flags_t flags;
 
     wcstring localized_desc() const { return C_(desc); }
@@ -361,7 +361,7 @@ class completer_t {
     bool complete_variable(const wcstring &str, size_t start_offset);
 
     bool condition_test(const wcstring &condition);
-    bool condition_test(const wcstring_list_t &conditions);
+    bool conditions_test(const wcstring_list_t &conditions);
 
     void complete_strings(const wcstring &wc_escaped, const description_func_t &desc_func,
                           const completion_list_t &possible_comp, complete_flags_t flags);
@@ -459,7 +459,7 @@ bool completer_t::condition_test(const wcstring &condition) {
     return test_res;
 }
 
-bool completer_t::condition_test(const wcstring_list_t &conditions) {
+bool completer_t::conditions_test(const wcstring_list_t &conditions) {
     for (const auto &c : conditions) {
         if (!condition_test(c)) return false;
     }
@@ -874,7 +874,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
                         arg = param_match2(&o, str.c_str());
                     }
 
-                    if (this->condition_test(o.condition)) {
+                    if (this->conditions_test(o.conditions)) {
                         if (o.type == option_type_short) {
                             // Only override a true last_option_requires_param value with a false one
                             if (last_option_requires_param.has_value()) {
@@ -901,7 +901,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
                 // If we are using old style long options, check for them first.
                 for (const complete_entry_opt_t &o : options) {
                     if (o.type == option_type_single_long && param_match(&o, popt.c_str()) &&
-                        this->condition_test(o.condition)) {
+                        this->conditions_test(o.conditions)) {
                         old_style_match = true;
                         if (o.result_mode.requires_param) use_common = false;
                         if (o.result_mode.no_files) use_files = false;
@@ -931,7 +931,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
                         } else if (o.type == option_type_double_long) {
                             match = param_match(&o, popt.c_str());
                         }
-                        if (match && this->condition_test(o.condition)) {
+                        if (match && this->conditions_test(o.conditions)) {
                             if (o.result_mode.requires_param) use_common = false;
                             if (o.result_mode.no_files) use_files = false;
                             if (o.result_mode.force_files) has_force = true;
@@ -954,7 +954,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
         // Now we try to complete an option itself
         for (const complete_entry_opt_t &o : options) {
             // If this entry is for the base command, check if any of the arguments match.
-            if (!this->condition_test(o.condition)) continue;
+            if (!this->conditions_test(o.conditions)) continue;
             if (o.option.empty()) {
                 use_files = use_files && (!(o.result_mode.no_files));
                 has_force = has_force || o.result_mode.force_files;
@@ -1701,7 +1701,7 @@ void complete_add(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
     opt.result_mode = result_mode;
 
     if (comp) opt.comp = comp;
-    opt.condition = std::move(condition);
+    opt.conditions = std::move(condition);
     if (desc) opt.desc = desc;
     opt.flags = flags;
 
@@ -1797,7 +1797,7 @@ static wcstring completion2string(const completion_key_t &key, const complete_en
 
     append_switch(out, L'd', C_(o.desc));
     append_switch(out, L'a', o.comp);
-    for (const auto &c : o.condition) {
+    for (const auto &c : o.conditions) {
         append_switch(out, L'n', c);
     }
     out.append(L"\n");

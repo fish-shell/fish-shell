@@ -98,7 +98,7 @@ Each option specification consists of:
 
 - Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
 
-See the :ref:`fish_opt <cmd-fish_opt>` command for a friendlier but more verbose way to create option specifications.
+See the :doc:`fish_opt <fish_opt>` command for a friendlier but more verbose way to create option specifications.
 
 If a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
 

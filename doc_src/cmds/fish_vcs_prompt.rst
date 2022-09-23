@@ -23,13 +23,13 @@ The ``fish_vcs_prompt`` function displays information about the current version 
 
 It calls out to VCS-specific functions. The currently supported systems are:
 
-- :ref:`fish_git_prompt <cmd-fish_git_prompt>`
-- :ref:`fish_hg_prompt <cmd-fish_hg_prompt>`
-- :ref:`fish_svn_prompt <cmd-fish_svn_prompt>`
+- :doc:`fish_git_prompt <fish_git_prompt>`
+- :doc:`fish_hg_prompt <fish_hg_prompt>`
+- :doc:`fish_svn_prompt <fish_svn_prompt>`
 
 If a VCS isn't installed, the respective function does nothing.
 
-The Subversion prompt is disabled by default, because it's slow on large repositories. To enable it, modify ``fish_vcs_prompt`` to uncomment it. See :ref:`funced <cmd-funced>`.
+The Subversion prompt is disabled by default, because it's slow on large repositories. To enable it, modify ``fish_vcs_prompt`` to uncomment it. See :doc:`funced <funced>`.
 
 For more information, see the documentation for each of the functions above.
 

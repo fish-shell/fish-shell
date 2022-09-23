@@ -27,7 +27,7 @@ Available subcommands for the ``prompt`` command:
 
 - ``choose`` loads a sample prompt in the current session.
 - ``list`` lists the names of the available sample prompts.
-- ``save`` saves the current prompt to a file (via :ref:`funcsave <cmd-funcsave>`).
+- ``save`` saves the current prompt to a file (via :doc:`funcsave <funcsave>`).
 - ``show`` shows what the given sample prompts (or all) would look like.
 
 With the ``theme`` command ``fish_config`` can be used to view and choose a theme (meaning a color scheme) inside the terminal.

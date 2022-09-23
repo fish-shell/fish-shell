@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``dirs`` prints the current :ref:`directory stack <directory-stack>`, as created by :ref:`pushd <cmd-pushd>` and modified by :ref:`popd <cmd-popd>`.
+``dirs`` prints the current :ref:`directory stack <directory-stack>`, as created by :doc:`pushd <pushd>` and modified by :doc:`popd <popd>`.
 
 The following options are available:
 
@@ -28,4 +28,4 @@ The following options are available:
 See Also
 --------
 
-- the :ref:`cdh <cmd-cdh>` command, which provides a more intuitive way to navigate to recently visited directories.
+- the :doc:`cdh <cdh>` command, which provides a more intuitive way to navigate to recently visited directories.

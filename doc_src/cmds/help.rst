@@ -27,7 +27,7 @@ This variable may be set as a list, where the first element is the browser comma
 Example
 -------
 
-``help fg`` shows the documentation for the :ref:`fg <cmd-fg>` builtin.
+``help fg`` shows the documentation for the :doc:`fg <fg>` builtin.
 
 Notes
 -----

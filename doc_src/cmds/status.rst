@@ -43,7 +43,7 @@ The following operations (subcommands) are available:
     Returns 0 if fish is currently executing a block of code.
 
 **is-breakpoint**
-    Returns 0 if fish is currently showing a prompt in the context of a :ref:`breakpoint <cmd-breakpoint>` command. See also the :ref:`fish_breakpoint_prompt <cmd-fish_breakpoint_prompt>` function.
+    Returns 0 if fish is currently showing a prompt in the context of a :doc:`breakpoint <breakpoint>` command. See also the :doc:`fish_breakpoint_prompt <fish_breakpoint_prompt>` function.
 
 **is-interactive**, **-i** or **--is-interactive**
     Returns 0 if fish is interactive - that is, connected to a keyboard.
@@ -64,7 +64,7 @@ The following operations (subcommands) are available:
     Prints the name of the currently-running function or command, like the deprecated :envvar:`_` variable.
 
 **filename**, **current-filename**, **-f** or **--current-filename**
-    Prints the filename of the currently-running script. If the current script was called via a symlink, this will return the symlink. If the current script was received by piping into :ref:`source <cmd-source>`, then this will return ``-``.
+    Prints the filename of the currently-running script. If the current script was called via a symlink, this will return the symlink. If the current script was received by piping into :doc:`source <source>`, then this will return ``-``.
 
 **basename**
     Prints just the filename of the running script, without any path components before.

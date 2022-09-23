@@ -27,10 +27,10 @@ The following options are available:
     A description of what the function does, suitable as a completion description.
 
 **-w** *WRAPPED_COMMAND* or **--wraps** *WRAPPED_COMMAND*
-    Inherit completions from the given *WRAPPED_COMMAND*. See the documentation for :ref:`complete <cmd-complete>` for more information.
+    Inherit completions from the given *WRAPPED_COMMAND*. See the documentation for :doc:`complete <complete>` for more information.
 
 **-e** *EVENT_NAME* or **--on-event** *EVENT_NAME*
-    Run this function when the specified named event is emitted. Fish internally generates named events, for example,when showing the prompt. Custom events can be emitted using the :ref:`emit <cmd-emit>` command.
+    Run this function when the specified named event is emitted. Fish internally generates named events, for example,when showing the prompt. Custom events can be emitted using the :doc:`emit <emit>` command.
 
 **-v** *VARIABLE_NAME* or **--on-variable** *VARIABLE_NAME*
     Run this function when the variable *VARIABLE_NAME* changes value. Note that :program:`fish` makes no guarantees on any particular timing or even that the function will be run for every single ``set``. Rather it will be run when the variable has been set at least once, possibly skipping some values or being run when the variable has been set to the same value (except for universal variables set in other shells - only changes in the value will be picked up for those).
@@ -54,7 +54,7 @@ The following options are available:
 
 If the user enters any additional arguments after the function, they are inserted into the environment :ref:`variable list <variables-lists>` ``$argv``. If the ``--argument-names`` option is provided, the arguments are also assigned to names specified in that option.
 
-By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the :ref:`emit <cmd-emit>` builtin. Fish generates the following named events:
+By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the :doc:`emit <emit>` builtin. Fish generates the following named events:
 
 - ``fish_prompt``, which is emitted whenever a new fish prompt is about to be displayed.
 

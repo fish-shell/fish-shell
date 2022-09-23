@@ -25,6 +25,6 @@ If you make those universal variables, your ``cd`` history is shared among all f
 See Also
 --------
 
-- the :ref:`dirh <cmd-dirh>` command to print the directory history
-- the :ref:`prevd <cmd-prevd>` command to move backward
-- the :ref:`nextd <cmd-nextd>` command to move forward
+- the :doc:`dirh <dirh>` command to print the directory history
+- the :doc:`prevd <prevd>` command to move backward
+- the :doc:`nextd <nextd>` command to move forward

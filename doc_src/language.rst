@@ -17,7 +17,7 @@ Shells like fish are used by giving them commands. A command is executed by writ
 
     echo hello world
 
-:ref:`echo <cmd-echo>` command writes its arguments to the screen. In this example the output is ``hello world``.
+:doc:`echo <cmds/echo>` command writes its arguments to the screen. In this example the output is ``hello world``.
 
 Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
 
@@ -27,12 +27,12 @@ Every program on your computer can be used as a command in fish. If the program 
 
 Here is a list of some useful commands:
 
-- :ref:`cd <cmd-cd>`: Change the current directory
+- :doc:`cd <cmds/cd>`: Change the current directory
 - ``ls``: List files and directories
 - ``man``: Display a manual page
 - ``mv``: Move (rename) files
 - ``cp``: Copy files
-- :ref:`open <cmd-open>`: Open files with the default application associated with each filetype
+- :doc:`open <cmds/open>`: Open files with the default application associated with each filetype
 - ``less``: Display the contents of files
 
 Commands and arguments are separated by the space character ``' '``. Every command ends with either a newline (by pressing the return key) or a semicolon ``;``. Multiple commands can be written on the same line by separating them with semicolons.
@@ -223,16 +223,16 @@ Example::
   emacs &
 
 
-will start the emacs text editor in the background. :ref:`fg <cmd-fg>` can be used to bring it into the foreground again when needed.
+will start the emacs text editor in the background. :doc:`fg <cmds/fg>` can be used to bring it into the foreground again when needed.
 
-Most programs allow you to suspend the program's execution and return control to fish by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the fish commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :ref:`fg <cmd-fg>` (foreground) command.
+Most programs allow you to suspend the program's execution and return control to fish by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the fish commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :doc:`fg <cmds/fg>` (foreground) command.
 
-If you instead want to put a suspended job into the background, use the :ref:`bg <cmd-bg>` command.
+If you instead want to put a suspended job into the background, use the :doc:`bg <cmds/bg>` command.
 
-To get a listing of all currently started jobs, use the :ref:`jobs <cmd-jobs>` command.
-These listed jobs can be removed with the :ref:`disown <cmd-disown>` command.
+To get a listing of all currently started jobs, use the :doc:`jobs <cmds/jobs>` command.
+These listed jobs can be removed with the :doc:`disown <cmds/disown>` command.
 
-At the moment, functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
+At the moment, functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :doc:`bg <cmds/bg>` command will not execute correctly.
 
 If the ``&`` character is followed by a non-separating character, it is not interpreted as background operator. Separating characters are whitespace and the characters ``;<>&|``.
 
@@ -255,7 +255,7 @@ Calling this as ``ll /tmp/`` will end up running ``ls -l /tmp/``, which will lis
 
 This is a kind of function known as a :ref:`wrapper <syntax-function-wrappers>` or "alias".
 
-Fish's prompt is also defined in a function, called :ref:`fish_prompt <cmd-fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
+Fish's prompt is also defined in a function, called :doc:`fish_prompt <cmds/fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
 
   function fish_prompt
       # A simple prompt. Displays the current directory
@@ -269,11 +269,11 @@ Fish's prompt is also defined in a function, called :ref:`fish_prompt <cmd-fish_
       echo (set_color yellow)$PWD (set_color purple)$user_char
   end
 
-To edit a function, you can use :ref:`funced <cmd-funced>`, and to save a function :ref:`funcsave <cmd-funcsave>`. This will store it in a function file that fish will :ref:`autoload <syntax-function-autoloading>` when needed.
+To edit a function, you can use :doc:`funced <cmds/funced>`, and to save a function :doc:`funcsave <cmds/funcsave>`. This will store it in a function file that fish will :ref:`autoload <syntax-function-autoloading>` when needed.
 
-The :ref:`functions <cmd-functions>` builtin can show a function's current definition (and :ref:`type <cmd-type>` will also do if given a function).
+The :doc:`functions <cmds/functions>` builtin can show a function's current definition (and :doc:`type <cmds/type>` will also do if given a function).
 
-For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
+For more information on functions, see the documentation for the :doc:`function <cmds/function>` builtin.
 
 .. _syntax-function-wrappers:
 
@@ -293,7 +293,7 @@ There are a few important things that need to be noted about aliases:
 - If the alias has the same name as the aliased command, you need to prefix the call to the program with ``command`` to tell fish that the function should not call itself, but rather a command with the same name. If you forget to do so, the function would call itself until the end of time. Usually fish is smart enough to figure this out and will refrain from doing so (which is hopefully in your interest).
 
 
-To easily create a function of this form, you can use the :ref:`alias <cmd-alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a function wrapper like this. :ref:`alias <cmd-alias>` immediately creates a function. Consider using ``alias --save`` or :ref:`funcsave <cmd-funcsave>` to save the created function into an autoload file instead of recreating the alias each time.
+To easily create a function of this form, you can use the :doc:`alias <cmds/alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a function wrapper like this. :doc:`alias <cmds/alias>` immediately creates a function. Consider using ``alias --save`` or :doc:`funcsave <cmds/funcsave>` to save the created function into an autoload file instead of recreating the alias each time.
 
 For an alternative, try :ref:`abbreviations <abbreviations>`. These are words that are expanded while you type, instead of being actual functions inside the shell.
 
@@ -353,15 +353,15 @@ Comments can also appear after a line like so::
 Conditions
 ----------
 
-Fish has some builtins that let you execute commands only if a specific criterion is met: :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>`, :ref:`and <cmd-and>` and :ref:`or <cmd-or>`, and also the familiar :ref:`&&/|| <tut-combiners>` syntax.
+Fish has some builtins that let you execute commands only if a specific criterion is met: :doc:`if <cmds/if>`, :doc:`switch <cmds/switch>`, :doc:`and <cmds/and>` and :doc:`or <cmds/or>`, and also the familiar :ref:`&&/|| <tut-combiners>` syntax.
 
-The :ref:`switch <cmd-switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
+The :doc:`switch <cmds/switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :doc:`switch <cmds/switch>` for more information.
 
 The other conditionals use the :ref:`exit status <variables-status>` of a command to decide if a command or a block of commands should be executed.
 
-Unlike programming languages you might know, :ref:`if <cmd-if>` doesn't take a *condition*, it takes a *command*. If that command returned a successful :ref:`exit status <variables-status>` (that's 0), the ``if`` branch is taken, otherwise the :ref:`else <cmd-else>` branch.
+Unlike programming languages you might know, :doc:`if <cmds/if>` doesn't take a *condition*, it takes a *command*. If that command returned a successful :ref:`exit status <variables-status>` (that's 0), the ``if`` branch is taken, otherwise the :doc:`else <cmds/else>` branch.
 
-To check a condition, there is the :ref:`test <cmd-test>` command::
+To check a condition, there is the :doc:`test <cmds/test>` command::
 
   if test 5 -gt 2
       echo Yes, five is greater than two
@@ -391,9 +391,9 @@ For more, see the documentation for the builtins or the :ref:`Conditionals <tut-
 Loops and blocks
 ----------------
 
-Like most programming language, fish also has the familiar :ref:`while <cmd-while>` and :ref:`for <cmd-for>` loops.
+Like most programming language, fish also has the familiar :doc:`while <cmds/while>` and :doc:`for <cmds/for>` loops.
 
-``while`` works like a repeated :ref:`if <cmd-if>`::
+``while`` works like a repeated :doc:`if <cmds/if>`::
 
   while true
       echo Still running
@@ -421,7 +421,7 @@ If you need a list of numbers, you can use the ``seq`` command to create one::
       echo $i
   end
 
-:ref:`break <cmd-break>` is available to break out of a loop, and :ref:`continue <cmd-continue>` to jump to the next iteration.
+:doc:`break <cmds/break>` is available to break out of a loop, and :doc:`continue <cmds/continue>` to jump to the next iteration.
 
 :ref:`Input and output redirections <redirects>` (including :ref:`pipes <pipes>`) can also be applied to loops::
 
@@ -429,7 +429,7 @@ If you need a list of numbers, you can use the ``seq`` command to create one::
       echo line: $line
   end < file
 
-In addition there's a :ref:`begin <cmd-begin>` block that just groups commands together so you can redirect to a block or use a new :ref:`variable scope <variables-scope>` without any repetition::
+In addition there's a :doc:`begin <cmds/begin>` block that just groups commands together so you can redirect to a block or use a new :ref:`variable scope <variables-scope>` without any repetition::
 
   begin
      set -l foo bar # this variable will only be available in this block!
@@ -475,7 +475,7 @@ Examples:
 
 - ``~/.*`` matches all hidden files (also known as "dotfiles") and directories in your home directory.
 
-For most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is like what bash does with ``shopt -s failglob``. There are exceptions, namely :ref:`set <cmd-set>` and :ref:`path <cmd-path>`, overriding variables in :ref:`overrides <variables-override>`, :ref:`count <cmd-count>` and :ref:`for <cmd-for>`. Their globs will instead expand to zero arguments (so the command won't see them at all), like with ``shopt -s nullglob`` in bash.
+For most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is like what bash does with ``shopt -s failglob``. There are exceptions, namely :doc:`set <cmds/set>` and :doc:`path <cmds/path>`, overriding variables in :ref:`overrides <variables-override>`, :doc:`count <cmds/count>` and :doc:`for <cmds/for>`. Their globs will instead expand to zero arguments (so the command won't see them at all), like with ``shopt -s nullglob`` in bash.
 
 Examples::
 
@@ -503,9 +503,9 @@ In the simplest case, this is just something like::
 
     echo $HOME
 
-which will replace ``$HOME`` with the home directory of the current user, and pass it to :ref:`echo <cmd-echo>`, which will then print it.
+which will replace ``$HOME`` with the home directory of the current user, and pass it to :doc:`echo <cmds/echo>`, which will then print it.
 
-Some variables like ``$HOME`` are already set because fish sets them by default or because fish's parent process passed them to fish when it started it. You can define your own variables by setting them with :ref:`set <cmd-set>`::
+Some variables like ``$HOME`` are already set because fish sets them by default or because fish's parent process passed them to fish when it started it. You can define your own variables by setting them with :doc:`set <cmds/set>`::
 
     set my_directory /home/cooluser/mystuff
     ls $my_directory
@@ -552,7 +552,7 @@ Unlike other shells, fish doesn't do what is known as "Word Splitting". Once a v
   |one
   thing|
 
-That means quoting isn't the absolute necessity it is in other shells. Most of the time, not quoting a variable is correct. The exception is when you need to ensure that the variable is passed as one element, even if it might be unset or have multiple elements. This happens often with :ref:`test <cmd-test>`::
+That means quoting isn't the absolute necessity it is in other shells. Most of the time, not quoting a variable is correct. The exception is when you need to ensure that the variable is passed as one element, even if it might be unset or have multiple elements. This happens often with :doc:`test <cmds/test>`::
 
   set -l foo one two three
   test -n $foo
@@ -596,13 +596,13 @@ When you write a command in parentheses like ``outercommand (innercommand)``, th
 
 A command substitution can have a dollar sign before the opening parenthesis like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines.
 
-If the output is piped to :ref:`string split or string split0 <cmd-string-split>` as the last step, those splits are used as they appear instead of splitting lines.
+If the output is piped to :doc:`string split or string split0 <cmds/string-split>` as the last step, those splits are used as they appear instead of splitting lines.
 
-The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :ref:`set <cmd-set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
+The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :doc:`set <cmds/set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
 
 To use only part of the output, refer to :ref:`index range expansion <expand-index-range>`.
 
-Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :ref:`read <cmd-read>` command.
+Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
 
 Examples::
 
@@ -625,14 +625,14 @@ Sometimes you want to pass the output of a command to another command that only 
 
     grep fish myanimallist1 | wc -l
 
-but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells allow this via ``foo <(bar) <(baz)``, and fish uses the :ref:`psub <cmd-psub>` command::
+but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells allow this via ``foo <(bar) <(baz)``, and fish uses the :doc:`psub <cmds/psub>` command::
 
     # Compare just the lines containing "fish" in two files:
     diff -u (grep fish myanimallist1 | psub) (grep fish myanimallist2 | psub)
 
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
 
-.. [#] Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :ref:`string split <cmd-string-split>` instead.
+.. [#] Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :doc:`string split <cmds/string-split>` instead.
 
 .. _expand-brace:
 
@@ -873,7 +873,7 @@ Shell variables
 
 Variables are a way to save data and pass it around. They can be used just by the shell, or they can be ":ref:`exported <variables-export>`", so that a copy of the variable is available to any external command the shell starts. An exported variable is referred to as an "environment variable".
 
-To set a variable value, use the :ref:`set <cmd-set>` command. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+To set a variable value, use the :doc:`set <cmds/set>` command. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
 Example:
 
@@ -1157,7 +1157,7 @@ When a list is exported as an environment variable, it is either space or colon 
 
 Fish automatically creates lists from all environment variables whose name ends in ``PATH`` (like :envvar:`PATH`, :envvar:`CDPATH` or :envvar:`MANPATH`), by splitting them on colons. Other variables are not automatically split.
 
-Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
+Lists can be inspected with the :doc:`count <cmds/count>` or the :doc:`contains <cmds/contains>` commands::
 
     count $smurf
     # 2
@@ -1199,7 +1199,7 @@ This function takes whatever arguments it gets and prints the first and third::
 
 Commandline tools often get various options and flags and positional arguments, and $argv would contain all of these.
 
-A more robust approach to argument handling is :ref:`argparse <cmd-argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
+A more robust approach to argument handling is :doc:`argparse <cmds/argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
 
   function mybetterfunction
       argparse h/help s/second -- $argv
@@ -1271,7 +1271,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: CDPATH
    
-   A list of directories in which the :ref:`cd <cmd-cd>` builtin looks for a new directory.
+   A list of directories in which the :doc:`cd <cmds/cd>` builtin looks for a new directory.
 
 .. envvar:: FISH_DEBUG
 
@@ -1315,7 +1315,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: fish_greeting
 
-   the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :ref:`funced <cmd-funced>`)
+   the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :doc:`funced <cmds/funced>`)
 
 .. envvar:: fish_history
 
@@ -1336,7 +1336,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: umask
 
-   the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.
+   the current file creation mask. The preferred way to change the umask variable is through the :doc:`umask <cmds/umask>` function. An attempt to set umask to an invalid value will always fail.
 
 .. envvar:: BROWSER
 
@@ -1386,7 +1386,7 @@ Fish also provides additional information through the values of certain environm
 
 .. ENVVAR:: IFS
 
-   the internal field separator that is used for word splitting with the :ref:`read <cmd-read>` builtin. Setting this to the empty string will also disable line splitting in :ref:`command substitution <expand-command-substitution>`. This variable can be changed.
+   the internal field separator that is used for word splitting with the :doc:`read <cmds/read>` builtin. Setting this to the empty string will also disable line splitting in :ref:`command substitution <expand-command-substitution>`. This variable can be changed.
 
 .. envvar:: last_pid
 
@@ -1457,9 +1457,9 @@ If fish encounters a problem while executing a command, the status variable may 
 
 If a process exits through a signal, the exit status will be 128 plus the number of the signal.
 
-The status can be negated with :ref:`not <cmd-not>` (or ``!``), which is useful in a :ref:`condition <syntax-conditional>`. This turns a status of 0 into 1 and any non-zero status into 0.
+The status can be negated with :doc:`not <cmds/not>` (or ``!``), which is useful in a :ref:`condition <syntax-conditional>`. This turns a status of 0 into 1 and any non-zero status into 0.
 
-There is also ``$pipestatus``, which is a list of all ``status`` values of processes in a pipe. One difference is that :ref:`not <cmd-not>` applies to ``$status``, but not ``$pipestatus``, because it loses information.
+There is also ``$pipestatus``, which is a list of all ``status`` values of processes in a pipe. One difference is that :doc:`not <cmds/not>` applies to ``$status``, but not ``$pipestatus``, because it loses information.
 
 For example::
 
@@ -1526,15 +1526,15 @@ Builtin commands
 
 Fish includes a number of commands in the shell directly. We call these "builtins". These include:
 
-- Builtins that manipulate the shell state - :ref:`cd <cmd-cd>` changes directory, :ref:`set <cmd-set>` sets variables
-- Builtins for dealing with data, like :ref:`string <cmd-string>` for strings and :ref:`math <cmd-math>` for numbers, :ref:`count <cmd-count>` for counting lines or arguments
-- :ref:`status <cmd-status>` for asking about the shell's status
-- :ref:`printf <cmd-printf>` and :ref:`echo <cmd-echo>` for creating output
-- :ref:`test <cmd-test>` for checking conditions
-- :ref:`argparse <cmd-argparse>` for parsing function arguments
-- :ref:`source <cmd-source>` to read a script in the current shell (so changes to variables stay) and :ref:`eval <cmd-eval>` to execute a string as script
-- :ref:`random <cmd-random>` to get random numbers or pick a random element from a list
-- :ref:`read <cmd-read>` for reading from a pipe or the terminal
+- Builtins that manipulate the shell state - :doc:`cd <cmds/cd>` changes directory, :doc:`set <cmds/set>` sets variables
+- Builtins for dealing with data, like :doc:`string <cmds/string>` for strings and :doc:`math <cmds/math>` for numbers, :doc:`count <cmds/count>` for counting lines or arguments
+- :doc:`status <cmds/status>` for asking about the shell's status
+- :doc:`printf <cmds/printf>` and :doc:`echo <cmds/echo>` for creating output
+- :doc:`test <cmds/test>` for checking conditions
+- :doc:`argparse <cmds/argparse>` for parsing function arguments
+- :doc:`source <cmds/source>` to read a script in the current shell (so changes to variables stay) and :doc:`eval <cmds/eval>` to execute a string as script
+- :doc:`random <cmds/random>` to get random numbers or pick a random element from a list
+- :doc:`read <cmds/read>` for reading from a pipe or the terminal
 
 For a list of all builtins, use ``builtin -n``.
 
@@ -1543,9 +1543,9 @@ For a list of all builtins, functions and commands shipped with fish, see the :r
 Querying for user input
 -----------------------
 
-Sometimes, you want to ask the user for input, for instance to confirm something. This can be done with the :ref:`read <cmd-read>` builtin.
+Sometimes, you want to ask the user for input, for instance to confirm something. This can be done with the :doc:`read <cmds/read>` builtin.
 
-Let's make up an example. This function will :ref:`glob <expand-wildcard>` the files in all the directories it gets as :ref:`arguments <variables-argv>`, and :ref:`if <syntax-conditional>` there are :ref:`more than five <cmd-test>` it will ask the user if it is supposed to show them, but only if it is connected to a terminal::
+Let's make up an example. This function will :ref:`glob <expand-wildcard>` the files in all the directories it gets as :ref:`arguments <variables-argv>`, and :ref:`if <syntax-conditional>` there are :doc:`more than five <cmds/test>` it will ask the user if it is supposed to show them, but only if it is connected to a terminal::
 
     function show_files
         # This will glob on all arguments. Any non-directories will be ignored.
@@ -1694,9 +1694,9 @@ To specify a signal handler for the WINCH signal, write::
         echo Got WINCH signal!
     end
 
-Please note that event handlers only become active when a function is loaded, which means you need to otherwise :ref:`source <cmd-source>` or execute a function instead of relying on :ref:`autoloading <syntax-function-autoloading>`. One approach is to put it into your :ref:`configuration file <configuration>`.
+Please note that event handlers only become active when a function is loaded, which means you need to otherwise :doc:`source <cmds/source>` or execute a function instead of relying on :ref:`autoloading <syntax-function-autoloading>`. One approach is to put it into your :ref:`configuration file <configuration>`.
 
-For more information on how to define new event handlers, see the documentation for the :ref:`function <cmd-function>` command.
+For more information on how to define new event handlers, see the documentation for the :doc:`function <cmds/function>` command.
 
 
 .. _debugging:
@@ -1704,6 +1704,6 @@ For more information on how to define new event handlers, see the documentation 
 Debugging fish scripts
 ----------------------
 
-Fish includes a built-in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using :ref:`printf <cmd-printf>` and :ref:`set <cmd-set>`. As another example, you can run :ref:`status print-stack-trace <cmd-status>` to see how this breakpoint was reached. To resume normal execution of the script, simply type :ref:`exit <cmd-exit>` or :kbd:`Control`\ +\ :kbd:`D`.
+Fish includes a built-in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how this breakpoint was reached. To resume normal execution of the script, simply type :doc:`exit <cmds/exit>` or :kbd:`Control`\ +\ :kbd:`D`.
 
-To start a debug session simply run the builtin command :ref:`breakpoint <cmd-breakpoint>` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
+To start a debug session simply run the builtin command :doc:`breakpoint <cmds/breakpoint>` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.

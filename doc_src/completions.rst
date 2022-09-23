@@ -12,7 +12,7 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
   complete -c myprog -s o -l output -a "yes no"
 
 
-There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :ref:`complete <cmd-complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
+There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :doc:`complete <cmds/complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
 
 As a more comprehensive example, here's a commented excerpt of the completions for systemd's ``timedatectl``::
 

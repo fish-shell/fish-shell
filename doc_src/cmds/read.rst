@@ -42,7 +42,7 @@ The following options are available:
     Uses the output of the shell command *PROMPT_CMD* as the prompt for the interactive mode. The default prompt command is ``set_color green; echo read; set_color normal; echo "> "``
 
 **-P** or **--prompt-str** *PROMPT_STR*
-    Uses the *PROMPT_STR* as the prompt for the interactive mode. It is equivalent to ``echo $PROMPT_STR`` and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the :ref:`echo <cmd-echo>` command.
+    Uses the *PROMPT_STR* as the prompt for the interactive mode. It is equivalent to ``echo $PROMPT_STR`` and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the :doc:`echo <echo>` command.
 
 **-R** or **--right-prompt** *RIGHT_PROMPT_CMD*
     Uses the output of the shell command *RIGHT_PROMPT_CMD* as the right prompt for the interactive mode. There is no default right prompt command.

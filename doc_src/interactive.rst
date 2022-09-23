@@ -10,11 +10,11 @@ Fish is used by giving commands in the fish language, see :ref:`The Fish Languag
 Help
 ----
 
-Fish has an extensive help system. Use the :ref:`help <cmd-help>` command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the :ref:`syntax section <syntax>` of this documentation.
+Fish has an extensive help system. Use the :doc:`help <cmds/help>` command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the :ref:`syntax section <syntax>` of this documentation.
 
 Fish also has man pages for its commands, and translates the help pages to man pages. For example, ``man set`` will show the documentation for ``set`` as a man page.
 
-Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the :ref:`fg <cmd-fg>` builtin, either type ``fg -h`` or ``help fg``.
+Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the :doc:`fg <cmds/fg>` builtin, either type ``fg -h`` or ``help fg``.
 
 The main page can be viewed via ``help index`` (or just ``help``) or ``man fish-doc``. The tutorial can be viewed with ``help tutorial`` or ``man fish-tutorial``.
 
@@ -84,7 +84,7 @@ Detected errors include:
 
 To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
 
-Fish also provides pre-made color themes you can pick with :ref:`fish_config <cmd-fish_config>`. Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
+Fish also provides pre-made color themes you can pick with :doc:`fish_config <cmds/fish_config>`. Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
 
 For example, to disable nearly all coloring::
 
@@ -99,7 +99,7 @@ Or, to see all themes, right in your terminal::
 Syntax highlighting variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
+The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
 
 
 Example: to make errors highlighted and red, use::
@@ -191,7 +191,7 @@ When the secondary or selected variables aren't set or are empty, the normal var
 Abbreviations
 -------------
 
-To avoid needless typing, a frequently-run command like ``git checkout`` can be abbreviated to ``gco`` using the :ref:`abbr <cmd-abbr>` command.
+To avoid needless typing, a frequently-run command like ``git checkout`` can be abbreviated to ``gco`` using the :doc:`abbr <cmds/abbr>` command.
 
 ::
 
@@ -206,7 +206,7 @@ This is an alternative to aliases, and has the advantage that you see the actual
 Programmable title
 ------------------
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :ref:`fish_title <cmd-fish_title>` function. The :ref:`fish_title <cmd-fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :ref:`status current-command <cmd-status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :ref:`fish_prompt <cmd-fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :doc:`fish_title <cmds/fish_title>` function. The :doc:`fish_title <cmds/fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_prompt <cmds/fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
 
 The default fish title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
 
@@ -225,16 +225,16 @@ To show the last command and working directory in the title::
 Programmable prompt
 -------------------
 
-When it is fish's turn to ask for input (like after it started or the command ended), it will show a prompt. It does this by running the :ref:`fish_prompt <cmd-fish_prompt>` and :ref:`fish_right_prompt <cmd-fish_right_prompt>` functions.
+When it is fish's turn to ask for input (like after it started or the command ended), it will show a prompt. It does this by running the :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` functions.
 
-The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` will be prepended on the left, though the default function only does this when in :ref:`vi-mode <vi-mode>`.
+The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left, though the default function only does this when in :ref:`vi-mode <vi-mode>`.
 
 .. _greeting:
 
 Configurable greeting
 ---------------------
 
-When it is started interactively, fish tries to run the :ref:`fish_greeting <cmd-fish_greeting>` function. The default fish_greeting prints a simple greeting. You can change its text by changing the ``$fish_greeting`` variable.
+When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple greeting. You can change its text by changing the ``$fish_greeting`` variable.
 
 .. _private-mode:
 
@@ -359,7 +359,7 @@ To enable emacs mode, use ``fish_default_key_bindings``. This is also the defaul
 - :kbd:`Control`\ +\ :kbd:`R` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing :kbd:`Control`\ +\ :kbd:`R` again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
 
 
-You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.
+You can change these key bindings using the :doc:`bind <cmds/bind>` builtin.
 
 
 .. _vi-mode:
@@ -386,9 +386,9 @@ It is also possible to add all emacs-mode bindings to vi-mode by using something
     end
 
 
-When in vi-mode, the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` function will display a mode indicator to the left of the prompt. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
+When in vi-mode, the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function will display a mode indicator to the left of the prompt. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
 
-When a binding switches the mode, it will repaint the mode-prompt if it exists, and the rest of the prompt only if it doesn't. So if you want a mode-indicator in your ``fish_prompt``, you need to erase ``fish_mode_prompt`` e.g. by adding an empty file at ``~/.config/fish/functions/fish_mode_prompt.fish``. (Bindings that change the mode are supposed to call the `repaint-mode` bind function, see :ref:`bind <cmd-bind>`)
+When a binding switches the mode, it will repaint the mode-prompt if it exists, and the rest of the prompt only if it doesn't. So if you want a mode-indicator in your ``fish_prompt``, you need to erase ``fish_mode_prompt`` e.g. by adding an empty file at ``~/.config/fish/functions/fish_mode_prompt.fish``. (Bindings that change the mode are supposed to call the `repaint-mode` bind function, see :doc:`bind <cmds/bind>`)
 
 The ``fish_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. The following snippet can be used to manually configure cursors after enabling vi-mode::
 
@@ -489,14 +489,14 @@ Visual mode
 Custom bindings
 ---------------
 
-In addition to the standard bindings listed here, you can also define your own with :ref:`bind <cmd-bind>`::
+In addition to the standard bindings listed here, you can also define your own with :doc:`bind <cmds/bind>`::
 
   # Just clear the commandline on control-c
   bind \cc 'commandline -r ""'
 
 Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
 
-The key sequence (the ``\cc``) here depends on your setup, in particular the terminal. To find out what the terminal sends use :ref:`fish_key_reader <cmd-fish_key_reader>`::
+The key sequence (the ``\cc``) here depends on your setup, in particular the terminal. To find out what the terminal sends use :doc:`fish_key_reader <cmds/fish_key_reader>`::
 
   > fish_key_reader # pressing control-c
   Press a key:
@@ -538,7 +538,7 @@ Multiline editing
 
 The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
 
-- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :ref:`end <cmd-end>` command.
+- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :doc:`end <cmds/end>` command.
 
 - Pressing :kbd:`Alt`\ +\ :kbd:`Enter` instead of pressing the :kbd:`Enter` key.
 
@@ -566,7 +566,7 @@ The command history is stored in the file ``~/.local/share/fish/fish_history`` (
 ``fish_history`` environment variable to change the name of the history session (resulting in a
 ``<session>_history`` file); both before starting the shell and while the shell is running.
 
-See the :ref:`history <cmd-history>` command for other manipulations.
+See the :doc:`history <cmds/history>` command for other manipulations.
 
 Examples:
 
@@ -574,7 +574,7 @@ To search for previous entries containing the word 'make', type ``make`` in the 
 
 If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt`\ +\ :kbd:`↑` to search for previously typed words containing 'm'.
 
-.. [#] Or another binding that triggers the ``history-pager`` input function. See :ref:`bind <cmd-bind>` for a list.
+.. [#] Or another binding that triggers the ``history-pager`` input function. See :doc:`bind <cmds/bind>` for a list.
 .. [#] Or another binding that triggers the ``pager-toggle-search`` input function.
 
 Navigating directories
@@ -582,21 +582,21 @@ Navigating directories
 
 .. _directory-history:
 
-Navigating directories is usually done with the :ref:`cd <cmd-cd>` command, but fish offers some advanced features as well.
+Navigating directories is usually done with the :doc:`cd <cmds/cd>` command, but fish offers some advanced features as well.
 
-The current working directory can be displayed with the :ref:`pwd <cmd-pwd>` command, or the ``$PWD`` :ref:`special variable <variables-special>`. Usually your prompt already does this.
+The current working directory can be displayed with the :doc:`pwd <cmds/pwd>` command, or the ``$PWD`` :ref:`special variable <variables-special>`. Usually your prompt already does this.
 
 Directory history
 ^^^^^^^^^^^^^^^^^
 
-Fish automatically keeps a trail of the recent visited directories with :ref:`cd <cmd-cd>` by storing this history in the ``dirprev`` and ``dirnext`` variables.
+Fish automatically keeps a trail of the recent visited directories with :doc:`cd <cmds/cd>` by storing this history in the ``dirprev`` and ``dirnext`` variables.
 
 Several commands are provided to interact with this directory history:
 
-- :ref:`dirh <cmd-dirh>` prints the history
-- :ref:`cdh <cmd-cdh>` displays a prompt to quickly navigate the history
-- :ref:`prevd <cmd-prevd>` moves backward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`←`
-- :ref:`nextd <cmd-nextd>` moves forward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`→`
+- :doc:`dirh <cmds/dirh>` prints the history
+- :doc:`cdh <cmds/cdh>` displays a prompt to quickly navigate the history
+- :doc:`prevd <cmds/prevd>` moves backward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`←`
+- :doc:`nextd <cmds/nextd>` moves forward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`→`
 
 .. _directory-stack:
 
@@ -605,6 +605,6 @@ Directory stack
 
 Another set of commands, usually also available in other shells like bash, deal with the directory stack. Stack handling is not automatic and needs explicit calls of the following commands:
 
-- :ref:`dirs <cmd-dirs>` prints the stack
-- :ref:`pushd <cmd-pushd>` adds a directory on top of the stack and makes it the current working directory
-- :ref:`popd <cmd-popd>` removes the directory on top of the stack and changes the current working directory
+- :doc:`dirs <cmds/dirs>` prints the stack
+- :doc:`pushd <cmds/pushd>` adds a directory on top of the stack and makes it the current working directory
+- :doc:`popd <cmds/popd>` removes the directory on top of the stack and changes the current working directory

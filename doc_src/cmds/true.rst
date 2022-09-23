@@ -20,5 +20,5 @@ Description
 See Also
 --------
 
-- :ref:`false <cmd-false>` command
+- :doc:`false <false>` command
 - :ref:`$status <variables-status>` variable

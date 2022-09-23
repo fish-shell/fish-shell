@@ -478,7 +478,7 @@ fish supports the familiar ``&&`` and ``||`` to combine commands, and ``!`` to n
 
 Here, ``make`` is only executed if ``./configure`` succeeds (returns 0), and ``sudo make install`` is only executed if both ``./configure`` and ``make`` succeed.
 
-fish also supports :ref:`and <cmd-and>`, :ref:`or <cmd-or>`, and :ref:`not <cmd-not>`. The first two are job modifiers and have lower precedence. Example usage::
+fish also supports :doc:`and <cmds/and>`, :doc:`or <cmds/or>`, and :doc:`not <cmds/not>`. The first two are job modifiers and have lower precedence. Example usage::
 
     > cp file1 file1_bak && cp file2 file2_bak; and echo "Backup successful"; or echo "Backup failed"
     Backup failed
@@ -495,7 +495,7 @@ As mentioned in :ref:`the section on the semicolon <tut-semicolon>`, this can al
 Conditionals (If, Else, Switch)
 -------------------------------
 
-Use :ref:`if <cmd-if>` and :ref:`else <cmd-else>` to conditionally execute code, based on the exit status of a command.
+Use :doc:`if <cmds/if>` and :doc:`else <cmds/else>` to conditionally execute code, based on the exit status of a command.
 
 
 ::
@@ -509,7 +509,7 @@ Use :ref:`if <cmd-if>` and :ref:`else <cmd-else>` to conditionally execute code,
     end
 
 
-To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use :ref:`test <cmd-test>`, like
+To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use :doc:`test <cmds/test>`, like
 
 
 ::
@@ -546,9 +546,9 @@ To compare strings or numbers or check file properties (whether a file exists or
     end
 
 
-For even more complex conditions, use :ref:`begin <cmd-begin>` and :ref:`end <cmd-end>` to group parts of them.
+For even more complex conditions, use :doc:`begin <cmds/begin>` and :doc:`end <cmds/end>` to group parts of them.
 
-There is also a :ref:`switch <cmd-switch>` command::
+There is also a :doc:`switch <cmds/switch>` command::
 
     switch (uname)
     case Linux
@@ -561,14 +561,14 @@ There is also a :ref:`switch <cmd-switch>` command::
         echo Hi, stranger!
     end
 
-As you see, :ref:`case <cmd-case>` does not fall through, and can accept multiple arguments or (quoted) wildcards.
+As you see, :doc:`case <cmds/case>` does not fall through, and can accept multiple arguments or (quoted) wildcards.
 
 For more, see :ref:`Conditions <syntax-conditional>`.
 
 Functions
 ---------
 
-A fish function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the :ref:`function <cmd-function>` builtin::
+A fish function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the :doc:`function <cmds/function>` builtin::
 
     function say_hello
         echo Hello $argv
@@ -581,7 +581,7 @@ A fish function is a list of commands, which may optionally take arguments. Unli
 
 Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place. [#]_
 
-You can list the names of all functions with the :ref:`functions <cmd-functions>` builtin (note the plural!). fish starts out with a number of functions::
+You can list the names of all functions with the :doc:`functions <cmds/functions>` builtin (note the plural!). fish starts out with a number of functions::
 
     > functions
     N_, abbr, alias, bg, cd, cdh, contains_seq, dirh, dirs, disown, down-or-search, edit_command_buffer, export, fg, fish_add_path, fish_breakpoint_prompt, fish_clipboard_copy, fish_clipboard_paste, fish_config, fish_default_key_bindings, fish_default_mode_prompt, fish_git_prompt, fish_hg_prompt, fish_hybrid_key_bindings, fish_indent, fish_is_root_user, fish_job_summary, fish_key_reader, fish_md5, fish_mode_prompt, fish_npm_helper, fish_opt, fish_print_git_action, fish_print_hg_root, fish_prompt, fish_sigtrap_handler, fish_svn_prompt, fish_title, fish_update_completions, fish_vcs_prompt, fish_vi_cursor, fish_vi_key_bindings, funced, funcsave, grep, help, history, hostname, isatty, kill, la, ll, ls, man, nextd, open, popd, prevd, prompt_hostname, prompt_pwd, psub, pushd, realpath, seq, setenv, suspend, trap, type, umask, up-or-search, vared, wait
@@ -597,7 +597,7 @@ You can see the source for any function by passing its name to ``functions``::
 
 For more, see :ref:`Functions <syntax-function>`.
 
-.. [#] There is a function called :ref:`alias <cmd-alias>`, but it's just a shortcut to make functions.
+.. [#] There is a function called :doc:`alias <cmds/alias>`, but it's just a shortcut to make functions.
 
 Loops
 -----
@@ -634,7 +634,7 @@ Prompt
 
 .. role:: purple
 
-Unlike other shells, there is no prompt variable like ``PS1``. To display your prompt, fish executes the :ref:`fish_prompt <cmd-fish_prompt>` function and uses its output as the prompt. And if it exists, fish also executes the :ref:`fish_right_prompt <cmd-fish_right_prompt>` function and uses its output as the right prompt.
+Unlike other shells, there is no prompt variable like ``PS1``. To display your prompt, fish executes the :doc:`fish_prompt <cmds/fish_prompt>` function and uses its output as the prompt. And if it exists, fish also executes the :doc:`fish_right_prompt <cmds/fish_right_prompt>` function and uses its output as the right prompt.
 
 You can define your own prompt from the command line:
 
@@ -647,7 +647,7 @@ You can define your own prompt from the command line:
 
 Then, if you are happy with it, you can save it to disk by typing ``funcsave fish_prompt``. This saves the prompt in ``~/.config/fish/functions/fish_prompt.fish``. (Or, if you want, you can create that file manually from the start.)
 
-Multiple lines are OK. Colors can be set via :ref:`set_color <cmd-set_color>`, passing it named ANSI colors, or hex RGB values::
+Multiple lines are OK. Colors can be set via :doc:`set_color <cmds/set_color>`, passing it named ANSI colors, or hex RGB values::
 
     function fish_prompt
         set_color purple
@@ -693,7 +693,7 @@ and it will be exported like that, and when fish starts it splits the $PATH it r
 
 You can do so directly in ``config.fish``, like you might do in other shells with ``.profile``. See :ref:`this example <path_example>`.
 
-A faster way is to use the :ref:`fish_add_path <cmd-fish_add_path>` function, which adds given directories to the path if they aren't already included. It does this by modifying the ``$fish_user_paths`` :ref:`universal variable <tut-universal>`, which is automatically prepended to ``$PATH``. For example, to permanently add ``/usr/local/bin`` to your ``$PATH``, you could write::
+A faster way is to use the :doc:`fish_add_path <cmds/fish_add_path>` function, which adds given directories to the path if they aren't already included. It does this by modifying the ``$fish_user_paths`` :ref:`universal variable <tut-universal>`, which is automatically prepended to ``$PATH``. For example, to permanently add ``/usr/local/bin`` to your ``$PATH``, you could write::
 
     > fish_add_path /usr/local/bin
 
@@ -749,7 +749,7 @@ This is the preferred way to define your prompt as well::
     end
 
 
-See the documentation for :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` for ways to create these files automatically, and :ref:`$fish_function_path <syntax-function-autoloading>` to control their location.
+See the documentation for :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` for ways to create these files automatically, and :ref:`$fish_function_path <syntax-function-autoloading>` to control their location.
 
 .. _tut-universal:
 

@@ -41,6 +41,6 @@ Example
 See Also
 --------
 
-- the :ref:`cdh <cmd-cdh>` command to display a prompt to quickly navigate the history
-- the :ref:`dirh <cmd-dirh>` command to print the directory history
-- the :ref:`nextd <cmd-nextd>` command to move forward
+- the :doc:`cdh <cdh>` command to display a prompt to quickly navigate the history
+- the :doc:`dirh <dirh>` command to print the directory history
+- the :doc:`nextd <nextd>` command to move forward

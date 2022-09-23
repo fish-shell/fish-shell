@@ -25,10 +25,10 @@ Description
 
 The **end** keyword ends a block of commands started by one of the following commands:
 
-- :ref:`begin <cmd-begin>` to start a block of commands
-- :ref:`function <cmd-function>` to define a function
-- :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>` to conditionally execute commands
-- :ref:`while <cmd-while>`, :ref:`for <cmd-for>` to perform commands multiple times
+- :doc:`begin <begin>` to start a block of commands
+- :doc:`function <function>` to define a function
+- :doc:`if <if>`, :doc:`switch <switch>` to conditionally execute commands
+- :doc:`while <while>`, :doc:`for <for>` to perform commands multiple times
 
 The **end** keyword does not change the current exit status.
 Instead, the status after it will be the status returned by the most recent command.

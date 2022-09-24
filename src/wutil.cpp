@@ -516,6 +516,15 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
     return success ? total_written : -1;
 }
 
+enum : wint_t {
+    PUA1_START = 0xE000,
+    PUA1_END = 0xF900,
+    PUA2_START = 0xF0000,
+    PUA2_END = 0xFFFFE,
+    PUA3_START = 0x100000,
+    PUA3_END = 0x10FFFE,
+};
+
 /// Return one if the code point is in a Unicode private use area.
 static int fish_is_pua(wint_t wc) {
     if (PUA1_START <= wc && wc < PUA1_END) return 1;

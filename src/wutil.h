@@ -106,13 +106,6 @@ inline ssize_t wwrite_to_fd(const wcstring &s, int fd) {
     return wwrite_to_fd(s.c_str(), s.size(), fd);
 }
 
-#define PUA1_START 0xE000
-#define PUA1_END 0xF900
-#define PUA2_START 0xF0000
-#define PUA2_END 0xFFFFE
-#define PUA3_START 0x100000
-#define PUA3_END 0x10FFFE
-
 // We need this because there are too many implementations that don't return the proper answer for
 // some code points. See issue #3050.
 #ifndef FISH_NO_ISW_WRAPPERS

@@ -1540,6 +1540,8 @@ For a list of all builtins, use ``builtin -n``.
 
 For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
 
+.. _user-input:
+
 Querying for user input
 -----------------------
 

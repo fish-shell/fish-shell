@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``popd`` removes the top directory from the :ref:`directory stack <directory-stack>` and changes the working directory to the new top directory. Use :ref:`pushd <cmd-pushd>` to add directories to the stack.
+``popd`` removes the top directory from the :ref:`directory stack <directory-stack>` and changes the working directory to the new top directory. Use :doc:`pushd <pushd>` to add directories to the stack.
 
 The **-h** or **--help** option displays help about using this command.
 
@@ -37,5 +37,5 @@ Example
 See Also
 --------
 
-- the :ref:`dirs <cmd-dirs>` command to print the directory stack
-- the :ref:`cdh <cmd-cdh>` command which provides a more intuitive way to navigate to recently visited directories.
+- the :doc:`dirs <dirs>` command to print the directory stack
+- the :doc:`cdh <cdh>` command which provides a more intuitive way to navigate to recently visited directories.

@@ -8,7 +8,7 @@ See :ref:`Fish for bash users <fish_for_bash_users>`
 
 How do I set or clear an environment variable?
 ----------------------------------------------
-Use the :ref:`set <cmd-set>` command::
+Use the :doc:`set <cmds/set>` command::
 
     set -x key value # typically set -gx key value
     set -e key
@@ -96,7 +96,7 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
     end
 
 
-You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
+You can also use the Web configuration tool, :doc:`fish_config <cmds/fish_config>`, to preview and choose from a gallery of sample prompts.
 
 Or you can use fish_config from the commandline::
 
@@ -107,7 +107,7 @@ Or you can use fish_config from the commandline::
   > fish_config prompt save
   # makes the change permanent
 
-If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` like::
+If you want to modify your existing prompt, you can use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` like::
 
   >_ funced fish_prompt
   # This opens up your editor (set in $EDITOR).
@@ -116,20 +116,20 @@ If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced
   # Once you are happy with it:
   >_ funcsave fish_prompt
 
-This also applies to :ref:`fish_right_prompt <cmd-fish_right_prompt>` and :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`.
+This also applies to :doc:`fish_right_prompt <cmds/fish_right_prompt>` and :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`.
 
 Why does my prompt show a ``[I]``?
 ----------------------------------
 
-That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
+That's the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
 
 If you haven't activated vi mode on purpose, you might have installed a third-party theme or plugin that does it.
 
-If you want to change or disable this display, modify the ``fish_mode_prompt`` function, for instance via :ref:`funced <cmd-funced>`.
+If you want to change or disable this display, modify the ``fish_mode_prompt`` function, for instance via :doc:`funced <cmds/funced>`.
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
+Use the web configuration tool, :doc:`fish_config <cmds/fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
 
 You can also use ``fish_config`` on the commandline, like::
 
@@ -142,7 +142,7 @@ You can also use ``fish_config`` on the commandline, like::
 
 How do I change the greeting message?
 -------------------------------------
-Change the value of the variable ``fish_greeting`` or create a :ref:`fish_greeting <cmd-fish_greeting>` function. For example, to remove the greeting use::
+Change the value of the variable ``fish_greeting`` or create a :doc:`fish_greeting <cmds/fish_greeting>` function. For example, to remove the greeting use::
 
     set -U fish_greeting
 
@@ -243,7 +243,7 @@ Or if you just want to do one command in case the first succeeded or failed, use
     somecommand
     or someothercommand
 
-See the :ref:`Conditions <syntax-conditional>` and the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
+See the :ref:`Conditions <syntax-conditional>` and the documentation for :doc:`test <cmds/test>` and :doc:`if <cmds/if>` for more information.
 
 My command prints "No matches for wildcard" but works in bash
 -------------------------------------------------------------

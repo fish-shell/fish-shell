@@ -137,9 +137,10 @@ end
 #
 # When a prompt is first displayed, make sure that interactive
 # mode-specific initializations have been performed.
+# This includes a `read` prompt, hence the fish_read event.
 # This handler removes itself after it is first called.
 #
-function __fish_on_interactive --on-event fish_prompt
+function __fish_on_interactive --on-event fish_prompt --on-event fish_read
     __fish_config_interactive
     functions -e __fish_on_interactive
 end

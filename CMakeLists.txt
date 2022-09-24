@@ -53,6 +53,12 @@ add_compile_options(-fno-exceptions)
 # Undefine NDEBUG to keep assert() in release builds.
 add_definitions(-UNDEBUG)
 
+# Enable large files on GNU.
+add_definitions(-D_LARGEFILE_SOURCE
+                -D_LARGEFILE64_SOURCE
+                -D_FILE_OFFSET_BITS=64
+                -D_ATFILE_SOURCE)
+
 # Hide the CMake Rules directories in Xcode projects.
 source_group("CMake Rules" REGULAR_EXPRESSION "^$")
 

@@ -435,7 +435,16 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
 /// up. Note that the filename came from a readdir() call, so we know it exists.
 static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wcstring &filename,
                                               const wchar_t *wc, expand_flags_t expand_flags,
-                                              completion_receiver_t *out) {
+                                              completion_receiver_t *out, bool known_dir) {
+    const bool executables_only = expand_flags & expand_flag::executables_only;
+    const bool need_directory = expand_flags & expand_flag::directories_only;
+    // Fast path: If we need directories, and we already know it is one,
+    // and we don't need to do anything else, just return it.
+    // This is a common case for cd completions, and removes the `stat` entirely in case the system supports it.
+    if (known_dir && !executables_only && !(expand_flags & expand_flag::gen_descriptions)) {
+        return wildcard_complete(filename + L'/', wc, const_desc(L""), out, expand_flags,
+                                 COMPLETE_NO_SPACE) == wildcard_result_t::match;
+    }
     // Check if it will match before stat().
     if (wildcard_complete(filename, wc, {}, nullptr, expand_flags, 0) != wildcard_result_t::match) {
         return false;
@@ -464,17 +473,15 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
     const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
 
-    const bool need_directory = expand_flags & expand_flag::directories_only;
     if (need_directory && !is_directory) {
         return false;
     }
 
-    const bool executables_only = expand_flags & expand_flag::executables_only;
     if (executables_only && (!is_executable || fast_waccess(stat_buf, X_OK) != 0)) {
         return false;
     }
 
-    if (is_windows_subsystem_for_linux() &&
+    if (executables_only && is_windows_subsystem_for_linux() &&
         string_suffixes_string_case_insensitive(L".dll", filename)) {
         return false;
     }
@@ -619,7 +626,7 @@ class wildcard_expander_t {
     }
 
     void try_add_completion_result(const wcstring &filepath, const wcstring &filename,
-                                   const wcstring &wildcard, const wcstring &prefix) {
+                                   const wcstring &wildcard, const wcstring &prefix, bool known_dir) {
         // This function is only for the completions case.
         assert(this->flags & expand_flag::for_completions);
 
@@ -631,7 +638,7 @@ class wildcard_expander_t {
 
         size_t before = this->resolved_completions->size();
         if (wildcard_test_flags_then_complete(abs_path, filename, wildcard.c_str(), this->flags,
-                                              this->resolved_completions)) {
+                                              this->resolved_completions, known_dir)) {
             // Hack. We added this completion result based on the last component of the wildcard.
             // Prepend our prefix to each wildcard that replaces its token.
             // Note that prepend_token_prefix is a no-op unless COMPLETE_REPLACES_TOKEN is set
@@ -718,10 +725,23 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
         // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.
         DIR *dir = open_dir(base_dir);
         if (dir) {
+            // wreaddir_resolving without the out argument is just wreaddir.
+            // So we can use the information in case we need it.
             wcstring next;
-            while (wreaddir(dir, next) && !interrupted_or_overflowed()) {
+            bool is_dir = false;
+            bool need_dir = flags & expand_flag::directories_only;
+            wcstring path = base_dir;
+            if (flags & expand_flag::special_for_cd) {
+                path = this->working_directory;
+                append_path_component(path, base_dir);
+                // cd operates on logical paths.
+                // for example, cd ../<tab> should complete "without resolving symlinks".
+                path = normalize_path(path);
+            }
+            while (wreaddir_resolving(dir, path, next, need_dir ? &is_dir : nullptr) && !interrupted_or_overflowed()) {
+                if (need_dir && !is_dir) continue;
                 if (!next.empty() && next.at(0) != L'.') {
-                    this->try_add_completion_result(base_dir + next, next, L"", prefix);
+                    this->try_add_completion_result(base_dir + next, next, L"", prefix, is_dir);
                 }
             }
             closedir(dir);
@@ -836,9 +856,14 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
 void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp,
                                               const wcstring &wc, const wcstring &prefix) {
     wcstring name_str;
-    while (!interrupted_or_overflowed() && wreaddir(base_dir_fp, name_str)) {
+    bool is_dir = false;
+    bool need_dir = flags & expand_flag::directories_only;
+
+    while (!interrupted_or_overflowed() &&
+           wreaddir_resolving(base_dir_fp, base_dir, name_str, need_dir ? &is_dir : nullptr)) {
+        if (need_dir && !is_dir) continue;
         if (flags & expand_flag::for_completions) {
-            this->try_add_completion_result(base_dir + name_str, name_str, wc, prefix);
+            this->try_add_completion_result(base_dir + name_str, name_str, wc, prefix, is_dir);
         } else {
             // Normal wildcard expansion, not for completions.
             if (wildcard_match(name_str, wc, true /* skip files with leading dots */)) {

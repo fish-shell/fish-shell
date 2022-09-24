@@ -48,4 +48,4 @@ When you're done, use::
 
   >_ funcsave fish_prompt
 
-For more, see :ref:`funcsave <cmd-funcsave>`.
+For more, see :doc:`funcsave <funcsave>`.

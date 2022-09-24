@@ -17,7 +17,7 @@ Description
 
 A background job is executed simultaneously with fish, and does not have access to the keyboard. If no job is specified, the last job to be used is put in the background. If ``PID`` is specified, the jobs containing the specified process IDs are put in the background.
 
-For compatibility with other shells, job expansion syntax is supported for ``bg``. A PID of the format ``%1`` will be interpreted as the PID of job 1. Job numbers can be seen in the output of :ref:`jobs <cmd-jobs>`.
+For compatibility with other shells, job expansion syntax is supported for ``bg``. A PID of the format ``%1`` will be interpreted as the PID of job 1. Job numbers can be seen in the output of :doc:`jobs <jobs>`.
 
 When at least one of the arguments isn't a valid job specifier,
 ``bg`` will print an error without backgrounding anything.

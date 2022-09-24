@@ -17,11 +17,11 @@ Description
 
 ``dirh`` does not accept any parameters.
 
-Note that the :ref:`cd <cmd-cd>` command limits directory history to the 25 most recently visited directories. The history is stored in the ``$dirprev`` and ``$dirnext`` variables.
+Note that the :doc:`cd <cd>` command limits directory history to the 25 most recently visited directories. The history is stored in the ``$dirprev`` and ``$dirnext`` variables.
 
 See Also
 --------
 
-- the :ref:`cdh <cmd-cdh>` command to display a prompt to quickly navigate the history
-- the :ref:`prevd <cmd-prevd>` command to move backward
-- the :ref:`nextd <cmd-nextd>` command to move forward
+- the :doc:`cdh <cdh>` command to display a prompt to quickly navigate the history
+- the :doc:`prevd <prevd>` command to move backward
+- the :doc:`nextd <nextd>` command to move forward

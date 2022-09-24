@@ -73,7 +73,6 @@ maybe_t<int> builtin_pwd(parser_t &parser, io_streams_t &streams, const wchar_t 
     if (pwd.empty()) {
         return STATUS_CMD_ERROR;
     }
-    streams.out.append(pwd);
-    streams.out.push_back(L'\n');
+    streams.out.append(pwd + L"\n");
     return STATUS_CMD_OK;
 }

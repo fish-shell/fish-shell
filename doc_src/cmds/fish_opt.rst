@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-This command provides a way to produce option specifications suitable for use with the :ref:`argparse <cmd-argparse>` command. You can, of course, write the option specifications by hand without using this command. But you might prefer to use this for the clarity it provides.
+This command provides a way to produce option specifications suitable for use with the :doc:`argparse <argparse>` command. You can, of course, write the option specifications by hand without using this command. But you might prefer to use this for the clarity it provides.
 
 The following ``argparse`` options are available:
 

@@ -78,4 +78,4 @@ Example
 See Also
 --------
 
-- the :ref:`printf <cmd-printf>` command, for more control over output formatting
+- the :doc:`printf <printf>` command, for more control over output formatting

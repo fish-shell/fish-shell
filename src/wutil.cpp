@@ -76,7 +76,11 @@ bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, 
     if (check_with_stat) {
         // We couldn't determine the file type from the dirent; check by stat'ing it.
         cstring fullpath = wcs2string(dir_path);
-        fullpath.push_back('/');
+        if (!fullpath.empty()) {
+            // If the dir_path was empty, we just use the name.
+            // This ends up as a relative path which is fine.
+            fullpath.push_back('/');
+        }
         fullpath.append(result->d_name);
         struct stat buf;
         if (stat(fullpath.c_str(), &buf) != 0) {

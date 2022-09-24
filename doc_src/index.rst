@@ -124,7 +124,7 @@ To add ``~/linux/bin`` to PATH variable when using a login shell, add this to ``
         set -gx PATH $PATH ~/linux/bin
     end
 
-This is just an example; using :ref:`fish_add_path <cmd-fish_add_path>` e.g. ``fish_add_path ~/linux/bin`` which only adds the path if it isn't included yet is easier.
+This is just an example; using :doc:`fish_add_path <cmds/fish_add_path>` e.g. ``fish_add_path ~/linux/bin`` which only adds the path if it isn't included yet is easier.
 
 To run commands on exit, use an :ref:`event handler <event>` that is triggered by the exit of the shell::
 

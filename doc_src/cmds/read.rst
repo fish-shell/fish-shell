@@ -42,7 +42,7 @@ The following options are available:
     Uses the output of the shell command *PROMPT_CMD* as the prompt for the interactive mode. The default prompt command is ``set_color green; echo read; set_color normal; echo "> "``
 
 **-P** or **--prompt-str** *PROMPT_STR*
-    Uses the *PROMPT_STR* as the prompt for the interactive mode. It is equivalent to ``echo $PROMPT_STR`` and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the :ref:`echo <cmd-echo>` command.
+    Uses the *PROMPT_STR* as the prompt for the interactive mode. It is equivalent to ``echo $PROMPT_STR`` and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the :doc:`echo <echo>` command.
 
 **-R** or **--right-prompt** *RIGHT_PROMPT_CMD*
     Uses the output of the shell command *RIGHT_PROMPT_CMD* as the right prompt for the interactive mode. There is no default right prompt command.
@@ -98,26 +98,29 @@ is set to empty and the exit status is set to 122. This limit can be altered wit
 Example
 -------
 
+``read`` has a few separate uses.
+
 The following code stores the value 'hello' in the shell variable :envvar:`$foo`.
-
-
 
 ::
 
     echo hello|read foo
 
-    # This is a neat way to handle command output by-line:
+While this is a neat way to handle command output line-by-line::
+
     printf '%s\n' line1 line2 line3 line4 | while read -l foo
                       echo "This is another line: $foo"
                   end
 
-    # Delimiters given via "-d" are taken as one string
+Delimiters given via "-d" are taken as one string::
+
     echo a==b==c | read -d == -l a b c
     echo $a # a
     echo $b # b
     echo $c # c
 
-    # --tokenize honors quotes and escaping like the shell's argument passing:
+``--tokenize`` honors quotes and escaping like the shell's argument passing::
+
     echo 'a\ b' | read -t first second
     echo $first # outputs "a b", $second is empty
 
@@ -125,3 +128,5 @@ The following code stores the value 'hello' in the shell variable :envvar:`$foo`
     echo $a # outputs 'afoo bar' (without the quotes)
     echo $b # outputs '(command echo wurst)* {a,b}' (without the quotes)
     echo $c # nothing
+
+For an example on interactive use, see :ref:`Querying for user input <user-input>`.

@@ -24,11 +24,14 @@ function __fish_print_apt_packages
         # aptitude has options that control the output formatting, but is orders of magnitude slower
         #
         # sed could probably do all of the heavy lifting here, but would be even less readable
-        apt-cache --no-generate show '.*'(commandline -ct)'.*' 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\x1a\n/g' | string join "" | string replace --all --regex \x1a+ \n | uniq
+        #
+        # The `head -n2500` causes us to stop once we have 2500 lines. We do it after the `sed` because
+        # Debian package descriptions can be extremely long - texlive-latex-extra has about 2700 lines in Debian 11.
+        apt-cache --no-generate show '.*'(commandline -ct)'.*' 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\x1a\n/g' | head -n 2500 | string join "" | string replace --all --regex \x1a+ \n | uniq
         return 0
     else
         set -l packages (dpkg --get-selections | string replace -fr '(\S+)\s+install' "\$1" | string match -e (commandline -ct))
-        apt-cache --no-generate show $packages 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\x1a\n/g' | string join "" | string replace --all --regex \x1a+ \n | uniq
+        apt-cache --no-generate show $packages 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\x1a\n/g' | head -n 2500 | string join "" | string replace --all --regex \x1a+ \n | uniq
         return 0
     end
 end

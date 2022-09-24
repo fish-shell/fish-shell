@@ -51,7 +51,7 @@ The status symbols themselves:
 
 Finally, ``$fish_prompt_hg_status_order``, which can be used to change the order the status symbols appear in. It defaults to ``added modified copied deleted untracked unmerged``.
 
-See also :ref:`fish_vcs_prompt <cmd-fish_vcs_prompt>`, which will call all supported version control prompt functions, including git, Mercurial and Subversion.
+See also :doc:`fish_vcs_prompt <fish_vcs_prompt>`, which will call all supported version control prompt functions, including git, Mercurial and Subversion.
 
 Example
 -------

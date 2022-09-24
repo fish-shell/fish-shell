@@ -24,7 +24,7 @@ Description
 
 Use **-f** or **--fields** to print out specific fields. FIELDS is a comma-separated string of field numbers and/or spans. Each field is one-indexed, and will be printed on separate lines. If a given field does not exist, then the command exits with status 1 and does not print anything, unless **--allow-empty** is used.
 
-See also the **--delimiter** option of the :ref:`read <cmd-read>` command.
+See also the **--delimiter** option of the :doc:`read <read>` command.
 
 ``string split0`` splits each *STRING* on the zero byte (NUL). Options are the same as ``string split`` except that no separator is given.
 

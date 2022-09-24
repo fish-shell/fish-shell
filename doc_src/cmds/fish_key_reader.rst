@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-:program:`fish_key_reader` is used to explain how you would bind a certain key sequence. By default, it prints the :ref:`bind <cmd-bind>` command for one key sequence read interactively over standard input.
+:program:`fish_key_reader` is used to explain how you would bind a certain key sequence. By default, it prints the :doc:`bind <bind>` command for one key sequence read interactively over standard input.
 
 If the character sequence matches a special key name (see ``bind --key-names``),  both ``bind CHARS ...`` and ``bind -k KEYNAME ...`` usage will be shown. In verbose mode (enabled by passing ``--verbose``), additional details about the characters received, such as the delay between chars, are written to standard error.
 

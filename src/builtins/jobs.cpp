@@ -46,6 +46,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
         pgid = *job_pgid;
     }
 
+    wcstring out;
     switch (mode) {
         case JOBS_PRINT_NOTHING: {
             break;
@@ -53,53 +54,57 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
         case JOBS_DEFAULT: {
             if (header) {
                 // Print table header before first job.
-                streams.out.append(_(L"Job\tGroup\t"));
+                out.append(_(L"Job\tGroup\t"));
                 if (have_proc_stat()) {
-                    streams.out.append(_(L"CPU\t"));
+                    out.append(_(L"CPU\t"));
                 }
-                streams.out.append(_(L"State\tCommand\n"));
+                out.append(_(L"State\tCommand\n"));
             }
 
-            streams.out.append_format(L"%d\t%d\t", j->job_id(), pgid);
+            append_format(out, L"%d\t%d\t", j->job_id(), pgid);
 
             if (have_proc_stat()) {
-                streams.out.append_format(L"%.0f%%\t", 100. * cpu_use(j));
+                append_format(out, L"%.0f%%\t", 100. * cpu_use(j));
             }
 
-            streams.out.append(j->is_stopped() ? _(L"stopped") : _(L"running"));
-            streams.out.append(L"\t");
-            streams.out.append(j->command_wcstr());
-            streams.out.append(L"\n");
+            out.append(j->is_stopped() ? _(L"stopped") : _(L"running"));
+            out.append(L"\t");
+            out.append(j->command_wcstr());
+            out.append(L"\n");
+            streams.out.append(out);
             break;
         }
         case JOBS_PRINT_GROUP: {
             if (header) {
                 // Print table header before first job.
-                streams.out.append(_(L"Group\n"));
+                out.append(_(L"Group\n"));
             }
-            streams.out.append_format(L"%d\n", pgid);
+            append_format(out, L"%d\n", pgid);
+            streams.out.append(out);
             break;
         }
         case JOBS_PRINT_PID: {
             if (header) {
                 // Print table header before first job.
-                streams.out.append(_(L"Process\n"));
+                out.append(_(L"Process\n"));
             }
 
             for (const process_ptr_t &p : j->processes) {
-                streams.out.append_format(L"%d\n", p->pid);
+                append_format(out, L"%d\n", p->pid);
             }
+            streams.out.append(out);
             break;
         }
         case JOBS_PRINT_COMMAND: {
             if (header) {
                 // Print table header before first job.
-                streams.out.append(_(L"Command\n"));
+                out.append(_(L"Command\n"));
             }
 
             for (const process_ptr_t &p : j->processes) {
-                streams.out.append_format(L"%ls\n", p->argv0());
+                append_format(out, L"%ls\n", p->argv0());
             }
+            streams.out.append(out);
             break;
         }
         default: {

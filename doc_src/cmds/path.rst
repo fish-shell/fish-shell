@@ -247,7 +247,7 @@ Examples
 
 With ``--relative`` (or ``-R``), it prints the number of seconds since the modification time. It only reads the current time once at start, so in case multiple paths are given the times are all relative to the *start* of ``path mtime -R`` running.
 
-If you want to know if a file is newer or older than another file, consider using ``test -nt`` instead. See :ref:`the test documentation <cmd-test>`.
+If you want to know if a file is newer or older than another file, consider using ``test -nt`` instead. See :doc:`the test documentation <test>`.
 
 It returns 0 if reading mtime for any path succeeded.
 

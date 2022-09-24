@@ -27,7 +27,7 @@ The generic key binding that matches if no other binding does can be set by spec
 
 If the ``-k`` switch is used, the name of a key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key\_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys). Normally this will print an error if the current ``$TERM`` entry doesn't have a given key, unless the ``-s`` switch is given.
 
-To find out what sequence a key combination sends, you can use :ref:`fish_key_reader <cmd-fish_key_reader>`.
+To find out what sequence a key combination sends, you can use :doc:`fish_key_reader <fish_key_reader>`.
 
 ``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` for a complete list of these input functions.
 
@@ -261,7 +261,7 @@ The following special input functions are available:
     reexecutes the prompt functions and redraws the prompt (also ``force-repaint`` for backwards-compatibility)
 
 ``repaint-mode``
-    reexecutes the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
+    reexecutes the :doc:`fish_mode_prompt <fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
 
 ``self-insert``
     inserts the matching sequence into the command line

@@ -49,6 +49,13 @@ Scripting improvements
     checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
     for a,b in y 1 z 3
         ^~^
+- ``math`` now actually handles division-by-zero while computing and gives it a bespoke error, as well as augmenting some errors with their extent (:issue:`9190`). This changes behavior in some limited cases. E.g.::
+
+    math min 1 / 0, 5
+
+  would previously print "5" because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite. Instead, ``math`` will now error out.
+- ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
+- Builtins writing to a pipe or file was optimized. In particular printf no longer issues a separate ``write()`` syscall for every escaped character. (:issue:`9229`).
 
 Interactive improvements
 ------------------------
@@ -57,25 +64,22 @@ Interactive improvements
 - Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - ``bind`` output is now syntax-highlighted when used interacively.
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
+- If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
+- Performance improvements to highlighting (:issue:`9180`) and the cd completions (:issue:`9220`) should make using fish more pleasant on slow systems.
 
 
-Resolved in 3.6.0
------------------
+Fixed Bugs
+----------
 - The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text.
 - process-exit and job-exit events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
 - A crash when completing a token that contained both a potential glob and a quoted variable expansion was fixed (:issue:`9137`).
-- If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
 - ``prompt_pwd`` no longer accidentally overwrites a global or universal ``$fish_prompt_pwd_full_dirs`` when called with the ``-d`` or ``--full-length-dirs`` option (:issue:`9123`).
 - A bug which caused fish to freeze or exit after running a command which does not preserve the foreground process group was fixed (:issue:`9181`).
 - The "Disco" sample prompt no longer prints an error in some working directories (:issue:`9164`). If you saved this prompt, you should run ``fish_config prompt save disco`` again.
-- ``math`` now actually handles division-by-zero while computing and gives it a bespoke error, as well as augmenting some errors with their extent (:issue:`9190`). This changes behavior in some limited cases. E.g.::
-
-    math min 1 / 0, 5
-
-  would previously print "5" because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite. Instead, ``math`` will now error out.
 - Fish calls external commands via the given path again instead of always making it absolute. This can be seen e.g. when you run a bash script and check ``$0`` (:issue:`9143`).
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
-- ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
+- On 32-bit systems, globs like ``*`` might fail to print certain files, due to missing large file support. This has been fixed by enabling large file support.
+- Interactive ``read`` in scripts will now have the correct keybindings again (:issue:`9227`).
 
 Completions
 ^^^^^^^^^^^

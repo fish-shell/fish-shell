@@ -23,7 +23,7 @@ Description
 
 The *FORMAT* argument is re-used as many times as necessary to convert all of the given arguments. So ``printf %s\n flounder catfish clownfish shark`` will print four lines.
 
-Unlike :ref:`echo <cmd-echo>`, ``printf`` does not append a new line unless it is specified as part of the string.
+Unlike :doc:`echo <echo>`, ``printf`` does not append a new line unless it is specified as part of the string.
 
 It doesn't support any options, so there is no need for a ``--`` separator, which makes it easier to use for arbitrary input than ``echo``. [#]_ 
 
@@ -99,7 +99,7 @@ Will print "Number of bananas in my pocket: 42", `without` a newline.
 See Also
 --------
 
-- the :ref:`echo <cmd-echo>` command, for simpler output
+- the :doc:`echo <echo>` command, for simpler output
 
 Footnotes
 ---------

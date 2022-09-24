@@ -67,7 +67,7 @@ A number of variables control the symbol ("display") and color ("color") for the
 - :envvar:`__fish_svn_prompt_char_token_broken_display`
 - :envvar:`__fish_svn_prompt_char_token_broken_color`
 
-See also :ref:`fish_vcs_prompt <cmd-fish_vcs_prompt>`, which will call all supported version control prompt functions, including git, Mercurial and Subversion.
+See also :doc:`fish_vcs_prompt <fish_vcs_prompt>`, which will call all supported version control prompt functions, including git, Mercurial and Subversion.
 
 Example
 -------

@@ -20,7 +20,7 @@ Description
 
 It is (by default) safe to use :program:`fish_add_path` in config.fish, or it can be used once, interactively, and the paths will stay in future because of :ref:`universal variables <variables-universal>`. This is a "do what I mean" style command, if you need more control, consider modifying the variable yourself.
 
-Components are normalized by :ref:`realpath <cmd-realpath>`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a component already exists, it is not added again and stays in the same place unless the ``--move`` switch is given.
+Components are normalized by :doc:`realpath <realpath>`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a component already exists, it is not added again and stays in the same place unless the ``--move`` switch is given.
 
 Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given (if $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to :envvar:`PATH`, so they still stay ahead of the system paths).
 
@@ -50,7 +50,7 @@ Options
     Move already-existing components to the place they would be added - by default they would be left in place and not added again.
 
 **-v** or **--verbose**
-    Print the :ref:`set <cmd-set>` command used.
+    Print the :doc:`set <set>` command used.
 
 **-n** or **--dry-run**
     Print the ``set`` command that would be used without executing it.

@@ -29,7 +29,7 @@ You can also define an empty ``fish_mode_prompt`` function to remove the Vi mode
     function fish_mode_prompt; end
     funcsave fish_mode_prompt
 
-``fish_mode_prompt`` will be executed when the vi mode changes. If it produces any output, it is displayed and used. If it does not, the other prompt functions (:ref:`fish_prompt <cmd-fish_prompt>` and :ref:`fish_right_prompt <cmd-fish_right_prompt>`) will be executed as well in case they contain a mode display.
+``fish_mode_prompt`` will be executed when the vi mode changes. If it produces any output, it is displayed and used. If it does not, the other prompt functions (:doc:`fish_prompt <fish_prompt>` and :doc:`fish_right_prompt <fish_right_prompt>`) will be executed as well in case they contain a mode display.
 
 Example
 -------

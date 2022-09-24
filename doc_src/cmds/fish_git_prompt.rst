@@ -24,7 +24,7 @@ The ``fish_git_prompt`` function displays information about the current git repo
 
 `Git <https://git-scm.com>`_ must be installed.
 
-There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the ``git config`` command, while fish variables can be set as usual with the :ref:`set <cmd-set>` command.
+There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the ``git config`` command, while fish variables can be set as usual with the :doc:`set <set>` command.
 
 - ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
   In large repositories, this can take a lot of time, so you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
@@ -121,7 +121,7 @@ Colors used with ``showcolorhints``:
 
 Note that all colors can also have a corresponding ``_done`` color. For example, the contents of ``$__fish_git_prompt_color_upstream_done`` is printed right _after_ the upstream.
 
-See also :ref:`fish_vcs_prompt <cmd-fish_vcs_prompt>`, which will call all supported version control prompt functions, including git, Mercurial and Subversion.
+See also :doc:`fish_vcs_prompt <fish_vcs_prompt>`, which will call all supported version control prompt functions, including git, Mercurial and Subversion.
 
 Example
 --------

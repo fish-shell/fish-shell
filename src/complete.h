@@ -198,7 +198,7 @@ class completion_receiver_t {
     const size_t limit_;
 };
 
-enum complete_option_type_t {
+enum complete_option_type_t : uint8_t {
     option_type_args_only,    // no option
     option_type_short,        // -x
     option_type_single_long,  // -foo

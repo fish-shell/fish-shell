@@ -8,6 +8,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
+#ifdef __APPLE__
+// This include is required on macOS 10.10 for locale_t
+#include <xlocale.h>
+#endif
 
 #include <ctime>
 #include <functional>

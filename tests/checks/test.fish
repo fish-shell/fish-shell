@@ -63,30 +63,25 @@ test -x /usr/bin/go /usr/local/bin/go
 # Test `test` date comparison logic for dates older than epoch
 touch -m -t 197001010000 epoch
 touch -m -t 190212112045 old
-touch -m -t 190112112040 oldest
 touch -m -t 203801080314 newest
 
 # Some filesystem do not support dates older than epoch, so silently skip this test - there's no
 # guarantee that an FS supports pre-epoch timestamps and lxfs (virtual WSLv1 fs) doesn't.
-if not path mtime oldest epoch | string match -qr -- '^[^-]'
-    test oldest -ot old || echo bad ot 1
+if not path mtime epoch | string match -qr -- '^[^-]'
     test newest -nt old || echo bad nt
-    test old -ot oldest && echo bad ot 2
     test epoch -nt newest && echo bad nt
 end
 
-for file in epoch old oldest newest
+for file in epoch old newest
     test $file -nt nonexist && echo good nt || echo $file: bad nt;
 end
 #CHECK: good nt
 #CHECK: good nt
 #CHECK: good nt
-#CHECK: good nt
 
-for file in epoch old oldest newest
+for file in epoch old newest
     test nonexist -ot $file && echo good ot || echo $file: bad ot;
 end
-#CHECK: good ot
 #CHECK: good ot
 #CHECK: good ot
 #CHECK: good ot
@@ -98,4 +93,4 @@ test epoch -ef epochlink && echo good ef || echo bad ef
 test epoch -ef old && echo bad ef || echo good ef
 #CHECK: good ef
 
-rm -f epoch old oldest newest epochlink
+rm -f epoch old newest epochlink

@@ -599,7 +599,7 @@ For more, see :ref:`Functions <syntax-function>`.
 
 .. [#] There is a function called :doc:`alias <cmds/alias>`, but it's just a shortcut to make functions.
 
-.. [#] fish also provides :ref:`abbrevisations <interactive-abbreviations>`, through the :ref:`abbr <cmd-abbr>` command.
+.. [#] fish also provides :ref:`abbreviations <abbreviations>`, through the :ref:`abbr <cmd-abbr>` command.
 
 Loops
 -----

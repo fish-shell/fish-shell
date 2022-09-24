@@ -28,12 +28,24 @@ Notable improvements and fixes
 - It is now possible to specify multiple scopes for ``set -e`` and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
 - A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
 - `status current-commandline` has been added and retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
+- Abbrevations are more flexible:
+
+  - They may optionally replace tokens anywhere on the command line, instead of only commands
+  - Matching tokens may be described using a regular expression instead of a literal word
+  - The replacement text may be produced by a fish function, instead of a literal word
+  - They may optionally only trigger after space, or after enter
+  - They may optionally run "quietly," without visibly modifying the command line
+  - They may position the cursor anywhere in the expansion, instead of at the end
+
+  See the documentation for more.
+
 
 Deprecations and removed features
 ---------------------------------
 - The difference between ``\xAB`` and ``\XAB`` has been removed. Before, ``\x`` would do the same thing as ``\X`` except that it would error if the value was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`1352`).
 - The ``fish_git_prompt`` will now only turn on features if the corresponding boolean variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, e.g. via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
   For example, ``set -g __fish_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), now it turns it off.
+- Abbreviations are no longer stored in universal variables. Existing universal abbreviations are still imported, but new abbreviations should be added to ``config.fish``.
 
 Scripting improvements
 ----------------------

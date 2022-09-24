@@ -1,3 +1,3 @@
-for i in (seq 2000)
+for i in (seq 1000)
     command true
 end

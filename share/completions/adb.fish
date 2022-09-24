@@ -14,7 +14,10 @@ function __fish_adb_get_devices -d 'Run adb devices and parse output'
     set -l procs (ps -Ao comm= | string match 'adb')
     # Don't run adb devices unless the server is already started - it takes a while to init
     if set -q procs[1]
-        adb devices -l | string replace -rf '(\S+).*model:(\S+).*' '$1'\t'$2'
+        set -l token (commandline -opc)
+        if test $token[-1] = '-s'
+            adb devices -l | string replace -rf '(\S+).*model:(\S+).*' '$1'\t'$2'
+        end
     end
 end
 
@@ -93,9 +96,14 @@ end
 
 
 # Generic options, must come before command
-complete -n __fish_adb_no_subcommand -c adb -s s -x -a "(__fish_adb_get_devices)" -d 'Device to communicate with'
-complete -n __fish_adb_no_subcommand -c adb -s d -d 'Communicate with first USB device'
-complete -n __fish_adb_no_subcommand -c adb -s e -d 'Communicate with emulator'
+complete -n __fish_adb_no_subcommand -c adb -s a -d 'Listen on all network interfaces'
+complete -n __fish_adb_no_subcommand -c adb -s d -d 'Use first USB device'
+complete -n __fish_adb_no_subcommand -c adb -s e -d 'Use first TCP/IP device'
+complete -n __fish_adb_no_subcommand -c adb -s s -x -a "(__fish_adb_get_devices)" -d 'Use device with given serial'
+complete -n __fish_adb_no_subcommand -c adb -s t -d 'Use device with given transport id'
+complete -n __fish_adb_no_subcommand -c adb -s H -d 'Name of adb server host'
+complete -n __fish_adb_no_subcommand -c adb -s P -d 'Port of adb server'
+complete -n __fish_adb_no_subcommand -c adb -s L -d 'Listen on given socket for adb server'
 
 # Commands
 complete -f -n __fish_adb_no_subcommand -c adb -a connect -d 'Connect to device'

@@ -955,6 +955,7 @@ static void term_fix_modes(struct termios *modes) {
 
     // We ignore these anyway, so there is no need to sacrifice a character.
     modes->c_cc[VSUSP] = disabling_char;
+    modes->c_cc[VQUIT] = disabling_char;
 }
 
 static void term_fix_external_modes(struct termios *modes) {

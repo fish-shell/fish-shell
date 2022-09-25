@@ -39,7 +39,7 @@ static const wchar_t *ctrl_symbolic_names[] = {
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, L"\\a",
     L"\\b",  L"\\t",  L"\\n",  L"\\v",  L"\\f",  L"\\r",  nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, L"\\e",  nullptr, nullptr, nullptr, nullptr};
+    nullptr, nullptr, nullptr, L"\\e",  L"\\x1c", nullptr, nullptr, nullptr};
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
 static bool should_exit(wchar_t wc) {

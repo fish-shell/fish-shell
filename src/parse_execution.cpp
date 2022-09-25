@@ -393,13 +393,9 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
     null_output_stream_t outs;
     string_output_stream_t errs;
     io_streams_t streams(outs, errs);
-    int err_code = 0;
-    maybe_t<int> err = builtin_function(*parser, streams, arguments, pstree, statement);
-    if (err) {
-        err_code = err.value();
-        parser->libdata().status_count++;
-        parser->set_last_statuses(statuses_t::just(err_code));
-    }
+    int err_code = builtin_function(*parser, streams, arguments, pstree, statement);
+    parser->libdata().status_count++;
+    parser->set_last_statuses(statuses_t::just(err_code));
 
     const wcstring &errtext = errs.contents();
     if (!errtext.empty()) {

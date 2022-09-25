@@ -118,12 +118,11 @@ static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden)
 
     for (i = 0; i < path_list.size(); i++) {
         const wcstring &ndir_str = path_list.at(i);
-        dir_t dir(ndir_str);
+        dir_iter_t dir(ndir_str);
         if (!dir.valid()) continue;
 
-        wcstring name;
-        while (dir.read(name)) {
-            const wchar_t *fn = name.c_str();
+        while (const auto *entry = dir.next()) {
+            const wchar_t *fn = entry->name.c_str();
             const wchar_t *suffix;
             if (!get_hidden && fn[0] == L'_') continue;
 

@@ -260,15 +260,6 @@ class dir_iter_t : noncopyable_t {
     entry_t entry_;
 };
 
-/// RAII wrapper for DIR*
-struct dir_t {
-    DIR *dir;
-    bool valid() const;
-    bool read(wcstring &name) const;
-    dir_t(const wcstring &path);
-    ~dir_t();
-};
-
 #ifndef HASH_FILE_ID
 #define HASH_FILE_ID 1
 namespace std {

@@ -586,42 +586,39 @@ class wildcard_expander_t {
         wcstring unique_hierarchy;
         wcstring abs_unique_hierarchy = start_point;
 
-        bool stop_descent = false;
-        DIR *dir;
-        while (!stop_descent && (dir = wopendir(abs_unique_hierarchy))) {
+        for (;;) {
             // We keep track of the single unique_entry entry. If we get more than one, it's not
             // unique and we stop the descent.
             wcstring unique_entry;
-
-            bool child_is_dir;
-            wcstring child_entry;
-            while (wreaddir_resolving(dir, abs_unique_hierarchy, child_entry, &child_is_dir)) {
-                if (child_entry.empty() || child_entry.at(0) == L'.') {
+            dir_iter_t dir(abs_unique_hierarchy);
+            if (!dir.valid()) {
+                break;
+            }
+            while (const auto *entry = dir.next()) {
+                if (entry->name.empty() || entry->name.at(0) == L'.') {
                     continue;  // either hidden, or . and .. entries -- skip them
-                } else if (child_is_dir && unique_entry.empty()) {
-                    unique_entry = child_entry;  // first candidate
+                }
+                if (entry->is_dir() && unique_entry.empty()) {
+                    unique_entry = entry->name;  // first candidate
                 } else {
                     // We either have two or more candidates, or the child is not a directory. We're
                     // done.
-                    stop_descent = true;
+                    unique_entry.clear();
                     break;
                 }
             }
 
             // We stop if we got two or more entries; also stop if we got zero or were interrupted
             if (unique_entry.empty() || interrupted_or_overflowed()) {
-                stop_descent = true;
+                break;
             }
 
-            if (!stop_descent) {
-                // We have an entry in the unique hierarchy!
-                append_path_component(unique_hierarchy, unique_entry);
-                unique_hierarchy.push_back(L'/');
+            // We have an entry in the unique hierarchy!
+            append_path_component(unique_hierarchy, unique_entry);
+            unique_hierarchy.push_back(L'/');
 
-                append_path_component(abs_unique_hierarchy, unique_entry);
-                abs_unique_hierarchy.push_back(L'/');
-            }
-            closedir(dir);
+            append_path_component(abs_unique_hierarchy, unique_entry);
+            abs_unique_hierarchy.push_back(L'/');
         }
         return unique_hierarchy;
     }

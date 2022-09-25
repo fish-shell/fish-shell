@@ -440,7 +440,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     const bool need_directory = expand_flags & expand_flag::directories_only;
     // Fast path: If we need directories, and we already know it is one,
     // and we don't need to do anything else, just return it.
-    // This is a common case for cd completions, and removes the `stat` entirely in case the system supports it.
+    // This is a common case for cd completions, and removes the `stat` entirely in case the system
+    // supports it.
     if (known_dir && !executables_only && !(expand_flags & expand_flag::gen_descriptions)) {
         return wildcard_complete(filename + L'/', wc, const_desc(L""), out, expand_flags,
                                  COMPLETE_NO_SPACE) == wildcard_result_t::match;
@@ -626,7 +627,8 @@ class wildcard_expander_t {
     }
 
     void try_add_completion_result(const wcstring &filepath, const wcstring &filename,
-                                   const wcstring &wildcard, const wcstring &prefix, bool known_dir) {
+                                   const wcstring &wildcard, const wcstring &prefix,
+                                   bool known_dir) {
         // This function is only for the completions case.
         assert(this->flags & expand_flag::for_completions);
 
@@ -738,7 +740,8 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
                 // for example, cd ../<tab> should complete "without resolving symlinks".
                 path = normalize_path(path);
             }
-            while (wreaddir_resolving(dir, path, next, need_dir ? &is_dir : nullptr) && !interrupted_or_overflowed()) {
+            while (wreaddir_resolving(dir, path, next, need_dir ? &is_dir : nullptr) &&
+                   !interrupted_or_overflowed()) {
                 if (need_dir && !is_dir) continue;
                 if (!next.empty() && next.at(0) != L'.') {
                     this->try_add_completion_result(base_dir + next, next, L"", prefix, is_dir);

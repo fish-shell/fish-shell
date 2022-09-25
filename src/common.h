@@ -261,6 +261,11 @@ bool contains(const Col &col, const T2 &val) {
     return std::find(std::begin(col), std::end(col), val) != std::end(col);
 }
 
+template <typename T1, typename T2>
+bool contains(std::initializer_list<T1> col, const T2 &val) {
+    return std::find(std::begin(col), std::end(col), val) != std::end(col);
+}
+
 /// Append a vector \p donator to the vector \p receiver.
 template <typename T>
 void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {

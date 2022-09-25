@@ -1707,6 +1707,93 @@ static void test_is_sorted_by_name() {
     static_assert(!is_sorted_by_name(not_sorted), "is_sorted_by_name failure");
 }
 
+void test_dir_iter() {
+    dir_iter_t baditer(L"/definitely/not/a/valid/directory/for/sure");
+    do_test(!baditer.valid());
+    do_test(baditer.error() == ENOENT || baditer.error() == EACCES);
+    do_test(baditer.next() == nullptr);
+
+    char t1[] = "/tmp/fish_test_dir_iter.XXXXXX";
+    const std::string basepathn = mkdtemp(t1);
+    const wcstring basepath = str2wcstring(basepathn);
+    auto makepath = [&](const wcstring &s) { return wcs2string(basepath + L"/" + s); };
+
+    const wcstring dirname = L"dir";
+    const wcstring regname = L"reg";
+    const wcstring reglinkname = L"reglink";    // link to regular file
+    const wcstring dirlinkname = L"dirlink";    // link to directory
+    const wcstring badlinkname = L"badlink";    // link to nowhere
+    const wcstring selflinkname = L"selflink";  // link to self
+    const wcstring fifoname = L"fifo";
+    const wcstring_list_t names = {dirname,     regname,      reglinkname, dirlinkname,
+                                   badlinkname, selflinkname, fifoname};
+
+    const auto is_link_name = [&](const wcstring &name) -> bool {
+        return contains({reglinkname, dirlinkname, badlinkname, selflinkname}, name);
+    };
+
+    // Make our different file types
+    int ret = mkdir(makepath(dirname).c_str(), 0700);
+    do_test(ret == 0);
+    ret = open(makepath(regname).c_str(), O_CREAT | O_WRONLY, 0600);
+    do_test(ret >= 0);
+    close(ret);
+    ret = symlink(makepath(regname).c_str(), makepath(reglinkname).c_str());
+    do_test(ret == 0);
+    ret = symlink(makepath(dirname).c_str(), makepath(dirlinkname).c_str());
+    do_test(ret == 0);
+    ret = symlink("/this/is/an/invalid/path", makepath(badlinkname).c_str());
+    do_test(ret == 0);
+    ret = symlink(makepath(selflinkname).c_str(), makepath(selflinkname).c_str());
+    do_test(ret == 0);
+    ret = mkfifo(makepath(fifoname).c_str(), 0600);
+    do_test(ret == 0);
+
+    dir_iter_t iter1(basepath);
+    do_test(iter1.valid());
+    do_test(iter1.error() == 0);
+    size_t seen = 0;
+    while (const auto *entry = iter1.next()) {
+        seen += 1;
+        do_test(entry->name != L"." && entry->name != L"..");
+        do_test(contains(names, entry->name));
+        maybe_t<dir_entry_type_t> expected{};
+        if (entry->name == dirname) {
+            expected = dir_entry_type_t::dir;
+        } else if (entry->name == regname) {
+            expected = dir_entry_type_t::reg;
+        } else if (entry->name == reglinkname) {
+            expected = dir_entry_type_t::reg;
+        } else if (entry->name == dirlinkname) {
+            expected = dir_entry_type_t::dir;
+        } else if (entry->name == badlinkname) {
+            expected = none();
+        } else if (entry->name == selflinkname) {
+            expected = dir_entry_type_t::lnk;
+        } else if (entry->name == fifoname) {
+            expected = dir_entry_type_t::fifo;
+        } else {
+            err(L"Unexpected file type");
+            continue;
+        }
+        // Links should never have a fast type if we are resolving them, since we cannot resolve a
+        // symlink from readdir.
+        if (is_link_name(entry->name)) {
+            do_test(entry->fast_type() == none());
+        }
+        // If we have a fast type, it should be correct.
+        do_test(entry->fast_type() == none() || entry->fast_type() == expected);
+        do_test(entry->check_type() == expected);
+    }
+    do_test(seen == names.size());
+
+    // Clean up.
+    for (const auto &name : names) {
+        (void)unlink(makepath(name).c_str());
+    }
+    (void)rmdir(basepathn.c_str());
+}
+
 static void test_utility_functions() {
     say(L"Testing utility functions");
     test_wcsfilecmp();
@@ -6947,6 +7034,7 @@ struct test_comparator_t {
 #define TEST_GROUP(x) x
 static const test_t s_tests[]{
     {TEST_GROUP("utility_functions"), test_utility_functions},
+    {TEST_GROUP("dir_iter"), test_dir_iter},
     {TEST_GROUP("string_split"), test_split_string_tok},
     {TEST_GROUP("wwrite_to_fd"), test_wwrite_to_fd},
     {TEST_GROUP("env_vars"), test_env_vars},

@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #ifdef __APPLE__
 // This include is required on macOS 10.10 for locale_t
@@ -161,6 +162,102 @@ struct file_id_t {
 
    private:
     int compare_file_id(const file_id_t &rhs) const;
+};
+
+/// Types of files that may be in a directory.
+enum class dir_entry_type_t : uint8_t {
+    fifo = 1,  // FIFO file
+    chr,       // character device
+    dir,       // directory
+    blk,       // block device
+    reg,       // regular file
+    lnk,       // symlink
+    sock,      // socket
+    whiteout,  // whiteout (from BSD)
+};
+
+/// Class for iterating over a directory, wrapping readdir().
+/// This allows enumerating the contents of a directory, exposing the file type if the filesystem
+/// itself exposes that from readdir(). stat() is incurred only if necessary: if the entry is a
+/// symlink, or if the caller asks for the stat buffer.
+/// Symlinks are followed.
+class dir_iter_t : noncopyable_t {
+   public:
+    struct entry_t;
+
+    /// Open a directory at a given path. On failure, \p error() will return the error code.
+    /// Note opendir is guaranteed to set close-on-exec by POSIX (hooray).
+    explicit dir_iter_t(const wcstring &path);
+
+    /// Advance this iterator.
+    /// \return a pointer to the entry, or nullptr if the entry is finished, or an error occurred.
+    /// The returned pointer is only valid until the next call to next().
+    const entry_t *next();
+
+    /// \return the errno value for the last error, or 0 if none.
+    int error() const { return error_; }
+
+    /// \return if we are valid: successfully opened a directory.
+    bool valid() const { return dir_ != nullptr; }
+
+    /// \return the underlying file descriptor, or -1 if invalid.
+    int fd() const { return dir_ ? dirfd(dir_) : -1; }
+
+    ~dir_iter_t();
+    dir_iter_t(dir_iter_t &&);
+    dir_iter_t &operator=(dir_iter_t &&);
+
+    /// An entry returned by dir_iter_t.
+    struct entry_t : noncopyable_t {
+        /// File name of this entry.
+        wcstring name{};
+
+        /// inode of this entry.
+        ino_t inode{};
+
+        /// \return the type of this entry if it is already available, otherwise none().
+        maybe_t<dir_entry_type_t> fast_type() const { return type_; }
+
+        /// \return the type of this entry, falling back to stat() if necessary.
+        /// If stat() fails because the file has disappeared, this will return none().
+        /// If stat() fails because of a broken symlink, this will return type lnk.
+        maybe_t<dir_entry_type_t> check_type() const;
+
+        /// \return whether this is a directory. This may call stat().
+        bool is_dir() const { return check_type() == dir_entry_type_t::dir; }
+
+        /// \return the stat buff for this entry, invoking stat() if necessary.
+        const maybe_t<struct stat> &stat() const;
+
+       private:
+        // Reset our fields.
+        void reset();
+
+        // Populate our stat buffer, and type. Errors are silently ignored.
+        void do_stat() const;
+
+        // Stat buff for this entry, or none if not yet computed.
+        mutable maybe_t<struct stat> stat_{};
+
+        // The type of the entry. This is initially none; it may be populated eagerly via readdir()
+        // on some filesystems, or later via stat(). If stat() fails, the error is silently ignored
+        // and the type is left as none(). Note this is an unavoidable race.
+        mutable maybe_t<dir_entry_type_t> type_{};
+
+        // fd of the DIR*, used for fstatat().
+        int dirfd_{-1};
+
+        entry_t();
+        ~entry_t();
+        entry_t(entry_t &&) = default;
+        entry_t &operator=(entry_t &&) = default;
+        friend class dir_iter_t;
+    };
+
+   private:
+    DIR *dir_{nullptr};
+    int error_{0};
+    entry_t entry_;
 };
 
 /// RAII wrapper for DIR*

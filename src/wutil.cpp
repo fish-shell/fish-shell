@@ -155,6 +155,179 @@ DIR *wopendir(const wcstring &name) {
     return opendir(tmp.c_str());
 }
 
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+static maybe_t<dir_entry_type_t> dirent_type_to_entry_type(uint8_t dt) {
+    switch (dt) {
+        case DT_FIFO:
+            return dir_entry_type_t::fifo;
+        case DT_CHR:
+            return dir_entry_type_t::chr;
+        case DT_DIR:
+            return dir_entry_type_t::dir;
+        case DT_BLK:
+            return dir_entry_type_t::blk;
+        case DT_REG:
+            return dir_entry_type_t::reg;
+        case DT_LNK:
+            return dir_entry_type_t::lnk;
+        case DT_SOCK:
+            return dir_entry_type_t::sock;
+        case DT_WHT:
+            return dir_entry_type_t::whiteout;
+        case DT_UNKNOWN:
+        default:
+            return none();
+    }
+}
+#endif
+
+static maybe_t<dir_entry_type_t> stat_mode_to_entry_type(mode_t m) {
+    switch (m & S_IFMT) {
+        case S_IFIFO:
+            return dir_entry_type_t::fifo;
+        case S_IFCHR:
+            return dir_entry_type_t::chr;
+        case S_IFDIR:
+            return dir_entry_type_t::dir;
+        case S_IFBLK:
+            return dir_entry_type_t::blk;
+        case S_IFREG:
+            return dir_entry_type_t::reg;
+        case S_IFLNK:
+            return dir_entry_type_t::lnk;
+        case S_IFSOCK:
+            return dir_entry_type_t::sock;
+#if defined(S_IFWHT)
+        case S_IFWHT:
+            return dir_entry_type_t::whiteout;
+#endif
+        default:
+            return none();
+    }
+}
+
+dir_iter_t::entry_t::entry_t() = default;
+dir_iter_t::entry_t::~entry_t() = default;
+
+void dir_iter_t::entry_t::reset() {
+    this->name.clear();
+    this->inode = {};
+    this->type_.reset();
+    this->stat_.reset();
+}
+
+maybe_t<dir_entry_type_t> dir_iter_t::entry_t::check_type() const {
+    // Call stat if needed to populate our type, swallowing errors.
+    if (!this->type_) {
+        this->do_stat();
+    }
+    return this->type_;
+}
+
+const maybe_t<struct stat> &dir_iter_t::entry_t::stat() const {
+    if (!stat_) {
+        (void)this->do_stat();
+    }
+    return stat_;
+}
+
+void dir_iter_t::entry_t::do_stat() const {
+    // We want to set both our type and our stat buffer.
+    // If we follow symlinks and stat() errors with a bad symlink, set the type to link, but do not
+    // populate the stat buffer.
+    if (this->dirfd_ < 0) {
+        return;
+    }
+    std::string narrow = wcs2string(this->name);
+    struct stat s {};
+    if (fstatat(this->dirfd_, narrow.c_str(), &s, 0) == 0) {
+        this->stat_ = s;
+        this->type_ = stat_mode_to_entry_type(s.st_mode);
+    } else {
+        switch (errno) {
+            case ELOOP:
+                this->type_ = dir_entry_type_t::lnk;
+                break;
+
+            case EACCES:
+            case EIO:
+            case ENOENT:
+            case ENOTDIR:
+            case ENAMETOOLONG:
+                // These are "expected" errors.
+                this->type_ = none();
+                break;
+
+            default:
+                wperror(L"fstatat");
+                break;
+        }
+    }
+}
+
+dir_iter_t::dir_iter_t(const wcstring &path) {
+    dir_ = wopendir(path);
+    if (!dir_) {
+        error_ = errno;
+        return;
+    }
+    entry_.dirfd_ = dirfd(dir_);
+}
+
+dir_iter_t::dir_iter_t(dir_iter_t &&rhs) {
+    // Steal the fields; ensure rhs no longer has FILE* and forgets its fd.
+    this->dir_ = rhs.dir_;
+    this->error_ = rhs.error_;
+    this->entry_ = std::move(rhs.entry_);
+    rhs.dir_ = nullptr;
+    rhs.entry_.dirfd_ = -1;
+}
+
+dir_iter_t &dir_iter_t::operator=(dir_iter_t &&rhs) {
+    if (this->dir_) {
+        (void)closedir(this->dir_);
+    }
+    this->dir_ = rhs.dir_;
+    this->error_ = rhs.error_;
+    this->entry_ = std::move(rhs.entry_);
+    rhs.dir_ = nullptr;
+    rhs.entry_.dirfd_ = -1;
+    return *this;
+}
+
+dir_iter_t::~dir_iter_t() {
+    if (dir_) {
+        (void)closedir(dir_);
+    }
+}
+
+const dir_iter_t::entry_t *dir_iter_t::next() {
+    if (!dir_) {
+        return nullptr;
+    }
+    errno = 0;
+    struct dirent *dent = readdir(dir_);
+    if (!dent) {
+        error_ = errno;
+        return nullptr;
+    }
+    // Skip . and ..
+    if (!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, "..")) {
+        return next();
+    }
+    entry_.reset();
+    entry_.name = str2wcstring(dent->d_name);
+    entry_.inode = dent->d_ino;
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+    auto type = dirent_type_to_entry_type(dent->d_type);
+    // Do not store symlinks as we will need to resolve them.
+    if (type != dir_entry_type_t::lnk) {
+        entry_.type_ = type;
+    }
+#endif
+    return &entry_;
+}
+
 dir_t::dir_t(const wcstring &path) {
     const cstring tmp = wcs2string(path);
     this->dir = opendir(tmp.c_str());

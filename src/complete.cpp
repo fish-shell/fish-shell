@@ -879,7 +879,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
                             // Only override a true last_option_requires_param value with a false one
                             if (last_option_requires_param.has_value()) {
                                 last_option_requires_param =
-                                    last_option_requires_param && o.result_mode.requires_param;
+                                    *last_option_requires_param && o.result_mode.requires_param;
                             } else {
                                 last_option_requires_param = o.result_mode.requires_param;
                             }

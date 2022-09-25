@@ -256,10 +256,10 @@ bool posix_spawner_t::check_fail(int err) {
 }
 
 posix_spawner_t::~posix_spawner_t() {
-    if (attr_) {
+    if (attr_.has_value()) {
         posix_spawnattr_destroy(this->attr());
     }
-    if (actions_) {
+    if (actions_.has_value()) {
         posix_spawn_file_actions_destroy(this->actions());
     }
 }

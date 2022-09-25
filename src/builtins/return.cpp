@@ -96,8 +96,16 @@ maybe_t<int> builtin_return(parser_t &parser, io_streams_t &streams, const wchar
         }
     }
 
-    // If we're not in a function, exit the current script,
-    // but not an interactive shell.
+    // *nix does not support negative return values, but our `return` builtin happily accepts being
+    // called with negative literals (e.g. `return -1`).
+    // Map negative values to (256 - their absolute value). This prevents `return -1` from
+    // evaluating to a `$status` of 0 and keeps us from running into undefined behavior by trying to
+    // left shift a negative value in W_EXITCODE().
+    if (retval < 0) {
+        retval = 256 - (std::abs(retval) % 256);
+    }
+
+    // If we're not in a function, exit the current script (but not an interactive shell).
     if (!has_function_block) {
         if (!parser.libdata().is_interactive) {
             parser.libdata().exit_current_script = true;

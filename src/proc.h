@@ -94,6 +94,9 @@ class proc_status_t {
 
     /// Construct directly from an exit code.
     static proc_status_t from_exit_code(int ret) {
+        assert(ret >= 0 && "trying to create proc_status_t from failed wait{,id,pid}() call"
+                " or invalid builtin exit code!");
+
         // Some paranoia.
         constexpr int zerocode = w_exitcode(0, 0);
         static_assert(WIFEXITED(zerocode), "Synthetic exit status not reported as exited");

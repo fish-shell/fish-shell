@@ -472,6 +472,9 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
         if (code == 0 && !builtin_ret.has_value()) {
             return proc_status_t::empty();
         }
+        if (code < 0) {
+            FLOGF(warning, "builtin %ls returned invalid exit code %d", cmdname.c_str(), code);
+        }
         return proc_status_t::from_exit_code(code);
     }
 

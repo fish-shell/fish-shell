@@ -253,35 +253,31 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
             }
         } else {
             // We do not end with a slash; it does not have to be a directory.
-            DIR *dir = nullptr;
             const wcstring dir_name = wdirname(abs_path);
             const wcstring filename_fragment = wbasename(abs_path);
             if (dir_name == L"/" && filename_fragment == L"/") {
                 // cd ///.... No autosuggestion.
                 return true;
-            } else if ((dir = wopendir(dir_name))) {
-                cleanup_t cleanup_dir([&] { closedir(dir); });
+            }
 
+            dir_iter_t dir(dir_name);
+            if (dir.valid()) {
                 // Check if we're case insensitive.
                 const bool do_case_insensitive =
-                    fs_is_case_insensitive(dir_name, dirfd(dir), case_sensitivity_cache);
+                    fs_is_case_insensitive(dir_name, dir.fd(), case_sensitivity_cache);
 
-                // We opened the dir_name; look for a string where the base name prefixes it Don't
-                // ask for the is_dir value unless we care, because it can cause extra filesystem
-                // access.
-                wcstring ent;
-                bool is_dir = false;
-                while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : nullptr)) {
+                // We opened the dir_name; look for a string where the base name prefixes it.
+                while (const auto *entry = dir.next()) {
                     if (ctx.check_cancel()) return false;
 
                     // Maybe skip directories.
-                    if (require_dir && !is_dir) {
+                    if (require_dir && !entry->is_dir()) {
                         continue;
                     }
 
-                    if (string_prefixes_string(filename_fragment, ent) ||
+                    if (string_prefixes_string(filename_fragment, entry->name) ||
                         (do_case_insensitive &&
-                         string_prefixes_string_case_insensitive(filename_fragment, ent))) {
+                         string_prefixes_string_case_insensitive(filename_fragment, entry->name))) {
                         return true;
                     }
                 }

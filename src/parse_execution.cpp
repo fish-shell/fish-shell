@@ -1021,7 +1021,8 @@ end_execution_reason_t parse_execution_context_t::determine_redirections(
         redirection_spec_t spec{oper->fd, oper->mode, std::move(target)};
 
         // Validate this spec.
-        if (spec.mode == redirection_mode_t::fd && !spec.is_close() && !spec.get_target_as_fd()) {
+        if (spec.mode == redirection_mode_t::fd && !spec.is_close() &&
+                !spec.get_target_as_fd().has_value()) {
             const wchar_t *fmt =
                 _(L"Requested redirection to '%ls', which is not a valid file descriptor");
             return report_error(STATUS_INVALID_ARGS, redir_node, fmt, spec.target.c_str());
@@ -1095,7 +1096,7 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
     for (const ast::variable_assignment_t &variable_assignment : variable_assignment_list) {
         const wcstring &source = get_source(variable_assignment);
         auto equals_pos = variable_assignment_equals_pos(source);
-        assert(equals_pos);
+        assert(equals_pos.has_value());
         const wcstring variable_name = source.substr(0, *equals_pos);
         const wcstring expression = source.substr(*equals_pos + 1);
         completion_list_t expression_expanded;

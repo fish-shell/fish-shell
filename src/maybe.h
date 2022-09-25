@@ -134,8 +134,14 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     // return whether the receiver contains a value.
     bool has_value() const { return impl_.filled; }
 
-    // bool conversion indicates whether the receiver contains a value.
-    explicit operator bool() const { return impl_.filled; }
+    // A bool operator as a shortcut to test if the maybe_t has a value.
+    // Not enabled if the type T is already bool-convertible to prevent accidental misuse,
+    // otherwise the "typename std::enable_if<....>::type" evaluates to bool, giving us a definition
+    // of `explicit operator bool() const { ... }`
+    template <typename U = T> explicit operator
+    typename std::enable_if<!std::is_convertible<U, bool>::value, bool>::type() const {
+        return impl_.filled;
+    }
 
     // The default constructor constructs a maybe with no value.
     maybe_t() = default;
@@ -210,5 +216,19 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
 
     ~maybe_t() { reset(); }
 };
+
+// A specialization enabling bool conversion for maybe_t types *can't* be converted to boolean,
+// protecting against accidental misuse.
+//
+//
+// template <typename U>
+// class maybe_t<U, typename std::enable_if<std::is_convertible<U, bool>::value>::type> {
+//         // bool conversion indicates whether the receiver contains a value.
+//         // bool conversion is disabled when the type is maybe_t<bool> or maybe_t<int> to prevent
+//         // accidentally comparing `maybe_t<>.has_value()` instead of `*maybe_t<>`.
+//         template <typename U = T>
+//         typename <std::enable_if<std::is_integral<Integer>::value, bool>::type
+//         explicit operator bool() const { return impl_.filled; }
+// }
 
 #endif

@@ -123,7 +123,8 @@ bool job_t::posts_job_exit_events() const {
 }
 
 bool job_t::signal(int signal) {
-    if (auto pgid = group->get_pgid()) {
+    auto pgid = group->get_pgid();
+    if (pgid.has_value()) {
         if (killpg(*pgid, signal) == -1) {
             char buffer[512];
             snprintf(buffer, 512, "killpg(%d, %s)", *pgid, strsignal(signal));
@@ -475,7 +476,8 @@ static void generate_job_exit_events(const job_ref_t &j, std::vector<event_t> *o
     if (!j->from_event_handler() || !j->is_foreground()) {
         // job_exit events.
         if (j->posts_job_exit_events()) {
-            if (auto last_pid = j->get_last_pid()) {
+            auto last_pid = j->get_last_pid();
+            if (last_pid.has_value()) {
                 out_evts->push_back(event_t::job_exit(*last_pid, j->internal_job_id));
             }
         }
@@ -976,7 +978,7 @@ void hup_jobs(const job_list_t &jobs) {
     pid_t fish_pgrp = getpgrp();
     for (const auto &j : jobs) {
         auto pgid = j->get_pgid();
-        if (pgid && *pgid != fish_pgrp && !j->is_completed()) {
+        if (pgid.has_value() && *pgid != fish_pgrp && !j->is_completed()) {
             if (j->is_stopped()) {
                 j->signal(SIGCONT);
             }

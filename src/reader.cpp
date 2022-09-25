@@ -1103,7 +1103,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 
 /// Update the cursor position.
 void reader_data_t::update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos) {
-    if (new_pos) {
+    if (new_pos.has_value()) {
         el->set_position(*new_pos);
     }
     size_t buff_pos = el->position();

@@ -224,7 +224,7 @@ static size_t width_without_escapes(const wcstring &ins, size_t start_pos = 0) {
     size_t pos = start_pos;
     while ((pos = ins.find('\x1B', pos)) != std::string::npos) {
         auto len = escape_code_length(ins.c_str() + pos);
-        if (len) {
+        if (len.has_value()) {
             auto sub = ins.substr(pos, *len);
             for (auto c : sub) {
                 auto w = fish_wcwidth_visible(c);
@@ -1217,7 +1217,8 @@ static maybe_t<wcstring> interpret_escapes(const wcstring &arg) {
     const wchar_t *end = cursor + arg.size();
     while (cursor < end) {
         if (*cursor == L'\\') {
-            if (auto escape_len = read_unquoted_escape(cursor, &result, true, false)) {
+            auto escape_len = read_unquoted_escape(cursor, &result, true, false);
+            if (escape_len.has_value()) {
                 cursor += *escape_len;
             } else {
                 // Invalid escape.
@@ -1709,7 +1710,7 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
         size_t totallen = 0;
         while (l[pos + totallen] == L'\x1B') {
             auto len = escape_code_length(l.c_str() + pos + totallen);
-            if (!len) break;
+            if (!len.has_value()) break;
             totallen += *len;
         }
         return totallen;

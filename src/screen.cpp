@@ -268,7 +268,7 @@ size_t layout_cache_t::escape_code_length(const wchar_t *code) {
     if (esc_seq_len) return esc_seq_len;
 
     auto found = ::escape_code_length(code);
-    if (found) {
+    if (found.has_value()) {
         this->add_escape_code(wcstring(code, *found));
         esc_seq_len = *found;
     }

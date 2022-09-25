@@ -1346,7 +1346,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         // appending INTERNAL_SEPARATORs, so we have to handle them specially.
                         auto escape_chars = read_unquoted_escape(
                             input + input_position, &result, allow_incomplete, unescape_special);
-                        if (!escape_chars) {
+                        if (!escape_chars.has_value()) {
                             // A none() return indicates an error.
                             errored = true;
                         } else {

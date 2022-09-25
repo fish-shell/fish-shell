@@ -281,10 +281,13 @@ posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
     // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
     // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
     maybe_t<pid_t> desired_pgid = none();
-    if (auto pgid = j->group->get_pgid()) {
-        desired_pgid = *pgid;
-    } else if (j->processes.front()->leads_pgrp) {
-        desired_pgid = 0;
+    {
+        auto pgid = j->group->get_pgid();
+        if (pgid.has_value()) {
+            desired_pgid = *pgid;
+        } else if (j->processes.front()->leads_pgrp) {
+            desired_pgid = 0;
+        }
     }
 
     // Set the handling for job control signals back to the default.

@@ -21,6 +21,17 @@ quote() {
 
 for benchmark in "$BENCHMARKS_DIR"/*; do
     basename "$benchmark"
+    # If we have hyperfine, use it first to warm up the cache
+    if command -v hyperfine >/dev/null 2>&1; then
+        cmd1="$(quote "${FISH_PATH}") --no-config $(quote "$benchmark")"
+        if [ -n "$FISH2_PATH" ]; then
+            cmd2="$(quote "${FISH2_PATH}") --no-config $(quote "$benchmark")"
+            hyperfine --warmup 3 "$cmd1" "$cmd2"
+        else
+            hyperfine --warmup 3 "$cmd1"
+        fi
+    fi
+
     [ -n "$FISH2_PATH" ] && echo "$FISH_PATH"
     "${FISH_PATH}" --print-rusage-self "$benchmark" > /dev/null
     if [ -n "$FISH2_PATH" ]; then
@@ -28,14 +39,5 @@ for benchmark in "$BENCHMARKS_DIR"/*; do
         "${FISH2_PATH}" --print-rusage-self "$benchmark" > /dev/null
     fi
 
-    if command -v hyperfine >/dev/null 2>&1; then
-        cmd1="$(quote "${FISH_PATH}") --no-config $(quote "$benchmark")"
-        if [ -n "$FISH2_PATH" ]; then
-            cmd2="$(quote "${FISH2_PATH}") --no-config $(quote "$benchmark")"
-            hyperfine "$cmd1" "$cmd2"
-        else
-            hyperfine "$cmd1"
-        fi
-    fi
 done
 

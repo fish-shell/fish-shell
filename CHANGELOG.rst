@@ -3,14 +3,31 @@ fish 3.6.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
-- By default, :kbd:``Control-R`` now opens the command history in the pager, via the new special input function ``history-pager``.
+- By default, :kbd:``Control-R`` now opens the command history in the pager, via the new special input function ``history-pager`` (:issue:`9089`, :issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the "isearch" seen in other shells.
+- ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
+
+    > touch foo
+    > sleep 10
+    > path mtime --relative foo
+    10
+
+- ``string`` gained a new ``shorten`` subcommand to shorten strings to a given visible width (:issue:`9156`)::
+
+    > string shorten -m10 "Hello this is a long string"
+    Hello thi…
+
+- ``test`` aka ``[``: implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
+- Fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
+
+    checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
+    for a,b in y 1 z 3
+        ^~^
 
 Deprecations and removed features
 ---------------------------------
 
 Scripting improvements
 ----------------------
-- ``test`` aka ``[``: implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
 - ``argparse`` can now be used without option specifications, to allow using --min-args, --max-args or for commands that take no options (but might in future) (:issue:`9006`)::
 
     function my_copy
@@ -30,30 +47,13 @@ Scripting improvements
     $XDG_DATA_DIRS[4]: |/usr/share|
     $XDG_DATA_DIRS: originally inherited as |/home/alfa/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/|
 
-- ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
-
-    > touch foo
-    > sleep 10
-    > path mtime --relative foo
-    10
-
-- ``string`` gained a new ``shorten`` subcommand to shorten strings to a given visible width (:issue:`9156`)::
-
-    > string shorten -m10 "Hello this is a long string"
-    Hello thi…
-
-- ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
 - The read limit is now restored to the default when $fish_read_limit is unset (:issue:`9129`).
-- Fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
-
-    checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
-    for a,b in y 1 z 3
-        ^~^
 - ``math`` now actually handles division-by-zero while computing and gives it a bespoke error, as well as augmenting some errors with their extent (:issue:`9190`). This changes behavior in some limited cases. E.g.::
 
     math min 1 / 0, 5
 
   would previously print "5" because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite. Instead, ``math`` will now error out.
+- ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
 - ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
 - Builtins writing to a pipe or file was optimized. In particular printf no longer issues a separate ``write()`` syscall for every escaped character. (:issue:`9229`).
 
@@ -66,6 +66,8 @@ Interactive improvements
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
 - If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
 - Performance improvements to highlighting (:issue:`9180`) and the cd completions (:issue:`9220`) should make using fish more pleasant on slow systems.
+- Fish now disables the QUIT terminal sequence when it has the terminal. This frees up a key combination, often ctrl-backslash (``\x1c``) (:issue:`9234`).
+- Fish's vi mode no longer uses iTerm's proprietary escape sequences to signal cursor change, instead using the normal xterm-style sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
 
 
 Fixed Bugs

@@ -1,4 +1,4 @@
-function ___fish_toxenvs
+function __fish_toxenvs
     echo ALL
     tox --listenvs-all 2>/dev/null
 end

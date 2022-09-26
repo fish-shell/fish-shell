@@ -117,7 +117,7 @@ else
     complete -c ls -s g -d "Show group instead of owner in long format"
     complete -c ls -s n -d "Long format, numerical UIDs and GIDs"
     contains "$uname" FreeBSD NetBSD OpenBSD DragonFly
-    and complete -c ls -o o -d "Long format, show file flags" # annoying BSD
+    and complete -c ls -s o -d "Long format, show file flags" # annoying BSD
     or complete -c ls -s o -d "Long format, omit group names" # annoying POSIX
 
     complete -c ls -s A -d "Show hidden except . and .."

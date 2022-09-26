@@ -68,8 +68,6 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             # and it uses the xterm sequences.
             if set -q KONSOLE_PROFILE_NAME
                 set function __fish_cursor_konsole
-            else if set -q ITERM_PROFILE
-                set function __fish_cursor_1337
             else
                 set function __fish_cursor_xterm
             end

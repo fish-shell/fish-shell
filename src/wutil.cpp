@@ -104,41 +104,6 @@ bool wreaddir(DIR *dir, wcstring &out_name) {
     return true;
 }
 
-/// Wrapper for readdir that tries to only return directories.
-/// This is only supported on some (file)systems,
-/// and includes links,
-/// so the caller still needs to check.
-bool readdir_for_dirs(DIR *dir, std::string *out_name) {
-    struct dirent *result = nullptr;
-    while (!result) {
-        result = readdir(dir);
-        if (!result) break;
-
-#if HAVE_STRUCT_DIRENT_D_TYPE
-        switch (result->d_type) {
-            case DT_DIR:
-            case DT_LNK:
-            case DT_UNKNOWN: {
-                break;  // these may be directories
-            }
-            default: {
-                // these definitely aren't - skip
-                result = nullptr;
-                continue;
-            }
-        }
-#else
-        // We can't determine if it's a directory or not, so just return it.
-        break;
-#endif
-    }
-
-    if (result && out_name) {
-        *out_name = result->d_name;
-    }
-    return result != nullptr;
-}
-
 wcstring wgetcwd() {
     char cwd[PATH_MAX];
     char *res = getcwd(cwd, sizeof(cwd));
@@ -293,6 +258,12 @@ dir_iter_t &dir_iter_t::operator=(dir_iter_t &&rhs) {
     rhs.dir_ = nullptr;
     rhs.entry_.dirfd_ = -1;
     return *this;
+}
+
+void dir_iter_t::rewind() {
+    if (dir_) {
+        rewinddir(dir_);
+    }
 }
 
 dir_iter_t::~dir_iter_t() {

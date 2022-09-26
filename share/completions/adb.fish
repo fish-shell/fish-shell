@@ -171,7 +171,7 @@ complete -n '__fish_seen_subcommand_from backup' -c adb -o nosystem -d 'Exclude 
 complete -n '__fish_seen_subcommand_from backup' -c adb -f -a "(__fish_adb_list_packages)" -d 'Package(s) to backup'
 
 # reboot
-complete -n '__fish_seen_subcommand_from reboot' -c adb -x -a 'bootloader recovery'
+complete -n '__fish_seen_subcommand_from reboot' -c adb -x -a 'bootloader recovery fastboot'
 
 # forward
 complete -n '__fish_seen_subcommand_from forward' -c adb -l list -d 'List all forward socket connections'

@@ -43,67 +43,6 @@ const file_id_t kInvalidFileID{};
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 
-bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, bool *out_is_dir) {
-    struct dirent *result = readdir(dir);
-    if (!result) {
-        out_name.clear();
-        return false;
-    }
-
-    out_name = str2wcstring(result->d_name);
-    if (!out_is_dir) {
-        return true;
-    }
-
-    // The caller cares if this is a directory, so check.
-    bool is_dir = false;
-    // We may be able to skip stat, if the readdir can tell us the file type directly.
-    bool check_with_stat = true;
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
-    if (result->d_type == DT_DIR) {
-        // Known directory.
-        is_dir = true;
-        check_with_stat = false;
-    } else if (result->d_type == DT_LNK || result->d_type == DT_UNKNOWN) {
-        // We want to treat symlinks to directories as directories. Use stat to resolve it.
-        check_with_stat = true;
-    } else {
-        // Regular file.
-        is_dir = false;
-        check_with_stat = false;
-    }
-#endif  // HAVE_STRUCT_DIRENT_D_TYPE
-    if (check_with_stat) {
-        // We couldn't determine the file type from the dirent; check by stat'ing it.
-        cstring fullpath = wcs2string(dir_path);
-        if (!fullpath.empty()) {
-            // If the dir_path was empty, we just use the name.
-            // This ends up as a relative path which is fine.
-            fullpath.push_back('/');
-        }
-        fullpath.append(result->d_name);
-        struct stat buf;
-        if (stat(fullpath.c_str(), &buf) != 0) {
-            is_dir = false;
-        } else {
-            is_dir = S_ISDIR(buf.st_mode);
-        }
-    }
-    *out_is_dir = is_dir;
-    return true;
-}
-
-bool wreaddir(DIR *dir, wcstring &out_name) {
-    struct dirent *result = readdir(dir);
-    if (!result) {
-        out_name.clear();
-        return false;
-    }
-
-    out_name = str2wcstring(result->d_name);
-    return true;
-}
-
 wcstring wgetcwd() {
     char cwd[PATH_MAX];
     char *res = getcwd(cwd, sizeof(cwd));

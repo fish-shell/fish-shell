@@ -67,11 +67,6 @@ wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes 
 /// allowing 'cd' into a directory that may not exist; see #5341.
 wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path);
 
-/// Wide character version of readdir().
-bool wreaddir(DIR *dir, wcstring &out_name);
-bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, wcstring &out_name,
-                        bool *out_is_dir);
-
 /// Wide character version of dirname().
 std::wstring wdirname(std::wstring path);
 

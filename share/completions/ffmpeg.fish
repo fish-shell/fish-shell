@@ -284,7 +284,7 @@ function __fish_ffmpeg_complete_filter
     set -l filter_type all
     if string match -rq -- '^-(vf(ilter)?|f(ilter)?:v)' (__fish_ffmpeg_last_arg)
         set filter_type video
-    else if string match -rq -- '^-(af(ilter)?|f(ilter)?:a' (__fish_ffmpeg_last_arg)
+    else if string match -rq -- '^-(af(ilter)?|f(ilter)?:a)' (__fish_ffmpeg_last_arg)
         set filter_type audio
     end
 

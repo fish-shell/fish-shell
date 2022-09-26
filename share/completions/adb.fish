@@ -14,10 +14,7 @@ function __fish_adb_get_devices -d 'Run adb devices and parse output'
     set -l procs (ps -Ao comm= | string match 'adb')
     # Don't run adb devices unless the server is already started - it takes a while to init
     if set -q procs[1]
-        set -l token (commandline -opc)
-        if test $token[-1] = '-s'
-            adb devices -l | string replace -rf '(\S+).*model:(\S+).*' '$1'\t'$2'
-        end
+        adb devices -l | string replace -rf '(\S+).*model:(\S+).*' '$1'\t'$2'
     end
 end
 

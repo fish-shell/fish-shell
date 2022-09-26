@@ -34,10 +34,10 @@ The following options are available:
     Adds a short option to the completions list.
 
 **-l** or **--long-option** *LONG_OPTION*
-    Adds a GNU style long option to the completions list.
+    Adds a GNU-style long option to the completions list.
 
 **-o** or **--old-option** *LONG_OPTION*
-    Adds an old style long option to the completions list (see below for details).
+    Adds an old-style long option to the completions list (see below for details).
 
 **-a** or **--arguments** *ARGUMENTS*
     Adds the specified option arguments to the completions list.
@@ -76,9 +76,9 @@ Command specific tab-completions in ``fish`` are based on the notion of options 
 
 - Short options, like ``-a``. Short options are a single character long, are preceded by a single hyphen and can be grouped together (like ``-la``, which is equivalent to ``-l -a``). Option arguments may be specified by appending the option with the value (``-w32``), or, if ``--require-parameter`` is given, in the following parameter (``-w 32``).
 
-- Old style long options, like ``-Wall`` or ``-name``. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter (``-ao null``) or after a ``=`` (``-ao=null``).
+- Old-style long options, like ``-Wall`` or ``-name``. Old-style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter (``-ao null``) or after a ``=`` (``-ao=null``).
 
-- GNU style long options, like ``--colors``. GNU style long options can be more than one character long, are preceded by two hyphens, and can't be grouped together. Option arguments may be specified after a ``=`` (``--quoting-style=shell``), or, if ``--require-parameter`` is given, in the following parameter (``--quoting-style shell``).
+- GNU-style long options, like ``--colors``. GNU-style long options can be more than one character long, are preceded by two hyphens, and can't be grouped together. Option arguments may be specified after a ``=`` (``--quoting-style=shell``), or, if ``--require-parameter`` is given, in the following parameter (``--quoting-style shell``).
 
 Multiple commands and paths can be given in one call to define the same completions for multiple commands.
 
@@ -86,7 +86,7 @@ Multiple command switches and wrapped commands can also be given to define multi
 
 Invoking ``complete`` multiple times for the same command adds the new definitions on top of any existing completions defined for the command.
 
-When ``-a`` or ``--arguments`` is specified in conjunction with long, short, or old style options, the specified arguments are only completed as arguments for any of the specified options. If ``-a`` or ``--arguments`` is specified without any long, short, or old style options, the specified arguments are used when completing non-option arguments to the command (except when completing an option argument that was specified with ``-r`` or ``--require-parameter``).
+When ``-a`` or ``--arguments`` is specified in conjunction with long, short, or old-style options, the specified arguments are only completed as arguments for any of the specified options. If ``-a`` or ``--arguments`` is specified without any long, short, or old-style options, the specified arguments are used when completing non-option arguments to the command (except when completing an option argument that was specified with ``-r`` or ``--require-parameter``).
 
 Command substitutions found in ``ARGUMENTS`` should return a newline-separated list of arguments, and each argument may optionally have a tab character followed by the argument description. Description given this way override a description given with ``-d`` or ``--description``.
 
@@ -101,14 +101,14 @@ When ``complete`` is called without anything that would define or erase completi
 Examples
 --------
 
-The short style option ``-o`` for the ``gcc`` command needs a file argument:
+The short-style option ``-o`` for the ``gcc`` command needs a file argument:
 
 ::
 
     complete -c gcc -s o -r
 
 
-The short style option ``-d`` for the ``grep`` command requires one of ``read``, ``skip`` or ``recurse``:
+The short-style option ``-d`` for the ``grep`` command requires one of ``read``, ``skip`` or ``recurse``:
 
 ::
 

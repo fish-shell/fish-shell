@@ -2304,6 +2304,29 @@ complete -f -c git -n '__fish_git_using_command for-each-ref' -x -l contains -d 
 complete -f -c git -n '__fish_git_using_command for-each-ref' -x -l no-contains -d "Only list refs not containing the specified commit" -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command for-each-ref' -x -l ignore-case -d "Sorting and filtering refs are case insensitive"
 
+### subcommands supporting --sort (XXX: list may not be complete!)
+set -l sortcommands branch for-each-ref tag
+# A list of keys one could reasonably sort refs by. This isn't the list of all keys that
+# can be used as any git internal key for a ref may be used here, sorted by binary value.
+function __fish_git_sort_keys
+    echo -objectsize\tSize of branch or commit
+    echo -authordate\tWhen the latest commit was actually made
+    echo -commiterdate\tWhen the branch was last committed or rebased
+    echo -creatordate\tWhen the latest commit or tag was created
+    echo -creator\tThe name of the commit author
+    echo -objectname\tThe complete SHA1
+    echo -objectname:short\tThe shortest non-ambiguous SHA1
+    echo -refname\tThe complete, unambiguous git ref name
+    echo -refname:short\tThe shortest non-ambiguous ref name
+    echo -author\tThe name of the author of the latest commit
+    echo -committer\tThe name of the person who committed latest
+    echo -tagger\tThe name of the person who created the tag
+    echo -authoremail\tThe email of the author of the latest commit
+    echo -commiteremail\tThe email of the person who committed last
+    echo -taggeremail\tThe email of the person who created the tag
+end
+complete -f -c git -n "__fish_seen_subcommand_from $sortcommands" -l sort -d 'Sort results by' -a "(__fish_git_sort_keys)"
+
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n __fish_git_needs_command -a '(__fish_git_custom_commands)' -d 'Custom command'
 

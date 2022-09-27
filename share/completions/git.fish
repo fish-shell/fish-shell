@@ -2292,7 +2292,7 @@ complete -f -c git -n '__fish_git_using_command for-each-ref' -l count -d "Limit
 set -l for_each_ref_interpreters shell perl python tcl
 for intr in $for_each_ref_interpreters
     complete -f -c git -n '__fish_git_using_command for-each-ref' \
-        -n "not __fish_seen_argument_from --$for_each_ref_interpreters" \
+        -n "not __fish_seen_argument --$for_each_ref_interpreters" \
         -l $intr -d "%(fieldname) placeholders are $intr scripts"
 end
 complete -f -c git -n '__fish_git_using_command for-each-ref' -x -l format -d "Format string with %(fieldname) placeholders"

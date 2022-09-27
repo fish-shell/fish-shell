@@ -18,6 +18,10 @@ function __fish_adb_get_devices -d 'Run adb devices and parse output'
     end
 end
 
+function __fish_adb_get_tcpip_devices -d 'Get list of devices connected via TCP/IP'
+    __fish_adb_get_devices | string match -r '^\d+\.\d+\.\d+\.\d+:\d+\t.*'
+end
+
 function __fish_adb_run_command -d 'Runs adb with any -s parameters already given on the command line'
     set -l sopt
     set -l sopt_is_next
@@ -155,7 +159,7 @@ complete -n '__fish_seen_subcommand_from devices' -c adb -f
 complete -n '__fish_seen_subcommand_from devices' -c adb -s l -d 'Also list device qualifiers'
 
 # disconnect
-complete -n '__fish_seen_subcommand_from disconnect' -c adb -x -a "(__fish_adb_get_devices)" -d 'Device to disconnect'
+complete -n '__fish_seen_subcommand_from disconnect' -c adb -x -a "(__fish_adb_get_tcpip_devices)" -d 'Device to disconnect'
 
 # backup
 complete -n '__fish_seen_subcommand_from backup' -c adb -s f -d 'File to write backup data to'

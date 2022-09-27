@@ -316,9 +316,13 @@ void output_stream_t::append_narrow_buffer(const separated_buffer_t &buffer) {
 
 void output_stream_t::append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
                                              bool want_newline) {
-    append(s, len);
     if (type == separation_type_t::explicitly && want_newline) {
-        append(L'\n');
+        // Try calling "append" less - it might write() to an fd
+        wcstring buf{s, len};
+        buf.push_back(L'\n');
+        append(buf);
+    } else {
+        append(s, len);
     }
 }
 

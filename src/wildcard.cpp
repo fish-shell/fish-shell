@@ -587,6 +587,11 @@ class wildcard_expander_t {
         wcstring unique_hierarchy;
         wcstring abs_unique_hierarchy = start_point;
 
+        // Ensure we don't fall into a symlink loop.
+        // Ideally we would compare both devices and inodes, but devices require a stat call, so we
+        // use inodes exclusively.
+        std::unordered_set<ino_t> visited_inodes;
+
         for (;;) {
             // We keep track of the single unique_entry entry. If we get more than one, it's not
             // unique and we stop the descent.
@@ -599,7 +604,11 @@ class wildcard_expander_t {
                 if (entry->name.empty() || entry->name.at(0) == L'.') {
                     continue;  // either hidden, or . and .. entries -- skip them
                 }
-                if (entry->is_dir() && unique_entry.empty()) {
+                if (!visited_inodes.insert(entry->inode).second) {
+                    // Either we've visited this inode already or there's multiple files;
+                    // either way stop.
+                    break;
+                } else if (entry->is_dir() && unique_entry.empty()) {
                     unique_entry = entry->name;  // first candidate
                 } else {
                     // We either have two or more candidates, or the child is not a directory. We're

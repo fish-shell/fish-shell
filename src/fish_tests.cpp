@@ -3766,6 +3766,15 @@ static void test_autosuggest_suggest_special() {
         err(L"mkdir failed");
     }
 
+    // Ensure symlink don't cause us to chase endlessly.
+    if (system("mkdir -p test/autosuggest_test/has_loop/loopy")) {
+        err(L"mkdir failed");
+    }
+    (void)unlink("test/autosuggest_test/has_loop/loopy/loop");
+    if (symlink("../loopy", "test/autosuggest_test/has_loop/loopy/loop")) {
+        err(L"symlink failed");
+    }
+
     const wcstring wd = L"test/autosuggest_test";
 
     pwd_environment_t vars{};
@@ -3807,6 +3816,9 @@ static void test_autosuggest_suggest_special() {
 
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/start/", L"unique2/unique3/",
                                        vars, __LINE__);
+
+    perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/has_loop/", L"loopy/loop/", vars,
+                                       __LINE__);
 
     if (!pushd(wcs2string(wd).c_str())) return;
     perform_one_autosuggestion_cd_test(L"cd 0", L"foobar/", vars, __LINE__);

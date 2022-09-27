@@ -79,23 +79,6 @@ function __fish_adb_list_files
     __fish_adb_run_command find -H "$token*" -maxdepth 0 -type f 2\>/dev/null
 end
 
-function __fish_adb_completion_for_pull
-    set -l token (commandline -opc)
-    __fish_adb_list_files
-    if test (count $token) -gt 2
-        __fish_complete_path
-    end
-end
-
-function __fish_adb_completion_for_push
-    set -l token (commandline -opc)
-    __fish_complete_path
-    if test (count $token) -gt 2
-        __fish_adb_list_files
-    end
-end
-
-
 # Generic options, must come before command
 complete -n __fish_adb_no_subcommand -c adb -s a -d 'Listen on all network interfaces'
 complete -n __fish_adb_no_subcommand -c adb -s d -d 'Use first USB device'
@@ -191,8 +174,8 @@ complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick
 
 # commands that accept listing device files
 complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'
-complete -n '__fish_seen_subcommand_from pull' -c adb -f -a "(__fish_adb_completion_for_pull)" -d 'File on device'
-complete -n '__fish_seen_subcommand_from push' -c adb -f -a "(__fish_adb_completion_for_push)" -d 'File on device'
+complete -n '__fish_seen_subcommand_from pull' -c adb -F -a "(__fish_adb_list_files)" -d 'File on device'
+complete -n '__fish_seen_subcommand_from push' -c adb -F -a "(__fish_adb_list_files)" -d 'File on device'
 
 # logcat
 complete -n '__fish_seen_subcommand_from logcat' -c adb -f

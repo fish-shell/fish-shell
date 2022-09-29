@@ -1213,18 +1213,6 @@ static void test_parser() {
         err(L"Bad command substitution not reported as error");
     }
 
-    if (!(detect_argument_errors(L"foo\\xFF9") & PARSER_TEST_ERROR)) {
-        err(L"Bad escape not reported as error");
-    }
-
-    if (!(detect_argument_errors(L"foo(echo \\xFF9)") & PARSER_TEST_ERROR)) {
-        err(L"Bad escape in command substitution not reported as error");
-    }
-
-    if (!(detect_argument_errors(L"foo(echo (echo (echo \\xFF9)))") & PARSER_TEST_ERROR)) {
-        err(L"Bad escape in nested command substitution not reported as error");
-    }
-
     if (!detect_errors(L"false & ; and cat")) {
         err(L"'and' command after background not reported as error");
     }

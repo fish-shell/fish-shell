@@ -97,3 +97,8 @@ math 5 \X2b 5
 
 math 7 \x2b 7
 #CHECK: 14
+
+echo \xc3\xb6
+# CHECK: ö
+echo \Xc3\Xb6
+# CHECK: ö

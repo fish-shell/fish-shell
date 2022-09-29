@@ -1198,11 +1198,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                         if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
                         break;
                     }
-                    case L'x': {
-                        chars = 2;
-                        max_val = ASCII_MAX;
-                        break;
-                    }
+                    case L'x':
                     case L'X': {
                         byte_literal = true;
                         max_val = BYTE_MAX;
@@ -1239,7 +1235,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                         // that are valid on their own, which is true for UTF-8)
                         byte_buff.push_back(static_cast<char>(res));
                         result_char_or_none = none();
-                        if (input[in_pos] == L'\\' && input[in_pos + 1] == L'X') {
+                        if (input[in_pos] == L'\\'
+                            && (input[in_pos + 1] == L'X' || input[in_pos + 1] == L'x')) {
                             in_pos++;
                             continue;
                         }

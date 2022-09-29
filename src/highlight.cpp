@@ -604,10 +604,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                                 in_pos++;
                                 break;
                             }
-                            case L'x': {
-                                in_pos++;
-                                break;
-                            }
+                            case L'x':
                             case L'X': {
                                 max_val = BYTE_MAX;
                                 in_pos++;

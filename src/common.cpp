@@ -1149,161 +1149,185 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
     bool errored = false;
     size_t in_pos = 1;  // in_pos always tracks the next character to read (and therefore the number
                         // of characters read so far)
-    const wchar_t c = input[in_pos++];
-    switch (c) {
-        // A null character after a backslash is an error.
-        case L'\0': {
-            // Adjust in_pos to only include the backslash.
-            assert(in_pos > 0);
-            in_pos--;
 
-            // It's an error, unless we're allowing incomplete escapes.
-            if (!allow_incomplete) errored = true;
-            break;
-        }
-        // Numeric escape sequences. No prefix means octal escape, otherwise hexadecimal.
-        case L'0':
-        case L'1':
-        case L'2':
-        case L'3':
-        case L'4':
-        case L'5':
-        case L'6':
-        case L'7':
-        case L'u':
-        case L'U':
-        case L'x':
-        case L'X': {
-            long long res = 0;
-            size_t chars = 2;
-            int base = 16;
-            bool byte_literal = false;
-            wchar_t max_val = ASCII_MAX;
+    // For multibyte \X sequences.
+    std::string byte_buff;
+    while (!errored) {
+        const wchar_t c = input[in_pos++];
+        switch (c) {
+                // A null character after a backslash is an error.
+            case L'\0': {
+                // Adjust in_pos to only include the backslash.
+                assert(in_pos > 0);
+                in_pos--;
 
-            switch (c) {
-                case L'u': {
-                    chars = 4;
-                    max_val = UCS2_MAX;
-                    break;
-                }
-                case L'U': {
-                    chars = 8;
-                    max_val = WCHAR_MAX;
-
-                    // Don't exceed the largest Unicode code point - see #1107.
-                    if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
-                    break;
-                }
-                case L'x': {
-                    chars = 2;
-                    max_val = ASCII_MAX;
-                    break;
-                }
-                case L'X': {
-                    byte_literal = true;
-                    max_val = BYTE_MAX;
-                    break;
-                }
-                default: {
-                    base = 8;
-                    chars = 3;
-                    // Note that in_pos currently is just after the first post-backslash character;
-                    // we want to start our escape from there.
-                    assert(in_pos > 0);
-                    in_pos--;
-                    break;
-                }
+                // It's an error, unless we're allowing incomplete escapes.
+                if (!allow_incomplete) errored = true;
+                break;
             }
+                // Numeric escape sequences. No prefix means octal escape, otherwise hexadecimal.
+            case L'0':
+            case L'1':
+            case L'2':
+            case L'3':
+            case L'4':
+            case L'5':
+            case L'6':
+            case L'7':
+            case L'u':
+            case L'U':
+            case L'x':
+            case L'X': {
+                long long res = 0;
+                size_t chars = 2;
+                int base = 16;
+                bool byte_literal = false;
+                wchar_t max_val = ASCII_MAX;
 
-            for (size_t i = 0; i < chars; i++) {
-                long d = convert_digit(input[in_pos], base);
-                if (d < 0) {
-                    // If we have no digit, this is a tokenizer error.
-                    if (i == 0) errored = true;
-                    break;
+                switch (c) {
+                    case L'u': {
+                        chars = 4;
+                        max_val = UCS2_MAX;
+                        break;
+                    }
+                    case L'U': {
+                        chars = 8;
+                        max_val = WCHAR_MAX;
+
+                        // Don't exceed the largest Unicode code point - see #1107.
+                        if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
+                        break;
+                    }
+                    case L'x': {
+                        chars = 2;
+                        max_val = ASCII_MAX;
+                        break;
+                    }
+                    case L'X': {
+                        byte_literal = true;
+                        max_val = BYTE_MAX;
+                        break;
+                    }
+                    default: {
+                        base = 8;
+                        chars = 3;
+                        // Note that in_pos currently is just after the first post-backslash
+                        // character; we want to start our escape from there.
+                        assert(in_pos > 0);
+                        in_pos--;
+                        break;
+                    }
                 }
 
-                res = (res * base) + d;
-                in_pos++;
-            }
+                for (size_t i = 0; i < chars; i++) {
+                    long d = convert_digit(input[in_pos], base);
+                    if (d < 0) {
+                        // If we have no digit, this is a tokenizer error.
+                        if (i == 0) errored = true;
+                        break;
+                    }
 
-            if (!errored && res <= max_val) {
-                result_char_or_none =
-                    static_cast<wchar_t>((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
-            } else {
-                errored = true;
-            }
+                    res = (res * base) + d;
+                    in_pos++;
+                }
 
-            break;
-        }
-        // \a means bell (alert).
-        case L'a': {
-            result_char_or_none = L'\a';
-            break;
-        }
-        // \b means backspace.
-        case L'b': {
-            result_char_or_none = L'\b';
-            break;
-        }
-        // \cX means control sequence X.
-        case L'c': {
-            const wchar_t sequence_char = input[in_pos++];
-            if (sequence_char >= L'a' && sequence_char <= (L'a' + 32)) {
-                result_char_or_none = sequence_char - L'a' + 1;
-            } else if (sequence_char >= L'A' && sequence_char <= (L'A' + 32)) {
-                result_char_or_none = sequence_char - L'A' + 1;
-            } else {
-                errored = true;
+                if (!errored && res <= max_val) {
+                    if (byte_literal) {
+                        // Multibyte encodings necessitate that we keep adjacent byte escapes.
+                        // - `\Xc3\Xb6` is "ö", but only together.
+                        // (this assumes a valid codepoint can't consist of multiple bytes
+                        // that are valid on their own, which is true for UTF-8)
+                        byte_buff.push_back(static_cast<char>(res));
+                        result_char_or_none = none();
+                        if (input[in_pos] == L'\\' && input[in_pos + 1] == L'X') {
+                            in_pos++;
+                            continue;
+                        }
+                    } else {
+                        result_char_or_none = static_cast<wchar_t>(res);
+                    }
+                } else {
+                    errored = true;
+                }
+
+                break;
             }
-            break;
+                // \a means bell (alert).
+            case L'a': {
+                result_char_or_none = L'\a';
+                break;
+            }
+                // \b means backspace.
+            case L'b': {
+                result_char_or_none = L'\b';
+                break;
+            }
+                // \cX means control sequence X.
+            case L'c': {
+                const wchar_t sequence_char = input[in_pos++];
+                if (sequence_char >= L'a' && sequence_char <= (L'a' + 32)) {
+                    result_char_or_none = sequence_char - L'a' + 1;
+                } else if (sequence_char >= L'A' && sequence_char <= (L'A' + 32)) {
+                    result_char_or_none = sequence_char - L'A' + 1;
+                } else {
+                    errored = true;
+                }
+                break;
+            }
+                // \x1B means escape.
+            case L'e': {
+                result_char_or_none = L'\x1B';
+                break;
+            }
+                // \f means form feed.
+            case L'f': {
+                result_char_or_none = L'\f';
+                break;
+            }
+                // \n means newline.
+            case L'n': {
+                result_char_or_none = L'\n';
+                break;
+            }
+                // \r means carriage return.
+            case L'r': {
+                result_char_or_none = L'\r';
+                break;
+            }
+                // \t means tab.
+            case L't': {
+                result_char_or_none = L'\t';
+                break;
+            }
+                // \v means vertical tab.
+            case L'v': {
+                result_char_or_none = L'\v';
+                break;
+            }
+                // If a backslash is followed by an actual newline, swallow them both.
+            case L'\n': {
+                result_char_or_none = none();
+                break;
+            }
+            default: {
+                if (unescape_special) result->push_back(INTERNAL_SEPARATOR);
+                result_char_or_none = c;
+                break;
+            }
         }
-        // \x1B means escape.
-        case L'e': {
-            result_char_or_none = L'\x1B';
-            break;
+
+        if (errored) return none();
+
+        if (!byte_buff.empty()) {
+            result->append(str2wcstring(byte_buff));
         }
-        // \f means form feed.
-        case L'f': {
-            result_char_or_none = L'\f';
-            break;
-        }
-        // \n means newline.
-        case L'n': {
-            result_char_or_none = L'\n';
-            break;
-        }
-        // \r means carriage return.
-        case L'r': {
-            result_char_or_none = L'\r';
-            break;
-        }
-        // \t means tab.
-        case L't': {
-            result_char_or_none = L'\t';
-            break;
-        }
-        // \v means vertical tab.
-        case L'v': {
-            result_char_or_none = L'\v';
-            break;
-        }
-        // If a backslash is followed by an actual newline, swallow them both.
-        case L'\n': {
-            result_char_or_none = none();
-            break;
-        }
-        default: {
-            if (unescape_special) result->push_back(INTERNAL_SEPARATOR);
-            result_char_or_none = c;
-            break;
-        }
+
+        break;
     }
 
-    if (!errored && result_char_or_none.has_value()) {
+    if (result_char_or_none.has_value()) {
         result->push_back(*result_char_or_none);
     }
-    if (errored) return none();
 
     return in_pos;
 }

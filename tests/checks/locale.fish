@@ -88,3 +88,12 @@ env LC_ALL=C $fish -c 'echo -n Y\u00FCY' | display_bytes
 env LC_ALL=C $fish -c 'echo -n T\u01FDT' | display_bytes
 #CHECK: 0000000 124 077 124
 #CHECK: 0000003
+
+string match ö \Xc3\Xb6
+#CHECK: ö
+
+math 5 \X2b 5
+#CHECK: 10
+
+math 7 \x2b 7
+#CHECK: 14

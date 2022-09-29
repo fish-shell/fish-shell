@@ -602,6 +602,8 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                             case L'U': {
                                 chars = 8;
                                 max_val = WCHAR_MAX;
+                                // Don't exceed the largest Unicode code point - see #1107.
+                                if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
                                 in_pos++;
                                 break;
                             }

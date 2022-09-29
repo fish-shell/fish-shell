@@ -5614,6 +5614,20 @@ static void test_highlighting() {
     highlight_tests.push_back({{L"$EMPTY_VARIABLE", highlight_role_t::error}});
     highlight_tests.push_back({{L"\"$EMPTY_VARIABLE\"", highlight_role_t::error}});
 
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"\\UFDFD", highlight_role_t::escape},
+        });
+#if WCHAR_T_BITS > 16
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"\\U10FFFF", highlight_role_t::escape},
+        });
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"\\U110000", highlight_role_t::error},
+        });
+#endif
     const auto saved_flags = fish_features();
     mutable_fish_features().set(features_t::ampersand_nobg_in_token, true);
     for (const highlight_component_list_t &components : highlight_tests) {

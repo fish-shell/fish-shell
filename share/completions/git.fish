@@ -51,11 +51,10 @@ function __fish_git_recent_commits
 end
 
 function __fish_git_branches
-    # This is much faster than using `git branch`,
-    # and avoids having to deal with localized "detached HEAD" messages.
-    __fish_git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
-        | string replace -r '^refs/heads/(.*)$' '$1\tLocal Branch' \
-        | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
+    # This is much faster than using `git branch` and avoids dealing with localized "detached HEAD" messages.
+    # We intentionally only sort local branches by recency. See discussion in #9248.
+    __fish_git for-each-ref --format='%(refname:strip=2)%09Local Branch' --sort=-committerdate refs/heads/ 2>/dev/null
+    __fish_git for-each-ref --format='%(refname:strip=2)%09Remote Branch' refs/remotes/ 2>/dev/null
 end
 
 function __fish_git_submodules
@@ -64,8 +63,7 @@ function __fish_git_submodules
 end
 
 function __fish_git_local_branches
-    __fish_git for-each-ref --format='%(refname:strip=2)' refs/heads/ 2>/dev/null \
-        | string replace -rf '.*' '$0\tLocal Branch'
+    __fish_git for-each-ref --format='%(refname:strip=2)%09Local Branch' --sort=-committerdate refs/heads/ 2>/dev/null
 end
 
 function __fish_git_unique_remote_branches

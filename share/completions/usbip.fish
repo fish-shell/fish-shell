@@ -8,35 +8,27 @@ function __fish_usbip_no_subcommand -d 'Test if usbip has yet to be given the su
 end
 
 function __fish_usbip_remote -d 'List remote usbip host'
-    set -l token (commandline -opc)
-    if test $token[-1] = -r
-        set -l remote (ip r | awk '/via/ {print $3"\t"$5}')
-        for i in $remote
-            echo $i
-        end
+    set -l remote (ip r | awk '/via/ {print $3"\t"$5}')
+    for i in $remote
+        echo $i
     end
 end
 
 function __fish_usbip_busid -d 'List usbip busid'
     set -l token (commandline -opc)
-    if test $token[-1] = -b
-        if contains -- -r $token
-            set -l remote (commandline -opc | string match -r '([0-9]{1,3}\.){3}[0-9]{1,3}')
-            set -l busids (usbip list -r $remote 2> /dev/null | string match -r '\d+-\d+')
-            for i in $busids
-                echo $i
-            end
+    if contains -- -r $token
+        set -l remote (commandline -opc | string match -r '([0-9]{1,3}\.){3}[0-9]{1,3}')
+        set -l busids (usbip list -r $remote 2> /dev/null | string match -r '\d+-\d+')
+        for i in $busids
+            echo $i
         end
     end
 end
 
 function __fish_usbip_busid_attached -d 'List usbip busid attached'
-    set -l token (commandline -opc)
-    if test $token[-1] = -p
-        set -l usbids (usbip port 2> /dev/null | string match -r '(?<=Port\s)(\d+)')
-        for i in $usbids
-            echo $i
-        end
+    set -l usbids (usbip port 2> /dev/null | string match -r '(?<=Port\s)(\d+)')
+    for i in $usbids
+        echo $i
     end
 end
 

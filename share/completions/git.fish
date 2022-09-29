@@ -1884,7 +1884,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-autosquash -d 'No 
 complete -f -c git -n '__fish_git_using_command rebase' -l autostash -d 'Before starting rebase, stash local changes, and apply stash when done'
 complete -f -c git -n '__fish_git_using_command rebase' -l no-autostash -d 'Do not stash local changes before starting rebase'
 complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-forward'
-complete -f -c git -n '__fish_git_using_command rebase' -l onto -d 'Rebase current branch onto given upstream or newbase'
+complete -f -c git -n '__fish_git_using_command rebase' -l onto -d 'Rebase current branch onto given upstream or newbase' -a '(__fish_git_branches)'
 # This actually takes script for $SHELL, but completing that is... complicated.
 complete -r -c git -n '__fish_git_using_command rebase' -l exec -d 'Execute shellscript'
 

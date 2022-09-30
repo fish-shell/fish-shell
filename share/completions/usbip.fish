@@ -15,13 +15,10 @@ function __fish_usbip_remote -d 'List remote usbip host'
 end
 
 function __fish_usbip_busid -d 'List usbip busid'
-    set -l token (commandline -opc)
-    if contains -- -r $token
-        set -l remote (commandline -opc | string match -r '([0-9]{1,3}\.){3}[0-9]{1,3}')
-        set -l busids (usbip list -r $remote 2> /dev/null | string match -r '\d+-\d+')
-        for i in $busids
-            echo $i
-        end
+    set -l remote (commandline -opc | string match -r '([0-9]{1,3}\.){3}[0-9]{1,3}')
+    set -l busids (usbip list -r $remote 2> /dev/null | string match -r '\d+-\d+')
+    for i in $busids
+        echo $i
     end
 end
 

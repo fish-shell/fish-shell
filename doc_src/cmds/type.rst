@@ -43,6 +43,7 @@ The following options are available:
 
 The **-q**, **-p**, **-t** and **-P** flags (and their long flag aliases) are mutually exclusive. Only one can be specified at a time.
 
+``type`` returns 0 if at least one entry was found, 1 otherwise, and 2 for invalid options or option combinations.
 
 Example
 -------

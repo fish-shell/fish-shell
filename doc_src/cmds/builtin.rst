@@ -23,7 +23,7 @@ The following options are available:
     Lists the names of all defined builtins.
 
 **-q** or **--query** *BUILTIN*
-    Tests if any of the specified builtins exist.
+    Tests if any of the specified builtins exist. If any exist, it returns 0, 1 otherwise.
 
 **-h** or **--help**
     Displays help about using this command.

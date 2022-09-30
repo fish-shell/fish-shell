@@ -1470,6 +1470,23 @@ Here ``$status`` reflects the status of ``grep``, which returns 0 if it found so
 
 So if both ``cat`` and ``grep`` succeeded, ``$status`` would be 1 because of the ``not``, and ``$pipestatus`` would be 0 and 0.
 
+It's possible for the first command to fail while the second succeeds. One common example is when the second program quits early.
+
+For example, if you have a pipeline like::
+
+  cat file1 file2 | head -n 50
+
+This will tell ``cat`` to print two files, "file1" and "file2", one after the other, and the ``head`` will then only print the first 50 lines. In this case you might often see this constellation::
+
+  > cat file1 file2 | head -n 50
+  # 50 lines of output
+  > echo $pipestatus
+  141 0
+
+Here, the "141" signifies that ``cat`` was killed by signal number 13 (128 + 13 == 141) - a ``SIGPIPE``. You can also use :envvar:`fish_kill_signal` to see the signal number. This happens because it was still working, and then ``head`` closed the pipe, so ``cat`` received a signal that it didn't ignore and so it died.
+
+Whether ``cat`` here will see a SIGPIPE depends on how long the file is and how much it writes at once, so you might see a pipestatus of "0 0", depending on the implementation. This is a general unix issue and not specific to fish. Some shells feature a "pipefail" feature that will call a pipeline failed if one of the processes in it failed, and this is a big problem with it.
+
 .. _variables-locale:
 
 Locale Variables

@@ -9,27 +9,18 @@ end
 
 function __fish_usbip_remote -d 'List remote usbip host'
     set -l remote (ip r | awk '/via/ {print $3"\t"$5}')
-    for i in $remote
-        echo $i
-    end
+    printf '%s\n' $remote
 end
 
 function __fish_usbip_busid -d 'List usbip busid'
-    set -l token (commandline -opc)
-    if contains -- -r $token
-        set -l remote (commandline -opc | string match -r '([0-9]{1,3}\.){3}[0-9]{1,3}')
-        set -l busids (usbip list -r $remote 2> /dev/null | string match -r '\d+-\d+')
-        for i in $busids
-            echo $i
-        end
-    end
+    set -l remote (commandline -opc | string match -r '([0-9]{1,3}\.){3}[0-9]{1,3}')
+    set -l busids (usbip list -r $remote 2> /dev/null | string match -r '\d+-\d+')
+    printf '%s\n' $busids
 end
 
 function __fish_usbip_busid_attached -d 'List usbip busid attached'
     set -l usbids (usbip port 2> /dev/null | string match -r '(?<=Port\s)(\d+)')
-    for i in $usbids
-        echo $i
-    end
+    printf '%s\n' $usbids
 end
 
 complete -f -c usbip
@@ -40,7 +31,7 @@ complete -f -c usbip -n __fish_usbip_no_subcommand -a bind -d 'Bind a USB device
 complete -f -c usbip -n __fish_usbip_no_subcommand -a unbind -d 'Unbind a USB device from a driver'
 complete -f -c usbip -n __fish_usbip_no_subcommand -a port -d 'List USB ports on the host'
 
-# attach 
+# attach
 complete -f -c usbip -n '__fish_seen_subcommand_from attach' -s r -l remote -d 'The machine with exported USB devices' -xa "(__fish_usbip_remote)"
 complete -f -c usbip -n '__fish_seen_subcommand_from attach' -s b -l busid -d 'Busid of the device on <host>' -xa "(__fish_usbip_busid)"
 complete -f -c usbip -n '__fish_seen_subcommand_from attach' -s d -l device -d 'Id of the virtual UDB on <host>'
@@ -57,5 +48,5 @@ complete -f -c usbip -n '__fish_seen_subcommand_from list' -s d -l device -d 'Li
 # Bind
 complete -f -c usbip -n '__fish_seen_subcommand_from bind' -s b -l busid -d 'Bind usbip-host.ko to device on <busid>'
 
-# unbind 
+# unbind
 complete -f -c usbip -n '__fish_seen_subcommand_from unbind' -s b -l busid -d 'Unbind usbip-host.ko to device on <busid>'

@@ -18,6 +18,10 @@ function __fish_adb_get_devices -d 'Run adb devices and parse output'
     end
 end
 
+function __fish_adb_get_tcpip_devices -d 'Get list of devices connected via TCP/IP'
+    __fish_adb_get_devices | string match -r '^\d+\.\d+\.\d+\.\d+:\d+\t.*'
+end
+
 function __fish_adb_run_command -d 'Runs adb with any -s parameters already given on the command line'
     set -l sopt
     set -l sopt_is_next
@@ -75,27 +79,15 @@ function __fish_adb_list_files
     __fish_adb_run_command find -H "$token*" -maxdepth 0 -type f 2\>/dev/null
 end
 
-function __fish_adb_completion_for_pull
-    set -l token (commandline -opc)
-    __fish_adb_list_files
-    if test (count $token) -gt 2
-        __fish_complete_path
-    end
-end
-
-function __fish_adb_completion_for_push
-    set -l token (commandline -opc)
-    __fish_complete_path
-    if test (count $token) -gt 2
-        __fish_adb_list_files
-    end
-end
-
-
 # Generic options, must come before command
-complete -n __fish_adb_no_subcommand -c adb -s s -x -a "(__fish_adb_get_devices)" -d 'Device to communicate with'
-complete -n __fish_adb_no_subcommand -c adb -s d -d 'Communicate with first USB device'
-complete -n __fish_adb_no_subcommand -c adb -s e -d 'Communicate with emulator'
+complete -n __fish_adb_no_subcommand -c adb -o a -d 'Listen on all network interfaces'
+complete -n __fish_adb_no_subcommand -c adb -o d -d 'Use first USB device'
+complete -n __fish_adb_no_subcommand -c adb -o e -d 'Use first TCP/IP device'
+complete -n __fish_adb_no_subcommand -c adb -o s -x -a "(__fish_adb_get_devices)" -d 'Use device with given serial'
+complete -n __fish_adb_no_subcommand -c adb -o t -d 'Use device with given transport id'
+complete -n __fish_adb_no_subcommand -c adb -o H -d 'Name of adb server host'
+complete -n __fish_adb_no_subcommand -c adb -o P -d 'Port of adb server'
+complete -n __fish_adb_no_subcommand -c adb -o L -d 'Listen on given socket for adb server'
 
 # Commands
 complete -f -n __fish_adb_no_subcommand -c adb -a connect -d 'Connect to device'
@@ -150,7 +142,7 @@ complete -n '__fish_seen_subcommand_from devices' -c adb -f
 complete -n '__fish_seen_subcommand_from devices' -c adb -s l -d 'Also list device qualifiers'
 
 # disconnect
-complete -n '__fish_seen_subcommand_from disconnect' -c adb -x -a "(__fish_adb_get_devices)" -d 'Device to disconnect'
+complete -n '__fish_seen_subcommand_from disconnect' -c adb -x -a "(__fish_adb_get_tcpip_devices)" -d 'Device to disconnect'
 
 # backup
 complete -n '__fish_seen_subcommand_from backup' -c adb -s f -d 'File to write backup data to'
@@ -166,7 +158,7 @@ complete -n '__fish_seen_subcommand_from backup' -c adb -o nosystem -d 'Exclude 
 complete -n '__fish_seen_subcommand_from backup' -c adb -f -a "(__fish_adb_list_packages)" -d 'Package(s) to backup'
 
 # reboot
-complete -n '__fish_seen_subcommand_from reboot' -c adb -x -a 'bootloader recovery'
+complete -n '__fish_seen_subcommand_from reboot' -c adb -x -a 'bootloader recovery fastboot'
 
 # forward
 complete -n '__fish_seen_subcommand_from forward' -c adb -l list -d 'List all forward socket connections'
@@ -182,8 +174,8 @@ complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick
 
 # commands that accept listing device files
 complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'
-complete -n '__fish_seen_subcommand_from pull' -c adb -f -a "(__fish_adb_completion_for_pull)" -d 'File on device'
-complete -n '__fish_seen_subcommand_from push' -c adb -f -a "(__fish_adb_completion_for_push)" -d 'File on device'
+complete -n '__fish_seen_subcommand_from pull' -c adb -F -a "(__fish_adb_list_files)" -d 'File on device'
+complete -n '__fish_seen_subcommand_from push' -c adb -F -a "(__fish_adb_list_files)" -d 'File on device'
 
 # logcat
 complete -n '__fish_seen_subcommand_from logcat' -c adb -f

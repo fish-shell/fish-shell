@@ -87,6 +87,7 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
+  - ``asciinema``
   - ``firefox``
   - ``firefox-developer-edition``
   - ``fortune``

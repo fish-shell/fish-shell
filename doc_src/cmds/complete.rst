@@ -37,7 +37,7 @@ The following options are available:
     Adds a GNU-style long option to the completions list.
 
 **-o** or **--old-option** *OPTION*
-    Adds an old-style short or long options (see below for details).
+    Adds an old-style short or long option (see below for details).
 
 **-a** or **--arguments** *ARGUMENTS*
     Adds the specified option arguments to the completions list.

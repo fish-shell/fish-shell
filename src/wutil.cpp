@@ -76,8 +76,11 @@ static maybe_t<dir_entry_type_t> dirent_type_to_entry_type(uint8_t dt) {
             return dir_entry_type_t::lnk;
         case DT_SOCK:
             return dir_entry_type_t::sock;
+#if defined(DT_WHT)
+        // OpenBSD doesn't have this one
         case DT_WHT:
             return dir_entry_type_t::whiteout;
+#endif
         case DT_UNKNOWN:
         default:
             return none();

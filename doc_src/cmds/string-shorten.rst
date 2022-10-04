@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    string shorten [(-c | --char) CHARS] [(-m | --max) INTEGER] [(-N | --no-newline)] [(-l | --left)]
+    string shorten [(-c | --char) CHARS] [(-m | --max) INTEGER] [(-N | --no-newline)] [(-l | --left)] [(-q | --quiet)]
                [STRING ...]
 
 .. END SYNOPSIS
@@ -30,7 +30,11 @@ If **-c** or **--char** is given, add *CHAR* instead of an ellipsis. This can al
 
 If **-l** or **--left** is given, remove text from the left on instead, so this prints the longest *suffix* of the string that fits. With **--no-newline**, this will take from the last line instead of the first.
 
+If **-q** or **--quiet** is given, ``string shorten`` only runs for the return value - if anything would be shortened, it returns 0, else 1.
+
 The default ellipsis is ``…``. If fish thinks your system is incapable because of your locale, it will use ``...`` instead.
+
+The return value is 0 if any shortening occured, 1 otherwise.
 
 .. END DESCRIPTION
 

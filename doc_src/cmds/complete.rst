@@ -36,8 +36,8 @@ The following options are available:
 **-l** or **--long-option** *LONG_OPTION*
     Adds a GNU-style long option to the completions list.
 
-**-o** or **--old-option** *LONG_OPTION*
-    Adds an old-style long option to the completions list (see below for details).
+**-o** or **--old-option** *OPTION*
+    Adds an old-style short or long option (see below for details).
 
 **-a** or **--arguments** *ARGUMENTS*
     Adds the specified option arguments to the completions list.
@@ -76,7 +76,7 @@ Command specific tab-completions in ``fish`` are based on the notion of options 
 
 - Short options, like ``-a``. Short options are a single character long, are preceded by a single hyphen and can be grouped together (like ``-la``, which is equivalent to ``-l -a``). Option arguments may be specified by appending the option with the value (``-w32``), or, if ``--require-parameter`` is given, in the following parameter (``-w 32``).
 
-- Old-style long options, like ``-Wall`` or ``-name``. Old-style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter (``-ao null``) or after a ``=`` (``-ao=null``).
+- Old-style options, long like ``-Wall`` or ``-name`` or even short like ``-a``. Old-style options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified by default following a space (``-foo null``) or after ``=`` (``-foo=null``).
 
 - GNU-style long options, like ``--colors``. GNU-style long options can be more than one character long, are preceded by two hyphens, and can't be grouped together. Option arguments may be specified after a ``=`` (``--quoting-style=shell``), or, if ``--require-parameter`` is given, in the following parameter (``--quoting-style shell``).
 
@@ -148,4 +148,6 @@ Now hub inherits all of the completions from git. Note this can also be specifie
 
    complete -c git
 
-Show all completions for ``git``.
+Shows all completions for ``git``.
+
+Any command ``foo`` that doesn't support grouping multiple short options in one string (not supporting ``-xf`` as short for ``-x -f``) or a short option and its value in one string (not supporting ``-d9`` instead of ``-d 9``) should be specified as a single-character old-style option instead of as a short-style option; for example, ``complete -c foo -o s; complete -c foo -o v`` would never suggest ``foo -ov`` but rather ``foo -o -v``.

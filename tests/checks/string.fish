@@ -950,3 +950,8 @@ for i in (seq 1 (string length -V -- $str))
     test $len = $i
     or echo Oopsie ellipsizing to $i failed
 end
+
+string shorten -m0 foo bar asodjsaoidj
+# CHECK: foo
+# CHECK: bar
+# CHECK: asodjsaoidj

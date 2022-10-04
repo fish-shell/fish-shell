@@ -1664,6 +1664,22 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
     auto ell_width = fish_wcswidth(ell);
 
     arg_iterator_t aiter_width(argv, optind, streams);
+
+    if (opts.max == 0) {
+        // Special case: Max of 0 means no shortening.
+        // This makes this more reusable, so you don't need special-cases like
+        //
+        // if test $shorten -gt 0
+        //     string shorten -m $shorten whatever
+        // else
+        //     echo whatever
+        // end
+        while (const wcstring *arg = aiter_width.nextstr()) {
+            streams.out.append(*arg + L"\n");
+        }
+        return STATUS_CMD_ERROR;
+    }
+
     while (const wcstring *arg = aiter_width.nextstr()) {
         // Visible width only makes sense line-wise.
         // So either we have no-newlines (which means we shorten on the first newline),

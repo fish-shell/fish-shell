@@ -22,7 +22,7 @@ Description
 
 The escape sequences reflect what fish knows about, and how it computes its output. Your terminal might support more escapes, or not support escape sequences that fish knows about.
 
-If **-m** or **--max** is given, truncate at the given width. Otherwise, the lowest non-zero width of all input strings is used.
+If **-m** or **--max** is given, truncate at the given width. Otherwise, the lowest non-zero width of all input strings is used. A max of 0 means no shortening takes place, all STRINGs are printed as-is.
 
 If **-N** or **--no-newline** is given, only the first line (or last line with **--left**) of each STRING is used, and an ellipsis is added if it was multiline. This only works for STRINGs being given as arguments, multiple lines given on stdin will be interpreted as separate STRINGs instead.
 

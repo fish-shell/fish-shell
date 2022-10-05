@@ -766,16 +766,8 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 
     // Error on unclosed quotes.
-    if (unclosed_quote_offset.has_value()) {
-        // gcc complains this is uninitialized
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
+    if (unclosed_quote_offset) {
         colors[*unclosed_quote_offset] = highlight_role_t::error;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
     }
 }
 

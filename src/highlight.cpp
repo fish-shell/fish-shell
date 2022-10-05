@@ -551,7 +551,8 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 
     enum { e_unquoted, e_single_quoted, e_double_quoted } mode = e_unquoted;
-    maybe_t<size_t> unclosed_quote_offset = none();
+    // For some ungodly reason making this a maybe<size_t> makes gcc grumpy
+    size_t unclosed_quote_offset = 0;
     int bracket_count = 0;
     for (size_t in_pos = 0; in_pos < buff_len; in_pos++) {
         const wchar_t c = buffstr.at(in_pos);
@@ -719,7 +720,6 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         }
                     }
                 } else if (c == L'\'') {
-                    unclosed_quote_offset = none();
                     mode = e_unquoted;
                 }
                 break;
@@ -733,7 +733,6 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                 }
                 switch (c) {
                     case L'"': {
-                        unclosed_quote_offset = none();
                         mode = e_unquoted;
                         break;
                     }
@@ -766,8 +765,8 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 
     // Error on unclosed quotes.
-    if (unclosed_quote_offset) {
-        colors[*unclosed_quote_offset] = highlight_role_t::error;
+    if (mode != e_unquoted) {
+        colors[unclosed_quote_offset] = highlight_role_t::error;
     }
 }
 

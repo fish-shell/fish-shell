@@ -222,3 +222,11 @@ set -l epochtime (path mtime epoch)
 # Allow for timezone shenanigans
 test $epochtime -gt 0 -a $epochtime -lt 180000
 or echo Oops not mtime
+
+path basename -Z foo bar baz | path sort
+# CHECK: bar
+# CHECK: baz
+# CHECK: foo
+
+path basename --null-out bar baz | string escape
+# CHECK: bar\x00baz\x00

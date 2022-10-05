@@ -201,7 +201,9 @@ static void path_out(io_streams_t &streams, const options_t &opts, const wcstrin
         if (!opts.null_out) {
             streams.out.append_with_separation(str, separation_type_t::explicitly);
         } else {
-            streams.out.append(str + L"\0");
+            // Note the char - if this was a string instead we'd add
+            // a string of length 0, i.e. nothing
+            streams.out.append(str + L'\0');
         }
     }
 }

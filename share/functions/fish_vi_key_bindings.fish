@@ -305,6 +305,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # After executing once, this will have defined functions listening for the variable.
     # Therefore it needs to be before setting fish_bind_mode.
     fish_vi_cursor
+    set -g fish_cursor_selection_mode inclusive
 
     set fish_bind_mode $init_mode
 

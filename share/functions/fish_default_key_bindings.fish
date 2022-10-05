@@ -104,4 +104,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
             # the following to tell a console to paste:
             bind --preset $argv \e\x20ep fish_clipboard_paste
     end
+
+    set -e -g fish_cursor_selection_mode
 end

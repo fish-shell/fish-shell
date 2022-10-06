@@ -1152,7 +1152,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
 
     // For multibyte \X sequences.
     std::string byte_buff;
-    while (!errored) {
+    while (true) {
         const wchar_t c = input[in_pos++];
         switch (c) {
                 // A null character after a backslash is an error.

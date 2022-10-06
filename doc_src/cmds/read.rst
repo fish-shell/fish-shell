@@ -100,7 +100,7 @@ Example
 
 ``read`` has a few separate uses.
 
-The following code stores the value 'hello' in the shell variable :envvar:`$foo`.
+The following code stores the value 'hello' in the shell variable :envvar:`foo`.
 
 ::
 

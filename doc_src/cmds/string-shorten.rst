@@ -8,8 +8,8 @@ Synopsis
 
 .. synopsis::
 
-    string shorten [(-c | --char) CHARS] [(-m | --max) INTEGER] [(-N | --no-newline)] [(-l | --left)] [(-q | --quiet)]
-               [STRING ...]
+    string shorten [(-c | --char) CHARS] [(-m | --max) INTEGER]
+                   [-N | --no-newline] [-l | --left] [-q | --quiet] [STRING ...]
 
 .. END SYNOPSIS
 

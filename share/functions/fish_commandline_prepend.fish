@@ -3,14 +3,24 @@ function fish_commandline_prepend --description "Prepend the given string to the
         commandline -r $history[1]
     end
 
-    set -l escaped (string escape --style=regex -- $argv[1])
     set -l process (commandline -p | string collect)
-    if set process (string replace -r -- "^$escaped " "" $process)
-        commandline --replace -p -- $process
-    else
-        set -l cursor (commandline -C)
-        commandline -C 0 -p
-        commandline -i -- "$argv[1] "
-        commandline -C (math $cursor + (string length -- "$argv[1] "))
+
+    set -l to_prepend "$argv[1] "
+    if string match -qr '^ ' "$process"
+        set to_prepend " $argv[1]"
     end
+
+    set -l length_diff (string length -- "$to_prepend")
+    set -l cursor_location (commandline -pC)
+
+    set -l escaped (string escape --style=regex -- $to_prepend)
+    if set process (string replace -r -- "^$escaped" "" $process)
+        commandline --replace -p -- $process
+        set length_diff "-$length_diff"
+    else
+        commandline -pC 0
+        commandline -pi -- "$to_prepend"
+    end
+
+    commandline -pC (math "max 0,($cursor_location + $length_diff)")
 end

@@ -168,7 +168,7 @@ Example OPTION_SPECs
 
 Some *OPTION_SPEC* examples:
 
-- ``h/help`` means that both ``-h`` and ``--help`` are valid. The flag is a boolean and can be used more than once. If either flag is used then ``_flag_h`` and ``_flag_help`` will be set to the count of how many times either flag was seen.
+- ``h/help`` means that both ``-h`` and ``--help`` are valid. The flag is a boolean and can be used more than once. If either flag is used then ``_flag_h`` and ``_flag_help`` will be set to however either flag was seen, as many times as it was seen. So it could be set to ``-h``, ``-h`` and ``--help``, and ``count $_flag_h`` would yield "3".
 
 - ``help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If it is used then ``_flag_help`` will be set to the count of how many times the long flag was seen. Also ``h-help`` (with an arbitrary short letter) for backwards compatibility.
 

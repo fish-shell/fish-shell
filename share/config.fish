@@ -50,24 +50,24 @@ else
     set xdg_data_dirs $__fish_data_dir
 end
 
-set -l vendor_completionsdirs
-set -l vendor_functionsdirs
-set -l vendor_confdirs
+set -g __fish_vendor_completionsdirs
+set -g __fish_vendor_functionsdirs
+set -g __fish_vendor_confdirs
 # Don't load vendor directories when running unit tests
 if not set -q FISH_UNIT_TESTS_RUNNING
-    set vendor_completionsdirs $__fish_user_data_dir/vendor_completions.d $xdg_data_dirs/vendor_completions.d
-    set vendor_functionsdirs $__fish_user_data_dir/vendor_functions.d $xdg_data_dirs/vendor_functions.d
-    set vendor_confdirs $__fish_user_data_dir/vendor_conf.d $xdg_data_dirs/vendor_conf.d
+    set __fish_vendor_completionsdirs $__fish_user_data_dir/vendor_completions.d $xdg_data_dirs/vendor_completions.d
+    set __fish_vendor_functionsdirs $__fish_user_data_dir/vendor_functions.d $xdg_data_dirs/vendor_functions.d
+    set __fish_vendor_confdirs $__fish_user_data_dir/vendor_conf.d $xdg_data_dirs/vendor_conf.d
 
     # Ensure that extra directories are always included.
-    if not contains -- $__extra_completionsdir $vendor_completionsdirs
-        set -a vendor_completionsdirs $__extra_completionsdir
+    if not contains -- $__extra_completionsdir $__fish_vendor_completionsdirs
+        set -a __fish_vendor_completionsdirs $__extra_completionsdir
     end
-    if not contains -- $__extra_functionsdir $vendor_functionsdirs
-        set -a vendor_functionsdirs $__extra_functionsdir
+    if not contains -- $__extra_functionsdir $__fish_vendor_functionsdirs
+        set -a __fish_vendor_functionsdirs $__extra_functionsdir
     end
-    if not contains -- $__extra_confdir $vendor_confdirs
-        set -a vendor_confdirs $__extra_confdir
+    if not contains -- $__extra_confdir $__fish_vendor_confdirs
+        set -a __fish_vendor_confdirs $__extra_confdir
     end
 end
 
@@ -75,13 +75,13 @@ end
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-    set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $vendor_functionsdirs $__fish_data_dir/functions
+    set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $__fish_vendor_functionsdirs $__fish_data_dir/functions
 else if not contains -- $__fish_data_dir/functions $fish_function_path
     set -a fish_function_path $__fish_data_dir/functions
 end
 
 if not set -q fish_complete_path
-    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $vendor_completionsdirs $__fish_data_dir/completions $__fish_user_data_dir/generated_completions
+    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__fish_vendor_completionsdirs $__fish_data_dir/completions $__fish_user_data_dir/generated_completions
 else if not contains -- $__fish_data_dir/completions $fish_complete_path
     set -a fish_complete_path $__fish_data_dir/completions
 end
@@ -235,7 +235,7 @@ end
 # As last part of initialization, source the conf directories.
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
 set -l sourcelist
-for file in $__fish_config_dir/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $vendor_confdirs/*.fish
+for file in $__fish_config_dir/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $__fish_vendor_confdirs/*.fish
     set -l basename (string replace -r '^.*/' '' -- $file)
     contains -- $basename $sourcelist
     and continue

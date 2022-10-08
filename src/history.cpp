@@ -1482,8 +1482,10 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
     wcstring_list_t collected;
     wcstring formatted_record;
     size_t remaining = max_items;
+    bool output_error = false;
 
-    // The function we use to act on each item.
+    // The function we use to act on each item. The return value indicates whether the search should
+    // continue (true) or stop (on false).
     std::function<bool(const history_item_t &item)> func = [&](const history_item_t &item) -> bool {
         if (remaining == 0) return false;
         remaining -= 1;
@@ -1493,7 +1495,11 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
             collected.push_back(std::move(formatted_record));
         } else {
             // We can output this immediately.
-            streams.out.append(formatted_record);
+            if (!streams.out.append(formatted_record)) {
+                // This can happen if the user hit Ctrl-C to abort (maybe after the first page?).
+                output_error = true;
+                return false;
+            }
         }
         return true;
     };
@@ -1514,9 +1520,16 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
     }
 
     // Output any items we collected (which only happens in reverse).
-    for (auto iter = collected.rbegin(); iter != collected.rend(); ++iter) {
-        streams.out.append(*iter);
+    for (auto iter = collected.rbegin(); !output_error && iter != collected.rend(); ++iter) {
+        if (!streams.out.append(*iter)) {
+            // Don't force an error if output was aborted (typically via Ctrl-C/SIGINT); just don't
+            // try writing any more.
+            output_error = true;
+        }
     }
+
+    // We are intentionally not returning false in case of an output error, as the user aborting the
+    // output early (the most common case) isn't a reason to exit w/ a non-zero status code.
     return true;
 }
 

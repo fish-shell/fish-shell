@@ -181,16 +181,10 @@ dir_iter_t::dir_iter_t(const wcstring &path) {
     entry_.dirfd_ = dirfd(&*dir_);
 }
 
-dir_iter_t::dir_iter_t(dir_iter_t &&rhs) {
-    // Steal the fields; ensure rhs no longer has FILE* and forgets its fd.
-    this->dir_ = std::move(rhs.dir_);
-    this->error_ = rhs.error_;
-    this->entry_ = std::move(rhs.entry_);
-    rhs.dir_ = nullptr;
-    rhs.entry_.dirfd_ = -1;
-}
+dir_iter_t::dir_iter_t(dir_iter_t &&rhs) { *this = std::move(rhs); }
 
 dir_iter_t &dir_iter_t::operator=(dir_iter_t &&rhs) {
+    // Steal the fields; ensure rhs no longer has DIR* and forgets its fd.
     this->dir_ = std::move(rhs.dir_);
     this->error_ = rhs.error_;
     this->entry_ = std::move(rhs.entry_);

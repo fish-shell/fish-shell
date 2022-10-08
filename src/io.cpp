@@ -338,8 +338,17 @@ bool fd_output_stream_t::append(const wchar_t *s, size_t amt) {
     if (errored_) return false;
     int res = wwrite_to_fd(s, amt, this->fd_);
     if (res < 0) {
-        // TODO: this error is too aggressive, e.g. if we got SIGINT we should not complain.
-        if (errno != EPIPE) {
+        // Some of our builtins emit multiple screens worth of data sent to a pager (the primary
+        // example being the `history` builtin) and receiving SIGINT should be considered normal and
+        // non-exceptional (user request to abort via Ctrl-C), meaning we shouldn't print an error.
+        if (errno == EINTR && sigcheck_.check()) {
+            // We have two options here: we can either return false without setting errored_ to
+            // true (*this* write will be silently aborted but the onus is on the caller to check
+            // the return value and skip future calls to `append()`) or we can flag the entire
+            // output stream as errored, causing us to both return false and skip any future writes.
+            // We're currently going with the latter, especially seeing as no callers currently
+            // check the result of `append()` (since it was always a void function before).
+        } else if (errno != EPIPE) {
             wperror(L"write");
         }
         errored_ = true;

@@ -53,7 +53,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
         case parse_error_bare_variable_assignment: {
             wcstring assignment_src = src.substr(this->source_start, this->source_length);
             maybe_t<size_t> equals_pos = variable_assignment_equals_pos(assignment_src);
-            assert(equals_pos);
+            assert(equals_pos.has_value());
             wcstring variable = assignment_src.substr(0, *equals_pos);
             wcstring value = assignment_src.substr(*equals_pos + 1);
             append_format(result, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, variable.c_str(),

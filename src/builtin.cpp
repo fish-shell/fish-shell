@@ -460,7 +460,7 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
         // Resolve our status code.
         // If the builtin itself produced an error, use that error.
         // Otherwise use any errors from writing to out and writing to err, in that order.
-        int code = builtin_ret ? *builtin_ret : 0;
+        int code = builtin_ret.has_value() ? *builtin_ret : 0;
         if (code == 0) code = out_ret;
         if (code == 0) code = err_ret;
 

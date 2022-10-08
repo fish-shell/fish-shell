@@ -28,7 +28,7 @@ static void disown_job(const wchar_t *cmd, io_streams_t &streams, job_t *j) {
     // Stopped disowned jobs must be manually signaled; explain how to do so.
     auto pgid = j->get_pgid();
     if (j->is_stopped()) {
-        if (pgid) killpg(*pgid, SIGCONT);
+        if (pgid.has_value()) killpg(*pgid, SIGCONT);
         const wchar_t *fmt =
             _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n");
         streams.err.append_format(fmt, cmd, j->job_id(), j->command_wcstr());

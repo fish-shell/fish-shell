@@ -42,8 +42,11 @@ static double cpu_use(const job_t *j) {
 /// Print information about the specified job.
 static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_t &streams) {
     int pgid = INVALID_PID;
-    if (auto job_pgid = j->get_pgid()) {
-        pgid = *job_pgid;
+    {
+        auto job_pgid = j->get_pgid();
+        if (job_pgid.has_value()) {
+            pgid = *job_pgid;
+        }
     }
 
     wcstring out;

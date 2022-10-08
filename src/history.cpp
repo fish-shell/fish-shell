@@ -582,7 +582,9 @@ void history_impl_t::populate_from_file_contents() {
     old_item_offsets.clear();
     if (file_contents) {
         size_t cursor = 0;
-        while (auto offset = file_contents->offset_of_next_item(&cursor, boundary_timestamp)) {
+        maybe_t<size_t> offset;
+        while ((offset =
+                    file_contents->offset_of_next_item(&cursor, boundary_timestamp)).has_value()) {
             // Remember this item.
             old_item_offsets.push_back(*offset);
         }
@@ -725,7 +727,8 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     // old file contents).
     if (auto local_file = history_file_contents_t::create(existing_fd)) {
         size_t cursor = 0;
-        while (auto offset = local_file->offset_of_next_item(&cursor, 0)) {
+        maybe_t<size_t> offset;
+        while ((offset = local_file->offset_of_next_item(&cursor, 0)).has_value()) {
             // Try decoding an old item.
             history_item_t old_item = local_file->decode_item(*offset);
 

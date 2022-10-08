@@ -74,7 +74,7 @@ tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token
     result.error = error_type;
     result.offset = token_start - this->start;
     // If we are passed a token_length, then use it; otherwise infer it from the buffer.
-    result.length = token_length ? *token_length : this->token_cursor - token_start;
+    result.length = token_length.has_value() ? *token_length : this->token_cursor - token_start;
     result.error_offset_within_token = error_loc - token_start;
     result.error_length = error_len;
     return result;
@@ -110,7 +110,7 @@ static bool tok_is_string_character(wchar_t c, maybe_t<wchar_t> next) {
         }
         case L'&': {
             if (!feature_test(features_t::ampersand_nobg_in_token)) return false;
-            bool next_is_string = next && tok_is_string_character(*next, none());
+            bool next_is_string = next.has_value() && tok_is_string_character(*next, none());
             // Unlike in other shells, '&' is not special if followed by a string character.
             return next_is_string;
         }
@@ -658,7 +658,7 @@ maybe_t<tok_t> tokenizer_t::next() {
 }
 
 bool is_token_delimiter(wchar_t c, maybe_t<wchar_t> next) {
-    return c == L'(' || !tok_is_string_character(c, next);
+    return c == L'(' || !tok_is_string_character(c, std::move(next));
 }
 
 wcstring tok_command(const wcstring &str) {
@@ -668,7 +668,7 @@ wcstring tok_command(const wcstring &str) {
             return {};
         }
         wcstring text = t.text_of(*token);
-        if (variable_assignment_equals_pos(text)) {
+        if (variable_assignment_equals_pos(text).has_value()) {
             continue;
         }
         return text;
@@ -885,7 +885,7 @@ move_word_state_machine_t::move_word_state_machine_t(move_word_style_t syl)
 
 void move_word_state_machine_t::reset() { state = 0; }
 
-// Return the location of the equals sign, or npos if the string does
+// Return the location of the equals sign, or none if the string does
 // not look like a variable assignment like FOO=bar.  The detection
 // works similar as in some POSIX shells: only letters and numbers qre
 // allowed on the left hand side, no quotes or escaping.

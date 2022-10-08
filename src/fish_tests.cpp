@@ -2915,7 +2915,7 @@ static bool run_one_test_test(int expected, const wcstring_list_t &lst, bool bra
     maybe_t<int> result = builtin_test(parser, streams, cargv.get());
 
     if (result != expected) {
-        std::wstring got = result ? std::to_wstring(result.value()) : L"nothing";
+        std::wstring got = result.has_value() ? std::to_wstring(result.value()) : L"nothing";
         err(L"expected builtin_test() to return %d, got %s", expected, got.c_str());
     }
     return result == expected;
@@ -5895,7 +5895,9 @@ static void run_one_string_test(const wchar_t *const *argv_raw, int expected_rc,
     args.resize(args.size() - 1);
 
     if (rc != expected_rc) {
-        std::wstring got = rc ? std::to_wstring(rc.value()) : L"nothing";
+        // The comparison above would have panicked if rc didn't have a value, so it's safe to
+        // assume it has one here:
+        std::wstring got = std::to_wstring(rc.value());
         err(L"Test failed on line %lu: [%ls]: expected return code %d but got %s", __LINE__,
             args.c_str(), expected_rc, got.c_str());
     } else if (outs.contents() != expected_out) {
@@ -6371,7 +6373,8 @@ static void test_illegal_command_exit_code() {
 
 void test_maybe() {
     say(L"Testing maybe_t");
-    do_test(!bool(maybe_t<int>()));
+    // maybe_t<T> bool conversion is only enabled for non-bool-convertible T types
+    do_test(!bool(maybe_t<wcstring>()));
     maybe_t<int> m(3);
     do_test(m.has_value());
     do_test(m.value() == 3);
@@ -6389,8 +6392,8 @@ void test_maybe() {
     do_test(m != maybe_t<int>());
     do_test(maybe_t<int>() == none());
     do_test(!maybe_t<int>(none()).has_value());
-    m = none();
-    do_test(!bool(m));
+    maybe_t<wcstring> n = none();
+    do_test(!bool(n));
 
     maybe_t<std::string> m2("abc");
     do_test(!m2.missing_or_empty());

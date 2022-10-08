@@ -671,7 +671,7 @@ static int path_extension(parser_t &parser, io_streams_t &streams, int argc, con
     while (const wcstring *arg = aiter.nextstr()) {
         auto pos = find_extension(*arg);
 
-        if (!pos) {
+        if (!pos.has_value()) {
             // If there is no extension the extension is empty.
             // This is unambiguous because we include the ".".
             path_out(streams, opts, L"");
@@ -702,7 +702,7 @@ static int path_change_extension(parser_t &parser, io_streams_t &streams, int ar
         auto pos = find_extension(*arg);
 
         wcstring ext;
-        if (!pos) {
+        if (!pos.has_value()) {
             ext = *arg;
         } else {
             ext = arg->substr(0, *pos);

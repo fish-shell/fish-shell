@@ -1026,7 +1026,8 @@ void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool optio
 void highlighter_t::visit(const ast::variable_assignment_t &varas) {
     color_as_argument(varas);
     // Highlight the '=' in variable assignments as an operator.
-    if (auto where = variable_assignment_equals_pos(varas.source(this->buff))) {
+    auto where = variable_assignment_equals_pos(varas.source(this->buff));
+    if (where.has_value()) {
         size_t equals_loc = varas.source_range().start + *where;
         this->color_array.at(equals_loc) = highlight_role_t::operat;
         auto var_name = varas.source(this->buff).substr(0, *where);
@@ -1048,7 +1049,7 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     if (!this->io_ok) {
         // We cannot check if the command is invalid, so just assume it's valid.
         is_valid_cmd = true;
-    } else if (variable_assignment_equals_pos(*cmd)) {
+    } else if (variable_assignment_equals_pos(*cmd).has_value()) {
         is_valid_cmd = true;
     } else {
         // Check to see if the command is valid.

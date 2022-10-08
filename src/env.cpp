@@ -1179,7 +1179,8 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
                                    wcstring_list_t val) {
     const query_t query(mode);
     // Handle electric and read-only variables.
-    if (auto ret = try_set_electric(key, query, val)) {
+    auto ret = try_set_electric(key, query, val);
+    if (ret.has_value()) {
         return mod_result_t{*ret};
     }
 

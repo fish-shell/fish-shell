@@ -16,6 +16,8 @@
 #include "fds.h"
 #include "global_safety.h"
 #include "redirection.h"
+#include "signal.h"
+#include "topic_monitor.h"
 
 using std::shared_ptr;
 
@@ -82,25 +84,27 @@ class separated_buffer_t : noncopyable_t {
     const std::vector<element_t> &elements() const { return elements_; }
 
     /// Append a string \p str of a given length \p len, with separation type \p sep.
-    void append(const char *str, size_t len, separation_type_t sep = separation_type_t::inferred) {
-        if (!try_add_size(len)) return;
+    bool append(const char *str, size_t len, separation_type_t sep = separation_type_t::inferred) {
+        if (!try_add_size(len)) return false;
         // Try merging with the last element.
         if (sep == separation_type_t::inferred && last_inferred()) {
             elements_.back().contents.append(str, len);
         } else {
             elements_.emplace_back(std::string(str, len), sep);
         }
+        return true;
     }
 
     /// Append a string \p str with separation type \p sep.
-    void append(std::string &&str, separation_type_t sep = separation_type_t::inferred) {
-        if (!try_add_size(str.size())) return;
+    bool append(std::string &&str, separation_type_t sep = separation_type_t::inferred) {
+        if (!try_add_size(str.size())) return false;
         // Try merging with the last element.
         if (sep == separation_type_t::inferred && last_inferred()) {
             elements_.back().contents.append(str);
         } else {
             elements_.emplace_back(std::move(str), sep);
         }
+        return true;
     }
 
     /// Remove all elements and unset the discard flag.
@@ -280,8 +284,8 @@ class io_buffer_t {
     ~io_buffer_t();
 
     /// Append a string to the buffer.
-    void append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
-        buffer_.acquire()->append(std::move(str), type);
+    bool append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
+        return buffer_.acquire()->append(std::move(str), type);
     }
 
     /// \return true if output was discarded due to exceeding the read limit.
@@ -328,7 +332,7 @@ class io_chain_t : public std::vector<io_data_ref_t> {
 
     void remove(const io_data_ref_t &element);
     void push_back(io_data_ref_t element);
-    void append(const io_chain_t &chain);
+    bool append(const io_chain_t &chain);
 
     /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
     /// if none.
@@ -347,7 +351,7 @@ class io_chain_t : public std::vector<io_data_ref_t> {
 class output_stream_t : noncopyable_t, nonmovable_t {
    public:
     /// Required override point. The output stream receives a string \p s with \p amt chars.
-    virtual void append(const wchar_t *s, size_t amt) = 0;
+    virtual bool append(const wchar_t *s, size_t amt) = 0;
 
     /// \return any internally buffered contents.
     /// This is only implemented for a string_output_stream; others flush data to their underlying
@@ -361,35 +365,39 @@ class output_stream_t : noncopyable_t, nonmovable_t {
     /// An optional override point. This is for explicit separation.
     /// \param want_newline this is true if the output item should be ended with a newline. This
     /// is only relevant if we are printing the output to a stream,
-    virtual void append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
+    virtual bool append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
                                         bool want_newline = true);
 
     /// The following are all convenience overrides.
-    void append_with_separation(const wcstring &s, separation_type_t type,
+    bool append_with_separation(const wcstring &s, separation_type_t type,
                                 bool want_newline = true) {
-        append_with_separation(s.data(), s.size(), type, want_newline);
+        return append_with_separation(s.data(), s.size(), type, want_newline);
     }
 
     /// Append a string.
-    void append(const wcstring &s) { append(s.data(), s.size()); }
-    void append(const wchar_t *s) { append(s, std::wcslen(s)); }
+    bool append(const wcstring &s) { return append(s.data(), s.size()); }
+    bool append(const wchar_t *s) { return append(s, std::wcslen(s)); }
 
     /// Append a char.
-    void append(wchar_t s) { append(&s, 1); }
-    void push_back(wchar_t c) { append(c); }
+    bool append(wchar_t s) { return append(&s, 1); }
+    bool push_back(wchar_t c) { return append(c); }
 
     // Append data from a narrow buffer, widening it.
-    void append_narrow_buffer(const separated_buffer_t &buffer);
+    bool append_narrow_buffer(const separated_buffer_t &buffer);
 
     /// Append a format string.
-    void append_format(const wchar_t *format, ...) {
+    bool append_format(const wchar_t *format, ...) {
         va_list va;
         va_start(va, format);
-        append_formatv(format, va);
+        bool r = append_formatv(format, va);
         va_end(va);
+
+        return r;
     }
 
-    void append_formatv(const wchar_t *format, va_list va) { append(vformat_string(format, va)); }
+    bool append_formatv(const wchar_t *format, va_list va) {
+        return append(vformat_string(format, va));
+    }
 
     output_stream_t() = default;
     virtual ~output_stream_t() = default;
@@ -397,7 +405,7 @@ class output_stream_t : noncopyable_t, nonmovable_t {
 
 /// A null output stream which ignores all writes.
 class null_output_stream_t final : public output_stream_t {
-    virtual void append(const wchar_t *s, size_t amt) override;
+    virtual bool append(const wchar_t *s, size_t amt) override;
 };
 
 /// An output stream for builtins which outputs to an fd.
@@ -405,15 +413,20 @@ class null_output_stream_t final : public output_stream_t {
 class fd_output_stream_t final : public output_stream_t {
    public:
     /// Construct from a file descriptor, which must be nonegative.
-    explicit fd_output_stream_t(int fd) : fd_(fd) { assert(fd_ >= 0 && "Invalid fd"); }
+    explicit fd_output_stream_t(int fd) : fd_(fd), sigcheck_(topic_t::sighupint) {
+        assert(fd_ >= 0 && "Invalid fd");
+    }
 
     int flush_and_check_error() override;
 
-    void append(const wchar_t *s, size_t amt) override;
+    bool append(const wchar_t *s, size_t amt) override;
 
    private:
     /// The file descriptor to write to.
     const int fd_;
+
+    /// Used to check if a SIGINT has been received when EINTR is encountered
+    sigchecker_t sigcheck_;
 
     /// Whether we have received an error.
     bool errored_{false};
@@ -423,7 +436,7 @@ class fd_output_stream_t final : public output_stream_t {
 class string_output_stream_t final : public output_stream_t {
    public:
     string_output_stream_t() = default;
-    void append(const wchar_t *s, size_t amt) override;
+    bool append(const wchar_t *s, size_t amt) override;
 
     /// \return the wcstring containing the output.
     const wcstring &contents() const override;
@@ -440,8 +453,8 @@ class buffered_output_stream_t final : public output_stream_t {
         assert(buffer_ && "Buffer must not be null");
     }
 
-    void append(const wchar_t *s, size_t amt) override;
-    void append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
+    bool append(const wchar_t *s, size_t amt) override;
+    bool append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
                                 bool want_newline) override;
     int flush_and_check_error() override;
 

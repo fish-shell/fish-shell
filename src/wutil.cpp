@@ -173,17 +173,17 @@ void dir_iter_t::entry_t::do_stat() const {
 }
 
 dir_iter_t::dir_iter_t(const wcstring &path) {
-    dir_ = wopendir(path);
+    dir_.reset(wopendir(path));
     if (!dir_) {
         error_ = errno;
         return;
     }
-    entry_.dirfd_ = dirfd(dir_);
+    entry_.dirfd_ = dirfd(&*dir_);
 }
 
 dir_iter_t::dir_iter_t(dir_iter_t &&rhs) {
     // Steal the fields; ensure rhs no longer has FILE* and forgets its fd.
-    this->dir_ = rhs.dir_;
+    this->dir_ = std::move(rhs.dir_);
     this->error_ = rhs.error_;
     this->entry_ = std::move(rhs.entry_);
     rhs.dir_ = nullptr;
@@ -191,10 +191,7 @@ dir_iter_t::dir_iter_t(dir_iter_t &&rhs) {
 }
 
 dir_iter_t &dir_iter_t::operator=(dir_iter_t &&rhs) {
-    if (this->dir_) {
-        (void)closedir(this->dir_);
-    }
-    this->dir_ = rhs.dir_;
+    this->dir_ = std::move(rhs.dir_);
     this->error_ = rhs.error_;
     this->entry_ = std::move(rhs.entry_);
     rhs.dir_ = nullptr;
@@ -204,22 +201,18 @@ dir_iter_t &dir_iter_t::operator=(dir_iter_t &&rhs) {
 
 void dir_iter_t::rewind() {
     if (dir_) {
-        rewinddir(dir_);
+        rewinddir(&*dir_);
     }
 }
 
-dir_iter_t::~dir_iter_t() {
-    if (dir_) {
-        (void)closedir(dir_);
-    }
-}
+dir_iter_t::~dir_iter_t() = default;
 
 const dir_iter_t::entry_t *dir_iter_t::next() {
     if (!dir_) {
         return nullptr;
     }
     errno = 0;
-    struct dirent *dent = readdir(dir_);
+    struct dirent *dent = readdir(&*dir_);
     if (!dent) {
         error_ = errno;
         return nullptr;

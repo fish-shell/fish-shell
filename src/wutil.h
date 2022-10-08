@@ -190,7 +190,7 @@ class dir_iter_t : noncopyable_t {
     bool valid() const { return dir_ != nullptr; }
 
     /// \return the underlying file descriptor, or -1 if invalid.
-    int fd() const { return dir_ ? dirfd(dir_) : -1; }
+    int fd() const { return dir_ ? dirfd(&*dir_) : -1; }
 
     /// Rewind the directory to the beginning.
     void rewind();
@@ -247,7 +247,10 @@ class dir_iter_t : noncopyable_t {
     };
 
    private:
-    DIR *dir_{nullptr};
+    struct dir_closer_t {
+        void operator()(DIR *dir) const { (void)closedir(dir); }
+    };
+    std::unique_ptr<DIR, dir_closer_t> dir_{nullptr};
     int error_{0};
     entry_t entry_;
 };

@@ -83,6 +83,7 @@ Interactive improvements
 - Fish now disables the QUIT terminal sequence when it has the terminal. This frees up a key combination, often ctrl-backslash (``\x1c``) (:issue:`9234`).
 - Fish's vi mode no longer uses iTerm's proprietary escape sequences to signal cursor change, instead using the normal xterm-style sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
 - Generating descriptions for commands now uses ``manpath`` instead of ``man --path`` on macOS, as that has been removed in macOS Ventura.
+- When running fish on a remote system (e.g. inside SSH or a container), :kbd:`Control-X` now copies to the local client system's clipboard if the terminal supports OSC 52.
 
 
 Fixed Bugs

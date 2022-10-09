@@ -23,4 +23,15 @@ function fish_clipboard_copy
     else if type -q clip.exe
         printf '%s' $cmdline | clip.exe
     end
+
+    # Copy with OSC 52; useful if we are running in an SSH session or in
+    # a container.
+    if type -q base64
+        if not isatty stdout
+            echo "fish_clipboard_copy: stdout is not a terminal" >&2
+            return 1
+        end
+        set -l encoded (printf %s $cmdline | base64 | string join '')
+        printf '\e]52;c;%s\a' "$encoded"
+    end
 end

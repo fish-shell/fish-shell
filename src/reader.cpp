@@ -1362,15 +1362,15 @@ void reader_data_t::pager_selection_changed() {
     }
 }
 
-/// Expand an abbreviation replacer, which means either returning its literal replacement or running
-/// its function. \return the replacement string, or none to skip it. This may run fish script!
-maybe_t<wcstring> expand_replacer(const wcstring &token, const abbrs_replacer_t &repl,
-                                  parser_t &parser) {
+/// Expand an abbreviation replacer, which may mean running its function.
+/// \return the replacement, or none to skip it. This may run fish script!
+maybe_t<abbrs_replacement_t> expand_replacer(source_range_t range, const wcstring &token,
+                                             const abbrs_replacer_t &repl, parser_t &parser) {
     if (!repl.is_function) {
         // Literal replacement cannot fail.
         FLOGF(abbrs, L"Expanded literal abbreviation <%ls> -> <%ls>", token.c_str(),
               repl.replacement.c_str());
-        return repl.replacement;
+        return abbrs_replacement_t::from(range, repl.replacement, repl);
     }
 
     wcstring cmd = escape_string(repl.replacement);
@@ -1386,7 +1386,7 @@ maybe_t<wcstring> expand_replacer(const wcstring &token, const abbrs_replacer_t 
     }
     wcstring result = join_strings(outputs, L'\n');
     FLOGF(abbrs, L"Expanded function abbreviation <%ls> -> <%ls>", token.c_str(), result.c_str());
-    return result;
+    return abbrs_replacement_t::from(range, std::move(result), repl);
 }
 
 // Extract all the token ranges in \p str, along with whether they are an undecorated command.
@@ -1449,9 +1449,12 @@ static std::vector<positioned_token_t> extract_tokens(const wcstring &str) {
     return result;
 }
 
-/// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
-maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, size_t cursor_pos,
-                                                     abbrs_phase_t phase, parser_t &parser) {
+/// Expand abbreviations in the given phase at the given cursor position.
+/// cursor. \return the replacement. This does NOT inspect the current reader data.
+maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline,
+                                                                  size_t cursor_pos,
+                                                                  abbrs_phase_t phase,
+                                                                  parser_t &parser) {
     // Find the token containing the cursor. Usually users edit from the end, so walk backwards.
     const auto tokens = extract_tokens(cmdline);
     auto iter = std::find_if(tokens.rbegin(), tokens.rend(), [&](const positioned_token_t &t) {
@@ -1467,8 +1470,8 @@ maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, si
     wcstring token_str = cmdline.substr(range.start, range.length);
     auto replacers = abbrs_match(token_str, position, phase);
     for (const auto &replacer : replacers) {
-        if (auto replacement = expand_replacer(token_str, replacer, parser)) {
-            return edit_t{range.start, range.length, replacement.acquire()};
+        if (auto replacement = expand_replacer(range, token_str, replacer, parser)) {
+            return replacement;
         }
     }
     return none();
@@ -1485,10 +1488,10 @@ bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack, abbrs
         // Try expanding abbreviations.
         this->update_commandline_state();
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
-        if (auto edit =
-                reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, phase, parser())) {
-            push_edit(el, std::move(*edit));
-            update_buff_pos(el);
+        if (auto replacement = reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, phase,
+                                                                    this->parser())) {
+            push_edit(el, edit_t{replacement->range, std::move(replacement->text)});
+            update_buff_pos(el, replacement->cursor);
             result = true;
         }
     }
@@ -1516,13 +1519,13 @@ static bool expand_quiet_abbreviations(wcstring *inout_str, parser_t &parser) {
             pt.is_cmd ? abbrs_position_t::command : abbrs_position_t::anywhere;
         auto replacers = abbrs_match(token, position, abbrs_phase_t::quiet);
         for (const auto &replacer : replacers) {
-            const auto replacement = expand_replacer(token, replacer, parser);
-            if (replacement && *replacement != token) {
+            const auto replacement = expand_replacer(orig_range, token, replacer, parser);
+            if (replacement && replacement->text != token) {
                 modified = true;
                 result.replace(orig_range.start + repl_lengths - orig_lengths, orig_range.length,
-                               *replacement);
+                               replacement->text);
                 orig_lengths += orig_range.length;
-                repl_lengths += replacement->length();
+                repl_lengths += replacement->text.length();
                 break;
             }
         }

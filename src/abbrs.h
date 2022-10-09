@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "maybe.h"
+#include "parse_constants.h"
 #include "re.h"
 
 class env_var_t;
@@ -48,6 +49,9 @@ struct abbreviation_t {
     /// Expansion position.
     abbrs_position_t position{abbrs_position_t::command};
 
+    /// If set, then move the cursor to the first instance of this string in the expansion.
+    maybe_t<wcstring> set_cursor_indicator{};
+
     /// Mark if we came from a universal variable.
     bool from_universal{};
 
@@ -84,8 +88,30 @@ struct abbrs_replacer_t {
 
     /// If true, treat 'replacement' as the name of a function.
     bool is_function;
+
+    /// If set, the cursor should be moved to the first instance of this string in the expansion.
+    maybe_t<wcstring> set_cursor_indicator;
 };
 using abbrs_replacer_list_t = std::vector<abbrs_replacer_t>;
+
+/// A helper type for replacing a range in a string.
+struct abbrs_replacement_t {
+    /// The original range of the token in the command line.
+    source_range_t range{};
+
+    /// The string to replace with.
+    wcstring text{};
+
+    /// The new cursor location, or none to use the default.
+    /// This is relative to the original range.
+    maybe_t<size_t> cursor{};
+
+    /// Construct a replacement from a replacer.
+    /// The \p range is the range of the text matched by the replacer in the command line.
+    /// The text is passed in separately as it may be the output of the replacer's function.
+    static abbrs_replacement_t from(source_range_t range, wcstring text,
+                                    const abbrs_replacer_t &replacer);
+};
 
 class abbrs_set_t {
    public:

@@ -54,7 +54,8 @@ abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t
     for (auto it = abbrs_.rbegin(); it != abbrs_.rend(); ++it) {
         const abbreviation_t &abbr = *it;
         if (abbr.matches(token, position, phase)) {
-            result.push_back(abbrs_replacer_t{abbr.replacement, abbr.replacement_is_function});
+            result.push_back(abbrs_replacer_t{abbr.replacement, abbr.replacement_is_function,
+                                              abbr.set_cursor_indicator});
         }
     }
     return result;
@@ -129,4 +130,20 @@ void abbrs_set_t::import_from_uvars(const std::unordered_map<wcstring, env_var_t
             }
         }
     }
+}
+
+// static
+abbrs_replacement_t abbrs_replacement_t::from(source_range_t range, wcstring text,
+                                              const abbrs_replacer_t &replacer) {
+    abbrs_replacement_t result{};
+    result.range = range;
+    result.text = std::move(text);
+    if (replacer.set_cursor_indicator.has_value()) {
+        size_t pos = result.text.find(*replacer.set_cursor_indicator);
+        if (pos != wcstring::npos) {
+            result.text.erase(pos, replacer.set_cursor_indicator->size());
+            result.cursor = pos + range.start;
+        }
+    }
+    return result;
 }

@@ -41,6 +41,7 @@ struct abbr_options_t {
     bool function{};
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
+    maybe_t<wcstring> set_cursor_indicator{};
 
     bool quiet{};
 
@@ -83,6 +84,18 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --quiet option requires --add\n"), CMD);
             return false;
         }
+        if (!add && set_cursor_indicator.has_value()) {
+            streams.err.append_format(_(L"%ls: --set-cursor option requires --add\n"), CMD);
+            return false;
+        }
+        if (set_cursor_indicator.has_value() && quiet) {
+            streams.err.append_format(_(L"%ls: --quiet cannot be used with --set-cursor\n"), CMD);
+            return false;
+        }
+        if (set_cursor_indicator.has_value() && set_cursor_indicator->empty()) {
+            streams.err.append_format(_(L"%ls: --set-cursor argument cannot be empty\n"), CMD);
+            return false;
+        }
         return true;
     }
 };
@@ -102,6 +115,10 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         if (abbr.is_regex()) {
             comps.push_back(L"--regex");
             comps.push_back(escape_string(abbr.key));
+        }
+        if (abbr.set_cursor_indicator.has_value()) {
+            comps.push_back(L"--set-cursor");
+            comps.push_back(escape_string(*abbr.set_cursor_indicator));
         }
         if (abbr.is_quiet) {
             comps.push_back(L"--quiet");
@@ -244,6 +261,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
     abbr.regex = std::move(regex);
     abbr.replacement_is_function = opts.function;
+    abbr.set_cursor_indicator = opts.set_cursor_indicator;
     abbr.is_quiet = opts.quiet;
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
@@ -283,6 +301,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                                                   {L"position", required_argument, 'p'},
                                                   {L"regex", required_argument, REGEX_SHORT},
                                                   {L"quiet", no_argument, QUIET_SHORT},
+                                                  {L"set-cursor", required_argument, 'C'},
                                                   {L"function", no_argument, 'f'},
                                                   {L"rename", no_argument, 'r'},
                                                   {L"erase", no_argument, 'e'},
@@ -343,6 +362,15 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
             }
             case QUIET_SHORT: {
                 opts.quiet = true;
+                break;
+            }
+            case 'C': {
+                if (opts.set_cursor_indicator.has_value()) {
+                    streams.err.append_format(
+                        _(L"%ls: Cannot specify multiple set-cursor options\n"), CMD);
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.set_cursor_indicator = w.woptarg;
                 break;
             }
             case 'f':

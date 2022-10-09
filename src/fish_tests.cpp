@@ -2506,11 +2506,11 @@ static void test_abbreviations() {
     maybe_t<wcstring> result;
     auto expand_abbreviation_in_command = [](const wcstring &cmdline,
                                              size_t cursor_pos) -> maybe_t<wcstring> {
-        if (auto edit = reader_expand_abbreviation_at_cursor(
+        if (auto replacement = reader_expand_abbreviation_at_cursor(
                 cmdline, cursor_pos, abbrs_phase_t::noisy, parser_t::principal_parser())) {
             wcstring cmdline_expanded = cmdline;
             std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
-            apply_edit(&cmdline_expanded, &colors, *edit);
+            apply_edit(&cmdline_expanded, &colors, edit_t{replacement->range, replacement->text});
             return cmdline_expanded;
         }
         return none_t();

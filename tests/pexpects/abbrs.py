@@ -152,3 +152,11 @@ expect_prompt()
 # The quiet one sees a token starting with 'a' and ending with 'z' and uppercases it.
 sendline(r"echo %abcdez%")
 expect_prompt(r"ABCDEZ")
+
+# Test cursor positioning.
+sendline(r"""abbr --erase (abbr --list) """)
+expect_prompt()
+sendline(r"""abbr LLL --position anywhere --set-cursor !HERE! '!HERE! | less'""")
+expect_prompt()
+send(r"""echo LLL derp?""")
+expect_str(r"echo derp | less ")

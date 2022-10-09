@@ -25,6 +25,7 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
+- The difference between ``\xAB`` and ``\XAB`` has been removed. Before, ``\x`` would do the same thing as ``\X`` except that it would error if the value was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`1352`).
 
 Scripting improvements
 ----------------------

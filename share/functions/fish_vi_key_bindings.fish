@@ -88,6 +88,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -s --preset [ history-token-search-backward
     bind -s --preset ] history-token-search-forward
+    bind -s --preset / history-pager
 
     bind -s --preset k up-or-search
     bind -s --preset j down-or-search

@@ -442,6 +442,8 @@ Command mode is also known as normal mode.
 
 - :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the :ref:`history <history-search>` section for more information on history searching.
 
+- :kbd:`/` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing it again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
+
 - :kbd:`Backspace` moves the cursor left.
 
 .. _vi-mode-insert:

@@ -1,25 +1,30 @@
 function fish_clipboard_paste
     set -l data
     if type -q pbpaste
-        set data (pbpaste 2>/dev/null)
+        set data (pbpaste 2>/dev/null | string collect -N)
     else if set -q WAYLAND_DISPLAY; and type -q wl-paste
-        set data (wl-paste 2>/dev/null)
+        set data (wl-paste -n 2>/dev/null | string collect -N)
     else if set -q DISPLAY; and type -q xsel
-        set data (xsel --clipboard)
+        set data (xsel --clipboard | string collect -N)
     else if set -q DISPLAY; and type -q xclip
-        set data (xclip -selection clipboard -o 2>/dev/null)
+        set data (xclip -selection clipboard -o 2>/dev/null | string collect -N)
     else if type -q powershell.exe
-        set data (powershell.exe Get-Clipboard | string trim -r -c \r)
+        set data (powershell.exe Get-Clipboard | string trim -r -c \r | string collect -N)
     end
 
     # Issue 6254: Handle zero-length clipboard content
-    if not string match -qr . -- "$data"
+    if not string length -q -- "$data"
         return 1
     end
 
-    # Also split on \r to turn it into a newline,
-    # otherwise the output looks really confusing.
-    set data (string split \r -- $data)
+    if not isatty stdout
+        # If we're redirected, just write the data *as-is*.
+        printf %s $data
+        return
+    end
+
+    # Also split on \r, otherwise it looks confusing
+    set data (string split \r -- $data | string split \n)
 
     # If the current token has an unmatched single-quote,
     # escape all single-quotes (and backslashes) in the paste,

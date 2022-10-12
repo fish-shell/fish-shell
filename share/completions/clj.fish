@@ -67,7 +67,7 @@ complete -c clj -f -o Sthreads -d "Set specific number of download threads"
 complete -c clj -f -o Strace -d "Write a trace.edn file that traces deps expansion"
 
 complete -c clj -k -f -s h -l help -d "Show help"
-complete -c clj -f -s P -d "Prepare deps - download libs, cache classpath, but don\'t exec"
+complete -c clj -f -s P -d "Prepare deps - download libs, cache classpath, but don't exec"
 complete -c clj -s J -d "Pass opt through in java_opts, ex: -J-Xmx512m"
 complete -c clj -s i -l init -r -d "Load a file or resource"
 complete -c clj -f -s e -l eval -r -d "Eval exprs in string; print non-nil values"

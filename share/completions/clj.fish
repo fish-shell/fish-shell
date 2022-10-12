@@ -1,11 +1,10 @@
-function __fish_bb_helper
-    #; ht Bob B@Clojurians Slack
-    # https://raw.githubusercontent.com/bobisageek/bb-scripts/main/clj-alils.clj
-    #
-    # Babashka code for listing all aliases and tools available from the current context
-    # based on :config-files from `clojure -Sdescribe`
+# ht Bob B@Clojurians Slack
+# https://raw.githubusercontent.com/bobisageek/bb-scripts/main/clj-alils.clj
+#
+# Babashka code for listing all aliases and tools available from the current context
+# based on :config-files from `clojure -Sdescribe`
 
-    echo '
+set -l bb_helper '
 (require \'[babashka.fs :as fs])
 
 (def config (->> (with-out-str (babashka.tasks/clojure "-Sdescribe"))
@@ -39,16 +38,15 @@ function __fish_bb_helper
       (case (first *command-line-args*)
         "tools" (installed-tools)
         (aliases)))'
+
+function __fish_clj_aliases -V bb_helper
+    command -q bb
+    bb -e "$bb_helper"
 end
 
-function __fish_clj_aliases
+function __fish_clj_tools -V bb_helper
     command -q bb
-    bb (__fish_bb_helper | psub)
-end
-
-function __fish_clj_tools
-    command -q bb
-    bb (__fish_bb_helper | psub) tools
+    bb -e "$bb_helper" tools
 end
 
 complete -c clj -s X -x -r -k -a "(__fish_complete_list : __fish_clj_aliases)" -d "Use concatenated aliases to modify classpath or supply exec fn/args"

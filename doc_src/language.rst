@@ -125,7 +125,8 @@ outputs ``hello world`` (without the apostrophes). In the former case the shell 
 
 The special characters and their escape sequences are:
 
-- :code:`\ ` (backslash space) escapes the space character. This keeps the shell from splitting arguments on the escaped space.
+.. (next line features a non-breaking space - this will be rendered to a normal space instead of removed)
+- :code:`\\\ ` (backslash space) escapes the space character. This keeps the shell from splitting arguments on the escaped space.
 - ``\$`` escapes the dollar character.
 - ``\\`` escapes the backslash character.
 - ``\*`` escapes the star character.
@@ -140,7 +141,6 @@ The special characters and their escape sequences are:
 - ``\]`` escapes the right bracket character.
 - ``\<`` escapes the less than character.
 - ``\>`` escapes the more than character.
-- ``\^`` escapes the circumflex character.
 - ``\&`` escapes the ampersand character.
 - ``\|`` escapes the vertical bar character.
 - ``\;`` escapes the semicolon character.

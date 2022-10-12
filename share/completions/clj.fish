@@ -78,5 +78,3 @@ complete -c clj -f -o version -l version -d "Print the version to stdout and exi
 complete -c clj -f -s m -l main -d "Call the -main function from namespace w/args"
 complete -c clj -f -s r -l repl -d "Run a repl"
 complete -c clj -r -d "Run a script from a file or resource"
-
-complete -c clojure --wraps clj

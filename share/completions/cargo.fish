@@ -66,7 +66,6 @@ complete -c cargo -n __fish_use_subcommand -f -a build -d 'Compile a local packa
 complete -c cargo -n __fish_use_subcommand -f -a check -d 'Check a local package and all of its dependencies for errors'
 complete -c cargo -n __fish_use_subcommand -f -a clean -d 'Remove artifacts that cargo has generated in the past'
 complete -c cargo -n __fish_use_subcommand -f -a complete -d 'Generate completion file for a shell'
-complete -c cargo -n __fish_use_subcommand -f -a describe-future-incompatibilities -d 'Reports any crates which will eventually stop compiling'
 complete -c cargo -n __fish_use_subcommand -f -a doc -d 'Build a package\'s documentation'
 complete -c cargo -n __fish_use_subcommand -f -a fetch -d 'Fetch dependencies of a package from the network'
 complete -c cargo -n __fish_use_subcommand -f -a fix -d 'Automatically fix lint warnings reported by rustc'

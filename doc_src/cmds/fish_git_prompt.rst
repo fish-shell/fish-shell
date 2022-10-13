@@ -26,6 +26,8 @@ The ``fish_git_prompt`` function displays information about the current git repo
 
 There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the ``git config`` command, while fish variables can be set as usual with the :doc:`set <set>` command.
 
+For the boolean options (those which enable or disable something), the fish variables understands "1" to mean true and every other value to mean false, the git settings need to be set to "true" or "false".
+
 - ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
   In large repositories, this can take a lot of time, so you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
 
@@ -52,7 +54,7 @@ There are numerous customization options, which can be controlled with git optio
      ``none``
           disables (useful with informative status)
 
-- ``$__fish_git_prompt_showstashstate`` can be set to display the state of the stash.
+- ``$__fish_git_prompt_showstashstate`` can be set to 1 to display the state of the stash.
 
 - ``$__fish_git_prompt_shorten_branch_len`` can be set to the number of characters that the branch name will be shortened to.
 
@@ -69,7 +71,7 @@ There are numerous customization options, which can be controlled with git optio
 
      If none of these apply, the commit SHA shortened to 8 characters is used.
 
-- ``$__fish_git_prompt_showcolorhints`` can be set to enable coloring for the branch name and status symbols.
+- ``$__fish_git_prompt_showcolorhints`` can be set to 1 to enable coloring for the branch name and status symbols.
 
 A number of variables set characters and color used as indicators. Many of these have a different default if used with informative status enabled, or ``$__fish_git_prompt_use_informative_chars`` set. The usual default is given first, then the informative default (if it is different). If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
 

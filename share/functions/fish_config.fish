@@ -267,6 +267,9 @@ function fish_config --description "Launch fish's web based configuration"
                         contains -- $c $have_colors
                         and continue
 
+                        # Erase conflicting global variables so we don't get a warning and
+                        # so changes are observed immediately.
+                        set -eg $c
                         set $scope $c
                     end
 

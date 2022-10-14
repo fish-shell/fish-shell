@@ -97,6 +97,7 @@ Completions
   - ``zig`` (:issue:`9083`)
   - ``sad``
   - ``dua``
+  - ``clojure``
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

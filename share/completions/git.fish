@@ -1124,7 +1124,7 @@ complete -F -c git -n '__fish_git_using_command checkout' -n 'contains -- -- (co
 complete -f -c git -n __fish_git_needs_command -a checkout -d 'Checkout and switch to a branch'
 
 # The following dynamic, order-preserved (-k) completions will be shown in reverse order (see #9221)
-complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_recent_commits --kall)'
+complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_recent_commits --all)'
 complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_tags)' -d Tag
 complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_heads)' -d Head
 complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'

@@ -1122,13 +1122,16 @@ complete -c git -n '__fish_git_using_command am' -l show-current-patch -a 'diff 
 ### checkout
 complete -F -c git -n '__fish_git_using_command checkout' -n 'contains -- -- (commandline -opc)'
 complete -f -c git -n __fish_git_needs_command -a checkout -d 'Checkout and switch to a branch'
-complete -f -c git -n '__fish_git_using_command checkout' -ka '(__fish_git_files modified deleted modified-staged-deleted)'
-complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_recent_commits --kall)'
+
+# The following dynamic, order-preserved (-k) completions will be shown in reverse order (see #9221)
+complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_recent_commits --kall)'
 complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_heads)' -d Head
 complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
 complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_heads)' -d Head
-complete -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_local_branches)'
+# In the presence of changed files, `git checkout ...` assumes highest likelihood is intent to restore so this comes last (aka shown first).
+complete -f -c git -n '__fish_git_using_command checkout' -ka '(__fish_git_files modified deleted modified-staged-deleted)'
+
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s B -d 'Create a new branch or reset existing to start point'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'

@@ -96,6 +96,7 @@ Completions
   - ``kind`` (:issue:`9110`)
   - ``zig`` (:issue:`9083`)
   - ``sad``
+  - ``clojure``
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

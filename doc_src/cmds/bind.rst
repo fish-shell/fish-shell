@@ -41,7 +41,7 @@ If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given 
 
 To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
-Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed in the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, you can use the fish command `set fish_bind_mode MODE`.
+Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
 
 Options
 -------

@@ -37,6 +37,9 @@ function fish_config --description "Launch fish's web based configuration"
         return 1
     end
 
+    # Variables a theme is allowed to set
+    set -l theme_var_filter '^fish_(?:pager_)?color.*$';
+
     switch $cmd
         case prompt
             # prompt - for prompt switching
@@ -250,11 +253,10 @@ function fish_config --description "Launch fish's web based configuration"
                         end
 
                         while read -lat toks
-                            # We only allow color variables.
+                            # The whitelist allows only color variables.
                             # Not the specific list, but something named *like* a color variable.
-                            #
                             # This also takes care of empty lines and comment lines.
-                            string match -rq '^fish_(?:pager_)?color.*$' -- $toks[1]
+                            string match -rq -- $theme_var_filter $toks[1]
                             or continue
 
                             # If we're supposed to set universally, remove any shadowing globals
@@ -277,12 +279,13 @@ function fish_config --description "Launch fish's web based configuration"
                             set $scope $c
                         end
                     else
-                        # We're persisting whatever current colors are loaded (maybe in the local scope)
+                        # We're persisting whatever current colors are loaded (maybe in the global scope)
                         # to the universal scope, without overriding them from a theme file.
-                        # Like above, make sure to erase from other scopes first. This branch is only
-                        # reachable in the case of `theme save` so $scope is always `-U`.
+                        # Like above, make sure to erase from other scopes first and ensure known color
+                        # variables are defined, even if empty.
+                        # This branch is only reachable in the case of `theme save` so $scope is always `-U`.
 
-                        for color in $known_colors
+                        for color in (printf "%s\n" $known_colors (set --names | string match -r $theme_var_filter) | sort -u)
                             if set -q $color
                                 # Cache the value from whatever scope currently defines it
                                 set -l value $$color
@@ -297,7 +300,7 @@ function fish_config --description "Launch fish's web based configuration"
                     return 0
                 case dump
                     # Write the current theme in .theme format, to stdout.
-                    set -L | string match -r '^fish_(?:pager_)?color.*$'
+                    set -L | string match -r $theme_var_filter
                 case '*'
                     echo "No such command: $cmd" >&2
                     return 1

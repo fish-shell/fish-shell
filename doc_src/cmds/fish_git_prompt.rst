@@ -26,7 +26,7 @@ The ``fish_git_prompt`` function displays information about the current git repo
 
 There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the ``git config`` command, while fish variables can be set as usual with the :doc:`set <set>` command.
 
-For the boolean options (those which enable or disable something), the fish variables understands "1" to mean true and every other value to mean false, the git settings need to be set to "true" or "false".
+Boolean options (those which enable or disable something) understand "1", "yes" or "true" to mean true and every other value to mean false.
 
 - ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
   In large repositories, this can take a lot of time, so you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.

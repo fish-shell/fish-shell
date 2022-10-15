@@ -97,6 +97,7 @@ The scoping rules when creating or updating a variable are:
 
 - If a variable's scope is not explicitly set and there is no existing variable by that name, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag, in which case the variable will be local to the most-inner currently executing block, while without them the variable will be local to the function as a whole. If no function is executing, the variable will be set in the global scope.
 
+- Similarly, a variable explicitly set with ``-f`` or ``--function`` outside of any function (a top-level declaration or at the interactive prompt) will be assigned to the global scope instead.
 
 The exporting rules when creating or updating a variable are identical to the scoping rules for variables:
 

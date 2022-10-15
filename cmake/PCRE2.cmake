@@ -40,7 +40,7 @@ else()
     message(FATAL_ERROR "Please install PCRE2 headers, or CMake >= 3.11 so I can download PCRE")
   endif()
   set(CMAKE_TLS_VERIFY true)
-  set(PCRE2_REPO "https://github.com/PhilipHazel/pcre2.git")
+  set(PCRE2_REPO "https://github.com/PCRE2Project/pcre2.git")
 
   message(STATUS "Fetching and configuring PCRE2 from ${PCRE2_REPO}")
   Set(FETCHCONTENT_QUIET FALSE)

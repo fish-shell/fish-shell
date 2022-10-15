@@ -91,11 +91,11 @@ If the variable name is one or more list elements, such as ``PATH[1 3 7]``, only
 
 The scoping rules when creating or updating a variable are:
 
-- Variables may be explicitly set to universal, global or local. Variables with the same name in different scopes will not be changed.
+- Variables may be explicitly set as universal, global, function, or local. Variables with the same name but in a different scope will not be changed.
 
-- If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
+- If the scope of a variable is not explicitly set *but a variable by that name has been previously defined*, the scope of the existing variable is used. If the variable is already defined in multiple scopes, the variable with the narrowest scope will be updated.
 
-- If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+- If a variable's scope is not explicitly set and there is no existing variable by that name, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag, in which case the variable will be local to the most-inner currently executing block, while without them the variable will be local to the function as a whole. If no function is executing, the variable will be set in the global scope.
 
 
 The exporting rules when creating or updating a variable are identical to the scoping rules for variables:

@@ -23,7 +23,7 @@ extern bool curses_initialized;
 struct event_t;
 
 // Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
-enum {
+enum : uint16_t {
     /// Default mode. Used with `env_stack_t::get()` to indicate the caller doesn't care what scope
     /// the var is in or whether it is exported or unexported.
     ENV_DEFAULT = 0,
@@ -48,7 +48,7 @@ enum {
     /// to modify a var that should not be modified by direct user action; e.g., a read-only var.
     ENV_USER = 1 << 8,
 };
-typedef uint32_t env_mode_flags_t;
+using env_mode_flags_t = uint16_t;
 
 /// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };

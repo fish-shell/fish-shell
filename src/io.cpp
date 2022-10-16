@@ -206,9 +206,10 @@ void io_chain_t::push_back(io_data_ref_t element) {
     std::vector<io_data_ref_t>::push_back(std::move(element));
 }
 
-void io_chain_t::append(const io_chain_t &chain) {
+bool io_chain_t::append(const io_chain_t &chain) {
     assert(&chain != this && "Cannot append self to self");
     this->insert(this->end(), chain.begin(), chain.end());
+    return true;
 }
 
 bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd) {
@@ -308,21 +309,24 @@ shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
     return nullptr;
 }
 
-void output_stream_t::append_narrow_buffer(const separated_buffer_t &buffer) {
+bool output_stream_t::append_narrow_buffer(const separated_buffer_t &buffer) {
     for (const auto &rhs_elem : buffer.elements()) {
-        append_with_separation(str2wcstring(rhs_elem.contents), rhs_elem.separation, false);
+        if (!append_with_separation(str2wcstring(rhs_elem.contents), rhs_elem.separation, false)) {
+            return false;
+        }
     }
+    return true;
 }
 
-void output_stream_t::append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
+bool output_stream_t::append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
                                              bool want_newline) {
     if (type == separation_type_t::explicitly && want_newline) {
         // Try calling "append" less - it might write() to an fd
         wcstring buf{s, len};
         buf.push_back(L'\n');
-        append(buf);
+        return append(buf);
     } else {
-        append(s, len);
+        return append(s, len);
     }
 }
 
@@ -330,16 +334,26 @@ const wcstring &output_stream_t::contents() const { return g_empty_string; }
 
 int output_stream_t::flush_and_check_error() { return STATUS_CMD_OK; }
 
-void fd_output_stream_t::append(const wchar_t *s, size_t amt) {
-    if (errored_) return;
+bool fd_output_stream_t::append(const wchar_t *s, size_t amt) {
+    if (errored_) return false;
     int res = wwrite_to_fd(s, amt, this->fd_);
     if (res < 0) {
-        // TODO: this error is too aggressive, e.g. if we got SIGINT we should not complain.
-        if (errno != EPIPE) {
+        // Some of our builtins emit multiple screens worth of data sent to a pager (the primary
+        // example being the `history` builtin) and receiving SIGINT should be considered normal and
+        // non-exceptional (user request to abort via Ctrl-C), meaning we shouldn't print an error.
+        if (errno == EINTR && sigcheck_.check()) {
+            // We have two options here: we can either return false without setting errored_ to
+            // true (*this* write will be silently aborted but the onus is on the caller to check
+            // the return value and skip future calls to `append()`) or we can flag the entire
+            // output stream as errored, causing us to both return false and skip any future writes.
+            // We're currently going with the latter, especially seeing as no callers currently
+            // check the result of `append()` (since it was always a void function before).
+        } else if (errno != EPIPE) {
             wperror(L"write");
         }
         errored_ = true;
     }
+    return !errored_;
 }
 
 int fd_output_stream_t::flush_and_check_error() {
@@ -347,20 +361,23 @@ int fd_output_stream_t::flush_and_check_error() {
     return errored_ ? STATUS_CMD_ERROR : STATUS_CMD_OK;
 }
 
-void null_output_stream_t::append(const wchar_t *, size_t) {}
+bool null_output_stream_t::append(const wchar_t *, size_t) { return true; }
 
-void string_output_stream_t::append(const wchar_t *s, size_t amt) { contents_.append(s, amt); }
+bool string_output_stream_t::append(const wchar_t *s, size_t amt) {
+    contents_.append(s, amt);
+    return true;
+}
 
 const wcstring &string_output_stream_t::contents() const { return contents_; }
 
-void buffered_output_stream_t::append(const wchar_t *s, size_t amt) {
-    buffer_->append(wcs2string(s, amt));
+bool buffered_output_stream_t::append(const wchar_t *s, size_t amt) {
+    return buffer_->append(wcs2string(s, amt));
 }
 
-void buffered_output_stream_t::append_with_separation(const wchar_t *s, size_t len,
+bool buffered_output_stream_t::append_with_separation(const wchar_t *s, size_t len,
                                                       separation_type_t type, bool want_newline) {
     UNUSED(want_newline);
-    buffer_->append(wcs2string(s, len), type);
+    return buffer_->append(wcs2string(s, len), type);
 }
 
 int buffered_output_stream_t::flush_and_check_error() {

@@ -41,13 +41,14 @@ struct abbr_options_t {
     bool function{};
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
+    maybe_t<abbrs_phases_t> phases{};
     maybe_t<wcstring> set_cursor_indicator{};
-
-    bool quiet{};
 
     wcstring_list_t args;
 
     bool validate(io_streams_t &streams) {
+        const bool quiet = (phases.value_or(0) & abbrs_phase_quiet);
+
         // Duplicate options?
         wcstring_list_t cmds;
         if (add) cmds.push_back(L"add");
@@ -83,6 +84,9 @@ struct abbr_options_t {
         if (!add && quiet) {
             streams.err.append_format(_(L"%ls: --quiet option requires --add\n"), CMD);
             return false;
+        } else if (!add && phases.has_value()) {
+            streams.err.append_format(_(L"%ls: --trigger-on option requires --add\n"), CMD);
+            return false;
         }
         if (!add && set_cursor_indicator.has_value()) {
             streams.err.append_format(_(L"%ls: --set-cursor option requires --add\n"), CMD);
@@ -96,6 +100,11 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --set-cursor argument cannot be empty\n"), CMD);
             return false;
         }
+        if (quiet && (*phases & ~abbrs_phase_quiet) != 0) {
+            streams.err.append_format(_(L"%ls: Cannot use --quiet with --trigger-on\n"), CMD);
+            return false;
+        }
+
         return true;
     }
 };
@@ -120,8 +129,16 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
             comps.push_back(L"--set-cursor");
             comps.push_back(escape_string(*abbr.set_cursor_indicator));
         }
-        if (abbr.is_quiet) {
-            comps.push_back(L"--quiet");
+        if (abbr.phases != abbrs_phases_default) {
+            if (abbr.phases & abbrs_phase_entry) {
+                comps.push_back(L"--trigger-on entry");
+            }
+            if (abbr.phases & abbrs_phase_exec) {
+                comps.push_back(L"--trigger-on exec");
+            }
+            if (abbr.phases & abbrs_phase_quiet) {
+                comps.push_back(L"--quiet");
+            }
         }
         if (abbr.replacement_is_function) {
             comps.push_back(L"--function");
@@ -262,7 +279,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     abbr.regex = std::move(regex);
     abbr.replacement_is_function = opts.function;
     abbr.set_cursor_indicator = opts.set_cursor_indicator;
-    abbr.is_quiet = opts.quiet;
+    abbr.phases = opts.phases.value_or(abbrs_phases_default);
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
@@ -300,6 +317,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     static const struct woption long_options[] = {{L"add", no_argument, 'a'},
                                                   {L"position", required_argument, 'p'},
                                                   {L"regex", required_argument, REGEX_SHORT},
+                                                  {L"trigger-on", required_argument, 't'},
                                                   {L"quiet", no_argument, QUIET_SHORT},
                                                   {L"set-cursor", required_argument, 'C'},
                                                   {L"function", no_argument, 'f'},
@@ -344,8 +362,8 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 } else if (!wcscmp(w.woptarg, L"anywhere")) {
                     opts.position = abbrs_position_t::anywhere;
                 } else {
-                    streams.err.append_format(_(L"%ls: Invalid position '%ls'\nPosition must be "
-                                                L"one of: command, anywhere.\n"),
+                    streams.err.append_format(_(L"%ls: Invalid position '%ls'\n"
+                                                L"Position must be one of: command, anywhere.\n"),
                                               CMD, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
@@ -360,8 +378,23 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 opts.regex_pattern = w.woptarg;
                 break;
             }
+            case 't': {
+                abbrs_phases_t phases = opts.phases.value_or(0);
+                if (!wcscmp(w.woptarg, L"entry")) {
+                    phases |= abbrs_phase_entry;
+                } else if (!wcscmp(w.woptarg, L"exec")) {
+                    phases |= abbrs_phase_exec;
+                } else {
+                    streams.err.append_format(_(L"%ls: Invalid --trigger-on '%ls'\n"
+                                                L"Must be one of: entry, exec.\n"),
+                                              CMD, w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.phases = phases;
+                break;
+            }
             case QUIET_SHORT: {
-                opts.quiet = true;
+                opts.phases = opts.phases.value_or(0) | abbrs_phase_quiet;
                 break;
             }
             case 'C': {

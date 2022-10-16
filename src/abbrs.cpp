@@ -18,21 +18,11 @@ bool abbreviation_t::matches_position(abbrs_position_t position) const {
     return this->position == abbrs_position_t::anywhere || this->position == position;
 }
 
-bool abbreviation_t::matches_phase(abbrs_phase_t phase) const {
-    switch (phase) {
-        case abbrs_phase_t::noisy:
-            return !this->is_quiet;
-        case abbrs_phase_t::quiet:
-            return this->is_quiet;
-        case abbrs_phase_t::any:
-            return true;
-    }
-    DIE("Unreachable");
-}
+bool abbreviation_t::matches_phases(abbrs_phases_t p) const { return bool(this->phases & p); }
 
 bool abbreviation_t::matches(const wcstring &token, abbrs_position_t position,
-                             abbrs_phase_t phase) const {
-    if (!this->matches_position(position) || !this->matches_phase(phase)) {
+                             abbrs_phases_t phases) const {
+    if (!this->matches_position(position) || !this->matches_phases(phases)) {
         return false;
     }
     if (this->is_regex()) {
@@ -48,12 +38,12 @@ acquired_lock<abbrs_set_t> abbrs_get_set() {
 }
 
 abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t position,
-                                         abbrs_phase_t phase) const {
+                                         abbrs_phases_t phases) const {
     abbrs_replacer_list_t result{};
     // Later abbreviations take precedence so walk backwards.
     for (auto it = abbrs_.rbegin(); it != abbrs_.rend(); ++it) {
         const abbreviation_t &abbr = *it;
-        if (abbr.matches(token, position, phase)) {
+        if (abbr.matches(token, position, phases)) {
             result.push_back(abbrs_replacer_t{abbr.replacement, abbr.replacement_is_function,
                                               abbr.set_cursor_indicator});
         }
@@ -62,9 +52,9 @@ abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t
 }
 
 bool abbrs_set_t::has_match(const wcstring &token, abbrs_position_t position,
-                            abbrs_phase_t phase) const {
+                            abbrs_phases_t phases) const {
     for (const auto &abbr : abbrs_) {
-        if (abbr.matches(token, position, phase)) {
+        if (abbr.matches(token, position, phases)) {
             return true;
         }
     }

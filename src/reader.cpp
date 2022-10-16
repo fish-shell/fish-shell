@@ -792,8 +792,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Do what we need to do whenever our pager selection changes.
     void pager_selection_changed();
 
-    /// Expand abbreviations at the current cursor position, minus backtrack_amt.
-    bool expand_abbreviation_at_cursor(size_t cursor_backtrack, abbrs_phase_t phase);
+    /// Expand abbreviations in the given phases at the current cursor position, minus
+    /// cursor_backtrack.
+    bool expand_abbreviation_at_cursor(size_t cursor_backtrack, abbrs_phases_t phases);
 
     /// \return true if the command line has changed and repainting is needed. If \p colors is not
     /// null, then also return true if the colors have changed.
@@ -1453,7 +1454,7 @@ static std::vector<positioned_token_t> extract_tokens(const wcstring &str) {
 /// cursor. \return the replacement. This does NOT inspect the current reader data.
 maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline,
                                                                   size_t cursor_pos,
-                                                                  abbrs_phase_t phase,
+                                                                  abbrs_phases_t phases,
                                                                   parser_t &parser) {
     // Find the token containing the cursor. Usually users edit from the end, so walk backwards.
     const auto tokens = extract_tokens(cmdline);
@@ -1468,7 +1469,7 @@ maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring
         iter->is_cmd ? abbrs_position_t::command : abbrs_position_t::anywhere;
 
     wcstring token_str = cmdline.substr(range.start, range.length);
-    auto replacers = abbrs_match(token_str, position, phase);
+    auto replacers = abbrs_match(token_str, position, phases);
     for (const auto &replacer : replacers) {
         if (auto replacement = expand_replacer(range, token_str, replacer, parser)) {
             return replacement;
@@ -1480,7 +1481,7 @@ maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring
 /// Expand abbreviations at the current cursor position, minus the given cursor backtrack. This may
 /// change the command line but does NOT repaint it. This is to allow the caller to coalesce
 /// repaints.
-bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack, abbrs_phase_t phase) {
+bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack, abbrs_phases_t phases) {
     bool result = false;
     editable_line_t *el = active_edit_line();
 
@@ -1488,7 +1489,7 @@ bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack, abbrs
         // Try expanding abbreviations.
         this->update_commandline_state();
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
-        if (auto replacement = reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, phase,
+        if (auto replacement = reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, phases,
                                                                     this->parser())) {
             push_edit(el, edit_t{replacement->range, std::move(replacement->text)});
             update_buff_pos(el, replacement->cursor);
@@ -1517,7 +1518,7 @@ static bool expand_quiet_abbreviations(wcstring *inout_str, parser_t &parser) {
 
         abbrs_position_t position =
             pt.is_cmd ? abbrs_position_t::command : abbrs_position_t::anywhere;
-        auto replacers = abbrs_match(token, position, abbrs_phase_t::quiet);
+        auto replacers = abbrs_match(token, position, abbrs_phase_quiet);
         for (const auto &replacer : replacers) {
             const auto replacement = expand_replacer(orig_range, token, replacer, parser);
             if (replacement && replacement->text != token) {
@@ -4230,7 +4231,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
 
         case rl::expand_abbr: {
-            if (expand_abbreviation_at_cursor(1, abbrs_phase_t::noisy)) {
+            if (expand_abbreviation_at_cursor(1, abbrs_phase_entry)) {
                 inputter.function_set_status(true);
             } else {
                 inputter.function_set_status(false);
@@ -4328,9 +4329,9 @@ parser_test_error_bits_t reader_data_t::expand_for_execute(wcstring *to_exec) {
         if (test_res & PARSER_TEST_ERROR) return test_res;
     }
 
-    // Noisy abbreviations at the cursor.
+    // Exec abbreviations at the cursor.
     // Note we want to expand abbreviations even if incomplete.
-    if (expand_abbreviation_at_cursor(0, abbrs_phase_t::noisy)) {
+    if (expand_abbreviation_at_cursor(0, abbrs_phase_exec)) {
         // Trigger syntax highlighting as we are likely about to execute this command.
         this->super_highlight_me_plenty();
         if (conf.syntax_check_ok) {

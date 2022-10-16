@@ -6435,6 +6435,10 @@ void test_maybe() {
     do_test(std::is_copy_assignable<maybe_t<noncopyable>>::value == false);
     do_test(std::is_copy_constructible<maybe_t<noncopyable>>::value == false);
 
+    // We can construct a maybe_t from noncopyable things.
+    maybe_t<noncopyable> nmt{make_unique<int>(42)};
+    do_test(**nmt == 42);
+
     maybe_t<std::string> c1{"abc"};
     maybe_t<std::string> c2 = c1;
     do_test(c1.value() == "abc");
@@ -6442,6 +6446,11 @@ void test_maybe() {
     c2 = c1;
     do_test(c1.value() == "abc");
     do_test(c2.value() == "abc");
+
+    do_test(c2.value_or("derp") == "abc");
+    do_test(c2.value_or("derp") == "abc");
+    c2.reset();
+    do_test(c2.value_or("derp") == "derp");
 }
 
 void test_layout_cache() {

@@ -95,7 +95,7 @@ function history --description "display or manipulate interactive command histor
                 if not set -qx LESS
                     set -x LESS --quit-if-one-screen
                     # Also set --no-init for less < v530, see #8157.
-                    if test (less --version | string match -r 'less (\d+)')[2] -lt 530 2>/dev/null
+                    if type -q less; and test (less --version | string match -r 'less (\d+)')[2] -lt 530 2>/dev/null
                         set -x LESS $LESS --no-init
                     end
                 end

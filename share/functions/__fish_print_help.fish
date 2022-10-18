@@ -133,7 +133,7 @@ function __fish_print_help --description "Print help message for the specified f
             # similar to man, but add -F to quit paging when the help output is brief (#6227)
             # Also set -X for less < v530, see #8157.
             set -l lessopts isRF
-            if test (less --version | string match -r 'less (\d+)')[2] -lt 530 2>/dev/null
+            if type -q less; and test (less --version | string match -r 'less (\d+)')[2] -lt 530 2>/dev/null
                 set lessopts "$lessopts"X
             end
 

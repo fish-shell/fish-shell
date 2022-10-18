@@ -126,6 +126,7 @@ outputs ``hello world`` (without the apostrophes). In the former case the shell 
 The special characters and their escape sequences are:
 
 .. (next line features a non-breaking space - this will be rendered to a normal space instead of removed)
+
 - :code:`\\\ ` (backslash space) escapes the space character. This keeps the shell from splitting arguments on the escaped space.
 - ``\$`` escapes the dollar character.
 - ``\\`` escapes the backslash character.
@@ -1269,7 +1270,7 @@ You can change the settings of fish by changing the values of certain variables.
    A list of directories in which to search for commands.
 
 .. envvar:: CDPATH
-   
+
    A list of directories in which the :doc:`cd <cmds/cd>` builtin looks for a new directory.
 
 .. envvar:: FISH_DEBUG
@@ -1505,7 +1506,7 @@ The "locale" of a program is its set of language and regional settings that depe
    A UTF-8 encoding is recommended.
 
 .. envvar:: LC_ALL
-   
+
    Overrides the :envvar:`LANG` environment variable and the values of the other ``LC_*`` variables. If this is set, none of the other variables are used for anything.
 
    Usually the other variables should be used instead. Use LC_ALL only when you need to override something.
@@ -1524,7 +1525,7 @@ The "locale" of a program is its set of language and regional settings that depe
    ``LC_MESSAGES`` determines the language in which messages are diisplayed.
 
 .. envvar:: LC_MONETARY
-   
+
    Determines currency, how it is formated, and the symbols used.
 
 .. envvar:: LC_NUMERIC

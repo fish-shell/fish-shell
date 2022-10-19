@@ -1,11 +1,11 @@
 set -l __fish_john_encodings ASCII RAW UTF-8 ISO-8859-1 Latin1 ANSI ISO-8859-2 ISO-8859-7 ISO-8859-15 KOI8-R CP437 CP720 CP737 CP850 CP852 CP858 CP866 CP868 CP1250 CP1251 CP1252 CP1253 CP1254 CP1255 CP1256
 
 function __fish_john_rules --description "Print JohnTheRipper rules"
-    john --list=rules
+    john --list=rules 2>/dev/null
 end
 
 function __fish_john_formats --description "Print JohnTheRipper hash formats"
-    john --list=format-details | cut -f1
+    john --list=format-details 2>/dev/null | cut -f1
 end
 
 complete -c john -l help -d "print usage summary"
@@ -38,12 +38,12 @@ complete -c john -l encoding -l input-encoding -fa "$__fish_john_encodings" -d "
 complete -c john -l rules -fa "(__fish_complete_list , __fish_john_rules)" -d "enable word mangling rules"
 complete -c john -l rules-stack -fa "(__fish_complete_list , __fish_john_rules)" -d "stacked rules"
 complete -c john -l rules-skip-nop -d "skip any NOP rules"
-complete -c john -l incremental -fa "(john --list=inc-modes)" -d "incremental mode"
+complete -c john -l incremental -fa "(john --list=inc-modes 2>/dev/null)" -d "incremental mode"
 complete -c john -l incremental-charcount -rf -d "override CharCount for incremental mode"
 complete -c john -l mask -f -d "mask mode"
 complete -c john -l markov -f -d "Markov mode"
 complete -c john -l mkv-stats -rF -d "markov stats file"
-complete -c john -l external -fa "(john --list=ext-modes)" -d "external mode or word filter"
+complete -c john -l external -fa "(john --list=ext-modes 2>/dev/null)" -d "external mode or word filter"
 complete -c john -l subsets -f -d "subsets mode"
 complete -c john -l subsets-required -rf -d "The N first characters of subsets charset are the required set"
 complete -c john -l subsets-min-diff -rf -d "Minimum unique characters in subset"

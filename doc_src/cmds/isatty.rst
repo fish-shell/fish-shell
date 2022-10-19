@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    isatty [FILE DESCRIPTOR]
+    isatty [FILE_DESCRIPTOR]
 
 Description
 -----------

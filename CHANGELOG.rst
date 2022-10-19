@@ -24,6 +24,7 @@ Notable improvements and fixes
     checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
     for a,b in y 1 z 3
         ^~^
+- A new helper function ``fish_delta`` can be used to show the difference to fish's stock configuration (:issue:`9255`).
 
 Deprecations and removed features
 ---------------------------------
@@ -59,6 +60,11 @@ Scripting improvements
 - ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
 - ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
 - Builtins writing to a pipe or file was optimized. In particular printf no longer issues a separate ``write()`` syscall for every escaped character. (:issue:`9229`).
+- ``fish_clipboard_copy`` and ``fish_clipboard_paste`` can now be used in pipes (:issue:`9271`)::
+
+    git rev-list 3.5.1 | fish_clipboard_copy
+
+    fish_clipboard_paste | string join + | math
 
 Interactive improvements
 ------------------------

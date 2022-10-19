@@ -30,7 +30,6 @@
 #include "../parser.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
-using std::move;
 using std::unique_ptr;
 
 namespace {
@@ -271,7 +270,7 @@ class unary_operator final : public expression {
    public:
     unique_ptr<expression> subject;
     unary_operator(token_t tok, range_t where, unique_ptr<expression> exp)
-        : expression(tok, where), subject(move(exp)) {}
+        : expression(tok, where), subject(std::move(exp)) {}
     bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
 };
 
@@ -299,7 +298,7 @@ class parenthetical_expression final : public expression {
    public:
     unique_ptr<expression> contents;
     parenthetical_expression(token_t tok, range_t where, unique_ptr<expression> expr)
-        : expression(tok, where), contents(move(expr)) {}
+        : expression(tok, where), contents(std::move(expr)) {}
 
     bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
 };
@@ -336,7 +335,7 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
         unique_ptr<expression> subject(parse_unary_expression(start + 1, end));
         if (subject) {
             return make_unique<unary_operator>(tok, range_t(start, subject->range.end),
-                                               move(subject));
+                                               std::move(subject));
         }
         return nullptr;
     }
@@ -382,7 +381,7 @@ unique_ptr<expression> test_parser::parse_combining_expression(unsigned int star
 
         // Go to the end of this expression.
         idx = expr->range.end;
-        subjects.push_back(move(expr));
+        subjects.push_back(std::move(expr));
         first = false;
     }
 
@@ -391,8 +390,8 @@ unique_ptr<expression> test_parser::parse_combining_expression(unsigned int star
     }
     // Our new expression takes ownership of all expressions we created. The token we pass is
     // irrelevant.
-    return make_unique<combining_expression>(test_combine_and, range_t(start, idx), move(subjects),
-                                             move(combiners));
+    return make_unique<combining_expression>(test_combine_and, range_t(start, idx),
+                                             std::move(subjects), std::move(combiners));
 }
 
 unique_ptr<expression> test_parser::parse_unary_primary(unsigned int start, unsigned int end) {
@@ -471,7 +470,7 @@ unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, uns
 
     // Success.
     return make_unique<parenthetical_expression>(test_paren_open, range_t(start, close_index + 1),
-                                                 move(subexpr));
+                                                 std::move(subexpr));
 }
 
 unique_ptr<expression> test_parser::parse_primary(unsigned int start, unsigned int end) {
@@ -502,10 +501,10 @@ unique_ptr<expression> test_parser::parse_3_arg_expression(unsigned int start, u
             // Transfer ownership to the vector of subjects.
             std::vector<token_t> combiners = {center_token->tok};
             std::vector<unique_ptr<expression>> subjects;
-            subjects.push_back(move(left));
-            subjects.push_back(move(right));
+            subjects.push_back(std::move(left));
+            subjects.push_back(std::move(right));
             result = make_unique<combining_expression>(center_token->tok, range_t(start, end),
-                                                       move(subjects), move(combiners));
+                                                       std::move(subjects), std::move(combiners));
         }
     } else {
         result = parse_unary_expression(start, end);
@@ -522,7 +521,7 @@ unique_ptr<expression> test_parser::parse_4_arg_expression(unsigned int start, u
         unique_ptr<expression> subject(parse_3_arg_expression(start + 1, end));
         if (subject) {
             result = make_unique<unary_operator>(first_token, range_t(start, subject->range.end),
-                                                 move(subject));
+                                                 std::move(subject));
         }
     } else if (first_token == test_paren_open) {
         result = parse_parenthentical(start, end);

@@ -303,7 +303,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the :ref:`killring`.
 
-- :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents.
+- :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
 
 - :kbd:`Alt`\ +\ :kbd:`D` moves the next word to the :ref:`killring`.
 

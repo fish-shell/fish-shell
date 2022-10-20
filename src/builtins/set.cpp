@@ -204,11 +204,14 @@ static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts, int
         return STATUS_INVALID_ARGS;
     }
 
-    // Variables can only have one scope.
+    // Variables can only have one scope...
     if (opts.local + opts.function + opts.global + opts.universal > 1) {
-        streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        // ..unless we are erasing a variable, in which case we can erase from several in one go.
+        if (!opts.erase) {
+            streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
     }
 
     // Variables can only have one export status.
@@ -391,7 +394,7 @@ static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_f
     return res;
 }
 
-/// Given a list of values and 1-based indexes, return a new list, with those elements removed.
+/// Given a list of values and 1-based indexes, return a new list with those elements removed.
 /// Note this deliberately accepts both args by value, as it modifies them both.
 static wcstring_list_t erased_at_indexes(wcstring_list_t input, std::vector<long> indexes) {
     // Sort our indexes into *descending* order.
@@ -620,45 +623,50 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
 static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                              const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     int ret = STATUS_CMD_OK;
-    env_mode_flags_t scope = compute_scope(opts);
-    for (int i = 0; i < argc; i++) {
-        auto split = split_var_and_indexes(argv[i], scope, parser.vars(), streams);
-        if (!split) {
-            builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_CMD_ERROR;
-        }
-
-        if (!valid_var_name(split->varname)) {
-            streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, split->varname.c_str());
-            builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
-        }
-
-        int retval = STATUS_CMD_OK;
-        if (split->indexes.empty()) {  // unset the var
-            retval = parser.vars().remove(split->varname, scope);
-            // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
-            // but do not emit any errors at the console as a compromise between user
-            // friendliness and correctness.
-            if (retval != ENV_NOT_FOUND) {
-                handle_env_return(retval, cmd, split->varname, streams);
+    env_mode_flags_t scopes = compute_scope(opts);
+    // `set -e` is allowed to be called with multiple scopes.
+    for (int bit = 0; 1<<bit <= ENV_USER; ++bit) {
+        int scope = scopes & 1<<bit;
+        if (scope == 0 || (scope == ENV_USER && scopes != ENV_USER)) continue;
+        for (int i = 0; i < argc; i++) {
+            auto split = split_var_and_indexes(argv[i], scope, parser.vars(), streams);
+            if (!split) {
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                return STATUS_CMD_ERROR;
             }
-            if (retval == ENV_OK) {
-                event_fire(parser, event_t::variable_erase(split->varname));
-            }
-        } else {  // remove just the specified indexes of the var
-            if (!split->var) return STATUS_CMD_ERROR;
-            wcstring_list_t result = erased_at_indexes(split->var->as_list(), split->indexes);
-            retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(result),
-                                              streams, parser);
-        }
 
-        // Set $status to the last error value.
-        // This is cheesy, but I don't expect this to be checked often.
-        if (retval != STATUS_CMD_OK) {
-            ret = retval;
-        } else {
-            warn_if_uvar_shadows_global(cmd, opts, split->varname, streams, parser);
+            if (!valid_var_name(split->varname)) {
+                streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, split->varname.c_str());
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                return STATUS_INVALID_ARGS;
+            }
+
+            int retval = STATUS_CMD_OK;
+            if (split->indexes.empty()) {  // unset the var
+                retval = parser.vars().remove(split->varname, scope);
+                // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
+                // but do not emit any errors at the console as a compromise between user
+                // friendliness and correctness.
+                if (retval != ENV_NOT_FOUND) {
+                    handle_env_return(retval, cmd, split->varname, streams);
+                }
+                if (retval == ENV_OK) {
+                    event_fire(parser, event_t::variable_erase(split->varname));
+                }
+            } else {  // remove just the specified indexes of the var
+                if (!split->var) return STATUS_CMD_ERROR;
+                wcstring_list_t result = erased_at_indexes(split->var->as_list(), split->indexes);
+                retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(result),
+                                                  streams, parser);
+            }
+
+            // Set $status to the last error value.
+            // This is cheesy, but I don't expect this to be checked often.
+            if (retval != STATUS_CMD_OK) {
+                ret = retval;
+            } else {
+                warn_if_uvar_shadows_global(cmd, opts, split->varname, streams, parser);
+            }
         }
     }
     return ret;

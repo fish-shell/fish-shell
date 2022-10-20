@@ -921,3 +921,23 @@ foo=bar $FISH -c 'set foo 1 2 3; set --show foo'
 # CHECK: $foo[2]: |2|
 # CHECK: $foo[3]: |3|
 # CHECK: $foo: originally inherited as |bar|
+
+# Verify behavior of erasing in multiple scopes simultaneously
+set -U marbles global
+set -g marbles global
+set -l marbles local
+
+set -eUg marbles
+set -ql marbles || echo "erased in more scopes than it should!"
+set -qg marbles && echo "didn't erase from global scope!"
+set -qU marbles && echo "didn't erase from universal scope!"
+
+begin
+    set -l secret local 4 8 15 16 23 42
+    set -g secret global 4 8 15 16 23 42
+    set -egl secret[3..5]
+    echo $secret
+    # CHECK: local 4 23 42
+end
+echo $secret
+# CHECK: global 4 23 42

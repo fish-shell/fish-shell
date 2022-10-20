@@ -68,7 +68,7 @@ The following other options are available:
     Causes the values to be prepended to the current set of values for the variable. This can be used with **--append** to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
 
 **-e** or **--erase**
-    Causes the specified shell variables to be erased
+    Causes the specified shell variables to be erased. Supports erasing from multiple scopes at once.
 
 **-q** or **--query**
     Test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined, up to a maximum of 255. If no variable was given, it also returns 255.

@@ -1557,6 +1557,40 @@ For a list of all builtins, use ``builtin -n``.
 
 For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
 
+.. _command-lookup:
+
+Command lookup
+--------------
+
+When fish is told to run something, it goes through multiple steps to find it.
+
+If it contains a ``/``, fish tries to execute the given file, from the current directory on.
+
+If it doesn't contain a ``/``, it could be a function, builtin, or external command, and so fish goes through the full lookup.
+
+In order:
+
+1. It tries to resolve it as a :ref:`function <syntax-function>`.
+
+   - If the function is already known, it uses that
+   - If there is a file of the name with a ".fish" suffix in :envvar:`fish_function_path`, it :ref:`loads that <syntax-function-autoloading>`. (If there is more than one file only the first is used)
+   - If the function is now defined it uses that
+
+2. It tries to resolve it as a :ref:`builtin <builtin-overview>`.
+3. It tries to find an executable file in :envvar:`PATH`.
+
+   - If it finds a file, it tells the kernel to run it.
+   - If the kernel knows how to run the file (e.g. via a ``#!`` line - ``#!/bin/sh`` or ``#!/usr/bin/python``), it does it.
+   - If the kernel reports that it couldn't run it because of a missing interpreter, and the file passes a rudimentary check, fish tells ``/bin/sh`` to run it.
+
+If none of these work, fish runs the function :doc:`fish_command_not_found <cmds/fish_command_not_found>` and sets :envvar:`status` to 127.
+
+You can use :doc:`type <cmds/type>` to see how fish resolved something::
+
+  > type --short --all echo
+  echo is a builtin
+  echo is /usr/bin/echo
+
 .. _user-input:
 
 Querying for user input

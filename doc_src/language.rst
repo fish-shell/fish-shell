@@ -1544,7 +1544,7 @@ Builtin commands
 Fish includes a number of commands in the shell directly. We call these "builtins". These include:
 
 - Builtins that manipulate the shell state - :doc:`cd <cmds/cd>` changes directory, :doc:`set <cmds/set>` sets variables
-- Builtins for dealing with data, like :doc:`string <cmds/string>` for strings and :doc:`math <cmds/math>` for numbers, :doc:`count <cmds/count>` for counting lines or arguments
+- Builtins for dealing with data, like :doc:`string <cmds/string>` for strings and :doc:`math <cmds/math>` for numbers, :doc:`count <cmds/count>` for counting lines or arguments, :doc:`path <cmds/path>` for dealing with path
 - :doc:`status <cmds/status>` for asking about the shell's status
 - :doc:`printf <cmds/printf>` and :doc:`echo <cmds/echo>` for creating output
 - :doc:`test <cmds/test>` for checking conditions

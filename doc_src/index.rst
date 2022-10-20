@@ -115,6 +115,8 @@ These files are read on the startup of every shell, whether interactive and/or i
 
 This is the short version; for a full explanation, like for sysadmins or integration for developers of other software, see :ref:`Configuration files <configuration>`.
 
+If you want to see what you changed over fish's defaults, see :doc:`fish_delta <cmds/fish_delta>`.
+
 Examples:
 ---------
 

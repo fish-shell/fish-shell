@@ -61,6 +61,12 @@ fish_git_prompt
 echo
 #CHECK: (newbranch|✔)
 
+set -g __fish_git_prompt_show_informative_status 0
+fish_git_prompt
+echo # the git prompt doesn't print a newline
+#CHECK: (newbranch)
+set -g __fish_git_prompt_show_informative_status 1
+
 # Informative mode only shows untracked files if explicitly told.
 set -g __fish_git_prompt_showuntrackedfiles 1
 fish_git_prompt
@@ -80,12 +86,22 @@ git add foo
 fish_git_prompt
 echo
 #CHECK: (newbranch +)
+set -g __fish_git_prompt_showdirtystate 0
+fish_git_prompt
+echo
+#CHECK: (newbranch)
+set -g __fish_git_prompt_showdirtystate 1
 
 set -g __fish_git_prompt_showuntrackedfiles 1
 touch bananan
 fish_git_prompt
 echo
 #CHECK: (newbranch +%)
+set -g __fish_git_prompt_showuntrackedfiles 0
+fish_git_prompt
+echo
+#CHECK: (newbranch +)
+set -g __fish_git_prompt_showuntrackedfiles 1
 
 set -g __fish_git_prompt_status_order untrackedfiles stagedstate
 fish_git_prompt

@@ -28,14 +28,14 @@ There are numerous customization options, which can be controlled with git optio
 
 Boolean options (those which enable or disable something) understand "1", "yes" or "true" to mean true and every other value to mean false.
 
-- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
+- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to 1, true or yes to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
   In large repositories, this can take a lot of time, so you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
 
   Because counting untracked files requires a lot of time, the number of untracked files is only shown if enabled via ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles``.
 
-- ``$__fish_git_prompt_showdirtystate`` or the git option ``bash.showDirtyState`` can be set to show if the repository is "dirty", i.e. has uncommitted changes.
+- ``$__fish_git_prompt_showdirtystate`` or the git option ``bash.showDirtyState`` can be set to 1, true or yes to show if the repository is "dirty", i.e. has uncommitted changes.
 
-- ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles`` can be set to show if the repository has untracked files (that aren't ignored).
+- ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles`` can be set to 1, true or yes to show if the repository has untracked files (that aren't ignored).
 
 - ``$__fish_git_prompt_showupstream`` can be set to a list of values to determine how changes between HEAD and upstream are shown:
 
@@ -54,7 +54,7 @@ Boolean options (those which enable or disable something) understand "1", "yes" 
      ``none``
           disables (useful with informative status)
 
-- ``$__fish_git_prompt_showstashstate`` can be set to 1 to display the state of the stash.
+- ``$__fish_git_prompt_showstashstate`` can be set to 1, true or yes to display the state of the stash.
 
 - ``$__fish_git_prompt_shorten_branch_len`` can be set to the number of characters that the branch name will be shortened to.
 
@@ -71,7 +71,7 @@ Boolean options (those which enable or disable something) understand "1", "yes" 
 
      If none of these apply, the commit SHA shortened to 8 characters is used.
 
-- ``$__fish_git_prompt_showcolorhints`` can be set to 1 to enable coloring for the branch name and status symbols.
+- ``$__fish_git_prompt_showcolorhints`` can be set to 1, true or yes to enable coloring for the branch name and status symbols.
 
 A number of variables set characters and color used as indicators. Many of these have a different default if used with informative status enabled, or ``$__fish_git_prompt_use_informative_chars`` set. The usual default is given first, then the informative default (if it is different). If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
 

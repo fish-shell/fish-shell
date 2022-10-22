@@ -2494,7 +2494,9 @@ static void reader_interactive_init(parser_t &parser) {
 
     termsize_container_t::shared().invalidate_tty();
 
-    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    // Provide value for `status current-command`
+    parser.set_status_var(parser_status_var_t::current_command, L"fish");
+    // Also provide a value for the deprecated fish 2.0 $_ variable
     parser.vars().set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
@@ -2628,8 +2630,12 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
 static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     wcstring ft = tok_command(cmd);
 
-    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    if (!ft.empty()) parser.vars().set_one(L"_", ENV_GLOBAL, ft);
+    // Provide values for `status current-command` and `status current-commandline`
+    if (!ft.empty()) {
+        parser.set_status_var(parser_status_var_t::current_command, ft);
+        // Also provide a value for the deprecated fish 2.0 $_ variable
+        parser.vars().set_one(L"_", ENV_GLOBAL, ft);
+    }
 
     outputter_t &outp = outputter_t::stdoutput();
     reader_write_title(cmd, parser);
@@ -2651,7 +2657,9 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     term_steal();
 
-    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    // Provide value for `status current-command`
+    parser.set_status_var(parser_status_var_t::current_command, program_name);
+    // Also provide a value for the deprecated fish 2.0 $_ variable
     parser.vars().set_one(L"_", ENV_GLOBAL, program_name);
 
     if (have_proc_stat()) {

@@ -108,8 +108,12 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
     }
 
     wcstring ft = tok_command(job->command());
-    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    if (!ft.empty()) parser.set_var_and_fire(L"_", ENV_EXPORT, std::move(ft));
+    if (!ft.empty()) {
+        // Provide value for `status current-command`
+        parser.set_status_var(parser_status_var_t::current_command, ft);
+        // Also provide a value for the deprecated fish 2.0 $_ variable
+        parser.set_var_and_fire(L"_", ENV_EXPORT, std::move(ft));
+    }
     reader_write_title(job->command(), parser);
 
     // Note if tty transfer fails, we still try running the job.

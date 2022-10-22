@@ -244,6 +244,11 @@ struct eval_res_t {
         : status(status), break_expand(break_expand), was_empty(was_empty), no_status(no_status) {}
 };
 
+enum class parser_status_var_t : uint8_t {
+    current_command,
+    count_,
+};
+
 class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
@@ -263,6 +268,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// This is in "reverse" order: the topmost block is at the front. This enables iteration from
     /// top down using range-based for loops.
     std::deque<block_t> block_list;
+
+    /// Variables set by the single-threaded parser or reader and queryable by any consumer.
+    std::array<wcstring, (int) parser_status_var_t::count_> status_vars_;
 
     /// The 'depth' of the fish call stack.
     int eval_level = -1;
@@ -388,6 +396,17 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     int get_last_status() const { return vars().get_last_status(); }
     statuses_t get_last_statuses() const { return vars().get_last_statuses(); }
     void set_last_statuses(statuses_t s) { vars().set_last_statuses(std::move(s)); }
+
+    /// Get a parser status variable
+    const wcstring& get_status_var(parser_status_var_t var) const {
+        return status_vars_.at((int) var);
+    }
+
+    /// Set a parser status variable
+    void set_status_var(parser_status_var_t var, wcstring val) {
+        ASSERT_IS_MAIN_THREAD();
+        status_vars_[(int) var] = std::move(val);
+    }
 
     /// Cover of vars().set(), which also fires any returned event handlers.
     /// \return a value like ENV_OK.

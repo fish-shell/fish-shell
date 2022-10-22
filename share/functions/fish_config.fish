@@ -145,11 +145,11 @@ function fish_config --description "Launch fish's web based configuration"
                 return 1
             end
 
-            set -l dir $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
+            set -l dirs $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
 
             switch $cmd
                 case list ''
-                    string replace -r '.*/([^/]*).theme$' '$1' $dir/*.theme
+                    string replace -r '.*/([^/]*).theme$' '$1' $dirs/*.theme
                     return
                 case demo
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
@@ -177,8 +177,8 @@ function fish_config --description "Launch fish's web based configuration"
                     echo
                 case show
                     set -l fish (status fish-path)
-                    set -l themes $dir/$argv.theme
-                    set -q themes[1]; or set themes $dir/*.theme
+                    set -l themes $dirs/$argv.theme
+                    set -q themes[1]; or set themes $dirs/*.theme
                     set -l used_themes
 
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
@@ -236,7 +236,7 @@ function fish_config --description "Launch fish's web based configuration"
                     # If we are choosing a theme or saving from a named theme, load the theme now.
                     # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
                     if set -q argv[1]
-                        set -l files $dir/$argv[1].theme
+                        set -l files $dirs/$argv[1].theme
                         set -l file
 
                         for f in $files
@@ -248,7 +248,7 @@ function fish_config --description "Launch fish's web based configuration"
 
                         if not set -q file[1]
                             echo "No such theme: $argv[1]" >&2
-                            echo "Searched directories: $dir" >&2
+                            echo "Searched directories: $dirs" >&2
                             return 1
                         end
 

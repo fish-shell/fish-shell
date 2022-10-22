@@ -113,6 +113,8 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
         parser.set_status_var(parser_status_var_t::current_command, ft);
         // Also provide a value for the deprecated fish 2.0 $_ variable
         parser.set_var_and_fire(L"_", ENV_EXPORT, std::move(ft));
+        // Provide value for `status current-commandline`
+        parser.set_status_var(parser_status_var_t::current_commandline, job->command());
     }
     reader_write_title(job->command(), parser);
 

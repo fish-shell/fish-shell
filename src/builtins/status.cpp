@@ -46,6 +46,7 @@ enum status_cmd_t {
     STATUS_SET_JOB_CONTROL,
     STATUS_STACK_TRACE,
     STATUS_TEST_FEATURE,
+    STATUS_CURRENT_COMMANDLINE,
     STATUS_UNDEF
 };
 
@@ -54,6 +55,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_BASENAME, L"basename"},
     {STATUS_BASENAME, L"current-basename"},
     {STATUS_CURRENT_CMD, L"current-command"},
+    {STATUS_CURRENT_COMMANDLINE, L"current-commandline"},
     {STATUS_DIRNAME, L"current-dirname"},
     {STATUS_FILENAME, L"current-filename"},
     {STATUS_FUNCTION, L"current-function"},
@@ -457,6 +459,13 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
                 streams.out.append(program_name);
                 streams.out.push_back(L'\n');
             }
+            break;
+        }
+        case STATUS_CURRENT_COMMANDLINE: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
+            const auto &var = parser.get_status_var(parser_status_var_t::current_commandline);
+            streams.out.append(var);
+            streams.out.push_back(L'\n');
             break;
         }
         case STATUS_FISH_PATH: {

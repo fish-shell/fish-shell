@@ -246,6 +246,7 @@ struct eval_res_t {
 
 enum class parser_status_var_t : uint8_t {
     current_command,
+    current_commandline,
     count_,
 };
 

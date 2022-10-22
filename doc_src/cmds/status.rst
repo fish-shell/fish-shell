@@ -18,6 +18,7 @@ Synopsis
     status is-full-job-control
     status is-interactive-job-control
     status current-command
+    status current-commandline
     status filename
     status basename
     status dirname
@@ -62,6 +63,9 @@ The following operations (subcommands) are available:
 
 **current-command**
     Prints the name of the currently-running function or command, like the deprecated :envvar:`_` variable.
+
+**current-commandline**
+    Prints the entirety of the currently-running commandline, inclusive of all jobs and operators.
 
 **filename**, **current-filename**, **-f** or **--current-filename**
     Prints the filename of the currently-running script. If the current script was called via a symlink, this will return the symlink. If the current script was received by piping into :doc:`source <source>`, then this will return ``-``.

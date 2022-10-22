@@ -37,6 +37,9 @@ function fish_config --description "Launch fish's web based configuration"
         return 1
     end
 
+    # Variables a theme is allowed to set
+    set -l theme_var_filter '^fish_(?:pager_)?color.*$';
+
     switch $cmd
         case prompt
             # prompt - for prompt switching
@@ -205,35 +208,22 @@ function fish_config --description "Launch fish's web based configuration"
                         echo "Too many arguments" >&2
                         return 1
                     end
-                    if not set -q argv[1]
+                    # The name of the theme to save *from* is optional for `fish_config theme save`
+                    if not set -q argv[1] && contains -- $cmd choose
                         echo "Too few arguments" >&2
                         return 1
                     end
 
-                    set -l files $dir/$argv[1].theme
-                    set -l file
-
                     set -l scope -g
+                    set -l have_colors
+
                     if contains -- $cmd save
-                        read -P"Overwrite theme? [y/N]" -l yesno
+                        read -P"Overwrite your current theme? [y/N] " -l yesno
                         if not string match -riq 'y(es)?' -- $yesno
                             echo Not overwriting >&2
                             return 1
                         end
                         set scope -U
-                    end
-
-                    for f in $files
-                        if test -e "$f"
-                            set file $f
-                            break
-                        end
-                    end
-
-                    if not set -q file[1]
-                        echo "No such theme: $argv[1]" >&2
-                        echo "Dirs: $dir" >&2
-                        return 1
                     end
 
                     set -l known_colors fish_color_{normal,command,keyword,quote,redirection,\
@@ -243,42 +233,74 @@ function fish_config --description "Launch fish's web based configuration"
                         selected_background,selected_prefix,selected_completion,selected_description,\
                         secondary_background,secondary_prefix,secondary_completion,secondary_description}
 
+                    # If we are choosing a theme or saving from a named theme, load the theme now.
+                    # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
+                    if set -q argv[1]
+                        set -l files $dir/$argv[1].theme
+                        set -l file
 
-                    set -l have_colors
-                    while read -lat toks
-                        # We only allow color variables.
-                        # Not the specific list, but something named *like* a color variable.
-                        #
-                        # This also takes care of empty lines and comment lines.
-                        string match -rq '^fish_(?:pager_)?color.*$' -- $toks[1]
-                        or continue
-
-                        # If we're supposed to set universally, remove any shadowing globals,
-                        # so the change takes effect immediately (and there's no warning).
-                        if test x"$scope" = x-U; and set -qg $toks[1]
-                            set -eg $toks[1]
+                        for f in $files
+                            if test -e "$f"
+                                set file $f
+                                break
+                            end
                         end
-                        set $scope $toks
-                        set -a have_colors $toks[1]
-                    end <$file
 
-                    # Set all colors that aren't mentioned to empty
-                    for c in $known_colors
-                        contains -- $c $have_colors
-                        and continue
+                        if not set -q file[1]
+                            echo "No such theme: $argv[1]" >&2
+                            echo "Searched directories: $dir" >&2
+                            return 1
+                        end
 
-                        # Erase conflicting global variables so we don't get a warning and
-                        # so changes are observed immediately.
-                        set -eg $c
-                        set $scope $c
+                        while read -lat toks
+                            # The whitelist allows only color variables.
+                            # Not the specific list, but something named *like* a color variable.
+                            # This also takes care of empty lines and comment lines.
+                            string match -rq -- $theme_var_filter $toks[1]
+                            or continue
+
+                            # If we're supposed to set universally, remove any shadowing globals
+                            # so the change takes effect immediately (and there's no warning).
+                            if test x"$scope" = x-U; and set -qg $toks[1]
+                                set -eg $toks[1]
+                            end
+                            set $scope $toks
+                            set -a have_colors $toks[1]
+                        end <$file
+
+                        # Set all colors that aren't mentioned to empty
+                        for c in $known_colors
+                            contains -- $c $have_colors
+                            and continue
+
+                            # Erase conflicting global variables so we don't get a warning and
+                            # so changes are observed immediately.
+                            set -eg $c
+                            set $scope $c
+                        end
+                    else
+                        # We're persisting whatever current colors are loaded (maybe in the global scope)
+                        # to the universal scope, without overriding them from a theme file.
+                        # Like above, make sure to erase from other scopes first and ensure known color
+                        # variables are defined, even if empty.
+                        # This branch is only reachable in the case of `theme save` so $scope is always `-U`.
+
+                        for color in (printf "%s\n" $known_colors (set --names | string match -r $theme_var_filter) | sort -u)
+                            if set -q $color
+                                # Cache the value from whatever scope currently defines it
+                                set -l value $$color
+                                set -eg $color
+                                set -U $color "$value"
+                            end
+                        end
                     end
 
-                    # Return true if we changed at least one color
-                    set -q have_colors[1]
-                    return
+                    # If we've made it this far, we've either found a theme file or persisted the current
+                    # state (if any). In all cases we haven't failed, so return 0.
+                    return 0
                 case dump
                     # Write the current theme in .theme format, to stdout.
-                    set -L | string match -r '^fish_(?:pager_)?color.*$'
+                    set -L | string match -r $theme_var_filter
                 case '*'
                     echo "No such command: $cmd" >&2
                     return 1

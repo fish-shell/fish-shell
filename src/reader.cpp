@@ -105,6 +105,8 @@
 /// The name of the function for getting the input mode indicator.
 #define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
+#define SHOULD_ADD_HISTORY_FUNCTION_NAME L"fish_should_add_history"
+
 /// The default title for the reader. This is used by reader_readline.
 #define DEFAULT_TITLE L"echo (status current-command) \" \" $PWD"
 
@@ -4238,6 +4240,7 @@ void reader_data_t::handle_execute(readline_loop_state_t &rls) {
             if (!text.empty()) {
                 // Mark this item as ephemeral if there is a leading space (#615).
                 history_persistence_mode_t mode;
+                bool skip = false;
                 if (text.front() == L' ') {
                     // Leading spaces are ephemeral (#615).
                     mode = history_persistence_mode_t::ephemeral;
@@ -4246,9 +4249,36 @@ void reader_data_t::handle_execute(readline_loop_state_t &rls) {
                     mode = history_persistence_mode_t::memory;
                 } else {
                     mode = history_persistence_mode_t::disk;
+                    wcstring fish_title_command = SHOULD_ADD_HISTORY_FUNCTION_NAME;
+                    if (function_exists(fish_title_command, parser())){
+                        fish_title_command.append(L" ");
+                        fish_title_command.append(escape_string(text, ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
+                        wcstring_list_t lst;
+                        int return_code = exec_subshell(fish_title_command, parser(), lst, false /* ignore exit status */);
+                        switch (return_code)
+                        {
+                            case 0:
+                                mode = history_persistence_mode_t::disk;
+                                break;
+                            case 1:
+                                mode = history_persistence_mode_t::memory;
+                                break;
+                            case 2:
+                                mode = history_persistence_mode_t::ephemeral;
+                                break;
+                            case 255:
+                                skip = true;
+                                break;
+                            default:
+                                mode = history_persistence_mode_t::disk;
+                                break;
+                        }
+                    }
                 }
-                history_t::add_pending_with_file_detection(history, text, this->vars().snapshot(),
+                if (!skip) {
+                    history_t::add_pending_with_file_detection(history, text, this->vars().snapshot(),
                                                            mode);
+                }
             }
         }
 

@@ -60,6 +60,7 @@ Known functions are a customization point. You can change them to change how you
 - :doc:`fish_command_not_found <cmds/fish_command_not_found>` to tell fish what to do when a command is not found.
 - :doc:`fish_title <cmds/fish_title>` to change the terminal's title.
 - :doc:`fish_greeting <cmds/fish_greeting>` to show a greeting when fish starts.
+- :doc:`fish_should_add_history <cmd/fish_should_add_history>` to decide whether a command should be added to the history.
 
 Helper functions
 ^^^^^^^^^^^^^^^^

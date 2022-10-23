@@ -1,0 +1,1 @@
+op completion fish | source

@@ -12,6 +12,8 @@ EOF
 
 DOCKER_EXTRA_ARGS=""
 
+export DOCKER_BUILDKIT=1
+
 # Exit on failure.
 set -e
 

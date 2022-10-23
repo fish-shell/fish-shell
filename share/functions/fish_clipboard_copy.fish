@@ -33,5 +33,16 @@ function fish_clipboard_copy
         end
         set -l encoded (printf %s $cmdline | base64 | string join '')
         printf '\e]52;c;%s\a' "$encoded"
+        # tmux requires user configuration to interpret OSC 52 on stdout.
+        # Luckily we can still make this work for the common case by bypassing
+        # tmux and writing to its underlying terminal.
+        if set -q TMUX
+            set -l tmux_tty (tmux display-message -p '#{client_tty}')
+            or return 1
+            # The terminal might not be writable if we switched user.
+            if test -w $tmux_tty
+                printf '\e]52;c;%s\a' "$encoded" >$tmux_tty
+            end
+        end
     end
 end

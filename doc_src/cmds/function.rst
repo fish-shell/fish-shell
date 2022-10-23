@@ -54,19 +54,7 @@ The following options are available:
 
 If the user enters any additional arguments after the function, they are inserted into the environment :ref:`variable list <variables-lists>` ``$argv``. If the ``--argument-names`` option is provided, the arguments are also assigned to names specified in that option.
 
-By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the :doc:`emit <emit>` builtin. Fish generates the following named events:
-
-- ``fish_prompt``, which is emitted whenever a new fish prompt is about to be displayed.
-
-- ``fish_preexec``, which is emitted right before executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
-
-- ``fish_posterror``, which is emitted right after executing a command with syntax errors. The commandline is passed as the first parameter.
-
-- ``fish_postexec``, which is emitted right after executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
-
-- ``fish_exit`` is emitted right before fish exits.
-
-- ``fish_cancel``, which is emitted when a commandline is cleared (used for terminal-shell integration).
+The event handler switches (``on-event``, ``on-variable``, ``on-job-exit``, ``on-process-exit`` and ``on-signal``) cause a function to run automatically at specific events. New named events for ``--on-event`` can be fired using the :doc:`emit <emit>` builtin. Fish already generates a few events, see :ref:`event` for more.
 
 Functions may not be named the same as a reserved keyword. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
 

@@ -1747,6 +1747,35 @@ To specify a signal handler for the WINCH signal, write::
         echo Got WINCH signal!
     end
 
+Fish already the following named events for the ``--on-event`` switch:
+
+- ``fish_prompt`` is emitted whenever a new fish prompt is about to be displayed.
+
+- ``fish_preexec`` is emitted right before executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
+
+- ``fish_posterror`` is emitted right after executing a command with syntax errors. The commandline is passed as the first parameter.
+
+- ``fish_postexec`` is emitted right after executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
+
+- ``fish_exit`` is emitted right before fish exits.
+
+- ``fish_cancel`` is emitted when a commandline is cleared.
+
+Events can be fired with the :doc:`emit <cmds/emit>` command, and do not have to be defined before. The names just need to match. For example::
+
+  function handler --on-event imdone
+      echo generator is done $argv
+  end
+
+  function generator
+      sleep 1
+      # The "imdone" is the name of the event
+      # the rest is the arguments to pass to the handler
+      emit imdone with $argv
+  end
+
+If there are multiple handlers for an event, they will all be run, but the order might change between fish releases, so you should not rely on it.
+
 Please note that event handlers only become active when a function is loaded, which means you need to otherwise :doc:`source <cmds/source>` or execute a function instead of relying on :ref:`autoloading <syntax-function-autoloading>`. One approach is to put it into your :ref:`configuration file <configuration>`.
 
 For more information on how to define new event handlers, see the documentation for the :doc:`function <cmds/function>` command.

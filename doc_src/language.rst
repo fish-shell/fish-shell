@@ -1645,7 +1645,7 @@ The names given to variables and functions (so-called "identifiers") have to fol
 
 - A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
-- A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
+- A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid. A function name also can't be the same as a reserved keyword or essential builtin like ``if`` or ``set``.
 
 - A bind mode name (e.g., ``bind -m abc ...``) must be a valid variable name.
 

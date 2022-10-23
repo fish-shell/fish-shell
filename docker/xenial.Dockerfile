@@ -10,12 +10,14 @@ RUN apt-get update \
     gettext \
     git \
     libncurses5-dev \
+    libpcre2-dev \
     locales \
     ninja-build \
     python3 \
     python3-pip \
     sudo \
-  && locale-gen en_US.UTF-8
+  && locale-gen en_US.UTF-8 \
+  && apt-get clean
 
 # The python3-pexpect package on Xenial doesn't allow delaybeforesend to be None.
 # Install pexpect with pip which is newer.

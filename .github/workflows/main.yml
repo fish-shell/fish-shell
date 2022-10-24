@@ -86,7 +86,11 @@ jobs:
       env:
           ASAN_OPTIONS: check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
           UBSAN_OPTIONS: print_stacktrace=1:report_error_type=1
-          LSAN_OPTIONS: verbosity=0:log_threads=0
+          # use_tls=0 is a workaround for LSAN crashing with "Tracer caught signal 11" (SIGSEGV),
+          # which seems to be an issue with TLS support in newer glibc versions under virtualized
+          # environments. Follow https://github.com/google/sanitizers/issues/1342 and
+          # https://github.com/google/sanitizers/issues/1409 to track this issue.
+          LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=0
       run: |
         make test
 

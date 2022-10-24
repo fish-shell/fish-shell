@@ -42,6 +42,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef FISH_CI_SAN
+#include <sanitizer/lsan_interface.h>
+#endif
+
 #include "ast.h"
 #include "autoload.h"
 #include "builtin.h"
@@ -3721,9 +3725,13 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
 // backslashes.
 static void test_autosuggest_suggest_special() {
-    // This manages to crash the asan on Ubuntu 20.04
-    // So just skip it.
-#ifndef __SANITIZE_ADDRESS__
+    // We execute LSAN with use_tls=0 under CI to avoid a SIGSEGV crash in LSAN itself.
+    // Unfortunately, this causes it to incorrectly flag a memory leak here that doesn't reproduce
+    // locally with use_tls=1.
+#ifdef FISH_CI_SAN
+    __lsan::ScopedDisabler disable_leak_detection{};
+#endif
+
     if (system("mkdir -p 'test/autosuggest_test/0foobar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
@@ -3845,7 +3853,6 @@ static void test_autosuggest_suggest_special() {
 
     parser_t::principal_parser().vars().remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
     popd();
-#endif  // ndef SANITIZE_ADDRESS
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {

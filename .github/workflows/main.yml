@@ -75,7 +75,7 @@ jobs:
       env:
           CC: clang
           CXX: clang++
-          CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address"
+          CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address -DFISH_CI_SAN"
       run: |
         mkdir build && cd build
         cmake ..

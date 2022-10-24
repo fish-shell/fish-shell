@@ -69,6 +69,7 @@ function trap -d 'Perform an action when the shell receives a signal'
             for sig in (string upper -- $names | string replace -r '^SIG' '')
                 if test -n "$sig"
                     functions __trap_handler_$sig
+                    echo ""
                 else
                     return 1
                 end

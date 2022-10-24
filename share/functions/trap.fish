@@ -63,12 +63,12 @@ function trap -d 'Perform an action when the shell receives a signal'
             if set -q argv[1]
                 set names $argv
             else
-                set names (functions -na | string match "__trap_handler_*" | string replace '__trap_handler_' '')
+                set names (functions -a | string split ',' | string match "__trap_handler_*" | string replace '__trap_handler_' '')
             end
 
             for sig in (string upper -- $names | string replace -r '^SIG' '')
                 if test -n "$sig"
-                    functions __trap_handler_$i
+                    functions __trap_handler_$sig
                 else
                     return 1
                 end

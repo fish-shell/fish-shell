@@ -289,7 +289,8 @@ function fish_git_prompt --description "Prompt function for Git"
             end
         end
 
-        if contains -- "$__fish_git_prompt_showupstream" yes true 1
+        # (showupstream has a variety of options, not just bool)
+        if set -q __fish_git_prompt_showupstream
             or contains -- "$__fish_git_prompt_show_informative_status" yes true 1
             set p (__fish_git_prompt_show_upstream)
         end

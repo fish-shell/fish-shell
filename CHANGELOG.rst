@@ -26,7 +26,6 @@ Notable improvements and fixes
         ^~^
 - A new helper function ``fish_delta`` can be used to show the difference to fish's stock configuration (:issue:`9255`).
 - It is now possible to specify multiple scopes for ``set -e`` and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
-- An intermittent command completion error on macOS Ventura has been fixed.
 
 =======
 
@@ -83,6 +82,7 @@ Interactive improvements
 - Performance improvements to highlighting (:issue:`9180`) and the cd completions (:issue:`9220`) should make using fish more pleasant on slow systems.
 - Fish now disables the QUIT terminal sequence when it has the terminal. This frees up a key combination, often ctrl-backslash (``\x1c``) (:issue:`9234`).
 - Fish's vi mode no longer uses iTerm's proprietary escape sequences to signal cursor change, instead using the normal xterm-style sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
+- Generating descriptions for commands now uses ``manpath`` instead of ``man --path`` on macOS, as that has been removed in macOS Ventura.
 
 
 Fixed Bugs

@@ -13,7 +13,7 @@ end
 
 left
 
-#CHECKERR: {{.*}} The function call stack limit has been exceeded. {{.*}}
+#CHECKERR: {{.*}} The call stack limit has been exceeded. {{.*}}
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}

@@ -220,8 +220,7 @@ enum class pipeline_position_t : uint8_t {
 
 /// Error message on reaching maximum call stack depth.
 #define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG                                                     \
-    _(L"The function call stack limit has been exceeded. Do you have an accidental infinite " \
-      L"loop?")
+    _(L"The call stack limit has been exceeded. Do you have an accidental infinite loop?")
 
 /// Error message when encountering an unknown builtin name.
 #define UNKNOWN_BUILTIN_ERR_MSG _(L"Unknown builtin '%ls'")

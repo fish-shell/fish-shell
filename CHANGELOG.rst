@@ -26,6 +26,7 @@ Notable improvements and fixes
         ^~^
 - A new helper function ``fish_delta`` can be used to show the difference to fish's stock configuration (:issue:`9255`).
 - It is now possible to specify multiple scopes for ``set -e`` and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
+- A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
 
 =======
 

@@ -459,6 +459,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \return the operation context for this parser.
     operation_context_t context();
 
+    /// Checks if the max eval depth has been exceeded
+    bool is_eval_depth_exceeded() const { return eval_level >= FISH_MAX_EVAL_DEPTH; }
+
     ~parser_t();
 };
 

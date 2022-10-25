@@ -31,6 +31,7 @@
 #include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "path.h"
 #include "util.h"
 #include "wcstringutil.h"
@@ -641,8 +642,13 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             case STATUS_READ_TOO_MUCH:
                 err = L"Too much data emitted by command substitution so it was discarded";
                 break;
+            // TODO: STATUS_CMD_ERROR is overused and too generic. We shouldn't have to test things
+            // to figure out what error to show after we've already been given an error code.
             case STATUS_CMD_ERROR:
                 err = L"Too many active file descriptors";
+                if (ctx.parser->is_eval_depth_exceeded()) {
+                    err = L"Unable to evaluate string substitution";
+                }
                 break;
             case STATUS_CMD_UNKNOWN:
                 err = L"Unknown command";

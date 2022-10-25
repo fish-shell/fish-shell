@@ -211,6 +211,9 @@ enum class pipeline_position_t : uint8_t {
 /// Maximum number of function calls.
 #define FISH_MAX_STACK_DEPTH 128
 
+/// Maximum number of nested string substitutions (in lieu of evals)
+#define FISH_MAX_EVAL_DEPTH 500
+
 /// Error message on a function that calls itself immediately.
 #define INFINITE_FUNC_RECURSION_ERR_MSG \
     _(L"The function '%ls' calls itself immediately, which would result in an infinite loop.")

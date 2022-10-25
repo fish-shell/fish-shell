@@ -38,7 +38,7 @@ inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
 }
 
 /// Types of blocks.
-enum class block_type_t {
+enum class block_type_t : uint16_t {
     while_block,              /// While loop block
     for_block,                /// For loop block
     if_block,                 /// If block
@@ -63,39 +63,46 @@ enum class loop_status_t {
 
 /// block_t represents a block of commands.
 class block_t {
+   private:
     /// Construct from a block type.
     explicit block_t(block_type_t t);
 
-    /// Type of block.
-    const block_type_t block_type;
-
    public:
-    /// Name of file that created this block.
-    filename_ref_t src_filename{};
-    /// Line number where this block was created.
-    int src_lineno{0};
-    /// Whether we should pop the environment variable stack when we're popped off of the block
-    /// stack.
-    bool wants_pop_env{false};
+    // If this is a function block, the function name. Otherwise empty.
+    wcstring function_name{};
+
     /// List of event blocks.
     event_blockage_list_t event_blocks{};
 
-    // If this is a function block, the function name and arguments.
-    // Otherwise empty.
-    wcstring function_name{};
+    // If this is a function block, the function args. Otherwise empty.
     wcstring_list_t function_args{};
+
+    /// Name of file that created this block.
+    filename_ref_t src_filename{};
+
+    // If this is an event block, the event. Otherwise ignored.
+    std::shared_ptr<event_t> event;
 
     // If this is a source block, the source'd file, interned.
     // Otherwise nothing.
     filename_ref_t sourced_file{};
 
-    // If this is an event block, the event. Otherwise ignored.
-    maybe_t<event_t> event;
+    /// Line number where this block was created.
+    int src_lineno{0};
 
-    block_type_t type() const { return this->block_type; }
+   private:
+    /// Type of block.
+    const block_type_t block_type;
+
+   public:
+    /// Whether we should pop the environment variable stack when we're popped off of the block
+    /// stack.
+    bool wants_pop_env{false};
 
     /// Description of the block, for debugging.
     wcstring description() const;
+
+    block_type_t type() const { return this->block_type; }
 
     /// \return if we are a function call (with or without shadowing).
     bool is_function_call() const {

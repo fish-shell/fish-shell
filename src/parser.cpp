@@ -740,7 +740,7 @@ block_t block_t::if_block() { return block_t(block_type_t::if_block); }
 
 block_t block_t::event_block(event_t evt) {
     block_t b{block_type_t::event};
-    b.event = std::move(evt);
+    b.event.reset(new event_t(std::move(evt)));
     return b;
 }
 

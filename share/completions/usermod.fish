@@ -16,8 +16,8 @@ complete -c usermod -s P -l prefix -d "Apply changes in the PREFIX_DIR" -x
 complete -c usermod -s s -l shell -d "The name of the user's new login shell" -x
 complete -c usermod -s u -l uid -d "The new numerical value of the user's ID" -x
 complete -c usermod -s U -l unlock -d "Unlock a users password" -f
-complete -c usermod -s v -l add-sub-uids -d "Add a range of subordinate uids to the user's account" -x
-complete -c usermod -s V -l del-sub-uids -d "Remove a range of subordinate uids from the user's account" -x
-complete -c usermod -s w -l add-sub-gids -d "Add a range of subordinate gids to the user's account" -x
-complete -c usermod -s W -l del-sub-gids -d "Remove a range of subordinate gids from the user's account" -x
+complete -c usermod -s v -l add-subuids -d "Add a range of subordinate uids to the user's account" -x
+complete -c usermod -s V -l del-subuids -d "Remove a range of subordinate uids from the user's account" -x
+complete -c usermod -s w -l add-subgids -d "Add a range of subordinate gids to the user's account" -x
+complete -c usermod -s W -l del-subgids -d "Remove a range of subordinate gids from the user's account" -x
 complete -c usermod -s Z -l selinux-user -d "The new SELinux user for the user's login" -x

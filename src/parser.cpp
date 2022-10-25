@@ -666,8 +666,6 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
 block_t::block_t(block_type_t t) : block_type(t) {}
 
-block_t::~block_t() = default;
-
 wcstring block_t::description() const {
     wcstring result;
     switch (this->type()) {

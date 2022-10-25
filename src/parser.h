@@ -121,8 +121,6 @@ class block_t {
     static block_t scope_block(block_type_t type);
     static block_t breakpoint_block();
     static block_t variable_assignment_block();
-
-    ~block_t();
 };
 
 struct profile_item_t {

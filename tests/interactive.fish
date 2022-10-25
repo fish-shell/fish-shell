@@ -64,8 +64,14 @@ if not python3 -c 'import pexpect'
 end
 for i in $pexpect_files_to_test
     if not test_pexpect_file $i
-        say yellow "Trying $i for a second time"
-        if not test_pexpect_file $i
+        # Retry pexpect tests under CI twice, as they are timing-sensitive and CI resource
+        # contention can cause tests to spuriously fail.
+        if set -qx CI
+            say yellow "Trying $i for a second time"
+            if not test_pexpect_file $i
+                set failed $failed $i
+            end
+        else
             set failed $failed $i
         end
     end

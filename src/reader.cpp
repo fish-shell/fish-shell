@@ -211,7 +211,7 @@ void apply_edit(wcstring *target, std::vector<highlight_spec_t> *colors, const e
     // Now do the same to highlighting.
     auto it = colors->begin() + offset;
     colors->erase(it, it + edit.length);
-    highlight_spec_t last_color = offset < 1 ? highlight_spec_t{} : colors->at(offset - 1);
+    highlight_spec_t last_color = offset == 0 ? highlight_spec_t{} : colors->at(offset - 1);
     colors->insert(it, edit.replacement.size(), last_color);
 }
 

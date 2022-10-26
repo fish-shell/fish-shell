@@ -773,6 +773,8 @@ class highlighter_t {
     // The string we're highlighting. Note this is a reference memmber variable (to avoid copying)!
     // We must not outlive this!
     const wcstring &buff;
+    // The position of the cursor within the string.
+    const maybe_t<size_t> cursor;
     // The operation context. Again, a reference member variable!
     const operation_context_t &ctx;
     // Whether it's OK to do I/O.
@@ -830,8 +832,10 @@ class highlighter_t {
     void visit(const ast::node_t &node) { visit_children(node); }
 
     // Constructor
-    highlighter_t(const wcstring &str, const operation_context_t &ctx, wcstring wd, bool can_do_io)
+    highlighter_t(const wcstring &str, maybe_t<size_t> cursor, const operation_context_t &ctx,
+                  wcstring wd, bool can_do_io)
         : buff(str),
+          cursor(cursor),
           ctx(ctx),
           io_ok(can_do_io),
           working_directory(std::move(wd)),
@@ -907,8 +911,12 @@ void highlighter_t::color_as_argument(const ast::node_t &node, bool options_allo
             this->color_array.at(arg_subcmd_end) = highlight_role_t::operat;
 
         // Highlight it recursively.
-        highlighter_t cmdsub_highlighter(cmdsub_contents, this->ctx, this->working_directory,
-                                         this->io_still_ok());
+        maybe_t<size_t> arg_cursor;
+        if (cursor.has_value()) {
+            arg_cursor = *cursor - arg_subcmd_start;
+        }
+        highlighter_t cmdsub_highlighter(cmdsub_contents, arg_cursor, this->ctx,
+                                         this->working_directory, this->io_still_ok());
         color_array_t subcolors = cmdsub_highlighter.highlight();
 
         // Copy out the subcolors back into our array.
@@ -1351,8 +1359,8 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
 }
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
-                     const operation_context_t &ctx, bool io_ok) {
+                     const operation_context_t &ctx, bool io_ok, maybe_t<size_t> cursor) {
     const wcstring working_directory = ctx.vars.get_pwd_slash();
-    highlighter_t highlighter(buff, ctx, working_directory, io_ok);
+    highlighter_t highlighter(buff, cursor, ctx, working_directory, io_ok);
     color = highlighter.highlight();
 }

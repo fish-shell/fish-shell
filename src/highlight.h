@@ -105,8 +105,10 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
 /// \param ctx The variables and cancellation check for this operation.
 /// \param io_ok If set, allow IO which may block. This means that e.g. invalid commands may be
 /// detected.
+/// \param cursor The position of the cursor in the commandline.
 void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color,
-                     const operation_context_t &ctx, bool io_ok = false);
+                     const operation_context_t &ctx, bool io_ok = false,
+                     maybe_t<size_t> cursor = {});
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
 /// It maintains a cache with no invalidation mechanism. The lifetime of these should typically be

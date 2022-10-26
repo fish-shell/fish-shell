@@ -2696,16 +2696,16 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
 // Given text and  whether IO is allowed, return a function that performs highlighting. The function
 // may be invoked on a background thread.
 static std::function<highlight_result_t(void)> get_highlight_performer(parser_t &parser,
-                                                                       const wcstring &text,
+                                                                       const editable_line_t &el,
                                                                        bool io_ok) {
     auto vars = parser.vars().snapshot();
     uint32_t generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
-        if (text.empty()) return {};
+        if (el.text().empty()) return {};
         operation_context_t ctx = get_bg_context(vars, generation_count);
-        std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_shell(text, colors, ctx, io_ok);
-        return highlight_result_t{std::move(colors), text};
+        std::vector<highlight_spec_t> colors(el.text().size(), highlight_spec_t{});
+        highlight_shell(el.text(), colors, ctx, io_ok, el.position());
+        return highlight_result_t{std::move(colors), el.text()};
     };
 }
 
@@ -2719,7 +2719,7 @@ void reader_data_t::super_highlight_me_plenty() {
     in_flight_highlight_request = el->text();
 
     FLOG(reader_render, L"Highlighting");
-    auto highlight_performer = get_highlight_performer(parser(), el->text(), true /* io_ok */);
+    auto highlight_performer = get_highlight_performer(parser(), *el, true /* io_ok */);
     auto shared_this = this->shared_from_this();
     debounce_highlighting().perform(highlight_performer, [shared_this](highlight_result_t result) {
         shared_this->highlight_complete(std::move(result));
@@ -2762,7 +2762,7 @@ void reader_data_t::finish_highlighting_before_exec() {
     if (!current_highlight_ok) {
         // We need to do a quick highlight without I/O.
         auto highlight_no_io =
-            get_highlight_performer(parser(), command_line.text(), false /* io not ok */);
+            get_highlight_performer(parser(), command_line, false /* io not ok */);
         this->highlight_complete(highlight_no_io());
     }
 }

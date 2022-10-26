@@ -85,6 +85,7 @@ struct maybe_impl_not_trivially_copyable_t : public maybe_impl_trivially_copyabl
             new (storage) T(std::move(v.value()));
         }
     }
+
     maybe_impl_not_trivially_copyable_t &operator=(maybe_impl_not_trivially_copyable_t &&v) {
         if (!v.filled) {
             reset();
@@ -101,6 +102,7 @@ struct maybe_impl_not_trivially_copyable_t : public maybe_impl_trivially_copyabl
             new (storage) T(v.value());
         }
     }
+
     maybe_impl_not_trivially_copyable_t &operator=(const maybe_impl_not_trivially_copyable_t &v) {
         if (&v == this) return *this;
         if (!v.filled) {
@@ -111,6 +113,7 @@ struct maybe_impl_not_trivially_copyable_t : public maybe_impl_trivially_copyabl
         return *this;
     }
 
+    maybe_impl_not_trivially_copyable_t() = default;
     ~maybe_impl_not_trivially_copyable_t() { reset(); }
 };
 

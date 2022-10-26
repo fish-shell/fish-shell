@@ -5348,6 +5348,7 @@ static void test_highlighting() {
     if (!pushd("test/fish_highlight_test/")) return;
     cleanup_t pop{[] { popd(); }};
     if (system("mkdir -p dir")) err(L"mkdir failed");
+    if (system("mkdir -p cdpath-entry/dir-in-cdpath")) err(L"mkdir failed");
     if (system("touch foo")) err(L"touch failed");
     if (system("touch bar")) err(L"touch failed");
 
@@ -5416,6 +5417,11 @@ static void test_highlighting() {
         {L"--help", highlight_role_t::option},
         {L"-h", highlight_role_t::option},
         {L"definitely_not_a_directory", highlight_role_t::error},
+    });
+
+    highlight_tests.push_back({
+        {L"cd", highlight_role_t::command},
+        {L"dir-in-cdpath", param_valid_path},
     });
 
     // Command substitutions.
@@ -5691,6 +5697,7 @@ static void test_highlighting() {
     // Verify variables and wildcards in commands using /bin/cat.
     vars.set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});
     vars.set(L"VARIABLE_IN_COMMAND2", ENV_LOCAL, {L"at"});
+    vars.set(L"CDPATH", ENV_LOCAL, {L"./cdpath-entry"});
     highlight_tests.push_back(
         {{L"/bin/ca", highlight_role_t::command, ns}, {L"*", highlight_role_t::operat, ns}});
 

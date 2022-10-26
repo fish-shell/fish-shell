@@ -1008,18 +1008,31 @@ void highlighter_t::visit(const ast::semi_nl_t &semi_nl) {
 
 void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool options_allowed) {
     color_as_argument(arg, options_allowed);
-    if (cmd_is_cd && io_still_ok()) {
+    if (!io_still_ok()) {
+        return;
+    }
+    // Underline every valid path.
+    bool is_valid_path = false;
+    if (cmd_is_cd) {
         // Mark this as an error if it's not 'help' and not a valid cd path.
         wcstring param = arg.source(this->buff);
         if (expand_one(param, expand_flag::skip_cmdsubst, ctx)) {
             bool is_help =
                 string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
-            if (!is_help &&
-                !is_potential_cd_path(param, working_directory, ctx, PATH_EXPAND_TILDE)) {
-                this->color_node(arg, highlight_role_t::error);
+            if (!is_help) {
+                is_valid_path =
+                    is_potential_cd_path(param, working_directory, ctx, PATH_EXPAND_TILDE);
+                if (!is_valid_path) {
+                    this->color_node(arg, highlight_role_t::error);
+                }
             }
         }
+    } else if (range_is_potential_path(buff, arg.range, ctx, working_directory)) {
+        is_valid_path = true;
     }
+    if (is_valid_path)
+        for (size_t i = arg.range.start, end = arg.range.start + arg.range.length; i < end; i++)
+            this->color_array.at(i).valid_path = true;
 }
 
 void highlighter_t::visit(const ast::variable_assignment_t &varas) {
@@ -1267,25 +1280,6 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     // Color every error range.
     for (const source_range_t &r : extras.errors) {
         this->color_range(r, highlight_role_t::error);
-    }
-
-    // Underline every valid path.
-    if (io_still_ok()) {
-        for (const ast::node_t &node : ast) {
-            const auto arg = node.try_as<ast::argument_t>();
-            if (!arg || arg->unsourced) continue;
-            if (ctx.check_cancel()) break;
-            if (range_is_potential_path(buff, arg->range, ctx, working_directory)) {
-                // Don't color highlight_role_t::error because it looks dorky. For example,
-                // trying to cd into a non-directory would show an underline and also red.
-                for (size_t i = arg->range.start, end = arg->range.start + arg->range.length;
-                     i < end; i++) {
-                    if (this->color_array.at(i).foreground != highlight_role_t::error) {
-                        this->color_array.at(i).valid_path = true;
-                    }
-                }
-            }
-        }
     }
 
     return std::move(color_array);

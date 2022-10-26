@@ -1012,7 +1012,7 @@ void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool optio
         if (expand_one(param, expand_flag::skip_cmdsubst, ctx)) {
             bool is_help =
                 string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
-            if (!is_help && this->io_ok &&
+            if (!is_help &&
                 !is_potential_cd_path(param, working_directory, ctx, PATH_EXPAND_TILDE)) {
                 this->color_node(arg, highlight_role_t::error);
             }

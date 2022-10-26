@@ -794,6 +794,8 @@ class highlighter_t {
         parse_flag_accept_incomplete_tokens | parse_flag_leave_unterminated |
         parse_flag_show_extra_semis;
 
+    bool io_still_ok() const { return io_ok && !ctx.check_cancel(); }
+
     // Color a command.
     void color_command(const ast::string_t &node);
     // Color a node as if it were an argument.
@@ -906,7 +908,7 @@ void highlighter_t::color_as_argument(const ast::node_t &node, bool options_allo
 
         // Highlight it recursively.
         highlighter_t cmdsub_highlighter(cmdsub_contents, this->ctx, this->working_directory,
-                                         this->io_ok);
+                                         this->io_still_ok());
         color_array_t subcolors = cmdsub_highlighter.highlight();
 
         // Copy out the subcolors back into our array.
@@ -1006,7 +1008,7 @@ void highlighter_t::visit(const ast::semi_nl_t &semi_nl) {
 
 void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool options_allowed) {
     color_as_argument(arg, options_allowed);
-    if (cmd_is_cd && io_ok) {
+    if (cmd_is_cd && io_still_ok()) {
         // Mark this as an error if it's not 'help' and not a valid cd path.
         wcstring param = arg.source(this->buff);
         if (expand_one(param, expand_flag::skip_cmdsubst, ctx)) {
@@ -1043,7 +1045,7 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
 
     wcstring expanded_cmd;
     bool is_valid_cmd = false;
-    if (!this->io_ok) {
+    if (!this->io_still_ok()) {
         // We cannot check if the command is invalid, so just assume it's valid.
         is_valid_cmd = true;
     } else if (variable_assignment_equals_pos(*cmd).has_value()) {
@@ -1152,7 +1154,7 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
         // No command substitution, so we can highlight the target file or fd. For example,
         // disallow redirections into a non-existent directory.
         bool target_is_valid = true;
-        if (!this->io_ok) {
+        if (!this->io_still_ok()) {
             // I/O is disallowed, so we don't have much hope of catching anything but gross
             // errors. Assume it's valid.
             target_is_valid = true;
@@ -1268,7 +1270,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     }
 
     // Underline every valid path.
-    if (io_ok) {
+    if (io_still_ok()) {
         for (const ast::node_t &node : ast) {
             const auto arg = node.try_as<ast::argument_t>();
             if (!arg || arg->unsourced) continue;

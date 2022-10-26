@@ -138,8 +138,9 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     // Not enabled if the type T is already bool-convertible to prevent accidental misuse,
     // otherwise the "typename std::enable_if<....>::type" evaluates to bool, giving us a definition
     // of `explicit operator bool() const { ... }`
-    template <typename U = T> explicit operator
-    typename std::enable_if<!std::is_convertible<U, bool>::value, bool>::type() const {
+    template <typename U = T>
+    explicit operator typename std::enable_if<!std::is_convertible<U, bool>::value, bool>::type()
+        const {
         return impl_.filled;
     }
 

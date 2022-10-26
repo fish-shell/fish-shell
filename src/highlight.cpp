@@ -185,8 +185,9 @@ static bool fs_is_case_insensitive(const wcstring &path, int fd,
 /// the deepest unique directory hierarchy.
 ///
 /// We expect the path to already be unescaped.
-bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories,
-                       const operation_context_t &ctx, path_flags_t flags) {
+bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
+                       const wcstring_list_t &directories, const operation_context_t &ctx,
+                       path_flags_t flags) {
     ASSERT_IS_BACKGROUND_THREAD();
 
     if (ctx.check_cancel()) return false;
@@ -244,11 +245,16 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
         if (abs_path.empty() || checked_paths.count(abs_path)) continue;
         checked_paths.insert(abs_path);
 
-        // If we end with a slash, then it must be a directory.
+        // If the user is still typing the argument, we want to highlight it if it's the prefix
+        // of a valid path. This means we need to potentially walk all files in some directory.
+        // There are two easy cases where we can skip this:
+        // 1. If the argument ends with a slash, it must be a valid directory, no prefix.
+        // 2. If the cursor is not at the argument, it means the user is definitely not typing it,
+        //    so we can skip the prefix-match.
         bool must_be_full_dir = abs_path.at(abs_path.size() - 1) == L'/';
-        if (must_be_full_dir) {
+        if (must_be_full_dir || !at_cursor) {
             struct stat buf;
-            if (0 == wstat(abs_path, &buf) && S_ISDIR(buf.st_mode)) {
+            if (0 == wstat(abs_path, &buf) && (!at_cursor || S_ISDIR(buf.st_mode))) {
                 return true;
             }
         } else {
@@ -290,8 +296,9 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in
 // out_path. Expects path to be unescaped.
-static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory,
-                                 const operation_context_t &ctx, path_flags_t flags) {
+static bool is_potential_cd_path(const wcstring &path, bool at_cursor,
+                                 const wcstring &working_directory, const operation_context_t &ctx,
+                                 path_flags_t flags) {
     wcstring_list_t directories;
 
     if (string_prefixes_string(L"./", path)) {
@@ -313,7 +320,8 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     }
 
     // Call is_potential_path with all of these directories.
-    return is_potential_path(path, directories, ctx, flags | PATH_REQUIRE_DIR | PATH_FOR_CD);
+    return is_potential_path(path, at_cursor, directories, ctx,
+                             flags | PATH_REQUIRE_DIR | PATH_FOR_CD);
 }
 
 // Given a plain statement node in a parse tree, get the command and return it, expanded
@@ -929,7 +937,7 @@ void highlighter_t::color_as_argument(const ast::node_t &node, bool options_allo
 /// Indicates whether the source range of the given node forms a valid path in the given
 /// working_directory.
 static bool range_is_potential_path(const wcstring &src, const source_range_t &range,
-                                    const operation_context_t &ctx,
+                                    bool at_cursor, const operation_context_t &ctx,
                                     const wcstring &working_directory) {
     // Skip strings exceeding PATH_MAX. See #7837.
     // Note some paths may exceed PATH_MAX, but this is just for highlighting.
@@ -946,7 +954,8 @@ static bool range_is_potential_path(const wcstring &src, const source_range_t &r
         if (!token.empty() && token.at(0) == HOME_DIRECTORY) token.at(0) = L'~';
 
         const wcstring_list_t working_directory_list(1, working_directory);
-        result = is_potential_path(token, working_directory_list, ctx, PATH_EXPAND_TILDE);
+        result =
+            is_potential_path(token, at_cursor, working_directory_list, ctx, PATH_EXPAND_TILDE);
     }
     return result;
 }
@@ -1021,6 +1030,7 @@ void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool optio
     }
     // Underline every valid path.
     bool is_valid_path = false;
+    bool at_cursor = cursor.has_value() && arg.source_range().contains_inclusive(*cursor);
     if (cmd_is_cd) {
         // Mark this as an error if it's not 'help' and not a valid cd path.
         wcstring param = arg.source(this->buff);
@@ -1028,14 +1038,14 @@ void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool optio
             bool is_help =
                 string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
             if (!is_help) {
-                is_valid_path =
-                    is_potential_cd_path(param, working_directory, ctx, PATH_EXPAND_TILDE);
+                is_valid_path = is_potential_cd_path(param, at_cursor, working_directory, ctx,
+                                                     PATH_EXPAND_TILDE);
                 if (!is_valid_path) {
                     this->color_node(arg, highlight_role_t::error);
                 }
             }
         }
-    } else if (range_is_potential_path(buff, arg.range, ctx, working_directory)) {
+    } else if (range_is_potential_path(buff, arg.range, at_cursor, ctx, working_directory)) {
         is_valid_path = true;
     }
     if (is_valid_path)

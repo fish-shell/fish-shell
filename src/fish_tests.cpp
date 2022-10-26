@@ -2870,25 +2870,26 @@ static void test_is_potential_path() {
     const wcstring_list_t wds({L".", wd});
 
     operation_context_t ctx{env_stack_t::principal()};
-    do_test(is_potential_path(L"al", wds, ctx, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"alpha/", wds, ctx, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"aard", wds, ctx, 0));
+    do_test(is_potential_path(L"al", true, wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"alpha/", true, wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"aard", true, wds, ctx, 0));
+    do_test(!is_potential_path(L"aard", false, wds, ctx, 0));
 
-    do_test(!is_potential_path(L"balpha/", wds, ctx, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aard", wds, ctx, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aarde", wds, ctx, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aarde", wds, ctx, 0));
+    do_test(!is_potential_path(L"balpha/", true, wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aard", true, wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aarde", true, wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aarde", true, wds, ctx, 0));
 
-    do_test(is_potential_path(L"test/is_potential_path_test/aardvark", wds, ctx, 0));
-    do_test(is_potential_path(L"test/is_potential_path_test/al", wds, ctx, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"test/is_potential_path_test/aardv", wds, ctx, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardvark", true, wds, ctx, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/al", true, wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardv", true, wds, ctx, 0));
 
-    do_test(
-        !is_potential_path(L"test/is_potential_path_test/aardvark", wds, ctx, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"test/is_potential_path_test/al/", wds, ctx, 0));
-    do_test(!is_potential_path(L"test/is_potential_path_test/ar", wds, ctx, 0));
+    do_test(!is_potential_path(L"test/is_potential_path_test/aardvark", true, wds, ctx,
+                               PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"test/is_potential_path_test/al/", true, wds, ctx, 0));
+    do_test(!is_potential_path(L"test/is_potential_path_test/ar", true, wds, ctx, 0));
 
-    do_test(is_potential_path(L"/usr", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"/usr", true, wds, ctx, PATH_REQUIRE_DIR));
 }
 
 /// Test the 'test' builtin.
@@ -5608,6 +5609,13 @@ static void test_highlighting() {
         // This is bogus, but we used to use "less" here and that doesn't have to be installed.
         {L"cat", highlight_role_t::command},
         {L"2>", highlight_role_t::redirection},
+    });
+
+    // Highlight path-prefixes only at the cursor.
+    highlight_tests.push_back({
+        {L"cat", highlight_role_t::command},
+        {L"/dev/nu", highlight_role_t::param},
+        {L"/dev/nu", param_valid_path},
     });
 
     highlight_tests.push_back({

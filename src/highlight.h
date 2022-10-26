@@ -146,7 +146,8 @@ enum {
     PATH_FOR_CD = 1 << 2,
 };
 typedef unsigned int path_flags_t;
-bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories,
-                       const operation_context_t &ctx, path_flags_t flags);
+bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
+                       const wcstring_list_t &directories, const operation_context_t &ctx,
+                       path_flags_t flags);
 
 #endif

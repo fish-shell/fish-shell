@@ -31,6 +31,11 @@ struct source_range_t {
     }
 
     bool operator!=(const source_range_t &rhs) const { return !(*this == rhs); }
+
+    // \return true if a location is in this range, including one-past-the-end.
+    bool contains_inclusive(source_offset_t loc) const {
+        return start <= loc && loc - start <= length;
+    }
 };
 
 // IMPORTANT: If the following enum table is modified you must also update token_enum_map below.

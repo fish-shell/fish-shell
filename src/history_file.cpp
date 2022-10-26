@@ -374,7 +374,6 @@ static const char *next_line(const char *start, const char *end) {
 static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
                                                     size_t *inout_cursor, time_t cutoff_timestamp) {
     size_t cursor = *inout_cursor;
-    maybe_t<size_t> result = none();
     const size_t length = contents.length();
     const char *const begin = contents.begin();
     const char *const end = contents.end();

@@ -76,7 +76,7 @@ static const wcstring &C_(const wcstring &s) {
 static const wcstring &C_(const wcstring &s) { return s; }
 #endif
 
-/// Struct describing a completion option entry.
+/// Struct describing a completion rule for options to a command.
 ///
 /// If option is empty, the comp field must not be empty and contains a list of arguments to the
 /// command.
@@ -92,11 +92,11 @@ namespace {
 struct complete_entry_opt_t {
     /// Text of the option (like 'foo').
     wcstring option;
-    /// Arguments to the option.
+    // Arguments to the option; may be a subshell expression expanded at evaluation time.
     wcstring comp;
     /// Description of the completion.
     wcstring desc;
-    /// Conditions under which to use the option.
+    // Conditions under which to use the option, expanded and evaluated at completion time.
     wcstring_list_t conditions;
     /// Type of the option: args_only, short, single_long, or double_long.
     complete_option_type_t type;
@@ -125,7 +125,7 @@ struct complete_entry_opt_t {
 static relaxed_atomic_t<unsigned int> k_complete_order{0};
 
 /// Struct describing a command completion.
-using option_list_t = std::forward_list<complete_entry_opt_t>;
+using option_list_t = std::vector<complete_entry_opt_t>;
 class completion_entry_t {
    public:
     /// List of all options.
@@ -139,15 +139,17 @@ class completion_entry_t {
     const option_list_t &get_options() const { return options; }
 
     /// Adds an option.
-    void add_option(complete_entry_opt_t &&opt) { options.push_front(std::move(opt)); }
+    void add_option(complete_entry_opt_t &&opt) { options.push_back(std::move(opt)); }
 
     /// Remove all completion options in the specified entry that match the specified short / long
     /// option strings. Returns true if it is now empty and should be deleted, false if it's not
     /// empty.
     bool remove_option(const wcstring &option, complete_option_type_t type) {
-        this->options.remove_if([&](const complete_entry_opt_t &opt) {
-            return opt.option == option && opt.type == type;
-        });
+        options.erase(std::remove_if(options.begin(), options.end(),
+                                     [&](const complete_entry_opt_t &opt) {
+                                         return opt.option == option && opt.type == type;
+                                     }),
+                      options.end());
         return this->options.empty();
     }
 
@@ -846,15 +848,17 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
             bool cmd_is_path = key.second;
             const wcstring &match = cmd_is_path ? path : cmd;
             if (wildcard_match(match, key.first)) {
-                // Copy all of their options into our list.
-                all_options.push_back(kv.second.get_options());  // Oof, this is a lot of copying
+                // Copy all of their options into our list. Oof, this is a lot of copying.
+                // We have to copy them in reverse order to preserve legacy behavior (#9221).
+                const auto& options = kv.second.get_options();
+                all_options.emplace_back(options.rbegin(), options.rend());
             }
         }
     }
 
     // Now release the lock and test each option that we captured above. We have to do this outside
     // the lock because callouts (like the condition) may add or remove completions. See issue 2.
-    for (const option_list_t &options : all_options) {
+    for (const auto &options : all_options) {
         size_t short_opt_pos = short_option_pos(str, options);
         // We want last_option_requires_param to default to false but distinguish between when
         // a previous completion has set it to false and when it has its default value.
@@ -1845,8 +1849,9 @@ wcstring complete_print(const wcstring &cmd) {
         const completion_entry_t &entry = cr.get().second;
         if (!cmd.empty() && key.first != cmd) continue;
         const option_list_t &options = entry.get_options();
-        for (const complete_entry_opt_t &o : options) {
-            out.append(completion2string(key, o));
+        // Output in reverse order to preserve legacy behavior (see #9221).
+        for (auto o = options.rbegin(); o != options.rend(); ++o) {
+            out.append(completion2string(key, *o));
         }
     }
 

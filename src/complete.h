@@ -59,6 +59,7 @@ using description_func_t = std::function<wcstring(const wcstring &)>;
 /// Helper to return a description_func_t for a constant string.
 description_func_t const_desc(const wcstring &s);
 
+/// This is an individual completion entry, i.e. the result of an expansion of a completion rule.
 class completion_t {
    private:
     // No public default constructor.
@@ -210,7 +211,7 @@ enum complete_option_type_t : uint8_t {
 void completions_sort_and_prioritize(completion_list_t *comps,
                                      completion_request_options_t flags = {});
 
-/// Add a completion.
+/// Add an unexpanded completion "rule" to generate completions from for a command.
 ///
 /// Examples:
 ///

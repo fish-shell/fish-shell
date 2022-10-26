@@ -388,11 +388,15 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
 
         // Prevent accidental recursion (see #6171).
         if (!parser.libdata().builtin_complete_current_commandline) {
-            if (!have_do_complete_param)
+            if (!have_do_complete_param) {
                 parser.libdata().builtin_complete_current_commandline = true;
+            }
 
             completion_list_t comp = complete(
                 do_complete_param, completion_request_options_t::normal(), parser.context());
+
+            // Apply the same sort and deduplication treatment as pager completions
+            completions_sort_and_prioritize(&comp);
 
             for (const auto &next : comp) {
                 // Make a fake commandline, and then apply the completion to it.
@@ -419,6 +423,8 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
 
                 // Append any description.
                 if (!next.description.empty()) {
+                    faux_cmdline_with_completion.reserve(
+                            faux_cmdline_with_completion.size() + 2 + next.description.size());
                     faux_cmdline_with_completion.push_back(L'\t');
                     faux_cmdline_with_completion.append(next.description);
                 }

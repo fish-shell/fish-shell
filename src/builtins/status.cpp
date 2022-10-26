@@ -451,7 +451,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
         }
         case STATUS_CURRENT_CMD: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            const auto &var = parser.get_status_var(parser_status_var_t::current_command);
+            const auto &var = parser.libdata().status_vars.command;
             if (!var.empty()) {
                 streams.out.append(var);
                 streams.out.push_back(L'\n');
@@ -463,7 +463,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
         }
         case STATUS_CURRENT_COMMANDLINE: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            const auto &var = parser.get_status_var(parser_status_var_t::current_commandline);
+            const auto &var = parser.libdata().status_vars.commandline;
             streams.out.append(var);
             streams.out.push_back(L'\n');
             break;

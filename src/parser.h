@@ -221,6 +221,15 @@ struct library_data_t {
     /// A file descriptor holding the current working directory, for use in openat().
     /// This is never null and never invalid.
     std::shared_ptr<const autoclose_fd_t> cwd_fd{};
+
+    /// Status variables set by the main thread as jobs are parsed and read by various consumers.
+    struct {
+        /// Used to get the head of the current job (not the current command, at least for now)
+        /// for `status current-command`.
+        wcstring command;
+        /// Used to get the full text of the current job for `status current-commandline`.
+        wcstring commandline;
+    } status_vars;
 };
 
 /// The result of parser_t::eval family.
@@ -269,9 +278,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// This is in "reverse" order: the topmost block is at the front. This enables iteration from
     /// top down using range-based for loops.
     std::deque<block_t> block_list;
-
-    /// Variables set by the single-threaded parser or reader and queryable by any consumer.
-    std::array<wcstring, (int) parser_status_var_t::count_> status_vars_;
 
     /// The 'depth' of the fish call stack.
     int eval_level = -1;
@@ -397,17 +403,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     int get_last_status() const { return vars().get_last_status(); }
     statuses_t get_last_statuses() const { return vars().get_last_statuses(); }
     void set_last_statuses(statuses_t s) { vars().set_last_statuses(std::move(s)); }
-
-    /// Get a parser status variable
-    const wcstring& get_status_var(parser_status_var_t var) const {
-        return status_vars_.at((int) var);
-    }
-
-    /// Set a parser status variable
-    void set_status_var(parser_status_var_t var, wcstring val) {
-        ASSERT_IS_MAIN_THREAD();
-        status_vars_[(int) var] = std::move(val);
-    }
 
     /// Cover of vars().set(), which also fires any returned event handlers.
     /// \return a value like ENV_OK.

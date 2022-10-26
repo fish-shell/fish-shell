@@ -2495,7 +2495,7 @@ static void reader_interactive_init(parser_t &parser) {
     termsize_container_t::shared().invalidate_tty();
 
     // Provide value for `status current-command`
-    parser.set_status_var(parser_status_var_t::current_command, L"fish");
+    parser.libdata().status_vars.command = L"fish";
     // Also provide a value for the deprecated fish 2.0 $_ variable
     parser.vars().set_one(L"_", ENV_GLOBAL, L"fish");
 }
@@ -2632,8 +2632,8 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     // Provide values for `status current-command` and `status current-commandline`
     if (!ft.empty()) {
-        parser.set_status_var(parser_status_var_t::current_command, ft);
-        parser.set_status_var(parser_status_var_t::current_commandline, cmd);
+        parser.libdata().status_vars.command = ft;
+        parser.libdata().status_vars.commandline = cmd;
         // Also provide a value for the deprecated fish 2.0 $_ variable
         parser.vars().set_one(L"_", ENV_GLOBAL, ft);
     }
@@ -2647,7 +2647,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     auto eval_res = parser.eval(cmd, io_chain_t{});
     job_reap(parser, true);
 
-    // update the execution duration iff a command is requested for execution
+    // Update the execution duration iff a command is requested for execution
     // issue - #4926
     if (!ft.empty()) {
         timepoint_t time_after = timef();
@@ -2659,11 +2659,11 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     term_steal();
 
     // Provide value for `status current-command`
-    parser.set_status_var(parser_status_var_t::current_command, program_name);
+    parser.libdata().status_vars.command = program_name;
     // Also provide a value for the deprecated fish 2.0 $_ variable
     parser.vars().set_one(L"_", ENV_GLOBAL, program_name);
     // Provide value for `status current-commandline`
-    parser.set_status_var(parser_status_var_t::current_commandline, L"");
+    parser.libdata().status_vars.commandline = L"";
 
     if (have_proc_stat()) {
         proc_update_jiffies(parser);

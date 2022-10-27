@@ -340,11 +340,11 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
     for (const auto &condition_string : condition) {
         parse_error_list_t errors;
         if (parse_util_detect_errors(condition_string, &errors)) {
-            streams.err.append_format(L"%ls: Condition '%ls' contained a syntax error", cmd,
-                                      condition_string.c_str());
             for (const auto &error : errors) {
-                streams.err.append_format(L"\n%ls: ", cmd);
-                streams.err.append(error.describe(condition_string, parser.is_interactive()));
+                wcstring prefix(wcstring(cmd) + L": -n '" + condition_string + L"': ");
+                streams.err.append(error.describe_with_prefix(condition_string, prefix,
+                                                              parser.is_interactive(), false));
+                streams.err.push_back(L'\n');
             }
             return STATUS_CMD_ERROR;
         }
@@ -356,7 +356,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         prefix.append(L": ");
 
         if (maybe_t<wcstring> err_text = parse_util_detect_errors_in_argument_list(comp, prefix)) {
-            streams.err.append_format(L"%ls: Completion '%ls' contained a syntax error\n", cmd,
+            streams.err.append_format(L"%ls: %ls: contains a syntax error\n", cmd,
                                       comp);
             streams.err.append(*err_text);
             streams.err.push_back(L'\n');

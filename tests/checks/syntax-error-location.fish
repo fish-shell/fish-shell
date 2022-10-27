@@ -19,15 +19,15 @@ echo 'true | time false' | $fish 2>| string replace -r '(.*)' '<$1>'
 
 echo '
 
-(true one)
+FOO=BAR (true one)
 (true two)
 
 # more things
 ' | $fish 2>| string replace -r '(.*)' '<$1>'
 
-# CHECK: <fish: Command substitutions not allowed>
-# CHECK: <(true one)>
-# CHECK: <^~~~~~~~~^>
+# CHECK: <fish: command substitutions not allowed here>
+# CHECK: <FOO=BAR (true one)>
+# CHECK: <        ^~~~~~~~~^>
 
 $fish -c 'echo "unfinished "(subshell' 2>| string replace -r '.*' '<$0>'
 # CHECK: <fish: Unexpected end of string, expecting ')'>

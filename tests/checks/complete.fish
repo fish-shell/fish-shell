@@ -469,8 +469,7 @@ complete -c thing -x -F
 # Multiple conditions
 complete -f -c shot
 complete -fc shot -n 'test (count (commandline -opc) -eq 1' -n 'test (commandline -opc)[-1] = shot' -a 'through'
-# CHECKERR: complete: Condition 'test (count (commandline -opc) -eq 1' contained a syntax error
-# CHECKERR: complete: Unexpected end of string, expecting ')'
+# CHECKERR: complete: -n 'test (count (commandline -opc) -eq 1': Unexpected end of string, expecting ')'
 # CHECKERR: test (count (commandline -opc) -eq 1
 # CHECKERR: ^
 complete -fc shot -n 'test (count (commandline -opc)) -eq 1' -n 'test (commandline -opc)[-1] = shot' -a 'through'

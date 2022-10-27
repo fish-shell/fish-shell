@@ -946,7 +946,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t
                 }
                 return expand_result_t::ok;
             case 1:
-                append_cmdsub_error(errors, start, end, L"Command substitutions not allowed");
+                append_cmdsub_error(errors, start, end, L"command substitutions not allowed here");
                 /* intentionally falls through */
             case -1:
             default:

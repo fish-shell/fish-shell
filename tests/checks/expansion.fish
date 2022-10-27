@@ -325,7 +325,7 @@ $fish -c 'echo {}}'
 #CHECKERR: echo {}}
 #CHECKERR: ^
 printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)
-#CHECK: <fish: Command substitutions not allowed>
+#CHECK: <fish: command substitutions not allowed here>
 #CHECK: <command (asd)>
 #CHECK: <        ^~~~^>
 true

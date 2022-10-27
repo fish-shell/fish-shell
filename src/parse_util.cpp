@@ -377,8 +377,8 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
                 if (!process) {
                     break;
                 }
+                __fallthrough__
             }
-            /* FALLTHROUGH */
             case token_type_t::end:
             case token_type_t::background:
             case token_type_t::andand:

@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #ifdef __APPLE__
 // This include is required on macOS 10.10 for locale_t
-#include <xlocale.h>
+#include <xlocale.h> // IWYU pragma: keep
 #endif
 
 #include <ctime>

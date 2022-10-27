@@ -23,6 +23,8 @@
  */
 
 // This version has been altered and ported to C++ for inclusion in fish.
+#include "config.h"
+
 #include "tinyexpr.h"
 
 #include <ctype.h>

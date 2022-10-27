@@ -10,6 +10,7 @@
 #include <wctype.h>
 
 #include <cwchar>
+#include <utility>
 #include <vector>
 
 #include "common.h"

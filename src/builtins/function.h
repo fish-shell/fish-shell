@@ -3,7 +3,6 @@
 #define FISH_BUILTIN_FUNCTION_H
 
 #include "../common.h"
-#include "../maybe.h"
 #include "../parse_tree.h"
 
 class parser_t;

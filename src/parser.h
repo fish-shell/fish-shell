@@ -14,7 +14,6 @@
 
 #include "common.h"
 #include "env.h"
-#include "event.h"
 #include "expand.h"
 #include "job_group.h"
 #include "maybe.h"
@@ -25,6 +24,7 @@
 #include "util.h"
 #include "wait_handle.h"
 
+struct event_t;
 class io_chain_t;
 class autoclose_fd_t;
 

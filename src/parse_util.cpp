@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cwchar>
+#include <cwctype>
 #include <memory>
 #include <string>
 #include <utility>

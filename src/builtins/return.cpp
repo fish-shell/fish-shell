@@ -4,6 +4,8 @@
 #include "return.h"
 
 #include <cerrno>
+#include <cstdlib>
+#include <cmath>
 #include <deque>
 
 #include "../builtin.h"

@@ -3,7 +3,6 @@
 
 #include "highlight.h"
 
-#include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -11,7 +10,7 @@
 #include <algorithm>
 #include <climits>
 #include <cwchar>
-#include <functional>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

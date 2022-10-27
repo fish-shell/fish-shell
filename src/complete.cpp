@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cwchar>
-#include <forward_list>
 #include <functional>
 #include <iterator>
 #include <map>

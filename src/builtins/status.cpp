@@ -16,7 +16,6 @@
 #include "../builtin.h"
 #include "../common.h"
 #include "../enum_map.h"
-#include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../future_feature_flags.h"
 #include "../io.h"

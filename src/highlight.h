@@ -13,6 +13,7 @@
 
 #include "color.h"
 #include "flog.h"
+#include "maybe.h"
 
 class environment_t;
 

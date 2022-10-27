@@ -5,7 +5,6 @@
 
 #include <stddef.h>
 
-#include <cwchar>
 #include <string>
 #include <utility>
 

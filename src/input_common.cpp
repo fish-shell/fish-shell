@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <pthread.h> // IWYU pragma: keep
 #include <signal.h>
 #include <stdio.h>
 #include <sys/types.h>

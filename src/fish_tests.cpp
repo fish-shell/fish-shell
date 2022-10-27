@@ -7,9 +7,6 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -35,6 +32,9 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <thread>
 #include <type_traits>

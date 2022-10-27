@@ -147,10 +147,14 @@ inline constexpr none_t none() { return none_t::none; }
 // This is a value-type class that stores a value of T in aligned storage.
 template <typename T>
 class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
+#if __GNUG__ && __GNUC__ < 5
+    using maybe_impl_t = maybe_detail::maybe_impl_not_trivially_copyable_t<T>;
+#else
     using maybe_impl_t =
         typename std::conditional<std::is_trivially_copyable<T>::value,
                                   maybe_detail::maybe_impl_trivially_copyable_t<T>,
-                                  maybe_detail::maybe_impl_not_trivially_copyable_t<T>>::type;
+                                  maybe_detail::maybe_impl_not_trivially_copyable_t<T> >::type;
+#endif
     maybe_impl_t impl_;
 
    public:

@@ -1,11 +1,10 @@
 function __fish_complete_apropos
-    if test (commandline -ct)
-        switch (commandline -ct)
-            case '-**'
+    set -f str (commandline -ct | string escape --style=regex)
+    switch "$str"
+        case '-**'
 
-            case '*'
-                apropos $str 2>/dev/null | string replace -rf -- "^(.*$str([^ ]*).*)" "$str\$2\t\$1"
-        end
+        case '*'
+            __fish_apropos "^$str" 2>/dev/null | string replace -rf -- '^([^(\s]+) ?\([,\w]+\)\s+-?\s?(.*)$' '$1\t$2'
     end
 end
 

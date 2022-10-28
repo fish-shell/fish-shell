@@ -1,19 +1,19 @@
 # TODO unused
-function __fish_equery_print_format
-    printf "%s\t%s\n" \
-        '$cp' "Category and package name (e.g 'app-portage/gentoolkit')" \
-        '$cpv' "Category, package name and version (e.g. 'app-portage/gentoolkit-0.3.0_rc10-r1')" \
-        '$category' "Category (e.g. 'app-portage')" \
-        '$name' "Package name (e.g. 'gentoolkit')" \
-        '$version' "Version (without the revision) (e.g. '0.3.0_rc10')" \
-        '$revision' "Revision (e.g. 'r1')" \
-        '$fullversion' "Version including revision (e.g. '0.3.0_rc10-r1')" \
-        '$slot' Slot \
-        '$repo' "Repository (e.g. 'gentoo')" \
-        '$mask' "Mask-status field (~M-??)" \
-        '$mask2' "Verbose description of the masking status" \
-        '$location' "Location field (IPO-)"
-end
+# function __fish_equery_print_format
+#     printf "%s\t%s\n" \
+#         '$cp' "Category and package name (e.g 'app-portage/gentoolkit')" \
+#         '$cpv' "Category, package name and version (e.g. 'app-portage/gentoolkit-0.3.0_rc10-r1')" \
+#         '$category' "Category (e.g. 'app-portage')" \
+#         '$name' "Package name (e.g. 'gentoolkit')" \
+#         '$version' "Version (without the revision) (e.g. '0.3.0_rc10')" \
+#         '$revision' "Revision (e.g. 'r1')" \
+#         '$fullversion' "Version including revision (e.g. '0.3.0_rc10-r1')" \
+#         '$slot' Slot \
+#         '$repo' "Repository (e.g. 'gentoo')" \
+#         '$mask' "Mask-status field (~M-??)" \
+#         '$mask2' "Verbose description of the masking status" \
+#         '$location' "Location field (IPO-)"
+# end
 
 ## Global Opts
 complete -c equery -s h -l help -d "Displays a help message"

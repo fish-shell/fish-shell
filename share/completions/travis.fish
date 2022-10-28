@@ -6,16 +6,6 @@ function __fish_travis_needs_command
     return 1
 end
 
-function __fish_travis_using_command
-    set -l cmd (commandline -opc)
-    if test (count $cmd) -gt 1
-        if test $argv[1] = $cmd[2]
-            return 0
-        end
-    end
-    return 1
-end
-
 # Commands
 complete -c travis -f -n __fish_travis_needs_command -a accounts -d "Displays accounts and their subscription status"
 complete -c travis -f -n __fish_travis_needs_command -a branches -d "Displays the most recent build for each branch"

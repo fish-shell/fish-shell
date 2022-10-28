@@ -38,22 +38,6 @@ function __fish_vagrant_machines
     end
 end
 
-function __fish_vagrant_running_machines
-    # List running machines
-    # The annoying thing here is that
-    # we could get IDs via `vagrant global-status`,
-    # but that doesn't have proper output and takes 0.5s.
-    #
-    # It seems like the data is available in $VAGRANT_HOME/data/machine-index/index, but it's in json, and that's unparseable with regex, and we can't expect jq to be installed.
-    if set -l state (__fish_print_vagrant_state)
-        # TODO: stub
-        if test -f "$state"
-            string replace -f '"active":' '' <$state | string split ,
-        else
-        end
-    end
-end
-
 function __fish_vagrant_boxes
     set -l vhome $VAGRANT_HOME/boxes
     set -q vhome[1]; or set vhome ~/.vagrant.d/boxes
@@ -99,11 +83,6 @@ function __fish_vagrant_box_need_command
     return 0
 end
 
-function __fish_vagrant_box_using_command
-    not set -l cmd (__fish_vagrant_box_need_command)
-    and contains -- $cmd[1] $argv
-end
-
 function __fish_vagrant_cloud_need_command
     set -l cmd (__fish_vagrant_need_command)
     test "$cmd[1]" = cloud 2>/dev/null
@@ -119,11 +98,6 @@ function __fish_vagrant_cloud_need_command
         return 1
     end
     return 0
-end
-
-function __fish_vagrant_cloud_using_command
-    not set -l cmd (__fish_vagrant_cloud_need_command)
-    and contains -- $cmd[1] $argv
 end
 
 complete -c vagrant -n __fish_vagrant_need_command -fa box -d 'Manage boxes: installation, removal, etc.'

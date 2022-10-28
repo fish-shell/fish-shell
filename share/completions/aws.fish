@@ -56,23 +56,6 @@ function __s3_cmd_in
     return 1
 end
 
-# Determines whether the first non-switch argument to `aws` was in $argv
-function __aws_cmd_in
-    set -l tokens (commandline -co)
-    for token in $tokens[2..-1]
-        if string match -qr "^--" -- $token
-            # Ignore switches everywhere
-            continue
-        else if contains $token $argv
-            return 0
-        else
-            return 1
-        end
-    end
-
-    return 1
-end
-
 # S3 completions
 complete -c aws -n "__fish_prev_arg_in s3" -xa "cp mv rm help sync ls mb mv presign rb website"
 

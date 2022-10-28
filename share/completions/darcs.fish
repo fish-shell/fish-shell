@@ -131,26 +131,6 @@ complete -c darcs -n __fish_darcs_use_optimize_command -x -a upgrade -d 'Upgrade
 complete -c darcs -n __fish_darcs_use_optimize_command -x -a cache -d 'Garbage collect global cache'
 
 
-function __fish_darcs_use_convert_command
-    set -l cmd (commandline -poc)
-    set -e cmd[1]
-
-    if contains convert $cmd
-        for i in $cmd
-            switch $i
-                case darcs-2
-                    return 1
-                case export
-                    return 1
-                case import
-                    return 1
-            end
-        end
-        return 0
-    end
-    return 1
-end
-
 complete -c darcs -l help -d 'Show a brief description of the command and its options'
 complete -c darcs -l list-options -d 'Show plain list of available options and commands, for auto-completion'
 complete -c darcs -l run-posthook -d 'Run posthook command without prompting [DEFAULT]'

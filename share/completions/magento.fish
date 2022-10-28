@@ -24,11 +24,6 @@ function __fish_print_magento_modules -d "Lists all Magento modules"
     end
 end
 
-function __fish_magento_print_indexer_modes -d "Lists all indexer modes"
-    echo realtime\t"Index in realtime"
-    echo schedule\t"Index via cron jobs"
-end
-
 function __fish_print_magento_i18n_packing_modes -d "Shows all available packing modes"
     echo replace\t"replace language pack by new one"
     echo merge\t"merge language packages"

@@ -20,15 +20,6 @@ function __fish_snap_using_subcommand -d 'Test if given subcommand is used'
     return 1
 end
 
-function __fish_snap_use_package -d 'Test if snap command should have packages as potential completion'
-    for i in (commandline -opc)
-        if contains -- $i alias buy disable download enable info install refresh remove revert run try
-            return 0
-        end
-    end
-    return 1
-end
-
 function __fish_snap_use_file -d 'Test if snap command should have files as potential completion'
     for i in (commandline -opc)
         if contains -- $i ack try

@@ -47,7 +47,7 @@ else()
   FetchContent_Declare(
     pcre2
     GIT_REPOSITORY ${PCRE2_REPO}
-    GIT_TAG "pcre2-10.36"
+    GIT_TAG "72669190cb947f0cac1d038a8bb1820da59ef447" # tag: pcre2-10.36
     GIT_SHALLOW ON
     GIT_PROGRESS TRUE
   )

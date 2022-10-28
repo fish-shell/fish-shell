@@ -47,7 +47,7 @@ else()
   FetchContent_Declare(
     pcre2
     GIT_REPOSITORY ${PCRE2_REPO}
-    GIT_TAG "72669190cb947f0cac1d038a8bb1820da59ef447" # tag: pcre2-10.36
+    GIT_TAG "pcre2-10.36"
     GIT_PROGRESS TRUE
   )
   # Don't try FetchContent_MakeAvailable, there's no way to add EXCLUDE_FROM_ALL

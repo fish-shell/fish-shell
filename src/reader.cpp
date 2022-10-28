@@ -2909,12 +2909,12 @@ static bool try_warn_on_background_jobs(reader_data_t *data) {
 
 /// Check if we should exit the reader loop.
 /// \return true if we should exit.
-static bool check_exit_loop_maybe_warning(reader_data_t *data) {
+bool check_exit_loop_maybe_warning(reader_data_t *data) {
     // sighup always forces exit.
     if (s_sighup_received) return true;
 
     // Check if an exit is requested.
-    if (data->exit_loop_requested) {
+    if (data && data->exit_loop_requested) {
         if (try_warn_on_background_jobs(data)) {
             data->exit_loop_requested = false;
             return false;

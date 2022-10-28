@@ -240,6 +240,9 @@ struct reader_config_t {
     int in{0};
 };
 
+class reader_data_t;
+bool check_exit_loop_maybe_warning(reader_data_t *data);
+
 /// Push a new reader environment controlled by \p conf, using the given history name.
 /// If \p history_name is empty, then save history in-memory only; do not write it to disk.
 void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t &&conf);

@@ -227,7 +227,7 @@ static void process_input(bool continuous_mode, bool verbose) {
     std::vector<wchar_t> bind_chars;
 
     std::fwprintf(stderr, L"Press a key:\n");
-    for (;;) {
+    while (!check_exit_loop_maybe_warning(nullptr)) {
         maybe_t<char_event_t> evt{};
         if (reader_test_and_clear_interrupted()) {
             evt = char_event_t{shell_modes.c_cc[VINTR]};

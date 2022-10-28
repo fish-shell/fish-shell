@@ -20,7 +20,7 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
     # signals. If echoctl is on, then the terminal will have written ^C to the console.
     # If off, it won't have. We don't echo ^C either way, so as to respect the user's
     # preference.
-    if test $signal_or_end_name = SIGINT; and test $is_foreground -eq 1
+    if test "$signal_or_end_name" = SIGINT; and test $is_foreground -eq 1
         return
     end
 

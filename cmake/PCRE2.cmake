@@ -48,6 +48,7 @@ else()
     pcre2
     GIT_REPOSITORY ${PCRE2_REPO}
     GIT_TAG "pcre2-10.36"
+    GIT_SHALLOW ON
     GIT_PROGRESS TRUE
   )
   # Don't try FetchContent_MakeAvailable, there's no way to add EXCLUDE_FROM_ALL

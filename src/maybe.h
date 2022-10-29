@@ -7,10 +7,11 @@
 #include <utility>
 
 namespace maybe_detail {
-// Template magic to make maybe_t<T> copyable iff T is copyable.
-// maybe_impl_t is the "too aggressive" implementation: it is always copyable.
+// Template magic to make maybe_t<T> (trivially) copyable iff T is.
+
+// This is an unsafe implementation: it is always trivially copyable.
 template <typename T>
-struct maybe_impl_t {
+struct maybe_impl_trivially_copyable_t {
     alignas(T) char storage[sizeof(T)];
     bool filled = false;
 
@@ -38,11 +39,13 @@ struct maybe_impl_t {
         return res;
     }
 
-    maybe_impl_t() = default;
+    maybe_impl_trivially_copyable_t() = default;
 
     // Move construction/assignment from a T.
-    explicit maybe_impl_t(T &&v) : filled(true) { new (storage) T(std::forward<T>(v)); }
-    maybe_impl_t &operator=(T &&v) {
+    explicit maybe_impl_trivially_copyable_t(T &&v) : filled(true) {
+        new (storage) T(std::forward<T>(v));
+    }
+    maybe_impl_trivially_copyable_t &operator=(T &&v) {
         if (filled) {
             value() = std::move(v);
         } else {
@@ -53,8 +56,8 @@ struct maybe_impl_t {
     }
 
     // Copy construction/assignment from a T.
-    explicit maybe_impl_t(const T &v) : filled(true) { new (storage) T(v); }
-    maybe_impl_t &operator=(const T &v) {
+    explicit maybe_impl_trivially_copyable_t(const T &v) : filled(true) { new (storage) T(v); }
+    maybe_impl_trivially_copyable_t &operator=(const T &v) {
         if (filled) {
             value() = v;
         } else {
@@ -63,15 +66,27 @@ struct maybe_impl_t {
         }
         return *this;
     }
+};
 
-    // Move construction/assignment from a maybe_impl.
-    maybe_impl_t(maybe_impl_t &&v) : filled(v.filled) {
+// This is an unsafe implementation: it is always copyable.
+template <typename T>
+struct maybe_impl_not_trivially_copyable_t : public maybe_impl_trivially_copyable_t<T> {
+    using base_t = maybe_impl_trivially_copyable_t<T>;
+    using base_t::maybe_impl_trivially_copyable_t;
+    using base_t::operator=;
+    using base_t::filled;
+    using base_t::reset;
+    using base_t::storage;
+
+    // Move construction/assignment from another instance.
+    maybe_impl_not_trivially_copyable_t(maybe_impl_not_trivially_copyable_t &&v) {
+        filled = v.filled;
         if (filled) {
             new (storage) T(std::move(v.value()));
         }
     }
 
-    maybe_impl_t &operator=(maybe_impl_t &&v) {
+    maybe_impl_not_trivially_copyable_t &operator=(maybe_impl_not_trivially_copyable_t &&v) {
         if (!v.filled) {
             reset();
         } else {
@@ -80,14 +95,15 @@ struct maybe_impl_t {
         return *this;
     }
 
-    // Copy construction/assignment from a maybe_impl.
-    maybe_impl_t(const maybe_impl_t &v) : filled(v.filled) {
+    // Copy construction/assignment from another instance.
+    maybe_impl_not_trivially_copyable_t(const maybe_impl_not_trivially_copyable_t &v) : base_t() {
+        filled = v.filled;
         if (v.filled) {
             new (storage) T(v.value());
         }
     }
 
-    maybe_impl_t &operator=(const maybe_impl_t &v) {
+    maybe_impl_not_trivially_copyable_t &operator=(const maybe_impl_not_trivially_copyable_t &v) {
         if (&v == this) return *this;
         if (!v.filled) {
             reset();
@@ -97,7 +113,8 @@ struct maybe_impl_t {
         return *this;
     }
 
-    ~maybe_impl_t() { reset(); }
+    maybe_impl_not_trivially_copyable_t() = default;
+    ~maybe_impl_not_trivially_copyable_t() { reset(); }
 };
 
 struct copyable_t {};
@@ -130,7 +147,15 @@ inline constexpr none_t none() { return none_t::none; }
 // This is a value-type class that stores a value of T in aligned storage.
 template <typename T>
 class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
-    maybe_detail::maybe_impl_t<T> impl_;
+#if __GNUG__ && __GNUC__ < 5
+    using maybe_impl_t = maybe_detail::maybe_impl_not_trivially_copyable_t<T>;
+#else
+    using maybe_impl_t =
+        typename std::conditional<std::is_trivially_copyable<T>::value,
+                                  maybe_detail::maybe_impl_trivially_copyable_t<T>,
+                                  maybe_detail::maybe_impl_not_trivially_copyable_t<T> >::type;
+#endif
+    maybe_impl_t impl_;
 
    public:
     // return whether the receiver contains a value.

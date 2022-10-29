@@ -1,5 +1,11 @@
 # Completions for the `apt` command
 
+# macOS has a /usr/bin/apt that is something else entirely: 
+# (apt - Returns the path to a Java home directory from the current user's settings)
+if [ (uname -s) = Darwin -a (command -v apt) = /usr/bin/apt ]
+    exit 1
+end
+
 set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends
 set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends autoremove
 set -l installed_pkg_subcmds remove

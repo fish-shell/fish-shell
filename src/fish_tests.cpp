@@ -6867,6 +6867,21 @@ static void test_re_basic() {
     }
     do_test(join_strings(matches, L',') == L"AA,CC,11");
     do_test(join_strings(captures, L',') == L"A,C,1");
+
+    // Test make_anchored
+    re = regex_t::try_compile(make_anchored(L"ab(.+?)"));
+    do_test(re.has_value());
+    do_test(!re->match(L""));
+    do_test(!re->match(L"ab"));
+    do_test((re->match(L"abcd") == match_range_t{0, 4}));
+    do_test((re->match(L"abcdefghij") == match_range_t{0, 10}));
+
+    re = regex_t::try_compile(make_anchored(L"(a+)|(b+)"));
+    do_test(re.has_value());
+    do_test(!re->match(L""));
+    do_test(!re->match(L"aabb"));
+    do_test((re->match(L"aaaa") == match_range_t{0, 4}));
+    do_test((re->match(L"bbbb") == match_range_t{0, 4}));
 }
 
 static void test_re_reset() {

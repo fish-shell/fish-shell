@@ -115,6 +115,8 @@ Completions
   - ``dua``
   - ``clojure``
 
+- Improvements to some completions.
+
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -114,4 +114,38 @@ end
 
 functions -q; or echo False
 #CHECK: False
+
+# See that we don't count a file with an empty function name,
+# or directories
+set -l tmpdir (mktemp -d)
+touch $tmpdir/.fish
+mkdir $tmpdir/directory.fish
+touch $tmpdir/actual_function.fish
+
+begin
+    set -l fish_function_path $tmpdir
+    functions
+end
+# CHECK: actual_function
+
+# these are functions defined either in this file,
+# or eagerly in share/config.fish.
+# I don't know of a way to ignore just them.
+#
+# CHECK: bg
+# CHECK: disown
+# CHECK: fg
+# CHECK: fish_command_not_found
+# CHECK: fish_sigtrap_handler
+# CHECK: frob
+# CHECK: kill
+# CHECK: name1
+# CHECK: name1a
+# CHECK: name3
+# CHECK: name3a
+# CHECK: t
+# CHECK: wait
+
+rm -r $tmpdir
+
 exit 0

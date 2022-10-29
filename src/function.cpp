@@ -127,9 +127,13 @@ static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden)
             if (!get_hidden && fn[0] == L'_') continue;
 
             suffix = std::wcsrchr(fn, L'.');
-            if (suffix && (std::wcscmp(suffix, L".fish") == 0)) {
-                wcstring name(fn, suffix - fn);
-                names.insert(name);
+            // We need a ".fish" *suffix*, it can't be the entire name.
+            if (suffix && suffix != fn && (std::wcscmp(suffix, L".fish") == 0)) {
+                // Also ignore directories.
+                if (!entry->is_dir()) {
+                    wcstring name(fn, suffix - fn);
+                    names.insert(name);
+                }
             }
         }
     }

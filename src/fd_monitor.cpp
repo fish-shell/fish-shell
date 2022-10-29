@@ -19,7 +19,7 @@ static constexpr uint64_t kUsecPerMsec = 1000;
 fd_monitor_t::fd_monitor_t() = default;
 
 fd_monitor_t::~fd_monitor_t() {
-    // In orindary usage, we never invoke the dtor.
+    // In ordinary usage, we never invoke the dtor.
     // This is used in the tests to not leave stale fds around.
     // That is why this is very hacky!
     data_.acquire()->terminate = true;

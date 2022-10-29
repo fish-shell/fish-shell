@@ -1259,7 +1259,7 @@ void screen_t::reset_abandoning_line(int screen_width) {
             std::string dim = fish_tparm(const_cast<char *>(enter_dim_mode));
             if (!dim.empty()) {
                 // Use dim if they have it, so the color will be based on their actual normal
-                // color and the background of the termianl.
+                // color and the background of the terminal.
                 abandon_line_string.append(str2wcstring(dim));
                 justgrey = false;
             }

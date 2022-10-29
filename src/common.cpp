@@ -239,7 +239,7 @@ static inline const char *align_start(const char *start, size_t len) {
     // How much do we have to add to start to make it 0 mod Align?
     // To compute 17 up-aligned by 8, compute its skew 17 % 8, yielding 1,
     // and then we will add 8 - 1. Of course if we align 16 with the same idea, we will
-    // add 8 instead of 0, so then mod the summand by Align again.
+    // add 8 instead of 0, so then mod the sum by Align again.
     // Note all of these mods are optimized to masks.
     uintptr_t add_which_aligns = Align - (startu % Align);
     add_which_aligns %= Align;
@@ -1820,7 +1820,7 @@ void assert_is_locked(std::mutex &mutex, const char *who, const char *caller) {
     }
 }
 
-/// Test if the specified character is in a range that fish uses interally to store special tokens.
+/// Test if the specified character is in a range that fish uses internally to store special tokens.
 ///
 /// NOTE: This is used when tokenizing the input. It is also used when reading input, before
 /// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted

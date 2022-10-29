@@ -61,7 +61,7 @@ job_group_ref_t job_group_t::create_with_job_control(wcstring command, bool want
 void job_group_t::set_pgid(pid_t pgid) {
     // Note we need not be concerned about thread safety. job_groups are intended to be shared
     // across threads, but any pgid should always have been set beforehand, since it's set
-    // immediately after thfe first process launches.
+    // immediately after the first process launches.
     assert(pgid >= 0 && "invalid pgid");
     assert(wants_job_control() && "should not set a pgid for this group");
     assert(!pgid_.has_value() && "pgid already set");

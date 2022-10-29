@@ -580,7 +580,7 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
     operation_context_t op_ctx = this->context();
     block_t *scope_block = this->push_block(block_t::scope_block(block_type));
 
-    // Propogate our job group.
+    // Propagate our job group.
     op_ctx.job_group = job_group;
 
     // Replace the context's cancel checker with one that checks the job group's signal.

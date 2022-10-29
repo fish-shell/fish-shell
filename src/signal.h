@@ -40,7 +40,7 @@ void get_signals_with_handlers(sigset_t *set);
 int signal_check_cancel();
 
 /// Set the cancellation signal to zero.
-/// In generaly this should only be done in interactive sessions.
+/// In generally this should only be done in interactive sessions.
 void signal_clear_cancel();
 
 enum class topic_t : uint8_t;

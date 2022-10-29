@@ -84,7 +84,7 @@ class history_item_t {
     /// \return whether the text is empty.
     bool empty() const { return contents.empty(); }
 
-    /// \return wehther our contents matches a search term.
+    /// \return whether our contents matches a search term.
     bool matches_search(const wcstring &term, enum history_search_type_t type,
                         bool case_sensitive) const;
 

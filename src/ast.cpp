@@ -138,7 +138,7 @@ class token_stream_t {
         return result;
     }
 
-    /// Provide the orignal source code.
+    /// Provide the original source code.
     const wcstring &source() const { return src_; }
 
    private:

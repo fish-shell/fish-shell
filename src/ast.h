@@ -75,7 +75,7 @@ const wchar_t *ast_type_to_string(type_t type);
  *    void will_visit_fields_of(job_t &job);
  *
  *    /// The visitor needs to be prepared for the following four field types.
- *    /// Naturally the vistor may overload visit_field to carve this
+ *    /// Naturally the visitor may overload visit_field to carve this
  *    /// arbitrarily finely.
  *
  *    /// A field may be a "direct embedding" of a node.
@@ -246,7 +246,7 @@ struct node_t : noncopyable_t {
     }
 
     /// Try casting to a concrete node type, except returns nullptr on failure.
-    /// Example ussage:
+    /// Example usage:
     ///     if (const auto *job_list = node->try_as<job_list_t>()) job_list->...
     template <typename To>
     To *try_as() {

@@ -1294,7 +1294,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
         char c[1] = {'\0'};
         ssize_t amt_written = write(pipe_fd.fd(), c, sizeof c);
         if (amt_written < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
-            // Very unsual: the pipe is full! Try to read some and repeat once.
+            // Very unusual: the pipe is full! Try to read some and repeat once.
             drain_excess();
             amt_written = write(pipe_fd.fd(), c, sizeof c);
             if (amt_written < 0) {

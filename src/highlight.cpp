@@ -777,7 +777,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
 namespace {
 /// Syntax highlighter helper.
 class highlighter_t {
-    // The string we're highlighting. Note this is a reference memmber variable (to avoid copying)!
+    // The string we're highlighting. Note this is a reference member variable (to avoid copying)!
     // We must not outlive this!
     const wcstring &buff;
     // The position of the cursor within the string.

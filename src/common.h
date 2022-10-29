@@ -73,18 +73,18 @@ struct termsize_t;
 // Unicode BOM value.
 #define UTF8_BOM_WCHAR 0xFEFFu
 
-// Use Unicode "noncharacters" for internal characters as much as we can. This
+// Use Unicode "non-characters" for internal characters as much as we can. This
 // gives us 32 "characters" for internal use that we can guarantee should not
 // appear in our input stream. See http://www.unicode.org/faq/private_use.html.
 #define RESERVED_CHAR_BASE static_cast<wchar_t>(0xFDD0)
 #define RESERVED_CHAR_END static_cast<wchar_t>(0xFDF0)
-// Split the available noncharacter values into two ranges to ensure there are
+// Split the available non-character values into two ranges to ensure there are
 // no conflicts among the places we use these special characters.
 #define EXPAND_RESERVED_BASE RESERVED_CHAR_BASE
 #define EXPAND_RESERVED_END (EXPAND_RESERVED_BASE + 16)
 #define WILDCARD_RESERVED_BASE EXPAND_RESERVED_END
 #define WILDCARD_RESERVED_END (WILDCARD_RESERVED_BASE + 16)
-// Make sure the ranges defined above don't exceed the range for noncharacters.
+// Make sure the ranges defined above don't exceed the range for non-characters.
 // This is to make sure we didn't do something stupid in subdividing the
 // Unicode range for our needs.
 //#if WILDCARD_RESERVED_END > RESERVED_CHAR_END
@@ -146,7 +146,7 @@ typedef unsigned int unescape_flags_t;
 // Flags for the escape_string() function. These are only applicable when the escape style is
 // "script" (i.e., STRING_STYLE_SCRIPT).
 enum {
-    /// Do not escape special fish syntax characters like the semicolon. Only escape nonprintable
+    /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
     /// characters and backslashes.
     ESCAPE_NO_PRINTABLES = 1 << 0,
     /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
@@ -154,7 +154,7 @@ enum {
     ESCAPE_NO_QUOTED = 1 << 1,
     /// Do not escape tildes.
     ESCAPE_NO_TILDE = 1 << 2,
-    /// Replace nonprintable control characters with Unicode symbols.
+    /// Replace non-printable control characters with Unicode symbols.
     ESCAPE_SYMBOLIC = 1 << 3
 };
 typedef unsigned int escape_flags_t;
@@ -338,7 +338,7 @@ void format_long_safe(wchar_t buff[64], long val);
 void format_llong_safe(wchar_t buff[64], long long val);
 void format_ullong_safe(wchar_t buff[64], unsigned long long val);
 
-/// "Narrows" a wide character string. This just grabs any ASCII characters and trunactes.
+/// "Narrows" a wide character string. This just grabs any ASCII characters and truncates.
 void narrow_string_safe(char buff[64], const wchar_t *s);
 
 /// Stored in blocks to reference the file which created the block.
@@ -561,7 +561,7 @@ void assert_is_not_forked_child(const char *who);
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
 bool is_windows_subsystem_for_linux();
 
-/// Detect if we are running under Cygwin or Cgywin64
+/// Detect if we are running under Cygwin or Cygwin64
 constexpr bool is_cygwin() {
 #ifdef __CYGWIN__
     return true;

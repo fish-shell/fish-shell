@@ -339,7 +339,7 @@ maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char 
     pid_t pid = -1;
     if (check_fail(posix_spawn(&pid, cmd, &*actions_, &*attr_, argv, envp))) {
         // The shebang wasn't introduced until UNIX Seventh Edition, so if
-        // the kernel won't run the binary we hand it off to the intpreter
+        // the kernel won't run the binary we hand it off to the interpreter
         // after performing a binary safety check, recommended by POSIX: a
         // line needs to exist before the first \0 with a lowercase letter
         if (error_ == ENOEXEC && is_thompson_shell_script(cmd)) {

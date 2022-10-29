@@ -1338,7 +1338,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
 
     bool is_autosuggest = this->flags.autosuggestion;
     // Perhaps set a transient commandline so that custom completions
-    // buitin_commandline will refer to the wrapped command. But not if
+    // builtin_commandline will refer to the wrapped command. But not if
     // we're doing autosuggestions.
     maybe_t<cleanup_t> remove_transient{};
     bool wants_transient = (ad->wrap_depth > 0 || ad->var_assignments) && !is_autosuggest;

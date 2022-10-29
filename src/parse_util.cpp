@@ -113,7 +113,7 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
             last_dollar = q_end;
             quoted_cmdsubs.push_back(paran_count);
         }
-        // We want to report whether the outermost comand substitution between
+        // We want to report whether the outermost command substitution between
         // paran_begin..paran_end is quoted.
         if (paran_count == 0 && inout_is_quoted) {
             *inout_is_quoted = *q_end == L'$';

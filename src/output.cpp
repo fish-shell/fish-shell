@@ -161,7 +161,7 @@ void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
     if (fg.is_reset() || bg.is_reset()) {
         fg = bg = normal;
         reset_modes();
-        // If we exit attibute mode, we must first set a color, or previously colored text might
+        // If we exit attribute mode, we must first set a color, or previously colored text might
         // lose it's color. Terminals are weird...
         write_foreground_color(*this, 0);
         writembs(*this, exit_attribute_mode);

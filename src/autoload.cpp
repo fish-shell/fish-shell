@@ -58,7 +58,7 @@ class autoload_file_cache_t {
     /// \return whether a timestamp is fresh enough to use.
     static bool is_fresh(timestamp_t then, timestamp_t now);
 
-    /// Attempt to find an autoloadable file by searching our path list for a given comand.
+    /// Attempt to find an autoloadable file by searching our path list for a given command.
     /// \return the file, or none() if none.
     maybe_t<autoloadable_file_t> locate_file(const wcstring &cmd) const;
 

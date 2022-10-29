@@ -449,7 +449,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Returns the file currently evaluated by the parser. This can be different than
     /// reader_current_filename, e.g. if we are evaluating a function defined in a different file
-    /// than the one curently read.
+    /// than the one currently read.
     filename_ref_t current_filename() const;
 
     /// Return if we are interactive, which means we are executing a command that the user typed in

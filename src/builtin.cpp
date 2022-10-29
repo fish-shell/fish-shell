@@ -197,7 +197,7 @@ void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wch
     b.append_format(_(L"(Type 'help %ls' for related documentation)\n"), cmd);
 }
 
-/// A generic bultin that only supports showing a help message. This is only a placeholder that
+/// A generic builtin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
 static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];

@@ -151,7 +151,7 @@ class binary_semaphore_t {
     // Whether our semaphore was successfully initialized.
     bool sem_ok_{};
 
-    // The semaphore, if initalized.
+    // The semaphore, if initialized.
     sem_t sem_{};
 
     // Pipes used to emulate a semaphore, if not initialized.

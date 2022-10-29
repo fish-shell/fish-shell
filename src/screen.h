@@ -142,7 +142,7 @@ class screen_t {
     /// \param right_prompt the right prompt, or NULL if none
     /// \param commandline the command line
     /// \param explicit_len the number of characters of the "explicit" (non-autosuggestion) portion
-    /// of the command line \param colors the colors to use for the comand line \param indent the
+    /// of the command line \param colors the colors to use for the commanad line \param indent the
     /// indent to use for the command line \param cursor_pos where the cursor is \param pager the
     /// pager to render below the command line \param page_rendering to cache the current pager view
     /// \param cursor_is_within_pager whether the position is within the pager line (first line)
@@ -157,7 +157,7 @@ class screen_t {
     /// This function assumes that the current line is still valid.
     void reset_line(bool repaint_prompt = false);
 
-    /// Resets the screen buffer's internal knowldge about the contents of the screen,
+    /// Resets the screen buffer's internal knowledge about the contents of the screen,
     /// abandoning the current line and going to the next line.
     /// If clear_to_eos is set,
     /// The screen width must be provided for the PROMPT_SP hack.

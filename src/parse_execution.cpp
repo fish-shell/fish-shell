@@ -1531,7 +1531,7 @@ end_execution_reason_t parse_execution_context_t::eval_node(const ast::job_list_
                                   INFINITE_FUNC_RECURSION_ERR_MSG, func_name.c_str());
     }
 
-    // Check for stack overflow in case of funtion calls (regular stack overflow) or string
+    // Check for stack overflow in case of function calls (regular stack overflow) or string
     // substitution blocks, which can be recursively called with eval (issue #9302).
     if ((associated_block->type() == block_type_t::top &&
          parser->function_stack_is_overflowing()) ||

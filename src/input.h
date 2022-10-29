@@ -36,7 +36,7 @@ class inputter_t final : private input_event_queue_t {
     /// but do not permanently block the escape character.
     ///
     /// This is performed in the same way vim does it, i.e. if an escape character is read, wait for
-    /// more input for a short time (a few milliseconds). If more input is avaialable, it is assumed
+    /// more input for a short time (a few milliseconds). If more input is available, it is assumed
     /// to be an escape sequence for a special character (such as an arrow key), and readch attempts
     /// to parse it. If no more input follows after the escape key, it is assumed to be an actual
     /// escape key press, and is returned as such.

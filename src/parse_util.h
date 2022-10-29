@@ -92,7 +92,7 @@ int parse_util_get_line_from_offset(const wcstring &str, size_t pos);
 /// Get the offset of the first character on the specified line.
 size_t parse_util_get_offset_from_line(const wcstring &str, int line);
 
-/// Return the total offset of the buffer for the cursor position nearest to the specified poition.
+/// Return the total offset of the buffer for the cursor position nearest to the specified position.
 size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 
 /// Return the given string, unescaping wildcard characters but not performing any other character

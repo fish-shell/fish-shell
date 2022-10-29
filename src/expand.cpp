@@ -276,7 +276,7 @@ static size_t parse_slice(const wchar_t *const in, wchar_t **const end_ptr, std:
 ///
 /// This function operates on strings backwards, starting at last_idx.
 ///
-/// Note: last_idx is considered to be where it previously finished procesisng. This means it
+/// Note: last_idx is considered to be where it previously finished processing. This means it
 /// actually starts operating on last_idx-1. As such, to process a string fully, pass string.size()
 /// as last_idx instead of string.size()-1.
 ///

@@ -109,7 +109,7 @@ bool function_load(const wcstring &name, parser_t &parser) {
 static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden) {
     size_t i;
 
-    // TODO: justfy this.
+    // TODO: justify this.
     auto &vars = env_stack_t::principal();
     const auto path_var = vars.get(L"fish_function_path");
     if (path_var.missing_or_empty()) return;

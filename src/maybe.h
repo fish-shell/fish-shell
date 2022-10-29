@@ -147,7 +147,13 @@ inline constexpr none_t none() { return none_t::none; }
 // This is a value-type class that stores a value of T in aligned storage.
 template <typename T>
 class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
-#if __GNUG__ && __GNUC__ < 5
+    // Making maybe_t trivially copyable results in some heisenbugs if compiled under gcc 8.3.0
+    // targeting 32-bit armhf platforms (Debian 10 armhf toolchain). It's confirmed not to happen if
+    // using clang 7 (under Debian 10 armhf) or gcc 10 (under Debian 11 armhf) so we're also
+    // excluding gcc 9 unless/until 32-bit armhf builds under GCC 9 are observed to pass all tests
+    // with this version check lowered. As this is only an optimization, just disable it across the
+    // board rather than only for armhf targets out of an abundance of caution.
+#if __GNUG__ && __GNUC__ < 10
     using maybe_impl_t = maybe_detail::maybe_impl_not_trivially_copyable_t<T>;
 #else
     using maybe_impl_t =

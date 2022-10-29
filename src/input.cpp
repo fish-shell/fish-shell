@@ -78,92 +78,92 @@ static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS;
 /// input_common.h.
 struct input_function_metadata_t {
     const wchar_t *name;
-    readline_cmd_t code;
+    readline_cmd_t::id_t code;
 };
 
 /// A static mapping of all readline commands as strings to their readline_cmd_t equivalent.
 /// Keep this list sorted alphabetically!
 static constexpr const input_function_metadata_t input_function_metadata[] = {
     // NULL makes it unusable - this is specially inserted when we detect mouse input
-    {L"", readline_cmd_t::disable_mouse_tracking},
-    {L"accept-autosuggestion", readline_cmd_t::accept_autosuggestion},
-    {L"and", readline_cmd_t::func_and},
-    {L"backward-bigword", readline_cmd_t::backward_bigword},
-    {L"backward-char", readline_cmd_t::backward_char},
-    {L"backward-delete-char", readline_cmd_t::backward_delete_char},
-    {L"backward-jump", readline_cmd_t::backward_jump},
-    {L"backward-jump-till", readline_cmd_t::backward_jump_till},
-    {L"backward-kill-bigword", readline_cmd_t::backward_kill_bigword},
-    {L"backward-kill-line", readline_cmd_t::backward_kill_line},
-    {L"backward-kill-path-component", readline_cmd_t::backward_kill_path_component},
-    {L"backward-kill-word", readline_cmd_t::backward_kill_word},
-    {L"backward-word", readline_cmd_t::backward_word},
-    {L"begin-selection", readline_cmd_t::begin_selection},
-    {L"begin-undo-group", readline_cmd_t::begin_undo_group},
-    {L"beginning-of-buffer", readline_cmd_t::beginning_of_buffer},
-    {L"beginning-of-history", readline_cmd_t::beginning_of_history},
-    {L"beginning-of-line", readline_cmd_t::beginning_of_line},
-    {L"cancel", readline_cmd_t::cancel},
-    {L"cancel-commandline", readline_cmd_t::cancel_commandline},
-    {L"capitalize-word", readline_cmd_t::capitalize_word},
-    {L"complete", readline_cmd_t::complete},
-    {L"complete-and-search", readline_cmd_t::complete_and_search},
-    {L"delete-char", readline_cmd_t::delete_char},
-    {L"delete-or-exit", readline_cmd_t::delete_or_exit},
-    {L"down-line", readline_cmd_t::down_line},
-    {L"downcase-word", readline_cmd_t::downcase_word},
-    {L"end-of-buffer", readline_cmd_t::end_of_buffer},
-    {L"end-of-history", readline_cmd_t::end_of_history},
-    {L"end-of-line", readline_cmd_t::end_of_line},
-    {L"end-selection", readline_cmd_t::end_selection},
-    {L"end-undo-group", readline_cmd_t::end_undo_group},
-    {L"execute", readline_cmd_t::execute},
-    {L"exit", readline_cmd_t::exit},
-    {L"expand-abbr", readline_cmd_t::expand_abbr},
-    {L"force-repaint", readline_cmd_t::force_repaint},
-    {L"forward-bigword", readline_cmd_t::forward_bigword},
-    {L"forward-char", readline_cmd_t::forward_char},
-    {L"forward-jump", readline_cmd_t::forward_jump},
-    {L"forward-jump-till", readline_cmd_t::forward_jump_till},
-    {L"forward-single-char", readline_cmd_t::forward_single_char},
-    {L"forward-word", readline_cmd_t::forward_word},
-    {L"history-pager", readline_cmd_t::history_pager},
-    {L"history-prefix-search-backward", readline_cmd_t::history_prefix_search_backward},
-    {L"history-prefix-search-forward", readline_cmd_t::history_prefix_search_forward},
-    {L"history-search-backward", readline_cmd_t::history_search_backward},
-    {L"history-search-forward", readline_cmd_t::history_search_forward},
-    {L"history-token-search-backward", readline_cmd_t::history_token_search_backward},
-    {L"history-token-search-forward", readline_cmd_t::history_token_search_forward},
-    {L"insert-line-over", readline_cmd_t::insert_line_over},
-    {L"insert-line-under", readline_cmd_t::insert_line_under},
-    {L"kill-bigword", readline_cmd_t::kill_bigword},
-    {L"kill-inner-line", readline_cmd_t::kill_inner_line},
-    {L"kill-line", readline_cmd_t::kill_line},
-    {L"kill-selection", readline_cmd_t::kill_selection},
-    {L"kill-whole-line", readline_cmd_t::kill_whole_line},
-    {L"kill-word", readline_cmd_t::kill_word},
-    {L"nextd-or-forward-word", readline_cmd_t::nextd_or_forward_word},
-    {L"or", readline_cmd_t::func_or},
-    {L"pager-toggle-search", readline_cmd_t::pager_toggle_search},
-    {L"prevd-or-backward-word", readline_cmd_t::prevd_or_backward_word},
-    {L"redo", readline_cmd_t::redo},
-    {L"repaint", readline_cmd_t::repaint},
-    {L"repaint-mode", readline_cmd_t::repaint_mode},
-    {L"repeat-jump", readline_cmd_t::repeat_jump},
-    {L"repeat-jump-reverse", readline_cmd_t::reverse_repeat_jump},
-    {L"self-insert", readline_cmd_t::self_insert},
-    {L"self-insert-notfirst", readline_cmd_t::self_insert_notfirst},
-    {L"suppress-autosuggestion", readline_cmd_t::suppress_autosuggestion},
-    {L"swap-selection-start-stop", readline_cmd_t::swap_selection_start_stop},
-    {L"togglecase-char", readline_cmd_t::togglecase_char},
-    {L"togglecase-selection", readline_cmd_t::togglecase_selection},
-    {L"transpose-chars", readline_cmd_t::transpose_chars},
-    {L"transpose-words", readline_cmd_t::transpose_words},
-    {L"undo", readline_cmd_t::undo},
-    {L"up-line", readline_cmd_t::up_line},
-    {L"upcase-word", readline_cmd_t::upcase_word},
-    {L"yank", readline_cmd_t::yank},
-    {L"yank-pop", readline_cmd_t::yank_pop},
+    {L"", readline_cmd_t::id_t::disable_mouse_tracking},
+    {L"accept-autosuggestion", readline_cmd_t::id_t::accept_autosuggestion},
+    {L"and", readline_cmd_t::id_t::func_and},
+    {L"backward-bigword", readline_cmd_t::id_t::backward_bigword},
+    {L"backward-char", readline_cmd_t::id_t::backward_char},
+    {L"backward-delete-char", readline_cmd_t::id_t::backward_delete_char},
+    {L"backward-jump", readline_cmd_t::id_t::backward_jump},
+    {L"backward-jump-till", readline_cmd_t::id_t::backward_jump_till},
+    {L"backward-kill-bigword", readline_cmd_t::id_t::backward_kill_bigword},
+    {L"backward-kill-line", readline_cmd_t::id_t::backward_kill_line},
+    {L"backward-kill-path-component", readline_cmd_t::id_t::backward_kill_path_component},
+    {L"backward-kill-word", readline_cmd_t::id_t::backward_kill_word},
+    {L"backward-word", readline_cmd_t::id_t::backward_word},
+    {L"begin-selection", readline_cmd_t::id_t::begin_selection},
+    {L"begin-undo-group", readline_cmd_t::id_t::begin_undo_group},
+    {L"beginning-of-buffer", readline_cmd_t::id_t::beginning_of_buffer},
+    {L"beginning-of-history", readline_cmd_t::id_t::beginning_of_history},
+    {L"beginning-of-line", readline_cmd_t::id_t::beginning_of_line},
+    {L"cancel", readline_cmd_t::id_t::cancel},
+    {L"cancel-commandline", readline_cmd_t::id_t::cancel_commandline},
+    {L"capitalize-word", readline_cmd_t::id_t::capitalize_word},
+    {L"complete", readline_cmd_t::id_t::complete},
+    {L"complete-and-search", readline_cmd_t::id_t::complete_and_search},
+    {L"delete-char", readline_cmd_t::id_t::delete_char},
+    {L"delete-or-exit", readline_cmd_t::id_t::delete_or_exit},
+    {L"down-line", readline_cmd_t::id_t::down_line},
+    {L"downcase-word", readline_cmd_t::id_t::downcase_word},
+    {L"end-of-buffer", readline_cmd_t::id_t::end_of_buffer},
+    {L"end-of-history", readline_cmd_t::id_t::end_of_history},
+    {L"end-of-line", readline_cmd_t::id_t::end_of_line},
+    {L"end-selection", readline_cmd_t::id_t::end_selection},
+    {L"end-undo-group", readline_cmd_t::id_t::end_undo_group},
+    {L"execute", readline_cmd_t::id_t::execute},
+    {L"exit", readline_cmd_t::id_t::exit},
+    {L"expand-abbr", readline_cmd_t::id_t::expand_abbr},
+    {L"force-repaint", readline_cmd_t::id_t::force_repaint},
+    {L"forward-bigword", readline_cmd_t::id_t::forward_bigword},
+    {L"forward-char", readline_cmd_t::id_t::forward_char},
+    {L"forward-jump", readline_cmd_t::id_t::forward_jump},
+    {L"forward-jump-till", readline_cmd_t::id_t::forward_jump_till},
+    {L"forward-single-char", readline_cmd_t::id_t::forward_single_char},
+    {L"forward-word", readline_cmd_t::id_t::forward_word},
+    {L"history-pager", readline_cmd_t::id_t::history_pager},
+    {L"history-prefix-search-backward", readline_cmd_t::id_t::history_prefix_search_backward},
+    {L"history-prefix-search-forward", readline_cmd_t::id_t::history_prefix_search_forward},
+    {L"history-search-backward", readline_cmd_t::id_t::history_search_backward},
+    {L"history-search-forward", readline_cmd_t::id_t::history_search_forward},
+    {L"history-token-search-backward", readline_cmd_t::id_t::history_token_search_backward},
+    {L"history-token-search-forward", readline_cmd_t::id_t::history_token_search_forward},
+    {L"insert-line-over", readline_cmd_t::id_t::insert_line_over},
+    {L"insert-line-under", readline_cmd_t::id_t::insert_line_under},
+    {L"kill-bigword", readline_cmd_t::id_t::kill_bigword},
+    {L"kill-inner-line", readline_cmd_t::id_t::kill_inner_line},
+    {L"kill-line", readline_cmd_t::id_t::kill_line},
+    {L"kill-selection", readline_cmd_t::id_t::kill_selection},
+    {L"kill-whole-line", readline_cmd_t::id_t::kill_whole_line},
+    {L"kill-word", readline_cmd_t::id_t::kill_word},
+    {L"nextd-or-forward-word", readline_cmd_t::id_t::nextd_or_forward_word},
+    {L"or", readline_cmd_t::id_t::func_or},
+    {L"pager-toggle-search", readline_cmd_t::id_t::pager_toggle_search},
+    {L"prevd-or-backward-word", readline_cmd_t::id_t::prevd_or_backward_word},
+    {L"redo", readline_cmd_t::id_t::redo},
+    {L"repaint", readline_cmd_t::id_t::repaint},
+    {L"repaint-mode", readline_cmd_t::id_t::repaint_mode},
+    {L"repeat-jump", readline_cmd_t::id_t::repeat_jump},
+    {L"repeat-jump-reverse", readline_cmd_t::id_t::reverse_repeat_jump},
+    {L"self-insert", readline_cmd_t::id_t::self_insert},
+    {L"self-insert-notfirst", readline_cmd_t::id_t::self_insert_notfirst},
+    {L"suppress-autosuggestion", readline_cmd_t::id_t::suppress_autosuggestion},
+    {L"swap-selection-start-stop", readline_cmd_t::id_t::swap_selection_start_stop},
+    {L"togglecase-char", readline_cmd_t::id_t::togglecase_char},
+    {L"togglecase-selection", readline_cmd_t::id_t::togglecase_selection},
+    {L"transpose-chars", readline_cmd_t::id_t::transpose_chars},
+    {L"transpose-words", readline_cmd_t::id_t::transpose_words},
+    {L"undo", readline_cmd_t::id_t::undo},
+    {L"up-line", readline_cmd_t::id_t::up_line},
+    {L"upcase-word", readline_cmd_t::id_t::upcase_word},
+    {L"yank", readline_cmd_t::id_t::yank},
+    {L"yank-pop", readline_cmd_t::id_t::yank_pop},
 };
 
 ASSERT_SORTED_BY_NAME(input_function_metadata);
@@ -212,12 +212,12 @@ static void input_set_bind_mode(parser_t &parser, const wcstring &bm) {
 }
 
 /// Returns the arity of a given input function.
-static int input_function_arity(readline_cmd_t function) {
-    switch (function) {
-        case readline_cmd_t::forward_jump:
-        case readline_cmd_t::backward_jump:
-        case readline_cmd_t::forward_jump_till:
-        case readline_cmd_t::backward_jump_till:
+static int input_function_arity(const readline_cmd_t& function) {
+    switch (function.id()) {
+        case readline_cmd_t::id_t::forward_jump:
+        case readline_cmd_t::id_t::backward_jump:
+        case readline_cmd_t::id_t::forward_jump_till:
+        case readline_cmd_t::id_t::backward_jump_till:
             return 1;
         default:
             return 0;
@@ -360,7 +360,7 @@ wchar_t inputter_t::function_pop_arg() {
     return result;
 }
 
-void inputter_t::function_push_args(readline_cmd_t code) {
+void inputter_t::function_push_args(const readline_cmd_t& code) {
     int arity = input_function_arity(code);
     assert(event_storage_.empty() && "event_storage_ should be empty");
     auto &skipped = event_storage_;
@@ -418,7 +418,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
     } else if (has_functions && !has_commands) {
         // Functions are added at the head of the input queue.
         for (auto it = m.commands.rbegin(), end = m.commands.rend(); it != end; ++it) {
-            readline_cmd_t code = input_function_get_code(*it).value();
+            readline_cmd_t::id_t code = input_function_get_code(*it).value();
             function_push_args(code);
             this->push_front(char_event_t(code, m.seq));
         }
@@ -674,7 +674,7 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
         // of a helper function to disable mouse tracking.
         // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
         peeker.consume();
-        this->push_front(char_event_t(readline_cmd_t::disable_mouse_tracking, L""));
+        this->push_front(char_event_t(readline_cmd_t::id_t::disable_mouse_tracking, L""));
         return;
     }
     peeker.restart();
@@ -732,9 +732,9 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
         auto evt = this->readch();
 
         if (evt.is_readline()) {
-            switch (evt.get_readline()) {
-                case readline_cmd_t::self_insert:
-                case readline_cmd_t::self_insert_notfirst: {
+            switch (evt.get_readline().id()) {
+                case readline_cmd_t::id_t::self_insert:
+                case readline_cmd_t::id_t::self_insert_notfirst: {
                     // Typically self-insert is generated by the generic (empty) binding.
                     // However if it is generated by a real sequence, then insert that sequence.
                     this->insert_front(evt.seq.cbegin(), evt.seq.cend());
@@ -743,15 +743,16 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
                     char_event_t res = read_characters_no_readline();
 
                     // Hackish: mark the input style.
-                    res.input_style = evt.get_readline() == readline_cmd_t::self_insert_notfirst
-                                          ? char_input_style_t::notfirst
-                                          : char_input_style_t::normal;
+                    res.input_style =
+                        evt.get_readline().id() == readline_cmd_t::id_t::self_insert_notfirst
+                            ? char_input_style_t::notfirst
+                            : char_input_style_t::normal;
                     return res;
                 }
-                case readline_cmd_t::func_and:
-                case readline_cmd_t::func_or: {
+                case readline_cmd_t::id_t::func_and:
+                case readline_cmd_t::id_t::func_or: {
                     // If previous function has correct status, we keep reading tokens
-                    if (evt.get_readline() == readline_cmd_t::func_and) {
+                    if (evt.get_readline().id() == readline_cmd_t::id_t::func_and) {
                         // Don't return immediately, we might need to handle it here - like
                         // self-insert.
                         if (function_status_) continue;
@@ -960,7 +961,7 @@ const wcstring_list_t &input_function_get_names() {
     return result;
 }
 
-maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name) {
+maybe_t<readline_cmd_t::id_t> input_function_get_code(const wcstring &name) {
     // `input_function_metadata` is required to be kept in asciibetical order, making it OK to do
     // a binary search for the matching name.
     if (const input_function_metadata_t *md = get_by_sorted_name(name, input_function_metadata)) {

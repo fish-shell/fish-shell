@@ -12,91 +12,103 @@
 #include "common.h"
 #include "maybe.h"
 
-enum class readline_cmd_t {
-    beginning_of_line,
-    end_of_line,
-    forward_char,
-    backward_char,
-    forward_single_char,
-    forward_word,
-    backward_word,
-    forward_bigword,
-    backward_bigword,
-    nextd_or_forward_word,
-    prevd_or_backward_word,
-    history_search_backward,
-    history_search_forward,
-    history_prefix_search_backward,
-    history_prefix_search_forward,
-    history_pager,
-    delete_char,
-    backward_delete_char,
-    kill_line,
-    yank,
-    yank_pop,
-    complete,
-    complete_and_search,
-    pager_toggle_search,
-    beginning_of_history,
-    end_of_history,
-    backward_kill_line,
-    kill_whole_line,
-    kill_inner_line,
-    kill_word,
-    kill_bigword,
-    backward_kill_word,
-    backward_kill_path_component,
-    backward_kill_bigword,
-    history_token_search_backward,
-    history_token_search_forward,
-    self_insert,
-    self_insert_notfirst,
-    transpose_chars,
-    transpose_words,
-    upcase_word,
-    downcase_word,
-    capitalize_word,
-    togglecase_char,
-    togglecase_selection,
-    execute,
-    beginning_of_buffer,
-    end_of_buffer,
-    repaint_mode,
-    repaint,
-    force_repaint,
-    up_line,
-    down_line,
-    suppress_autosuggestion,
-    accept_autosuggestion,
-    begin_selection,
-    swap_selection_start_stop,
-    end_selection,
-    kill_selection,
-    insert_line_under,
-    insert_line_over,
-    forward_jump,
-    backward_jump,
-    forward_jump_till,
-    backward_jump_till,
-    func_and,
-    func_or,
-    expand_abbr,
-    delete_or_exit,
-    exit,
-    cancel_commandline,
-    cancel,
-    undo,
-    redo,
-    begin_undo_group,
-    end_undo_group,
-    repeat_jump,
-    disable_mouse_tracking,
-    // NOTE: This one has to be last.
-    reverse_repeat_jump
+class readline_cmd_t {
+   public:
+    enum class id_t {
+        beginning_of_line,
+        end_of_line,
+        forward_char,
+        backward_char,
+        forward_single_char,
+        forward_word,
+        backward_word,
+        forward_bigword,
+        backward_bigword,
+        nextd_or_forward_word,
+        prevd_or_backward_word,
+        history_search_backward,
+        history_search_forward,
+        history_prefix_search_backward,
+        history_prefix_search_forward,
+        history_pager,
+        delete_char,
+        backward_delete_char,
+        kill_line,
+        yank,
+        yank_pop,
+        complete,
+        complete_and_search,
+        pager_toggle_search,
+        beginning_of_history,
+        end_of_history,
+        backward_kill_line,
+        kill_whole_line,
+        kill_inner_line,
+        kill_word,
+        kill_bigword,
+        backward_kill_word,
+        backward_kill_path_component,
+        backward_kill_bigword,
+        history_token_search_backward,
+        history_token_search_forward,
+        self_insert,
+        self_insert_notfirst,
+        transpose_chars,
+        transpose_words,
+        upcase_word,
+        downcase_word,
+        capitalize_word,
+        togglecase_char,
+        togglecase_selection,
+        execute,
+        beginning_of_buffer,
+        end_of_buffer,
+        repaint_mode,
+        repaint,
+        force_repaint,
+        up_line,
+        down_line,
+        suppress_autosuggestion,
+        accept_autosuggestion,
+        begin_selection,
+        swap_selection_start_stop,
+        end_selection,
+        kill_selection,
+        insert_line_under,
+        insert_line_over,
+        forward_jump,
+        backward_jump,
+        forward_jump_till,
+        backward_jump_till,
+        func_and,
+        func_or,
+        expand_abbr,
+        delete_or_exit,
+        exit,
+        cancel_commandline,
+        cancel,
+        undo,
+        redo,
+        begin_undo_group,
+        end_undo_group,
+        repeat_jump,
+        disable_mouse_tracking,
+        // NOTE: This one has to be last.
+        reverse_repeat_jump
+    };
+
+    /// Get the command this instance represents
+    id_t id() const { return id_; }
+
+    /// Create a command without data.
+    /* implicit */ readline_cmd_t(readline_cmd_t::id_t id) : id_(id){};
+
+   private:
+    id_t id_;
 };
 
 // The range of key codes for inputrc-style keyboard functions.
-enum { R_END_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::reverse_repeat_jump) + 1 };
+enum { R_END_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::id_t::reverse_repeat_jump) + 1 };
 
 /// Represents an event on the character input stream.
 enum class char_event_type_t : uint8_t {
@@ -165,7 +177,7 @@ class char_event_t {
         }
     }
 
-    readline_cmd_t get_readline() const {
+    const readline_cmd_t& get_readline() const {
         assert(type == char_event_type_t::readline && "Not a readline type");
         return v_.rl;
     }

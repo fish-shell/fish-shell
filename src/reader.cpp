@@ -602,7 +602,7 @@ struct history_pager_result_t {
 /// state should be in reader_data_t.
 struct readline_loop_state_t {
     /// The last command that was executed.
-    maybe_t<readline_cmd_t> last_cmd{};
+    maybe_t<readline_cmd_t::id_t> last_cmd_id{};
 
     /// If the last command was a yank, the length of yanking that occurred.
     size_t yank_len{0};
@@ -857,7 +857,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void apply_commandline_state_changes();
 
     /// Compute completions and update the pager and/or commandline as needed.
-    void compute_and_apply_completions(readline_cmd_t c, readline_loop_state_t &rls);
+    void compute_and_apply_completions(const readline_cmd_t& c, readline_loop_state_t &rls);
 
     /// Given that the user is tab-completing a token \p wc whose cursor is at \p pos in the token,
     /// try expanding it as a wildcard, populating \p result with the expanded string.
@@ -868,9 +868,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void run_input_command_scripts(const wcstring_list_t &cmds);
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
-    void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
+    void handle_readline_command(const readline_cmd_t& cmd, readline_loop_state_t &rls);
 
-    // Handle readline_cmd_t::execute. This may mean inserting a newline if the command is
+    // Handle readline_cmd_t::id_t::execute. This may mean inserting a newline if the command is
     // unfinished.
     void handle_execute(readline_loop_state_t &rls);
 
@@ -1577,9 +1577,9 @@ void restore_term_mode() {
 }
 
 /// Indicates if the given command char ends paging.
-static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) {
-    using rl = readline_cmd_t;
-    switch (c) {
+static bool command_ends_paging(const readline_cmd_t& c, bool focused_on_search_field) {
+    using rl = readline_cmd_t::id_t;
+    switch (c.id()) {
         case rl::history_prefix_search_backward:
         case rl::history_prefix_search_forward:
         case rl::history_search_backward:
@@ -1653,18 +1653,18 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
 }
 
 /// Indicates if the given command ends the history search.
-static bool command_ends_history_search(readline_cmd_t c) {
-    switch (c) {
-        case readline_cmd_t::history_prefix_search_backward:
-        case readline_cmd_t::history_prefix_search_forward:
-        case readline_cmd_t::history_search_backward:
-        case readline_cmd_t::history_search_forward:
-        case readline_cmd_t::history_token_search_backward:
-        case readline_cmd_t::history_token_search_forward:
-        case readline_cmd_t::beginning_of_history:
-        case readline_cmd_t::end_of_history:
-        case readline_cmd_t::repaint:
-        case readline_cmd_t::force_repaint:
+static bool command_ends_history_search(const readline_cmd_t& c) {
+    switch (c.id()) {
+        case readline_cmd_t::id_t::history_prefix_search_backward:
+        case readline_cmd_t::id_t::history_prefix_search_forward:
+        case readline_cmd_t::id_t::history_search_backward:
+        case readline_cmd_t::id_t::history_search_forward:
+        case readline_cmd_t::id_t::history_token_search_backward:
+        case readline_cmd_t::id_t::history_token_search_forward:
+        case readline_cmd_t::id_t::beginning_of_history:
+        case readline_cmd_t::id_t::end_of_history:
+        case readline_cmd_t::id_t::repaint:
+        case readline_cmd_t::id_t::force_repaint:
             return false;
         default:
             return true;
@@ -2826,7 +2826,7 @@ void reader_set_autosuggestion_enabled(const env_stack_t &vars) {
         if (data->conf.autosuggest_ok != enable) {
             data->conf.autosuggest_ok = enable;
             data->force_exec_prompt_and_repaint = true;
-            data->inputter.queue_char(readline_cmd_t::repaint);
+            data->inputter.queue_char(readline_cmd_t(readline_cmd_t::id_t::repaint));
         }
     }
 }
@@ -3007,8 +3007,10 @@ expand_result_t::result_t reader_data_t::try_expand_wildcard(wcstring wc, size_t
     return expand_result_t::ok;
 }
 
-void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loop_state_t &rls) {
-    assert((c == readline_cmd_t::complete || c == readline_cmd_t::complete_and_search) &&
+void reader_data_t::compute_and_apply_completions(const readline_cmd_t& c,
+                                                  readline_loop_state_t &rls) {
+    assert((c.id() == readline_cmd_t::id_t::complete ||
+            c.id() == readline_cmd_t::id_t::complete_and_search) &&
            "Invalid command");
     editable_line_t *el = &command_line;
 
@@ -3087,7 +3089,8 @@ void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loo
     rls.complete_did_insert = handle_completions(rls.comp, token_begin - buff, token_end - buff);
 
     // Show the search field if requested and if we printed a list of completions.
-    if (c == readline_cmd_t::complete_and_search && !rls.complete_did_insert && !pager.empty()) {
+    if (c.id() == readline_cmd_t::id_t::complete_and_search && !rls.complete_did_insert &&
+        !pager.empty()) {
         pager.set_search_field_shown(true);
         select_completion_in_direction(selection_motion_t::next);
     }
@@ -3308,7 +3311,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
         }
 
         // Since we handled a normal character, we don't have a last command.
-        rls.last_cmd.reset();
+        rls.last_cmd_id.reset();
     }
 
     if (last_exec_count != exec_count()) {
@@ -3320,10 +3323,10 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 }
 
 /// Handle a readline command \p c, updating the state \p rls.
-void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_state_t &rls) {
+void reader_data_t::handle_readline_command(const readline_cmd_t& c, readline_loop_state_t &rls) {
     const auto &vars = this->vars();
-    using rl = readline_cmd_t;
-    switch (c) {
+    using rl = readline_cmd_t::id_t;
+    switch (c.id()) {
         // Go to beginning of line.
         case rl::beginning_of_line: {
             editable_line_t *el = active_edit_line();
@@ -3388,7 +3391,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             //
             // Also paging is already cancelled above.
             if (rls.complete_did_insert &&
-                (rls.last_cmd == rl::complete || rls.last_cmd == rl::complete_and_search)) {
+                (rls.last_cmd_id == rl::complete || rls.last_cmd_id == rl::complete_and_search)) {
                 editable_line_t *el = active_edit_line();
                 el->undo();
                 update_buff_pos(el);
@@ -3432,15 +3435,16 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::complete:
         case rl::complete_and_search: {
             if (!conf.complete_ok) break;
-            if (is_navigating_pager_contents() ||
-                (!rls.comp.empty() && !rls.complete_did_insert && rls.last_cmd == rl::complete)) {
+            if (is_navigating_pager_contents() || (!rls.comp.empty() && !rls.complete_did_insert &&
+                                                   rls.last_cmd_id == rl::complete)) {
                 // The user typed complete more than once in a row. If we are not yet fully
                 // disclosed, then become so; otherwise cycle through our available completions.
                 if (current_page_rendering.remaining_to_disclose > 0) {
                     pager.set_fully_disclosed();
                 } else {
-                    select_completion_in_direction(c == rl::complete ? selection_motion_t::next
-                                                                     : selection_motion_t::prev);
+                    select_completion_in_direction(c.id() == rl::complete
+                                                       ? selection_motion_t::next
+                                                       : selection_motion_t::prev);
                 }
             } else {
                 // Either the user hit tab only once, or we had no visible completion list.
@@ -3476,7 +3480,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
             size_t len = end - begin;
             if (len) {
-                kill(el, begin - buff, len, KILL_APPEND, rls.last_cmd != rl::kill_line);
+                kill(el, begin - buff, len, KILL_APPEND, rls.last_cmd_id != rl::kill_line);
             }
             break;
         }
@@ -3499,7 +3503,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             assert(end >= begin);
             size_t len = std::max<size_t>(end - begin, 1);
             begin = end - len;
-            kill(el, begin - buff, len, KILL_PREPEND, rls.last_cmd != rl::backward_kill_line);
+            kill(el, begin - buff, len, KILL_PREPEND, rls.last_cmd_id != rl::backward_kill_line);
             break;
         }
         case rl::kill_whole_line:  // We match the emacs behavior here: "kills the entire line
@@ -3522,7 +3526,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             size_t end = el->position();
             for (;; end++) {
                 if (buff[end] == L'\0') {
-                    if (c == rl::kill_whole_line && begin > 0) {
+                    if (c.id() == rl::kill_whole_line && begin > 0) {
                         // We are on the last line. Delete the newline in the beginning to clear
                         // this line.
                         begin--;
@@ -3530,7 +3534,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     break;
                 }
                 if (buff[end] == L'\n') {
-                    if (c == rl::kill_whole_line) {
+                    if (c.id() == rl::kill_whole_line) {
                         end++;
                     }
                     break;
@@ -3540,7 +3544,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             assert(end >= begin);
 
             if (end > begin) {
-                kill(el, begin, end - begin, KILL_APPEND, rls.last_cmd != c);
+                kill(el, begin, end - begin, KILL_APPEND, rls.last_cmd_id != c.id());
             }
             break;
         }
@@ -3581,7 +3585,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             editable_line_t *el = active_edit_line();
             if (el->position() < el->size()) {
                 delete_char(false /* backward */);
-            } else if (c == rl::delete_or_exit && el->empty()) {
+            } else if (c.id() == rl::delete_or_exit && el->empty()) {
                 // This is by definition a successful exit, override the status
                 parser().set_last_statuses(statuses_t::just(STATUS_CMD_OK));
                 exit_loop_requested = true;
@@ -3601,10 +3605,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::history_token_search_backward:
         case rl::history_token_search_forward: {
             reader_history_search_t::mode_t mode =
-                (c == rl::history_token_search_backward || c == rl::history_token_search_forward)
+                (c.id() == rl::history_token_search_backward ||
+                 c.id() == rl::history_token_search_forward)
                     ? reader_history_search_t::token
-                : (c == rl::history_prefix_search_backward ||
-                   c == rl::history_prefix_search_forward)
+                : (c.id() == rl::history_prefix_search_backward ||
+                   c.id() == rl::history_prefix_search_forward)
                     ? reader_history_search_t::prefix
                     : reader_history_search_t::line;
 
@@ -3638,11 +3643,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 }
             }
             if (history_search.active()) {
-                history_search_direction_t dir =
-                    (c == rl::history_search_backward || c == rl::history_token_search_backward ||
-                     c == rl::history_prefix_search_backward)
-                        ? history_search_direction_t::backward
-                        : history_search_direction_t::forward;
+                history_search_direction_t dir = (c.id() == rl::history_search_backward ||
+                                                  c.id() == rl::history_token_search_backward ||
+                                                  c.id() == rl::history_prefix_search_backward)
+                                                     ? history_search_direction_t::backward
+                                                     : history_search_direction_t::forward;
                 bool found = history_search.move_in_direction(dir);
 
                 // Signal that we've found nothing
@@ -3714,13 +3719,13 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword: {
             move_word_style_t style =
-                (c == rl::backward_kill_bigword          ? move_word_style_whitespace
-                 : c == rl::backward_kill_path_component ? move_word_style_path_components
-                                                         : move_word_style_punctuation);
+                (c.id() == rl::backward_kill_bigword          ? move_word_style_whitespace
+                 : c.id() == rl::backward_kill_path_component ? move_word_style_path_components
+                                                              : move_word_style_punctuation);
             // Is this the same killring item as the last kill?
-            bool newv = (rls.last_cmd != rl::backward_kill_word &&
-                         rls.last_cmd != rl::backward_kill_path_component &&
-                         rls.last_cmd != rl::backward_kill_bigword);
+            bool newv = (rls.last_cmd_id != rl::backward_kill_word &&
+                         rls.last_cmd_id != rl::backward_kill_path_component &&
+                         rls.last_cmd_id != rl::backward_kill_bigword);
             move_word(active_edit_line(), MOVE_DIR_LEFT, true /* erase */, style, newv);
             break;
         }
@@ -3728,26 +3733,26 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::kill_bigword: {
             // The "bigword" functions differ only in that they move to the next whitespace, not
             // punctuation.
-            auto move_style =
-                (c == rl::kill_word) ? move_word_style_punctuation : move_word_style_whitespace;
+            auto move_style = (c.id() == rl::kill_word) ? move_word_style_punctuation
+                                                        : move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_RIGHT, true /* erase */, move_style,
-                      rls.last_cmd != c /* same kill item if same movement */);
+                      rls.last_cmd_id != c.id() /* same kill item if same movement */);
             break;
         }
         case rl::backward_word:
         case rl::backward_bigword:
         case rl::prevd_or_backward_word: {
-            if (c == rl::prevd_or_backward_word && command_line.empty()) {
+            if (c.id() == rl::prevd_or_backward_word && command_line.empty()) {
                 auto last_statuses = parser().get_last_statuses();
                 (void)parser().eval(L"prevd", io_chain_t{});
                 parser().set_last_statuses(std::move(last_statuses));
                 force_exec_prompt_and_repaint = true;
-                inputter.queue_char(readline_cmd_t::repaint);
+                inputter.queue_char(readline_cmd_t(readline_cmd_t::id_t::repaint));
                 break;
             }
 
-            auto move_style = (c != rl::backward_bigword) ? move_word_style_punctuation
-                                                          : move_word_style_whitespace;
+            auto move_style = (c.id() != rl::backward_bigword) ? move_word_style_punctuation
+                                                               : move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
                       false);
             break;
@@ -3755,17 +3760,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::forward_word:
         case rl::forward_bigword:
         case rl::nextd_or_forward_word: {
-            if (c == rl::nextd_or_forward_word && command_line.empty()) {
+            if (c.id() == rl::nextd_or_forward_word && command_line.empty()) {
                 auto last_statuses = parser().get_last_statuses();
                 (void)parser().eval(L"nextd", io_chain_t{});
                 parser().set_last_statuses(std::move(last_statuses));
                 force_exec_prompt_and_repaint = true;
-                inputter.queue_char(readline_cmd_t::repaint);
+                inputter.queue_char(readline_cmd_t(readline_cmd_t::id_t::repaint));
                 break;
             }
 
-            auto move_style = (c != rl::forward_bigword) ? move_word_style_punctuation
-                                                         : move_word_style_whitespace;
+            auto move_style = (c.id() != rl::forward_bigword) ? move_word_style_punctuation
+                                                              : move_word_style_whitespace;
             editable_line_t *el = active_edit_line();
             if (el->position() < el->size()) {
                 move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);
@@ -3776,7 +3781,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::beginning_of_history:
         case rl::end_of_history: {
-            bool up = (c == rl::beginning_of_history);
+            bool up = (c.id() == rl::beginning_of_history);
             if (is_navigating_pager_contents()) {
                 select_completion_in_direction(up ? selection_motion_t::page_north
                                                   : selection_motion_t::page_south);
@@ -3797,7 +3802,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (is_navigating_pager_contents()) {
                 // We are already navigating pager contents.
                 selection_motion_t direction;
-                if (c == rl::down_line) {
+                if (c.id() == rl::down_line) {
                     // Down arrow is always south.
                     direction = selection_motion_t::south;
                 } else if (selection_is_at_top(this)) {
@@ -3812,15 +3817,15 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(direction);
             } else if (!pager.empty()) {
                 // We pressed a direction with a non-empty pager, begin navigation.
-                select_completion_in_direction(c == rl::down_line ? selection_motion_t::south
-                                                                  : selection_motion_t::north);
+                select_completion_in_direction(c.id() == rl::down_line ? selection_motion_t::south
+                                                                       : selection_motion_t::north);
             } else {
                 // Not navigating the pager contents.
                 editable_line_t *el = active_edit_line();
                 int line_old = parse_util_get_line_from_offset(el->text(), el->position());
                 int line_new;
 
-                if (c == rl::up_line)
+                if (c.id() == rl::up_line)
                     line_new = line_old - 1;
                 else
                     line_new = line_old + 1;
@@ -3995,10 +4000,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // We always change the case; this decides whether we go uppercase (true) or
                 // lowercase (false).
                 bool make_uppercase;
-                if (c == rl::capitalize_word)
+                if (c.id() == rl::capitalize_word)
                     make_uppercase = !capitalized_first && iswalnum(chr);
                 else
-                    make_uppercase = (c == rl::upcase_word);
+                    make_uppercase = (c.id() == rl::upcase_word);
 
                 // Apply the operation and then record what we did.
                 if (make_uppercase)
@@ -4040,7 +4045,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
 
         case rl::kill_selection: {
-            bool newv = (rls.last_cmd != rl::kill_selection);
+            bool newv = (rls.last_cmd_id != rl::kill_selection);
             if (auto selection = this->get_selection()) {
                 kill(&command_line, selection->start, selection->length, KILL_APPEND, newv);
             }
@@ -4070,10 +4075,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_jump:
         case rl::forward_jump_till:
         case rl::backward_jump_till: {
-            auto direction = (c == rl::forward_jump || c == rl::forward_jump_till)
+            auto direction = (c.id() == rl::forward_jump || c.id() == rl::forward_jump_till)
                                  ? jump_direction_t::forward
                                  : jump_direction_t::backward;
-            auto precision = (c == rl::forward_jump || c == rl::backward_jump)
+            auto precision = (c.id() == rl::forward_jump || c.id() == rl::backward_jump)
                                  ? jump_precision_t::to
                                  : jump_precision_t::till;
             editable_line_t *el = active_edit_line();
@@ -4127,7 +4132,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::undo:
         case rl::redo: {
             editable_line_t *el = active_edit_line();
-            bool ok = (c == rl::undo) ? el->undo() : el->redo();
+            bool ok = (c.id() == rl::undo) ? el->undo() : el->redo();
             if (ok) {
                 if (el == &command_line) {
                     clear_pager();
@@ -4277,7 +4282,7 @@ void reader_data_t::handle_execute(readline_loop_state_t &rls) {
 }
 
 maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
-    using rl = readline_cmd_t;
+    using rl = readline_cmd_t::id_t;
     readline_loop_state_t rls{};
 
     // Suppress fish_trace during executing key bindings.
@@ -4353,7 +4358,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     while (!rls.finished && !check_exit_loop_maybe_warning(this)) {
         if (reset_loop_state) {
             reset_loop_state = false;
-            rls.last_cmd = none();
+            rls.last_cmd_id = none();
             rls.complete_did_insert = false;
         }
         // Perhaps update the termsize. This is cheap if it has not changed.
@@ -4393,13 +4398,13 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         assert((event_needing_handling->is_char() || event_needing_handling->is_readline()) &&
                "Should have a char or readline");
 
-        if (rls.last_cmd != rl::yank && rls.last_cmd != rl::yank_pop) {
+        if (rls.last_cmd_id != rl::yank && rls.last_cmd_id != rl::yank_pop) {
             rls.yank_len = 0;
         }
 
         if (event_needing_handling->is_readline()) {
             readline_cmd_t readline_cmd = event_needing_handling->get_readline();
-            if (readline_cmd == rl::cancel && is_navigating_pager_contents()) {
+            if (readline_cmd.id() == rl::cancel && is_navigating_pager_contents()) {
                 clear_transient_edit();
             }
 
@@ -4414,7 +4419,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             if (history_search.active() && command_ends_history_search(readline_cmd)) {
                 // "cancel" means to abort the whole thing, other ending commands mean to finish the
                 // search.
-                if (readline_cmd == rl::cancel) {
+                if (readline_cmd.id() == rl::cancel) {
                     // Go back to the search string by simply undoing the history-search edit.
                     clear_transient_edit();
                 }
@@ -4422,7 +4427,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                 command_line_has_transient_edit = false;
             }
 
-            rls.last_cmd = readline_cmd;
+            rls.last_cmd_id = readline_cmd.id();
         } else {
             // Ordinary char.
             wchar_t c = event_needing_handling->get_char();
@@ -4444,7 +4449,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                 // reason to report this to the user unless they've enabled debugging output.
                 FLOGF(reader, _(L"Unknown key binding 0x%X"), c);
             }
-            rls.last_cmd = none();
+            rls.last_cmd_id = none();
         }
     }
 
@@ -4556,7 +4561,7 @@ void reader_schedule_prompt_repaint() {
     reader_data_t *data = current_data_or_null();
     if (data && !data->force_exec_prompt_and_repaint) {
         data->force_exec_prompt_and_repaint = true;
-        data->inputter.queue_char(readline_cmd_t::repaint);
+        data->inputter.queue_char(readline_cmd_t(readline_cmd_t::id_t::repaint));
     }
 }
 

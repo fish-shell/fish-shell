@@ -297,7 +297,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             return STATUS_INVALID_ARGS;
         }
 
-        using rl = readline_cmd_t;
+        using rl = readline_cmd_t::id_t;
         for (i = w.woptind; i < argc; i++) {
             if (auto mc = input_function_get_code(argv[i])) {
                 // Don't enqueue a repaint if we're currently in the middle of one,
@@ -315,7 +315,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                     reader_handle_command(*mc);
                 } else {
                     // Inserts the readline function at the back of the queue.
-                    reader_queue_ch(*mc);
+                    reader_queue_ch(readline_cmd_t(*mc));
                 }
             } else {
                 streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]);

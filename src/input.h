@@ -68,7 +68,7 @@ class inputter_t final : private input_event_queue_t {
     void uvar_change_notified() override;
 
     void function_push_arg(wchar_t arg);
-    void function_push_args(readline_cmd_t code);
+    void function_push_args(const readline_cmd_t& code);
     void mapping_execute(const input_mapping_t &m, const command_handler_t &command_handler);
     void mapping_execute_matching_or_generic(const command_handler_t &command_handler);
     maybe_t<input_mapping_t> find_mapping(event_queue_peeker_t *peeker);
@@ -152,7 +152,7 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name);
 wcstring_list_t input_terminfo_get_names(bool skip_null);
 
 /// Returns the input function code for the given input function name.
-maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name);
+maybe_t<readline_cmd_t::id_t> input_function_get_code(const wcstring &name);
 
 /// Returns a list of all existing input function names.
 const wcstring_list_t &input_function_get_names(void);

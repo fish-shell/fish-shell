@@ -1,6 +1,5 @@
 function __fish_print_lsblk_columns --description 'Print available lsblk columns'
-    lsblk --help | sed '1,/Available columns:/d; /^$/,$d; s/^\s\+//; s/\s/\t/'
-
+    LC_ALL=C lsblk --help | sed '1,/Available .*columns:/d; /^$/,$d; s/^\s\+//; s/\s/\t/'
 end
 
 complete -c lsblk -s a -l all -d "print all devices"

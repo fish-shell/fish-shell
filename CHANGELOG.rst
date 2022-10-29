@@ -114,6 +114,7 @@ Completions
   - ``sad``
   - ``dua``
   - ``clojure``
+  - ``loadkeys``
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

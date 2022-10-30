@@ -2,7 +2,7 @@
 
 # macOS has a /usr/bin/apt that is something else entirely: 
 # (apt - Returns the path to a Java home directory from the current user's settings)
-if [ (uname -s) = Darwin -a (command -v apt) = /usr/bin/apt ]
+if [ "$(uname -s)" = Darwin -a "$(command -s apt)" = /usr/bin/apt ]
     exit 1
 end
 

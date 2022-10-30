@@ -24,13 +24,6 @@
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
-/// For text insertion, how should it be done.
-enum {
-    REPLACE_MODE = 1,  // replace current text
-    INSERT_MODE,       // insert at cursor position
-    APPEND_MODE        // insert at end of current token/command/buffer
-};
-
 /// Handle a single readline_cmd_t command out-of-band.
 void reader_handle_command(readline_cmd_t cmd);
 
@@ -38,50 +31,6 @@ void reader_handle_command(readline_cmd_t cmd);
 void commandline_get_part(const wchar_t *current_buffer, size_t current_cursor_pos,
                           commandline_part_t buffer_part, const wchar_t **begin,
                           const wchar_t **end);
-
-/// Replace/append/insert the selection with/at/after the specified string.
-///
-/// \param begin beginning of selection
-/// \param end end of selection
-/// \param insert the string to insert
-/// \param append_mode can be one of REPLACE_MODE, INSERT_MODE or APPEND_MODE, affects the way the
-/// test update is performed
-/// \param buff the original command line buffer
-/// \param cursor_pos the position of the cursor in the command line
-static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t *insert,
-                         int append_mode, const wchar_t *buff, size_t cursor_pos) {
-    size_t out_pos = cursor_pos;
-
-    wcstring out;
-
-    out.append(buff, begin - buff);
-
-    switch (append_mode) {
-        case REPLACE_MODE: {
-            out.append(insert);
-            out_pos = out.size();
-            break;
-        }
-        case APPEND_MODE: {
-            out.append(begin, end - begin);
-            out.append(insert);
-            break;
-        }
-        case INSERT_MODE: {
-            long cursor = cursor_pos - (begin - buff);
-            out.append(begin, cursor);
-            out.append(insert);
-            out.append(begin + cursor, end - begin - cursor);
-            out_pos += std::wcslen(insert);
-            break;
-        }
-        default: {
-            DIE("unexpected append_mode");
-        }
-    }
-    out.append(end);
-    commandline_set_buffer(out, out_pos);
-}
 
 /// Output the specified selection.
 ///
@@ -131,7 +80,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     bool cut_at_cursor = false;
 
     int argc = builtin_count_args(argv);
-    int append_mode = 0;
+    maybe_t<commandline_insertion_mode_t> append_mode{};
 
     bool function_mode = false;
     bool selection_mode = false;
@@ -180,7 +129,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case L'a': {
-                append_mode = APPEND_MODE;
+                append_mode = commandline_insertion_mode_t::append;
                 break;
             }
             case L'b': {
@@ -188,11 +137,11 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 break;
             }
             case L'i': {
-                append_mode = INSERT_MODE;
+                append_mode = commandline_insertion_mode_t::insert;
                 break;
             }
             case L'r': {
-                append_mode = REPLACE_MODE;
+                append_mode = commandline_insertion_mode_t::replace;
                 break;
             }
             case 'c': {
@@ -369,7 +318,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     // Set default modes.
     if (!append_mode) {
-        append_mode = REPLACE_MODE;
+        append_mode = commandline_insertion_mode_t::replace;
     }
 
     if (!buffer_part) {
@@ -467,20 +416,21 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         return STATUS_CMD_OK;
     }
 
-    commandline_get_part(current_buffer, current_cursor_pos, *buffer_part, &begin, &end);
     int arg_count = argc - w.woptind;
     if (arg_count == 0) {
+        commandline_get_part(current_buffer, current_cursor_pos, *buffer_part, &begin, &end);
         write_part(begin, end, cut_at_cursor, tokenize, current_buffer, current_cursor_pos,
                    streams);
     } else if (arg_count == 1) {
-        replace_part(begin, end, argv[w.woptind], append_mode, current_buffer, current_cursor_pos);
+        reader_queue_ch(
+            readline_cmd_t(commandline_insertion_t(*buffer_part, *append_mode, argv[w.woptind])));
     } else {
         wcstring sb = argv[w.woptind];
         for (int i = w.woptind + 1; i < argc; i++) {
             sb.push_back(L'\n');
             sb.append(argv[i]);
         }
-        replace_part(begin, end, sb.c_str(), append_mode, current_buffer, current_cursor_pos);
+        reader_queue_ch(readline_cmd_t(commandline_insertion_t(*buffer_part, *append_mode, sb)));
     }
 
     return STATUS_CMD_OK;

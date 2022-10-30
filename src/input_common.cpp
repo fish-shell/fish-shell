@@ -270,3 +270,125 @@ void input_event_queue_t::prepare_to_select() {}
 void input_event_queue_t::select_interrupted() {}
 void input_event_queue_t::uvar_change_notified() {}
 input_event_queue_t::~input_event_queue_t() = default;
+
+readline_cmd_t::readline_cmd_t(const readline_cmd_t& rl) : id_(rl.id_) {
+    if (id_ == id_t::insert_chars)
+        new (&arg_.insertion) commandline_insertion_t(rl.arg_.insertion);
+    else if (id_ == id_t::set_cursor)
+        arg_.cursor_pos = rl.arg_.cursor_pos;
+}
+
+readline_cmd_t::readline_cmd_t(readline_cmd_t&& rl) : id_(rl.id_) {
+    if (id_ == id_t::insert_chars)
+        new (&arg_.insertion) commandline_insertion_t(std::move(rl.arg_.insertion));
+    else if (id_ == id_t::set_cursor)
+        arg_.cursor_pos = rl.arg_.cursor_pos;
+}
+
+readline_cmd_t& readline_cmd_t::operator=(const readline_cmd_t& rl) {
+    if (this != &rl) {
+        // commandline_insertion_t is a non-aggregate type so needs to
+        // initialized it when it becomes the active union member
+        // freed it when it is deactivated.
+        if (id_ == id_t::insert_chars) {
+            if (rl.id_ == id_t::insert_chars)
+                arg_.insertion = rl.arg_.insertion;
+            else
+                arg_.insertion.~commandline_insertion_t();
+        } else if (rl.id_ == id_t::insert_chars) {
+            new (&arg_.insertion) commandline_insertion_t(rl.arg_.insertion);
+        }
+        if (rl.id_ == id_t::set_cursor) arg_.cursor_pos = rl.arg_.cursor_pos;
+        id_ = rl.id_;
+    }
+    return *this;
+}
+
+readline_cmd_t& readline_cmd_t::operator=(readline_cmd_t&& rl) {
+    if (this != &rl) {
+        // commandline_insertion_t is a non-aggregate type so needs to
+        // initialized it when it becomes the active union member
+        // freed it when it is deactivated.
+        if (id_ == id_t::insert_chars) {
+            if (rl.id_ == id_t::insert_chars)
+                arg_.insertion = std::move(rl.arg_.insertion);
+            else
+                arg_.insertion.~commandline_insertion_t();
+        } else if (rl.id_ == id_t::insert_chars) {
+            new (&arg_.insertion) commandline_insertion_t(std::move(rl.arg_.insertion));
+        }
+        if (rl.id_ == id_t::set_cursor) arg_.cursor_pos = rl.arg_.cursor_pos;
+        id_ = rl.id_;
+    }
+    return *this;
+}
+
+readline_cmd_t::~readline_cmd_t() {
+    // Only destroy arg_.insertion if it is active.
+    if (id_ == id_t::insert_chars) arg_.insertion.~commandline_insertion_t();
+}
+
+char_event_t::char_event_t(const char_event_t& ce)
+    : type(ce.type), input_style(ce.input_style), seq(ce.seq) {
+    if (is_readline())
+        new (&v_.rl) readline_cmd_t(ce.v_.rl);
+    else if (is_char())
+        v_.c = ce.v_.c;
+}
+
+char_event_t::char_event_t(char_event_t&& ce)
+    : type(ce.type), input_style(ce.input_style), seq(std::move(ce.seq)) {
+    if (is_readline())
+        new (&v_.rl) readline_cmd_t(std::move(ce.v_.rl));
+    else if (is_char())
+        v_.c = ce.v_.c;
+}
+
+char_event_t& char_event_t::operator=(const char_event_t& ce) {
+    if (this != &ce) {
+        // readline_cmd_t is a non-aggregate type so needs to be
+        // initialized when it becomes the active union member and
+        // freed it when it is deactivated.
+        if (is_readline()) {
+            if (ce.is_readline())
+                v_.rl = ce.v_.rl;
+            else
+                v_.rl.~readline_cmd_t();
+        } else if (ce.is_readline()) {
+            new (&v_.rl) readline_cmd_t(ce.v_.rl);
+        }
+        if (ce.is_char()) v_.c = ce.v_.c;
+
+        type = ce.type;
+        input_style = ce.input_style;
+        seq = ce.seq;
+    }
+    return *this;
+}
+
+char_event_t& char_event_t::operator=(char_event_t&& ce) {
+    if (this != &ce) {
+        // readline_cmd_t is a non-aggregate type so needs to be
+        // initialized when it becomes the active union member and
+        // freed it when it is deactivated.
+        if (is_readline()) {
+            if (ce.is_readline())
+                v_.rl = std::move(ce.v_.rl);
+            else
+                v_.rl.~readline_cmd_t();
+        } else if (ce.is_readline()) {
+            new (&v_.rl) readline_cmd_t(std::move(ce.v_.rl));
+        }
+        if (ce.is_char()) v_.c = ce.v_.c;
+
+        type = ce.type;
+        input_style = ce.input_style;
+        seq = std::move(ce.seq);
+    }
+    return *this;
+}
+
+char_event_t::~char_event_t() {
+    // Only destroy readline command if it active.
+    if (is_readline()) v_.rl.~readline_cmd_t();
+}

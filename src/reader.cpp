@@ -4199,6 +4199,27 @@ void reader_data_t::handle_readline_command(const readline_cmd_t& c, readline_lo
             update_buff_pos(el, static_cast<size_t>(pos));
             break;
         }
+        case rl::insert_chars: {
+            auto el = active_edit_line();
+            auto ins = c.get_insertion();
+            if (ins.mode == commandline_insertion_mode_t::insert) {
+                insert_string(el, ins.str);
+            } else {
+                const wchar_t *begin;
+                const wchar_t *end;
+                const wchar_t *buffer = el->text().c_str();
+                commandline_get_part(buffer, el->position(), ins.part, &begin, &end);
+                if (ins.mode == commandline_insertion_mode_t::replace) {
+                    replace_substring(el, begin - buffer, end - begin, ins.str);
+                } else {
+                    auto current_pos = el->position();
+                    update_buff_pos(el, end - buffer);
+                    insert_string(el, ins.str);
+                    update_buff_pos(el, current_pos);
+                }
+            }
+            break;
+        }
         // Some commands should have been handled internally by inputter_t::readch().
         case rl::self_insert:
         case rl::self_insert_notfirst:

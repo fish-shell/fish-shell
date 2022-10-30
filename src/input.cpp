@@ -88,6 +88,8 @@ static constexpr const input_function_metadata_t input_function_metadata[] = {
     {L"", readline_cmd_t::id_t::disable_mouse_tracking},
     // Cannot be bound to a key, used by `commandline --cursor <pos>`
     {L"", readline_cmd_t::id_t::set_cursor},
+    // Cannot be bound to a key, used by `commandline --insert` etc.
+    {L"", readline_cmd_t::id_t::insert_chars},
     {L"accept-autosuggestion", readline_cmd_t::id_t::accept_autosuggestion},
     {L"and", readline_cmd_t::id_t::func_and},
     {L"backward-bigword", readline_cmd_t::id_t::backward_bigword},

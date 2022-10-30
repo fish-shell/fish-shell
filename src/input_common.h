@@ -20,16 +20,30 @@ enum class commandline_part_t {
     token     // operate on token under cursor
 };
 
+/// How should text be inserted.
+enum class commandline_insertion_mode_t {
+    replace,  // replace the current text
+    insert,   // insert text at cursor position
+    append,   // insert text at the send of the current target
+};
+
 /// Data for set_cursor command.
 struct commandline_cursor_pos_t {
     commandline_part_t part;
     long pos;
 
-    // Hack for default initialization for commands other than
-    // set_cursor. Will be removed in the next commit.
-    commandline_cursor_pos_t() {}
-
     commandline_cursor_pos_t(commandline_part_t part, long pos) : part(part), pos(pos) {}
+};
+
+/// Data for insert_chars command.
+struct commandline_insertion_t {
+    commandline_part_t part;
+    commandline_insertion_mode_t mode;
+    wcstring str;
+
+    commandline_insertion_t(commandline_part_t part, commandline_insertion_mode_t mode,
+                            const wcstring& str)
+        : part(part), mode(mode), str(str) {}
 };
 
 class readline_cmd_t {
@@ -114,6 +128,7 @@ class readline_cmd_t {
         repeat_jump,
         disable_mouse_tracking,
         set_cursor,
+        insert_chars,
         // NOTE: This one has to be last.
         reverse_repeat_jump
     };
@@ -124,23 +139,54 @@ class readline_cmd_t {
     /// Get the data associated with set_cursor command.
     const commandline_cursor_pos_t& get_cursor_pos() const {
         assert(id_ == id_t::set_cursor && "Only valid for set_cursor");
-        return cursor_pos_;
+        return arg_.cursor_pos;
+    }
+
+    /// Get the data associated with insert_chars command.
+    const commandline_insertion_t& get_insertion() const {
+        assert(id_ == id_t::insert_chars && "Only valid for insert_chars");
+        return arg_.insertion;
     }
 
     /// Create a command without data.
     /* implicit */ readline_cmd_t(readline_cmd_t::id_t id) : id_(id) {
-        assert(id_ != id_t::set_cursor && "Cannot create set_cursor command with this constructor");
+        assert(id_ != id_t::set_cursor && id_ != id_t::insert_chars &&
+               "Cannot create set_cursor or insert_chars commands with this constructor");
     }
 
     /// Create set_cursor command.
     /* implicit */ readline_cmd_t(commandline_cursor_pos_t pos)
-        : id_(id_t::set_cursor), cursor_pos_(pos) {}
+        : id_(id_t::set_cursor), arg_(pos) {}
+
+    /// Create insert_chars command.
+    /* implicit */ readline_cmd_t(commandline_insertion_t insertion)
+        : id_(id_t::insert_chars), arg_(std::move(insertion)) {}
+
+    readline_cmd_t(const readline_cmd_t& rl);
+
+    readline_cmd_t(readline_cmd_t&& rl) noexcept;
+
+    readline_cmd_t& operator=(const readline_cmd_t& rl);
+
+    readline_cmd_t& operator=(readline_cmd_t&& rl) noexcept;
+
+    ~readline_cmd_t();
 
    private:
     id_t id_;
 
-    /// Only used by set_cursor command
-    commandline_cursor_pos_t cursor_pos_;
+    union arg_t {
+        /// Set if id_ is set_cursor
+        commandline_cursor_pos_t cursor_pos;
+
+        /// Set if id_ is insert_chars
+        commandline_insertion_t insertion;
+
+        arg_t(commandline_cursor_pos_t pos) : cursor_pos(pos){};
+        arg_t(commandline_insertion_t insertion) : insertion(std::move(insertion)){};
+        arg_t(){};
+        ~arg_t(){};
+    } arg_;
 };
 
 // The range of key codes for inputrc-style keyboard functions.
@@ -173,13 +219,18 @@ enum class char_input_style_t : uint8_t {
 };
 
 class char_event_t {
-    union {
+    union v_t {
         /// Set if the type is charc.
         wchar_t c;
 
         /// Set if the type is readline.
         readline_cmd_t rl;
-    } v_{};
+
+        v_t(wchar_t c) : c(c){};
+        v_t(readline_cmd_t rl) : rl(std::move(rl)){};
+        v_t(){};
+        ~v_t(){};
+    } v_;
 
    public:
     /// The type of event.
@@ -218,17 +269,25 @@ class char_event_t {
         return v_.rl;
     }
 
-    /* implicit */ char_event_t(wchar_t c) : type(char_event_type_t::charc) { v_.c = c; }
+    /* implicit */ char_event_t(wchar_t c) : v_(c), type(char_event_type_t::charc) {}
 
     /* implicit */ char_event_t(readline_cmd_t rl, wcstring seq = {})
-        : type(char_event_type_t::readline), seq(std::move(seq)) {
-        v_.rl = rl;
-    }
+        : v_(std::move(rl)), type(char_event_type_t::readline), seq(std::move(seq)) {}
 
     /* implicit */ char_event_t(char_event_type_t type) : type(type) {
         assert(type != char_event_type_t::charc && type != char_event_type_t::readline &&
                "Cannot create a char event with this constructor");
     }
+
+    char_event_t(const char_event_t& ce);
+
+    char_event_t(char_event_t&& ce) noexcept;
+
+    char_event_t& operator=(const char_event_t& ce);
+
+    char_event_t& operator=(char_event_t&& ce) noexcept;
+
+    ~char_event_t();
 };
 
 /// Adjust the escape timeout.

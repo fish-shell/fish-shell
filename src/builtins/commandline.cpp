@@ -450,26 +450,24 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         return res & PARSER_TEST_ERROR ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }
 
-    commandline_get_part(current_buffer, current_cursor_pos, *buffer_part, &begin, &end);
-
     if (cursor_mode) {
         if (argc - w.woptind) {
-            long new_pos = fish_wcstol(argv[w.woptind]) + (begin - current_buffer);
+            long new_pos = fish_wcstol(argv[w.woptind]);
             if (errno) {
                 streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]);
                 builtin_print_error_trailer(parser, streams.err, cmd);
             }
 
-            new_pos =
-                std::max(0L, std::min(new_pos, static_cast<long>(std::wcslen(current_buffer))));
-            commandline_set_buffer(current_buffer, static_cast<size_t>(new_pos));
+            reader_queue_ch(readline_cmd_t(commandline_cursor_pos_t(*buffer_part, new_pos)));
         } else {
+            commandline_get_part(current_buffer, current_cursor_pos, *buffer_part, &begin, &end);
             size_t pos = current_cursor_pos - (begin - current_buffer);
             streams.out.append_format(L"%lu\n", static_cast<unsigned long>(pos));
         }
         return STATUS_CMD_OK;
     }
 
+    commandline_get_part(current_buffer, current_cursor_pos, *buffer_part, &begin, &end);
     int arg_count = argc - w.woptind;
     if (arg_count == 0) {
         write_part(begin, end, cut_at_cursor, tokenize, current_buffer, current_cursor_pos,

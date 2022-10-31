@@ -86,6 +86,8 @@ struct input_function_metadata_t {
 static constexpr const input_function_metadata_t input_function_metadata[] = {
     // NULL makes it unusable - this is specially inserted when we detect mouse input
     {L"", readline_cmd_t::id_t::disable_mouse_tracking},
+    // Cannot be bound to a key, used by `commandline --cursor <pos>`
+    {L"", readline_cmd_t::id_t::set_cursor},
     {L"accept-autosuggestion", readline_cmd_t::id_t::accept_autosuggestion},
     {L"and", readline_cmd_t::id_t::func_and},
     {L"backward-bigword", readline_cmd_t::id_t::backward_bigword},

@@ -20,6 +20,18 @@ enum class commandline_part_t {
     token     // operate on token under cursor
 };
 
+/// Data for set_cursor command.
+struct commandline_cursor_pos_t {
+    commandline_part_t part;
+    long pos;
+
+    // Hack for default initialization for commands other than
+    // set_cursor. Will be removed in the next commit.
+    commandline_cursor_pos_t() {}
+
+    commandline_cursor_pos_t(commandline_part_t part, long pos) : part(part), pos(pos) {}
+};
+
 class readline_cmd_t {
    public:
     enum class id_t {
@@ -101,6 +113,7 @@ class readline_cmd_t {
         end_undo_group,
         repeat_jump,
         disable_mouse_tracking,
+        set_cursor,
         // NOTE: This one has to be last.
         reverse_repeat_jump
     };
@@ -108,11 +121,26 @@ class readline_cmd_t {
     /// Get the command this instance represents
     id_t id() const { return id_; }
 
+    /// Get the data associated with set_cursor command.
+    const commandline_cursor_pos_t& get_cursor_pos() const {
+        assert(id_ == id_t::set_cursor && "Only valid for set_cursor");
+        return cursor_pos_;
+    }
+
     /// Create a command without data.
-    /* implicit */ readline_cmd_t(readline_cmd_t::id_t id) : id_(id){};
+    /* implicit */ readline_cmd_t(readline_cmd_t::id_t id) : id_(id) {
+        assert(id_ != id_t::set_cursor && "Cannot create set_cursor command with this constructor");
+    }
+
+    /// Create set_cursor command.
+    /* implicit */ readline_cmd_t(commandline_cursor_pos_t pos)
+        : id_(id_t::set_cursor), cursor_pos_(pos) {}
 
    private:
     id_t id_;
+
+    /// Only used by set_cursor command
+    commandline_cursor_pos_t cursor_pos_;
 };
 
 // The range of key codes for inputrc-style keyboard functions.

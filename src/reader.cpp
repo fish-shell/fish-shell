@@ -4187,6 +4187,18 @@ void reader_data_t::handle_readline_command(const readline_cmd_t& c, readline_lo
             outp.writestr(L"\x1B[?1000l");
             break;
         }
+        case rl::set_cursor: {
+            auto cursor_pos = c.get_cursor_pos();
+            const wchar_t *begin;
+            const wchar_t *end;
+            auto el = active_edit_line();
+            const wchar_t *buffer = el->text().c_str();
+            commandline_get_part(buffer, el->position(), cursor_pos.part, &begin, &end);
+            long pos = cursor_pos.pos + (begin - buffer);
+            pos = std::max(0L, std::min(pos, static_cast<long>(el->size())));
+            update_buff_pos(el, static_cast<size_t>(pos));
+            break;
+        }
         // Some commands should have been handled internally by inputter_t::readch().
         case rl::self_insert:
         case rl::self_insert_notfirst:

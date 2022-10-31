@@ -24,14 +24,6 @@
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
-/// Which part of the comandbuffer are we operating on.
-enum {
-    STRING_MODE = 1,  // operate on entire buffer
-    JOB_MODE,         // operate on job under cursor
-    PROCESS_MODE,     // operate on process under cursor
-    TOKEN_MODE        // operate on token under cursor
-};
-
 /// For text insertion, how should it be done.
 enum {
     REPLACE_MODE = 1,  // replace current text
@@ -41,6 +33,11 @@ enum {
 
 /// Handle a single readline_cmd_t command out-of-band.
 void reader_handle_command(readline_cmd_t cmd);
+
+/// Get the bounds of a part of the command line
+void commandline_get_part(const wchar_t *current_buffer, size_t current_cursor_pos,
+                          commandline_part_t buffer_part, const wchar_t **begin,
+                          const wchar_t **end);
 
 /// Replace/append/insert the selection with/at/after the specified string.
 ///
@@ -130,7 +127,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const commandline_state_t rstate = commandline_get_state();
     const wchar_t *cmd = argv[0];
-    int buffer_part = 0;
+    maybe_t<commandline_part_t> buffer_part{};
     bool cut_at_cursor = false;
 
     int argc = builtin_count_args(argv);
@@ -187,7 +184,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 break;
             }
             case L'b': {
-                buffer_part = STRING_MODE;
+                buffer_part = commandline_part_t::buffer;
                 break;
             }
             case L'i': {
@@ -203,15 +200,15 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 break;
             }
             case 't': {
-                buffer_part = TOKEN_MODE;
+                buffer_part = commandline_part_t::token;
                 break;
             }
             case 'j': {
-                buffer_part = JOB_MODE;
+                buffer_part = commandline_part_t::job;
                 break;
             }
             case 'p': {
-                buffer_part = PROCESS_MODE;
+                buffer_part = commandline_part_t::process;
                 break;
             }
             case 'f': {
@@ -376,7 +373,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if (!buffer_part) {
-        buffer_part = STRING_MODE;
+        buffer_part = commandline_part_t::buffer;
     }
 
     if (line_mode) {
@@ -453,29 +450,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         return res & PARSER_TEST_ERROR ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }
 
-    switch (buffer_part) {
-        case STRING_MODE: {
-            begin = current_buffer;
-            end = begin + std::wcslen(begin);
-            break;
-        }
-        case PROCESS_MODE: {
-            parse_util_process_extent(current_buffer, current_cursor_pos, &begin, &end, nullptr);
-            break;
-        }
-        case JOB_MODE: {
-            parse_util_job_extent(current_buffer, current_cursor_pos, &begin, &end);
-            break;
-        }
-        case TOKEN_MODE: {
-            parse_util_token_extent(current_buffer, current_cursor_pos, &begin, &end, nullptr,
-                                    nullptr);
-            break;
-        }
-        default: {
-            DIE("unexpected buffer_part");
-        }
-    }
+    commandline_get_part(current_buffer, current_cursor_pos, *buffer_part, &begin, &end);
 
     if (cursor_mode) {
         if (argc - w.woptind) {

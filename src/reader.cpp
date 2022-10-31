@@ -138,6 +138,34 @@ static acquired_lock<commandline_state_t> commandline_state_snapshot() {
 
 commandline_state_t commandline_get_state() { return *commandline_state_snapshot(); }
 
+void commandline_get_part(const wchar_t *current_buffer, size_t current_cursor_pos,
+                          commandline_part_t buffer_part, const wchar_t **begin,
+                          const wchar_t **end) {
+    switch (buffer_part) {
+        case commandline_part_t::buffer: {
+            *begin = current_buffer;
+            *end = *begin + std::wcslen(*begin);
+            break;
+        }
+        case commandline_part_t::process: {
+            parse_util_process_extent(current_buffer, current_cursor_pos, begin, end, nullptr);
+            break;
+        }
+        case commandline_part_t::job: {
+            parse_util_job_extent(current_buffer, current_cursor_pos, begin, end);
+            break;
+        }
+        case commandline_part_t::token: {
+            parse_util_token_extent(current_buffer, current_cursor_pos, begin, end, nullptr,
+                                    nullptr);
+            break;
+        }
+        default: {
+            DIE("unexpected buffer_part");
+        }
+    }
+}
+
 void commandline_set_buffer(wcstring text, size_t cursor_pos) {
     auto state = commandline_state_snapshot();
     state->cursor_pos = std::min(cursor_pos, text.size());

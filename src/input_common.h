@@ -12,6 +12,14 @@
 #include "common.h"
 #include "maybe.h"
 
+/// Which part of the commandline buffer are we operating on.
+enum class commandline_part_t {
+    buffer,   // operate on entire buffer
+    job,      // operate on job under cursor
+    process,  // operate on process under cursor
+    token     // operate on token under cursor
+};
+
 class readline_cmd_t {
    public:
     enum class id_t {

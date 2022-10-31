@@ -92,6 +92,13 @@ t("abc def ghi",
    commandline --insert x",
   "9 abc def xghi")
 
+#commandline -f begin/end_undo_group
+t("abc def ghi",
+  "commandline -f begin-undo-group;\
+   commandline -f backward-delete-char backward-delete-char;\
+   commandline -f end-undo-group undo",
+  "11 abc def ghi")
+
 sendline("bind '~' 'handle_tilde'")
 expect_prompt()
 

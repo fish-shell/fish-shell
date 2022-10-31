@@ -4626,13 +4626,6 @@ void reader_schedule_prompt_repaint() {
     }
 }
 
-void reader_handle_command(readline_cmd_t cmd) {
-    if (reader_data_t *data = current_data_or_null()) {
-        readline_loop_state_t rls{};
-        data->handle_readline_command(cmd, rls);
-    }
-}
-
 void reader_queue_ch(const char_event_t &ch) {
     if (reader_data_t *data = current_data_or_null()) {
         data->inputter.queue_char(ch);

@@ -24,9 +24,6 @@
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
-/// Handle a single readline_cmd_t command out-of-band.
-void reader_handle_command(readline_cmd_t cmd);
-
 /// Get the bounds of a part of the command line
 void commandline_get_part(const wchar_t *current_buffer, size_t current_cursor_pos,
                           commandline_part_t buffer_part, const wchar_t **begin,
@@ -252,17 +249,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                     if (ld.is_repaint) continue;
                 }
 
-                // HACK: Execute these right here and now so they can affect any insertions/changes
-                // made via bindings. The correct solution is to change all `commandline`
-                // insert/replace operations into readline functions with associated data, so that
-                // all queued `commandline` operations - including buffer modifications - are
-                // executed in order
-                if (mc == rl::begin_undo_group || mc == rl::end_undo_group) {
-                    reader_handle_command(*mc);
-                } else {
-                    // Inserts the readline function at the back of the queue.
-                    reader_queue_ch(readline_cmd_t(*mc));
-                }
+                // Inserts the readline function at the back of the queue.
+                reader_queue_ch(readline_cmd_t(*mc));
             } else {
                 streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]);
                 builtin_print_error_trailer(parser, streams.err, cmd);

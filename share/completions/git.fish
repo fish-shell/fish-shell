@@ -2129,9 +2129,22 @@ complete -f -c git -n '__fish_git_using_command config' -l local -d 'Get/set loc
 complete -F -c git -n '__fish_git_using_command config' -s f -l file -d 'Read config from file' -r
 complete -F -c git -n '__fish_git_using_command config' -l blob -d 'Read config from blob' -r
 
+# For config options that have the user select one from a set, this function completes possible options
+function __fish_git_complete_key_values
+    set -l config_key (__fish_nth_token 2)
+
+    switch $config_key
+        case diff.algorithm
+            printf "%s\n" myers patience histogram minimal
+        case '*'
+            __fish_complete_path
+    end
+end
+
 # If no argument is specified, it's as if --get was used
 # Use -k with `__fish_git_config_keys` so that user defined values are shown first
 complete -c git -n '__fish_git_using_command config' -n '__fish_is_nth_token 2' -kfa '(__fish_git_config_keys)'
+complete -c git -n '__fish_git_using_command config' -n '__fish_is_nth_token 3' -fa '(__fish_git_complete_key_values)'
 complete -f -c git -n '__fish_git_using_command config' -l get -d 'Get config with name' -kra '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-all -d 'Get all values matching key' -ka '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-urlmatch -d 'Get value specific for the section url' -r

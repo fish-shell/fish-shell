@@ -1,5 +1,9 @@
 # RUN: %fish %s
 
+printf "%d %d\n" 1 2 3
+# CHECK: 1 2
+# CHECK: 3 0
+
 printf "Hello %d %i %f %F %g %G\n" 1 2 3 4 5 6
 # CHECK: Hello 1 2 3.000000 4.000000 5 6
 

@@ -53,6 +53,7 @@
 #include "printf.h"
 
 #include <cerrno>
+#include <cinttypes>
 #include <climits>
 #include <cstdarg>
 #include <cstdint>
@@ -174,7 +175,7 @@ void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...) {
 }
 
 void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end, int errcode) {
-    if (errcode != 0) {
+    if (errcode != 0 && errcode != EINVAL) {
         if (errcode == ERANGE) {
             this->fatal_error(L"%ls: %ls", s, _(L"Number out of range"));
         } else {
@@ -201,16 +202,14 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
 template <typename T>
 static T raw_string_to_scalar_type(const wchar_t *s, wchar_t **end);
 
-// we use wcstoll instead of wcstoimax because FreeBSD 8 has busted wcstoumax and wcstoimax - see
-// #626
 template <>
 intmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    return std::wcstoll(s, end, 0);
+    return std::wcstoimax(s, end, 0);
 }
 
 template <>
 uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    return std::wcstoull(s, end, 0);
+    return std::wcstoumax(s, end, 0);
 }
 
 template <>

@@ -1,4 +1,5 @@
 FROM fedora:latest
+LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 RUN dnf install --assumeyes \
       cmake \

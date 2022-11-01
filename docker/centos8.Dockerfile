@@ -1,4 +1,5 @@
 FROM centos:8
+LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 # See https://stackoverflow.com/questions/70963985/error-failed-to-download-metadata-for-repo-appstream-cannot-prepare-internal
 

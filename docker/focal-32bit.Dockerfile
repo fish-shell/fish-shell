@@ -1,4 +1,5 @@
 FROM ubuntu:20.04
+LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8

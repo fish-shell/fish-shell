@@ -1,4 +1,5 @@
 FROM centos:7
+LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 # install epel first to get cmake3
 RUN yum install --assumeyes epel-release https://repo.ius.io/ius-release-el7.rpm \

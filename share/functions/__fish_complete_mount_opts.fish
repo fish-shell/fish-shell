@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_user_ids
     if command -sq getent
         for line in (getent passwd)

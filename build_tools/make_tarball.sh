@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Script to generate a tarball
 # We use git to output a tree. But we also want to build the user documentation
 # and put that in the tarball, so that nobody needs to have sphinx installed

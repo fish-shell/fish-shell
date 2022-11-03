@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c dd -xa '(__fish_complete_dd)'
 complete -c dd -d 'display help and exit' -xa --help
 complete -c dd -d 'output version information and exit' -xa --version

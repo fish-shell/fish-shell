@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ansible -s a -l args -r -f -d "Module arguments"
 complete -c ansible -l ask-vault-pass -f -d "Ask for vault password"
 complete -c ansible -s B -l background -r -f -d "Run asynchronously, failing after X seconds"

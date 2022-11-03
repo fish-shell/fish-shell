@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: %fish %s
 
 # Ensure we don't hang on deep command substitutions - see #6503.

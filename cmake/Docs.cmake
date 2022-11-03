@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 find_program(SPHINX_EXECUTABLE NAMES sphinx-build
     HINTS
     $ENV{SPHINX_DIR}

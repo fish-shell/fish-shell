@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c animate -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(animate -list alpha)'
 complete -c animate -o authenticate -d 'Decipher image with this password [password]'
 complete -c animate -o backdrop -d 'Display image centered on a backdrop'

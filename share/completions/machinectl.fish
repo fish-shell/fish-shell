@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -f -c machinectl
 
 set -l commands list status show start login enable disable poweroff reboot \

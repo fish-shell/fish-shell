@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c pfctl -s s -d 'Show a filter parameter by modifier' -xa \
     'queue\t"Show loaded queue definitions" \
 	rules\t"Show loaded filter rules" \

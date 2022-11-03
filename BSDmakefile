@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This is a very basic `make` wrapper around the CMake build toolchain.
 #
 # Supported arguments:

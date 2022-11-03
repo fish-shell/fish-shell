@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
 #ifndef FISH_PARSE_UTIL_H
 #define FISH_PARSE_UTIL_H

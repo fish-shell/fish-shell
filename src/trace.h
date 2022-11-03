@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /// Support for fish_trace.
 #ifndef FISH_TRACE_H
 #define FISH_TRACE_H

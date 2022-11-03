@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_lunchy_needs_command
     set -l cmd (commandline -opc)
 

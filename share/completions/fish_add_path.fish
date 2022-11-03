@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c fish_add_path -s a -l append -d 'Add path to the end'
 complete -c fish_add_path -s p -l prepend -d 'Add path to the front (default)'
 complete -c fish_add_path -s g -l global -d 'Use a global $fish_user_paths'

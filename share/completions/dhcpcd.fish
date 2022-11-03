@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # dhcpcd is a DHCP client
 # See: https://roy.marples.name/projects/dhcpcd/index
 

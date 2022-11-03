@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2019 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_vcs_prompt:
 
 fish_vcs_prompt - output version control system information for use in a prompt

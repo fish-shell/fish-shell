@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # plain vi (as bundled with SunOS 5.8)
 # todo:
 # -wn : Set the default window size to n

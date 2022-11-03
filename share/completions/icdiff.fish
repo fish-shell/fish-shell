@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for icdiff
 complete -c icdiff -l version -d "Display version and exit"
 complete -c icdiff -s h -l help -d "Display help and exit"

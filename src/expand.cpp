@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // String expansion functions. These functions perform several kinds of parameter expansion.
 #include "config.h"  // IWYU pragma: keep
 

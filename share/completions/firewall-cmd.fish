@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_firewalld_zones --description "Print list of predefined firewalld zones"
     firewall-cmd --get-zones | string split " "
 end

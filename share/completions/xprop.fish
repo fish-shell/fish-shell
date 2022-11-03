@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_xprop_list_properties
     # TODO search commandline for a target window ("-root" or "-name foo")
     xprop -root | string split -f1 '('

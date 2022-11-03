@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 """ Command line test driver. """
 
 from __future__ import unicode_literals

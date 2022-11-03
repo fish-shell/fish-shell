@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l __fish_john_encodings ASCII RAW UTF-8 ISO-8859-1 Latin1 ANSI ISO-8859-2 ISO-8859-7 ISO-8859-15 KOI8-R CP437 CP720 CP737 CP850 CP852 CP858 CP866 CP868 CP1250 CP1251 CP1252 CP1253 CP1254 CP1255 CP1256
 
 function __fish_john_rules --description "Print JohnTheRipper rules"

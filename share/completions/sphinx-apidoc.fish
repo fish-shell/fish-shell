@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c sphinx-apidoc -s h -l help -d "Display usage summary"
 complete -c sphinx-apidoc -l version -d "Display Sphinx version"
 complete -c sphinx-apidoc -s o -d "Directory to place all output"

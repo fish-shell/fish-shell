@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /// The flogger: debug logging support for fish.
 #ifndef FISH_FLOG_H
 #define FISH_FLOG_H

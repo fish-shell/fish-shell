@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2010-2020 Google LLC. http://angularjs.org
+//
+// SPDX-License-Identifier: MIT
+
 /*
  AngularJS v1.8.2
  (c) 2010-2020 Google LLC. http://angularjs.org

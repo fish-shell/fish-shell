@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if test (uname) = Darwin # OS X
     complete -c open -s a -d 'specify app name' -r -a "(mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*' | string replace -r '.+/(.+).app' '\$1')"
     complete -c open -s b -d 'specify app bundle id' -x -a "(mdls (mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*') -name kMDItemCFBundleIdentifier | string replace -rf 'kMDItemCFBundleIdentifier = \"(.+)\"' '\$1')"

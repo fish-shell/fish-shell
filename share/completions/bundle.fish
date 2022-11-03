@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for bundler
 
 function __fish_bundle_no_command -d 'Test if bundle has been given no subcommand'

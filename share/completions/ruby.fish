@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #Completions for ruby
 complete -c ruby -s 0 -d 'Specify record separator'
 complete -c ruby -s a -d 'Turn on autosplit mode'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands flashall getvar oem flashing reboot update erase format devices flash get_staged help stage boot fetch
 
 function __fish_fastboot_list_partition_or_file

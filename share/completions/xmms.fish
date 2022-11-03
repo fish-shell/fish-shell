@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Completions for the xmms command
 # Vikas Gorur <vikas@80x25.org>

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c import -o adjoin -d 'Join images into a single multi-image file'
 complete -c import -o border -d 'Include window border in the output image'
 complete -c import -o channel -d 'Apply option to select image channels [type]' -xa '(import -list channel)'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c winemaker -l nobanner -d 'Don\'t use banner'
 complete -c winemaker -l backup -d 'Use backup'
 complete -c winemaker -l nobackup -d 'Don\'t use backup'

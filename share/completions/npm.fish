@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # NPM (https://npmjs.org) completions for Fish shell
 # __fish_npm_needs_* and __fish_npm_using_* taken from:
 # https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands

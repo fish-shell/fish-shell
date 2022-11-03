@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c rakudo -n __fish_is_first_token -F -a - -d 'Read program source from STDIN or start REPL if a TTY'
 complete -c rakudo -s c -d 'Check syntax only. Runs BEGIN and CHECK blocks'
 complete -c rakudo -l doc -d 'Extract documentation and print it as text'

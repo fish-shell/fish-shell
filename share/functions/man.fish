@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if not command -qs man
     # see #5329 and discussion at https://github.com/fish-shell/fish-shell/commit/13e025bdb01cc4dd08463ec497a0a3495873702f
     exit

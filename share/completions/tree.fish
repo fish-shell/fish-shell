@@ -1,4 +1,6 @@
-
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 ## Listing options
 complete -c tree -s a -d 'All files are listed'

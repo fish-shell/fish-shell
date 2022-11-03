@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c realpath -s e -l canonicalize-existing -d 'all components of the path must exist'
 complete -c realpath -s m -l canonicalize-missing -d 'no components of the path need exist'
 complete -c realpath -s L -l logical -d 'resolve \'..\' components before symlinks'

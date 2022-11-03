@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_lpr_option --description 'Complete lpr option'
     set -l optstr (commandline -t)
     switch $optstr

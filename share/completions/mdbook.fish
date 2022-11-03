@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l cmds build help init serve test watch
 
 complete -c mdbook -f

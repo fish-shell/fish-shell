@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_commandline_prepend --description "Prepend the given string to the command-line, or remove the prefix if already there"
     if not commandline | string length -q
         commandline -r $history[1]

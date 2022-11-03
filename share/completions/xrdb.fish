@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c xrdb -o display -d 'display to use'
 complete -c xrdb -o all -d 'do all resources [default]'
 complete -c xrdb -o global -d 'do screen-independent resources'

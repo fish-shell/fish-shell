@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowing
     # How many non-option tokens we skip in the input commandline before completing the subcommand
     # Usually 1; for ssh 2.

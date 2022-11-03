@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Functions for executing a program.
 //
 // Some of the code in this file is based on code from the Glibc manual, though the changes

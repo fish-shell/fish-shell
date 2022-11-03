@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set(languages de en fr pl pt_BR sv zh_CN)
 
 include(FeatureSummary)

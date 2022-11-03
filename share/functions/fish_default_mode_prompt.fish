@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_default_mode_prompt --description "Display vi prompt mode"
     # Do nothing if not in vi mode
     if test "$fish_key_bindings" = fish_vi_key_bindings

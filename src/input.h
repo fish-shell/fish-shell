@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Functions for reading a character of input from stdin, using the inputrc information for key
 // bindings.
 #ifndef FISH_INPUT_H

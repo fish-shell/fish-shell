@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This file does some internal fish setup.
 # It is not recommended to remove or edit it.
 #

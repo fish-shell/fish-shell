@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2018 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Flags to enable upcoming features
 #ifndef FISH_FUTURE_FEATURE_FLAGS_H
 #define FISH_FUTURE_FEATURE_FLAGS_H

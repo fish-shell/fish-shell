@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # try new completion generation of click first
 set -l comps (_PIPENV_COMPLETE=fish_source pipenv 2>/dev/null)
 if test -z "$comps" || string match -q 'Usage:*' -- $comps

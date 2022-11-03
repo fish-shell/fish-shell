@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if stat --version 2>/dev/null >/dev/null # GNU
     complete -c stat -s L -l dereference -d 'follow links'
     complete -c stat -s f -l file-system -d 'display file system status instead of file status'

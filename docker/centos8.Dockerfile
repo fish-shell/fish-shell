@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 FROM centos:8
 
 # See https://stackoverflow.com/questions/70963985/error-failed-to-download-metadata-for-repo-appstream-cannot-prepare-internal

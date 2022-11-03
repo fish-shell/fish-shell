@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // A specialized tokenizer for tokenizing the fish language. In the future, the tokenizer should be
 // extended to support marks, tokenizing multiple strings and disposing of unused string segments.
 #include "config.h"  // IWYU pragma: keep

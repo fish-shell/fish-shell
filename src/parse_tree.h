@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2013 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Programmatic representation of fish code.
 #ifndef FISH_PARSE_PRODUCTIONS_H
 #define FISH_PARSE_PRODUCTIONS_H

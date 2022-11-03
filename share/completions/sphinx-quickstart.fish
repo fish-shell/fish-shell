@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c sphinx-quickstart -s q -l quiet -d "Quiet mode"
 complete -c sphinx-quickstart -s h -l help -d "Display usage summary"
 complete -c sphinx-quickstart -l version -d "Display Sphinx version"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: env fth=%fish_test_helper fish=%fish %fish %s
 
 # Ensure job control works in non-interactive environments.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if seq --version 2>/dev/null >/dev/null #GNU
     complete -c seq -s f -l format -d 'Use printf style floating-point FORMAT'
     complete -c seq -s s -l separator -d 'Use STRING to separate numbers'

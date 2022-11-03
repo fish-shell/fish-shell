@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2013 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Functions used for implementing the set_color builtin.
 #include "config.h"
 

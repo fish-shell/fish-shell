@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if command -q wc && command wc --version >/dev/null 2>/dev/null
     complete -c wc -s c -l bytes -d "Print byte count"
     complete -c wc -s m -l chars -d "Print character count"

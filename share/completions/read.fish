@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for builtin read
 complete -c read -s h -l help -d "Display help and exit"
 complete -c read -s p -l prompt -d "Set prompt command" -x

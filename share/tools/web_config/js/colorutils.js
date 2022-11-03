@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2013 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /* TODO: Write an angularjs service to wrap these methods */
 
 term_256_colors =

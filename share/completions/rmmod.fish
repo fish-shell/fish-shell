@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # rmmod completion
 complete -c rmmod -x -a "(lsmod | string replace -r '\s.*' '')"
 

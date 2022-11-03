@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: %fish %s
 #
 # This deals with $PATH manipulation. We need to be careful not to step on anything.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c command -n 'test (count (commandline -opc)) -eq 1' -s h -l help -d 'Display help and exit'
 complete -c command -n 'test (count (commandline -opc)) -eq 1' -s a -l all -d 'Print all external commands by the given name'
 complete -c command -n 'test (count (commandline -opc)) -eq 1' -s q -l quiet -l query -d 'Do not print anything, only set exit status'

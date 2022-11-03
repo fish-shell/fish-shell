@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_unrar -d "Peek inside of archives and list all files"
     set -l cmd (commandline -poc)
     set -e cmd[1]

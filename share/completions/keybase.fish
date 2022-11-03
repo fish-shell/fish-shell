@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #Keybase 5.6.1
 
 function __fish_keybase_line_ends_with

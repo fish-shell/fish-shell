@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_tokenizer_state --description "Print the state of the tokenizer at the end of the given string"
     # Go through the token char-by-char in a state machine.
     # The states are:

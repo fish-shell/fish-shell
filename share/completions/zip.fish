@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for zip
 complete -c zip -s f -d "Freshen: only changed files"
 complete -c zip -s d -d "Delete entries in zipfile"

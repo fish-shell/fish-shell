@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c usermod -xa "(__fish_complete_users)"
 complete -c usermod -s a -l append -d "Append groups (use with -G)"
 complete -c usermod -s c -l comment -d "Change user's password file comment" -x

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c makedepend -s D -r -d Define
 complete -c makedepend -s I -r -d "Include directory"
 complete -c makedepend -s Y -r -d "Replace include directories"

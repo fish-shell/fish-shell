@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # GNU and BSD mktemp differ in their handling of arguments
 # Let's expose a simplified common interface
 function mktemp

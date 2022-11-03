@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # name: Informative Vcs
 # author: Mariusz Smykula <mariuszs at gmail.com>
 

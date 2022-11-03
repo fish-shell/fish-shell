@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Pandoc completions written by David Sanson
 # Copyright (c) 2018 David Sanson
 # Licensed under the GNU General Public License version 2

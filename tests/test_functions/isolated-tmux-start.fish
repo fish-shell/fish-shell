@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function isolated-tmux-start
     set -l tmpdir (mktemp -d)
     cd $tmpdir

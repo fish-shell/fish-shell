@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_opam_using_command
     set -l cmd (commandline -opc)
     if test (count $cmd) -gt 1

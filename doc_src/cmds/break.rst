@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-break:
 
 break - stop the current inner loop

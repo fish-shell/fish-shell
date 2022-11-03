@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_magento_url_protocols -d "Shows all available URL protocols"
     echo http://
     echo https://

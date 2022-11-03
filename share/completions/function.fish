@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_signals
     __fish_make_completion_signals
     for sig in $__kill_signals

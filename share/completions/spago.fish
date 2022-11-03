@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # fish completion for spago, PureScript package manager and build tool
 # version v0.16.0
 

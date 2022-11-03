@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the archlinux package information and build tool `asp` (https://github.com/falconindy/asp)
 set -l commands checkout difflog export gc disk-usage help list-{all,arches,local,repos} {short,}log show update untrack
 

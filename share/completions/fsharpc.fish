@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the F# Compiler
 # See: https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/compiler-options
 

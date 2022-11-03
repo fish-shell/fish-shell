@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c elvish -o help -d 'Show help and exit'
 complete -c elvish -o version -d 'Show version and exit'
 

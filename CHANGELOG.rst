@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2020 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. ignore: 2271 9265 9252 8514 9241 9226 9214 9211 9206 9186 9099 9154 9152 9141 7717 9140 9134 9121 9111 9109 9091 9067 9028
 
 fish 3.6.0 (released ???)

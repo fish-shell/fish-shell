@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish %s
 set -l filename (echo foo | psub --testing)
 test -f $filename

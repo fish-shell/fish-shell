@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fish completions for Perforce (p4) SCM
 # Based on the list of commands from
 # https://www.perforce.com/perforce/r16.1/manuals/cmdref/

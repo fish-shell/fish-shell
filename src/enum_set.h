@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2018 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 #ifndef FISH_ENUM_SET_H
 #define FISH_ENUM_SET_H
 

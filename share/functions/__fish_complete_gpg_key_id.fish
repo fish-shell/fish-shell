@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Helper function for contextual autocompletion of GPG key ids
 
 function __fish_complete_gpg_key_id -d 'Complete using gpg key ids' -a __fish_complete_gpg_command list_arg

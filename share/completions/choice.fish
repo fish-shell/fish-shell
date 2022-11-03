@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c choice -f -a /c -d "Specify the list of choices to be created"
 complete -c choice -f -a /n -d "Hide the list of choices"
 complete -c choice -f -a /cs -d "Specify that the choices are case-sensitive"

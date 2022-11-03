@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # On Solaris, `killall` kills all processes. So we don't want to bother providing completion
 # support on that OS.
 set -l OS (uname)

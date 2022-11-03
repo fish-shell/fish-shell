@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c dhclient -f -a "(__fish_print_interfaces)"
 
 complete -c dhclient -s 4 -d 'Use the DHCPv4 protocol'

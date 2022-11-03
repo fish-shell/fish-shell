@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This file adds commands to manage the FISH-BUILD-VERSION-FILE (hereafter
 # FBVF). This file exists in the build directory and is used to populate the
 # documentation and also the version string in fish_version.o (printed with

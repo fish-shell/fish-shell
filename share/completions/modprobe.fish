@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c modprobe -n "__fish_contains_opt -s r remove" --no-files -d Module -a "(lsmod | cut -d' ' -f1)"
 complete -c modprobe -n "not __fish_contains_opt -s r remove" --no-files -d Module -a "(__fish_print_modules)"
 complete -c modprobe -s v -l verbose -d "Print messages about what the program is doing"

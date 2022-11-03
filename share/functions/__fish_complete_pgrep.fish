@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_complete_pgrep -d 'Complete pgrep/pkill' --argument-names cmd
     complete -c $cmd -xa '(__fish_complete_proc)'

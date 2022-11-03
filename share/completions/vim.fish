@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # these don't work
 #complete vim -a - -d 'The file to edit is read from stdin. Commands are read from stderr, which should be a tty'
 

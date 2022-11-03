@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 __fish_make_completion_signals
 
 complete -c timeout -l foreground -d 'Run COMMAND in the foreground'

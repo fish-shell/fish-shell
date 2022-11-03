@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Command specific completions for the bison command.
 # These completions where generated from the commands

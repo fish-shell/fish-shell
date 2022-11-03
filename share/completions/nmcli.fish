@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l nmoutput (nmcli -g NAME connection show --active 2>/dev/null)
 or exit # networkmanager isn't running, no point in completing
 set -l cname (string escape -- $nmoutput\t"Active connection")

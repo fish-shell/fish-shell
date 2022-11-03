@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_anypython
     # Try python3 first, because that's usually faster and generally nicer.
     for py in python3 python3.{9,8,7,6,5,4,3} python2 python2.7 python

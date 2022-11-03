@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Helper to notarize an .app.zip or .pkg file.
 # Based on https://www.logcg.com/en/archives/3222.html
 

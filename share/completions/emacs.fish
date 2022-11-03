@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Initialization options
 complete -c emacs -l batch -d "do not do interactive display; implies -q"
 complete -c emacs -l chdir -d "change to directory DIR"

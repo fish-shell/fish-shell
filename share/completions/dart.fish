@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # global option
 complete -c dart -s h -l help -d "Print this usage information."
 complete -c dart -s v -l verbose -d "Show additional command output."

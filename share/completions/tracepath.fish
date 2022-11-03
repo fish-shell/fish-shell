@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c tracepath -x -a "(__fish_print_hostnames)"
 
 complete -c tracepath -s 4 -d 'Use IPv4 only'

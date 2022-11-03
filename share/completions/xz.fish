@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c xz -s z -l compress -d Compress
 complete -c xz -s d -l decompress -l uncompress -d Decompress -k -x -a "
 (

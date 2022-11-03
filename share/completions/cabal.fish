@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_cabal
     set -l cmd (commandline -poc)
     if test (count $cmd) -gt 1

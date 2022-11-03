@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_get_vmctl_vms
     for line in (vmctl status | string match -e -v "MAXMEM")

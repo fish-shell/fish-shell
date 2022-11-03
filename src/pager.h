@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Pager support.
 #ifndef FISH_PAGER_H
 #define FISH_PAGER_H

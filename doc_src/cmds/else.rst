@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-else:
 
 else - execute command if a condition is not met

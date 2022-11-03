@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: %fish %s
 
 # Ensure that, if variable expansion results in multiple strings

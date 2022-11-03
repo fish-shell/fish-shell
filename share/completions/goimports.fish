@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c goimports -s d -d "Display diffs instead of rewriting files"
 complete -c goimports -s e -d "Report all errors"
 complete -c goimports -s l -d "List files whose formatting differs from goimport's"

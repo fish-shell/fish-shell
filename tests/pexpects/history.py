@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This is a very fragile test. Sorry about that. But interactively entering
 # commands and verifying they are recorded correctly in the interactive
 # history and that history can be manipulated is inherently difficult.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_preview_current_file --description "Open the file at the cursor in a pager"
     set -l pager less --
     set -q PAGER && echo $PAGER | read -at pager

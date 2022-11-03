@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Command specific completions for the node command.
 # These completions were generated from the commands

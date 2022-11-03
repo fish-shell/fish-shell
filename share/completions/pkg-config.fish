@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # pkg-config
 complete -f -c pkg-config -l modversion -d 'Print versions of the specified libraries'
 complete -f -c pkg-config -l version -d 'Display the version of pkg-config and quit'

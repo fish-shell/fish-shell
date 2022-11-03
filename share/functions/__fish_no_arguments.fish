@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_no_arguments -d "Internal fish function"
     set -l cmd (commandline -poc) (commandline -tc)

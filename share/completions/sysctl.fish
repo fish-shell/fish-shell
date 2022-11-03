@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Only GNU and BSD sysctl seem to know "-h", so others should exit non-zero
 if sysctl -h >/dev/null 2>/dev/null
     # Print sysctl keys and values, separated by a tab

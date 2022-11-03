@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Runtime options
 complete -c mono -s h -l help -d 'Show help'
 complete -c mono -s V -l version -a number -f -d 'Show version'

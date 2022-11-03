@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # TODO: Whether the expensive operations
 # done by the module detection really needs to be done every time the completion is invoked is
 # unclear. See issue #3856.

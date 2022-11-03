@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This defines a compatibility shim for the `trap` command found in other shells like bash and zsh.
 function trap -d 'Perform an action when the shell receives a signal'
     set -l options h/help l/list-signals p/print

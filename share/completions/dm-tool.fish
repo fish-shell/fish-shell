@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the dm-tool command (part of the lightdm display manager)
 
 set -l cmds 'add-local-x-seat add-nested-seat add-seat list-seats lock switch-to-greeter switch-to-guest switch-to-user'

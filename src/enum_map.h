@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2021 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 #ifndef FISH_ENUM_MAP_H
 #define FISH_ENUM_MAP_H
 

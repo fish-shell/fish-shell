@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c archlinux-java -f
 complete -c archlinux-java -n __fish_use_subcommand -a status -d 'List installed Java environments and enabled one'
 complete -c archlinux-java -n __fish_use_subcommand -a set -d 'Force <JAVA_ENV> as default'

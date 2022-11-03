@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Pygments lexer for a fish command synopsis.
 #
 # Example usage:

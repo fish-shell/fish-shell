@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete id -xa "(__fish_complete_users)"
 
 if string match -eq 'GNU coreutils' (id --version 2>&1)

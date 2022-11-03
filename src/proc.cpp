@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Utilities for keeping track of jobs, processes and subshells, as well as signal handling
 // functions for tracking children. These functions do not themselves launch new processes, the exec
 // library will call proc to create representations of the running jobs as needed.

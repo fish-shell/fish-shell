@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # virsh is the main interface for managing virtlib guest domains.
 # See: https://libvirt.org/virshcmdref.html
 

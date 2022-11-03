@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
 set -l __fish_status_all_commands current-command current-filename current-function current-line-number features filename fish-path function is-block is-breakpoint is-command-substitution is-full-job-control is-interactive is-interactive-job-control is-login is-no-job-control job-control line-number print-stack-trace stack-trace test-feature
 

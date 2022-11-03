@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __history_completions --argument-names limit
     if string match -q "" -- "$limit"
         set limit 25

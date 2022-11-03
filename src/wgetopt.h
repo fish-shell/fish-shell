@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // A version of the getopt library for use with wide character strings.
 //
 // This is simply the gnu getopt library, but converted for use with wchar_t instead of char. This

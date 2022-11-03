@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_figlet_fonts
     set -l dir (figlet -I 2)
     set -l files $dir/*.flf $dir/*.tlf

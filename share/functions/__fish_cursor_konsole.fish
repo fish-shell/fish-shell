@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_cursor_konsole -d 'Set cursor (konsole)'
     set -l shape $argv[1]
     switch "$shape"

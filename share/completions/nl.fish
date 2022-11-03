@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l style 'a\t"number all lines"
 t\t"number only nonempty lines"
 n\t"number no lines"

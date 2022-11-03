@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __bower_cmds
     echo -en "cache\tManage bower cache
 help\tDisplay help information about Bower

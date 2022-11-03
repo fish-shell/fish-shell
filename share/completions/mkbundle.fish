@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_mkbundle_cross_args
     mkbundle --list-targets | awk -F '	- ' '/^Targets available/ { exit } !/^Available targets/ { printf "%s\t%s\n", gensub(/^\t/, "", 1, $1), $2 }'
 end

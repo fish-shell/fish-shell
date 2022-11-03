@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish -C 'set -l fish %fish' %s
 
 # Test that fish -n doesn't check for command existence - function autoloading throws a wrench in that.

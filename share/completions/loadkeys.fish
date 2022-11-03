@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_console_keymaps
     # The path(s) used may differ by linux distribution, and are compiled into
     # loadkeys, which doesn't provide a way to check which paths are searched

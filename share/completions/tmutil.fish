@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completion for tmutil (macOS)
 
 complete -f -c tmutil -n __fish_use_subcommand -a addexclusion -d 'Add an exclusion not to back up a file'

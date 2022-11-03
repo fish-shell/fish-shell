@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 ### Command-not-found handlers
 # This can be overridden by defining a new fish_command_not_found function
 

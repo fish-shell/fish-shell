@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_pygmentize
     set -l lines (pygmentize -L $argv[1] | string match -r '^(?:\* |    ).*(?:)$' | string replace -r '\* (.*):$' '$1' | string replace -r '^(.*)\.$' '$1' | string trim)
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-listchanges
 complete -c apt-listchanges -l help -d "Display help and exit"
 complete -c apt-listchanges -l apt -d "Read filenames from pipe"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: env fth=%fish_test_helper %fish %s
 
 # These tests check how installed trap handlers are listed. Run separately from the main trap

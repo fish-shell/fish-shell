@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 #Common options
 complete -c gphoto2 -s '?' -l help -d 'Print complete help message on program usage'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ng -f -d "The Angular CLI"
 
 complete -c ng -n __fish_use_subcommand -a add -d "Add dependency"

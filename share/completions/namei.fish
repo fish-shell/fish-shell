@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c namei -s h -l help -d 'displays this help text'
 complete -c namei -s V -l version -d 'output version information and exit'
 complete -c namei -s x -l mountpoints -d 'show mount point directories with a \'D\''

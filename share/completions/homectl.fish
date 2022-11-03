@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands_need_user activate deactivate inspect authenticate remove update passwd resize lock unlock with
 set -l commands list create lock-all $commands_need_user
 

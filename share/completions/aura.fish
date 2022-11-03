@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This can't currently be wrapped as the pacman completions rely on variables whose value this needs to change
 # complete -c aura -w pacman
 set -l listinstalled "(pacman -Q | tr ' ' \t)"

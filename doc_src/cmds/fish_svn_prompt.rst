@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2019 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_svn_prompt:
 
 fish_svn_prompt - output Subversion information for use in a prompt

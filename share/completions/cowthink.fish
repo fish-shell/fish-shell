@@ -1,4 +1,6 @@
-
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c cowthink -s e -d "Specify eye string" -r
 complete -c cowthink -s f -d "Specify cow file" -x -a '(cowthink -l | tail -n +2 | string split " ")'

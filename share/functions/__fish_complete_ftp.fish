@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_ftp -d 'Complete ftp, pftp' --argument-names ftp
     # Common across all ftp implementations
     complete -c $ftp -xa "(__fish_print_hostnames)" -d Hostname

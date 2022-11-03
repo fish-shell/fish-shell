@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 # disable on github actions because it's flakey

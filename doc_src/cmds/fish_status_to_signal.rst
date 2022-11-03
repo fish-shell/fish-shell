@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2021 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_status_to_signal:
 
 fish_status_to_signal - convert exit codes to human-friendly signals

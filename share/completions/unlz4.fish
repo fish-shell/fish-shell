@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for unlz4
 
 complete -c unlz4 -k -x -a "

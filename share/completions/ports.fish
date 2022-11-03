@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_ports_dirs -d 'Obtain a list of ports local collections'
     ls /usr/ports
 end

@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2020 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_is_root_user:
 
 fish_is_root_user - check if the current user is root

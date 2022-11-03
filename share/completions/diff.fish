@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for diff
 complete -c diff -s i -l ignore-case -d "Ignore case differences"
 complete -c diff -l ignore-file-name-case -d "Ignore case when comparing file names"

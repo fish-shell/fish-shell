@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # pip[2|3] emits (or emitted) completions with the wrong command name
 # See discussion at https://github.com/fish-shell/fish-shell/pull/4448
 # and pip bug at https://github.com/pypa/pip/pull/4755

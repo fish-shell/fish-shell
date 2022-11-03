@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c create_ap -f
 complete -c create_ap -a '(__fish_print_interfaces)'
 complete -c create_ap -s h -l help -d 'Show help'

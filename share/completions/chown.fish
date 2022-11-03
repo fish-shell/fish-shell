@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if chown --version &>/dev/null # gee, and you is not eunichs
     complete chown -s c -l changes -d "Output diagnostic for changed files"
     complete chown -l dereference -d "Dereference symbolic links"

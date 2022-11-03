@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c zopfli -s h -d "Gives this help"
 complete -c zopfli -s c -d "Write the result on stdout"
 complete -c zopfli -s v -d "Verbose mode"

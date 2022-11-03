@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # fish completions for mdadm, as documented under Debian Stretch (mdadm v3.4)
 # Known lacks :
 # - be more contextual : suggest according to available files, devices, arrays…

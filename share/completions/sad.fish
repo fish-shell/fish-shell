@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete sad -s 0 -l read0 -d 'Use \0 as stdin delimiter'
 complete sad -s e -l exact -d 'String literal mode'
 complete sad -x -s f -l flags -d "Regex flags: use `--help` instead of `-h` to see details"

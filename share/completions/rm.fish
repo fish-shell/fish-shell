@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #Completions for rm
 if rm --version >/dev/null 2>/dev/null # GNU
     complete -c rm -s d -l directory -d "Unlink directories"

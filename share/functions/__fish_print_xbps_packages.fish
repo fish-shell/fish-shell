@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_xbps_packages
     # Caches for 5 minutes
     type -q -f xbps-query || return 1

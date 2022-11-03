@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 ### subcommands
 complete -f -c ros -n __fish_use_subcommand -xa run -d "Run repl"
 complete -f -c ros -n __fish_use_subcommand -xa install -d "Install a given implementation or a system for roswell environment"

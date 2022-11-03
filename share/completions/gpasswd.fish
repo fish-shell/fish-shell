@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c gpasswd -xa '(__fish_complete_groups)'
 complete -c gpasswd -s a -l add -d 'Add user to group' -xa '(__fish_complete_users)'

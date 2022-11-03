@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if not command -q time
     complete -c time -a "(__fish_complete_subcommand)" -d Command
     exit

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for sylpheed
 
 complete -c sylpheed -l exit -d 'Exit sylpheed'

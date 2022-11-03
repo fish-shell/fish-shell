@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # tig - text-mode interface for Git
 
 not functions -q __fish_git && source $__fish_data_dir/completions/git.fish

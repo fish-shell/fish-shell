@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_use_subcommand -d "Test if a non-switch argument has been given in the current commandline"
     set -l cmd (commandline -poc)

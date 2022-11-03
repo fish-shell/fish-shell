@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for libavif (https://github.com/AOMediaCodec/libavif)
 
 complete -c avifdec -s h -l help -d "Show syntax help"

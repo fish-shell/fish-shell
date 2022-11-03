@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c wicd-cli -s h -l help -d 'Print help and exit'
 complete -c wicd-cli -s S -l scan -d 'Scan for networks'
 complete -c wicd-cli -s l -l list-networks -d 'List networks'

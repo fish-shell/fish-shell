@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c msgfmt -s D -l directory -d "Add specified directory to list for input files search" -x -a "(__fish_complete_directories (commandline -ct))"
 

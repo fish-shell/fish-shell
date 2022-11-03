@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for: MATLAB R2021b
 function __fish_matlabcheck_no_desktop_nodesktop_opts
     not __fish_seen_argument --old desktop --old nodesktop

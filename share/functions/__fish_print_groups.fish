@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This should be used where you want group names without a description. If you also want
 # a description, such as when getting a list of groups for a completion, you probably want
 # __fish_complete_groups.

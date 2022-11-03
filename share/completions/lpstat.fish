@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 __fish_complete_lpr lpstat
 complete -c lpstat -s H -d 'Show server hostname and port'
 complete -c lpstat -s R -d 'Shows ranking of print jobs'

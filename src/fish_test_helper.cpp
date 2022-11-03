@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // fish_test_helper is a little program with no fish dependencies that acts like certain other
 // programs, allowing fish to test its behavior.
 

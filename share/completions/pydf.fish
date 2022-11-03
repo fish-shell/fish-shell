@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c pydf -r -d 'Report colourised filesystem disk space usage'
 complete -c pydf -l help -d 'show this help message'

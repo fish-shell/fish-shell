@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -x -c godoc -l analysis -o analysis -d "Comma-separated list of analyses to perform"
 complete -c godoc -l ex -o ex -d "Show examples in command line mode"
 complete -r -c godoc -l goroot -o goroot -d "Go root directory"

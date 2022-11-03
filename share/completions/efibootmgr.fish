@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __efibootmgr_list_bootnum
     efibootmgr | string match -r -- "Boot\d+.+" |
         string split -m1 -f2 -- Boot |

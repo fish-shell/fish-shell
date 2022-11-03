@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_hybrid_key_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"
     bind --erase --all --preset # clear earlier bindings, if any
 

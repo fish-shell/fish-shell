@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c plutil -o help -d "Show usage information and exit"
 complete -c plutil -o lint -d "Check plist files for syntax errors"
 complete -c plutil -o convert -xa "xml1 binary1 json swift objc" -d "Rewrite file in FORMAT"

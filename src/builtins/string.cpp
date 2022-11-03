@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2015 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Implementation of the string builtin.
 #include "config.h"  // IWYU pragma: keep
 

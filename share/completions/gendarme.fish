@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c gendarme -l version -d 'Show version'
 
 complete -c gendarme -l config -r -d 'Use config file'

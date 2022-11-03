@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Sublime Text build 3142
 
 # Usage: subl [arguments] [files]         edit the given files

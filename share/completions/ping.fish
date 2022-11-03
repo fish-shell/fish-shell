@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ping -xa "(__fish_print_hostnames)"
 
 set -l ping_version (ping -V 2>&1 | string collect)

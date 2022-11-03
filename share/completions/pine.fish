@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c pine -s f -d "Open folder" -a "(ls -d ~/.Mail/*)"
 complete -c pine -s F -d "Open file" -r
 complete -c pine -s h -d "Display help and exit"

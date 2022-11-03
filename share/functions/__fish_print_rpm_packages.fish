@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_rpm_packages
     type -q -f rpm /usr/share/yum-cli/completion-helper.py || return 1
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_argparse_exclusive_args --description 'Helper function to list unused options'
     set --local all_tokens (commandline --tokenize)
     set --erase all_tokens[1]

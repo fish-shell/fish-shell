@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for the killring.
 //
 // Works like the killring in emacs and readline. The killring is cut and paste with a memory of

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -f -c elixir -s v -d "Prints version and exit"
 complete -f -c elixir -s e -d "Evaluates the given command"
 complete -c elixir -s r -d "Requires the given files/patterns"

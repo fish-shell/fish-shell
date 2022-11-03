@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-isatty:
 
 isatty - test if a file descriptor is a terminal

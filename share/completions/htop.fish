@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # htop is an interactive process viewer.
 # See: http://hisham.hm/htop
 

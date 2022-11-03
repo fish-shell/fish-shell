@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c conjure -o monitor -d 'Monitor progress'
 complete -c conjure -o quiet -d 'Suppress all warning messages'
 complete -c conjure -o regard-warnings -d 'Pay attention to warning messages'

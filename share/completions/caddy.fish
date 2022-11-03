@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Caddy is a general-purpose HTTP/2 web server that serves HTTPS by default.
 # https://caddyserver.com
 

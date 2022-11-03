@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-proxy-import
 complete -c apt-proxy-import -s h -l help -d 'Display help and exit'
 complete -f -c apt-proxy-import -s V -l version -d 'Display version and exit'

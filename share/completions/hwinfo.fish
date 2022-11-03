@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for hwinfo
 
 set -l hardware_items all arch bios block bluetooth braille bridge camera \

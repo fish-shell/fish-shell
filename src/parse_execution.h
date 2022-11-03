@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2013 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 #ifndef FISH_PARSE_EXECUTION_H
 #define FISH_PARSE_EXECUTION_H

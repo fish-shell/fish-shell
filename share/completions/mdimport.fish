@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completion for mdimport (macOS)
 
 complete -c mdimport -s g -r -d 'Import files using the listed plugin'

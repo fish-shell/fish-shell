@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_list_loaded_klds
     set -l klds (kldstat | string match -r '\b\S+.ko$')
     for kld in $klds

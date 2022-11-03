@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-trap:
 
 trap - perform an action when the shell receives a signal

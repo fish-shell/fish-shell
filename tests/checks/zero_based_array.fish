@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish %s
 echo $foo[0]
 #CHECKERR: {{.*}}checks/zero_based_array.fish (line {{\d+}}): array indices start at 1, not 0.

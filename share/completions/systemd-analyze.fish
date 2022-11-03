@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_systemd_units
     systemctl list-unit-files --full --no-legend --no-pager --plain 2>/dev/null | string split -f 1 ' '
     systemctl list-units --state=loaded --full --no-legend --no-pager --plain 2>/dev/null | string split -f 1 ' '

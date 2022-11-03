@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c kcmshell5 -f -l list -d "List available modules"
 complete -c kcmshell5 -f -l author -d "Show author information"
 complete -c kcmshell5 -f -l license -d "Show license information"

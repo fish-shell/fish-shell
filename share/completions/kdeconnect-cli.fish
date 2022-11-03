@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __complete_devices
     kdeconnect-cli --shell-device-autocompletion=zsh 2>/dev/null | string replace -rf -- '(\w+)\[(.*)]' '$1\t$2'
     or kdeconnect-cli --list-devices 2>/dev/null | string replace -rf -- '- (.*): (\w+) .*' '$2\t$1'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l subcommands help version login logout passwd target api auth apps app \
     push scale delete rename start stop restart restage restart-app-instance \
     run-task tasks terminate-task events files logs env set-env unset-env stacks \

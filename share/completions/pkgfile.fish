@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c pkgfile -l version -d 'show program\'s version number and exit'
 complete -c pkgfile -s h -l help -d 'show this help message and exit'
 complete -c pkgfile -s b -l binaries -d 'only show files in a {s}bin/ directory. Works with -s, -l'

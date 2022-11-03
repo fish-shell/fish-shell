@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -f -c yast2 -a '(yast2 -l)' -d Module
 
 complete -f -c yast2 -s h -l help -d 'Show help'

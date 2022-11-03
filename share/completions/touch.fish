@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete touch -d "change file access and modification times"
 # common options
 complete touch -s a -d "change access time (atime)"

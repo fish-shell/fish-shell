@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Functions for handling event triggers
 //
 // Because most of these functions can be called by signal handler, it is important to make it well

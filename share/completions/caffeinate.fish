@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completion for caffeinate (macOS)
 
 complete -c caffeinate -s d -f -d 'Create an assertion to prevent the display from sleeping'

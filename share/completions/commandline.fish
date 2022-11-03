@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c commandline -s h -l help -d "Display help and exit"
 complete -c commandline -s a -l append -d "Add text to the end of the selected area"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This function is typically bound to Alt-W, it is used to list man page entries
 # for the command under the cursor.
 function __fish_whatis_current_token -d "Show man page entries or function description related to the token under the cursor"

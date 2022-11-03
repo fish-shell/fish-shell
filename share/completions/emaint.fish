@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_portage_repository_names --description 'Print the names of all configured repositories'
     # repos.conf may be a file or a directory
     find /etc/portage/repos.conf -type f -exec cat '{}' + | string replace -r --filter '^\s*\[([[:alnum:]_][[:alnum:]_-]*)\]' '$1' | string match -v -e DEFAULT

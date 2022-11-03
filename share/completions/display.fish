@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c display -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(display -list alpha)'
 complete -c display -o antialias -d 'Remove pixel-aliasing'
 complete -c display -o authenticate -d 'Decipher image with this password [password]'

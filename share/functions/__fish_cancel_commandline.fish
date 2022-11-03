@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_setup_cancel_text -v fish_color_cancel -v fish_color_normal
     set -g __fish_cancel_text "^C"
     if set -q fish_color_cancel

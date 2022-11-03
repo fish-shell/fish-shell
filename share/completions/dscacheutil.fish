@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # dscacheutil
 complete -c dscacheutil -f -d 'Directory Service cache utility'
 complete -c dscacheutil -s h -d 'lists options' -f -n '[ (commandline -opc | count) -le 1 ]'

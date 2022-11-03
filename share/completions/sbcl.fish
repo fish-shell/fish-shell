@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c sbcl -l help -d "Print this message and exit."
 complete -c sbcl -l version -d "Print version information and exit."
 complete -c sbcl -l core -d "Use the specified core file instead of the default."

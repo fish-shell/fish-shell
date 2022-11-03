@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c gofmt -l cpuprofile -o cpuprofile -d "Write cpu profile to this file"
 complete -c gofmt -s d -d "Display diffs instead of rewriting files"
 complete -c gofmt -s e -d "Report all errors (not just the first 10 on different lines)"

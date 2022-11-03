@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2015 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-prompt_pwd:
 
 prompt_pwd - print pwd suitable for prompt

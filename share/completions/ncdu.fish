@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ncdu -s h -l help -d 'Print help'
 complete -c ncdu -s q -d 'Quiet mode. Refresh interval 2 seconds'
 complete -c ncdu -s v -s V -l version -d 'Print version'

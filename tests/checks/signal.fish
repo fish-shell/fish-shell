@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: env fish_test_helper=%fish_test_helper %fish -C 'set -l fish %fish' %s
 
 $fish -c 'function main; exit 4; true; end; main'

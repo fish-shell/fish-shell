@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c pbget -l abs -d 'Use the ABS tree'
 complete -c pbget -l arch -d 'Set the desired package architecture'

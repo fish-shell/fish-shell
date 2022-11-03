@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c latexmk -k -x -a "(__fish_complete_suffix (commandline -ct) .tex '(La)TeX file')"
 complete -c latexmk -o bibtex -d 'use bibtex when needed (default)'
 complete -c latexmk -o bibtex- -d 'never use bibtex'

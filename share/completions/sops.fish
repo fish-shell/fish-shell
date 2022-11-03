@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for SOPS (Secrets OPerationS)
 
 function __fish_sops_no_subcommand --description "Test if there is a subcommand given"

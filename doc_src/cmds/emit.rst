@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-emit:
 
 emit - emit a generic event

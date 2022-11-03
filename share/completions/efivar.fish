@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c efivar -f
 
 complete -c efivar -s A -l attributes -x -d "Attributes to use on append"

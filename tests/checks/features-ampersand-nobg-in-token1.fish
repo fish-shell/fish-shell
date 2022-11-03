@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish --features=ampersand-nobg-in-token -C 'set -g fish_indent %fish_indent' %s
 
 echo no&background

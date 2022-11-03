@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Depending on cursor position and current mode, either search backward or move up one line"
 function up-or-search -d "Search back or move cursor up 1 line"
     # If we are already in search mode, continue

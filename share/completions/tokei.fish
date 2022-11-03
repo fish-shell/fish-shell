@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Written against `tokei --help`, version 10.0.1 compiled with support for CBOR, JSON, and YAML
 
 function __fish_tokei_supported_serializations

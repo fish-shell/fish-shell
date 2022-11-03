@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # General options:
 complete -c pg_restore -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Connect to database name"
 complete -c pg_restore -s f -l file -a - -r -d "Output file name (- for stdout)"

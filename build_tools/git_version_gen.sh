@@ -1,4 +1,9 @@
 #!/bin/sh
+
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Originally from the git sources (GIT-VERSION-GEN)
 # Presumably (C) Junio C Hamano <junkio@cox.net>
 # Reused under GPL v2.0

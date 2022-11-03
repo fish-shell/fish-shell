@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Put system-wide fish configuration entries here
 # or in .fish files in conf.d/
 # Files in conf.d can be overridden by the user

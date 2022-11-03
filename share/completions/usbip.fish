@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_usbip_no_subcommand -d 'Test if usbip has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i attach detach list bind unbind port

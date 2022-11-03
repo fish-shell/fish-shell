@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l COMMANDS -s i -o il -s u -o ul -o us -s l
 
 complete -c gacutil -s '?' -d 'Show help'

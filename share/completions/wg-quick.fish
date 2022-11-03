@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l valid_subcmds up down strip save
 
 function __fish_wg_complete_interfaces

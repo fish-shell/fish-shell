@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # excluding help
 set -l subcommands frequency-info frequency-set idle-info idle-set set info monitor
 

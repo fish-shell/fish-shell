@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l cmds list start stop switch-to enable disable enable-all disable-all is-active is-enabled
 
 # Helper function that prints network profiles managed by netctl-auto.

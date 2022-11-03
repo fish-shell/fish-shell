@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: env fth=%fish_test_helper %fish %s
 
 set -g SIGUSR1_COUNT 0

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2014 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Helper functions for working with wcstring.
 #include "config.h"  // IWYU pragma: keep
 

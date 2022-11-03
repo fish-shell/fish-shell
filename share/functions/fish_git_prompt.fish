@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+# 
+# SPDX-License-Identifier: GPL-2.0-only
+
 # based off of the git-prompt script that ships with git
 # hence licensed under GPL version 2 (like the rest of fish).
 #

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Apache Ant (1.9.5) completion for Fish Shell.
 
 function __fish_complete_ant_targets -d "Print list of targets from build.xml and imported files"

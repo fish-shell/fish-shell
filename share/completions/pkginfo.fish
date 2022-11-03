@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completions for Python pkginfo
 if pkginfo --help 2>/dev/null | string match -qr Python
     complete -f -c pkginfo -s h -l help -d 'Print help'

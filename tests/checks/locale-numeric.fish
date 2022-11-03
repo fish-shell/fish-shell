@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: %fish %s
 # musl currently does not have a `locale` command, so we skip this test there.
 # REQUIRES: command -v locale

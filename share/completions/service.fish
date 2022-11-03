@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # First argument is the names of the service, i.e. a file in /etc/init.d
 complete -c service -n "__fish_is_nth_token 1" -xa "(__fish_print_service_names)" -d Service
 

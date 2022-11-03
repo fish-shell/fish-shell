@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish %s
 # Avoid regressions of issue \#3860 wherein the first word of the alias ends with a semicolon
 function foo

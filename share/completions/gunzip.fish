@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c gunzip -s c -l stdout -d "Compress to stdout"
 complete -c gunzip -k -x -a "(
 	__fish_complete_suffix .gz

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2008 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completions for quilt version 0.46 or similar
 complete -c quilt -s h -d "Show help"
 complete -c quilt -l version -d "Show version"

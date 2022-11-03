@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for arp
 complete -c arp -s v -l verbose -d "Verbose mode"
 complete -c arp -s n -l numeric -d "Numerical address"

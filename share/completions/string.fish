@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for builtin string
 # This follows a strict command-then-options approach, so we can just test the number of tokens
 complete -f -c string

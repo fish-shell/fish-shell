@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c feh -l action -s A -x -d "Specify a shell command as action to perform on image"
 
 for i in (seq 1 9)

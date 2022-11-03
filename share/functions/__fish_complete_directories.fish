@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Find directories that complete $argv[1], output them as completions
 # with description $argv[2] if defined, otherwise use 'Directory'.

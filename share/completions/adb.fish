@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for Android adb command
 
 function __fish_adb_no_subcommand -d 'Test if adb has yet to be given the subcommand'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for builtin path
 # This follows a strict command-then-options approach, so we can just test the number of tokens
 complete -f -c path -n "test (count (commandline -opc)) -le 2" -s h -l help -d "Display help and exit"

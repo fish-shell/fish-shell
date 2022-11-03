@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2008 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # fish completion for git
 
 # Use this instead of calling git directly; it passes the commands that are

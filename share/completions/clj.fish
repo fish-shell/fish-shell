@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # ht Bob B@Clojurians Slack
 # https://raw.githubusercontent.com/bobisageek/bb-scripts/main/clj-alils.clj
 #

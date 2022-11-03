@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fish shell completions for conda, the package management system
 # https://conda.io/docs
 # Based on `conda help` as per version 4.4.11

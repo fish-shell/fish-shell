@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # See: https://github.com/zeit/serve
 
 complete -x -c serve -l help -s h -d "Shows help message"

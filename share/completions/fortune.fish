@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fish completions for fortune <https://www.ibiblio.org/pub/linux/games/amusements/fortune/!INDEX.html>
 
 complete -c fortune -s a -d 'Include offensive fortunes'

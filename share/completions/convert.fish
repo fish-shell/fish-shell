@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c convert -o adjoin -d 'Join images into a single multi-image file'
 complete -c convert -o affine -d 'Affine transform matrix [matrix]'
 complete -c convert -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(convert -list alpha)'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the `dpkg-reconfigure` command
 
 complete -f -c dpkg-reconfigure -a '(__fish_print_apt_packages)' -d Package

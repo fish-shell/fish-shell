@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # name: Informative
 # http://michal.karzynski.pl/blog/2009/11/19/my-informative-shell-prompt/
 

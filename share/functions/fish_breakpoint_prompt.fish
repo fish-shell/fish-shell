@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Define the default debugging prompt command.
 function fish_breakpoint_prompt --description "A right prompt to be used when `breakpoint` is executed"
     set -l saved_status $status

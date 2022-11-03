@@ -1,4 +1,9 @@
 #!/usr/bin/env fish
+
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Build a list of all sections in the html sphinx docs, separately by page,
 # so it can be added to share/functions/help.fish
 # Use like

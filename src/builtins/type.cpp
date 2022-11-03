@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2020 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Implementation of the type builtin.
 #include "config.h"  // IWYU pragma: keep
 

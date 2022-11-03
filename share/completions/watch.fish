@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c watch -s b -l beep -d 'Beep if command has a non-zero exit'
 complete -c watch -s c -l color -d 'Interpret ANSI color sequences'
 complete -c watch -s d -l differences -d 'Highlight changes between updates'

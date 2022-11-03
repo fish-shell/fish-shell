@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # This is a neat function, stolen from zsh. It allows you to edit the
 # value of a variable interactively.

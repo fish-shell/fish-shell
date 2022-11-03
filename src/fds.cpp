@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2021 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /** Facilities for working with file descriptors. */
 
 #include "config.h"  // IWYU pragma: keep

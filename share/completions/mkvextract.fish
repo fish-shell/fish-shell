@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Sample output of 'mkvmerge -i file.mkv'
 #
 # File 'file.mkv': container: Matroska

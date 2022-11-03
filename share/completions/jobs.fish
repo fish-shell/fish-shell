@@ -1,4 +1,6 @@
-
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c jobs -s h -l help -d 'Display help and exit'
 complete -c jobs -s p -l pid -d "Show the process id of each process in the job"

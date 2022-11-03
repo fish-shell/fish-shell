@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the FreeBSD `kldload` kernel module load utility
 function __fish_list_kldload_options
     set -l klds (__fish_complete_suffix /boot/kernel/(commandline -ct) ".ko" | string replace -r '.*/(.+)\\.ko' '$1')

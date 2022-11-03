@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_detect_screen_socket_dir -d "Detect which folder screen uses"
     set -l screen_bin screen
     if not set -q __fish_screen_socket_dir

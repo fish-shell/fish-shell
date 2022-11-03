@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This file is explicitly sourced by the npm and yarn completions
 # It is used to enumerate entries from the npm registry, interact with a locally installed
 # package.json file, and more.

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c pdftotext -s f -d "First page to convert"
 complete -c pdftotext -s l -d "Last page to convert"

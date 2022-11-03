@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c mocha -l help -o help -s h -d "Show help"
 complete -c mocha -s V -l version -d "output the version number"
 complete -c mocha -s A -l async-only -d "force all tests to take a callback (async) or return a promise"

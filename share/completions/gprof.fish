@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c gprof -s A -l annoted-source -d "Print annotated source"
 complete -c gprof -s b -l brief -d "Do not print explanations"
 complete -c gprof -s C -l exec-counts -d "Print tally"

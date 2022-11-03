@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c expect -s c -r -d "execute command"
 complete -c expect -s d -n "__fish_not_contain_opt -s d" -d "diagnostic output"
 complete -c expect -s D -x -r -a "0 1" -n "__fish_not_contain_opt -s D" -d "debug value"

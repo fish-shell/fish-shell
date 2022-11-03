@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c fish -s c -l command -d "Run specified command instead of interactive session" -x -a "(__fish_complete_command)"
 complete -c fish -s C -l init-command -d "Run specified command before session" -x -a "(__fish_complete_command)"
 complete -c fish -s h -l help -d "Display help and exit"

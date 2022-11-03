@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
 set -l __fish_history_all_commands search delete save merge clear clear-session
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c black -x -s c -l code -d 'Format code passed in as a string'
 complete -c black -x -s l -l line-length -d 'Characters per line'
 complete -c black -x -s t -l target-version -d 'Python versions supported by output'

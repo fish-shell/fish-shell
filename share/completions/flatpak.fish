@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for flatpak, an "Application deployment framework for desktop apps"
 # (http://flatpak.org)
 set -l flatversion (flatpak --version | string match -r '[\d.]+' | cut -f -2 -d .)

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for opkg
 
 function __fish_opkg_no_subcommand -d 'Test if opkg has yet to be given the subcommand'

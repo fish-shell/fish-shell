@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c du -s a -l all -d "Write size for all files"
 complete -c du -l apparent-size -d "Print file size, not disk usage"
 complete -c du -s B -l block-size -d "Block size"

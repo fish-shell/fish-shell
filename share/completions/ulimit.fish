@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c ulimit -s S -l soft -d "Set or get soft limit"
 complete -c ulimit -s H -l hard -d "Set or get hard limit"

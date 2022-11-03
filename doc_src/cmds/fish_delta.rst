@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2022 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 fish_delta - compare functions and completions to the default
 ==============================================================
 

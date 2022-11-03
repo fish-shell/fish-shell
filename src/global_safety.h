@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Support for enforcing correct access to globals.
 #ifndef FISH_GLOBAL_SAFETY_H
 #define FISH_GLOBAL_SAFETY_H

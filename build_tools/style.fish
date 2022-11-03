@@ -1,4 +1,9 @@
 #!/usr/bin/env fish
+
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # This runs C++ files and fish scripts (*.fish) through their respective code
 # formatting programs.

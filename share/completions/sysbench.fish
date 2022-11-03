@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 ### Auto-complete for sysbench (cross-platform and multi-threaded benchmark tool) ###
 
 ### sub commands specification ###

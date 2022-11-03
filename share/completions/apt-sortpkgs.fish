@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-sortpkgs
 complete -c apt-sortpkgs -s h -l help -d "Display help and exit"
 complete -f -c apt-sortpkgs -s s -l source -d "Use source index field"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 __fish_complete_lpr lpr
 complete -c lpr -k -xa "(__fish_complete_suffix .pdf)"
 complete -c lpr -k -xa "(__fish_complete_suffix .ps)"

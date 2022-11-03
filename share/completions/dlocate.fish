@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c dlocate -s S -x -d 'List records that match filenames'
 complete -c dlocate -s L -d 'List all files in the package' -xa '(__fish_print_apt_packages)'

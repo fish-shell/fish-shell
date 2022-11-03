@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Load completions shared by various ssh tools like ssh, scp and sftp.
 __fish_complete_ssh scp
 

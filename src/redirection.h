@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 #ifndef FISH_REDIRECTION_H
 #define FISH_REDIRECTION_H
 

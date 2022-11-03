@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands allow permit grant block deny revoke edit exec fetchurl help hook prune reload status stdlib version
 
 set -l with_file allow permit grant block deny revoke edit

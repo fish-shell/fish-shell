@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for functions for reading data from stdin and passing to the parser. If stdin is a
 // keyboard, it supplies a killring, history, syntax highlighting, tab-completion and various other
 // features.

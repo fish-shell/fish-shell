@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish %s
 # Test various `bind` command invocations. This is meant to verify that
 # invalid flags, mode names, etc. are caught as well as to verify that valid

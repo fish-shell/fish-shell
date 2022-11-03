@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c lpadmin -s c -d 'Adds the named printer to class' -x
 complete -c lpadmin -s i -d 'Sets a  System V style interface script for the printer' -x
 complete -c lpadmin -s m -d 'Sets a standard System V interface script or PPD file ' -x

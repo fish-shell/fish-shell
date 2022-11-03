@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: © 2009 Axel Liljencrantz
+# SPDX-FileCopyrightText: © 2009 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_debian_services --description 'Prints services installed'
     for service in /etc/init.d/*
         if test -x $service

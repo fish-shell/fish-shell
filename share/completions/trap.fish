@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c trap -s l -l list-signals -d 'Display names of all signals'
 complete -c trap -s p -l print -d 'Display all currently defined trap handlers'

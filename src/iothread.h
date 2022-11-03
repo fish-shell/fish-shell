@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2011 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Handles IO that may hang.
 #ifndef FISH_IOTHREAD_H
 #define FISH_IOTHREAD_H

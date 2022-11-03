@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_apropos
     set -f str (commandline -ct | string escape --style=regex)
     switch "$str"

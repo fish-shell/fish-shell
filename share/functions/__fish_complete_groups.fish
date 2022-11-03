@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_complete_groups --description "Print a list of local groups, with group members as the description"
     if command -sq getent

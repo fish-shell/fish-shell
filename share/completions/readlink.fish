@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c readlink -s f -l canonicalize -d 'Canonicalize, follow symlinks, last can be missing'
 complete -c readlink -s e -l canonicalize-existing -d 'Canonicalize, follow symlinks, none can be missing'

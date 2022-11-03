@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish -C 'set -g fish %fish' %s
 # Test that fish doesn't crash if cwd is unreadable at the start (#6597)
 

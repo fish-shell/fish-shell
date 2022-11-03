@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for string expansion functions. These functions perform several kinds of parameter
 // expansion. There are a lot of issues with regards to memory allocation. Overall, these functions
 // would benefit from using a more clever memory allocation scheme, perhaps an evil combination of

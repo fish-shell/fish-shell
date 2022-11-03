@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish -i %s
 # Note: ^ this is interactive so we test interactive behavior,
 # e.g. the fish_git_prompt variable handlers test `status is-interactive`.

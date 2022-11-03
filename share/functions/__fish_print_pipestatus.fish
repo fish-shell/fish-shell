@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_pipestatus --description "Print pipestatus for prompt"
     set -l last_status
     if set -q __fish_last_status

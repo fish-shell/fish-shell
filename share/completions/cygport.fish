@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 # Options
 complete -c cygport -s 4 -l 32 -d "Build for 32-bit Cygwin"

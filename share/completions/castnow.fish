@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Castnow is a utility that can be used to play back media files on Chromecast devices.
 # See: https://github.com/xat/castnow
 

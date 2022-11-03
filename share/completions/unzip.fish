@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c unzip -s p -d "extract files to pipe, no messages"
 complete -c unzip -s f -d "freshen existing files, create none"
 complete -c unzip -s u -d "update files, create if necessary"

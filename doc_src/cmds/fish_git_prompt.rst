@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2019 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_git_prompt:
 
 fish_git_prompt - output git information for use in a prompt

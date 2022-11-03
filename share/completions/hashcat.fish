@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_hashcat_types --description "Get hashcat hash types"
     set -l modes (hashcat --example-hashes | string replace -f -r '^(?:MODE: |Hash mode #)(\d+)' '$1')
     set -l types (hashcat --example-hashes | string replace -f -r '^(?:TYPE:|\s+Name\.+:)\s+(.+)' '$1')

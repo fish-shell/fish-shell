@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # If we're not interactive, there is effectively no bind mode.
     if not status is-interactive

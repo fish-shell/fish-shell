@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_move_last -d "Move the last element of a directory history from src to dest"
     set -l src $argv[1]
     set -l dest $argv[2]

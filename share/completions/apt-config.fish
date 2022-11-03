@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-config
 complete -c apt-config -s h -l help -d "Display help and exit"
 complete -c apt-config -a shell -d "Access config file from shell"

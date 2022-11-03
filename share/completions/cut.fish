@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if cut --version &>/dev/null
     complete -c cut -s b -l bytes -x -d "Select byte positions"
     complete -c cut -s c -l characters -x -d "Select characters"

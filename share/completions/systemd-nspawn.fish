@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c systemd-nspawn -s D -l directory -d 'Directory to use as file system root for the container' -r
 complete -c systemd-nspawn -l template -d 'Directory or btrfs subvolume to use as template' -r
 complete -c systemd-nspawn -s x -l ephemeral -d 'Run container with a temporary btrfs snapshot (Only on btrfs)'

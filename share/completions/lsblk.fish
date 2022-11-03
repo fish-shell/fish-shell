@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_lsblk_columns --description 'Print available lsblk columns'
     LC_ALL=C lsblk --help | sed '1,/Available .*columns:/d; /^$/,$d; s/^\s\+//; s/\s/\t/'
 end

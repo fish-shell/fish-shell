@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Tab completion for cargo (https://github.com/rust-lang/cargo).
 
 ## --- WRITTEN MANUALLY ---

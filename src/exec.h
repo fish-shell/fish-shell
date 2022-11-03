@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for functions for executing a program.
 #ifndef FISH_EXEC_H
 #define FISH_EXEC_H

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_ipset_nosubcommand
     if __fish_seen_subcommand_from create add del test destroy list save restore flush rename swap help version
         return 1

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c monop -s r -d 'Specifies the assembly to use for looking up the type'
 complete -c monop -s a -d 'Renders all of the types in the specified assembly'
 complete -c monop -s s -s k -l search -d 'Searches through all known assemblies for types containing \'class\''

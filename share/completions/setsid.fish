@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # setsid is a tool to run a program in a new session.
 # It is part of the util-linux package.
 # See: https://www.kernel.org/pub/linux/utils/util-linux

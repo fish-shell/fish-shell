@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete fish_config -f
 set -l prompt_commands choose save show list
 set -l theme_commands choose demo dump save show list

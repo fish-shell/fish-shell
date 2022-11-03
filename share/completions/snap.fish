@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for `snap` command
 
 function __fish_snap_no_subcommand -d 'Test if snap has yet to be given the subcommand'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Use the Google style with these modifications:
 #
 # 1) lines can be up to 100 chars long rather than 80, and

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for functions for manipulating fish script variables.
 #ifndef FISH_ENV_H
 #define FISH_ENV_H

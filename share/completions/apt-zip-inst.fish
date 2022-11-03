@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-zip-inst
 complete -c apt-zip-inst -s h -l help -d "Display help and exit"
 complete -f -c apt-zip-inst -s V -l version -d "Display version and exit"

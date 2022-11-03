@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands status set-hostname set-icon-name set-chassis set-deployment set-location
 
 complete -c hostnamectl -f

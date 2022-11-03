@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function suspend --description 'Suspend the current shell.'
     set -l options h/help f/force
     argparse -n suspend --max-args=1 $options -- $argv

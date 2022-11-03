@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_fab_tasks
     for task in (fab -l)
         set -l _matched (string match -r "^ +([^ ]*) *([^ ]?.*)" $task)

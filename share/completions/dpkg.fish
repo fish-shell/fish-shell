@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c dpkg -s i -l install -d 'Install .deb package' -k -xa '(__fish_complete_suffix .deb)'
 complete -c dpkg -l unpack -d 'Unpack .deb package' -k -xa '(__fish_complete_suffix .deb)'

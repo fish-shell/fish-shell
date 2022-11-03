@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_connman_services
     # connmanctl services follows this pattern (to be interpreted as a regex):
     # "[\* ][A ][ORacd ] service_name +identification_string"

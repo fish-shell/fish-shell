@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ldapsearch -s V -d 'Print version info'
 complete -c ldapsearch -o VV -d 'Print version info and exit'
 complete -c ldapsearch -s d -x -d 'Set the LDAP debug level'

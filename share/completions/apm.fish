@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Returns exit code of 0 if apm hasn't received a command yet, e.g. `config`
 function __fish_apm_needs_command
     set -l cmd (commandline -opc)

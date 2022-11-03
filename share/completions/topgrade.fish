@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Flags
 complete -f -c topgrade -s c -l cleanup -d "Cleanup temporary or old files"
 complete -f -c topgrade -l disable-predefined-git-repos -d "Don't pull the predefined git repos"

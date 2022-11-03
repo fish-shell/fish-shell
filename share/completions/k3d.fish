@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_k3d_no_subcommand --description 'Test if k3d has yet to be given subcommands'
     for i in (commandline -opc)
         if contains -- $i cluster image kubeconfig node version

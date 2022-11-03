@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 #ifndef FISH_COMMON_H
 #define FISH_COMMON_H

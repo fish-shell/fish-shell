@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # pv - Pipe Viewer - is a terminal-based tool for monitoring the progress of
 # data through a pipeline.
 # See: http://www.ivarch.com/programs/pv.shtml

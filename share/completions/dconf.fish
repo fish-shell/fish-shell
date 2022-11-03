@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fish completions for gnome's "dconf" configuration tool
 
 function __fish_dconf_keys

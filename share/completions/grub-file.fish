@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # grub-file - check file type
 
 complete -c grub-file -l is-i386-xen-pae-domu -d 'Check if FILE can be booted as i386 PAE Xen unprivileged guest kernel'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for systemd's localectl
 set -l commands status set-locale list-locales set-keymap list-keymaps set-x11-keymap list-x11-keymap-{models,layouts,variants,options}
 

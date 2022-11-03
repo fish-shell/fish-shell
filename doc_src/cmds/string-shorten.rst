@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2022 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 string-shorten - shorten strings to a width, with an ellipsis
 ===============================================================
 

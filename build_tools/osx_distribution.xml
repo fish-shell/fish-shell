@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
+
+<!--
+SPDX-FileCopyrightText: © 2013 fish-shell contributors
+
+SPDX-License-Identifier: GPL-2.0-only
+-->
+
 <installer-gui-script minSpecVersion="1">
     <title>fish shell</title>
     <welcome file="welcome.html" mime-type="text/html"/>

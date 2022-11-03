@@ -1,4 +1,6 @@
-
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c nice -a "(__fish_complete_subcommand -- -n --adjustment)" -d Command
 

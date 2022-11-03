@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Support the usual (i.e., bash compatible) `umask` UI. This reports or modifies the magic global
 # `umask` variable which is monitored by the fish process.
 

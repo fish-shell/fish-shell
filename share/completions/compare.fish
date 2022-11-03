@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c compare -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(compare -list alpha)'
 complete -c compare -o authenticate -d 'Decipher image with this password [password]'
 complete -c compare -o channel -d 'Apply option to select image channels [type]' -xa '(compare -list channel)'

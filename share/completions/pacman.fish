@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for pacman
 # Author: Giorgio Lando <patroclo7@gmail.com>
 # Updated by maxfl, SanskritFritz, faho, f1u77y, akiirui

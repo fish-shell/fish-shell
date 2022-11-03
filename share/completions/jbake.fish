@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for JBake (https://jbake.org/)
 
 complete -c jbake -o b -l bake -f -d "Perform a bake"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Provide a menu of the directories recently navigated to and ask the user to
 # choose one to make the new current working directory (cwd).
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fish completion for gnome-extensions
 
 function __fish_gnome-extensions_complete_all_extensions

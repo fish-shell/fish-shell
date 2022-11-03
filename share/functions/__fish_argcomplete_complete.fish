@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_argcomplete_complete
     set -lx _ARGCOMPLETE 1
     set -lx _ARGCOMPLETE_IFS \n

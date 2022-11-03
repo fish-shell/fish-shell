@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument-names item error_message
     switch $item
         case .

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c reflector -f
 # options
 complete -c reflector -s h -l help -d 'Show help'

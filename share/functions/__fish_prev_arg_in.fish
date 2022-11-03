@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # returns 0 only if previous argument is one of the supplied arguments
 function __fish_prev_arg_in
     set -l tokens (commandline -co)

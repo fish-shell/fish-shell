@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #Completions for rmdir
 complete -x -c rmdir -a "(__fish_complete_directories (commandline -ct))"
 complete -c rmdir -l ignore-fail-on-non-empty -d "Ignore errors from non-empty directories"

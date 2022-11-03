@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c gv -k -xa "(__fish_complete_suffix .ps)"
 complete -c gv -k -xa "(__fish_complete_suffix .ps.gz)"
 complete -c gv -k -xa "(__fish_complete_suffix .eps)"

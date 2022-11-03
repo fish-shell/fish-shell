@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Commands
 complete -c ngrok -f -a authtoken -d "Save authtoken to configuration file"
 complete -c ngrok -f -a credits -d "Prints author and licensing information"

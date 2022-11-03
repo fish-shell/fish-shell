@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2020 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Support for null-terminated arrays like char**.
 #ifndef FISH_NULL_TERMINATED_ARRAY_H
 #define FISH_NULL_TERMINATED_ARRAY_H

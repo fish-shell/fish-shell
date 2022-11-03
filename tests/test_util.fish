@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # vim: set ts=4 sw=4 tw=100 et:
 # Utilities for the test runners
 

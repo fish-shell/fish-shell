@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_maybe_list_all_functions
     # if the current commandline token starts with an _, list all functions
     if string match -qr -- '^_' (commandline -ct)

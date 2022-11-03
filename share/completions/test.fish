@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c test -d 'condition evaluation utility' --force-files
 complete -c test -k -f -a ! -d "Negate expression"
 complete -c test -k -f -s a -d "Logical AND"

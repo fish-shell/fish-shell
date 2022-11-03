@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fishscript tests
 #
 # There is no shebang line because you shouldn't be running this by hand. You

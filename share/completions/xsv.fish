@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c xsv -n "__fish_is_nth_token 1" -xa cat -d 'Concatenate by row or column'
 complete -c xsv -n "__fish_is_nth_token 1" -xa count -d 'Count records'
 complete -c xsv -n "__fish_is_nth_token 1" -xa fixlengths -d 'Makes all records have same length'

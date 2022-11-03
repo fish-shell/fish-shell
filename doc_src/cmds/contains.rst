@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-contains:
 
 contains - test if a word is present in a list

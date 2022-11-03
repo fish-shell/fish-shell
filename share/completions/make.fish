@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for make
 function __fish_print_make_targets --argument-names directory file
     # Since we filter based on localized text, we need to ensure the

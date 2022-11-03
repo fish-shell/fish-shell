@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c speedtest-cli -s h -l help -d 'Display help and exit'
 complete -c speedtest-cli -l no-download -d 'Do not perform download test'
 complete -c speedtest-cli -l no-upload -d 'Do not perform upload test'

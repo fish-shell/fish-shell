@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __cmdkey_complete_args -d 'Function to generate args'
     set -l current_token (commandline -tc)
     set -l previous_token (commandline -oc)[-1]

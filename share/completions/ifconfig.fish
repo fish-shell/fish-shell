@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -x -c ifconfig -a down -d "Stop interface"
 complete -x -c ifconfig -a up -d "Start interface"
 complete -x -c ifconfig -a "

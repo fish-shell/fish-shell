@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 """pexpect_helper provides a wrapper around the pexpect module.
 
 This module exposes a single class SpawnedProc, which wraps pexpect.spawn().

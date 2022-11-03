@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c makepkg -s A -l ignorearch -d 'Ignore missing or incomplete arch field'
 complete -c makepkg -s c -l clean -d 'Clean up work files after build'
 complete -c makepkg -l config -d 'Use alternate config <file>'

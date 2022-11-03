@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_not_contain_opt -d "Checks that a specific option is not in the current command line"
     set -l next_short
     set -l short_opt

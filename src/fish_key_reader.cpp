@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2016 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // A small utility to print information related to pressing keys. This is similar to using tools
 // like `xxd` and `od -tx1z` but provides more information such as the time delay between each
 // character. It also allows pressing and interpreting keys that are normally special such as

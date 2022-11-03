@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if chgrp --version &>/dev/null # not unix
     complete -c chgrp -s c -l changes -d "Output diagnostic for changed files"
     complete -c chgrp -l dereference -d "Dereference symlinks"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function prompt_login --description "display user name for the prompt"
     if not set -q __fish_machine
         set -g __fish_machine

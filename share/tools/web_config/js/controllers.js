@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2013 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 controllers = angular.module("controllers", []);
 
 controllers.controller("main", function($scope, $location) {

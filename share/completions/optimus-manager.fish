@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c optimus-manager -f
 complete -c optimus-manager -l switch -d 'Set the GPU mode to MODE. You need to log out then log in to apply the change' -xa 'integrated nvidia hybrid'
 complete -c optimus-manager -l temp-config -d 'Set a path to a temporary configuration file to use for the next reboot ONLY' -r

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2013 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Constants used in the programmatic representation of fish code.
 #ifndef FISH_PARSE_CONSTANTS_H
 #define FISH_PARSE_CONSTANTS_H

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: env FISH_PATH=%fish FILE_PATH=%s %fish %s
 
 status line-number

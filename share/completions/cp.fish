@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if cp --version 2>/dev/null >/dev/null # GNU cp
     complete -c cp -s a -l archive -d "Same as -dpR"
     complete -c cp -l attributes-only -d "Copy just the attributes"

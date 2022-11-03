@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Archlinux's mkinitcpio (https://projects.archlinux.org/mkinitcpio.git/)
 
 function __fish_mkinitcpio_complete_hooks

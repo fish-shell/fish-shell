@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # First written by:  Sean C. Higgins
 
 complete -x -c telnet -d Hostname -a "(__fish_print_hostnames)"

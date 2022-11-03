@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -x -c zopflipng -k -a "(__fish_complete_suffix .png)"
 
 complete -c zopflipng -s m -d "Compress more"

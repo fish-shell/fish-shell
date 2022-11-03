@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c who -s a -l all -d "Same as -b -d --login -p -r -t -T -u"
 complete -c who -s b -l boot -d "Print time of last boot"
 complete -c who -s d -l dead -d "Print dead processes"

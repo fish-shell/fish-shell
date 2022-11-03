@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c lsof -s '?' -s h -d 'Print help and exit'
 complete -c lsof -s a -d 'Causes list selections to be ANDed'
 complete -c lsof -s A -r -d 'Use alternative name list file'

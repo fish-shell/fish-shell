@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_exercism_no_subcommand -d 'Test if exercism has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i demo debug configure fetch restore submit unsubmit tracks download help

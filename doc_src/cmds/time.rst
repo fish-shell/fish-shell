@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2020 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-time:
 
 time - measure how long a command or block takes

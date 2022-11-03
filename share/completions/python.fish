@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c python -s B -d 'Don\'t write .py[co] files on import'
 complete -c python -s c -x -d "Execute argument as command"
 complete -c python -l check-hash-based-pycs -a "default always never" -d "Control validation behaviour of pyc files"

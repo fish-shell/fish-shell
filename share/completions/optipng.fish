@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -x -c optipng
 complete -x -c optipng -n '__fish_should_complete_switches; and __fish_is_first_arg' -a '-?\t"show help"'
 complete -x -c optipng -n '__fish_should_complete_switches; and __fish_is_first_arg' -a '-h\t"show help"'

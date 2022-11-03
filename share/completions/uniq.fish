@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if uniq --version >/dev/null 2>/dev/null
     complete -c uniq -s c -l count -d "Print number of occurrences"
     complete -c uniq -s d -l repeated -d "Only print duplicates"

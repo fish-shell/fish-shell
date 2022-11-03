@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ranger -s d -l debug -d "Activate debug mode"
 complete -c ranger -s c -l clean -d "Activate clean mode"
 complete -c ranger -s r -l confdir -d "Change configuration directory"

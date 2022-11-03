@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: env PATH="a::b" CDPATH="d::e" MANPATH="x::y" %fish %s
 
 # In PATH and CDPATH, empty elements are treated the same as "."

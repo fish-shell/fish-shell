@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if cat --version 2>/dev/null >/dev/null # GNU
     complete -c cat -s A -l show-all -d "Escape all unprintables"
     complete -c cat -s b -l number-nonblank -d "Number non-blank lines"

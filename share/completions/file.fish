@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for file
 
 complete -c file -s b -l brief -d 'Do not prepend filenames to output lines'

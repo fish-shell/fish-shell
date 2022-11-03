@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This function is typically bound to Alt-L, it is used to list the contents
 # of the directory under the cursor.
 

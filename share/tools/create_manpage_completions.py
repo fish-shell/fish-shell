@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # -*- coding: utf-8 -*-
 
 # Run me like this: ./create_manpage_completions.py /usr/share/man/man{1,8}/* > man_completions.fish

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_alternatives_names -d "Get the names of link groups in the alternatives system"
     alternatives --list | cut -f 1 | string trim
 end

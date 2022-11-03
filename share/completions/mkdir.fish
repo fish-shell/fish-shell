@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 # Checks if we are using GNU tools
 if mkdir --version >/dev/null 2>/dev/null

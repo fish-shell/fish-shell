@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for top
 complete -c top -s b -d "Batch mode"
 complete -c top -s c -d "Toggle command line/program name"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_docutils -d "Completions for Docutils common options" -a cmd
     complete -x -c $cmd -k -a "
     (

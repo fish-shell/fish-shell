@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # grub-install - install GRUB to a device
 
 complete -c grub-install -l compress -d 'Compress GRUB files' -x -a 'no xz gz lzo'

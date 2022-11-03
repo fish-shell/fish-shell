@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for functions that react to environment variable changes
 #ifndef FISH_ENV_DISPATCH_H
 #define FISH_ENV_DISPATCH_H

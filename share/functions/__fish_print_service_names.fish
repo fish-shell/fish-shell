@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_service_names -d 'All services known to the system'
     if test -d /run/systemd/system # Systemd systems
         # For the `service` command, this needs to be without the type suffix

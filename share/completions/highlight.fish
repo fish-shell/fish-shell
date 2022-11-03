@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c highlight -s O -l out-format -d 'Output file in given format' -xa 'xterm256 latex tex rtf html xhtml ansi bbcode svg'
 complete -c highlight -s t -l tab -d 'Specify tab length' -x

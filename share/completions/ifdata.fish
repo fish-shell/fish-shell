@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ifdata -xa '(__fish_print_interfaces)'
 complete -c ifdata -o e -d 'Reports interface existence via return code'
 complete -c ifdata -o p -d 'Print out the whole config of iface'

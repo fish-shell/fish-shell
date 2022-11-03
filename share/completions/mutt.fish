@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_abook_emails --description 'Print email addresses (abook)'
     abook --mutt-query "" | string match -r -v '^\s*$'
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function export --description 'Set env variable. Alias for `set -gx` for bash compatibility.'
     if not set -q argv[1]
         set -x

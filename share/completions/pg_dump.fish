@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c pg_dump --no-files -a '(__fish_complete_pg_database)'
 
 # General options:

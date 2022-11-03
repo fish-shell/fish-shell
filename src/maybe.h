@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2017 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 #ifndef FISH_MAYBE_H
 #define FISH_MAYBE_H
 

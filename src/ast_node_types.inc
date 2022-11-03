@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2020 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Define ELEM and optionally ELEMLIST before including this file.
 // ELEM is for ordinary nodes.
 // ELEMLIST(x, y) marks list nodes and the type they contain.

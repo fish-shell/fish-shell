@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # minikube - is a tool that makes it easy to run Kubernetes
 # locally. Minikube runs a single-node Kubernetes cluster inside a VM on
 # your computer for users looking to try out Kubernetes or develop with it

@@ -1,4 +1,9 @@
 #!/usr/bin/env fish
+
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # This is meant to be run by "make lint" or "make lint-all". It is not meant to
 # be run directly from a shell prompt.

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c pacman-key -s a -l add -d 'Add or update keys from <file>'
 complete -c pacman-key -l config -d 'Use an alternate config <file>'

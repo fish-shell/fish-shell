@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Try to set the locale from the system configuration if we did not inherit any. One case where this
 # can happen is a linux with systemd where the user logs in via getty (e.g., on the system console).
 # See https://github.com/fish-shell/fish-shell/issues/3092. This isn't actually our job, so there's

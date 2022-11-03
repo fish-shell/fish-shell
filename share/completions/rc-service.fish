@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # First argument is the names of the service, i.e. a file in /etc/init.d
 complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
     -xa "(__fish_print_service_names)" -d "Service name"

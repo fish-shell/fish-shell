@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function down-or-search -d "search forward or move down 1 line"
     # If we are already in search mode, continue
     if commandline --search-mode

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2017 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for executing builtin_block function.
 #ifndef FISH_BUILTIN_BLOCK_H
 #define FISH_BUILTIN_BLOCK_H

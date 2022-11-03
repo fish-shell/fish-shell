@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # RUN: %fish %s
 # $XDG_DATA_HOME can itself be a relative path. So force it to an absolute
 # path so we can remove it from any resolved paths below. This is needed

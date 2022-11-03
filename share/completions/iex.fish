@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -f -c iex -s v -d "Prints version and exit"
 complete -f -c iex -s e -d "Evaluates the given command"
 complete -c iex -s r -d "Requires the given files/patterns"

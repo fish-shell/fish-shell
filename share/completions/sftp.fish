@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Load completions shared by various ssh tools like ssh, scp and sftp.
 __fish_complete_ssh sftp
 

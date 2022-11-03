@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function isatty -d "Tests if a file descriptor is a tty"
     set -l options h/help
     argparse -n isatty $options -- $argv

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_portage_repository_paths --description 'Print the paths of all configured repositories'
     set -l a /etc/portage/repos.conf
     set -l b

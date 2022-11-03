@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Regular completions
 complete -c vips -s l -l list -d 'List objects'
 complete -c vips -s p -l plugin -d 'Load PLUGIN'

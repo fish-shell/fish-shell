@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function help --description 'Show help for the fish shell'
     set -l options h/help
     argparse -n help $options -- $argv

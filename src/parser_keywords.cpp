@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Functions having to do with parser keywords, like testing if a function is a block command.
 #include "config.h"  // IWYU pragma: keep
 

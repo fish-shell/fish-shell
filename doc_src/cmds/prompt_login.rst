@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2021 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-prompt_login:
 
 prompt_login - describe the login suitable for prompt

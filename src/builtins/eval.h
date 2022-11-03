@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for executing builtin_eval function.
 #ifndef FISH_BUILTIN_EVAL_H
 #define FISH_BUILTIN_EVAL_H

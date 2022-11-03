@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # -*-  mode:fish; tab-width:4  -*-
 #
 # fish-completion for fish-bd

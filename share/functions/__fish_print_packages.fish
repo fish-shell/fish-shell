@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_packages
     # This is `__fish_print_packages`. It prints packages,
     # from the first package manager it finds.

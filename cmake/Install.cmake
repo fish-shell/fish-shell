@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # -DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
 # -DPREFIX=L"${CMAKE_INSTALL_PREFIX}"
 # -DDATADIR=L"${CMAKE_INSTALL_FULL_DATADIR}"

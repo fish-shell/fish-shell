@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c pactree -xa "(pacman -Sl | string replace -r '(\S+) *(\S+) *(.*)' '$2\t$3')"
 complete -c pactree -s b -l dbpath -d 'Set an alternate database location' -xa '(__fish_complete_directories)'
 complete -c pactree -s c -l color -d 'Colorize output'

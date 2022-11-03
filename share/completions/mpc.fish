@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for mpc, used to control MPD from the command line
 
 set -l subcommands consume crossfade queued mixrampdb mixrampdelay next \

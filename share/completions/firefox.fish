@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # X11 options
 complete -c firefox -l display -r -d "X display to use"
 complete -c firefox -l sync -d "Make X calls synchronous"

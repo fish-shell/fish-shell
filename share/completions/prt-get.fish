@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for prt-get
 # A function to verify if prt-get (the crux package management tool) needs to be completed by a further command
 

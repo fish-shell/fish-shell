@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # name: Astronaut
 # author: Radu Potop
 # description: A prompt theme similar to Starship.rs but without the emojis.

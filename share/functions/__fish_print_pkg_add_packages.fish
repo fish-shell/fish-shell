@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_pkg_add_packages
     # pkg_info on OpenBSD provides versioning info which we want for
     # installed packages but, calling it directly can cause delays in

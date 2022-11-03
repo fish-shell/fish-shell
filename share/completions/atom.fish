@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c atom -s d -l dev -d 'Run in development mode'
 complete -c atom -s f -l foreground -d 'Keep main process in foreground'
 complete -c atom -s h -l help -d 'Print usage message'

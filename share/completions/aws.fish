@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # These are very much incomplete completions for the aws-cli suite.
 # In addition to a complete list of services, the `aws s3` completions are mostly complete
 # (and are the primary reason this file exists). The automatically generated completions

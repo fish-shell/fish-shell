@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2021 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Support for handling pids that are no longer fish jobs.
 // This includes pids that have been disowned ("forgotten") and background jobs which have finished,
 // but may be wait'ed.

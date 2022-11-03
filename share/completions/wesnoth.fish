@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2008 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Command specific completions for the wesnoth command from The Battle For Wesnoth (a strategy game)
 # http://www.wesnoth.org/
 

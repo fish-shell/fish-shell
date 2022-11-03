@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // My own globbing implementation. Needed to implement this instead of using libs globbing to
 // support tab-expansion of globbed parameters.
 #ifndef FISH_WILDCARD_H

@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2019 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _completion-own:
 
 Writing your own completions

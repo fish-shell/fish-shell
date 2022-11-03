@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c grep -s A -l after-context -d "Print NUM lines of trailing context" -x
 complete -c grep -s a -l text -d "Process binary file as text"
 complete -c grep -s B -l before-context -d "Print NUM lines of leading context" -x

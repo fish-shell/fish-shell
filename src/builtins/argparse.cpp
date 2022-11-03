@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2017 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Implementation of the argparse builtin.
 //
 // See issue #4190 for the rationale behind the original behavior of this builtin.

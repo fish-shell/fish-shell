@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Given the path to a .git directory this function prints a human-readable name
 # for the git action in progress (e.g. "merge") or returns 1.
 function fish_print_git_action --argument-names git_dir

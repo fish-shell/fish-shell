@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This function only emits completions that might result from matches against $CDPATH. We rely on
 # the core file name completion logic to include all other possible matches.
 function __fish_complete_cd -d "Completions for the cd command"

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2018 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /**
  * widechar_width.h for Unicode 15.0.0
  * See https://github.com/ridiculousfish/widecharwidth/

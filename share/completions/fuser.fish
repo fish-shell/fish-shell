@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 __fish_make_completion_signals
 for i in $__kill_signals
     string split -f 1,2 " " -- $i | read --line number name

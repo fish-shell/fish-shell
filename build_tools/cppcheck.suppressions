@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2016 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // suppress all instances of varFuncNullUB: "Passing NULL after the last typed
 // argument to a variadic function leads to undefined behaviour." That's
 // because all the places we do this are valid and won't cause problems even

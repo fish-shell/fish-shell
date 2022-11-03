@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for wide character equivalents of various standard unix functions.
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H

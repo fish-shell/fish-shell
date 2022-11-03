@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ikdasm -o help -d 'Show help'
 
 complete -c ikdasm -o out -r -d 'Redirect stdout to file'

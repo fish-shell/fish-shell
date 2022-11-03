@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #at
 complete -f -c at -s V -d "Display version and exit"
 complete -f -c at -s q -d "Use specified queue"

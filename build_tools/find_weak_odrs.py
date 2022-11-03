@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Finds potential ODR violations due to weak symbols.
 # For example, if you have two different structs with the same name in different files,
 # their inline constructors may collide.

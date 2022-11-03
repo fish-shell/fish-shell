@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c objdump -l archive-headers -s a -d "Display archive header information"
 complete -c objdump -l file-headers -s f -d "Display contents of the overall file header"
 complete -c objdump -l private-headers -s p -d "Display object format specific file header contents"

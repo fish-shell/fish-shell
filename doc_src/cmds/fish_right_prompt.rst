@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2012 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_right_prompt:
 
 fish_right_prompt - define the appearance of the right-side command line prompt

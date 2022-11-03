@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c traceroute -x -a "(__fish_print_hostnames)"
 
 complete -c traceroute -l help -d 'Print help info and exit'

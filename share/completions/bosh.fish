@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l subcommands add-blob alias-env attach-disk blobs cancel-task clean-up \
     cloud-check cloud-config config configs cpi-config create-env create-release \
     delete-config delete-deployment delete-disk delete-env delete-release \

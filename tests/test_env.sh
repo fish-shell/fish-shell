@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # vim: set ts=4 sw=4 tw=100 et:
 
 # This script sets up a clean environment for a script or executable to execute in/under. It creates

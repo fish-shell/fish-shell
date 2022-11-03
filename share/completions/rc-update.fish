@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_rc-update_actions
     set -l actions add \
         'Add the service to the runlevel or the current one if non given'

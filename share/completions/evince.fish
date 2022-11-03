@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_evince_complete_file_url
     set -l comp

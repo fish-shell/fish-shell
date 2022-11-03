@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_lxc_no_subcommand -d 'Test if lxc has yet to be given the command'
     for i in (commandline --tokenize --cut-at-cursor --current-process)
         if contains -- $i config console copy delete exec file help image info launch list move network pause profile publish remote rename restart restore shell snapshot start stop

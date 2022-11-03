@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_parse_configure
     if test (count $argv) -ne 1
         echo "Usage: parse_configure path/to/configure" 1>&2

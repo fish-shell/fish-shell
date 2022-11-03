@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c hjson -n __fish_should_complete_switches -s j -l json -d "output formatted json"
 complete -c hjson -n __fish_should_complete_switches -s c -l compact -d "output condensed json"
 

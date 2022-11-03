@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_qdbus_complete
     argparse system 'bus=' literal help -- (commandline --cut-at-cursor --tokenize) 2>/dev/null
     or return

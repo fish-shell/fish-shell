@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Generates a list of parent directories for a given path
 # i.e. /a/b/c/d -> [/a/b/c/, /a/b/, /a/, and /a]
 function __fish_parent_directories

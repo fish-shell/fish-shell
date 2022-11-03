@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for totem
 
 complete -c totem -l usage -d 'Output a brief synopsis of command options then quit'

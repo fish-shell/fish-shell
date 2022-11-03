@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2012 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /* Define to 1 if you have the `backtrace_symbols' function. */
 #cmakedefine HAVE_BACKTRACE_SYMBOLS 1
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This should be used where you want user names without a description. If you also want
 # a description, such as when getting a list of users for a completion, you probably want
 # __fish_complete_users.

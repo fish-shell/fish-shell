@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete --command powershell --short-option '?' --old-option Help --description 'Show help'
 
 complete --command powershell --old-option PSConsoleFile --require-parameter \

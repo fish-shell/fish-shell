@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // History functions, part of the user interface.
 #include "config.h"  // IWYU pragma: keep
 

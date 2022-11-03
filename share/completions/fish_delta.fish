@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c fish_delta -f -a '(path filter -rf -- $fish_function_path/*.fish $fish_complete_path/*.fish $__fish_vendor_confdirs/*.fish |
 path basename | path change-extension "") config'
 

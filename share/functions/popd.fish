@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function popd --description "Pop directory from the stack and cd to it"
     if count $argv >/dev/null

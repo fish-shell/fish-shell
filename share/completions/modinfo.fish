@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c modinfo -a "(__fish_print_modules)"
 complete -c modinfo -l author -s a -d "Print only 'author'"
 complete -c modinfo -l description -s d -d "Print only 'description'"

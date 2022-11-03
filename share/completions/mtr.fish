@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c mtr -x -a '(__fish_print_hostnames)'
 
 complete -c mtr -s h -l help -d 'Display help and exit'

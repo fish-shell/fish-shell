@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # apple shortcuts.app CLI tool completion sucker downer by Aaron Gyes
 # https://en.wikipedia.org/wiki/Shortcuts_(app)
 

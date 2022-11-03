@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_man_page
     # Get all commandline tokens not starting with "-", up to and including the cursor's
     set -l args (string match -rv '^-|^$' -- (commandline -cpo && commandline -t))

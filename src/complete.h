@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /// Prototypes for functions related to tab-completion.
 ///
 /// These functions are used for storing and retrieving tab-completion data, as well as for

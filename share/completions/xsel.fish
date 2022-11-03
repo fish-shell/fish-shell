@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c xsel -s a -l append -d "Append input to selection"
 complete -c xsel -s f -l follow -d "Append to selection as input grows"
 complete -c xsel -s i -l input -d "Read into selection"

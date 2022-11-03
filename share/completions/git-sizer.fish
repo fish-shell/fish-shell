@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for git-sizer
 
 complete -f -c git-sizer -l help -d "Display help for Git Sizer"

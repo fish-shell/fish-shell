@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_ssh -d "common completions for ssh commands" --argument-names command
     complete -c $command -s 4 -d "IPv4 only"
     complete -c $command -s 6 -d "IPv6 only"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -xc whatis -a "(__fish_complete_man)"
 
 complete -c whatis -s d -l debug -d Debug

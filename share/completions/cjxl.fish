@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the JPEG XL Reference Software (https://gitlab.com/wg1/jpeg-xl)
 
 complete -c cjxl -s V -l version -d "Print version number"

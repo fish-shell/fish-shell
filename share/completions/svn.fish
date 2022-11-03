@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_svn_diff --description 'Complete "svn diff" arguments'
     set -l cmdl (commandline -cop)
     #set -l cmdl svn diff --diff-cmd diff --extensions '-a -b'

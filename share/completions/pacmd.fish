@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Pulseaudio's pacmd
 # This covers the most useful commands
 set -l commands (pacmd help 2>/dev/null | string match -r '^ +[-\w]+' | string trim)

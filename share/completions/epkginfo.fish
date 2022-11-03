@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c epkginfo -xa "(__fish_print_portage_available_pkgs)"
 ## Opts
 complete -c epkginfo -s h -l help -d "display help"

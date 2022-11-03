@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-cdrom
 complete -c apt-cdrom -s h -l help -d "Display help and exit"
 complete -r -c apt-cdrom -a add -d "Add new disc to source list"

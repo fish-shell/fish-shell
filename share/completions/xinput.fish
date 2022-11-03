@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # xinput, a tool for managing X11 input devices
 set -l cmds version list get-feedbacks set-pointer set-mode set-ptr-feedback set-integer-feedback set-button-map query-state list-props set-int-prop set-float-prop set-prop watch-props delete-prop test test-xi2 create-master remove-master reattach float set-cp map-to-output enable disable
 

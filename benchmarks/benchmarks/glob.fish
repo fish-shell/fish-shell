@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Glob fish's source directory.
 # This timing is bound to change if the repo does,
 # so it's best to build two fishes, check out one version of the repo,

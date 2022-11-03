@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the rpm command. Insanely complicated,
 # since rpm has multiple operation modes, and a perverse number of switches.
 

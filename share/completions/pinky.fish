@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c pinky -a "(__fish_complete_users)" -f
 complete -c pinky -s l -d "produce long format output for the specified USERs"
 complete -c pinky -s b -d "omit the user's home directory and shell in long format"

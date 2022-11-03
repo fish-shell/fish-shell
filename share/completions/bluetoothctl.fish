@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # bluetoothctl enables to manage bluetooth devices and controllers.
 
 set -l cmds list show select devices paired-devices system-alias reset-alias power pairable discoverable discoverable-timeout agent default-agent advertise set-alias scan info pair cancel-pairing trust untrust block unblock remove connect disconnect scan.uuids scan.service scan.manufacturer scan.data scan.discoverable scan.discoverable-timeout scan.tx-power scan.name scan.appearance scan.duration scan.timeout scan.secondary scan.clear gatt.list-attributes gatt.select-attribute gatt.attribute-info gatt.read gatt.write gatt.acquire-write gatt.release-write gatt.acquire-notify gatt.release-notify gatt.notify gatt.clone gatt.register-application gatt.unregister-application gatt.register-service gatt.unregister-service gatt.register-includes gatt.unregister-includes gatt.register-characteristic gatt.unregister-characteristic gatt.register-descriptor gatt.unregister-descriptor advertise.uuids advertise.service advertise.manufacturer advertise.data advertise.discoverable advertise.discoverable-timeout advertise.tx-power advertise.name advertise.appearance advertise.duration advertise.timeout advertise.secondary advertise.clear

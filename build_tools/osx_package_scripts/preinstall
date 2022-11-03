@@ -1,5 +1,9 @@
 #!/bin/sh -x
 
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 echo "Removing any previous installation"
 pkgutil --pkg-info ${INSTALL_PKG_SESSION_ID} && pkgutil --only-files --files ${INSTALL_PKG_SESSION_ID} | while read installed
      do rm -v ${DSTVOLUME}${installed}

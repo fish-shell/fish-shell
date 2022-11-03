@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This is a helper function for `fish_opt`. It does some basic validation of the arguments.
 function __fish_opt_validate_args --no-scope-shadowing
     if not set -q _flag_short

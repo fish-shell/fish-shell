@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This is needed because GNU and BSD implementations of `od` differ in the whitespace they emit.
 # In the past we used the `xxd` command which doesn't suffer from such idiosyncrasies but it isn't
 # available on some systems unless you install the Vim editor. Whereas `od` is pretty much

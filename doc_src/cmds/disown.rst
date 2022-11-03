@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2017 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-disown:
 
 disown - remove a process from the list of jobs

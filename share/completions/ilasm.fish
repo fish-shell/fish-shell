@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ilasm -l help -d 'Show help and exit'
 complete -c ilasm -l version -d 'Show version and exit'
 

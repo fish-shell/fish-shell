@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_update_completions --description "Update man-page based completions"
     # Don't write .pyc files, use the manpath, clean up old completions
     # display progress.

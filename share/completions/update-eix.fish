@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for the eix tool's update-eix command
 # http://dev.croup.de/proj/eix and http://sourceforge.net/projects/eix/
 

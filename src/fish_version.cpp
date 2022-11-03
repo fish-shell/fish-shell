@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2014 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Fish version receiver.
 //
 // This file has a specific purpose of shortening compilation times when

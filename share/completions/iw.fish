@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # iw(8) completion for fish
 
 # The completions for iw are based off those for ip, which has a similar options structure.

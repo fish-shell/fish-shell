@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c zef -f
 complete -c zef -n __fish_is_first_token -s h -l help -f -d 'Display help text'
 complete -c zef -n __fish_is_first_token -l version -f -d 'Detailed version information'

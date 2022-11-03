@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2008 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Command specific completions for the useradd command.
 # These completions where generated from the commands

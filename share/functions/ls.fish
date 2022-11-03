@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_set_lscolors --description 'Set $LS_COLORS if possible'
     if ! set -qx LS_COLORS && set -l cmd (command -s {g,}dircolors)[1]
         set -l colorfile

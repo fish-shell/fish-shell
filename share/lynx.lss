@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Lynx Style Sheet
 # Used as a custom style sheet (LSS) for the Lynx browser to work around some
 # poor defaults. Usage: `lynx -lss=style.lss`

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_ansible_vault_no_subcommand -d 'Test if ansible-vault has yet to be given the subcommand'
     commandline -pc | not string match --regex '[^-]\b(?:create|decrypt|edit|encrypt|encrypt_string|rekey|view)\b'

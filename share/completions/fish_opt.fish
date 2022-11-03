@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'
 
 complete --command fish_opt --no-files

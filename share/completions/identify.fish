@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c identify -o antialias -d 'Remove pixel-aliasing'
 complete -c identify -o authenticate -d 'Decrypt image with this password [value]'
 complete -c identify -o channel -d 'Apply option to select image channels [type]' -xa '(identify -list channel)'

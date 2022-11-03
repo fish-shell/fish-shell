@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c VBoxHeadless -l startvm -o startvm -s s -x -d "Start given VM" -a "(__fish_print_VBox_vms)"
 
 complete -c VBoxHeadless -l vrde -o vrde -s v -d "Enable or disamble VRDE server or don't change setting" -a "on off config"

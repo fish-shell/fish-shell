@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l cmds help info dump status monitor mount unmount unlock lock loop-setup loop-delete power-off smart-simulate
 
 function __fish_print_mounted_blockdevice

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_print_hg_root
     # If hg isn't installed, there's nothing we can do
     if not command -sq hg

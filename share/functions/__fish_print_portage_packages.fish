@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_portage_packages
     # This completes the package name from the portage tree.
     # True for installing new packages. Function for printing

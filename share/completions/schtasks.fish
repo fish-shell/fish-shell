@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __schtasks_print_tasks -d 'Helper function to print tasks'
     schtasks /query /fo csv /nh | awk -F ',' '{ print $1 }'
 end

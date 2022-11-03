@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if mktemp --version >/dev/null 2>/dev/null # GNU
     complete -c mktemp -s d -l directory -d 'create a directory, not a file'
     complete -c mktemp -s u -l dry-run -d 'do not create anything; merely print a name (unsafe)'

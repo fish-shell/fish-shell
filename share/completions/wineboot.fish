@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c wineboot -s h -l help -d 'Show help and exit'
 complete -c wineboot -s e -l end-session -d 'End current session cleanly'
 complete -c wineboot -s f -l force -d 'Force exit processes don\'t exit cleanly'

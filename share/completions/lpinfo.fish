@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 __fish_complete_lpr lpinfo
 complete -c lpinfo -s l -d 'Shows a "long" listing of devices or drivers'
 complete -c lpinfo -l device-id -x -d 'Specifies the IEEE-1284 device ID to match when listing drivers with the -m option'

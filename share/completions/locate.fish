@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c locate -s A -l all -d 'Match all non-option arguments'
 complete -c locate -s b -l basename -d 'Match against the base name of the file'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Yarn 1.22.4
 
 source $__fish_data_dir/functions/__fish_npm_helper.fish

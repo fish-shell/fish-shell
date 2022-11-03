@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if chmod --version &>/dev/null # gnu's not unix
     complete chmod -s c -l changes -d 'Like -v but report only changes'
     complete chmod -l no-preserve-root -d 'Don\'t treat / special (default)'

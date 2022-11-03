@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Returns whether we *should* complete a -s or --long argument.
 # The preference is NOT to do so, i.e. prefer subcommands over switches.
 function __fish_should_complete_switches

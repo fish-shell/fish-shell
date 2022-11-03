@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // The utility library for universal variables. Used both by the client library and by the daemon.
 #include "config.h"  // IWYU pragma: keep
 

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Script to produce an OS X installer .pkg and .app(.zip)
 
 VERSION=$(git describe --always --dirty 2>/dev/null)

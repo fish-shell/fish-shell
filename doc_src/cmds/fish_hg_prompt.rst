@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2019 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_hg_prompt:
 
 fish_hg_prompt - output Mercurial information for use in a prompt

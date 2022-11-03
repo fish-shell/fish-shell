@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l options (command mpv --list-options 2>/dev/null)
 complete -c mpv -l(string replace -fr '^\s*--([\w-]+).*' '$1' -- $options)
 complete -c mpv -lno-(string replace -fr '^\s*--([\w-]+).*Flag.*' '$1' -- $options)

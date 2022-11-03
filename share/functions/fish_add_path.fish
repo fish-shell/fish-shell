@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_add_path --description "Add paths to the PATH"
     # This is meant to be the easy one-stop shop to adding stuff to $PATH.
     # By default it'll prepend the given paths to a universal $fish_user_paths, excluding the already-included ones.

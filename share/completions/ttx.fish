@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completions for ttx, xml font export utility
 
 # Retrieved from http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=IWS-AppendixC

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_cdh_args
     set -l all_dirs $dirprev $dirnext
     set -l uniq_dirs

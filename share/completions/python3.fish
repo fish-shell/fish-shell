@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c python3 -s B -d 'Don\'t write .py[co] files on import'
 complete -c python3 -s c -x -d "Execute argument as command"
 complete -c python3 -s d -d "Debug on"

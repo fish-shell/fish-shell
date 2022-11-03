@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # The control program for pulseaudio
 # See not just pactl(1) but also pulse-cli-syntax(1)
 # Note: Streams are called "sink-input" (for playback) and "source-output" (for recording)

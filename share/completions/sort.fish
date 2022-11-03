@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c sort -s b -l ignore-leading-blanks -d "Ignore leading blanks"
 complete -c sort -s d -l dictionary-order -d "Consider only blanks and alphanumerics"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l levels '(set -l p /etc/runlevels/*; string replace /etc/runlevels "" $p)'
 
 #disable file listing

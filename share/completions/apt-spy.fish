@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-spy
 complete -c apt-spy -s h -d "Display help and exit"
 complete -f -c apt-spy -s d -a "stable testing unstable" -d "Debian distribution"

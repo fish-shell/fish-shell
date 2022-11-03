@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2016 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for functions for executing builtin_test functions.
 #ifndef FISH_BUILTIN_TEST_H
 #define FISH_BUILTIN_TEST_H

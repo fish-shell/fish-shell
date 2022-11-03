@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #function __fish_emerge_print_all_pkgs_with_version_compare -d 'Print completions for all packages including the version compare if that is already typed'
 #    set -l version_comparator (commandline -t | string match -r '^[\'"]*[<>]\?=\?' | \
 #                               sed -r 's/^[\'"]*(.*)/\1/g')

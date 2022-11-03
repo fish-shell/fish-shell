@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # jq is a lightweight and flexible command-line JSON processor.
 # See: https://stedolan.github.io/jq
 

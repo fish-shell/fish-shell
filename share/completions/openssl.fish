@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 if string match -q "OpenSSL*" (command openssl version)
     # This is real OpenSSL that has the list command.

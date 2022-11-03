@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Adapted from __terlar_git_prompt
 
 set -g fish_color_hg_clean green

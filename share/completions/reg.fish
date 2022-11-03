@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __reg_add_complete_args -a previous_token
     if test "$previous_token" = /t
         echo 'REG_SZ

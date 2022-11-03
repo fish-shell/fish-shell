@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completion for mkdocs
 
 complete -f -c mkdocs -s h -l help -d 'Show help and exit'

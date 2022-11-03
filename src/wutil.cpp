@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Wide character equivalents of various standard unix functions.
 #define FISH_NO_ISW_WRAPPERS
 #include "config.h"

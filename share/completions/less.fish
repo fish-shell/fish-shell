@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c less -s \? -l help -d "Display help and exit"
 complete -c less -s a -l search-skip-screen -d "Search after end of screen"
 complete -c less -s b -l buffers -r -d "Buffer space"

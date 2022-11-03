@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This function is compatible with clang, clang++, and variations thereof, and is shared
 # by clang.fish and clang++.fish.
 # We dynamically query the head at `(commandline -o)[1]` to get the correct completions.

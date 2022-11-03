@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c sphinx-build -s h -l help -d "Display usage summary"
 complete -c sphinx-build -l version -d "Display Sphinx version"
 

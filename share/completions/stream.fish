@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c stream -o authenticate -d 'Decipher image with this password [password]'
 complete -c stream -o channel -d 'Apply option to select image channels [type]' -xa '(stream -list channel)'
 complete -c stream -o colorspace -d 'Alternate image colorspace [type]' -xa '(stream -list colorspace)'

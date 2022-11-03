@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c md5sum -d "Compute and check message digest" -r
 complete -c md5sum -s b -l binary -d 'Read in binary mode'
 complete -c md5sum -s c -l check -d "Read sums from files and check them"

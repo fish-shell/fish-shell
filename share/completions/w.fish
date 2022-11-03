@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c w -s h -d "Dont print header"
 complete -c w -s u -d "Ignore username for time calculations"
 complete -c w -s s -d "Short format"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ln -l backup -d 'Make a backup of each existing destination file' -a "none off numbered t existing nil simple never"
 complete -c ln -s b -d 'Make a backup of each existing destination file'
 complete -c ln -s d -l directory -d 'Allow superuser to attempt to hard link directories'

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 #completions for wpa_cli
 complete -x -c wpa_cli -a status -d 'get current WPA/EAPOL/EAP status'

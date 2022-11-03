@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c ethtool -xa '(__fish_print_interfaces)'
 
 complete -c ethtool -s h -l help -d 'Shows help message'

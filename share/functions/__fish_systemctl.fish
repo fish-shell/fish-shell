@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_systemctl --description 'Call systemctl with some options from the current commandline'
     # These options are all global - before or after subcommand/arguments.
     # There's a bunch of long-only options in here, so we need to be creative with the mandatory short version.

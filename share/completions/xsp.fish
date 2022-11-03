@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c xsp -l help -d 'Show help'
 complete -c xsp -l version -d 'Show version'
 

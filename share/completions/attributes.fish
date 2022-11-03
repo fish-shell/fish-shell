@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __attributes_disk_complete_args
     if not __fish_seen_subcommand_from set clear
         echo -e 'set\tSet the specified attribute of the disk with focus

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_interfaces --description "Print a list of known network interfaces"
     if test -d /sys/class/net
         set -l interfaces /sys/class/net/*

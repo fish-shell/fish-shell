@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2018 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 /*
  * TINYEXPR - Tiny recursive descent parser and evaluation engine in C
  *

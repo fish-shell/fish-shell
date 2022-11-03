@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # global options
 complete -c ansible-galaxy -n __fish_use_subcommand -l version -d "Show version and config"
 complete -c ansible-galaxy -s h -l help -d "Show help message"

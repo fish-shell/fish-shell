@@ -1,4 +1,9 @@
 #!/usr/bin/env fish
+
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Compares the output of two fish profile runs and emits the time difference between
 # the first and second set of results.

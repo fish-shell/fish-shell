@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c transmission-remote -s a -l add -d 'Add torrents to transmission'
 complete -c transmission-remote -s b -l debug -d 'Enable debugging mode'

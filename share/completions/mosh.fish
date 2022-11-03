@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -x -c mosh -d Hostname -a "(__fish_complete_user_at_hosts)"
 

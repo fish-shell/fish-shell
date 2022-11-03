@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c logkeys -s s -l start -d 'Starts the keylogging daemon'
 complete -c logkeys -s k -l kill -d 'Terminates the logkeys daemon'

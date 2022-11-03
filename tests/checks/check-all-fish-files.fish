@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish -C 'set -l fish %fish' %s
 # Test ALL THE FISH FILES
 # in share/, that is - the tests are exempt because they contain syntax errors, on purpose

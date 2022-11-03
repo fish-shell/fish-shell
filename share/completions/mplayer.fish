@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for mplayer (Incomplete, there are too many options and
 # I am too lazy. Please send in suggested additions)
 

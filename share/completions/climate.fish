@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # climate is a tool that provide simple commands that wrap some useful
 # but complex combination of Linux commands.
 # The tool can be found at https://github.com/adtac/climate

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for: PascalABC.NET 3.8.1 compiler
 
 function __pabcnetcclear_generate_args --description 'Function to generate args'

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Various bug and feature tests. Compiled and run by make test.
 #include "config.h"  // IWYU pragma: keep
 

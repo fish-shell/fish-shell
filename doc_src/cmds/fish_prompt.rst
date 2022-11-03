@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_prompt:
 
 fish_prompt - define the appearance of the command line prompt

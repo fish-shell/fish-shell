@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-show-versions
 complete -c apt-show-versions -s h -l help -d 'Display help and exit'
 complete -r -c apt-show-versions -s p -l packages -a '(apt-cache pkgnames)' -d 'Print PKG versions'

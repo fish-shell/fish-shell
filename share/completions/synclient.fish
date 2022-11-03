@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set __fish_synclient_keys (synclient | string replace -r '\s*(\w+).*' '$1')
 
 complete -c synclient -s l -d "List current user settings"

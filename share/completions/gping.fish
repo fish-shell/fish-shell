@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for https://github.com/orf/gping
 
 complete -x -c gping -d "Ping, but with a graph"

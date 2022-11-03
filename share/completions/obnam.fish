@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 function __fish_obnam_nosubcommand
     if __fish_seen_subcommand_from add-key backup client-keys clients diff dump-repo force-lock forget fsck \

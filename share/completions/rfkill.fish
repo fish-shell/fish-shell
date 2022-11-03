@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c rfkill -xa 'block unblock list event help' -n 'not __fish_seen_subcommand_from block unblock list event help'
 complete -c rfkill -n '__fish_seen_subcommand_from block unblock list' -d 'device group' -xa "all wifi wlan bluetooth uwb ultrawideband wimax wwan gps fm (rfkill list | string replace : \t)"
 complete -c rfkill -s V -l version -d 'Print version'

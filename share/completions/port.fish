@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for port
 
 set -l subcommands activate archive build cat cd checksum clean configure \

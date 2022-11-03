@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_status_to_signal --description "Convert exit code to signal name"
     __fish_make_completion_signals # Make sure signals are cached
     for arg in $argv

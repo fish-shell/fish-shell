@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_lsusb
     lsusb | awk -F[ :] '{ print $2 ":" $4 }'
 end

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Test to see if we've seen a subcommand from a list.
 # This logic may seem backwards, but the commandline will often be much shorter

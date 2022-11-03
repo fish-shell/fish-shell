@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completion for mdls (macOS)
 
 complete -c mdls -s n -o name -x -d 'Print only the matching metadata attribute value'

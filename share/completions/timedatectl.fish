@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands status show set-time set-timezone list-timezones set-local-rtc set-ntp timesync-status show-timesync
 
 complete -c timedatectl -f

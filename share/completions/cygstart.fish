@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c cygstart -s a -l action -r -a 'open explore edit find print' -d 'Use specified action instead of default'
 complete -c cygstart -s o -l open -d 'Short for: --action open'
 complete -c cygstart -s x -l explore -d 'Short for: --action explore'

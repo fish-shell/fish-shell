@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c scrot -s h -l help -d 'Display help and exit'
 complete -c scrot -s v -l version -d 'Display version information and exit'

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_config --description "Launch fish's web based configuration"
     argparse h/help -- $argv
     or return

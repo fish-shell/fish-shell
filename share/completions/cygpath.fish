@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c cygpath -s d -l dos -d 'Print DOS/short form (C:PROGRA~1)'
 complete -c cygpath -s m -l mixed -d 'Print Windows form with regular slashes (C:/WINNT)'
 complete -c cygpath -s M -l mode -d 'Report on mode of file'

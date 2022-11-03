@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_wajig_no_subcommand -d 'Test if wajig has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i addcdrom auto-alts auto-clean auto-download auto-install \

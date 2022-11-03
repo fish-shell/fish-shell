@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete --command launchctl -n __fish_use_subcommand -xa bootstrap -d "Bootstraps a domain or a service into a domain"
 complete --command launchctl -n __fish_use_subcommand -xa bootout -d "Tears down a domain or removes a service from a domain"
 complete --command launchctl -n __fish_use_subcommand -xa enable -d "Enables an existing service"

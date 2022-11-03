@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c comp -f -a /d -d 'Display differences in decimal format'
 complete -c comp -f -a /a -d 'Display differences as characters'
 complete -c comp -f -a /l -d 'Displays the number of the line where a difference occurs'

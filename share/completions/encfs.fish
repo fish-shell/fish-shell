@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c encfs -s i -l idle -d "Unmount when idle for specified MINUTES"
 complete -c encfs -s f -d "Run in the foreground"

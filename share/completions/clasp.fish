@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # options
 complete -c clasp -s v -l version -d "output the current version"
 complete -c clasp -s A -l auth -d "path to an auth file or a folder with a '.clasprc.json' file."

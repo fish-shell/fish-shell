@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 __fish_complete_lpr lpoptions
 
 complete -c lpoptions -s d -d 'Sets the user default printer' -xa '(__fish_print_lpr_printers)'

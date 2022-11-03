@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if head --version >/dev/null 2>/dev/null
     complete -c head -s c -l bytes -d 'Print the first N bytes; Leading '-', truncate the last N bytes' -r
     complete -c head -s n -l lines -d 'Print the first N lines; Leading '-', truncate the last N lines' -r

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c nm -s a -l debug-syms -d 'Display debugger-only symbols'
 complete -c nm -s A -l print-file-name -d 'Print name of the input file before every symbol'
 #complete -c nm -C -l demangle[=STYLE] Decode low-level symbol names into user-level names

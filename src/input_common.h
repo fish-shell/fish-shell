@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Header file for the low level input library.
 #ifndef INPUT_COMMON_H
 #define INPUT_COMMON_H

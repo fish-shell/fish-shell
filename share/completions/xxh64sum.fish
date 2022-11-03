@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c xxh64sum -s V -l version -d "Display version"
 complete -c xxh64sum -l little-endian -d "Display hashes in little endian"
 complete -c xxh64sum -s h -l help -d "Display help"

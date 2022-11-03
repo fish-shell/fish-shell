@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if which -v >/dev/null 2>/dev/null # GNU
     complete -c which -s a -l all -d "Print all matching executables in PATH, not just the first"
     complete -c which -s i -l read-alias -d "Read aliases from stdin, reporting matching ones on stdout"

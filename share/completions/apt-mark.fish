@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #completion for apt-mark
 
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'

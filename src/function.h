@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for functions for storing and retrieving function information. These functions also
 // take care of autoloading functions in the $fish_function_path. Actual function evaluation is
 // taken care of by the parser and to some degree the builtin handling library.

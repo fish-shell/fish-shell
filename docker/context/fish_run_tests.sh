@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # This script is copied into the root directory of our Docker tests.
 # It is the entry point for running Docker-based tests.
 

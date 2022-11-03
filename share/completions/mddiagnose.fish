@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # completion for mddiagnose (macOS)
 
 complete -c mddiagnose -s h -f -d 'Display help'

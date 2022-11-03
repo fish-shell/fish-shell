@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_lpr -d 'Complete lpr common options' --argument-names cmd
     complete -c $cmd -s E -d 'Forces encryption when connecting to the server'
     complete -c $cmd -s U -d 'Specifies an alternate username' -xa '(__fish_complete_users)'

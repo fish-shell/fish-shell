@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_zfs_ro_properties -d "Completes with ZFS read-only properties"
     echo -e "available\tAvailable space"
     echo -e "avail\tAvailable space"

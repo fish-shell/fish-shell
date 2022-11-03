@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c mc -s a -l stickchars -d 'No graphic chars for line drawing'
 complete -c mc -s b -l nocolor -d 'Force black and white display'

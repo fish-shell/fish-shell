@@ -1,5 +1,9 @@
 #!/usr/bin/env fish
 
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Finds global variables by parsing the output of 'nm'
 # for object files in this directory.
 # This was written for macOS nm.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c imv -s h -d 'Show help message and quit'
 complete -c imv -s v -d 'Show version and quit'
 complete -c imv -s b -d 'Background colour (6-digit hex)' -x

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_pushd_plus
     if count $dirstack >/dev/null
         # print each member of the stack, replace $HOME with ~

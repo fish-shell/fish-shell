@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function dirs --description 'Print directory stack'
     set -l options h/help c
     argparse -n dirs --max-args=0 $options -- $argv

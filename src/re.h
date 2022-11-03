@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2022 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Wraps PCRE2.
 #ifndef FISH_RE_H
 #define FISH_RE_H

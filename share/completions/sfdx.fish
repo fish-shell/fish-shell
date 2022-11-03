@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Tab completion for sfdx (https://developer.salesforce.com/tools/sfdxcli).
 
 function __fish_sfdx_using_command

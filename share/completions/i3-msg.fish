@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # i3-msg is a tool to send messages to the i3 window manager.
 # See: https://i3wm.org
 

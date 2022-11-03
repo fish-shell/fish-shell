@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands info trigger settle control monitor test test-builtin
 complete -c udevadm -n "__fish_is_nth_token 1" -xa "$commands"
 

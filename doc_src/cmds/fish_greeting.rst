@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2020 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_greeting:
 
 fish_greeting - display a welcome message in interactive shells

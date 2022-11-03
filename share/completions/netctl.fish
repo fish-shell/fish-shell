@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l cmds list store restore stop-all start stop restart switch-to status enable disable reenable is-enabled edit
 
 function __fish_netctl_get_profiles

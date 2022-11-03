@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands status install update remove is-installed random-seed systemd-efi-options reboot-to-firmware list set-default set-oneshot
 
 complete -c bootctl -f

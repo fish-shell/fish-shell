@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c stack -f
 
 # Completion for 'stack' haskell build tool (http://haskellstack.org)

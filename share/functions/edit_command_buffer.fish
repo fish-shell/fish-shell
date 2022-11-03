@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function edit_command_buffer --description 'Edit the command buffer in an external editor'
     set -l f (mktemp)
     or return 1

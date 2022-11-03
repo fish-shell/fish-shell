@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c montage -o adjoin -d 'Join images into a single multi-image file'
 complete -c montage -o affine -d 'Affine transform matrix [matrix]'
 complete -c montage -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(montage -list alpha)'

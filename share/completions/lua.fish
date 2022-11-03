@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c lua -s e -d 'Execute string' -x
 # Try the most common lib directories, silencing errors in case they don't exist.

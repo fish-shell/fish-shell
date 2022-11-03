@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_print_xdg_applications_directories --description 'Print directories where desktop files are stored'
     set -l data_home $XDG_DATA_HOME
     if test -z "$data_home"

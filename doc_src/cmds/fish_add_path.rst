@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2020 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_add_path:
 .. program::fish_add_path
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fish Shell command-line completions for Test Kitchen
 
 function __fish_kitchen_no_command -d 'Test if kitchen has yet to be given the main command'

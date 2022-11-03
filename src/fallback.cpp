@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // This file only contains fallback implementations of functions which have been found to be missing
 // or broken by the configuration scripts.
 //

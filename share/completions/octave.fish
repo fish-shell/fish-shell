@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completion for: GNU Octave 5.2.0
 
 complete -c octave -x -a '(__fish_complete_suffix .m)'

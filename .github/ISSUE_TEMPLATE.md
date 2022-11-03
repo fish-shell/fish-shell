@@ -1,4 +1,10 @@
 <!--
+SPDX-FileCopyrightText: © 2016 fish-shell contributors
+
+SPDX-License-Identifier: GPL-2.0-only
+-->
+
+<!--
 Please tell us which fish version you are using by executing the following:
 
   fish --version

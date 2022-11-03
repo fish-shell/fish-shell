@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2018 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # openocd is a utility for programming microcontrollers, especially popular with
 # developers targeting ARM devices. It has a number of pre-installed configuration
 # scripts to control its connection behavior which are in its installation directory

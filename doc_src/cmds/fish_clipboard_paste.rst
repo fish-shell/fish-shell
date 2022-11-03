@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2022 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_clipboard_paste:
 
 fish_clipboard_paste - get text from the system's clipboard

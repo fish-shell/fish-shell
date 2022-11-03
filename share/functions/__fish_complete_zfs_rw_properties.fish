@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write properties"
     set -l OS ""
     switch (uname)

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Startup
 complete -c strace -s p -l attach -xa '(__fish_complete_pids)'
 complete -c strace -s u -l user -xa '(__fish_complete_users)'

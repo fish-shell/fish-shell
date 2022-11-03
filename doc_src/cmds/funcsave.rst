@@ -1,3 +1,8 @@
+.. SPDX-FileCopyrightText: © 2009 Axel Liljencrantz
+.. SPDX-FileCopyrightText: © 2009 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-funcsave:
 
 funcsave - save the definition of a function to the user's autoload directory

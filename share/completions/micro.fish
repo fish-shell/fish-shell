@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c micro -o clean -d 'Cleans the configuration directory'
 complete -c micro -o config-dir -xa '(__fish_complete_directories)' -d 'Custom location for the configuration directory'
 complete -c micro -o options -d 'Show all option help'

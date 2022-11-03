@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c pidof -s s -d "Single shot: return only one PID"
 complete -c pidof -s c -d "Only return processes w/ same root directory"
 complete -c pidof -s n -d "Avoid stat(2) for binaries on NFS shares"

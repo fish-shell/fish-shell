@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2012 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Functions used for implementing the test builtin.
 //
 // Implemented from scratch (yes, really) by way of IEEE 1003.1 as reference.

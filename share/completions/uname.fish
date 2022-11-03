@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if test (uname) = Darwin
     complete -c uname -s a -d 'Behave as though all of the options mnrsv were specified.'
     complete -c uname -s m -d 'print the machine hardware name.'

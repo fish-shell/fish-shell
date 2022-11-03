@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for networkctl (a part of systemd)
 
 set -l command_with_devices list status lldp delete up down renew forcerenew reconfigure

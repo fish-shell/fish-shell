@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Lists PHPUnit test suites
 function __fish_phpunit_list_suites
     __fish_phpunit_list --list-suites

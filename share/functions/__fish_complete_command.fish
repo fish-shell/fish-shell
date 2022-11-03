@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2007 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_command --description 'Complete using all available commands'
     set -l ctoken (commandline -ct)
     switch $ctoken

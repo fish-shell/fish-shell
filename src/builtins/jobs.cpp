@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2006 Axel Liljencrantz
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Functions for executing the jobs builtin.
 #include "config.h"  // IWYU pragma: keep
 

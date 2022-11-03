@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Fish completions for systemd's "busctl" dbus tool
 # TODO:
 # One issue is that sometimes these will come to a dead-end e.g. when a particular interface has no properties

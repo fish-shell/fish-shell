@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2020 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 #ifndef FISH_OPERATION_CONTEXT_H
 #define FISH_OPERATION_CONTEXT_H
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Provide a minimalist realpath implementation to help deal with platforms that may not provide it
 # as a command. If an external realpath or grealpath command is available simply pass all arguments
 # thru to it. If not fallback to our builtin.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c date -f -d "display or set date and time"
 if date --version >/dev/null 2>/dev/null
     complete -c date -s d -l date -d "Display date described by string" -x

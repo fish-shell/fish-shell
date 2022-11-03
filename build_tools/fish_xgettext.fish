@@ -1,4 +1,9 @@
 #!/usr/bin/env fish
+
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Tool to generate messages.pot
 # Extended to replace the old Makefile rule which did not port easily to CMake

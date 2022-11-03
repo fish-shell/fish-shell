@@ -1,4 +1,9 @@
 #! /bin/echo "interactive.fish must be run via the test driver!"
+
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #
 # Interactive tests using `pexpect`
 

@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 if [ "$#" -gt 2 -o "$#" -eq 0 ]; then
     echo "Usage: driver.sh /path/to/fish [/path/to/other/fish]"
     exit 1

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c abbr -f
 complete -c abbr -f -s a -l add -d 'Add abbreviation'
 complete -c abbr -f -s q -l query -d 'Check if an abbreviation exists'

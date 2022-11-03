@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Translation of fish in Polish
 # This file is distributed under the same license as the fish package.
 # Author: m4sk1n <m4sk1n@vivaldi.net>

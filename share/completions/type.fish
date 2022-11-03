@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
 
 complete -c type -s h -l help -d "Display help and exit"
 complete -c type -s a -l all -d "Print all possible definitions of the specified name"

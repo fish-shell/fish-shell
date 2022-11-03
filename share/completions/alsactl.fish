@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l commands store restore nrestore init daemon rdaemon kill monitor
 
 complete -c alsactl -n "not __fish_seen_subcommand_from $commands" -a store -d "Save current driver state" -f

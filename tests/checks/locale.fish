@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish -C "set fish %fish" %s
 # This hangs when running on github actions with tsan for unknown reasons,
 # see #7934.

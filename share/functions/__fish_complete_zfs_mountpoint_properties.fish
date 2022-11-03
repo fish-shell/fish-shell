@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_zfs_mountpoint_properties -d "Completes with ZFS mountpoint properties"
     set -l OS ""
     switch (uname)

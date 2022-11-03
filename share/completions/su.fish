@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_su_env_whitelist
     env | string match -v -e -r '^(?:HOME|SHELL|USER|LOGNAME|PATH)=' | string replace -r '([^=]+)=(.*)' '$1\t$2'
 end

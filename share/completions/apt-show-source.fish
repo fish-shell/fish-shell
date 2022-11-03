@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #apt-show-source
 complete -c apt-show-source -s h -l help -d 'Display help and exit'
 complete -r -c apt-show-source -l status-file -d 'Read package from file' -f

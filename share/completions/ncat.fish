@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Completions for ncat (https://www.nmap.org)
 
 complete -c ncat -f -a "(__fish_print_hostnames)"

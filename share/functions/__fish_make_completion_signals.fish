@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_make_completion_signals --description 'Make list of kill signals for completion'
     set -q __kill_signals
     and return 0

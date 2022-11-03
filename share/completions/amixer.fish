@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2012 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 set -l cmds 'scontrols scontents controls contents sget sset cset cget set get'
 complete -c amixer -xa "$cmds" -n "not __fish_seen_subcommand_from $cmds"
 complete -c amixer -n '__fish_seen_subcommand_from sset sget get set' -xa "(amixer scontrols | string split -f 2 \')"

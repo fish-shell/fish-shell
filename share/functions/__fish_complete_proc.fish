@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2011 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function __fish_complete_proc
     # "comm=" means "print comm field with an empty name", which causes the header to be removed.
     # On many systems, comm is truncated (e.g. on Linux it's 15 chars),

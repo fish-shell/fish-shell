@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: © 2019 fish-shell contributors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 // Prototypes for executing builtin_time function.
 #ifndef FISH_TIMER_H
 #define FISH_TIMER_H

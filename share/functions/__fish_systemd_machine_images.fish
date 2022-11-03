@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Like for running machines, I'm assuming machinectl doesn't allow spaces in image names
 # This does not include the special image ".host" since it isn't valid for most operations
 function __fish_systemd_machine_images

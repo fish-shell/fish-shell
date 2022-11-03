@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2014 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function abbr --description "Manage abbreviations"
     set -l options --stop-nonopt --exclusive 'a,r,e,l,s,q' --exclusive 'g,U'
     set -a options h/help a/add r/rename e/erase l/list s/show q/query

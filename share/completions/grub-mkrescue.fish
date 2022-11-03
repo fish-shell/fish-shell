@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # grub-mkrescue makes GRUB CD-ROM, disk, pendrive and floppy bootable image.
 
 complete -c grub-mkrescue -l compress -a 'no\tNo\ compression xz\tXZ gz\tGZ lzo\tLZO' -x -d "Compress GRUB files"

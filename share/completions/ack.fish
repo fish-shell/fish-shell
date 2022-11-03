@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2013 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # Searching
 complete -c ack -s i -l ignore-case -d 'Ignore case'
 complete -c ack -l smart-case -d 'Ignore case when pattern contains no uppercase'

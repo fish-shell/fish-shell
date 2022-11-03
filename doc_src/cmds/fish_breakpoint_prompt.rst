@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: © 2017 fish-shell contributors
+..
+.. SPDX-License-Identifier: GPL-2.0-only
+
 .. _cmd-fish_breakpoint_prompt:
 
 fish_breakpoint_prompt - define the prompt when stopped at a breakpoint

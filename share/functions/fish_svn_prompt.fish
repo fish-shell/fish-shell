@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2015 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # colour of the revision number to display in the prompt
 set -g __fish_svn_prompt_color_revision yellow
 

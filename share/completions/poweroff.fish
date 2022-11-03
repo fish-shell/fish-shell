@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2016 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 complete -c poweroff -l help -d "Show help"
 complete -c poweroff -l halt -d "Halt the machine"
 complete -c poweroff -l poweroff -s p -d "Switch off the machine"

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2019 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 #RUN: %fish %s
 # OpenBSD doesn't do hex numbers in str/wcstod (like C99 requires).
 # So let's skip this.

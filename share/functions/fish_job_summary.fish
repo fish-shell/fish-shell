@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2020 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name signal_desc proc_pid proc_name
     # job_id: ID of the job that stopped/terminated/ended.
     # is_foreground: 1 if the job was running in the foreground, 0 otherwise.

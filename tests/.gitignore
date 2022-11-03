@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2017 fish-shell contributors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 # In the tests directory we want to allow including files matching *.out but
 # exclude temporary test result files.
 !*.out

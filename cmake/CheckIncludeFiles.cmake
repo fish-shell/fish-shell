@@ -1,6 +1,7 @@
+# SPDX-FileCopyrightText: Copyright 2000-2017 Kitware, Inc. and Contributors
 # SPDX-FileCopyrightText: © 2017 fish-shell contributors
 #
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-3-Clause
 
 # Distributed under the OSI-approved BSD 3-Clause License.  See full license information in
 # doc_src/license.hdr or https://cmake.org/licensing for details.

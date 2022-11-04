@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: Copyright (C) 1990-2007 Free Software Foundation, Inc.
 // SPDX-FileCopyrightText: © 2013 fish-shell contributors
 //
 // SPDX-License-Identifier: GPL-2.0-or-later

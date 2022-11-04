@@ -1,6 +1,7 @@
+// SPDX-FileCopyrightText: Copyright (C) 1987, 88, 89, 90, 91, 92, 93, 94 Free Software Foundation, Inc.
 // SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
 //
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: LGPL-2.0-or-later
 
 // A version of the getopt library for use with wide character strings.
 //

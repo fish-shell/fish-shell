@@ -1,7 +1,7 @@
 <!--
-SPDX-FileCopyrightText: © 2020 fish-shell contributors
+SPDX-FileCopyrightText: © 2014 Coraline Ada Ehmke
 
-SPDX-License-Identifier: GPL-2.0-only
+SPDX-License-Identifier: CC-BY-5.0
 -->
 
 # Contributor Covenant Code of Conduct

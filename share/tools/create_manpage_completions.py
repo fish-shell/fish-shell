@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+# SPDX-FileCopyrightText: © 2012 Siteshwar Vashisht
 # SPDX-FileCopyrightText: © 2012 fish-shell contributors
 #
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-2-Clause
 
 # -*- coding: utf-8 -*-
 

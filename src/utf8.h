@@ -1,6 +1,7 @@
+// SPDX-FileCopyrightText: Copyright (c) 2007 Alexey Vatchenko <av@bsdua.org>
 // SPDX-FileCopyrightText: © 2014 fish-shell contributors
 //
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: ISC
 
 /*
  * Copyright (c) 2007 Alexey Vatchenko <av@bsdua.org>

@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (C) 1987, 88, 89, 90, 91, 92, 93, 94 Free Software Foundation, Inc.
 // SPDX-FileCopyrightText: © 2005 Axel Liljencrantz
+// SPDX-FileCopyrightText: © 2009 fish-shell contributors
+// SPDX-FileCopyrightText: © 2022 fish-shell contributors
 //
 // SPDX-License-Identifier: LGPL-2.0-or-later
 

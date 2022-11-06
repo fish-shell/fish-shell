@@ -1,6 +1,36 @@
 # these don't work
 #complete vim -a - -d 'The file to edit is read from stdin. Commands are read from stderr, which should be a tty'
 
+function __fish_vim_find_tags_path
+    set -l max_depth 10
+    set -l tags_path tags
+
+    for depth in (seq $max_depth)
+        if test -f $tags_path
+            echo $tags_path
+            return 0
+        end
+
+        set tags_path ../$tags_path
+    end
+
+    return 1
+end
+
+function __fish_vim_tags
+    set -l token (commandline -ct)
+    set -l tags_path (__fish_vim_find_tags_path)
+    or return
+
+    # To prevent freezes on a huge tags file (e.g., on one from the Linux
+    # kernel source tree), limit matching tag lines to some reasonable amount
+    set -l limit 10000
+
+    # tags file is alphabetically sorted, so it's reasonable to use "look" to
+    # speedup the lookup of strings with known prefix
+    command look $token $tags_path | head -n $limit | cut -f1,2 -d \t
+end
+
 # todo
 # +[num]        : Position the cursor on line number
 # +/{pat}       : Position the cursor on the first occurrence of {pat}
@@ -16,7 +46,7 @@ complete -c vim -s p -r -d 'Open tab pages for each file'
 complete -c vim -s q -r -d 'Start in quickFix mode'
 complete -c vim -s r -r -d 'Use swap files for recovery'
 complete -c vim -s s -r -d 'Source and execute script file'
-complete -c vim -s t -r -d 'Set the cursor to tag'
+complete -c vim -s t -xa '(__fish_vim_tags)' -d 'Set the cursor to tag'
 complete -c vim -s T -r -d 'Terminal name'
 complete -c vim -s u -r -d 'Use alternative vimrc'
 complete -c vim -s U -r -d 'Use alternative vimrc in GUI mode'

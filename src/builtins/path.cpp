@@ -942,8 +942,8 @@ maybe_t<int> builtin_path(parser_t &parser, io_streams_t &streams, const wchar_t
     }
 
     if (argc >= 3 && (std::wcscmp(argv[2], L"-h") == 0 || std::wcscmp(argv[2], L"--help") == 0)) {
-        wcstring path_dash_subcommand = wcstring(argv[0]) + L"-" + subcmd_name;
-        builtin_print_help(parser, streams, path_dash_subcommand.c_str());
+        // Unlike string, we don't have separate docs (yet)
+        builtin_print_help(parser, streams, L"path");
         return STATUS_CMD_OK;
     }
     argc--;

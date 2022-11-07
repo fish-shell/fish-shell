@@ -711,12 +711,11 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, cons
         flags |= ESCAPE_NO_QUOTED;
     }
 
-    int nesc = 0;
+    int nesc;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wcstring *arg = aiter.nextstr()) {
-        wcstring sep = aiter.want_newline() ? L"\n" : L"";
-        streams.out.append(escape_string(*arg, flags, opts.escape_style) + sep);
-        nesc++;
+    for (nesc = 0; const wcstring *arg = aiter.nextstr(); nesc++) {
+        streams.out.append(escape_string(*arg, flags, opts.escape_style));
+        if (aiter.want_newline()) streams.out.push_back(L'\n');
     }
 
     return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
@@ -738,9 +737,9 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc,
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         wcstring result;
-        wcstring sep = aiter.want_newline() ? L"\n" : L"";
         if (unescape_string(*arg, &result, flags, opts.escape_style)) {
-            streams.out.append(result + sep);
+            streams.out.append(result);
+            if (aiter.want_newline()) streams.out.push_back(L'\n');
             nesc++;
         }
     }
@@ -818,7 +817,8 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
                     nnonempty++;
                 }
                 if (!opts.quiet) {
-                    streams.out.append(to_string(max) + L"\n");
+                    streams.out.append(to_string(max));
+                    streams.out.push_back(L'\n');
                 } else if (nnonempty > 0) {
                     return STATUS_CMD_OK;
                 }
@@ -829,7 +829,8 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
                 nnonempty++;
             }
             if (!opts.quiet) {
-                streams.out.append(to_string(n) + L"\n");
+                streams.out.append(to_string(n));
+                streams.out.push_back(L'\n');
             } else if (nnonempty > 0) {
                 return STATUS_CMD_OK;
             }
@@ -895,7 +896,8 @@ class wildcard_matcher_t final : public string_matcher_t {
                 if (opts.index) {
                     streams.out.append_format(L"1 %lu\n", arg.length());
                 } else {
-                    streams.out.append(arg + L"\n");
+                    streams.out.append(arg);
+                    streams.out.push_back(L'\n');
                 }
             }
         }
@@ -976,10 +978,11 @@ class regex_matcher_t final : public string_matcher_t {
         if (!mrange.has_value()) {
             if (opts.invert_match && !opts.quiet) {
                 if (opts.index) {
-                    streams.out.append_format(L"1 %lu\n", arg.length());
+                    streams.out.append_format(L"1 %lu", arg.length());
                 } else {
-                    streams.out.append(arg + L"\n");
+                    streams.out.append(arg);
                 }
+                streams.out.push_back(L'\n');
             }
 
             return opts.invert_match ? match_result_t::match : match_result_t::no_match;
@@ -988,7 +991,8 @@ class regex_matcher_t final : public string_matcher_t {
         }
 
         if (opts.entire && !opts.quiet) {
-            streams.out.append(arg + L"\n");
+            streams.out.append(arg);
+            streams.out.push_back(L'\n');
         }
 
         // If we have groups-only, we skip the first match, which is the full one.
@@ -997,10 +1001,11 @@ class regex_matcher_t final : public string_matcher_t {
             maybe_t<match_range_t> cg = this->regex_.group(match_data_, j);
             if (cg.has_value() && !opts.quiet) {
                 if (opts.index) {
-                    streams.out.append_format(L"%lu %lu\n", cg->begin + 1, cg->end - cg->begin);
+                    streams.out.append_format(L"%lu %lu", cg->begin + 1, cg->end - cg->begin);
                 } else {
-                    streams.out.append(arg.substr(cg->begin, cg->end - cg->begin) + L"\n");
+                    streams.out.append(arg.substr(cg->begin, cg->end - cg->begin));
                 }
+                streams.out.push_back(L'\n');
             }
         }
 
@@ -1168,10 +1173,8 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, const w
                 padded.append(pad, opts.char_to_pad);
             }
         }
-        if (aiter_width.want_newline()) {
-            padded.push_back(L'\n');
-        }
         streams.out.append(padded);
+        if (aiter_width.want_newline()) streams.out.push_back(L'\n');
     }
 
     return STATUS_CMD_OK;
@@ -1278,8 +1281,8 @@ bool literal_replacer_t::replace_matches(const wcstring &arg, bool want_newline)
     }
 
     if (!opts.quiet && (!opts.filter || replacement_occurred)) {
-        wcstring sep = want_newline ? L"\n" : L"";
-        streams.out.append(result + sep);
+        streams.out.append(result);
+        if (want_newline) streams.out.push_back(L'\n');
     }
 
     return true;
@@ -1306,8 +1309,8 @@ bool regex_replacer_t::replace_matches(const wcstring &arg, bool want_newline) {
     } else {
         bool replacement_occurred = repl_count > 0;
         if (!opts.quiet && (!opts.filter || replacement_occurred)) {
-            wcstring sep = want_newline ? L"\n" : L"";
-            streams.out.append(*result + sep);
+            streams.out.append(*result);
+            if (want_newline) streams.out.push_back(L'\n');
         }
         total_replaced += repl_count;
     }
@@ -1515,7 +1518,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
         }
 
         if (!first && !opts.quiet) {
-            streams.out.append(L'\n');
+            streams.out.push_back(L'\n');
         }
         first = false;
 
@@ -1574,7 +1577,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
 
     // Historical behavior is to never append a newline if all strings were empty.
     if (!opts.quiet && !opts.no_newline && !all_empty && aiter.want_newline()) {
-        streams.out.append(L'\n');
+        streams.out.push_back(L'\n');
     }
 
     return all_empty ? STATUS_CMD_ERROR : STATUS_CMD_OK;
@@ -1605,7 +1608,6 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, const w
         using size_type = wcstring::size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
-        wcstring sep = aiter.want_newline() ? L"\n" : L"";
 
         if (opts.start > 0) {
             pos = static_cast<size_type>(opts.start - 1);
@@ -1635,7 +1637,8 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, const w
 
         // Note that std::string permits count to extend past end of string.
         if (!opts.quiet) {
-            streams.out.append(s->substr(pos, count) + sep);
+            streams.out.append(s->substr(pos, count));
+            if (aiter.want_newline()) streams.out.push_back(L'\n');
         }
         nsub++;
         if (opts.quiet) return STATUS_CMD_OK;
@@ -1676,7 +1679,8 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
         //     echo whatever
         // end
         while (const wcstring *arg = aiter_width.nextstr()) {
-            streams.out.append(*arg + L"\n");
+            streams.out.append(*arg);
+            streams.out.push_back(L'\n');
         }
         return STATUS_CMD_ERROR;
     }
@@ -1761,12 +1765,14 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
             }
 
             if (pos == 0) {
-                streams.out.append(line + L"\n");
+                streams.out.append(line);
+                streams.out.push_back(L'\n');
             } else {
                 // We have an ellipsis, construct our string and print it.
                 nsub++;
-                out = ell + out + L'\n';
+                out = ell + out;
                 streams.out.append(out);
+                streams.out.push_back(L'\n');
             }
             continue;
         } else {
@@ -1804,13 +1810,12 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
         }
 
         if (pos == line.size()) {
-            streams.out.append(line + L"\n");
+            streams.out.append(line);
+            streams.out.push_back(L'\n');
         } else {
             nsub++;
-            wcstring newl = line.substr(0, pos);
-            newl.append(ell);
-            newl.push_back(L'\n');
-            streams.out.append(newl);
+            streams.out.append(wcstring(line.substr(0, pos) + ell));
+            streams.out.push_back(L'\n');
         }
     }
 
@@ -1837,7 +1842,6 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, const 
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        wcstring sep = aiter.want_newline() ? L"\n" : L"";
         // Begin and end are respectively the first character to keep on the left, and first
         // character to trim on the right. The length is thus end - start.
         size_t begin = 0, end = arg->size();
@@ -1852,7 +1856,8 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, const 
         assert(begin <= end && end <= arg->size());
         ntrim += arg->size() - (end - begin);
         if (!opts.quiet) {
-            streams.out.append(wcstring(*arg, begin, end - begin) + sep);
+            streams.out.append(wcstring(*arg, begin, end - begin));
+            if (aiter.want_newline()) streams.out.push_back(L'\n');
         } else if (ntrim > 0) {
             return STATUS_CMD_OK;
         }
@@ -1877,8 +1882,8 @@ static int string_transform(parser_t &parser, io_streams_t &streams, int argc, c
         std::transform(transformed.begin(), transformed.end(), transformed.begin(), func);
         if (transformed != *arg) n_transformed++;
         if (!opts.quiet) {
-            wcstring sep = aiter.want_newline() ? L"\n" : L"";
-            streams.out.append(transformed + sep);
+            streams.out.append(transformed);
+            if (aiter.want_newline()) streams.out.push_back(L'\n');
         } else if (n_transformed > 0) {
             return STATUS_CMD_OK;
         }

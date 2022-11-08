@@ -1491,19 +1491,21 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
-    if (opts.max == 0 && opts.count == 0) {
-        // XXX: This used to be allowed, but returned 1.
-        // Keep it that way for now instead of adding an error.
-        // streams.err.append(L"Count or max must be greater than zero");
-        return STATUS_CMD_ERROR;
-    }
 
     bool all_empty = true;
     bool first = true;
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *word = aiter.nextstr()) {
-        // If the string is empty, there is nothing to repeat.
+        if (!opts.max  && !opts.count && !word->empty()) {
+            opts.count = fish_wcstol(word->c_str());
+            if (errno || opts.count < 0) {
+                string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], word->c_str());
+                return STATUS_INVALID_ARGS;
+            }
+            continue;
+        }
+
         if (word->empty()) {
             continue;
         }

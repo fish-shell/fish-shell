@@ -1489,28 +1489,43 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
     opts.quiet_valid = true;
     opts.no_newline_valid = true;
     int optind;
-    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    // use -1 as the mandatory_args parameter: it evaluates true so string_get_arg_argv will be tried -
+    // but since the test is this to show an error:
+    // if (!opts->arg1 && n_req_args == 1)
+    // 
+    int retval = parse_opts(&opts, &optind, -1, argc, argv, parser, streams);
+    FLOGF(debug, L"optind=%d", optind);
+    if (retval != STATUS_CMD_OK) {
+        FLOGF(debug, L"retval %d", retval);
+        return retval;
+    }
 
     bool all_empty = true;
     bool first = true;
+    //FLOGF(debug, L"opts.max == %d && opts.count == %d", opts.max, opts.count);
+    if (opts.max == 0 && opts.count == 0) {
+        //FLOGF(debug, L"about to wcstol %s", opts.arg1);
+        opts.count = fish_wcstol(opts.arg1);
+        if (errno || opts.count < 0) {
+            string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], opts.arg1);
+            return STATUS_INVALID_ARGS;
+        }
+    } else {
+        optind--;
+    }
+
+    //FLOGF(debug, L"about to arg_iterate count=%d", opts.count);
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *word = aiter.nextstr()) {
-        if (!opts.max  && !opts.count && !word->empty()) {
-            opts.count = fish_wcstol(word->c_str());
-            if (errno || opts.count < 0) {
-                string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], word->c_str());
-                return STATUS_INVALID_ARGS;
-            }
-            continue;
-        }
+        //FLOGF(debug, L"while (const wcstring *word = aiter.nextstr()), opts.count=%d", opts.count);
 
         if (word->empty()) {
             continue;
         }
 
         all_empty = false;
+
         if (opts.quiet) {
             // Early out if we can - see #7495.
             return STATUS_CMD_OK;
@@ -1522,6 +1537,8 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
         first = false;
 
         auto &w = *word;
+        //FLOGF(debug, L"first = false;\n opts.count=%d max=%d", opts.count, opts.max);
+
 
         // The maximum size of the string is either the "max" characters,
         // or it's the "count" repetitions, whichever ends up lower.
@@ -1529,6 +1546,8 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
         if (max == 0 || (opts.count > 0 && w.length() * opts.count < max)) {
             max = w.length() * opts.count;
         }
+        //FLOGF(debug, L"if (max == 0 || (opts.count > 0 && w.length() * opts.count < max)) {...};\n opts.count=%d opts.max=%d", opts.count, opts.max);
+
 
         // Reserve a string to avoid writing constantly.
         // The 1500 here is a total gluteal extraction, but 500 seems to perform slightly worse.
@@ -1578,7 +1597,6 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
     if (!opts.quiet && !opts.no_newline && !all_empty && aiter.want_newline()) {
         streams.out.append(L'\n');
     }
-
     return all_empty ? STATUS_CMD_ERROR : STATUS_CMD_OK;
 }
 

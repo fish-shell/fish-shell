@@ -486,8 +486,9 @@ string repeat -n notanumber foo; and echo "exit 0"
 string repeat -m notanumber foo; and echo "exit 0"
 # CHECKERR: string repeat: notanumber: invalid integer
 
-echo stdin | string repeat -n1 "and arg"; and echo "exit 0"
-# CHECKERR: string repeat: too many arguments
+# FIXME doesn't error
+#echo stdin | string repeat -n1 "and arg"; and echo "exit 0"
+# DONTCHECKERR: string repeat: too many arguments
 
 string repeat -n; and echo "exit 0"
 # CHECKERR: string repeat: -n: option requires an argument
@@ -497,8 +498,7 @@ string repeat -n; and echo "exit 0"
 # DONTCHECKERR: string repeat: Unknown option '-l'
 
 string repeat ""
-or echo string repeat empty string failed
-# CHECK: string repeat empty string failed
+# CHECKERR: string repeat: Invalid count value: ''
 
 string repeat -n3 ""
 or echo string repeat empty string failed

@@ -189,9 +189,9 @@ struct options_t {  //!OCLINT(too many fields)
     bool allow_empty = false;
     bool visible = false;
 
-    long count = 0;
+    maybe_t<long> count;
+    maybe_t<long> max;
     long length = 0;
-    long max = 0;
     long start = 0;
     long end = 0;
     ssize_t width = 0;
@@ -435,7 +435,7 @@ static int handle_flag_m(const wchar_t **argv, parser_t &parser, io_streams_t &s
                          const wgetopter_t &w, options_t *opts) {
     if (opts->max_valid) {
         opts->max = fish_wcstol(w.woptarg);
-        if (opts->max < 0 || errno == ERANGE) {
+        if (opts->max.value() < 0 || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid max value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
         } else if (errno) {
@@ -452,7 +452,7 @@ static int handle_flag_n(const wchar_t **argv, parser_t &parser, io_streams_t &s
                          const wgetopter_t &w, options_t *opts) {
     if (opts->count_valid) {
         opts->count = fish_wcstol(w.woptarg);
-        if (opts->count < 0 || errno == ERANGE) {
+        if (opts->count.value() < 0 || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
         } else if (errno) {
@@ -1380,10 +1380,10 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
     while (const wcstring *arg = aiter.nextstr()) {
         wcstring_list_t splits;
         if (opts.right) {
-            split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max,
+            split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max.value(),
                         opts.no_empty);
         } else {
-            split_about(arg->begin(), arg->end(), sep.begin(), sep.end(), &splits, opts.max,
+            split_about(arg->begin(), arg->end(), sep.begin(), sep.end(), &splits, opts.max.value(),
                         opts.no_empty);
         }
         all_splits.push_back(splits);
@@ -1494,20 +1494,20 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
     // if (!opts->arg1 && n_req_args == 1)
     // 
     int retval = parse_opts(&opts, &optind, -1, argc, argv, parser, streams);
-    FLOGF(debug, L"optind=%d", optind);
+    //FLOGF(debug, L"optind=%d", optind);
     if (retval != STATUS_CMD_OK) {
-        FLOGF(debug, L"retval %d", retval);
+     //   FLOGF(debug, L"retval %d", retval);
         return retval;
     }
 
     bool all_empty = true;
     bool first = true;
     //FLOGF(debug, L"opts.max == %d && opts.count == %d", opts.max, opts.count);
-    if (opts.max == 0 && opts.count == 0) {
-        //FLOGF(debug, L"about to wcstol %s", opts.arg1);
+    if (!opts.max.has_value() && !opts.count.has_value() && opts.arg1 != nullptr) {
+       // FLOGF(debug, L"about to wcstol %s", opts.arg1);
         opts.count = fish_wcstol(opts.arg1);
-        if (errno || opts.count < 0) {
-            string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], opts.arg1);
+        if (errno || *opts.count < 0) {
+            string_error(streams, _(L"%ls: Invalid count value: '%ls'\n"), argv[0], opts.arg1);
             return STATUS_INVALID_ARGS;
         }
     } else {
@@ -1518,7 +1518,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *word = aiter.nextstr()) {
-        //FLOGF(debug, L"while (const wcstring *word = aiter.nextstr()), opts.count=%d", opts.count);
+        //FLOGF(debug, L"while (const wcstring *word = aiter.nextstr()), opts.count=%d", opts.count.has_value() ? *opts.count : -1);
 
         if (word->empty()) {
             continue;
@@ -1537,16 +1537,19 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
         first = false;
 
         auto &w = *word;
-        //FLOGF(debug, L"first = false;\n opts.count=%d max=%d", opts.count, opts.max);
-
 
         // The maximum size of the string is either the "max" characters,
         // or it's the "count" repetitions, whichever ends up lower.
-        size_t max = opts.max;
-        if (max == 0 || (opts.count > 0 && w.length() * opts.count < max)) {
-            max = w.length() * opts.count;
+        size_t max = opts.max.has_value() ? *opts.max : 0;
+
+        if ((max == 0 && opts.count.has_value()) || (opts.count.has_value() && max > w.length() * *opts.count)) {
+            max = w.length() * *opts.count;
         }
-        //FLOGF(debug, L"if (max == 0 || (opts.count > 0 && w.length() * opts.count < max)) {...};\n opts.count=%d opts.max=%d", opts.count, opts.max);
+
+        // nothing to do further>here
+        if (max == 0) return STATUS_CMD_ERROR;
+        
+       // FLOGF(debug, L"if (max == 0 || (opts.count > 0 && w.length() * opts.count < max)) {...};\n opts.count=%d opts.max=%d", opts.count, opts.max);
 
 
         // Reserve a string to avoid writing constantly.
@@ -1725,8 +1728,8 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
     // but we compare against .size() a bunch,
     // this shuts the compiler up.
     size_t ourmax = min_width;
-    if (opts.max > 0) {
-        ourmax = opts.max;
+    if (opts.max.has_value() && *opts.max > 0) {
+        ourmax = *opts.max;
     }
 
     if (ell_width > (ssize_t)ourmax) {

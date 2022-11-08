@@ -418,6 +418,12 @@ string repeat --count 2 foo
 echo foo | string repeat -n 2
 # CHECK: foofoo
 
+echo foo | string repeat 2
+# CHECK: foofoo
+
+string repeat 2 foo
+# CHECK: foofoo
+
 string repeat -n2 -q foo; and echo "exit 0"
 # CHECK: exit 0
 
@@ -486,9 +492,8 @@ string repeat -n notanumber foo; and echo "exit 0"
 string repeat -m notanumber foo; and echo "exit 0"
 # CHECKERR: string repeat: notanumber: invalid integer
 
-# FIXME doesn't error
-#echo stdin | string repeat -n1 "and arg"; and echo "exit 0"
-# DONTCHECKERR: string repeat: too many arguments
+echo stdin | string repeat -n1 "and arg"; and echo "exit 0"
+# CHECKERR: string repeat: too many arguments
 
 string repeat -n; and echo "exit 0"
 # CHECKERR: string repeat: -n: option requires an argument

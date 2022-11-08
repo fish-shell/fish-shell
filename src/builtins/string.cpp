@@ -1492,34 +1492,28 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
     // use -1 as the mandatory_args parameter: it evaluates true so string_get_arg_argv will be tried -
     // but since the test is this to show an error:
     // if (!opts->arg1 && n_req_args == 1)
-    // 
     int retval = parse_opts(&opts, &optind, -1, argc, argv, parser, streams);
-    //FLOGF(debug, L"optind=%d", optind);
     if (retval != STATUS_CMD_OK) {
-     //   FLOGF(debug, L"retval %d", retval);
         return retval;
     }
 
     bool all_empty = true;
     bool first = true;
-    //FLOGF(debug, L"opts.max == %d && opts.count == %d", opts.max, opts.count);
     if (!opts.max.has_value() && !opts.count.has_value() && opts.arg1 != nullptr) {
-       // FLOGF(debug, L"about to wcstol %s", opts.arg1);
         opts.count = fish_wcstol(opts.arg1);
         if (errno || *opts.count < 0) {
             string_error(streams, _(L"%ls: Invalid count value: '%ls'\n"), argv[0], opts.arg1);
             return STATUS_INVALID_ARGS;
         }
+    } else if (string_args_from_stdin(streams) && opts.count.has_value() && opts.arg1) {
+        string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+        return STATUS_INVALID_ARGS;
     } else {
         optind--;
     }
 
-    //FLOGF(debug, L"about to arg_iterate count=%d", opts.count);
-
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *word = aiter.nextstr()) {
-        //FLOGF(debug, L"while (const wcstring *word = aiter.nextstr()), opts.count=%d", opts.count.has_value() ? *opts.count : -1);
-
         if (word->empty()) {
             continue;
         }
@@ -1548,9 +1542,6 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
 
         // nothing to do further>here
         if (max == 0) return STATUS_CMD_ERROR;
-        
-       // FLOGF(debug, L"if (max == 0 || (opts.count > 0 && w.length() * opts.count < max)) {...};\n opts.count=%d opts.max=%d", opts.count, opts.max);
-
 
         // Reserve a string to avoid writing constantly.
         // The 1500 here is a total gluteal extraction, but 500 seems to perform slightly worse.

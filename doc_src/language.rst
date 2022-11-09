@@ -148,6 +148,8 @@ The special characters and their escape sequences are:
 - ``\"`` escapes the quote character.
 - ``\'`` escapes the apostrophe character.
 
+As a special case, ``\`` immediately followed by a literal new line is a "continuation" and tells fish to ignore the line break and resume input at the start of the next line (without introducing any whitespace or terminating a token).
+
 .. _redirects:
 
 Input/Output Redirection

@@ -439,6 +439,17 @@ tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command {
     font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
 }
 
+/* We don't want the prompt char or the following white space to be selected - that's annoying. */
+.highlight .gp, .highlight .gp + .w {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+    cursor: default;
+}
+
 #synopsis .line {
     line-height: 1em;
 }
@@ -607,7 +618,7 @@ aside.footnote > p {
 .param-valid-path { color: #00afff; text-decoration: underline }
 
 /* Color based on the Generic.Prompt (.gp) class from pygments.css. */
-.prompt { color: #8f7902 }
+.prompt { color: #8f7902; }
 
 kbd {
   background-color: #f9f9f9;

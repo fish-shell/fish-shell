@@ -664,8 +664,6 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             // This is cheesy, but I don't expect this to be checked often.
             if (retval != STATUS_CMD_OK) {
                 ret = retval;
-            } else {
-                warn_if_uvar_shadows_global(cmd, opts, split->varname, streams, parser);
             }
         }
     }

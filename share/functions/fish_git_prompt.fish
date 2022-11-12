@@ -168,29 +168,31 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     test "$count" = "0 0"
 end
 
-function fish_git_prompt --description "Prompt function for Git"
+set -l uname (uname)
+function fish_git_prompt --description "Prompt function for Git" -V uname
     # If git isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
     # Same for waiting for xcrun to generate its database and make `git` not slow
     # Return 10 in case a prompt wants to indicate this, or needs to know this is transient
 
-    # git(1) is can be really slow after a reboot on macOS, as libxcselect/xcrun will rebuild
+    # git(1) can be really slow after a reboot on macOS, as libxcselect/xcrun will rebuild
     # its cache and do security checks on the Xcode bundle before actually exec'ing `git` for us.
-    if [ (uname) = Darwin -a "$(command -v git)" = /usr/bin/git ]
+    if [ $uname = Darwin -a "$(command -v git)" = /usr/bin/git ]
         # `git` can also just not be available, because the xcode or the command line tools package
         # aren't installed. Detect that situation and return early to avoid the install-on-demand
         # dialog for xcode/CLT
         if not xcode-select --print-path &>/dev/null
             return 1
         end
-        if not test -e "$(xcrun --show-cache-path)"
+        set -f xcrun_cache_path "$(xcrun --show-cache-path)"
+        if not test -e $xcrun_cache_path
             command git --version &>/dev/null &
             # the existance of the function __fish_git_xcrun_wait indicates we're waiting on
             # the xcrun machinery to do what it needs to do. No global var necessary
-            function __fish_git_xcrun_wait -j(jobs -l -p)
-                if not test -e "$(xcrun --show-cache-path)"
+            function __fish_git_xcrun_wait -j(jobs -l -p) -V xcrun_cache_path
+                if not test -e $xcrun_cache_path
                     # assert xcrun_db exists now
-                    printf "%s: %s still doesn't exist\n" (status function) "$TMPDIR/xcrun_db" >&2
+                    printf "%s: %s still doesn't exist\n" (status function) $xcrun_cache_path >&2
                 end
                 functions -e (status function)
                 commandline -f repaint

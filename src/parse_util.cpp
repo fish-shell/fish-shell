@@ -367,7 +367,7 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
     if (b) *b = end;
 
     const wcstring buffcpy(begin, end);
-    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
+    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
     maybe_t<tok_t> token{};
     while ((token = tok.next()) && !finished) {
         size_t tok_begin = token->offset;
@@ -382,8 +382,7 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
             case token_type_t::end:
             case token_type_t::background:
             case token_type_t::andand:
-            case token_type_t::oror:
-            case token_type_t::comment: {
+            case token_type_t::oror: {
                 if (tok_begin >= pos) {
                     finished = 1;
                     if (b) *b = const_cast<wchar_t *>(begin) + tok_begin;

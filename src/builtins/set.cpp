@@ -539,13 +539,14 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
     const wchar_t *exportv = var->exports() ? _(L"exported") : _(L"unexported");
     const wchar_t *pathvarv = var->is_pathvar() ? _(L" a path variable") : L"";
     wcstring_list_t vals = var->as_list();
-    streams.out.append_format(_(L"$%ls: set in %ls scope, %ls,%ls with %d elements\n"), var_name,
+    streams.out.append_format(_(L"$%ls: set in %ls scope, %ls,%ls with %d elements"), var_name,
                               scope_name, exportv, pathvarv, vals.size());
     // HACK: PWD can be set, depending on how you ask.
     // For our purposes it's read-only.
     if (env_var_t::flags_for(var_name) & env_var_t::flag_read_only) {
-        streams.out.append(_(L"Variable is read-only\n"));
+        streams.out.append(_(L" (read-only)\n"));
     }
+    else streams.out.push_back(L'\n');
 
     for (size_t i = 0; i < vals.size(); i++) {
         if (vals.size() > 100) {

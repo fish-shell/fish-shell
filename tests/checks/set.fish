@@ -710,14 +710,12 @@ env | string match -e __fish_test_universal_exported_var
 # If they can be set they can only be set in global scope,
 # so they should only be shown in global scope.
 set -S status
-#CHECK: $status: set in global scope, unexported, with 1 elements
-#CHECK: Variable is read-only
+#CHECK: $status: set in global scope, unexported, with 1 elements (read-only)
 #CHECK: $status[1]: |0|
 
 # PWD is also read-only.
 set -S PWD
-#CHECK: $PWD: set in global scope, exported, with 1 elements
-#CHECK: Variable is read-only
+#CHECK: $PWD: set in global scope, exported, with 1 elements (read-only)
 #CHECK: $PWD[1]: |{{.*}}|
 #CHECK: $PWD: originally inherited as |{{.*}}|
 
@@ -910,8 +908,7 @@ echo $status
 set -U status
 # CHECKERR: set: Tried to modify the special variable 'status' with the wrong scope
 set -S status
-# CHECK: $status: set in global scope, unexported, with 1 elements
-# CHECK: Variable is read-only
+# CHECK: $status: set in global scope, unexported, with 1 elements (read-only)
 # CHECK: $status[1]: |2|
 
 # See that we show inherited variables correctly:

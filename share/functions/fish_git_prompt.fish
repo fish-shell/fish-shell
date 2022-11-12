@@ -168,10 +168,32 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     test "$count" = "0 0"
 end
 
+# git(1) is can be really slow after a reboot on macOS, as libxcselect/xcrun will rebuild
+# its cache and do security checks on the Xcode bundle before actually exec'ing `git` for us.
+if [ (uname) = Darwin -a "$(command -v git)" = /usr/bin/git ]
+    if not test -e "$TMPDIR/xcrun_db"
+        command git --version &> /dev/null &
+        # the existance of the function __fish_git_xcrun_wait indicates we're waiting on
+        # the xcrun machinery to do what it needs to do. No global var necessary
+        function __fish_git_xcrun_wait -j(jobs -l -p)
+            if not test -e "$TMPDIR/xcrun_db"
+                # assert xcrun_db exists now
+                printf "%s: %s still doesn't exist\n" (status function) "$TMPDIR/xcrun_db" >&2
+            end
+            functions -e (status function)
+            commandline -f repaint
+        end
+    end
+end
+
 function fish_git_prompt --description "Prompt function for Git"
     # If git isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
-    if not command -sq git
+    # Same for waiting for xcrun to generate its database and make `git` not slow
+    # Return 10 in case a prompt wants to indicate this, or needs to know this is transient
+    if functions -q __fish_git_xcrun_wait
+        return 10
+    else if not command -sq git
         return 1
     end
     set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD 2>/dev/null)

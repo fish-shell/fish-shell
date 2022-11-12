@@ -1,4 +1,8 @@
-`fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status|
+.. |Cirrus CI| image:: https://api.cirrus-ci.com/github/fish-shell/fish-shell.svg?branch=master
+      :target: https://cirrus-ci.com/github/fish-shell/fish-shell
+      :alt: Cirrus CI Build Status
+
+`fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status| |Cirrus CI|
 =================================================================================
 
 fish is a smart and user-friendly command line shell for macOS, Linux,

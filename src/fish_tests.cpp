@@ -1026,7 +1026,7 @@ static void test_debounce_timeout() {
 
     // Verify that debounce doesn't wait forever.
     // Use a shared_ptr so we don't have to join our threads.
-    const long timeout_ms = 50;
+    const long timeout_ms = 500;
     struct data_t {
         debounce_t db{timeout_ms};
         bool exit_ok = false;

@@ -1934,15 +1934,15 @@ complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcom
 ### stash
 complete -c git -n __fish_git_needs_command -a stash -d 'Stash away changes'
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a "list\t'List stashes'
-show/t'Show the changes recorded in the stash'
-pop/t'Apply and remove a single stashed state'
-apply/t'Apply a single stashed state'
-clear/t'Remove all stashed states'
-drop/t'Remove a single stashed state from the stash list'
-create/t'Create a stash'
-save/t'Save a new stash'
-branch/t'Create a new branch from a stash'
-push/t'Create a new stash with given files'"
+show\t'Show the changes recorded in the stash'
+pop\t'Apply and remove a single stashed state'
+apply\t'Apply a single stashed state'
+clear\t'Remove all stashed states'
+drop\t'Remove a single stashed state from the stash list'
+create\t'Create a stash'
+save\t'Save a new stash'
+branch\t'Create a new branch from a stash'
+push\t'Create a new stash with given files'"
 
 complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command apply' -ka '(__fish_git_complete_stashes)'
 complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command branch' -ka '(__fish_git_complete_stashes)'

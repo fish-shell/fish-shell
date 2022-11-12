@@ -171,12 +171,12 @@ end
 # git(1) is can be really slow after a reboot on macOS, as libxcselect/xcrun will rebuild
 # its cache and do security checks on the Xcode bundle before actually exec'ing `git` for us.
 if [ (uname) = Darwin -a "$(command -v git)" = /usr/bin/git ]
-    if not test -e "$TMPDIR/xcrun_db"
+    if not test -e "$(xcrun --show-cache-path)"
         command git --version &> /dev/null &
         # the existance of the function __fish_git_xcrun_wait indicates we're waiting on
         # the xcrun machinery to do what it needs to do. No global var necessary
         function __fish_git_xcrun_wait -j(jobs -l -p)
-            if not test -e "$TMPDIR/xcrun_db"
+            if not test -e "$(xcrun --show-cache-path)"
                 # assert xcrun_db exists now
                 printf "%s: %s still doesn't exist\n" (status function) "$TMPDIR/xcrun_db" >&2
             end

@@ -51,11 +51,14 @@ linux_task:
         - ninja -j 6 fish fish_tests
         - ninja fish_run_tests
 
+    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+
 linux_arm_task:
     matrix:
         - name: focal-arm64
           arm_container:
               image: ghcr.io/fish-shell/fish-ci/focal-arm64
+              only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
         - name: jammy-armv7-32bit
           arm_container:
               image: ghcr.io/fish-shell/fish-ci/jammy-armv7-32bit
@@ -70,6 +73,8 @@ linux_arm_task:
         - ninja -j 6 fish fish_tests
         - file ./fish
         - ninja fish_run_tests
+
+    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
 
 freebsd_task:
     matrix:
@@ -97,3 +102,5 @@ freebsd_task:
         - sudo -u fish-user -s cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=1 ..
         - sudo -u fish-user -s ninja -j 6 fish fish_tests
         - sudo -u fish-user -s ninja fish_run_tests
+
+    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'

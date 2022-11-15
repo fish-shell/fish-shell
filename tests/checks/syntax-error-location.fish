@@ -55,3 +55,13 @@ $fish -c "set -g fish_function_path $(string escape $TMPDIR); this_should_be_an_
 # CHECKERR: fish:
 # CHECKERR: set -g fish_function_path {{.*}}; this_should_be_an_error
 # CHECKERR:                                   ^~~~~~~~~~~~~~~~~~~~~~^
+
+$fish -c 'echo {$}'
+# CHECKERR: fish: Expected a variable name after this $. <= no more checks
+# CHECKERR: echo {$}
+# CHECKERR: ^
+
+$fish -c 'echo {$,}'
+# CHECKERR: fish: Expected a variable name after this $.
+# CHECKERR: echo {$,}
+# CHECKERR: ^

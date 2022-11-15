@@ -866,6 +866,12 @@ static const wchar_t *error_format_for_character(wchar_t wc) {
         case VARIABLE_EXPAND_EMPTY: {
             return ERROR_NOT_PID;
         }
+        case BRACE_END:
+        case L'}':
+        case L',':
+        case BRACE_SEP: {
+            return ERROR_NO_VAR_NAME;
+        }
         default: {
             return ERROR_BAD_VAR_CHAR1;
         }

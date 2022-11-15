@@ -313,7 +313,7 @@ echo "Back to normal variable: $testvar" (count $testvar)
 
 # Test fatal syntax errors
 $fish -c 'echo $,foo'
-#CHECKERR: fish: $, is not a valid variable in fish.
+#CHECKERR: fish: Expected a variable name after this $.
 #CHECKERR: echo $,foo
 #CHECKERR: ^
 $fish -c 'echo {'

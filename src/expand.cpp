@@ -172,7 +172,7 @@ enum class parse_slice_error_t {
 static size_t parse_slice(const wchar_t *const in, wchar_t **const end_ptr, std::vector<long> &idx,
                           size_t array_size, parse_slice_error_t *const error) {
     const long size = static_cast<long>(array_size);
-    size_t pos = 1;  // skip past the opening square brace
+    size_t pos = 1;  // skip past the opening square bracket
 
     *error = parse_slice_error_t::none;
 
@@ -557,6 +557,7 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
     }
 
     if (brace_begin == nullptr) {
+        // No more brace expansions left; we can return the value as-is.
         if (!out->add(std::move(instr))) {
             return expand_result_t::error;
         }
@@ -579,6 +580,11 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
                 }
             }
 
+            // `whole_item` is a whitespace- and brace-stripped member of a single pass of brace
+            // expansion, e.g. in `{ alpha , b,{c, d }}`, `alpha`, `b`, and `c, d` will, in the
+            // first round of expansion, each in turn be a `whole_item` (with recursive commas
+            // replaced by special placeholders).
+            // We recursively call `expand_braces` with each item until it's been fully expanded.
             wcstring whole_item;
             whole_item.reserve(tot_len + item_len + 2);
             whole_item.append(in, length_preceding_braces);

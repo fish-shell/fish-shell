@@ -1449,8 +1449,9 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         brace_count--;
                         to_append_or_none = BRACE_END;
                         if (!braces.empty()) {
-                            // If we didn't have a var or separator since the last '{',
-                            // put the literal back.
+                            // HACK: To reduce accidental use of brace expansion, treat a brace
+                            // with zero or one items as literal input. See #4632. (The hack is
+                            // doing it here and like this.)
                             if (vars_or_seps.empty() || vars_or_seps.back() < braces.back()) {
                                 result[braces.back()] = L'{';
                                 // We also need to turn all spaces back.

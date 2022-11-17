@@ -115,6 +115,7 @@ Completions
   - ``dua``
   - ``clojure``
   - ``loadkeys``
+  - ``toot``
 
 - Improvements to some completions.
 

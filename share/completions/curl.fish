@@ -169,7 +169,7 @@ complete -c curl -l remote-name-all -d 'For every URL write output to local file
 complete -c curl -s O -l remote-name -d 'Write output to a local file named like the remote file we get'
 complete -c curl -s R -l remote-time -d 'Use timestamp of remote file on output'
 complete -c curl -l request-target -d '(HTTP) Use an alternative request target'
-complete -c curl -s X -l request -d '(HTTP) Specifies a custom HTTP method'
+complete -c curl -x -s X -l request -d '(HTTP) Specifies a custom HTTP method' -a 'GET HEAD POST PUT DELETE CONNECT OPTIONS TRACE PATCH'
 complete -c curl -l resolve -d 'Provide a custom address for a specific host and port pair'
 complete -c curl -l retry-connrefused -d 'Consider ECONNREFUSED a transient error'
 complete -c curl -l retry-delay -d 'Time to wait between transfer retries'

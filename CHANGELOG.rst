@@ -115,6 +115,7 @@ Completions
   - ``dua``
   - ``clojure``
   - ``loadkeys``
+  - ``okular``
 
 - Improvements to some completions.
 

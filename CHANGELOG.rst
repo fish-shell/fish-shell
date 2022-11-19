@@ -117,6 +117,7 @@ Completions
   - ``loadkeys``
   - ``toot``
   - ``eg``
+  - ``kb``
 
 - Improvements to some completions.
 

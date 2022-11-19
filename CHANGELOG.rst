@@ -116,6 +116,7 @@ Completions
   - ``clojure``
   - ``loadkeys``
   - ``toot``
+  - ``eg``
 
 - Improvements to some completions.
 

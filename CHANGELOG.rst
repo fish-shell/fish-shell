@@ -118,6 +118,7 @@ Completions
   - ``toot``
   - ``eg``
   - ``kb``
+  - ``okular``
 
 - Improvements to some completions.
 

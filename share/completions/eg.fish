@@ -1,6 +1,6 @@
 # Based on https://github.com/srsudar/eg/blob/master/eg/core.py#L75 source code
 
-complete -c eg -s h -l help -d 'Show version and exit'
+complete -c eg -s v -l version -d 'Show version and exit'
 complete -c eg -s f -l config-file -d 'A path to a .egrc file'
 complete -c eg -s e -l edit -d 'Edit custom examples for a specific command'
 complete -c eg -l examples-dir -d 'A location to examples/ directory'

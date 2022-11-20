@@ -115,6 +115,7 @@ Completions
   - ``dua``
   - ``clojure``
   - ``loadkeys``
+  - ``dolphin``
 
 - Improvements to some completions.
 

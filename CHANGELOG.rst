@@ -119,6 +119,7 @@ Completions
   - ``eg``
   - ``kb``
   - ``okular``
+  - ``dolphin``
 
 - Improvements to some completions.
 

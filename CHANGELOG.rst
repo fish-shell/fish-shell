@@ -120,6 +120,7 @@ Completions
   - ``kb``
   - ``okular``
   - ``dolphin``
+  - ``ark``
 
 - Improvements to some completions.
 

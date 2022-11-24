@@ -115,6 +115,7 @@ Completions
   - ``dua``
   - ``clojure``
   - ``loadkeys``
+  - ``konsole``
 
 - Improvements to some completions.
 

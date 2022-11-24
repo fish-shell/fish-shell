@@ -121,6 +121,7 @@ Completions
   - ``okular``
   - ``dolphin``
   - ``ark``
+  - ``konsole``
 
 - Improvements to some completions.
 

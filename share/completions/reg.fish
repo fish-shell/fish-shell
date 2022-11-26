@@ -6,8 +6,8 @@ function __reg_run_reg_safely
     #if which reg > /dev/null # these lines will be uncommented at the end of PR
         set -l output (reg $argv | tr -d '\r' | tail --lines +2 | string collect)
         if not string match -q -r "reg: Invalid syntax*" -- $output
-            set output (echo $output | string replace " " "\n" | string collect)
-            echo $output
+            set output (string split \n -- $output)
+            echo $output | string replace -a " " \n
         end
     #end
 end

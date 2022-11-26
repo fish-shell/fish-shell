@@ -127,6 +127,7 @@ Completions
   - ``xreader``
   - ``xplayer``
   - ``pix``
+  - ``readelf``
 
 - Improvements to some completions.
 

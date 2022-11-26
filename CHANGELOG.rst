@@ -127,6 +127,7 @@ Completions
   - ``xreader``
   - ``xplayer``
   - ``pix``
+  - ``nu``
 
 - Improvements to some completions.
 

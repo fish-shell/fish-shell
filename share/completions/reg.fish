@@ -96,6 +96,12 @@ function __reg_export_complete_args -a previous_token
 end
 
 function __reg_query_complete_args -a previous_token
+    if test "$previous_token" = query
+        set -l current_token (commandline -tc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     if test "$previous_token" = /t
         echo 'REG_SZ
 REG_MULTI_SZ

@@ -1,4 +1,24 @@
+function reg # placeholder for testing with wine, will be removed at the end of PR
+    wine reg $argv 2> /dev/null
+end
+
+function __reg_run_reg_safely
+    #if which reg > /dev/null # these lines will be uncommented at the end of PR
+        set -l output (reg $argv | tr -d '\r' | tail --lines +2 | string collect)
+        if not string match -q -r "reg: Invalid syntax*" -- $output
+            set output (echo $output | string replace " " "\n" | string collect)
+            echo $output
+        end
+    #end
+end
+
 function __reg_add_complete_args -a previous_token
+    if test "$previous_token" = add
+        set -l current_token (commandline -toc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     if test "$previous_token" = /t
         echo 'REG_SZ
 REG_MULTI_SZ

@@ -14,7 +14,7 @@ end
 
 function __reg_add_complete_args -a previous_token
     if test "$previous_token" = add
-        set -l current_token (commandline -toc)
+        set -l current_token (commandline -tc)
         __reg_run_reg_safely query $current_token
         return
     end

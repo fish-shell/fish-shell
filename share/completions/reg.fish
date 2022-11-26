@@ -84,7 +84,13 @@ function __reg_delete_complete_args -a previous_token
 /?\tShow help'
 end
 
-function __reg_export_complete_args
+function __reg_export_complete_args -a previous_token
+    if test "$previous_token" = export
+        set -l current_token (commandline -tc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
@@ -136,7 +142,7 @@ function __reg_complete_args -d 'Function to generate args'
     else if __fish_seen_subcommand_from delete
         __reg_delete_complete_args $previous_token
     else if __fish_seen_subcommand_from export
-        __reg_export_complete_args
+        __reg_export_complete_args $previous_token
     else if __fish_seen_subcommand_from query
         __reg_query_complete_args $previous_token
     else if __fish_seen_subcommand_from save

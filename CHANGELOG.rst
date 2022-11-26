@@ -115,6 +115,11 @@ Completions
   - ``dua``
   - ``clojure``
   - ``loadkeys``
+  - ``xed``
+  - ``xviewer``
+  - ``xreader``
+  - ``xplayer``
+  - ``pix``
 
 - Improvements to some completions.
 

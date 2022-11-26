@@ -122,6 +122,11 @@ Completions
   - ``dolphin``
   - ``ark``
   - ``konsole``
+  - ``xed``
+  - ``xviewer``
+  - ``xreader``
+  - ``xplayer``
+  - ``pix``
 
 - Improvements to some completions.
 

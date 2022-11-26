@@ -1,0 +1,8 @@
+complete -c wish -o encoding -d "Specify encoding"
+complete -c wish -o colormap -d "Use a new private colormap"
+complete -c wish -o display -d "Specify display"
+complete -c wish -o geometry -d "Specify initial geometry for window"
+complete -c wish -o name -d "Specify title for window"
+complete -c wish -o sync -d "Synchronize X server commands"
+complete -c wish -o use -d "Specify parent window id"
+complete -c wish -o visual -d "Specify visual"

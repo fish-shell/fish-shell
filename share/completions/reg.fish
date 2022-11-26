@@ -1,15 +1,11 @@
-function reg # placeholder for testing with wine, will be removed at the end of PR
-    wine reg $argv 2> /dev/null
-end
-
 function __reg_run_reg_safely
-    #if which reg > /dev/null # these lines will be uncommented at the end of PR
+    if which reg > /dev/null
         set -l output (reg $argv | tr -d '\r' | tail --lines +2 | string collect)
         if not string match -q -r "reg: Invalid syntax*" -- $output
             set output (string split \n -- $output)
             echo $output | string replace -a " " \n
         end
-    #end
+    end
 end
 
 function __reg_add_complete_args -a previous_token

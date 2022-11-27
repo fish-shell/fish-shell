@@ -47,8 +47,6 @@ struct abbr_options_t {
     wcstring_list_t args;
 
     bool validate(io_streams_t &streams) {
-        const bool quiet = (phases.value_or(0) & abbrs_phase_quiet);
-
         // Duplicate options?
         wcstring_list_t cmds;
         if (add) cmds.push_back(L"add");
@@ -81,10 +79,7 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --function option requires --add\n"), CMD);
             return false;
         }
-        if (!add && quiet) {
-            streams.err.append_format(_(L"%ls: --quiet option requires --add\n"), CMD);
-            return false;
-        } else if (!add && phases.has_value()) {
+        if (!add && phases.has_value()) {
             streams.err.append_format(_(L"%ls: --trigger-on option requires --add\n"), CMD);
             return false;
         }
@@ -92,16 +87,8 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --set-cursor option requires --add\n"), CMD);
             return false;
         }
-        if (set_cursor_indicator.has_value() && quiet) {
-            streams.err.append_format(_(L"%ls: --quiet cannot be used with --set-cursor\n"), CMD);
-            return false;
-        }
         if (set_cursor_indicator.has_value() && set_cursor_indicator->empty()) {
             streams.err.append_format(_(L"%ls: --set-cursor argument cannot be empty\n"), CMD);
-            return false;
-        }
-        if (quiet && (*phases & ~abbrs_phase_quiet) != 0) {
-            streams.err.append_format(_(L"%ls: Cannot use --quiet with --trigger-on\n"), CMD);
             return false;
         }
 
@@ -135,9 +122,6 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
             }
             if (abbr.phases & abbrs_phase_exec) {
                 comps.push_back(L"--trigger-on exec");
-            }
-            if (abbr.phases & abbrs_phase_quiet) {
-                comps.push_back(L"--quiet");
             }
         }
         if (abbr.replacement_is_function) {
@@ -308,7 +292,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, EXPAND_ON_SHORT, QUIET_SHORT };
+    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, EXPAND_ON_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
@@ -318,7 +302,6 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                                                   {L"position", required_argument, 'p'},
                                                   {L"regex", required_argument, REGEX_SHORT},
                                                   {L"trigger-on", required_argument, 't'},
-                                                  {L"quiet", no_argument, QUIET_SHORT},
                                                   {L"set-cursor", required_argument, 'C'},
                                                   {L"function", no_argument, 'f'},
                                                   {L"rename", no_argument, 'r'},
@@ -391,10 +374,6 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                     return STATUS_INVALID_ARGS;
                 }
                 opts.phases = phases;
-                break;
-            }
-            case QUIET_SHORT: {
-                opts.phases = opts.phases.value_or(0) | abbrs_phase_quiet;
                 break;
             }
             case 'C': {

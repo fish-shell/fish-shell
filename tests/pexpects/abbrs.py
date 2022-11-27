@@ -102,10 +102,10 @@ sendline(r"abbr --erase uppercaser2")
 expect_prompt()
 
 # Abbreviations which cause the command line to become incomplete or invalid
-# are visibly expanded, even if they are quiet.
-sendline(r"abbr openparen --position anywhere --quiet '('")
+# are visibly expanded.
+sendline(r"abbr openparen '(' --position anywhere")
 expect_prompt()
-sendline(r"abbr closeparen --position anywhere --quiet ')'")
+sendline(r"abbr closeparen ')' --position anywhere")
 expect_prompt()
 sendline(r"echo openparen")
 expect_str(r"echo (")
@@ -115,8 +115,11 @@ sendline(r"echo closeparen")
 expect_str(r"echo )")
 send(r"?")
 expect_str(r"<echo )>")
-sendline(r"echo openparen seq 5 closeparen")
+sendline(r"echo openparen seq 5 closeparen")  # expands on enter
 expect_prompt(r"1 2 3 4 5")
+sendline(r"echo openparen seq 5 closeparen ")  # expands on space
+expect_prompt(r"1 2 3 4 5")
+
 
 # Verify that 'commandline' is accurate.
 # Abbreviation functions cannot usefully change the command line, but they can read it.
@@ -136,22 +139,6 @@ expect_str(r"<@abc@ >")
 sendline(r"echo $last_cursor : $last_cmdline")
 expect_prompt(r"6 : @abc@ ")
 
-
-# Again but now we stack them. Noisy abbreviations expand first, then quiet ones.
-sendline(r"""function strip_percents; string trim --chars % -- $argv; end""")
-expect_prompt()
-sendline(r"""function do_upper; string upper -- $argv; end""")
-expect_prompt()
-
-sendline(r"abbr noisy1 --regex '%.+%' --function strip_percents --position anywhere")
-expect_prompt()
-
-sendline(r"abbr quiet1 --regex 'a.+z' --function do_upper --quiet --position anywhere")
-expect_prompt()
-# The noisy abbr strips the %
-# The quiet one sees a token starting with 'a' and ending with 'z' and uppercases it.
-sendline(r"echo %abcdez%")
-expect_prompt(r"ABCDEZ")
 
 # Test cursor positioning.
 sendline(r"""abbr --erase (abbr --list) """)

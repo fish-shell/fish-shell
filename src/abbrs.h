@@ -27,15 +27,8 @@ enum abbrs_phase_t : uint8_t {
     // Expands "on enter" before submitting the command to be executed.
     abbrs_phase_exec = 1 << 1,
 
-    // Expands "quietly" after submitting the command. This is incompatible with the other
-    // phases.
-    abbrs_phase_quiet = 1 << 2,
-
     // Default set of phases.
     abbrs_phases_default = abbrs_phase_entry | abbrs_phase_exec,
-
-    // All phases.
-    abbrs_phases_all = abbrs_phase_entry | abbrs_phase_exec | abbrs_phase_quiet,
 };
 using abbrs_phases_t = uint8_t;
 

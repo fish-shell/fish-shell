@@ -618,10 +618,6 @@ struct readline_loop_state_t {
     /// command.
     bool finished{false};
 
-    /// If the loop is finished, then the command to execute; this may differ from the command line
-    /// itself due to quiet abbreviations.
-    wcstring cmd;
-
     /// Maximum number of characters to read.
     size_t nchars{std::numeric_limits<size_t>::max()};
 };
@@ -886,10 +882,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void add_to_history() const;
 
     // Expand abbreviations before execution.
-    // Replace the command line with any noisy abbreviations as needed.
-    // Populate \p to_exec with the command to execute, which may include silent abbreviations.
+    // Replace the command line with any abbreviations as needed.
     // \return the test result, which may be incomplete to insert a newline, or an error.
-    parser_test_error_bits_t expand_for_execute(wcstring *to_exec);
+    parser_test_error_bits_t expand_for_execute();
 
     void clear_pager();
     void select_completion_in_direction(selection_motion_t dir,
@@ -1497,44 +1492,6 @@ bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack, abbrs
         }
     }
     return result;
-}
-
-// Expand any quiet abbreviations, modifying \p str in place.
-// \return true if the string changed, false if not.
-static bool expand_quiet_abbreviations(wcstring *inout_str, parser_t &parser) {
-    bool modified = false;
-    const wcstring &str = *inout_str;
-    wcstring result = str;
-    // We may have multiple replacements.
-    // Keep track of the change in length.
-    size_t orig_lengths = 0;
-    size_t repl_lengths = 0;
-
-    const std::vector<positioned_token_t> tokens = extract_tokens(result);
-    wcstring token;
-    for (positioned_token_t pt : tokens) {
-        source_range_t orig_range = pt.range;
-        token.assign(str, orig_range.start, orig_range.length);
-
-        abbrs_position_t position =
-            pt.is_cmd ? abbrs_position_t::command : abbrs_position_t::anywhere;
-        auto replacers = abbrs_match(token, position, abbrs_phase_quiet);
-        for (const auto &replacer : replacers) {
-            const auto replacement = expand_replacer(orig_range, token, replacer, parser);
-            if (replacement && replacement->text != token) {
-                modified = true;
-                result.replace(orig_range.start + repl_lengths - orig_lengths, orig_range.length,
-                               replacement->text);
-                orig_lengths += orig_range.length;
-                repl_lengths += replacement->text.length();
-                break;
-            }
-        }
-    }
-    if (modified) {
-        *inout_str = std::move(result);
-    }
-    return modified;
 }
 
 void reader_reset_interrupted() { interrupted = 0; }
@@ -4309,16 +4266,9 @@ void reader_data_t::add_to_history() const {
     }
 }
 
-parser_test_error_bits_t reader_data_t::expand_for_execute(wcstring *to_exec) {
-    // Expand abbreviations. First noisy abbreviations at the cursor, followed by quiet
-    // abbreviations, anywhere that matches.
+parser_test_error_bits_t reader_data_t::expand_for_execute() {
+    // Expand abbreviations at the cursor.
     // The first expansion is "user visible" and enters into history.
-    // The second happens silently, unless it produces an error, in which case we show the text to
-    // the user.
-    // We update the command line with the user-visible result and then return the silent result by
-    // reference.
-
-    assert(to_exec && "Null pointer");
     editable_line_t *el = &command_line;
     parser_test_error_bits_t test_res = 0;
 
@@ -4338,25 +4288,7 @@ parser_test_error_bits_t reader_data_t::expand_for_execute(wcstring *to_exec) {
             test_res = reader_shell_test(parser(), el->text());
         }
     }
-
-    // We may have an error or be incomplete.
-    if (test_res) return test_res;
-
-    // Quiet abbreviations anywhere.
-    wcstring text_for_exec = el->text();
-    if (expand_quiet_abbreviations(&text_for_exec, parser())) {
-        if (conf.syntax_check_ok) {
-            test_res = reader_shell_test(parser(), text_for_exec);
-            if (test_res) {
-                // Replace the command line with an undoable edit, to make the replacement visible.
-                push_edit(el, edit_t(0, el->size(), std::move(text_for_exec)));
-                return test_res;
-            }
-        }
-    }
-
-    *to_exec = std::move(text_for_exec);
-    return 0;
+    return test_res;
 }
 
 bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
@@ -4403,8 +4335,7 @@ bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
 
     // Expand the command line in preparation for execution.
     // to_exec is the command to execute; the command line itself has the command for history.
-    wcstring to_exec;
-    parser_test_error_bits_t test_res = this->expand_for_execute(&to_exec);
+    parser_test_error_bits_t test_res = this->expand_for_execute();
     if (test_res & PARSER_TEST_ERROR) {
         return false;
     } else if (test_res & PARSER_TEST_INCOMPLETE) {
@@ -4414,7 +4345,6 @@ bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
     assert(test_res == 0);
 
     this->add_to_history();
-    rls.cmd = std::move(to_exec);
     rls.finished = true;
     update_buff_pos(&command_line, command_line.size());
     return true;
@@ -4508,7 +4438,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
         if (rls.nchars <= command_line.size()) {
             // We've already hit the specified character limit.
-            rls.cmd = command_line.text();
             rls.finished = true;
             break;
         }
@@ -4632,7 +4561,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
         outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     }
-    return rls.finished ? maybe_t<wcstring>{std::move(rls.cmd)} : none();
+    return rls.finished ? maybe_t<wcstring>{command_line.text()} : none();
 }
 
 bool reader_data_t::jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,

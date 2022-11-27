@@ -171,20 +171,3 @@ abbr --add bogus --position anywhere --position command stuff
 abbr --add --trigger-on derp zzxjoanw stuff
 # CHECKERR: abbr: Invalid --trigger-on 'derp'
 # CHECKERR: Must be one of: entry, exec.
-
-abbr --add --trigger-on entry --quiet zzxjoanw stuff
-# CHECKERR: abbr: Cannot use --quiet with --trigger-on
-
-abbr --add --quiet --trigger-on exec zzxjoanw stuff
-# CHECKERR: abbr: Cannot use --quiet with --trigger-on
-
-abbr --add quiet-abbr --quiet foo1
-abbr --add loud-abbr foo2
-abbr --show
-# CHECK: abbr -a -- quiet-abbr --quiet foo1
-# CHECK: abbr -a -- loud-abbr foo2
-
-abbr --add loud-abbr foo2
-abbr --show
-# CHECK: abbr -a -- quiet-abbr --quiet foo1
-# CHECK: abbr -a -- loud-abbr foo2

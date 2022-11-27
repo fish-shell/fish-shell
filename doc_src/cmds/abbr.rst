@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    abbr --add NAME [--quiet] [--position command | anywhere] [--regex PATTERN]
+    abbr --add NAME [--position command | anywhere] [--regex PATTERN]
                     [--set-cursor SENTINEL] [--trigger-on entry | exec]...
                     [-f | --function] EXPANSION
     abbr --erase NAME ...
@@ -29,8 +29,6 @@ An abbreviation may match a literal word, or it may match a pattern given by a r
 
 Abbreviations may expand either after their word is entered, or if they are executed with the enter key. The ``--trigger-on`` option allows limiting expansion to only entering, or only executing.
 
-By default abbreviations print the new command line after being entered. The ``--quiet`` option causes abbreviations to expand silently.
-
 Combining these features, it is possible to create custom syntaxes, where a regular expression recognizes matching tokens, and the expansion function interprets them. See the `Examples`_ section.
 
 Abbreviations may be added to :ref:`config.fish <configuration>`. Abbreviations are only expanded for typed-in commands, not in scripts.
@@ -41,13 +39,11 @@ Abbreviations may be added to :ref:`config.fish <configuration>`. Abbreviations 
 
 .. synopsis::
 
-    abbr [-a | --add] NAME [--quiet] [--position command | anywhere] [--regex PATTERN]
+    abbr [-a | --add] NAME [--position command | anywhere] [--regex PATTERN]
          [--set-cursor SENTINEL] [--trigger-on entry | exec]...
          [-f | --function] EXPANSION
 
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
-
-With **--quiet**, the expansion occurs without printing the new command line. The original, unexpanded command is saved in history. Without **--quiet** the new command line is shown with the abbreviation expanded. If a **--quiet** abbreviation results in an incomplete command or syntax error, the command line is printed as if it were not quiet.
 
 With **--position command**, the abbreviation will only expand when it is positioned as a command, not as an argument to another command. With **--position anywhere** the abbreviation may expand anywhere in the command line. The default is **command**.
 
@@ -55,7 +51,7 @@ With **--regex**, the abbreviation matches using the regular expression given by
 
 With **--set-cursor**, the cursor is moved to the first occurrence of **SENTINEL** in the expansion. That **SENTINEL** value is erased.
 
-With **--trigger-on entry**, the abbreviation will expand after its word or pattern is ended, for example by typing a space. With **--trigger-on exec**, the abbreviation will expand when the enter key is pressed. These options may be combined, but are incompatible with **--quiet**. The default is both **entry** and **exec**.
+With **--trigger-on entry**, the abbreviation will expand after its word or pattern is ended, for example by typing a space. With **--trigger-on exec**, the abbreviation will expand when the enter key is pressed. These options may be combined. The default is both **entry** and **exec**.
 
 With **-f** or **--function**, **EXPANSION** is treated as the name of a fish function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged.
 
@@ -87,9 +83,9 @@ Add a new abbreviation where ``L`` will be replaced with ``| less``, placing the
     function last_history_item
         echo $history[1]
     end
-    abbr -a !! --position anywhere --function last_history_item --quiet
+    abbr -a !! --position anywhere --function last_history_item
 
-This first creates a function ``last_history_item`` which outputs the last entered command. It then adds an abbreviation which replaces ``!!`` with the result of calling this function. The ``--quiet`` option causes the expansion to happen without visibly modifying the text. Taken together, this implements the ``!!`` history expansion feature of bash.
+This first creates a function ``last_history_item`` which outputs the last entered command. It then adds an abbreviation which replaces ``!!`` with the result of calling this function. Taken together, this is similar to the ``!!`` history expansion feature of bash.
 
 ::
 

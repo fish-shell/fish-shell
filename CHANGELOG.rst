@@ -34,7 +34,6 @@ Notable improvements and fixes
   - Matching tokens may be described using a regular expression instead of a literal word
   - The replacement text may be produced by a fish function, instead of a literal word
   - They may optionally only trigger after space, or after enter
-  - They may optionally run "quietly," without visibly modifying the command line
   - They may position the cursor anywhere in the expansion, instead of at the end
 
   See the documentation for more.

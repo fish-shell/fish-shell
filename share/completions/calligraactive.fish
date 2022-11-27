@@ -1,0 +1,7 @@
+complete -c calligraactive -l help -d 'Show help and exit'
+complete -c calligraactive -s v -l version -d 'Show version and exit'
+complete -c calligraactive -l help-qt -d 'Show Qt specific options and exit'
+complete -c calligraactive -l help-kde -d 'Show KDE specific options and exit'
+complete -c calligraactive -l help-all -d 'Show all options and exit'
+complete -c calligraactive -l author -d 'Show author information and exit'
+complete -c calligraactive -l license -d 'Show license information and exit'

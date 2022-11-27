@@ -41,7 +41,7 @@ struct abbr_options_t {
     bool function{};
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
-    maybe_t<wcstring> set_cursor_indicator{};
+    maybe_t<wcstring> set_cursor_marker{};
 
     wcstring_list_t args;
 
@@ -78,11 +78,11 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --function option requires --add\n"), CMD);
             return false;
         }
-        if (!add && set_cursor_indicator.has_value()) {
+        if (!add && set_cursor_marker.has_value()) {
             streams.err.append_format(_(L"%ls: --set-cursor option requires --add\n"), CMD);
             return false;
         }
-        if (set_cursor_indicator.has_value() && set_cursor_indicator->empty()) {
+        if (set_cursor_marker.has_value() && set_cursor_marker->empty()) {
             streams.err.append_format(_(L"%ls: --set-cursor argument cannot be empty\n"), CMD);
             return false;
         }
@@ -107,9 +107,8 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
             comps.push_back(L"--regex");
             comps.push_back(escape_string(abbr.key));
         }
-        if (abbr.set_cursor_indicator.has_value()) {
-            comps.push_back(L"--set-cursor");
-            comps.push_back(escape_string(*abbr.set_cursor_indicator));
+        if (abbr.set_cursor_marker.has_value()) {
+            comps.push_back(L"--set-cursor=" + escape_string(*abbr.set_cursor_marker));
         }
         if (abbr.replacement_is_function) {
             comps.push_back(L"--function");
@@ -249,7 +248,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
     abbr.regex = std::move(regex);
     abbr.replacement_is_function = opts.function;
-    abbr.set_cursor_indicator = opts.set_cursor_indicator;
+    abbr.set_cursor_marker = opts.set_cursor_marker;
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
@@ -278,26 +277,27 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT };
+    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, SET_CURSOR_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
     static const wchar_t *const short_options = L"-afrseqgUh";
-    static const struct woption long_options[] = {{L"add", no_argument, 'a'},
-                                                  {L"position", required_argument, 'p'},
-                                                  {L"regex", required_argument, REGEX_SHORT},
-                                                  {L"set-cursor", required_argument, 'C'},
-                                                  {L"function", no_argument, 'f'},
-                                                  {L"rename", no_argument, 'r'},
-                                                  {L"erase", no_argument, 'e'},
-                                                  {L"query", no_argument, 'q'},
-                                                  {L"show", no_argument, 's'},
-                                                  {L"list", no_argument, 'l'},
-                                                  {L"global", no_argument, 'g'},
-                                                  {L"universal", no_argument, 'U'},
-                                                  {L"help", no_argument, 'h'},
-                                                  {}};
+    static const struct woption long_options[] = {
+        {L"add", no_argument, 'a'},
+        {L"position", required_argument, 'p'},
+        {L"regex", required_argument, REGEX_SHORT},
+        {L"set-cursor", optional_argument, SET_CURSOR_SHORT},
+        {L"function", no_argument, 'f'},
+        {L"rename", no_argument, 'r'},
+        {L"erase", no_argument, 'e'},
+        {L"query", no_argument, 'q'},
+        {L"show", no_argument, 's'},
+        {L"list", no_argument, 'l'},
+        {L"global", no_argument, 'g'},
+        {L"universal", no_argument, 'U'},
+        {L"help", no_argument, 'h'},
+        {}};
 
     int argc = builtin_count_args(argv);
     int opt;
@@ -346,13 +346,14 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 opts.regex_pattern = w.woptarg;
                 break;
             }
-            case 'C': {
-                if (opts.set_cursor_indicator.has_value()) {
+            case SET_CURSOR_SHORT: {
+                if (opts.set_cursor_marker.has_value()) {
                     streams.err.append_format(
                         _(L"%ls: Cannot specify multiple set-cursor options\n"), CMD);
                     return STATUS_INVALID_ARGS;
                 }
-                opts.set_cursor_indicator = w.woptarg;
+                // The default set-cursor indicator is '%'.
+                opts.set_cursor_marker = w.woptarg ? w.woptarg : L"%";
                 break;
             }
             case 'f':

@@ -43,7 +43,7 @@ struct abbreviation_t {
     abbrs_position_t position{abbrs_position_t::command};
 
     /// If set, then move the cursor to the first instance of this string in the expansion.
-    maybe_t<wcstring> set_cursor_indicator{};
+    maybe_t<wcstring> set_cursor_marker{};
 
     /// Mark if we came from a universal variable.
     bool from_universal{};
@@ -76,7 +76,7 @@ struct abbrs_replacer_t {
     bool is_function;
 
     /// If set, the cursor should be moved to the first instance of this string in the expansion.
-    maybe_t<wcstring> set_cursor_indicator;
+    maybe_t<wcstring> set_cursor_marker;
 };
 using abbrs_replacer_list_t = std::vector<abbrs_replacer_t>;
 

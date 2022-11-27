@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     abbr --add NAME [--position command | anywhere] [--regex PATTERN]
-                    [--set-cursor SENTINEL]
+                    [--set-cursor[=MARKER]]
                     [-f | --function] EXPANSION
     abbr --erase NAME ...
     abbr --rename OLD_WORD NEW_WORD
@@ -38,7 +38,7 @@ Abbreviations may be added to :ref:`config.fish <configuration>`. Abbreviations 
 .. synopsis::
 
     abbr [-a | --add] NAME [--position command | anywhere] [--regex PATTERN]
-         [--set-cursor SENTINEL]
+         [--set-cursor[=MARKER]]
          [-f | --function] EXPANSION
 
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
@@ -47,7 +47,7 @@ With **--position command**, the abbreviation will only expand when it is positi
 
 With **--regex**, the abbreviation matches using the regular expression given by **PATTERN**, instead of the literal **NAME**. The pattern is interpreted using PCRE2 syntax and must match the entire token. If multiple abbreviations match the same token, the last abbreviation added is used.
 
-With **--set-cursor**, the cursor is moved to the first occurrence of **SENTINEL** in the expansion. That **SENTINEL** value is erased.
+With **--set-cursor=MARKER**, the cursor is moved to the first occurrence of **MARKER** in the expansion. The **MARKER** value is erased. The **MARKER** may be omitted (i.e. simply ``--set-cursor``), in which case it defaults to ``%``.
 
 With **-f** or **--function**, **EXPANSION** is treated as the name of a fish function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged.
 
@@ -69,7 +69,7 @@ Add a new abbreviation where ``-C`` will be replaced with ``--color``. The ``--`
 
 ::
 
-    abbr -a L --position anywhere --set-cursor ! "! | less"
+    abbr -a L --position anywhere --set-cursor "% | less"
 
 Add a new abbreviation where ``L`` will be replaced with ``| less``, placing the cursor before the pipe.
 

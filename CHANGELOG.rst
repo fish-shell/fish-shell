@@ -127,7 +127,13 @@ Completions
   - ``xreader``
   - ``xplayer``
   - ``pix``
-  - ``readelf``
+  - ``readelf`` (:issue:`8746`)
+  - ``rc``
+  - ``wish``
+  - ``qshell``
+  - ``ksh``
+  - ``tcsh``
+  - ``csh``
 
 - Improvements to some completions.
 

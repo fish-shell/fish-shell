@@ -167,7 +167,3 @@ abbr --add bogus --position never stuff
 
 abbr --add bogus --position anywhere --position command stuff
 # CHECKERR: abbr: Cannot specify multiple positions
-
-abbr --add --trigger-on derp zzxjoanw stuff
-# CHECKERR: abbr: Invalid --trigger-on 'derp'
-# CHECKERR: Must be one of: entry, exec.

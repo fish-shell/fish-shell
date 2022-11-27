@@ -18,11 +18,11 @@ bool abbreviation_t::matches_position(abbrs_position_t position) const {
     return this->position == abbrs_position_t::anywhere || this->position == position;
 }
 
-bool abbreviation_t::matches_phases(abbrs_phases_t p) const { return bool(this->phases & p); }
+bool abbreviation_t::triggers_on(abbrs_triggers_t t) const { return bool(this->triggers & t); }
 
 bool abbreviation_t::matches(const wcstring &token, abbrs_position_t position,
-                             abbrs_phases_t phases) const {
-    if (!this->matches_position(position) || !this->matches_phases(phases)) {
+                             abbrs_triggers_t trigger) const {
+    if (!this->matches_position(position) || !this->triggers_on(trigger)) {
         return false;
     }
     if (this->is_regex()) {
@@ -38,12 +38,12 @@ acquired_lock<abbrs_set_t> abbrs_get_set() {
 }
 
 abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t position,
-                                         abbrs_phases_t phases) const {
+                                         abbrs_triggers_t trigger) const {
     abbrs_replacer_list_t result{};
     // Later abbreviations take precedence so walk backwards.
     for (auto it = abbrs_.rbegin(); it != abbrs_.rend(); ++it) {
         const abbreviation_t &abbr = *it;
-        if (abbr.matches(token, position, phases)) {
+        if (abbr.matches(token, position, trigger)) {
             result.push_back(abbrs_replacer_t{abbr.replacement, abbr.replacement_is_function,
                                               abbr.set_cursor_indicator});
         }
@@ -52,9 +52,9 @@ abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t
 }
 
 bool abbrs_set_t::has_match(const wcstring &token, abbrs_position_t position,
-                            abbrs_phases_t phases) const {
+                            abbrs_triggers_t trigger) const {
     for (const auto &abbr : abbrs_) {
-        if (abbr.matches(token, position, phases)) {
+        if (abbr.matches(token, position, trigger)) {
             return true;
         }
     }

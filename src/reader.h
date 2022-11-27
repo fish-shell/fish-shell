@@ -266,12 +266,13 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 
 /// Expand at most one abbreviation at the given cursor position, updating the position if the
 /// abbreviation wants to move the cursor. Use the parser to run any abbreviations which want
-/// function calls. \return none if no abbreviations were expanded, otherwise the resulting edit.
-using abbrs_phases_t = uint8_t;
+/// function calls. \return none if no abbreviations were expanded, otherwise the resulting
+/// replacement.
+using abbrs_triggers_t = uint8_t;
 struct abbrs_replacement_t;
 maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline,
                                                                   size_t cursor_pos,
-                                                                  abbrs_phases_t phases,
+                                                                  abbrs_triggers_t triggers,
                                                                   parser_t &parser);
 
 /// Apply a completion string. Exposed for testing only.

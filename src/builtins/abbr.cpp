@@ -41,7 +41,7 @@ struct abbr_options_t {
     bool function{};
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
-    maybe_t<abbrs_phases_t> phases{};
+    maybe_t<abbrs_triggers_t> triggers{};
     maybe_t<wcstring> set_cursor_indicator{};
 
     wcstring_list_t args;
@@ -79,8 +79,9 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --function option requires --add\n"), CMD);
             return false;
         }
-        if (!add && phases.has_value()) {
-            streams.err.append_format(_(L"%ls: --trigger-on option requires --add\n"), CMD);
+        if (!add && triggers.has_value()) {
+            streams.err.append_format(_(L"%ls: --on-space and --on-enter options require --add\n"),
+                                      CMD);
             return false;
         }
         if (!add && set_cursor_indicator.has_value()) {
@@ -116,12 +117,12 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
             comps.push_back(L"--set-cursor");
             comps.push_back(escape_string(*abbr.set_cursor_indicator));
         }
-        if (abbr.phases != abbrs_phases_default) {
-            if (abbr.phases & abbrs_phase_entry) {
-                comps.push_back(L"--trigger-on entry");
+        if (abbr.triggers != abbrs_trigger_on_default) {
+            if (abbr.triggers & abbrs_trigger_on_space) {
+                comps.push_back(L"--on-space");
             }
-            if (abbr.phases & abbrs_phase_exec) {
-                comps.push_back(L"--trigger-on exec");
+            if (abbr.triggers & abbrs_trigger_on_enter) {
+                comps.push_back(L"--on-enter");
             }
         }
         if (abbr.replacement_is_function) {
@@ -263,7 +264,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     abbr.regex = std::move(regex);
     abbr.replacement_is_function = opts.function;
     abbr.set_cursor_indicator = opts.set_cursor_indicator;
-    abbr.phases = opts.phases.value_or(abbrs_phases_default);
+    abbr.triggers = opts.triggers.value_or(abbrs_trigger_on_default);
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
@@ -292,7 +293,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, EXPAND_ON_SHORT };
+    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, ON_SPACE_SHORT, ON_ENTER_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
@@ -301,7 +302,8 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     static const struct woption long_options[] = {{L"add", no_argument, 'a'},
                                                   {L"position", required_argument, 'p'},
                                                   {L"regex", required_argument, REGEX_SHORT},
-                                                  {L"trigger-on", required_argument, 't'},
+                                                  {L"on-space", no_argument, ON_SPACE_SHORT},
+                                                  {L"on-enter", no_argument, ON_ENTER_SHORT},
                                                   {L"set-cursor", required_argument, 'C'},
                                                   {L"function", no_argument, 'f'},
                                                   {L"rename", no_argument, 'r'},
@@ -361,19 +363,12 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 opts.regex_pattern = w.woptarg;
                 break;
             }
-            case 't': {
-                abbrs_phases_t phases = opts.phases.value_or(0);
-                if (!wcscmp(w.woptarg, L"entry")) {
-                    phases |= abbrs_phase_entry;
-                } else if (!wcscmp(w.woptarg, L"exec")) {
-                    phases |= abbrs_phase_exec;
-                } else {
-                    streams.err.append_format(_(L"%ls: Invalid --trigger-on '%ls'\n"
-                                                L"Must be one of: entry, exec.\n"),
-                                              CMD, w.woptarg);
-                    return STATUS_INVALID_ARGS;
-                }
-                opts.phases = phases;
+            case ON_SPACE_SHORT: {
+                opts.triggers = opts.triggers.value_or(0) | abbrs_trigger_on_space;
+                break;
+            }
+            case ON_ENTER_SHORT: {
+                opts.triggers = opts.triggers.value_or(0) | abbrs_trigger_on_enter;
                 break;
             }
             case 'C': {

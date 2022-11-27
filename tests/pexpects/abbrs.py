@@ -148,12 +148,12 @@ expect_prompt()
 send(r"""echo LLL derp?""")
 expect_str(r"echo derp | less ")
 
-# Test trigger-on.
+# Test --on-enter and --on-space.
 sendline(r"""abbr --erase (abbr --list) """)
 expect_prompt()
-sendline(r"""abbr --add entry-only --position anywhere --trigger-on entry 'worked1'""")
+sendline(r"""abbr --add entry-only --position anywhere --on-space 'worked1'""")
 expect_prompt()
-sendline(r"""abbr --add exec-only --position anywhere --trigger-on exec 'worked2'""")
+sendline(r"""abbr --add exec-only --position anywhere --on-enter 'worked2'""")
 expect_prompt()
 sendline(r"echo entry-only")  # should not trigger, no space
 expect_prompt(r"entry-only")

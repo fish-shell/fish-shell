@@ -19,18 +19,18 @@ enum class abbrs_position_t : uint8_t {
     anywhere,  // expand in any token
 };
 
-/// Describes a phase of expansion.
-enum abbrs_phase_t : uint8_t {
-    // Expands "on space" immediately after the user types it.
-    abbrs_phase_entry = 1 << 0,
+/// Describes the reason for triggering expansion.
+enum abbrs_trigger_on_t : uint8_t {
+    // Expands on "space" (any token-closing character) immediately after the user types it.
+    abbrs_trigger_on_space = 1 << 0,
 
-    // Expands "on enter" before submitting the command to be executed.
-    abbrs_phase_exec = 1 << 1,
+    // Expands on "enter" (any exec key binding) before submitting the command to be executed.
+    abbrs_trigger_on_enter = 1 << 1,
 
-    // Default set of phases.
-    abbrs_phases_default = abbrs_phase_entry | abbrs_phase_exec,
+    // Default set of triggers.
+    abbrs_trigger_on_default = abbrs_trigger_on_space | abbrs_trigger_on_enter,
 };
-using abbrs_phases_t = uint8_t;
+using abbrs_triggers_t = uint8_t;
 
 struct abbreviation_t {
     // Abbreviation name. This is unique within the abbreviation set.
@@ -61,14 +61,14 @@ struct abbreviation_t {
     /// Mark if we came from a universal variable.
     bool from_universal{};
 
-    /// Set of phases in which this abbreviation expands.
-    abbrs_phases_t phases{abbrs_phases_default};
+    /// Set of conditions in which this abbreviation expands.
+    abbrs_triggers_t triggers{abbrs_trigger_on_default};
 
     // \return true if this is a regex abbreviation.
     bool is_regex() const { return this->regex.has_value(); }
 
-    // \return true if we match a token at a given position in a given set of phases.
-    bool matches(const wcstring &token, abbrs_position_t position, abbrs_phases_t phases) const;
+    // \return true if we match a token at a given position and trigger.
+    bool matches(const wcstring &token, abbrs_position_t position, abbrs_triggers_t trigger) const;
 
     // Construct from a name, a key which matches a token, a replacement token, a position, and
     // whether we are derived from a universal variable.
@@ -82,8 +82,8 @@ struct abbreviation_t {
     // \return if we expand in a given position.
     bool matches_position(abbrs_position_t position) const;
 
-    // \return if we expand in a given set of phases.
-    bool matches_phases(abbrs_phases_t p) const;
+    // \return if we trigger in this phase.
+    bool triggers_on(abbrs_triggers_t t) const;
 };
 
 /// The result of an abbreviation expansion.
@@ -123,10 +123,11 @@ class abbrs_set_t {
     /// \return the list of replacers for an input token, in priority order.
     /// The \p position is given to describe where the token was found.
     abbrs_replacer_list_t match(const wcstring &token, abbrs_position_t position,
-                                abbrs_phases_t phases) const;
+                                abbrs_triggers_t trigger) const;
 
     /// \return whether we would have at least one replacer for a given token.
-    bool has_match(const wcstring &token, abbrs_position_t position, abbrs_phases_t phases) const;
+    bool has_match(const wcstring &token, abbrs_position_t position,
+                   abbrs_triggers_t trigger) const;
 
     /// Add an abbreviation. Any abbreviation with the same name is replaced.
     void add(abbreviation_t &&abbr);
@@ -163,8 +164,8 @@ acquired_lock<abbrs_set_t> abbrs_get_set();
 /// \return the list of replacers for an input token, in priority order, using the global set.
 /// The \p position is given to describe where the token was found.
 inline abbrs_replacer_list_t abbrs_match(const wcstring &token, abbrs_position_t position,
-                                         abbrs_phases_t phases) {
-    return abbrs_get_set()->match(token, position, phases);
+                                         abbrs_triggers_t trigger) {
+    return abbrs_get_set()->match(token, position, trigger);
 }
 
 #endif

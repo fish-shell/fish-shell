@@ -1,0 +1,12 @@
+complete -c yash -l help -d 'Show help and exit'
+complete -c yash -s V -l version -d 'Show version and exit'
+
+complete -c yash -s c -l cmdline -d 'Commands to run'
+complete -c yash -s s -l stdin -d 'Read commands from stdin'
+complete -c yash -s v -l verbose -d 'List optional features'
+complete -c yash -s l -l login -d 'Use login shell'
+complete -c yash -s i -l interactive -d 'Use interactive shell'
+complete -c yash -l profile -d 'Load profile'
+complete -c yash -l noprofile -d 'Do not load profile'
+complete -c yash -l rcfile -d 'Load .rc file'
+complete -c yash -l norcfile -d 'Do not load .rc file'

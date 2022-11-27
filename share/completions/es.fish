@@ -8,3 +8,4 @@ complete -c es -s x
 complete -c es -s n
 complete -c es -s p
 complete -c es -s o
+complete -c es -s d

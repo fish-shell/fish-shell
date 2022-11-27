@@ -1,0 +1,10 @@
+complete -c es -s c
+complete -c es -s s
+complete -c es -s i
+complete -c es -s l
+complete -c es -s e
+complete -c es -s v
+complete -c es -s x
+complete -c es -s n
+complete -c es -s p
+complete -c es -s o

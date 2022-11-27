@@ -1,0 +1,7 @@
+complete -c calligraplanwork -l help -d 'Show help and exit'
+complete -c calligraplanwork -s v -l version -d 'Show version and exit'
+complete -c calligraplanwork -l help-qt -d 'Show Qt specific options and exit'
+complete -c calligraplanwork -l help-kde -d 'Show KDE specific options and exit'
+complete -c calligraplanwork -l help-all -d 'Show all options and exit'
+complete -c calligraplanwork -l author -d 'Show author information and exit'
+complete -c calligraplanwork -l license -d 'Show license information and exit'

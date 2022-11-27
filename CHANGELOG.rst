@@ -127,6 +127,12 @@ Completions
   - ``xreader``
   - ``xplayer``
   - ``pix``
+  - ``rc``
+  - ``wish``
+  - ``qshell``
+  - ``ksh``
+  - ``tcsh``
+  - ``csh``
 
 - Improvements to some completions.
 

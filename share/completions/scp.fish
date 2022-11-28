@@ -53,7 +53,7 @@ complete -c scp -d "Local Path" -n "not string match @ -- (commandline -ct)"
 # Get the list of remote files from the scp target.
 complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -a "
 (__scp_remote_target):( \
-        command ssh (__scp2ssh_port_number) -o 'BatchMode yes' (__scp_remote_target) ls\ -dp\ (__scp_remote_path_prefix | string unescape)\* 2>/dev/null |
+        command ssh (__scp2ssh_port_number) -o 'BatchMode yes' (__scp_remote_target) command\ ls\ -dp\ (__scp_remote_path_prefix | string unescape)\* 2>/dev/null |
         string escape -n
 )
 "

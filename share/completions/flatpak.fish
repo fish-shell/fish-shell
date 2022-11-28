@@ -1,22 +1,9 @@
 # Completions for flatpak, an "Application deployment framework for desktop apps"
 # (http://flatpak.org)
-set -l flatversion (flatpak --version | string match -r '[\d.]+' | cut -f -2 -d .)
 set -l commands install update uninstall list info config repair create-usb search run override make-current enter ps \
     documents document-{export,unexport,info} permissions permission-{show,reset} remotes remote-{add,modify,delete,ls,info} \
-    build build-{init,finish,export,bundle,import-bundle,sign,update-repo,commit-from} repo
-
-if test $flatversion -ge 1.1 2>/dev/null
-    set commands $commands history kill
-    complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a history -d 'Show history'
-    complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a kill -d 'Stop a running application'
-end
-
-if test $flatversion -ge 1.5 2>/dev/null
-    set commands $commands mask permission-{remove,set}
-    complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a mask -d 'Mask out updates and automatic installation'
-    complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a permission-remove -d 'Remove item from permission store'
-    complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a permission-set -d 'Set permissions'
-end
+    build build-{init,finish,export,bundle,import-bundle,sign,update-repo,commit-from} repo \
+    history kill mask permission-{remove,set}
 
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a install -d 'Install an application or runtime from a remote'
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a update -d 'Update an installed application or runtime'
@@ -55,17 +42,16 @@ complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-s
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-update-repo -d 'Update the summary file in a repository'
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-commit-from -d 'Create new commit based on existing ref'
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a repo -d 'Show information about a repo'
+complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a history -d 'Show history'
+complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a kill -d 'Stop a running application'
+complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a mask -d 'Mask out updates and automatic installation'
+complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a permission-remove -d 'Remove item from permission store'
+complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a permission-set -d 'Set permissions'
 
-if test $flatversion -ge 1.2 2>/dev/null
-    complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app --columns=application,name)"
-    complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list --columns=application,name)"
-    complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(flatpak ps --columns=instance,application)"
-    complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(flatpak remotes --columns=name,title)"
-else
-    complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app | string match -r '\S+')"
-    complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list | string match -r '\S+')"
-    complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(flatpak remotes | string match -r '\S+')"
-end
+complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app --columns=application,name)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list --columns=application,name)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(flatpak ps --columns=instance,application)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(flatpak remotes --columns=name,title)"
 
 # Note that "remote-ls" opens an internet connection, so we don't want to complete "install"
 # Plenty of the other stuff is too free-form to complete (e.g. remote-add).

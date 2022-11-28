@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from pexpect_helper import SpawnedProc
+from pexpect_helper import SpawnedProc, control
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -59,3 +59,28 @@ send("\b" * 64)
 # Commandline works when run on its own (#8807).
 sendline("commandline whatever")
 expect_re("prompt [0-9]+>whatever")
+
+# Test --current-process output
+send(control("u"))
+sendline(r"bind \cb 'set tmp (commandline --current-process)'")
+expect_prompt()
+send("echo process1; echo process2")
+send(control("a"))
+send(control("b"))
+send(control("k"))
+sendline("echo first process is [$tmp]")
+expect_str("first process is [echo process1]")
+
+send("echo process # comment")
+send(control("a"))
+send(control("b"))
+send(control("k"))
+sendline('echo "process extent is [$tmp]"')
+expect_str("process extent is [echo process # comment]")
+
+sendline(r"bind \cb 'set tmp (commandline --current-process | count)'")
+sendline(r'commandline "echo line1 \\" "# comment" "line2"')
+send(control("b"))
+send(control("u") * 6)
+sendline('echo "process spans $tmp lines"')
+expect_str("process spans 3 lines")

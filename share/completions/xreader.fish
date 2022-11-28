@@ -1,0 +1,10 @@
+complete -c xreader -s '?' -s h -l help -d 'Show help and exit'
+complete -c xreader -l version -d 'Show version and exit'
+complete -c xreader -l help-all -d 'Show all options and exit'
+
+complete -c xreader -s p -l page-label -d 'Page label'
+complete -c xreader -s i -l page-index -d 'Page number'
+complete -c xreader -s f -l fullscreen -d 'Use fullscreen mode'
+complete -c xreader -s s -l presentation -d 'Use presentation mode'
+complete -c xreader -s w -l preview -d 'Use preview mode'
+complete -c xreader -l display -d 'X display'

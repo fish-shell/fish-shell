@@ -1,0 +1,106 @@
+env:
+    CIRRUS_CLONE_DEPTH: 1
+    CI: 1
+
+linux_task:
+    matrix:
+        - name: alpine
+          container: &step
+              image: ghcr.io/fish-shell/fish-ci/alpine:latest
+              memory: 4GB
+        - name: bionic
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/bionic:latest
+        - name: bionic-asan-clang
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/bionic-asan-clang:latest
+        - name: bionic-tsan
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/bionic-tsan:latest
+        - name: bionic-tsan-clang
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/bionic-tsan-clang:latest
+        - name: centos7
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/centos7:latest
+        - name: centos8
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/centos8:latest
+        - name: focal-32bit
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/focal-32bit:latest
+        - name: xenial
+          container:
+              <<: *step
+              image: ghcr.io/fish-shell/fish-ci/xenial:latest
+
+    tests_script:
+        # cirrus at times gives us 32 procs and 2 GB of RAM
+        # Unrestriced parallelism results in OOM
+        - lscpu || true
+        - (cat /proc/meminfo | grep MemTotal) || true
+        - mkdir build && cd build
+        - cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=6 ..
+        - ninja -j 6 fish fish_tests
+        - ninja fish_run_tests
+
+    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+
+linux_arm_task:
+    matrix:
+        - name: focal-arm64
+          arm_container:
+              image: ghcr.io/fish-shell/fish-ci/focal-arm64
+              only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+        - name: jammy-armv7-32bit
+          arm_container:
+              image: ghcr.io/fish-shell/fish-ci/jammy-armv7-32bit
+
+    tests_script:
+        # cirrus at times gives us 32 procs and 2 GB of RAM
+        # Unrestriced parallelism results in OOM
+        - lscpu || true
+        - (cat /proc/meminfo | grep MemTotal) || true
+        - mkdir build && cd build
+        - cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=6 ..
+        - ninja -j 6 fish fish_tests
+        - file ./fish
+        - ninja fish_run_tests
+
+    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+
+freebsd_task:
+    matrix:
+        - name: FreeBSD 14
+          freebsd_instance:
+              image_family: freebsd-14-0-snap
+        - name: FreeBSD 13
+          freebsd_instance:
+              image: freebsd-13-0-release-amd64
+        - name: FreeBSD 12.3
+          freebsd_instance:
+              image: freebsd-12-3-release-amd64
+    tests_script:
+        - pkg install -y cmake devel/pcre2 devel/ninja misc/py-pexpect git
+        # BSDs have the following behavior: root may open or access files even if
+        # the mode bits would otherwise disallow it. For example root may open()
+        # a file with write privileges even if the file has mode 400. This breaks
+        # our tests for e.g. cd and path. So create a new unprivileged user to run tests.
+        - pw user add -n fish-user -s /bin/csh -d /home/fish-user
+        - mkdir -p /home/fish-user
+        - chown -R fish-user /home/fish-user
+        - mkdir build && cd build
+        - chown -R fish-user ..
+        - sudo -u fish-user -s whoami
+        - sudo -u fish-user -s cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=1 ..
+        - sudo -u fish-user -s ninja -j 6 fish fish_tests
+        - sudo -u fish-user -s ninja fish_run_tests
+
+    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'

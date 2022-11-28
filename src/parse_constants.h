@@ -217,14 +217,19 @@ enum class pipeline_position_t : uint8_t {
 #define FISH_MAX_STACK_DEPTH 128
 
 /// Maximum number of nested string substitutions (in lieu of evals)
+/// Reduced under TSAN: our CI test creates 500 jobs and this is very slow with TSAN.
+#if FISH_TSAN_WORKAROUNDS
+#define FISH_MAX_EVAL_DEPTH 250
+#else
 #define FISH_MAX_EVAL_DEPTH 500
+#endif
 
 /// Error message on a function that calls itself immediately.
 #define INFINITE_FUNC_RECURSION_ERR_MSG \
     _(L"The function '%ls' calls itself immediately, which would result in an infinite loop.")
 
 /// Error message on reaching maximum call stack depth.
-#define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG                                                     \
+#define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG \
     _(L"The call stack limit has been exceeded. Do you have an accidental infinite loop?")
 
 /// Error message when encountering an unknown builtin name.

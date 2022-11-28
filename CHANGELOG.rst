@@ -115,6 +115,24 @@ Completions
   - ``dua``
   - ``clojure``
   - ``loadkeys``
+  - ``toot``
+  - ``eg``
+  - ``kb``
+  - ``okular``
+  - ``dolphin``
+  - ``ark``
+  - ``konsole``
+  - ``xed``
+  - ``xviewer``
+  - ``xreader``
+  - ``xplayer``
+  - ``pix``
+  - ``rc``
+  - ``wish``
+  - ``qshell``
+  - ``ksh``
+  - ``tcsh``
+  - ``csh``
 
 - Improvements to some completions.
 

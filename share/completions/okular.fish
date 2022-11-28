@@ -1,0 +1,8 @@
+complete -c okular -s p -l page -d 'A page number'
+complete -c okular -l presentation -d 'Enable presentation mode'
+complete -c okular -l print -d 'Show print dialog'
+complete -c okular -l print-and-exit -d 'Show print dialog and exit'
+complete -c okular -l unique -d 'Enable unique instance control'
+complete -c okular -l noraise -d 'Disable window raising'
+complete -c okular -l find -d 'A string to find'
+complete -c okular -l editor-cmd -d 'An external editor command'

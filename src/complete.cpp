@@ -1568,6 +1568,14 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         effective_cmdline = &effective_cmdline_buf;
     }
 
+    if (tokens.back().type == token_type_t::comment) {
+        return;
+    }
+    tokens.erase(std::remove_if(tokens.begin(), tokens.end(),
+                                [](const tok_t &tok) { return tok.type == token_type_t::comment; }),
+                 tokens.end());
+    assert(!tokens.empty());
+
     const tok_t &cmd_tok = tokens.front();
     const tok_t &cur_tok = tokens.back();
 

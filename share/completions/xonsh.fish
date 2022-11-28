@@ -1,0 +1,13 @@
+complete -c xonsh -s h -l help -d 'Show help and exit'
+complete -c xonsh -s v -l version -d 'Show version and exit'
+
+complete -c xonsh -s c -d 'Command to run and exit'
+complete -c xonsh -s i -l interactive -d 'Use interactive mode'
+complete -c xonsh -s l -l login -d 'Use login shell'
+complete -c xonsh -l rc -d '.rc files to load'
+complete -c xonsh -l no-rc -d 'Do not load .rc files'
+complete -c xonsh -l no-script-cache -d 'Do not use script cache'
+complete -c xonsh -l cache-everything -d 'Use script cache'
+complete -c xonsh -s D -d 'Specify environment variable'
+complete -c xonsh -x -l shell-type -a 'b best d dumb ptk prompt-toolkit prompt_toolkit rand random rl readline' -d 'Specify shell type'
+complete -c xonsh -l timings -d 'Show timing information'

@@ -1,4 +1,18 @@
+function __reg_run_reg_safely
+    set -l output (reg $argv | tr -d '\r' | tail --lines +2 | string collect)
+    if not string match -q -r "reg: Invalid syntax*" -- $output
+        set output (string split \n -- $output)
+        echo $output | string replace -a " " \n
+    end
+end
+
 function __reg_add_complete_args -a previous_token
+    if test "$previous_token" = add
+        set -l current_token (commandline -tc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     if test "$previous_token" = /t
         echo 'REG_SZ
 REG_MULTI_SZ
@@ -47,7 +61,13 @@ function __reg_copy_complete_args
 /?\tShow help'
 end
 
-function __reg_delete_complete_args
+function __reg_delete_complete_args -a previous_token
+    if test "$previous_token" = delete
+        set -l current_token (commandline -tc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     if not __fish_seen_argument -w v -w ve -w va
         echo -e '/v\tDelete a specific entry under the subkey
 /ve\tSpecify that only entries that have no value will be deleted
@@ -58,12 +78,24 @@ function __reg_delete_complete_args
 /?\tShow help'
 end
 
-function __reg_export_complete_args
+function __reg_export_complete_args -a previous_token
+    if test "$previous_token" = export
+        set -l current_token (commandline -tc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
 
 function __reg_query_complete_args -a previous_token
+    if test "$previous_token" = query
+        set -l current_token (commandline -tc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     if test "$previous_token" = /t
         echo 'REG_SZ
 REG_MULTI_SZ
@@ -93,7 +125,13 @@ REG_NONE'
 /?\tShow help'
 end
 
-function __reg_save_complete_args
+function __reg_save_complete_args -a previous_token
+    if test "$previous_token" = save
+        set -l current_token (commandline -tc)
+        __reg_run_reg_safely query $current_token
+        return
+    end
+
     echo -e '/y\tOverwrite an existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
@@ -108,13 +146,13 @@ function __reg_complete_args -d 'Function to generate args'
     else if __fish_seen_subcommand_from copy
         __reg_copy_complete_args
     else if __fish_seen_subcommand_from delete
-        __reg_delete_complete_args
+        __reg_delete_complete_args $previous_token
     else if __fish_seen_subcommand_from export
-        __reg_export_complete_args
+        __reg_export_complete_args $previous_token
     else if __fish_seen_subcommand_from query
         __reg_query_complete_args $previous_token
     else if __fish_seen_subcommand_from save
-        __reg_save_complete_args
+        __reg_save_complete_args $previous_token
     end
 end
 

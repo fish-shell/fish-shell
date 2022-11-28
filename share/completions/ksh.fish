@@ -1,6 +1,4 @@
 set -l options allexport bgnice braceexpand emacs errexit globstar gmacs histexpand ignoreeof keyword letoctal markdirs monitor multiline noclobber noexec noglob nolog notify nounset pipefail privileged showme trackall verbose vi viraw xtrace
-complete -c ksh -a "+{a,b,c,e,f,h,i,k,n,o,p,r,s,t,u,v,x,B,C,D,P}"
-complete -c ksh -a "-{a,b,c,e,f,h,i,k,n,o,p,r,s,t,u,v,x,B,C,D,P}"
-complete -c ksh -s R
-
+complete -c ksh -a "{+,-}{a\t'always export vars',b\t'print job end message immediately',c\t'read commands from 1st arg',e\t'fail on non-zero exit status',f\t'disable pathname expansion',i\t'interactive session',n\t'run script but skip execution',o\t'specify options',p\t'privledged mode',r\t'restricted mode',s\t'read commands from stdin',u\t'error on expanding unset var',v\tverbose,x\t'execution trace',B\t'enable {...} expansion',C\t'always noclobber',D\t'output strings in script'}"
 complete -c ksh -a "$options"
+complete -c ksh -a "cilrsDEabefhkmnprtuvxBCGH"

@@ -59,7 +59,7 @@ These options modify how variables operate:
 **--export** or **-x**
     Causes the specified shell variable to be exported to child processes (making it an "environment variable").
 
-**--unexport**
+**--unexport** or **-u**
     Causes the specified shell variable to NOT be exported to child processes.
 
 **--path**
@@ -214,4 +214,3 @@ This runs fish with a temporary home directory::
 Notes
 -----
 - Fish versions prior to 3.0 supported the syntax ``set PATH[1] PATH[4] /bin /sbin``, which worked like ``set PATH[1 4] /bin /sbin``.
-- **-u** is accpeted as a synonym of **--unexport**.

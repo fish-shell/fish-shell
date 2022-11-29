@@ -25,7 +25,7 @@ struct realpath_cmd_opts_t {
 
 static const wchar_t *const short_options = L"+:hs";
 static const struct woption long_options[] = {
-    {L"no-symlinks", no_argument, nullptr, 's'}, {L"help", no_argument, nullptr, 'h'}, {}};
+    {L"no-symlinks", no_argument, 's'}, {L"help", no_argument, 'h'}, {}};
 
 static int parse_cmd_opts(realpath_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {

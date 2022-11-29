@@ -62,11 +62,13 @@ class builtin_bind_t {
     bool erase(const wchar_t *const *seq, bool all, const wchar_t *mode, bool use_terminfo,
                bool user, io_streams_t &streams);
     bool get_terminfo_sequence(const wcstring &seq, wcstring *out_seq, io_streams_t &streams) const;
-    bool insert(int optind, int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams);
+    bool insert(int optind, int argc, const wchar_t **argv, parser_t &parser,
+                io_streams_t &streams);
     void list_modes(io_streams_t &streams);
-    bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, parser_t &parser, io_streams_t &streams);
-    bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool preset, parser_t &parser,
+    bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, parser_t &parser,
                   io_streams_t &streams);
+    bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool preset,
+                  parser_t &parser, io_streams_t &streams);
 };
 
 /// List a single key binding.
@@ -141,7 +143,8 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
 }
 
 /// List all current key bindings.
-void builtin_bind_t::list(const wchar_t *bind_mode, bool user, parser_t &parser, io_streams_t &streams) {
+void builtin_bind_t::list(const wchar_t *bind_mode, bool user, parser_t &parser,
+                          io_streams_t &streams) {
     const std::vector<input_mapping_name_t> lst = input_mappings_->get_names(user);
 
     for (const input_mapping_name_t &binding : lst) {
@@ -255,7 +258,8 @@ bool builtin_bind_t::erase(const wchar_t *const *seq, bool all, const wchar_t *m
     return res;
 }
 
-bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, parser_t &parser,
+                            io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
 
@@ -342,18 +346,18 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":aehkKfM:Lm:s";
-    static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'},
-                                                  {L"erase", no_argument, nullptr, 'e'},
-                                                  {L"function-names", no_argument, nullptr, 'f'},
-                                                  {L"help", no_argument, nullptr, 'h'},
-                                                  {L"key", no_argument, nullptr, 'k'},
-                                                  {L"key-names", no_argument, nullptr, 'K'},
-                                                  {L"list-modes", no_argument, nullptr, 'L'},
-                                                  {L"mode", required_argument, nullptr, 'M'},
-                                                  {L"preset", no_argument, nullptr, 'p'},
-                                                  {L"sets-mode", required_argument, nullptr, 'm'},
-                                                  {L"silent", no_argument, nullptr, 's'},
-                                                  {L"user", no_argument, nullptr, 'u'},
+    static const struct woption long_options[] = {{L"all", no_argument, 'a'},
+                                                  {L"erase", no_argument, 'e'},
+                                                  {L"function-names", no_argument, 'f'},
+                                                  {L"help", no_argument, 'h'},
+                                                  {L"key", no_argument, 'k'},
+                                                  {L"key-names", no_argument, 'K'},
+                                                  {L"list-modes", no_argument, 'L'},
+                                                  {L"mode", required_argument, 'M'},
+                                                  {L"preset", no_argument, 'p'},
+                                                  {L"sets-mode", required_argument, 'm'},
+                                                  {L"silent", no_argument, 's'},
+                                                  {L"user", no_argument, 'u'},
                                                   {}};
 
     int opt;

@@ -91,15 +91,15 @@ static void print_colors(io_streams_t &streams, wcstring_list_t args, bool bold,
 }
 
 static const wchar_t *const short_options = L":b:hvoidrcu";
-static const struct woption long_options[] = {{L"background", required_argument, nullptr, 'b'},
-                                              {L"help", no_argument, nullptr, 'h'},
-                                              {L"bold", no_argument, nullptr, 'o'},
-                                              {L"underline", no_argument, nullptr, 'u'},
-                                              {L"italics", no_argument, nullptr, 'i'},
-                                              {L"dim", no_argument, nullptr, 'd'},
-                                              {L"reverse", no_argument, nullptr, 'r'},
-                                              {L"version", no_argument, nullptr, 'v'},
-                                              {L"print-colors", no_argument, nullptr, 'c'},
+static const struct woption long_options[] = {{L"background", required_argument, 'b'},
+                                              {L"help", no_argument, 'h'},
+                                              {L"bold", no_argument, 'o'},
+                                              {L"underline", no_argument, 'u'},
+                                              {L"italics", no_argument, 'i'},
+                                              {L"dim", no_argument, 'd'},
+                                              {L"reverse", no_argument, 'r'},
+                                              {L"version", no_argument, 'v'},
+                                              {L"print-colors", no_argument, 'c'},
                                               {}};
 
 /// set_color builtin.

@@ -40,18 +40,18 @@ struct functions_cmd_opts_t {
     const wchar_t *description = nullptr;
 };
 static const wchar_t *const short_options = L":Ht:Dacd:ehnqv";
-static const struct woption long_options[] = {{L"erase", no_argument, nullptr, 'e'},
-                                              {L"description", required_argument, nullptr, 'd'},
-                                              {L"names", no_argument, nullptr, 'n'},
-                                              {L"all", no_argument, nullptr, 'a'},
-                                              {L"help", no_argument, nullptr, 'h'},
-                                              {L"query", no_argument, nullptr, 'q'},
-                                              {L"copy", no_argument, nullptr, 'c'},
-                                              {L"details", no_argument, nullptr, 'D'},
-                                              {L"no-details", no_argument, nullptr, 1},
-                                              {L"verbose", no_argument, nullptr, 'v'},
-                                              {L"handlers", no_argument, nullptr, 'H'},
-                                              {L"handlers-type", required_argument, nullptr, 't'},
+static const struct woption long_options[] = {{L"erase", no_argument, 'e'},
+                                              {L"description", required_argument, 'd'},
+                                              {L"names", no_argument, 'n'},
+                                              {L"all", no_argument, 'a'},
+                                              {L"help", no_argument, 'h'},
+                                              {L"query", no_argument, 'q'},
+                                              {L"copy", no_argument, 'c'},
+                                              {L"details", no_argument, 'D'},
+                                              {L"no-details", no_argument, 1},
+                                              {L"verbose", no_argument, 'v'},
+                                              {L"handlers", no_argument, 'H'},
+                                              {L"handlers-type", required_argument, 't'},
                                               {}};
 
 static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)

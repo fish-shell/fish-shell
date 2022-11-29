@@ -57,20 +57,20 @@ struct history_cmd_opts_t {
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
 static const wchar_t *const short_options = L":CRcehmn:pt::z";
-static const struct woption long_options[] = {{L"prefix", no_argument, nullptr, 'p'},
-                                              {L"contains", no_argument, nullptr, 'c'},
-                                              {L"help", no_argument, nullptr, 'h'},
-                                              {L"show-time", optional_argument, nullptr, 't'},
-                                              {L"exact", no_argument, nullptr, 'e'},
-                                              {L"max", required_argument, nullptr, 'n'},
-                                              {L"null", no_argument, nullptr, 'z'},
-                                              {L"case-sensitive", no_argument, nullptr, 'C'},
-                                              {L"delete", no_argument, nullptr, 1},
-                                              {L"search", no_argument, nullptr, 2},
-                                              {L"save", no_argument, nullptr, 3},
-                                              {L"clear", no_argument, nullptr, 4},
-                                              {L"merge", no_argument, nullptr, 5},
-                                              {L"reverse", no_argument, nullptr, 'R'},
+static const struct woption long_options[] = {{L"prefix", no_argument, 'p'},
+                                              {L"contains", no_argument, 'c'},
+                                              {L"help", no_argument, 'h'},
+                                              {L"show-time", optional_argument, 't'},
+                                              {L"exact", no_argument, 'e'},
+                                              {L"max", required_argument, 'n'},
+                                              {L"null", no_argument, 'z'},
+                                              {L"case-sensitive", no_argument, 'C'},
+                                              {L"delete", no_argument, 1},
+                                              {L"search", no_argument, 2},
+                                              {L"save", no_argument, 3},
+                                              {L"clear", no_argument, 4},
+                                              {L"merge", no_argument, 5},
+                                              {L"reverse", no_argument, 'R'},
                                               {}};
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.

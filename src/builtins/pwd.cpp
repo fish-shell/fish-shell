@@ -20,9 +20,9 @@
 
 /// The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 static const wchar_t *const short_options = L"LPh";
-static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
-                                              {L"logical", no_argument, nullptr, 'L'},
-                                              {L"physical", no_argument, nullptr, 'P'},
+static const struct woption long_options[] = {{L"help", no_argument, 'h'},
+                                              {L"logical", no_argument, 'L'},
+                                              {L"physical", no_argument, 'P'},
                                               {}};
 maybe_t<int> builtin_pwd(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);

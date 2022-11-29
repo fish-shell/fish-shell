@@ -137,7 +137,7 @@ maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, const wchar_t
 
     static const wchar_t *const short_options = L":nh";
     static const struct woption long_options[] = {
-        {L"any", no_argument, nullptr, 'n'}, {L"help", no_argument, nullptr, 'h'}, {}};
+        {L"any", no_argument, 'n'}, {L"help", no_argument, 'h'}, {}};
 
     int opt;
     wgetopter_t w;

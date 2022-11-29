@@ -292,12 +292,7 @@ void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct w
 
     nextchar += std::wcslen(nextchar);
     if (longind != nullptr) *longind = option_index;
-    if (pfound->flag) {
-        *(pfound->flag) = pfound->val;
-        *retval = 0;
-    } else {
-        *retval = pfound->val;
-    }
+    *retval = pfound->val;
 }
 
 // Find a matching long opt.

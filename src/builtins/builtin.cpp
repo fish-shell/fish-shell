@@ -20,10 +20,8 @@ struct builtin_cmd_opts_t {
     bool query = false;
 };
 static const wchar_t *const short_options = L":hnq";
-static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
-                                              {L"names", no_argument, nullptr, 'n'},
-                                              {L"query", no_argument, nullptr, 'q'},
-                                              {}};
+static const struct woption long_options[] = {
+    {L"help", no_argument, 'h'}, {L"names", no_argument, 'n'}, {L"query", no_argument, 'q'}, {}};
 
 static int parse_cmd_opts(builtin_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {

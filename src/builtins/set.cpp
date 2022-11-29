@@ -56,22 +56,22 @@ enum {
 // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
 // we stop scanning for flags when the first non-flag argument is seen.
 static const wchar_t *const short_options = L"+:LSUaefghlnpqux";
-static const struct woption long_options[] = {{L"export", no_argument, nullptr, 'x'},
-                                              {L"global", no_argument, nullptr, 'g'},
-                                              {L"function", no_argument, nullptr, 'f'},
-                                              {L"local", no_argument, nullptr, 'l'},
-                                              {L"erase", no_argument, nullptr, 'e'},
-                                              {L"names", no_argument, nullptr, 'n'},
-                                              {L"unexport", no_argument, nullptr, 'u'},
-                                              {L"universal", no_argument, nullptr, 'U'},
-                                              {L"long", no_argument, nullptr, 'L'},
-                                              {L"query", no_argument, nullptr, 'q'},
-                                              {L"show", no_argument, nullptr, 'S'},
-                                              {L"append", no_argument, nullptr, 'a'},
-                                              {L"prepend", no_argument, nullptr, 'p'},
-                                              {L"path", no_argument, nullptr, opt_path},
-                                              {L"unpath", no_argument, nullptr, opt_unpath},
-                                              {L"help", no_argument, nullptr, 'h'},
+static const struct woption long_options[] = {{L"export", no_argument, 'x'},
+                                              {L"global", no_argument, 'g'},
+                                              {L"function", no_argument, 'f'},
+                                              {L"local", no_argument, 'l'},
+                                              {L"erase", no_argument, 'e'},
+                                              {L"names", no_argument, 'n'},
+                                              {L"unexport", no_argument, 'u'},
+                                              {L"universal", no_argument, 'U'},
+                                              {L"long", no_argument, 'L'},
+                                              {L"query", no_argument, 'q'},
+                                              {L"show", no_argument, 'S'},
+                                              {L"append", no_argument, 'a'},
+                                              {L"prepend", no_argument, 'p'},
+                                              {L"path", no_argument, opt_path},
+                                              {L"unpath", no_argument, opt_unpath},
+                                              {L"help", no_argument, 'h'},
                                               {}};
 
 // Hint for invalid path operation with a colon.
@@ -545,8 +545,8 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
     // For our purposes it's read-only.
     if (env_var_t::flags_for(var_name) & env_var_t::flag_read_only) {
         streams.out.append(_(L" (read-only)\n"));
-    }
-    else streams.out.push_back(L'\n');
+    } else
+        streams.out.push_back(L'\n');
 
     for (size_t i = 0; i < vals.size(); i++) {
         if (vals.size() > 100) {
@@ -626,8 +626,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     int ret = STATUS_CMD_OK;
     env_mode_flags_t scopes = compute_scope(opts);
     // `set -e` is allowed to be called with multiple scopes.
-    for (int bit = 0; 1<<bit <= ENV_USER; ++bit) {
-        int scope = scopes & 1<<bit;
+    for (int bit = 0; 1 << bit <= ENV_USER; ++bit) {
+        int scope = scopes & 1 << bit;
         if (scope == 0 || (scope == ENV_USER && scopes != ENV_USER)) continue;
         for (int i = 0; i < argc; i++) {
             auto split = split_var_and_indexes(argv[i], scope, parser.vars(), streams);

@@ -160,14 +160,12 @@ struct woption {
     const wchar_t *name{nullptr};
     /// Must be one of no_argument, required_argument or optional_argument.
     woption_argument_t has_arg{};
-    /// If non-null, the flag whose value should be set if this switch is encountered.
-    int *flag{nullptr};
     /// If \c flag is non-null, this is the value that flag will be set to. Otherwise, this is the
     /// return-value of the function call.
     wchar_t val{L'\0'};
 
-    constexpr woption(const wchar_t *name, woption_argument_t has_arg, int *flag, wchar_t val)
-        : name(name), has_arg(has_arg), flag(flag), val(val) {}
+    constexpr woption(const wchar_t *name, woption_argument_t has_arg, wchar_t val)
+        : name(name), has_arg(has_arg), val(val) {}
 
     constexpr woption() = default;
 };

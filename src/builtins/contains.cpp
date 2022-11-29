@@ -19,7 +19,7 @@ struct contains_cmd_opts_t {
 };
 static const wchar_t *const short_options = L"+:hi";
 static const struct woption long_options[] = {
-    {L"help", no_argument, nullptr, 'h'}, {L"index", no_argument, nullptr, 'i'}, {}};
+    {L"help", no_argument, 'h'}, {L"index", no_argument, 'i'}, {}};
 
 static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {

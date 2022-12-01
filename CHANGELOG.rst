@@ -223,7 +223,7 @@ Deprecations and removed features
 
     This flag was introduced in fish 3.4.
 
-  To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to :envvar:`fish_features`` and restart fish::
+  To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to :envvar:`fish_features` and restart fish::
 
     set -Ua fish_features no-regex-easyesc
 

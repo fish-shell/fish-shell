@@ -19,7 +19,7 @@ If a *SECTION* is specified, the help for that command is shown.
 
 The **-h** or **--help** option displays help about using this command.
 
-If the :envvar:`BROWSER`` environment variable is set, it will be used to display the documentation.
+If the :envvar:`BROWSER` environment variable is set, it will be used to display the documentation.
 Otherwise, fish will search for a suitable browser.
 To use a different browser than as described above, one can set the :envvar:`fish_help_browser` variable.
 This variable may be set as a list, where the first element is the browser command and the rest are browser options.

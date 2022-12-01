@@ -1315,6 +1315,14 @@ You can change the settings of fish by changing the values of certain variables.
 
    sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
 
+.. envvar:: fish_complete_path
+
+   determines where fish looks for completion. When trying to complete for a command, fish looks for files in the directories in this variable.
+
+.. envvar:: fish_function_path
+
+   determines where fish looks for functions. When fish :ref:`autoloads <syntax-function-autoloading>` a function, it will look for files in these directories.
+
 .. envvar:: fish_greeting
 
    the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :doc:`funced <cmds/funced>`)
@@ -1370,6 +1378,10 @@ Fish also provides additional information through the values of certain environm
 
    a list of entries in fish's :ref:`kill ring <killring>` of cut text.
 
+.. envvar:: fish_read_limit
+
+   how many bytes fish will process with :doc:`read <cmds/read>` or in a :ref:`command substitution <expand-command-substitution>`.
+
 .. envvar:: fish_pid
 
    the process ID (PID) of the shell.
@@ -1413,6 +1425,12 @@ Fish also provides additional information through the values of certain environm
 .. envvar:: status_generation
 
    the "generation" count of ``$status``. This will be incremented only when the previous command produced an explicit status. (For example, background jobs will not increment this).
+
+.. ENVVAR:: TERM
+
+   the type of the current terminal. When fish tries to determine how the terminal works - how many colors it supports, what sequences it sends for keys and other things - it looks at this variable and the corresponding information in the terminfo database (see ``man terminfo``).
+
+   Note: Typically this should not be changed as the terminal sets it to the correct value.
 
 .. ENVVAR:: USER
 

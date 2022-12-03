@@ -236,6 +236,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
     for (const wcstring &wd : directories) {
         if (ctx.check_cancel()) return false;
         wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
+        bool must_be_full_dir = abs_path.at(abs_path.size() - 1) == L'/';
         if (flags & PATH_FOR_CD) {
             abs_path = normalize_path(abs_path);
         }
@@ -250,7 +251,6 @@ bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
         // 1. If the argument ends with a slash, it must be a valid directory, no prefix.
         // 2. If the cursor is not at the argument, it means the user is definitely not typing it,
         //    so we can skip the prefix-match.
-        bool must_be_full_dir = abs_path.at(abs_path.size() - 1) == L'/';
         if (must_be_full_dir || !at_cursor) {
             struct stat buf;
             if (0 == wstat(abs_path, &buf) && (!at_cursor || S_ISDIR(buf.st_mode))) {

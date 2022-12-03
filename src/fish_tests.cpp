@@ -2874,6 +2874,7 @@ static void test_is_potential_path() {
     do_test(is_potential_path(L"alpha/", true, wds, ctx, PATH_REQUIRE_DIR));
     do_test(is_potential_path(L"aard", true, wds, ctx, 0));
     do_test(!is_potential_path(L"aard", false, wds, ctx, 0));
+    do_test(!is_potential_path(L"alp/", true, wds, ctx, PATH_REQUIRE_DIR | PATH_FOR_CD));
 
     do_test(!is_potential_path(L"balpha/", true, wds, ctx, PATH_REQUIRE_DIR));
     do_test(!is_potential_path(L"aard", true, wds, ctx, PATH_REQUIRE_DIR));

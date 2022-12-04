@@ -246,14 +246,14 @@ int wgetopter_t::_handle_short_opt(int argc, string_array_t argv) {
 }
 
 void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct woption *pfound,
-                                   const wchar_t *nameend, int *longind, int option_index,
-                                   int *retval) {
+                                   size_t nameend, int *longind, int option_index, int *retval) {
     woptind++;
-    if (*nameend) {
+    assert(nextchar[nameend] == '\0' || nextchar[nameend] == '=');
+    if (nextchar[nameend] == '=') {
         // Don't test has_arg with >, because some C compilers don't allow it to be used on
         // enums.
         if (pfound->has_arg)
-            woptarg = nameend + 1;
+            woptarg = &nextchar[nameend + 1];
         else {
             nextchar += std::wcslen(nextchar);
             *retval = '?';
@@ -276,16 +276,15 @@ void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct w
 
 // Find a matching long opt.
 const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption *longopts,
-                                                           const wchar_t *nameend, int *exact,
-                                                           int *ambig, int *indfound) const {
+                                                           size_t nameend, int *exact, int *ambig,
+                                                           int *indfound) const {
     const struct woption *pfound = nullptr;
     int option_index = 0;
 
     // Test all long options for either exact match or abbreviated matches.
     for (const struct woption *p = longopts; p->name; p++, option_index++) {
-        if (!std::wcsncmp(p->name, nextchar, nameend - nextchar)) {
-            if (static_cast<unsigned int>(nameend - nextchar) ==
-                static_cast<unsigned int>(wcslen(p->name))) {
+        if (!std::wcsncmp(p->name, nextchar, nameend)) {
+            if (nameend == wcslen(p->name)) {
                 // Exact match found.
                 pfound = p;
                 *indfound = option_index;
@@ -311,9 +310,10 @@ bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct w
     int ambig = 0;
     int indfound = 0;
 
-    const wchar_t *nameend;
-    for (nameend = nextchar; *nameend && *nameend != '='; nameend++)
-        ;  //!OCLINT(empty body)
+    size_t nameend = 0;
+    while (nextchar[nameend] && nextchar[nameend] != '=') {
+        nameend++;
+    }
 
     const struct woption *pfound =
         _find_matching_long_opt(longopts, nameend, &exact, &ambig, &indfound);

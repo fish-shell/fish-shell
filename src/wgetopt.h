@@ -124,11 +124,10 @@ class wgetopter_t {
     int _handle_short_opt(int argc, string_array_t argv);
     bool _handle_long_opt(int argc, string_array_t argv, const struct woption *longopts,
                           int *longind, int long_only, int *retval);
-    const struct woption *_find_matching_long_opt(const struct woption *longopts,
-                                                  const wchar_t *nameend, int *exact, int *ambig,
-                                                  int *indfound) const;
+    const struct woption *_find_matching_long_opt(const struct woption *longopts, size_t nameend,
+                                                  int *exact, int *ambig, int *indfound) const;
     void _update_long_opt(int argc, string_array_t argv, const struct woption *pfound,
-                          const wchar_t *nameend, int *longind, int option_index, int *retval);
+                          size_t nameend, int *longind, int option_index, int *retval);
     bool initialized = false;
     bool missing_arg_return_colon = false;
 };

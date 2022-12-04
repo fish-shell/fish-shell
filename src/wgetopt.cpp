@@ -205,10 +205,6 @@ int wgetopter_t::_handle_short_opt(int argc, string_array_t argv) {
     if (*nextchar == '\0') ++woptind;
 
     if (temp == nullptr || c == ':') {
-        if (wopterr) {
-            std::fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0],
-                          static_cast<wint_t>(c));
-        }
         woptopt = c;
 
         if (*nextchar != '\0') woptind++;
@@ -236,11 +232,6 @@ int wgetopter_t::_handle_short_opt(int argc, string_array_t argv) {
             // the next element now.
             woptind++;
         } else if (woptind == argc) {
-            if (wopterr) {
-                // 1003.2 specifies the format of this message.
-                std::fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
-                              static_cast<wint_t>(c));
-            }
             woptopt = c;
             c = missing_arg_return_colon ? ':' : '?';
         } else {
@@ -264,15 +255,6 @@ void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct w
         if (pfound->has_arg)
             woptarg = nameend + 1;
         else {
-            if (wopterr) {
-                if (argv[woptind - 1][1] == '-')  // --option
-                    std::fwprintf(stderr, _(L"%ls: Option '--%ls' doesn't allow an argument\n"),
-                                  argv[0], pfound->name);
-                else
-                    // +option or -option
-                    std::fwprintf(stderr, _(L"%ls: Option '%lc%ls' doesn't allow an argument\n"),
-                                  argv[0], argv[woptind - 1][0], pfound->name);
-            }
             nextchar += std::wcslen(nextchar);
             *retval = '?';
             return;
@@ -281,9 +263,6 @@ void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct w
         if (woptind < argc)
             woptarg = argv[woptind++];
         else {
-            if (wopterr)
-                std::fwprintf(stderr, _(L"%ls: Option '%ls' requires an argument\n"), argv[0],
-                              argv[woptind - 1]);
             nextchar += std::wcslen(nextchar);
             *retval = missing_arg_return_colon ? ':' : '?';
             return;
@@ -340,9 +319,6 @@ bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct w
         _find_matching_long_opt(longopts, nameend, &exact, &ambig, &indfound);
 
     if (ambig && !exact) {
-        if (wopterr) {
-            std::fwprintf(stderr, _(L"%ls: Option '%ls' is ambiguous\n"), argv[0], argv[woptind]);
-        }
         nextchar += std::wcslen(nextchar);
         woptind++;
         *retval = '?';
@@ -358,14 +334,6 @@ bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct w
     // with '--' or is not a valid short option, then it's an error. Otherwise interpret it as a
     // short option.
     if (!long_only || argv[woptind][1] == '-' || std::wcschr(shortopts, *nextchar) == nullptr) {
-        if (wopterr) {
-            if (argv[woptind][1] == '-')  // --option
-                std::fwprintf(stderr, _(L"%ls: Unrecognized option '--%ls'\n"), argv[0], nextchar);
-            else
-                // +option or -option
-                std::fwprintf(stderr, _(L"%ls: Unrecognized option '%lc%ls'\n"), argv[0],
-                              argv[woptind][0], nextchar);
-        }
         nextchar = const_cast<wchar_t *>(L"");
         woptind++;
         *retval = '?';
@@ -391,8 +359,7 @@ bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct w
 // that those that are not options now come last.)
 //
 // OPTSTRING is a string containing the legitimate option characters. If an option character is seen
-// that is not listed in OPTSTRING, return '?' after printing an error message.  If you set
-// `wopterr' to zero, the error message is suppressed but we still return '?'.
+// that is not listed in OPTSTRING, return '?'.
 //
 // If a char in OPTSTRING is followed by a colon, that means it wants an arg, so the following text
 // in the same ARGV-element, or the text of the following ARGV-element, is returned in `optarg'.

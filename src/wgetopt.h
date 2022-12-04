@@ -76,9 +76,6 @@ class wgetopter_t {
     // XXX 1003.2 says this must be 1 before any call.
     int woptind = 0;
 
-    // Callers store zero here to inhibit the error message for unrecognized options.
-    int wopterr = 0;
-
     // Set to an option character which was unrecognized. This must be initialized on some systems
     // to avoid linking in the system's own getopt implementation.
     int woptopt = '?';

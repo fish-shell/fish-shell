@@ -499,7 +499,7 @@ Unlike bash (by default), fish will not pass on the literal glob character if no
 Variable expansion
 ^^^^^^^^^^^^^^^^^^
 
-One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable. For more on shell variables, read the :ref:`Shell variables <variables>` section.
+One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable.
 
 In the simplest case, this is just something like::
 
@@ -516,7 +516,6 @@ Some variables like ``$HOME`` are already set because fish sets them by default 
 For more on how setting variables works, see :ref:`Shell variables <variables>` and the following sections.
 
 Sometimes a variable has no value because it is undefined or empty, and it expands to nothing::
-
 
     echo $nonexistentvariable
     # Prints no output.
@@ -535,10 +534,13 @@ The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand
 
 If $WORD here is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
 
+For more on shell variables, read the :ref:`Shell variables <variables>` section.
+
 Quoting variables
 '''''''''''''''''
 
-Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (`:`) instead [#]_.
+
+Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (``:``) instead [#]_.
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
@@ -594,17 +596,15 @@ Command substitution
 
 The output of a command (or an entire :ref:`pipeline <pipes>`) can be used as the arguments to another command.
 
-When you write a command in parentheses like ``outercommand (innercommand)``, the ``innercommand`` will be executed first. Its output will be taken and each line given as a separate argument to ``outercommand``, which will then be executed. [#]_
+When you write a command in parentheses like ``outercommand (innercommand)``, fish first runs ``innercommand``, and then uses each line of its output as a separate argument to ``outercommand``, which will then be executed. Unlike other shells, the value of ``$IFS`` is not used [#]_, fish splits on newlines.
 
-A command substitution can have a dollar sign before the opening parenthesis like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines.
+A command substitution can have a dollar sign before the opening parenthesis like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines, but trailing empty lines are still removed.
 
 If the output is piped to :doc:`string split or string split0 <cmds/string-split>` as the last step, those splits are used as they appear instead of splitting lines.
 
 The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :doc:`set <cmds/set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
 
-To use only part of the output, refer to :ref:`index range expansion <expand-index-range>`.
-
-Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
+To use only some lines of the output, refer to :ref:`index range expansion <expand-index-range>`.
 
 Examples::
 
@@ -634,7 +634,9 @@ but if you need multiple or the command doesn't read from standard input, "proce
 
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
 
-.. [#] Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :doc:`string split <cmds/string-split>` instead.
+Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
+
+.. [#] One exception: Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :doc:`string split <cmds/string-split>` instead.
 
 .. _expand-brace:
 
@@ -685,7 +687,7 @@ To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 Combining lists (Cartesian Product)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When lists are expanded with other parts attached, they are expanded with these parts still attached. Even if two lists are attached to each other, they are expanded in all combinations. This is referred to as the `cartesian product` (like in mathematics), and works basically like :ref:`brace expansion <expand-brace>`.
+When lists are expanded with other parts attached, they are expanded with these parts still attached. Even if two lists are attached to each other, they are expanded in all combinations. This is referred to as the "cartesian product" (like in mathematics), and works basically like :ref:`brace expansion <expand-brace>`.
 
 Examples::
 
@@ -847,7 +849,6 @@ The ``~`` (tilde) character at the beginning of a parameter, followed by a usern
 
   echo ~root # prints root's home directory, probably "/root"
 
-
 .. _combine:
 
 Combining different expansions
@@ -913,7 +914,6 @@ Variables can be explicitly set to be universal with the ``-U`` or ``--universal
 - When no scope is given and no variable of that name exists, the variable is created in function scope if inside a function, or global scope if no function is executing.
 
 There can be many variables with the same name, but different scopes. When you :ref:`use a variable <expand-variable>`, the smallest scoped variable of that name will be used. If a local variable exists, it will be used instead of the global or universal variable of the same name.
-
 
 Example:
 
@@ -1023,7 +1023,6 @@ To see universal variables in action, start two fish sessions side by side, and 
 
 Do not append to universal variables in :ref:`config.fish <configuration>`, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
 
-
 .. _variables-functions:
 
 Variable scope for functions
@@ -1047,8 +1046,6 @@ For example::
     avast
 
     # Outputs "Avast, mateys"
-
-
 
 .. _variables-export:
 
@@ -1128,7 +1125,6 @@ It is also possible to set or erase individual elements of a list::
 
     # Output 'evil'
     echo $smurf
-
 
 If you specify a negative index when expanding or assigning to a list variable, the index will be taken from the *end* of the list. For example, the index -1 is the last element of the list::
 

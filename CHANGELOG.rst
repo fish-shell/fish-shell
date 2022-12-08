@@ -1,11 +1,11 @@
-.. ignore: 2271 9265 9252 8514 9241 9226 9214 9211 9206 9186 9099 9154 9152 9141 7717 9140 9134 9121 9111 9109 9091 9067 9028
+.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9134 9140 9141 9152 9154 9186 9206 9211 9214 9226 9241 9252 9265 9301 9303 9311 9341 9342 9382 9394
 
 fish 3.6.0 (released ???)
 ===================================
 
 Notable improvements and fixes
 ------------------------------
-- By default, :kbd:``Control-R`` now opens the command history in the pager, via the new special input function ``history-pager`` (:issue:`9089`, :issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the "isearch" seen in other shells.
+- By default, :kbd:``Control-R`` now opens the command history in the pager (:issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the incremental search seen in other shells. The new special input function ``history-pager`` has been added for custom bindings.
 - ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
 
     > touch foo
@@ -18,18 +18,16 @@ Notable improvements and fixes
     > string shorten -m10 "Hello this is a long string"
     Hello thi…
 
-- ``test`` aka ``[``: implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
-- Fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
+- ``test`` aka ``[`` implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
+- fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
 
     checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
     for a,b in y 1 z 3
         ^~^
-- A new helper function ``fish_delta`` can be used to show the difference to fish's stock configuration (:issue:`9255`).
+- A new helper function, ``fish_delta``, can be used to show the difference to fish's stock configuration (:issue:`9255`).
 - It is now possible to specify multiple scopes for ``set -e`` and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
 - A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
 - `status current-commandline` has been added and retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
-
-=======
 
 Deprecations and removed features
 ---------------------------------
@@ -105,45 +103,49 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
-  - ``asciinema``
-  - ``firefox``
-  - ``firefox-developer-edition``
-  - ``fortune``
-  - ``kind`` (:issue:`9110`)
-  - ``zig`` (:issue:`9083`)
-  - ``sad``
-  - ``dua``
-  - ``clojure``
-  - ``loadkeys``
-  - ``toot``
-  - ``eg``
-  - ``kb``
-  - ``okular``
-  - ``dolphin``
   - ``ark``
-  - ``konsole``
-  - ``xed``
-  - ``xviewer``
-  - ``xreader``
-  - ``xplayer``
-  - ``pix``
-  - ``rc``
-  - ``wish``
-  - ``qshell``
-  - ``ksh``
-  - ``tcsh``
+  - ``asciinema``
+  - ``clojure``
   - ``csh``
+  - ``dolphin``
+  - ``dua``
+  - ``efivar`` (:issue:`9318`)
+  - ``eg``
+  - ``es`` (:issue:`9388`)
+  - ``firefox-developer-edition``
+  - ``firefox``
+  - ``fortune``
+  - ``kb``
+  - ``kind`` (:issue:`9110`)
+  - ``konsole``
+  - ``ksh``
+  - ``loadkeys`` (:issue:`9312`)
+  - ``okular``
+  - ``op`` (:issue:`9300`)
+  - ``pix``
+  - ``qshell``
+  - ``rc``
+  - ``sad``
+  - ``tcsh``
+  - ``toot``
+  - ``wish``
+  - ``xed``
+  - ``xonsh`` (:issue:`9389`)
+  - ``xplayer``
+  - ``xreader``
+  - ``xviewer``
+  - ``zig`` (:issue:`9083`)
 
-- Improvements to some completions.
+- Improvements to many completions.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Other improvements
 ------------------
-- The css for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
-- The web-based configuration tool now works on systems that have ipv6 disabled (:issue:`3857`).
-- Aliases can ignore arguments by ending them with ``#``.
+- The CSS for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
+- The Web-based configuration tool now works on systems with IPv6 disabled (:issue:`3857`).
+- Aliases can ignore arguments by ending them with ``#`` (:issue:`9199`).
 
 
 For distributors

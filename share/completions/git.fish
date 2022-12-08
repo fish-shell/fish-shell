@@ -1388,6 +1388,7 @@ complete -f -c git -n '__fish_git_using_command grep' -l or -d 'Combine patterns
 complete -f -c git -n '__fish_git_using_command grep' -l not -d 'Combine patterns using not'
 complete -f -c git -n '__fish_git_using_command grep' -l all-match -d 'Only match files that can match all the pattern expressions when giving multiple'
 complete -f -c git -n '__fish_git_using_command grep' -s q -l quiet -d 'Just exit with status 0 when there is a match and with non-zero status when there isn\'t'
+complete -f -c git -n '__fish_git_using_command grep' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_refs)'
 # TODO options, including max-depth, h, open-files-in-pager, contexts, threads, file
 
 ### init

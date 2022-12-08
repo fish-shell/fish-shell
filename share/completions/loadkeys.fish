@@ -4,9 +4,9 @@ function __fish_print_console_keymaps
     # or which keymaps it can find. localectl can list keymaps, but is part of
     # systemd, which we shouldn't depend on.
 
-    set -l dirs '/usr/share/kbd/keymaps' '/usr/share/keymaps' '/usr/lib/kbd/keymaps' '/lib/kbd/keymaps' '/usr/src/linux/drivers'
+    set -l dirs /usr/share/kbd/keymaps /usr/share/keymaps /usr/lib/kbd/keymaps /lib/kbd/keymaps /usr/src/linux/drivers
 
-	path filter -f $dirs/** | string replace -rf '.*/(.*)\.k?map(|\..*)$' '$1'
+    path filter -f $dirs/** | string replace -rf '.*/(.*)\.k?map(|\..*)$' '$1'
 end
 
 complete -fc loadkeys -a "(__fish_print_console_keymaps)"

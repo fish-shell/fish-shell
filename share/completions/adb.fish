@@ -207,5 +207,3 @@ complete -n '__fish_seen_subcommand_from logcat' -c adb -s e -l regex -d 'Only p
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s m -l max-count -d 'Quit after print <count> lines'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l print -d 'Print all message even if they do not matches, requires --regex and --max-count'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l uid -d 'Only display log messages from UIDs present in the comma separate list <uids>'
-
-

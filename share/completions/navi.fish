@@ -4,15 +4,15 @@ set --local sub_commands fn help info repo widget
 set --local options best-match cheatsh finder fzf-overrides fzf-overrides-var help path print query tag-rules tldr version
 
 # subcommands
-complete  navi -n "not __fish_seen_subcommand_from $sub_commands && \
+complete navi -n "not __fish_seen_subcommand_from $sub_commands && \
     not __fish_contains_opt -s h -s p -s q -s V $options" -a "$sub_commands"
 
 set --local internal_functions "url::open welcome widget::last_command map::expand"
-complete  navi -n "__fish_seen_subcommand_from fn && not __fish_seen_subcommand_from $internal_functions" \
+complete navi -n "__fish_seen_subcommand_from fn && not __fish_seen_subcommand_from $internal_functions" \
     -k -a $internal_functions
 
 set --local supported_shells "bash zsh fish elvish"
-complete  navi -n "__fish_seen_subcommand_from widget && not __fish_seen_subcommand_from $supported_shells" -k -a $supported_shells
+complete navi -n "__fish_seen_subcommand_from widget && not __fish_seen_subcommand_from $supported_shells" -k -a $supported_shells
 
 # options
 complete navi -n "not __fish_seen_subcommand_from $sub_commands" -l best-match -d "Returns the best match"

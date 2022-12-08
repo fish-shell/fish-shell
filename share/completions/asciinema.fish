@@ -15,7 +15,7 @@ complete -c asciinema -n "__fish_seen_subcommand_from rec" -s e -l env -d "List 
 complete -c asciinema -n "__fish_seen_subcommand_from rec" -s t -l title -d "Title of the asciicast" -x
 complete -c asciinema -n "__fish_seen_subcommand_from rec" -s i -l idle-time-limit -d "Limit recorded idle time to given number of seconds" -x
 complete -c asciinema -n "__fish_seen_subcommand_from rec" -l cols -d "Override terminal columns for recorded process" -x
-complete -c asciinema -n "__fish_seen_subcommand_from rec" -l rows  -d "Override terminal rows for recorded process" -x
+complete -c asciinema -n "__fish_seen_subcommand_from rec" -l rows -d "Override terminal rows for recorded process" -x
 complete -c asciinema -n "__fish_seen_subcommand_from rec" -s y -l yes -d "Answer \"yes\" to all prompts"
 complete -c asciinema -n "__fish_seen_subcommand_from rec" -s q -l quiet -d "Be quiet, suppress all notices/warnings"
 

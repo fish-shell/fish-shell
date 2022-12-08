@@ -6,7 +6,7 @@ complete -c reflector -l download-timeout -d 'The number of seconds to wait befo
 complete -c reflector -l list-countries -d 'Display a table of the distribution of servers by country'
 complete -c reflector -l cache-timeout -d 'The cache timeout in seconds for the data retrieved from the Arch Linux Mirror Status API'
 complete -c reflector -l url -d 'The URL from which to retrieve the mirror data in JSON format'
-complete -c reflector -l save -d 'Save the mirrorlist to the given path' 
+complete -c reflector -l save -d 'Save the mirrorlist to the given path'
 complete -c reflector -l sort -d 'Sort the mirrorlist' -xa 'age rate country score delay'
 complete -c reflector -l threads -d 'The number of threads to use for downloading'
 complete -c reflector -l verbose -d 'Print extra information'
@@ -27,4 +27,3 @@ complete -c reflector -l completion-percent -d 'Set the minimum completion perce
 complete -c reflector -l isos -d 'Only return mirrors that host ISOs'
 complete -c reflector -l ipv4 -d 'Only return mirrors that support IPv4'
 complete -c reflector -l ipv6 -d 'Only return mirrors that support IPv6'
-

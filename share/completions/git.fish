@@ -201,8 +201,8 @@ function __fish_git_files
                     # "u <xy> <sub> <m1> <m2> <m3> <mW> <h1> <h2> <h3> <path>"
                     # This is first to distinguish it from normal modifications et al.
                     set -ql unmerged
-                    and set file  "$line[11..-1]"
-                    and set desc  $unmerged_desc
+                    and set file "$line[11..-1]"
+                    and set desc $unmerged_desc
                 case '2 .R*' '2 R.*'
                     # Renamed/Copied
                     # From the docs: "Renamed or copied entries have the following format:"
@@ -210,44 +210,44 @@ function __fish_git_files
                     # Since <sep> is \t, we can't really parse it unambiguously.
                     # The "-z" format would be great here!
                     set -ql renamed
-                    and set file  (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
-                    and set desc  $renamed_desc
+                    and set file (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
+                    and set desc $renamed_desc
                 case '2 RM*' '2 RT*'
                     # Staged as renamed, with unstaged modifications (issue #6031)
                     set -ql renamed
                     or set -ql modified
-                    and set file  (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
+                    and set file (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
                     set -ql renamed
-                    and set desc  $renamed_desc
+                    and set desc $renamed_desc
                     set -ql modified
                     and set --append desc $modified_desc
                 case '2 RD*'
                     # Staged as renamed, but deleted in the worktree
                     set -ql renamed
                     or set -ql deleted
-                    and set file  (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
+                    and set file (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
                     set -ql renamed
-                    and set desc  $renamed_desc
+                    and set desc $renamed_desc
                     set -ql deleted
                     and set --append desc $deleted_desc
                 case '2 .C*' '2 C.*'
                     set -ql copied
-                    and set file  (string replace -r '\t[^\t].*' '' -- "$line[10..-1]")
-                    and set desc  $copied_desc
+                    and set file (string replace -r '\t[^\t].*' '' -- "$line[10..-1]")
+                    and set desc $copied_desc
                 case '1 A.*'
                     # Additions are only shown here if they are staged.
                     # Otherwise it's an untracked file.
                     set -ql added
-                    and set file  "$line[9..-1]"
-                    and set desc  $added_desc
+                    and set file "$line[9..-1]"
+                    and set desc $added_desc
                 case '1 AD*'
                     # Added files that were since deleted
                     if set -ql added
-                        set file  "$line[9..-1]"
-                        set desc  $added_desc
+                        set file "$line[9..-1]"
+                        set desc $added_desc
                     else if set -ql deleted
-                        set file  "$line[9..-1]"
-                        set desc  $deleted_desc
+                        set file "$line[9..-1]"
+                        set desc $deleted_desc
                     end
                 case "1 AM*" "1 AT*"
                     # Added files with additional modifications
@@ -255,71 +255,71 @@ function __fish_git_files
                     # it happens when e.g. a file is replaced with a symlink.
                     # For our purposes it's the same as modified)
                     if set -ql added
-                        set file  "$line[9..-1]"
-                        set desc  $added_desc
+                        set file "$line[9..-1]"
+                        set desc $added_desc
                     else if set -ql modified
-                        set file  "$line[9..-1]"
-                        set desc  $modified_desc
+                        set file "$line[9..-1]"
+                        set desc $modified_desc
                     end
                 case '1 .A*'
                     # Files added with git add --intent-to-add.
                     set -ql untracked
-                    and set file  "$line[9..-1]"
-                    and set desc  $untracked_desc
+                    and set file "$line[9..-1]"
+                    and set desc $untracked_desc
                 case '1 .M*' '1 .T*'
                     # Modified
                     # From the docs: "Ordinary changed entries have the following format:"
                     # "1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>"
                     # Since <path> can contain spaces, print from element 9 onwards
                     set -ql modified
-                    and set file  "$line[9..-1]"
-                    and set desc  $modified_desc
+                    and set file "$line[9..-1]"
+                    and set desc $modified_desc
                 case '1 MD*' '1 TD*'
                     set -ql modified_staged_deleted
-                    and set file  "$line[9..-1]"
-                    and set desc  $modified_staged_deleted_desc
+                    and set file "$line[9..-1]"
+                    and set desc $modified_staged_deleted_desc
                 case '1 M.*' '1 T.*'
                     # If the character is first ("M."), then that means it's "our" change,
                     # which means it is staged.
                     # This is useless for many commands - e.g. `checkout` won't do anything with this.
                     # So it needs to be requested explicitly.
                     set -ql modified_staged
-                    and set file  "$line[9..-1]"
-                    and set desc  $staged_modified_desc
+                    and set file "$line[9..-1]"
+                    and set desc $staged_modified_desc
                 case '1 MM*' '1 MT*' '1 TM*' '1 TT*'
                     # Staged-modified with unstaged modifications
                     # These need to be offered for both kinds of modified.
                     if set -ql modified
-                        set file  "$line[9..-1]"
-                        set desc  $modified_desc
+                        set file "$line[9..-1]"
+                        set desc $modified_desc
                     else if set -ql modified_staged
-                        set file  "$line[9..-1]"
-                        set desc  $staged_modified_desc
+                        set file "$line[9..-1]"
+                        set desc $staged_modified_desc
                     end
                 case '1 .D*'
                     set -ql deleted
-                    and set file  "$line[9..-1]"
-                    and set desc  $deleted_desc
+                    and set file "$line[9..-1]"
+                    and set desc $deleted_desc
                 case '1 D.*'
                     # TODO: The docs are unclear on this.
                     # There is both X unmodified and Y either M or D ("not updated")
                     # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                     # For our purposes, we assume this is a staged deletion.
                     set -ql deleted_staged
-                    and set file  "$line[9..-1]"
-                    and set desc  $staged_deleted_desc
+                    and set file "$line[9..-1]"
+                    and set desc $staged_deleted_desc
                 case "$q"' *'
                     # Untracked
                     # "? <path>" - print from element 2 on.
                     set -ql untracked
-                    and set file  "$line[2..-1]"
-                    and set desc  $untracked_desc
+                    and set file "$line[2..-1]"
+                    and set desc $untracked_desc
                 case '! *'
                     # Ignored
                     # "! <path>" - print from element 2 on.
                     set -ql ignored
-                    and set file  "$line[2..-1]"
-                    and set desc  $ignored_desc
+                    and set file "$line[2..-1]"
+                    and set desc $ignored_desc
             end
             # Only try printing if the file was selected.
             if set -q file[1]
@@ -330,7 +330,7 @@ function __fish_git_files
                     # We just remove the quotes and hope it works out.
                     # If this contains newlines or tabs,
                     # there is nothing we can do, but that's a general issue with scripted completions.
-                    set file  (string trim -c \" -- $file)
+                    set file (string trim -c \" -- $file)
                     # The relative filename.
                     if string match -q './*' -- (commandline -ct)
                         printf './%s\t%s\n' $file $d
@@ -368,7 +368,7 @@ function __fish_git_files
             if set -q use_next[1]
                 if contains -- $use_next $argv
                     set -l var "$use_next"_desc
-                    set desc  $$var
+                    set desc $$var
                     set -e use_next[1]
                 else
                     set -e use_next[1]
@@ -401,54 +401,54 @@ function __fish_git_files
                     continue
                 case AM
                     if set -ql added
-                        set file  "$line[9..-1]"
-                        set desc  $added_desc
+                        set file "$line[9..-1]"
+                        set desc $added_desc
                     else if set -ql modified
-                        set file  "$line[9..-1]"
-                        set desc  $modified_desc
+                        set file "$line[9..-1]"
+                        set desc $modified_desc
                     end
                 case AD
                     if set -ql added
-                        set file  "$line[9..-1]"
-                        set desc  $added_desc
+                        set file "$line[9..-1]"
+                        set desc $added_desc
                     else if set -ql deleted
-                        set file  "$line[9..-1]"
-                        set desc  $deleted_desc
+                        set file "$line[9..-1]"
+                        set desc $deleted_desc
                     end
                 case 'A '
                     # Additions are only shown here if they are staged.
                     # Otherwise it's an untracked file.
                     set -ql added
-                    and set desc  $added_desc
+                    and set desc $added_desc
                 case '*M'
                     # Modified
                     set -ql modified
-                    and set desc  $modified_desc
+                    and set desc $modified_desc
                 case 'M*'
                     # If the character is first ("M "), then that means it's "our" change,
                     # which means it is staged.
                     # This is useless for many commands - e.g. `checkout` won't do anything with this.
                     # So it needs to be requested explicitly.
                     set -ql modified_staged
-                    and set desc  $staged_modified_desc
+                    and set desc $staged_modified_desc
                 case '*D'
                     set -ql deleted
-                    and set desc  $deleted_desc
+                    and set desc $deleted_desc
                 case 'D*'
                     # TODO: The docs are unclear on this.
                     # There is both X unmodified and Y either M or D ("not updated")
                     # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                     # For our purposes, we assume this is a staged deletion.
                     set -ql deleted_staged
-                    and set desc  $staged_deleted_desc
+                    and set desc $staged_deleted_desc
                 case "$q$q"
                     # Untracked
                     set -ql untracked
-                    and set desc  $untracked_desc
+                    and set desc $untracked_desc
                 case '!!'
                     # Ignored
                     set -ql ignored
-                    and set desc  $ignored_desc
+                    and set desc $ignored_desc
             end
             if set -q desc[1]
                 # Again: "XY filename", so the filename starts on character 4.
@@ -481,12 +481,12 @@ function __fish_git_files
                 # The filename with ":/:" prepended.
                 if string match -q '../*' -- $file
                     or string match -q ':*' -- (commandline -ct)
-                    set file  (string replace -- "$root/" ":/:" "$root/$relfile")
+                    set file (string replace -- "$root/" ":/:" "$root/$relfile")
                 end
 
                 if test "$root/$relfile" -ef "$relfile"
                     and not string match -q ':*' -- (commandline -ct)
-                    set file  $relfile
+                    set file $relfile
                 end
 
                 printf '%s\n' $file\t$desc
@@ -1448,10 +1448,10 @@ complete -c git -n '__fish_git_using_command log' -l cherry-pick -d 'Omit equiva
 complete -c git -n '__fish_git_using_command log' -l walk-reflogs -s g -d 'Traverse the reflog'
 complete -c git -n '__fish_git_using_command log' -l no-walk -a "sorted unsorted" -f
 complete -c git -n '__fish_git_using_command log' -f -l bisect -l color-words -l abbrev -l notes -l expand-tabs -l show-notes -l show-linear-break
-complete -c git -n '__fish_git_using_command log' -l use-mailmap -l full-diff -l log-size -l left-only -l right-only -l cherry -l merge -l boundary -l simplify-by-decoration -l full-history -l dense -l sparse -l simplify-merges -l ancestry-path -l date-order  \
--l do-walk -l format -l abbrev-commit -l no-abbrev-commit -l oneline -l no-expand-tabs -l no-notes -l standard-notes -l no-standard-notes -l show-signature -l relative-date -l parents -l children -l left-right -l cc -l graph -l numstat -l shortstat -l summary \
--l patch-with-stat -l name-only -l name-status -l raw -l patch-with-raw -l indent-heuristic -l no-indent-heuristic -l compaction-heuristic -l no-compaction-heuristic -l minimal -l patience -l histogram -l no-color -l no-renames -l check -l full-index -l binary \
--l author-date-order -l topo-order -l reverse
+complete -c git -n '__fish_git_using_command log' -l use-mailmap -l full-diff -l log-size -l left-only -l right-only -l cherry -l merge -l boundary -l simplify-by-decoration -l full-history -l dense -l sparse -l simplify-merges -l ancestry-path -l date-order \
+    -l do-walk -l format -l abbrev-commit -l no-abbrev-commit -l oneline -l no-expand-tabs -l no-notes -l standard-notes -l no-standard-notes -l show-signature -l relative-date -l parents -l children -l left-right -l cc -l graph -l numstat -l shortstat -l summary \
+    -l patch-with-stat -l name-only -l name-status -l raw -l patch-with-raw -l indent-heuristic -l no-indent-heuristic -l compaction-heuristic -l no-compaction-heuristic -l minimal -l patience -l histogram -l no-color -l no-renames -l check -l full-index -l binary \
+    -l author-date-order -l topo-order -l reverse
 complete -c git -n '__fish_git_using_command log' -l date -a "relative local iso iso-local iso8601 iso8601-local iso-strict iso-strict-local iso8601-strict iso8601-strict-local rfc-local rfc2822-local short short-local raw human unix format: default default-local" -x
 complete -c git -n '__fish_git_using_command log' -l encoding -a '(__fish_print_encodings)' -x
 complete -c git -n '__fish_git_using_command log' -s c -s m -s r -s t -s u -s z
@@ -2175,7 +2175,7 @@ complete -f -c git -n '__fish_git_using_command config' -l show-origin -d 'Show 
 complete -f -c git -n '__fish_git_using_command config' -n '__fish_seen_argument get' -l default -d 'Use default value when missing entry'
 
 ### for-each-ref
-complete -f -c git -n __fish_git_needs_command -a "for-each-ref" -d "Format and output info on each ref"
+complete -f -c git -n __fish_git_needs_command -a for-each-ref -d "Format and output info on each ref"
 complete -f -c git -n '__fish_git_using_command for-each-ref' -l count -d "Limit to n results"
 # Any one of --shell, --perl, --python, or --tcl
 set -l for_each_ref_interpreters shell perl python tcl

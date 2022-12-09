@@ -20,6 +20,9 @@
 #include <chrono>
 #include <clocale>
 #include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <cwchar>
 #include <functional>
@@ -32,9 +35,6 @@
 #include <memory>
 #include <mutex>
 #include <set>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -93,6 +93,7 @@
 #include "util.h"
 #include "wait_handle.h"
 #include "wcstringutil.h"
+#include "wgetopt.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -7040,6 +7041,51 @@ void termsize_tester_t::test() {
     do_test(ts2.updating(parser) == *stubby_termsize);
 }
 
+void test_wgetopt() {
+    // Regression test for a crash.
+    const wchar_t *const short_options = L"-a";
+    const struct woption long_options[] = {
+        {L"add", no_argument, 'a'},
+        {},
+    };
+    const wchar_t *argv[] = {L"abbr", L"--add", L"emacsnw", L"emacs", L"-nw", nullptr};
+    int argc = builtin_count_args(argv);
+    wgetopter_t w;
+    int opt;
+    int a_count = 0;
+    wcstring_list_t arguments;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
+        switch (opt) {
+            case 'a': {
+                a_count += 1;
+                break;
+            }
+            case 1: {
+                // non-option argument
+                do_test(w.woptarg != nullptr);
+                arguments.push_back(w.woptarg);
+                break;
+            }
+            case '?': {
+                // unrecognized option
+                fprintf(stderr, "got arg %d\n", w.woptind - 1);
+                if (argv[w.woptind - 1]) {
+                    do_test(argv[w.woptind - 1] != nullptr);
+                    arguments.push_back(argv[w.woptind - 1]);
+                }
+                break;
+            }
+            default: {
+                err(L"Unexpected option '%d'", opt);
+                break;
+            }
+        }
+    }
+    do_test(a_count == 1);
+    do_test(arguments.size() == 3);
+    do_test(join_strings(arguments, L' ') == L"emacsnw emacs -nw");
+}
+
 // typedef void (test_entry_point_t)();
 using test_entry_point_t = void (*)();
 struct test_t {
@@ -7159,6 +7205,8 @@ static const test_t s_tests[]{
     {TEST_GROUP("re"), test_re_named},
     {TEST_GROUP("re"), test_re_name_extraction},
     {TEST_GROUP("re"), test_re_substitute},
+    {TEST_GROUP("re"), test_re_substitute},
+    {TEST_GROUP("wgetopt"), test_wgetopt},
 };
 
 void list_tests() {

@@ -405,17 +405,32 @@ int wgetopter_t::_wgetopt_internal(int argc, string_array_t argv, const wchar_t 
     // "u".
     //
     // This distinction seems to be the most useful approach.
-    if (longopts != nullptr &&
-        (argv[woptind][1] == '-' ||
-         (long_only && (argv[woptind][2] || !std::wcschr(shortopts, argv[woptind][1]))))) {
-        int retval;
-        if (_handle_long_opt(argc, argv, longopts, longind, long_only, &retval)) return retval;
+    if (longopts && woptind < argc) {
+        const wchar_t *arg = argv[woptind];
+        assert(arg && "Null arg");
+        bool try_long = false;
+        if (arg[0] == '-' && arg[1] == '-') {
+            // Like --foo
+            try_long = true;
+        } else if (long_only && wcslen(arg) >= 3) {
+            // Like -fu
+            try_long = true;
+        } else if (!std::wcschr(shortopts, arg[1])) {
+            // Like -f, but f is not a short arg.
+            try_long = true;
+        }
+        if (try_long) {
+            int retval = 0;
+            if (_handle_long_opt(argc, argv, longopts, longind, long_only, &retval)) {
+                return retval;
+            }
+        }
     }
-
     return _handle_short_opt(argc, argv);
 }
 
 int wgetopter_t::wgetopt_long(int argc, string_array_t argv, const wchar_t *options,
                               const struct woption *long_options, int *opt_index) {
+    assert(woptind <= argc && "woptind is out of range");
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 0);
 }

@@ -1,7 +1,7 @@
 # fish completions for ouch https://github.com/ouch-org/ouch
 
 # subcommands list
-set -l commands c compress d decompress list help
+set -l commands c compress d decompress l list help
 
 # if no subcommand yet then no file completion
 complete -c ouch -f --condition "not __fish_seen_subcommand_from $commands"

@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    abbr --add NAME [--position command | anywhere] [--regex PATTERN]
+    abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN]
                     [--set-cursor[=MARKER]]
                     [-f | --function] EXPANSION
     abbr --erase NAME ...
@@ -37,9 +37,8 @@ Abbreviations may be added to :ref:`config.fish <configuration>`. Abbreviations 
 
 .. synopsis::
 
-    abbr [-a | --add] NAME [--position command | anywhere] [--regex PATTERN]
-         [--set-cursor[=MARKER]]
-         [-f | --function] EXPANSION
+    abbr [-a | --add] NAME [--position command | anywhere] [-r | --regex PATTERN]
+         [--set-cursor[=MARKER]] [-f | --function] EXPANSION
 
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
 
@@ -104,7 +103,7 @@ Other subcommands
 
 ::
 
-    abbr [-r | --rename] OLD_NAME NEW_NAME
+    abbr --rename OLD_NAME NEW_NAME
 
 Renames an abbreviation, from *OLD_NAME* to *NEW_NAME*
 

@@ -277,27 +277,20 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, SET_CURSOR_SHORT };
+    enum { NON_OPTION_ARGUMENT = 1, SET_CURSOR_SHORT, RENAME_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
-    static const wchar_t *const short_options = L"-afrseqgUh";
+    static const wchar_t *const short_options = L"-afr:seqgUh";
     static const struct woption long_options[] = {
-        {L"add", no_argument, 'a'},
-        {L"position", required_argument, 'p'},
-        {L"regex", required_argument, REGEX_SHORT},
-        {L"set-cursor", optional_argument, SET_CURSOR_SHORT},
-        {L"function", no_argument, 'f'},
-        {L"rename", no_argument, 'r'},
-        {L"erase", no_argument, 'e'},
-        {L"query", no_argument, 'q'},
-        {L"show", no_argument, 's'},
-        {L"list", no_argument, 'l'},
-        {L"global", no_argument, 'g'},
-        {L"universal", no_argument, 'U'},
-        {L"help", no_argument, 'h'},
-        {}};
+        {L"add", no_argument, 'a'},         {L"position", required_argument, 'p'},
+        {L"regex", required_argument, 'r'}, {L"set-cursor", optional_argument, SET_CURSOR_SHORT},
+        {L"function", no_argument, 'f'},    {L"rename", no_argument, RENAME_SHORT},
+        {L"erase", no_argument, 'e'},       {L"query", no_argument, 'q'},
+        {L"show", no_argument, 's'},        {L"list", no_argument, 'l'},
+        {L"global", no_argument, 'g'},      {L"universal", no_argument, 'U'},
+        {L"help", no_argument, 'h'},        {}};
 
     int argc = builtin_count_args(argv);
     int opt;
@@ -337,7 +330,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 }
                 break;
             }
-            case REGEX_SHORT: {
+            case 'r': {
                 if (opts.regex_pattern.has_value()) {
                     streams.err.append_format(_(L"%ls: Cannot specify multiple regex patterns\n"),
                                               CMD);
@@ -359,7 +352,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
             case 'f':
                 opts.function = true;
                 break;
-            case 'r':
+            case RENAME_SHORT:
                 opts.rename = true;
                 break;
             case 'e':

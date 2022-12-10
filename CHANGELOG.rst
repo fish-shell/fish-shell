@@ -44,6 +44,7 @@ Deprecations and removed features
 - The ``fish_git_prompt`` will now only turn on features if the corresponding boolean variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, e.g. via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
   For example, ``set -g __fish_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), now it turns it off.
 - Abbreviations are no longer stored in universal variables. Existing universal abbreviations are still imported, but new abbreviations should be added to ``config.fish``.
+- The short option ``-r`` for abbreviations has changed from ``rename`` to ``regex``, for consistency with ``string``.
 
 Scripting improvements
 ----------------------

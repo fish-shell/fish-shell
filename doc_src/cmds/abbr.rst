@@ -20,7 +20,10 @@ Synopsis
 Description
 -----------
 
-``abbr`` manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
+``abbr`` manages abbreviations - user-defined words that are replaced with longer phrases when entered.
+
+.. note::
+    Only typed-in commands use abbreviations. Abbreviations are not expanded in scripts.
 
 For example, a frequently-run command like ``git checkout`` can be abbreviated to ``gco``.
 After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
@@ -29,7 +32,8 @@ An abbreviation may match a literal word, or it may match a pattern given by a r
 
 Combining these features, it is possible to create custom syntaxes, where a regular expression recognizes matching tokens, and the expansion function interprets them. See the `Examples`_ section.
 
-Abbreviations may be added to :ref:`config.fish <configuration>`. Abbreviations are only expanded for typed-in commands, not in scripts.
+Abbreviations may be added to :ref:`config.fish <configuration>`.
+
 
 
 "add" subcommand

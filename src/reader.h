@@ -268,11 +268,9 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 /// abbreviation wants to move the cursor. Use the parser to run any abbreviations which want
 /// function calls. \return none if no abbreviations were expanded, otherwise the resulting
 /// replacement.
-using abbrs_triggers_t = uint8_t;
 struct abbrs_replacement_t;
 maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline,
                                                                   size_t cursor_pos,
-                                                                  abbrs_triggers_t triggers,
                                                                   parser_t &parser);
 
 /// Apply a completion string. Exposed for testing only.

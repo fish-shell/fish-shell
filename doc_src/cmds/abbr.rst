@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     abbr --add NAME [--position command | anywhere] [--regex PATTERN]
-                    [--set-cursor SENTINEL] [--on-space] [--on-enter]...
+                    [--set-cursor SENTINEL]
                     [-f | --function] EXPANSION
     abbr --erase NAME ...
     abbr --rename OLD_WORD NEW_WORD
@@ -25,9 +25,7 @@ Description
 For example, a frequently-run command like ``git checkout`` can be abbreviated to ``gco``.
 After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
 
-An abbreviation may match a literal word, or it may match a pattern given by a regular expression. When an abbreviation matches a word, that word is replaced by new text, called its *expansion*. This expansion may be a fixed new phrase, or it can be dynamically created via a fish function.
-
-Abbreviations by default expand either after their word is entered and the user presses space, or if they are executed with the enter key. The ``--on-space`` and ``-on-enter`` options allows limiting expansion to only space or enter, respectively.
+An abbreviation may match a literal word, or it may match a pattern given by a regular expression. When an abbreviation matches a word, that word is replaced by new text, called its *expansion*. This expansion may be a fixed new phrase, or it can be dynamically created via a fish function. This expansion occurs after pressing space or enter.
 
 Combining these features, it is possible to create custom syntaxes, where a regular expression recognizes matching tokens, and the expansion function interprets them. See the `Examples`_ section.
 
@@ -40,7 +38,7 @@ Abbreviations may be added to :ref:`config.fish <configuration>`. Abbreviations 
 .. synopsis::
 
     abbr [-a | --add] NAME [--position command | anywhere] [--regex PATTERN]
-         [--set-cursor SENTINEL] [--on-space] [--on-enter]
+         [--set-cursor SENTINEL]
          [-f | --function] EXPANSION
 
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
@@ -50,8 +48,6 @@ With **--position command**, the abbreviation will only expand when it is positi
 With **--regex**, the abbreviation matches using the regular expression given by **PATTERN**, instead of the literal **NAME**. The pattern is interpreted using PCRE2 syntax and must match the entire token. If multiple abbreviations match the same token, the last abbreviation added is used.
 
 With **--set-cursor**, the cursor is moved to the first occurrence of **SENTINEL** in the expansion. That **SENTINEL** value is erased.
-
-With **--on-space**, the abbreviation will expand after its word or pattern is entered and the user presses space (or another word-boundary character such as semicolon). With **--on-enter**, the abbreviation will expand when the enter key is pressed to execute it. These options may be combined. The default is both **space** and **enter**.
 
 With **-f** or **--function**, **EXPANSION** is treated as the name of a fish function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged.
 
@@ -98,7 +94,7 @@ This first creates a function ``vim_edit`` which prepends ``vim`` before its arg
 
 ::
 
-    abbr 4DIRS --on-space --set-cursor ! "$(string join \n -- 'for dir in */' 'cd $dir' '!' 'cd ..' 'end')"
+    abbr 4DIRS --set-cursor ! "$(string join \n -- 'for dir in */' 'cd $dir' '!' 'cd ..' 'end')"
 
 This creates an abbreviation "4DIRS" which expands to a multi-line loop "template." The template enters each directory and then leaves it. The cursor is positioned ready to enter the command to run in each directory, at the location of the ``!``, which is itself erased.
 

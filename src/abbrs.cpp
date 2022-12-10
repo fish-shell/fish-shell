@@ -18,11 +18,8 @@ bool abbreviation_t::matches_position(abbrs_position_t position) const {
     return this->position == abbrs_position_t::anywhere || this->position == position;
 }
 
-bool abbreviation_t::triggers_on(abbrs_triggers_t t) const { return bool(this->triggers & t); }
-
-bool abbreviation_t::matches(const wcstring &token, abbrs_position_t position,
-                             abbrs_triggers_t trigger) const {
-    if (!this->matches_position(position) || !this->triggers_on(trigger)) {
+bool abbreviation_t::matches(const wcstring &token, abbrs_position_t position) const {
+    if (!this->matches_position(position)) {
         return false;
     }
     if (this->is_regex()) {
@@ -37,13 +34,12 @@ acquired_lock<abbrs_set_t> abbrs_get_set() {
     return abbrs.acquire();
 }
 
-abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t position,
-                                         abbrs_triggers_t trigger) const {
+abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t position) const {
     abbrs_replacer_list_t result{};
     // Later abbreviations take precedence so walk backwards.
     for (auto it = abbrs_.rbegin(); it != abbrs_.rend(); ++it) {
         const abbreviation_t &abbr = *it;
-        if (abbr.matches(token, position, trigger)) {
+        if (abbr.matches(token, position)) {
             result.push_back(abbrs_replacer_t{abbr.replacement, abbr.replacement_is_function,
                                               abbr.set_cursor_indicator});
         }
@@ -51,10 +47,9 @@ abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t
     return result;
 }
 
-bool abbrs_set_t::has_match(const wcstring &token, abbrs_position_t position,
-                            abbrs_triggers_t trigger) const {
+bool abbrs_set_t::has_match(const wcstring &token, abbrs_position_t position) const {
     for (const auto &abbr : abbrs_) {
-        if (abbr.matches(token, position, trigger)) {
+        if (abbr.matches(token, position)) {
             return true;
         }
     }

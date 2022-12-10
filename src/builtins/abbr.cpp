@@ -41,7 +41,6 @@ struct abbr_options_t {
     bool function{};
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
-    maybe_t<abbrs_triggers_t> triggers{};
     maybe_t<wcstring> set_cursor_indicator{};
 
     wcstring_list_t args;
@@ -79,11 +78,6 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --function option requires --add\n"), CMD);
             return false;
         }
-        if (!add && triggers.has_value()) {
-            streams.err.append_format(_(L"%ls: --on-space and --on-enter options require --add\n"),
-                                      CMD);
-            return false;
-        }
         if (!add && set_cursor_indicator.has_value()) {
             streams.err.append_format(_(L"%ls: --set-cursor option requires --add\n"), CMD);
             return false;
@@ -116,14 +110,6 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         if (abbr.set_cursor_indicator.has_value()) {
             comps.push_back(L"--set-cursor");
             comps.push_back(escape_string(*abbr.set_cursor_indicator));
-        }
-        if (abbr.triggers != abbrs_trigger_on_default) {
-            if (abbr.triggers & abbrs_trigger_on_space) {
-                comps.push_back(L"--on-space");
-            }
-            if (abbr.triggers & abbrs_trigger_on_enter) {
-                comps.push_back(L"--on-enter");
-            }
         }
         if (abbr.replacement_is_function) {
             comps.push_back(L"--function");
@@ -264,7 +250,6 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     abbr.regex = std::move(regex);
     abbr.replacement_is_function = opts.function;
     abbr.set_cursor_indicator = opts.set_cursor_indicator;
-    abbr.triggers = opts.triggers.value_or(abbrs_trigger_on_default);
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
 }
@@ -293,7 +278,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     const wchar_t *cmd = argv[0];
     abbr_options_t opts;
     // Note 1 is returned by wgetopt to indicate a non-option argument.
-    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT, ON_SPACE_SHORT, ON_ENTER_SHORT };
+    enum { NON_OPTION_ARGUMENT = 1, REGEX_SHORT };
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
@@ -302,8 +287,6 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     static const struct woption long_options[] = {{L"add", no_argument, 'a'},
                                                   {L"position", required_argument, 'p'},
                                                   {L"regex", required_argument, REGEX_SHORT},
-                                                  {L"on-space", no_argument, ON_SPACE_SHORT},
-                                                  {L"on-enter", no_argument, ON_ENTER_SHORT},
                                                   {L"set-cursor", required_argument, 'C'},
                                                   {L"function", no_argument, 'f'},
                                                   {L"rename", no_argument, 'r'},
@@ -361,14 +344,6 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                     return STATUS_INVALID_ARGS;
                 }
                 opts.regex_pattern = w.woptarg;
-                break;
-            }
-            case ON_SPACE_SHORT: {
-                opts.triggers = opts.triggers.value_or(0) | abbrs_trigger_on_space;
-                break;
-            }
-            case ON_ENTER_SHORT: {
-                opts.triggers = opts.triggers.value_or(0) | abbrs_trigger_on_enter;
                 break;
             }
             case 'C': {

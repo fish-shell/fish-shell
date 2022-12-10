@@ -258,3 +258,12 @@ end
 # CHECKERR: ^
 # CHECKERR: in function 'cd' with arguments 'broken-symbolic-link'
 # CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+
+begin
+    mkdir -p foo/bar/muf
+    set -lx CDPATH foo/bar
+    cd muf
+    echo $PWD | grep -q ^/ && echo '$PWD is absolute'
+    # CHECK: $PWD is absolute
+    cd ../../..
+end

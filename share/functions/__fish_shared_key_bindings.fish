@@ -192,9 +192,12 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
         bind --preset $argv \n execute
         bind --preset $argv \r execute
-        # Control+Return behave like Return because it's easy to mistype after accepting an autosuggestion.
+        # Make Control+Return behave like Return because it's easy to mistype after accepting an autosuggestion.
         bind --preset $argv \e\[27\;5\;13~ execute # Sent with XTerm.vt100.formatOtherKeys: 0
         bind --preset $argv \e\[13\;5u execute # CSI u sequence, sent with XTerm.vt100.formatOtherKeys: 1
+        # Same for Shift+Return
+        bind --preset $argv \e\[27\;2\;13~ execute
+        bind --preset $argv \e\[13\;2u execute
     end
 end
 

@@ -250,16 +250,14 @@ void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct w
     woptind++;
     assert(nextchar[nameend] == '\0' || nextchar[nameend] == '=');
     if (nextchar[nameend] == '=') {
-        // Don't test has_arg with >, because some C compilers don't allow it to be used on
-        // enums.
-        if (pfound->has_arg)
+        if (pfound->has_arg != no_argument)
             woptarg = &nextchar[nameend + 1];
         else {
             nextchar += std::wcslen(nextchar);
             *retval = '?';
             return;
         }
-    } else if (pfound->has_arg == 1) {
+    } else if (pfound->has_arg == required_argument) {
         if (woptind < argc)
             woptarg = argv[woptind++];
         else {

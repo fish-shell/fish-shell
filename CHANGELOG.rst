@@ -107,7 +107,7 @@ Interactive improvements
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
 - If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
 - Performance improvements to highlighting (:issue:`9180`) and the cd completions (:issue:`9220`) should make using fish more pleasant on slow systems.
-- Fish now disables the QUIT terminal sequence when it has the terminal. This frees up a key combination, often ctrl-backslash (``\x1c``) (:issue:`9234`).
+- Fish now disables the QUIT terminal sequence when it has the terminal. This frees up a key combination, often :kbd:`Control-Backslash` (``\x1c``) (:issue:`9234`).
 - Fish's vi mode no longer uses iTerm's proprietary escape sequences to signal cursor change, instead using the normal xterm-style sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
 - Generating descriptions for commands now uses ``manpath`` instead of ``man --path`` on macOS, as that has been removed in macOS Ventura.
 - When running fish on a remote system (e.g. inside SSH or a container), :kbd:`Control-X` now copies to the local client system's clipboard if the terminal supports OSC 52.

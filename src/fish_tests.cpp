@@ -46,6 +46,7 @@
 #include <sanitizer/lsan_interface.h>
 #endif
 
+#include "abbrs.h"
 #include "ast.h"
 #include "autoload.h"
 #include "builtin.h"
@@ -2466,84 +2467,116 @@ static void test_ifind_fuzzy() {
 
 static void test_abbreviations() {
     say(L"Testing abbreviations");
-    auto &vars = parser_t::principal_parser().vars();
-    vars.push(true);
-
-    const std::vector<std::pair<const wcstring, const wcstring>> abbreviations = {
-        {L"gc", L"git checkout"},
-        {L"foo", L"bar"},
-        {L"gx", L"git checkout"},
-    };
-    for (const auto &kv : abbreviations) {
-        int ret = vars.set_one(L"_fish_abbr_" + kv.first, ENV_LOCAL, kv.second);
-        if (ret != 0) err(L"Unable to set abbreviation variable");
+    {
+        auto literal_abbr = [](const wchar_t *name, const wchar_t *repl,
+                               abbrs_position_t pos = abbrs_position_t::command) {
+            return abbreviation_t(name, name /* key */, repl, pos);
+        };
+        auto abbrs = abbrs_get_set();
+        abbrs->add(literal_abbr(L"gc", L"git checkout"));
+        abbrs->add(literal_abbr(L"foo", L"bar"));
+        abbrs->add(literal_abbr(L"gx", L"git checkout"));
+        abbrs->add(literal_abbr(L"yin", L"yang", abbrs_position_t::anywhere));
     }
 
-    if (expand_abbreviation(L"", vars)) err(L"Unexpected success with empty abbreviation");
-    if (expand_abbreviation(L"nothing", vars)) err(L"Unexpected success with missing abbreviation");
+    // Helper to expand an abbreviation, enforcing we have no more than one result.
+    auto abbr_expand_1 = [](const wcstring &token, abbrs_position_t pos) -> maybe_t<wcstring> {
+        auto result = abbrs_match(token, pos);
+        if (result.size() > 1) {
+            err(L"abbreviation expansion for %ls returned more than 1 result", token.c_str());
+        }
+        if (result.empty()) {
+            return none();
+        }
+        return result.front().replacement;
+    };
 
-    auto mresult = expand_abbreviation(L"gc", vars);
+    auto cmd = abbrs_position_t::command;
+    if (abbr_expand_1(L"", cmd)) err(L"Unexpected success with empty abbreviation");
+    if (abbr_expand_1(L"nothing", cmd)) err(L"Unexpected success with missing abbreviation");
+
+    auto mresult = abbr_expand_1(L"gc", cmd);
     if (!mresult) err(L"Unexpected failure with gc abbreviation");
     if (*mresult != L"git checkout") err(L"Wrong abbreviation result for gc");
 
-    mresult = expand_abbreviation(L"foo", vars);
+    mresult = abbr_expand_1(L"foo", cmd);
     if (!mresult) err(L"Unexpected failure with foo abbreviation");
     if (*mresult != L"bar") err(L"Wrong abbreviation result for foo");
 
     maybe_t<wcstring> result;
-    auto expand_abbreviation_in_command = [](const wcstring &cmdline, size_t cursor_pos,
-                                             const environment_t &vars) -> maybe_t<wcstring> {
-        if (auto edit = reader_expand_abbreviation_in_command(cmdline, cursor_pos, vars)) {
+    auto expand_abbreviation_in_command = [](const wcstring &cmdline,
+                                             size_t cursor_pos) -> maybe_t<wcstring> {
+        if (auto replacement = reader_expand_abbreviation_at_cursor(cmdline, cursor_pos,
+                                                                    parser_t::principal_parser())) {
             wcstring cmdline_expanded = cmdline;
             std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
-            apply_edit(&cmdline_expanded, &colors, *edit);
+            apply_edit(&cmdline_expanded, &colors, edit_t{replacement->range, replacement->text});
             return cmdline_expanded;
         }
         return none_t();
     };
-    result = expand_abbreviation_in_command(L"just a command", 3, vars);
+    result = expand_abbreviation_in_command(L"just a command", 3);
     if (result) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
-    result = expand_abbreviation_in_command(L"gc somebranch", 0, vars);
+    result = expand_abbreviation_in_command(L"gc somebranch", 0);
     if (!result) err(L"Command not expanded on line %ld", (long)__LINE__);
 
-    result = expand_abbreviation_in_command(L"gc somebranch", const_strlen(L"gc"), vars);
+    result = expand_abbreviation_in_command(L"gc somebranch", const_strlen(L"gc"));
     if (!result) err(L"gc not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Space separation.
-    result = expand_abbreviation_in_command(L"gx somebranch", const_strlen(L"gc"), vars);
+    result = expand_abbreviation_in_command(L"gx somebranch", const_strlen(L"gc"));
     if (!result) err(L"gx not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
-    result = expand_abbreviation_in_command(L"echo hi ; gc somebranch",
-                                            const_strlen(L"echo hi ; g"), vars);
+    result =
+        expand_abbreviation_in_command(L"echo hi ; gc somebranch", const_strlen(L"echo hi ; g"));
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo hi ; git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     result = expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ",
-                                            const_strlen(L"echo (echo (echo (echo (gc"), vars);
+                                            const_strlen(L"echo (echo (echo (echo (gc"));
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo (echo (echo (echo (git checkout ")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // If commands should be expanded.
-    result = expand_abbreviation_in_command(L"if gc", const_strlen(L"if gc"), vars);
+    result = expand_abbreviation_in_command(L"if gc", const_strlen(L"if gc"));
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"if git checkout")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Others should not be.
-    result = expand_abbreviation_in_command(L"of gc", const_strlen(L"of gc"), vars);
+    result = expand_abbreviation_in_command(L"of gc", const_strlen(L"of gc"));
     if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // Others should not be.
-    result = expand_abbreviation_in_command(L"command gc", const_strlen(L"command gc"), vars);
+    result = expand_abbreviation_in_command(L"command gc", const_strlen(L"command gc"));
     if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
-    vars.pop();
+    // yin/yang expands everywhere.
+    result = expand_abbreviation_in_command(L"command yin", const_strlen(L"command yin"));
+    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (result != L"command yang") {
+        err(L"command yin incorrectly expanded on line %ld to '%ls'", (long)__LINE__,
+            result->c_str());
+    }
+
+    // Renaming works.
+    {
+        auto abbrs = abbrs_get_set();
+        do_test(!abbrs->has_name(L"gcc"));
+        do_test(abbrs->has_name(L"gc"));
+        abbrs->rename(L"gc", L"gcc");
+        do_test(abbrs->has_name(L"gcc"));
+        do_test(!abbrs->has_name(L"gc"));
+        do_test(!abbrs->erase(L"gc"));
+        do_test(abbrs->erase(L"gcc"));
+        do_test(!abbrs->erase(L"gcc"));
+    }
 }
 
 /// Test path functions.
@@ -3502,17 +3535,16 @@ static void test_complete() {
     completions.clear();
 
     // Test abbreviations.
-    auto &pvars = parser_t::principal_parser().vars();
     function_add(L"testabbrsonetwothreefour", func_props);
-    int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
+    abbrs_get_set()->add(abbreviation_t(L"somename", L"testabbrsonetwothreezero", L"expansion"));
     completions = complete(L"testabbrsonetwothree", {}, parser->context());
-    do_test(ret == 0);
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"four");
     do_test((completions.at(0).flags & COMPLETE_NO_SPACE) == 0);
     // Abbreviations should not have a space after them.
     do_test(completions.at(1).completion == L"zero");
     do_test((completions.at(1).flags & COMPLETE_NO_SPACE) != 0);
+    abbrs_get_set()->erase(L"testabbrsonetwothreezero");
 
     // Test wraps.
     do_test(comma_join(complete_get_wrap_targets(L"wrapper1")).empty());
@@ -6435,6 +6467,10 @@ void test_maybe() {
     do_test(std::is_copy_assignable<maybe_t<noncopyable>>::value == false);
     do_test(std::is_copy_constructible<maybe_t<noncopyable>>::value == false);
 
+    // We can construct a maybe_t from noncopyable things.
+    maybe_t<noncopyable> nmt{make_unique<int>(42)};
+    do_test(**nmt == 42);
+
     maybe_t<std::string> c1{"abc"};
     maybe_t<std::string> c2 = c1;
     do_test(c1.value() == "abc");
@@ -6442,6 +6478,11 @@ void test_maybe() {
     c2 = c1;
     do_test(c1.value() == "abc");
     do_test(c2.value() == "abc");
+
+    do_test(c2.value_or("derp") == "abc");
+    do_test(c2.value_or("derp") == "abc");
+    c2.reset();
+    do_test(c2.value_or("derp") == "derp");
 }
 
 void test_layout_cache() {
@@ -6858,6 +6899,21 @@ static void test_re_basic() {
     }
     do_test(join_strings(matches, L',') == L"AA,CC,11");
     do_test(join_strings(captures, L',') == L"A,C,1");
+
+    // Test make_anchored
+    re = regex_t::try_compile(make_anchored(L"ab(.+?)"));
+    do_test(re.has_value());
+    do_test(!re->match(L""));
+    do_test(!re->match(L"ab"));
+    do_test((re->match(L"abcd") == match_range_t{0, 4}));
+    do_test((re->match(L"abcdefghij") == match_range_t{0, 10}));
+
+    re = regex_t::try_compile(make_anchored(L"(a+)|(b+)"));
+    do_test(re.has_value());
+    do_test(!re->match(L""));
+    do_test(!re->match(L"aabb"));
+    do_test((re->match(L"aaaa") == match_range_t{0, 4}));
+    do_test((re->match(L"bbbb") == match_range_t{0, 4}));
 }
 
 static void test_re_reset() {

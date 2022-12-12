@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 
+#include "builtins/abbr.h"
 #include "builtins/argparse.h"
 #include "builtins/bg.h"
 #include "builtins/bind.h"
@@ -354,6 +355,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L":", &builtin_true, N_(L"Return a successful result")},
     {L"[", &builtin_test, N_(L"Test a condition")},
     {L"_", &builtin_gettext, N_(L"Translate a string")},
+    {L"abbr", &builtin_abbr, N_(L"Manage generics")},
     {L"and", &builtin_generic, N_(L"Run command if last command succeeded")},
     {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},

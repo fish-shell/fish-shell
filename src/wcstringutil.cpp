@@ -286,12 +286,12 @@ wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps, size
     return out;
 }
 
-wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
+static wcstring join_strings_impl(const wcstring_list_t &vals, const wchar_t *sep, size_t seplen) {
     if (vals.empty()) return wcstring{};
 
     // Reserve the size we will need.
     // count-1 separators, plus the length of all strings.
-    size_t size = vals.size() - 1;
+    size_t size = (vals.size() - 1) * seplen;
     for (const wcstring &s : vals) {
         size += s.size();
     }
@@ -302,12 +302,20 @@ wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
     bool first = true;
     for (const wcstring &s : vals) {
         if (!first) {
-            result.push_back(sep);
+            result.append(sep, seplen);
         }
         result.append(s);
         first = false;
     }
     return result;
+}
+
+wcstring join_strings(const wcstring_list_t &vals, wchar_t c) {
+    return join_strings_impl(vals, &c, 1);
+}
+
+wcstring join_strings(const wcstring_list_t &vals, const wchar_t *sep) {
+    return join_strings_impl(vals, sep, wcslen(sep));
 }
 
 void wcs2string_bad_char(wchar_t wc) {

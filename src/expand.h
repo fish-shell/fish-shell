@@ -203,14 +203,6 @@ void expand_tilde(wcstring &input, const environment_t &vars);
 /// Perform the opposite of tilde expansion on the string, which is modified in place.
 wcstring replace_home_directory_with_tilde(const wcstring &str, const environment_t &vars);
 
-/// Abbreviation support. Expand src as an abbreviation, returning the expanded form if found,
-/// none() if not.
-maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &vars);
-
-/// \return a snapshot of all abbreviations as a map abbreviation->expansion.
-/// The abbreviations are unescaped, i.e. they may not be valid variable identifiers (#6166).
-std::map<wcstring, wcstring> get_abbreviations(const environment_t &vars);
-
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv);

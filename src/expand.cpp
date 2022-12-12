@@ -1326,31 +1326,3 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
     }
     return result;
 }
-
-maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &vars) {
-    if (src.empty()) return none();
-
-    wcstring esc_src = escape_string(src, 0, STRING_STYLE_VAR);
-    if (esc_src.empty()) {
-        return none();
-    }
-    wcstring var_name = L"_fish_abbr_" + esc_src;
-    if (auto var_value = vars.get(var_name)) {
-        return var_value->as_string();
-    }
-    return none();
-}
-
-std::map<wcstring, wcstring> get_abbreviations(const environment_t &vars) {
-    const wcstring prefix = L"_fish_abbr_";
-    auto names = vars.get_names(0);
-    std::map<wcstring, wcstring> result;
-    for (const wcstring &name : names) {
-        if (string_prefixes_string(prefix, name)) {
-            wcstring key;
-            unescape_string(name.substr(prefix.size()), &key, UNESCAPE_DEFAULT, STRING_STYLE_VAR);
-            result[key] = vars.get(name)->as_string();
-        }
-    }
-    return result;
-}

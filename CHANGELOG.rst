@@ -6,7 +6,7 @@ fish 3.6.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 - By default, :kbd:``Control-R`` now opens the command history in the pager (:issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the incremental search seen in other shells. The new special input function ``history-pager`` has been added for custom bindings.
-- ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
+- ``path`` gained a new ``mtime`` subcommand to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
 
     > touch foo
     > sleep 10
@@ -18,16 +18,15 @@ Notable improvements and fixes
     > string shorten -m10 "Hello this is a long string"
     Hello thi…
 
-- ``test`` aka ``[`` implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
+- ``test`` aka ``[`` gained ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity (:issue:`3589`).
 - fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
 
     checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
     for a,b in y 1 z 3
         ^~^
-- A new helper function, ``fish_delta``, can be used to show the difference to fish's stock configuration (:issue:`9255`).
-- It is now possible to specify multiple scopes for ``set -e`` and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
-- A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
-- `status current-commandline` has been added and retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
+- A new function, ``fish_delta``, shows changes that have been made in fish's configuration from the defaults (:issue:`9255`).
+- ``set --erase`` can be used in combination with multiple scope options, and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
+- ``status`` gained a new subcommand, ``current-commandline`` which retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
 - Abbrevations are more flexible:
 
   - They may optionally replace tokens anywhere on the command line, instead of only commands
@@ -109,6 +108,7 @@ Fixed Bugs
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
 - On 32-bit systems, globs like ``*`` might fail to print certain files, due to missing large file support. This has been fixed by enabling large file support.
 - Interactive ``read`` in scripts will now have the correct keybindings again (:issue:`9227`).
+- A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
 
 Completions
 ^^^^^^^^^^^

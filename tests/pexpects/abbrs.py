@@ -30,10 +30,10 @@ send(r"echo alpha ?")
 expect_str(r"<echo alpha >")
 
 # Abbreviation expansions may have multiple words.
-sendline(r"abbr --add emacsnw emacs -nw")
+sendline(r"abbr --add emacsnw emacs -nw -l")
 expect_prompt()
 send(r"emacsnw ?")
-expect_str(r"<emacs -nw >")
+expect_str(r"<emacs -nw -l >")
 
 # Regression test that abbreviations still expand in incomplete positions.
 sendline(r"""abbr --erase (abbr --list)""")
@@ -103,9 +103,9 @@ expect_prompt()
 
 # Abbreviations which cause the command line to become incomplete or invalid
 # are visibly expanded.
-sendline(r"abbr openparen '(' --position anywhere")
+sendline(r"abbr openparen --position anywhere '('")
 expect_prompt()
-sendline(r"abbr closeparen ')' --position anywhere")
+sendline(r"abbr closeparen --position anywhere ')'")
 expect_prompt()
 sendline(r"echo openparen")
 expect_str(r"echo (")

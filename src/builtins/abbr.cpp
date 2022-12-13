@@ -295,8 +295,9 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     int argc = builtin_count_args(argv);
     int opt;
     wgetopter_t w;
-    bool unrecognized_options_are_args = false;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
+    bool in_expansion = false;
+    while (!in_expansion &&
+           (opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case NON_OPTION_ARGUMENT:
                 // If --add is specified (or implied by specifying no other commands), all
@@ -307,7 +308,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 opts.args.push_back(w.woptarg);
                 if (opts.args.size() >= 2 &&
                     !(opts.rename || opts.show || opts.list || opts.erase || opts.query)) {
-                    unrecognized_options_are_args = true;
+                    in_expansion = true;
                 }
                 break;
             case 'a':
@@ -376,12 +377,8 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 return STATUS_CMD_OK;
             }
             case '?': {
-                if (unrecognized_options_are_args) {
-                    opts.args.push_back(argv[w.woptind - 1]);
-                } else {
-                    builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-                    return STATUS_INVALID_ARGS;
-                }
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
         }
     }

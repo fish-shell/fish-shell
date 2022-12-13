@@ -5,7 +5,32 @@ fish 3.6.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
-- By default, :kbd:``Control-R`` now opens the command history in the pager (:issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the incremental search seen in other shells. The new special input function ``history-pager`` has been added for custom bindings.
+- By default, :kbd:`Control-R` now opens the command history in the pager (:issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the incremental search seen in other shells. The new special input function ``history-pager`` has been added for custom bindings.
+- Abbrevations are more flexible (:issue:`9313`):
+
+  - They may optionally replace tokens anywhere on the command line, instead of only commands
+  - Matching tokens may be described using a regular expression instead of a literal word
+  - The replacement text may be produced by a fish function, instead of a literal word
+  - They may position the cursor anywhere in the expansion, instead of at the end
+
+  For example::
+
+    function multicd
+        echo cd (string repeat -n (math (string length -- $argv[1]) - 1) ../)
+    end
+
+    abbr --add dotdot --regex '^\.\.+$' --function multicd
+
+  This expands ``..`` to ``cd ../``, ``...`` to ``cd ../../`` and ``....`` to ``cd ../../../`` and so on.
+
+  Or::
+
+    function last_history_item; echo $history[1]; end
+    abbr -a !! --position anywhere --function last_history_item
+
+  which expands ``!!`` to the last history item, anywhere on the command line, mimicking other shells' history expansion.
+
+  See :ref:`the documentation <cmd-abbr>` for more.
 - ``path`` gained a new ``mtime`` subcommand to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
 
     > touch foo
@@ -27,14 +52,6 @@ Notable improvements and fixes
 - A new function, ``fish_delta``, shows changes that have been made in fish's configuration from the defaults (:issue:`9255`).
 - ``set --erase`` can be used in combination with multiple scope options, and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
 - ``status`` gained a new subcommand, ``current-commandline`` which retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
-- Abbrevations are more flexible:
-
-  - They may optionally replace tokens anywhere on the command line, instead of only commands
-  - Matching tokens may be described using a regular expression instead of a literal word
-  - The replacement text may be produced by a fish function, instead of a literal word
-  - They may position the cursor anywhere in the expansion, instead of at the end
-
-  See the documentation for more.
 
 
 Deprecations and removed features

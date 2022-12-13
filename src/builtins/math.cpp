@@ -36,9 +36,9 @@ struct math_cmd_opts_t {
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
 // This is needed because of the minus, `-`, operator in math expressions.
 static const wchar_t *const short_options = L"+:hs:b:";
-static const struct woption long_options[] = {{L"scale", required_argument, nullptr, 's'},
-                                              {L"base", required_argument, nullptr, 'b'},
-                                              {L"help", no_argument, nullptr, 'h'},
+static const struct woption long_options[] = {{L"scale", required_argument, 's'},
+                                              {L"base", required_argument, 'b'},
+                                              {L"help", no_argument, 'h'},
                                               {}};
 
 static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
@@ -259,7 +259,8 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
         streams.err.append_format(L"'%ls'\n", expression.c_str());
         if (error.len >= 2) {
             wcstring tildes(error.len - 2, L'~');
-            streams.err.append_format(L"%*ls%ls%ls%ls\n", error.position - 1, L" ", L"^", tildes.c_str(), L"^");
+            streams.err.append_format(L"%*ls%ls%ls%ls\n", error.position - 1, L" ", L"^",
+                                      tildes.c_str(), L"^");
         } else {
             streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ", L"^");
         }

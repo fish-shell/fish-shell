@@ -44,6 +44,7 @@
 #include <set>
 #include <type_traits>
 
+#include "abbrs.h"
 #include "ast.h"
 #include "color.h"
 #include "common.h"
@@ -787,8 +788,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Do what we need to do whenever our pager selection changes.
     void pager_selection_changed();
 
-    /// Expand abbreviations at the current cursor position, minus backtrack_amt.
-    bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
+    /// Expand abbreviations at the current cursor position, minus cursor_backtrack.
+    bool expand_abbreviation_at_cursor(size_t cursor_backtrack);
 
     /// \return true if the command line has changed and repainting is needed. If \p colors is not
     /// null, then also return true if the colors have changed.
@@ -871,8 +872,18 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
     // Handle readline_cmd_t::execute. This may mean inserting a newline if the command is
-    // unfinished.
-    void handle_execute(readline_loop_state_t &rls);
+    // unfinished. It may also set 'finished' and 'cmd' inside the rls.
+    // \return true on success, false if we got an error, in which case the caller should fire the
+    // error event.
+    bool handle_execute(readline_loop_state_t &rls);
+
+    // Add the current command line contents to history.
+    void add_to_history() const;
+
+    // Expand abbreviations before execution.
+    // Replace the command line with any abbreviations as needed.
+    // \return the test result, which may be incomplete to insert a newline, or an error.
+    parser_test_error_bits_t expand_for_execute();
 
     void clear_pager();
     void select_completion_in_direction(selection_motion_t dir,
@@ -1346,80 +1357,135 @@ void reader_data_t::pager_selection_changed() {
     }
 }
 
-/// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
-maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                                      const environment_t &vars) {
-    // See if we are at "command position". Get the surrounding command substitution, and get the
-    // extent of the first token.
-    const wchar_t *const buff = cmdline.c_str();
-    const wchar_t *cmdsub_begin = nullptr, *cmdsub_end = nullptr;
-    parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsub_begin, &cmdsub_end);
-    assert(cmdsub_begin != nullptr && cmdsub_begin >= buff);
-    assert(cmdsub_end != nullptr && cmdsub_end >= cmdsub_begin);
-
-    // Determine the offset of this command substitution.
-    const size_t subcmd_offset = cmdsub_begin - buff;
-
-    const wcstring subcmd = wcstring(cmdsub_begin, cmdsub_end - cmdsub_begin);
-    const size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
-
-    // Parse this subcmd.
-    using namespace ast;
-    auto ast =
-        ast_t::parse(subcmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens |
-                                 parse_flag_leave_unterminated);
-
-    // Look for plain statements where the cursor is at the end of the command.
-    const ast::string_t *matching_cmd_node = nullptr;
-    for (const node_t &n : ast) {
-        const auto *stmt = n.try_as<decorated_statement_t>();
-        if (!stmt) continue;
-
-        // Skip if we have a decoration.
-        if (stmt->opt_decoration) continue;
-
-        // See if the command's source range range contains our cursor, including at the end.
-        auto msource = stmt->command.try_source_range();
-        if (!msource) continue;
-
-        // Now see if its source range contains our cursor, including at the end.
-        if (subcmd_cursor_pos >= msource->start &&
-            subcmd_cursor_pos <= msource->start + msource->length) {
-            // Success!
-            matching_cmd_node = &stmt->command;
-            break;
-        }
+/// Expand an abbreviation replacer, which may mean running its function.
+/// \return the replacement, or none to skip it. This may run fish script!
+maybe_t<abbrs_replacement_t> expand_replacer(source_range_t range, const wcstring &token,
+                                             const abbrs_replacer_t &repl, parser_t &parser) {
+    if (!repl.is_function) {
+        // Literal replacement cannot fail.
+        FLOGF(abbrs, L"Expanded literal abbreviation <%ls> -> <%ls>", token.c_str(),
+              repl.replacement.c_str());
+        return abbrs_replacement_t::from(range, repl.replacement, repl);
     }
 
-    // Now if we found a command node, expand it.
-    maybe_t<edit_t> result{};
-    if (matching_cmd_node) {
-        assert(!matching_cmd_node->unsourced && "Should not be unsourced");
-        const wcstring token = matching_cmd_node->source(subcmd);
-        if (auto abbreviation = expand_abbreviation(token, vars)) {
-            // There was an abbreviation! Replace the token in the full command. Maintain the
-            // relative position of the cursor.
-            source_range_t r = matching_cmd_node->source_range();
-            result = edit_t(subcmd_offset + r.start, r.length, std::move(*abbreviation));
+    wcstring cmd = escape_string(repl.replacement);
+    cmd.push_back(L' ');
+    cmd.append(escape_string(token));
+
+    scoped_push<bool> not_interactive(&parser.libdata().is_interactive, false);
+
+    wcstring_list_t outputs{};
+    int ret = exec_subshell(cmd, parser, outputs, false /* not apply_exit_status */);
+    if (ret != STATUS_CMD_OK) {
+        return none();
+    }
+    wcstring result = join_strings(outputs, L'\n');
+    FLOGF(abbrs, L"Expanded function abbreviation <%ls> -> <%ls>", token.c_str(), result.c_str());
+    return abbrs_replacement_t::from(range, std::move(result), repl);
+}
+
+// Extract all the token ranges in \p str, along with whether they are an undecorated command.
+// Tokens containing command substitutions are skipped; this ensures tokens are non-overlapping.
+struct positioned_token_t {
+    source_range_t range;
+    bool is_cmd;
+};
+static std::vector<positioned_token_t> extract_tokens(const wcstring &str) {
+    using namespace ast;
+
+    parse_tree_flags_t ast_flags = parse_flag_continue_after_error |
+                                   parse_flag_accept_incomplete_tokens |
+                                   parse_flag_leave_unterminated;
+    auto ast = ast::ast_t::parse(str, ast_flags);
+
+    // Helper to check if a node is the command portion of an undecorated statement.
+    auto is_command = [&](const node_t *node) {
+        for (const node_t *cursor = node; cursor; cursor = cursor->parent) {
+            if (const auto *stmt = cursor->try_as<decorated_statement_t>()) {
+                if (!stmt->opt_decoration && node == &stmt->command) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    wcstring cmdsub_contents;
+    std::vector<positioned_token_t> result;
+    traversal_t tv = ast.walk();
+    while (const node_t *node = tv.next()) {
+        // We are only interested in leaf nodes with source.
+        if (node->category != category_t::leaf) continue;
+        source_range_t r = node->source_range();
+        if (r.length == 0) continue;
+
+        // If we have command subs, then we don't include this token; instead we recurse.
+        bool has_cmd_subs = false;
+        size_t cmdsub_cursor = r.start, cmdsub_start = 0, cmdsub_end = 0;
+        while (parse_util_locate_cmdsubst_range(str, &cmdsub_cursor, &cmdsub_contents,
+                                                &cmdsub_start, &cmdsub_end,
+                                                true /* accept incomplete */) > 0) {
+            if (cmdsub_start >= r.end()) {
+                break;
+            }
+            has_cmd_subs = true;
+            for (positioned_token_t t : extract_tokens(cmdsub_contents)) {
+                // cmdsub_start is the open paren; the contents start one after it.
+                t.range.start += static_cast<source_offset_t>(cmdsub_start + 1);
+                result.push_back(t);
+            }
+        }
+
+        if (!has_cmd_subs) {
+            // Common case of no command substitutions in this leaf node.
+            result.push_back(positioned_token_t{r, is_command(node)});
         }
     }
     return result;
 }
 
+/// Expand abbreviations at the given cursor position.
+/// \return the replacement. This does NOT inspect the current reader data.
+maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline,
+                                                                  size_t cursor_pos,
+                                                                  parser_t &parser) {
+    // Find the token containing the cursor. Usually users edit from the end, so walk backwards.
+    const auto tokens = extract_tokens(cmdline);
+    auto iter = std::find_if(tokens.rbegin(), tokens.rend(), [&](const positioned_token_t &t) {
+        return t.range.contains_inclusive(cursor_pos);
+    });
+    if (iter == tokens.rend()) {
+        return none();
+    }
+    source_range_t range = iter->range;
+    abbrs_position_t position =
+        iter->is_cmd ? abbrs_position_t::command : abbrs_position_t::anywhere;
+
+    wcstring token_str = cmdline.substr(range.start, range.length);
+    auto replacers = abbrs_match(token_str, position);
+    for (const auto &replacer : replacers) {
+        if (auto replacement = expand_replacer(range, token_str, replacer, parser)) {
+            return replacement;
+        }
+    }
+    return none();
+}
+
 /// Expand abbreviations at the current cursor position, minus the given cursor backtrack. This may
 /// change the command line but does NOT repaint it. This is to allow the caller to coalesce
 /// repaints.
-bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
+bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack) {
     bool result = false;
     editable_line_t *el = active_edit_line();
 
     if (conf.expand_abbrev_ok && el == &command_line) {
         // Try expanding abbreviations.
+        this->update_commandline_state();
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
-
-        if (auto edit = reader_expand_abbreviation_in_command(el->text(), cursor_pos, vars())) {
-            push_edit(el, std::move(*edit));
-            update_buff_pos(el);
+        if (auto replacement =
+                reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, this->parser())) {
+            push_edit(el, edit_t{replacement->range, std::move(replacement->text)});
+            update_buff_pos(el, replacement->cursor);
             result = true;
         }
     }
@@ -3590,7 +3656,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::execute: {
-            this->handle_execute(rls);
+            if (!this->handle_execute(rls)) {
+                event_fire_generic(parser(), L"fish_posterror", {command_line.text()});
+                screen.reset_abandoning_line(termsize_last().width);
+            }
             break;
         }
 
@@ -4117,7 +4186,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
 
         case rl::expand_abbr: {
-            if (expand_abbreviation_as_necessary(1)) {
+            if (expand_abbreviation_at_cursor(1)) {
                 inputter.function_set_status(true);
             } else {
                 inputter.function_set_status(false);
@@ -4164,13 +4233,69 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
     }
 }
 
-void reader_data_t::handle_execute(readline_loop_state_t &rls) {
+void reader_data_t::add_to_history() const {
+    if (!history || conf.in_silent_mode) {
+        return;
+    }
+
+    // Historical behavior is to trim trailing spaces, unless escape (#7661).
+    wcstring text = command_line.text();
+    while (!text.empty() && text.back() == L' ' &&
+           count_preceding_backslashes(text, text.size() - 1) % 2 == 0) {
+        text.pop_back();
+    }
+
+    // Remove ephemeral items - even if the text is empty.
+    history->remove_ephemeral_items();
+
+    if (!text.empty()) {
+        // Mark this item as ephemeral if there is a leading space (#615).
+        history_persistence_mode_t mode;
+        if (text.front() == L' ') {
+            // Leading spaces are ephemeral (#615).
+            mode = history_persistence_mode_t::ephemeral;
+        } else if (in_private_mode(this->vars())) {
+            // Private mode means in-memory only.
+            mode = history_persistence_mode_t::memory;
+        } else {
+            mode = history_persistence_mode_t::disk;
+        }
+        history_t::add_pending_with_file_detection(history, text, this->vars().snapshot(), mode);
+    }
+}
+
+parser_test_error_bits_t reader_data_t::expand_for_execute() {
+    // Expand abbreviations at the cursor.
+    // The first expansion is "user visible" and enters into history.
+    editable_line_t *el = &command_line;
+    parser_test_error_bits_t test_res = 0;
+
+    // Syntax check before expanding abbreviations. We could consider relaxing this: a string may be
+    // syntactically invalid but become valid after expanding abbreviations.
+    if (conf.syntax_check_ok) {
+        test_res = reader_shell_test(parser(), el->text());
+        if (test_res & PARSER_TEST_ERROR) return test_res;
+    }
+
+    // Exec abbreviations at the cursor.
+    // Note we want to expand abbreviations even if incomplete.
+    if (expand_abbreviation_at_cursor(0)) {
+        // Trigger syntax highlighting as we are likely about to execute this command.
+        this->super_highlight_me_plenty();
+        if (conf.syntax_check_ok) {
+            test_res = reader_shell_test(parser(), el->text());
+        }
+    }
+    return test_res;
+}
+
+bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
     // Evaluate. If the current command is unfinished, or if the charater is escaped
     // using a backslash, insert a newline.
     // If the user hits return while navigating the pager, it only clears the pager.
     if (is_navigating_pager_contents()) {
         clear_pager();
-        return;
+        return true;
     }
 
     // Delete any autosuggestion.
@@ -4203,77 +4328,24 @@ void reader_data_t::handle_execute(readline_loop_state_t &rls) {
     // If the conditions are met, insert a new line at the position of the cursor.
     if (continue_on_next_line) {
         insert_char(el, L'\n');
-        return;
+        return true;
     }
 
-    // See if this command is valid.
-    parser_test_error_bits_t command_test_result = 0;
-    if (conf.syntax_check_ok) {
-        command_test_result = reader_shell_test(parser(), el->text());
-    }
-    if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
-        // This command is valid, but an abbreviation may make it invalid. If so, we
-        // will have to test again.
-        if (expand_abbreviation_as_necessary(0)) {
-            // Trigger syntax highlighting as we are likely about to execute this command.
-            this->super_highlight_me_plenty();
-            if (conf.syntax_check_ok) {
-                command_test_result = reader_shell_test(parser(), el->text());
-            }
-        }
-    }
-
-    if (command_test_result == 0) {
-        // Finished command, execute it. Don't add items in silent mode (#7230).
-        wcstring text = command_line.text();
-        if (text.empty()) {
-            // Here the user just hit return. Make a new prompt, don't remove ephemeral
-            // items.
-            rls.finished = true;
-            return;
-        }
-
-        // Historical behavior is to trim trailing spaces.
-        // However, escaped spaces ('\ ') should not be trimmed (#7661)
-        // This can be done by counting pre-trailing '\'
-        // If there's an odd number, this must be an escaped space.
-        while (!text.empty() && text.back() == L' ' &&
-               count_preceding_backslashes(text, text.size() - 1) % 2 == 0) {
-            text.pop_back();
-        }
-
-        if (history && !conf.in_silent_mode) {
-            // Remove ephemeral items - even if the text is empty
-            history->remove_ephemeral_items();
-
-            if (!text.empty()) {
-                // Mark this item as ephemeral if there is a leading space (#615).
-                history_persistence_mode_t mode;
-                if (text.front() == L' ') {
-                    // Leading spaces are ephemeral (#615).
-                    mode = history_persistence_mode_t::ephemeral;
-                } else if (in_private_mode(this->vars())) {
-                    // Private mode means in-memory only.
-                    mode = history_persistence_mode_t::memory;
-                } else {
-                    mode = history_persistence_mode_t::disk;
-                }
-                history_t::add_pending_with_file_detection(history, text, this->vars().snapshot(),
-                                                           mode);
-            }
-        }
-
-        rls.finished = true;
-        update_buff_pos(&command_line, command_line.size());
-    } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
-        // We are incomplete, continue editing.
+    // Expand the command line in preparation for execution.
+    // to_exec is the command to execute; the command line itself has the command for history.
+    parser_test_error_bits_t test_res = this->expand_for_execute();
+    if (test_res & PARSER_TEST_ERROR) {
+        return false;
+    } else if (test_res & PARSER_TEST_INCOMPLETE) {
         insert_char(el, L'\n');
-    } else {
-        // Result must be some combination including an error. The error message will
-        // already be printed, all we need to do is repaint.
-        event_fire_generic(parser(), L"fish_posterror", {el->text()});
-        screen.reset_abandoning_line(termsize_last().width);
+        return true;
     }
+    assert(test_res == 0);
+
+    this->add_to_history();
+    rls.finished = true;
+    update_buff_pos(&command_line, command_line.size());
+    return true;
 }
 
 maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
@@ -4487,7 +4559,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
         outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     }
-
     return rls.finished ? maybe_t<wcstring>{command_line.text()} : none();
 }
 

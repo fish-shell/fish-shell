@@ -205,10 +205,6 @@ int wgetopter_t::_handle_short_opt(int argc, string_array_t argv) {
     if (*nextchar == '\0') ++woptind;
 
     if (temp == nullptr || c == ':') {
-        if (wopterr) {
-            std::fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0],
-                          static_cast<wint_t>(c));
-        }
         woptopt = c;
 
         if (*nextchar != '\0') woptind++;
@@ -236,11 +232,6 @@ int wgetopter_t::_handle_short_opt(int argc, string_array_t argv) {
             // the next element now.
             woptind++;
         } else if (woptind == argc) {
-            if (wopterr) {
-                // 1003.2 specifies the format of this message.
-                std::fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
-                              static_cast<wint_t>(c));
-            }
             woptopt = c;
             c = missing_arg_return_colon ? ':' : '?';
         } else {
@@ -255,35 +246,21 @@ int wgetopter_t::_handle_short_opt(int argc, string_array_t argv) {
 }
 
 void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct woption *pfound,
-                                   const wchar_t *nameend, int *longind, int option_index,
-                                   int *retval) {
+                                   size_t nameend, int *longind, int option_index, int *retval) {
     woptind++;
-    if (*nameend) {
-        // Don't test has_arg with >, because some C compilers don't allow it to be used on
-        // enums.
-        if (pfound->has_arg)
-            woptarg = nameend + 1;
+    assert(nextchar[nameend] == '\0' || nextchar[nameend] == '=');
+    if (nextchar[nameend] == '=') {
+        if (pfound->has_arg != no_argument)
+            woptarg = &nextchar[nameend + 1];
         else {
-            if (wopterr) {
-                if (argv[woptind - 1][1] == '-')  // --option
-                    std::fwprintf(stderr, _(L"%ls: Option '--%ls' doesn't allow an argument\n"),
-                                  argv[0], pfound->name);
-                else
-                    // +option or -option
-                    std::fwprintf(stderr, _(L"%ls: Option '%lc%ls' doesn't allow an argument\n"),
-                                  argv[0], argv[woptind - 1][0], pfound->name);
-            }
             nextchar += std::wcslen(nextchar);
             *retval = '?';
             return;
         }
-    } else if (pfound->has_arg == 1) {
+    } else if (pfound->has_arg == required_argument) {
         if (woptind < argc)
             woptarg = argv[woptind++];
         else {
-            if (wopterr)
-                std::fwprintf(stderr, _(L"%ls: Option '%ls' requires an argument\n"), argv[0],
-                              argv[woptind - 1]);
             nextchar += std::wcslen(nextchar);
             *retval = missing_arg_return_colon ? ':' : '?';
             return;
@@ -292,26 +269,20 @@ void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct w
 
     nextchar += std::wcslen(nextchar);
     if (longind != nullptr) *longind = option_index;
-    if (pfound->flag) {
-        *(pfound->flag) = pfound->val;
-        *retval = 0;
-    } else {
-        *retval = pfound->val;
-    }
+    *retval = pfound->val;
 }
 
 // Find a matching long opt.
 const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption *longopts,
-                                                           const wchar_t *nameend, int *exact,
-                                                           int *ambig, int *indfound) const {
+                                                           size_t nameend, int *exact, int *ambig,
+                                                           int *indfound) const {
     const struct woption *pfound = nullptr;
     int option_index = 0;
 
     // Test all long options for either exact match or abbreviated matches.
     for (const struct woption *p = longopts; p->name; p++, option_index++) {
-        if (!std::wcsncmp(p->name, nextchar, nameend - nextchar)) {
-            if (static_cast<unsigned int>(nameend - nextchar) ==
-                static_cast<unsigned int>(wcslen(p->name))) {
+        if (!std::wcsncmp(p->name, nextchar, nameend)) {
+            if (nameend == wcslen(p->name)) {
                 // Exact match found.
                 pfound = p;
                 *indfound = option_index;
@@ -337,17 +308,15 @@ bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct w
     int ambig = 0;
     int indfound = 0;
 
-    const wchar_t *nameend;
-    for (nameend = nextchar; *nameend && *nameend != '='; nameend++)
-        ;  //!OCLINT(empty body)
+    size_t nameend = 0;
+    while (nextchar[nameend] && nextchar[nameend] != '=') {
+        nameend++;
+    }
 
     const struct woption *pfound =
         _find_matching_long_opt(longopts, nameend, &exact, &ambig, &indfound);
 
     if (ambig && !exact) {
-        if (wopterr) {
-            std::fwprintf(stderr, _(L"%ls: Option '%ls' is ambiguous\n"), argv[0], argv[woptind]);
-        }
         nextchar += std::wcslen(nextchar);
         woptind++;
         *retval = '?';
@@ -363,14 +332,6 @@ bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct w
     // with '--' or is not a valid short option, then it's an error. Otherwise interpret it as a
     // short option.
     if (!long_only || argv[woptind][1] == '-' || std::wcschr(shortopts, *nextchar) == nullptr) {
-        if (wopterr) {
-            if (argv[woptind][1] == '-')  // --option
-                std::fwprintf(stderr, _(L"%ls: Unrecognized option '--%ls'\n"), argv[0], nextchar);
-            else
-                // +option or -option
-                std::fwprintf(stderr, _(L"%ls: Unrecognized option '%lc%ls'\n"), argv[0],
-                              argv[woptind][0], nextchar);
-        }
         nextchar = const_cast<wchar_t *>(L"");
         woptind++;
         *retval = '?';
@@ -396,8 +357,7 @@ bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct w
 // that those that are not options now come last.)
 //
 // OPTSTRING is a string containing the legitimate option characters. If an option character is seen
-// that is not listed in OPTSTRING, return '?' after printing an error message.  If you set
-// `wopterr' to zero, the error message is suppressed but we still return '?'.
+// that is not listed in OPTSTRING, return '?'.
 //
 // If a char in OPTSTRING is followed by a colon, that means it wants an arg, so the following text
 // in the same ARGV-element, or the text of the following ARGV-element, is returned in `optarg'.
@@ -443,17 +403,32 @@ int wgetopter_t::_wgetopt_internal(int argc, string_array_t argv, const wchar_t 
     // "u".
     //
     // This distinction seems to be the most useful approach.
-    if (longopts != nullptr &&
-        (argv[woptind][1] == '-' ||
-         (long_only && (argv[woptind][2] || !std::wcschr(shortopts, argv[woptind][1]))))) {
-        int retval;
-        if (_handle_long_opt(argc, argv, longopts, longind, long_only, &retval)) return retval;
+    if (longopts && woptind < argc) {
+        const wchar_t *arg = argv[woptind];
+        assert(arg && "Null arg");
+        bool try_long = false;
+        if (arg[0] == '-' && arg[1] == '-') {
+            // Like --foo
+            try_long = true;
+        } else if (long_only && wcslen(arg) >= 3) {
+            // Like -fu
+            try_long = true;
+        } else if (!std::wcschr(shortopts, arg[1])) {
+            // Like -f, but f is not a short arg.
+            try_long = true;
+        }
+        if (try_long) {
+            int retval = 0;
+            if (_handle_long_opt(argc, argv, longopts, longind, long_only, &retval)) {
+                return retval;
+            }
+        }
     }
-
     return _handle_short_opt(argc, argv);
 }
 
 int wgetopter_t::wgetopt_long(int argc, string_array_t argv, const wchar_t *options,
                               const struct woption *long_options, int *opt_index) {
+    assert(woptind <= argc && "woptind is out of range");
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 0);
 }

@@ -47,19 +47,18 @@ struct function_cmd_opts_t {
 // This command is atypical in using the "-" (RETURN_IN_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
 static const wchar_t *const short_options = L"-:a:d:e:hj:p:s:v:w:SV:";
-static const struct woption long_options[] = {
-    {L"description", required_argument, nullptr, 'd'},
-    {L"on-signal", required_argument, nullptr, 's'},
-    {L"on-job-exit", required_argument, nullptr, 'j'},
-    {L"on-process-exit", required_argument, nullptr, 'p'},
-    {L"on-variable", required_argument, nullptr, 'v'},
-    {L"on-event", required_argument, nullptr, 'e'},
-    {L"wraps", required_argument, nullptr, 'w'},
-    {L"help", no_argument, nullptr, 'h'},
-    {L"argument-names", required_argument, nullptr, 'a'},
-    {L"no-scope-shadowing", no_argument, nullptr, 'S'},
-    {L"inherit-variable", required_argument, nullptr, 'V'},
-    {}};
+static const struct woption long_options[] = {{L"description", required_argument, 'd'},
+                                              {L"on-signal", required_argument, 's'},
+                                              {L"on-job-exit", required_argument, 'j'},
+                                              {L"on-process-exit", required_argument, 'p'},
+                                              {L"on-variable", required_argument, 'v'},
+                                              {L"on-event", required_argument, 'e'},
+                                              {L"wraps", required_argument, 'w'},
+                                              {L"help", no_argument, 'h'},
+                                              {L"argument-names", required_argument, 'a'},
+                                              {L"no-scope-shadowing", no_argument, 'S'},
+                                              {L"inherit-variable", required_argument, 'V'},
+                                              {}};
 
 /// \return the internal_job_id for a pid, or 0 if none.
 /// This looks through both active and finished jobs.
@@ -222,9 +221,8 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 
 /// Define a function. Calls into `function.cpp` to perform the heavy lifting of defining a
 /// function.
-int builtin_function(parser_t &parser, io_streams_t &streams,
-                              const wcstring_list_t &c_args, const parsed_source_ref_t &source,
-                              const ast::block_statement_t &func_node) {
+int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
+                     const parsed_source_ref_t &source, const ast::block_statement_t &func_node) {
     assert(source && "Missing source in builtin_function");
     // The wgetopt function expects 'function' as the first argument. Make a new wcstring_list with
     // that property. This is needed because this builtin has a different signature than the other

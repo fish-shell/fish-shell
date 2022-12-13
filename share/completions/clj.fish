@@ -40,12 +40,12 @@ set -l bb_helper '
         (aliases)))'
 
 function __fish_clj_aliases -V bb_helper
-    command -q bb ; or return
+    command -q bb; or return
     bb -e "$bb_helper"
 end
 
 function __fish_clj_tools -V bb_helper
-    command -q bb ; or return
+    command -q bb; or return
     bb -e "$bb_helper" tools
 end
 

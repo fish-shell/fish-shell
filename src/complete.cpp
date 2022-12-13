@@ -24,6 +24,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "abbrs.h"
 #include "autoload.h"
 #include "builtin.h"
 #include "common.h"
@@ -668,16 +669,23 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
 }
 
 void completer_t::complete_abbr(const wcstring &cmd) {
-    std::map<wcstring, wcstring> abbrs = get_abbreviations(ctx.vars);
+    // Copy the list of names and descriptions so as not to hold the lock across the call to
+    // complete_strings.
     completion_list_t possible_comp;
-    possible_comp.reserve(abbrs.size());
-    for (const auto &kv : abbrs) {
-        possible_comp.emplace_back(kv.first);
+    std::unordered_map<wcstring, wcstring> descs;
+    {
+        auto abbrs = abbrs_get_set();
+        for (const auto &abbr : abbrs->list()) {
+            if (!abbr.is_regex()) {
+                possible_comp.emplace_back(abbr.key);
+                descs[abbr.key] = abbr.replacement;
+            }
+        }
     }
 
     auto desc_func = [&](const wcstring &key) {
-        auto iter = abbrs.find(key);
-        assert(iter != abbrs.end() && "Abbreviation not found");
+        auto iter = descs.find(key);
+        assert(iter != descs.end() && "Abbreviation not found");
         return format_string(ABBR_DESC, iter->second.c_str());
     };
     this->complete_strings(cmd, desc_func, possible_comp, COMPLETE_NO_SPACE);

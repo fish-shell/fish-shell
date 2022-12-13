@@ -137,8 +137,9 @@ wcstring_list_t split_string(const wcstring &val, wchar_t sep);
 wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps,
                                  size_t max_results = std::numeric_limits<size_t>::max());
 
-/// Join a list of strings by a separator character.
+/// Join a list of strings by a separator character or string.
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
+wcstring join_strings(const wcstring_list_t &vals, const wchar_t *sep);
 
 inline wcstring to_string(long x) {
     wchar_t buff[64];

@@ -24,9 +24,8 @@ struct command_cmd_opts_t {
 };
 static const wchar_t *const short_options = L":ahqsv";
 static const struct woption long_options[] = {
-    {L"help", no_argument, nullptr, 'h'},   {L"all", no_argument, nullptr, 'a'},
-    {L"quiet", no_argument, nullptr, 'q'},  {L"query", no_argument, nullptr, 'q'},
-    {L"search", no_argument, nullptr, 's'}, {}};
+    {L"help", no_argument, 'h'},  {L"all", no_argument, 'a'},    {L"quiet", no_argument, 'q'},
+    {L"query", no_argument, 'q'}, {L"search", no_argument, 's'}, {}};
 
 static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {

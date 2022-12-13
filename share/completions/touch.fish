@@ -13,7 +13,7 @@ if touch --version 2>/dev/null >/dev/null # GNU
     # TODO these may require that = but builtin complete doesn't seem to infer it should
     # use = here
     complete touch -l time -x -d "change specified kind of timestamp" -a \
-    "atime\t'change access time (atime) only'
+        "atime\t'change access time (atime) only'
     access\t'change access time (atime) only'
     use\t'change access time (atime) only'
     mtime\t'change modification time (mtime) only'

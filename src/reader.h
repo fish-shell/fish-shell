@@ -42,6 +42,9 @@ struct edit_t {
     explicit edit_t(size_t offset, size_t length, wcstring replacement)
         : offset(offset), length(length), replacement(std::move(replacement)) {}
 
+    explicit edit_t(source_range_t range, wcstring replacement)
+        : edit_t(range.start, range.length, std::move(replacement)) {}
+
     /// Used for testing.
     bool operator==(const edit_t &other) const;
 };
@@ -261,10 +264,14 @@ bool fish_is_unwinding_for_exit();
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
                                             const wcstring &autosuggestion);
 
-/// Expand abbreviations at the given cursor position. Exposed for testing purposes only.
-/// \return none if no abbreviations were expanded, otherwise the new command line.
-maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                                      const environment_t &vars);
+/// Expand at most one abbreviation at the given cursor position, updating the position if the
+/// abbreviation wants to move the cursor. Use the parser to run any abbreviations which want
+/// function calls. \return none if no abbreviations were expanded, otherwise the resulting
+/// replacement.
+struct abbrs_replacement_t;
+maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline,
+                                                                  size_t cursor_pos,
+                                                                  parser_t &parser);
 
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,

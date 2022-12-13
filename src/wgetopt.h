@@ -76,9 +76,6 @@ class wgetopter_t {
     // XXX 1003.2 says this must be 1 before any call.
     int woptind = 0;
 
-    // Callers store zero here to inhibit the error message for unrecognized options.
-    int wopterr = 0;
-
     // Set to an option character which was unrecognized. This must be initialized on some systems
     // to avoid linking in the system's own getopt implementation.
     int woptopt = '?';
@@ -127,11 +124,10 @@ class wgetopter_t {
     int _handle_short_opt(int argc, string_array_t argv);
     bool _handle_long_opt(int argc, string_array_t argv, const struct woption *longopts,
                           int *longind, int long_only, int *retval);
-    const struct woption *_find_matching_long_opt(const struct woption *longopts,
-                                                  const wchar_t *nameend, int *exact, int *ambig,
-                                                  int *indfound) const;
+    const struct woption *_find_matching_long_opt(const struct woption *longopts, size_t nameend,
+                                                  int *exact, int *ambig, int *indfound) const;
     void _update_long_opt(int argc, string_array_t argv, const struct woption *pfound,
-                          const wchar_t *nameend, int *longind, int option_index, int *retval);
+                          size_t nameend, int *longind, int option_index, int *retval);
     bool initialized = false;
     bool missing_arg_return_colon = false;
 };
@@ -160,14 +156,12 @@ struct woption {
     const wchar_t *name{nullptr};
     /// Must be one of no_argument, required_argument or optional_argument.
     woption_argument_t has_arg{};
-    /// If non-null, the flag whose value should be set if this switch is encountered.
-    int *flag{nullptr};
     /// If \c flag is non-null, this is the value that flag will be set to. Otherwise, this is the
     /// return-value of the function call.
     wchar_t val{L'\0'};
 
-    constexpr woption(const wchar_t *name, woption_argument_t has_arg, int *flag, wchar_t val)
-        : name(name), has_arg(has_arg), flag(flag), val(val) {}
+    constexpr woption(const wchar_t *name, woption_argument_t has_arg, wchar_t val)
+        : name(name), has_arg(has_arg), val(val) {}
 
     constexpr woption() = default;
 };

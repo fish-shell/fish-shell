@@ -428,16 +428,16 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust the completions in share/completions/ when options change
-static const struct woption long_options[] = {{L"quiet", no_argument, nullptr, 'q'},
-                                              {L"null-in", no_argument, nullptr, 'z'},
-                                              {L"null-out", no_argument, nullptr, 'Z'},
-                                              {L"perm", required_argument, nullptr, 'p'},
-                                              {L"type", required_argument, nullptr, 't'},
-                                              {L"invert", no_argument, nullptr, 'v'},
-                                              {L"relative", no_argument, nullptr, 'R'},
-                                              {L"reverse", no_argument, nullptr, 'r'},
-                                              {L"unique", no_argument, nullptr, 'u'},
-                                              {L"key", required_argument, nullptr, 1},
+static const struct woption long_options[] = {{L"quiet", no_argument, 'q'},
+                                              {L"null-in", no_argument, 'z'},
+                                              {L"null-out", no_argument, 'Z'},
+                                              {L"perm", required_argument, 'p'},
+                                              {L"type", required_argument, 't'},
+                                              {L"invert", no_argument, 'v'},
+                                              {L"relative", no_argument, 'R'},
+                                              {L"reverse", no_argument, 'r'},
+                                              {L"unique", no_argument, 'u'},
+                                              {L"key", required_argument, 1},
                                               {}};
 
 static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function = {

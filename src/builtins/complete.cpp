@@ -150,29 +150,28 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
     bool unescape_output = true;
 
     static const wchar_t *const short_options = L":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk";
-    static const struct woption long_options[] = {
-        {L"exclusive", no_argument, nullptr, 'x'},
-        {L"no-files", no_argument, nullptr, 'f'},
-        {L"force-files", no_argument, nullptr, 'F'},
-        {L"require-parameter", no_argument, nullptr, 'r'},
-        {L"path", required_argument, nullptr, 'p'},
-        {L"command", required_argument, nullptr, 'c'},
-        {L"short-option", required_argument, nullptr, 's'},
-        {L"long-option", required_argument, nullptr, 'l'},
-        {L"old-option", required_argument, nullptr, 'o'},
-        {L"subcommand", required_argument, nullptr, 'S'},
-        {L"description", required_argument, nullptr, 'd'},
-        {L"arguments", required_argument, nullptr, 'a'},
-        {L"erase", no_argument, nullptr, 'e'},
-        {L"unauthoritative", no_argument, nullptr, 'u'},
-        {L"authoritative", no_argument, nullptr, 'A'},
-        {L"condition", required_argument, nullptr, 'n'},
-        {L"wraps", required_argument, nullptr, 'w'},
-        {L"do-complete", optional_argument, nullptr, 'C'},
-        {L"help", no_argument, nullptr, 'h'},
-        {L"keep-order", no_argument, nullptr, 'k'},
-        {L"escape", no_argument, nullptr, opt_escape},
-        {}};
+    static const struct woption long_options[] = {{L"exclusive", no_argument, 'x'},
+                                                  {L"no-files", no_argument, 'f'},
+                                                  {L"force-files", no_argument, 'F'},
+                                                  {L"require-parameter", no_argument, 'r'},
+                                                  {L"path", required_argument, 'p'},
+                                                  {L"command", required_argument, 'c'},
+                                                  {L"short-option", required_argument, 's'},
+                                                  {L"long-option", required_argument, 'l'},
+                                                  {L"old-option", required_argument, 'o'},
+                                                  {L"subcommand", required_argument, 'S'},
+                                                  {L"description", required_argument, 'd'},
+                                                  {L"arguments", required_argument, 'a'},
+                                                  {L"erase", no_argument, 'e'},
+                                                  {L"unauthoritative", no_argument, 'u'},
+                                                  {L"authoritative", no_argument, 'A'},
+                                                  {L"condition", required_argument, 'n'},
+                                                  {L"wraps", required_argument, 'w'},
+                                                  {L"do-complete", optional_argument, 'C'},
+                                                  {L"help", no_argument, 'h'},
+                                                  {L"keep-order", no_argument, 'k'},
+                                                  {L"escape", no_argument, opt_escape},
+                                                  {}};
 
     bool have_x = false;
 
@@ -356,8 +355,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         prefix.append(L": ");
 
         if (maybe_t<wcstring> err_text = parse_util_detect_errors_in_argument_list(comp, prefix)) {
-            streams.err.append_format(L"%ls: %ls: contains a syntax error\n", cmd,
-                                      comp);
+            streams.err.append_format(L"%ls: %ls: contains a syntax error\n", cmd, comp);
             streams.err.append(*err_text);
             streams.err.push_back(L'\n');
             return STATUS_CMD_ERROR;
@@ -423,8 +421,8 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
 
                 // Append any description.
                 if (!next.description.empty()) {
-                    faux_cmdline_with_completion.reserve(
-                            faux_cmdline_with_completion.size() + 2 + next.description.size());
+                    faux_cmdline_with_completion.reserve(faux_cmdline_with_completion.size() + 2 +
+                                                         next.description.size());
                     faux_cmdline_with_completion.push_back(L'\t');
                     faux_cmdline_with_completion.append(next.description);
                 }

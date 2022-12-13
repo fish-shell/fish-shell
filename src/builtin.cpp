@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 
+#include "builtins/abbr.h"
 #include "builtins/argparse.h"
 #include "builtins/bg.h"
 #include "builtins/bind.h"
@@ -105,7 +106,7 @@ void builtin_wperror(const wchar_t *program_name, io_streams_t &streams) {
 }
 
 static const wchar_t *const short_options = L"+:h";
-static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'}, {}};
+static const struct woption long_options[] = {{L"help", no_argument, 'h'}, {}};
 
 int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int argc,
                              const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -354,6 +355,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L":", &builtin_true, N_(L"Return a successful result")},
     {L"[", &builtin_test, N_(L"Test a condition")},
     {L"_", &builtin_gettext, N_(L"Translate a string")},
+    {L"abbr", &builtin_abbr, N_(L"Manage generics")},
     {L"and", &builtin_generic, N_(L"Run command if last command succeeded")},
     {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},

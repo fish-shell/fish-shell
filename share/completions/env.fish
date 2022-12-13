@@ -94,19 +94,19 @@ end
 complete -c env -a "(__fish_complete_env_subcommand)"
 # Complete the name of the variable to redefine
 complete -c env -n '__fish_env_defining_vars; and not string match -eq = -- (commandline -ct)' -a "(__fish_env_redefine_vars)" -f -d "Redefine variable"
-complete -c env -n '__fish_env_defining_vars; and not string match -eq = -- (commandline -ct)' -a "(__fish_env_names_from_history)" -f -d "Historical"
+complete -c env -n '__fish_env_defining_vars; and not string match -eq = -- (commandline -ct)' -a "(__fish_env_names_from_history)" -f -d Historical
 complete -c env -n '__fish_env_defining_vars; and string match -eq = -- (commandline -ct)' -a "(__fish_env_values_from_history)" -f
 
 if set -q is_gnu
-    complete -c env -n '__fish_env_not_yet_vars' -s i -l ignore-environment -d "Start with an empty environment"
-    complete -c env -n '__fish_env_not_yet_vars' -s u -l unset -d "Unset environment variable" -x -a "(set --names -x)"
-    complete -c env -n '__fish_env_not_yet_vars' -l help -d "Display help and exit"
-    complete -c env -n '__fish_env_not_yet_vars' -l version -d "Display version and exit"
+    complete -c env -n __fish_env_not_yet_vars -s i -l ignore-environment -d "Start with an empty environment"
+    complete -c env -n __fish_env_not_yet_vars -s u -l unset -d "Unset environment variable" -x -a "(set --names -x)"
+    complete -c env -n __fish_env_not_yet_vars -l help -d "Display help and exit"
+    complete -c env -n __fish_env_not_yet_vars -l version -d "Display version and exit"
 else
-    complete -c env -n '__fish_env_not_yet_vars' -s 0 -d "End output lines with NUL"
-    complete -c env -n '__fish_env_not_yet_vars' -s i -d "Start with empty environment"
-    complete -c env -n '__fish_env_not_yet_vars' -s P -d "Provide an alternate PATH"
-    complete -c env -n '__fish_env_not_yet_vars' -s S -d "Split argument into args on ' '"
-    complete -c env -n '__fish_env_not_yet_vars' -s u -d "Unset environment variable" -x -a "(set --names -x)"
-    complete -c env -n '__fish_env_not_yet_vars' -s v -d "Verbose output on processing"
+    complete -c env -n __fish_env_not_yet_vars -s 0 -d "End output lines with NUL"
+    complete -c env -n __fish_env_not_yet_vars -s i -d "Start with empty environment"
+    complete -c env -n __fish_env_not_yet_vars -s P -d "Provide an alternate PATH"
+    complete -c env -n __fish_env_not_yet_vars -s S -d "Split argument into args on ' '"
+    complete -c env -n __fish_env_not_yet_vars -s u -d "Unset environment variable" -x -a "(set --names -x)"
+    complete -c env -n __fish_env_not_yet_vars -s v -d "Verbose output on processing"
 end

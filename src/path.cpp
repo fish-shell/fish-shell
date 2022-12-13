@@ -186,24 +186,20 @@ wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
         }
         // Always append $PWD
         cdpathsv.push_back(L".");
-        for (wcstring next_path : cdpathsv) {
-            if (next_path.empty()) next_path = L".";
-            if (next_path == L".") {
-                // next_path is just '.', and we have a working directory, so use the wd instead.
-                next_path = wd;
-            }
-
+        for (const wcstring &path : cdpathsv) {
+            wcstring abspath;
             // We want to return an absolute path (see issue 6220)
-            if (string_prefixes_string(L"./", next_path)) {
-                next_path = next_path.replace(0, 2, wd);
-            } else if (string_prefixes_string(L"../", next_path) || next_path == L"..") {
-                next_path = next_path.insert(0, wd);
+            if (path.empty() || (path.front() != L'/' && path.front() != L'~')) {
+                abspath = wd;
+                abspath += L'/';
             }
+            abspath += path;
 
-            expand_tilde(next_path, env_vars);
-            if (next_path.empty()) continue;
+            expand_tilde(abspath, env_vars);
+            if (abspath.empty()) continue;
+            abspath = normalize_path(abspath);
 
-            wcstring whole_path = std::move(next_path);
+            wcstring whole_path = std::move(abspath);
             append_path_component(whole_path, dir);
             paths.push_back(whole_path);
         }

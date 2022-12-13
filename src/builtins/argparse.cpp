@@ -62,10 +62,10 @@ struct argparse_cmd_opts_t {
 
 static const wchar_t *const short_options = L"+:hn:six:N:X:";
 static const struct woption long_options[] = {
-    {L"stop-nonopt", no_argument, nullptr, 's'},    {L"ignore-unknown", no_argument, nullptr, 'i'},
-    {L"name", required_argument, nullptr, 'n'},     {L"exclusive", required_argument, nullptr, 'x'},
-    {L"help", no_argument, nullptr, 'h'},           {L"min-args", required_argument, nullptr, 'N'},
-    {L"max-args", required_argument, nullptr, 'X'}, {}};
+    {L"stop-nonopt", no_argument, 's'},    {L"ignore-unknown", no_argument, 'i'},
+    {L"name", required_argument, 'n'},     {L"exclusive", required_argument, 'x'},
+    {L"help", no_argument, 'h'},           {L"min-args", required_argument, 'N'},
+    {L"max-args", required_argument, 'X'}, {}};
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
@@ -462,8 +462,7 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
         }
 
         if (!opt_spec->long_flag.empty()) {
-            long_options->push_back(
-                {opt_spec->long_flag.c_str(), arg_type, nullptr, opt_spec->short_flag});
+            long_options->push_back({opt_spec->long_flag.c_str(), arg_type, opt_spec->short_flag});
         }
     }
     long_options->push_back(woption{});

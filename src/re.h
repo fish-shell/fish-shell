@@ -111,6 +111,9 @@ class regex_t : noncopyable_t {
     /// \return a range on a successful match, none on no match.
     maybe_t<match_range_t> match(match_data_t &md, const wcstring &subject) const;
 
+    /// A convenience function which calls prepare() for you.
+    maybe_t<match_range_t> match(const wcstring &subject) const;
+
     /// \return the matched range for an indexed or named capture group. 0 means the entire match.
     maybe_t<match_range_t> group(const match_data_t &md, size_t group_idx) const;
     maybe_t<match_range_t> group(const match_data_t &md, const wcstring &name) const;
@@ -144,6 +147,11 @@ class regex_t : noncopyable_t {
     regex_t(adapters::bytecode_ptr_t &&);
     adapters::bytecode_ptr_t code_;
 };
+
+/// Adjust a pattern so that it is anchored at both beginning and end.
+/// This is a workaround for the fact that PCRE2_ENDANCHORED is unavailable on pre-2017 PCRE2
+/// (e.g. 10.21, on Xenial).
+wcstring make_anchored(wcstring pattern);
 
 }  // namespace re
 #endif

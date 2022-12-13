@@ -1,12 +1,37 @@
-.. ignore: 2271 9265 9252 8514 9241 9226 9214 9211 9206 9186 9099 9154 9152 9141 7717 9140 9134 9121 9111 9109 9091 9067 9028
+.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9134 9140 9141 9152 9154 9186 9206 9211 9214 9226 9241 9252 9265 9301 9303 9311 9341 9342 9382 9394
 
 fish 3.6.0 (released ???)
 ===================================
 
 Notable improvements and fixes
 ------------------------------
-- By default, :kbd:``Control-R`` now opens the command history in the pager, via the new special input function ``history-pager`` (:issue:`9089`, :issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the "isearch" seen in other shells.
-- ``path`` gained a new ``mtime`` command to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
+- By default, :kbd:`Control-R` now opens the command history in the pager (:issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the incremental search seen in other shells. The new special input function ``history-pager`` has been added for custom bindings.
+- Abbrevations are more flexible (:issue:`9313`):
+
+  - They may optionally replace tokens anywhere on the command line, instead of only commands
+  - Matching tokens may be described using a regular expression instead of a literal word
+  - The replacement text may be produced by a fish function, instead of a literal word
+  - They may position the cursor anywhere in the expansion, instead of at the end
+
+  For example::
+
+    function multicd
+        echo cd (string repeat -n (math (string length -- $argv[1]) - 1) ../)
+    end
+
+    abbr --add dotdot --regex '^\.\.+$' --function multicd
+
+  This expands ``..`` to ``cd ../``, ``...`` to ``cd ../../`` and ``....`` to ``cd ../../../`` and so on.
+
+  Or::
+
+    function last_history_item; echo $history[1]; end
+    abbr -a !! --position anywhere --function last_history_item
+
+  which expands ``!!`` to the last history item, anywhere on the command line, mimicking other shells' history expansion.
+
+  See :ref:`the documentation <cmd-abbr>` for more.
+- ``path`` gained a new ``mtime`` subcommand to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
 
     > touch foo
     > sleep 10
@@ -18,24 +43,24 @@ Notable improvements and fixes
     > string shorten -m10 "Hello this is a long string"
     Hello thi…
 
-- ``test`` aka ``[``: implemented ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity, common extensions (:issue:`3589`).
-- Fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
+- ``test`` aka ``[`` gained ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity (:issue:`3589`).
+- fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
 
     checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
     for a,b in y 1 z 3
         ^~^
-- A new helper function ``fish_delta`` can be used to show the difference to fish's stock configuration (:issue:`9255`).
-- It is now possible to specify multiple scopes for ``set -e`` and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
-- A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
-- `status current-commandline` has been added and retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
+- A new function, ``fish_delta``, shows changes that have been made in fish's configuration from the defaults (:issue:`9255`).
+- ``set --erase`` can be used in combination with multiple scope options, and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
+- ``status`` gained a new subcommand, ``current-commandline`` which retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
 
-=======
 
 Deprecations and removed features
 ---------------------------------
 - The difference between ``\xAB`` and ``\XAB`` has been removed. Before, ``\x`` would do the same thing as ``\X`` except that it would error if the value was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`1352`).
 - The ``fish_git_prompt`` will now only turn on features if the corresponding boolean variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, e.g. via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
   For example, ``set -g __fish_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), now it turns it off.
+- Abbreviations are no longer stored in universal variables. Existing universal abbreviations are still imported, but new abbreviations should be added to ``config.fish``.
+- The short option ``-r`` for abbreviations has changed from ``rename`` to ``regex``, for consistency with ``string``.
 
 Scripting improvements
 ----------------------
@@ -100,51 +125,56 @@ Fixed Bugs
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
 - On 32-bit systems, globs like ``*`` might fail to print certain files, due to missing large file support. This has been fixed by enabling large file support.
 - Interactive ``read`` in scripts will now have the correct keybindings again (:issue:`9227`).
+- A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
 
 Completions
 ^^^^^^^^^^^
 - Added completions for:
 
-  - ``asciinema``
-  - ``firefox``
-  - ``firefox-developer-edition``
-  - ``fortune``
-  - ``kind`` (:issue:`9110`)
-  - ``zig`` (:issue:`9083`)
-  - ``sad``
-  - ``dua``
-  - ``clojure``
-  - ``loadkeys``
-  - ``toot``
-  - ``eg``
-  - ``kb``
-  - ``okular``
-  - ``dolphin``
   - ``ark``
+  - ``asciinema``
+  - ``clojure``
+  - ``csh``
+  - ``dolphin``
+  - ``dua``
+  - ``efivar`` (:issue:`9318`)
+  - ``eg``
+  - ``es`` (:issue:`9388`)
+  - ``firefox-developer-edition``
+  - ``firefox``
+  - ``fortune``
+  - ``kb``
+  - ``kind`` (:issue:`9110`)
   - ``konsole``
-  - ``xed``
-  - ``xviewer``
-  - ``xreader``
-  - ``xplayer``
+  - ``ksh``
+  - ``loadkeys`` (:issue:`9312`)
+  - ``okular``
+  - ``op`` (:issue:`9300`)
   - ``pix``
   - ``readelf`` (:issue:`8746`)
-  - ``rc``
-  - ``wish``
   - ``qshell``
-  - ``ksh``
+  - ``rc``
+  - ``sad``
   - ``tcsh``
-  - ``csh``
+  - ``toot``
+  - ``wish``
+  - ``xed``
+  - ``xonsh`` (:issue:`9389`)
+  - ``xplayer``
+  - ``xreader``
+  - ``xviewer``
+  - ``zig`` (:issue:`9083`)
 
-- Improvements to some completions.
+- Improvements to many completions.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Other improvements
 ------------------
-- The css for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
-- The web-based configuration tool now works on systems that have ipv6 disabled (:issue:`3857`).
-- Aliases can ignore arguments by ending them with ``#``.
+- The CSS for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
+- The Web-based configuration tool now works on systems with IPv6 disabled (:issue:`3857`).
+- Aliases can ignore arguments by ending them with ``#`` (:issue:`9199`).
 
 
 For distributors
@@ -224,7 +254,7 @@ Deprecations and removed features
 
     This flag was introduced in fish 3.4.
 
-  To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to :envvar:`fish_features`` and restart fish::
+  To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to :envvar:`fish_features` and restart fish::
 
     set -Ua fish_features no-regex-easyesc
 

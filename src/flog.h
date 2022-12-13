@@ -109,6 +109,8 @@ class category_list_t {
     category_t path{L"path", L"Searching/using paths"};
 
     category_t screen{L"screen", L"Screen repaints"};
+
+    category_t abbrs{L"abbrs", L"Abbreviation expansion"};
 };
 
 /// The class responsible for logging.

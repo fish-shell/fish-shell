@@ -209,6 +209,14 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     // Transfer the value to the caller.
     T acquire() { return impl_.acquire(); }
 
+    // Return (a copy of) our value, or the given value if we are empty.
+    T value_or(T v) const {
+        if (this->has_value()) {
+            return this->value();
+        }
+        return v;
+    }
+
     // Clear the value.
     void reset() { impl_.reset(); }
 

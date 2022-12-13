@@ -34,11 +34,11 @@ struct type_cmd_opts_t {
 };
 static const wchar_t *const short_options = L":hasftpPq";
 static const struct woption long_options[] = {
-    {L"help", no_argument, nullptr, 'h'},       {L"all", no_argument, nullptr, 'a'},
-    {L"short", no_argument, nullptr, 's'},      {L"no-functions", no_argument, nullptr, 'f'},
-    {L"type", no_argument, nullptr, 't'},       {L"path", no_argument, nullptr, 'p'},
-    {L"force-path", no_argument, nullptr, 'P'}, {L"query", no_argument, nullptr, 'q'},
-    {L"quiet", no_argument, nullptr, 'q'},      {}};
+    {L"help", no_argument, 'h'},       {L"all", no_argument, 'a'},
+    {L"short", no_argument, 's'},      {L"no-functions", no_argument, 'f'},
+    {L"type", no_argument, 't'},       {L"path", no_argument, 'p'},
+    {L"force-path", no_argument, 'P'}, {L"query", no_argument, 'q'},
+    {L"quiet", no_argument, 'q'},      {}};
 
 static int parse_cmd_opts(type_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {

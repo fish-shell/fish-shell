@@ -130,6 +130,11 @@ maybe_t<match_range_t> regex_t::match(match_data_t &md, const wcstring &subject)
     return match_range_t{ovector[0], ovector[1]};
 }
 
+maybe_t<match_range_t> regex_t::match(const wcstring &subject) const {
+    match_data_t md = this->prepare();
+    return this->match(md, subject);
+}
+
 maybe_t<match_range_t> regex_t::group(const match_data_t &md, size_t group_idx) const {
     if (group_idx >= md.max_capture || group_idx >= pcre2_get_ovector_count(get_md(md.data))) {
         return none();
@@ -288,3 +293,13 @@ regex_t::regex_t(adapters::bytecode_ptr_t &&code) : code_(std::move(code)) {
 }
 
 wcstring re_error_t::message() const { return message_for_code(this->code); }
+
+wcstring re::make_anchored(wcstring pattern) {
+    // PATTERN -> ^(:?PATTERN)$.
+    const wchar_t *prefix = L"^(?:";
+    const wchar_t *suffix = L")$";
+    pattern.reserve(pattern.size() + wcslen(prefix) + wcslen(suffix));
+    pattern.insert(0, prefix);
+    pattern.append(suffix);
+    return pattern;
+}

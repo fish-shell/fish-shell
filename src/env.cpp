@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "abbrs.h"
 #include "common.h"
 #include "env_dispatch.h"
 #include "env_universal_common.h"
@@ -452,6 +453,10 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
                 vars.globals().remove(name, ENV_GLOBAL | ENV_EXPORT);
             }
         }
+
+        // Import any abbreviations from uvars.
+        // Note we do not dynamically react to changes.
+        abbrs_get_set()->import_from_uvars(table);
     }
 }
 

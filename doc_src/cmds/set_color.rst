@@ -87,7 +87,7 @@ In particular it will:
 
 If terminfo reports 256 color support for a terminal, 256 color support will always be enabled.
 
-To force true-color support on or off, set :envvar:`fish_term24bit`` to "1" for on and 0 for off - ``set -g fish_term24bit 1``.
+To force true-color support on or off, set :envvar:`fish_term24bit` to "1" for on and 0 for off - ``set -g fish_term24bit 1``.
 
 To debug color palette problems, ``tput colors`` may be useful to see the number of colors in terminfo for a terminal. Fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
 

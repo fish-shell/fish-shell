@@ -26,10 +26,10 @@ static int parse_cmd_opts(block_cmd_opts_t &opts, int *optind,  //!OCLINT(high n
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":eghl";
-    static const struct woption long_options[] = {{L"erase", no_argument, nullptr, 'e'},
-                                                  {L"local", no_argument, nullptr, 'l'},
-                                                  {L"global", no_argument, nullptr, 'g'},
-                                                  {L"help", no_argument, nullptr, 'h'},
+    static const struct woption long_options[] = {{L"erase", no_argument, 'e'},
+                                                  {L"local", no_argument, 'l'},
+                                                  {L"global", no_argument, 'g'},
+                                                  {L"help", no_argument, 'h'},
                                                   {}};
 
     int opt;

@@ -13,6 +13,10 @@
 #include <iterator>  // for std::begin/end
 
 static void abandon_tty() {
+    // The parent may get SIGSTOPed when it tries to call tcsetpgrp if the child has already done
+    // it. Prevent this by ignoring signals.
+    signal(SIGTTIN, SIG_IGN);
+    signal(SIGTTOU, SIG_IGN);
     pid_t pid = fork();
     if (pid < 0) {
         perror("fork");

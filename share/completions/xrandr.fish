@@ -68,4 +68,4 @@ complete -c xrandr -l set -d 'Set the property value: --set <prop> <value>' -x
 complete -c xrandr -l off -d 'Disables the output'
 complete -c xrandr -l crtc -d 'Set the crtc' -x
 complete -c xrandr -l gamma -d 'Set gamma correction [red:green:blue]' -x
-complete -c xrandr -l brightness -d 'Set brightness. Multiplies gamma galues by brightness value'
+complete -c xrandr -l brightness -d 'Set brightness. Multiplies gamma values by brightness value'

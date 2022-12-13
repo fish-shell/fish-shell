@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "abbrs.h"
 #include "ast.h"
 #include "builtin.h"
 #include "color.h"
@@ -236,6 +237,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
     for (const wcstring &wd : directories) {
         if (ctx.check_cancel()) return false;
         wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
+        bool must_be_full_dir = abs_path.at(abs_path.size() - 1) == L'/';
         if (flags & PATH_FOR_CD) {
             abs_path = normalize_path(abs_path);
         }
@@ -250,7 +252,6 @@ bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
         // 1. If the argument ends with a slash, it must be a valid directory, no prefix.
         // 2. If the cursor is not at the argument, it means the user is definitely not typing it,
         //    so we can skip the prefix-match.
-        bool must_be_full_dir = abs_path.at(abs_path.size() - 1) == L'/';
         if (must_be_full_dir || !at_cursor) {
             struct stat buf;
             if (0 == wstat(abs_path, &buf) && (!at_cursor || S_ISDIR(buf.st_mode))) {
@@ -1334,7 +1335,8 @@ static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t de
     if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd);
 
     // Abbreviations
-    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
+    if (!is_valid && abbreviation_ok)
+        is_valid = abbrs_get_set()->has_match(cmd, abbrs_position_t::command);
 
     // Regular commands
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, vars).has_value();

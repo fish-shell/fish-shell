@@ -27,6 +27,7 @@ Description
 
 For example, a frequently-run command like ``git checkout`` can be abbreviated to ``gco``.
 After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
+To avoid expanding something that looks like an abbreviation, the default :kbd:`Control`\ +\ :kbd:`Space` binding inserts a space without expanding.
 
 An abbreviation may match a literal word, or it may match a pattern given by a regular expression. When an abbreviation matches a word, that word is replaced by new text, called its *expansion*. This expansion may be a fixed new phrase, or it can be dynamically created via a fish function. This expansion occurs after pressing space or enter.
 

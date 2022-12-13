@@ -1462,7 +1462,9 @@ maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring
         iter->is_cmd ? abbrs_position_t::command : abbrs_position_t::anywhere;
 
     wcstring token_str = cmdline.substr(range.start, range.length);
-    auto replacers = abbrs_match(token_str, position);
+    wcstring command = tok_command(cmdline);
+
+    auto replacers = abbrs_match(token_str, position, command);
     for (const auto &replacer : replacers) {
         if (auto replacement = expand_replacer(range, token_str, replacer, parser)) {
             return replacement;

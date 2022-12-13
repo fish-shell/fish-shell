@@ -39,6 +39,7 @@ struct abbr_options_t {
     bool erase{};
     bool query{};
     bool function{};
+    maybe_t<wcstring> command;
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
     maybe_t<wcstring> set_cursor_marker{};
@@ -66,6 +67,10 @@ struct abbr_options_t {
             add = !args.empty();
         }
 
+        if (!add && command.has_value()) {
+            streams.err.append_format(_(L"%ls: --command option requires --add\n"), CMD);
+            return false;
+        }
         if (!add && position.has_value()) {
             streams.err.append_format(_(L"%ls: --position option requires --add\n"), CMD);
             return false;
@@ -84,6 +89,10 @@ struct abbr_options_t {
         }
         if (set_cursor_marker.has_value() && set_cursor_marker->empty()) {
             streams.err.append_format(_(L"%ls: --set-cursor argument cannot be empty\n"), CMD);
+            return false;
+        }
+        if (command.has_value() && position.has_value() && *position == abbrs_position_t::command) {
+            streams.err.append_format(_(L"%ls: Cannot specify a command and command position\n"), CMD);
             return false;
         }
 
@@ -106,6 +115,10 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         if (abbr.is_regex()) {
             comps.push_back(L"--regex");
             comps.push_back(escape_string(abbr.key));
+        }
+        if (abbr.is_command()) {
+            comps.push_back(L"--command");
+            comps.push_back(escape_string(abbr.command.value()));
         }
         if (abbr.set_cursor_marker.has_value()) {
             comps.push_back(L"--set-cursor=" + escape_string(*abbr.set_cursor_marker));
@@ -243,10 +256,12 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     }
 
     abbrs_position_t position = opts.position ? *opts.position : abbrs_position_t::command;
+    if (opts.command.has_value()) position = abbrs_position_t::anywhere;
 
     // Note historically we have allowed overwriting existing abbreviations.
     abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
     abbr.regex = std::move(regex);
+    abbr.command = opts.command;
     abbr.replacement_is_function = opts.function;
     abbr.set_cursor_marker = opts.set_cursor_marker;
     abbrs_get_set()->add(std::move(abbr));
@@ -290,7 +305,8 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
         {L"erase", no_argument, 'e'},       {L"query", no_argument, 'q'},
         {L"show", no_argument, 's'},        {L"list", no_argument, 'l'},
         {L"global", no_argument, 'g'},      {L"universal", no_argument, 'U'},
-        {L"help", no_argument, 'h'},        {}};
+        {L"help", no_argument, 'h'},        {L"command", required_argument, 'c'},
+        {}};
 
     int argc = builtin_count_args(argv);
     int opt;
@@ -338,6 +354,15 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                     return STATUS_INVALID_ARGS;
                 }
                 opts.regex_pattern = w.woptarg;
+                break;
+            }
+            case 'c': {
+                if (opts.command.has_value()) {
+                    streams.err.append_format(_(L"%ls: Cannot specify multiple commands\n"),
+                                              CMD);
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.command = w.woptarg;
                 break;
             }
             case SET_CURSOR_SHORT: {

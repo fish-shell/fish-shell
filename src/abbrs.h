@@ -33,6 +33,10 @@ struct abbreviation_t {
     /// we accomplish this by surrounding the regex in ^ and $.
     maybe_t<re::regex_t> regex{};
 
+    /// If set, this abbr is only valid for a specific command's arguments.
+    /// Note that this implies position != command.
+    maybe_t<wcstring> command{};
+
     /// Replacement string.
     wcstring replacement{};
 
@@ -51,8 +55,10 @@ struct abbreviation_t {
     // \return true if this is a regex abbreviation.
     bool is_regex() const { return this->regex.has_value(); }
 
+    bool is_command() const { return this->command.has_value(); }
+
     // \return true if we match a token at a given position.
-    bool matches(const wcstring &token, abbrs_position_t position) const;
+    bool matches(const wcstring &token, abbrs_position_t position, const wcstring &command) const;
 
     // Construct from a name, a key which matches a token, a replacement token, a position, and
     // whether we are derived from a universal variable.
@@ -103,10 +109,10 @@ class abbrs_set_t {
    public:
     /// \return the list of replacers for an input token, in priority order.
     /// The \p position is given to describe where the token was found.
-    abbrs_replacer_list_t match(const wcstring &token, abbrs_position_t position) const;
+    abbrs_replacer_list_t match(const wcstring &token, abbrs_position_t position, const wcstring &command) const;
 
     /// \return whether we would have at least one replacer for a given token.
-    bool has_match(const wcstring &token, abbrs_position_t position) const;
+    bool has_match(const wcstring &token, abbrs_position_t position, const wcstring &command) const;
 
     /// Add an abbreviation. Any abbreviation with the same name is replaced.
     void add(abbreviation_t &&abbr);
@@ -142,8 +148,8 @@ acquired_lock<abbrs_set_t> abbrs_get_set();
 
 /// \return the list of replacers for an input token, in priority order, using the global set.
 /// The \p position is given to describe where the token was found.
-inline abbrs_replacer_list_t abbrs_match(const wcstring &token, abbrs_position_t position) {
-    return abbrs_get_set()->match(token, position);
+inline abbrs_replacer_list_t abbrs_match(const wcstring &token, abbrs_position_t position, const wcstring &command) {
+    return abbrs_get_set()->match(token, position, command);
 }
 
 #endif

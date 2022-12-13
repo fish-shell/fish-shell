@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN]
-                    [--set-cursor[=MARKER]]
+                    [--set-cursor[=MARKER]] [-c | --command COMMAND]
                     [-f | --function] EXPANSION
     abbr --erase NAME ...
     abbr --rename OLD_WORD NEW_WORD
@@ -47,6 +47,8 @@ Abbreviations may be added to :ref:`config.fish <configuration>`.
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
 
 With **--position command**, the abbreviation will only expand when it is positioned as a command, not as an argument to another command. With **--position anywhere** the abbreviation may expand anywhere in the command line. The default is **command**.
+
+With **--command COMMAND**, the abbreviation will only expand when positioned as an argument to the given command. This allows adding abbreviations e.g. for specific subcommands.
 
 With **--regex**, the abbreviation matches using the regular expression given by **PATTERN**, instead of the literal **NAME**. The pattern is interpreted using PCRE2 syntax and must match the entire token. If multiple abbreviations match the same token, the last abbreviation added is used.
 
@@ -100,6 +102,12 @@ This first creates a function ``vim_edit`` which prepends ``vim`` before its arg
     abbr 4DIRS --set-cursor ! "$(string join \n -- 'for dir in */' 'cd $dir' '!' 'cd ..' 'end')"
 
 This creates an abbreviation "4DIRS" which expands to a multi-line loop "template." The template enters each directory and then leaves it. The cursor is positioned ready to enter the command to run in each directory, at the location of the ``!``, which is itself erased.
+
+::
+
+    abbr --command git c checkout
+
+This creates an abbreviation "c" that expands to "checkout", but only when the current command is "git". It will expand for ``git c`` and ``git show c``, but not for ``echo c``.
 
 Other subcommands
 --------------------

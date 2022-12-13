@@ -2481,7 +2481,8 @@ static void test_abbreviations() {
 
     // Helper to expand an abbreviation, enforcing we have no more than one result.
     auto abbr_expand_1 = [](const wcstring &token, abbrs_position_t pos) -> maybe_t<wcstring> {
-        auto result = abbrs_match(token, pos);
+        // (we're not testing command matches here)
+        auto result = abbrs_match(token, pos, L"");
         if (result.size() > 1) {
             err(L"abbreviation expansion for %ls returned more than 1 result", token.c_str());
         }

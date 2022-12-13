@@ -120,6 +120,14 @@ expect_prompt(r"1 2 3 4 5")
 sendline(r"echo openparen seq 5 closeparen ")  # expands on space
 expect_prompt(r"1 2 3 4 5")
 
+sendline(r"""abbr --add c --command echo checkout""")
+expect_prompt(r"")
+sendline(r"echo c")
+expect_prompt(r"echo checkout")
+sendline(r"printf %s\n c")
+expect_prompt("c")
+sendline("abbr --erase c")
+expect_prompt("")
 
 # Verify that 'commandline' is accurate.
 # Abbreviation functions cannot usefully change the command line, but they can read it.

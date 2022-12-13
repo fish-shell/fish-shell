@@ -18,10 +18,15 @@ bool abbreviation_t::matches_position(abbrs_position_t position) const {
     return this->position == abbrs_position_t::anywhere || this->position == position;
 }
 
-bool abbreviation_t::matches(const wcstring &token, abbrs_position_t position) const {
+bool abbreviation_t::matches(const wcstring &token, abbrs_position_t position, const wcstring &command) const {
     if (!this->matches_position(position)) {
         return false;
     }
+
+    if (this->is_command()) {
+        if (command != this->command.value()) return false;
+    }
+
     if (this->is_regex()) {
         return this->regex->match(token).has_value();
     } else {
@@ -34,12 +39,12 @@ acquired_lock<abbrs_set_t> abbrs_get_set() {
     return abbrs.acquire();
 }
 
-abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t position) const {
+abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t position, const wcstring &command) const {
     abbrs_replacer_list_t result{};
     // Later abbreviations take precedence so walk backwards.
     for (auto it = abbrs_.rbegin(); it != abbrs_.rend(); ++it) {
         const abbreviation_t &abbr = *it;
-        if (abbr.matches(token, position)) {
+        if (abbr.matches(token, position, command)) {
             result.push_back(abbrs_replacer_t{abbr.replacement, abbr.replacement_is_function,
                                               abbr.set_cursor_marker});
         }
@@ -47,9 +52,9 @@ abbrs_replacer_list_t abbrs_set_t::match(const wcstring &token, abbrs_position_t
     return result;
 }
 
-bool abbrs_set_t::has_match(const wcstring &token, abbrs_position_t position) const {
+bool abbrs_set_t::has_match(const wcstring &token, abbrs_position_t position, const wcstring &command) const {
     for (const auto &abbr : abbrs_) {
-        if (abbr.matches(token, position)) {
+        if (abbr.matches(token, position, command)) {
             return true;
         }
     }

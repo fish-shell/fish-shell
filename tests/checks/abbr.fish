@@ -158,7 +158,7 @@ abbr --add nonregex_name foo
 abbr --add regex_name --regex 'A[0-9]B' bar
 abbr --show
 # CHECK: abbr -a -- nonregex_name foo
-# CHECK: abbr -a -- regex_name --regex 'A[0-9]B' bar
+# CHECK: abbr -a --regex 'A[0-9]B' -- regex_name bar
 abbr --erase (abbr --list)
 
 abbr --add bogus --position never stuff

@@ -99,10 +99,6 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         comps.clear();
         comps.push_back(L"abbr -a");
         if (abbr.from_universal) comps.push_back(L"-U");
-        comps.push_back(L"--");
-        // Literal abbreviations have the name and key as the same.
-        // Regex abbreviations have a pattern separate from the name.
-        comps.push_back(escape_string(abbr.name));
         if (abbr.is_regex()) {
             comps.push_back(L"--regex");
             comps.push_back(escape_string(abbr.key));
@@ -113,6 +109,10 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         if (abbr.replacement_is_function) {
             comps.push_back(L"--function");
         }
+        comps.push_back(L"--");
+        // Literal abbreviations have the name and key as the same.
+        // Regex abbreviations have a pattern separate from the name.
+        comps.push_back(escape_string(abbr.name));
         comps.push_back(escape_string(abbr.replacement));
         wcstring result = join_strings(comps, L' ');
         result.push_back(L'\n');

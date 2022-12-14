@@ -151,6 +151,7 @@ Completions
   - ``okular``
   - ``op`` (:issue:`9300`)
   - ``pix``
+  - ``readelf`` (:issue:`8746`)
   - ``qshell``
   - ``rc``
   - ``sad``

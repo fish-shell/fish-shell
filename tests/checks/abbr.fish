@@ -156,9 +156,11 @@ abbr --show
 
 abbr --add nonregex_name foo
 abbr --add regex_name --regex 'A[0-9]B' bar
+abbr --add !! --position anywhere --function replace_history
 abbr --show
 # CHECK: abbr -a -- nonregex_name foo
 # CHECK: abbr -a --regex 'A[0-9]B' -- regex_name bar
+# CHECK: abbr -a --position anywhere --function -- !! replace_history
 abbr --erase (abbr --list)
 
 abbr --add bogus --position never stuff

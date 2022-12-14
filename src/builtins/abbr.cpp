@@ -103,6 +103,10 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
             comps.push_back(L"--regex");
             comps.push_back(escape_string(abbr.key));
         }
+        if (abbr.position != abbrs_position_t::command) {
+            comps.push_back(L"--position");
+            comps.push_back(L"anywhere");
+        }
         if (abbr.set_cursor_marker.has_value()) {
             comps.push_back(L"--set-cursor=" + escape_string(*abbr.set_cursor_marker));
         }

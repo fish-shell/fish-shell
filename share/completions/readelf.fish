@@ -52,16 +52,33 @@ complete -c readelf -s x -l hex-dump -d "Dump the contents of specified section 
 complete -c readelf -s p -l string-dump -d "Dump the contents of specified section as strings" -a $sections -x
 complete -c readelf -s R -l relocated-dump -d "Dump the relocated contents of of specified section" -a $sections -x
 complete -c readelf -s z -l decompress -d "Decompress section before dumping it"
-for c in {a,A,r,c,L,f,F,g,i,o,m,p,t,R,l,s,O,u,T,U}
-	complete -c readelf -o w$c -d "Display the contents of DWARF debug sections"
-end
-complete -c readelf -l debug-dump -d "Display the contents of DWARF debug sections" -a 'abbrev addr aranges cu_index decodedline frames frames-interp gdb_index info loc macro pubnames pubtypes Ranges rawline str str-offsets trace_abbrev trace_aranges trace_info' -x
+complete -c readelf -l debug-dump -d "Display the contents of DWARF debug sections"
+complete -c readelf -o wa -l debug-dump=abbrev -d "Displays the contents of the .debug_abbrev section"
+complete -c readelf -o wA -l debug-dump=addr -d "Displays the contents of the .debug_addr section"
+complete -c readelf -o wc -l debug-dump=cu_index -d "Displays the contents of the .debug_cu_index and/or .debug_tu_index sections"
+complete -c readelf -o wf -l debug-dump=frames -d "Display the raw contents of a .debug_frame section"
+complete -c readelf -o wF -l debug-dump=frames-interp -d "Display the interpreted contents of a .debug_frame section"
+complete -c readelf -o wg -l debug-dump=gdb_index -d " Displays the contents of the .gdb_index and/or .debug_names sections"
+complete -c readelf -o wi -l debug-dump=info -d "Displays the contents of the .debug_info section"
 complete -c readelf -o wk -l debug-dump=links -d "Display the contents of sections that link to separate debuginfo files"
-complete -c readelf -s P -l process-links -d "Display the contents of non-debug sections in separate debuginfo files"
 complete -c readelf -o wK -l debug-dump=follow-links -d "Follow links to separate debug info files"
 complete -c readelf -o wN -l debug-dump=no-follow-links -d "Don't follow links to separate debug info files"
 complete -c readelf -o wD -l debug-dump=use-debuginfod -d "When following links, also query debuginfod servers"
 complete -c readelf -o wE -l debug-dump=do-not-use-debuginfod -d "When following links, don't query debuginfod servers"
+complete -c readelf -o wl -l debug-dump=rawline -d "Displays the contents of the .debug_line section in a raw format"
+complete -c readelf -o wL -l debug-dump=decodedline -d "Displays the interpreted contents of the .debug_line section"
+complete -c readelf -o wm -l debug-dump=macro -d "Displays the contents of the .debug_macro and/or .debug_macinfo sections"
+complete -c readelf -o wo -l debug-dump=loc -d "Displays the contents of the .debug_loc and/or .debug_loclists sections"
+complete -c readelf -o wO -l debug-dump=str-offsets -d "Displays the contents of the .debug_str_offsets section"
+complete -c readelf -o wp -l debug-dump=pubnames -d "Displays the contents of the .debug_pubnames and/or .debug_gnu_pubnames sections"
+complete -c readelf -o wr -l debug-dump=aranges -d "Displays the contents of the .debug_aranges section"
+complete -c readelf -o wR -l debug-dump=Ranges -d "Displays the contents of the .debug_ranges and/or .debug_rnglists sections"
+complete -c readelf -o ws -l debug-dump=str -d "Displays the contents of the .debug_str, .debug_line_str and/or .debug_str_offsets sections"
+complete -c readelf -o wt -l debug-dump=pubtype -d "Displays the contents of the .debug_pubtypes and/or .debug_gnu_pubtypes sections"
+complete -c readelf -o wT -l debug-dump=trace_aranges -d "Displays the contents of the .trace_aranges section"
+complete -c readelf -o wu -l debug-dump=trace_abbrev -d "Displays the contents of the .trace_abbrev section"
+complete -c readelf -o wU -l debug-dump=trace_info -d "Displays the contents of the .trace_info section"
+complete -c readelf -s P -l process-links -d "Display the contents of non-debug sections in separate debuginfo files"
 complete -c readelf -l dwarf-depth -d "Don't display DIEs at greater than specified depth" -x
 complete -c readelf -l dwarf-start -d "Display DIEs starting at specified offset" -x
 complete -c readelf -l ctf -d "Display CTF info from specified section" -x

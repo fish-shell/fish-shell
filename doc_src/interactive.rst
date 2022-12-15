@@ -197,9 +197,18 @@ To avoid needless typing, a frequently-run command like ``git checkout`` can be 
 
   abbr -a gco git checkout
 
-After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
+After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the ``gco`` will turn into ``git checkout`` in the command line.
 
-This is an alternative to aliases, and has the advantage that you see the actual command before using it, and the actual command will be stored in history.
+This is a lot more powerful, for example you can make going up a number of directories easier with this::
+
+  function multicd
+      echo cd (string repeat -n (math (string length -- $argv[1]) - 1) ../)
+  end
+  abbr --add dotdot --regex '^\.\.+$' --function multicd
+
+Now, ``..`` transforms to ``cd ../``, while ``...`` turns into ``cd ../../`` and ``....`` expands to ``cd ../../../``.
+
+The advantage over aliases is that you can see the actual command before using it, add to it or change it, and the actual command will be stored in history.
 
 .. _title:
 

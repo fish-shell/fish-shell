@@ -942,7 +942,7 @@ class FishConfigTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 
     WHITELIST = set(["::1", "::ffff:127.0.0.1", "127.0.0.1"])
 
-    address_family = socket.AF_INET6 if socket.has_ipv6 else socket.AF_INET
+    address_family = socket.AF_INET6 if socket.has_dualstack_ipv6() else socket.AF_INET
 
     def verify_request(self, request, client_address):
         return client_address[0] in FishConfigTCPServer.WHITELIST
@@ -1664,7 +1664,7 @@ authkey = binascii.b2a_hex(os.urandom(16)).decode("ascii")
 
 # Try to find a suitable port
 PORT = 8000
-HOST = "::" if socket.has_ipv6 else "localhost"
+HOST = "::" if socket.has_dualstack_ipv6() else "localhost"
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler

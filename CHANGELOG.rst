@@ -50,7 +50,7 @@ Notable improvements and fixes
     for a,b in y 1 z 3
         ^~^
 - A new function, ``fish_delta``, shows changes that have been made in fish's configuration from the defaults (:issue:`9255`).
-- ``set --erase`` can be used in combination with multiple scope options, and all of the named variables present in any of the specified scopes will be erased. This makes it possible to remove all instances of a variable in all scopes (``set -efglU foo``) in one go (:issue:`7711`).
+- ``set --erase`` can now be used with multiple scopes at once, like ``set -efglU foo`` (:issue:`7711`).
 - ``status`` gained a new subcommand, ``current-commandline`` which retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
 
 

@@ -158,9 +158,141 @@ complete -c tmux -n "__fish_seen_subcommand_from $unbind" -xs t -d 'key table' -
 ###############  End:   Key Bindings ###############
 
 ###############  Begin: Options ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+set -l setoption 'set set-option'
+set -l showoptions show-options
+set -l options \
+    backspace \
+    buffer-limit \
+    command-alias \
+    default-terminal \
+    copy-command \
+    escape-time \
+    editor \
+    exit-empty \
+    exit-unattached \
+    extended-keys \
+    focus-events \
+    history-file \
+    message-limit \
+    prompt-history-limit \
+    set-clipboard \
+    terminal-features \
+    terminal-overrides \
+    user-keys \
+    activity-action \
+    assume-paste-time \
+    base-index \
+    bell-action \
+    default-command \
+    default-shell \
+    default-size \
+    destroy-unattached \
+    detach-on-destroy \
+    display-panes-active-colour \
+    display-panes-colour \
+    display-panes-time \
+    display-time \
+    history-limit \
+    key-table \
+    lock-after-time \
+    lock-command \
+    message-command-style \
+    message-style \
+    mouse \
+    prefix \
+    prefix \
+    renumber-windows \
+    repeat-time \
+    set-titles \
+    set-titles-string \
+    silence-action \
+    status \
+    status-format \
+    status-interval \
+    status-justify \
+    status-keys \
+    status-left \
+    status-left-length \
+    status-left-style \
+    status-position \
+    status-right \
+    status-right-length \
+    status-right-style \
+    status-style \
+    update-environment \
+    visual-activity \
+    visual-bell \
+    visual-silence \
+    word-separators \
+    aggressive-resize \
+    automatic-rename \
+    automatic-rename-format \
+    clock-mode-colour \
+    clock-mode-style \
+    fill-character \
+    main-pane-height \
+    main-pane-width \
+    copy-mode-match-style \
+    copy-mode-mark-style \
+    copy-mode-current-match-style \
+    mode-keys \
+    mode-style \
+    monitor-activity \
+    monitor-bell \
+    monitor-silence \
+    other-pane-height \
+    other-pane-width \
+    pane-active-border-style \
+    pane-base-index \
+    pane-border-format \
+    pane-border-indicators \
+    pane-border-lines \
+    pane-border-status \
+    pane-border-style \
+    popup-style \
+    popup-border-style \
+    popup-border-lines \
+    window-status-activity-style \
+    window-status-bell-style \
+    window-status-current-format \
+    window-status-current-style \
+    window-status-format \
+    window-status-last-style \
+    window-status-separator \
+    window-status-style \
+    window-size \
+    wrap-search \
+    allow-passthrough \
+    allow-rename \
+    alternate-screen \
+    cursor-colour \
+    pane-colours \
+    cursor-style \
+    remain-on-exit \
+    remain-on-exit-format \
+    scroll-on-clear \
+    synchronize-panes \
+    window-active-style \
+    window-style
+complete -c tmux -n '__fish_use_subcommand' -a "$setoption" -d 'Set or unset option'
+complete -c tmux -n '__fish_use_subcommand' -a "$showoptions" -d 'Show set options'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s p -d 'Pane option'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s w -d 'Window option'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s s -d 'Server option'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s g -d 'Global option'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s F -d 'Expand format'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s u -d 'Unset option'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s U -d 'Unset option, also in child panes'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s o -d 'Prevent override'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s q -d 'Suppress ambiguous option errors'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s a -d 'Append'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s t -x -d 'Target pane' -a '(__fish_tmux_panes)'
+complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s q -d 'No error if unset'
+complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s v -d 'Only show value'
+complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s H -d 'Include hooks'
+complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s A -d 'Include inherited options'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions; and not __fish_seen_subcommand_from $options" -a "$options"
+
 ###############  End:   Options ###############
 
 ###############  Begin: Environment ###############

@@ -12,9 +12,6 @@ complete -f -c yarn -n '__fish_seen_subcommand_from add; and not __fish_is_switc
 
 complete -f -c yarn -n __fish_use_subcommand -a help -d 'Show available commands and flags'
 
-complete -f -c yarn -n __fish_use_subcommand -a access -d 'Not implemented'
-complete -f -c yarn -n '__fish_seen_subcommand_from access' -a 'public restricted grant revoke ls-packages ls-collaborators edit'
-
 complete -f -c yarn -n __fish_use_subcommand -a add -d 'Add packages'
 complete -f -c yarn -n '__fish_seen_subcommand_from add' -l dev -s D
 complete -f -c yarn -n '__fish_seen_subcommand_from add' -l peer -s P
@@ -22,30 +19,15 @@ complete -f -c yarn -n '__fish_seen_subcommand_from add' -l O -s O
 complete -f -c yarn -n '__fish_seen_subcommand_from add' -l exact -s E
 complete -f -c yarn -n '__fish_seen_subcommand_from add' -l tilde -s T
 
-complete -f -c yarn -n __fish_use_subcommand -a audit -d 'Perform vulnerability audit'
-
-complete -f -c yarn -n __fish_use_subcommand -a autoclean -d 'Clean unnecessary files from dependencies'
-
 complete -f -c yarn -n __fish_use_subcommand -a bin -d 'Show location of Yarn `bin` folder'
 
 complete -f -c yarn -n __fish_use_subcommand -a cache -d 'Manage Yarn cache'
-complete -f -c yarn -n '__fish_seen_subcommand_from cache' -a 'ls dir clean'
-
-complete -f -c yarn -n __fish_use_subcommand -a check -d 'Check dependencies integrity'
+complete -f -c yarn -n '__fish_seen_subcommand_from cache' -a 'clean'
 
 complete -f -c yarn -n __fish_use_subcommand -a config -d 'Manage Yarn configuration'
 complete -f -c yarn -n '__fish_seen_subcommand_from config' -a 'set get delete list'
 
-complete -f -c yarn -n __fish_use_subcommand -a create -d 'Create new project'
-
 complete -f -c yarn -n __fish_use_subcommand -a exec -d 'Run binaries'
-
-complete -f -c yarn -n __fish_use_subcommand -a generate-lock-entry -d 'Generate lockfile entry'
-
-complete -f -c yarn -n __fish_use_subcommand -a global -d 'Manage global packages'
-complete -f -c yarn -n '__fish_seen_subcommand_from global' -a 'add bin dir ls list remove upgrade upgrade-interactive'
-
-complete -f -c yarn -n __fish_use_subcommand -a import -d 'Generate lockfile from existing installation'
 
 complete -f -c yarn -n __fish_use_subcommand -a info -d 'Show information about a package'
 
@@ -54,33 +36,14 @@ complete -f -c yarn -n '__fish_seen_subcommand_from init' -s y -l yes
 
 complete -f -c yarn -n __fish_use_subcommand -a install -d 'Install packages'
 
-complete -f -c yarn -n __fish_use_subcommand -a licenses -d 'List licenses for installed packages'
-complete -f -c yarn -n '__fish_seen_subcommand_from licenses' -a 'ls generate-disclaimer'
 complete -f -c yarn -n __fish_use_subcommand -a link -d 'Symlink a package'
 
 complete -f -c yarn -n __fish_use_subcommand -a list -d 'List installed packages'
 complete -f -c yarn -n '__fish_seen_subcommand_from list' -l depth
 
-complete -f -c yarn -n __fish_use_subcommand -a login -d 'Store registry username and email'
-complete -f -c yarn -n __fish_use_subcommand -a logout -d 'Clear registry username and email'
 complete -f -c yarn -n __fish_use_subcommand -a node -d 'Run Node with the hook already setup'
-complete -f -c yarn -n __fish_use_subcommand -a outdated -d 'Check for outdated packages'
-
-complete -f -c yarn -n __fish_use_subcommand -a owner -d 'Manage package owners'
-complete -f -c yarn -n '__fish_seen_subcommand_from owner' -a 'add rm ls'
 
 complete -f -c yarn -n __fish_use_subcommand -a pack -d 'Create compressed archive of packages'
-
-complete -f -c yarn -n __fish_use_subcommand -a policies -d 'Defines project-wide policies'
-
-complete -f -c yarn -n __fish_use_subcommand -a publish -d 'Publish package to npm registry'
-complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l access -a 'public restricted'
-complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l tag
-complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l new-version
-complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l message
-complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l no-git-tag-version
-complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l access
-complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l tag
 
 complete -f -c yarn -n __fish_use_subcommand -a remove -d 'Remove packages'
 complete -f -c yarn -n __fish_use_subcommand -a run -d 'Run a defined package script'
@@ -101,15 +64,9 @@ end
 # Scripts can be used like normal subcommands, or with `yarn run SCRIPT`.
 complete -c yarn -n '__fish_use_subcommand; or __fish_seen_subcommand_from run' -xa "(__fish_yarn_run)"
 
-complete -f -c yarn -n __fish_use_subcommand -a tag -d 'Manage package tags'
-complete -f -c yarn -n '__fish_seen_subcommand_from tag' -a 'add rm ls'
-
-complete -f -c yarn -n __fish_use_subcommand -a team -d 'Maintain team memberships'
-complete -f -c yarn -n '__fish_seen_subcommand_from team' -a 'create destroy add rm ls'
-
 complete -f -c yarn -n __fish_use_subcommand -a unlink -d 'Unlink a previously created symlink'
 complete -f -c yarn -n __fish_use_subcommand -a unplug -d 'Force unpack packages'
-complete -f -c yarn -n __fish_use_subcommand -a upgrade -d 'Upgrade packages'
+complete -f -c yarn -n __fish_use_subcommand -a up -d 'Upgrade packages'
 complete -f -c yarn -n __fish_use_subcommand -a upgrade-interactive -d 'Upgrade packages interactively'
 
 complete -f -c yarn -n __fish_use_subcommand -a version -d 'Update the package version'
@@ -117,13 +74,12 @@ complete -f -c yarn -n '__fish_seen_subcommand_from version' -l new-version
 complete -f -c yarn -n '__fish_seen_subcommand_from version' -l message
 complete -f -c yarn -n '__fish_seen_subcommand_from version' -l no-git-tag-version
 
-complete -f -c yarn -n __fish_use_subcommand -a versions -d 'Show Yarn and Node version'
 complete -f -c yarn -n __fish_use_subcommand -a why -d 'Show why a package is installed'
 complete -f -c yarn -n __fish_use_subcommand -a workspace -d 'Manage workspace packages'
 complete -f -c yarn -n __fish_use_subcommand -a workspaces -d 'Show workspaces information'
 
 # These are the yarn commands all of them use the same options
-set -g yarn_cmds access add audit autoclean bin cache check config create exec generate-lock-entry global import info init install licenses link list login logout node outdated owner pack policies publish remove run tag team unlink unplug upgrade upgrade-interactive version versions why workspace workspaces
+set -g yarn_cmds add bin cache config exec info init install link node pack remove run unlink unplug up upgrade-interactive version why workspace workspaces
 
 # Common short, long options
 complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l help -s h -d 'output usage information'

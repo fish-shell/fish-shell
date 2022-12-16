@@ -180,7 +180,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv ";" self-insert expand-abbr
         bind --preset $argv "|" self-insert expand-abbr
         bind --preset $argv "&" self-insert expand-abbr
-        bind --preset $argv "^" self-insert expand-abbr
         bind --preset $argv ">" self-insert expand-abbr
         bind --preset $argv "<" self-insert expand-abbr
         # Closing a command substitution expands abbreviations

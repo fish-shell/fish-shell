@@ -9,8 +9,7 @@ Synopsis
 .. synopsis::
 
     abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN]
-                    [--set-cursor[=MARKER]]
-                    [-f | --function] EXPANSION
+                    [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
     abbr --erase NAME ...
     abbr --rename OLD_WORD NEW_WORD
     abbr --show
@@ -43,7 +42,7 @@ Abbreviations may be added to :ref:`config.fish <configuration>`.
 .. synopsis::
 
     abbr [-a | --add] NAME [--position command | anywhere] [-r | --regex PATTERN]
-         [--set-cursor[=MARKER]] [-f | --function] EXPANSION
+         [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
 
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
 
@@ -53,7 +52,7 @@ With **--regex**, the abbreviation matches using the regular expression given by
 
 With **--set-cursor=MARKER**, the cursor is moved to the first occurrence of **MARKER** in the expansion. The **MARKER** value is erased. The **MARKER** may be omitted (i.e. simply ``--set-cursor``), in which case it defaults to ``%``.
 
-With **-f** or **--function**, **EXPANSION** is treated as the name of a fish function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged.
+With **-f FUNCTION** or **--function FUNCTION**, **FUNCTION** is treated as the name of a fish function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged. No **EXPANSION** may be given separately.
 
 
 Examples

@@ -38,7 +38,7 @@ struct abbr_options_t {
     bool list{};
     bool erase{};
     bool query{};
-    bool function{};
+    maybe_t<wcstring> function;
     maybe_t<wcstring> regex_pattern;
     maybe_t<abbrs_position_t> position{};
     maybe_t<wcstring> set_cursor_marker{};
@@ -74,7 +74,7 @@ struct abbr_options_t {
             streams.err.append_format(_(L"%ls: --regex option requires --add\n"), CMD);
             return false;
         }
-        if (!add && function) {
+        if (!add && function.has_value()) {
             streams.err.append_format(_(L"%ls: --function option requires --add\n"), CMD);
             return false;
         }
@@ -112,12 +112,15 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         }
         if (abbr.replacement_is_function) {
             comps.push_back(L"--function");
+            comps.push_back(escape_string(abbr.replacement));
         }
         comps.push_back(L"--");
         // Literal abbreviations have the name and key as the same.
         // Regex abbreviations have a pattern separate from the name.
         comps.push_back(escape_string(abbr.name));
-        comps.push_back(escape_string(abbr.replacement));
+        if (!abbr.replacement_is_function) {
+            comps.push_back(escape_string(abbr.replacement));
+        }
         wcstring result = join_strings(comps, L' ');
         result.push_back(L'\n');
         streams.out.append(result);
@@ -194,7 +197,7 @@ static int abbr_query(const abbr_options_t &opts, io_streams_t &) {
 // Add a named abbreviation.
 static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     const wchar_t *const subcmd = L"--add";
-    if (opts.args.size() < 2) {
+    if (opts.args.size() < 2 && !opts.function.has_value()) {
         streams.err.append_format(_(L"%ls %ls: Requires at least two arguments\n"), CMD, subcmd);
         return STATUS_INVALID_ARGS;
     }
@@ -232,14 +235,22 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
         assert(regex.has_value() && "Anchored compilation should have succeeded");
     }
 
+    if (opts.function.has_value() && opts.args.size() > 1) {
+        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, L"abbr");
+        return STATUS_INVALID_ARGS;
+    }
     wcstring replacement;
-    for (auto iter = opts.args.begin() + 1; iter != opts.args.end(); ++iter) {
-        if (!replacement.empty()) replacement.push_back(L' ');
-        replacement.append(*iter);
+    if (opts.function.has_value()) {
+        replacement = *opts.function;
+    } else {
+        for (auto iter = opts.args.begin() + 1; iter != opts.args.end(); ++iter) {
+            if (!replacement.empty()) replacement.push_back(L' ');
+            replacement.append(*iter);
+        }
     }
     // Abbreviation function names disallow spaces.
     // This is to prevent accidental usage of e.g. `--function 'string replace'`
-    if (opts.function &&
+    if (opts.function.has_value() &&
         (!valid_func_name(replacement) || replacement.find(L' ') != wcstring::npos)) {
         streams.err.append_format(_(L"%ls: Invalid function name: %ls\n"), CMD,
                                   replacement.c_str());
@@ -251,7 +262,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     // Note historically we have allowed overwriting existing abbreviations.
     abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
     abbr.regex = std::move(regex);
-    abbr.replacement_is_function = opts.function;
+    abbr.replacement_is_function = opts.function.has_value();
     abbr.set_cursor_marker = opts.set_cursor_marker;
     abbrs_get_set()->add(std::move(abbr));
     return STATUS_CMD_OK;
@@ -286,11 +297,11 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
-    static const wchar_t *const short_options = L"-afr:seqgUh";
+    static const wchar_t *const short_options = L"-:af:r:seqgUh";
     static const struct woption long_options[] = {
         {L"add", no_argument, 'a'},         {L"position", required_argument, 'p'},
         {L"regex", required_argument, 'r'}, {L"set-cursor", optional_argument, SET_CURSOR_SHORT},
-        {L"function", no_argument, 'f'},    {L"rename", no_argument, RENAME_SHORT},
+        {L"function", required_argument, 'f'},    {L"rename", no_argument, RENAME_SHORT},
         {L"erase", no_argument, 'e'},       {L"query", no_argument, 'q'},
         {L"show", no_argument, 's'},        {L"list", no_argument, 'l'},
         {L"global", no_argument, 'g'},      {L"universal", no_argument, 'U'},
@@ -355,7 +366,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 break;
             }
             case 'f':
-                opts.function = true;
+                opts.function = wcstring(w.woptarg);
                 break;
             case RENAME_SHORT:
                 opts.rename = true;
@@ -379,6 +390,10 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
             case 'h': {
                 builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
+            }
+            case ':': {
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
             }
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

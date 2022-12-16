@@ -33,9 +33,9 @@ To find out what sequence a key combination sends, you can use :doc:`fish_key_re
 
 When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a :ref:`function <syntax-function>` and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
 
-If a script produces output, it should finish by calling ``commandline -f repaint`` to tell fish that a repaint is in order.
 
-Note that special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script).
+.. note::
+   Special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script). To run special input functions from regular fish script, use ``commandline -f`` (see also :doc:`commandline <commandline>`). If a script produces output, it should finish by calling ``commandline -f repaint`` to tell fish that a repaint is in order.
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given ``MODE``) are printed. If ``SEQUENCE`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 

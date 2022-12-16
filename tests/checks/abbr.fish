@@ -133,9 +133,18 @@ echo $status
 # CHECKERR: abbr: --position option requires --add
 # CHECK: 2
 
-abbr --query banana --function
+abbr --query banana --function foo
 echo $status
 # CHECKERR: abbr: --function option requires --add
+# CHECK: 2
+
+abbr --query banana --function
+echo $status
+# CHECKERR: abbr: --function: option requires an argument
+# CHECKERR: checks/abbr.fish (line 141):
+# CHECKERR: abbr --query banana --function
+# CHECKERR: ^
+# CHECKERR: (Type 'help abbr' for related documentation)
 # CHECK: 2
 
 abbr --add peach --function invalid/function/name
@@ -160,7 +169,7 @@ abbr --add !! --position anywhere --function replace_history
 abbr --show
 # CHECK: abbr -a -- nonregex_name foo
 # CHECK: abbr -a --regex 'A[0-9]B' -- regex_name bar
-# CHECK: abbr -a --position anywhere --function -- !! replace_history
+# CHECK: abbr -a --position anywhere --function replace_history -- !!
 abbr --erase (abbr --list)
 
 abbr --add bogus --position never stuff

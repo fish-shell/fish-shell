@@ -197,7 +197,7 @@ To avoid needless typing, a frequently-run command like ``git checkout`` can be 
 
   abbr -a gco git checkout
 
-After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the ``gco`` will turn into ``git checkout`` in the command line.
+After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, a ``gco`` in command position will turn into ``git checkout`` in the command line. If you want to use a literal ``gco`` sometimes, use :kbd:`Control`\ +\ :kbd:`Space` [#]_.
 
 This is a lot more powerful, for example you can make going up a number of directories easier with this::
 
@@ -209,6 +209,8 @@ This is a lot more powerful, for example you can make going up a number of direc
 Now, ``..`` transforms to ``cd ../``, while ``...`` turns into ``cd ../../`` and ``....`` expands to ``cd ../../../``.
 
 The advantage over aliases is that you can see the actual command before using it, add to it or change it, and the actual command will be stored in history.
+
+.. [#] Any binding that executes the ``expand-abbr`` or ``execute`` :ref:`bind function <cmds/bind>` will expand abbreviations. By default :kbd:`Control`\ +\ :kbd:`Space` is bound to just inserting a space.
 
 .. _title:
 

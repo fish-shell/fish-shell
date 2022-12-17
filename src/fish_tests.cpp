@@ -2505,9 +2505,9 @@ static void test_abbreviations() {
 
     maybe_t<wcstring> result;
     auto expand_abbreviation_in_command = [](const wcstring &cmdline,
-                                             size_t cursor_pos) -> maybe_t<wcstring> {
-        if (auto replacement = reader_expand_abbreviation_at_cursor(cmdline, cursor_pos,
-                                                                    parser_t::principal_parser())) {
+                                             maybe_t<size_t> cursor_pos = {}) -> maybe_t<wcstring> {
+        if (auto replacement = reader_expand_abbreviation_at_cursor(
+                cmdline, cursor_pos.value_or(cmdline.size()), parser_t::principal_parser())) {
             wcstring cmdline_expanded = cmdline;
             std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
             apply_edit(&cmdline_expanded, &colors, edit_t{replacement->range, replacement->text});
@@ -2544,21 +2544,21 @@ static void test_abbreviations() {
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // If commands should be expanded.
-    result = expand_abbreviation_in_command(L"if gc", const_strlen(L"if gc"));
+    result = expand_abbreviation_in_command(L"if gc");
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"if git checkout")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Others should not be.
-    result = expand_abbreviation_in_command(L"of gc", const_strlen(L"of gc"));
+    result = expand_abbreviation_in_command(L"of gc");
     if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // Others should not be.
-    result = expand_abbreviation_in_command(L"command gc", const_strlen(L"command gc"));
+    result = expand_abbreviation_in_command(L"command gc");
     if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // yin/yang expands everywhere.
-    result = expand_abbreviation_in_command(L"command yin", const_strlen(L"command yin"));
+    result = expand_abbreviation_in_command(L"command yin");
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"command yang") {
         err(L"command yin incorrectly expanded on line %ld to '%ls'", (long)__LINE__,

@@ -210,7 +210,7 @@ Now, ``..`` transforms to ``cd ../``, while ``...`` turns into ``cd ../../`` and
 
 The advantage over aliases is that you can see the actual command before using it, add to it or change it, and the actual command will be stored in history.
 
-.. [#] Any binding that executes the ``expand-abbr`` or ``execute`` :ref:`bind function <cmds/bind>` will expand abbreviations. By default :kbd:`Control`\ +\ :kbd:`Space` is bound to just inserting a space.
+.. [#] Any binding that executes the ``expand-abbr`` or ``execute`` :doc:`bind function <cmds/bind>` will expand abbreviations. By default :kbd:`Control`\ +\ :kbd:`Space` is bound to just inserting a space.
 
 .. _title:
 

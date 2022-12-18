@@ -2,9 +2,10 @@
 set __fish_abbr_not_add_cond '__fish_seen_subcommand_from --query --rename --erase --show --list --help'
 set __fish_abbr_add_cond 'not __fish_seen_subcommand_from --query --rename --erase --show --list --help'
 function __fish_abbr_add_function_cond
-    argparse -s h/help a/add p/position= f/function r/regex= 'set-cursor=?' \
+    argparse h/help a/add p/position= f/function r/regex= 'set-cursor=?' \
         -- (commandline -opc)[2..-1] 2>/dev/null
     and test (count $argv) -eq 1
+    and set -q _flag_f
 end
 
 complete -c abbr -f

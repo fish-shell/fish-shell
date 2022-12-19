@@ -366,6 +366,18 @@ void signal_set_handlers(bool interactive) {
     if (interactive) {
         set_interactive_handlers();
     }
+
+#ifdef FISH_TSAN_WORKAROUNDS
+    // Work around the following TSAN bug:
+    // The structure containing signal information for a thread is lazily allocated by TSAN.
+    // It is possible for the same thread to receive two allocations, if the signal handler
+    // races with other allocation paths (e.g. a blocking call). This results in the first signal
+    // being potentially dropped.
+    // The workaround is to send ourselves a SIGCHLD signal now, to force the allocation to happen.
+    // As no child is associated with this signal, it is OK if it is dropped, so long as the
+    // allocation happens.
+    (void)kill(getpid(), SIGCHLD);
+#endif
 }
 
 void signal_set_handlers_once(bool interactive) {

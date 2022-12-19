@@ -174,9 +174,9 @@ The destination of a stream can be changed using something called *redirection*.
 
 ``DESTINATION`` can be one of the following:
 
-- A filename. The output will be written to the specified file. Often ``>/dev/null`` to silence output by writing it to the special "sinkhole" file.
+- A filename to write the output to. Often ``>/dev/null`` to silence output by writing it to the special "sinkhole" file.
 - An ampersand (``&``) followed by the number of another file descriptor like ``&2`` for standard error. The output will be written to the destination descriptor.
-- An ampersand followed by a minus sign (``&-``). The file descriptor will be closed.
+- An ampersand followed by a minus sign (``&-``). The file descriptor will be closed. Note: This may cause the program to fail because its writes will be unsuccessful.
 
 As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same destination. For example, ``echo hello &> all_output.txt`` redirects both stdout and stderr to the file ``all_output.txt``. This is equivalent to ``echo hello > all_output.txt 2>&1``.
 
@@ -186,7 +186,30 @@ Any arbitrary file descriptor can be used in a redirection by prefixing the redi
 - To redirect the output of descriptor N, use ``N>DESTINATION``.
 - To append the output of descriptor N to a file, use ``N>>DESTINATION_FILE``.
 
-For example, ``echo hello 2> output.stderr`` writes the standard error (file descriptor 2) to ``output.stderr``.
+For example::
+
+  # Write `foo`'s standard error (file descriptor 2)
+  # to a file called "output.stderr":
+  foo 2> output.stderr
+
+  # if $num doesn't contain a number,
+  # this test will be false and print an error,
+  # so by ignoring the error we can be sure that we're dealing
+  # with a number in the "if" block:
+  if test "$num" -gt 2 2>/dev/null
+      # do things with $num as a number greater than 2
+  else
+      # do things if $num is <= 2 or not a number
+  end
+
+  # Save `make`s output in a file:
+  make &>/log
+
+  # Redirections stack and can be used with blocks:
+  begin
+      echo stdout
+      echo stderr >&2 # <- this goes to stderr!
+  end >/dev/null # ignore stdout, so this prints "stderr"
 
 It is an error to redirect a builtin, function, or block to a file descriptor above 2. However this is supported for external commands.
 

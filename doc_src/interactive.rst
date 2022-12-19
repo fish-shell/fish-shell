@@ -42,31 +42,21 @@ Tab completion is a time saving feature of any modern shell. When you type :kbd:
 
 The pager can be navigated with the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Shift`\ +\ :kbd:`Tab`. Pressing :kbd:`Control`\ +\ :kbd:`S` (the ``pager-toggle-search`` binding - :kbd:`/` in vi-mode) opens up a search menu that you can use to filter the list.
 
-Fish provides some general purpose completions:
+Fish provides some general purpose completions, like for commands, variable names, usernames or files.
 
-- Commands (builtins, functions and regular programs).
+It also provides a large number of program specific scripted completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but a lot are more advanced. For example:
 
-- Shell variable names.
+- ``man`` and ``whatis`` show the installed manual pages as completions.
 
-- Usernames for tilde expansion.
+- ``make`` uses targets in the Makefile in the current directory as completions.
 
-- Filenames, even on strings with wildcards such as ``*`` and ``**``.
+- ``mount`` uses mount points specified in fstab as completions.
 
-It also provides a large number of program specific scripted completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but some are more advanced. For example:
-
-- The programs ``man`` and ``whatis`` show all installed manual pages as completions.
-
-- The ``make`` program uses all targets in the Makefile in the current directory as completions.
-
-- The ``mount`` command uses all mount points specified in fstab as completions.
-
-- The ``ssh`` command uses all hosts that are stored in the known_hosts file as completions. (See the ssh documentation for more information)
-
-- The ``su`` command shows the users on the system
-
-- The ``apt-get``, ``rpm`` and ``yum`` commands show installed or installable packages
+- ``apt``, ``rpm`` and ``yum`` show installed or installable packages
 
 You can also write your own completions or install some you got from someone else. For that, see :ref:`Writing your own completions <completion-own>`.
+
+Completion scripts are loaded on demand, just like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$fish_complete_path`` :ref:`list <variables-list>` is used instead of ``$fish_function_path``. Typically you can drop new completions in ~/.config/fish/completions/name-of-command.fish and fish will find them automatically.
 
 .. _color:
 

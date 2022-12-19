@@ -278,7 +278,7 @@ The first line tells fish to define a function by the name of ``ll``, so it can 
 
 Calling this as ``ll /tmp/`` will end up running ``ls -l /tmp/``, which will list the contents of /tmp.
 
-This is a kind of function known as a :ref:`wrapper <syntax-function-wrappers>` or "alias".
+This is a kind of function known as an :ref:`alias <syntax-aliases>`.
 
 Fish's prompt is also defined in a function, called :doc:`fish_prompt <cmds/fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
 
@@ -300,12 +300,12 @@ The :doc:`functions <cmds/functions>` builtin can show a function's current defi
 
 For more information on functions, see the documentation for the :doc:`function <cmds/function>` builtin.
 
-.. _syntax-function-wrappers:
+.. _syntax-aliases:
 
 Defining aliases
 ^^^^^^^^^^^^^^^^
 
-One of the most common uses for functions is to slightly alter the behavior of an already existing command. For example, one might want to redefine the ``ls`` command to display colors. The switch for turning on colors on GNU systems is ``--color=auto``. An alias, or wrapper, around ``ls`` might look like this::
+One of the most common uses for functions is to slightly alter the behavior of an already existing command. For example, one might want to redefine the ``ls`` command to display colors. The switch for turning on colors on GNU systems is ``--color=auto``. An alias around ``ls`` might look like this::
 
   function ls
       command ls --color=auto $argv
@@ -317,8 +317,7 @@ There are a few important things that need to be noted about aliases:
 
 - If the alias has the same name as the aliased command, you need to prefix the call to the program with ``command`` to tell fish that the function should not call itself, but rather a command with the same name. If you forget to do so, the function would call itself until the end of time. Usually fish is smart enough to figure this out and will refrain from doing so (which is hopefully in your interest).
 
-
-To easily create a function of this form, you can use the :doc:`alias <cmds/alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a function wrapper like this. :doc:`alias <cmds/alias>` immediately creates a function. Consider using ``alias --save`` or :doc:`funcsave <cmds/funcsave>` to save the created function into an autoload file instead of recreating the alias each time.
+To easily create a function of this form, you can use the :doc:`alias <cmds/alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a simple wrapping function like this. :doc:`alias <cmds/alias>` immediately creates a function. Consider using ``alias --save`` or :doc:`funcsave <cmds/funcsave>` to save the created function into an autoload file instead of recreating the alias each time.
 
 For an alternative, try :ref:`abbreviations <abbreviations>`. These are words that are expanded while you type, instead of being actual functions inside the shell.
 

@@ -59,4 +59,4 @@ See more
 
 1. The :doc:`function <function>` command this builds on.
 2. :ref:`Functions <syntax-function>`.
-3. :ref:`Function wrappers <syntax-function-wrappers>`.
+3. :ref:`Defining aliases <syntax-aliases>`.

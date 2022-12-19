@@ -18,6 +18,8 @@ Description
 
 ``alias`` is a simple wrapper for the ``function`` builtin, which creates a function wrapping a command. It has similar syntax to POSIX shell ``alias``. For other uses, it is recommended to define a :doc:`function <function>`.
 
+If you want to ease your interactive use, to save typing, consider using an :doc:`abbreviation <abbr>` instead.
+
 ``fish`` marks functions that have been created by ``alias`` by including the command used to create them in the function description. You can list ``alias``-created functions by running ``alias`` without arguments. They must be erased using ``functions -e``.
 
 - ``NAME`` is the name of the alias

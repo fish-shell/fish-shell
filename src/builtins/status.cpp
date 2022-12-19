@@ -166,7 +166,7 @@ static void print_features(io_streams_t &streams) {
 }
 
 static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -266,11 +266,11 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 break;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -290,7 +290,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
     status_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

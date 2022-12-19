@@ -91,11 +91,9 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
                         wcstring *error_message = nullptr);
 int builtin_count_args(const wchar_t *const *argv);
 
-void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                            const wchar_t *opt, bool print_hints = true);
+void builtin_unknown_option(io_streams_t &streams, const wchar_t *cmd, const wchar_t *opt);
 
-void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                              const wchar_t *opt, bool print_hints = true);
+void builtin_missing_argument(io_streams_t &streams, const wchar_t *cmd, const wchar_t *opt);
 
 void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wchar_t *cmd);
 
@@ -105,5 +103,5 @@ struct help_only_cmd_opts_t {
     bool print_help = false;
 };
 int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc,
-                             const wchar_t **argv, parser_t &parser, io_streams_t &streams);
+                             const wchar_t **argv, io_streams_t &streams);
 #endif

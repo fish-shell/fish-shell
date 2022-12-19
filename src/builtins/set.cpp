@@ -81,7 +81,7 @@ static const struct woption long_options[] = {{L"export", no_argument, 'x'},
     _(L"%ls: successfully set universal '%ls'; but a global by that name shadows it\n")
 
 static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
 
     int opt;
@@ -157,7 +157,7 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
                 break;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
@@ -175,7 +175,7 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
                         }
                     }
                 }
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -814,7 +814,7 @@ maybe_t<int> builtin_set(parser_t &parser, io_streams_t &streams, const wchar_t 
     set_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, streams);
     if (retval != STATUS_CMD_OK) return retval;
     argv += optind;
     argc -= optind;

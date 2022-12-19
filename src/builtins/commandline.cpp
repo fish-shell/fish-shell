@@ -268,11 +268,11 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 return STATUS_CMD_OK;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case L'?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -293,7 +293,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         }
 
         if (argc == w.woptind) {
-            builtin_missing_argument(parser, streams, cmd, argv[0]);
+            builtin_missing_argument(streams, cmd, argv[0]);
             return STATUS_INVALID_ARGS;
         }
 

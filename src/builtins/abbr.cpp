@@ -381,7 +381,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 return STATUS_CMD_OK;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
         }

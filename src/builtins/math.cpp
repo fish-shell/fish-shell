@@ -42,7 +42,7 @@ static const struct woption long_options[] = {{L"scale", required_argument, 's'}
                                               {}};
 
 static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, io_streams_t &streams) {
     const wchar_t *cmd = L"math";
     int opt;
     wgetopter_t w;
@@ -83,7 +83,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
@@ -279,7 +279,7 @@ maybe_t<int> builtin_math(parser_t &parser, io_streams_t &streams, const wchar_t
     // Is this really the right way to handle no expression present?
     // if (argc == 0) return STATUS_CMD_OK;
 
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

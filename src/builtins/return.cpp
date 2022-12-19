@@ -37,7 +37,7 @@ static int parse_cmd_opts(return_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 break;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {

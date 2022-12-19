@@ -405,13 +405,11 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 break;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
-                                         /* print_hints */ false);
+                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1],
-                                       /* print_hints */ false);
+                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -573,8 +571,7 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, &long_idx)) != -1) {
         if (opt == ':') {
-            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
-                                     false /* print_hints */);
+            builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
             return STATUS_INVALID_ARGS;
         } else if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.

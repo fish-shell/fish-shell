@@ -25,7 +25,7 @@ Variables
 
 Fish sets and erases variables with :doc:`set <cmds/set>` instead of ``VAR=VAL`` and a variety of separate builtins like ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
 
-  # Define $PAGER global and exported,
+  # Define $PAGER *g*lobal and e*x*ported,
   # so this is like ``export PAGER=less``
   set -gx PAGER less
 

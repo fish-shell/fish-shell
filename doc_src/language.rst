@@ -1074,21 +1074,11 @@ For example::
 Exporting variables
 ^^^^^^^^^^^^^^^^^^^
 
-Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like ``LESS`` or ``GOPATH``, but also for variables that contain general system settings like ``PATH`` or ``LANGUAGE``. If an external command needs to know a variable, it needs to be exported.
+Variables in fish can be exported, so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like ``PAGER`` or ``GOPATH``, but also for variables that contain general system settings like ``PATH`` or ``LANGUAGE``. If an external command needs to know a variable, it needs to be exported. Exported variables are also often called "environment variables".
 
 This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :envvar:`PATH` and :ref:`locale variables <variables-locale>`.
 
-Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are identical to the scoping rules for variables:
-
-- If a variable is explicitly set to either be exported or not exported, that setting will be honored.
-
-- If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
-
-- Otherwise, by default, the variable will not be exported.
-
-- If a variable has function or local scope and is exported, any function called receives a *copy* of it, so any changes it makes to the variable disappear once the function returns.
-
-- Global variables are accessible to functions whether they are exported or not.
+Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are similar to the scoping rules for variables - when an option is passed it is respected, otherwise the variable's existing state is used. If no option is passed and the variable didn't exist yet it is not exported.
 
 As a naming convention, exported variables are in uppercase and unexported variables are in lowercase.
 
@@ -1101,7 +1091,7 @@ For example::
     set -gx GTK2_RC_FILES "$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
     set -gx LESSHISTFILE "-"
 
-Note: Exporting is not a :ref:`scope <variables-scope>`, but an additional state. It typically makes sense to make exported variables global as well, but local-exported variables can be useful if you need something more specific than :ref:`Overrides <variables-override>`. They are *copied* to functions so the function can't alter them outside, and still available to commands.
+Note: Exporting is not a :ref:`scope <variables-scope>`, but an additional state. It typically makes sense to make exported variables global as well, but local-exported variables can be useful if you need something more specific than :ref:`Overrides <variables-override>`. They are *copied* to functions so the function can't alter them outside, and still available to commands. Global variables are accessible to functions whether they are exported or not.
 
 .. _variables-lists:
 

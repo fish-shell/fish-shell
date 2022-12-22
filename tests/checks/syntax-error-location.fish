@@ -71,5 +71,5 @@ echo "bind -M" | $fish
 # CHECKERR: Standard input (line 1): 
 # CHECKERR: bind -M
 # CHECKERR: ^
-# CHECKERR: (Type \'help bind\' for related documentation)
+# CHECKERR: (Type 'help bind' for related documentation)
 

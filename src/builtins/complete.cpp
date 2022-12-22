@@ -294,11 +294,11 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
                 return STATUS_CMD_OK;
             }
             case ':': {
-                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
-                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -369,7 +369,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
             if (!state.initialized) {
                 // This corresponds to using 'complete -C' in non-interactive mode.
                 // See #2361    .
-                builtin_missing_argument(streams, cmd, L"-C");
+                builtin_missing_argument(parser, streams, cmd, L"-C");
                 return STATUS_INVALID_ARGS;
             }
             do_complete_param = std::move(state.text);

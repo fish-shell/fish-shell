@@ -28,7 +28,7 @@ static const struct woption long_options[] = {
     {L"no-symlinks", no_argument, 's'}, {L"help", no_argument, 'h'}, {}};
 
 static int parse_cmd_opts(realpath_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -43,11 +43,11 @@ static int parse_cmd_opts(realpath_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 break;
             }
             case ':': {
-                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
-                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -68,7 +68,7 @@ maybe_t<int> builtin_realpath(parser_t &parser, io_streams_t &streams, const wch
     int argc = builtin_count_args(argv);
     int optind;
 
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

@@ -109,7 +109,7 @@ static const wchar_t *const short_options = L"+:h";
 static const struct woption long_options[] = {{L"help", no_argument, 'h'}, {}};
 
 int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int argc,
-                             const wchar_t **argv, io_streams_t &streams) {
+                             const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -120,11 +120,11 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
                 break;
             }
             case ':': {
-                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
-                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -162,12 +162,17 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
 }
 
 /// Perform error reporting for encounter with unknown option.
-void builtin_unknown_option(io_streams_t &streams, const wchar_t *cmd, const wchar_t *opt) {
+void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
+                            const wchar_t *opt, bool print_hints) {
     streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, opt);
+    if (print_hints) {
+        builtin_print_error_trailer(parser, streams.err, cmd);
+    }
 }
 
 /// Perform error reporting for encounter with missing argument.
-void builtin_missing_argument(io_streams_t &streams, const wchar_t *cmd, const wchar_t *opt) {
+void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
+                              const wchar_t *opt, bool print_hints) {
     if (opt[0] == L'-' && opt[1] != L'-') {
         // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt += std::wcslen(opt) - 1;
@@ -175,6 +180,10 @@ void builtin_missing_argument(io_streams_t &streams, const wchar_t *cmd, const w
         streams.err.append_format(BUILTIN_ERR_MISSING, cmd, wcstring(L"-").append(opt).c_str());
     } else
         streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
+
+    if (print_hints) {
+        builtin_print_error_trailer(parser, streams.err, cmd);
+    }
 }
 
 /// Print the backtrace and call for help that we use at the end of error messages.
@@ -196,7 +205,7 @@ static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, con
     int argc = builtin_count_args(argv);
     help_only_cmd_opts_t opts;
     int optind;
-    int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, streams);
+    int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

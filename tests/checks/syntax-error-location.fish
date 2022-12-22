@@ -65,3 +65,11 @@ $fish -c 'echo {$,}'
 # CHECKERR: fish: Expected a variable name after this $.
 # CHECKERR: echo {$,}
 # CHECKERR: ^
+
+echo "bind -M" | $fish
+# CHECKERR: bind: -M: option requires an argument
+# CHECKERR: Standard input (line 1): 
+# CHECKERR: bind -M
+# CHECKERR: ^
+# CHECKERR: (Type \'help bind\' for related documentation)
+

@@ -657,7 +657,8 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, co
             if (retval != STATUS_CMD_OK) return retval;
         } else if (opt == ':') {
             streams.err.append(L"string ");  // clone of string_error
-            builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
+            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
+                                     false /* print_hints */);
             return STATUS_INVALID_ARGS;
         } else if (opt == '?') {
             string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

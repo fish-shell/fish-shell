@@ -343,7 +343,7 @@ void builtin_bind_t::list_modes(io_streams_t &streams) {
 }
 
 static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":aehkKfM:Lm:s";
     static const struct woption long_options[] = {{L"all", no_argument, 'a'},
@@ -424,11 +424,11 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case ':': {
-                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case L'?': {
-                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -452,7 +452,7 @@ maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &stream
     this->opts = &opts;
 
     int optind;
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.list_modes) {

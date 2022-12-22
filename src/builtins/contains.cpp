@@ -22,7 +22,7 @@ static const struct woption long_options[] = {
     {L"help", no_argument, 'h'}, {L"index", no_argument, 'i'}, {}};
 
 static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
-                          io_streams_t &streams) {
+                          parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -37,11 +37,11 @@ static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, cons
                 break;
             }
             case ':': {
-                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
-                builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -62,7 +62,7 @@ maybe_t<int> builtin_contains(parser_t &parser, io_streams_t &streams, const wch
     contains_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

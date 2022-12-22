@@ -103,7 +103,7 @@ static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const
 }
 
 static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -184,14 +184,14 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                 break;
             }
             case ':': {
-                builtin_missing_argument(streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
                 // Try to parse it as a number; e.g., "-123".
                 opts.max_items = fish_wcstol(argv[w.woptind - 1] + 1);
                 if (errno) {
-                    builtin_unknown_option(streams, cmd, argv[w.woptind - 1]);
+                    builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                     return STATUS_INVALID_ARGS;
                 }
                 w.nextchar = nullptr;
@@ -214,7 +214,7 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
     history_cmd_opts_t opts;
 
     int optind;
-    int retval = parse_cmd_opts(opts, &optind, argc, argv, streams);
+    int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {

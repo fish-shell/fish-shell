@@ -10,8 +10,30 @@ In short:
 - Be conservative in what you need (``C++11``, few dependencies)
 - Use automated tools to help you (including ``make test``, ``build_tools/style.fish`` and ``make lint``)
 
-General
--------
+Contributing completions
+------------------------
+
+Completion scripts are the most common contribution to fish, and they are very welcome.
+
+In general, we'll take all well-written completion scripts for a command that is publically available.
+This means no private tools or personal scripts, and we do reserve the right to reject for other reasons.
+
+Completion scripts should
+
+1. Use as few dependencies as possible - try to use fish's builtins like ``string`` instead of ``grep`` and ``awk``,
+   use ``python`` to read json instead of ``jq`` (because it's already a soft dependency for fish's tools)
+2. If it uses a common unix tool, use posix-compatible invocations - ideally it would work on GNU/Linux, macOS, the BSDs and other systems
+3. Option and argument descriptions should be kept short.
+   The shorter the description, the more likely it is that fish can use more columns.
+4. Function names should start with ``__fish``, and functions should be kept in the completion file unless they're used elsewhere.
+5. Run ``fish_indent`` on your script.
+
+Put your completion script into share/completions/name-of-command.fish.
+
+If you want to add tests, you probably want to add a littlecheck test. See below for details.
+
+Contributing to fish's C++ core
+-------------------------------
 
 Fish uses C++11. Newer C++ features should not be used to make it possible to use on older systems.
 
@@ -27,30 +49,22 @@ POSIX-compatible invocations of any tools, and no superfluous dependencies.
 E.g. some completions deal with JSON data. In those it's preferable to use python to handle it,
 as opposed to ``jq``, because fish already optionally uses python elsewhere. (It also happens to be quite a bit *faster*)
 
-Lint Free Code
---------------
+Linters
+-------
 
-Automated analysis tools like cppcheck and oclint can point out
+Automated analysis tools like cppcheck can point out
 potential bugs or code that is extremely hard to understand. They also
 help ensure the code has a consistent style and that it avoids patterns
 that tend to confuse people.
 
-To make linting the code easy there are two make targets: ``lint`` and
-``lint-all``. The latter does exactly what the name implies. The former
-will lint any modified but not committed ``*.cpp`` files. If there is no
-uncommitted work it will lint the files in the most recent commit.
+To make linting the code easy there are two make targets: ``lint``,
+to lint any modified but not committed ``*.cpp`` files, and
+``lint-all`` to lint all files.
 
 Fish has custom cppcheck rules in the file ``.cppcheck.rule``. These
 help catch mistakes such as using ``wcwidth()`` rather than
 ``fish_wcwidth()``. Please add a new rule if you find similar mistakes
 being made.
-
-Dealing With Lint Warnings
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You are strongly encouraged to address a lint warning by refactoring the
-code, changing variable names, or whatever action is implied by the
-warning.
 
 Suppressing Lint Warnings
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,17 +87,10 @@ following:
 
    [src/complete.cpp:1727]: warning (nullPointerRedundantCheck): Either the condition 'cmd_node' is redundant or there is possible null pointer dereference: cmd_node.
 
-Suppressing oclint warnings is more complicated to describe so I’ll
-refer you to the `OCLint
-HowTo <http://docs.oclint.org/en/latest/howto/suppress.html#annotations>`__
-on the topic.
+Code Style
+----------
 
-Ensuring Your Changes Conform to the Style Guides
--------------------------------------------------
-
-The following sections discuss the specific rules for the style that
-should be used when writing fish code. To ensure your changes conform to
-the style rules you simply need to run
+To ensure your changes conform to the style rules run
 
 ::
 
@@ -107,31 +114,6 @@ If you want to check the style of the entire code base run
 
 That command will refuse to restyle any files if you have uncommitted
 changes.
-
-Configuring Your Editor for Fish C++ Code
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Vim
-^^^
-
-As of Vim 7.4 it does not recognize triple-slash comments as used by
-Doxygen and the OS X Xcode IDE to flag comments that explain the
-following C symbol. This means the ``gq`` key binding to reformat such
-comments doesn’t behave as expected. You can fix that by adding the
-following to your vimrc:
-
-::
-
-   autocmd Filetype c,cpp setlocal comments^=:///
-
-If you use Vim I recommend the `vim-clang-format
-plugin <https://github.com/rhysd/vim-clang-format>`__ by
-[@rhysd](https://github.com/rhysd).
-
-Emacs
-^^^^^
-
-If you use Emacs: TBD
 
 Configuring Your Editor for Fish Scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -337,8 +319,6 @@ To install the lint checkers on Mac OS X using Homebrew:
 
 ::
 
-   brew tap oclint/formulae
-   brew install oclint
    brew install cppcheck
 
 To install the lint checkers on Debian-based Linux distributions:
@@ -346,7 +326,6 @@ To install the lint checkers on Debian-based Linux distributions:
 ::
 
    sudo apt-get install clang
-   sudo apt-get install oclint
    sudo apt-get install cppcheck
 
 Installing the Formatting Tools

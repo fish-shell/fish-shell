@@ -1,4 +1,4 @@
-set -l options (command mpv --list-options 2>/dev/null)
+set -l options (mpv --list-options 2>/dev/null)
 complete -c mpv -l(string replace -fr '^\s*--([\w-]+).*' '$1' -- $options)
 complete -c mpv -lno-(string replace -fr '^\s*--([\w-]+).*Flag.*' '$1' -- $options)
 

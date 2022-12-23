@@ -96,8 +96,6 @@ def esc(m):
     map = {
         "\n": "\\n",
         "\\": "\\\\",
-        "'": "\\'",
-        '"': '\\"',
         "\a": "\\a",
         "\b": "\\b",
         "\f": "\\f",
@@ -304,11 +302,11 @@ class TestFailure(object):
                         )
                         if b:
                             bstr = (
-                                "'{BLUE}"
-                                + b.line.escaped_text(for_formatting=True)
-                                + "{RESET}'"
-                                + " on line "
+                                "on line "
                                 + str(b.line.number)
+                                + ": {BLUE}"
+                                + b.line.escaped_text(for_formatting=True)
+                                + "{RESET}"
                             )
                             lastcheckline = b.line.number
 

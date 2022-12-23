@@ -35,34 +35,34 @@ msgstr ""
 #: src/ast.cpp:685 src/ast.cpp:706
 #, c-format
 msgid "Expected %ls, but found %ls"
-msgstr ""
+msgstr "Erwartete %ls, aber fand %ls"
 
 #: src/ast.cpp:719
 msgid "'end' outside of a block"
-msgstr ""
+msgstr "'end' ausserhalb eines Blocks"
 
 #: src/ast.cpp:723
 msgid "'else' builtin not inside of if block"
-msgstr ""
+msgstr "'else' nicht in einem 'if'-Block"
 
 #: src/ast.cpp:727
 msgid "'case' builtin not inside of switch block"
-msgstr ""
+msgstr "'case' nicht in einem 'switch'-Block"
 
 #: src/ast.cpp:741
 #, c-format
 msgid "Expected a string, but found %ls"
-msgstr ""
+msgstr "Erwartete Zeichenkette, aber fand %ls"
 
 #: src/ast.cpp:971 src/ast.cpp:1028
 #, c-format
 msgid "Expected a command, but found %ls"
-msgstr ""
+msgstr "Erwartete einen Befehl, aber fand %ls"
 
 #: src/builtin.cpp:198
 #, c-format
 msgid "(Type 'help %ls' for related documentation)\n"
-msgstr ""
+msgstr "(Nutze 'help %ls' für Dokumentation)\n"
 
 #: src/builtin.cpp:286
 #, c-format
@@ -72,7 +72,7 @@ msgstr "%ls: Nicht innerhalb einer Schleife\n"
 #: src/builtin.cpp:314
 #, c-format
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr ""
+msgstr "%ls: Befehl nicht interaktiv am Prompt gültig\n"
 
 #: src/builtin.cpp:354 src/builtin.cpp:404
 msgid "Evaluate contents of file"
@@ -84,11 +84,11 @@ msgstr "Ein erfolgreiches Resultat zurückgeben"
 
 #: src/builtin.cpp:356 src/builtin.cpp:408
 msgid "Test a condition"
-msgstr ""
+msgstr "Teste eine Bedingung"
 
 #: src/builtin.cpp:357
 msgid "Translate a string"
-msgstr ""
+msgstr "Übersetze eine Zeichenkette"
 
 #: src/builtin.cpp:358
 msgid "Manage abbreviations"
@@ -96,11 +96,11 @@ msgstr "Handbuch-Sektionen"
 
 #: src/builtin.cpp:359
 msgid "Run command if last command succeeded"
-msgstr ""
+msgstr "Führe Befehl aus wenn der Letzte gelang"
 
 #: src/builtin.cpp:360
 msgid "Parse options in fish script"
-msgstr ""
+msgstr "Optionen in einem Fishskript parsen"
 
 #: src/builtin.cpp:361
 msgid "Create a block of code"
@@ -124,15 +124,15 @@ msgstr "Innerste Schleife beenden"
 
 #: src/builtin.cpp:366
 msgid "Halt execution and start debug prompt"
-msgstr ""
+msgstr "Ausführung anhalten und einen Debugprompt starten"
 
 #: src/builtin.cpp:367
 msgid "Run a builtin specifically"
-msgstr ""
+msgstr "Speziell ein Builtin ausführen"
 
 #: src/builtin.cpp:368
 msgid "Block of code to run conditionally"
-msgstr ""
+msgstr "Einen Block Befehle zur bedingten Ausführung"
 
 #: src/builtin.cpp:369
 msgid "Change working directory"
@@ -140,7 +140,7 @@ msgstr "Arbeitsverzeichnis wechseln"
 
 #: src/builtin.cpp:370
 msgid "Run a command specifically"
-msgstr ""
+msgstr "Speziell ein externes Kommando ausführen"
 
 #: src/builtin.cpp:371
 msgid "Set or get the commandline"
@@ -156,11 +156,11 @@ msgstr "Nach einem String in einer Liste suchen"
 
 #: src/builtin.cpp:374
 msgid "Skip over remaining innermost loop"
-msgstr ""
+msgstr "Über den Rest der innersten Schleife springen"
 
 #: src/builtin.cpp:375
 msgid "Count the number of arguments"
-msgstr ""
+msgstr "Die Anzahl Argumente zählen"
 
 #: src/builtin.cpp:376
 msgid "Remove job from job list"
@@ -168,7 +168,7 @@ msgstr ""
 
 #: src/builtin.cpp:377
 msgid "Print arguments"
-msgstr ""
+msgstr "Argumente ausgeben"
 
 #: src/builtin.cpp:378
 msgid "Evaluate block if condition is false"
@@ -26692,7 +26692,7 @@ msgstr ""
 #: /tmp/fish.i8YroE/implicit/share/completions/touch.fish:11
 #: /tmp/fish.i8YroE/implicit/share/functions/__fish_complete_netcat.fish:46
 msgid "display help"
-msgstr ""
+msgstr "Hilfe anzeigen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/epkginfo.fish:2
 msgid "extended pkg description"
@@ -45118,7 +45118,7 @@ msgstr ""
 #: /tmp/fish.i8YroE/implicit/share/completions/heroku.fish:27
 #: /tmp/fish.i8YroE/implicit/share/completions/touch.fish:12
 msgid "display version"
-msgstr ""
+msgstr "Zeige Version"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/heroku.fish:28
 msgid ""
@@ -83355,19 +83355,19 @@ msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/touch.fish:1
 msgid "change file access and modification times"
-msgstr ""
+msgstr "Dateizugriffs- und Änderungszeiten ändern"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/touch.fish:2
 msgid "change access time (atime)"
-msgstr ""
+msgstr "Zugriffszeit (atime) ändern"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/touch.fish:3
 msgid "change modification time (mtime)"
-msgstr ""
+msgstr "Änderungszeit (mtime) ändern"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/touch.fish:4
 msgid "use specified time [[CC]YY]MMDDhhmm[.SS]"
-msgstr ""
+msgstr "diese Zeit (format [[CC]YY]MMDDhhmm[.SS]) nutzen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/touch.fish:5
 msgid "set date back"

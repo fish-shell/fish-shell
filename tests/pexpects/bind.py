@@ -96,7 +96,11 @@ expect_prompt(
 send("echo TEXT")
 send("\033")
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep(0.300)
+# Specifically alt+h *is* bound to __fish_man_page,
+# and I have seen this think that trigger with 300ms.
+#
+# The next step is to rip out this test because it's much more pain than it is worth
+sleep(0.400)
 send("hhrAi\r")
 expect_prompt(
     "\r\nTAXT\r\n", unmatched="vi mode replace char, default timeout: long delay"
@@ -106,7 +110,7 @@ expect_prompt(
 send("echo MORE-TEXT")
 send("\033")
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep(0.300)
+sleep(0.400)
 send("xxxxx\r")
 
 # vi mode delete char, default timeout: long delay

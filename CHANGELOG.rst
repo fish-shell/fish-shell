@@ -1,4 +1,4 @@
-.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9134 9140 9141 9152 9154 9186 9206 9211 9214 9226 9241 9252 9265 9301 9303 9311 9341 9342 9382 9394 9399
+.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9134 9140 9141 9152 9154 9186 9206 9211 9214 9226 9241 9252 9265 9301 9303 9311 9334 9341 9342 9382 9390 9394 9399 9410 9417 9419 9425 9426
 
 fish 3.6.0 (released ???)
 ===================================
@@ -6,7 +6,7 @@ fish 3.6.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 - By default, :kbd:`Control-R` now opens the command history in the pager (:issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the incremental search seen in other shells. The new special input function ``history-pager`` has been added for custom bindings.
-- Abbrevations are more flexible (:issue:`9313`):
+- Abbrevations are more flexible (:issue:`9313`, :issue:`5003`, :issue:`2287`):
 
   - They may optionally replace tokens anywhere on the command line, instead of only commands
   - Matching tokens may be described using a regular expression instead of a literal word
@@ -126,6 +126,10 @@ Fixed Bugs
 - On 32-bit systems, globs like ``*`` might fail to print certain files, due to missing large file support. This has been fixed by enabling large file support.
 - Interactive ``read`` in scripts will now have the correct keybindings again (:issue:`9227`).
 - A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
+- A crash with relative $CDPATH has been fixed (:issue:`9407`).
+- ``printf`` now properly fills extra ``%d`` specifiers with 0 even on macOS and BSD (:issue:`9321`).
+- ``fish_key_reader`` now correctly exits when receiving a SIGHUP (like after closing the terminal) (:issue:`9309`).
+- ``fish_config theme save`` now works as documented instead of erroring out (:issue:`9088`, :issue:`9273`).
 
 Completions
 ^^^^^^^^^^^
@@ -150,8 +154,9 @@ Completions
   - ``loadkeys`` (:issue:`9312`)
   - ``okular``
   - ``op`` (:issue:`9300`)
+  - ``ouch`` (:issue:`9405`)
   - ``pix``
-  - ``readelf`` (:issue:`8746`)
+  - ``readelf`` (:issue:`8746`, :issue:`9386`)
   - ``qshell``
   - ``rc``
   - ``sad``

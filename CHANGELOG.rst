@@ -1,4 +1,4 @@
-.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9134 9140 9141 9152 9154 9186 9206 9211 9214 9226 9241 9252 9265 9301 9303 9311 9334 9341 9342 9382 9390 9394 9399 9410 9417 9419 9425 9426
+.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9134 9140 9141 9152 9154 9186 9206 9211 9214 9226 9241 9252 9265 9301 9303 9311 9334 9341 9342 9382 9390 9394 9399 9410 9417 9419 9425 9426 9292 9293 9294 9287 9278 9131 9135 9187 9138 9195 9175 9155 9150 9218 9219 9222 9279 9160 9224 9337 9368 9239
 
 fish 3.6.0 (released ???)
 ===================================
@@ -50,13 +50,13 @@ Notable improvements and fixes
     for a,b in y 1 z 3
         ^~^
 - A new function, ``fish_delta``, shows changes that have been made in fish's configuration from the defaults (:issue:`9255`).
-- ``set --erase`` can now be used with multiple scopes at once, like ``set -efglU foo`` (:issue:`7711`).
-- ``status`` gained a new subcommand, ``current-commandline`` which retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`).
+- ``set --erase`` can now be used with multiple scopes at once, like ``set -efglU foo`` (:issue:`7711`, :issue:`9280`).
+- ``status`` gained a new subcommand, ``current-commandline`` which retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`, :issue:`9296`).
 
 
 Deprecations and removed features
 ---------------------------------
-- The difference between ``\xAB`` and ``\XAB`` has been removed. Before, ``\x`` would do the same thing as ``\X`` except that it would error if the value was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`1352`).
+- The difference between ``\xAB`` and ``\XAB`` has been removed. Before, ``\x`` would do the same thing as ``\X`` except that it would error if the value was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`9245`, :issue:`1352`).
 - The ``fish_git_prompt`` will now only turn on features if the corresponding boolean variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, e.g. via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
   For example, ``set -g __fish_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), now it turns it off.
 - Abbreviations are no longer stored in universal variables. Existing universal abbreviations are still imported, but new abbreviations should be added to ``config.fish``.
@@ -101,7 +101,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - If the terminal definition for $TERM can't be used, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
-- The new environment variable ``$fish_cursor_selection_mode`` can be used to configure whether the command line selection includes (``inclusive``) the character under the cursor or not (``exclusive``). The new default is ``exclusive``. Use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
+- The new environment variable ``$fish_cursor_selection_mode`` can be used to configure whether the command line selection includes (``inclusive``) the character under the cursor or not (``exclusive``). The new default is ``exclusive``. Use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`, :issue:`9262`).
 - Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - ``bind`` output is now syntax-highlighted when used interacively.
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
@@ -111,11 +111,15 @@ Interactive improvements
 - Fish's vi mode no longer uses iTerm's proprietary escape sequences to signal cursor change, instead using the normal xterm-style sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
 - Generating descriptions for commands now uses ``manpath`` instead of ``man --path`` on macOS, as that has been removed in macOS Ventura.
 - When running fish on a remote system (e.g. inside SSH or a container), :kbd:`Control-X` now copies to the local client system's clipboard if the terminal supports OSC 52.
+- ``commandline`` gained two new options, ``--selection-start`` and ``--selection-end``, to set the start/end of the current selection (:issue:`9197`, :issue:`9215`).
+- Fish's builtins now handle SIGINT (:issue:`9266`).
+- Fish no longer loads completions if the command is used via a relative path and is not in $PATH (:issue:`9133`).
+- Fish no longer completes inside of comments (:issue:`9320`).
 
 
 Fixed Bugs
 ----------
-- The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text.
+- The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text (:issue:`9066`).
 - process-exit and job-exit events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
 - A crash when completing a token that contained both a potential glob and a quoted variable expansion was fixed (:issue:`9137`).
 - ``prompt_pwd`` no longer accidentally overwrites a global or universal ``$fish_prompt_pwd_full_dirs`` when called with the ``-d`` or ``--full-length-dirs`` option (:issue:`9123`).
@@ -136,17 +140,18 @@ Completions
 - Added completions for:
 
   - ``ark``
-  - ``asciinema``
-  - ``clojure``
+  - ``asciinema`` (:issue:`9257`)
+  - ``clojure`` (:issue:`9272`)
   - ``csh``
+  - ``direnv`` (:issue:`9268`)
+  - ``dive`` (:issue:`9082`)
   - ``dolphin``
-  - ``dua``
+  - ``dua`` (:issue:`9277`)
   - ``efivar`` (:issue:`9318`)
   - ``eg``
   - ``es`` (:issue:`9388`)
-  - ``firefox-developer-edition``
-  - ``firefox``
-  - ``fortune``
+  - ``firefox-developer-edition`` and ``firefox`` (:issue:`9090`)
+  - ``fortune`` (:issue:`9177`)
   - ``kb``
   - ``kind`` (:issue:`9110`)
   - ``konsole``
@@ -159,9 +164,10 @@ Completions
   - ``readelf`` (:issue:`8746`, :issue:`9386`)
   - ``qshell``
   - ``rc``
-  - ``sad``
+  - ``sad`` (:issue:`9145`)
   - ``tcsh``
   - ``toot``
+  - ``tox`` (:issue:`9078`)
   - ``wish``
   - ``xed``
   - ``xonsh`` (:issue:`9389`)
@@ -174,6 +180,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- Opening ``help`` on WSL now calls powershell to open the browser if available, removing some awkward UNC path errors (:issue:`9119`).
 
 Other improvements
 ------------------
@@ -184,7 +191,7 @@ Other improvements
 
 For distributors
 ----------------
-- The vendored PCRE2 sources have been removed. It is recommended to declare PCRE2 as a dependency when packaging fish. If the CMake variable FISH_USE_SYSTEM_PCRE2 is false, fish will now download and build PCRE2 from the official repo (:issue:`8355`). Note this variable defaults to true if PCRE2 is found installed on the system.
+- The vendored PCRE2 sources have been removed. It is recommended to declare PCRE2 as a dependency when packaging fish. If the CMake variable FISH_USE_SYSTEM_PCRE2 is false, fish will now download and build PCRE2 from the official repo (:issue:`8355`, :issue:`8363`). Note this variable defaults to true if PCRE2 is found installed on the system.
 
 --------------
 

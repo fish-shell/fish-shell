@@ -276,7 +276,7 @@ Shared bindings
 
 Some bindings are common across Emacs and Vi mode, because they aren't text editing bindings, or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
-- :kbd:`Tab` :ref:`completes <tab-completion>` the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode.
+- :kbd:`Tab` :ref:`completes <tab-completion>` the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode. :kbd:`Tab` is the same as :kbd:`Control`\ +\ :kbd:`I`.
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`→` accepts the autosuggestion.
 
@@ -298,11 +298,11 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
 
-- :kbd:`Control`\ +\ :kbd:`U` moves contents from the beginning of line to the cursor to the :ref:`killring <killring>`.
+- :kbd:`Control`\ +\ :kbd:`U` removes contents from the beginning of line to the cursor (moving it to the :ref:`killring <killring>`).
 
 - :kbd:`Control`\ +\ :kbd:`L` clears and repaints the screen.
 
-- :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the :ref:`killring`.
+- :kbd:`Control`\ +\ :kbd:`W` removes the previous path component (everything up to the previous "/", ":" or "@") (moving it to the :ref:`killring`).
 
 - :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
 
@@ -341,9 +341,13 @@ To enable emacs mode, use ``fish_default_key_bindings``. This is also the defaul
 
 - :kbd:`Control`\ +\ :kbd:`N`, :kbd:`Control`\ +\ :kbd:`P` move the cursor up/down or through history, like the up and down arrow shared bindings.
 
-- :kbd:`Delete` or :kbd:`Backspace` removes one character forwards or backwards respectively.
+- :kbd:`Delete` or :kbd:`Backspace` removes one character forwards or backwards respectively. This also goes for :kbd:`Control`\ +\ :kbd:`H`, which is indistinguishable from backspace.
 
-- :kbd:`Control`\ +\ :kbd:`K` moves contents from the cursor to the end of line to the :ref:`killring`.
+- :kbd:`Alt`\ +\ :kbd:`Backspace` removes one word backwards.
+
+- :kbd:`Alt`\ +\ :kbd:`<` moves to the beginning of the commandline, :kbd:`Alt`\ +\ :kbd:`>` moves to the end.
+
+- :kbd:`Control`\ +\ :kbd:`K` deletes from the cursor to the end of line (moving it to the :ref:`killring`).
 
 - :kbd:`Alt`\ +\ :kbd:`C` capitalizes the current word.
 

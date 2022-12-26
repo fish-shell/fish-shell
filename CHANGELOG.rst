@@ -134,6 +134,8 @@ Fixed Bugs
 - ``printf`` now properly fills extra ``%d`` specifiers with 0 even on macOS and BSD (:issue:`9321`).
 - ``fish_key_reader`` now correctly exits when receiving a SIGHUP (like after closing the terminal) (:issue:`9309`).
 - ``fish_config theme save`` now works as documented instead of erroring out (:issue:`9088`, :issue:`9273`).
+- Fish no longer triggers prompts to install command line tools when first run on macOS (:issue:`9343`).
+- ``fish_git_prompt`` now quietly fails on macOS if the xcrun cache is not yet populated (:issue:`6625`), working around a potential hang.
 
 Completions
 ^^^^^^^^^^^

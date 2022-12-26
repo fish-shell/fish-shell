@@ -272,7 +272,7 @@ While the key bindings included with fish include many of the shortcuts popular 
 .. _shared-binds:
 
 Shared bindings
----------------
+^^^^^^^^^^^^^^^
 
 Some bindings are common across Emacs and Vi mode, because they aren't text editing bindings, or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
@@ -329,7 +329,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 .. _emacs-mode:
 
 Emacs mode commands
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 To enable emacs mode, use ``fish_default_key_bindings``. This is also the default.
 
@@ -366,7 +366,7 @@ You can change these key bindings using the :doc:`bind <cmds/bind>` builtin.
 .. _vi-mode:
 
 Vi mode commands
-----------------
+^^^^^^^^^^^^^^^^
 
 Vi mode allows for the use of Vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
 
@@ -411,7 +411,7 @@ If the cursor shape does not appear to be changing after setting the above varia
 .. _vi-mode-command:
 
 Command mode
-^^^^^^^^^^^^
+""""""""""""
 
 Command mode is also known as normal mode.
 
@@ -450,7 +450,7 @@ Command mode is also known as normal mode.
 .. _vi-mode-insert:
 
 Insert mode
-^^^^^^^^^^^
+"""""""""""
 
 - :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`.
 
@@ -459,7 +459,7 @@ Insert mode
 .. _vi-mode-visual:
 
 Visual mode
-^^^^^^^^^^^
+"""""""""""
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) extend the selection backward/forward by one character.
 
@@ -490,7 +490,7 @@ Visual mode
 .. _custom-binds:
 
 Custom bindings
----------------
+^^^^^^^^^^^^^^^
 
 In addition to the standard bindings listed here, you can also define your own with :doc:`bind <cmds/bind>`::
 
@@ -521,7 +521,7 @@ If you want to be able to press :kbd:`Escape` and then a character and have it c
 .. _killring:
 
 Copy and paste (Kill Ring)
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Fish uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control`\ +\ :kbd:`K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control`\ +\ :kbd:`Y` (the ``yank`` input function). After pasting, use :kbd:`Alt`\ +\ :kbd:`Y` (``yank-pop``) to rotate to the previous kill.
 
@@ -537,7 +537,7 @@ The configuration setting ``$fish_cursor_selection_mode`` can be used to configu
 .. _multiline:
 
 Multiline editing
------------------
+^^^^^^^^^^^^^^^^^
 
 The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
 
@@ -552,7 +552,7 @@ The fish commandline editor works exactly the same in single line mode and in mu
 .. _history-search:
 
 Searchable command history
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After a command has been executed, it is remembered in the history list. Any duplicate history items are automatically removed. By pressing the up and down keys, you can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 

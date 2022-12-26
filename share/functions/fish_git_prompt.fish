@@ -168,10 +168,37 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     test "$count" = "0 0"
 end
 
+# Decide if git is safe to run.
+# On Darwin, git is pre-installed as a stub, which will pop a dialog if you run it.
+if string match -q Darwin -- "$(uname)" && type -q xcode-select && type -q xcrun
+    if string match -q /usr/bin/git -- "$(command -s git)" && not xcode-select --print-path &>/dev/null
+        # Only the stub git is installed.
+        # Do not try to run it.
+        function __fish_git_prompt_ready
+            return 1
+        end
+    else
+        # git is installed, but on the first run it may be very slow as xcrun needs to populate the cache.
+        # Kick it off in the background to populate the cache.
+        command git --version &>/dev/null &
+        disown
+        function __fish_git_prompt_ready
+            path is "$(xcrun --show-cache-path)" || return 1
+            # git is ready, erase the function.
+            functions -e __fish_git_prompt_ready
+            return 0
+        end
+    end
+end
+
 function fish_git_prompt --description "Prompt function for Git"
     # If git isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
     if not command -sq git
+        return 1
+    end
+    # Fail if __fish_git_prompt_ready is defined and fails.
+    if functions -q __fish_git_prompt_ready && not __fish_git_prompt_ready
         return 1
     end
     set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD 2>/dev/null)

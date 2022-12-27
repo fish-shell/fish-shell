@@ -79,6 +79,8 @@ Run ``help`` to open fish's help in a web browser, and ``man`` with the page (li
 
 To open this section, use ``help getting-help``.
 
+Fish works by running commands, which are often also installed on your computer. Usually these commands also provide help in the man system, so you can get help for them there. Try ``man ls`` to get help on your computer's ``ls`` command.
+
 Syntax Highlighting
 -------------------
 

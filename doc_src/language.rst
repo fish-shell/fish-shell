@@ -21,15 +21,13 @@ Shells like fish are used by giving them commands. A command is executed by writ
 
 Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
 
-To learn more about the ``echo`` command, read its manual page by typing ``man echo``. ``man`` is a command for displaying a manual page on a given topic. It takes the name of the manual page to display as an argument. There are manual pages for almost every command. There are also manual pages for many other things, such as system libraries and important files.
-
 Every program on your computer can be used as a command in fish. If the program file is located in one of the :envvar:`PATH` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
 
 Here is a list of some useful commands:
 
 - :doc:`cd <cmds/cd>`: Change the current directory
 - ``ls``: List files and directories
-- ``man``: Display a manual page
+- ``man``: Display a manual page - try ``man ls`` to get help on your "ls" command, or ``man mv`` to get information about "mv".
 - ``mv``: Move (rename) files
 - ``cp``: Copy files
 - :doc:`open <cmds/open>`: Open files with the default application associated with each filetype
@@ -39,7 +37,9 @@ Commands and arguments are separated by the space character ``' '``. Every comma
 
 A switch is a very common special type of argument. Switches almost always start with one or more hyphens ``-`` and alter the way a command operates. For example, the ``ls`` command usually lists the names of all files and directories in the current working directory. By using the ``-l`` switch, the behavior of ``ls`` is changed to not only display the filename, but also the size, permissions, owner, and modification time of each file.
 
-Switches differ between commands and are usually documented on a command's manual page. There are some switches, however, that are common to most commands. For example, ``--help`` will usually display a help text, ``--version`` will usually display the command version, and ``-i`` will often turn on interactive prompting before taking action.
+Switches differ between commands and are usually documented on a command's manual page. There are some switches, however, that are common to most commands. For example, ``--help`` will usually display a help text, ``--version`` will usually display the command version, and ``-i`` will often turn on interactive prompting before taking action. Try ``man your-command-here`` to get information on your command's switches.
+
+So the basic idea of fish is the same as with other unix shells: It gets a commandline, runs :ref:`expansions <expand>`, and the result is then run as a command.
 
 .. _terminology:
 
@@ -48,21 +48,21 @@ Terminology
 
 Here we define some of the terms used on this page and throughout the rest of the fish documentation:
 
-- **Argument**: A parameter given to a command.
+- **Argument**: A parameter given to a command. In ``echo foo``, the "foo" is an argument.
 
-- **Builtin**: A command that is implemented by the shell. Builtins are so closely tied to the operation of the shell that it is impossible to implement them as external commands.
+- **Builtin**: A command that is implemented by the shell. Builtins are so closely tied to the operation of the shell that it is impossible to implement them as external commands. In ``echo foo``, the "echo" is a builtin.
 
-- **Command**: A program that the shell can run, or more specifically an external program that the shell runs in another process.
+- **Command**: A program that the shell can run, or more specifically an external program that the shell runs in another process. External commands are provided on your system, as executable files. In ``echo foo`` the "echo" is a builtin command, in ``command echo foo`` the "echo" is an external command, provided by a file like /bin/echo.
 
 - **Function**: A block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple simple commands into one more advanced command.
 
 - **Job**: A running pipeline or command.
 
-- **Pipeline**: A set of commands strung together so that the output of one command is the input of the next command.
+- **Pipeline**: A set of commands strung together so that the output of one command is the input of the next command. ``echo foo | grep foo`` is a pipeline.
 
 - **Redirection**: An operation that changes one of the input or output streams associated with a job.
 
-- **Switch** or **Option**: A special kind of argument that alters the behavior of a command. A switch almost always begins with one or two hyphens.
+- **Switch** or **Option**: A special kind of argument that alters the behavior of a command. A switch almost always begins with one or two hyphens. In ``echo -n foo`` the "-n" is an option.
 
 .. _quotes:
 
@@ -488,11 +488,11 @@ Parameter expansion
 
 When fish is given a commandline, it expands the parameters before sending them to the command. There are multiple different kinds of expansions:
 
-- :ref:`Wildcards <expand-wildcard>`, to create filenames from patterns
-- :ref:`Variable expansion <expand-variable>`, to use the value of a variable
-- :ref:`Command substitution <expand-command-substitution>`, to use the output of another command
-- :ref:`Brace expansion <expand-brace>`, to write lists with common pre- or suffixes in a shorter way
-- :ref:`Tilde expansion <expand-home>`, to turn the ``~`` at the beginning of paths into the path to the home directory
+- :ref:`Wildcards <expand-wildcard>`, to create filenames from patterns - ``*.jpg``
+- :ref:`Variable expansion <expand-variable>`, to use the value of a variable - ``$HOME``
+- :ref:`Command substitution <expand-command-substitution>`, to use the output of another command - ``$(cat /path/to/file)``
+- :ref:`Brace expansion <expand-brace>`, to write lists with common pre- or suffixes in a shorter way ``{/usr,}/bin``
+- :ref:`Tilde expansion <expand-home>`, to turn the ``~`` at the beginning of paths into the path to the home directory ``~/bin``
 
 Parameter expansion is limited to 524288 items. There is a limit to how many arguments the operating system allows for any command, and 524288 is far above it. This is a measure to stop the shell from hanging doing useless computation.
 

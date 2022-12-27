@@ -43,12 +43,6 @@ Don't introduce new dependencies unless absolutely necessary, and if you do,
 please make it optional with graceful failure if possible.
 Add any new dependencies to the README.rst under the *Running* and/or *Building* sections.
 
-This also goes for completion scripts and functions - if at all possible, they should only use
-POSIX-compatible invocations of any tools, and no superfluous dependencies.
-
-E.g. some completions deal with JSON data. In those it's preferable to use python to handle it,
-as opposed to ``jq``, because fish already optionally uses python elsewhere. (It also happens to be quite a bit *faster*)
-
 Linters
 -------
 
@@ -96,8 +90,11 @@ To ensure your changes conform to the style rules run
 
    build_tools/style.fish
 
-before committing your change. That will run ``git-clang-format`` to
-rewrite only the lines you’re modifying.
+before committing your change. That will run our autoformatters:
+
+- ``git-clang-format`` for c++
+- ``fish_indent`` (shipped with fish) for fish script
+- ``black`` for python
 
 If you’ve already committed your changes that’s okay since it will then
 check the files in the most recent commit. This can be useful after
@@ -150,18 +147,6 @@ made to run fish_indent via e.g.
 
    (add-hook 'fish-mode-hook (lambda ()
        (add-hook 'before-save-hook 'fish_indent-before-save)))
-
-Suppressing Reformatting of C++ Code
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can tell ``clang-format`` to not reformat a block by enclosing it in
-comments like this:
-
-::
-
-   // clang-format off
-   code to ignore
-   // clang-format on
 
 Fish Script Style Guide
 -----------------------

@@ -77,6 +77,7 @@ Run ``help`` to open fish's help in a web browser, and ``man`` with the page (li
     set - handle shell variables
       Synopsis...
 
+To open this section, use ``help getting-help``.
 
 Syntax Highlighting
 -------------------
@@ -140,7 +141,7 @@ You can include multiple wildcards::
     lesson.pdf
 
 
-Especially powerful is the recursive wildcard ** which searches directories recursively::
+The recursive wildcard ``**`` searches directories recursively::
 
     > ls /var/**.log
     /var/log/system.log
@@ -159,19 +160,15 @@ You can pipe between commands with the usual vertical bar::
     > echo hello world | wc
           1       2      12
 
-
 stdin and stdout can be redirected via the familiar ``<`` and ``>``. stderr is redirected with a ``2>``.
-
-
 
 ::
 
     > grep fish < /etc/shells > ~/output.txt 2> ~/errors.txt
 
+To redirect stdout and stderr into one file, you can use ``&>``::
 
-To redirect stdout and stderr into one file, you need to first redirect stdout, and then stderr into stdout::
-
-    > make > make_output.txt 2>&1
+    > make &> make_output.txt
 
 For more, see :ref:`Input and output redirections <redirects>` and :ref:`Pipes <pipes>`.
 
@@ -227,10 +224,10 @@ If there's more than one possibility, it will list them:
     :class: highlight
 
     :prompt:`>` :red:`~/stuff/s`:kbd:`Tab`
-    ~/stuff/script.sh  (Executable, 4.8kB)  ~/stuff/sources/  (Directory)
+    ~/stuff/script.sh  :gray:`(command)`  ~/stuff/sources/  :gray:`(directory)`
 
 
-Hit tab again to cycle through the possibilities.
+Hit tab again to cycle through the possibilities. The part in parentheses there (that "command" and "directory") is the completion description. It's just a short hint to explain what kind of argument it is.
 
 fish can also complete many commands, like git branches:
 
@@ -239,8 +236,7 @@ fish can also complete many commands, like git branches:
 
     :prompt:`>` :command:`git` :param:`merge pr`:kbd:`Tab` => :command:`git` :param:`merge prompt_designer`
     :prompt:`>` :command:`git` :param:`checkout b`:kbd:`Tab`
-    builtin_list_io_merge (Branch) builtin_set_color (Branch) busted_events (Tag)
-
+    builtin_list_io_merge :gray:`(Branch)`  builtin_set_color :gray:`(Branch)` busted_events :gray:`(Tag)`
 
 Try hitting tab and see what fish can do!
 
@@ -252,7 +248,6 @@ Like other shells, a dollar sign followed by a variable name is replaced with th
     > echo My home directory is $HOME
     My home directory is /home/tutorial
 
-
 This is known as variable substitution, and it also happens in double quotes, but not single quotes::
 
     > echo "My current directory is $PWD"
@@ -260,8 +255,7 @@ This is known as variable substitution, and it also happens in double quotes, bu
     > echo 'My current directory is $PWD'
     My current directory is $PWD
 
-
-Unlike other shells, fish has no dedicated ``VARIABLE=VALUE`` syntax for setting variables. Instead it has an ordinary command: ``set``, which takes a variable name, and then its value.
+Unlike other shells, fish has an ordinary command to set variables: ``set``, which takes a variable name, and then its value.
 
 ::
 
@@ -277,7 +271,6 @@ Unlike other shells, variables are not further split after substitution::
     > mkdir $name
     > ls
     Mister Noodle
-
 
 In bash, this would have created two directories "Mister" and "Noodle". In fish, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to ``mkdir``, spaces and all.
 
@@ -298,7 +291,7 @@ Exports (Shell Variables)
 
 Sometimes you need to have a variable available to an external command, often as a setting. For example many programs like ``git`` or ``man`` read the ``$PAGER`` variable to figure out your preferred pager (the program that lets you scroll text). Other variables used like this include ``$BROWSER``, ``$LANG`` (to configure your language) and ``$PATH``. You'll note these are written in ALLCAPS, but that's just a convention.
 
-To give a variable to an external command, it needs to be "exported". Unlike other shells, fish does not have an export command. Instead, a variable is exported via an option to ``set``, either ``--export`` or just ``-x``.
+To give a variable to an external command, it needs to be "exported". This is done with a flag to ``set``, either ``--export`` or just ``-x``.
 
 ::
 
@@ -407,7 +400,7 @@ Command substitutions without a dollar are not expanded within quotes, so the ve
     > ls *.txt
     testing_1360099791.txt
 
-Unlike other shells, fish does not split command substitutions on any whitespace (like spaces or tabs), only newlines. This can be an issue with commands like ``pkg-config`` that print what is meant to be multiple arguments on a single line. To split it on spaces too, use ``string split``.
+Unlike other shells, fish does not split command substitutions on any whitespace (like spaces or tabs), only newlines. Usually this is a big help because unix commands operate on a line-by-line basis. Sometimes it can be an issue with commands like ``pkg-config`` that print what is meant to be multiple arguments on a single line. To split it on spaces too, use ``string split``.
 
 ::
 
@@ -444,14 +437,14 @@ To write them on the same line, use the semicolon (";"). That means the followin
     echo fish
     echo chips
 
+This is useful interactively to enter multiple commands. In a script it's easier to read if the commands are on separate lines.
 
 Exit Status
 -----------
 
-When a command exits, it returns a status code as a non-negative integer.
+When a command exits, it returns a status code as a non-negative integer (that's a whole number >= 0).
 
 Unlike other shells, fish stores the exit status of the last command in ``$status`` instead of ``$?``.
-
 
 ::
 
@@ -497,7 +490,6 @@ Conditionals (If, Else, Switch)
 
 Use :doc:`if <cmds/if>` and :doc:`else <cmds/else>` to conditionally execute code, based on the exit status of a command.
 
-
 ::
 
     if grep fish /etc/shells
@@ -508,9 +500,7 @@ Use :doc:`if <cmds/if>` and :doc:`else <cmds/else>` to conditionally execute cod
         echo Got nothing
     end
 
-
 To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use :doc:`test <cmds/test>`, like
-
 
 ::
 
@@ -538,13 +528,11 @@ To compare strings or numbers or check file properties (whether a file exists or
 
 :ref:`Combiners <tut-combiners>` can also be used to make more complex conditions, like
 
-
 ::
 
-    if grep fish /etc/shells; and command -sq fish
+    if command -sq fish; and grep fish /etc/shells
         echo fish is installed and configured
     end
-
 
 For even more complex conditions, use :doc:`begin <cmds/begin>` and :doc:`end <cmds/end>` to group parts of them.
 
@@ -578,15 +566,12 @@ A fish function is a list of commands, which may optionally take arguments. Unli
     say_hello everybody!
     # prints: Hello everybody!
 
-
 Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place. [#]_
 
 You can list the names of all functions with the :doc:`functions <cmds/functions>` builtin (note the plural!). fish starts out with a number of functions::
 
     > functions
     N_, abbr, alias, bg, cd, cdh, contains_seq, dirh, dirs, disown, down-or-search, edit_command_buffer, export, fg, fish_add_path, fish_breakpoint_prompt, fish_clipboard_copy, fish_clipboard_paste, fish_config, fish_default_key_bindings, fish_default_mode_prompt, fish_git_prompt, fish_hg_prompt, fish_hybrid_key_bindings, fish_indent, fish_is_root_user, fish_job_summary, fish_key_reader, fish_md5, fish_mode_prompt, fish_npm_helper, fish_opt, fish_print_git_action, fish_print_hg_root, fish_prompt, fish_sigtrap_handler, fish_svn_prompt, fish_title, fish_update_completions, fish_vcs_prompt, fish_vi_cursor, fish_vi_key_bindings, funced, funcsave, grep, help, history, hostname, isatty, kill, la, ll, ls, man, nextd, open, popd, prevd, prompt_hostname, prompt_pwd, psub, pushd, realpath, seq, setenv, suspend, trap, type, umask, up-or-search, vared, wait
-
-
 
 You can see the source for any function by passing its name to ``functions``::
 
@@ -613,13 +598,11 @@ While loops::
     # Loop forever
     # yes, this really will loop forever. Unless you abort it with ctrl-c.
 
-
 For loops can be used to iterate over a list. For example, a list of files::
 
     for file in *.txt
         cp $file $file.bak
     end
-
 
 Iterating over a list of numbers can be done with ``seq``::
 

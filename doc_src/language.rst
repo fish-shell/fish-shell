@@ -408,6 +408,28 @@ Some examples::
   set -q XDG_CONFIG_HOME; and set -l configdir $XDG_CONFIG_HOME
   or set -l configdir ~/.config
 
+Note that combiners are *lazy* - only the part that is necessary to determine the final status is run.
+
+Compare::
+
+  if sleep 2; and false
+      echo 'How did I get here? This should be impossible'
+  end
+
+and::
+
+  if false; and sleep 2
+      echo 'How did I get here? This should be impossible'
+  end
+
+These do essentially the same thing, but the former takes 2 seconds longer because the ``sleep`` always needs to run. So, in cases like these, the ordering is quite important for performance.
+
+Or you can have a case where it is necessary to stop early::
+
+  if command -sq foo; and foo
+
+If this went on after seeing that the command "foo" doesn't exist, it would try to run ``foo`` and error because it wasn't found!
+
 For more, see the documentation for the builtins or the :ref:`Conditionals <tut-conditionals>` section of the tutorial.
 
 .. _syntax-loops-and-blocks:

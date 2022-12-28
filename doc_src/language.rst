@@ -1191,11 +1191,15 @@ Fish automatically creates lists from all environment variables whose name ends 
 
 Lists can be inspected with the :doc:`count <cmds/count>` or the :doc:`contains <cmds/contains>` commands::
 
-    count $smurf
-    # 2
+    > count $smurf
+    2
 
-    contains blue $smurf
-    # key found, exits with status 0
+    > contains blue $smurf
+    # blue was found, so it exits with status 0
+    # (without printing anything)
+
+    > echo $status
+    0
 
     > contains -i blue $smurf
     1

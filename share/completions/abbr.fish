@@ -1,6 +1,6 @@
 # "add" is implicit.
-set __fish_abbr_not_add_cond '__fish_seen_subcommand_from --query --rename --erase --show --list --help'
-set __fish_abbr_add_cond 'not __fish_seen_subcommand_from --query --rename --erase --show --list --help'
+set __fish_abbr_not_add_cond 'not __fish_seen_subcommand_from -a --add'
+set __fish_abbr_add_cond 'not __fish_seen_subcommand_from -q --query --rename -e --erase -s --show -l --list -h --help'
 
 complete -c abbr -f
 complete -c abbr -f -n $__fish_abbr_not_add_cond -s a -l add -d 'Add abbreviation'

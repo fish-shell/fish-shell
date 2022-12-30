@@ -1233,23 +1233,27 @@ This function takes whatever arguments it gets and prints the first and third::
   apple
   banana
 
-Commandline tools often get various options and flags and positional arguments, and $argv would contain all of these.
+That covers the positional arguments, but commandline tools often get various options and flags, and $argv would contain them intermingled with the positional arguments. Typical unix argument handling allows short options (``-h``, also grouped like in ``ls -lah``), long options (``--help``) and allows those options to take arguments (``--color=auto`` or ``--position anywhere`` or ``complete -C"git "``) as well as a ``--`` separator to signal the end of options. Handling all of these manually is tricky and error-prone.
 
-A more robust approach to argument handling is :doc:`argparse <cmds/argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
+A more robust approach to option handling is :doc:`argparse <cmds/argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
 
   function mybetterfunction
+      # We tell argparse about -h/--help and -s/--second - these are short and long forms of the same option.
+      # The "--" here is mandatory, it tells it from where to read the arguments.
       argparse h/help s/second -- $argv
-      or return # exit if argparse failed because it found an option it didn't recognize - it will print an error
+      # exit if argparse failed because it found an option it didn't recognize - it will print an error
+      or return
 
       # If -h or --help is given, we print a little help text and return
-      if set -q _flag_help
+      if set -ql _flag_help
           echo "mybetterfunction [-h|--help] [-s|--second] [ARGUMENT ...]"
           return 0
       end
 
       # If -s or --second is given, we print the second argument,
       # not the first and third.
-      if set -q _flag_second
+      # (this is also available as _flag_s because of the short version)
+      if set -ql _flag_second
           echo $argv[2]
       else
           echo $argv[1]
@@ -1261,6 +1265,8 @@ The options will be *removed* from $argv, so $argv[2] is the second *positional*
 
   > mybetterfunction first -s second third
   second
+
+For more information on argparse, like how to handle option arguments, see :doc:`the argparse documentation <cmds/argparse>`.
 
 .. _variables-path:
 

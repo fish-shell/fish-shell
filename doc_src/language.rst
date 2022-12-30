@@ -1273,7 +1273,7 @@ For more information on argparse, like how to handle option arguments, see :doc:
 PATH variables
 ^^^^^^^^^^^^^^
 
-Path variables are a special kind of variable used to support colon-delimited path lists including :envvar:`PATH`, :envvar:`CDPATH`, :envvar:`MANPATH`, :envvar:`PYTHONPATH`, etc. All variables that end in "PATH" (case-sensitive) become PATH variables.
+Path variables are a special kind of variable used to support colon-delimited path lists including :envvar:`PATH`, :envvar:`CDPATH`, :envvar:`MANPATH`, :envvar:`PYTHONPATH`, etc. All variables that end in "PATH" (case-sensitive) become PATH variables by default.
 
 PATH variables act as normal lists, except they are implicitly joined and split on colons.
 
@@ -1309,19 +1309,11 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: PATH
 
-   A list of directories in which to search for commands.
+   A list of directories in which to search for commands. This is a common unix variable also used by other tools.
 
 .. envvar:: CDPATH
 
    A list of directories in which the :doc:`cd <cmds/cd>` builtin looks for a new directory.
-
-.. envvar:: FISH_DEBUG
-
-   Controls which debug categories :command:`fish` enables for output, analogous to the ``--debug`` option.
-
-.. envvar:: FISH_DEBUG_OUTPUT
-
-   Specifies a file to direct debug output to.
 
 .. describe:: Locale Variables
 
@@ -1379,6 +1371,14 @@ You can change the settings of fish by changing the values of certain variables.
 
    if set and not empty, will cause fish to print commands before they execute, similar to ``set -x``
    in bash. The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
+
+.. envvar:: FISH_DEBUG
+
+   Controls which debug categories :command:`fish` enables for output, analogous to the ``--debug`` option.
+
+.. envvar:: FISH_DEBUG_OUTPUT
+
+   Specifies a file to direct debug output to.
 
 .. envvar:: fish_user_paths
 
@@ -1849,5 +1849,7 @@ Debugging fish scripts
 Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, simply type :doc:`exit <cmds/exit>` or :kbd:`Control`\ +\ :kbd:`D`.
 
 To start a debug session simply insert the :doc:`builtin command <cmds/breakpoint>` ``breakpoint`` at the point in a function or script where you wish to gain control, then run the function or script. Also, the default action of the ``TRAP`` signal is to call this builtin, meaning a running script can be actively debugged by sending it the ``TRAP`` signal (``kill -s TRAP <PID>``). There is limited support for interactively setting or modifying breakpoints from this debug prompt: it is possible to insert new breakpoints in (or remove old ones from) other functions by using the ``funced`` function to edit the definition of a function, but it is not possible to add or remove a breakpoint from the function/script currently loaded and being executed.
+
+Another way to debug script issues is to set the :envvar:`fish_trace` variable, e.g. ``fish_trace=1 fish_prompt`` to see which commands fish executes when running the :doc:`fish_prompt <cmds/fish_prompt>` function.
 
 If you specifically want to debug performance issues, :program:`fish` can be run with the ``--profile /path/to/profile.log`` option to save a profile to the specified path. This profile log includes a breakdown of how long each step in the execution took. See :doc:`fish <cmds/fish>` for more information.

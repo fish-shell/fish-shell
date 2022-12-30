@@ -1174,6 +1174,22 @@ complete -f -c git -n '__fish_git_using_command branch' -l merged -d 'List branc
 complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List branches that have not been merged'
 complete -f -c git -n '__fish_git_using_command branch' -l unset-upstream -d 'Remove branch upstream information'
 
+### bundle
+set -l bundlecommands create verify list-heads unbundle
+complete -f -c git -n __fish_git_needs_command -a bundle -d 'Create, unpack, and manipulate "bundle" files'
+complete -f -c git -n "__fish_git_using_command bundle" -n "not __fish_seen_subcommand_from $bundlecommands" -a "create\t'Create a bundle'
+verify\t'Check that the bundle is valid and will apply cleanly'
+list-heads\t'List the references defined in the bundle'
+unbundle\t'Build a pack index file and print all defined references'"
+complete -f -c git -n "__fish_git_using_command bundle" -n "__fish_seen_subcommand_from create verify" -s q -l quiet -d 'Do not show progress meter'
+complete -f -c git -n "__fish_git_using_command bundle" -n "__fish_seen_subcommand_from create unbundle" -l progress -d 'Show progress meter'
+complete -f -c git -n "__fish_git_using_command bundle" -n "__fish_seen_subcommand_from create" -l all-progress -d 'Show progress meter during object writing phase'
+complete -f -c git -n "__fish_git_using_command bundle" -n "__fish_seen_subcommand_from create" -l all-progress-implied -d 'Similar to --all-progress when progress meter is shown'
+complete -x -c git -n "__fish_git_using_command bundle" -n "__fish_seen_subcommand_from create" -l version -d 'Specify bundle format version'
+# FIXME: <file> should be suggested first and <git-rev-list args> second (also, '--all' is only valid in rev-list)
+complete -c git -n '__fish_git_using_command bundle' -n "__fish_seen_subcommand_from create" -ka '--all\t"All refs"'
+complete -c git -n '__fish_git_using_command bundle' -n "__fish_seen_subcommand_from create" -ka '(__fish_git_ranges)'
+
 ### cherry
 complete -f -c git -n __fish_git_needs_command -a cherry -d 'Find commits yet to be applied to upstream'
 complete -f -c git -n '__fish_git_using_command cherry' -s v -d 'Show the commit subjects next to the SHA1s'

@@ -376,10 +376,9 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     if (is_interactive_session()) {
         wcstring nshlvl_str = L"1";
         if (const char *shlvl_var = getenv("SHLVL")) {
-            const wchar_t *end;
             // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a
             // diagnostic?
-            long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
+            long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str());
             if (!errno && shlvl_i >= 0) {
                 nshlvl_str = to_string(shlvl_i + 1);
             }

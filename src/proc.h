@@ -509,9 +509,6 @@ class job_t : noncopyable_t {
     /// \return whether we should post job_exit events.
     bool posts_job_exit_events() const;
 
-    /// \return whether this job and its parent chain are fully constructed.
-    bool job_chain_is_fully_constructed() const;
-
     /// Run ourselves. Returning once we complete or stop.
     void continue_job(parser_t &parser);
 

@@ -144,14 +144,14 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
 ///
 /// Process and print help for the specified builtin or function.
 void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
-                        wcstring *error_message) {
+                        const wcstring &error_message) {
     // This won't ever work if no_exec is set.
     if (no_exec()) return;
     const wcstring name_esc = escape_string(name);
     wcstring cmd = format_string(L"__fish_print_help %ls ", name_esc.c_str());
     io_chain_t ios;
-    if (error_message) {
-        cmd.append(escape_string(*error_message));
+    if (!error_message.empty()) {
+        cmd.append(escape_string(error_message));
         // If it's an error, redirect the output of __fish_print_help to stderr
         ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO));
     }
@@ -268,7 +268,7 @@ static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &strea
 
     if (argc != 1) {
         wcstring error_message = format_string(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
-        builtin_print_help(parser, streams, argv[0], &error_message);
+        builtin_print_help(parser, streams, argv[0], error_message);
         return STATUS_INVALID_ARGS;
     }
 
@@ -284,7 +284,7 @@ static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &strea
     }
     if (!has_loop) {
         wcstring error_message = format_string(_(L"%ls: Not inside of loop\n"), argv[0]);
-        builtin_print_help(parser, streams, argv[0], &error_message);
+        builtin_print_help(parser, streams, argv[0], error_message);
         return STATUS_CMD_ERROR;
     }
 

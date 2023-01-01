@@ -1,4 +1,4 @@
-.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9134 9140 9141 9152 9154 9186 9206 9211 9214 9226 9241 9252 9265 9301 9303 9311 9334 9341 9342 9382 9390 9394 9399 9410 9417 9419 9425 9426 9292 9293 9294 9287 9278 9131 9135 9187 9138 9195 9175 9155 9150 9218 9219 9222 9279 9160 9224 9337 9368 9239
+.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9131 9134 9135 9138 9140 9141 9150 9152 9154 9155 9160 9175 9186 9187 9195 9206 9211 9214 9218 9219 9222 9224 9226 9239 9241 9252 9265 9278 9279 9287 9292 9293 9294 9301 9303 9311 9334 9337 9341 9342 9368 9382 9390 9394 9399 9410 9417 9419 9425 9426
 
 fish 3.6.0 (released ???)
 ===================================
@@ -31,7 +31,7 @@ Notable improvements and fixes
   which expands ``!!`` to the last history item, anywhere on the command line, mimicking other shells' history expansion.
 
   See :ref:`the documentation <cmd-abbr>` for more.
-- ``path`` gained a new ``mtime`` subcommand to print the modification time stamp for files. This can be used e.g. to handle cache file ages (:issue:`9057`)::
+- ``path`` gained a new ``mtime`` subcommand to print the modification time stamp for files. For example, this can be used to handle cache file ages (:issue:`9057`)::
 
     > touch foo
     > sleep 10
@@ -40,31 +40,30 @@ Notable improvements and fixes
 
 - ``string`` gained a new ``shorten`` subcommand to shorten strings to a given visible width (:issue:`9156`)::
 
-    > string shorten -m10 "Hello this is a long string"
+    > string shorten --max 10 "Hello this is a long string"
     Hello thi…
 
-- ``test`` aka ``[`` gained ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare identity (:issue:`3589`).
-- fish will now mark the extent of many errors with a squiggly line instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
+- ``test`` (aka ``[``) gained ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare whether the arguments are the same file (:issue:`3589`).
+- fish will now mark the extent of many errors with a squiggly line, instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
 
     checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
     for a,b in y 1 z 3
         ^~^
 - A new function, ``fish_delta``, shows changes that have been made in fish's configuration from the defaults (:issue:`9255`).
 - ``set --erase`` can now be used with multiple scopes at once, like ``set -efglU foo`` (:issue:`7711`, :issue:`9280`).
-- ``status`` gained a new subcommand, ``current-commandline`` which retrieves the entirety of the currently executing commandline when called from a function during execution, allowing easier job introspection (:issue:`8905`, :issue:`9296`).
-
+- ``status`` gained a new subcommand, ``current-commandline``, which retrieves the entirety of the currently-executing command line when called from a function during execution. This allows easier job introspection (:issue:`8905`, :issue:`9296`).
 
 Deprecations and removed features
 ---------------------------------
-- The difference between ``\xAB`` and ``\XAB`` has been removed. Before, ``\x`` would do the same thing as ``\X`` except that it would error if the value was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`9245`, :issue:`1352`).
-- The ``fish_git_prompt`` will now only turn on features if the corresponding boolean variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, e.g. via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
-  For example, ``set -g __fish_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), now it turns it off.
+- The ``\x`` and ``\X`` escape syntax is now equivalent. ``\xAB`` previously behaved the same as ``\XAB``, except that it would error if the value "AB" was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`9245`, :issue:`1352`).
+- The ``fish_git_prompt`` will now only turn on features if the appropriate variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, such as via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
+  For example, ``set -g __fish_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), but now it turns it off.
 - Abbreviations are no longer stored in universal variables. Existing universal abbreviations are still imported, but new abbreviations should be added to ``config.fish``.
 - The short option ``-r`` for abbreviations has changed from ``rename`` to ``regex``, for consistency with ``string``.
 
 Scripting improvements
 ----------------------
-- ``argparse`` can now be used without option specifications, to allow using --min-args, --max-args or for commands that take no options (but might in future) (:issue:`9006`)::
+- ``argparse`` can now be used without option specifications, to allow using ``--min-args``, ``--max-args`` or for commands that take no options (but might in future) (:issue:`9006`)::
 
     function my_copy
         argparse --min-args 2 -- $argv
@@ -83,15 +82,15 @@ Scripting improvements
     $XDG_DATA_DIRS[4]: |/usr/share|
     $XDG_DATA_DIRS: originally inherited as |/home/alfa/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/|
 
-- The read limit is now restored to the default when $fish_read_limit is unset (:issue:`9129`).
-- ``math`` now actually handles division-by-zero while computing and gives it a bespoke error, as well as augmenting some errors with their extent (:issue:`9190`). This changes behavior in some limited cases. E.g.::
+- The read limit is now restored to the default when :envvar:`fish_read_limit` is unset (:issue:`9129`).
+- ``math`` produces an error for division-by-zero, as well as augmenting some errors with their extent (:issue:`9190`). This changes behavior in some limited cases, such as::
 
     math min 1 / 0, 5
 
-  would previously print "5" because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite. Instead, ``math`` will now error out.
+  which would previously print "5" (because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite) but will now return an error.
 - ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
-- ``string repeat`` no longer allocates the entire output at once, instead using chunks. This needs less memory and has less of a delay with long strings. Also it was possible to make fish crash by making it allocate more memory than the system had. (:issue:`9124`)
-- Builtins writing to a pipe or file was optimized. In particular printf no longer issues a separate ``write()`` syscall for every escaped character. (:issue:`9229`).
+- ``string repeat`` uses less memory and is faster. (:issue:`9124`)
+- Builtins are much faster when writing to a pipe or file is optimized. (:issue:`9229`).
 - ``fish_clipboard_copy`` and ``fish_clipboard_paste`` can now be used in pipes (:issue:`9271`)::
 
     git rev-list 3.5.1 | fish_clipboard_copy
@@ -100,9 +99,9 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-- If the terminal definition for $TERM can't be used, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
+- If the terminal definition for :envvar:`TERM` can't be found, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
 - A new variable, :envvar:`fish_cursor_selection_mode`, can be used to configure whether the command line selection includes the character under the cursor (``inclusive``) or not (``exclusive``). The new default is ``exclusive``; use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`, :issue:`9262`).
-- Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
+- fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - ``bind`` output is now syntax-highlighted when used interacively.
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
 - If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
@@ -189,7 +188,6 @@ Other improvements
 - The CSS for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
 - The Web-based configuration tool now works on systems with IPv6 disabled (:issue:`3857`).
 - Aliases can ignore arguments by ending them with ``#`` (:issue:`9199`).
-
 
 For distributors
 ----------------

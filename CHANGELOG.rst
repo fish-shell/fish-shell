@@ -101,7 +101,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - If the terminal definition for $TERM can't be used, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
-- The new environment variable ``$fish_cursor_selection_mode`` can be used to configure whether the command line selection includes (``inclusive``) the character under the cursor or not (``exclusive``). The new default is ``exclusive``. Use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`, :issue:`9262`).
+- A new variable, :envvar:`fish_cursor_selection_mode`, can be used to configure whether the command line selection includes the character under the cursor (``inclusive``) or not (``exclusive``). The new default is ``exclusive``; use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`, :issue:`9262`).
 - Fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - ``bind`` output is now syntax-highlighted when used interacively.
 - The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).

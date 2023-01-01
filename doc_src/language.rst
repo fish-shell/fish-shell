@@ -1351,6 +1351,10 @@ You can change the settings of fish by changing the values of certain variables.
 
    determines where fish looks for completion. When trying to complete for a command, fish looks for files in the directories in this variable.
 
+.. envvar:: fish_cursor_selection_mode
+
+    controls whether the selection is inclusive or exclusive of the character under the cursor (see :ref:`Copy and Paste <killring>`).
+
 .. envvar:: fish_function_path
 
    determines where fish looks for functions. When fish :ref:`autoloads <syntax-function-autoloading>` a function, it will look for files in these directories.

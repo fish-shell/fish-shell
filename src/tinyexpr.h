@@ -24,8 +24,8 @@
 
 // This version was altered and ported to C++ for inclusion in fish.
 
-#ifndef __TINYEXPR_H__
-#define __TINYEXPR_H__
+#ifndef TINYEXPR_H
+#define TINYEXPR_H
 
 typedef enum {
     TE_ERROR_NONE = 0,
@@ -51,4 +51,4 @@ typedef struct te_error_t {
 /* Returns NaN on error. */
 double te_interp(const wchar_t *expression, te_error_t *error);
 
-#endif /*__TINYEXPR_H__*/
+#endif /* TINYEXPR_H */

@@ -1,23 +1,21 @@
-set -l subcommands complete config details download help magnet open search
-
 # Subcommands
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a complete -d "Print bash completion command"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a config -d "Show or update configuration"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a details -d "Show details about torrent with given ID"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a download -d "Download torrent with given ID"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a help -d "Print detailed help for another command"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a magnet -d "Copy magnet link with given ID to clipboard"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a open -d "Open torrent in the default torrent application"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -a search -d "Search for torrents"
+complete -f -n __fish_use_subcommand -c mariner -a complete -d "Print bash completion command"
+complete -f -n __fish_use_subcommand -c mariner -a config -d "Show or update configuration"
+complete -f -n __fish_use_subcommand -c mariner -a details -d "Show details about torrent with given ID"
+complete -f -n __fish_use_subcommand -c mariner -a download -d "Download torrent with given ID"
+complete -f -n __fish_use_subcommand -c mariner -a help -d "Print detailed help for another command"
+complete -f -n __fish_use_subcommand -c mariner -a magnet -d "Copy magnet link with given ID to clipboard"
+complete -f -n __fish_use_subcommand -c mariner -a open -d "Open torrent in the default torrent application"
+complete -f -n __fish_use_subcommand -c mariner -a search -d "Search for torrents"
 
 # Global options
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -l version -d "Show program's version number and exit"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -s v -l verbose -d "Increase verbosity of output. Can be repeated"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -s q -l quiet -d "Suppress output except warnings and errors"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -s h -l help -d "Show help message and exit"
-complete -f -n "__fish_use_subcommand $subcommands" -c mariner -l debug -d "Show tracebacks on errors"
-complete -r -n "__fish_use_subcommand $subcommands" -c mariner -l log-file -d "Specify a file to log output. Default ~/.local/share/mariner/mariner.log"
-complete -r -n "__fish_use_subcommand $subcommands" -c mariner -l config-file -d "Path to config file. Default ~/.config/mariner/config.yaml"
+complete -f -n __fish_use_subcommand -c mariner -l version -d "Show program's version number and exit"
+complete -f -n __fish_use_subcommand -c mariner -s v -l verbose -d "Increase verbosity of output. Can be repeated"
+complete -f -n __fish_use_subcommand -c mariner -s q -l quiet -d "Suppress output except warnings and errors"
+complete -f -n __fish_use_subcommand -c mariner -s h -l help -d "Show help message and exit"
+complete -f -n __fish_use_subcommand -c mariner -l debug -d "Show tracebacks on errors"
+complete -r -n __fish_use_subcommand -c mariner -l log-file -d "Specify a file to log output. Default ~/.local/share/mariner/mariner.log"
+complete -r -n __fish_use_subcommand -c mariner -l config-file -d "Path to config file. Default ~/.config/mariner/config.yaml"
 
 # Config options
 complete -f -n "__fish_seen_subcommand_from config" -c mariner -s s -l show -d "Show the configuration"

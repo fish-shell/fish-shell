@@ -183,7 +183,7 @@ if string match -q Darwin -- "$(uname)" && type -q xcode-select && type -q xcrun
         command git --version &>/dev/null &
         disown $last_pid &>/dev/null
         function __fish_git_prompt_ready
-            path is "$(xcrun --show-cache-path)" || return 1
+            path is "$(xcrun --show-cache-path 2>/dev/null)" || return 1
             # git is ready, erase the function.
             functions -e __fish_git_prompt_ready
             return 0

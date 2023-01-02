@@ -28,7 +28,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         # This triggers the handler, which calls us again and ensures the user_key_bindings
         # are executed.
         set fish_key_bindings fish_vi_key_bindings
-        return
+        # unless the handler somehow doesn't exist, which would leave us without bindings.
+        # this happens in no-config mode.
+        functions -q __fish_reload_key_bindings
+        and return
     end
 
     set -l init_mode insert

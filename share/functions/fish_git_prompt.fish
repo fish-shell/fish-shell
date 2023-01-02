@@ -170,8 +170,8 @@ end
 
 # Decide if git is safe to run.
 # On Darwin, git is pre-installed as a stub, which will pop a dialog if you run it.
-if string match -q Darwin -- "$(uname)" && type -q xcode-select && type -q xcrun
-    if string match -q /usr/bin/git -- "$(command -s git)" && not xcode-select --print-path &>/dev/null
+if string match -q Darwin -- "$(uname)" && string match -q /usr/bin/git -- "$(command -s git)" && type -q xcode-select && type -q xcrun
+    if not xcode-select --print-path &>/dev/null
         # Only the stub git is installed.
         # Do not try to run it.
         function __fish_git_prompt_ready

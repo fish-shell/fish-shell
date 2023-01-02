@@ -62,7 +62,7 @@ packets:\t"Switch to the next file after it contains N packets"'
     complete -c $shark -s i -ra '(__fish_wireshark_interface)'
     complete -c $shark -s i -ra '-\t"Capture from standard input"' \
         -d 'Network interface or pipe to use for live packet capture'
-    complete -c $shark -s I -l monitor-mode -d 'Put the interface in "monitor mode"' -xa '(__fish_wireshark_interface)'
+    complete -c $shark -s I -l monitor-mode -d 'Put the interface in "monitor mode"'
     complete -c $shark -s L -l list-data-link-types -d 'List the data link types supported by the interface and exit'
     complete -c $shark -l list-time-stamp-types -d 'List time stamp types supported for the interface'
     complete -c $shark -s p -l no-promiscuous-mode -d "Don't put the interface into promiscuous mode"

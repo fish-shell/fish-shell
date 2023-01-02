@@ -158,8 +158,6 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is
         DESTINATION ${docdir} OPTIONAL)
 install(FILES CHANGELOG.rst DESTINATION ${docdir})
 
-install(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
-
 # These files are built by cmake/gettext.cmake, but using GETTEXT_PROCESS_PO_FILES's
 # INSTALL_DESTINATION leads to them being installed as ${lang}.gmo, not fish.mo
 # The ${languages} array comes from cmake/gettext.cmake

@@ -149,6 +149,19 @@ function __fish_complete_iw
                             channel "" \
                             freq "" \
                             power_save "Power save state"
+                    else
+                        switch "$cmd[5]"
+                            case type
+                                if not set -q cmd[6]
+                                    printf '%s\n' managed ibss monitor mesh wds
+                                end
+                            case channel
+                                if not set -q cmd[6]
+                                    # cmd[6] is just the simple channel number
+                                else if not set -q cmd[7]
+                                    printf '%s\n' NOHT HT20 HT40+ HT40- 5MHz 10MHz 80MHz
+                                end
+                        end
                     end
                 case get
                     if not set -q cmd[5]

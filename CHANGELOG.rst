@@ -1,4 +1,4 @@
-.. ignore: 2271 7717 8514 9028 9067 9089 9091 9099 9109 9111 9121 9131 9134 9135 9138 9140 9141 9150 9152 9154 9155 9160 9175 9186 9187 9195 9206 9211 9214 9218 9219 9222 9224 9226 9239 9241 9252 9265 9278 9279 9287 9292 9293 9294 9301 9303 9311 9334 9337 9341 9342 9368 9382 9390 9394 9399 9410 9417 9419 9425 9426
+.. ignore: 2271 7717 8514 8994 9003 9028 9067 9089 9091 9099 9109 9111 9121 9131 9134 9135 9138 9140 9141 9150 9152 9154 9155 9160 9175 9186 9187 9195 9206 9211 9214 9218 9219 9222 9224 9226 9239 9241 9252 9262 9265 9278 9279 9287 9292 9293 9294 9301 9303 9311 9334 9337 9341 9342 9368 9382 9390 9394 9399 9410 9417 9419 9425 9426
 
 fish 3.6.0 (released ???)
 ===================================
@@ -88,9 +88,6 @@ Scripting improvements
     math min 1 / 0, 5
 
   which would previously print "5" (because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite) but will now return an error.
-- ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
-- ``string repeat`` uses less memory and is faster. (:issue:`9124`)
-- Builtins are much faster when writing to a pipe or file is optimized. (:issue:`9229`).
 - ``fish_clipboard_copy`` and ``fish_clipboard_paste`` can now be used in pipes (:issue:`9271`)::
 
     git rev-list 3.5.1 | fish_clipboard_copy
@@ -100,31 +97,28 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - If the terminal definition for :envvar:`TERM` can't be found, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
-- A new variable, :envvar:`fish_cursor_selection_mode`, can be used to configure whether the command line selection includes the character under the cursor (``inclusive``) or not (``exclusive``). The new default is ``exclusive``; use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`, :issue:`9262`).
+- A new variable, :envvar:`fish_cursor_selection_mode`, can be used to configure whether the command line selection includes the character under the cursor (``inclusive``) or not (``exclusive``). The new default is ``exclusive``; use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
 - fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - ``bind`` output is now syntax-highlighted when used interacively.
-- The :kbd:`Alt-H` binding will now show the manpage of the command under cursor instead of the always skipping ``sudo`` and the likes (:issue:`9020`).
-- If ``$fish_color_valid_path`` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
-- Performance improvements to highlighting (:issue:`9180`) and the cd completions (:issue:`9220`) should make using fish more pleasant on slow systems.
-- Fish now disables the QUIT terminal sequence when it has the terminal. This frees up a key combination, often :kbd:`Control-Backslash` (``\x1c``) (:issue:`9234`).
-- Fish's vi mode no longer uses iTerm's proprietary escape sequences to signal cursor change, instead using the normal xterm-style sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
-- Generating descriptions for commands now uses ``manpath`` instead of ``man --path`` on macOS, as that has been removed in macOS Ventura.
-- When running fish on a remote system (e.g. inside SSH or a container), :kbd:`Control-X` now copies to the local client system's clipboard if the terminal supports OSC 52.
+- :kbd:`Alt-H` (the default `__fish_man_page` binding) does a better job of showing the manual page of the command under cursor (:issue:`9020`).
+- If :envvar:`fish_color_valid_path` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
+- The key combination for the QUIT terminal sequence, often :kbd:`Control-Backslash` (``\x1c``), can now be sused as a binding (:issue:`9234`).
+- fish's vi mode uses normal xterm-style sequences to signal cursor change, instead of using the iTerm's proprietary escape sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
+- When running fish on a remote system (such as inside SSH or a container), :kbd:`Control-X` now copies to the local client system's clipboard if the terminal supports OSC 52.
 - ``commandline`` gained two new options, ``--selection-start`` and ``--selection-end``, to set the start/end of the current selection (:issue:`9197`, :issue:`9215`).
-- Fish's builtins now handle SIGINT (:issue:`9266`).
-- Fish no longer loads completions if the command is used via a relative path and is not in $PATH (:issue:`9133`).
-- Fish no longer completes inside of comments (:issue:`9320`).
-
+- fish's builtins now handle keyboard interrupts (:kbd:`Control-C`) correctly (:issue:`9266`).
+- fish no longer loads completions if the command is used via a relative path and is not in $PATH (:issue:`9133`).
+- fish no longer completes inside of comments (:issue:`9320`).
 
 Fixed Bugs
 ----------
 - The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text (:issue:`9066`).
-- process-exit and job-exit events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
+- ``process-exit`` and ``job-exit`` events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
 - A crash when completing a token that contained both a potential glob and a quoted variable expansion was fixed (:issue:`9137`).
 - ``prompt_pwd`` no longer accidentally overwrites a global or universal ``$fish_prompt_pwd_full_dirs`` when called with the ``-d`` or ``--full-length-dirs`` option (:issue:`9123`).
 - A bug which caused fish to freeze or exit after running a command which does not preserve the foreground process group was fixed (:issue:`9181`).
 - The "Disco" sample prompt no longer prints an error in some working directories (:issue:`9164`). If you saved this prompt, you should run ``fish_config prompt save disco`` again.
-- Fish calls external commands via the given path again instead of always making it absolute. This can be seen e.g. when you run a bash script and check ``$0`` (:issue:`9143`).
+- fish launches external commands via the given path again, rather than always using an absolute path. This behaviour was inadvertently changed in 3.5.0 and is visible, for example, when launching a bash script which checks ``$0`` (:issue:`9143`).
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
 - On 32-bit systems, globs like ``*`` might fail to print certain files, due to missing large file support. This has been fixed by enabling large file support.
 - Interactive ``read`` in scripts will now have the correct keybindings again (:issue:`9227`).
@@ -177,17 +171,20 @@ Completions
   - ``xviewer``
   - ``zig`` (:issue:`9083`)
 
-- Improvements to many completions.
+- Improvements to many completions, including making ``cd`` completion much faster (:issue:`9220`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- Opening ``help`` on WSL now calls powershell to open the browser if available, removing some awkward UNC path errors (:issue:`9119`).
+- Opening ``help`` on WSL now uses PowerShell to open the browser if available, removing some awkward UNC path errors (:issue:`9119`).
 
 Other improvements
 ------------------
-- The CSS for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
 - The Web-based configuration tool now works on systems with IPv6 disabled (:issue:`3857`).
 - Aliases can ignore arguments by ending them with ``#`` (:issue:`9199`).
+-  ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
+- ``string repeat`` uses less memory and is faster. (:issue:`9124`)
+- Builtins are much faster when writing to a pipe or file. (:issue:`9229`).
+- Performance improvements to highlighting (:issue:`9180`) should make using fish more pleasant on slow systems.
 
 For distributors
 ----------------

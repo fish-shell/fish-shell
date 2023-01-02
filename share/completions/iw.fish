@@ -159,7 +159,7 @@ function __fish_complete_iw
                                 if not set -q cmd[6]
                                     # cmd[6] is just the simple channel number
                                 else if not set -q cmd[7]
-                                    printf '%s\n' NOHT HT20 HT40+ HT40- 5MHz 10MHz 80MHz
+                                    printf '%s\n' NOHT HT20 HT40+ HT40- 5MHz 10MHz 80MHz 160MHz
                                 end
                         end
                     end

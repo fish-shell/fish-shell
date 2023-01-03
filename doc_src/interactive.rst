@@ -235,7 +235,21 @@ The output of the former is displayed on the left and the latter's output on the
 Configurable greeting
 ---------------------
 
-When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple greeting. You can change its text by changing the ``$fish_greeting`` variable.
+When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple greeting. You can change its text by changing the ``$fish_greeting`` variable, for instance using a :ref:`universal variable <variables-universal>`::
+
+  set -U fish_greeting
+
+or you can set it :ref:`globally <variables-scope>` in :ref:`config.fish <configuration>`::
+
+  set -g fish_greeting 'Hey, stranger!'
+
+or you can script it by changing the function::
+
+  function fish_greeting
+      random choice "Hello!" "Hi" "G'day" "Howdy"
+  end
+
+save this in config.fish or :ref:`a function file <syntax-function-autoloading>`. You can also use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` to edit it easily.
 
 .. _private-mode:
 

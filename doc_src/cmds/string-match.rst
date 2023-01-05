@@ -59,6 +59,12 @@ Match Glob Examples
     >_ string match -i 'a??B' Axxb
     Axxb
 
+    >_ string match -- '-*' -h foo --version bar
+    # To match things that look like options, we need a `--`
+    # to tell string its options end there.
+    -h
+    --version
+
     >_ echo 'ok?' | string match '*\?'
     ok?
 
@@ -90,6 +96,12 @@ Match Regex Examples
     dog3
     cat4
     dog4
+
+    >_ string match -r -- '-.*' -h foo --version bar
+    # To match things that look like options, we need a `--`
+    # to tell string its options end there.
+    -h
+    --version
 
     >_ string match -r '(\d\d?):(\d\d):(\d\d)' 2:34:56
     2:34:56

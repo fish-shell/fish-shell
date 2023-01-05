@@ -95,6 +95,9 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line);
 /// Return the total offset of the buffer for the cursor position nearest to the specified position.
 size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 
+/// Return the given string, escaping wildcard characters.
+wcstring parse_util_escape_wildcards(const wcstring &str);
+
 /// Return the given string, unescaping wildcard characters but not performing any other character
 /// transformation.
 wcstring parse_util_unescape_wildcards(const wcstring &str);

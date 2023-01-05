@@ -386,6 +386,9 @@ bool pager_t::completion_info_passes_filter(const comp_t &info) const {
     // If we have no filter, everything passes.
     if (!search_field_shown || this->search_field_line.empty()) return true;
 
+    // By definition, history pager entries always match.
+    if (info.representative.replaces_commandline()) return true;
+
     const wcstring &needle = this->search_field_line.text();
 
     // Match against the description.

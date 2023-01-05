@@ -184,6 +184,14 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
         case history_search_type_t::prefix: {
             return string_prefixes_string(term, content_to_match);
         }
+        case history_search_type_t::glob: {
+            wcstring wcpattern = parse_util_unescape_wildcards(term);
+            if (wcpattern.empty())
+                wcpattern = ANY_STRING;
+            else if (wcpattern.front() != ANY_STRING && wcpattern.back() != ANY_STRING)
+                wcpattern.push_back(ANY_STRING);
+            return wildcard_match(content_to_match, wcpattern);
+        }
         case history_search_type_t::contains_glob: {
             wcstring wcpattern1 = parse_util_unescape_wildcards(term);
             if (wcpattern1.front() != ANY_STRING) wcpattern1.insert(0, 1, ANY_STRING);

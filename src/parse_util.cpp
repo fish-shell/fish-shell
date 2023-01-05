@@ -483,6 +483,22 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     assert(pb <= (buff + bufflen));
 }
 
+wcstring parse_util_escape_wildcards(const wcstring &str) {
+    wcstring result;
+    result.reserve(str.size());
+    bool esc_qmark = !feature_test(features_t::qmark_noglob);
+
+    for (wchar_t c : str) {
+        bool escape = c == L'*' || (esc_qmark && c == L'?') || c == L'\\';
+        if (escape) {
+            result.push_back(L'\\');
+        }
+        result.push_back(c);
+    }
+
+    return result;
+}
+
 wcstring parse_util_unescape_wildcards(const wcstring &str) {
     wcstring result;
     result.reserve(str.size());

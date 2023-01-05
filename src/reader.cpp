@@ -1286,7 +1286,7 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     size_t page_size = std::max(termsize_last().height / 2 - 2, 12);
 
     completion_list_t completions;
-    history_search_t search{history, search_string, history_search_type_t::contains,
+    history_search_t search{history, search_string, history_search_type_t::glob,
                             smartcase_flags(search_string), history_index};
     while (completions.size() < page_size && search.go_to_next_match(direction)) {
         const history_item_t &item = search.current_item();
@@ -3750,7 +3750,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             pager.set_search_field_shown(true);
             pager.set_prefix(MB_CUR_MAX > 1 ? L"► " : L"> ", false /* highlight */);
             // Update the search field, which triggers the actual history search.
-            insert_string(&pager.search_field_line, command_line.text());
+            insert_string(&pager.search_field_line,
+                          wcstring{L"*"} + parse_util_escape_wildcards(command_line.text()) + L"*");
+            pager.search_field_line.set_position(pager.search_field_line.size() - 1);
             break;
         }
         case rl::backward_char: {

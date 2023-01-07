@@ -534,7 +534,7 @@ In addition, when pasting inside single quotes, pasted single quotes and backsla
 Kill ring entries are stored in ``fish_killring`` variable.
 
 The commands ``begin-selection`` and ``end-selection`` (unbound by default; used for selection in vi visual mode) control text selection together with cursor movement commands that extend the current selection.
-The configuration setting ``$fish_cursor_selection_mode`` can be used to configure if that selection should include the character under the cursor (``inclusive``) or not (``exclusive``). The default is ``exclusive``, which works well with any cursor shape. For vi mode, and particularly for the ``block`` or ``underscore`` cursor shapes you may prefer ``inclusive``.
+The variable :envvar:`fish_cursor_selection_mode` can be used to configure if that selection should include the character under the cursor (``inclusive``) or not (``exclusive``). The default is ``exclusive``, which works well with any cursor shape. For vi mode, and particularly for the ``block`` or ``underscore`` cursor shapes you may prefer ``inclusive``.
 
 .. [#] These rely on external tools. Currently xsel, xclip, wl-copy/wl-paste and pbcopy/pbpaste are supported.
 

@@ -1,3 +1,43 @@
+fish 3.7.0 (released ???)
+===================================
+
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Scripting improvements
+----------------------
+
+Interactive improvements
+------------------------
+
+New or improved bindings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+
+Completions
+^^^^^^^^^^^
+- Added completions for:
+
+
+Improved terminal support
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Other improvements
+------------------
+
+
+For distributors
+----------------
+- *Placeholder to fix Sphinx warning*
+
+--------------
+
+
 fish 3.6.0 (released January 7, 2023)
 =====================================
 

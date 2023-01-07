@@ -1,7 +1,5 @@
-.. ignore: 2271 7717 8514 8994 9003 9028 9067 9074 9089 9091 9099 9109 9111 9121 9131 9134 9135 9138 9140 9141 9150 9152 9154 9155 9160 9175 9186 9187 9195 9206 9211 9214 9218 9219 9222 9224 9226 9239 9241 9252 9262 9265 9278 9279 9287 9292 9293 9294 9301 9303 9311 9334 9337 9341 9342 9368 9382 9390 9394 9399 9410 9417 9419 9425 9426 9434 9436 
-
-fish 3.6.0 (released ???)
-===================================
+fish 3.6.0 (released January 7, 2023)
+=====================================
 
 Notable improvements and fixes
 ------------------------------
@@ -103,7 +101,7 @@ Interactive improvements
 - fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - The ``complete-and-search`` binding, used with :kbd:`Shift-Tab` by default, selects the first item in the results immediately (:issue:`9080`).
 - ``bind`` output is now syntax-highlighted when used interacively.
-- :kbd:`Alt-H` (the default `__fish_man_page` binding) does a better job of showing the manual page of the command under cursor (:issue:`9020`).
+- :kbd:`Alt-H` (the default ``__fish_man_page`` binding) does a better job of showing the manual page of the command under cursor (:issue:`9020`).
 - If :envvar:`fish_color_valid_path` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
 - The key combination for the QUIT terminal sequence, often :kbd:`Control-Backslash` (``\x1c``), can now be sused as a binding (:issue:`9234`).
 - fish's vi mode uses normal xterm-style sequences to signal cursor change, instead of using the iTerm's proprietary escape sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)

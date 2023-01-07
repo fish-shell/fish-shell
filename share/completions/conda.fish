@@ -14,16 +14,68 @@
 # Let's erase them, so that we start from a blank state
 complete -c conda -e
 
-# Complete using -n to select the given conda subcommand
-# and passing the rest of the arguments to `complete`
-# The goal here is to reduce clutter in the definitions below
+function __fish_conda_subcommand
+    # This function does triple-duty:
+    # If called without arguments, it will print the first subcommand.
+    # If one exists, it returns false.
+    # If it doesn't, it returns true.
+    #
+    # If called with arguments, it will check that those match the given subcommands,
+    # and that there are no additional subcommands.
+    set -l subcmds $argv
+    set -q subcmds[1]
+    set -l have_sub $status
+
+    # get the commandline args without the "conda"
+    set -l toks (commandline -opc)[2..-1]
+
+    # Remove any important options - if we had options with arguments,
+    # they'd need to be listed here to be removed.
+    argparse -i h/help v/version -- $toks 2>/dev/null
+    # Return false if it fails - this shouldn't really happen,
+    # so all bets are off
+    or return 2
+
+    # Remove all matching subcommands
+    while set -q subcmds[1]
+        # If the subcommand matches, or we have an option, go on.
+        # (if the option took an argument we wouldn't know,
+        #  so it needs to be argparse'd out above!)
+        if test "$subcmds[1]" = "$argv[1]"
+            set -e argv[1]
+            set -e subcmds[1]
+        else if string match -q -- '-*' $argv[1]
+            set -e argv[1]
+        else
+            return 1
+        end
+    end
+
+    # Skip any remaining options.
+    while string match -q -- '-*' $argv[1]
+        set -e argv[1]
+    end
+
+    # If we have no subcommand left,
+    # we either matched all given subcommands or we need one.
+    if not set -q argv[1]
+        return $have_sub
+    end
+
+    echo -- $argv[1]
+
+    # If we didn't have subcommands to check, return true
+    # If we did, this is an additional command and so we return false.
+    not test $have_sub -eq 0
+end
+
 function __fish_conda -a cmd
-    complete -c conda -n "__fish_seen_subcommand_from $cmd" $argv[2..-1]
+    complete -c conda -n "contains -- (__fish_conda_subcommand) $cmd" $argv[2..-1]
 end
 
 # Complete for the first argument only
 function __fish_conda_top
-    complete -c conda -n __fish_is_first_token $argv
+    complete -c conda -n 'not __fish_conda_subcommand' $argv
 end
 
 function __fish_conda_config_keys
@@ -294,3 +346,8 @@ __fish_conda search -l platform -x -a "$__fish_conda_platforms" -d "Search the g
 
 # Option reverse-dependency
 __fish_conda search -l reverse-dependency -d "Perform a reverse dependency search"
+
+__fish_conda_top -a env -d "Conda options for environments"
+complete -c conda -n "__fish_conda_subcommand env" -a create -d "Create a new environment"
+complete -c conda -n "__fish_conda_subcommand env" -a list -d "List all conda environments"
+complete -c conda -n "__fish_conda_subcommand env create" -s f -l file -r -d "Create environment from yaml file"

@@ -1,6 +1,8 @@
 fish 3.7.0 (released ???)
 ===================================
 
+.. ignore: 9439 9440 9442 9452
+
 Notable improvements and fixes
 ------------------------------
 
@@ -12,6 +14,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -22,6 +25,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+  - ``otool``
 
 
 Improved terminal support

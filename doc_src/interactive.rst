@@ -517,7 +517,18 @@ In addition to the standard bindings listed here, you can also define your own w
 
 Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
 
-The key sequence (the ``\cc``) here depends on your setup, in particular the terminal. To find out what the terminal sends use :doc:`fish_key_reader <cmds/fish_key_reader>`::
+If you change your mind on a binding and want to go back to fish's default, you can simply erase it again::
+
+  bind --erase \cc
+
+Fish remembers its preset bindings and so it will take effect again. This saves you from having to remember what it was before and add it again yourself.
+
+Key sequences
+"""""""""""""
+
+The terminal tells fish which keys you pressed by sending some sequences of bytes to describe that key. For some keys, this is easy - pressing :kbd:`a` simply means the terminal sends "a". In others it's more complicated and terminals disagree on which they send.
+
+In these cases, :doc:`fish_key_reader <cmds/fish_key_reader>` can tell you how to write the key sequence for your terminal. Just start it and press the keys you are interested in::
 
   > fish_key_reader # pressing control-c
   Press a key:

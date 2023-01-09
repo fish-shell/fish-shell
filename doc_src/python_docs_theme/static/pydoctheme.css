@@ -607,6 +607,7 @@ div.documentwrapper {
 .gray { color: #777 }
 .purple { color: #551a8b; font-weight: bold; }
 .red { color: #FF0000; }
+.green { color: #00FF00; }
 
 /* Color based on the Name.Function (.nf) class from pygments.css. */
 .command { color: #005fd7 }

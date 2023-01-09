@@ -1323,6 +1323,16 @@ You can change the settings of fish by changing the values of certain variables.
 
    A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See :ref:`Variables for changing highlighting colors <variables-color>` for more information.
 
+.. envvar:: fish_term24bit
+
+   If this is set to 1, fish will assume the terminal understands 24-bit RGB color sequences, and won't translate them to the 256 or 16 color palette.
+   This is often detected automatically.
+
+.. envvar:: fish_term256
+
+   If this is set to 1, fish will assume the terminal understands 256 colors, and won't translate matching colors down to the 16 color palette.
+   This is usually autodetected.
+
 .. envvar:: fish_ambiguous_width
 
    controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal renders these characters as single-width (typical), or 2 if double-width.

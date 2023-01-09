@@ -1282,7 +1282,8 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     //
     // We can still push fish further upward in case the first entry is multiline,
     // but that can't really be helped.
-    size_t page_size = std::max(termsize_last().height / 2, 12);
+    // (subtract 2 for the search line and the prompt)
+    size_t page_size = std::max(termsize_last().height / 2 - 2, 12);
 
     completion_list_t completions;
     history_search_t search{history, search_string, history_search_type_t::contains,

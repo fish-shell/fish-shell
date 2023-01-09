@@ -15,6 +15,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
+- The history pager now uses more screen space, usually half the screen (:issue:`9458`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -26,6 +27,7 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
   - ``otool``
+- git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 
 
 Improved terminal support

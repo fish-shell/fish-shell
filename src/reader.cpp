@@ -1277,9 +1277,13 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
                                                    history_search_direction_t direction,
                                                    size_t history_index,
                                                    const wcstring &search_string) {
-    // Use a small page size because we don't always offer practical ways to select a item from
-    // a large page (since we don't support subsequence filtering here).
-    constexpr size_t page_size = 12;
+    // Limit the number of elements to half the screen like we do for completions
+    // Note that this is imperfect because we could have a multi-column layout.
+    //
+    // We can still push fish further upward in case the first entry is multiline,
+    // but that can't really be helped.
+    size_t page_size = std::max(termsize_last().height / 2, 12);
+
     completion_list_t completions;
     history_search_t search{history, search_string, history_search_type_t::contains,
                             smartcase_flags(search_string), history_index};

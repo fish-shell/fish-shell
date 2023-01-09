@@ -33,6 +33,19 @@ git init >/dev/null 2>&1
 # First set up a test alias - *before loading the completions*
 git config --local alias.re 'restore --staged'
 
+# Test custom command completions by adding a command:
+
+set -p PATH $PWD
+echo "echo foo" > git-frobnicate
+chmod +x git-frobnicate
+
+complete -c git-frobnicate -xa 'foo bar baz'
+
+complete -C'git frobnicate '
+#CHECK: bar
+#CHECK: baz
+#CHECK: foo
+
 complete -C'git ' | grep '^add'\t
 # (note: actual tab character in the check here)
 #CHECK: add	Add file contents to the staging area
@@ -41,9 +54,11 @@ touch foo
 
 complete -C'git add '
 #CHECK: foo	Untracked file
+#CHECK: git-frobnicate	Untracked file
 
 complete -C'git add :'
 #CHECK: :/:foo	Untracked file
+#CHECK: :/:git-frobnicate	Untracked file
 
 git config alias.s status
 complete 'git s --s'
@@ -71,7 +86,7 @@ set -g __fish_git_prompt_show_informative_status 1
 set -g __fish_git_prompt_showuntrackedfiles 1
 fish_git_prompt
 echo
-#CHECK: (newbranch|…1)
+#CHECK: (newbranch|…2)
 set -e __fish_git_prompt_show_informative_status
 set -e __fish_git_prompt_showuntrackedfiles
 

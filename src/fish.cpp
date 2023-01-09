@@ -431,9 +431,6 @@ int main(int argc, char **argv) {
 
     setlocale(LC_ALL, "");
 
-    // struct stat tmp;
-    // stat("----------FISH_HIT_MAIN----------", &tmp);
-
     const char *dummy_argv[2] = {"fish", nullptr};
     if (!argv[0]) {
         argv = const_cast<char **>(dummy_argv);  //!OCLINT(parameter reassignment)
@@ -491,8 +488,6 @@ int main(int argc, char **argv) {
     // If we're not executing, there's no need to find the config.
     if (!opts.no_exec) {
         paths = determine_config_directory_paths(argv[0]);
-    }
-    if (!opts.no_exec) {
         env_init(&paths, /* do uvars */ !opts.no_config, /* default paths */ opts.no_config);
     }
 

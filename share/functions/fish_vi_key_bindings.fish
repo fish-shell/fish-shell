@@ -125,8 +125,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M default \ch backward-char
     bind -s --preset -M insert \x7f backward-delete-char
     bind -s --preset -M default \x7f backward-char
-    bind -s --preset -M insert -k sdc backward-delete-char # shifted delete
-    bind -s --preset -M default -k sdc backward-delete-char # shifted delete
 
     bind -s --preset dd kill-whole-line
     bind -s --preset D kill-line

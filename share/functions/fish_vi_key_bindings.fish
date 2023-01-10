@@ -23,16 +23,22 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # and without this would then have subtly broken bindings.
     if test "$fish_key_bindings" != fish_vi_key_bindings
         and test "$rebind" = true
-        # Allow the user to set the variable universally.
+        # Allow the user to set the variable universally
+        set -l scope
         set -q fish_key_bindings
-        or set -g fish_key_bindings
-        # This triggers the handler, which calls us again and ensures the user_key_bindings
-        # are executed.
-        set fish_key_bindings fish_vi_key_bindings
-        # unless the handler somehow doesn't exist, which would leave us without bindings.
-        # this happens in no-config mode.
-        functions -q __fish_reload_key_bindings
-        and return
+        or set scope -g
+        true
+        # We try to use `set --no-event`, but to avoid leaving the user without bindings
+        # if they run this with an older version we fall back on setting the variable
+        # with an event.
+        if ! set --no-event $scope fish_key_bindings fish_vi_key_bindings 2>/dev/null
+            # This triggers the handler, which calls us again
+            set $scope fish_key_bindings fish_vi_key_bindings
+            # unless the handler somehow doesn't exist, which would leave us without bindings.
+            # this happens in no-config mode.
+            functions -q __fish_reload_key_bindings
+            and return
+        end
     end
 
     set -l init_mode insert

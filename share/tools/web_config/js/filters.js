@@ -41,20 +41,3 @@ filters.filter("filterBinding", function() {
         return result;
     }
 });
-
-filters.filter("filterAbbreviations", function() {
-    return function(abbreviations, query) {
-        var result = []
-        if (abbreviations == undefined) return result;
-        if (query == null) { return abbreviations};
-
-        for(var i=0; i<abbreviations.length; ++i) {
-            var abbr = abbreviations[i];
-            if (abbr.word.toLowerCase().indexOf(query) != -1 || abbr.phrase.toLowerCase().indexOf(query.toLowerCase()) != -1) {
-                result.push(abbr);
-            }
-        }
-
-        return result;
-    }
-});

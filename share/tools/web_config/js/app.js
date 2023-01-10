@@ -34,10 +34,6 @@ fishconfig.config(
             controller: "bindingsController",
             templateUrl: "partials/bindings.html"
         })
-        .when("/abbreviations", {
-            controller: "abbreviationsController",
-            templateUrl: "partials/abbreviations.html"
-        })
         .otherwise({
             redirectTo: "/colors"
         })

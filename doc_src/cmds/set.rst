@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     set
-    set (-f | --function) (-l | --local) (-g | --global) (-U | --universal)
+    set (-f | --function) (-l | --local) (-g | --global) (-U | --universal) [--no-event]
     set [-Uflg] NAME [VALUE ...]
     set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
     set (-a | --append) [-flgU] NAME VALUE ...
@@ -101,6 +101,11 @@ Further options:
     If no variable names are given then all variables are shown in sorted order.
     It shows the scopes the given variables are set in, along with the values in each and whether or not it is exported.
     No other flags can be used with this option.
+
+**--no-event**
+    Don't generate a variable change event when setting or erasing a variable.
+    We recommend using this carefully because the event handlers are usually set up for a reason.
+    Possible uses include modifying the variable inside a variable handler.
 
 **-L** or **--long**
     Do not abbreviate long values when printing set variables.

@@ -806,6 +806,11 @@ impl Parser {
         res
     }
 
+    /// Cover of vars().set(), without firing events
+    pub fn set_var(&self, key: &wstr, mode: EnvMode, vals: Vec<WString>) -> EnvStackSetResult {
+        self.vars().set(key, mode, vals)
+    }
+
     /// Update any universal variables and send event handlers.
     /// If \p always is set, then do it even if we have no pending changes (that is, look for
     /// changes from other fish instances); otherwise only sync if this instance has changed uvars.

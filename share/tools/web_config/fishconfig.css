@@ -293,19 +293,6 @@ body {
     border-bottom: #444 dotted 1px;
 }
 
-.abbreviation_actions {
-    width: 8em;
-    text-align: right;
-    border-bottom: #444 dotted 1px;
-}
-
-.abbreviation_input {
-    height: 1.5em;
-    font: inherit;
-    padding: 3px;
-    margin: 0;
-}
-
 /* The CSS we apply when a table row is filtered */
 .data_table_row_filtered {
     display: none;

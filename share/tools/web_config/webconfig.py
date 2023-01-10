@@ -1338,40 +1338,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             result.extend([self.read_one_sample_prompt(path) for path in paths])
         return result
 
-    def do_get_abbreviations(self):
-        # Example abbreviation line:
-        # abbr -a -U -- ls 'ls -a'
-        result = []
-        out, err = run_fish_cmd("abbr --show")
-        for line in out.rstrip().split("\n"):
-            if not line:
-                continue
-            _, abbr = line.split(" -- ", 1)
-            word, phrase = abbr.split(" ", 1)
-            result.append({"word": word, "phrase": phrase})
-        return result
-
-    def do_remove_abbreviation(self, abbreviation):
-        out, err = run_fish_cmd("abbr --erase %s" % abbreviation["word"])
-        if err:
-            return err
-        else:
-            return None
-
-    def do_save_abbreviation(self, abbreviation):
-        out, err = run_fish_cmd(
-            # Remove one layer of single-quotes because escape_fish_cmd adds them back.
-            "abbr --add %s %s"
-            % (
-                escape_fish_cmd(strip_one_layer(abbreviation["word"], "'")),
-                escape_fish_cmd(strip_one_layer(abbreviation["phrase"], "'")),
-            )
-        )
-        if err:
-            return err
-        else:
-            return None
-
     def secure_startswith(self, haystack, needle):
         if len(haystack) < len(needle):
             return False
@@ -1453,8 +1419,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = self.do_get_color_for_variable(name)
         elif p == "/bindings/":
             output = self.do_get_bindings()
-        elif p == "/abbreviations/":
-            output = self.do_get_abbreviations()
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
@@ -1577,18 +1541,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 output = ["OK"]
             else:
                 output = ["Unable to set prompt"]
-        elif p == "/save_abbreviation/":
-            errmsg = self.do_save_abbreviation(postvars)
-            if errmsg:
-                output = [errmsg]
-            else:
-                output = ["OK"]
-        elif p == "/remove_abbreviation/":
-            errmsg = self.do_remove_abbreviation(postvars)
-            if errmsg:
-                output = [errmsg]
-            else:
-                output = ["OK"]
         else:
             return self.send_error(404)
 
@@ -1701,7 +1653,6 @@ if len(sys.argv) > 1:
         "variables",
         "history",
         "bindings",
-        "abbreviations",
     ]:
         if tab.startswith(sys.argv[1]):
             initial_tab = "#!/" + tab

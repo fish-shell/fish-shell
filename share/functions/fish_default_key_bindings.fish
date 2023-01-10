@@ -10,15 +10,24 @@ function fish_default_key_bindings -d "emacs-like key binds"
         bind --erase --all --preset # clear earlier bindings, if any
         if test "$fish_key_bindings" != fish_default_key_bindings
             # Allow the user to set the variable universally
+            set -l scope
             set -q fish_key_bindings
-            or set -g fish_key_bindings
-            # This triggers the handler, which calls us again and ensures the user_key_bindings
-            # are executed.
-            set fish_key_bindings fish_default_key_bindings
-            # unless the handler somehow doesn't exist, which would leave us without bindings.
-            # this happens in no-config mode.
-            functions -q __fish_reload_key_bindings
-            and return
+            or set scope -g
+            true
+            # We try to use `set --no-event`, but to avoid leaving the user without bindings
+            # if they run this with an older version we fall back on setting the variable
+            # with an event.
+            if ! set --no-event $scope fish_key_bindings fish_default_key_bindings 2>/dev/null
+                # This triggers the handler, which calls us again
+                set $scope fish_key_bindings fish_default_key_bindings
+                # unless the handler somehow doesn't exist, which would leave us without bindings.
+                # this happens in no-config mode.
+                functions -q __fish_reload_key_bindings
+                and return
+            else
+                # (we need to set the bind mode to default)
+                set --no-event fish_bind_mode default
+            end
         end
     end
 

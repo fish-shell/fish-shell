@@ -883,6 +883,15 @@ const completion_t *pager_t::selected_completion(const page_rendering_t &renderi
     return result;
 }
 
+size_t pager_t::selected_completion_index() const { return selected_completion_idx; }
+
+void pager_t::set_selected_completion_index(size_t new_index) {
+    // Current users are off by one at most.
+    assert(new_index == PAGER_SELECTION_NONE || new_index <= completion_infos.size());
+    if (new_index == completion_infos.size()) --new_index;
+    selected_completion_idx = new_index;
+}
+
 /// Get the selected row and column. Completions are rendered column first, i.e. we go south before
 /// we go west. So if we have N rows, and our selected index is N + 2, then our row is 2 (mod by N)
 /// and our column is 1 (divide by N).

@@ -202,6 +202,9 @@ The following special input functions are available:
 ``history-pager``
     invoke the searchable pager on history (incremental search); or if the history pager is already active, search further backwards in time.
 
+``history-pager-delete``
+    permanently delete the history item selected in the history pager
+
 ``history-search-backward``
     search the history for the previous match
 

@@ -165,6 +165,9 @@ class pager_t {
     // Returns the currently selected completion for the given rendering.
     const completion_t *selected_completion(const page_rendering_t &rendering) const;
 
+    size_t selected_completion_index() const;
+    void set_selected_completion_index(size_t new_index);
+
     // Indicates the row and column for the given rendering. Returns -1 if no selection.
     size_t get_selected_row(const page_rendering_t &rendering) const;
     size_t get_selected_column(const page_rendering_t &rendering) const;

@@ -449,6 +449,10 @@ Command mode is also known as normal mode.
 
 - :kbd:`Shift`\ +\ :kbd:`A` enters :ref:`insert mode <vi-mode-insert>` at the end of the line.
 
+- :kbd:`o` inserts a new line under the current one and enters :ref:`insert mode <vi-mode-insert>`
+
+- :kbd:`O` (capital-"o") inserts a new line above the current one and enters :ref:`insert mode <vi-mode-insert>`
+
 - :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
 - :kbd:`d`\ +\ :kbd:`d` deletes the current line and moves it to the :ref:`killring`.
@@ -458,12 +462,17 @@ Command mode is also known as normal mode.
 - :kbd:`p` pastes text from the :ref:`killring`.
 
 - :kbd:`u` undoes the most recent edit of the command line.
+- :kbd:`Control`\ +\ :kbd:`R` redoes the most recent edit.
 
 - :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the :ref:`history <history-search>` section for more information on history searching.
 
 - :kbd:`/` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing it again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
 
 - :kbd:`Backspace` moves the cursor left.
+
+- :kbd:`g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
+
+- :kbd:`:q` exits fish.
 
 .. _vi-mode-insert:
 

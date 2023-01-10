@@ -816,8 +816,8 @@ nohelpers\t'exclude helper commands'
 config\t'list completion.commands'"
 
 # Options shared between multiple commands
-set -l format_pretty_args "oneline\t'hash⏎ titleline' short\t'hash⏎ author⏎ titleline' medium\t'hash⏎ author⏎ authordate⏎ title⏎ message' full\t'hash⏎ author⏎ committer⏎ title⏎ message'
-fuller\t'hash⏎ author⏎ authordate⏎ committer⏎ committerdate⏎ title⏎ message' email\t'hash⏎ date⏎ author⏎ authordate⏎ title⏎ message' raw\t'Show raw commit as stored in commit object' format:\t'Specify format string'"
+set -l format_pretty_args "oneline\t'hash titleline' short\t'hash author titleline' medium\t'hash author authordate title message' full\t'hash author committer title message'
+fuller\t'hash author authordate committer committerdate title message' email\t'hash date author authordate title message' raw\t'Show raw commit as stored in commit object' format:\t'Specify format string'"
 complete -f -c git -n '__fish_git_using_command log show diff-tree rev-list' -l pretty -a $format_pretty_args
 
 complete -c git -n '__fish_git_using_command diff show range-diff' -l abbrev -d 'Show only a partial prefix instead of the full 40-byte hexadecimal object name'

@@ -38,6 +38,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \cs pager-toggle-search
     # shift-tab does a tab complete followed by a search.
     bind --preset $argv --key btab complete-and-search
+    bind --preset $argv -k sdc history-pager-delete or backward-delete-char # shifted delete
 
     bind --preset $argv \e\n "commandline -f expand-abbr; commandline -i \n"
     bind --preset $argv \e\r "commandline -f expand-abbr; commandline -i \n"

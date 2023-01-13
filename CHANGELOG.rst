@@ -1,16 +1,22 @@
 fish 3.7.0 (released ???)
 ===================================
 
-.. ignore: 9439 9440 9442 9452
+.. ignore: 9439 9440 9442 9452 9469
 
 Notable improvements and fixes
 ------------------------------
+- ``abbr --erase`` now also erases the universal variables used by the old abbr function. That means::
+    abbr --erase (abbr --list)
+
+  can now be used to clean out all old abbreviations (:issue:`9468`)
 
 Deprecations and removed features
 ---------------------------------
 
 Scripting improvements
 ----------------------
+- ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
+- ``read`` will now print an error if told to set a read-only variable instead of silently doing nothing (:issue:`9346`).
 
 Interactive improvements
 ------------------------

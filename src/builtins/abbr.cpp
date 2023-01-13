@@ -139,7 +139,7 @@ static int abbr_list(const abbr_options_t &opts, io_streams_t &streams) {
     }
     const auto abbrs = abbrs_get_set();
     for (const auto &abbr : abbrs->list()) {
-        wcstring name = escape_string(abbr.name);
+        wcstring name = abbr.name;
         name.push_back(L'\n');
         streams.out.append(name);
     }

@@ -180,7 +180,13 @@ echo erase $status
 set --show _fish_abbr_cuckoo
 # Nothing
 
+abbr --add '$PAGER' less
 abbr --erase (abbr --list)
+abbr --list
+# Nothing
+abbr --add '$PAGER' less
+abbr --list
+# CHECK: $PAGER
 
 abbr --add bogus --position never stuff
 # CHECKERR: abbr: Invalid position 'never'

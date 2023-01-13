@@ -22,6 +22,7 @@
 #include "../common.h"
 #include "../env.h"
 #include "../io.h"
+#include "../parser.h"
 #include "../re.h"
 #include "../wcstringutil.h"
 #include "../wgetopt.h"
@@ -269,7 +270,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
 }
 
 // Erase the named abbreviations.
-static int abbr_erase(const abbr_options_t &opts, io_streams_t &) {
+static int abbr_erase(const abbr_options_t &opts, parser_t &parser, io_streams_t &) {
     if (opts.args.empty()) {
         // This has historically been a silent failure.
         return STATUS_CMD_ERROR;
@@ -282,6 +283,14 @@ static int abbr_erase(const abbr_options_t &opts, io_streams_t &) {
         if (!abbrs->erase(arg)) {
             result = ENV_NOT_FOUND;
         }
+        // Erase the old uvar - this makes `abbr -e` work.
+        wcstring esc_src = escape_string(arg, 0, STRING_STYLE_VAR);
+        if (!esc_src.empty()) {
+            wcstring var_name = L"_fish_abbr_" + esc_src;
+            auto ret = parser.vars().remove(var_name, ENV_UNIVERSAL);
+            if (ret == ENV_OK) result = STATUS_CMD_OK;
+        }
+
     }
     return result;
 }
@@ -410,7 +419,7 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
     if (opts.show) return abbr_show(opts, streams);
     if (opts.list) return abbr_list(opts, streams);
     if (opts.rename) return abbr_rename(opts, streams);
-    if (opts.erase) return abbr_erase(opts, streams);
+    if (opts.erase) return abbr_erase(opts, parser, streams);
     if (opts.query) return abbr_query(opts, streams);
 
     // validate() should error or ensure at least one path is set.

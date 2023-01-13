@@ -170,6 +170,16 @@ abbr --show
 # CHECK: abbr -a -- nonregex_name foo
 # CHECK: abbr -a --regex 'A[0-9]B' -- regex_name bar
 # CHECK: abbr -a --position anywhere --function replace_history -- !!
+
+# Confirm that this erases the old uvar
+# (slightly cheating since we haven't imported it as an abbr,
+#  but that's okay)
+abbr --erase cuckoo
+echo erase $status
+# CHECK: erase 0
+set --show _fish_abbr_cuckoo
+# Nothing
+
 abbr --erase (abbr --list)
 
 abbr --add bogus --position never stuff

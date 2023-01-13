@@ -51,8 +51,8 @@ The following scope control variable scope:
 
 **-g** or **--global**
     Sets a globally-scoped variable.
-    Global variables don't disappear and are available to all functions running in the same shell.
-    They can even be modified.
+    Global variables are available to all functions running in the same shell.
+    They can be modified or erased.
 
 These options modify how variables operate:
 

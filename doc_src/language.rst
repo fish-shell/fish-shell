@@ -944,7 +944,7 @@ Variable Scope
 
 There are four kinds of variables in fish: universal, global, function and local variables.
 
-- Universal variables are shared between all fish sessions a user is running on one computer. They are stored in disk and persist even after reboot.
+- Universal variables are shared between all fish sessions a user is running on one computer. They are stored on disk and persist even after reboot.
 - Global variables are specific to the current fish session. They can be erased by explicitly requesting ``set -e``.
 - Function variables are specific to the currently executing function. They are erased ("go out of scope") when the current function ends. Outside of a function, they don't go out of scope.
 - Local variables are specific to the current block of commands, and automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``. Outside of a block, this is the same as the function scope.

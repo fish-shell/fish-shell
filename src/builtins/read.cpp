@@ -424,6 +424,11 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
+        if (env_var_t::flags_for(argv[i]) & env_var_t::flag_read_only) {
+            streams.err.append_format(_(L"%ls: %ls: cannot overwrite read-only variable"), cmd, argv[i]);
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
     }
 
     return STATUS_CMD_OK;

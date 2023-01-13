@@ -380,3 +380,12 @@ begin
 end | read -l --line foo bar
 echo $foo $bar
 # CHECK: 1 2
+
+echo foo | read status
+# CHECKERR: read: status: cannot overwrite read-only variable
+# CHECKERR: {{.*}}read.fish (line {{\d+}}):
+# CHECKERR: echo foo | read status
+# CHECKERR: ^
+# CHECKERR: (Type 'help read' for related documentation)
+echo read $status
+# CHECK: read 2

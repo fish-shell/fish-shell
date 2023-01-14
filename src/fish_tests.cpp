@@ -347,13 +347,6 @@ static void test_enum_set() {
     do_test((enum_set_t<test_enum>{test_enum::beta} | test_enum::alpha).to_raw() == 3);
     do_test((enum_set_t<test_enum>{test_enum::beta} | enum_set_t<test_enum>{test_enum::alpha})
                 .to_raw() == 3);
-
-    unsigned idx = 0;
-    for (auto v : enum_iter_t<test_enum>{}) {
-        do_test(static_cast<unsigned>(v) == idx);
-        idx++;
-    }
-    do_test(static_cast<unsigned>(test_enum::COUNT) == idx);
 }
 
 static void test_enum_array() {

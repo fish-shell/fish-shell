@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "common.h"
+#include "cxx.h"
 #include "env.h"
 #include "expand.h"
 #include "job_group.h"
@@ -38,7 +39,7 @@ inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
 }
 
 /// Types of blocks.
-enum class block_type_t : uint16_t {
+enum class block_type_t : uint8_t {
     while_block,              /// While loop block
     for_block,                /// For loop block
     if_block,                 /// If block
@@ -469,13 +470,19 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     std::shared_ptr<parser_t> shared();
 
     /// \return a cancel poller for checking if this parser has been signalled.
+    /// autocxx falls over with this so hide it.
+#if INCLUDE_RUST_HEADERS
     cancel_checker_t cancel_checker() const;
+#endif
 
     /// \return the operation context for this parser.
     operation_context_t context();
 
     /// Checks if the max eval depth has been exceeded
     bool is_eval_depth_exceeded() const { return eval_level >= FISH_MAX_EVAL_DEPTH; }
+
+    /// autocxx junk.
+    RustFFIJobList ffi_jobs() const;
 
     ~parser_t();
 };

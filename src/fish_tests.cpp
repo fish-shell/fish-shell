@@ -53,13 +53,16 @@
 #include "color.h"
 #include "common.h"
 #include "complete.h"
+#include "cxxgen.h"
 #include "enum_set.h"
 #include "env.h"
 #include "env_universal_common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fd_monitor.h"
+#include "fd_readable_set.rs.h"
 #include "fds.h"
+#include "ffi_init.rs.h"
 #include "function.h"
 #include "future_feature_flags.h"
 #include "global_safety.h"
@@ -85,7 +88,8 @@
 #include "reader.h"
 #include "redirection.h"
 #include "screen.h"
-#include "signal.h"
+#include "signals.h"
+#include "smoke.rs.h"
 #include "termsize.h"
 #include "timer.h"
 #include "tokenizer.h"
@@ -844,7 +848,7 @@ static void test_fd_monitor() {
     constexpr uint64_t usec_per_msec = 1000;
 
     // Items which will never receive data or be called back.
-    item_maker_t item_never(fd_monitor_item_t::kNoTimeout);
+    item_maker_t item_never(kNoTimeout);
     item_maker_t item_hugetimeout(100000000LLU * usec_per_msec);
 
     // Item which should get no data, and time out.
@@ -854,13 +858,13 @@ static void test_fd_monitor() {
     item_maker_t item42_timeout(16 * usec_per_msec);
 
     // Item which should get exactly 42 bytes, and not time out.
-    item_maker_t item42_nottimeout(fd_monitor_item_t::kNoTimeout);
+    item_maker_t item42_nottimeout(kNoTimeout);
 
     // Item which should get 42 bytes, then get notified it is closed.
     item_maker_t item42_thenclose(16 * usec_per_msec);
 
     // Item which gets one poke.
-    item_maker_t item_pokee(fd_monitor_item_t::kNoTimeout);
+    item_maker_t item_pokee(kNoTimeout);
 
     // Item which should be called back once.
     item_maker_t item_oneshot(16 * usec_per_msec);
@@ -4289,7 +4293,7 @@ bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
 
     bool result = false;
     int fd = note->notification_fd();
-    if (fd >= 0 && fd_readable_set_t::poll_fd_readable(fd)) {
+    if (fd >= 0 && poll_fd_readable(fd)) {
         result = note->notification_fd_became_readable(fd);
     }
     return result;
@@ -6682,7 +6686,8 @@ void test_dirname_basename() {
 
 static void test_topic_monitor() {
     say(L"Testing topic monitor");
-    topic_monitor_t monitor;
+    auto monitor_box = new_topic_monitor();
+    topic_monitor_t &monitor = *monitor_box;
     generation_list_t gens{};
     constexpr auto t = topic_t::sigchld;
     gens.sigchld = 0;
@@ -6706,12 +6711,13 @@ static void test_topic_monitor() {
 
 static void test_topic_monitor_torture() {
     say(L"Torture-testing topic monitor");
-    topic_monitor_t monitor;
+    auto monitor_box = new_topic_monitor();
+    topic_monitor_t &monitor = *monitor_box;
     const size_t thread_count = 64;
     constexpr auto t1 = topic_t::sigchld;
     constexpr auto t2 = topic_t::sighupint;
     std::vector<generation_list_t> gens;
-    gens.resize(thread_count, generation_list_t::invalids());
+    gens.resize(thread_count, invalid_generations());
     std::atomic<uint32_t> post_count{};
     for (auto &gen : gens) {
         gen = monitor.current_generations();
@@ -7137,6 +7143,11 @@ void test_wgetopt() {
     do_test(join_strings(arguments, L' ') == L"emacsnw emacs -nw");
 }
 
+void test_rust_smoke() {
+    size_t x = rust::add(37, 5);
+    do_test(x == 42);
+}
+
 // typedef void (test_entry_point_t)();
 using test_entry_point_t = void (*)();
 struct test_t {
@@ -7256,8 +7267,8 @@ static const test_t s_tests[]{
     {TEST_GROUP("re"), test_re_named},
     {TEST_GROUP("re"), test_re_name_extraction},
     {TEST_GROUP("re"), test_re_substitute},
-    {TEST_GROUP("re"), test_re_substitute},
     {TEST_GROUP("wgetopt"), test_wgetopt},
+    {TEST_GROUP("rust_smoke"), test_rust_smoke},
 };
 
 void list_tests() {
@@ -7312,6 +7323,7 @@ int main(int argc, char **argv) {
     say(L"Testing low-level functionality");
     set_main_thread();
     setup_fork_guards();
+    rust_init();
     proc_init();
     env_init();
     misc_init();

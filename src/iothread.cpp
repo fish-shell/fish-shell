@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "fallback.h"
+#include "fd_readable_set.rs.h"
 #include "fds.h"
 #include "flog.h"
 #include "maybe.h"
@@ -213,7 +214,7 @@ void iothread_perform_impl(void_function_t &&func, bool cant_wait) {
 int iothread_port() { return get_notify_signaller().read_fd(); }
 
 void iothread_service_main_with_timeout(uint64_t timeout_usec) {
-    if (fd_readable_set_t::is_fd_readable(iothread_port(), timeout_usec)) {
+    if (is_fd_readable(iothread_port(), timeout_usec)) {
         iothread_service_main();
     }
 }

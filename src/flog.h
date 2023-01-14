@@ -197,6 +197,10 @@ std::vector<const flog_details::category_t *> get_flog_categories();
 /// This is used by the tracing machinery.
 void log_extra_to_flog_file(const wcstring &s);
 
+/// \return the FD for the flog file.
+/// This is exposed for the Rust bridge.
+int get_flog_file_fd();
+
 /// Output to the fish log a sequence of arguments, separated by spaces, and ending with a newline.
 /// We save and restore errno because we don't want this to affect other code.
 #define FLOG(wht, ...)                                                        \

@@ -19,7 +19,7 @@
 #include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
-#include "../signal.h"
+#include "../signals.h"
 #include "../topic_monitor.h"
 #include "../wait_handle.h"
 #include "../wgetopt.h"

@@ -16,7 +16,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "global_safety.h"
 #include "reader.h"
-#include "signal.h"
+#include "signals.h"
 #include "termsize.h"
 #include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -243,7 +243,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             if (!observed) {
                 reader_sighup();
             }
-            topic_monitor_t::principal().post(topic_t::sighupint);
+            topic_monitor_principal().post(topic_t::sighupint);
             break;
 
         case SIGTERM:
@@ -261,12 +261,12 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
                 s_cancellation_signal = SIGINT;
             }
             reader_handle_sigint();
-            topic_monitor_t::principal().post(topic_t::sighupint);
+            topic_monitor_principal().post(topic_t::sighupint);
             break;
 
         case SIGCHLD:
             // A child process stopped or exited.
-            topic_monitor_t::principal().post(topic_t::sigchld);
+            topic_monitor_principal().post(topic_t::sigchld);
             break;
 
         case SIGALRM:
@@ -429,7 +429,7 @@ sigchecker_t::sigchecker_t(topic_t signal) : topic_(signal) {
 }
 
 bool sigchecker_t::check() {
-    auto &tm = topic_monitor_t::principal();
+    auto &tm = topic_monitor_principal();
     generation_t gen = tm.generation_for_topic(topic_);
     bool changed = this->gen_ != gen;
     this->gen_ = gen;
@@ -437,8 +437,8 @@ bool sigchecker_t::check() {
 }
 
 void sigchecker_t::wait() const {
-    auto &tm = topic_monitor_t::principal();
-    generation_list_t gens = generation_list_t::invalids();
-    gens.at(topic_) = this->gen_;
+    auto &tm = topic_monitor_principal();
+    generation_list_t gens = invalid_generations();
+    gens.at_mut(topic_) = this->gen_;
     tm.check(&gens, true /* wait */);
 }

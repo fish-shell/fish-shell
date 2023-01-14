@@ -29,7 +29,7 @@
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "proc.h"
-#include "signal.h"
+#include "signals.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class io_chain_t;
@@ -454,7 +454,7 @@ wcstring parser_t::current_line() {
 void parser_t::job_add(shared_ptr<job_t> job) {
     assert(job != nullptr);
     assert(!job->processes.empty());
-    job_list.push_front(std::move(job));
+    job_list.insert(job_list.begin(), std::move(job));
 }
 
 void parser_t::job_promote(job_t *job) {
@@ -662,6 +662,10 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         }
         output.append(this->stack_trace());
     }
+}
+
+RustFFIJobList parser_t::ffi_jobs() const {
+    return RustFFIJobList{const_cast<job_ref_t *>(job_list.data()), job_list.size()};
 }
 
 block_t::block_t(block_type_t t) : block_type(t) {}

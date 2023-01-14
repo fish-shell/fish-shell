@@ -27,7 +27,7 @@
 #include "../parser.h"
 #include "../parser_keywords.h"
 #include "../proc.h"
-#include "../signal.h"
+#include "../signals.h"
 #include "../wait_handle.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep

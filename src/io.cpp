@@ -334,6 +334,10 @@ const wcstring &output_stream_t::contents() const { return g_empty_string; }
 
 int output_stream_t::flush_and_check_error() { return STATUS_CMD_OK; }
 
+fd_output_stream_t::fd_output_stream_t(int fd) : fd_(fd), sigcheck_(topic_t::sighupint) {
+    assert(fd_ >= 0 && "Invalid fd");
+}
+
 bool fd_output_stream_t::append(const wchar_t *s, size_t amt) {
     if (errored_) return false;
     int res = wwrite_to_fd(s, amt, this->fd_);

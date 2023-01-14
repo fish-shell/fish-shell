@@ -28,7 +28,7 @@
 #include "parse_constants.h"
 #include "parser.h"
 #include "parser_keywords.h"
-#include "signal.h"
+#include "signals.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 

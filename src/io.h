@@ -16,7 +16,7 @@
 #include "fds.h"
 #include "global_safety.h"
 #include "redirection.h"
-#include "signal.h"
+#include "signals.h"
 #include "topic_monitor.h"
 
 using std::shared_ptr;
@@ -413,9 +413,7 @@ class null_output_stream_t final : public output_stream_t {
 class fd_output_stream_t final : public output_stream_t {
    public:
     /// Construct from a file descriptor, which must be nonegative.
-    explicit fd_output_stream_t(int fd) : fd_(fd), sigcheck_(topic_t::sighupint) {
-        assert(fd_ >= 0 && "Invalid fd");
-    }
+    explicit fd_output_stream_t(int fd);
 
     int flush_and_check_error() override;
 
@@ -496,6 +494,11 @@ struct io_streams_t : noncopyable_t {
     std::shared_ptr<job_group_t> job_group{};
 
     io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
+
+    /// autocxx junk.
+    output_stream_t &get_out() { return out; };
+    output_stream_t &get_err() { return err; };
+    io_streams_t(const io_streams_t &) = delete;
 };
 
 #endif

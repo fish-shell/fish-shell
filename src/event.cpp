@@ -20,7 +20,7 @@
 #include "maybe.h"
 #include "parser.h"
 #include "proc.h"
-#include "signal.h"
+#include "signals.h"
 #include "termsize.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep

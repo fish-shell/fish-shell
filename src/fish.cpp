@@ -39,11 +39,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "ast.h"
 #include "common.h"
+#include "cxxgen.h"
 #include "env.h"
 #include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
+#include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "function.h"
@@ -59,7 +61,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signals.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -319,6 +321,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             }
             case 'd': {
                 activate_flog_categories_by_pattern(str2wcstring(optarg));
+                rust_activate_flog_categories_by_pattern(str2wcstring(optarg).c_str());
                 for (auto cat : get_flog_categories()) {
                     if (cat->enabled) {
                         std::fwprintf(stdout, L"Debug enabled for category: %ls\n", cat->name);
@@ -427,6 +430,7 @@ int main(int argc, char **argv) {
     program_name = L"fish";
     set_main_thread();
     setup_fork_guards();
+    rust_init();
     signal_unblock_all();
 
     setlocale(LC_ALL, "");

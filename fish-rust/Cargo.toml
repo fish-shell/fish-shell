@@ -1,0 +1,40 @@
+[package]
+name = "fish-rust"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+widestring-suffix = { path = "./widestring-suffix/" }
+
+autocxx = "0.23.1"
+cxx = "1.0"
+errno = "0.2.8"
+lazy_static = "1.4.0"
+libc = "0.2.137"
+nix = "0.25.0"
+num-traits = "0.2.15"
+unixstring = "0.2.7"
+widestring = "1.0.2"
+
+[build-dependencies]
+autocxx-build = "0.23.1"
+cxx-build = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+cxx-gen = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+miette = { version = "5", features = ["fancy"] }
+
+[lib]
+crate-type=["staticlib"]
+
+[patch.crates-io]
+cxx = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+cxx-gen = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+autocxx = { git = "https://github.com/ridiculousfish/autocxx", branch = "fish" }
+autocxx-build = { git = "https://github.com/ridiculousfish/autocxx", branch = "fish" }
+autocxx-bindgen = { git = "https://github.com/ridiculousfish/autocxx-bindgen", branch = "fish" }
+
+#cxx = { path = "../../cxx" }
+#cxx-gen = { path="../../cxx/gen/lib" }
+#autocxx = { path = "../../autocxx" }
+#autocxx-build = { path = "../../autocxx/gen/build" }
+#autocxx-bindgen = { path = "../../autocxx-bindgen" }

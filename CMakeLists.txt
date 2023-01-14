@@ -24,6 +24,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
 endif()
 
+include(cmake/Rust.cmake)
+
 # Error out when linking statically, it doesn't work.
 if (CMAKE_EXE_LINKER_FLAGS MATCHES ".*-static.*")
     message(FATAL_ERROR "Fish does not support static linking")
@@ -43,6 +45,9 @@ endif()
 # - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
 add_compile_options(-Wall -Wextra -Wno-comment -Wno-address)
 
+# Get extra C++ files from Rust.
+get_property(FISH_EXTRA_SOURCES TARGET fish-rust PROPERTY fish_extra_cpp_files)
+
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
   add_compile_options(-Wunused-template -Wunused-local-typedef -Wunused-macros)
 endif()
@@ -52,6 +57,9 @@ add_compile_options(-fno-exceptions)
 
 # Undefine NDEBUG to keep assert() in release builds.
 add_definitions(-UNDEBUG)
+
+# Allow including Rust headers in normal (not bindgen) builds.
+add_definitions(-DINCLUDE_RUST_HEADERS)
 
 # Enable large files on GNU.
 add_definitions(-D_LARGEFILE_SOURCE
@@ -117,10 +125,10 @@ set(FISH_SRCS
     src/pager.cpp src/parse_execution.cpp src/parse_tree.cpp src/parse_util.cpp
     src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
     src/proc.cpp src/re.cpp src/reader.cpp src/redirection.cpp src/screen.cpp
-    src/signal.cpp src/termsize.cpp src/timer.cpp src/tinyexpr.cpp
-    src/tokenizer.cpp src/topic_monitor.cpp src/trace.cpp src/utf8.cpp src/util.cpp
+    src/signals.cpp src/termsize.cpp src/timer.cpp src/tinyexpr.cpp
+    src/tokenizer.cpp src/trace.cpp src/utf8.cpp src/util.cpp
     src/wait_handle.cpp src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp 
-    src/wutil.cpp src/fds.cpp
+    src/wutil.cpp src/fds.cpp src/rustffi.cpp
 )
 
 # Header files are just globbed.
@@ -132,6 +140,11 @@ include(cmake/gettext.cmake)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+# Pull in our src directory for headers searches, but only quoted ones.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -iquote ${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+
 
 # Set up standard directories.
 include(GNUInstallDirs)
@@ -175,8 +188,10 @@ endfunction(FISH_LINK_DEPS_AND_SIGN)
 add_library(fishlib STATIC ${FISH_SRCS} ${FISH_BUILTIN_SRCS})
 target_sources(fishlib PRIVATE ${FISH_HEADERS})
 target_link_libraries(fishlib
+  fish-rust
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
-  ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY})
+  ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY}
+  "fish-rust")
 target_include_directories(fishlib PRIVATE
   ${CURSES_INCLUDE_DIRS})
 

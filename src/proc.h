@@ -94,8 +94,9 @@ class proc_status_t {
 
     /// Construct directly from an exit code.
     static proc_status_t from_exit_code(int ret) {
-        assert(ret >= 0 && "trying to create proc_status_t from failed wait{,id,pid}() call"
-                " or invalid builtin exit code!");
+        assert(ret >= 0 &&
+               "trying to create proc_status_t from failed wait{,id,pid}() call"
+               " or invalid builtin exit code!");
 
         // Some paranoia.
         constexpr int zerocode = w_exitcode(0, 0);
@@ -349,6 +350,11 @@ using process_ptr_t = std::unique_ptr<process_t>;
 using process_list_t = std::vector<process_ptr_t>;
 class parser_t;
 
+struct RustFFIProcList {
+    process_ptr_t *procs;
+    size_t count;
+};
+
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t : noncopyable_t {
    public:
@@ -382,6 +388,9 @@ class job_t : noncopyable_t {
    public:
     job_t(const properties_t &props, wcstring command_str);
     ~job_t();
+
+    /// Autocxx needs to see this.
+    job_t(const job_t &) = delete;
 
     /// Returns the command as a wchar_t *. */
     const wchar_t *command_wcstr() const { return command_str.c_str(); }
@@ -439,6 +448,9 @@ class job_t : noncopyable_t {
 
     /// A non-user-visible, never-recycled job ID.
     const internal_job_id_t internal_job_id;
+
+    /// Getter to enable ffi.
+    internal_job_id_t get_internal_job_id() const { return internal_job_id; }
 
     /// Flags associated with the job.
     struct flags_t {
@@ -522,8 +534,20 @@ class job_t : noncopyable_t {
 
     /// \returns the statuses for this job.
     maybe_t<statuses_t> get_statuses() const;
+
+    /// \returns the list of processes.
+    const process_list_t &get_processes() const;
+
+    /// autocxx junk.
+    RustFFIProcList ffi_processes() const;
 };
 using job_ref_t = std::shared_ptr<job_t>;
+
+// Helper junk for autocxx.
+struct RustFFIJobList {
+    job_ref_t *jobs;
+    size_t count;
+};
 
 /// Whether this shell is attached to a tty.
 bool is_interactive_session();
@@ -540,7 +564,7 @@ bool no_exec();
 void mark_no_exec();
 
 // List of jobs.
-using job_list_t = std::deque<job_ref_t>;
+using job_list_t = std::vector<job_ref_t>;
 
 /// The current job control mode.
 ///

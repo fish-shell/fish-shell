@@ -8,7 +8,8 @@ Notable improvements and fixes
 - ``abbr --erase`` now also erases the universal variables used by the old abbr function. That means::
     abbr --erase (abbr --list)
 
-  can now be used to clean out all old abbreviations (:issue:`9468`)
+  can now be used to clean out all old abbreviations (:issue:`9468`).
+- ``abbr --add --universal`` now warns about --universal being non-functional, to make it easier to detect old-style ``abbr`` calls (:issue:`9475`).
 
 Deprecations and removed features
 ---------------------------------
@@ -22,6 +23,7 @@ Interactive improvements
 ------------------------
 - Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`)
+- Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`9473`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

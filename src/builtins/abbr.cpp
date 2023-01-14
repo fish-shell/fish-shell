@@ -393,9 +393,15 @@ maybe_t<int> builtin_abbr(parser_t &parser, io_streams_t &streams, const wchar_t
                 opts.list = true;
                 break;
             case 'g':
-            case 'U':
                 // Kept for backwards compatibility but ignored.
+                // This basically does nothing now.
                 break;
+            case 'U': {
+                // Kept and made ineffective, so we warn.
+                streams.err.append_format(_(L"%ls: Warning: Option '%ls' was removed and is now ignored"), cmd, argv[w.woptind - 1]);
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                break;
+            }
             case 'h': {
                 builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;

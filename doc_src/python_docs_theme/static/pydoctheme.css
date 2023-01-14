@@ -169,7 +169,7 @@ div.warning {
   border: 1px solid #f66;
 }
 
-div.admonition {
+div.admonition, div.versionchanged {
   padding: 7px;
 }
 
@@ -177,7 +177,7 @@ p.admonition-title::after {
   content: ":";
 }
 
-p.admonition-title {
+p.admonition-title, span.versionmodified {
   display: inline;
   font-weight: bold;
 }

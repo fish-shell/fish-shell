@@ -32,9 +32,10 @@ An abbreviation may match a literal word, or it may match a pattern given by a r
 
 Combining these features, it is possible to create custom syntaxes, where a regular expression recognizes matching tokens, and the expansion function interprets them. See the `Examples`_ section.
 
-Abbreviations may be added to :ref:`config.fish <configuration>`.
-
-
+.. versionchanged:: 3.6.0
+   Previous versions of this allowed saving abbreviations in universal variables.
+   That's no longer possible. Existing variables will still be imported and ``abbr --erase`` will also erase the variables.
+   We recommend adding abbreviations to :ref:`config.fish <configuration>` by just adding the ``abbr --add`` command.
 
 "add" subcommand
 --------------------

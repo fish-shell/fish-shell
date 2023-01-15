@@ -267,3 +267,7 @@ begin
     # CHECK: $PWD is absolute
     cd ../../..
 end
+
+complete -C'cd .'
+# CHECK: ../
+# CHECK: ./

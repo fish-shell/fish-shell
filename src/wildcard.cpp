@@ -858,6 +858,16 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, dir_iter
     bool is_dir = false;
     bool need_dir = flags & expand_flag::directories_only;
 
+    if (prefix.empty() && flags & expand_flag::for_completions) {
+        // Add the special dot-paths.
+        // dir_iter ordinarily skips these, for good reason,
+        // but here we need them.
+        this->try_add_completion_result(base_dir + L"..", L"..", wc, prefix,
+                                            is_dir);
+        this->try_add_completion_result(base_dir + L".", L".", wc, prefix,
+                                            is_dir);
+    }
+
     const dir_iter_t::entry_t *entry{};
     while (!interrupted_or_overflowed() && (entry = base_dir_iter.next())) {
         if (need_dir && !entry->is_dir()) continue;

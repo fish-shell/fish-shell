@@ -172,12 +172,13 @@ void dir_iter_t::entry_t::do_stat() const {
     }
 }
 
-dir_iter_t::dir_iter_t(const wcstring &path) {
+dir_iter_t::dir_iter_t(const wcstring &path, bool withdot) {
     dir_.reset(wopendir(path));
     if (!dir_) {
         error_ = errno;
         return;
     }
+    withdot_ = withdot;
     entry_.dirfd_ = dirfd(&*dir_);
 }
 
@@ -211,8 +212,9 @@ const dir_iter_t::entry_t *dir_iter_t::next() {
         error_ = errno;
         return nullptr;
     }
-    // Skip . and ..
-    if (!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, "..")) {
+    // Skip . and ..,
+    // unless we've been told not to.
+    if (!withdot_ && (!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, ".."))) {
         return next();
     }
     entry_.reset();

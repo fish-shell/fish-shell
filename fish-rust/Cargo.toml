@@ -10,6 +10,7 @@ widestring-suffix = { path = "./widestring-suffix/" }
 autocxx = "0.23.1"
 cxx = "1.0"
 errno = "0.2.8"
+inventory = { version = "0.3.3", optional = true}
 lazy_static = "1.4.0"
 libc = "0.2.137"
 nix = "0.25.0"
@@ -25,6 +26,12 @@ miette = { version = "5", features = ["fancy"] }
 
 [lib]
 crate-type=["staticlib"]
+
+[features]
+# The fish-ffi-tests feature causes tests to be built which need to use the FFI.
+# These tests are run by fish_tests().
+default = ["fish-ffi-tests"]
+fish-ffi-tests = ["inventory"]
 
 [patch.crates-io]
 cxx = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }

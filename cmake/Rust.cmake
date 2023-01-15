@@ -17,6 +17,7 @@ set(fish_autocxx_gen_dir "${CMAKE_BINARY_DIR}/fish-autocxx-gen/")
 
 corrosion_import_crate(
     MANIFEST_PATH "${CMAKE_SOURCE_DIR}/fish-rust/Cargo.toml"
+    FEATURES "fish-ffi-tests"
 )
 
 # We need the build dir because cxx puts our headers in there.

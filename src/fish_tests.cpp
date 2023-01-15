@@ -63,6 +63,7 @@
 #include "fd_readable_set.rs.h"
 #include "fds.h"
 #include "ffi_init.rs.h"
+#include "ffi_tests.rs.h"
 #include "function.h"
 #include "future_feature_flags.h"
 #include "global_safety.h"
@@ -7148,6 +7149,8 @@ void test_rust_smoke() {
     do_test(x == 42);
 }
 
+void test_rust_ffi() { rust::run_ffi_tests(); }
+
 // typedef void (test_entry_point_t)();
 using test_entry_point_t = void (*)();
 struct test_t {
@@ -7269,6 +7272,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("re"), test_re_substitute},
     {TEST_GROUP("wgetopt"), test_wgetopt},
     {TEST_GROUP("rust_smoke"), test_rust_smoke},
+    {TEST_GROUP("rust_ffi"), test_rust_ffi},
 };
 
 void list_tests() {

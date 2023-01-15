@@ -19,3 +19,8 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
+
+use crate::ffi_tests::add_test;
+add_test!("test_add", || {
+    assert_eq!(add(2, 3), 5);
+});

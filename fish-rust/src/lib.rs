@@ -10,6 +10,7 @@ mod fd_readable_set;
 mod fds;
 mod ffi;
 mod ffi_init;
+mod ffi_tests;
 mod flog;
 mod signal;
 mod smoke;

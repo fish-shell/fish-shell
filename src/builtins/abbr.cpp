@@ -202,11 +202,12 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
         streams.err.append_format(_(L"%ls %ls: Requires at least two arguments\n"), CMD, subcmd);
         return STATUS_INVALID_ARGS;
     }
-    const wcstring &name = opts.args[0];
-    if (name.empty()) {
+
+    if (opts.args.empty() || opts.args[0].empty()) {
         streams.err.append_format(_(L"%ls %ls: Name cannot be empty\n"), CMD, subcmd);
         return STATUS_INVALID_ARGS;
     }
+    const wcstring &name = opts.args[0];
     if (std::any_of(name.begin(), name.end(), iswspace)) {
         streams.err.append_format(
             _(L"%ls %ls: Abbreviation '%ls' cannot have spaces in the word\n"), CMD, subcmd,

@@ -194,3 +194,8 @@ abbr --add bogus --position never stuff
 
 abbr --add bogus --position anywhere --position command stuff
 # CHECKERR: abbr: Cannot specify multiple positions
+
+abbr --add --regex foo --function foo
+# CHECKERR: abbr --add: Name cannot be empty
+echo foo
+# CHECK: foo

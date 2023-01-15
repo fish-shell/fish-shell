@@ -119,7 +119,7 @@ bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
 
 /// Returns true if needle, represented as a subsequence, is contained within haystack.
 /// Note subsequence is not substring: "foo" is a subsequence of "follow" for example.
-static bool subsequence_in_string(const wcstring &needle, const wcstring &haystack) {
+bool subsequence_in_string(const wcstring &needle, const wcstring &haystack) {
     // Impossible if needle is larger than haystack.
     if (needle.size() > haystack.size()) {
         return false;

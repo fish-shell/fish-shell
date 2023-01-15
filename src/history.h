@@ -57,6 +57,8 @@ enum class history_search_type_t {
     contains_glob,
     /// Search for commands starting with the given glob pattern.
     prefix_glob,
+    /// Search for commands containing the given string as a subsequence
+    contains_subsequence,
     /// Matches everything.
     match_everything,
 };

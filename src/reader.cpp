@@ -1288,11 +1288,21 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     completion_list_t completions;
     history_search_t search{history, search_string, history_search_type_t::contains,
                             smartcase_flags(search_string), history_index};
-    while (completions.size() < page_size && search.go_to_next_match(direction)) {
+    bool next_match_found = search.go_to_next_match(direction);
+    if (!next_match_found) {
+        // If there were no matches, try again with subsequence search
+        search =
+            history_search_t{history, search_string, history_search_type_t::contains_subsequence,
+                             smartcase_flags(search_string), history_index};
+        next_match_found = search.go_to_next_match(direction);
+    }
+    while (completions.size() < page_size && next_match_found) {
         const history_item_t &item = search.current_item();
         completions.push_back(completion_t{
             item.str(), L"", string_fuzzy_match_t::exact_match(),
             COMPLETE_REPLACES_COMMANDLINE | COMPLETE_DONT_ESCAPE | COMPLETE_DONT_SORT});
+
+        next_match_found = search.go_to_next_match(direction);
     }
     size_t last_index = search.current_index();
     if (direction == history_search_direction_t::forward)

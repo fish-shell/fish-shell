@@ -34,6 +34,9 @@ bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
 
+/// Test if a string matches a subsequence of another.
+bool subsequence_in_string(const wcstring &needle, const wcstring &haystack);
+
 /// Case-insensitive string search, modeled after std::string::find().
 /// \param fuzzy indicates this is being used for fuzzy matching and case insensitivity is
 /// expanded to include symbolic characters (#3584).

@@ -195,6 +195,9 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
             if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern2);
         }
+        case history_search_type_t::contains_subsequence: {
+            return subsequence_in_string(term, content_to_match);
+        }
         case history_search_type_t::match_everything: {
             return true;
         }

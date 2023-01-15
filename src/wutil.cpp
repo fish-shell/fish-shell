@@ -514,6 +514,8 @@ const wcstring &wgettext(const wchar_t *in) {
     return val;
 }
 
+const wchar_t *wgettext_ptr(const wchar_t *in) { return wgettext(in).c_str(); }
+
 int wmkdir(const wcstring &name, int mode) {
     cstring name_narrow = wcs2string(name);
     return mkdir(name_narrow.c_str(), mode);

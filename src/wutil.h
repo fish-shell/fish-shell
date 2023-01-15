@@ -90,6 +90,7 @@ std::wstring wbasename(std::wstring path);
 /// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
 /// will be nothing more than a wrapper around gettext, like all other functions in this file.
 const wcstring &wgettext(const wchar_t *in);
+const wchar_t *wgettext_ptr(const wchar_t *in);
 
 /// Wide character version of mkdir.
 int wmkdir(const wcstring &name, int mode);

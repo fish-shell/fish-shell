@@ -31,6 +31,7 @@ include_cpp! {
     generate!("parse_util_unescape_wildcards")
 
     generate!("wildcard_match")
+    generate!("wgettext_ptr")
 
 }
 

@@ -163,6 +163,19 @@ The script should write any error messages to stdout, not stderr. It should retu
 
 Fish ships with a ``_validate_int`` function that accepts a ``--min`` and ``--max`` flag. Let's say your command accepts a ``-m`` or ``--max`` flag and the minimum allowable value is zero and the maximum is 5. You would define the option like this: ``m/max=!_validate_int --min 0 --max 5``. The default if you just call ``_validate_int`` without those flags is to simply check that the value is a valid integer with no limits on the min or max value allowed.
 
+Here are some examples of flag validations::
+
+  # validate that a path is a directory
+  argparse 'p/path=!test -d "$_flag_value"' -- --path $__fish_config_dir
+  # validate that a path does not exist or print an error
+  argparse 'p/path=!test ! -e "$_flag_value" || echo "Path exists: $_flag_value"' -- $argv
+  # validate that a function does not exist
+  argparse 'f/func=!not functions -q "$_flag_value"' -- -f alias
+  # validate that a string matches a regex
+  argparse 'c/color=!string match -rq \'^#?[0-9a-fA-F]{6}$\' "$_flag_value"' -- -c 'c0ffee'
+  # validate with a validator function
+  argparse 'n/num=!_validate_int --min 0 --max 99' -- --num 42
+
 Example OPTION_SPECs
 --------------------
 

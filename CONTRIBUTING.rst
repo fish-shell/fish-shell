@@ -18,6 +18,13 @@ Completion scripts are the most common contribution to fish, and they are very w
 In general, we'll take all well-written completion scripts for a command that is publically available.
 This means no private tools or personal scripts, and we do reserve the right to reject for other reasons.
 
+Before you try to contribute them to fish, consider if the authors of the tool you are completing want to maintain the script instead.
+Often that makes more sense, specifically because they can add new options to the script immediately once they add them,
+and don't have to maintain one completion script for multiple versions. If the authors no longer wish to maintain the script,
+they can of course always contact the fish maintainers to hand it over, preferably by opening a PR.
+This isn't a requirement - if the authors don't want to maintain it, or you simply don't want to contact them,
+you can contribute your script to fish.
+
 Completion scripts should
 
 1. Use as few dependencies as possible - try to use fish's builtins like ``string`` instead of ``grep`` and ``awk``,
@@ -27,8 +34,11 @@ Completion scripts should
    The shorter the description, the more likely it is that fish can use more columns.
 4. Function names should start with ``__fish``, and functions should be kept in the completion file unless they're used elsewhere.
 5. Run ``fish_indent`` on your script.
+6. Try not to use minor convenience features right after they are available in fish - we do try to keep completion scripts backportable.
+   If something has a real impact on the correctness or performance, feel free to use it,
+   but if it is just a shortcut, please leave it.
 
-Put your completion script into share/completions/name-of-command.fish.
+Put your completion script into share/completions/name-of-command.fish. If you have multiple commands, you need multiple files.
 
 If you want to add tests, you probably want to add a littlecheck test. See below for details.
 

@@ -700,11 +700,15 @@ When using this feature together with list brackets, the brackets will be used f
 Command substitution
 ^^^^^^^^^^^^^^^^^^^^
 
-The output of a command (or an entire :ref:`pipeline <pipes>`) can be used as the arguments to another command.
+A ``command substitution`` is an expansion that uses the *output* of a command as the arguments to another. For example::
 
-When you write a command in parentheses like ``outercommand (innercommand)``, fish first runs ``innercommand``, and then uses each line of its output as a separate argument to ``outercommand``, which will then be executed. Unlike other shells, the value of ``$IFS`` is not used [#]_, fish splits on newlines.
+  echo (pwd)
 
-A command substitution can have a dollar sign before the opening parenthesis like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines, but trailing empty lines are still removed.
+This executes the :doc:`pwd <cmds/pwd>` command, takes its output (more specifically what it wrote to the standard output "stdout" stream) and uses it as arguments to :doc:`echo <cmds/echo>`. So the inner command (the ``pwd``) is run first and has to complete before the outer command can even be started.
+
+If the inner command prints multiple lines, fish will use each separate line as a separate argument to the outer command. Unlike other shells, the value of ``$IFS`` is not used [#]_, fish splits on newlines.
+
+A command substitution can also be spelled with a dollar sign like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines, but trailing empty lines are still removed.
 
 If the output is piped to :doc:`string split or string split0 <cmds/string-split>` as the last step, those splits are used as they appear instead of splitting lines.
 
@@ -727,7 +731,6 @@ Examples::
 
     # Set ``$data`` to the contents of data, splitting on NUL-bytes.
     set data (cat data | string split0)
-
 
 Sometimes you want to pass the output of a command to another command that only accepts files. If it's just one file, you can usually just pass it via a pipe, like::
 

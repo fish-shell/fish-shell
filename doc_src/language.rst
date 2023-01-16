@@ -377,31 +377,80 @@ Comments can also appear after a line like so::
 Conditions
 ----------
 
-Fish has some builtins that let you execute commands only if a specific criterion is met: :doc:`if <cmds/if>`, :doc:`switch <cmds/switch>`, :doc:`and <cmds/and>` and :doc:`or <cmds/or>`, and also the familiar :ref:`&&/|| <tut-combiners>` syntax.
+Fish has some builtins that let you execute commands only if a specific criterion is met: :doc:`if <cmds/if>`, :doc:`switch <cmds/switch>`, :doc:`and <cmds/and>` and :doc:`or <cmds/or>`, and also the familiar :ref:`&&/|| <syntax-combiners>` syntax.
 
-The :doc:`switch <cmds/switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :doc:`switch <cmds/switch>` for more information.
+.. _syntax-if:
 
-The other conditionals use the :ref:`exit status <variables-status>` of a command to decide if a command or a block of commands should be executed.
+The ``if`` statement
+^^^^^^^^^^^^^^^^^^^^
 
-Unlike programming languages you might know, :doc:`if <cmds/if>` doesn't take a *condition*, it takes a *command*. If that command returned a successful :ref:`exit status <variables-status>` (that's 0), the ``if`` branch is taken, otherwise the :doc:`else <cmds/else>` branch.
+The :doc:`if <cmds/if>` statement runs a block of commands if the condition was true.
 
-To check a condition, there is the :doc:`test <cmds/test>` command::
+Like other shells, but unlike typical programming languages you might know, the condition here is a *command*. Fish runs it, and if it returns a true :ref:`exit status <variables-status>` (that's 0), the if-block is run. For example::
 
-  if test 5 -gt 2
-      echo Yes, five is greater than two
+  if test -e /etc/os-release
+      cat /etc/os-release
   end
 
-Some examples::
+This uses the :doc:`test <cmds/test>` command to see if the file /etc/os-release exists. If it does, it runs ``cat``, which prints it on the screen.
+
+Unlike other shells, the condition command just ends after the first job, there is no ``then`` here. Combiners like ``and`` and ``or`` extend the condition.
+
+``if`` is commonly used with the :doc:`test <cmds/test>` command that can check conditions.::
+
+  if test 5 -gt 2
+      echo "Yes, 5 is greater than 2"
+  end
+
+``if`` can also take ``else if`` clauses with additional conditions and an  :doc:`else <cmds/else>` clause that is executed when everything else was false::
+
+  if test "$number" -gt 10
+     echo Your number was greater than 10
+  else if test "$number" -gt 5
+     echo Your number was greater than 5
+  else if test "$number" -gt 1
+     echo Your number was greater than 1
+  else
+     echo Your number was smaller or equal to 1
+  end
+
+The :doc:`not <cmds/not>` keyword can be used to invert the status::
 
   # Just see if the file contains the string "fish" anywhere.
   # This executes the `grep` command, which searches for a string,
   # and if it finds it returns a status of 0.
+  # The `not` then turns 0 into 1 or anything else into 0.
   # The `-q` switch stops it from printing any matches.
-  if grep -q fish myanimals
-      echo "You have fish!"
-  else
+  if not grep -q fish myanimals
       echo "You don't have fish!"
+  else
+      echo "You have fish!"
   end
+
+The ``switch`` statement
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :doc:`switch <cmds/switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. It can take multiple :doc:`case <cmds/case>` blocks that are executed when the string matches. They can take :ref:`wildcards <expand-wildcard>`. For example::
+
+  switch (uname)
+  case Linux
+      echo Hi Tux!
+  case Darwin
+      echo Hi Hexley!
+  case DragonFly '*BSD'
+      echo Hi Beastie! # this also works for FreeBSD and NetBSD
+  case '*'
+      echo Hi, stranger!
+  end
+
+Unlike other shells or programming languages, there is no fallthrough - the first matching ``case`` block is executed and then control jumps out of the ``switch``.
+
+.. _syntax-combiners:
+
+Combiners (``and`` / ``or`` / ``&&`` / ``||``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For simple checks, you can use combiners. :doc:`and <cmds/and>` or ``&&`` run the second command if the first succeeded, while :doc:`or <cmds/or>` or ``||`` run it if the first failed. For example::
 
   # $XDG_CONFIG_HOME is a standard place to store configuration.
   # If it's not set applications should use ~/.config.
@@ -422,7 +471,7 @@ and::
       echo 'How did I get here? This should be impossible'
   end
 
-These do essentially the same thing, but the former takes 2 seconds longer because the ``sleep`` always needs to run. So, in cases like these, the ordering is quite important for performance.
+These do essentially the same thing, but the former takes 2 seconds longer because the ``sleep`` always needs to run.
 
 Or you can have a case where it is necessary to stop early::
 
@@ -430,7 +479,20 @@ Or you can have a case where it is necessary to stop early::
 
 If this went on after seeing that the command "foo" doesn't exist, it would try to run ``foo`` and error because it wasn't found!
 
-For more, see the documentation for the builtins or the :ref:`Conditionals <tut-conditionals>` section of the tutorial.
+Combiners really just execute step-by-step, so it isn't recommended to build longer chains of them because they might do something you don't want. Consider::
+
+  test -e /etc/my.config
+  or echo "OH NO WE NEED A CONFIG FILE"
+  and return 1
+
+This will execute ``return 1`` also if the ``test`` succeeded. This is because fish runs ``test -e /etc/my.config``, sets $status to 0, then skips the ``echo``, keeps $status at 0, and then executes the ``return 1`` because $status is still 0.
+
+So if you have more complex conditions or want to run multiple things after something failed, consider using an :ref:`if <syntax-if>`. Here that would be::
+
+  if not test -e /etc/my.config
+      echo "OH NO WE NEED A CONFIG FILE"
+      return 1
+  end
 
 .. _syntax-loops-and-blocks:
 

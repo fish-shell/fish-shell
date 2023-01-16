@@ -17,7 +17,6 @@ pub fn wgettext_impl_do_not_use_directly(text: &[wchar_t]) -> &'static wstr {
 
 /// Get a (possibly translated) string from a string literal.
 /// This returns a &'static wstr.
-#[allow(unused_macros)]
 macro_rules! wgettext {
     ($string:literal) => {
         crate::wutil::gettext::wgettext_impl_do_not_use_directly(
@@ -25,6 +24,7 @@ macro_rules! wgettext {
         )
     };
 }
+pub(crate) use wgettext;
 
 /// Like wgettext, but applies a sprintf format string.
 /// The result is a WString.

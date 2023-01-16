@@ -1,6 +1,8 @@
 use crate::wchar::{self};
+use ::std::pin::Pin;
 use ::std::slice;
 use autocxx::prelude::*;
+use cxx::SharedPtr;
 
 // autocxx has been hacked up to know about this.
 pub type wchar_t = u32;
@@ -33,6 +35,39 @@ include_cpp! {
     generate!("wildcard_match")
     generate!("wgettext_ptr")
 
+    generate!("parser_t")
+    generate!("job_t")
+    generate!("process_t")
+
+    generate!("proc_wait_any")
+
+    generate!("output_stream_t")
+    generate!("io_streams_t")
+
+    generate_pod!("RustFFIJobList")
+    generate_pod!("RustFFIProcList")
+    generate_pod!("RustBuiltin")
+
+    generate!("builtin_missing_argument")
+    generate!("builtin_unknown_option")
+    generate!("builtin_print_help")
+
+    generate!("wait_handle_t")
+    generate!("wait_handle_store_t")
+}
+
+impl parser_t {
+    pub fn get_jobs(&self) -> &[SharedPtr<job_t>] {
+        let ffi_jobs = self.ffi_jobs();
+        unsafe { slice::from_raw_parts(ffi_jobs.jobs, ffi_jobs.count) }
+    }
+}
+
+impl job_t {
+    pub fn get_procs(&self) -> &mut [UniquePtr<process_t>] {
+        let ffi_procs = self.ffi_processes();
+        unsafe { slice::from_raw_parts_mut(ffi_procs.procs, ffi_procs.count) }
+    }
 }
 
 /// Allow wcharz_t to be "into" wstr.
@@ -52,6 +87,30 @@ impl From<wcharz_t> for wchar::WString {
         Self::from_vec(v).expect("Invalid UTF-32")
     }
 }
+
+/// A bogus trait for turning &mut Foo into Pin<&mut Foo>.
+/// autocxx enforces that non-const methods must be called through Pin,
+/// but this means we can't pass around mutable references to types like parser_t.
+/// We also don't want to assert that parser_t is Unpin.
+/// So we just allow constructing a pin from a mutable reference; none of the C++ code.
+/// It's worth considering disabling this in cxx; for now we use this trait.
+/// Eventually parser_t and io_streams_t will not require Pin so we just unsafe-it away.
+pub trait Repin {
+    fn pin(&mut self) -> Pin<&mut Self> {
+        unsafe { Pin::new_unchecked(self) }
+    }
+
+    fn unpin(self: Pin<&mut Self>) -> &mut Self {
+        unsafe { self.get_unchecked_mut() }
+    }
+}
+
+// Implement Repin for our types.
+impl Repin for parser_t {}
+impl Repin for job_t {}
+impl Repin for process_t {}
+impl Repin for io_streams_t {}
+impl Repin for output_stream_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

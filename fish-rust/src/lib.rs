@@ -20,3 +20,5 @@ mod wchar_ext;
 mod wchar_ffi;
 mod wgetopt;
 mod wutil;
+
+mod builtins;

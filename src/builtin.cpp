@@ -59,14 +59,16 @@
 #include "builtins/return.h"
 #include "builtins/set.h"
 #include "builtins/set_color.h"
+#include "builtins/shared.rs.h"
 #include "builtins/source.h"
 #include "builtins/status.h"
 #include "builtins/string.h"
 #include "builtins/test.h"
 #include "builtins/type.h"
 #include "builtins/ulimit.h"
-#include "builtins/wait.h"
 #include "complete.h"
+#include "cxx.h"
+#include "cxxgen.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "io.h"
@@ -78,6 +80,10 @@
 #include "reader.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
+
+static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd);
+static proc_status_t builtin_run_rust(parser_t &parser, io_streams_t &streams,
+                                      const wcstring_list_t &argv, RustBuiltin builtin);
 
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
@@ -221,6 +227,10 @@ static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, con
     }
 
     return STATUS_CMD_ERROR;
+}
+
+static maybe_t<int> implemented_in_rust(parser_t &, io_streams_t &, const wchar_t **) {
+    DIE("builtin is implemented in Rust, this should not be called");
 }
 
 // How many bytes we read() at once.
@@ -410,7 +420,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"true", &builtin_true, N_(L"Return a successful result")},
     {L"type", &builtin_type, N_(L"Check if a thing is a thing")},
     {L"ulimit", &builtin_ulimit, N_(L"Get/set resource usage limits")},
-    {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},
+    {L"wait", &implemented_in_rust, N_(L"Wait for background processes completed")},
     {L"while", &builtin_generic, N_(L"Perform a command multiple times")},
 };
 ASSERT_SORTED_BY_NAME(builtin_datas);
@@ -441,6 +451,11 @@ static bool cmd_needs_help(const wcstring &cmd) { return contains(help_builtins,
 proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_streams_t &streams) {
     if (argv.empty()) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
     const wcstring &cmdname = argv.front();
+
+    auto rust_builtin = try_get_rust_builtin(cmdname);
+    if (rust_builtin.has_value()) {
+        return builtin_run_rust(parser, streams, argv, *rust_builtin);
+    }
 
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
@@ -511,4 +526,21 @@ const wchar_t *builtin_get_desc(const wcstring &name) {
         result = _(builtin->desc);
     }
     return result;
+}
+
+static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
+    if (cmd == L"wait") {
+        return RustBuiltin::Wait;
+    }
+    return none();
+}
+
+static proc_status_t builtin_run_rust(parser_t &parser, io_streams_t &streams,
+                                      const wcstring_list_t &argv, RustBuiltin builtin) {
+    ::rust::Vec<wcharz_t> rust_argv;
+    for (const wcstring &arg : argv) {
+        rust_argv.emplace_back(arg.c_str());
+    }
+    rust_run_builtin(parser, streams, rust_argv, builtin);
+    return proc_status_t{};
 }

@@ -111,7 +111,7 @@ set(FISH_BUILTIN_SRCS
     src/builtins/realpath.cpp src/builtins/return.cpp src/builtins/set.cpp
     src/builtins/set_color.cpp src/builtins/source.cpp src/builtins/status.cpp
     src/builtins/string.cpp src/builtins/test.cpp src/builtins/type.cpp src/builtins/ulimit.cpp
-    src/builtins/wait.cpp)
+)
 
 # List of other sources.
 set(FISH_SRCS

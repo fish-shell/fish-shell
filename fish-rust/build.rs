@@ -24,6 +24,7 @@ fn main() -> miette::Result<()> {
         "src/ffi_tests.rs",
         "src/smoke.rs",
         "src/topic_monitor.rs",
+        "src/builtins/shared.rs",
     ];
     cxx_build::bridges(source_files)
         .flag_if_supported("-std=c++11")

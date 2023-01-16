@@ -26,6 +26,19 @@ macro_rules! wgettext {
     };
 }
 
+/// Like wgettext, but applies a sprintf format string.
+/// The result is a WString.
+macro_rules! wgettext_fmt {
+    (
+    $string:literal, // format string
+    $($args:expr),*, // list of expressions
+    $(,)?   // optional trailing comma
+    ) => {
+        crate::wutil::sprintf!(&crate::wutil::wgettext!($string), $($args),*)
+    };
+}
+pub(crate) use wgettext_fmt;
+
 use crate::ffi_tests::add_test;
 add_test!("test_untranslated", || {
     let s: &'static wstr = wgettext!("abc");

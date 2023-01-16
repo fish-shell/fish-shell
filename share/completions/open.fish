@@ -1,6 +1,6 @@
 if test (uname) = Darwin # OS X
-    complete -c open -s a -d 'specify app name' -r -a "(mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*' | string replace -r '.+/(.+).app' '\$1')"
-    complete -c open -s b -d 'specify app bundle id' -x -a "(mdls (mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*') -name kMDItemCFBundleIdentifier | string replace -rf 'kMDItemCFBundleIdentifier = \"(.+)\"' '\$1')"
+    complete -c open -s a -d 'specify app name' -r -a "(mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /System/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*' | string replace -r '.+/(.+).app' '\$1')"
+    complete -c open -s b -d 'specify app bundle id' -x -a "(mdls (mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /System/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*') -name kMDItemCFBundleIdentifier | string replace -rf 'kMDItemCFBundleIdentifier = \"(.+)\"' '\$1')"
     complete -c open -s e -d 'open in TextEdit'
     complete -c open -s t -d 'open in default editor'
     complete -c open -s f -d 'open stdin with editor'

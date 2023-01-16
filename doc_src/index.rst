@@ -100,10 +100,19 @@ A script written in :command:`bash` would need a first line like this:
 
 When the shell tells the kernel to execute the file, it will use the interpreter ``/bin/bash``.
 
-For a script written in another language, just replace ``/bin/bash`` with the interpreter for that language (for example: ``/usr/bin/python`` for a python script, or ``/usr/local/bin/fish`` for a fish script).
+For a script written in another language, just replace ``/bin/bash`` with the interpreter for that language. For example: ``/usr/bin/python`` for a python script, or ``/usr/local/bin/fish`` for a fish script, if that is where you have them installed.
 
-This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
+If you want to share your script with others, you might want to use :command:`env` to allow for the interpreter to be installed in other locations. For example::
 
+  #!/usr/bin/env fish
+  echo Hello from fish $version
+
+This will call ``env``, which then goes through :envvar:`PATH` to find a program called "fish". This makes it work, whether fish is installed in /usr/local/bin/fish or /usr/bin/fish or ~/.local/bin/fish, as long as that directory is in :envvar:`PATH`.
+
+The shebang line is only used when scripts are executed without specifying the interpreter [#]_. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
+
+When executing files without an interpreter, fish, like other shells, tries your system shell, typically /bin/sh. This is needed because some scripts are shipped without a shebang line.
+       
 Configuration
 =============
 

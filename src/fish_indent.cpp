@@ -194,7 +194,7 @@ struct pretty_printer_t {
                         p = p->parent;
                         assert(p->type == type_t::statement);
                         p = p->parent;
-                        if (auto job = p->try_as<job_t>()) {
+                        if (auto job = p->try_as<job_pipeline_t>()) {
                             if (!job->variables.empty()) result |= allow_escaped_newlines;
                         } else if (auto job_cnt = p->try_as<job_continuation_t>()) {
                             if (!job_cnt->variables.empty()) result |= allow_escaped_newlines;

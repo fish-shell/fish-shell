@@ -47,7 +47,7 @@ class parse_execution_context_t : noncopyable_t {
     int cancel_signal{0};
 
     // The currently executing job node, used to indicate the line number.
-    const ast::job_t *executing_job_node{};
+    const ast::job_pipeline_t *executing_job_node{};
 
     // Cached line number information.
     size_t cached_lineno_offset = 0;
@@ -84,7 +84,7 @@ class parse_execution_context_t : noncopyable_t {
                                           wcstring *out_cmd, wcstring_list_t *out_args) const;
 
     /// Indicates whether a job is a simple block (one block, no redirections).
-    bool job_is_simple_block(const ast::job_t &job) const;
+    bool job_is_simple_block(const ast::job_pipeline_t &job) const;
 
     enum process_type_t process_type_for_command(const ast::decorated_statement_t &statement,
                                                  const wcstring &cmd) const;
@@ -135,7 +135,7 @@ class parse_execution_context_t : noncopyable_t {
     end_execution_reason_t determine_redirections(const ast::argument_or_redirection_list_t &list,
                                                   redirection_spec_list_t *out_redirections);
 
-    end_execution_reason_t run_1_job(const ast::job_t &job, const block_t *associated_block);
+    end_execution_reason_t run_1_job(const ast::job_pipeline_t &job, const block_t *associated_block);
     end_execution_reason_t test_and_run_1_job_conjunction(const ast::job_conjunction_t &jc,
                                                           const block_t *associated_block);
     end_execution_reason_t run_job_conjunction(const ast::job_conjunction_t &job_expr,
@@ -144,7 +144,7 @@ class parse_execution_context_t : noncopyable_t {
                                         const block_t *associated_block);
     end_execution_reason_t run_job_list(const ast::andor_job_list_t &job_list_node,
                                         const block_t *associated_block);
-    end_execution_reason_t populate_job_from_job_node(job_t *j, const ast::job_t &job_node,
+    end_execution_reason_t populate_job_from_job_node(job_t *j, const ast::job_pipeline_t &job_node,
                                                       const block_t *associated_block);
 
     // Assign a job group to the given job.
@@ -154,7 +154,7 @@ class parse_execution_context_t : noncopyable_t {
     bool use_job_control() const;
 
     // Returns the line number of the node. Not const since it touches cached_lineno_offset.
-    int line_offset_of_node(const ast::job_t *node);
+    int line_offset_of_node(const ast::job_pipeline_t *node);
     int line_offset_of_character_at_offset(size_t offset);
 
    public:

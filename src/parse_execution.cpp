@@ -150,7 +150,7 @@ parse_execution_context_t::infinite_recursive_statement_in_job_list(const ast::j
     // Get the first job in the job list.
     const ast::job_conjunction_t *jc = jobs.at(0);
     if (!jc) return nullptr;
-    const ast::job_t *job = &jc->job;
+    const ast::job_pipeline_t *job = &jc->job;
 
     // Helper to return if a statement is infinitely recursive in this function.
     auto statement_recurses =
@@ -245,7 +245,7 @@ maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution()
 }
 
 /// Return whether the job contains a single statement, of block type, with no redirections.
-bool parse_execution_context_t::job_is_simple_block(const ast::job_t &job) const {
+bool parse_execution_context_t::job_is_simple_block(const ast::job_pipeline_t &job) const {
     using namespace ast;
     // Must be no pipes.
     if (!job.continuation.empty()) {
@@ -1180,7 +1180,7 @@ end_execution_reason_t parse_execution_context_t::populate_job_process(
 }
 
 end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
-    job_t *j, const ast::job_t &job_node, const block_t *associated_block) {
+    job_t *j, const ast::job_pipeline_t &job_node, const block_t *associated_block) {
     UNUSED(associated_block);
 
     // We are going to construct process_t structures for every statement in the job.
@@ -1244,7 +1244,7 @@ static bool remove_job(parser_t &parser, const job_t *job) {
 /// For historical reasons the 'not' and 'time' prefix are "inside out". That is, it's
 /// 'not time cmd'. Note that a time appearing anywhere in the pipeline affects the whole job.
 /// `sleep 1 | not time true` will time the whole job!
-static bool job_node_wants_timing(const ast::job_t &job_node) {
+static bool job_node_wants_timing(const ast::job_pipeline_t &job_node) {
     // Does our job have the job-level time prefix?
     if (job_node.time) return true;
 
@@ -1266,7 +1266,7 @@ static bool job_node_wants_timing(const ast::job_t &job_node) {
     return false;
 }
 
-end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &job_node,
+end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipeline_t &job_node,
                                                             const block_t *associated_block) {
     if (auto ret = check_end_execution()) {
         return *ret;
@@ -1288,7 +1288,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     scoped_push<int> saved_eval_level(&parser->eval_level, parser->eval_level + 1);
 
     // Save the node index.
-    scoped_push<const ast::job_t *> saved_node(&executing_job_node, &job_node);
+    scoped_push<const ast::job_pipeline_t *> saved_node(&executing_job_node, &job_node);
 
     // Profiling support.
     profile_item_t *profile_item = this->parser->create_profile_item();
@@ -1577,7 +1577,7 @@ bool parse_execution_context_t::use_job_control() const {
     DIE("Unreachable");
 }
 
-int parse_execution_context_t::line_offset_of_node(const ast::job_t *node) {
+int parse_execution_context_t::line_offset_of_node(const ast::job_pipeline_t *node) {
     // If we're not executing anything, return -1.
     if (!node) {
         return -1;

@@ -1058,7 +1058,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
 }
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
-static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
+static bool detect_errors_in_backgrounded_job(const ast::job_pipeline_t &job,
                                               parse_error_list_t *parse_errors) {
     using namespace ast;
     auto source_range = job.try_source_range();
@@ -1127,10 +1127,10 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     const statement_t *st = dst.parent->as<statement_t>();
 
     // Walk up to the job.
-    const ast::job_t *job = nullptr;
+    const ast::job_pipeline_t *job = nullptr;
     for (const node_t *cursor = st; job == nullptr; cursor = cursor->parent) {
         assert(cursor && "Reached root without finding a job");
-        job = cursor->try_as<ast::job_t>();
+        job = cursor->try_as<ast::job_pipeline_t>();
     }
     assert(job && "Should have found the job");
 
@@ -1304,7 +1304,7 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
         } else if (const argument_t *arg = node.try_as<argument_t>()) {
             const wcstring &arg_src = arg->source(buff_src, &storage);
             res |= parse_util_detect_errors_in_argument(*arg, arg_src, out_errors);
-        } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
+        } else if (const ast::job_pipeline_t *job = node.try_as<ast::job_pipeline_t>()) {
             // Disallow background in the following cases:
             //
             // foo & ; and bar

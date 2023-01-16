@@ -1,7 +1,7 @@
 fish 3.7.0 (released ???)
 ===================================
 
-.. ignore: 9439 9440 9442 9452 9469
+.. ignore: 9439 9440 9442 9452 9469 9480 9482
 
 Notable improvements and fixes
 ------------------------------
@@ -23,7 +23,7 @@ Interactive improvements
 ------------------------
 - Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`)
-- Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`9473`).
+- Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -36,6 +36,7 @@ Completions
 - Added completions for:
   - ``otool``
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
+- File completion now offers ``../`` and ``./`` again (:issue:`9477`)
 
 
 Improved terminal support

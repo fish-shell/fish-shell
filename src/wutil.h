@@ -171,12 +171,15 @@ enum class dir_entry_type_t : uint8_t {
 /// symlink, or if the caller asks for the stat buffer.
 /// Symlinks are followed.
 class dir_iter_t : noncopyable_t {
+   private:
+    /// Whether this dir_iter considers the "." and ".." filesystem entries.
+    bool withdot_{false};
    public:
     struct entry_t;
 
     /// Open a directory at a given path. On failure, \p error() will return the error code.
     /// Note opendir is guaranteed to set close-on-exec by POSIX (hooray).
-    explicit dir_iter_t(const wcstring &path);
+    explicit dir_iter_t(const wcstring &path, bool withdot = false);
 
     /// Advance this iterator.
     /// \return a pointer to the entry, or nullptr if the entry is finished, or an error occurred.

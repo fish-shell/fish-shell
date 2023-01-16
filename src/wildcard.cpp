@@ -679,7 +679,7 @@ class wildcard_expander_t {
     }
 
     // Helper to resolve using our prefix.
-    dir_iter_t open_dir(const wcstring &base_dir) const {
+    dir_iter_t open_dir(const wcstring &base_dir, bool dotdot = false) const {
         wcstring path = this->working_directory;
         append_path_component(path, base_dir);
         if (flags & expand_flag::special_for_cd) {
@@ -687,7 +687,7 @@ class wildcard_expander_t {
             // for example, cd ../<tab> should complete "without resolving symlinks".
             path = normalize_path(path);
         }
-        return dir_iter_t(path);
+        return dir_iter_t(path, dotdot);
     }
 
    public:
@@ -952,7 +952,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
             }
         }
 
-        dir_iter_t dir = open_dir(base_dir);
+        // return "." and ".." entries if we're doing completions
+        dir_iter_t dir = open_dir(base_dir, /* return . and .. */ flags & expand_flag::for_completions);
         if (dir.valid()) {
             if (is_last_segment) {
                 // Last wildcard segment, nonempty wildcard.

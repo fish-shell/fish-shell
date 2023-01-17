@@ -4482,7 +4482,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
             // Clear the pager if necessary.
             bool focused_on_search_field = (active_edit_line() == &pager.search_field_line);
-            if (command_ends_paging(readline_cmd, focused_on_search_field)) {
+            if (!history_search.active() &&
+                command_ends_paging(readline_cmd, focused_on_search_field)) {
                 clear_pager();
             }
 

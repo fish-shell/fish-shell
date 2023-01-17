@@ -714,7 +714,7 @@ If the output is piped to :doc:`string split or string split0 <cmds/string-split
 
 The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :doc:`set <cmds/set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
 
-To use only some lines of the output, refer to :ref:`index range expansion <expand-index-range>`.
+To use only some lines of the output, refer to :ref:`slices <expand-slices>`.
 
 Examples::
 
@@ -856,10 +856,10 @@ This can be quite useful. For example, if you want to go through all the files i
 
 Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in :envvar:`PATH`, the right answer here is to expand to no files.
 
-.. _expand-index-range:
+.. _expand-slices:
 
-Index range expansion
-^^^^^^^^^^^^^^^^^^^^^
+Slices
+^^^^^^
 
 Sometimes it's necessary to access only some of the elements of a :ref:`list <variables-lists>` (all fish variables are lists), or some of the lines a :ref:`command substitution <expand-command-substitution>` outputs. Both are possible in fish by writing a set of indices in brackets, like::
 
@@ -879,7 +879,7 @@ If a list has 5 elements the indices go from 1 to 5, so a range of ``2..16`` wil
 If the end is negative the range always goes up, so ``2..-2`` will go from element 2 to 4, and ``2..-16`` won't go anywhere because there is no way to go from the second element to one that doesn't exist, while going up.
 If the start is negative the range always goes down, so ``-2..1`` will go from element 4 to 1, and ``-16..2`` won't go anywhere because there is no way to go from an element that doesn't exist to the second element, while going down.
 
-A missing starting index in a range defaults to 1. This is allowed if the range is the first index expression of the sequence. Similarly, a missing ending index, defaulting to -1 is allowed for the last index range in the sequence.
+A missing starting index in a range defaults to 1. This is allowed if the range is the first index expression of the sequence. Similarly, a missing ending index, defaulting to -1 is allowed for the last index in the sequence.
 
 Multiple ranges are also possible, separated with a space.
 
@@ -1234,7 +1234,7 @@ If you specify a negative index when expanding or assigning to a list variable, 
     orange
     apple
 
-As you see, you can use a range of indices, see :ref:`index range expansion <expand-index-range>` for details.
+As you see, you can use a range of indices, see :ref:`slices <expand-slices>` for details.
 
 All lists are one-dimensional and can't contain other lists, although it is possible to fake nested lists using dereferencing - see :ref:`variable expansion <expand-variable>`.
 

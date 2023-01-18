@@ -99,7 +99,6 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
     for (const auto &abbr : abbrs->list()) {
         comps.clear();
         comps.push_back(L"abbr -a");
-        if (abbr.from_universal) comps.push_back(L"-U");
         if (abbr.is_regex()) {
             comps.push_back(L"--regex");
             comps.push_back(escape_string(abbr.key));
@@ -122,6 +121,7 @@ static int abbr_show(const abbr_options_t &, io_streams_t &streams) {
         if (!abbr.replacement_is_function) {
             comps.push_back(escape_string(abbr.replacement));
         }
+        if (abbr.from_universal) comps.push_back(_(L"# imported from a universal variable, see `help abbr`"));
         wcstring result = join_strings(comps, L' ');
         result.push_back(L'\n');
         streams.out.append(result);

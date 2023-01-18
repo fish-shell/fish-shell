@@ -25,6 +25,7 @@ Interactive improvements
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`)
 - Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
 - Escape during history search restores the original commandline again (regressed in 3.6.0).
+- Using ``--help`` on builtins now respects the $MANPAGER variable in preference to $PAGER (:issue:`9488`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

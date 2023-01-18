@@ -69,29 +69,30 @@ Here we define some of the terms used on this page and throughout the rest of th
 Quotes
 ------
 
-Sometimes features like :ref:`parameter expansion <expand>` and :ref:`character escapes <escapes>` get in the way. When that happens, you can use quotes, either single (``'``) or double (``"``). Between single quotes, fish performs no expansions. Between double quotes, fish only performs :ref:`variable expansion <expand-variable>`. No other kind of expansion (including :ref:`brace expansion <expand-brace>` or parameter expansion) is performed, and escape sequences (for example, ``\n``) are ignored. Within quotes, whitespace is not used to separate arguments, allowing quoted arguments to contain spaces.
+Sometimes you want to give a command an argument that contains characters special to fish, like spaces or ``$`` or ``*``. To do that, you can use quotes::
+
+    rm "my file.txt"
+
+to remove a file called ``my file.txt`` instead of trying to remove two files, ``my`` and ``file.txt``.
+
+Fish understands two kinds of quotes: Single (``'``) and double (``"``), and both work slightly differently.
+
+Between single quotes, fish performs no expansions. Between double quotes, fish only performs :ref:`variable expansion <expand-variable>` and :ref:`command substitution <expand-command-substitution>` in the ``$(command)``. No other kind of expansion (including :ref:`brace expansion <expand-brace>` or parameter expansion) is performed, and escape sequences (for example, ``\n``) are ignored. Within quotes, whitespace is not used to separate arguments, allowing quoted arguments to contain spaces.
 
 The only meaningful escape sequences in single quotes are ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only meaningful escapes in double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and ``\\``, which escapes the backslash symbol.
 
 Single quotes have no special meaning within double quotes and vice versa.
 
-Example::
-
-    rm "cumbersome filename.txt"
-
-removes the file ``cumbersome filename.txt``, while
-
-::
-
-    rm cumbersome filename.txt
-
-removes two files, ``cumbersome`` and ``filename.txt``.
-
-Another example::
+More examples::
 
     grep 'enabled)$' foo.txt
 
 searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special to ``grep``: it matches the end of the line).
+
+::
+   apt install "postgres-*"
+
+installs all packages with a name starting with "postgres-", instead of looking through the current directory for files named "postgres-something".
 
 .. _escapes:
 

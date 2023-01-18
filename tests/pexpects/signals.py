@@ -76,7 +76,7 @@ send("sleep 131 & echo $last_pid\r")
 pids += [expect_re("\d+\r\n").group().strip()]
 expect_prompt()
 send("sleep 9999999\r")
-sleep(0.300)  # ensure fish kicks off the above sleep before it gets HUP - see #7288
+sleep(0.500)  # ensure fish kicks off the above sleep before it gets HUP - see #7288
 os.kill(sp.spawn.pid, signal.SIGHUP)
 
 # Verify the spawned fish shell has exited.

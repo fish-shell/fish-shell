@@ -167,8 +167,6 @@ Here are some examples of flag validations::
 
   # validate that a path is a directory
   argparse 'p/path=!test -d "$_flag_value"' -- --path $__fish_config_dir
-  # validate that a path does not exist or print an error
-  argparse 'p/path=!test ! -e "$_flag_value" || echo "Path exists: $_flag_value"' -- $argv
   # validate that a function does not exist
   argparse 'f/func=!not functions -q "$_flag_value"' -- -f alias
   # validate that a string matches a regex

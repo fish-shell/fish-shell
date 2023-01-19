@@ -39,7 +39,7 @@ Completions
   - ``otool``
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)
-
+- Completion for ``terraform`` now asks for a parameter after ``terraform init -backend-config``. (:issue:`9498`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

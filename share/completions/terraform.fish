@@ -81,7 +81,7 @@ complete -r -c terraform -n "__fish_seen_subcommand_from import" -o var-file -d 
 complete -f -c terraform -n __fish_terraform_needs_command -a init -d "Initialize a new or existing Terraform configuration"
 complete -f -c terraform -n "__fish_seen_subcommand_from init" -o backend=false -d "Disable backend initialization"
 complete -f -c terraform -n "__fish_seen_subcommand_from init" -o cloud=false -d "Disable backend initialization"
-complete -f -c terraform -n "__fish_seen_subcommand_from init" -o backend-config -d "Backend configuration"
+complete -r -c terraform -n "__fish_seen_subcommand_from init" -o backend-config -d "Backend configuration"
 complete -f -c terraform -n "__fish_seen_subcommand_from init" -o force-copy -d "Suppress prompts about copying state data"
 complete -f -c terraform -n "__fish_seen_subcommand_from init" -o from-module -d "Copy the module into target directory before init"
 complete -f -c terraform -n "__fish_seen_subcommand_from init" -o get=false -d "Disable downloading modules for this configuration"

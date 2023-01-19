@@ -3,12 +3,14 @@ function __fish_print_portage_repository_paths --description 'Print the paths of
     set -l b
     set -l c /usr/share/portage/config/repos.conf
     test -d $a
-    and set b (find $a -type f )
+    and set b (find $a -type f 2>/dev/null)
     test -f $a
     and set b $a
     test -n "$b"
-    and string match -q "[gentoo]" -- (cat $b)
+    and string match -q "[gentoo]" -- (cat $b 2>/dev/null)
     and set c $b
     or set -a c $b
-    cat $c | string match -g -r '^location = (.*$)'
+    path is -r -- $c
+    or return
+    cat $c 2>/dev/null | string match -g -r '^location = (.*$)'
 end

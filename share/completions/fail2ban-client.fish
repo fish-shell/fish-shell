@@ -1,9 +1,11 @@
 function __fail2ban_jails
-	path basename {,/usr/local}/etc/fail2ban/filter.d/*.{conf,local} | path change-extension "" | sort -u
+	# No need to deduplicate because fish will take care of that for us
+	path basename {,/usr/local}/etc/fail2ban/filter.d/*.{conf,local} | path change-extension ""
 end
 
 function __fail2ban_actions
-	path basename {,/usr/local}/etc/fail2ban/action.d/*.{conf,local} | path change-extension "" | sort -u
+	# No need to deduplicate because fish will take care of that for us
+	path basename {,/usr/local}/etc/fail2ban/action.d/*.{conf,local} | path change-extension ""
 end
 
 # basic options

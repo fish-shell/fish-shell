@@ -61,6 +61,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv \cf forward-char
     bind --preset $argv \cb backward-char
     bind --preset $argv \ct transpose-chars
+    bind --preset $argv \cg cancel
     bind --preset $argv \c_ undo
     bind --preset $argv \cz undo
     bind --preset $argv \e/ redo

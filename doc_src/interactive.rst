@@ -363,6 +363,8 @@ To enable emacs mode, use ``fish_default_key_bindings``. This is also the defaul
 
 - :kbd:`Control`\ +\ :kbd:`K` deletes from the cursor to the end of line (moving it to the :ref:`killring`).
 
+- :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`G` cancel the current operation. Immediately after an unambiguous completion this undoes it.
+
 - :kbd:`Alt`\ +\ :kbd:`C` capitalizes the current word.
 
 - :kbd:`Alt`\ +\ :kbd:`U` makes the current word uppercase.

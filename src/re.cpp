@@ -251,7 +251,8 @@ maybe_t<wcstring> regex_t::substitute(const wcstring &subject, const wcstring &r
     error_code_t rc =
         pcre2_substitute(get_code(code_), to_sptr(subject), subject.size(), start_idx, options,
                          nullptr /* match_data */, nullptr /* context */, to_sptr(replacement),
-                         replacement.size(), reinterpret_cast<PCRE2_UCHAR32 *>(buffer), &bufflen);
+                         // (not using UCHAR32 here for cygwin's benefit)
+                         replacement.size(), reinterpret_cast<PCRE2_UCHAR *>(buffer), &bufflen);
 
     if (out_repl_count) {
         *out_repl_count = std::max(rc, 0);

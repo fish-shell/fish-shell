@@ -23,6 +23,7 @@ Interactive improvements
 ------------------------
 - Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`).
+- The history pager now shows fuzzy (subsequence) matches in the absence of exact substring matches (:issue:`9476`).
 - Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
 - Escape during history search restores the original commandline again (regressed in 3.6.0).
 - Using ``--help`` on builtins now respects the $MANPAGER variable in preference to $PAGER (:issue:`9488`).

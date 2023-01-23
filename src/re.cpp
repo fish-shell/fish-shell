@@ -271,7 +271,7 @@ maybe_t<wcstring> regex_t::substitute(const wcstring &subject, const wcstring &r
         wcstring res(bufflen, L'\0');
         rc = pcre2_substitute(get_code(code_), to_sptr(subject), subject.size(), start_idx, options,
                               nullptr /* match_data */, nullptr /* context */, to_sptr(replacement),
-                              replacement.size(), reinterpret_cast<PCRE2_UCHAR32 *>(&res[0]),
+                              replacement.size(), reinterpret_cast<PCRE2_UCHAR *>(&res[0]),
                               &bufflen);
         if (out_repl_count) {
             *out_repl_count = std::max(rc, 0);

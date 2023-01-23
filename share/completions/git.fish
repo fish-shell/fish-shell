@@ -1127,7 +1127,7 @@ complete -f -c git -n '__fish_git_using_command archive' -l worktree-attributes 
 # TODO options
 
 ### bisect
-complete -f -c git -n __fish_git_needs_command -a bisect -d 'Find the change that introduced a bug by binary search'
+complete -f -c git -n __fish_git_needs_command -a bisect -d 'Use binary search to find what introduced a bug'
 complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_prev_arg_in bisect' -xa "start\t'Start a new bisect session'
 bad\t'Mark a commit as bad'
 new\t'Mark a commit as new'
@@ -1305,7 +1305,7 @@ complete -f -c git -n '__fish_git_using_command describe' -l always -d 'Show uni
 complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Follow only the first parent of a merge commit'
 
 ### diff
-complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between commits or commit and working tree'
+complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between commits and working tree'
 complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l staged -d 'Show diff of changes in the index'
@@ -2015,7 +2015,7 @@ status\t'Show submodule status'
 init\t'Initialize all submodules'
 deinit\t'Unregister the given submodules'
 update\t'Update all submodules'
-set-branch\t'Sets the default remote tracking branch for the submodule'
+set-branch\t'Set the default remote tracking branch'
 set-url\t'Sets the URL of the specified submodule'
 summary\t'Show commit summary'
 foreach\t'Run command on each submodule'

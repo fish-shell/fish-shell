@@ -2009,7 +2009,8 @@ complete -f -c git -n '__fish_git_using_command format-patch' -l no-numbered -s 
 
 ## git submodule
 set -l submodulecommands add status init deinit update set-branch set-url summary foreach sync absorbgitdirs
-complete -f -c git -n __fish_git_needs_command -a "submodule\t'Initialize, update or inspect submodules'
+complete -f -c git -n __fish_git_needs_command -a "submodule\t'Initialize, update or inspect submodules'"
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a "
 status\t'Show submodule status'
 init\t'Initialize all submodules'
 deinit\t'Unregister the given submodules'

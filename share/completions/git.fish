@@ -1529,7 +1529,7 @@ complete -c git -n '__fish_git_using_command log' -l stdin -d 'Read commits from
 complete -c git -n '__fish_git_using_command log' -l cherry-mark -d 'Mark equivalent commits with = and inequivalent with +'
 complete -c git -n '__fish_git_using_command log' -l cherry-pick -d 'Omit equivalent commits'
 complete -c git -n '__fish_git_using_command log' -l left-only
-complete -c git -n '__fish_git_using_command log' -l rigth-only
+complete -c git -n '__fish_git_using_command log' -l right-only
 complete -c git -n '__fish_git_using_command log' -l cherry
 complete -c git -n '__fish_git_using_command log' -l walk-reflogs -s g
 complete -c git -n '__fish_git_using_command log' -l merge

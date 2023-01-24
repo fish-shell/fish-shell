@@ -509,7 +509,7 @@ function __fish_git_rev_files
 
     # List files in $rev's index, skipping the "tree ..." header, but appending
     # the parent path, which git does not include in the output (and fish requires)
-    printf "$path%s\n" (__fish_git show $rev:$path | sed '1,2d')
+    string join \n -- $path(__fish_git show $rev:$path | sed '1,2d')
 end
 
 # Provides __fish_git_rev_files completions for the current token

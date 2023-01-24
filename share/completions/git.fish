@@ -2386,16 +2386,13 @@ end
 
 # source git-* commands' autocompletion file if exists
 set -l __fish_git_custom_commands_completion
-for file in $PATH/git-*
-    not command -q $file
-    and continue
-
-    set -l subcommand (string replace -r -- '.*/git-([^/]*)$' '$1' $file)
-
+for file in (path filter -xZ $PATH/git-* | path basename)
     # Already seen this command earlier in $PATH.
-    contains -- $subcommand $__fish_git_custom_commands_completion
+    contains -- $file $__fish_git_custom_commands_completion
     and continue
 
-    complete -c git -f -n "__fish_git_using_command $subcommand" -a "(__fish_git_complete_custom_command $subcommand)"
-    set -a __fish_git_custom_commands_completion $subcommand
+    # Running `git foo` ends up running `git-foo`, so we need to ignore the `git-` here.
+    set -l cmd (string replace -r '^git-' '' -- $file)
+    complete -c git -f -n "__fish_git_using_command $cmd" -a "(__fish_git_complete_custom_command $cmd)"
+    set -a __fish_git_custom_commands_completion $file
 end

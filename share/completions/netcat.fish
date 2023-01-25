@@ -6,7 +6,7 @@ set -l flavor
 if string match -rq -- '^OpenBSD netcat' (netcat -h 2>&1)[1]
     set flavor nc.openbsd
 else
-    set flavor (basename (realpath (command -v netcat)))
+    set flavor (command -s netcat | path resolve | path basename)
 end
 
 __fish_complete_netcat netcat $flavor

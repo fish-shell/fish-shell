@@ -37,7 +37,10 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+
   - ``otool``
+  - ``mix phx``
+  
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)
 

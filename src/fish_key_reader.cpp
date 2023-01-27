@@ -36,8 +36,8 @@
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
 static const wchar_t *ctrl_symbolic_names[] = {
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, L"\\a",
-    L"\\b",  L"\\t",  L"\\n",  L"\\v",  L"\\f",  L"\\r",  nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+    L"\\b",  L"\\t",  L"\\n",  nullptr, nullptr, L"\\r",  nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, L"\\e",  L"\\x1c", nullptr, nullptr, nullptr};
 

@@ -25,7 +25,7 @@ expect_str("Press a key:")
 
 # Is a single control char echoed correctly?
 send("\x07")
-expect_str("char: \\cG  (or \\a)\r\nbind \\a 'do something'\r\n")
+expect_str("char: \\cG\r\nbind \\cG 'do something'\r\n")
 
 # Is a non-ASCII UTF-8 sequence prefaced by an escape char handled correctly?
 sleep(0.020)

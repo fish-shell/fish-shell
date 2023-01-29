@@ -90,6 +90,7 @@ More examples::
 searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special to ``grep``: it matches the end of the line).
 
 ::
+
    apt install "postgres-*"
 
 installs all packages with a name starting with "postgres-", instead of looking through the current directory for files named "postgres-something".

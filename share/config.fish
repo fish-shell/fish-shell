@@ -228,8 +228,12 @@ function fg
     builtin fg (__fish_expand_pid_args $argv)[-1]
 end
 
-function kill
-    command kill (__fish_expand_pid_args $argv)
+if command -q kill
+    # Only define this if something to wrap exists
+    # this allows a nice "commad not found" error to be triggered.
+    function kill
+        command kill (__fish_expand_pid_args $argv)
+    end
 end
 
 # As last part of initialization, source the conf directories.

@@ -764,7 +764,7 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
                         evt = this->readch();
                     } while (evt.is_readline());
                     this->push_front(evt);
-                    return readch();
+                    continue;
                 }
                 default: {
                     return evt;

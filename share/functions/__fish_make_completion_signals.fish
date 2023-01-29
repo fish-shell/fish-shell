@@ -19,6 +19,12 @@ function __fish_make_completion_signals --description 'Make list of kill signals
         return
     end
 
+    # If we don't have a kill, we don't try to run it.
+    # We require a kill *command* because we used to unconditionally define
+    # a wrapper (to allow %foo expansion)
+    command -q kill
+    or return
+
     # Some systems use the GNU coreutils kill command where `kill -L` produces an extended table
     # format that looks like this:
     #

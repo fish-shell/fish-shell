@@ -285,6 +285,12 @@ void input_event_queue_t::promote_interruptions_to_front() {
     std::rotate(queue_.begin(), first, last);
 }
 
+void input_event_queue_t::drop_leading_readline_events() {
+    queue_.erase(queue_.begin(),
+                 std::find_if(queue_.begin(), queue_.end(),
+                              [](const char_event_t& evt) { return !evt.is_readline(); }));
+}
+
 void input_event_queue_t::prepare_to_select() {}
 void input_event_queue_t::select_interrupted() {}
 void input_event_queue_t::uvar_change_notified() {}

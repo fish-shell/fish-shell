@@ -120,6 +120,7 @@ function history --description "display or manipulate interactive command histor
 
             if test $search_mode = --exact
                 builtin history delete $search_mode $_flag_case_sensitive -- $searchterm
+                builtin history save
                 return
             end
 

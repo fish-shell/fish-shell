@@ -15,6 +15,7 @@ mod flog;
 mod signal;
 mod smoke;
 mod topic_monitor;
+mod util;
 mod wchar;
 mod wchar_ext;
 mod wchar_ffi;

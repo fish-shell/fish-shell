@@ -1589,62 +1589,6 @@ static void test_parse_util_cmdsubst_extent() {
     }
 }
 
-static struct wcsfilecmp_test {
-    const wchar_t *str1;
-    const wchar_t *str2;
-    int expected_rc;
-} wcsfilecmp_tests[] = {{L"", L"", 0},
-                        {L"", L"def", -1},
-                        {L"abc", L"", 1},
-                        {L"abc", L"def", -1},
-                        {L"abc", L"DEF", -1},
-                        {L"DEF", L"abc", 1},
-                        {L"abc", L"abc", 0},
-                        {L"ABC", L"ABC", 0},
-                        {L"AbC", L"abc", -1},
-                        {L"AbC", L"ABC", 1},
-                        {L"def", L"abc", 1},
-                        {L"1ghi", L"1gHi", 1},
-                        {L"1ghi", L"2ghi", -1},
-                        {L"1ghi", L"01ghi", 1},
-                        {L"1ghi", L"02ghi", -1},
-                        {L"01ghi", L"1ghi", -1},
-                        {L"1ghi", L"002ghi", -1},
-                        {L"002ghi", L"1ghi", 1},
-                        {L"abc01def", L"abc1def", -1},
-                        {L"abc1def", L"abc01def", 1},
-                        {L"abc12", L"abc5", 1},
-                        {L"51abc", L"050abc", 1},
-                        {L"abc5", L"abc12", -1},
-                        {L"5abc", L"12ABC", -1},
-                        {L"abc0789", L"abc789", -1},
-                        {L"abc0xA789", L"abc0xA0789", 1},
-                        {L"abc002", L"abc2", -1},
-                        {L"abc002g", L"abc002", 1},
-                        {L"abc002g", L"abc02g", -1},
-                        {L"abc002.txt", L"abc02.txt", -1},
-                        {L"abc005", L"abc012", -1},
-                        {L"abc02", L"abc002", 1},
-                        {L"abc002.txt", L"abc02.txt", -1},
-                        {L"GHI1abc2.txt", L"ghi1abc2.txt", -1},
-                        {L"a0", L"a00", -1},
-                        {L"a00b", L"a0b", -1},
-                        {L"a0b", L"a00b", 1},
-                        {L"a-b", L"azb", 1},
-                        {nullptr, nullptr, 0}};
-
-/// Verify the behavior of the `wcsfilecmp()` function.
-static void test_wcsfilecmp() {
-    for (auto test = wcsfilecmp_tests; test->str1; test++) {
-        int rc = wcsfilecmp(test->str1, test->str2);
-        if (rc != test->expected_rc) {
-            err(L"New failed on line %lu: [\"%ls\" <=> \"%ls\"]: "
-                L"expected return code %d but got %d",
-                __LINE__, test->str1, test->str2, test->expected_rc, rc);
-        }
-    }
-}
-
 static void test_const_strlen() {
     do_test(const_strlen("") == 0);
     do_test(const_strlen(L"") == 0);
@@ -1788,7 +1732,6 @@ void test_dir_iter() {
 
 static void test_utility_functions() {
     say(L"Testing utility functions");
-    test_wcsfilecmp();
     test_parse_util_cmdsubst_extent();
     test_const_strlen();
     test_const_strcmp();

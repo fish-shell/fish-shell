@@ -126,8 +126,8 @@ set(FISH_SRCS
     src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
     src/proc.cpp src/re.cpp src/reader.cpp src/redirection.cpp src/screen.cpp
     src/signals.cpp src/termsize.cpp src/timer.cpp src/tinyexpr.cpp
-    src/tokenizer.cpp src/trace.cpp src/utf8.cpp src/util.cpp
-    src/wait_handle.cpp src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp 
+    src/tokenizer.cpp src/trace.cpp src/utf8.cpp
+    src/wait_handle.cpp src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp
     src/wutil.cpp src/fds.cpp src/rustffi.cpp
 )
 

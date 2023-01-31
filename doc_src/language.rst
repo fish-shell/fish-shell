@@ -1718,7 +1718,7 @@ In order:
    - If the kernel knows how to run the file (e.g. via a ``#!`` line - ``#!/bin/sh`` or ``#!/usr/bin/python``), it does it.
    - If the kernel reports that it couldn't run it because of a missing interpreter, and the file passes a rudimentary check, fish tells ``/bin/sh`` to run it.
 
-If none of these work, fish runs the function :doc:`fish_command_not_found <cmds/fish_command_not_found>` and sets :envvar:`status` to 127.
+If none of these work, fish runs the function :doc:`fish_command_not_found <cmds/fish_command_not_found>`.
 
 You can use :doc:`type <cmds/type>` to see how fish resolved something::
 

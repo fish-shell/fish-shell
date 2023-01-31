@@ -723,7 +723,8 @@ parse_execution_context_t::ast_args_list_t parse_execution_context_t::get_argume
 end_execution_reason_t parse_execution_context_t::handle_command_not_found(
     const wcstring &cmd_str, const ast::decorated_statement_t &statement, int err_code) {
     // We couldn't find the specified command. This is a non-fatal error. We want to set the exit
-    // status to 127, which is the standard number used by other shells like bash and zsh.
+    // status to 127, which is the standard number used by other shells like bash and zsh,
+    // unless there is an explicit command handler, then we can use its exit code.
 
     const wchar_t *const cmd = cmd_str.c_str();
     if (err_code != ENOENT) {
@@ -770,7 +771,6 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
     // Redirect to stderr
     auto io = io_chain_t{};
-    io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}}, L"");
 
     if (function_exists(L"fish_command_not_found", *parser)) {
         buffer = L"fish_command_not_found";
@@ -778,15 +778,18 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
             buffer.push_back(L' ');
             buffer.append(escape_string(arg));
         }
-        auto prev_statuses = parser->get_last_statuses();
 
         event_t event(event_type_t::generic);
         event.desc.str_param1 = L"fish_command_not_found";
         block_t *b = parser->push_block(block_t::event_block(event));
         parser->eval(buffer, io);
         parser->pop_block(b);
-        parser->set_last_statuses(std::move(prev_statuses));
+
+        return end_execution_reason_t::cancelled;
     } else {
+        // Redirect to stderr _if there's no handler_
+        io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}},
+                             L"");
         // If we have no handler, just print it as a normal error.
         error = _(L"Unknown command:");
         if (!event_args.empty()) {

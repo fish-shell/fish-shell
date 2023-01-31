@@ -13,6 +13,7 @@ end
 
 function __fish_default_command_not_found_handler
     printf (_ "fish: Unknown command: %s\n") (string escape -- $argv[1]) >&2
+    return 127
 end
 
 # If an old handler already exists, defer to that.

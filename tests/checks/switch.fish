@@ -107,8 +107,7 @@ begin
         case '*'
             echo Matched!
     end
-    # CHECKERR: fish: Unknown command: doesnotexist
-    # CHECKERR: checks/switch.fish (line {{\d+}}):
+    # CHECKERR: checks/switch.fish (line {{\d+}}): Unknown command: doesnotexist
     # CHECKERR: doesnotexist
     # CHECKERR: ^~~~~~~~~~~^
     # CHECKERR: in command substitution

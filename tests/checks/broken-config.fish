@@ -6,8 +6,7 @@ begin
     $fish -l -c 'echo but still going'
     # CHECK: broken
     # CHECK: but still going
-    # CHECKERR: fish: Unknown command: syntax-error
-    # CHECKERR: ~//fish/config.fish (line {{\d+}}):
+    # CHECKERR: ~//fish/config.fish (line {{\d+}}): Unknown command: syntax-error
     # CHECKERR: syntax-error
     # CHECKERR: ^~~~~~~~~~~^
     # CHECKERR: from sourcing file ~//fish/config.fish

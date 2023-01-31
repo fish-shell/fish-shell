@@ -2,17 +2,16 @@
 set -g PATH
 $fish -c "nonexistent-command-1234 banana rama"
 #CHECKERR: fish: Unknown command: nonexistent-command-1234
-#CHECKERR: fish: 
 #CHECKERR: nonexistent-command-1234 banana rama
 #CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~^
-$fish -C 'function fish_command_not_found; echo cmd-not-found; end' -ic "nonexistent-command-1234 1 2 3 4"
-#CHECKERR: cmd-not-found
-#CHECKERR: fish: 
+$fish -C 'function fish_command_not_found; echo cmd-not-found; end' -c "nonexistent-command-1234 1 2 3 4"
+##CHECKERR: cmd-not-found
+#CHECKERR: fish: Unknown command: nonexistent-command-1234
 #CHECKERR: nonexistent-command-1234 1 2 3 4
 #CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~^
 $fish -C 'function fish_command_not_found; echo command-not-found $argv; end' -c "nonexistent-command-abcd foo bar baz"
-#CHECKERR: command-not-found nonexistent-command-abcd foo bar baz
-#CHECKERR: fish: 
+##CHECKERR: command-not-found nonexistent-command-abcd foo bar baz
+#CHECKERR: fish: Unknown command: nonexistent-command-abcd
 #CHECKERR: nonexistent-command-abcd foo bar baz
 #CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~^
 
@@ -27,8 +26,7 @@ echo $status
 
 
 { echo; echo }
-# CHECKERR: {{.*}}: Unknown command: '{ echo; echo }'
-# CHECKERR: {{.*}}: '{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'
+# CHECKERR: {{.*}}: Unknown command: '{ echo; echo }''{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'
 # CHECKERR: { echo; echo }
 # CHECKERR: ^~~~~~~~~~~~~^
 

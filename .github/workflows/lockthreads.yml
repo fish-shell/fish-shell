@@ -17,9 +17,9 @@ jobs:
       pull-requests: write  # for dessant/lock-threads to lock PRs
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v2
+      - uses: dessant/lock-threads@v4
         with:
           github-token: ${{ github.token }}
-          issue-lock-inactive-days: '365'
-          pr-lock-inactive-days: '365'
-          issue-exclude-labels: 'question, needs more info'
+          issue-inactive-days: '365'
+          pr-inactive-days: '365'
+          exclude-any-issue-labels: 'question, needs more info'

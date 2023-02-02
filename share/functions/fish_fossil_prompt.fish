@@ -34,9 +34,9 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     or set -g fish_prompt_fossil_status_modified '*'
     set -q fish_prompt_fossil_status_renamed
     or set -g fish_prompt_fossil_status_renamed '⇒'
-    set -q fish_prompt_fossil_status_deleted '
+    set -q fish_prompt_fossil_status_deleted
     or set -g fish_prompt_fossil_status_deleted '-'
-    set -q fish_prompt_fossil_status_missing '
+    set -q fish_prompt_fossil_status_missing
     or set -g fish_prompt_fossil_status_missing '✖'
     set -q fish_prompt_fossil_status_untracked
     or set -g fish_prompt_fossil_status_untracked '?'
@@ -48,14 +48,18 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
 
 
 
-    echo -n ' ['
+    echo -n ' ('
+	set_color magenta
+	echo -n "$branch"
+	set_color normal
+	echo -n '|'
+	#set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | sort -u)
 	set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | path sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"
         set_color $fish_color_fossil_clean
-        echo -n "($branch)"'✓'
-        set_color normal
+        echo -n '✔'
 
     # Handle modified or dirty (unknown state)
     else
@@ -86,10 +90,11 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
         if string match -qr '^(ADDED|EDITED|DELETED)' $repo_status
             set_color $fish_color_fossil_modified
         else
-            set_color $fish_color_fossil_dirty
+            set_color --bold $fish_color_fossil_dirty
         end
 
-        echo -n "($branch)"'⚡'
+        echo -n '⚡'
+		set_color normal
 
         # Sort status symbols
         for i in $fish_prompt_fossil_status_order
@@ -101,10 +106,8 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
                 echo -n $$status_name
             end
         end
-
-        set_color normal
     end
 
     set_color normal
-    echo -n ']'
+    echo -n ')'
 end

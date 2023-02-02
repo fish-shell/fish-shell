@@ -32,7 +32,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
 
     echo -n ' ['
     # Disabling color and pager is always a good idea.
-    set -l repo_status (fossil status --differ 2>/dev/null | grep -v '\w:\|^\s' | awk '{print $1}' | sort -u)
+    set -l repo_status (fossil changes --differ 2>/dev/null | grep -v '\w:\|^\s' | awk '{print $1}' | sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"

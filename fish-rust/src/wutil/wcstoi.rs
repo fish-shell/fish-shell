@@ -6,11 +6,13 @@ pub enum Error {
     Overflow,
     Empty,
     InvalidDigit,
+    CharsLeft,
 }
 
 struct ParseResult {
     result: u64,
     negative: bool,
+    consumed_all: bool,
 }
 
 /// Helper to get the current char, or \0.
@@ -74,6 +76,7 @@ where
                 return Ok(ParseResult {
                     result: 0,
                     negative: false,
+                    consumed_all: chars.peek() == None,
                 });
             }
         }
@@ -102,11 +105,12 @@ where
     if result == 0 {
         negative = false;
     }
-    Ok(ParseResult { result, negative })
+    let consumed_all = chars.peek() == None;
+    Ok(ParseResult { result, negative, consumed_all })
 }
 
 /// Parse some iterator over Chars into some Integer type, optionally with a radix.
-fn fish_wcstoi_impl<Int, Chars>(src: Chars, mradix: Option<u32>) -> Result<Int, Error>
+fn fish_wcstoi_impl<Int, Chars>(src: Chars, mradix: Option<u32>, consume_all: bool) -> Result<Int, Error>
 where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
@@ -116,11 +120,13 @@ where
     let signed = Int::min_value() < Int::zero();
 
     let ParseResult {
-        result, negative, ..
+        result, negative, consumed_all, ..
     } = fish_parse_radix(src, mradix)?;
 
     if !signed && negative {
         Err(Error::InvalidDigit)
+    } else if consume_all && !consumed_all {
+        Err(Error::CharsLeft)
     } else if !signed || !negative {
         match Int::from(result) {
             Some(r) => Ok(r),
@@ -150,7 +156,7 @@ where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src, None)
+    fish_wcstoi_impl(src, None, false)
 }
 
 /// Convert the given wide string to an integer using the given radix.
@@ -160,7 +166,15 @@ where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src, Some(radix))
+    fish_wcstoi_impl(src, Some(radix), false)
+}
+
+pub fn fish_wcstoi_radix_all<Int, Chars>(src: Chars, radix: Option<u32>, consume_all: bool) -> Result<Int, Error>
+where
+    Chars: Iterator<Item = char>,
+    Int: PrimInt,
+{
+    fish_wcstoi_impl(src, radix, consume_all)
 }
 
 #[cfg(test)]

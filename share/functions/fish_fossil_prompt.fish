@@ -8,31 +8,48 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     set -l branch (fossil branch current 2>/dev/null)
     or return 127
 
-    set -g fish_color_fossil_clean green
-    set -g fish_color_fossil_modified yellow
-    set -g fish_color_fossil_dirty red
+    set -q fish_color_fossil_clean
+    or set -g fish_color_fossil_clean green
+    set -q fish_color_fossil_modified
+    or set -g fish_color_fossil_modified yellow
+    set -q fish_color_fossil_dirty
+    or set -g fish_color_fossil_dirty red
 
-    set -g fish_color_fossil_added green
-    set -g fish_color_fossil_renamed magenta
-    set -g fish_color_fossil_missing red
-    set -g fish_color_fossil_deleted red
-    set -g fish_color_fossil_untracked yellow
-    set -g fish_color_fossil_conflict red
+    set -q fish_color_fossil_added
+    or set -g fish_color_fossil_added green
+    set -q fish_color_fossil_renamed
+    or set -g fish_color_fossil_renamed magenta
+    set -q fish_color_fossil_missing
+    or set -g fish_color_fossil_missing red
+    set -q fish_color_fossil_deleted
+    or set -g fish_color_fossil_deleted red
+    set -q fish_color_fossil_untracked
+    or set -g fish_color_fossil_untracked yellow
+    set -q fish_color_fossil_conflict
+    or set -g fish_color_fossil_conflict red
 
-    set -g fish_prompt_fossil_status_added '✚'
-    set -g fish_prompt_fossil_status_modified '*'
-    set -g fish_prompt_fossil_status_renamed '⇒'
-    set -g fish_prompt_fossil_status_deleted '-'
-    set -g fish_prompt_fossil_status_missing '✖'
-    set -g fish_prompt_fossil_status_untracked '?'
-    set -g fish_prompt_fossil_status_conflict '×'
+    set -q fish_prompt_fossil_status_added
+    or set -g fish_prompt_fossil_status_added '✚'
+    set -q fish_prompt_fossil_status_modified
+    or set -g fish_prompt_fossil_status_modified '*'
+    set -q fish_prompt_fossil_status_renamed
+    or set -g fish_prompt_fossil_status_renamed '⇒'
+    set -q fish_prompt_fossil_status_deleted '
+    or set -g fish_prompt_fossil_status_deleted '-'
+    set -q fish_prompt_fossil_status_missing '
+    or set -g fish_prompt_fossil_status_missing '✖'
+    set -q fish_prompt_fossil_status_untracked
+    or set -g fish_prompt_fossil_status_untracked '?'
+    set -q fish_prompt_fossil_status_conflict
+    or set -g fish_prompt_fossil_status_conflict '×'
 
-    set -g fish_prompt_fossil_status_order added modified renamed deleted missing untracked conflict
+	set -q fish_prompt_fossil_status_order
+	or set -g fish_prompt_fossil_status_order added modified renamed deleted missing untracked conflict
+
 
 
     echo -n ' ['
-    # Disabling color and pager is always a good idea.
-    set -l repo_status (fossil changes --differ 2>/dev/null | grep -v '\w:\|^\s' | awk '{print $1}' | sort -u)
+	set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | path sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"
@@ -66,7 +83,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
             end
         end
 
-        if string match -qr '^(ADDED|EDITED|DELETD)' $repo_status
+        if string match -qr '^(ADDED|EDITED|DELETED)' $repo_status
             set_color $fish_color_fossil_modified
         else
             set_color $fish_color_fossil_dirty

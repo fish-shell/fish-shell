@@ -1,5 +1,7 @@
 use crate::wchar::{self};
+#[rustfmt::skip]
 use ::std::pin::Pin;
+#[rustfmt::skip]
 use ::std::slice;
 use autocxx::prelude::*;
 use cxx::SharedPtr;

@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "env.h"
 #include "expand.h"
 #include "fds.h"
+#include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "future_feature_flags.h"
@@ -873,6 +874,7 @@ int main(int argc, char *argv[]) {
     program_name = L"fish_indent";
     set_main_thread();
     setup_fork_guards();
+    rust_init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
     // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
     //

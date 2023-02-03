@@ -20,7 +20,7 @@
 #include "common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "future_feature_flags.h"
+#include "future_feature_flags.rs.h"
 #include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
@@ -486,7 +486,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 wcstring parse_util_unescape_wildcards(const wcstring &str) {
     wcstring result;
     result.reserve(str.size());
-    bool unesc_qmark = !feature_test(features_t::qmark_noglob);
+    bool unesc_qmark = !feature_test(feature_flag_t::qmark_noglob);
 
     const wchar_t *const cs = str.c_str();
     for (size_t i = 0; cs[i] != L'\0'; i++) {

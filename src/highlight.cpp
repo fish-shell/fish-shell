@@ -25,7 +25,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
-#include "future_feature_flags.h"
+#include "future_feature_flags.rs.h"
 #include "history.h"
 #include "maybe.h"
 #include "operation_context.h"
@@ -665,7 +665,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                             break;
                         }
                         case L'?': {
-                            if (!feature_test(features_t::qmark_noglob)) {
+                            if (!feature_test(feature_flag_t::qmark_noglob)) {
                                 colors[in_pos] = highlight_role_t::operat;
                             }
                             break;

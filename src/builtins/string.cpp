@@ -19,7 +19,6 @@
 #include "../common.h"
 #include "../env.h"
 #include "../fallback.h"  // IWYU pragma: keep
-#include "../future_feature_flags.h"
 #include "../io.h"
 #include "../maybe.h"
 #include "../parse_util.h"
@@ -30,6 +29,7 @@
 #include "../wgetopt.h"
 #include "../wildcard.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "future_feature_flags.rs.h"
 
 // Empirically determined.
 // This is probably down to some pipe buffer or some such,
@@ -1240,7 +1240,7 @@ class regex_replacer_t final : public string_replacer_t {
     regex_replacer_t(const wchar_t *argv0, re::regex_t regex, const wcstring &replacement_,
                      const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams), regex(std::move(regex)) {
-        if (feature_test(features_t::string_replace_backslash)) {
+        if (feature_test(feature_flag_t::string_replace_backslash)) {
             replacement = replacement_;
         } else {
             replacement = interpret_escapes(replacement_);

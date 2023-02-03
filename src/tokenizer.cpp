@@ -15,7 +15,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "future_feature_flags.h"
+#include "future_feature_flags.rs.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // _(s) is already wgettext(s).c_str(), so let's not convert back to wcstring
@@ -110,7 +110,7 @@ static bool tok_is_string_character(wchar_t c, maybe_t<wchar_t> next) {
             return false;
         }
         case L'&': {
-            if (!feature_test(features_t::ampersand_nobg_in_token)) return false;
+            if (!feature_test(feature_flag_t::ampersand_nobg_in_token)) return false;
             bool next_is_string = next.has_value() && tok_is_string_character(*next, none());
             // Unlike in other shells, '&' is not special if followed by a string character.
             return next_is_string;

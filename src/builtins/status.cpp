@@ -17,13 +17,13 @@
 #include "../common.h"
 #include "../enum_map.h"
 #include "../fallback.h"  // IWYU pragma: keep
-#include "../future_feature_flags.h"
 #include "../io.h"
 #include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "future_feature_flags.rs.h"
 
 enum status_cmd_t {
     STATUS_CURRENT_CMD = 1,
@@ -156,12 +156,12 @@ static bool set_status_cmd(const wchar_t *cmd, status_cmd_opts_t &opts, status_c
 /// Print the features and their values.
 static void print_features(io_streams_t &streams) {
     auto max_len = std::numeric_limits<int>::min();
-    for (const auto &md : features_t::metadata)
-        max_len = std::max(max_len, static_cast<int>(wcslen(md.name)));
-    for (const auto &md : features_t::metadata) {
+    for (const auto &md : feature_metadata())
+        max_len = std::max(max_len, static_cast<int>(md.name->size()));
+    for (const auto &md : feature_metadata()) {
         int set = feature_test(md.flag);
-        streams.out.append_format(L"%-*ls%-3s %ls %ls\n", max_len + 1, md.name, set ? "on" : "off",
-                                  md.groups, md.description);
+        streams.out.append_format(L"%-*ls%-3s %ls %ls\n", max_len + 1, md.name->c_str(),
+                                  set ? "on" : "off", md.groups->c_str(), md.description->c_str());
     }
 }
 
@@ -365,11 +365,12 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
                 streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 1, args.size());
                 return STATUS_INVALID_ARGS;
             }
-            auto metadata = features_t::metadata_for(args.front().c_str());
-            if (!metadata) {
-                retval = TEST_FEATURE_NOT_RECOGNIZED;
-            } else {
-                retval = feature_test(metadata->flag) ? TEST_FEATURE_ON : TEST_FEATURE_OFF;
+            retval = TEST_FEATURE_NOT_RECOGNIZED;
+            for (const auto &md : feature_metadata()) {
+                if (*md.name == args.front()) {
+                    retval = feature_test(md.flag) ? TEST_FEATURE_ON : TEST_FEATURE_OFF;
+                    break;
+                }
             }
             break;
         }

@@ -23,7 +23,7 @@
 #include "enum_set.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "future_feature_flags.h"
+#include "future_feature_flags.rs.h"
 #include "maybe.h"
 #include "path.h"
 #include "wcstringutil.h"
@@ -53,7 +53,7 @@ bool wildcard_has_internal(const wchar_t *s, size_t len) {
 bool wildcard_has(const wchar_t *str, size_t len) {
     assert(str != nullptr);
     const wchar_t *end = str + len;
-    bool qmark_is_wild = !feature_test(features_t::qmark_noglob);
+    bool qmark_is_wild = !feature_test(feature_flag_t::qmark_noglob);
     // Fast check for * or ?; if none there is no wildcard.
     // Note some strings contain * but no wildcards, e.g. if they are quoted.
     if (std::find(str, end, L'*') == end && (!qmark_is_wild || std::find(str, end, L'?') == end)) {

@@ -36,7 +36,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
-#include "future_feature_flags.h"
+#include "future_feature_flags.rs.h"
 #include "global_safety.h"
 #include "iothread.h"
 #include "signals.h"
@@ -863,7 +863,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     const bool escape_printables = !(flags & ESCAPE_NO_PRINTABLES);
     const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
     const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
-    const bool no_qmark = feature_test(features_t::qmark_noglob);
+    const bool no_qmark = feature_test(feature_flag_t::qmark_noglob);
     const bool symbolic = static_cast<bool>(flags & ESCAPE_SYMBOLIC) && (MB_CUR_MAX > 1);
     assert((!symbolic || !escape_printables) && "symbolic implies escape-no-printables");
 
@@ -1401,7 +1401,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     break;
                 }
                 case L'?': {
-                    if (unescape_special && !feature_test(features_t::qmark_noglob)) {
+                    if (unescape_special && !feature_test(feature_flag_t::qmark_noglob)) {
                         to_append_or_none = ANY_CHAR;
                     }
                     break;

@@ -49,7 +49,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fish_version.h"
 #include "flog.h"
 #include "function.h"
-#include "future_feature_flags.h"
+#include "future_feature_flags.rs.h"
 #include "global_safety.h"
 #include "history.h"
 #include "io.h"
@@ -500,10 +500,10 @@ int main(int argc, char **argv) {
     // command line takes precedence).
     if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features().set_from_string(s);
+            mutable_fish_features()->set_from_string(s.c_str());
         }
     }
-    mutable_fish_features().set_from_string(opts.features);
+    mutable_fish_features()->set_from_string(opts.features.c_str());
     proc_init();
     misc_init();
     reader_init();

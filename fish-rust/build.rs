@@ -26,7 +26,7 @@ fn main() -> miette::Result<()> {
         "src/topic_monitor.rs",
         "src/builtins/shared.rs",
     ];
-    cxx_build::bridges(source_files)
+    cxx_build::bridges(&source_files)
         .flag_if_supported("-std=c++11")
         .include(&fish_src_dir)
         .include(&fish_build_dir) // For config.h
@@ -41,7 +41,9 @@ fn main() -> miette::Result<()> {
         .build()?;
     b.flag_if_supported("-std=c++11")
         .compile("fish-rust-autocxx");
-    println!("cargo:rerun-if-changed=src/ffi.rs");
+    for file in source_files {
+        println!("cargo:rerun-if-changed={file}");
+    }
 
     Ok(())
 }

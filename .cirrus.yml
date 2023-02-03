@@ -51,7 +51,8 @@ linux_task:
         - ninja -j 6 fish fish_tests
         - ninja fish_run_tests
 
-    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+    # CI task disabled during RIIR transition
+    only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'
 
 linux_arm_task:
     matrix:
@@ -74,7 +75,8 @@ linux_arm_task:
         - file ./fish
         - ninja fish_run_tests
 
-    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+    # CI task disabled during RIIR transition
+    only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'
 
 freebsd_task:
     matrix:

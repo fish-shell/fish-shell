@@ -53,6 +53,7 @@ mod ffi_tests_impl {
 
 pub(crate) use ffi_tests_impl::*;
 
+#[allow(clippy::module_inception)]
 #[cxx::bridge(namespace = rust)]
 mod ffi_tests {
     extern "Rust" {

@@ -169,13 +169,13 @@ fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
     let wc = parse_util_unescape_wildcards(&wc_esc.to_ffi());
     let mut match_found = false;
     for cat in categories::all_categories() {
-        if wildcard_match(&cat.name.to_ffi(), &*wc, false) {
+        if wildcard_match(&cat.name.to_ffi(), &wc, false) {
             cat.enabled.store(sense, Ordering::Relaxed);
             match_found = true;
         }
     }
     if !match_found {
-        eprintln!("Failed to match debug category: {}\n", wc_esc);
+        eprintln!("Failed to match debug category: {wc_esc}\n");
     }
 }
 

@@ -94,7 +94,7 @@ impl Printf for u64 {
         .try_into()
         .unwrap_or_default();
         let formatted = if spec.left_adj {
-            let mut num_str = prefix.clone();
+            let mut num_str = prefix;
             num_str.extend(rev_num.chars().rev());
             while num_str.len() < width {
                 num_str.push(' ');
@@ -104,11 +104,11 @@ impl Printf for u64 {
             while prefix.len() + rev_num.len() < width {
                 rev_num.push('0');
             }
-            let mut num_str = prefix.clone();
+            let mut num_str = prefix;
             num_str.extend(rev_num.chars().rev());
             num_str
         } else {
-            let mut num_str = prefix.clone();
+            let mut num_str = prefix;
             num_str.extend(rev_num.chars().rev());
             while num_str.len() < width {
                 num_str.insert(0, ' ');
@@ -359,7 +359,7 @@ impl Printf for f64 {
                         rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
                         tail /= 10;
                     }
-                    number.push_str(&format!("{}", int_part));
+                    number.push_str(&int_part.to_string());
                     number.push('.');
                     number.extend(rev_tail_str.chars().rev());
                     if strip_trailing_0s {
@@ -371,35 +371,33 @@ impl Printf for f64 {
                     number.push_str(&format!("{}", normal.round()));
                 }
                 number.push(exp_symb);
-                number.push_str(&format!("{:+03}", exponent));
-            } else {
-                if precision > 0 {
-                    let mut int_part = abs.trunc();
-                    let exp_factor = 10.0_f64.powf(precision as f64);
-                    let mut tail = ((abs - int_part) * exp_factor).round() as u64;
-                    let mut rev_tail_str = WString::new();
-                    if tail >= exp_factor as u64 {
-                        // overflow - we must round up
-                        int_part += 1.0;
-                        tail -= exp_factor as u64;
-                        // no need to change the exponent as we don't have one
-                        // (not scientific notation)
-                    }
-                    for _ in 0..precision {
-                        rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
-                        tail /= 10;
-                    }
-                    number.push_str(&format!("{}", int_part));
-                    number.push('.');
-                    number.extend(rev_tail_str.chars().rev());
-                    if strip_trailing_0s {
-                        while number.ends_with('0') {
-                            number.pop();
-                        }
-                    }
-                } else {
-                    number.push_str(&format!("{}", abs.round()));
+                number.push_str(&format!("{exponent:+03}"));
+            } else if precision > 0 {
+                let mut int_part = abs.trunc();
+                let exp_factor = 10.0_f64.powf(precision as f64);
+                let mut tail = ((abs - int_part) * exp_factor).round() as u64;
+                let mut rev_tail_str = WString::new();
+                if tail >= exp_factor as u64 {
+                    // overflow - we must round up
+                    int_part += 1.0;
+                    tail -= exp_factor as u64;
+                    // no need to change the exponent as we don't have one
+                    // (not scientific notation)
                 }
+                for _ in 0..precision {
+                    rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
+                    tail /= 10;
+                }
+                number.push_str(&int_part.to_string());
+                number.push('.');
+                number.extend(rev_tail_str.chars().rev());
+                if strip_trailing_0s {
+                    while number.ends_with('0') {
+                        number.pop();
+                    }
+                }
+            } else {
+                number.push_str(&format!("{}", abs.round()));
             }
         } else {
             // not finite

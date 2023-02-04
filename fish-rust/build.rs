@@ -38,7 +38,7 @@ fn main() -> miette::Result<()> {
     // Emit autocxx junk.
     // This allows "C++ to be used from Rust."
     let include_paths = [&fish_src_dir, &fish_build_dir, &cxx_include_dir];
-    let mut b = autocxx_build::Builder::new("src/ffi.rs", &include_paths)
+    let mut b = autocxx_build::Builder::new("src/ffi.rs", include_paths)
         .custom_gendir(autocxx_gen_dir.into())
         .build()?;
     b.flag_if_supported("-std=c++11")

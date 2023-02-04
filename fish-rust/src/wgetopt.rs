@@ -149,7 +149,7 @@ pub struct woption<'a> {
 }
 
 /// Helper function to create a woption.
-pub const fn wopt<'a>(name: &'a wstr, has_arg: woption_argument_t, val: char) -> woption<'a> {
+pub const fn wopt(name: &wstr, has_arg: woption_argument_t, val: char) -> woption<'_> {
     woption { name, has_arg, val }
 }
 
@@ -368,7 +368,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         if temp.char_at(2) == ':' {
             // This is an option that accepts an argument optionally.
             if !self.nextchar.is_empty() {
-                self.woptarg = Some(self.nextchar.clone());
+                self.woptarg = Some(self.nextchar);
                 self.woptind += 1;
             } else {
                 self.woptarg = None;
@@ -377,7 +377,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         } else {
             // This is an option that requires an argument.
             if !self.nextchar.is_empty() {
-                self.woptarg = Some(self.nextchar.clone());
+                self.woptarg = Some(self.nextchar);
                 // If we end this ARGV-element by taking the rest as an arg, we must advance to
                 // the next element now.
                 self.woptind += 1;
@@ -447,10 +447,9 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         indfound: &mut usize,
     ) -> Option<woption<'opts>> {
         let mut pfound: Option<woption> = None;
-        let mut option_index = 0;
 
         // Test all long options for either exact match or abbreviated matches.
-        for p in self.longopts.iter() {
+        for (option_index, p) in self.longopts.iter().enumerate() {
             if p.name.starts_with(&self.nextchar[..nameend]) {
                 // Exact match found.
                 pfound = Some(*p);
@@ -465,7 +464,6 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
                 // Second or later nonexact match found.
                 *ambig = true;
             }
-            option_index += 1;
         }
         return pfound;
     }
@@ -586,17 +584,20 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         // This distinction seems to be the most useful approach.
         if !self.longopts.is_empty() && self.woptind < self.argc() {
             let arg = self.argv[self.woptind];
-            let mut try_long = false;
-            if arg.char_at(0) == '-' && arg.char_at(1) == '-' {
+
+            let try_long = if arg.char_at(0) == '-' && arg.char_at(1) == '-' {
                 // Like --foo
-                try_long = true;
+                true
             } else if long_only && arg.len() >= 3 {
                 // Like -fu
-                try_long = true;
+                true
             } else if !self.shortopts.as_char_slice().contains(&arg.char_at(1)) {
                 // Like -f, but f is not a short arg.
-                try_long = true;
-            }
+                true
+            } else {
+                false
+            };
+
             if try_long {
                 let mut retval = '\0';
                 if self._handle_long_opt(longind, long_only, &mut retval) {

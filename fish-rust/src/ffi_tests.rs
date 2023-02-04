@@ -7,8 +7,6 @@
 
 #[cfg(all(feature = "fish-ffi-tests", not(test)))]
 mod ffi_tests_impl {
-    use inventory;
-
     /// A test which needs to cross the FFI.
     #[derive(Debug)]
     pub struct FFITest {

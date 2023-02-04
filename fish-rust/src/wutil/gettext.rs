@@ -6,10 +6,7 @@ use crate::wchar_ffi::wcslen;
 
 /// Implementation detail for wgettext!.
 pub fn wgettext_impl_do_not_use_directly(text: &[wchar_t]) -> &'static wstr {
-    assert!(
-        text.len() > 0 && text[text.len() - 1] == 0,
-        "should be nul-terminated"
-    );
+    assert_eq!(text.last(), Some(&0), "should be nul-terminated");
     let res: *const wchar_t = ffi::wgettext_ptr(text.as_ptr());
     let slice = unsafe { std::slice::from_raw_parts(res as *const u32, wcslen(res)) };
     wstr::from_slice(slice).expect("Invalid UTF-32")

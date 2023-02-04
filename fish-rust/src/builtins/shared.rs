@@ -128,7 +128,7 @@ pub fn builtin_unknown_option(
     opt: &wstr,
     print_hints: bool,
 ) {
-    ffi::builtin_missing_argument(
+    ffi::builtin_unknown_option(
         parser.pin(),
         streams.ffi_pin(),
         c_str!(cmd),

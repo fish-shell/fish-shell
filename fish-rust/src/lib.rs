@@ -8,6 +8,10 @@ extern crate lazy_static;
 
 mod fd_readable_set;
 mod fds;
+#[allow(rustdoc::broken_intra_doc_links)]
+#[allow(clippy::module_inception)]
+#[allow(clippy::new_ret_no_self)]
+#[allow(clippy::wrong_self_convention)]
 mod ffi;
 mod ffi_init;
 mod ffi_tests;

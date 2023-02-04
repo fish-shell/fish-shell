@@ -127,7 +127,19 @@ pub trait WCharFromFFI<Target> {
     fn from_ffi(&self) -> Target;
 }
 
+impl WCharFromFFI<WString> for cxx::CxxWString {
+    fn from_ffi(&self) -> WString {
+        WString::from_chars(self.as_chars())
+    }
+}
+
 impl WCharFromFFI<WString> for cxx::UniquePtr<cxx::CxxWString> {
+    fn from_ffi(&self) -> WString {
+        WString::from_chars(self.as_chars())
+    }
+}
+
+impl WCharFromFFI<WString> for cxx::SharedPtr<cxx::CxxWString> {
     fn from_ffi(&self) -> WString {
         WString::from_chars(self.as_chars())
     }

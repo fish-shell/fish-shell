@@ -47,6 +47,7 @@ use crate::wchar::{utf32str, wstr, WExt};
 // `ordering'.  In the case of RETURN_IN_ORDER, only `--' can cause `getopt' to return EOF with
 // `woptind' != ARGC.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::upper_case_acronyms)]
 enum Ordering {
     REQUIRE_ORDER,
     PERMUTE,
@@ -585,6 +586,8 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         if !self.longopts.is_empty() && self.woptind < self.argc() {
             let arg = self.argv[self.woptind];
 
+            #[allow(clippy::if_same_then_else)]
+            #[allow(clippy::needless_bool)]
             let try_long = if arg.char_at(0) == '-' && arg.char_at(1) == '-' {
                 // Like --foo
                 true

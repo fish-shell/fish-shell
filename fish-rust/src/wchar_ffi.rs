@@ -121,6 +121,7 @@ impl WCharToFFI for wcharz_t {
 /// Convert from a CxxWString, in preparation for using over FFI.
 pub trait WCharFromFFI<Target> {
     /// Convert from a CxxWString for FFI purposes.
+    #[allow(clippy::wrong_self_convention)]
     fn from_ffi(&self) -> Target;
 }
 

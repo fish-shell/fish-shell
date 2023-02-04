@@ -484,6 +484,14 @@ static void initialize_curses_using_fallbacks(const environment_t &vars) {
 // Apply any platform-specific hacks to cur_term/
 static void apply_term_hacks(const environment_t &vars) {
     UNUSED(vars);
+    // Midnight Commander tries to extract the last line of the prompt,
+    // and does so in a way that is broken if you do `\r` after it,
+    // like we normally do.
+    // See https://midnight-commander.org/ticket/4258.
+    if (auto var = vars.get(L"MC_SID")) {
+        screen_set_midnight_commander_hack();
+    }
+
     // Be careful, variables like "enter_italics_mode" are #defined to dereference through cur_term.
     // See #8876.
     if (!cur_term) {

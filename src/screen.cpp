@@ -75,6 +75,12 @@ static size_t try_sequence(const char *seq, const wchar_t *str) {
     return 0;  // this should never be executed
 }
 
+static bool midnight_commander_hack = false;
+
+void screen_set_midnight_commander_hack() {
+    midnight_commander_hack = true;
+}
+
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 static size_t next_tab_stop(size_t current_line_width) {
     // Assume tab stops every 8 characters if undefined.
@@ -905,7 +911,11 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
 
     // Also move the cursor to the beginning of the line here,
     // in case we're wrong about the width anywhere.
-    this->move(0, 0);
+    // Don't do it when running in midnight_commander because of
+    // https://midnight-commander.org/ticket/4258.
+    if (!midnight_commander_hack) {
+        this->move(0, 0);
+    }
 
     // Clear remaining lines (if any) if we haven't cleared the screen.
     if (!has_cleared_screen && need_clear_screen && clr_eol) {

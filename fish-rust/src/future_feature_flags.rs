@@ -166,7 +166,7 @@ impl features_t {
     /// The special group name "all" may be used for those who like to live on the edge.
     /// Unknown features are silently ignored.
     #[widestrs]
-    pub fn set_from_string(&mut self, str: wcharz_t) {
+    pub fn set_from_string<'a>(&mut self, str: impl Into<&'a wstr>) {
         let str: &wstr = str.into();
         let whitespace = "\t\n\0x0B\0x0C\r "L.as_char_slice();
         for entry in str.as_char_slice().split(|c| *c == ',') {
@@ -232,12 +232,10 @@ pub fn feature_metadata() -> [feature_metadata_t; metadata.len()] {
 #[test]
 #[widestrs]
 fn test_feature_flags() {
-    use crate::wchar_ffi::wcharz;
-
     let mut f = features_t::new();
-    f.set_from_string(wcharz!("stderr-nocaret,nonsense"L));
+    f.set_from_string("stderr-nocaret,nonsense"L);
     assert!(f.test(feature_flag_t::stderr_nocaret));
-    f.set_from_string(wcharz!("stderr-nocaret,no-stderr-nocaret,nonsense"L));
+    f.set_from_string("stderr-nocaret,no-stderr-nocaret,nonsense"L);
     assert!(f.test(feature_flag_t::stderr_nocaret));
 
     // Ensure every metadata is represented once.

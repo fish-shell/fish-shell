@@ -30,11 +30,11 @@ fn ordering_to_int(ord: Ordering) -> i32 {
 }
 
 fn wcsfilecmp_glob_ffi(a: wcharz_t, b: wcharz_t) -> i32 {
-    ordering_to_int(wcsfilecmp_glob(a, b))
+    ordering_to_int(wcsfilecmp_glob(a.into(), b.into()))
 }
 
 fn wcsfilecmp_ffi(a: wcharz_t, b: wcharz_t) -> i32 {
-    ordering_to_int(wcsfilecmp(a, b))
+    ordering_to_int(wcsfilecmp(a.into(), b.into()))
 }
 
 /// Compares two wide character strings with an (arguably) intuitive ordering. This function tries
@@ -64,10 +64,7 @@ fn wcsfilecmp_ffi(a: wcharz_t, b: wcharz_t) -> i32 {
 /// a 'file1' and 'File1' will not be considered identical, and hence their internal sort order is
 /// not arbitrary, but the names 'file1', 'File2' and 'file3' will still be sorted in the order
 /// given above.
-pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> Ordering {
-    // TODO This should return `std::cmp::Ordering`.
-    let a: &wstr = a.into();
-    let b: &wstr = b.into();
+pub fn wcsfilecmp(a: &wstr, b: &wstr) -> Ordering {
     let mut retval = Ordering::Equal;
     let mut ai = 0;
     let mut bi = 0;
@@ -134,10 +131,7 @@ pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> Ordering {
 }
 
 /// wcsfilecmp, but frozen in time for glob usage.
-pub fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> Ordering {
-    // TODO This should return `std::cmp::Ordering`.
-    let a: &wstr = a.into();
-    let b: &wstr = b.into();
+pub fn wcsfilecmp_glob(a: &wstr, b: &wstr) -> Ordering {
     let mut retval = Ordering::Equal;
     let mut ai = 0;
     let mut bi = 0;
@@ -268,14 +262,10 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
 #[test]
 fn test_wcsfilecmp() {
     use crate::wchar::L;
-    use crate::wchar_ffi::wcharz;
 
     macro_rules! validate {
         ($str1:expr, $str2:expr, $expected_rc:expr) => {
-            assert_eq!(
-                wcsfilecmp(wcharz!(L!($str1)), wcharz!(L!($str2))),
-                $expected_rc
-            )
+            assert_eq!(wcsfilecmp(L!($str1), L!($str2)), $expected_rc)
         };
     }
 

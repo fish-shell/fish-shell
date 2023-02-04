@@ -158,7 +158,7 @@ impl fd_readable_set_t {
                 self.pollfds_.insert(
                     pos,
                     libc::pollfd {
-                        fd: fd,
+                        fd,
                         events: libc::POLLIN,
                         revents: 0,
                     },

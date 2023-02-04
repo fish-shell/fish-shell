@@ -32,18 +32,18 @@ impl<'a> CharPrefixSuffix for &'a wstr {
 impl<'a> CharPrefixSuffix for &'a WString {
     type Iter = CharsUtf32<'a>;
     fn chars(self) -> Self::Iter {
-        wstr::chars(&*self)
+        wstr::chars(self)
     }
 }
 
 /// \return true if \p prefix is a prefix of \p contents.
-fn iter_prefixes_iter<Prefix, Contents>(mut prefix: Prefix, mut contents: Contents) -> bool
+fn iter_prefixes_iter<Prefix, Contents>(prefix: Prefix, mut contents: Contents) -> bool
 where
     Prefix: Iterator,
     Contents: Iterator,
     Prefix::Item: PartialEq<Contents::Item>,
 {
-    while let Some(c1) = prefix.next() {
+    for c1 in prefix {
         match contents.next() {
             Some(c2) if c1 == c2 => {}
             _ => return false,

@@ -377,7 +377,7 @@ static mut s_principal: *const topic_monitor_t = std::ptr::null();
 
 /// Create a new topic monitor. Exposed for the FFI.
 pub fn new_topic_monitor() -> Box<topic_monitor_t> {
-    Box::new(topic_monitor_t::default())
+    Box::default()
 }
 
 impl topic_monitor_t {

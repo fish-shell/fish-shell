@@ -35,11 +35,7 @@ where
     Chars: Iterator<Item = char>,
 {
     if let Some(r) = mradix {
-        assert!(
-            (2..=36).contains(&r),
-            "fish_parse_radix: invalid radix {}",
-            r
-        );
+        assert!((2..=36).contains(&r), "fish_parse_radix: invalid radix {r}");
     }
     let chars = &mut ichars.peekable();
 
@@ -63,17 +59,16 @@ where
     }
 
     // Determine the radix.
-    let radix;
-    if mradix.is_some() {
-        radix = mradix.unwrap();
+    let radix = if let Some(radix) = mradix {
+        radix
     } else if current(chars) == '0' {
         chars.next();
         match current(chars) {
             'x' | 'X' => {
                 chars.next();
-                radix = 16;
+                16
             }
-            c if '0' <= c && c <= '9' => radix = 8,
+            c if ('0'..='9').contains(&c) => 8,
             _ => {
                 // Just a 0.
                 return Ok(ParseResult {
@@ -83,8 +78,8 @@ where
             }
         }
     } else {
-        radix = 10;
-    }
+        10
+    };
 
     // Compute as u64.
     let mut consumed1 = false;

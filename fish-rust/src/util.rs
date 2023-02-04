@@ -2,6 +2,7 @@
 
 use crate::ffi::wcharz_t;
 use crate::wchar::wstr;
+use std::cmp::Ordering;
 use std::time;
 
 #[cxx::bridge]
@@ -80,15 +81,19 @@ pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> i32 {
         acl = acl.to_uppercase().next().unwrap();
         bcl = bcl.to_uppercase().next().unwrap();
 
-        if acl < bcl {
-            retval = -1;
-            break;
-        } else if acl > bcl {
-            retval = 1;
-            break;
-        } else {
-            ai += 1;
-            bi += 1;
+        match acl.cmp(&bcl) {
+            Ordering::Less => {
+                retval = -1;
+                break;
+            }
+            Ordering::Equal => {
+                ai += 1;
+                bi += 1;
+            }
+            Ordering::Greater => {
+                retval = 1;
+                break;
+            }
         }
     }
 
@@ -152,15 +157,19 @@ pub fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> i32 {
         // TODO Compare the tail (enabled by Rust's Unicode support).
         let acl = ac.to_lowercase().next().unwrap();
         let bcl = bc.to_lowercase().next().unwrap();
-        if acl < bcl {
-            retval = -1;
-            break;
-        } else if acl > bcl {
-            retval = 1;
-            break;
-        } else {
-            ai += 1;
-            bi += 1;
+        match acl.cmp(&bcl) {
+            Ordering::Less => {
+                retval = -1;
+                break;
+            }
+            Ordering::Equal => {
+                ai += 1;
+                bi += 1;
+            }
+            Ordering::Greater => {
+                retval = 1;
+                break;
+            }
         }
     }
 

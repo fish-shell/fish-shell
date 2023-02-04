@@ -7047,7 +7047,6 @@ void test_wgetopt() {
             }
             case '?': {
                 // unrecognized option
-                fprintf(stderr, "got arg %d\n", w.woptind - 1);
                 if (argv[w.woptind - 1]) {
                     do_test(argv[w.woptind - 1] != nullptr);
                     arguments.push_back(argv[w.woptind - 1]);

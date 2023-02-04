@@ -15,6 +15,7 @@ mod ffi_init;
 mod ffi_tests;
 mod flog;
 mod future_feature_flags;
+mod redirection;
 mod signal;
 mod smoke;
 mod topic_monitor;

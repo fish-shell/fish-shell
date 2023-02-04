@@ -188,6 +188,7 @@ class dir_iter_t : noncopyable_t {
    private:
     /// Whether this dir_iter considers the "." and ".." filesystem entries.
     bool withdot_{false};
+
    public:
     struct entry_t;
 

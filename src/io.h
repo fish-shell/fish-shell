@@ -346,6 +346,8 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     void print() const;
 };
 
+dup2_list_t dup2_list_resolve_chain_shim(const io_chain_t &io_chain);
+
 /// Base class representing the output that a builtin can generate.
 /// This has various subclasses depending on the ultimate output destination.
 class output_stream_t : noncopyable_t, nonmovable_t {

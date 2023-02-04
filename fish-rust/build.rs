@@ -23,6 +23,7 @@ fn main() -> miette::Result<()> {
         "src/ffi_init.rs",
         "src/ffi_tests.rs",
         "src/future_feature_flags.rs",
+        "src/redirection.rs",
         "src/smoke.rs",
         "src/topic_monitor.rs",
         "src/util.rs",

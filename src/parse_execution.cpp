@@ -112,9 +112,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const ast::node_t &nod
 }
 
 /// Get a redirection from stderr to stdout (i.e. 2>&1).
-static redirection_spec_t get_stderr_merge() {
+static rust::Box<redirection_spec_t> get_stderr_merge() {
     const wchar_t *stdout_fileno_str = L"1";
-    return redirection_spec_t{STDERR_FILENO, redirection_mode_t::fd, stdout_fileno_str};
+    return new_redirection_spec(STDERR_FILENO, redirection_mode_t::fd, stdout_fileno_str);
 }
 
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree,
@@ -450,7 +450,8 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     auto var = parser->vars().get(for_var_name, ENV_DEFAULT);
     if (env_var_t::flags_for(for_var_name.c_str()) & env_var_t::flag_read_only) {
         return report_error(STATUS_INVALID_ARGS, header.var_name,
-                            _(L"%ls: %ls: cannot overwrite read-only variable"), L"for", for_var_name.c_str());
+                            _(L"%ls: %ls: cannot overwrite read-only variable"), L"for",
+                            for_var_name.c_str());
     }
 
     auto &vars = parser->vars();
@@ -735,19 +736,20 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
             // If the original command did not include a "/", assume we found it via $PATH.
             auto src = get_source(statement.command);
             if (src.find(L"/") == wcstring::npos) {
-                return this->report_error(
-                                          STATUS_NOT_EXECUTABLE, statement.command,
-                                          _(L"Unknown command. A component of '%ls' is not a directory. Check your $PATH."), cmd);
+                return this->report_error(STATUS_NOT_EXECUTABLE, statement.command,
+                                          _(L"Unknown command. A component of '%ls' is not a "
+                                            L"directory. Check your $PATH."),
+                                          cmd);
             } else {
                 return this->report_error(
-                                          STATUS_NOT_EXECUTABLE, statement.command,
-                                          _(L"Unknown command. A component of '%ls' is not a directory."), cmd);
+                    STATUS_NOT_EXECUTABLE, statement.command,
+                    _(L"Unknown command. A component of '%ls' is not a directory."), cmd);
             }
         }
 
         return this->report_error(
-                                  STATUS_NOT_EXECUTABLE, statement.command,
-                                  _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
+            STATUS_NOT_EXECUTABLE, statement.command,
+            _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
     }
 
     // Handle unrecognized commands with standard command not found handler that can make better
@@ -770,7 +772,9 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
     // Redirect to stderr
     auto io = io_chain_t{};
-    io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}}, L"");
+    auto list = new_redirection_spec_list();
+    list->push_back(new_redirection_spec(STDOUT_FILENO, redirection_mode_t::fd, L"2"));
+    io.append_from_specs(*list, L"");
 
     if (function_exists(L"fish_command_not_found", *parser)) {
         buffer = L"fish_command_not_found";
@@ -890,7 +894,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
 
     // Produce the full argument list and the set of IO redirections.
     wcstring_list_t cmd_args;
-    redirection_spec_list_t redirections;
+    auto redirections = new_redirection_spec_list();
     if (use_implicit_cd) {
         // Implicit cd is simple.
         cmd_args = {L"cd", cmd};
@@ -917,7 +921,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         }
 
         // The set of IO redirections that we construct for the process.
-        auto reason = this->determine_redirections(statement.args_or_redirs, &redirections);
+        auto reason = this->determine_redirections(statement.args_or_redirs, &*redirections);
         if (reason != end_execution_reason_t::ok) {
             return reason;
         }
@@ -1018,14 +1022,14 @@ end_execution_reason_t parse_execution_context_t::determine_redirections(
 
         // Make a redirection spec from the redirect token.
         assert(oper && oper->is_valid() && "expected to have a valid redirection");
-        redirection_spec_t spec{oper->fd, oper->mode, std::move(target)};
+        auto spec = new_redirection_spec(oper->fd, oper->mode, target.c_str());
 
         // Validate this spec.
-        if (spec.mode == redirection_mode_t::fd && !spec.is_close() &&
-                !spec.get_target_as_fd().has_value()) {
+        if (spec->mode() == redirection_mode_t::fd && !spec->is_close() &&
+            !spec->get_target_as_fd()) {
             const wchar_t *fmt =
                 _(L"Requested redirection to '%ls', which is not a valid file descriptor");
-            return report_error(STATUS_INVALID_ARGS, redir_node, fmt, spec.target.c_str());
+            return report_error(STATUS_INVALID_ARGS, redir_node, fmt, spec->target()->c_str());
         }
         out_redirections->push_back(std::move(spec));
 
@@ -1077,8 +1081,8 @@ end_execution_reason_t parse_execution_context_t::populate_block_process(
     }
     assert(args_or_redirs && "Should have args_or_redirs");
 
-    redirection_spec_list_t redirections;
-    auto reason = this->determine_redirections(*args_or_redirs, &redirections);
+    auto redirections = new_redirection_spec_list();
+    auto reason = this->determine_redirections(*args_or_redirs, &*redirections);
     if (reason == end_execution_reason_t::ok) {
         proc->type = process_type_t::block_node;
         proc->block_node_source = pstree;
@@ -1207,8 +1211,8 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
         if (parsed_pipe->stderr_merge) {
             // This was a pipe like &| which redirects both stdout and stderr.
             // Also redirect stderr to stdout.
-            auto specs = processes.back()->redirection_specs();
-            specs.push_back(get_stderr_merge());
+            auto specs = processes.back()->redirection_specs().clone();
+            specs->push_back(get_stderr_merge());
             processes.back()->set_redirection_specs(std::move(specs));
         }
 

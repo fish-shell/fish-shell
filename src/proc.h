@@ -275,9 +275,9 @@ class process_t : noncopyable_t {
     const wchar_t *argv0() const { return argv_.empty() ? nullptr : argv_.front().c_str(); }
 
     /// Redirection list getter and setter.
-    const redirection_spec_list_t &redirection_specs() const { return proc_redirection_specs_; }
+    const redirection_spec_list_t &redirection_specs() const { return *proc_redirection_specs_; }
 
-    void set_redirection_specs(redirection_spec_list_t specs) {
+    void set_redirection_specs(rust::Box<redirection_spec_list_t> specs) {
         this->proc_redirection_specs_ = std::move(specs);
     }
 
@@ -340,7 +340,7 @@ class process_t : noncopyable_t {
 
    private:
     wcstring_list_t argv_;
-    redirection_spec_list_t proc_redirection_specs_;
+    rust::Box<redirection_spec_list_t> proc_redirection_specs_;
 
     // The wait handle. This is constructed lazily, and cached.
     wait_handle_ref_t wait_handle_{};

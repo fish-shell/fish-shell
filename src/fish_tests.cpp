@@ -3065,7 +3065,7 @@ static void test_dup2s() {
     io_chain_t chain;
     chain.push_back(make_shared<io_close_t>(17));
     chain.push_back(make_shared<io_fd_t>(3, 19));
-    auto list = dup2_list_t::resolve_chain(chain);
+    auto list = dup2_list_resolve_chain_shim(chain);
     do_test(list.get_actions().size() == 2);
 
     auto act1 = list.get_actions().at(0);
@@ -3086,7 +3086,7 @@ static void test_dup2s_fd_for_target_fd() {
     chain.push_back(make_shared<io_fd_t>(5, 8));
     chain.push_back(make_shared<io_fd_t>(1, 4));
     chain.push_back(make_shared<io_fd_t>(3, 5));
-    auto list = dup2_list_t::resolve_chain(chain);
+    auto list = dup2_list_resolve_chain_shim(chain);
 
     do_test(list.fd_for_target_fd(3) == 8);
     do_test(list.fd_for_target_fd(5) == 8);

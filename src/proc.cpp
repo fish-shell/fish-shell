@@ -251,7 +251,7 @@ static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
     }
 }
 
-process_t::process_t() = default;
+process_t::process_t() : proc_redirection_specs_(new_redirection_spec_list()) {}
 
 void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_principal().current_generations();

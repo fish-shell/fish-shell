@@ -33,9 +33,10 @@ end
 
 complete -c apt -f
 
-complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_apt_packages | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250 | sort)'
-complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_apt_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)'
-complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -a '(__fish_complete_suffix .deb)'
+# We use -k to keep PWD directories (from the .deb completion) after packages, so we need to sort the packages
+complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -kxa '(__fish_complete_suffix .deb)'
+complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -kxa '(__fish_print_apt_packages | sort)'
+complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -kxa '(__fish_print_apt_packages --installed | sort)'
 
 complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-recommends
 # This advanced flag is the safest way to upgrade packages that otherwise would have been kept back

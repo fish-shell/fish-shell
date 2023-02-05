@@ -66,6 +66,7 @@ impl parser_t {
 }
 
 impl job_t {
+    #[allow(clippy::mut_from_ref)]
     pub fn get_procs(&self) -> &mut [UniquePtr<process_t>] {
         let ffi_procs = self.ffi_processes();
         unsafe { slice::from_raw_parts_mut(ffi_procs.procs, ffi_procs.count) }

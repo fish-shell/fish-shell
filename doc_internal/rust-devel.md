@@ -12,7 +12,7 @@ Important tools used during this transition:
 2. [cxx](http://cxx.rs) for basic C++ <-> Rust interop.
 3. [autocxx](https://google.github.io/autocxx/) for using C++ types in Rust.
 
-We use forks of the last two - see the FFI section below. No special action is required to obtain these packages. They're downloaded by cargo.
+We use forks of the last two - see the [FFI section](#ffi) below. No special action is required to obtain these packages. They're downloaded by cargo.
 
 ## Building
 
@@ -61,7 +61,7 @@ The basic development loop for this port:
    - Utility functions may have both a Rust and C++ implementation. An example is `FLOG` where interop is too hard.
    - Major components (e.g. builtin implementations) should _not_ be duplicated; instead the Rust should call C++ or vice-versa.
 
-You will likely run into limitations of [`autocxx`](https://google.github.io/autocxx/) and to a lesser extent [`cxx`](https://cxx.rs/). See the FFI sections below.
+You will likely run into limitations of [`autocxx`](https://google.github.io/autocxx/) and to a lesser extent [`cxx`](https://cxx.rs/). See the [FFI sections](#ffi) below.
 
 ## Type Mapping
 
@@ -96,7 +96,7 @@ There is also a `widestrs` proc-macro which enables L as a _suffix_, to reduce t
 ```rust
 use crate::wchar::{wstr, widestrs}
 
-[#widestrs]
+#[widestrs]
 fn get_shell_name() -> &'static wstr {
     "fish"L // equivalent to L!("fish")
 }
@@ -150,7 +150,7 @@ The [autocxx guidance](https://google.github.io/autocxx/workflow.html#how-can-i-
 
 ## FFI
 
-The boundary between Rust and C++ is referred to as the FII.
+The boundary between Rust and C++ is referred to as the Foreign Function Interface, or FFI.
 
 `autocxx` and `cxx` both are designed for long-term interop: C++ and Rust coexisting for years. To this end, both emphasize safety: requiring lots of `unsafe`, `Pin`, etc.
 

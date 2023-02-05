@@ -228,12 +228,7 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
             if ret == Ordering::Equal {
                 // Comparing the string value is the same as numerical
                 // for wchar_t digits!
-                if ac > bc {
-                    ret = Ordering::Greater;
-                }
-                if bc > ac {
-                    ret = Ordering::Less;
-                }
+                ret = ac.cmp(bc);
             }
         } else {
             // We don't have negative numbers and we only allow ints,

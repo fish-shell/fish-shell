@@ -28,7 +28,7 @@ pub(crate) use wgettext;
 macro_rules! wgettext_fmt {
     (
     $string:literal, // format string
-    $($args:expr),*, // list of expressions
+    $($args:expr),* // list of expressions
     $(,)?   // optional trailing comma
     ) => {
         crate::wutil::sprintf!(&crate::wutil::wgettext!($string), $($args),*)

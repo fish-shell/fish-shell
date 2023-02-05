@@ -31,6 +31,7 @@ struct wcharz_t {
 
     /* implicit */ wcharz_t(const wchar_t *s) : str(s) {}
     operator const wchar_t *() const { return str; }
+    operator wcstring() const { return str; }
 
     inline size_t size() const { return wcslen(str); }
     inline size_t length() const { return size(); }

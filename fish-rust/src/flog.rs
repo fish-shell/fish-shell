@@ -150,7 +150,7 @@ pub fn flog_impl(s: &str) {
 
 macro_rules! FLOG {
     ($category:ident, $($elem:expr),+) => {
-        if crate::flog::categories::$category.enabled.load(Ordering::Relaxed) {
+        if crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             let mut vs = Vec::new();
             $(
                 vs.push(format!("{:?}", $elem));

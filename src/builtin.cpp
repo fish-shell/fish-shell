@@ -41,7 +41,6 @@
 #include "builtins/complete.h"
 #include "builtins/contains.h"
 #include "builtins/disown.h"
-#include "builtins/echo.h"
 #include "builtins/emit.h"
 #include "builtins/eval.h"
 #include "builtins/exit.h"
@@ -384,7 +383,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"continue", &builtin_break_continue, N_(L"Skip over remaining innermost loop")},
     {L"count", &builtin_count, N_(L"Count the number of arguments")},
     {L"disown", &builtin_disown, N_(L"Remove job from job list")},
-    {L"echo", &builtin_echo, N_(L"Print arguments")},
+    {L"echo", &implemented_in_rust, N_(L"Print arguments")},
     {L"else", &builtin_generic, N_(L"Evaluate block if condition is false")},
     {L"emit", &builtin_emit, N_(L"Emit an event")},
     {L"end", &builtin_generic, N_(L"End a block of commands")},
@@ -529,6 +528,9 @@ const wchar_t *builtin_get_desc(const wcstring &name) {
 }
 
 static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
+    if (cmd == L"echo") {
+        return RustBuiltin::Echo;
+    }
     if (cmd == L"wait") {
         return RustBuiltin::Wait;
     }

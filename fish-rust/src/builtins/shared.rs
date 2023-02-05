@@ -108,6 +108,7 @@ pub fn run_builtin(
     builtin: RustBuiltin,
 ) -> Option<c_int> {
     match builtin {
+        RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),
     }
 }

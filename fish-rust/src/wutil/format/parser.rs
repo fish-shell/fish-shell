@@ -57,7 +57,7 @@ pub enum NumericParam {
     Literal(i32),
     /// Get the width from the previous argument
     ///
-    /// This should never be passed to [Printf::format()][crate::Printf::format()].
+    /// This should never be passed to [Printf::format()][super::format::Printf::format()].
     FromArgument,
 }
 

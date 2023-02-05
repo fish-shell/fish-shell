@@ -1,13 +1,14 @@
+//! Support for wide strings.
+//!
+//! There are two wide string types that are commonly used:
+//!   - wstr: a string slice without a nul terminator. Like `&str` but wide chars.
+//!   - WString: an owning string without a nul terminator. Like `String` but wide chars.
+
 use crate::ffi;
 pub use cxx::CxxWString;
 pub use ffi::{wchar_t, wcharz_t};
 pub use widestring::utf32str;
 pub use widestring::{Utf32Str as wstr, Utf32String as WString};
-
-/// Support for wide strings.
-/// There are two wide string types that are commonly used:
-///   - wstr: a string slice without a nul terminator. Like `&str` but wide chars.
-///   - WString: an owning string without a nul terminator. Like `String` but wide chars.
 
 /// Creates a wstr string slice, like the "L" prefix of C++.
 /// The result is of type wstr.

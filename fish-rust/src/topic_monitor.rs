@@ -1,20 +1,6 @@
-use crate::fd_readable_set::fd_readable_set_t;
-use crate::fds::{self, autoclose_pipes_t};
-use crate::ffi::{self as ffi, c_int};
-use crate::flog::FLOG;
-use crate::wchar::{widestrs, wstr, WString};
-use crate::wchar_ffi::wcharz;
-use nix::errno::Errno;
-use nix::unistd;
-use std::cell::UnsafeCell;
-use std::mem;
-use std::pin::Pin;
-use std::sync::{
-    atomic::{AtomicU8, Ordering},
-    Condvar, Mutex, MutexGuard,
-};
+/*! Topic monitoring support.
 
-/** Topic monitoring support. Topics are conceptually "a thing that can happen." For example,
+Topics are conceptually "a thing that can happen." For example,
 delivery of a SIGINT, a child process exits, etc. It is possible to post to a topic, which means
 that that thing happened.
 
@@ -33,6 +19,22 @@ Tying this all together is the topic_monitor_t. This provides the current topic 
 also provides the ability to perform a blocking wait for any topic to change in a particular topic
 set. This is the real power of topics: you can wait for a sigchld signal OR a thread exit.
 */
+
+use crate::fd_readable_set::fd_readable_set_t;
+use crate::fds::{self, autoclose_pipes_t};
+use crate::ffi::{self as ffi, c_int};
+use crate::flog::FLOG;
+use crate::wchar::{widestrs, wstr, WString};
+use crate::wchar_ffi::wcharz;
+use nix::errno::Errno;
+use nix::unistd;
+use std::cell::UnsafeCell;
+use std::mem;
+use std::pin::Pin;
+use std::sync::{
+    atomic::{AtomicU8, Ordering},
+    Condvar, Mutex, MutexGuard,
+};
 
 #[cxx::bridge]
 mod topic_monitor_ffi {

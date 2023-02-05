@@ -1,6 +1,6 @@
 # Completions for the `apt` command
 
-# macOS has a /usr/bin/apt that is something else entirely: 
+# macOS has a /usr/bin/apt that is something else entirely:
 # (apt - Returns the path to a Java home directory from the current user's settings)
 if [ "$(uname -s)" = Darwin -a "$(command -s apt)" = /usr/bin/apt ]
     exit 1
@@ -14,7 +14,7 @@ set -l handle_file_pkg_subcmds install
 function __fish_apt_subcommand -V all_subcmds
     set -l subcommand $argv[1]
     set -e argv[1]
-    complete -f -c apt -n "not __fish_seen_subcommand_from $all_subcmds" -a $subcommand $argv
+    complete -f -c apt -n "__fish_is_first_token" -a $subcommand $argv
 end
 
 function __fish_apt_option

@@ -82,8 +82,8 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd);
-static proc_status_t builtin_run_rust(parser_t &parser, io_streams_t &streams,
-                                      const wcstring_list_t &argv, RustBuiltin builtin);
+static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
+                                     const wcstring_list_t &argv, RustBuiltin builtin);
 
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
@@ -452,11 +452,6 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
     if (argv.empty()) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
     const wcstring &cmdname = argv.front();
 
-    auto rust_builtin = try_get_rust_builtin(cmdname);
-    if (rust_builtin.has_value()) {
-        return builtin_run_rust(parser, streams, argv, *rust_builtin);
-    }
-
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
     // handle displaying help for it here.
@@ -465,38 +460,43 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
         return proc_status_t::from_exit_code(STATUS_CMD_OK);
     }
 
-    if (const builtin_data_t *data = builtin_lookup(cmdname)) {
+    maybe_t<int> builtin_ret;
+
+    auto rust_builtin = try_get_rust_builtin(cmdname);
+    if (rust_builtin.has_value()) {
+        builtin_ret = builtin_run_rust(parser, streams, argv, *rust_builtin);
+    } else if (const builtin_data_t *data = builtin_lookup(cmdname)) {
         // Construct the permutable argv array which the builtin expects, and execute the builtin.
         null_terminated_array_t<wchar_t> argv_arr(argv);
-        maybe_t<int> builtin_ret = data->func(parser, streams, argv_arr.get());
-
-        // Flush our out and error streams, and check for their errors.
-        int out_ret = streams.out.flush_and_check_error();
-        int err_ret = streams.err.flush_and_check_error();
-
-        // Resolve our status code.
-        // If the builtin itself produced an error, use that error.
-        // Otherwise use any errors from writing to out and writing to err, in that order.
-        int code = builtin_ret.has_value() ? *builtin_ret : 0;
-        if (code == 0) code = out_ret;
-        if (code == 0) code = err_ret;
-
-        // The exit code is cast to an 8-bit unsigned integer, so saturate to 255. Otherwise,
-        // multiples of 256 are reported as 0.
-        if (code > 255) code = 255;
-
-        // Handle the case of an empty status.
-        if (code == 0 && !builtin_ret.has_value()) {
-            return proc_status_t::empty();
-        }
-        if (code < 0) {
-            FLOGF(warning, "builtin %ls returned invalid exit code %d", cmdname.c_str(), code);
-        }
-        return proc_status_t::from_exit_code(code);
+        builtin_ret = data->func(parser, streams, argv_arr.get());
+    } else {
+        FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, cmdname.c_str());
+        return proc_status_t::from_exit_code(STATUS_CMD_ERROR);
     }
 
-    FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, cmdname.c_str());
-    return proc_status_t::from_exit_code(STATUS_CMD_ERROR);
+    // Flush our out and error streams, and check for their errors.
+    int out_ret = streams.out.flush_and_check_error();
+    int err_ret = streams.err.flush_and_check_error();
+
+    // Resolve our status code.
+    // If the builtin itself produced an error, use that error.
+    // Otherwise use any errors from writing to out and writing to err, in that order.
+    int code = builtin_ret.has_value() ? *builtin_ret : 0;
+    if (code == 0) code = out_ret;
+    if (code == 0) code = err_ret;
+
+    // The exit code is cast to an 8-bit unsigned integer, so saturate to 255. Otherwise,
+    // multiples of 256 are reported as 0.
+    if (code > 255) code = 255;
+
+    // Handle the case of an empty status.
+    if (code == 0 && !builtin_ret.has_value()) {
+        return proc_status_t::empty();
+    }
+    if (code < 0) {
+        FLOGF(warning, "builtin %ls returned invalid exit code %d", cmdname.c_str(), code);
+    }
+    return proc_status_t::from_exit_code(code);
 }
 
 /// Returns a list of all builtin names.
@@ -542,5 +542,5 @@ static proc_status_t builtin_run_rust(parser_t &parser, io_streams_t &streams,
         rust_argv.emplace_back(arg.c_str());
     }
     rust_run_builtin(parser, streams, rust_argv, builtin);
-    return proc_status_t{};
+    return none();
 }

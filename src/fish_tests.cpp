@@ -2105,15 +2105,15 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     va_list va;
     bool res = true;
     wchar_t *arg;
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
     pwd_environment_t pwd{};
     operation_context_t ctx{parser_t::principal_parser().shared(), pwd, no_cancel};
 
-    if (expand_string(in, &output, flags, ctx, &errors) == expand_result_t::error) {
-        if (errors.empty()) {
+    if (expand_string(in, &output, flags, ctx, &*errors) == expand_result_t::error) {
+        if (errors->empty()) {
             err(L"Bug: Parse error reported but no error text found.");
         } else {
-            err(L"%ls", errors.at(0).describe(in, ctx.parser->is_interactive()).c_str());
+            err(L"%ls", errors->at(0)->describe(in, ctx.parser->is_interactive())->c_str());
         }
         return false;
     }
@@ -2324,14 +2324,14 @@ static void test_expand_overflow() {
     int set = parser->vars().set(L"bigvar", ENV_LOCAL, std::move(vals));
     do_test(set == ENV_OK);
 
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
     operation_context_t ctx{parser, parser->vars(), no_cancel};
 
     // We accept only 1024 completions.
     completion_receiver_t output{1024};
 
-    auto res = expand_string(expansion, &output, expand_flags_t{}, ctx, &errors);
-    do_test(!errors.empty());
+    auto res = expand_string(expansion, &output, expand_flags_t{}, ctx, &*errors);
+    do_test(!errors->empty());
     do_test(res == expand_result_t::error);
 
     parser->vars().pop();
@@ -4965,7 +4965,7 @@ static void test_new_parser_fuzzing() {
     wcstring src;
     src.reserve(128);
 
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
 
     double start = timef();
     bool log_it = true;
@@ -4989,7 +4989,7 @@ static void test_new_parser_fuzzing() {
 // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
 // true if successful.
 static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *out_joined_args,
-                             enum statement_decoration_t *out_deco) {
+                             statement_decoration_t *out_deco) {
     using namespace ast;
     out_cmd->clear();
     out_joined_args->clear();
@@ -5062,7 +5062,7 @@ static void test_new_parser_ll2() {
         wcstring src;
         wcstring cmd;
         wcstring args;
-        enum statement_decoration_t deco;
+        statement_decoration_t deco;
     } tests[] = {{L"echo hello", L"echo", L"hello", statement_decoration_t::none},
                  {L"command echo hello", L"echo", L"hello", statement_decoration_t::command},
                  {L"exec echo hello", L"echo", L"hello", statement_decoration_t::exec},
@@ -5079,7 +5079,7 @@ static void test_new_parser_ll2() {
 
     for (const auto &test : tests) {
         wcstring cmd, args;
-        enum statement_decoration_t deco = statement_decoration_t::none;
+        statement_decoration_t deco = statement_decoration_t::none;
         bool success = test_1_parse_ll2(test.src, &cmd, &args, &deco);
         if (!success) err(L"Parse of '%ls' failed on line %ld", test.cmd.c_str(), (long)__LINE__);
         if (cmd != test.cmd)
@@ -5135,20 +5135,20 @@ static void test_new_parser_ad_hoc() {
     ast = ast_t::parse(L"a=", parse_flag_leave_unterminated);
     do_test(!ast.errored());
 
-    parse_error_list_t errors;
-    ast = ast_t::parse(L"begin; echo (", parse_flag_leave_unterminated, &errors);
-    do_test(errors.size() == 1 &&
-            errors.at(0).code == parse_error_code_t::tokenizer_unterminated_subshell);
+    auto errors = new_parse_error_list();
+    ast = ast_t::parse(L"begin; echo (", parse_flag_leave_unterminated, &*errors);
+    do_test(errors->size() == 1 &&
+            errors->at(0)->code() == parse_error_code_t::tokenizer_unterminated_subshell);
 
-    errors.clear();
-    ast = ast_t::parse(L"for x in (", parse_flag_leave_unterminated, &errors);
-    do_test(errors.size() == 1 &&
-            errors.at(0).code == parse_error_code_t::tokenizer_unterminated_subshell);
+    errors->clear();
+    ast = ast_t::parse(L"for x in (", parse_flag_leave_unterminated, &*errors);
+    do_test(errors->size() == 1 &&
+            errors->at(0)->code() == parse_error_code_t::tokenizer_unterminated_subshell);
 
-    errors.clear();
-    ast = ast_t::parse(L"begin; echo '", parse_flag_leave_unterminated, &errors);
-    do_test(errors.size() == 1 &&
-            errors.at(0).code == parse_error_code_t::tokenizer_unterminated_quote);
+    errors->clear();
+    ast = ast_t::parse(L"begin; echo '", parse_flag_leave_unterminated, &*errors);
+    do_test(errors->size() == 1 &&
+            errors->at(0)->code() == parse_error_code_t::tokenizer_unterminated_quote);
 }
 
 static void test_new_parser_errors() {
@@ -5179,24 +5179,24 @@ static void test_new_parser_errors() {
         const wcstring src = test.src;
         parse_error_code_t expected_code = test.code;
 
-        parse_error_list_t errors;
-        auto ast = ast::ast_t::parse(src, parse_flag_none, &errors);
+        auto errors = new_parse_error_list();
+        auto ast = ast::ast_t::parse(src, parse_flag_none, &*errors);
         if (!ast.errored()) {
             err(L"Source '%ls' was expected to fail to parse, but succeeded", src.c_str());
         }
 
-        if (errors.size() != 1) {
+        if (errors->size() != 1) {
             err(L"Source '%ls' was expected to produce 1 error, but instead produced %lu errors",
-                src.c_str(), errors.size());
-            for (const auto &err : errors) {
-                fprintf(stderr, "%ls\n", err.describe(src, false).c_str());
+                src.c_str(), errors->size());
+            for (size_t i = 0; i < errors->size(); i++) {
+                fprintf(stderr, "%ls\n", errors->at(i)->describe(src, false)->c_str());
             }
-        } else if (errors.at(0).code != expected_code) {
+        } else if (errors->at(0)->code() != expected_code) {
             err(L"Source '%ls' was expected to produce error code %lu, but instead produced error "
                 L"code %lu",
-                src.c_str(), expected_code, (unsigned long)errors.at(0).code);
-            for (const auto &error : errors) {
-                err(L"\t\t%ls", error.describe(src, true).c_str());
+                src.c_str(), expected_code, (unsigned long)errors->at(0)->code());
+            for (size_t i = 0; i < errors->size(); i++) {
+                err(L"\t\t%ls", errors->at(i)->describe(src, true)->c_str());
             }
         }
     }
@@ -5289,13 +5289,14 @@ static void test_error_messages() {
                        {L"echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME},
                        {L"echo foo $ bar", ERROR_NO_VAR_NAME}};
 
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
     for (const auto &test : error_tests) {
-        errors.clear();
-        parse_util_detect_errors(test.src, &errors);
-        do_test(!errors.empty());
-        if (!errors.empty()) {
-            do_test1(string_matches_format(errors.at(0).text, test.error_text_format), test.src);
+        errors->clear();
+        parse_util_detect_errors(test.src, &*errors);
+        do_test(!errors->empty());
+        if (!errors->empty()) {
+            do_test1(string_matches_format(*errors->at(0)->text(), test.error_text_format),
+                     test.src);
         }
     }
 }

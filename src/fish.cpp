@@ -263,11 +263,11 @@ static int run_command_list(parser_t &parser, const std::vector<std::string> &cm
     for (const auto &cmd : cmds) {
         wcstring cmd_wcs = str2wcstring(cmd);
         // Parse into an ast and detect errors.
-        parse_error_list_t errors;
-        auto ast = ast::ast_t::parse(cmd_wcs, parse_flag_none, &errors);
+        auto errors = new_parse_error_list();
+        auto ast = ast::ast_t::parse(cmd_wcs, parse_flag_none, &*errors);
         bool errored = ast.errored();
         if (!errored) {
-            errored = parse_util_detect_errors(ast, cmd_wcs, &errors);
+            errored = parse_util_detect_errors(ast, cmd_wcs, &*errors);
         }
         if (!errored) {
             // Construct a parsed source ref.
@@ -277,7 +277,7 @@ static int run_command_list(parser_t &parser, const std::vector<std::string> &cm
             parser.eval(ps, io);
         } else {
             wcstring sb;
-            parser.get_backtrace(cmd_wcs, errors, sb);
+            parser.get_backtrace(cmd_wcs, *errors, sb);
             std::fwprintf(stderr, L"%ls", sb.c_str());
         }
     }

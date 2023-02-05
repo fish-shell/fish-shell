@@ -16,10 +16,12 @@ include_cpp! {
     #include "io.h"
     #include "parse_util.h"
     #include "wildcard.h"
+    #include "tokenizer.h"
     #include "parser.h"
     #include "proc.h"
     #include "common.h"
     #include "builtin.h"
+    #include "fallback.h"
 
     safety!(unsafe_ffi)
 
@@ -30,9 +32,14 @@ include_cpp! {
     generate_pod!("pipes_ffi_t")
     generate!("make_pipes_ffi")
 
+    generate!("valid_var_name_char")
+
     generate!("get_flog_file_fd")
 
     generate!("parse_util_unescape_wildcards")
+
+    generate!("fish_wcwidth")
+    generate!("fish_wcswidth")
 
     generate!("wildcard_match")
     generate!("wgettext_ptr")

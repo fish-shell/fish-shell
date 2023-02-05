@@ -2,10 +2,7 @@
 #ifndef FISH_PARSE_CONSTANTS_H
 #define FISH_PARSE_CONSTANTS_H
 
-#include "config.h"
-
 #include "common.h"
-#include "enum_map.h"
 
 using source_offset_t = uint32_t;
 constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
@@ -16,33 +13,31 @@ constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-
         exit_without_destructors(-1);  \
     } while (0)
 
-// A range of source code.
+#if INCLUDE_RUST_HEADERS
+
+#include "parse_constants.rs.h"
+
+using source_range_t = SourceRange;
+using parse_token_type_t = ParseTokenType;
+using parse_keyword_t = ParseKeyword;
+using statement_decoration_t = StatementDecoration;
+using parse_error_code_t = ParseErrorCode;
+using pipeline_position_t = PipelinePosition;
+using parse_error_list_t = ParseErrorList;
+
+#else
+
+// Hacks to allow us to compile without Rust headers.
+
+#include "config.h"
+
 struct source_range_t {
     source_offset_t start;
     source_offset_t length;
-
-    source_offset_t end() const {
-        assert(start + length >= start && "Overflow");
-        return start + length;
-    }
-
-    bool operator==(const source_range_t &rhs) const {
-        return start == rhs.start && length == rhs.length;
-    }
-
-    bool operator!=(const source_range_t &rhs) const { return !(*this == rhs); }
-
-    // \return true if a location is in this range, including one-past-the-end.
-    bool contains_inclusive(source_offset_t loc) const {
-        return start <= loc && loc - start <= length;
-    }
 };
 
-// IMPORTANT: If the following enum table is modified you must also update token_enum_map below.
 enum class parse_token_type_t : uint8_t {
     invalid = 1,
-
-    // Terminal types.
     string,
     pipe,
     redirection,
@@ -50,37 +45,14 @@ enum class parse_token_type_t : uint8_t {
     andand,
     oror,
     end,
-    // Special terminal type that means no more tokens forthcoming.
     terminate,
-    // Very special terminal types that don't appear in the production list.
     error,
     tokenizer_error,
     comment,
 };
 
-const enum_map<parse_token_type_t> token_enum_map[] = {
-    {parse_token_type_t::comment, L"parse_token_type_t::comment"},
-    {parse_token_type_t::error, L"parse_token_type_t::error"},
-    {parse_token_type_t::tokenizer_error, L"parse_token_type_t::tokenizer_error"},
-    {parse_token_type_t::background, L"parse_token_type_t::background"},
-    {parse_token_type_t::end, L"parse_token_type_t::end"},
-    {parse_token_type_t::pipe, L"parse_token_type_t::pipe"},
-    {parse_token_type_t::redirection, L"parse_token_type_t::redirection"},
-    {parse_token_type_t::string, L"parse_token_type_t::string"},
-    {parse_token_type_t::andand, L"parse_token_type_t::andand"},
-    {parse_token_type_t::oror, L"parse_token_type_t::oror"},
-    {parse_token_type_t::terminate, L"parse_token_type_t::terminate"},
-    {parse_token_type_t::invalid, L"parse_token_type_t::invalid"},
-    {parse_token_type_t::invalid, nullptr}};
-
-// IMPORTANT: If the following enum is modified you must update the corresponding keyword_enum_map
-// array below.
-//
-// IMPORTANT: These enums must start at zero.
 enum class parse_keyword_t : uint8_t {
-    // 'none' is not a keyword, it is a sentinel indicating nothing.
     none,
-
     kw_and,
     kw_begin,
     kw_builtin,
@@ -101,28 +73,6 @@ enum class parse_keyword_t : uint8_t {
     kw_while,
 };
 
-const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_t::kw_exclam, L"!"},
-                                                      {parse_keyword_t::kw_and, L"and"},
-                                                      {parse_keyword_t::kw_begin, L"begin"},
-                                                      {parse_keyword_t::kw_builtin, L"builtin"},
-                                                      {parse_keyword_t::kw_case, L"case"},
-                                                      {parse_keyword_t::kw_command, L"command"},
-                                                      {parse_keyword_t::kw_else, L"else"},
-                                                      {parse_keyword_t::kw_end, L"end"},
-                                                      {parse_keyword_t::kw_exec, L"exec"},
-                                                      {parse_keyword_t::kw_for, L"for"},
-                                                      {parse_keyword_t::kw_function, L"function"},
-                                                      {parse_keyword_t::kw_if, L"if"},
-                                                      {parse_keyword_t::kw_in, L"in"},
-                                                      {parse_keyword_t::kw_not, L"not"},
-                                                      {parse_keyword_t::kw_or, L"or"},
-                                                      {parse_keyword_t::kw_switch, L"switch"},
-                                                      {parse_keyword_t::kw_time, L"time"},
-                                                      {parse_keyword_t::kw_while, L"while"},
-                                                      {parse_keyword_t::none, nullptr}};
-#define keyword_enum_map_len (sizeof keyword_enum_map / sizeof *keyword_enum_map)
-
-// Statement decorations like 'command' or 'exec'.
 enum class statement_decoration_t : uint8_t {
     none,
     command,
@@ -130,87 +80,44 @@ enum class statement_decoration_t : uint8_t {
     exec,
 };
 
-// Parse error code list.
 enum class parse_error_code_t : uint8_t {
     none,
-
-    // Matching values from enum parser_error.
     syntax,
     cmdsubst,
-
-    generic,  // unclassified error types
-
-    // Tokenizer errors.
+    generic,
     tokenizer_unterminated_quote,
     tokenizer_unterminated_subshell,
     tokenizer_unterminated_slice,
     tokenizer_unterminated_escape,
     tokenizer_other,
-
-    unbalancing_end,           // end outside of block
-    unbalancing_else,          // else outside of if
-    unbalancing_case,          // case outside of switch
-    bare_variable_assignment,  // a=b without command
-    andor_in_pipeline,         // "and" or "or" after a pipe
+    unbalancing_end,
+    unbalancing_else,
+    unbalancing_case,
+    bare_variable_assignment,
+    andor_in_pipeline,
 };
+
+struct ParseErrorList;
+using parse_error_list_t = ParseErrorList;
+
+#endif
+
+// Special source_start value that means unknown.
+#define SOURCE_LOCATION_UNKNOWN (static_cast<size_t>(-1))
 
 enum {
     parse_flag_none = 0,
-
-    /// Attempt to build a "parse tree" no matter what. This may result in a 'forest' of
-    /// disconnected trees. This is intended to be used by syntax highlighting.
     parse_flag_continue_after_error = 1 << 0,
-    /// Include comment tokens.
     parse_flag_include_comments = 1 << 1,
-    /// Indicate that the tokenizer should accept incomplete tokens */
     parse_flag_accept_incomplete_tokens = 1 << 2,
-    /// Indicate that the parser should not generate the terminate token, allowing an 'unfinished'
-    /// tree where some nodes may have no productions.
     parse_flag_leave_unterminated = 1 << 3,
-    /// Indicate that the parser should generate job_list entries for blank lines.
     parse_flag_show_blank_lines = 1 << 4,
-    /// Indicate that extra semis should be generated.
     parse_flag_show_extra_semis = 1 << 5,
 };
 using parse_tree_flags_t = uint8_t;
 
 enum { PARSER_TEST_ERROR = 1, PARSER_TEST_INCOMPLETE = 2 };
 using parser_test_error_bits_t = uint8_t;
-
-struct parse_error_t {
-    /// Text of the error.
-    wcstring text;
-    /// Code for the error.
-    enum parse_error_code_t code;
-    /// Offset and length of the token in the source code that triggered this error.
-    size_t source_start;
-    size_t source_length;
-    /// Return a string describing the error, suitable for presentation to the user. If
-    /// is_interactive is true, the offending line with a caret is printed as well.
-    wcstring describe(const wcstring &src, bool is_interactive) const;
-    /// Return a string describing the error, suitable for presentation to the user, with the given
-    /// prefix. If skip_caret is false, the offending line with a caret is printed as well.
-    wcstring describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive,
-                                  bool skip_caret) const;
-};
-typedef std::vector<parse_error_t> parse_error_list_t;
-
-wcstring token_type_user_presentable_description(parse_token_type_t type,
-                                                 parse_keyword_t keyword = parse_keyword_t::none);
-
-// Special source_start value that means unknown.
-#define SOURCE_LOCATION_UNKNOWN (static_cast<size_t>(-1))
-
-/// Helper function to offset error positions by the given amount. This is used when determining
-/// errors in a substring of a larger source buffer.
-void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
-
-// The location of a pipeline.
-enum class pipeline_position_t : uint8_t {
-    none,       // not part of a pipeline
-    first,      // first command in a pipeline
-    subsequent  // second or further command in a pipeline
-};
 
 /// Maximum number of function calls.
 #define FISH_MAX_STACK_DEPTH 128

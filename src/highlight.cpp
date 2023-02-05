@@ -394,7 +394,7 @@ rgb_color_t highlight_color_resolver_t::resolve_spec(const highlight_spec_t &hig
     return iter->second;
 }
 
-static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
+static bool command_is_valid(const wcstring &cmd, statement_decoration_t decoration,
                              const wcstring &working_directory, const environment_t &vars);
 
 static bool has_expand_reserved(const wcstring &str) {
@@ -1057,7 +1057,7 @@ void highlighter_t::visit(const ast::variable_assignment_t &varas) {
     color_as_argument(varas);
     // Highlight the '=' in variable assignments as an operator.
     auto where = variable_assignment_equals_pos(varas.source(this->buff));
-    if (where.has_value()) {
+    if (where) {
         size_t equals_loc = varas.source_range().start + *where;
         this->color_array.at(equals_loc) = highlight_role_t::operat;
         auto var_name = varas.source(this->buff).substr(0, *where);
@@ -1079,7 +1079,7 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     if (!this->io_still_ok()) {
         // We cannot check if the command is invalid, so just assume it's valid.
         is_valid_cmd = true;
-    } else if (variable_assignment_equals_pos(*cmd).has_value()) {
+    } else if (variable_assignment_equals_pos(*cmd)) {
         is_valid_cmd = true;
     } else {
         // Check to see if the command is valid.
@@ -1305,7 +1305,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
 }  // namespace
 
 /// Determine if a command is valid.
-static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
+static bool command_is_valid(const wcstring &cmd, statement_decoration_t decoration,
                              const wcstring &working_directory, const environment_t &vars) {
     // Determine which types we check, based on the decoration.
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,

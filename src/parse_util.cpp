@@ -819,7 +819,7 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
 
     va_list va;
     va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
+    error.text = std::make_unique<wcstring>(vformat_string(fmt, va));
     va_end(va);
 
     errors->push_back(std::move(error));
@@ -1031,17 +1031,17 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                 err |= check_subtoken(checked, paren_begin - has_dollar);
 
                 assert(paren_begin < paren_end && "Parens out of order?");
-                parse_error_list_t subst_errors;
-                err |= parse_util_detect_errors(subst, &subst_errors);
+                auto subst_errors = new_parse_error_list();
+                err |= parse_util_detect_errors(subst, &*subst_errors);
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
                 // within the string, and the offset of the node.
                 size_t error_offset = paren_begin + 1 + source_start;
-                parse_error_offset_source_start(&subst_errors, error_offset);
+                subst_errors->offset_source_start(error_offset);
 
                 if (out_errors != nullptr) {
-                    out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
+                    out_errors->append(&*subst_errors);
                 }
 
                 checked = paren_end + 1;
@@ -1185,9 +1185,9 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         // Check that we can expand the command.
         // Make a new error list so we can fix the offset for just those, then append later.
         wcstring command;
-        parse_error_list_t new_errors;
+        auto new_errors = new_parse_error_list();
         if (expand_to_command_and_args(unexp_command, operation_context_t::empty(), &command,
-                                       nullptr, &new_errors,
+                                       nullptr, &*new_errors,
                                        true /* skip wildcards */) == expand_result_t::error) {
             errored = true;
         }
@@ -1244,8 +1244,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
             // The expansion errors here go from the *command* onwards,
             // so we need to offset them by the *command* offset,
             // excluding the decoration.
-            parse_error_offset_source_start(&new_errors, dst.command.source_range().start);
-            vec_append(*parse_errors, std::move(new_errors));
+            new_errors->offset_source_start(dst.command.source_range().start);
+            parse_errors->append(&*new_errors);
         }
     }
     return errored;
@@ -1352,18 +1352,19 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     // Parse the input string into an ast. Some errors are detected here.
     using namespace ast;
-    parse_error_list_t parse_errors;
-    auto ast = ast_t::parse(buff_src, parse_flags, &parse_errors);
+    auto parse_errors = new_parse_error_list();
+    auto ast = ast_t::parse(buff_src, parse_flags, &*parse_errors);
     if (allow_incomplete) {
         // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
         // successfully.
-        size_t idx = parse_errors.size();
+        size_t idx = parse_errors->size();
         while (idx--) {
-            if (parse_errors.at(idx).code == parse_error_code_t::tokenizer_unterminated_quote ||
-                parse_errors.at(idx).code == parse_error_code_t::tokenizer_unterminated_subshell) {
+            if (parse_errors->at(idx)->code() == parse_error_code_t::tokenizer_unterminated_quote ||
+                parse_errors->at(idx)->code() ==
+                    parse_error_code_t::tokenizer_unterminated_subshell) {
                 // Remove this error, since we don't consider it a real error.
                 has_unclosed_quote_or_subshell = true;
-                parse_errors.erase(parse_errors.begin() + idx);
+                parse_errors->erase(idx);
             }
         }
     }
@@ -1376,8 +1377,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     }
 
     // Early parse error, stop here.
-    if (!parse_errors.empty()) {
-        if (out_errors) vec_append(*out_errors, std::move(parse_errors));
+    if (!parse_errors->empty()) {
+        if (out_errors) out_errors->append(&*parse_errors);
         return PARSER_TEST_ERROR;
     }
 
@@ -1390,24 +1391,24 @@ maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_
     // Helper to return a description of the first error.
     auto get_error_text = [&](const parse_error_list_t &errors) {
         assert(!errors.empty() && "Expected an error");
-        return errors.at(0).describe_with_prefix(arg_list_src, prefix, false /* not interactive */,
-                                                 false /* don't skip caret */);
+        return *errors.at(0)->describe_with_prefix(
+            arg_list_src, prefix, false /* not interactive */, false /* don't skip caret */);
     };
 
     // Parse the string as a freestanding argument list.
     using namespace ast;
-    parse_error_list_t errors;
-    auto ast = ast_t::parse_argument_list(arg_list_src, parse_flag_none, &errors);
-    if (!errors.empty()) {
-        return get_error_text(errors);
+    auto errors = new_parse_error_list();
+    auto ast = ast_t::parse_argument_list(arg_list_src, parse_flag_none, &*errors);
+    if (!errors->empty()) {
+        return get_error_text(*errors);
     }
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
     for (const argument_t &arg : ast.top()->as<freestanding_argument_list_t>()->arguments) {
         const wcstring arg_src = arg.source(arg_list_src);
-        if (parse_util_detect_errors_in_argument(arg, arg_src, &errors)) {
-            return get_error_text(errors);
+        if (parse_util_detect_errors_in_argument(arg, arg_src, &*errors)) {
+            return get_error_text(*errors);
         }
     }
     return none();

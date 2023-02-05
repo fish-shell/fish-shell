@@ -75,10 +75,10 @@ static void append_syntax_error(parse_error_list_t *errors, size_t source_start,
 
     va_list va;
     va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
+    error.text = std::make_unique<wcstring>(vformat_string(fmt, va));
     va_end(va);
 
-    errors->push_back(error);
+    errors->push_back(std::move(error));
 }
 
 /// Append a cmdsub error to the given error list. But only do so if the error hasn't already been
@@ -95,14 +95,14 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
 
     va_list va;
     va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
+    error.text = std::make_unique<wcstring>(vformat_string(fmt, va));
     va_end(va);
 
-    for (const auto &it : *errors) {
-        if (error.text == it.text) return;
+    for (size_t i = 0; i < errors->size(); i++) {
+        if (*error.text == *errors->at(i)->text()) return;
     }
 
-    errors->push_back(error);
+    errors->push_back(std::move(error));
 }
 
 /// Append an overflow error, when expansion produces too much data.
@@ -113,7 +113,7 @@ static expand_result_t append_overflow_error(parse_error_list_t *errors,
         error.source_start = source_start;
         error.source_length = 0;
         error.code = parse_error_code_t::generic;
-        error.text = _(L"Expansion produced too many results");
+        error.text = std::make_unique<wcstring>(_(L"Expansion produced too many results"));
         errors->push_back(std::move(error));
     }
     return expand_result_t::make_error(STATUS_EXPAND_ERROR);

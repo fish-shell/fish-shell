@@ -503,14 +503,14 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
 
     // Expand it. We need to offset any errors by the position of the string.
     completion_list_t switch_values_expanded;
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
     auto expand_ret =
-        expand_string(switch_value, &switch_values_expanded, expand_flags_t{}, ctx, &errors);
-    parse_error_offset_source_start(&errors, statement.argument.range.start);
+        expand_string(switch_value, &switch_values_expanded, expand_flags_t{}, ctx, &*errors);
+    errors->offset_source_start(statement.argument.range.start);
 
     switch (expand_ret.result) {
         case expand_result_t::error:
-            return report_errors(expand_ret.status, errors);
+            return report_errors(expand_ret.status, *errors);
 
         case expand_result_t::cancel:
             return end_execution_reason_t::cancelled;
@@ -666,18 +666,20 @@ end_execution_reason_t parse_execution_context_t::report_error(int status, const
     auto r = node.source_range();
 
     // Create an error.
-    parse_error_list_t error_list = parse_error_list_t(1);
-    parse_error_t *error = &error_list.at(0);
-    error->source_start = r.start;
-    error->source_length = r.length;
-    error->code = parse_error_code_t::syntax;  // hackish
+    auto error_list = new_parse_error_list();
+    parse_error_t error;
+    error.source_start = r.start;
+    error.source_length = r.length;
+    error.code = parse_error_code_t::syntax;  // hackish
 
     va_list va;
     va_start(va, fmt);
-    error->text = vformat_string(fmt, va);
+    error.text = std::make_unique<wcstring>(vformat_string(fmt, va));
     va_end(va);
 
-    return this->report_errors(status, error_list);
+    error_list->push_back(std::move(error));
+
+    return this->report_errors(status, *error_list);
 }
 
 end_execution_reason_t parse_execution_context_t::report_errors(
@@ -814,7 +816,7 @@ end_execution_reason_t parse_execution_context_t::expand_command(
     // Here we're expanding a command, for example $HOME/bin/stuff or $randomthing. The first
     // completion becomes the command itself, everything after becomes arguments. Command
     // substitutions are not supported.
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
 
     // Get the unexpanded command string. We expect to always get it here.
     wcstring unexp_cmd = get_source(statement.command);
@@ -822,14 +824,14 @@ end_execution_reason_t parse_execution_context_t::expand_command(
 
     // Expand the string to produce completions, and report errors.
     expand_result_t expand_err =
-        expand_to_command_and_args(unexp_cmd, ctx, out_cmd, out_args, &errors);
+        expand_to_command_and_args(unexp_cmd, ctx, out_cmd, out_args, &*errors);
     if (expand_err == expand_result_t::error) {
         // Issue #5812 - the expansions were done on the command token,
         // excluding prefixes such as " " or "if ".
         // This means that the error positions are relative to the beginning
         // of the token; we need to make them relative to the original source.
-        parse_error_offset_source_start(&errors, pos_of_command_token);
-        return report_errors(STATUS_ILLEGAL_CMD, errors);
+        errors->offset_source_start(pos_of_command_token);
+        return report_errors(STATUS_ILLEGAL_CMD, *errors);
     } else if (expand_err == expand_result_t::wildcard_no_match) {
         return report_error(STATUS_UNMATCHED_WILDCARD, statement, WILDCARD_ERR_MSG,
                             get_source(statement).c_str());
@@ -949,14 +951,14 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
         assert(arg_node->has_source() && "Argument should have source");
 
         // Expand this string.
-        parse_error_list_t errors;
+        auto errors = new_parse_error_list();
         arg_expanded.clear();
         auto expand_ret =
-            expand_string(get_source(*arg_node), &arg_expanded, expand_flags_t{}, ctx, &errors);
-        parse_error_offset_source_start(&errors, arg_node->range.start);
+            expand_string(get_source(*arg_node), &arg_expanded, expand_flags_t{}, ctx, &*errors);
+        errors->offset_source_start(arg_node->range.start);
         switch (expand_ret.result) {
             case expand_result_t::error: {
-                return this->report_errors(expand_ret.status, errors);
+                return this->report_errors(expand_ret.status, *errors);
             }
 
             case expand_result_t::cancel: {
@@ -1100,18 +1102,18 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
     for (const ast::variable_assignment_t &variable_assignment : variable_assignment_list) {
         const wcstring &source = get_source(variable_assignment);
         auto equals_pos = variable_assignment_equals_pos(source);
-        assert(equals_pos.has_value());
+        assert(equals_pos);
         const wcstring variable_name = source.substr(0, *equals_pos);
         const wcstring expression = source.substr(*equals_pos + 1);
         completion_list_t expression_expanded;
-        parse_error_list_t errors;
+        auto errors = new_parse_error_list();
         // TODO this is mostly copied from expand_arguments_from_nodes, maybe extract to function
         auto expand_ret =
-            expand_string(expression, &expression_expanded, expand_flags_t{}, ctx, &errors);
-        parse_error_offset_source_start(&errors, variable_assignment.range.start + *equals_pos + 1);
+            expand_string(expression, &expression_expanded, expand_flags_t{}, ctx, &*errors);
+        errors->offset_source_start(variable_assignment.range.start + *equals_pos + 1);
         switch (expand_ret.result) {
             case expand_result_t::error:
-                return this->report_errors(expand_ret.status, errors);
+                return this->report_errors(expand_ret.status, *errors);
 
             case expand_result_t::cancel:
                 return end_execution_reason_t::cancelled;

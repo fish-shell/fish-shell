@@ -1318,8 +1318,8 @@ cleanup_t completer_t::apply_var_assignments(const wcstring_list_t &var_assignme
     const expand_flags_t expand_flags = expand_flag::skip_cmdsubst;
     const block_t *block = ctx.parser->push_block(block_t::variable_assignment_block());
     for (const wcstring &var_assign : var_assignments) {
-        maybe_t<size_t> equals_pos = variable_assignment_equals_pos(var_assign);
-        assert(equals_pos.has_value() && "All variable assignments should have equals position");
+        auto equals_pos = variable_assignment_equals_pos(var_assign);
+        assert(equals_pos && "All variable assignments should have equals position");
         const wcstring variable_name = var_assign.substr(0, *equals_pos);
         const wcstring expression = var_assign.substr(*equals_pos + 1);
 
@@ -1406,7 +1406,7 @@ void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
         size_t wrapped_command_offset_in_wt = wcstring::npos;
         while (auto tok = tokenizer.next()) {
             wcstring tok_src = tok->get_source(wt);
-            if (variable_assignment_equals_pos(tok_src).has_value()) {
+            if (variable_assignment_equals_pos(tok_src)) {
                 ad->var_assignments->push_back(std::move(tok_src));
             } else {
                 wrapped_command_offset_in_wt = tok->offset;
@@ -1553,7 +1553,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     for (const tok_t &tok : tokens) {
         if (tok.location_in_or_at_end_of_source_range(cursor_pos)) break;
         wcstring tok_src = tok.get_source(cmdline);
-        if (!variable_assignment_equals_pos(tok_src).has_value()) break;
+        if (!variable_assignment_equals_pos(tok_src)) break;
         var_assignments.push_back(std::move(tok_src));
     }
     tokens.erase(tokens.begin(), tokens.begin() + var_assignments.size());
@@ -1603,8 +1603,8 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     }
 
     if (cmd_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
-        maybe_t<size_t> equal_sign_pos = variable_assignment_equals_pos(current_token);
-        if (equal_sign_pos.has_value()) {
+        auto equal_sign_pos = variable_assignment_equals_pos(current_token);
+        if (equal_sign_pos) {
             complete_param_expand(current_token, true /* do_file */);
             return;
         }

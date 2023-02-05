@@ -10,6 +10,9 @@
 #include "maybe.h"
 #include "parse_constants.h"
 #include "redirection.h"
+#if INCLUDE_RUST_HEADERS
+#include "tokenizer.rs.h"
+#endif
 
 /// Token types. XXX Why this isn't parse_token_type_t, I'm not really sure.
 enum class token_type_t : uint8_t {
@@ -207,8 +210,5 @@ class move_word_state_machine_t {
     bool consume_char(wchar_t c);
     void reset();
 };
-
-/// The position of the equal sign in a variable assignment like foo=bar.
-maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt);
 
 #endif

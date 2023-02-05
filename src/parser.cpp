@@ -439,10 +439,11 @@ wcstring parser_t::current_line() {
     // Use an error with empty text.
     assert(source_offset >= 0);
     parse_error_t empty_error = {};
+    empty_error.text = std::make_unique<wcstring>();
     empty_error.source_start = source_offset;
 
-    wcstring line_info = empty_error.describe_with_prefix(execution_context->get_source(), prefix,
-                                                          is_interactive(), skip_caret);
+    wcstring line_info = *empty_error.describe_with_prefix(execution_context->get_source(), prefix,
+                                                           is_interactive(), skip_caret);
     if (!line_info.empty()) {
         line_info.push_back(L'\n');
     }
@@ -499,13 +500,13 @@ profile_item_t *parser_t::create_profile_item() {
 eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
                           const job_group_ref_t &job_group, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
-    parse_error_list_t error_list;
-    if (parsed_source_ref_t ps = parse_source(wcstring{cmd}, parse_flag_none, &error_list)) {
+    auto error_list = new_parse_error_list();
+    if (parsed_source_ref_t ps = parse_source(wcstring{cmd}, parse_flag_none, &*error_list)) {
         return this->eval(ps, io, job_group, block_type);
     } else {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
-        this->get_backtrace(cmd, error_list, backtrace_and_desc);
+        this->get_backtrace(cmd, *error_list, backtrace_and_desc);
 
         // Print it.
         std::fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
@@ -623,20 +624,20 @@ template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {
     if (!errors.empty()) {
-        const parse_error_t &err = errors.at(0);
+        const auto *err = errors.at(0);
 
         // Determine if we want to try to print a caret to point at the source error. The
-        // err.source_start <= src.size() check is due to the nasty way that slices work, which is
+        // err.source_start() <= src.size() check is due to the nasty way that slices work, which is
         // by rewriting the source.
         size_t which_line = 0;
         bool skip_caret = true;
-        if (err.source_start != SOURCE_LOCATION_UNKNOWN && err.source_start <= src.size()) {
+        if (err->source_start() != SOURCE_LOCATION_UNKNOWN && err->source_start() <= src.size()) {
             // Determine which line we're on.
-            which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
+            which_line = 1 + std::count(src.begin(), src.begin() + err->source_start(), L'\n');
 
             // Don't include the caret if we're interactive, this is the first line of text, and our
             // source is at its beginning, because then it's obvious.
-            skip_caret = (is_interactive() && which_line == 1 && err.source_start == 0);
+            skip_caret = (is_interactive() && which_line == 1 && err->source_start() == 0);
         }
 
         wcstring prefix;
@@ -655,7 +656,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         }
 
         const wcstring description =
-            err.describe_with_prefix(src, prefix, is_interactive(), skip_caret);
+            *err->describe_with_prefix(src, prefix, is_interactive(), skip_caret);
         if (!description.empty()) {
             output.append(description);
             output.push_back(L'\n');

@@ -2755,13 +2755,13 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
 }
 
 static parser_test_error_bits_t reader_shell_test(const parser_t &parser, const wcstring &bstr) {
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
     parser_test_error_bits_t res =
-        parse_util_detect_errors(bstr, &errors, true /* do accept incomplete */);
+        parse_util_detect_errors(bstr, &*errors, true /* do accept incomplete */);
 
     if (res & PARSER_TEST_ERROR) {
         wcstring error_desc;
-        parser.get_backtrace(bstr, errors, error_desc);
+        parser.get_backtrace(bstr, *errors, error_desc);
 
         // Ensure we end with a newline. Also add an initial newline, because it's likely the user
         // just hit enter and so there's junk on the current line.
@@ -4719,11 +4719,11 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     }
 
     // Parse into an ast and detect errors.
-    parse_error_list_t errors;
-    auto ast = ast::ast_t::parse(str, parse_flag_none, &errors);
+    auto errors = new_parse_error_list();
+    auto ast = ast::ast_t::parse(str, parse_flag_none, &*errors);
     bool errored = ast.errored();
     if (!errored) {
-        errored = parse_util_detect_errors(ast, str, &errors);
+        errored = parse_util_detect_errors(ast, str, &*errors);
     }
     if (!errored) {
         // Construct a parsed source ref.
@@ -4733,7 +4733,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
         return 0;
     } else {
         wcstring sb;
-        parser.get_backtrace(str, errors, sb);
+        parser.get_backtrace(str, *errors, sb);
         std::fwprintf(stderr, L"%ls", sb.c_str());
         return 1;
     }

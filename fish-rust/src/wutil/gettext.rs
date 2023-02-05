@@ -15,7 +15,7 @@ pub fn wgettext_impl_do_not_use_directly(text: &[wchar_t]) -> &'static wstr {
 /// Get a (possibly translated) string from a string literal.
 /// This returns a &'static wstr.
 macro_rules! wgettext {
-    ($string:literal) => {
+    ($string:expr) => {
         crate::wutil::gettext::wgettext_impl_do_not_use_directly(
             crate::wchar_ffi::u32cstr!($string).as_slice_with_nul(),
         )
@@ -27,7 +27,7 @@ pub(crate) use wgettext;
 /// The result is a WString.
 macro_rules! wgettext_fmt {
     (
-    $string:literal, // format string
+    $string:expr, // format string
     $($args:expr),* // list of expressions
     $(,)?   // optional trailing comma
     ) => {

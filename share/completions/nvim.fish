@@ -30,6 +30,8 @@ complete -c nvim -s V -d 'Start in verbose mode'
 complete -c nvim -s h -l help -d 'Print help message and exit'
 complete -c nvim -l noplugin -d 'Skip loading plugins'
 complete -c nvim -s v -l version -d 'Print version information and exit'
+complete -c nvim -l clean -d 'Factory defaults: skip vimrc, plugins, shada'
+complete -c nvim -l startuptime -r -d 'Write startup timing messages to <file>'
 
 # Support for those is planned, but not all of them are implemented yet (February 2023)
 # For the unimplemented, nvim prints a corresponding message
@@ -42,10 +44,6 @@ complete -c nvim -l remote-wait -d 'Edit files on NVim server'
 complete -c nvim -l remote-wait-silent -d 'Edit files on Vim server'
 complete -c nvim -l serverlist -d 'List all Vim servers that can be found'
 complete -c nvim -l servername -d 'Set server name'
-
-# Options not included in vim.fish, also available in vim
-complete -c nvim -l clean -d 'Factory defaults: skip vimrc, plugins, shada'
-complete -c nvim -l startuptime -r -d 'Write startup timing messages to <file>'
 
 # Options exclusive to Neovim, see https://neovim.io/doc/user/starting.html
 complete -c nvim -s l -r -d 'Execute Lua script'

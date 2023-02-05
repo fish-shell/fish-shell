@@ -225,7 +225,7 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
             // first differing digit.
             //
             // If the numbers have the same length, that's the value.
-            if let Ordering::Equal = ret {
+            if ret == Ordering::Equal {
                 // Comparing the string value is the same as numerical
                 // for wchar_t digits!
                 if ac > bc {

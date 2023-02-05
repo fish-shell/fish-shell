@@ -18,6 +18,8 @@ Scripting improvements
 ----------------------
 - ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
 - ``read`` will now print an error if told to set a read-only variable instead of silently doing nothing (:issue:`9346`).
+- ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively``.
+- Stack trace now shows line numbers for copied functions.
 
 Interactive improvements
 ------------------------

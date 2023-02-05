@@ -99,11 +99,25 @@ set -l name1 (functions name1)
 set -l name1a (functions name1a)
 set -l name3 (functions name3)
 set -l name3a (functions name3a)
-# First line for the non-copied function is "# Defined in checks/function.fish" - skip it to work around #6575.
+# First two lines for the copied and non-copied functions are different. Skip it for now.
 test "$name1[3..-1]" = "$name1a[3..-1]"; and echo "1 = 1a"
 #CHECK: 1 = 1a
 test "$name3[3..-1]" = "$name3a[3..-1]"; and echo "3 = 3a"
 #CHECK: 3 = 3a
+
+# Test the first two lines.
+string join \n -- $name1[1..2]
+#CHECK: # Defined in {{(?:(?!, copied).)*}}
+#CHECK: function name1 --argument arg1 arg2
+string join \n -- $name1a[1..2]
+#CHECK: # Defined in {{.*}}, copied in {{.*}}
+#CHECK: function name1a --argument arg1 arg2
+string join \n -- $name3[1..2]
+#CHECK: # Defined in {{(?:(?!, copied).)*}}
+#CHECK: function name3 --argument arg1 arg2
+string join \n -- $name3a[1..2]
+#CHECK: # Defined in {{.*}}, copied in {{.*}}
+#CHECK: function name3a --argument arg1 arg2
 
 function test
     echo banana

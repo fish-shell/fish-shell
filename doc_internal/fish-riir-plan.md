@@ -1,4 +1,4 @@
-These is a proposed port of fish-shell from C++ to Rust, and from CMake to cargo or related. This document is high level - see the Development Guide for more details.
+These is a proposed port of fish-shell from C++ to Rust, and from CMake to cargo or related. This document is high level - see the [Development Guide] for more details.
 
 ## Why Port
 
@@ -41,7 +41,7 @@ We will not use tokio, serde, async, or other fancy Rust frameworks initially.
 
 ### FFI
 
-Rust/C++ interop will use [autocxx](https://github.com/google/autocxx), [Cxx](https://cxx.rs), and possibly [bindgen](https://rust-lang.github.io/rust-bindgen/). I've forked these for fish (see the Development Guide). Once the port is done, we will stop using them, except perhaps bindgen for PCRE2.
+Rust/C++ interop will use [autocxx](https://github.com/google/autocxx), [Cxx](https://cxx.rs), and possibly [bindgen](https://rust-lang.github.io/rust-bindgen/). I've forked these for fish (see the [Development Guide]). Once the port is done, we will stop using them, except perhaps bindgen for PCRE2.
 
 We will use [corrosion](https://github.com/corrosion-rs/corrosion) for CMake integration.
 
@@ -60,7 +60,7 @@ So instead of `String`, fish will use its own string type, and manage encoding a
 
 After the port we can consider moving to UTF-8, for memory usage reasons.
 
-See the Rust Development Guide for more on strings.
+See the [Rust Development Guide][Development Guide] for more on strings.
 
 ### Thread Safety
 
@@ -75,3 +75,5 @@ Handwaving, 6 months? Frankly unknown - there's 102 remaining .cpp files of vari
 ## Links
 
 - [Packaging Rust projects](https://wiki.archlinux.org/title/Rust_package_guidelines) from Arch Linux
+
+[Development Guide]: rust-devel.md

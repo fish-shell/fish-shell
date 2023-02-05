@@ -1,5 +1,7 @@
-// A version of the getopt library for use with wide character strings.
-//
+//! A version of the getopt library for use with wide character strings.
+//!
+//! Note wgetopter expects an mutable array of const strings. It modifies the order of the
+//! strings, but not their contents.
 /* Declarations for getopt.
    Copyright (C) 1989, 90, 91, 92, 93, 94 Free Software Foundation, Inc.
 
@@ -21,31 +23,29 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-/// Note wgetopter expects an mutable array of const strings. It modifies the order of the
-/// strings, but not their contents.
 use crate::wchar::{utf32str, wstr, WExt};
 
-// Describe how to deal with options that follow non-option ARGV-elements.
-//
-// If the caller did not specify anything, the default is PERMUTE.
-//
-// REQUIRE_ORDER means don't recognize them as options; stop option processing when the first
-// non-option is seen. This is what Unix does. This mode of operation is selected by using `+'
-// as the first character of the list of option characters.
-//
-// PERMUTE is the default.  We permute the contents of ARGV as we scan, so that eventually all
-// the non-options are at the end.  This allows options to be given in any order, even with
-// programs that were not written to expect this.
-//
-// RETURN_IN_ORDER is an option available to programs that were written to expect options and
-// other ARGV-elements in any order and that care about the ordering of the two.  We describe
-// each non-option ARGV-element as if it were the argument of an option with character code 1.
-// Using `-' as the first character of the list of option characters selects this mode of
-// operation.
-//
-// The special argument `--' forces an end of option-scanning regardless of the value of
-// `ordering'.  In the case of RETURN_IN_ORDER, only `--' can cause `getopt' to return EOF with
-// `woptind' != ARGC.
+/// Describe how to deal with options that follow non-option ARGV-elements.
+///
+/// If the caller did not specify anything, the default is PERMUTE.
+///
+/// REQUIRE_ORDER means don't recognize them as options; stop option processing when the first
+/// non-option is seen. This is what Unix does. This mode of operation is selected by using `+'
+/// as the first character of the list of option characters.
+///
+/// PERMUTE is the default.  We permute the contents of ARGV as we scan, so that eventually all
+/// the non-options are at the end.  This allows options to be given in any order, even with
+/// programs that were not written to expect this.
+///
+/// RETURN_IN_ORDER is an option available to programs that were written to expect options and
+/// other ARGV-elements in any order and that care about the ordering of the two.  We describe
+/// each non-option ARGV-element as if it were the argument of an option with character code 1.
+/// Using `-` as the first character of the list of option characters selects this mode of
+/// operation.
+///
+/// The special argument `--` forces an end of option-scanning regardless of the value of
+/// `ordering`.  In the case of RETURN_IN_ORDER, only `--` can cause `getopt` to return EOF with
+/// `woptind` != ARGC.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(clippy::upper_case_acronyms)]
 enum Ordering {
@@ -65,47 +65,46 @@ fn empty_wstr() -> &'static wstr {
 }
 
 pub struct wgetopter_t<'opts, 'args, 'argarray> {
-    // Argv.
+    /// Argv.
     argv: &'argarray mut [&'args wstr],
 
-    // For communication from `getopt' to the caller. When `getopt' finds an option that takes an
-    // argument, the argument value is returned here. Also, when `ordering' is RETURN_IN_ORDER, each
-    // non-option ARGV-element is returned here.
+    /// For communication from `getopt` to the caller. When `getopt` finds an option that takes an
+    /// argument, the argument value is returned here. Also, when `ordering` is RETURN_IN_ORDER, each
+    /// non-option ARGV-element is returned here.
     pub woptarg: Option<&'args wstr>,
 
     shortopts: &'opts wstr,
     longopts: &'opts [woption<'opts>],
 
-    // The next char to be scanned in the option-element in which the last option character we
-    // returned was found. This allows us to pick up the scan where we left off.
-    //
-    // If this is empty, it means resume the scan by advancing to the next ARGV-element.
+    /// The next char to be scanned in the option-element in which the last option character we
+    /// returned was found. This allows us to pick up the scan where we left off.
+    ///
+    /// If this is empty, it means resume the scan by advancing to the next ARGV-element.
     nextchar: &'args wstr,
 
-    // Index in ARGV of the next element to be scanned. This is used for communication to and from
-    // the caller and for communication between successive calls to `getopt'.
-    //
-    // On entry to `getopt', zero means this is the first call; initialize.
-    //
-    // When `getopt' returns EOF, this is the index of the first of the non-option elements that the
-    // caller should itself scan.
-    //
-    // Otherwise, `woptind' communicates from one call to the next how much of ARGV has been scanned
-    // so far.
-
+    /// Index in ARGV of the next element to be scanned. This is used for communication to and from
+    /// the caller and for communication between successive calls to `getopt`.
+    ///
+    /// On entry to `getopt`, zero means this is the first call; initialize.
+    ///
+    /// When `getopt` returns EOF, this is the index of the first of the non-option elements that the
+    /// caller should itself scan.
+    ///
+    /// Otherwise, `woptind` communicates from one call to the next how much of ARGV has been scanned
+    /// so far.
     // XXX 1003.2 says this must be 1 before any call.
     pub woptind: usize,
 
-    // Set to an option character which was unrecognized.
+    /// Set to an option character which was unrecognized.
     woptopt: char,
 
-    // Describe how to deal with options that follow non-option ARGV-elements.
+    /// Describe how to deal with options that follow non-option ARGV-elements.
     ordering: Ordering,
 
-    // Handle permutation of arguments.
-
-    // Describe the part of ARGV that contains non-options that have been skipped.  `first_nonopt'
-    // is the index in ARGV of the first of them; `last_nonopt' is the index after the last of them.
+    /// Handle permutation of arguments.
+    ///
+    /// Describe the part of ARGV that contains non-options that have been skipped.  `first_nonopt`
+    /// is the index in ARGV of the first of them; `last_nonopt` is the index after the last of them.
     pub first_nonopt: usize,
     pub last_nonopt: usize,
 
@@ -113,7 +112,7 @@ pub struct wgetopter_t<'opts, 'args, 'argarray> {
     initialized: bool,
 }
 
-// Names for the values of the `has_arg' field of `woption'.
+/// Names for the values of the `has_arg` field of `woption`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum woption_argument_t {
     no_argument,
@@ -125,18 +124,18 @@ pub enum woption_argument_t {
 /// getopt_long or getopt_long_only is a vector of `struct option' terminated by an element
 /// containing a name which is zero.
 ///
-/// The field `has_arg' is:
+/// The field `has_arg` is:
 /// no_argument    (or 0) if the option does not take an argument,
 /// required_argument  (or 1) if the option requires an argument,
 /// optional_argument   (or 2) if the option takes an optional argument.
 ///
-/// If the field `flag' is not NULL, it points to a variable that is set to the value given in the
-/// field `val' when the option is found, but left unchanged if the option is not found.
+/// If the field `flag` is not NULL, it points to a variable that is set to the value given in the
+/// field `val` when the option is found, but left unchanged if the option is not found.
 ///
-/// To have a long-named option do something other than set an `int' to a compiled-in constant, such
-/// as set a value from `optarg', set the option's `flag' field to zero and its `val' field to a
+/// To have a long-named option do something other than set an `int` to a compiled-in constant, such
+/// as set a value from `optarg`, set the option's `flag` field to zero and its `val` field to a
 /// nonzero value (the equivalent single-letter option character, if there is one).  For long
-/// options that have a zero `flag' field, `getopt' returns the contents of the `val' field.
+/// options that have a zero `flag` field, `getopt` returns the contents of the `val` field.
 #[derive(Debug, Clone, Copy)]
 pub struct woption<'a> {
     /// Long name for switch.
@@ -191,13 +190,13 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         return self.argv.len();
     }
 
-    // Exchange two adjacent subsequences of ARGV. One subsequence is elements
-    // [first_nonopt,last_nonopt) which contains all the non-options that have been skipped so far. The
-    // other is elements [last_nonopt,woptind), which contains all the options processed since those
-    // non-options were skipped.
-    //
-    // `first_nonopt' and `last_nonopt' are relocated so that they describe the new indices of the
-    // non-options in ARGV after they are moved.
+    /// Exchange two adjacent subsequences of ARGV. One subsequence is elements
+    /// [first_nonopt,last_nonopt) which contains all the non-options that have been skipped so far. The
+    /// other is elements [last_nonopt,woptind), which contains all the options processed since those
+    /// non-options were skipped.
+    ///
+    /// `first_nonopt` and `last_nonopt` are relocated so that they describe the new indices of the
+    /// non-options in ARGV after they are moved.
     fn exchange(&mut self) {
         let mut bottom = self.first_nonopt;
         let middle = self.last_nonopt;
@@ -235,7 +234,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         self.last_nonopt = self.woptind;
     }
 
-    // Initialize the internal data when the first call is made.
+    /// Initialize the internal data when the first call is made.
     fn _wgetopt_initialize(&mut self) {
         // Start processing options with ARGV-element 1 (since ARGV-element 0 is the program name); the
         // sequence of previously skipped non-option ARGV-elements is empty.
@@ -266,8 +265,8 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         self.initialized = true;
     }
 
-    // Advance to the next ARGV-element.
-    // \return Some(\0) on success, or None or another value if we should stop.
+    /// Advance to the next ARGV-element.
+    /// \return Some(\0) on success, or None or another value if we should stop.
     fn _advance_to_next_argv(&mut self) -> Option<char> {
         let argc = self.argc();
         if self.ordering == Ordering::PERMUTE {
@@ -337,7 +336,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         return Some(char::from(0));
     }
 
-    // Check for a matching short opt.
+    /// Check for a matching short opt.
     fn _handle_short_opt(&mut self) -> char {
         // Look at and handle the next short option-character.
         let mut c = self.nextchar.char_at(0);
@@ -439,7 +438,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         *retval = pfound.val;
     }
 
-    // Find a matching long opt.
+    /// Find a matching long opt.
     fn _find_matching_long_opt(
         &self,
         nameend: usize,
@@ -469,7 +468,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         return pfound;
     }
 
-    // Check for a matching long opt.
+    /// Check for a matching long opt.
     fn _handle_long_opt(
         &mut self,
         longind: &mut usize,
@@ -518,45 +517,45 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         return false;
     }
 
-    // Scan elements of ARGV (whose length is ARGC) for option characters given in OPTSTRING.
-    //
-    // If an element of ARGV starts with '-', and is not exactly "-" or "--", then it is an option
-    // element.  The characters of this element (aside from the initial '-') are option characters.  If
-    // `getopt' is called repeatedly, it returns successively each of the option characters from each of
-    // the option elements.
-    //
-    // If `getopt' finds another option character, it returns that character, updating `woptind' and
-    // `nextchar' so that the next call to `getopt' can resume the scan with the following option
-    // character or ARGV-element.
-    //
-    // If there are no more option characters, `getopt' returns `EOF'. Then `woptind' is the index in
-    // ARGV of the first ARGV-element that is not an option.  (The ARGV-elements have been permuted so
-    // that those that are not options now come last.)
-    //
-    // OPTSTRING is a string containing the legitimate option characters. If an option character is seen
-    // that is not listed in OPTSTRING, return '?'.
-    //
-    // If a char in OPTSTRING is followed by a colon, that means it wants an arg, so the following text
-    // in the same ARGV-element, or the text of the following ARGV-element, is returned in `optarg'.
-    // Two colons mean an option that wants an optional arg; if there is text in the current
-    // ARGV-element, it is returned in `w.woptarg', otherwise `w.woptarg' is set to zero.
-    //
-    // If OPTSTRING starts with `-' or `+', it requests different methods of handling the non-option
-    // ARGV-elements. See the comments about RETURN_IN_ORDER and REQUIRE_ORDER, above.
-    //
-    // Long-named options begin with `--' instead of `-'. Their names may be abbreviated as long as the
-    // abbreviation is unique or is an exact match for some defined option.  If they have an argument,
-    // it follows the option name in the same ARGV-element, separated from the option name by a `=', or
-    // else the in next ARGV-element. When `getopt' finds a long-named option, it returns 0 if that
-    // option's `flag' field is nonzero, the value of the option's `val' field if the `flag' field is
-    // zero.
-    //
-    // LONGOPTS is a vector of `struct option' terminated by an element containing a name which is zero.
-    //
-    // LONGIND returns the index in LONGOPT of the long-named option found. It is only valid when a
-    // long-named option has been found by the most recent call.
-    //
-    // If LONG_ONLY is nonzero, '-' as well as '--' can introduce long-named options.
+    /// Scan elements of ARGV (whose length is ARGC) for option characters given in OPTSTRING.
+    ///
+    /// If an element of ARGV starts with '-', and is not exactly "-" or "--", then it is an option
+    /// element.  The characters of this element (aside from the initial '-') are option characters.  If
+    /// `getopt` is called repeatedly, it returns successively each of the option characters from each of
+    /// the option elements.
+    ///
+    /// If `getopt` finds another option character, it returns that character, updating `woptind` and
+    /// `nextchar` so that the next call to `getopt` can resume the scan with the following option
+    /// character or ARGV-element.
+    ///
+    /// If there are no more option characters, `getopt` returns `EOF`. Then `woptind` is the index in
+    /// ARGV of the first ARGV-element that is not an option.  (The ARGV-elements have been permuted so
+    /// that those that are not options now come last.)
+    ///
+    /// OPTSTRING is a string containing the legitimate option characters. If an option character is seen
+    /// that is not listed in OPTSTRING, return '?'.
+    ///
+    /// If a char in OPTSTRING is followed by a colon, that means it wants an arg, so the following text
+    /// in the same ARGV-element, or the text of the following ARGV-element, is returned in `optarg`.
+    /// Two colons mean an option that wants an optional arg; if there is text in the current
+    /// ARGV-element, it is returned in `w.woptarg`, otherwise `w.woptarg` is set to zero.
+    ///
+    /// If OPTSTRING starts with `-` or `+', it requests different methods of handling the non-option
+    /// ARGV-elements. See the comments about RETURN_IN_ORDER and REQUIRE_ORDER, above.
+    ///
+    /// Long-named options begin with `--` instead of `-`. Their names may be abbreviated as long as the
+    /// abbreviation is unique or is an exact match for some defined option.  If they have an argument,
+    /// it follows the option name in the same ARGV-element, separated from the option name by a `=', or
+    /// else the in next ARGV-element. When `getopt` finds a long-named option, it returns 0 if that
+    /// option's `flag` field is nonzero, the value of the option's `val` field if the `flag` field is
+    /// zero.
+    ///
+    /// LONGOPTS is a vector of `struct option' terminated by an element containing a name which is zero.
+    ///
+    /// LONGIND returns the index in LONGOPT of the long-named option found. It is only valid when a
+    /// long-named option has been found by the most recent call.
+    ///
+    /// If LONG_ONLY is nonzero, '-' as well as '--' can introduce long-named options.
     fn _wgetopt_internal(&mut self, longind: &mut usize, long_only: bool) -> Option<char> {
         if !self.initialized {
             self._wgetopt_initialize();

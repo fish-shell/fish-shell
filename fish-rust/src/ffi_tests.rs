@@ -1,9 +1,10 @@
-/// Support for tests which need to cross the FFI.
-/// Because the C++ is not compiled by `cargo test` and there is no natural way to
-/// do it, use the following facilities for tests which need to use C++ types.
-/// This uses the inventory crate to build a custom-test harness
-/// as described at https://www.infinyon.com/blog/2021/04/rust-custom-test-harness/
-/// See smoke.rs add_test for an example of how to use this.
+//! Support for tests which need to cross the FFI.
+//!
+//! Because the C++ is not compiled by `cargo test` and there is no natural way to
+//! do it, use the following facilities for tests which need to use C++ types.
+//! This uses the inventory crate to build a custom-test harness
+//! as described at <https://www.infinyon.com/blog/2021/04/rust-custom-test-harness/>
+//! See smoke.rs add_test for an example of how to use this.
 
 #[cfg(all(feature = "fish-ffi-tests", not(test)))]
 mod ffi_tests_impl {

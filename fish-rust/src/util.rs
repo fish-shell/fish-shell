@@ -13,10 +13,28 @@ mod ffi {
     }
 
     extern "Rust" {
-        fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> i32;
-        fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> i32;
+        #[cxx_name = "wcsfilecmp"]
+        fn wcsfilecmp_ffi(a: wcharz_t, b: wcharz_t) -> i32;
+        #[cxx_name = "wcsfilecmp_glob"]
+        fn wcsfilecmp_glob_ffi(a: wcharz_t, b: wcharz_t) -> i32;
         fn get_time() -> i64;
     }
+}
+
+fn ordering_to_int(ord: Ordering) -> i32 {
+    match ord {
+        Ordering::Less => -1,
+        Ordering::Equal => 0,
+        Ordering::Greater => 1,
+    }
+}
+
+fn wcsfilecmp_glob_ffi(a: wcharz_t, b: wcharz_t) -> i32 {
+    ordering_to_int(wcsfilecmp_glob(a, b))
+}
+
+fn wcsfilecmp_ffi(a: wcharz_t, b: wcharz_t) -> i32 {
+    ordering_to_int(wcsfilecmp(a, b))
 }
 
 /// Compares two wide character strings with an (arguably) intuitive ordering. This function tries
@@ -46,11 +64,11 @@ mod ffi {
 /// a 'file1' and 'File1' will not be considered identical, and hence their internal sort order is
 /// not arbitrary, but the names 'file1', 'File2' and 'file3' will still be sorted in the order
 /// given above.
-pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> i32 {
+pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> Ordering {
     // TODO This should return `std::cmp::Ordering`.
     let a: &wstr = a.into();
     let b: &wstr = b.into();
-    let mut retval = 0;
+    let mut retval = Ordering::Equal;
     let mut ai = 0;
     let mut bi = 0;
     while ai < a.len() && bi < b.len() {
@@ -61,7 +79,7 @@ pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> i32 {
             (retval, ad, bd) = wcsfilecmp_leading_digits(&a[ai..], &b[bi..]);
             ai += ad;
             bi += bd;
-            if retval != 0 || ai == a.len() || bi == b.len() {
+            if retval != Ordering::Equal || ai == a.len() || bi == b.len() {
                 break;
             }
             continue;
@@ -82,22 +100,18 @@ pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> i32 {
         bcl = bcl.to_uppercase().next().unwrap();
 
         match acl.cmp(&bcl) {
-            Ordering::Less => {
-                retval = -1;
-                break;
-            }
             Ordering::Equal => {
                 ai += 1;
                 bi += 1;
             }
-            Ordering::Greater => {
-                retval = 1;
+            o => {
+                retval = o;
                 break;
             }
         }
     }
 
-    if retval != 0 {
+    if retval != Ordering::Equal {
         return retval; // we already know the strings aren't logically equal
     }
 
@@ -109,26 +123,22 @@ pub fn wcsfilecmp(a: wcharz_t, b: wcharz_t) -> i32 {
             // names are literally identical because that won't occur given how this function is
             // used. And even if it were to occur (due to being reused in some other context) it
             // would be so rare that it isn't worth optimizing for.
-            match a.cmp(b) {
-                std::cmp::Ordering::Less => -1,
-                std::cmp::Ordering::Equal => 0,
-                std::cmp::Ordering::Greater => 1,
-            }
+            a.cmp(b)
         } else {
-            -1 // string a is a prefix of b and b is longer
+            Ordering::Less // string a is a prefix of b and b is longer
         }
     } else {
         assert!(bi == b.len());
-        return 1; // string b is a prefix of a and a is longer
+        Ordering::Greater // string b is a prefix of a and a is longer
     }
 }
 
 /// wcsfilecmp, but frozen in time for glob usage.
-pub fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> i32 {
+pub fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> Ordering {
     // TODO This should return `std::cmp::Ordering`.
     let a: &wstr = a.into();
     let b: &wstr = b.into();
-    let mut retval = 0;
+    let mut retval = Ordering::Equal;
     let mut ai = 0;
     let mut bi = 0;
     while ai < a.len() && bi < b.len() {
@@ -141,7 +151,7 @@ pub fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> i32 {
             bi += bd;
             // If we know the strings aren't logically equal or we've reached the end of one or both
             // strings we can stop iterating over the chars in each string.
-            if retval != 0 || ai == a.len() || bi == b.len() {
+            if retval != Ordering::Equal || ai == a.len() || bi == b.len() {
                 break;
             }
             continue;
@@ -158,22 +168,18 @@ pub fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> i32 {
         let acl = ac.to_lowercase().next().unwrap();
         let bcl = bc.to_lowercase().next().unwrap();
         match acl.cmp(&bcl) {
-            Ordering::Less => {
-                retval = -1;
-                break;
-            }
             Ordering::Equal => {
                 ai += 1;
                 bi += 1;
             }
-            Ordering::Greater => {
-                retval = 1;
+            o => {
+                retval = o;
                 break;
             }
         }
     }
 
-    if retval != 0 {
+    if retval != Ordering::Equal {
         return retval; // we already know the strings aren't logically equal
     }
 
@@ -185,17 +191,13 @@ pub fn wcsfilecmp_glob(a: wcharz_t, b: wcharz_t) -> i32 {
             // names are literally identical because that won't occur given how this function is
             // used. And even if it were to occur (due to being reused in some other context) it
             // would be so rare that it isn't worth optimizing for.
-            match a.cmp(b) {
-                std::cmp::Ordering::Less => -1,
-                std::cmp::Ordering::Equal => 0,
-                std::cmp::Ordering::Greater => 1,
-            }
+            a.cmp(b)
         } else {
-            -1 // string a is a prefix of b and b is longer
+            Ordering::Less // string a is a prefix of b and b is longer
         }
     } else {
         assert!(bi == b.len());
-        return 1; // string b is a prefix of a and a is longer
+        Ordering::Greater // string b is a prefix of a and a is longer
     }
 }
 
@@ -209,12 +211,12 @@ pub fn get_time() -> i64 {
 
 // Compare the strings to see if they begin with an integer that can be compared and return the
 // result of that comparison.
-fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (i32, usize, usize) {
+fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
     // Ignore leading 0s.
     let mut ai = a.as_char_slice().iter().take_while(|c| **c == '0').count();
     let mut bi = b.as_char_slice().iter().take_while(|c| **c == '0').count();
 
-    let mut ret = 0;
+    let mut ret = Ordering::Equal;
     loop {
         let ac = a.as_char_slice().get(ai).unwrap_or(&'\0');
         let bc = b.as_char_slice().get(bi).unwrap_or(&'\0');
@@ -223,14 +225,14 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (i32, usize, usize) {
             // first differing digit.
             //
             // If the numbers have the same length, that's the value.
-            if ret == 0 {
+            if let Ordering::Equal = ret {
                 // Comparing the string value is the same as numerical
                 // for wchar_t digits!
                 if ac > bc {
-                    ret = 1;
+                    ret = Ordering::Greater;
                 }
                 if bc > ac {
-                    ret = -1;
+                    ret = Ordering::Less;
                 }
             }
         } else {
@@ -238,10 +240,10 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (i32, usize, usize) {
             // and we have already skipped leading zeroes,
             // so the longer number is larger automatically.
             if ac.is_ascii_digit() {
-                ret = 1;
+                ret = Ordering::Greater;
             }
             if bc.is_ascii_digit() {
-                ret = -1;
+                ret = Ordering::Less;
             }
             break;
         }
@@ -283,42 +285,42 @@ fn test_wcsfilecmp() {
     }
 
     // Not using L as suffix because the macro munges error locations.
-    validate!("", "", 0);
-    validate!("", "def", -1);
-    validate!("abc", "", 1);
-    validate!("abc", "def", -1);
-    validate!("abc", "DEF", -1);
-    validate!("DEF", "abc", 1);
-    validate!("abc", "abc", 0);
-    validate!("ABC", "ABC", 0);
-    validate!("AbC", "abc", -1);
-    validate!("AbC", "ABC", 1);
-    validate!("def", "abc", 1);
-    validate!("1ghi", "1gHi", 1);
-    validate!("1ghi", "2ghi", -1);
-    validate!("1ghi", "01ghi", 1);
-    validate!("1ghi", "02ghi", -1);
-    validate!("01ghi", "1ghi", -1);
-    validate!("1ghi", "002ghi", -1);
-    validate!("002ghi", "1ghi", 1);
-    validate!("abc01def", "abc1def", -1);
-    validate!("abc1def", "abc01def", 1);
-    validate!("abc12", "abc5", 1);
-    validate!("51abc", "050abc", 1);
-    validate!("abc5", "abc12", -1);
-    validate!("5abc", "12ABC", -1);
-    validate!("abc0789", "abc789", -1);
-    validate!("abc0xA789", "abc0xA0789", 1);
-    validate!("abc002", "abc2", -1);
-    validate!("abc002g", "abc002", 1);
-    validate!("abc002g", "abc02g", -1);
-    validate!("abc002.txt", "abc02.txt", -1);
-    validate!("abc005", "abc012", -1);
-    validate!("abc02", "abc002", 1);
-    validate!("abc002.txt", "abc02.txt", -1);
-    validate!("GHI1abc2.txt", "ghi1abc2.txt", -1);
-    validate!("a0", "a00", -1);
-    validate!("a00b", "a0b", -1);
-    validate!("a0b", "a00b", 1);
-    validate!("a-b", "azb", 1);
+    validate!("", "", Ordering::Equal);
+    validate!("", "def", Ordering::Less);
+    validate!("abc", "", Ordering::Greater);
+    validate!("abc", "def", Ordering::Less);
+    validate!("abc", "DEF", Ordering::Less);
+    validate!("DEF", "abc", Ordering::Greater);
+    validate!("abc", "abc", Ordering::Equal);
+    validate!("ABC", "ABC", Ordering::Equal);
+    validate!("AbC", "abc", Ordering::Less);
+    validate!("AbC", "ABC", Ordering::Greater);
+    validate!("def", "abc", Ordering::Greater);
+    validate!("1ghi", "1gHi", Ordering::Greater);
+    validate!("1ghi", "2ghi", Ordering::Less);
+    validate!("1ghi", "01ghi", Ordering::Greater);
+    validate!("1ghi", "02ghi", Ordering::Less);
+    validate!("01ghi", "1ghi", Ordering::Less);
+    validate!("1ghi", "002ghi", Ordering::Less);
+    validate!("002ghi", "1ghi", Ordering::Greater);
+    validate!("abc01def", "abc1def", Ordering::Less);
+    validate!("abc1def", "abc01def", Ordering::Greater);
+    validate!("abc12", "abc5", Ordering::Greater);
+    validate!("51abc", "050abc", Ordering::Greater);
+    validate!("abc5", "abc12", Ordering::Less);
+    validate!("5abc", "12ABC", Ordering::Less);
+    validate!("abc0789", "abc789", Ordering::Less);
+    validate!("abc0xA789", "abc0xA0789", Ordering::Greater);
+    validate!("abc002", "abc2", Ordering::Less);
+    validate!("abc002g", "abc002", Ordering::Greater);
+    validate!("abc002g", "abc02g", Ordering::Less);
+    validate!("abc002.txt", "abc02.txt", Ordering::Less);
+    validate!("abc005", "abc012", Ordering::Less);
+    validate!("abc02", "abc002", Ordering::Greater);
+    validate!("abc002.txt", "abc02.txt", Ordering::Less);
+    validate!("GHI1abc2.txt", "ghi1abc2.txt", Ordering::Less);
+    validate!("a0", "a00", Ordering::Less);
+    validate!("a00b", "a0b", Ordering::Less);
+    validate!("a0b", "a00b", Ordering::Greater);
+    validate!("a-b", "azb", Ordering::Greater);
 }

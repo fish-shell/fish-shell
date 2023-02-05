@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 #![allow(clippy::needless_return)]
+#![allow(clippy::manual_is_ascii_check)]
 
 #[macro_use]
 extern crate lazy_static;

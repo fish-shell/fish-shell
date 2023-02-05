@@ -9,6 +9,7 @@
 use crate::ffi;
 pub use cxx::CxxWString;
 pub use ffi::{wchar_t, wcharz_t};
+use once_cell::sync::Lazy;
 pub use widestring::U32CString as W0String;
 pub use widestring::{u32cstr, utf32str};
 pub use widestring::{Utf32Str as wstr, Utf32String as WString};
@@ -72,14 +73,12 @@ macro_rules! wcharz {
 pub(crate) use c_str;
 pub(crate) use wcharz;
 
-lazy_static! {
-    /// A shared, empty CxxWString.
-    static ref EMPTY_WSTRING: cxx::UniquePtr<cxx::CxxWString> = cxx::CxxWString::create(&[]);
-}
+static EMPTY_WSTRING: Lazy<cxx::UniquePtr<cxx::CxxWString>> =
+    Lazy::new(|| cxx::CxxWString::create(&[]));
 
 /// \return a reference to a shared empty wstring.
 pub fn empty_wstring() -> &'static cxx::CxxWString {
-    &EMPTY_WSTRING
+    &*EMPTY_WSTRING
 }
 
 /// Implement Debug for wcharz_t.

@@ -358,6 +358,7 @@ dependencies = [
  "miette",
  "nix",
  "num-traits",
+ "once_cell",
  "unixstring",
  "widestring",
  "widestring-suffix",

@@ -23,7 +23,8 @@ mod builtins_ffi {
             streams: Pin<&mut io_streams_t>,
             cpp_args: &Vec<wcharz_t>,
             builtin: RustBuiltin,
-        );
+            status_code: &mut i32,
+        ) -> bool;
     }
 
     impl Vec<wcharz_t> {}
@@ -79,7 +80,8 @@ fn rust_run_builtin(
     streams: Pin<&mut builtins_ffi::io_streams_t>,
     cpp_args: &Vec<wcharz_t>,
     builtin: RustBuiltin,
-) {
+    status_code: &mut i32,
+) -> bool {
     let mut storage = Vec::<wchar::WString>::new();
     for arg in cpp_args {
         storage.push(arg.into());
@@ -89,7 +91,14 @@ fn rust_run_builtin(
         args.push(arg.as_utfstr());
     }
     let streams = &mut io_streams_t::new(streams);
-    run_builtin(parser.unpin(), streams, args.as_mut_slice(), builtin);
+
+    match run_builtin(parser.unpin(), streams, args.as_mut_slice(), builtin) {
+        None => false,
+        Some(status) => {
+            *status_code = status;
+            true
+        }
+    }
 }
 
 pub fn run_builtin(

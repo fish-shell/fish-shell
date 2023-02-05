@@ -420,9 +420,9 @@ struct pretty_printer_t {
         // always emit one.
         bool needs_nl = false;
 
-        tokenizer_t tokenizer(gap_text.c_str(), TOK_SHOW_COMMENTS | TOK_SHOW_BLANK_LINES);
-        while (maybe_t<tok_t> tok = tokenizer.next()) {
-            wcstring tok_text = tokenizer.text_of(*tok);
+        auto tokenizer = new_tokenizer(gap_text.c_str(), TOK_SHOW_COMMENTS | TOK_SHOW_BLANK_LINES);
+        while (auto tok = tokenizer->next()) {
+            wcstring tok_text = *tokenizer->text_of(*tok);
 
             if (needs_nl) {
                 emit_newline();
@@ -434,11 +434,11 @@ struct pretty_printer_t {
                 if (tok_text == L"\n") continue;
             }
 
-            if (tok->type == token_type_t::comment) {
+            if (tok->type_ == token_type_t::comment) {
                 emit_space_or_indent();
                 output.append(tok_text);
                 needs_nl = true;
-            } else if (tok->type == token_type_t::end) {
+            } else if (tok->type_ == token_type_t::end) {
                 // This may be either a newline or semicolon.
                 // Semicolons found here are not part of the ast and can simply be removed.
                 // Newlines are preserved unless mask_newline is set.
@@ -449,7 +449,7 @@ struct pretty_printer_t {
                 fprintf(stderr,
                         "Gap text should only have comments and newlines - instead found token "
                         "type %d with text: %ls\n",
-                        (int)tok->type, tok_text.c_str());
+                        (int)tok->type_, tok_text.c_str());
                 DIE("Gap text should only have comments and newlines");
             }
         }

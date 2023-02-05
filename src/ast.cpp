@@ -77,8 +77,7 @@ static parse_keyword_t keyword_for_token(token_type_t tok, const wcstring &token
 }
 
 /// Convert from tokenizer_t's token type to a parse_token_t type.
-static parse_token_type_t parse_token_type_from_tokenizer_token(
-    enum token_type_t tokenizer_token_type) {
+static parse_token_type_t parse_token_type_from_tokenizer_token(token_type_t tokenizer_token_type) {
     switch (tokenizer_token_type) {
         case token_type_t::string:
             return parse_token_type_t::string;
@@ -111,7 +110,7 @@ class token_stream_t {
     explicit token_stream_t(const wcstring &src, parse_tree_flags_t flags,
                             std::vector<source_range_t> &comments)
         : src_(src),
-          tok_(src_.c_str(), tokenizer_flags_from_parse_flags(flags)),
+          tok_(new_tokenizer(src_.c_str(), tokenizer_flags_from_parse_flags(flags))),
           comment_ranges(comments) {}
 
     /// \return the token at the given index, without popping it. If the token stream is exhausted,
@@ -161,8 +160,8 @@ class token_stream_t {
     /// \return a new parse token, advancing the tokenizer.
     /// This returns comments.
     parse_token_t advance_1() {
-        auto mtoken = tok_.next();
-        if (!mtoken.has_value()) {
+        auto mtoken = tok_->next();
+        if (!mtoken) {
             return parse_token_t{parse_token_type_t::terminate};
         }
         const tok_t &token = *mtoken;
@@ -171,9 +170,9 @@ class token_stream_t {
         // `builtin --names` lists builtins, but `builtin "--names"` attempts to run --names as a
         // command. Amazingly as of this writing (10/12/13) nobody seems to have noticed this.
         // Squint at it really hard and it even starts to look like a feature.
-        parse_token_t result{parse_token_type_from_tokenizer_token(token.type)};
-        const wcstring &text = tok_.copy_text_of(token, &storage_);
-        result.keyword = keyword_for_token(token.type, text);
+        parse_token_t result{parse_token_type_from_tokenizer_token(token.type_)};
+        const wcstring &text = storage_ = *tok_->text_of(token);
+        result.keyword = keyword_for_token(token.type_, text);
         result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
         result.is_help_argument = (text == L"-h" || text == L"--help");
         result.is_newline = (result.type == parse_token_type_t::end && text == L"\n");
@@ -222,7 +221,7 @@ class token_stream_t {
     const wcstring &src_;
 
     // The tokenizer to generate new tokens.
-    tokenizer_t tok_;
+    rust::Box<tokenizer_t> tok_;
 
     /// Any comment nodes are collected here.
     /// These are only collected if parse_flag_include_comments is set.
@@ -749,7 +748,7 @@ struct populator_t {
 
             case parse_token_type_t::tokenizer_error:
                 parse_error(tok, parse_error_from_tokenizer_error(tok.tok_error), L"%ls",
-                            tokenizer_get_error_message(tok.tok_error));
+                            tokenizer_get_error_message(tok.tok_error)->c_str());
                 break;
 
             case parse_token_type_t::end:

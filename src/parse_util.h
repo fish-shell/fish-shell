@@ -14,7 +14,8 @@ namespace ast {
 struct argument_t;
 class ast_t;
 }  // namespace ast
-struct tok_t;
+struct Tok;
+using tok_t = Tok;
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// \return the length of the slice starting at \p in, or 0 if there is no slice, or -1 on error.

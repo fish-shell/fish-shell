@@ -1158,12 +1158,10 @@ static bool contains_pending_variable(const std::vector<wcstring> &pending_varia
 }
 
 void highlighter_t::visit(const ast::redirection_t &redir) {
-    maybe_t<pipe_or_redir_t> oper =
-        pipe_or_redir_t::from_string(redir.oper.source(this->buff));  // like 2>
-    wcstring target = redir.target.source(this->buff);                // like &1 or file path
+    auto oper = pipe_or_redir_from_string(redir.oper.source(this->buff).c_str());  // like 2>
+    wcstring target = redir.target.source(this->buff);  // like &1 or file path
 
-    assert(oper.has_value() &&
-           "Should have successfully parsed a pipe_or_redir_t since it was in our ast");
+    assert(oper && "Should have successfully parsed a pipe_or_redir_t since it was in our ast");
 
     // Color the > part.
     // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)

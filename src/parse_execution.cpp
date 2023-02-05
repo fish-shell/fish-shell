@@ -1005,7 +1005,7 @@ end_execution_reason_t parse_execution_context_t::determine_redirections(
         if (!arg_or_redir.is_redirection()) continue;
         const ast::redirection_t &redir_node = arg_or_redir.redirection();
 
-        maybe_t<pipe_or_redir_t> oper = pipe_or_redir_t::from_string(get_source(redir_node.oper));
+        auto oper = pipe_or_redir_from_string(get_source(redir_node.oper).c_str());
         if (!oper || !oper->is_valid()) {
             // TODO: figure out if this can ever happen. If so, improve this error message.
             return report_error(STATUS_INVALID_ARGS, redir_node, _(L"Invalid redirection: %ls"),
@@ -1202,8 +1202,8 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
             break;
         }
         // Handle the pipe, whose fd may not be the obvious stdout.
-        auto parsed_pipe = pipe_or_redir_t::from_string(get_source(jc.pipe));
-        assert(parsed_pipe.has_value() && parsed_pipe->is_pipe && "Failed to parse valid pipe");
+        auto parsed_pipe = pipe_or_redir_from_string(get_source(jc.pipe).c_str());
+        assert(parsed_pipe && parsed_pipe->is_pipe && "Failed to parse valid pipe");
         if (!parsed_pipe->is_valid()) {
             result = report_error(STATUS_INVALID_ARGS, jc.pipe, ILLEGAL_FD_ERR_MSG,
                                   get_source(jc.pipe).c_str());

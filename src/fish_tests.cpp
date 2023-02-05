@@ -640,25 +640,25 @@ static void test_tokenizer() {
     say(L"Testing tokenizer");
     {
         const wchar_t *str = L"alpha beta";
-        tokenizer_t t(str, 0);
-        maybe_t<tok_t> token{};
+        auto t = new_tokenizer(str, 0);
+        std::unique_ptr<tok_t> token{};
 
-        token = t.next();  // alpha
-        do_test(token.has_value());
-        do_test(token->type == token_type_t::string);
+        token = t->next();  // alpha
+        do_test(token);
+        do_test(token->type_ == token_type_t::string);
         do_test(token->offset == 0);
         do_test(token->length == 5);
-        do_test(t.text_of(*token) == L"alpha");
+        do_test(*t->text_of(*token) == L"alpha");
 
-        token = t.next();  // beta
-        do_test(token.has_value());
-        do_test(token->type == token_type_t::string);
+        token = t->next();  // beta
+        do_test(token);
+        do_test(token->type_ == token_type_t::string);
         do_test(token->offset == 6);
         do_test(token->length == 4);
-        do_test(t.text_of(*token) == L"beta");
+        do_test(*t->text_of(*token) == L"beta");
 
-        token = t.next();
-        do_test(!token.has_value());
+        token = t->next();
+        do_test(!token);
     }
 
     const wchar_t *str =
@@ -678,21 +678,21 @@ static void test_tokenizer() {
     say(L"Test correct tokenization");
 
     {
-        tokenizer_t t(str, 0);
+        auto t = new_tokenizer(str, 0);
         size_t i = 0;
-        while (auto token = t.next()) {
+        while (auto token = t->next()) {
             if (i >= sizeof types / sizeof *types) {
                 err(L"Too many tokens returned from tokenizer");
-                std::fwprintf(stdout, L"Got excess token type %ld\n", (long)token->type);
+                std::fwprintf(stdout, L"Got excess token type %ld\n", (long)token->type_);
                 break;
             }
-            if (types[i] != token->type) {
+            if (types[i] != token->type_) {
                 err(L"Tokenization error:");
                 std::fwprintf(
                     stdout,
                     L"Token number %zu of string \n'%ls'\n, expected type %ld, got token type "
                     L"%ld\n",
-                    i + 1, str, (long)types[i], (long)token->type);
+                    i + 1, str, (long)types[i], (long)token->type_);
             }
             i++;
         }
@@ -703,50 +703,50 @@ static void test_tokenizer() {
 
     // Test some errors.
     {
-        tokenizer_t t(L"abc\\", 0);
-        auto token = t.next();
-        do_test(token.has_value());
-        do_test(token->type == token_type_t::error);
+        auto t = new_tokenizer(L"abc\\", 0);
+        auto token = t->next();
+        do_test(token);
+        do_test(token->type_ == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_escape);
         do_test(token->error_offset_within_token == 3);
     }
 
     {
-        tokenizer_t t(L"abc )defg(hij", 0);
-        auto token = t.next();
-        do_test(token.has_value());
-        token = t.next();
-        do_test(token.has_value());
-        do_test(token->type == token_type_t::error);
+        auto t = new_tokenizer(L"abc )defg(hij", 0);
+        auto token = t->next();
+        do_test(token);
+        token = t->next();
+        do_test(token);
+        do_test(token->type_ == token_type_t::error);
         do_test(token->error == tokenizer_error_t::closing_unopened_subshell);
         do_test(token->offset == 4);
         do_test(token->error_offset_within_token == 0);
     }
 
     {
-        tokenizer_t t(L"abc defg(hij (klm)", 0);
-        auto token = t.next();
-        do_test(token.has_value());
-        token = t.next();
-        do_test(token.has_value());
-        do_test(token->type == token_type_t::error);
+        auto t = new_tokenizer(L"abc defg(hij (klm)", 0);
+        auto token = t->next();
+        do_test(token);
+        token = t->next();
+        do_test(token);
+        do_test(token->type_ == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_subshell);
         do_test(token->error_offset_within_token == 4);
     }
 
     {
-        tokenizer_t t(L"abc defg[hij (klm)", 0);
-        auto token = t.next();
-        do_test(token.has_value());
-        token = t.next();
-        do_test(token.has_value());
-        do_test(token->type == token_type_t::error);
+        auto t = new_tokenizer(L"abc defg[hij (klm)", 0);
+        auto token = t->next();
+        do_test(token);
+        token = t->next();
+        do_test(token);
+        do_test(token->type_ == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_slice);
         do_test(token->error_offset_within_token == 4);
     }
 
     // Test some redirection parsing.
-    auto pipe_or_redir = [](const wchar_t *s) { return pipe_or_redir_t::from_string(s); };
+    auto pipe_or_redir = [](const wchar_t *s) { return pipe_or_redir_from_string(s); };
     do_test(pipe_or_redir(L"|")->is_pipe);
     do_test(pipe_or_redir(L"0>|")->is_pipe);
     do_test(pipe_or_redir(L"0>|")->fd == 0);
@@ -770,7 +770,7 @@ static void test_tokenizer() {
     do_test(pipe_or_redir(L"&>?")->stderr_merge);
 
     auto get_redir_mode = [](const wchar_t *s) -> maybe_t<redirection_mode_t> {
-        if (auto redir = pipe_or_redir_t::from_string(s)) {
+        if (auto redir = pipe_or_redir_from_string(s)) {
             return redir->mode;
         }
         return none();
@@ -1520,6 +1520,12 @@ static void test_indents() {
              0, "\nend"                                           //
     );
 
+    tests.clear();
+    add_test(&tests,                            //
+             0, "echo 'continuation line' \\",  //
+             1, "\ncont",                       //
+             0, "\n"                            //
+    );
     int test_idx = 0;
     for (const indent_test_t &test : tests) {
         // Construct the input text and expected indents.
@@ -2740,11 +2746,11 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
     }
     stops.erase(idx);
 
-    move_word_state_machine_t sm(style);
+    auto sm = new_move_word_state_machine(style);
     while (idx != end) {
         size_t char_idx = (motion == word_motion_left ? idx - 1 : idx);
         wchar_t wc = command.at(char_idx);
-        bool will_stop = !sm.consume_char(wc);
+        bool will_stop = !sm->consume_char(wc);
         // std::fwprintf(stdout, L"idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc,
         //          will_stop);
         bool expected_stop = (stops.count(idx) > 0);
@@ -2765,7 +2771,7 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
             stops.erase(idx);
         }
         if (will_stop) {
-            sm.reset();
+            sm->reset();
         } else {
             idx += (motion == word_motion_left ? -1 : 1);
         }
@@ -2775,36 +2781,51 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
 /// Test word motion (forward-word, etc.). Carets represent cursor stops.
 static void test_word_motion() {
     say(L"Testing word motion");
-    test_1_word_motion(word_motion_left, move_word_style_punctuation, L"^echo ^hello_^world.^txt^");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation,
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_punctuation,
+                       L"^echo ^hello_^world.^txt^");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_punctuation,
                        L"^echo^ hello^_world^.txt^");
 
-    test_1_word_motion(word_motion_left, move_word_style_punctuation,
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_punctuation,
                        L"echo ^foo_^foo_^foo/^/^/^/^/^    ^");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation,
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_punctuation,
                        L"^echo^ foo^_foo^_foo^/^/^/^/^/    ^");
 
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^/^foo/^bar/^baz/^");
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^--foo ^--bar^");
-    test_1_word_motion(word_motion_left, move_word_style_path_components,
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
+                       L"^/^foo/^bar/^baz/^");
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
+                       L"^echo ^--foo ^--bar^");
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
                        L"^echo ^hi ^> ^/^dev/^null^");
 
-    test_1_word_motion(word_motion_left, move_word_style_path_components,
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
                        L"^echo ^/^foo/^bar{^aaa,^bbb,^ccc}^bak/^");
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^bak ^///^");
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aaa ^@ ^@^aaa^");
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aaa ^a ^@^aaa^");
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aaa ^@@@ ^@@^aa^");
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aa^@@  ^aa@@^a^");
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
+                       L"^echo ^bak ^///^");
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
+                       L"^aaa ^@ ^@^aaa^");
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
+                       L"^aaa ^a ^@^aaa^");
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
+                       L"^aaa ^@@@ ^@@^aa^");
+    test_1_word_motion(word_motion_left, move_word_style_t::move_word_style_path_components,
+                       L"^aa^@@  ^aa@@^a^");
 
-    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^a^ bcd^");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"a^b^ cde^");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^ab^ cde^");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^ab^&cd^ ^& ^e^ f^&");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_punctuation,
+                       L"^a^ bcd^");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_punctuation,
+                       L"a^b^ cde^");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_punctuation,
+                       L"^ab^ cde^");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_punctuation,
+                       L"^ab^&cd^ ^& ^e^ f^&");
 
-    test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^^a-b-c^ d-e-f");
-    test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^a-b-c^\n d-e-f^ ");
-    test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^a-b-c^\n\nd-e-f^ ");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_whitespace,
+                       L"^^a-b-c^ d-e-f");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_whitespace,
+                       L"^a-b-c^\n d-e-f^ ");
+    test_1_word_motion(word_motion_right, move_word_style_t::move_word_style_whitespace,
+                       L"^a-b-c^\n\nd-e-f^ ");
 }
 
 /// Test is_potential_path.
@@ -5694,6 +5715,14 @@ static void test_highlighting() {
         {L"\\U110000", highlight_role_t::error},
     });
 #endif
+
+    highlight_tests.clear();
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"stuff", highlight_role_t::param},
+        {L"# comment", highlight_role_t::comment},
+    });
+
     bool saved_flag = feature_test(feature_flag_t::ampersand_nobg_in_token);
     mutable_fish_features()->set(feature_flag_t::ampersand_nobg_in_token, true);
     for (const highlight_component_list_t &components : highlight_tests) {

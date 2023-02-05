@@ -178,7 +178,7 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
                     }
                 }
             }
-            is_token_begin = is_token_delimiter(pos[0], pos[1]);
+            is_token_begin = is_token_delimiter(pos[0], std::make_shared<wchar_t>(pos[1]));
         } else {
             escaped = false;
             is_token_begin = false;
@@ -367,12 +367,12 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
     if (b) *b = end;
 
     const wcstring buffcpy(begin, end);
-    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
-    maybe_t<tok_t> token{};
-    while ((token = tok.next()) && !finished) {
+    auto tok = new_tokenizer(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
+    std::unique_ptr<tok_t> token{};
+    while ((token = tok->next()) && !finished) {
         size_t tok_begin = token->offset;
 
-        switch (token->type) {
+        switch (token->type_) {
             case token_type_t::pipe: {
                 if (!process) {
                     break;
@@ -440,13 +440,13 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
     const wcstring buffcpy = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
-    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
-    while (maybe_t<tok_t> token = tok.next()) {
+    auto tok = new_tokenizer(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
+    while (std::unique_ptr<tok_t> token = tok->next()) {
         size_t tok_begin = token->offset;
         size_t tok_end = tok_begin;
 
         // Calculate end of token.
-        if (token->type == token_type_t::string) {
+        if (token->type_ == token_type_t::string) {
             tok_end += token->length;
         }
 
@@ -459,14 +459,14 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
         // If cursor is inside the token, this is the token we are looking for. If so, set a and b
         // and break.
-        if (token->type == token_type_t::string && tok_end >= offset_within_cmdsubst) {
+        if (token->type_ == token_type_t::string && tok_end >= offset_within_cmdsubst) {
             a = cmdsubst_begin + token->offset;
             b = a + token->length;
             break;
         }
 
         // Remember previous string token.
-        if (token->type == token_type_t::string) {
+        if (token->type_ == token_type_t::string) {
             pa = cmdsubst_begin + token->offset;
             pb = pa + token->length;
         }
@@ -541,11 +541,11 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
 }
 
 wchar_t parse_util_get_quote_type(const wcstring &cmd, size_t pos) {
-    tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
-    while (auto token = tok.next()) {
-        if (token->type == token_type_t::string &&
+    auto tok = new_tokenizer(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
+    while (auto token = tok->next()) {
+        if (token->type_ == token_type_t::string &&
             token->location_in_or_at_end_of_source_range(pos)) {
-            return get_quote(tok.text_of(*token), pos - token->offset);
+            return get_quote(*tok->text_of(*token), pos - token->offset);
         }
     }
     return L'\0';

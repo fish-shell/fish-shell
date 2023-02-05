@@ -107,7 +107,7 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
         std::fwprintf(stderr, FG_MSG, job->job_id(), job->command_wcstr());
     }
 
-    wcstring ft = tok_command(job->command());
+    wcstring ft = *tok_command(job->command());
     if (!ft.empty()) {
         // Provide value for `status current-command`
         parser.libdata().status_vars.command = ft;

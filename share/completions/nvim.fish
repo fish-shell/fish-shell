@@ -33,17 +33,18 @@ complete -c nvim -s v -l version -d 'Print version information and exit'
 complete -c nvim -l clean -d 'Factory defaults: skip vimrc, plugins, shada'
 complete -c nvim -l startuptime -r -d 'Write startup timing messages to <file>'
 
-# Support for those is planned, but not all of them are implemented yet (February 2023)
-# For the unimplemented, nvim prints a corresponding message
-# https://neovim.io/doc/user/remote.html
 complete -c nvim -l remote -d 'Edit files on NVim server'
 complete -c nvim -l remote-expr -d 'Evaluate expr on NVim server'
 complete -c nvim -l remote-send -d 'Send keys to NVim server'
 complete -c nvim -l remote-silent -d 'Edit files on NVim server'
-complete -c nvim -l remote-wait -d 'Edit files on NVim server'
-complete -c nvim -l remote-wait-silent -d 'Edit files on Vim server'
-complete -c nvim -l serverlist -d 'List all Vim servers that can be found'
-complete -c nvim -l servername -d 'Set server name'
+# Support for those is planned, but they are not implemented yet (February 2023)
+# Nvim prints either a corresponding helpful message or a confusing message ("Garbage after option argument: ...")
+# Once they are supported, comment them back in
+# https://neovim.io/doc/user/remote.html
+# complete -c nvim -l remote-wait -d 'Edit files on NVim server'
+# complete -c nvim -l remote-wait-silent -d 'Edit files on Vim server'
+# complete -c nvim -l serverlist -d 'List all Vim servers that can be found'
+# complete -c nvim -l servername -d 'Set server name'
 
 # Options exclusive to Neovim, see https://neovim.io/doc/user/starting.html
 complete -c nvim -s l -r -d 'Execute Lua script'

@@ -3,9 +3,12 @@ complete -c nvim -s c -r -d 'Execute Ex command after the first file has been re
 complete -c nvim -s S -r -d 'Source file after the first file has been read'
 complete -c nvim -l cmd -r -d 'Execute Ex command before loading any vimrc'
 complete -c nvim -s i -r -d 'Set the shada file location'
-complete -c nvim -s o -r -d 'Open horizontally split windows for each file'
-complete -c nvim -s O -r -d 'Open vertically split windows for each file'
-complete -c nvim -s p -r -d 'Open tab pages for each file'
+complete -c nvim -s o -d 'Open horizontally split windows for each file'
+complete -c nvim -o o2 -d 'Open two horizontally split windows' # actually -o[N]
+complete -c nvim -s O -d 'Open vertically split windows for each file'
+complete -c nvim -o O2 -d 'Open two vertically split windows' # actually -O[N]
+complete -c nvim -s p -d 'Open tab pages for each file'
+complete -c nvim -o p2 -d 'Open two tab pages' # actually -p[N]
 complete -c nvim -s q -r -d 'Start in quickFix mode'
 complete -c nvim -s r -r -d 'Use swap files for recovery'
 complete -c nvim -s t -xa '(__fish_vim_tags)' -d 'Set the cursor to tag'

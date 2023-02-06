@@ -324,33 +324,31 @@ function __fish_git_files
             end
             # Only try printing if the file was selected.
             if set -q file[1]
-                for d in $desc
-                    # Without "-z", git sometimes _quotes_ filenames.
-                    # It adds quotes around it _and_ escapes the character.
-                    # e.g. `"a\\b"`.
-                    # We just remove the quotes and hope it works out.
-                    # If this contains newlines or tabs,
-                    # there is nothing we can do, but that's a general issue with scripted completions.
-                    set file (string trim -c \" -- $file)
-                    # The relative filename.
-                    if string match -q './*' -- (commandline -ct)
-                        printf './%s\t%s\n' $file $d
-                    else
-                        printf '%s\t%s\n' "$file" $d
-                    end
-                    # Now from repo root.
-                    # Only do this if the filename isn't a simple child,
-                    # or the current token starts with ":"
-                    if string match -q '../*' -- $file
-                        or string match -q ':*' -- (commandline -ct)
-                        set -l fromroot (builtin realpath -- $file 2>/dev/null)
-                        # `:` starts pathspec "magic", and the second `:` terminates it.
-                        # `/` is the magic letter for "from repo root".
-                        # If we didn't terminate it we'd have to escape any special chars
-                        # (non-alphanumeric, glob or regex special characters, in whatever dialect git uses)
-                        and set fromroot (string replace -- "$root/" ":/:" "$fromroot")
-                        and printf '%s\t%s\n' "$fromroot" $d
-                    end
+                # Without "-z", git sometimes _quotes_ filenames.
+                # It adds quotes around it _and_ escapes the character.
+                # e.g. `"a\\b"`.
+                # We just remove the quotes and hope it works out.
+                # If this contains newlines or tabs,
+                # there is nothing we can do, but that's a general issue with scripted completions.
+                set file (string trim -c \" -- $file)
+                # The relative filename.
+                if string match -q './*' -- (commandline -ct)
+                    printf './%s\n' $file\t$desc
+                else
+                    printf '%s\n' "$file"\t$desc
+                end
+                # Now from repo root.
+                # Only do this if the filename isn't a simple child,
+                # or the current token starts with ":"
+                if string match -q '../*' -- $file
+                    or string match -q ':*' -- (commandline -ct)
+                    set -l fromroot (builtin realpath -- $file 2>/dev/null)
+                    # `:` starts pathspec "magic", and the second `:` terminates it.
+                    # `/` is the magic letter for "from repo root".
+                    # If we didn't terminate it we'd have to escape any special chars
+                    # (non-alphanumeric, glob or regex special characters, in whatever dialect git uses)
+                    and set fromroot (string replace -- "$root/" ":/:" "$fromroot")
+                    and printf '%s\n' "$fromroot"\t$desc
                 end
             end
         end

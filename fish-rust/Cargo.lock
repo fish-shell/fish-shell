@@ -353,7 +353,6 @@ dependencies = [
  "cxx-gen",
  "errno",
  "inventory",
- "lazy_static",
  "libc",
  "miette",
  "nix",

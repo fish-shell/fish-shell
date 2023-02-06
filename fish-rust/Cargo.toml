@@ -11,7 +11,6 @@ autocxx = "0.23.1"
 cxx = "1.0"
 errno = "0.2.8"
 inventory = { version = "0.3.3", optional = true}
-lazy_static = "1.4.0"
 libc = "0.2.137"
 nix = { version = "0.25.0", default-features = false, features = [] }
 num-traits = "0.2.15"

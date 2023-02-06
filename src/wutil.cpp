@@ -161,6 +161,7 @@ void dir_iter_t::entry_t::do_stat() const {
             case ENOENT:
             case ENOTDIR:
             case ENAMETOOLONG:
+            case ENODEV:
                 // These are "expected" errors.
                 this->type_ = none();
                 break;

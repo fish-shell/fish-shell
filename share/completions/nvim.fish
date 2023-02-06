@@ -1,3 +1,5 @@
+type --query __fish_vim_tags || source (status dirname)/vim.fish
+
 # Options copied from vim.fish
 complete -c nvim -s c -r -d 'Execute Ex command after the first file has been read'
 complete -c nvim -s S -r -d 'Source file after the first file has been read'

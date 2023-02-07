@@ -18,7 +18,7 @@ mod future_feature_flags_ffi {
 
     /// The list of flags.
     #[repr(u8)]
-    enum feature_flag_t {
+    enum FeatureFlag {
         /// Whether ^ is supported for stderr redirection.
         stderr_nocaret,
 
@@ -34,7 +34,7 @@ mod future_feature_flags_ffi {
 
     /// Metadata about feature flags.
     struct feature_metadata_t {
-        flag: feature_flag_t,
+        flag: FeatureFlag,
         name: UniquePtr<CxxWString>,
         groups: UniquePtr<CxxWString>,
         description: UniquePtr<CxxWString>,
@@ -43,20 +43,20 @@ mod future_feature_flags_ffi {
     }
 
     extern "Rust" {
-        type features_t;
-        fn test(self: &features_t, flag: feature_flag_t) -> bool;
-        fn set(self: &mut features_t, flag: feature_flag_t, value: bool);
-        fn set_from_string(self: &mut features_t, str: wcharz_t);
-        fn fish_features() -> *const features_t;
-        fn feature_test(flag: feature_flag_t) -> bool;
-        fn mutable_fish_features() -> *mut features_t;
+        type Features;
+        fn test(self: &Features, flag: FeatureFlag) -> bool;
+        fn set(self: &mut Features, flag: FeatureFlag, value: bool);
+        fn set_from_string(self: &mut Features, str: wcharz_t);
+        fn fish_features() -> *const Features;
+        fn feature_test(flag: FeatureFlag) -> bool;
+        fn mutable_fish_features() -> *mut Features;
         fn feature_metadata() -> [feature_metadata_t; 4];
     }
 }
 
-pub use future_feature_flags_ffi::{feature_flag_t, feature_metadata_t};
+pub use future_feature_flags_ffi::{feature_metadata_t, FeatureFlag};
 
-pub struct features_t {
+pub struct Features {
     // Values for the flags.
     // These are atomic to "fix" a race reported by tsan where tests of feature flags and other
     // tests which use them conceptually race.
@@ -66,7 +66,7 @@ pub struct features_t {
 /// Metadata about feature flags.
 struct FeatureMetadata {
     /// The flag itself.
-    flag: feature_flag_t,
+    flag: FeatureFlag,
 
     /// User-presentable short name of the feature flag.
     name: &'static wstr,
@@ -101,7 +101,7 @@ impl From<&FeatureMetadata> for feature_metadata_t {
 #[widestrs]
 const metadata: [FeatureMetadata; 4] = [
     FeatureMetadata {
-        flag: feature_flag_t::stderr_nocaret,
+        flag: FeatureFlag::stderr_nocaret,
         name: "stderr-nocaret"L,
         groups: "3.0"L,
         description: "^ no longer redirects stderr (historical, can no longer be changed)"L,
@@ -109,7 +109,7 @@ const metadata: [FeatureMetadata; 4] = [
         read_only: true,
     },
     FeatureMetadata {
-        flag: feature_flag_t::qmark_noglob,
+        flag: FeatureFlag::qmark_noglob,
         name: "qmark-noglob"L,
         groups: "3.0"L,
         description: "? no longer globs"L,
@@ -117,7 +117,7 @@ const metadata: [FeatureMetadata; 4] = [
         read_only: false,
     },
     FeatureMetadata {
-        flag: feature_flag_t::string_replace_backslash,
+        flag: FeatureFlag::string_replace_backslash,
         name: "regex-easyesc"L,
         groups: "3.1"L,
         description: "string replace -r needs fewer \\'s"L,
@@ -125,7 +125,7 @@ const metadata: [FeatureMetadata; 4] = [
         read_only: false,
     },
     FeatureMetadata {
-        flag: feature_flag_t::ampersand_nobg_in_token,
+        flag: FeatureFlag::ampersand_nobg_in_token,
         name: "ampersand-nobg-in-token"L,
         groups: "3.4"L,
         description: "& only backgrounds if followed by a separator"L,
@@ -135,29 +135,29 @@ const metadata: [FeatureMetadata; 4] = [
 ];
 
 /// The singleton shared feature set.
-static mut global_features: *const UnsafeCell<features_t> = std::ptr::null();
+static mut global_features: *const UnsafeCell<Features> = std::ptr::null();
 
 pub fn future_feature_flags_init() {
     unsafe {
         // Leak it for now.
-        global_features = Box::into_raw(Box::new(UnsafeCell::new(features_t::new())));
+        global_features = Box::into_raw(Box::new(UnsafeCell::new(Features::new())));
     }
 }
 
-impl features_t {
+impl Features {
     fn new() -> Self {
-        features_t {
+        Features {
             values: array::from_fn(|i| AtomicBool::new(metadata[i].default_value)),
         }
     }
 
     /// Return whether a flag is set.
-    pub fn test(&self, flag: feature_flag_t) -> bool {
+    pub fn test(&self, flag: FeatureFlag) -> bool {
         self.values[flag.repr as usize].load(Ordering::SeqCst)
     }
 
     /// Set a flag.
-    pub fn set(&mut self, flag: feature_flag_t, value: bool) {
+    pub fn set(&mut self, flag: FeatureFlag, value: bool) {
         self.values[flag.repr as usize].store(value, Ordering::SeqCst)
     }
 
@@ -209,18 +209,18 @@ impl features_t {
 }
 
 /// Return the global set of features for fish. This is const to prevent accidental mutation.
-pub fn fish_features() -> *const features_t {
+pub fn fish_features() -> *const Features {
     unsafe { (*global_features).get() }
 }
 
 /// Perform a feature test on the global set of features.
-pub fn feature_test(flag: feature_flag_t) -> bool {
+pub fn feature_test(flag: FeatureFlag) -> bool {
     unsafe { &*(*global_features).get() }.test(flag)
 }
 
 /// Return the global set of features for fish, but mutable. In general fish features should be set
 /// at startup only.
-pub fn mutable_fish_features() -> *mut features_t {
+pub fn mutable_fish_features() -> *mut Features {
     unsafe { (*global_features).get() }
 }
 
@@ -232,11 +232,11 @@ pub fn feature_metadata() -> [feature_metadata_t; metadata.len()] {
 #[test]
 #[widestrs]
 fn test_feature_flags() {
-    let mut f = features_t::new();
+    let mut f = Features::new();
     f.set_from_string("stderr-nocaret,nonsense"L);
-    assert!(f.test(feature_flag_t::stderr_nocaret));
+    assert!(f.test(FeatureFlag::stderr_nocaret));
     f.set_from_string("stderr-nocaret,no-stderr-nocaret,nonsense"L);
-    assert!(f.test(feature_flag_t::stderr_nocaret));
+    assert!(f.test(FeatureFlag::stderr_nocaret));
 
     // Ensure every metadata is represented once.
     let mut counts: [usize; metadata.len()] = [0; metadata.len()];
@@ -248,7 +248,7 @@ fn test_feature_flags() {
     }
 
     assert_eq!(
-        metadata[feature_flag_t::stderr_nocaret.repr as usize].name,
+        metadata[FeatureFlag::stderr_nocaret.repr as usize].name,
         "stderr-nocaret"L
     );
 }

@@ -29,7 +29,7 @@
 #include "../wgetopt.h"
 #include "../wildcard.h"
 #include "../wutil.h"  // IWYU pragma: keep
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 
 // Empirically determined.
 // This is probably down to some pipe buffer or some such,

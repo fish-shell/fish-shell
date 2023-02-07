@@ -49,7 +49,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fish_version.h"
 #include "flog.h"
 #include "function.h"
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 #include "global_safety.h"
 #include "history.h"
 #include "io.h"

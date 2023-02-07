@@ -20,7 +20,7 @@
 #include "common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 #include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_tree.h"

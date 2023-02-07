@@ -23,7 +23,7 @@
 #include "../proc.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 
 enum status_cmd_t {
     STATUS_CURRENT_CMD = 1,

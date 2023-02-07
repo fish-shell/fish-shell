@@ -36,7 +36,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 #include "global_safety.h"
 #include "iothread.h"
 #include "signals.h"

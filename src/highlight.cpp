@@ -25,7 +25,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 #include "history.h"
 #include "maybe.h"
 #include "operation_context.h"

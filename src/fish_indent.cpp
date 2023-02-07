@@ -43,7 +43,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "flog.h"
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 #include "global_safety.h"
 #include "highlight.h"
 #include "maybe.h"

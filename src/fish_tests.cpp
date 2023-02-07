@@ -65,7 +65,7 @@
 #include "ffi_init.rs.h"
 #include "ffi_tests.rs.h"
 #include "function.h"
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 #include "global_safety.h"
 #include "highlight.h"
 #include "history.h"

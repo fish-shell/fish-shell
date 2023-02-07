@@ -23,7 +23,7 @@
 #include "enum_set.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "future_feature_flags.rs.h"
+#include "future_feature_flags.h"
 #include "maybe.h"
 #include "path.h"
 #include "wcstringutil.h"

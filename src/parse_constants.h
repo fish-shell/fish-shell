@@ -136,7 +136,6 @@ enum parse_error_code_t : uint8_t {
 
     // Matching values from enum parser_error.
     parse_error_syntax,
-    parse_error_eval,
     parse_error_cmdsubst,
 
     parse_error_generic,  // unclassified error types

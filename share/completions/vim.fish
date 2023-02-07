@@ -17,6 +17,7 @@ function __fish_vim_find_tags_path
     return 1
 end
 
+# NB: This function is also used by the nvim completions
 function __fish_vim_tags
     set -l token (commandline -ct)
     set -l tags_path (__fish_vim_find_tags_path)

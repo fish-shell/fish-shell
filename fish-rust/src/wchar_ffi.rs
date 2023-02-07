@@ -78,7 +78,7 @@ static EMPTY_WSTRING: Lazy<cxx::UniquePtr<cxx::CxxWString>> =
 
 /// \return a reference to a shared empty wstring.
 pub fn empty_wstring() -> &'static cxx::CxxWString {
-    &*EMPTY_WSTRING
+    &EMPTY_WSTRING
 }
 
 /// Implement Debug for wcharz_t.

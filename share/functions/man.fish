@@ -36,5 +36,20 @@ function man --description "Format and display the on-line manual pages"
         set MANPATH $fish_manpath $MANPATH
     end
 
+    if test (count $argv) -eq 1
+        # Some of these don't have their own page,
+        # and adding one would be awkward given that the filename
+        # isn't guaranteed to be allowed.
+        # So we override them with the good name.
+        switch $argv
+            case :
+                set argv true
+            case '['
+                set argv test
+            case .
+                set argv source
+        end
+    end
+
     command man $argv
 end

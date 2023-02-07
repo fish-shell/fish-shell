@@ -4,34 +4,188 @@
 <head>
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <title>fish shell configuration</title>
-    <link rel="icon" type="image/png" href="favicon.png"/>
-    <link rel="stylesheet" type="text/css" href="fishconfig.css"/>
-    <script type="text/javascript" src="js/angular.js"></script>
-    <script type="text/javascript" src="js/angular-route.js"></script>
-    <script type="text/javascript" src="js/angular-sanitize.js"></script>
-    <script type="text/javascript" src="js/colorutils.js"></script>
-    <script type="text/javascript" src="js/filters.js"></script>
-    <script type="text/javascript" src="js/controllers.js"></script>
-    <script type="text/javascript" src="js/app.js"></script>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" type="text/css" href="fishconfig.css" />
+    <script type="text/javascript" src="js/main.js" defer></script>
+    <script type="text/javascript" src="js/alpine.js" defer></script>
 </head>
 
-<body>
+<!-- TODO check that every x-for has a :key binding -->
+<!-- TODO check that every template has single child -->
 
-<div id="ancestor">
-    <!-- TODO: Add logo -->
-    <div id="parent">
-        <div id="tab_parent" ng-controller="main">
-            <div ng-class="{'tab': true, 'selected_tab': currentTab =='colors'}" id="tab_colors" ng-click="changeView('colors')">colors</div>
-            <div ng-class="{'tab': true, 'selected_tab': currentTab == 'prompt'}" id="tab_prompt" ng-click="changeView('prompt')">prompt</div>
-            <div ng-class="{'tab': true, 'selected_tab': currentTab == 'functions'}" id="tab_functions" ng-click="changeView('functions')">functions</div>
-            <div ng-class="{'tab': true, 'selected_tab': currentTab == 'variables'}" id="tab_variables" ng-click="changeView('variables')">variables</div>
-            <div ng-class="{'tab': true, 'selected_tab': currentTab == 'history'}" id="tab_history" ng-click="changeView('history')">history</div>
-            <div ng-class="{'tab': true, 'selected_tab': currentTab == 'bindings'}" id="tab_bindings" ng-click="changeView('bindings')">bindings</div>
+<body id="ancestor" x-data="{ currentTab: 'functions' }">
+    <main id="parent">
+        <div id="tab_parent">
+            <a :class="{'tab': true, 'selected_tab': currentTab =='colors'}" id="tab_colors"
+                @click="currentTab = 'colors'">colors</a>
+            <a :class="{'tab': true, 'selected_tab': currentTab == 'prompt'}" id="tab_prompt"
+                @click="currentTab = 'prompt'">prompt</a>
+            <a :class="{'tab': true, 'selected_tab': currentTab == 'functions'}" id="tab_functions"
+                @click="currentTab = 'functions'">functions</a>
+            <a :class="{'tab': true, 'selected_tab': currentTab == 'variables'}" id="tab_variables"
+                @click="currentTab = 'variables'">variables</a>
+            <a :class="{'tab': true, 'selected_tab': currentTab == 'history'}" id="tab_history"
+                @click="currentTab = 'history'">history</a>
+            <a :class="{'tab': true, 'selected_tab': currentTab == 'bindings'}" id="tab_bindings"
+                @click="currentTab = 'bindings'">bindings</a>
         </div>
         <div id="tab_contents">
-        <ng-view></ng-view>
-		</div>
-    </div>
-</div>
+            <!-- Investigate potential race condition with selectedPrompt (e.g. replace x-if with x-show) -->
+            <template x-if="currentTab === 'prompt'" x-data="prompt">
+                <div class="height_limiter">
+                    <!-- The first 'sample' prompt is the current one; the remainders are samples. This ought to be cleaned up. -->
+                    <div class="current_prompt" style="min-height: 7.5em;"
+                        :style="{'background-color': terminalBackgroundColor}">
+                        <div class="prompt_demo_choice_label" style="color: #FFF;" x-text="selectedPrompt.name"></div>
+                        <div style='display: flex'>
+                            <div x-html='selectedPrompt.demo' style='flex-grow: 1' class="prompt_demo unbordered"></div>
+                            <div x-if='selectedPrompt.right' title="right prompt for {{selectedPrompt.name }}"
+                                x-html='selectedPrompt.right' class="prompt_demo unbordered"
+                                @click="selectPrompt(selectedPrompt)">
+                            </div>
+                        </div>
+                        <div style="position: absolute; right: 5px; bottom: 5px;">
+                            <button class="save_button" x-show="showSaveButton" style="color: #CCC" @click="setPrompt()"
+                                x-text="savePromptButtonTitle"></button>
+                        </div>
+                    </div>
+                    <div style="margin: 10px 15px 7px 15px; padding-bottom: 10px; border-bottom: solid 1px #999">Preview
+                        a
+                        prompt below:</div>
+                    <div class="prompt_choices_scrollview">
+                        <div class="prompt_choices_list">
+                            <template x-for="p in samplePrompts" :key="p.name">
+                                <div>
+                                    <div class="prompt_demo_choice_label" x-text="p.name"></div>
+                                    <template x-if="p.right">
+                                        <div style="display: flex;">
+                                            <div x-html="p.demo" class="prompt_demo" style="flex-grow: 1"
+                                                @click="selectPrompt(p)"></div>
+                                            <div title="right prompt for {{p.name}}" x-html="p.right || ''"
+                                                class="prompt_demo" @click="selectPrompt(p)"></div>
+                                        </div>
+                                    </template>
+                                    <template x-if="!p.right">
+                                        <div x-html="p.demo" class="prompt_demo" @click="selectPrompt(p)">
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="currentTab === 'functions'" x-data="functions">
+                <div class="master_detail_table">
+                    <div class="master">
+                        <template x-for="func in functions">
+                            <div>
+                                <div id="master_{{func}}"
+                                    :class="{'master_element': true, 'selected_master_elem': func == selectedFunction }"
+                                    @click="selectFunction(func)">
+                                    <span class="master_element_text" x-text="func"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="detail">
+                        <div class="detail_function" x-html="functionDefinition"></div>
+                    </div>
+                </div>
+
+            </template>
+
+            <template x-if="currentTab === 'variables'" x-data="variables">
+                <div>
+                    <div id="table_filter_container">
+                        <input id="table_filter_text_box" class="filter_text_box text_box_transient"
+                            placeholder="Filter" x-model="query">
+                    </div>
+                    <table class="data_table">
+                        <template x-for="v in filteredVars" :key="v.name">
+                            <tr class="data_table_row" tabindex="0" x-data="{ focused: false }"
+                                @focusin="focused = true" @focusout="focused = false">
+                                <td class="data_table_cell no_overflow" style="text-align: right; padding-right: 30px;"
+                                    x-text="v.name"></td>
+                                <!-- Small hack to select/unselect variables -->
+                                <td :class="{ 'data_table_cell': true, 'no_overflow': !focused }"
+                                    style="text-align: left; padding-right: 30px;" x-text="v.value"></td>
+                            </tr>
+                        </template>
+                    </table>
+                </div>
+            </template>
+
+            <template x-if="currentTab === 'history'" x-data="history">
+                <div>
+                    <div id="table_filter_container">
+                        <table class="paginator">
+                            <tr>
+                                <td :class="{disabled: currentPage == 0}" class="prev">
+                                    <button type="button" @click="prevPage">« Prev</a>
+                                </td>
+                                <td class="desc" x-text="currentPageDescription"></td>
+                                <td :class="{disabled: currentPage * itemsPerPage >= filteredItems.length}"
+                                    class="next">
+                                    <button type="button" @click="nextPage">Next »</a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <input id="table_filter_text_box" class="filter_text_box text_box_transient"
+                            placeholder="Filter" x-model.debounce="query">
+                    </div>
+                    <table class="data_table">
+                        <!-- TODO maybe use history index as keys here? -->
+                        <template
+                            x-for="item in filteredItems.slice(currentPage * itemsPerPage, (currentPage+1) * itemsPerPage)"
+                            :key="item">
+                            <tr>
+                                <td :class="{'history_text': true, 'no_overflow': selectedItems.indexOf(item) < 0}"
+                                    @click="selectItem(item)" x-text="item"></td>
+                                <td class="history_delete">
+                                    <button type="button" class="delete_icon"
+                                        @click="deleteHistoryItem(item)">❌</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </table>
+                </div>
+            </template>
+
+
+            <template x-if="currentTab === 'bindings'" x-data="bindings"
+                x-init="bindings = await (await fetch('bindings/')).json()">
+                <div>
+                    <div id="table_filter_container">
+                        <input id="table_filter_text_box" class="filter_text_box text_box_transient"
+                            placeholder="Filter" x-model="query">
+                    </div>
+                    <table class="data_table">
+                        <template x-for="b in filteredBindings" :key="b.command">
+                            <tr class="data_table_row" tabindex="0" x-data="{ focused: false }"
+                                @focusin="focused = true" @focusout="focused = false">
+                                <td :class="{ 'data_table_cell': true, 'no_overflow': !focused }"
+                                    style="text-align: right; padding-right: 30px;" x-text="b.command"></td>
+                                <!-- Small hack to select/unselect variables -->
+                                <td :class="{ 'data_table_cell': true, 'no_overflow': !focused }"
+                                    style="text-align: left; padding-right: 30px;">
+                                    <template x-for="variety in b.bindings" :key="variety.readable_binding">
+                                        <div>
+                                            <span x-text="variety.readable_binding"></span>
+                                            <template x-for="raw in variety.raw_bindings" :key="raw">
+                                                <div class="raw_binding" x-show="focused" x-text="raw"></div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </table>
+                </div>
+            </template>
+        </div>
+    </main>
 </body>
+
 </html>

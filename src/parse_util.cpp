@@ -815,7 +815,7 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
     parse_error_t error;
     error.source_start = source_location;
     error.source_length = source_length;
-    error.code = parse_error_syntax;
+    error.code = parse_error_code_t::syntax;
 
     va_list va;
     va_start(va, fmt);
@@ -965,13 +965,13 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
             if (out_errors) {
                 const wchar_t *fmt = L"Invalid token '%ls'";
                 if (arg_src.length() == 2 && arg_src[0] == L'\\' &&
-                        (arg_src[1] == L'c' || towlower(arg_src[1]) == L'u'
-                        || towlower(arg_src[1]) == L'x')) {
+                    (arg_src[1] == L'c' || towlower(arg_src[1]) == L'u' ||
+                     towlower(arg_src[1]) == L'x')) {
                     fmt = L"Incomplete escape sequence '%ls'";
                 }
 
-                append_syntax_error(out_errors, source_start + begin, end - begin,
-                                    fmt, arg_src.c_str());
+                append_syntax_error(out_errors, source_start + begin, end - begin, fmt,
+                                    arg_src.c_str());
             }
             return 1;
         }
@@ -1359,8 +1359,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         // successfully.
         size_t idx = parse_errors.size();
         while (idx--) {
-            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote ||
-                parse_errors.at(idx).code == parse_error_tokenizer_unterminated_subshell) {
+            if (parse_errors.at(idx).code == parse_error_code_t::tokenizer_unterminated_quote ||
+                parse_errors.at(idx).code == parse_error_code_t::tokenizer_unterminated_subshell) {
                 // Remove this error, since we don't consider it a real error.
                 has_unclosed_quote_or_subshell = true;
                 parse_errors.erase(parse_errors.begin() + idx);

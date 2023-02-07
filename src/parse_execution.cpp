@@ -669,7 +669,7 @@ end_execution_reason_t parse_execution_context_t::report_error(int status, const
     parse_error_t *error = &error_list.at(0);
     error->source_start = r.start;
     error->source_length = r.length;
-    error->code = parse_error_syntax;  // hackish
+    error->code = parse_error_code_t::syntax;  // hackish
 
     va_list va;
     va_start(va, fmt);

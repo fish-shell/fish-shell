@@ -5137,15 +5137,18 @@ static void test_new_parser_ad_hoc() {
 
     parse_error_list_t errors;
     ast = ast_t::parse(L"begin; echo (", parse_flag_leave_unterminated, &errors);
-    do_test(errors.size() == 1 && errors.at(0).code == parse_error_tokenizer_unterminated_subshell);
+    do_test(errors.size() == 1 &&
+            errors.at(0).code == parse_error_code_t::tokenizer_unterminated_subshell);
 
     errors.clear();
     ast = ast_t::parse(L"for x in (", parse_flag_leave_unterminated, &errors);
-    do_test(errors.size() == 1 && errors.at(0).code == parse_error_tokenizer_unterminated_subshell);
+    do_test(errors.size() == 1 &&
+            errors.at(0).code == parse_error_code_t::tokenizer_unterminated_subshell);
 
     errors.clear();
     ast = ast_t::parse(L"begin; echo '", parse_flag_leave_unterminated, &errors);
-    do_test(errors.size() == 1 && errors.at(0).code == parse_error_tokenizer_unterminated_quote);
+    do_test(errors.size() == 1 &&
+            errors.at(0).code == parse_error_code_t::tokenizer_unterminated_quote);
 }
 
 static void test_new_parser_errors() {
@@ -5154,22 +5157,22 @@ static void test_new_parser_errors() {
         const wchar_t *src;
         parse_error_code_t code;
     } tests[] = {
-        {L"echo 'abc", parse_error_tokenizer_unterminated_quote},
-        {L"'", parse_error_tokenizer_unterminated_quote},
-        {L"echo (abc", parse_error_tokenizer_unterminated_subshell},
+        {L"echo 'abc", parse_error_code_t::tokenizer_unterminated_quote},
+        {L"'", parse_error_code_t::tokenizer_unterminated_quote},
+        {L"echo (abc", parse_error_code_t::tokenizer_unterminated_subshell},
 
-        {L"end", parse_error_unbalancing_end},
-        {L"echo hi ; end", parse_error_unbalancing_end},
+        {L"end", parse_error_code_t::unbalancing_end},
+        {L"echo hi ; end", parse_error_code_t::unbalancing_end},
 
-        {L"else", parse_error_unbalancing_else},
-        {L"if true ; end ; else", parse_error_unbalancing_else},
+        {L"else", parse_error_code_t::unbalancing_else},
+        {L"if true ; end ; else", parse_error_code_t::unbalancing_else},
 
-        {L"case", parse_error_unbalancing_case},
-        {L"if true ; case ; end", parse_error_generic},
+        {L"case", parse_error_code_t::unbalancing_case},
+        {L"if true ; case ; end", parse_error_code_t::generic},
 
-        {L"true | and", parse_error_andor_in_pipeline},
+        {L"true | and", parse_error_code_t::andor_in_pipeline},
 
-        {L"a=", parse_error_bare_variable_assignment},
+        {L"a=", parse_error_code_t::bare_variable_assignment},
     };
 
     for (const auto &test : tests) {

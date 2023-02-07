@@ -71,7 +71,7 @@ static void append_syntax_error(parse_error_list_t *errors, size_t source_start,
     parse_error_t error;
     error.source_start = source_start;
     error.source_length = 0;
-    error.code = parse_error_syntax;
+    error.code = parse_error_code_t::syntax;
 
     va_list va;
     va_start(va, fmt);
@@ -91,7 +91,7 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
     parse_error_t error;
     error.source_start = source_start;
     error.source_length = source_end - source_start + 1;
-    error.code = parse_error_cmdsubst;
+    error.code = parse_error_code_t::cmdsubst;
 
     va_list va;
     va_start(va, fmt);
@@ -112,7 +112,7 @@ static expand_result_t append_overflow_error(parse_error_list_t *errors,
         parse_error_t error;
         error.source_start = source_start;
         error.source_length = 0;
-        error.code = parse_error_generic;
+        error.code = parse_error_code_t::generic;
         error.text = _(L"Expansion produced too many results");
         errors->push_back(std::move(error));
     }

@@ -682,7 +682,7 @@ struct populator_t {
                "Should not attempt to consume terminate token");
         auto tok = consume_any_token();
         if (tok.type != type) {
-            parse_error(tok, parse_error_generic, _(L"Expected %ls, but found %ls"),
+            parse_error(tok, parse_error_code_t::generic, _(L"Expected %ls, but found %ls"),
                         token_type_user_presentable_description(type).c_str(),
                         tok.user_presentable_description().c_str());
             return source_range_t{0, 0};
@@ -703,7 +703,7 @@ struct populator_t {
         //   complete -c foo -a "'abc"
         if (this->top_type_ == type_t::freestanding_argument_list) {
             this->parse_error(
-                tok, parse_error_generic, _(L"Expected %ls, but found %ls"),
+                tok, parse_error_code_t::generic, _(L"Expected %ls, but found %ls"),
                 token_type_user_presentable_description(parse_token_type_t::string).c_str(),
                 tok.user_presentable_description().c_str());
             return;
@@ -715,15 +715,15 @@ struct populator_t {
                 // There are three keywords which end a job list.
                 switch (tok.keyword) {
                     case parse_keyword_t::kw_end:
-                        this->parse_error(tok, parse_error_unbalancing_end,
+                        this->parse_error(tok, parse_error_code_t::unbalancing_end,
                                           _(L"'end' outside of a block"));
                         break;
                     case parse_keyword_t::kw_else:
-                        this->parse_error(tok, parse_error_unbalancing_else,
+                        this->parse_error(tok, parse_error_code_t::unbalancing_else,
                                           _(L"'else' builtin not inside of if block"));
                         break;
                     case parse_keyword_t::kw_case:
-                        this->parse_error(tok, parse_error_unbalancing_case,
+                        this->parse_error(tok, parse_error_code_t::unbalancing_case,
                                           _(L"'case' builtin not inside of switch block"));
                         break;
                     default:
@@ -738,7 +738,8 @@ struct populator_t {
             case parse_token_type_t::background:
             case parse_token_type_t::andand:
             case parse_token_type_t::oror:
-                parse_error(tok, parse_error_generic, _(L"Expected a string, but found %ls"),
+                parse_error(tok, parse_error_code_t::generic,
+                            _(L"Expected a string, but found %ls"),
                             tok.user_presentable_description().c_str());
                 break;
 
@@ -968,14 +969,15 @@ struct populator_t {
         } else if (token1.type != parse_token_type_t::string) {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
-            parse_error(token1, parse_error_generic, _(L"Expected a command, but found %ls"),
+            parse_error(token1, parse_error_code_t::generic,
+                        _(L"Expected a command, but found %ls"),
                         token1.user_presentable_description().c_str());
             return got_error();
         } else if (token1.may_be_variable_assignment) {
             // Here we have a variable assignment which we chose to not parse as a variable
             // assignment because there was no string after it.
             // Ensure we consume the token, so we don't get back here again at the same place.
-            parse_error(consume_any_token(), parse_error_bare_variable_assignment, L"");
+            parse_error(consume_any_token(), parse_error_code_t::bare_variable_assignment, L"");
             return got_error();
         }
 
@@ -1025,7 +1027,8 @@ struct populator_t {
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
                 // we can't leave our pointer as null.
-                parse_error(token1, parse_error_generic, _(L"Expected a command, but found %ls"),
+                parse_error(token1, parse_error_code_t::generic,
+                            _(L"Expected a command, but found %ls"),
                             token1.user_presentable_description().c_str());
                 return got_error();
 
@@ -1083,7 +1086,8 @@ struct populator_t {
         const auto &tok = peek_token(1);
         if (tok.keyword == parse_keyword_t::kw_and || tok.keyword == parse_keyword_t::kw_or) {
             const wchar_t *cmdname = (tok.keyword == parse_keyword_t::kw_and ? L"and" : L"or");
-            parse_error(tok, parse_error_andor_in_pipeline, INVALID_PIPELINE_CMD_ERR_MSG, cmdname);
+            parse_error(tok, parse_error_code_t::andor_in_pipeline, INVALID_PIPELINE_CMD_ERR_MSG,
+                        cmdname);
         }
         node.accept(*this);
     }
@@ -1112,7 +1116,7 @@ struct populator_t {
                 return;
             }
 
-            parse_error(peek, parse_error_generic, L"Expected %ls, but found %ls",
+            parse_error(peek, parse_error_code_t::generic, L"Expected %ls, but found %ls",
                         token_types_user_presentable_description({TokTypes...}).c_str(),
                         peek.user_presentable_description().c_str());
             token.unsourced = true;
@@ -1149,11 +1153,11 @@ struct populator_t {
                 source_range_t kw_range = p.first;
                 const wchar_t *kw_name = p.second;
                 if (kw_name) {
-                    this->parse_error(kw_range, parse_error_generic,
+                    this->parse_error(kw_range, parse_error_code_t::generic,
                                       L"Missing end to balance this %ls", kw_name);
                 }
             }
-            parse_error(peek, parse_error_generic, L"Expected %ls, but found %ls",
+            parse_error(peek, parse_error_code_t::generic, L"Expected %ls, but found %ls",
                         keywords_user_presentable_description({KWs...}).c_str(),
                         peek.user_presentable_description().c_str());
             return;

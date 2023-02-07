@@ -20,17 +20,17 @@
 parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err) {
     switch (err) {
         case tokenizer_error_t::none:
-            return parse_error_none;
+            return parse_error_code_t::none;
         case tokenizer_error_t::unterminated_quote:
-            return parse_error_tokenizer_unterminated_quote;
+            return parse_error_code_t::tokenizer_unterminated_quote;
         case tokenizer_error_t::unterminated_subshell:
-            return parse_error_tokenizer_unterminated_subshell;
+            return parse_error_code_t::tokenizer_unterminated_subshell;
         case tokenizer_error_t::unterminated_slice:
-            return parse_error_tokenizer_unterminated_slice;
+            return parse_error_code_t::tokenizer_unterminated_slice;
         case tokenizer_error_t::unterminated_escape:
-            return parse_error_tokenizer_unterminated_escape;
+            return parse_error_code_t::tokenizer_unterminated_escape;
         default:
-            return parse_error_tokenizer_other;
+            return parse_error_code_t::tokenizer_other;
     }
 }
 
@@ -45,11 +45,11 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
             if (skip_caret && this->text.empty()) return L"";
             result.append(this->text);
             break;
-        case parse_error_andor_in_pipeline:
+        case parse_error_code_t::andor_in_pipeline:
             append_format(result, INVALID_PIPELINE_CMD_ERR_MSG,
                           src.substr(this->source_start, this->source_length).c_str());
             break;
-        case parse_error_bare_variable_assignment: {
+        case parse_error_code_t::bare_variable_assignment: {
             wcstring assignment_src = src.substr(this->source_start, this->source_length);
             maybe_t<size_t> equals_pos = variable_assignment_equals_pos(assignment_src);
             assert(equals_pos.has_value());

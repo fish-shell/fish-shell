@@ -131,27 +131,27 @@ enum class statement_decoration_t : uint8_t {
 };
 
 // Parse error code list.
-enum parse_error_code_t : uint8_t {
-    parse_error_none,
+enum class parse_error_code_t : uint8_t {
+    none,
 
     // Matching values from enum parser_error.
-    parse_error_syntax,
-    parse_error_cmdsubst,
+    syntax,
+    cmdsubst,
 
-    parse_error_generic,  // unclassified error types
+    generic,  // unclassified error types
 
     // Tokenizer errors.
-    parse_error_tokenizer_unterminated_quote,
-    parse_error_tokenizer_unterminated_subshell,
-    parse_error_tokenizer_unterminated_slice,
-    parse_error_tokenizer_unterminated_escape,
-    parse_error_tokenizer_other,
+    tokenizer_unterminated_quote,
+    tokenizer_unterminated_subshell,
+    tokenizer_unterminated_slice,
+    tokenizer_unterminated_escape,
+    tokenizer_other,
 
-    parse_error_unbalancing_end,           // end outside of block
-    parse_error_unbalancing_else,          // else outside of if
-    parse_error_unbalancing_case,          // case outside of switch
-    parse_error_bare_variable_assignment,  // a=b without command
-    parse_error_andor_in_pipeline,         // "and" or "or" after a pipe
+    unbalancing_end,           // end outside of block
+    unbalancing_else,          // else outside of if
+    unbalancing_case,          // case outside of switch
+    bare_variable_assignment,  // a=b without command
+    andor_in_pipeline,         // "and" or "or" after a pipe
 };
 
 enum {

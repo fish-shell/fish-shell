@@ -1,6 +1,6 @@
-type --query __fish_vim_tags || source (status dirname)/vim.fish
+type --quiet __fish_vim_tags || source (status dirname)/vim.fish
 
-# Options copied from vim.fish
+# Options shared with vim, copied from vim.fish
 complete -c nvim -s c -r -d 'Execute Ex command after the first file has been read'
 complete -c nvim -s S -r -d 'Source file after the first file has been read'
 complete -c nvim -l cmd -r -d 'Execute Ex command before loading any vimrc'
@@ -38,27 +38,31 @@ complete -c nvim -s v -l version -d 'Print version information and exit'
 complete -c nvim -l clean -d 'Factory defaults: skip vimrc, plugins, shada'
 complete -c nvim -l startuptime -r -d 'Write startup timing messages to <file>'
 
-complete -c nvim -l remote -d 'Edit files on nvim server specified with --server'
-complete -c nvim -l remote-expr -d 'Evaluate expr on nvim server specified with --server'
-complete -c nvim -l remote-send -d 'Send keys to nvim server specified with --server'
-complete -c nvim -l remote-silent -d 'Edit files on nvim server specified with --server'
-# Support for those is planned, but they are not implemented yet (February 2023)
-# nvim prints either a corresponding helpful message or a confusing message ("Garbage after option argument: ...")
-# Once they are supported, comment them back in
-# https://neovim.io/doc/user/remote.html
-# complete -c nvim -l remote-wait -d 'Edit files on nvim server'
-# complete -c nvim -l remote-wait-silent -d 'Edit files on nvim server'
-# complete -c nvim -l serverlist -d 'List all nvim servers that can be found'
-# complete -c nvim -l servername -d 'Set server name'
-
 # Options exclusive to nvim, see https://neovim.io/doc/user/starting.html
 complete -c nvim -s l -r -d 'Execute Lua script'
 complete -c nvim -s ll -r -d 'Execute Lua script in uninitialized editor'
 complete -c nvim -s es -d 'Start in Ex script mode, execute stdin as Ex commands'
 complete -c nvim -s Es -d 'Start in Ex script mode, read stdin as text into buffer 1'
 complete -c nvim -s s -r -d 'Execute script file as normal-mode input'
+
+# Server and API options
 complete -c nvim -l api-info -d 'Write msgpack-encoded API metadata to stdout'
 complete -c nvim -l embed -d 'Use stdin/stdout as a msgpack-rpc channel'
 complete -c nvim -l headless -d "Don't start a user interface"
-complete -c nvim -l listen -r -d 'Serve RPC API from this address'
+complete -c nvim -l listen -r -d 'Serve RPC API from this address (e.g. 127.0.0.1:6000)'
 complete -c nvim -l server -r -d 'Specify RPC server to send commands to'
+
+# Client options
+complete -c nvim -l remote -d 'Edit files on nvim server specified with --server'
+complete -c nvim -l remote-expr -d 'Evaluate expr on nvim server specified with --server'
+complete -c nvim -l remote-send -d 'Send keys to nvim server specified with --server'
+complete -c nvim -l remote-silent -d 'Edit files on nvim server specified with --server'
+
+# Unimplemented client/server options
+# Support for these options is planned, but they are not implemented yet (February 2023).
+# nvim currently prints either a helpful error message or a confusing one ("Garbage after option argument: ...")
+# Once they are supported, we can add them back in - see https://neovim.io/doc/user/remote.html for their status.
+# complete -c nvim -l remote-wait -d 'Edit files on nvim server'
+# complete -c nvim -l remote-wait-silent -d 'Edit files on nvim server'
+# complete -c nvim -l serverlist -d 'List all nvim servers that can be found'
+# complete -c nvim -l servername -d 'Set server name'

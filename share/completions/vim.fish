@@ -17,6 +17,7 @@ function __fish_vim_find_tags_path
     return 1
 end
 
+# NB: This function is also used by the nvim completions
 function __fish_vim_tags
     set -l token (commandline -ct)
     set -l tags_path (__fish_vim_find_tags_path)
@@ -40,9 +41,12 @@ complete -c vim -s S -r -d 'Source file after the first file has been read'
 complete -c vim -l cmd -r -d 'Execute Ex command before loading any vimrc'
 complete -c vim -s d -r -d 'Use device as terminal (Amiga only)'
 complete -c vim -s i -r -d 'Set the viminfo file location'
-complete -c vim -s o -r -d 'Open stacked windows for each file'
-complete -c vim -s O -r -d 'Open side by side windows for each file'
-complete -c vim -s p -r -d 'Open tab pages for each file'
+complete -c vim -s o -d 'Open horizontally split windows for each file'
+complete -c vim -o o2 -d 'Open two horizontally split windows' # actually -o[N]
+complete -c vim -s O -d 'Open vertically split windows for each file'
+complete -c nvim -o O2 -d 'Open two vertically split windows' # actually -O[N]
+complete -c vim -s p -d 'Open tab pages for each file'
+complete -c nvim -o p2 -d 'Open two tab pages' # actually -p[N]
 complete -c vim -s q -r -d 'Start in quickFix mode'
 complete -c vim -s r -r -d 'Use swap files for recovery'
 complete -c vim -s s -r -d 'Source and execute script file'
@@ -95,3 +99,5 @@ complete -c vim -l serverlist -d 'List all Vim servers that can be found'
 complete -c vim -l servername -d 'Set server name'
 complete -c vim -l version -d 'Print version information and exit'
 complete -c vim -l socketid -r -d 'Run gvim in another window (GTK GUI only)'
+complete -c vim -l clean -d 'Factory defaults: skip vimrc, plugins, viminfo'
+complete -c vim -l startuptime -r -d 'Write startup timing messages to <file>'

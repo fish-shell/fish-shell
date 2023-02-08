@@ -1,4 +1,215 @@
+// TODO double check all defaults for nullability etc
 document.addEventListener("alpine:init", () => {
+    window.Alpine.data("colors", () => ({
+        // TODO make null
+        selectedColorScheme: {},
+        terminalBackgroundColor: "black",
+        showSaveButton: false,
+        csUserVisibleTitle: "",
+        selectedColorSetting: false,
+
+        text_color_for_color: window.text_color_for_color,
+
+        changeSelectedColorScheme(newScheme) {
+            console.log(newScheme);
+            // TODO find out if angular.copy is deep copy
+            this.selectedColorScheme = { ...newScheme };
+            if (this.selectedColorScheme.preferred_background) {
+                this.terminalBackgroundColor = this.selectedColorScheme.preferred_background;
+            }
+            this.selectedColorSetting = false;
+            this.customizationActive = false;
+            this.csEditingType = false;
+            //TODO: Save button should be shown only when colors are changed
+            this.showSaveButton = true;
+
+            this.noteThemeChanged();
+        },
+
+        text_color_for_color: text_color_for_color,
+
+        border_color_for_color: border_color_for_color,
+
+        interpret_color: interpret_color,
+
+        get colorArraysArray() {
+            var result = null;
+            if (this.selectedColorScheme.colors && this.selectedColorScheme.colors.length > 0)
+                result = get_colors_as_nested_array(this.selectedColorScheme.colors, 32);
+            else result = get_colors_as_nested_array(term_256_colors, 32);
+            return result;
+        },
+
+        customizationActive: false,
+        csEditingType: false,
+        beginCustomizationWithSetting(setting) {
+            if (!this.customizationActive) {
+                this.customizationActive = true;
+                this.selectedColorSetting = setting;
+                this.csEditingType = setting;
+                this.csUserVisibleTitle = user_visible_title_for_setting_name(setting);
+            }
+        },
+
+        selectColorSetting(name) {
+            this.selectedColorSetting = name;
+            this.csEditingType = this.customizationActive ? name : "";
+            this.csUserVisibleTitle = user_visible_title_for_setting_name(name);
+            this.beginCustomizationWithSetting(name);
+        },
+
+        toggleCustomizationActive() {
+            if (!this.customizationActive) {
+                this.beginCustomizationWithSetting(this.selectedColorSetting || "command");
+            } else {
+                this.customizationActive = false;
+                this.selectedColorSetting = "";
+                this.csEditingType = "";
+            }
+        },
+
+        changeSelectedTextColor(color) {
+            this.selectedColorScheme[this.selectedColorSetting] = color;
+            this.selectedColorScheme["colordata-" + this.selectedColorSetting].color = color;
+            this.noteThemeChanged();
+        },
+
+        sampleTerminalBackgroundColors: [
+            "white",
+            "#" + solarized.base3,
+            "#300",
+            "#003",
+            "#" + solarized.base03,
+            "#232323",
+            "#" + nord.nord0,
+            "black",
+        ],
+
+        /* Array of FishColorSchemes */
+        colorSchemes: [],
+        isValidColor(col) {
+            if (col == "normal") return true;
+            var s = new Option().style;
+            s.color = col;
+            return !!s.color;
+        },
+
+        saveThemeButtonTitle: "Set Theme",
+
+        noteThemeChanged() {
+            this.saveThemeButtonTitle = "Set Theme";
+        },
+
+        async setTheme() {
+            var settingNames = [
+                "normal",
+                "command",
+                "quote",
+                "redirection",
+                "end",
+                "error",
+                "param",
+                "comment",
+                "match",
+                "selection",
+                "search_match",
+                "history_current",
+                "operator",
+                "escape",
+                "cwd",
+                "cwd_root",
+                "valid_path",
+                "autosuggestion",
+                "user",
+                "host",
+                "cancel",
+                // Cheesy hardcoded variable names ahoy!
+                // These are all the pager vars,
+                // we should really just save all these in a dictionary.
+                "fish_pager_color_background",
+                "fish_pager_color_prefix",
+                "fish_pager_color_progress",
+                "fish_pager_color_completion",
+                "fish_pager_color_description",
+                "fish_pager_color_selected_background",
+                "fish_pager_color_selected_prefix",
+                "fish_pager_color_selected_completion",
+                "fish_pager_color_selected_description",
+                // TODO: Setting these to empty currently makes them weird. Figure out why!
+                /*
+                                "fish_pager_color_secondary_background",
+                                "fish_pager_color_secondary_prefix",
+                                "fish_pager_color_secondary_completion",
+                                "fish_pager_color_secondary_description",
+                                */
+            ];
+            var remaining = settingNames.length;
+            var postdata = {
+                theme: this.selectedColorScheme["name"],
+                colors: [],
+            };
+            for (var name of settingNames) {
+                var selected;
+                var realname = "colordata-" + name;
+                // Skip colors undefined in the current theme
+                // js is dumb - the empty string is false,
+                // but we want that to mean unsetting a var.
+                if (
+                    !this.selectedColorScheme[realname] &&
+                    this.selectedColorScheme[realname] !== ""
+                ) {
+                    continue;
+                } else {
+                    selected = this.selectedColorScheme[realname];
+                }
+                postdata.colors.push({
+                    what: name,
+                    color: selected,
+                });
+            }
+            let resp = await fetch("set_color/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(postdata),
+            });
+            if (resp.ok) {
+                this.saveThemeButtonTitle = "Theme Set!";
+            }
+        },
+
+        async init() {
+            let schemes = await (await fetch("colors/")).json();
+
+            for (var scheme of schemes) {
+                var currentScheme = {
+                    name: "Current",
+                    colors: [],
+                    preferred_background: "black",
+                };
+                currentScheme["name"] = scheme["theme"];
+                if (scheme["name"]) currentScheme["name"] = scheme["name"];
+                var data = scheme["colors"];
+                if (scheme["preferred_background"]) {
+                    if (this.isValidColor(scheme["preferred_background"])) {
+                        currentScheme["preferred_background"] = scheme["preferred_background"];
+                    }
+                }
+                if (scheme["url"]) currentScheme["url"] = scheme["url"];
+
+                for (var i in data) {
+                    currentScheme[data[i].name] = interpret_color(data[i].color).replace(/#/, "");
+                    // HACK: For some reason the colors array is cleared later
+                    // So we cheesily encode the actual objects as colordata-, so we can send them.
+                    // TODO: We should switch to keeping the objects, and also displaying them
+                    // with underlines and such.
+                    currentScheme["colordata-" + data[i].name] = data[i];
+                }
+                this.colorSchemes.push(currentScheme);
+            }
+            this.changeSelectedColorScheme(this.colorSchemes[0]);
+        },
+    }));
+
     window.Alpine.data("prompt", () => ({
         selectedPrompt: null,
         showSaveButton: true,

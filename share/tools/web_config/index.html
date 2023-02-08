@@ -6,14 +6,16 @@
     <title>fish shell configuration</title>
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="stylesheet" type="text/css" href="fishconfig.css" />
+    <script type="text/javascript" src="js/colorutils.js" defer></script>
     <script type="text/javascript" src="js/main.js" defer></script>
     <script type="text/javascript" src="js/alpine.js" defer></script>
 </head>
 
 <!-- TODO check that every x-for has a :key binding -->
 <!-- TODO check that every template has single child -->
+<!-- TODO try to reduce depth by either splitting routes or eliminating redundant wrappers -->
 
-<body id="ancestor" x-data="{ currentTab: 'functions' }">
+<body id="ancestor" x-data="{ currentTab: 'colors' }">
     <main id="parent">
         <div id="tab_parent">
             <a :class="{'tab': true, 'selected_tab': currentTab =='colors'}" id="tab_colors"
@@ -30,6 +32,163 @@
                 @click="currentTab = 'bindings'">bindings</a>
         </div>
         <div id="tab_contents">
+            <template x-if="currentTab === 'colors'" x-data="colors">
+                <div>
+                    <!-- ko with: color_picker -->
+                    <div class="colorpicker_text_sample" :style="{'background-color': terminalBackgroundColor}">
+                        <span style="position: absolute; left: 10px; top: 3px"
+                            :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}"
+                            x-text="selectedColorScheme.name"></span>
+                        <br />
+                        <div class="color_picker_background_cells">
+                            <span style="display: block; text-align: right; line-height: 110%"
+                                :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}">
+                                Background Color:<br />(demo only)&nbsp;
+                            </span>
+                            <template x-for="color in sampleTerminalBackgroundColors">
+                                <label :style="{'background-color': color}">
+                                    <input type="radio" :value="color" x-model="terminalBackgroundColor" hidden
+                                        :title="'Preview with this background color.\n\nfish cannot change the background color of your terminal. Refer to your terminal settings to set its background color.'">
+                                    </input>
+                                </label>
+                            </template>
+                        </div>
+                        <!-- This is the sample text -->
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
+                            @click="selectColorSetting('command')">/bright/vixens</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'param'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.param)}"
+                            @click="selectColorSetting('param')">jump</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'end'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.end)}"
+                            @click="selectColorSetting('end')">|</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
+                            @click="selectColorSetting('command')">dozy</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'quote'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.quote)}"
+                            @click="selectColorSetting('quote')"> "fowl"</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'redirection'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.redirection)}"
+                            @click="selectColorSetting('redirection')">&gt; quack</span>
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'end'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.end)}"
+                            @click="selectColorSetting('end')">&</span>
+                        <br>
+
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
+                            @click="selectColorSetting('command')">echo</span>
+
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'error'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.error)}"
+                            @click="selectColorSetting('error')">'</span><span
+                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'quote'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.quote)}"
+                            @click="selectColorSetting('quote')">Errors are the portals to discovery</span>
+
+                        <br>
+
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'comment'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.comment)}"
+                            @click="selectColorSetting('comment')"># This is a comment</span>
+
+                        <br>
+
+                        <span :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'command'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.command)}"
+                            @click="selectColorSetting('command')">Th</span><span class="fake_cursor"><span
+                                style="visibility: hidden">i</span></span><span
+                            :class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'autosuggestion'}"
+                            :style="{ 'color': interpret_color(selectedColorScheme.autosuggestion)}"
+                            @click="selectColorSetting('autosuggestion')">s is an autosuggestion</span>
+
+
+                        <div style="position: absolute; right: 5px; bottom: 5px;">
+
+                            <button class="customize_theme_button" :class="{button_highlight: customizationActive}"
+                                :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}"
+                                @click="toggleCustomizationActive">Customize</button>
+
+                            <button class="save_button"
+                                :style="{'color': `#${text_color_for_color(terminalBackgroundColor)}`}"
+                                x-show="showSaveButton" @click="setTheme" x-text="saveThemeButtonTitle"></button>
+                        </div>
+
+                    </div>
+
+                    <div x-show="customizationActive">
+                        <div style="margin: 10px 0 7px 35px;">Choose a color for <span
+                                x-text="csUserVisibleTitle"></span>:</div>
+                        <!-- TODO maybe add input[type=color] for 24bit terminals -->
+                        <table class="colorpicker_term256" style="margin: 0px 20px;">
+                            <tbody>
+                                <template x-for="color_array in colorArraysArray">
+                                    <tr class="colorpicker_term256_row">
+                                        <template x-for="color in color_array">
+                                            <td class="colorpicker_term256_cell"
+                                                :style="{'background-color': interpret_color(color)}"
+                                                @click="changeSelectedTextColor(color)">
+                                                <div class="colorpicker_term256_selection_indicator"
+                                                    x-show="selectedColorScheme[selectedColorSetting] == color"
+                                                    :style="{'border-color': interpret_color(border_color_for_color(color))}">
+                                                </div>
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <!-- /ko -->
+                        </table>
+                    </div>
+
+                    <div style="margin: 10px 0 7px 35px;">Preview a theme below:</div>
+
+                    <div class="color_scheme_choices_scrollview">
+                        <div class="color_scheme_choices_list">
+                            <template x-for="colorScheme in colorSchemes">
+                                <div class="color_scheme_choice_container"
+                                    @click="changeSelectedColorScheme(colorScheme)">
+                                    <div class="color_scheme_choice_label">
+                                        <!-- This click/clickBubble nonsense is so that we can have a separate URL inside a parent with an onClick handler -->
+                                        <span x-text="colorScheme.name"></span>
+                                        <a x-show="colorScheme.url" style="text-decoration: none; color: inherit;"
+                                            :href="colorScheme.url">&#10138;</a>
+                                    </div>
+                                    <div class="colorpicker_text_sample_tight"
+                                        :style="{'background-color': colorScheme.preferred_background}">
+                                        <span
+                                            :style="{'color': interpret_color(colorScheme.command)}">/bright/vixens</span>
+                                        <span :style="{'color': interpret_color(colorScheme.param)}">jump</span>
+                                        <span :style="{'color': interpret_color(colorScheme.end)}">|</span>
+                                        <span :style="{'color': interpret_color(colorScheme.command)}">dozy</span>
+                                        <span :style="{'color': interpret_color(colorScheme.quote)}"> "fowl" </span>
+                                        <span :style="{'color': interpret_color(colorScheme.redirection)}">&gt;
+                                            quack</span>
+                                        <span :style="{'color': interpret_color(colorScheme.end)}">&</span>
+                                        <br>
+                                        <span :style="{'color': interpret_color(colorScheme.command)}">echo</span>
+                                        <span :style="{'color': interpret_color(colorScheme.error)}">'</span><span
+                                            :style="{'color': interpret_color(colorScheme.quote)}">Errors are the
+                                            portals to discovery</span>
+                                        <br>
+                                        <span :style="{'color': interpret_color(colorScheme.comment)}"># This is a
+                                            comment</span>
+                                        <br>
+                                        <span :style="{'color': interpret_color(colorScheme.command)}">Th</span><span
+                                            class="fake_cursor"><span style="visibility: hidden">i</span></span><span
+                                            :style="{ 'color': interpret_color(colorScheme.autosuggestion)}">s is an
+                                            autosuggestion</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </template>
+
             <!-- Investigate potential race condition with selectedPrompt (e.g. replace x-if with x-show) -->
             <template x-if="currentTab === 'prompt'" x-data="prompt">
                 <div class="height_limiter">
@@ -79,6 +238,7 @@
                 <div class="master_detail_table">
                     <div class="master">
                         <template x-for="func in functions">
+                            <!-- TODO use ul/li -->
                             <div>
                                 <div id="master_{{func}}"
                                     :class="{'master_element': true, 'selected_master_elem': func == selectedFunction }"

@@ -65,6 +65,14 @@ You will likely run into limitations of [`autocxx`](https://google.github.io/aut
 
 ## Type Mapping
 
+### Constants & Type Aliases
+
+The FFI does not support constants (`#define` or `static const`) or type aliases (`typedef`, `using`). Duplicate them using their Rust equivalent (`pub const` and `type`/`struct`/`enum`).
+
+### Non-POD types
+
+Many types cannot currently be passed across the language boundary by value or occur in shared structs. As a workaround, use references, raw pointers or smart pointers (`cxx` provides `SharedPtr` and `UniquePtr`). Try to keep workarounds on the C++ side and the FFI layer of the Rust code. This ensures we will get rid of the workarounds as we peel off the FFI layer.
+
 ### Strings
 
 Fish will mostly _not_ use Rust's `String/&str` types as these cannot represent non-UTF8 data using the default encoding.
@@ -140,6 +148,8 @@ pub fn get_jobs(ffi_jobs: &ffi::RustFFIJobList) -> &[SharedPtr<job_t>] {
     unsafe { slice::from_raw_parts(ffi_jobs.jobs, ffi_jobs.count) }
 }
 ```
+
+Another workaround is to define a struct that contains the shared pointer, and create a vector of that struct.
 
 ## Development Tooling
 

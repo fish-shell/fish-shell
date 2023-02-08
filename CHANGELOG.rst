@@ -42,6 +42,8 @@ Completions
   - ``otool``
   - ``pre-commit`` (:issue:`9521`)
   - ``proxychains`` (:issue:`9486`)
+  - ``mix phx``
+  - ``neovim``
 - Improvements to many completions.
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)

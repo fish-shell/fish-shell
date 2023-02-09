@@ -1,15 +1,19 @@
 set -l commands flashall getvar oem flashing reboot update erase format devices flash get_staged help stage boot fetch
 
 function __fish_fastboot_list_partition_or_file
-    if __fish_seen_subcommand_from (__fish_fastboot_list_partition){_a,_b,}
-        __fish_complete_path
-    else
-        __fish_fastboot_list_partition
+    set -l tokens (commandline -opc)
+    # if last 2 token is flash, then list file
+    if test (count $tokens) -gt 2
+        if test $tokens[-2] = flash
+            __fish_complete_path
+            return
+        end
     end
+    __fish_fastboot_list_partition
 end
 
 function __fish_fastboot_list_partition
-    set -l partitions boot bootloader dtbo modem odm odm_dlkm oem product pvmfw radio recovery system vbmeta vendor vendor_dlkm cache userdata system_ext
+    set -l partitions boot bootloader cache cust dtbo metadata misc modem odm odm_dlkm oem product pvmfw radio recovery system system_ext userdata vbmeta vendor vendor_dlkm vmbeta_system
     for i in $partitions
         echo $i
     end
@@ -73,4 +77,3 @@ complete -n '__fish_seen_subcommand_from reboot' -c fastboot -xa 'bootloader fas
 
 # oem
 complete -n '__fish_seen_subcommand_from oem' -c fastboot -xa 'device-info lock unlock edl'
-

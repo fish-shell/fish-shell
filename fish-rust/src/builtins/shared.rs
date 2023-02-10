@@ -1,7 +1,8 @@
 use crate::builtins::wait;
 use crate::ffi::{self, parser_t, wcharz_t, Repin, RustBuiltin};
-use crate::wchar::{self, wstr};
+use crate::wchar::{self, wstr, L};
 use crate::wchar_ffi::{c_str, empty_wstring};
+use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use libc::c_int;
 use std::pin::Pin;
 
@@ -154,4 +155,55 @@ pub fn builtin_print_help(parser: &mut parser_t, streams: &io_streams_t, cmd: &w
         c_str!(cmd),
         empty_wstring(),
     );
+}
+
+pub struct HelpOnlyCmdOpts {
+    pub print_help: bool,
+    pub optind: usize,
+}
+
+impl HelpOnlyCmdOpts {
+    pub fn parse(
+        args: &mut [&wstr],
+        parser: &mut parser_t,
+        streams: &mut io_streams_t,
+    ) -> Result<Self, Option<c_int>> {
+        let cmd = args[0];
+        let print_hints = true;
+
+        const shortopts: &wstr = L!("+:h");
+        const longopts: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
+
+        let mut print_help = false;
+        let mut w = wgetopter_t::new(shortopts, longopts, args);
+        while let Some(c) = w.wgetopt_long() {
+            match c {
+                'h' => {
+                    print_help = true;
+                }
+                ':' => {
+                    builtin_missing_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.woptind - 1],
+                        print_hints,
+                    );
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                '?' => {
+                    builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                _ => {
+                    panic!("unexpected retval from wgetopter::wgetopt_long()");
+                }
+            }
+        }
+
+        Ok(HelpOnlyCmdOpts {
+            print_help,
+            optind: w.woptind,
+        })
+    }
 }

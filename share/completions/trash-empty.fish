@@ -1,5 +1,5 @@
 complete -f -c trash-empty -s h -l help -d 'show help message'
-complete -f -c trash-empty -l print-completion -a 'bash zsh tcsh' -d 'print shell completion script'
+complete -f -c trash-empty -l print-completion -xa 'bash zsh tcsh' -d 'print shell completion script'
 complete -f -c trash-empty -l version -d 'show version number'
 complete -f -c trash-empty -s v -l verbose -d 'list files that will be deleted'
 complete -F -c trash-empty -l trash-dir -d 'specify trash directory'

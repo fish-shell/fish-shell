@@ -1,5 +1,5 @@
 complete -f -c trash -s h -l help -d 'show help message'
-complete -f -c trash -l print-completion -a 'bash zsh tcsh' -d 'print shell completion script'
+complete -f -c trash -l print-completion -xa 'bash zsh tcsh' -d 'print shell completion script'
 complete -f -c trash -s d -l directory -d 'ignored (for GNU rm compatibility)'
 complete -f -c trash -s f -l force -d 'silently ignore nonexistent files'
 complete -f -c trash -s i -l interactive -d 'prompt before every removal'

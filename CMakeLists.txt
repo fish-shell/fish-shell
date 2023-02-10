@@ -103,7 +103,7 @@ set(FISH_BUILTIN_SRCS
     src/builtins/bg.cpp src/builtins/bind.cpp src/builtins/block.cpp
     src/builtins/builtin.cpp src/builtins/cd.cpp src/builtins/command.cpp
     src/builtins/commandline.cpp src/builtins/complete.cpp src/builtins/contains.cpp
-    src/builtins/disown.cpp src/builtins/emit.cpp
+    src/builtins/disown.cpp
     src/builtins/eval.cpp src/builtins/exit.cpp src/builtins/fg.cpp
     src/builtins/function.cpp src/builtins/functions.cpp src/builtins/history.cpp
     src/builtins/jobs.cpp src/builtins/math.cpp src/builtins/printf.cpp src/builtins/path.cpp

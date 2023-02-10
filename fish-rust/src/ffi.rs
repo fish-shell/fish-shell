@@ -22,6 +22,7 @@ include_cpp! {
     #include "common.h"
     #include "builtin.h"
     #include "fallback.h"
+    #include "event.h"
 
     safety!(unsafe_ffi)
 
@@ -63,6 +64,8 @@ include_cpp! {
 
     generate!("wait_handle_t")
     generate!("wait_handle_store_t")
+
+    generate!("event_fire_generic")
 }
 
 impl parser_t {

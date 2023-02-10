@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "global_safety.h"
+#include "wutil.h"
 
 struct io_streams_t;
 
@@ -161,6 +162,9 @@ void event_print(io_streams_t &streams, const wcstring &type_filter);
 
 /// Returns a string describing the specified event.
 wcstring event_get_desc(const parser_t &parser, const event_t &e);
+
+// FFI helper for event_fire_generic
+void event_fire_generic(parser_t &parser, wcstring name, const wcharz_t *argv, int argc);
 
 /// Fire a generic event with the specified name.
 void event_fire_generic(parser_t &parser, wcstring name, wcstring_list_t args = {});

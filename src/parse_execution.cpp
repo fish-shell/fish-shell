@@ -788,7 +788,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
         event_t event(event_type_t::generic);
         event.desc.str_param1 = L"fish_command_not_found";
-        block_t *b = parser->push_block(block_t::event_block(event));
+        block_t *b = parser->push_block(event_block(event));
         parser->eval(buffer, io);
         parser->pop_block(b);
         parser->set_last_statuses(std::move(prev_statuses));

@@ -72,6 +72,9 @@ struct termsize_container_t {
     /// \return the singleton shared container.
     static termsize_container_t &shared();
 
+    /// autocxx junk.
+    static termsize_t ffi_updating(parser_t &parser);
+
    private:
     /// A function used for accessing the termsize from the tty. This is only exposed for testing.
     using tty_size_reader_func_t = maybe_t<termsize_t> (*)();

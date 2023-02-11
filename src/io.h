@@ -330,13 +330,18 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     // user-declared ctor to allow const init. Do not default this, it will break the build.
     io_chain_t() {}
 
+    /// autocxx falls over with this so hide it.
+#if INCLUDE_RUST_HEADERS
     void remove(const io_data_ref_t &element);
     void push_back(io_data_ref_t element);
+#endif
     bool append(const io_chain_t &chain);
 
     /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
     /// if none.
+#if INCLUDE_RUST_HEADERS
     io_data_ref_t io_for_fd(int fd) const;
+#endif
 
     /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
     /// \return true on success, false on error, in which case an error will have been printed.

@@ -489,6 +489,10 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
     return nullptr;
 }
 
+job_t *parser_t::ffi_job_get_from_pid(int pid) const { return job_get_from_pid(pid); }
+
+library_data_pod *parser_t::ffi_libdata_pod() { return &library_data.pod; }
+
 profile_item_t *parser_t::create_profile_item() {
     if (g_profiling_active) {
         profile_items.emplace_back();
@@ -741,7 +745,7 @@ wcstring block_t::description() const {
 
 block_t block_t::if_block() { return block_t(block_type_t::if_block); }
 
-block_t block_t::event_block(event_t evt) {
+block_t event_block(event_t evt) {
     block_t b{block_type_t::event};
     b.event.reset(new event_t(std::move(evt)));
     return b;

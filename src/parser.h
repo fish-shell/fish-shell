@@ -64,11 +64,10 @@ enum class loop_status_t {
 
 /// block_t represents a block of commands.
 class block_t {
-   private:
+   public:
     /// Construct from a block type.
     explicit block_t(block_type_t t);
 
-   public:
     // If this is a function block, the function name. Otherwise empty.
     wcstring function_name{};
 
@@ -113,7 +112,6 @@ class block_t {
 
     /// Entry points for creating blocks.
     static block_t if_block();
-    static block_t event_block(event_t evt);
     static block_t function_block(wcstring name, wcstring_list_t args, bool shadows);
     static block_t source_block(filename_ref_t src);
     static block_t for_block();
@@ -122,7 +120,12 @@ class block_t {
     static block_t scope_block(block_type_t type);
     static block_t breakpoint_block();
     static block_t variable_assignment_block();
+
+    /// autocxx junk.
+    const event_blockage_list_t *ffi_event_blocks() const { return &event_blocks; }
 };
+
+block_t event_block(event_t evt);
 
 struct profile_item_t {
     using microseconds_t = long long;
@@ -488,6 +491,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// autocxx junk.
     RustFFIJobList ffi_jobs() const;
+    event_blockage_list_t *ffi_global_event_blocks() { return &global_event_blocks; }
+    job_t *ffi_job_get_from_pid(int pid) const;
+    library_data_pod *ffi_libdata_pod();
 
     ~parser_t();
 };

@@ -5,6 +5,7 @@ use ::std::pin::Pin;
 use ::std::slice;
 use autocxx::prelude::*;
 use cxx::SharedPtr;
+use libc::pid_t;
 
 // autocxx has been hacked up to know about this.
 pub type wchar_t = u32;
@@ -23,6 +24,7 @@ include_cpp! {
     #include "builtin.h"
     #include "fallback.h"
     #include "event.h"
+    #include "termsize.h"
 
     safety!(unsafe_ffi)
 
@@ -71,12 +73,52 @@ include_cpp! {
     generate!("sig2wcs")
     generate!("wcs2sig")
     generate!("signal_get_desc")
+    generate!("signal_handle")
+    generate!("signal_check_cancel")
+
+    generate!("library_data_t")
+    generate_pod!("library_data_pod")
+    generate!("event_block_list_blocks_type")
+    generate!("block_t")
+    generate!("block_type_t")
+    generate!("statuses_t")
+    generate!("io_chain_t")
+    generate!("event_block")
+
+    generate!("termsize_container_t")
 }
 
 impl parser_t {
+    pub fn get_block_at_index(&self, i: usize) -> Option<&block_t> {
+        let b = self.block_at_index(i);
+        unsafe { b.as_ref() }
+    }
+
     pub fn get_jobs(&self) -> &[SharedPtr<job_t>] {
         let ffi_jobs = self.ffi_jobs();
         unsafe { slice::from_raw_parts(ffi_jobs.jobs, ffi_jobs.count) }
+    }
+
+    pub fn global_event_blocks(&mut self) -> *mut event_blockage_list_t {
+        self.pin().ffi_global_event_blocks()
+    }
+
+    pub fn job_get_from_pid(&self, pid: pid_t) -> Option<&job_t> {
+        let job = self.ffi_job_get_from_pid(pid.into());
+        unsafe { job.as_ref() }
+    }
+
+    pub fn get_libdata_pod(&mut self) -> &mut library_data_pod {
+        let libdata = self.pin().ffi_libdata_pod();
+
+        unsafe { &mut *libdata }
+    }
+}
+
+impl block_t {
+    pub fn event_blocks(&self) -> *const event_blockage_list_t {
+        let blocks = self.ffi_event_blocks();
+        unsafe { &*blocks }
     }
 }
 

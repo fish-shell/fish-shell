@@ -1,0 +1,693 @@
+//! Functions for handling event triggers
+//!
+//! Because most of these functions can be called by signal handler, it is important to make it well
+//! defined when these functions produce output or perform memory allocations, since such functions
+//! may not be safely called by signal handlers.
+
+use autocxx::WithinUniquePtr;
+use cxx::SharedPtr;
+use libc::{pid_t, SIGWINCH};
+use std::sync::{
+    atomic::{AtomicBool, AtomicU32, Ordering},
+    Arc, Mutex,
+};
+use widestring_suffix::widestrs;
+
+use crate::builtins::shared::io_streams_t;
+use crate::common::{escape_string, EscapeFlags, EscapeStringStyle, ScopedPush};
+use crate::ffi::{
+    block_t, block_type_t, event_block_list_blocks_type, io_chain_t, parser_t, signal_check_cancel,
+    signal_handle, termsize_container_t, Repin,
+};
+use crate::flog::FLOG;
+use crate::signal::{sig2wcs, signal_get_desc};
+use crate::wchar::L;
+use crate::wchar_ffi::WCharToFFI;
+use crate::wchar_ffi::{wstr, WString};
+use crate::wutil::sprintf;
+
+const ANY_PID: pid_t = 0;
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum EventType {
+    /// Matches any event type (not always any event, as the function name may limit the choice as
+    /// well).
+    Any,
+    /// An event triggered by a signal.
+    Signal { signal: usize },
+    /// An event triggered by a variable update.
+    Variable { name: WString },
+    /// An event triggered by a process exit.
+    ProcessExit {
+        /// Process ID. Use [`ANY_PID`] to match any pid.
+        pid: pid_t,
+    },
+    /// An event triggered by a job exit.
+    JobExit {
+        /// pid requested by the event, or [`ANY_PID`] for all.
+        pid: pid_t,
+        /// `internal_job_id` of the job to match.
+        /// If this is 0, we match either all jobs (`pid == ANY_PID`) or no jobs (otherwise).
+        internal_job_id: u64,
+    },
+    /// An event triggered by a job exit, triggering the 'caller'-style events only.
+    CallerExit {
+        /// Internal job ID.
+        caller_id: u64,
+    },
+    /// A generic event.
+    Generic {
+        /// The parameter describing this generic event.
+        param: WString,
+    },
+}
+
+impl EventType {
+    fn str_param1(&self) -> Option<&wstr> {
+        match self {
+            EventType::Any
+            | EventType::Signal { .. }
+            | EventType::ProcessExit { .. }
+            | EventType::JobExit { .. }
+            | EventType::CallerExit { .. } => None,
+            EventType::Variable { name } => Some(name),
+            EventType::Generic { param } => Some(param),
+        }
+    }
+
+    #[widestrs]
+    fn name(&self) -> &'static wstr {
+        match self {
+            EventType::Any => "any"L,
+            EventType::Signal { .. } => "signal"L,
+            EventType::Variable { .. } => "variable"L,
+            EventType::ProcessExit { .. } => "process-exit"L,
+            EventType::JobExit { .. } => "job-exit"L,
+            EventType::CallerExit { .. } => "caller-exit"L,
+            EventType::Generic { .. } => "generic"L,
+        }
+    }
+
+    #[widestrs]
+    fn matches_filter(&self, filter: &wstr) -> bool {
+        if filter.is_empty() {
+            return true;
+        }
+
+        match self {
+            EventType::Any => return false,
+            EventType::ProcessExit { .. }
+            | EventType::JobExit { .. }
+            | EventType::CallerExit { .. } => {
+                if filter == "exit"L {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+
+        filter == self.name()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventDescription {
+    // TODO: remove the wrapper struct and just put `EventType` where `EventDescription` is now
+    typ: EventType,
+}
+
+#[derive(Debug)]
+pub struct EventHandler {
+    /// Properties of the event to match.
+    desc: EventDescription,
+    /// Name of the function to invoke.
+    function_name: WString,
+    /// A flag set when an event handler is removed from the global list.
+    /// Once set, this is never cleared.
+    removed: AtomicBool,
+    /// A flag set when an event handler is first fired.
+    fired: AtomicBool,
+}
+
+impl EventHandler {
+    pub fn new(desc: EventDescription, name: Option<WString>) -> Self {
+        Self {
+            desc,
+            function_name: name.unwrap_or_else(WString::new),
+            removed: AtomicBool::new(false),
+            fired: AtomicBool::new(false),
+        }
+    }
+
+    /// \return true if a handler is "one shot": it fires at most once.
+    fn is_one_shot(&self) -> bool {
+        match self.desc.typ {
+            EventType::ProcessExit { pid } => pid != ANY_PID,
+            EventType::JobExit { pid, .. } => pid != ANY_PID,
+            EventType::CallerExit { .. } => true,
+            EventType::Signal { .. }
+            | EventType::Variable { .. }
+            | EventType::Generic { .. }
+            | EventType::Any => false,
+        }
+    }
+
+    /// Tests if one event instance matches the definition of an event class.
+    /// In case of a match, \p only_once indicates that the event cannot match again by nature.
+    fn matches(&self, instance: &Event) -> bool {
+        if self.desc.typ == EventType::Any {
+            return true;
+        }
+        if self.desc.typ != instance.desc.typ {
+            return false;
+        }
+
+        match (&self.desc.typ, &instance.desc.typ) {
+            (EventType::Any, _) => true,
+            (EventType::Signal { signal }, EventType::Signal { signal: ev_signal }) => {
+                signal == ev_signal
+            }
+            (EventType::Variable { name }, EventType::Variable { name: ev_name }) => {
+                name == ev_name
+            }
+            (EventType::ProcessExit { pid }, EventType::ProcessExit { pid: ev_pid }) => {
+                *pid == ANY_PID || pid == ev_pid
+            }
+            (
+                EventType::JobExit {
+                    pid,
+                    internal_job_id,
+                },
+                EventType::JobExit {
+                    internal_job_id: ev_internal_job_id,
+                    ..
+                },
+            ) => *pid == ANY_PID || internal_job_id == ev_internal_job_id,
+            (
+                EventType::CallerExit { caller_id },
+                EventType::CallerExit {
+                    caller_id: ev_caller_id,
+                },
+            ) => caller_id == ev_caller_id,
+            (EventType::Generic { param }, EventType::Generic { param: ev_param }) => {
+                param == ev_param
+            }
+            (_, _) => false,
+        }
+    }
+}
+type EventHandlerList = Vec<Arc<EventHandler>>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Event {
+    desc: EventDescription,
+    arguments: Vec<WString>,
+}
+
+impl Event {
+    pub fn generic(desc: WString) -> Self {
+        Self {
+            desc: EventDescription {
+                typ: EventType::Generic { param: desc },
+            },
+            arguments: vec![],
+        }
+    }
+
+    pub fn variable_erase(name: WString) -> Self {
+        Self {
+            desc: EventDescription {
+                typ: EventType::Variable { name: name.clone() },
+            },
+            arguments: vec!["VARIABLE".into(), "ERASE".into(), name],
+        }
+    }
+
+    pub fn variable_set(name: WString) -> Self {
+        Self {
+            desc: EventDescription {
+                typ: EventType::Variable { name: name.clone() },
+            },
+            arguments: vec!["VARIABLE".into(), "SET".into(), name],
+        }
+    }
+
+    pub fn process_exit(pid: pid_t, status: i32) -> Self {
+        Self {
+            desc: EventDescription {
+                typ: EventType::ProcessExit { pid },
+            },
+            arguments: vec![
+                "PROCESS_EXIT".into(),
+                pid.to_string().into(),
+                status.to_string().into(),
+            ],
+        }
+    }
+
+    pub fn job_exit(pgid: pid_t, jid: u64) -> Self {
+        Self {
+            desc: EventDescription {
+                typ: EventType::JobExit {
+                    pid: pgid,
+                    internal_job_id: jid,
+                },
+            },
+            arguments: vec![
+                "JOB_EXIT".into(),
+                pgid.to_string().into(),
+                "0".into(), // historical
+            ],
+        }
+    }
+
+    pub fn caller_exit(internal_job_id: u64, job_id: i32) -> Self {
+        Self {
+            desc: EventDescription {
+                typ: EventType::CallerExit {
+                    caller_id: internal_job_id,
+                },
+            },
+            arguments: vec![
+                "JOB_EXIT".into(),
+                job_id.to_string().into(),
+                "0".into(), // historical
+            ],
+        }
+    }
+
+    /// Test if specified event is blocked.
+    fn is_blocked(&self, parser: &mut parser_t) -> bool {
+        for i in 0.. {
+            let Some(block) = parser.get_block_at_index(i) else {
+                break;
+            };
+
+            if event_block_list_blocks_type(unsafe { &*block.event_blocks() }) {
+                return true;
+            }
+        }
+
+        event_block_list_blocks_type(unsafe { &*parser.global_event_blocks() })
+    }
+}
+
+const SIGNAL_COUNT: usize = 65; // FIXME: NSIG
+
+struct PendingSignals {
+    /// A counter that is incremented each time a pending signal is received.
+    counter: AtomicU32,
+    /// List of pending signals.
+    received: [AtomicBool; SIGNAL_COUNT],
+    /// The last counter visible in `acquire_pending()`.
+    /// This is not accessed from a signal handler.
+    last_counter: Mutex<u32>,
+}
+
+impl PendingSignals {
+    /// Mark a signal as pending. This may be called from a signal handler.
+    /// We expect only one signal handler to execute at once.
+    /// Also note that these may be coalesced.
+    pub fn mark(&self, which: usize) {
+        if let Some(received) = self.received.get(which) {
+            received.store(true, Ordering::Relaxed);
+            let count = self.counter.load(Ordering::Relaxed);
+            self.counter.store(count + 1, Ordering::Release);
+        }
+    }
+
+    /// \return the list of signals that were set, clearing them.
+    // TODO: return bitvec?
+    pub fn acquire_pending(&self) -> [bool; SIGNAL_COUNT] {
+        let mut current = self
+            .last_counter
+            .lock()
+            .expect("mutex should not be poisoned");
+
+        // Check the counter first. If it hasn't changed, no signals have been received.
+        let count = self.counter.load(Ordering::Acquire);
+        let mut ret = [false; SIGNAL_COUNT];
+        if count == *current {
+            return ret;
+        }
+
+        // The signal count has changed. Store the new counter and fetch all set signals.
+        *current = count;
+        for (i, received) in self.received.iter().enumerate() {
+            if received.load(Ordering::Relaxed) {
+                ret[i] = true;
+                received.store(false, Ordering::Relaxed);
+            }
+        }
+
+        ret
+    }
+}
+
+// TODO: inline const
+#[allow(clippy::declare_interior_mutable_const)]
+const ATOMIC_BOOL_FALSE: AtomicBool = AtomicBool::new(false);
+#[allow(clippy::declare_interior_mutable_const)]
+const ATOMIC_U32_0: AtomicU32 = AtomicU32::new(0);
+
+static s_pending_signals: PendingSignals = PendingSignals {
+    counter: AtomicU32::new(0),
+    received: [ATOMIC_BOOL_FALSE; SIGNAL_COUNT],
+    last_counter: Mutex::new(0),
+};
+
+/// List of event handlers.
+static s_event_handlers: Mutex<EventHandlerList> = Mutex::new(Vec::new());
+
+/// Tracks the number of registered event handlers for each signal.
+/// This is inspected by a signal handler. We assume no values in here overflow.
+static s_observed_signals: [AtomicU32; SIGNAL_COUNT] = [ATOMIC_U32_0; SIGNAL_COUNT];
+
+/// List of events that have been sent but have not yet been delivered because they are blocked.
+static s_blocked_events: Mutex<Vec<Arc<Event>>> = Mutex::new(Vec::new());
+
+fn inc_signal_observed(sig: usize) {
+    if let Some(sig) = s_observed_signals.get(sig) {
+        sig.fetch_add(1, Ordering::Relaxed);
+    }
+}
+
+fn dec_signal_observed(sig: usize) {
+    if let Some(sig) = s_observed_signals.get(sig) {
+        sig.fetch_sub(1, Ordering::Relaxed);
+    }
+}
+
+/// Returns whether an event listener is registered for the given signal. This is safe to call from
+/// a signal handler.
+pub fn is_signal_observed(sig: usize) -> bool {
+    // We are in a signal handler!
+    if let Some(sig) = s_observed_signals.get(sig) {
+        sig.load(Ordering::Relaxed) > 0
+    } else {
+        false
+    }
+}
+
+pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
+    let s = match &evt.desc.typ {
+        EventType::Signal { signal } => format!(
+            "signal handler for {} ({})",
+            sig2wcs(*signal),
+            signal_get_desc(*signal)
+        ),
+        EventType::Variable { name } => format!("handler for variable '{name}'"),
+        EventType::ProcessExit { pid } => format!("exit handler for process {pid}"),
+        EventType::JobExit { pid, .. } => {
+            if let Some(job) = parser.job_get_from_pid(*pid) {
+                format!(
+                    "exit handler for job {}, '{}'",
+                    job.job_id().0,
+                    job.command()
+                )
+            } else {
+                format!("exit handler for job with pid {pid}")
+            }
+        }
+        EventType::CallerExit { .. } => "exit handler for command substitution caller".to_string(),
+        EventType::Generic { param } => format!("handler for generic event '{param}'"),
+        EventType::Any => unreachable!(),
+    };
+
+    WString::from_str(&s)
+}
+
+/// Add an event handler.
+pub fn add_handler(eh: Arc<EventHandler>) {
+    if let EventType::Signal { signal } = eh.desc.typ {
+        signal_handle(
+            i32::try_from(signal)
+                .expect("signal should be < 2^31")
+                .into(),
+        );
+        inc_signal_observed(signal);
+    }
+
+    s_event_handlers
+        .lock()
+        .expect("event handler list should not be poisoned")
+        .push(eh);
+}
+
+fn remove_handlers_if(mut func: impl FnMut(&EventHandler) -> bool) {
+    let mut handlers = s_event_handlers
+        .lock()
+        .expect("event handler list should not be poisoned");
+
+    // TODO: drain_filter
+    let mut i = 0;
+    while i < handlers.len() {
+        let handler = &handlers[i];
+        if func(handler) {
+            handler.removed.store(true, Ordering::Relaxed);
+            if let EventType::Signal { signal } = handler.desc.typ {
+                dec_signal_observed(signal);
+            }
+            handlers.remove(i);
+        } else {
+            i += 1;
+        }
+    }
+}
+
+/// Remove all events for the given function name.
+pub fn remove_function_handlers(name: &wstr) {
+    remove_handlers_if(|h| h.function_name == name);
+}
+
+/// Return all event handlers for the given function.
+pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
+    s_event_handlers
+        .lock()
+        .expect("event handler list should not be poisoned")
+        .iter()
+        .filter(|h| h.function_name == name)
+        .cloned()
+        .collect()
+}
+
+/// Perform the specified event. Since almost all event firings will not be matched by even a single
+/// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
+/// allocated/initialized unless needed.
+fn fire_internal(parser: &mut parser_t, event: &Event) {
+    let ld = parser.get_libdata_pod();
+    assert!(ld.is_event >= 0, "is_event should not be negative");
+
+    let _inc_event = {
+        let incremented = ld.is_event + 1;
+        ScopedPush::new(&mut ld.is_event, incremented)
+    };
+    // Suppress fish_trace during events.
+    let _suppress_trace = ScopedPush::new(&mut ld.suppress_fish_trace, true);
+
+    // Capture the event handlers that match this event.
+    let fire: Vec<_> = s_event_handlers
+        .lock()
+        .expect("event handler list should not be poisoned")
+        .iter()
+        .filter(|h| h.matches(event))
+        .cloned()
+        .collect();
+
+    // Iterate over our list of matching events. Fire the ones that are still present.
+    let mut fired_one_shot = false;
+    for handler in fire {
+        // A previous handlers may have erased this one.
+        if handler.removed.load(Ordering::Relaxed) {
+            continue;
+        };
+
+        // Construct a buffer to evaluate, starting with the function name and then all the
+        // arguments.
+        let mut buffer = handler.function_name.clone();
+        for arg in &event.arguments {
+            buffer.push_str(" ");
+            buffer.push_utfstr(&escape_string(
+                arg,
+                EscapeStringStyle::Script(EscapeFlags::default()),
+            ));
+        }
+
+        // Event handlers are not part of the main flow of code, so they are marked as
+        // non-interactive.
+        let _interactive = ScopedPush::new(&mut ld.is_interactive, false);
+        let prev_statuses = parser.get_last_statuses().within_unique_ptr();
+
+        FLOG!(
+            event,
+            "Firing event '",
+            event.desc.typ.str_param1().unwrap_or(L!("")),
+            "' to handler '",
+            handler.function_name,
+            "'"
+        );
+
+        let parser = parser.pin();
+        let b = parser.push_block(event_block(Box::new(event)).within_unique_ptr());
+        parser.eval(
+            &buffer.to_ffi(),
+            &io_chain_t::new().within_unique_ptr(),
+            &SharedPtr::null(),
+            block_type_t::top,
+        );
+        parser.pop_block(b);
+        parser.set_last_statuses(prev_statuses);
+
+        handler.fired.store(true, Ordering::Relaxed);
+        fired_one_shot |= handler.is_one_shot();
+    }
+
+    if fired_one_shot {
+        remove_handlers_if(|h| h.fired.load(Ordering::Relaxed) && h.is_one_shot());
+    }
+}
+
+/// Fire all delayed events attached to the given parser.
+pub fn fire_delayed(parser: &mut parser_t) {
+    let ld = parser.get_libdata_pod();
+    // Do not invoke new event handlers from within event handlers.
+    if ld.is_event != 0 {
+        return;
+    };
+    // Do not invoke new event handlers if we are unwinding (#6649).
+    if signal_check_cancel().0 != 0 {
+        return;
+    };
+
+    let mut to_send = std::mem::take(
+        &mut *s_blocked_events
+            .try_lock()
+            .expect("s_blocked_events should not be locked"),
+    );
+
+    let signals = s_pending_signals.acquire_pending();
+    for (sig, &pending) in signals.iter().enumerate() {
+        if pending {
+            // HACK: The only variables we change in response to a *signal*
+            // are $COLUMNS and $LINES.
+            // Do that now.
+            if i32::try_from(sig).expect("signal should be < 2^31") == SIGWINCH {
+                let _ = termsize_container_t::ffi_updating(parser.pin());
+            }
+            let e = Arc::new(Event {
+                desc: EventDescription {
+                    typ: EventType::Signal { signal: sig },
+                },
+                arguments: vec![sig2wcs(sig).into()],
+            });
+            to_send.push(e)
+        }
+    }
+
+    // Fire or re-block all events.
+    for event in to_send {
+        if event.is_blocked(parser) {
+            s_blocked_events
+                .try_lock()
+                .expect("s_blocked_events should not be locked")
+                .push(event);
+        } else {
+            fire_internal(parser, &event);
+        }
+    }
+}
+
+/// Enqueue a signal event. Invoked from a signal handler.
+pub fn enqueue_signal(signal: usize) {
+    // Beware, we are in a signal handler
+    s_pending_signals.mark(signal);
+}
+
+/// Fire the specified event event, executing it on `parser`.
+pub fn fire(parser: &mut parser_t, event: Event) {
+    // Fire events triggered by signals.
+    fire_delayed(parser);
+
+    if event.is_blocked(parser) {
+        s_blocked_events
+            .try_lock()
+            .expect("s_blocked_events should not be locked")
+            .push(Arc::new(event));
+    } else {
+        fire_internal(parser, &event);
+    }
+}
+
+#[widestrs]
+const EVENT_FILTER_NAMES: &[&wstr] = &[
+    "signal"L,
+    "variable"L,
+    "exit"L,
+    "process-exit"L,
+    "job-exit"L,
+    "caller-exit"L,
+    "generic"L,
+];
+
+/// Print all events. If type_filter is not empty, only output events with that type.
+#[widestrs]
+pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
+    let mut tmp = s_event_handlers
+        .lock()
+        .expect("event handler list should not be poisoned")
+        .clone();
+
+    tmp.sort_by(|e1, e2| e1.desc.typ.cmp(&e2.desc.typ));
+
+    let mut last_type = None;
+    for evt in tmp {
+        // If we have a filter, skip events that don't match.
+        if !evt.desc.typ.matches_filter(type_filter) {
+            continue;
+        }
+
+        if last_type.as_ref() != Some(&evt.desc.typ) {
+            if last_type.is_some() {
+                streams.out.append("\n"L);
+            }
+
+            last_type = Some(evt.desc.typ.clone());
+            streams
+                .out
+                .append(&sprintf!("Event %ls\n"L, evt.desc.typ.name()));
+        }
+
+        match &evt.desc.typ {
+            EventType::Signal { signal } => {
+                streams
+                    .out
+                    .append(&sprintf!("%ls %ls\n"L, sig2wcs(*signal), evt.function_name));
+            }
+            EventType::ProcessExit { .. } | EventType::JobExit { .. } => {}
+            EventType::CallerExit { .. } => {
+                streams
+                    .out
+                    .append(&sprintf!("caller-exit %ls\n"L, evt.function_name));
+            }
+            EventType::Variable { name: param } | EventType::Generic { param } => {
+                streams
+                    .out
+                    .append(&sprintf!("%ls %ls\n"L, param, evt.function_name));
+            }
+            EventType::Any => unreachable!(),
+        }
+    }
+}
+
+/// Fire a generic event with the specified name.
+pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString>) {
+    fire(
+        parser,
+        Event {
+            desc: EventDescription {
+                typ: EventType::Generic { param: name },
+            },
+            arguments,
+        },
+    )
+}

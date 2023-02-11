@@ -101,7 +101,10 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     streams.err.append_format(_(L"%ls: Unknown signal '%ls'"), cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                opts.events.push_back(event_description_t::signal(sig));
+                event_description_t event_desc;
+                event_desc.typ = event_type_t::signal;
+                event_desc.signal = sig;
+                opts.events.push_back(std::move(event_desc));
                 break;
             }
             case 'v': {
@@ -110,16 +113,23 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     return STATUS_INVALID_ARGS;
                 }
 
-                opts.events.push_back(event_description_t::variable(w.woptarg));
+                event_description_t event_desc;
+                event_desc.typ = event_type_t::variable;
+                event_desc.str_param1 = std::make_unique<wcstring>(w.woptarg);
+                opts.events.push_back(std::move(event_desc));
                 break;
             }
             case 'e': {
-                opts.events.push_back(event_description_t::generic(w.woptarg));
+                event_description_t event_desc;
+                event_desc.typ = event_type_t::generic;
+                event_desc.str_param1 = std::make_unique<wcstring>(w.woptarg);
+                opts.events.push_back(std::move(event_desc));
                 break;
             }
             case 'j':
             case 'p': {
-                event_description_t e(event_type_t::any);
+                event_description_t e;
+                e.typ = event_type_t::any;
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
                     internal_job_id_t caller_id =
@@ -129,11 +139,11 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                             _(L"%ls: calling job for event handler not found"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
-                    e.type = event_type_t::caller_exit;
-                    e.param1.caller_id = caller_id;
+                    e.typ = event_type_t::caller_exit;
+                    e.caller_id = caller_id;
                 } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
-                    e.type = event_type_t::process_exit;
-                    e.param1.pid = getpid();
+                    e.typ = event_type_t::process_exit;
+                    e.pid = getpid();
                 } else {
                     pid_t pid = fish_wcstoi(w.woptarg);
                     if (errno || pid < 0) {
@@ -142,14 +152,15 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                         return STATUS_INVALID_ARGS;
                     }
                     if (opt == 'p') {
-                        e.type = event_type_t::process_exit;
-                        e.param1.pid = pid;
+                        e.typ = event_type_t::process_exit;
+                        e.pid = pid;
                     } else {
-                        e.type = event_type_t::job_exit;
-                        e.param1.jobspec = {pid, job_id_for_pid(pid, parser)};
+                        e.typ = event_type_t::job_exit;
+                        e.pid = pid;
+                        e.internal_job_id = job_id_for_pid(pid, parser);
                     }
                 }
-                opts.events.push_back(e);
+                opts.events.push_back(std::move(e));
                 break;
             }
             case 'a': {
@@ -294,25 +305,25 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
 
     // Add any event handlers.
     for (const event_description_t &ed : opts.events) {
-        event_add_handler(std::make_shared<event_handler_t>(ed, function_name));
+        event_add_handler(ed, function_name);
     }
 
     // If there is an --on-process-exit or --on-job-exit event handler for some pid, and that
     // process has already exited, run it immediately (#7210).
     for (const event_description_t &ed : opts.events) {
-        if (ed.type == event_type_t::process_exit) {
-            pid_t pid = ed.param1.pid;
+        if (ed.typ == event_type_t::process_exit) {
+            pid_t pid = ed.pid;
             if (pid == EVENT_ANY_PID) continue;
             wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid);
             if (wh && wh->completed) {
-                event_fire(parser, event_t::process_exit(pid, wh->status));
+                event_fire(parser, *new_event_process_exit(pid, wh->status));
             }
-        } else if (ed.type == event_type_t::job_exit) {
-            pid_t pid = ed.param1.jobspec.pid;
+        } else if (ed.typ == event_type_t::job_exit) {
+            pid_t pid = ed.pid;
             if (pid == EVENT_ANY_PID) continue;
             wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid);
             if (wh && wh->completed) {
-                event_fire(parser, event_t::job_exit(pid, wh->internal_job_id));
+                event_fire(parser, *new_event_job_exit(pid, wh->internal_job_id));
             }
         }
     }

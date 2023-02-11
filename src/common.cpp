@@ -57,6 +57,7 @@
 struct termios shell_modes;
 
 const wcstring g_empty_string{};
+const wcstring_list_t g_empty_string_list{};
 
 /// This allows us to notice when we've forked.
 static relaxed_atomic_bool_t is_forked_proc{false};

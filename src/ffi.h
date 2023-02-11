@@ -8,7 +8,7 @@
 #endif
 
 template <typename T>
-std::shared_ptr<T> box_to_shared_ptr(rust::Box<T> &&value) {
+inline std::shared_ptr<T> box_to_shared_ptr(rust::Box<T> &&value) {
     T *ptr = value.into_raw();
     std::shared_ptr<T> shared(ptr, [](T *ptr) { rust::Box<T>::from_raw(ptr); });
     return shared;

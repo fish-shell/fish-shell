@@ -217,9 +217,6 @@ struct library_data_t {
     /// The current filename we are evaluating, either from builtin source or on the command line.
     filename_ref_t current_filename{};
 
-    /// List of events that have been sent but have not yet been delivered because they are blocked.
-    std::vector<std::shared_ptr<const event_t>> blocked_events{};
-
     /// A stack of fake values to be returned by builtin_commandline. This is used by the completion
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
     /// the command line.

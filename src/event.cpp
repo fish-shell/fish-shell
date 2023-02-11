@@ -92,6 +92,9 @@ static owning_lock<event_handler_list_t> s_event_handlers;
 /// This is inspected by a signal handler. We assume no values in here overflow.
 static std::array<relaxed_atomic_t<uint32_t>, NSIG> s_observed_signals;
 
+/// List of events that have been sent but have not yet been delivered because they are blocked.
+static std::vector<std::shared_ptr<const event_t>> s_blocked_events{};
+
 static inline void inc_signal_observed(int sig) {
     if (0 <= sig && sig < NSIG) {
         s_observed_signals[sig]++;
@@ -333,8 +336,8 @@ void event_fire_delayed(parser_t &parser) {
     if (signal_check_cancel()) return;
 
     std::vector<shared_ptr<const event_t>> to_send;
-    to_send.swap(ld.blocked_events);
-    assert(ld.blocked_events.empty());
+    to_send.swap(s_blocked_events);
+    assert(s_blocked_events.empty());
 
     // Append all signal events to to_send.
     auto signals = s_pending_signals.acquire_pending();
@@ -358,7 +361,7 @@ void event_fire_delayed(parser_t &parser) {
     // Fire or re-block all events.
     for (const auto &evt : to_send) {
         if (event_is_blocked(parser, *evt)) {
-            ld.blocked_events.push_back(evt);
+            s_blocked_events.push_back(evt);
         } else {
             event_fire_internal(parser, *evt);
         }
@@ -375,7 +378,7 @@ void event_fire(parser_t &parser, const event_t &event) {
     event_fire_delayed(parser);
 
     if (event_is_blocked(parser, event)) {
-        parser.libdata().blocked_events.push_back(std::make_shared<event_t>(event));
+        s_blocked_events.push_back(std::make_shared<event_t>(event));
     } else {
         event_fire_internal(parser, event);
     }

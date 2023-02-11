@@ -1,4 +1,8 @@
+use widestring::U32CStr;
+
+use crate::ffi;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
+use crate::wchar_ffi::{c_str, wstr};
 
 /// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
 pub struct sigchecker_t {
@@ -37,4 +41,27 @@ impl sigchecker_t {
         *gens.at_mut(self.topic) = self.gen;
         tm.check(&mut gens, true /* wait */);
     }
+}
+
+/// Get the integer signal value representing the specified signal.
+pub fn wcs2sig(s: &wstr) -> Option<usize> {
+    let sig = ffi::wcs2sig(c_str!(s));
+
+    sig.0.try_into().ok()
+}
+
+/// Get string representation of a signal.
+pub fn sig2wcs(sig: usize) -> &'static wstr {
+    let s = ffi::sig2wcs(i32::try_from(sig).expect("signal should be < 2^31").into());
+    let s = unsafe { U32CStr::from_ptr_str(s) };
+
+    wstr::from_ucstr(s).expect("signal name should be valid utf-32")
+}
+
+/// Returns a description of the specified signal.
+pub fn signal_get_desc(sig: usize) -> &'static wstr {
+    let s = ffi::signal_get_desc(i32::try_from(sig).expect("signal should be < 2^31").into());
+    let s = unsafe { U32CStr::from_ptr_str(s) };
+
+    wstr::from_ucstr(s).expect("signal description should be valid utf-32")
 }

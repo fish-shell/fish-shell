@@ -269,11 +269,11 @@ event_handler_list_t event_get_function_handlers(const wcstring &name) {
 /// allocated/initialized unless needed.
 static void event_fire_internal(parser_t &parser, const event_t &event) {
     auto &ld = parser.libdata();
-    assert(ld.is_event >= 0 && "is_event should not be negative");
-    scoped_push<decltype(ld.is_event)> inc_event{&ld.is_event, ld.is_event + 1};
+    assert(ld.pod.is_event >= 0 && "is_event should not be negative");
+    scoped_push<decltype(ld.pod.is_event)> inc_event{&ld.pod.is_event, ld.pod.is_event + 1};
 
     // Suppress fish_trace during events.
-    scoped_push<bool> suppress_trace{&ld.suppress_fish_trace, true};
+    scoped_push<bool> suppress_trace{&ld.pod.suppress_fish_trace, true};
 
     // Capture the event handlers that match this event.
     std::vector<std::shared_ptr<event_handler_t>> fire;
@@ -302,7 +302,7 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
 
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
-        scoped_push<bool> interactive{&ld.is_interactive, false};
+        scoped_push<bool> interactive{&ld.pod.is_interactive, false};
         auto prev_statuses = parser.get_last_statuses();
 
         FLOGF(event, L"Firing event '%ls' to handler '%ls'", event.desc.str_param1.c_str(),
@@ -328,7 +328,7 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
 void event_fire_delayed(parser_t &parser) {
     auto &ld = parser.libdata();
     // Do not invoke new event handlers from within event handlers.
-    if (ld.is_event) return;
+    if (ld.pod.is_event) return;
     // Do not invoke new event handlers if we are unwinding (#6649).
     if (signal_check_cancel()) return;
 

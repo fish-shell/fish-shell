@@ -385,9 +385,9 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         cleanup_t remove_transient([&] { parser.libdata().transient_commandlines.pop_back(); });
 
         // Prevent accidental recursion (see #6171).
-        if (!parser.libdata().builtin_complete_current_commandline) {
+        if (!parser.libdata().pod.builtin_complete_current_commandline) {
             if (!have_do_complete_param) {
-                parser.libdata().builtin_complete_current_commandline = true;
+                parser.libdata().pod.builtin_complete_current_commandline = true;
             }
 
             completion_list_t comp = complete(
@@ -430,7 +430,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
                 streams.out.append(faux_cmdline_with_completion);
             }
 
-            parser.libdata().builtin_complete_current_commandline = false;
+            parser.libdata().pod.builtin_complete_current_commandline = false;
         }
     } else if (path.empty() && gnu_opt.empty() && short_opt.empty() && old_opt.empty() && !remove &&
                !*comp && !*desc && condition.empty() && wrap_targets.empty() &&

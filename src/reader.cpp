@@ -821,7 +821,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     const parser_t &parser() const { return *parser_ref; }
 
     /// Convenience cover over exec_count().
-    uint64_t exec_count() const { return parser().libdata().exec_count; }
+    uint64_t exec_count() const { return parser().libdata().pod.exec_count; }
 
     reader_data_t(std::shared_ptr<parser_t> parser, std::shared_ptr<history_t> hist,
                   reader_config_t &&conf)
@@ -1389,7 +1389,7 @@ maybe_t<abbrs_replacement_t> expand_replacer(source_range_t range, const wcstrin
     cmd.push_back(L' ');
     cmd.append(escape_string(token));
 
-    scoped_push<bool> not_interactive(&parser.libdata().is_interactive, false);
+    scoped_push<bool> not_interactive(&parser.libdata().pod.is_interactive, false);
 
     wcstring_list_t outputs{};
     int ret = exec_subshell(cmd, parser, outputs, false /* not apply_exit_status */);
@@ -1522,8 +1522,8 @@ int reader_test_and_clear_interrupted() {
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position) {
     if (!term_supports_setting_title()) return;
 
-    scoped_push<bool> noninteractive{&parser.libdata().is_interactive, false};
-    scoped_push<bool> in_title(&parser.libdata().suppress_fish_trace, true);
+    scoped_push<bool> noninteractive{&parser.libdata().pod.is_interactive, false};
+    scoped_push<bool> in_title(&parser.libdata().pod.suppress_fish_trace, true);
 
     wcstring fish_title_command = DEFAULT_TITLE;
     if (function_exists(L"fish_title", parser)) {
@@ -1573,7 +1573,7 @@ void reader_data_t::exec_prompt() {
     right_prompt_buff.clear();
 
     // Suppress fish_trace while in the prompt.
-    scoped_push<bool> in_prompt(&parser().libdata().suppress_fish_trace, true);
+    scoped_push<bool> in_prompt(&parser().libdata().pod.suppress_fish_trace, true);
 
     // Update the termsize now.
     // This allows prompts to react to $COLUMNS.
@@ -1581,7 +1581,7 @@ void reader_data_t::exec_prompt() {
 
     // If we have any prompts, they must be run non-interactively.
     if (!conf.left_prompt_cmd.empty() || !conf.right_prompt_cmd.empty()) {
-        scoped_push<bool> noninteractive{&parser().libdata().is_interactive, false};
+        scoped_push<bool> noninteractive{&parser().libdata().pod.is_interactive, false};
 
         exec_mode_prompt();
 
@@ -1617,8 +1617,8 @@ void reader_data_t::exec_prompt() {
     reader_write_title(L"", parser(), false);
 
     // Some prompt may have requested an exit (#8033).
-    this->exit_loop_requested |= parser().libdata().exit_current_script;
-    parser().libdata().exit_current_script = false;
+    this->exit_loop_requested |= parser().libdata().pod.exit_current_script;
+    parser().libdata().pod.exit_current_script = false;
 }
 
 void reader_init() {
@@ -3232,8 +3232,8 @@ static int read_i(parser_t &parser) {
             }
 
             // If the command requested an exit, then process it now and clear it.
-            data->exit_loop_requested |= parser.libdata().exit_current_script;
-            parser.libdata().exit_current_script = false;
+            data->exit_loop_requested |= parser.libdata().pod.exit_current_script;
+            parser.libdata().pod.exit_current_script = false;
 
             event_fire_generic(parser, L"fish_postexec", {command});
             // Allow any pending history items to be returned in the history array.
@@ -3491,12 +3491,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // This can happen e.g. if a variable triggers a repaint,
             // and the variable is set inside the prompt (#7324).
             // builtin commandline will refuse to enqueue these.
-            parser().libdata().is_repaint = true;
+            parser().libdata().pod.is_repaint = true;
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
                 screen.reset_line(true /* redraw prompt */);
                 if (this->is_repaint_needed()) this->layout_and_repaint(L"mode");
-                parser().libdata().is_repaint = false;
+                parser().libdata().pod.is_repaint = false;
                 break;
             }
             // Else we repaint as normal.
@@ -3504,12 +3504,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::force_repaint:
         case rl::repaint: {
-            parser().libdata().is_repaint = true;
+            parser().libdata().pod.is_repaint = true;
             exec_prompt();
             screen.reset_line(true /* redraw prompt */);
             this->layout_and_repaint(L"readline");
             force_exec_prompt_and_repaint = false;
-            parser().libdata().is_repaint = false;
+            parser().libdata().pod.is_repaint = false;
             break;
         }
         case rl::complete:
@@ -4375,7 +4375,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     // Suppress fish_trace during executing key bindings.
     // This is simply to reduce noise.
-    scoped_push<bool> in_title(&parser().libdata().suppress_fish_trace, true);
+    scoped_push<bool> in_title(&parser().libdata().pod.suppress_fish_trace, true);
 
     // If nchars_or_0 is positive, then that's the maximum number of chars. Otherwise keep it at
     // SIZE_MAX.
@@ -4473,8 +4473,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
 
         // If we ran `exit` anywhere, exit.
-        exit_loop_requested |= parser().libdata().exit_current_script;
-        parser().libdata().exit_current_script = false;
+        exit_loop_requested |= parser().libdata().pod.exit_current_script;
+        parser().libdata().pod.exit_current_script = false;
         if (exit_loop_requested) continue;
 
         if (!event_needing_handling || event_needing_handling->is_check_exit()) {
@@ -4765,13 +4765,13 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
         }
     }
 
-    scoped_push<bool> interactive_push{&parser.libdata().is_interactive, interactive};
+    scoped_push<bool> interactive_push{&parser.libdata().pod.is_interactive, interactive};
     signal_set_handlers_once(interactive);
 
     res = interactive ? read_i(parser) : read_ni(parser, fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
-    parser.libdata().exit_current_script = false;
+    parser.libdata().pod.exit_current_script = false;
 
     return res;
 }

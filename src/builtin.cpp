@@ -295,7 +295,7 @@ static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &strea
     }
 
     // Mark the status in the libdata.
-    parser.libdata().loop_status = is_break ? loop_status_t::breaks : loop_status_t::continues;
+    parser.libdata().pod.loop_status = is_break ? loop_status_t::breaks : loop_status_t::continues;
     return STATUS_CMD_OK;
 }
 

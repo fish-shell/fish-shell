@@ -39,14 +39,6 @@ static wcstring user_presentable_path(const wcstring &path, const environment_t 
     return replace_home_directory_with_tilde(path, vars);
 }
 
-void library_data_t::set_exit_current_script(bool val) {
-    exit_current_script = val;
-};
-
-void library_data_t::set_returning(bool val) {
-    returning = val;
-};
-
 parser_t::parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal)
     : variables(std::move(vars)), is_principal_(is_principal) {
     assert(variables.get() && "Null variables in parser initializer");
@@ -283,7 +275,7 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
         if (file) {
             append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
                           user_presentable_path(*file, parser.vars()).c_str());
-        } else if (parser.libdata().within_fish_init) {
+        } else if (parser.libdata().pod.within_fish_init) {
             append_format(trace, _(L"\tcalled during startup\n"));
         }
     }
@@ -435,7 +427,7 @@ wcstring parser_t::current_line() {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "),
                           user_presentable_path(*file, vars()).c_str(), lineno);
-        } else if (libdata().within_fish_init) {
+        } else if (libdata().pod.within_fish_init) {
             append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
             append_format(prefix, L"%ls (line %d): ", _(L"Standard input"), lineno);
@@ -496,6 +488,8 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
     }
     return nullptr;
 }
+
+library_data_pod *parser_t::ffi_libdata_pod() { return &library_data.pod; }
 
 profile_item_t *parser_t::create_profile_item() {
     if (g_profiling_active) {
@@ -601,11 +595,11 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
                                    make_unique<parse_execution_context_t>(ps, op_ctx, block_io));
 
     // Check the exec count so we know if anything got executed.
-    const size_t prev_exec_count = libdata().exec_count;
-    const size_t prev_status_count = libdata().status_count;
+    const size_t prev_exec_count = libdata().pod.exec_count;
+    const size_t prev_status_count = libdata().pod.status_count;
     end_execution_reason_t reason = execution_context->eval_node(node, scope_block);
-    const size_t new_exec_count = libdata().exec_count;
-    const size_t new_status_count = libdata().status_count;
+    const size_t new_exec_count = libdata().pod.exec_count;
+    const size_t new_status_count = libdata().pod.status_count;
 
     exc.restore();
     this->pop_block(scope_block);

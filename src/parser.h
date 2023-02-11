@@ -146,8 +146,8 @@ struct profile_item_t {
 
 class parse_execution_context_t;
 
-/// Miscellaneous data used to avoid recursion and others.
-struct library_data_t {
+/// Plain-Old-Data components of `struct library_data_t` that can be shared over FFI
+struct library_data_pod {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
 
@@ -207,6 +207,12 @@ struct library_data_t {
 
     /// The read limit to apply to captured subshell output, or 0 for none.
     size_t read_limit{0};
+};
+
+/// Miscellaneous data used to avoid recursion and others.
+struct library_data_t {
+    /// Plain-Old-Data components that can be shared over FFI
+    struct library_data_pod pod;
 
     /// The current filename we are evaluating, either from builtin source or on the command line.
     filename_ref_t current_filename{};
@@ -232,8 +238,7 @@ struct library_data_t {
         wcstring commandline;
     } status_vars;
 
-    void set_exit_current_script(bool val);
-    void set_returning(bool val);
+    library_data_pod *ffi_pod() { return &pod; }
 };
 
 /// The result of parser_t::eval family.
@@ -458,7 +463,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).
-    bool is_interactive() const { return libdata().is_interactive; }
+    bool is_interactive() const { return libdata().pod.is_interactive; }
 
     /// Return a string representing the current stack trace.
     wcstring stack_trace() const;
@@ -486,6 +491,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// autocxx junk.
     RustFFIJobList ffi_jobs() const;
+    library_data_pod *ffi_libdata_pod();
 
     /// autocxx junk.
     bool ffi_has_funtion_block() const;

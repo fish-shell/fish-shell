@@ -232,13 +232,13 @@ maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution()
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();
-    if (ld.exit_current_script) {
+    if (ld.pod.exit_current_script) {
         return end_execution_reason_t::cancelled;
     }
-    if (ld.returning) {
+    if (ld.pod.returning) {
         return end_execution_reason_t::control_flow;
     }
-    if (ld.loop_status != loop_status_t::normals) {
+    if (ld.pod.loop_status != loop_status_t::normals) {
         return end_execution_reason_t::control_flow;
     }
     return none();
@@ -394,7 +394,7 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
     string_output_stream_t errs;
     io_streams_t streams(outs, errs);
     int err_code = builtin_function(*parser, streams, arguments, pstree, statement);
-    parser->libdata().status_count++;
+    parser->libdata().pod.status_count++;
     parser->set_last_statuses(statuses_t::just(err_code));
 
     const wcstring &errtext = errs.contents();
@@ -478,13 +478,13 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
         event_fire(*parser, evt);
 
         auto &ld = parser->libdata();
-        ld.loop_status = loop_status_t::normals;
+        ld.pod.loop_status = loop_status_t::normals;
         this->run_job_list(block_contents, fb);
 
         if (check_end_execution() == end_execution_reason_t::control_flow) {
             // Handle break or continue.
-            bool do_break = (ld.loop_status == loop_status_t::breaks);
-            ld.loop_status = loop_status_t::normals;
+            bool do_break = (ld.pod.loop_status == loop_status_t::breaks);
+            ld.pod.loop_status = loop_status_t::normals;
             if (do_break) {
                 break;
             }
@@ -632,7 +632,7 @@ end_execution_reason_t parse_execution_context_t::run_while_statement(
 
         // Push a while block and then check its cancellation reason.
         auto &ld = parser->libdata();
-        ld.loop_status = loop_status_t::normals;
+        ld.pod.loop_status = loop_status_t::normals;
 
         block_t *wb = parser->push_block(block_t::while_block());
         this->run_job_list(contents, wb);
@@ -641,8 +641,8 @@ end_execution_reason_t parse_execution_context_t::run_while_statement(
 
         if (cancel_reason == end_execution_reason_t::control_flow) {
             // Handle break or continue.
-            bool do_break = (ld.loop_status == loop_status_t::breaks);
-            ld.loop_status = loop_status_t::normals;
+            bool do_break = (ld.pod.loop_status == loop_status_t::breaks);
+            ld.pod.loop_status = loop_status_t::normals;
             if (do_break) {
                 break;
             } else {
@@ -1359,8 +1359,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipel
     job_t::properties_t props{};
     props.initial_background = job_node.bg.has_value();
     props.skip_notification =
-        ld.is_subshell || parser->is_block() || ld.is_event || !parser->is_interactive();
-    props.from_event_handler = ld.is_event;
+        ld.pod.is_subshell || parser->is_block() || ld.pod.is_event || !parser->is_interactive();
+    props.from_event_handler = ld.pod.is_event;
     props.wants_timing = job_node_wants_timing(job_node);
 
     // It's an error to have 'time' in a background job.
@@ -1373,7 +1373,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipel
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
     // the job ID here.
-    scoped_push<internal_job_id_t> caller_id(&parser->libdata().caller_id, job->internal_job_id);
+    scoped_push<internal_job_id_t> caller_id(&parser->libdata().pod.caller_id, job->internal_job_id);
 
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
@@ -1395,7 +1395,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipel
             // Ensure statuses are set (#7540).
             if (auto statuses = job->get_statuses()) {
                 parser->set_last_statuses(statuses.value());
-                parser->libdata().status_count++;
+                parser->libdata().pod.status_count++;
             }
             remove_job(*this->parser, job.get());
         }
@@ -1561,7 +1561,7 @@ void parse_execution_context_t::setup_group(job_t *j) {
     } else {
         // This is a "real job" that gets its own pgroup.
         j->processes.front()->leads_pgrp = true;
-        bool wants_terminal = !parser->libdata().is_event;
+        bool wants_terminal = !parser->libdata().pod.is_event;
         j->group = job_group_t::create_with_job_control(j->command(), wants_terminal);
     }
     j->group->set_is_foreground(!j->is_initially_background());

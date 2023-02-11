@@ -123,7 +123,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
                     internal_job_id_t caller_id =
-                        parser.libdata().is_subshell ? parser.libdata().caller_id : 0;
+                        parser.libdata().pod.is_subshell ? parser.libdata().pod.caller_id : 0;
                     if (caller_id == 0) {
                         streams.err.append_format(
                             _(L"%ls: calling job for event handler not found"), cmd);

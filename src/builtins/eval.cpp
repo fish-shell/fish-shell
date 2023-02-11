@@ -39,7 +39,7 @@ maybe_t<int> builtin_eval(parser_t &parser, io_streams_t &streams, const wchar_t
     // buffer in that case.
     shared_ptr<io_bufferfill_t> stdout_fill{};
     if (streams.out_is_piped) {
-        stdout_fill = io_bufferfill_t::create(parser.libdata().read_limit, STDOUT_FILENO);
+        stdout_fill = io_bufferfill_t::create(parser.libdata().pod.read_limit, STDOUT_FILENO);
         if (!stdout_fill) {
             // We were unable to create a pipe, probably fd exhaustion.
             return STATUS_CMD_ERROR;
@@ -50,7 +50,7 @@ maybe_t<int> builtin_eval(parser_t &parser, io_streams_t &streams, const wchar_t
     // Of course the same applies to stderr.
     shared_ptr<io_bufferfill_t> stderr_fill{};
     if (streams.err_is_piped) {
-        stderr_fill = io_bufferfill_t::create(parser.libdata().read_limit, STDERR_FILENO);
+        stderr_fill = io_bufferfill_t::create(parser.libdata().pod.read_limit, STDERR_FILENO);
         if (!stderr_fill) {
             return STATUS_CMD_ERROR;
         }

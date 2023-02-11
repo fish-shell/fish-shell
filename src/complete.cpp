@@ -713,8 +713,8 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
     bool saved_interactive = false;
     statuses_t status;
     if (ctx.parser) {
-        saved_interactive = ctx.parser->libdata().is_interactive;
-        ctx.parser->libdata().is_interactive = false;
+        saved_interactive = ctx.parser->libdata().pod.is_interactive;
+        ctx.parser->libdata().pod.is_interactive = false;
         status = ctx.parser->get_last_statuses();
     }
 
@@ -726,7 +726,7 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
     completion_list_t possible_comp = parser_t::expand_argument_list(args, eflags, ctx);
 
     if (ctx.parser) {
-        ctx.parser->libdata().is_interactive = saved_interactive;
+        ctx.parser->libdata().pod.is_interactive = saved_interactive;
         ctx.parser->set_last_statuses(status);
     }
 
@@ -1511,15 +1511,15 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
     // for autosuggestions where we don't evaluate command substitutions or variable assignments.
     if (ctx.parser) {
-        if (ctx.parser->libdata().complete_recursion_level >= 24) {
+        if (ctx.parser->libdata().pod.complete_recursion_level >= 24) {
             FLOGF(error, _(L"completion reached maximum recursion depth, possible cycle?"),
                   cmdline.c_str());
             return;
         }
-        ++ctx.parser->libdata().complete_recursion_level;
+        ++ctx.parser->libdata().pod.complete_recursion_level;
     };
     cleanup_t decrement{[this]() {
-        if (ctx.parser) --ctx.parser->libdata().complete_recursion_level;
+        if (ctx.parser) --ctx.parser->libdata().pod.complete_recursion_level;
     }};
 
     const size_t cursor_pos = cmdline.size();

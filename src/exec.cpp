@@ -369,7 +369,7 @@ static void run_internal_process_or_short_circuit(parser_t &parser, const std::s
             auto statuses = j->get_statuses();
             if (statuses) {
                 parser.set_last_statuses(statuses.value());
-                parser.libdata().status_count++;
+                parser.libdata().pod.status_count++;
             } else if (j->flags().negate) {
                 // Special handling for `not set var (substitution)`.
                 // If there is no status, but negation was requested,
@@ -611,7 +611,7 @@ static void function_restore_environment(parser_t &parser, const block_t *block)
     parser.pop_block(block);
 
     // If we returned due to a return statement, then stop returning now.
-    parser.libdata().returning = false;
+    parser.libdata().pod.returning = false;
 }
 
 // The "performer" function of a block or function process.
@@ -864,7 +864,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
 
     if (p->type != process_type_t::block_node) {
         // A simple `begin ... end` should not be considered an execution of a command.
-        parser.libdata().exec_count++;
+        parser.libdata().pod.exec_count++;
     }
 
     const block_t *block = nullptr;
@@ -978,7 +978,7 @@ static bool allow_exec_with_background_jobs(parser_t &parser) {
 
     // Compare run counts, so we only warn once.
     uint64_t current_run_count = reader_run_count();
-    uint64_t &last_exec_run_count = parser.libdata().last_exec_run_counter;
+    uint64_t &last_exec_run_count = parser.libdata().pod.last_exec_run_counter;
     if (isatty(STDIN_FILENO) && current_run_count - 1 != last_exec_run_count) {
         print_exit_warning_for_jobs(bgs);
         last_exec_run_count = current_run_count;
@@ -1191,8 +1191,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
     parser.assert_can_execute();
     auto &ld = parser.libdata();
 
-    scoped_push<bool> is_subshell(&ld.is_subshell, true);
-    scoped_push<size_t> read_limit(&ld.read_limit, is_subcmd ? read_byte_limit : 0);
+    scoped_push<bool> is_subshell(&ld.pod.is_subshell, true);
+    scoped_push<size_t> read_limit(&ld.pod.read_limit, is_subcmd ? read_byte_limit : 0);
 
     auto prev_statuses = parser.get_last_statuses();
     const cleanup_t put_back([&] {
@@ -1205,7 +1205,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    auto bufferfill = io_bufferfill_t::create(ld.read_limit);
+    auto bufferfill = io_bufferfill_t::create(ld.pod.read_limit);
     if (!bufferfill) {
         *break_expand = true;
         return STATUS_CMD_ERROR;

@@ -239,9 +239,9 @@ static void source_config_in_directory(parser_t &parser, const wcstring &dir) {
 
     const wcstring cmd = L"builtin source " + escaped_pathname;
 
-    parser.libdata().within_fish_init = true;
+    parser.libdata().pod.within_fish_init = true;
     parser.eval(cmd, io_chain_t());
-    parser.libdata().within_fish_init = false;
+    parser.libdata().pod.within_fish_init = false;
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
@@ -565,7 +565,7 @@ int main(int argc, char **argv) {
         }
         parser.vars().set(L"argv", ENV_DEFAULT, std::move(list));
         res = run_command_list(parser, opts.batch_cmds, {});
-        parser.libdata().exit_current_script = false;
+        parser.libdata().pod.exit_current_script = false;
     } else if (my_optind == argc) {
         // Implicitly interactive mode.
         if (opts.no_exec && isatty(STDIN_FILENO)) {

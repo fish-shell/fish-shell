@@ -653,10 +653,10 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
-    if (parser.libdata().is_cleaning_procs) {
+    if (parser.libdata().pod.is_cleaning_procs) {
         return false;
     }
-    const scoped_push<bool> cleaning(&parser.libdata().is_cleaning_procs, true);
+    const scoped_push<bool> cleaning(&parser.libdata().pod.is_cleaning_procs, true);
 
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)
@@ -955,7 +955,7 @@ bool job_t::resume() {
 void job_t::continue_job(parser_t &parser) {
     FLOGF(proc_job_run, L"Run job %d (%ls), %ls, %ls", job_id(), command_wcstr(),
           is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
-          parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
+          parser.libdata().pod.is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     // Wait for the status of our own job to change.
     while (!fish_is_unwinding_for_exit() && !is_stopped() && !is_completed()) {
@@ -969,7 +969,7 @@ void job_t::continue_job(parser_t &parser) {
             auto statuses = get_statuses();
             if (statuses) {
                 parser.set_last_statuses(statuses.value());
-                parser.libdata().status_count++;
+                parser.libdata().pod.status_count++;
             }
         }
     }
@@ -977,7 +977,7 @@ void job_t::continue_job(parser_t &parser) {
 
 void proc_wait_any(parser_t &parser) {
     process_mark_finished_children(parser, true /* block_ok */);
-    process_clean_after_marking(parser, parser.libdata().is_interactive);
+    process_clean_after_marking(parser, parser.libdata().pod.is_interactive);
 }
 
 void hup_jobs(const job_list_t &jobs) {

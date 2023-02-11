@@ -303,7 +303,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 // Don't enqueue a repaint if we're currently in the middle of one,
                 // because that's an infinite loop.
                 if (mc == rl::repaint_mode || mc == rl::force_repaint || mc == rl::repaint) {
-                    if (ld.is_repaint) continue;
+                    if (ld.pod.is_repaint) continue;
                 }
 
                 // HACK: Execute these right here and now so they can affect any insertions/changes

@@ -146,8 +146,25 @@ struct profile_item_t {
 
 class parse_execution_context_t;
 
+/// Plain-Old-Data components of `struct library_data_t` that can be shared over FFI
+struct library_data_pod {
+    /// Whether we are running an event handler. This is not a bool because we keep count of the
+    /// event nesting level.
+    int is_event{0};
+
+    /// Whether we are currently interactive.
+    bool is_interactive{false};
+
+    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
+    /// bindings.
+    bool suppress_fish_trace{false};
+};
+
 /// Miscellaneous data used to avoid recursion and others.
 struct library_data_t {
+    /// Plain-Old-Data components that can be shared over FFI
+    struct library_data_pod pod;
+
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
 
@@ -179,17 +196,6 @@ struct library_data_t {
 
     /// Whether we are running a subshell command.
     bool is_subshell{false};
-
-    /// Whether we are running an event handler. This is not a bool because we keep count of the
-    /// event nesting level.
-    int is_event{0};
-
-    /// Whether we are currently interactive.
-    bool is_interactive{false};
-
-    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
-    /// bindings.
-    bool suppress_fish_trace{false};
 
     /// Whether we should break or continue the current loop.
     /// This is set by the 'break' and 'continue' commands.
@@ -231,6 +237,8 @@ struct library_data_t {
         /// Used to get the full text of the current job for `status current-commandline`.
         wcstring commandline;
     } status_vars;
+
+    library_data_pod *ffi_pod() { return &pod; }
 };
 
 /// The result of parser_t::eval family.
@@ -455,7 +463,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).
-    bool is_interactive() const { return libdata().is_interactive; }
+    bool is_interactive() const { return libdata().pod.is_interactive; }
 
     /// Return a string representing the current stack trace.
     wcstring stack_trace() const;

@@ -109,7 +109,7 @@ maybe_t<int> builtin_return(parser_t &parser, io_streams_t &streams, const wchar
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if (!has_function_block) {
-        if (!parser.libdata().is_interactive) {
+        if (!parser.libdata().pod.is_interactive) {
             parser.libdata().exit_current_script = true;
         }
         return retval;

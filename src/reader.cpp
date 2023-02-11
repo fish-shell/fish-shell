@@ -1389,7 +1389,7 @@ maybe_t<abbrs_replacement_t> expand_replacer(source_range_t range, const wcstrin
     cmd.push_back(L' ');
     cmd.append(escape_string(token));
 
-    scoped_push<bool> not_interactive(&parser.libdata().is_interactive, false);
+    scoped_push<bool> not_interactive(&parser.libdata().pod.is_interactive, false);
 
     wcstring_list_t outputs{};
     int ret = exec_subshell(cmd, parser, outputs, false /* not apply_exit_status */);
@@ -1522,8 +1522,8 @@ int reader_test_and_clear_interrupted() {
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position) {
     if (!term_supports_setting_title()) return;
 
-    scoped_push<bool> noninteractive{&parser.libdata().is_interactive, false};
-    scoped_push<bool> in_title(&parser.libdata().suppress_fish_trace, true);
+    scoped_push<bool> noninteractive{&parser.libdata().pod.is_interactive, false};
+    scoped_push<bool> in_title(&parser.libdata().pod.suppress_fish_trace, true);
 
     wcstring fish_title_command = DEFAULT_TITLE;
     if (function_exists(L"fish_title", parser)) {
@@ -1573,7 +1573,7 @@ void reader_data_t::exec_prompt() {
     right_prompt_buff.clear();
 
     // Suppress fish_trace while in the prompt.
-    scoped_push<bool> in_prompt(&parser().libdata().suppress_fish_trace, true);
+    scoped_push<bool> in_prompt(&parser().libdata().pod.suppress_fish_trace, true);
 
     // Update the termsize now.
     // This allows prompts to react to $COLUMNS.
@@ -1581,7 +1581,7 @@ void reader_data_t::exec_prompt() {
 
     // If we have any prompts, they must be run non-interactively.
     if (!conf.left_prompt_cmd.empty() || !conf.right_prompt_cmd.empty()) {
-        scoped_push<bool> noninteractive{&parser().libdata().is_interactive, false};
+        scoped_push<bool> noninteractive{&parser().libdata().pod.is_interactive, false};
 
         exec_mode_prompt();
 
@@ -4375,7 +4375,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     // Suppress fish_trace during executing key bindings.
     // This is simply to reduce noise.
-    scoped_push<bool> in_title(&parser().libdata().suppress_fish_trace, true);
+    scoped_push<bool> in_title(&parser().libdata().pod.suppress_fish_trace, true);
 
     // If nchars_or_0 is positive, then that's the maximum number of chars. Otherwise keep it at
     // SIZE_MAX.
@@ -4765,7 +4765,7 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
         }
     }
 
-    scoped_push<bool> interactive_push{&parser.libdata().is_interactive, interactive};
+    scoped_push<bool> interactive_push{&parser.libdata().pod.is_interactive, interactive};
     signal_set_handlers_once(interactive);
 
     res = interactive ? read_i(parser) : read_ni(parser, fd, io);

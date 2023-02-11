@@ -1359,8 +1359,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipel
     job_t::properties_t props{};
     props.initial_background = job_node.bg.has_value();
     props.skip_notification =
-        ld.is_subshell || parser->is_block() || ld.is_event || !parser->is_interactive();
-    props.from_event_handler = ld.is_event;
+        ld.is_subshell || parser->is_block() || ld.pod.is_event || !parser->is_interactive();
+    props.from_event_handler = ld.pod.is_event;
     props.wants_timing = job_node_wants_timing(job_node);
 
     // It's an error to have 'time' in a background job.
@@ -1561,7 +1561,7 @@ void parse_execution_context_t::setup_group(job_t *j) {
     } else {
         // This is a "real job" that gets its own pgroup.
         j->processes.front()->leads_pgrp = true;
-        bool wants_terminal = !parser->libdata().is_event;
+        bool wants_terminal = !parser->libdata().pod.is_event;
         j->group = job_group_t::create_with_job_control(j->command(), wants_terminal);
     }
     j->group->set_is_foreground(!j->is_initially_background());

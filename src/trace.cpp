@@ -15,7 +15,7 @@ void trace_set_enabled(bool do_enable) { do_trace = do_enable; }
 
 bool trace_enabled(const parser_t &parser) {
     const auto &ld = parser.libdata();
-    if (ld.suppress_fish_trace) return false;
+    if (ld.pod.suppress_fish_trace) return false;
     return do_trace;
 }
 

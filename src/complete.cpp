@@ -713,8 +713,8 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
     bool saved_interactive = false;
     statuses_t status;
     if (ctx.parser) {
-        saved_interactive = ctx.parser->libdata().is_interactive;
-        ctx.parser->libdata().is_interactive = false;
+        saved_interactive = ctx.parser->libdata().pod.is_interactive;
+        ctx.parser->libdata().pod.is_interactive = false;
         status = ctx.parser->get_last_statuses();
     }
 
@@ -726,7 +726,7 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
     completion_list_t possible_comp = parser_t::expand_argument_list(args, eflags, ctx);
 
     if (ctx.parser) {
-        ctx.parser->libdata().is_interactive = saved_interactive;
+        ctx.parser->libdata().pod.is_interactive = saved_interactive;
         ctx.parser->set_last_statuses(status);
     }
 

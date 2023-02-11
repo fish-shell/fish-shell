@@ -224,7 +224,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     reader_push(parser, wcstring{}, std::move(conf));
 
     commandline_set_buffer(commandline, std::wcslen(commandline));
-    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
+    scoped_push<bool> interactive{&parser.libdata().pod.is_interactive, true};
 
     auto mline = reader_readline(nchars);
     interactive.restore();

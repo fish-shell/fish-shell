@@ -70,6 +70,9 @@ include_cpp! {
     generate!("event_fire_generic")
 
     generate!("escape_string")
+    generate!("sig2wcs")
+    generate!("wcs2sig")
+    generate!("signal_get_desc")
 }
 
 impl parser_t {

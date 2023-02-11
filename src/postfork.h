@@ -15,7 +15,7 @@
 #include "common.h"
 #include "maybe.h"
 
-class Dup2List;
+struct Dup2List;
 using dup2_list_t = Dup2List;
 class job_t;
 class process_t;

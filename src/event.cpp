@@ -418,7 +418,7 @@ static bool filter_matches_event(const wcstring &filter, event_type_t type) {
         case event_type_t::job_exit:
             return filter == L"job-exit" || filter == L"exit";
         case event_type_t::caller_exit:
-            return filter == L"process-exit" || filter == L"exit";
+            return filter == L"caller-exit" || filter == L"exit";
         case event_type_t::generic:
             return filter == L"generic";
     }

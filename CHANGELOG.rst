@@ -10,6 +10,7 @@ Notable improvements and fixes
 
   can now be used to clean out all old abbreviations (:issue:`9468`).
 - ``abbr --add --universal`` now warns about --universal being non-functional, to make it easier to detect old-style ``abbr`` calls (:issue:`9475`).
+- ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 
 Deprecations and removed features
 ---------------------------------

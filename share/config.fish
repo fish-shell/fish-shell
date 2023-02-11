@@ -141,8 +141,10 @@ end
 # This handler removes itself after it is first called.
 #
 function __fish_on_interactive --on-event fish_prompt --on-event fish_read
-    __fish_config_interactive
+    # We erase this *first* so it can't be called again,
+    # e.g. if fish_greeting calls "read".
     functions -e __fish_on_interactive
+    __fish_config_interactive
 end
 
 # Set the locale if it isn't explicitly set. Allowing the lack of locale env vars to imply the

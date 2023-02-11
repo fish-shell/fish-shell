@@ -8,7 +8,7 @@ use super::shared::{
     BUILTIN_ERR_NOT_NUMBER, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::builtins::shared::BUILTIN_ERR_TOO_MANY_ARGUMENTS;
-use crate::ffi::{parser_t, Repin};
+use crate::ffi::parser_t;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::fish_wcstoi;
@@ -79,14 +79,15 @@ pub fn r#return(
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
-        if !parser.is_interactive() {
-            parser.pin().libdata().set_exit_current_script(true);
+        let ld = parser.libdata_pod();
+        if !ld.is_interactive {
+            ld.exit_current_script = true;
         }
         return Some(retval);
     }
 
     // Mark a return in the libdata.
-    parser.pin().libdata().set_returning(true);
+    parser.libdata_pod().returning = true;
 
     return Some(retval);
 }

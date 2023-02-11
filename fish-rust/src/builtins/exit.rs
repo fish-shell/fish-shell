@@ -2,7 +2,7 @@ use libc::c_int;
 
 use super::r#return::parse_return_value;
 use super::shared::io_streams_t;
-use crate::ffi::{parser_t, Repin};
+use crate::ffi::parser_t;
 use crate::wchar::wstr;
 
 /// Function for handling the exit builtin.
@@ -20,7 +20,7 @@ pub fn exit(
     // TODO: in concurrent mode this won't successfully exit a pipeline, as there are other parsers
     // involved. That is, `exit | sleep 1000` may not exit as hoped. Need to rationalize what
     // behavior we want here.
-    parser.pin().libdata().set_exit_current_script(true);
+    parser.libdata_pod().exit_current_script = true;
 
     return Some(retval);
 }

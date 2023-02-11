@@ -39,14 +39,6 @@ static wcstring user_presentable_path(const wcstring &path, const environment_t 
     return replace_home_directory_with_tilde(path, vars);
 }
 
-void library_data_t::set_exit_current_script(bool val) {
-    exit_current_script = val;
-};
-
-void library_data_t::set_returning(bool val) {
-    returning = val;
-};
-
 parser_t::parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal)
     : variables(std::move(vars)), is_principal_(is_principal) {
     assert(variables.get() && "Null variables in parser initializer");
@@ -496,6 +488,8 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
     }
     return nullptr;
 }
+
+library_data_pod_t *parser_t::ffi_libdata_pod() { return &library_data; }
 
 profile_item_t *parser_t::create_profile_item() {
     if (g_profiling_active) {

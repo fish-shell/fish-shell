@@ -49,6 +49,7 @@ include_cpp! {
     generate!("job_t")
     generate!("process_t")
     generate!("library_data_t")
+    generate_pod!("library_data_pod_t")
 
     generate!("proc_wait_any")
 
@@ -79,6 +80,12 @@ impl parser_t {
     pub fn get_jobs(&self) -> &[SharedPtr<job_t>] {
         let ffi_jobs = self.ffi_jobs();
         unsafe { slice::from_raw_parts(ffi_jobs.jobs, ffi_jobs.count) }
+    }
+
+    pub fn libdata_pod(&mut self) -> &mut library_data_pod_t {
+        let libdata = self.pin().ffi_libdata_pod();
+
+        unsafe { &mut *libdata }
     }
 }
 

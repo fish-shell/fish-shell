@@ -4,6 +4,7 @@
 #![allow(clippy::needless_return)]
 #![allow(clippy::manual_is_ascii_check)]
 
+mod common;
 mod fd_readable_set;
 mod fds;
 #[allow(rustdoc::broken_intra_doc_links)]

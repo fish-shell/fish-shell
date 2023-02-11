@@ -68,6 +68,8 @@ include_cpp! {
     generate!("wait_handle_store_t")
 
     generate!("event_fire_generic")
+
+    generate!("escape_string")
 }
 
 impl parser_t {

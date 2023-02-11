@@ -4,8 +4,9 @@ use widestring_suffix::widestrs;
 use super::shared::{
     builtin_print_help, io_streams_t, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
-use crate::ffi::{self, parser_t, Repin};
-use crate::wchar_ffi::{wstr, W0String, WCharToFFI};
+use crate::event;
+use crate::ffi::parser_t;
+use crate::wchar_ffi::{wstr, WString};
 use crate::wutil::format::printf::sprintf;
 
 #[widestrs]
@@ -32,20 +33,13 @@ pub fn emit(
         return STATUS_INVALID_ARGS;
     };
 
-    let event_args: Vec<W0String> = argv[opts.optind + 1..]
-        .iter()
-        .map(|s| W0String::from_ustr(s).unwrap())
-        .collect();
-    let event_arg_ptrs: Vec<ffi::wcharz_t> = event_args
-        .iter()
-        .map(|s| ffi::wcharz_t { str_: s.as_ptr() })
-        .collect();
-
-    ffi::event_fire_generic(
-        parser.pin(),
-        event_name.to_ffi(),
-        event_arg_ptrs.as_ptr(),
-        c_int::try_from(event_arg_ptrs.len()).unwrap().into(),
+    event::fire_generic(
+        parser,
+        (*event_name).to_owned(),
+        argv[opts.optind + 1..]
+            .iter()
+            .map(|&s| WString::from(s))
+            .collect(),
     );
 
     STATUS_CMD_OK

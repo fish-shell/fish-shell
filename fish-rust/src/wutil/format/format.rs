@@ -508,3 +508,9 @@ impl Printf for WString {
         self.as_utfstr().format(spec)
     }
 }
+
+impl Printf for &WString {
+    fn format(&self, spec: &ConversionSpecifier) -> Result<WString> {
+        self.as_utfstr().format(spec)
+    }
+}

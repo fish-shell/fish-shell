@@ -15,6 +15,7 @@
 #include "common.h"
 #include "cxx.h"
 #include "env.h"
+#include "event.h"
 #include "expand.h"
 #include "maybe.h"
 #include "operation_context.h"
@@ -26,8 +27,9 @@
 
 class autoclose_fd_t;
 class io_chain_t;
-struct event_t;
+struct Event;
 struct job_group_t;
+class parser_t;
 
 /// Types of blocks.
 enum class block_type_t : uint8_t {
@@ -55,11 +57,10 @@ enum class loop_status_t {
 
 /// block_t represents a block of commands.
 class block_t {
-   private:
+   public:
     /// Construct from a block type.
     explicit block_t(block_type_t t);
 
-   public:
     // If this is a function block, the function name. Otherwise empty.
     wcstring function_name{};
 
@@ -73,7 +74,7 @@ class block_t {
     filename_ref_t src_filename{};
 
     // If this is an event block, the event. Otherwise ignored.
-    std::shared_ptr<event_t> event;
+    std::shared_ptr<rust::Box<Event>> event;
 
     // If this is a source block, the source'd file, interned.
     // Otherwise nothing.
@@ -101,7 +102,7 @@ class block_t {
 
     /// Entry points for creating blocks.
     static block_t if_block();
-    static block_t event_block(event_t evt);
+    static block_t event_block(const void *evt_);
     static block_t function_block(wcstring name, wcstring_list_t args, bool shadows);
     static block_t source_block(filename_ref_t src);
     static block_t for_block();
@@ -113,6 +114,7 @@ class block_t {
 
     /// autocxx junk.
     void ffi_incr_event_blocks();
+    uint64_t ffi_event_blocks() const { return event_blocks; }
 };
 
 struct profile_item_t {
@@ -204,9 +206,6 @@ struct library_data_pod_t {
 struct library_data_t : public library_data_pod_t {
     /// The current filename we are evaluating, either from builtin source or on the command line.
     filename_ref_t current_filename{};
-
-    /// List of events that have been sent but have not yet been delivered because they are blocked.
-    std::vector<std::shared_ptr<const event_t>> blocked_events{};
 
     /// A stack of fake values to be returned by builtin_commandline. This is used by the completion
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
@@ -333,6 +332,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     eval_res_t eval(const wcstring &cmd, const io_chain_t &io,
                     const job_group_ref_t &job_group = {},
                     block_type_t block_type = block_type_t::top);
+
+    /// An ffi overload of `eval(const wcstring &cmd, ...)` but without the extra parameters.
+    eval_res_t eval_string_ffi1(const wcstring &cmd);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
@@ -485,6 +487,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// autocxx junk.
     RustFFIJobList ffi_jobs() const;
     library_data_pod_t *ffi_libdata_pod();
+    job_t *ffi_job_get_from_pid(int pid) const;
 
     /// autocxx junk.
     bool ffi_has_funtion_block() const;

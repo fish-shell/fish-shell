@@ -65,7 +65,7 @@ void parser_t::assert_can_execute() const { ASSERT_IS_MAIN_THREAD(); }
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
     int res = vars().set(key, mode, std::move(vals));
     if (res == ENV_OK) {
-        event_fire(*this, event_t::variable_set(key));
+        event_fire(*this, *new_event_variable_set(key));
     }
     return res;
 }
@@ -80,7 +80,7 @@ void parser_t::sync_uvars_and_fire(bool always) {
     if (this->syncs_uvars_) {
         auto evts = this->vars().universal_sync(always);
         for (const auto &evt : evts) {
-            event_fire(*this, evt);
+            event_fire(*this, *evt);
         }
     }
 }
@@ -252,7 +252,7 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
         }
         case block_type_t::event: {
             assert(b.event && "Should have an event");
-            wcstring description = event_get_desc(parser, *b.event);
+            wcstring description = *event_get_desc(parser, **b.event);
             append_format(trace, _(L"in event handler: %ls\n"), description.c_str());
             print_call_site = true;
             break;
@@ -505,6 +505,8 @@ job_t *parser_t::job_get_from_pid(int64_t pid, size_t &job_pos) const {
 
 library_data_pod_t *parser_t::ffi_libdata_pod() { return &library_data; }
 
+job_t *parser_t::ffi_job_get_from_pid(int pid) const { return job_get_from_pid(pid); }
+
 profile_item_t *parser_t::create_profile_item() {
     if (g_profiling_active) {
         profile_items.emplace_back();
@@ -533,6 +535,8 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
         return eval_res_t{proc_status_t::from_exit_code(STATUS_ILLEGAL_CMD), break_expand};
     }
 }
+
+eval_res_t parser_t::eval_string_ffi1(const wcstring &cmd) { return eval(cmd, io_chain_t()); }
 
 eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
                           const job_group_ref_t &job_group, enum block_type_t block_type) {
@@ -776,9 +780,11 @@ bool block_t::is_function_call() const {
 
 block_t block_t::if_block() { return block_t(block_type_t::if_block); }
 
-block_t block_t::event_block(event_t evt) {
+block_t block_t::event_block(const void *evt_) {
+    const auto &evt = *static_cast<const Event *>(evt_);
     block_t b{block_type_t::event};
-    b.event.reset(new event_t(std::move(evt)));
+    b.event =
+        std::make_shared<rust::Box<Event>>(evt.clone());  // TODO Post-FFI: move instead of clone.
     return b;
 }
 

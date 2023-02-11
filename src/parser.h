@@ -146,8 +146,8 @@ struct profile_item_t {
 
 class parse_execution_context_t;
 
-/// Miscellaneous data used to avoid recursion and others.
-struct library_data_t {
+/// Plain-Old-Data components of `struct library_data_t` that can be shared over FFI
+struct library_data_pod_t {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
 
@@ -207,7 +207,10 @@ struct library_data_t {
 
     /// The read limit to apply to captured subshell output, or 0 for none.
     size_t read_limit{0};
+};
 
+/// Miscellaneous data used to avoid recursion and others.
+struct library_data_t : public library_data_pod_t {
     /// The current filename we are evaluating, either from builtin source or on the command line.
     filename_ref_t current_filename{};
 
@@ -231,9 +234,6 @@ struct library_data_t {
         /// Used to get the full text of the current job for `status current-commandline`.
         wcstring commandline;
     } status_vars;
-
-    void set_exit_current_script(bool val);
-    void set_returning(bool val);
 };
 
 /// The result of parser_t::eval family.
@@ -486,6 +486,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// autocxx junk.
     RustFFIJobList ffi_jobs() const;
+    library_data_pod_t *ffi_libdata_pod();
 
     /// autocxx junk.
     bool ffi_has_funtion_block() const;

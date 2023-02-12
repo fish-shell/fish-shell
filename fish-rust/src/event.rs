@@ -9,25 +9,27 @@
 #![allow(unused_variables)]
 
 use autocxx::WithinUniquePtr;
-use cxx::SharedPtr;
+use cxx::{CxxVector, CxxWString, SharedPtr, UniquePtr};
 use libc::{pid_t, SIGWINCH};
-use std::sync::{
-    atomic::{AtomicBool, AtomicU32, Ordering},
-    Arc, Mutex,
+use std::{
+    pin::Pin,
+    sync::{
+        atomic::{AtomicBool, AtomicU32, Ordering},
+        Arc, Mutex,
+    },
 };
 use widestring_suffix::widestrs;
 
 use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, EscapeFlags, EscapeStringStyle, ScopedPush};
 use crate::ffi::{
-    block_t, block_type_t, event_block_list_blocks_type, io_chain_t, parser_t, signal_check_cancel,
-    signal_handle, termsize_container_t, Repin,
+    self, block_type_t, event_block, event_block_list_blocks_type, io_chain_t, parser_t,
+    signal_check_cancel, signal_handle, termsize_container_t, Repin,
 };
 use crate::flog::FLOG;
 use crate::signal::{sig2wcs, signal_get_desc};
 use crate::wchar::L;
-use crate::wchar_ffi::WCharToFFI;
-use crate::wchar_ffi::{wstr, WString};
+use crate::wchar_ffi::{wcharz_t, wstr, WCharFromFFI, WCharToFFI, WString};
 use crate::wutil::sprintf;
 
 #[cxx::bridge]

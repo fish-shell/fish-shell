@@ -11,6 +11,7 @@ mod fds;
 #[allow(clippy::module_inception)]
 #[allow(clippy::new_ret_no_self)]
 #[allow(clippy::wrong_self_convention)]
+#[allow(clippy::needless_lifetimes)]
 mod ffi;
 mod ffi_init;
 mod ffi_tests;

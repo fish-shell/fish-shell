@@ -4,6 +4,10 @@
 //! defined when these functions produce output or perform memory allocations, since such functions
 //! may not be safely called by signal handlers.
 
+// TODO
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+
 use autocxx::WithinUniquePtr;
 use cxx::SharedPtr;
 use libc::{pid_t, SIGWINCH};
@@ -723,6 +727,8 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         let _interactive = ScopedPush::new(&mut ld.is_interactive, false);
+        todo!();
+        /*
         let prev_statuses = parser.get_last_statuses().within_unique_ptr();
 
         FLOG!(
@@ -747,6 +753,7 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
 
         handler.fired.store(true, Ordering::Relaxed);
         fired_one_shot |= handler.is_one_shot();
+        */
     }
 
     if fired_one_shot {

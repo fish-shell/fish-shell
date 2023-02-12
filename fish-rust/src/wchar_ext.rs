@@ -90,7 +90,7 @@ pub trait WExt {
     }
 
     /// Equivalent of `basic_string.rfind()` from C++
-    fn find_last_char(&self, c: char) -> Option<usize> {
+    fn rfind(&self, c: char) -> Option<usize> {
         self.as_char_slice().iter().rposition(|&x| x == c)
     }
 }

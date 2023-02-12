@@ -65,7 +65,7 @@ void parser_t::assert_can_execute() const { ASSERT_IS_MAIN_THREAD(); }
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
     int res = vars().set(key, mode, std::move(vals));
     if (res == ENV_OK) {
-        event_fire(*this, event_t::variable_set(key));
+        event_fire(*this, *new_event_variable_set(key));
     }
     return res;
 }
@@ -80,7 +80,7 @@ void parser_t::sync_uvars_and_fire(bool always) {
     if (this->syncs_uvars_) {
         auto evts = this->vars().universal_sync(always);
         for (const auto &evt : evts) {
-            event_fire(*this, evt);
+            event_fire(*this, *evt);
         }
     }
 }
@@ -252,7 +252,7 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
         }
         case block_type_t::event: {
             assert(b.event && "Should have an event");
-            wcstring description = event_get_desc(parser, *b.event);
+            wcstring description = *event_get_desc(parser, **b.event);
             append_format(trace, _(L"in event handler: %ls\n"), description.c_str());
             print_call_site = true;
             break;
@@ -745,9 +745,9 @@ wcstring block_t::description() const {
 
 block_t block_t::if_block() { return block_t(block_type_t::if_block); }
 
-block_t event_block(event_t evt) {
+block_t event_block(rust::Box<Event> evt) {
     block_t b{block_type_t::event};
-    b.event.reset(new event_t(std::move(evt)));
+    b.event = std::make_shared<rust::Box<Event>>(std::move(evt));
     return b;
 }
 

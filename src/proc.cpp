@@ -463,33 +463,34 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 }
 
 /// Generate process_exit events for any completed processes in \p j.
-static void generate_process_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
+static void generate_process_exit_events(const job_ref_t &j,
+                                         std::vector<rust::Box<Event>> *out_evts) {
     // Historically we have avoided generating events for foreground jobs from event handlers, as an
     // event handler may itself produce a new event.
     if (!j->from_event_handler() || !j->is_foreground()) {
         for (const auto &p : j->processes) {
             if (p->pid > 0 && p->completed && !p->posted_proc_exit) {
                 p->posted_proc_exit = true;
-                out_evts->push_back(event_t::process_exit(p->pid, p->status.status_value()));
+                out_evts->push_back(new_event_process_exit(p->pid, p->status.status_value()));
             }
         }
     }
 }
 
 /// Given a job that has completed, generate job_exit and caller_exit events.
-static void generate_job_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
+static void generate_job_exit_events(const job_ref_t &j, std::vector<rust::Box<Event>> *out_evts) {
     // Generate proc and job exit events, except for foreground jobs originating in event handlers.
     if (!j->from_event_handler() || !j->is_foreground()) {
         // job_exit events.
         if (j->posts_job_exit_events()) {
             auto last_pid = j->get_last_pid();
             if (last_pid.has_value()) {
-                out_evts->push_back(event_t::job_exit(*last_pid, j->internal_job_id));
+                out_evts->push_back(new_event_job_exit(*last_pid, j->internal_job_id));
             }
         }
     }
     // Generate caller_exit events.
-    out_evts->push_back(event_t::caller_exit(j->internal_job_id, j->job_id()));
+    out_evts->push_back(new_event_caller_exit(j->internal_job_id, j->job_id()));
 }
 
 /// \return whether to emit a fish_job_summary call for a process.
@@ -536,9 +537,8 @@ bool job_or_proc_wants_summary(const shared_ptr<job_t> &j) {
 
 /// Invoke the fish_job_summary function by executing the given command.
 static void call_job_summary(parser_t &parser, const wcstring &cmd) {
-    event_t event(event_type_t::generic);
-    event.desc.str_param1 = L"fish_job_summary";
-    block_t *b = parser.push_block(block_t::event_block(event));
+    auto event = new_event_generic(L"fish_job_summary");
+    block_t *b = parser.push_block(event_block(std::move(event)));
     auto saved_status = parser.get_last_statuses();
     parser.eval(cmd, io_chain_t());
     parser.set_last_statuses(saved_status);
@@ -667,7 +667,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
     // Accumulate exit events into a new list, which we fire after the list manipulation is
     // complete.
-    std::vector<event_t> exit_events;
+    std::vector<rust::Box<Event>> exit_events;
 
     // Defer processing under-construction jobs or jobs that want a message when we are not
     // interactive.
@@ -719,7 +719,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
     // Post pending exit events.
     for (const auto &evt : exit_events) {
-        event_fire(parser, evt);
+        event_fire(parser, *evt);
     }
 
     if (printed) {

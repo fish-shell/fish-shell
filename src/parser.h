@@ -25,7 +25,7 @@
 #include "util.h"
 #include "wait_handle.h"
 
-struct event_t;
+struct Event;
 class io_chain_t;
 class autoclose_fd_t;
 
@@ -81,7 +81,7 @@ class block_t {
     filename_ref_t src_filename{};
 
     // If this is an event block, the event. Otherwise ignored.
-    std::shared_ptr<event_t> event;
+    std::shared_ptr<rust::Box<Event>> event;
 
     // If this is a source block, the source'd file, interned.
     // Otherwise nothing.
@@ -125,7 +125,7 @@ class block_t {
     const event_blockage_list_t *ffi_event_blocks() const { return &event_blocks; }
 };
 
-block_t event_block(event_t evt);
+block_t event_block(rust::Box<Event> evt);
 
 struct profile_item_t {
     using microseconds_t = long long;

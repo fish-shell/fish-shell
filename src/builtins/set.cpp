@@ -652,7 +652,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                     handle_env_return(retval, cmd, split->varname, streams);
                 }
                 if (retval == ENV_OK) {
-                    event_fire(parser, event_t::variable_erase(split->varname));
+                    event_fire(parser, *new_event_variable_erase(split->varname));
                 }
             } else {  // remove just the specified indexes of the var
                 if (!split->var) return STATUS_CMD_ERROR;

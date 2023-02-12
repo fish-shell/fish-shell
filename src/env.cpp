@@ -1300,7 +1300,7 @@ mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
     return result;
 }
 
-std::vector<event_t> env_stack_t::universal_sync(bool always) {
+std::vector<rust::Box<Event>> env_stack_t::universal_sync(bool always) {
     if (s_uvar_scope_is_global) return {};
     if (!always && !s_uvars_locally_modified) return {};
     s_uvars_locally_modified = false;
@@ -1311,11 +1311,11 @@ std::vector<event_t> env_stack_t::universal_sync(bool always) {
         universal_notifier_t::default_notifier().post_notification();
     }
     // React internally to changes to special variables like LANG, and populate on-variable events.
-    std::vector<event_t> result;
+    std::vector<rust::Box<Event>> result;
     for (const callback_data_t &cb : callbacks) {
         env_dispatch_var_change(cb.key, *this);
-        event_t evt =
-            cb.is_erase() ? event_t::variable_erase(cb.key) : event_t::variable_set(cb.key);
+        auto evt =
+            cb.is_erase() ? new_event_variable_erase(cb.key) : new_event_variable_set(cb.key);
         result.push_back(std::move(evt));
     }
     return result;

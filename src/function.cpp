@@ -288,7 +288,7 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
     wcstring out;
     wcstring desc = this->localized_description();
     wcstring def = get_function_body_source(*this);
-    std::vector<std::shared_ptr<event_handler_t>> ev = event_get_function_handlers(name);
+    auto handlers = event_get_function_handler_descs(name);
 
     out.append(L"function ");
 
@@ -314,23 +314,22 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
         out.append(L" --no-scope-shadowing");
     }
 
-    for (const auto &next : ev) {
-        const event_description_t &d = next->desc;
-        switch (d.type) {
+    for (const auto &d: handlers) {
+        switch (d.typ) {
             case event_type_t::signal: {
-                append_format(out, L" --on-signal %ls", sig2wcs(d.param1.signal));
+                append_format(out, L" --on-signal %ls", sig2wcs(d.signal));
                 break;
             }
             case event_type_t::variable: {
-                append_format(out, L" --on-variable %ls", d.str_param1.c_str());
+                append_format(out, L" --on-variable %ls", d.str_param1->c_str());
                 break;
             }
             case event_type_t::process_exit: {
-                append_format(out, L" --on-process-exit %d", d.param1.pid);
+                append_format(out, L" --on-process-exit %d", d.pid);
                 break;
             }
             case event_type_t::job_exit: {
-                append_format(out, L" --on-job-exit %d", d.param1.jobspec.pid);
+                append_format(out, L" --on-job-exit %d", d.pid);
                 break;
             }
             case event_type_t::caller_exit: {
@@ -338,12 +337,12 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
                 break;
             }
             case event_type_t::generic: {
-                append_format(out, L" --on-event %ls", d.str_param1.c_str());
+                append_format(out, L" --on-event %ls", d.str_param1->c_str());
                 break;
             }
             case event_type_t::any:
             default: {
-                DIE("unexpected next->type");
+                DIE("unexpected next->typ");
             }
         }
     }

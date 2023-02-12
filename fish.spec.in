@@ -10,6 +10,7 @@ URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
 BuildRequires:          ncurses-devel gettext gcc-c++ xz pcre2-devel
+BuildRequires:			rust >= 1.67
 
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3

@@ -66,18 +66,18 @@ pub struct io_streams_t {
 }
 
 impl io_streams_t {
-    fn new(mut streams: Pin<&mut builtins_ffi::io_streams_t>) -> io_streams_t {
+    pub fn new(mut streams: Pin<&mut builtins_ffi::io_streams_t>) -> io_streams_t {
         let out = output_stream_t(streams.as_mut().get_out().unpin());
         let err = output_stream_t(streams.as_mut().get_err().unpin());
         let streams = streams.unpin();
         io_streams_t { streams, out, err }
     }
 
-    fn ffi_pin(&mut self) -> Pin<&mut builtins_ffi::io_streams_t> {
+    pub fn ffi_pin(&mut self) -> Pin<&mut builtins_ffi::io_streams_t> {
         unsafe { Pin::new_unchecked(&mut *self.streams) }
     }
 
-    fn ffi_ref(&self) -> &builtins_ffi::io_streams_t {
+    pub fn ffi_ref(&self) -> &builtins_ffi::io_streams_t {
         unsafe { &*self.streams }
     }
 }

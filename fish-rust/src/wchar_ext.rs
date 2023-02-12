@@ -119,6 +119,16 @@ mod tests {
         assert_eq!(None, L!("abc").find_char('X'));
         assert_eq!(None, L!("").find_char('X'));
     }
+    
+    #[cfg(test)]
+    fn test_rfind() {
+        assert_eq!(Some(3), L!("a/b/c").rfind('/'));
+        assert_eq!(Some(2), L!("a/b/c").rfind('b'));
+        assert_eq!(Some(0), L!("a/b/c").rfind('a'));
+        assert_eq!(None, L!("a/b/c").rfind('z'));
+        assert_eq!(None, L!("").rfind('z'));
+        assert_eq!(None, WString::new().rfind('a'));
+    }
 
     #[cfg(test)]
     fn test_prefix() {

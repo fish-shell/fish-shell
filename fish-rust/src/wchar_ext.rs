@@ -1,4 +1,7 @@
-use crate::wchar::{wstr, WString};
+use crate::{
+    expand::SpecialUnicodeValues,
+    wchar::{wstr, WString, ENCODE_DIRECT_BASE},
+};
 use widestring::utfstr::CharsUtf32;
 
 /// A thing that a wide string can start with or end with.

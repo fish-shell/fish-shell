@@ -34,6 +34,18 @@ pub use widestring_suffix::widestrs;
 /// Pull in our extensions.
 pub use crate::wchar_ext::{CharPrefixSuffix, WExt};
 
+// Use Unicode "non-characters" for internal characters as much as we can. This
+// gives us 32 "characters" for internal use that we can guarantee should not
+// appear in our input stream. See http://www.unicode.org/faq/private_use.html.
+pub(crate) const RESERVED_CHAR_BASE: u32 = 0xFDD0;
+pub(crate) const RESERVED_CHAR_END: u32 = 0xFDF0;
+// Split the available non-character values into two ranges to ensure there are
+// no conflicts among the places we use these special characters.
+pub(crate) const EXPAND_RESERVED_BASE: u32 = RESERVED_CHAR_BASE;
+pub(crate) const EXPAND_RESERVED_END: u32 = EXPAND_RESERVED_BASE + 16;
+pub(crate) const WILDCARD_RESERVED_BASE: u32 = EXPAND_RESERVED_END;
+pub(crate) const WILDCARD_RESERVED_END: u32 = WILDCARD_RESERVED_BASE + 16;
+
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
 // We can't use non-characters for these two ranges because there are only 66 of
@@ -46,7 +58,7 @@ pub use crate::wchar_ext::{CharPrefixSuffix, WExt};
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-const ENCODE_DIRECT_BASE: u32 = 0xF600;
+pub(crate) const ENCODE_DIRECT_BASE: u32 = 0xF600;
 const ENCODE_DIRECT_END: u32 = ENCODE_DIRECT_BASE + 256;
 
 /// Encode a literal byte in a UTF-32 character. This is required for e.g. the echo builtin, whose

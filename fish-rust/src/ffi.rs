@@ -23,16 +23,20 @@ include_cpp! {
     #include "builtin.h"
     #include "fallback.h"
     #include "event.h"
+    #include "re.h"
+    #include "parse_constants.h"
 
     safety!(unsafe_ffi)
 
     generate_pod!("wcharz_t")
+    generate_pod!("source_range_t")
     generate!("make_fd_nonblocking")
     generate!("wperror")
 
     generate_pod!("pipes_ffi_t")
     generate!("make_pipes_ffi")
 
+    generate!("re::regex_t")
     generate!("valid_var_name_char")
 
     generate!("get_flog_file_fd")

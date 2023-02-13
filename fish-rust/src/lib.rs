@@ -33,3 +33,4 @@ mod wgetopt;
 mod wutil;
 
 mod builtins;
+mod abbrs;

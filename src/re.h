@@ -114,6 +114,9 @@ class regex_t : noncopyable_t {
     /// A convenience function which calls prepare() for you.
     maybe_t<match_range_t> match(const wcstring &subject) const;
 
+    /// A convenience function which calls prepare() for you.
+    bool matches_ffi(const wcstring &subject) const;
+
     /// \return the matched range for an indexed or named capture group. 0 means the entire match.
     maybe_t<match_range_t> group(const match_data_t &md, size_t group_idx) const;
     maybe_t<match_range_t> group(const match_data_t &md, const wcstring &name) const;

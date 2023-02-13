@@ -1,3 +1,7 @@
+# Completions for trash-cli
+# There are many implementations of trash cli tools, but the name ``trash-put`` is unique.
+
+# https://github.com/andreafrancia/trash-cli
 complete -f -c trash-put -s h -l help -d 'show help message'
 complete -f -c trash-put -l print-completion -xa 'bash zsh tcsh' -d 'print shell completion script'
 complete -f -c trash-put -s d -l directory -d 'ignored (for GNU rm compatibility)'

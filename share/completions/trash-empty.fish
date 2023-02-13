@@ -1,3 +1,7 @@
+# Completions for trash-cli
+# There are many implementations of trash cli tools, but the name ``trash-empty`` is unique.
+
+# https://github.com/andreafrancia/trash-cli
 complete -f -c trash-empty -s h -l help -d 'show help message'
 complete -f -c trash-empty -l print-completion -xa 'bash zsh tcsh' -d 'print shell completion script'
 complete -f -c trash-empty -l version -d 'show version number'

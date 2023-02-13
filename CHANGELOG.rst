@@ -41,11 +41,7 @@ Completions
   - ``otool``
   - ``mix phx``
   - ``neovim``
-  - ``trash``
-  - ``trash-empty``
-  - ``trash-list``
-  - ``trash-put``
-  - ``trash-restore``
+  - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore``
 
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)

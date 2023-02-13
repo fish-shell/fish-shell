@@ -155,6 +155,8 @@ set -g ___fish_git_prompt_status_order stashstate
 set -g ___fish_git_prompt_char_stashstate ''
 set -g ___fish_git_prompt_char_cleanstate ''
 
+git commit -m 'Init'
+echo 'changed' > foo
 git stash >/dev/null 2>&1
 fish_git_prompt
 echo

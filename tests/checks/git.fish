@@ -128,6 +128,7 @@ fish_git_prompt
 echo
 #CHECK: (newbranch %)
 
+set -e __fish_git_prompt_showdirtystate
 set -e __fish_git_prompt_showuntrackedfiles
 set -e __fish_git_prompt_status_order
 
@@ -145,6 +146,30 @@ git add foo
 fish_git_prompt
 echo
 #CHECK: (newbranch +)
+
+# Test displaying only stash count
+set -g __fish_git_prompt_show_informative_status 1
+set -g __fish_git_prompt_showstashstate 1
+set -g ___fish_git_prompt_status_order stashstate
+set -g ___fish_git_prompt_char_stashstate ''
+set -g ___fish_git_prompt_char_cleanstate ''
+
+git stash
+fish_git_prompt
+echo
+#CHECK: (newbranch|1)
+
+git stash pop
+fish_git_prompt
+echo
+#CHECK: (newbranch)
+
+set -e __fish_git_prompt_show_informative_status
+set -e __fish_git_prompt_showstashstate
+set -e ___fish_git_prompt_status_order
+set -e ___fish_git_prompt_char_stashstate
+set -e ___fish_git_prompt_char_cleanstate
+
 
 
 

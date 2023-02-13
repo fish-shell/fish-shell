@@ -14,6 +14,6 @@ function __trash_by_andreafrancia
     complete -f -c trash -l version -d 'show version number'
 end
 
-if string match -qr "https://github.com/andreafrancia/trash-cli" (trash --help)
+if string match -qr "https://github.com/andreafrancia/trash-cli" (trash --help 2>/dev/null)
     __trash_by_andreafrancia
 end

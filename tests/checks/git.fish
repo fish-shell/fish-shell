@@ -151,9 +151,9 @@ set -e __fish_git_prompt_showdirtystate
 # Test displaying only stash count
 set -g __fish_git_prompt_show_informative_status 1
 set -g __fish_git_prompt_showstashstate 1
-set -gx ___fish_git_prompt_status_order stashstate
-set -gx ___fish_git_prompt_char_stashstate ''
-set -gx ___fish_git_prompt_char_cleanstate ''
+set -g __fish_git_prompt_status_order stashstate
+set -g ___fish_git_prompt_char_stashstate ''
+set -g ___fish_git_prompt_char_cleanstate ''
 
 git commit -m 'Init' >/dev/null
 echo 'changed' > foo

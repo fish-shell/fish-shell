@@ -135,6 +135,10 @@ maybe_t<match_range_t> regex_t::match(const wcstring &subject) const {
     return this->match(md, subject);
 }
 
+bool regex_t::matches_ffi(const wcstring &subject) const {
+    return this->match(subject).has_value();
+}
+
 maybe_t<match_range_t> regex_t::group(const match_data_t &md, size_t group_idx) const {
     if (group_idx >= md.max_capture || group_idx >= pcre2_get_ovector_count(get_md(md.data))) {
         return none();

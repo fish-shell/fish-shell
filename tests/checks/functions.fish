@@ -55,6 +55,28 @@ if test $x[5] != 'line 1\\\\n\\nline 2 & more; way more'
 end
 
 # ==========
+# Verify that `functions --details` works as expected when given the name of a
+# function that is copied. (Prints the filename where it was copied.)
+functions -c f1 f1a
+functions -D f1a
+#CHECK: {{.*}}checks/functions.fish
+functions -Dv f1a
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
+echo "functions -c f1 f1b" | source
+functions -D f1b
+#CHECK: -
+functions -Dv f1b
+#CHECK: -
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
+
+# ==========
 # Verify function description setting
 function test_func_desc
 end
@@ -103,6 +125,41 @@ functions t
 
 functions --no-details t
 # CHECK: function t
+# CHECK: echo tttt;
+# CHECK: end
+
+functions -c t t2
+functions t2
+# CHECK: # Defined via `source`, copied in {{.*}}checks/functions.fish @ line {{\d+}}
+# CHECK: function t2
+# CHECK: echo tttt;
+# CHECK: end
+functions -D t2
+#CHECK: {{.*}}checks/functions.fish
+functions -Dv t2
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: -
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
+
+echo "functions -c t t3" | source
+functions t3
+# CHECK: # Defined via `source`, copied via `source`
+# CHECK: function t3
+# CHECK: echo tttt;
+# CHECK: end
+functions -D t3
+#CHECK: -
+functions -Dv t3
+#CHECK: -
+#CHECK: -
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
+
+functions --no-details t2
+# CHECK: function t2
 # CHECK: echo tttt;
 # CHECK: end
 

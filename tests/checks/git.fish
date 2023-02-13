@@ -169,7 +169,7 @@ echo
 
 set -e __fish_git_prompt_show_informative_status
 set -e __fish_git_prompt_showstashstate
-set -e ___fish_git_prompt_status_order
+set -e __fish_git_prompt_status_order
 set -e ___fish_git_prompt_char_stashstate
 set -e ___fish_git_prompt_char_cleanstate
 

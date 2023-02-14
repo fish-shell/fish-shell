@@ -68,10 +68,10 @@ fn push_timer_ffi(enabled: bool) -> Box<PrintElapsedOnDropFfi> {
 }
 
 /// An enumeration of supported libc rusage types used by [`getrusage()`].
+/// NB: RUSAGE_THREAD is not supported on macOS.
 enum RUsage {
     RSelf, // "Self" is a reserved keyword
     RChildren,
-    RThread,
 }
 
 /// A safe wrapper around `libc::getrusage()`
@@ -81,7 +81,6 @@ fn getrusage(resource: RUsage) -> libc::rusage {
         match resource {
             RUsage::RSelf => libc::getrusage(libc::RUSAGE_SELF, rusage.as_mut_ptr()),
             RUsage::RChildren => libc::getrusage(libc::RUSAGE_CHILDREN, rusage.as_mut_ptr()),
-            RUsage::RThread => libc::getrusage(libc::RUSAGE_THREAD, rusage.as_mut_ptr()),
         }
     };
 

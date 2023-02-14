@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 pub const fn timeval_to_duration(val: &libc::timeval) -> Duration {
-    let micros = val.tv_sec * (1E6 as i64) + val.tv_usec;
+    let micros = val.tv_sec as i64 * (1E6 as i64) + val.tv_usec as i64;
     Duration::from_micros(micros as u64)
 }
 

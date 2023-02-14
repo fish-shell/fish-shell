@@ -455,7 +455,22 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
 
         // Import any abbreviations from uvars.
         // Note we do not dynamically react to changes.
-        abbrs_get_set()->import_from_uvars(table);
+        const wchar_t *const prefix = L"_fish_abbr_";
+        size_t prefix_len = wcslen(prefix);
+        const bool from_universal = true;
+        auto abbrs = abbrs_get_set();
+        for (const auto &kv : table) {
+            if (string_prefixes_string(prefix, kv.first)) {
+                wcstring escaped_name = kv.first.substr(prefix_len);
+                wcstring name;
+                if (unescape_string(escaped_name, &name, unescape_flags_t{}, STRING_STYLE_VAR)) {
+                    wcstring key = name;
+                    wcstring replacement = join_strings(kv.second.as_list(), L' ');
+                    abbrs->add(std::move(name), std::move(key), std::move(replacement),
+                               abbrs_position_t::command, from_universal);
+                }
+            }
+        }
     }
 }
 

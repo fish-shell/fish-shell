@@ -1,8 +1,10 @@
-use crate::wchar;
+use crate::wchar::{self};
+use crate::wchar_ffi::WCharToFFI;
 #[rustfmt::skip]
 use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
+use crate::wchar::wstr;
 use autocxx::prelude::*;
 use cxx::SharedPtr;
 
@@ -25,15 +27,16 @@ include_cpp! {
     #include "event.h"
     #include "re.h"
     #include "parse_constants.h"
+    #include "env.h"
 
     safety!(unsafe_ffi)
 
     generate_pod!("wcharz_t")
-    generate_pod!("source_range_t")
     generate!("make_fd_nonblocking")
     generate!("wperror")
 
     generate_pod!("pipes_ffi_t")
+    generate!("env_stack_t")
     generate!("make_pipes_ffi")
 
     generate!("re::regex_t")
@@ -65,17 +68,24 @@ include_cpp! {
     generate!("builtin_missing_argument")
     generate!("builtin_unknown_option")
     generate!("builtin_print_help")
+    generate!("builtin_print_error_trailer")
 
     generate!("wait_handle_t")
     generate!("wait_handle_store_t")
 
     generate!("event_fire_generic")
+    generate!("escape_string")
+    generate_pod!("escape_string_style_t")
 }
 
 impl parser_t {
     pub fn get_jobs(&self) -> &[SharedPtr<job_t>] {
         let ffi_jobs = self.ffi_jobs();
         unsafe { slice::from_raw_parts(ffi_jobs.jobs, ffi_jobs.count) }
+    }
+
+    pub fn remove_var(&mut self, var: &wstr, flags: c_int) -> c_int {
+        self.pin().remove_var_ffi(&var.to_ffi(), flags)
     }
 }
 
@@ -128,6 +138,9 @@ impl Repin for job_t {}
 impl Repin for process_t {}
 impl Repin for io_streams_t {}
 impl Repin for output_stream_t {}
+impl Repin for env_stack_t {}
+
+unsafe impl Send for re::regex_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

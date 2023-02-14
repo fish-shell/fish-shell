@@ -12,11 +12,16 @@
 #include "re.h"
 
 #if INCLUDE_RUST_HEADERS
+
 #include "abbrs.rs.h"
+
 #else
+// Hacks to allow us to compile without Rust headers.
+struct abbrs_replacer_t;
 
+struct abbrs_replacement_t;
+
+struct abbreviation_t;
 #endif
-
-class env_var_t;
 
 #endif

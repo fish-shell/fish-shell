@@ -1,6 +1,7 @@
+#![allow(clippy::extra_unused_lifetimes, clippy::needless_lifetimes)]
 use std::{
     collections::HashSet,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard},
 };
 
 use crate::{
@@ -12,9 +13,10 @@ use once_cell::sync::Lazy;
 pub use widestring::{Utf32Str as wstr, Utf32String as WString};
 
 use crate::abbrs::abbr_ffi::abbrs_replacer_t;
-use crate::{ffi::re::regex_t, parse_constants::SourceRange};
+use crate::ffi::re::regex_t;
+use crate::parse_constants::SourceRange;
 
-use self::abbr_ffi::{abbrs_position_t, abbrs_replacement_t, source_range_t};
+use self::abbr_ffi::{abbreviation_t, abbrs_position_t, abbrs_replacement_t};
 
 #[cxx::bridge]
 mod abbr_ffi {
@@ -22,7 +24,7 @@ mod abbr_ffi {
         include!("re.h");
         include!("parse_constants.h");
 
-        type source_range_t = crate::ffi::source_range_t;
+        type SourceRange = crate::parse_constants::SourceRange;
     }
 
     enum abbrs_position_t {
@@ -38,13 +40,24 @@ mod abbr_ffi {
     }
 
     struct abbrs_replacement_t {
-        range: source_range_t,
+        range: SourceRange,
         text: UniquePtr<CxxWString>,
         cursor: usize,
         has_cursor: bool,
     }
 
+    struct abbreviation_t {
+        key: UniquePtr<CxxWString>,
+        replacement: UniquePtr<CxxWString>,
+        is_regex: bool,
+    }
+
     extern "Rust" {
+        type GlobalAbbrs<'a>;
+
+        #[cxx_name = "abbrs_list"]
+        fn abbrs_list_ffi() -> Vec<abbreviation_t>;
+
         #[cxx_name = "abbrs_match"]
         fn abbrs_match_ffi(token: &CxxWString, position: abbrs_position_t)
             -> Vec<abbrs_replacer_t>;
@@ -54,19 +67,41 @@ mod abbr_ffi {
 
         #[cxx_name = "abbrs_replacement_from"]
         fn abbrs_replacement_from_ffi(
-            range: source_range_t,
-            mut text: CxxWString,
-            replacer: abbrs_replacer_t,
+            range: SourceRange,
+            text: &CxxWString,
+            set_cursor_marker: &CxxWString,
+            has_cursor_marker: bool,
         ) -> abbrs_replacement_t;
+
+        #[cxx_name = "abbrs_get_set"]
+        unsafe fn abbrs_get_set_ffi<'a>() -> Box<GlobalAbbrs<'a>>;
+        unsafe fn add<'a>(
+            self: &mut GlobalAbbrs<'_>,
+            name: &CxxWString,
+            key: &CxxWString,
+            replacement: &CxxWString,
+            position: abbrs_position_t,
+            from_universal: bool,
+        );
     }
 }
 
-const abbrs: Lazy<Arc<Mutex<AbbreviationSet>>> =
+static abbrs: Lazy<Arc<Mutex<AbbreviationSet>>> =
     Lazy::new(|| Arc::new(Mutex::new(Default::default())));
+
+pub fn with_abbrs<R>(cb: impl FnOnce(&AbbreviationSet) -> R) -> R {
+    let abbrs_g = abbrs.lock().unwrap();
+    cb(&abbrs_g)
+}
+
+pub fn with_abbrs_mut<R>(cb: impl FnOnce(&mut AbbreviationSet) -> R) -> R {
+    let mut abbrs_g = abbrs.lock().unwrap();
+    cb(&mut abbrs_g)
+}
 
 /// Controls where in the command line abbreviations may expand.
 #[derive(Debug, PartialEq, Clone, Copy)]
-enum Position {
+pub enum Position {
     Command,  // expand in command position
     Anywhere, // expand in any token
 }
@@ -81,40 +116,41 @@ impl From<abbrs_position_t> for Position {
     }
 }
 
-struct Abbreviation {
+#[derive(Debug)]
+pub struct Abbreviation {
     // Abbreviation name. This is unique within the abbreviation set.
     // This is used as the token to match unless we have a regex.
-    name: WString,
+    pub name: WString,
 
     /// The key (recognized token) - either a literal or a regex pattern.
-    key: WString,
+    pub key: WString,
 
     /// If set, use this regex to recognize tokens.
     /// If unset, the key is to be interpreted literally.
     /// Note that the fish interface enforces that regexes match the entire token;
     /// we accomplish this by surrounding the regex in ^ and $.
-    regex: Option<regex_t>,
+    pub regex: Option<regex_t>,
 
     /// Replacement string.
-    replacement: WString,
+    pub replacement: WString,
 
     /// If set, the replacement is a function name.
-    replacement_is_function: bool,
+    pub replacement_is_function: bool,
 
     /// Expansion position.
-    position: Position,
+    pub position: Position,
 
     /// If set, then move the cursor to the first instance of this string in the expansion.
-    set_cursor_marker: Option<WString>,
+    pub set_cursor_marker: Option<WString>,
 
     /// Mark if we came from a universal variable.
-    from_universal: bool,
+    pub from_universal: bool,
 }
 
 impl Abbreviation {
     // Construct from a name, a key which matches a token, a replacement token, a position, and
     // whether we are derived from a universal variable.
-    fn new(
+    pub fn new(
         name: WString,
         key: WString,
         replacement: WString,
@@ -156,7 +192,7 @@ impl Abbreviation {
 }
 
 /// The result of an abbreviation expansion.
-struct Replacer {
+pub struct Replacer {
     /// The string to use to replace the incoming token, either literal or as a function name.
     replacement: WString,
 
@@ -179,21 +215,6 @@ impl From<Replacer> for abbrs_replacer_t {
     }
 }
 
-impl Into<Replacer> for abbrs_replacer_t {
-    fn into(self) -> Replacer {
-        let cursor_marker = if self.has_cursor_marker {
-            Some(self.set_cursor_marker.from_ffi())
-        } else {
-            None
-        };
-        Replacer {
-            replacement: self.replacement.from_ffi(),
-            is_function: self.is_function,
-            set_cursor_marker: cursor_marker,
-        }
-    }
-}
-
 struct Replacement {
     /// The original range of the token in the command line.
     range: SourceRange,
@@ -210,9 +231,9 @@ impl Replacement {
     /// Construct a replacement from a replacer.
     /// The \p range is the range of the text matched by the replacer in the command line.
     /// The text is passed in separately as it may be the output of the replacer's function.
-    fn from(range: SourceRange, mut text: WString, replacer: Replacer) -> Self {
+    fn from(range: SourceRange, mut text: WString, set_cursor_marker: Option<WString>) -> Self {
         let mut cursor = None;
-        if let Some(set_cursor_marker) = replacer.set_cursor_marker {
+        if let Some(set_cursor_marker) = set_cursor_marker {
             let matched = text
                 .as_char_slice()
                 .windows(set_cursor_marker.len())
@@ -233,30 +254,8 @@ impl Replacement {
     }
 }
 
-fn abbrs_replacement_from_ffi(
-    range: source_range_t,
-    text: CxxWString,
-    replacer: abbrs_replacer_t,
-) -> abbrs_replacement_t {
-    let replacement = Replacement::from(
-        SourceRange {
-            start: range.start,
-            length: range.length,
-        },
-        text.from_ffi(),
-        replacer.into(),
-    );
-
-    abbrs_replacement_t {
-        range,
-        text: replacement.text.to_ffi(),
-        cursor: replacement.cursor.unwrap_or_default(),
-        has_cursor: replacement.cursor.is_some(),
-    }
-}
-
 #[derive(Default)]
-struct AbbreviationSet {
+pub struct AbbreviationSet {
     /// List of abbreviations, in definition order.
     abbrs: Vec<Abbreviation>,
 
@@ -268,7 +267,7 @@ struct AbbreviationSet {
 impl AbbreviationSet {
     /// \return the list of replacers for an input token, in priority order.
     /// The \p position is given to describe where the token was found.
-    fn r#match(&self, token: &wstr, position: Position) -> Vec<Replacer> {
+    pub fn r#match(&self, token: &wstr, position: Position) -> Vec<Replacer> {
         let mut result = vec![];
 
         // Later abbreviations take precedence so walk backwards.
@@ -285,13 +284,13 @@ impl AbbreviationSet {
     }
 
     /// \return whether we would have at least one replacer for a given token.
-    fn has_match(&self, token: &wstr, position: Position) -> bool {
+    pub fn has_match(&self, token: &wstr, position: Position) -> bool {
         self.abbrs.iter().any(|abbr| abbr.matches(token, position))
     }
 
     /// Add an abbreviation. Any abbreviation with the same name is replaced.
-    fn add(&mut self, abbr: Abbreviation) {
-        assert!(abbr.name.is_empty(), "Invalid name");
+    pub fn add(&mut self, abbr: Abbreviation) {
+        assert!(!abbr.name.is_empty(), "Invalid name");
         let inserted = self.used_names.insert(abbr.name.clone());
         if !inserted {
             // Name was already used, do a linear scan to find it.
@@ -309,7 +308,7 @@ impl AbbreviationSet {
 
     /// Rename an abbreviation. This asserts that the old name is used, and the new name is not; the
     /// caller should check these beforehand with has_name().
-    fn rename(&mut self, old_name: &wstr, new_name: &wstr) {
+    pub fn rename(&mut self, old_name: &wstr, new_name: &wstr) {
         let erased = self.used_names.remove(old_name);
         let inserted = self.used_names.insert(new_name.to_owned());
         assert!(
@@ -326,7 +325,7 @@ impl AbbreviationSet {
 
     /// Erase an abbreviation by name.
     /// \return true if erased, false if not found.
-    fn erase(&mut self, name: &wstr) -> bool {
+    pub fn erase(&mut self, name: &wstr) -> bool {
         let erased = self.used_names.remove(name);
         if !erased {
             return false;
@@ -337,17 +336,16 @@ impl AbbreviationSet {
                 return true;
             }
         }
-        assert!(false, "Unable to find named abbreviation");
-        return false;
+        panic!("Unable to find named abbreviation");
     }
 
     /// \return true if we have an abbreviation with the given name.
-    fn has_name(&self, name: &wstr) -> bool {
+    pub fn has_name(&self, name: &wstr) -> bool {
         self.used_names.contains(name)
     }
 
     /// \return a reference to the abbreviation list.
-    fn list(&self) -> &[Abbreviation] {
+    pub fn list(&self) -> &[Abbreviation] {
         &self.abbrs
     }
 }
@@ -355,7 +353,7 @@ impl AbbreviationSet {
 /// \return the list of replacers for an input token, in priority order, using the global set.
 /// The \p position is given to describe where the token was found.
 fn abbrs_match(token: &wstr, position: Position) -> Vec<Replacer> {
-    return abbrs.lock().unwrap().r#match(token, position);
+    return with_abbrs(|set| set.r#match(token, position));
 }
 
 fn abbrs_match_ffi(token: &CxxWString, position: abbrs_position_t) -> Vec<abbrs_replacer_t> {
@@ -366,8 +364,79 @@ fn abbrs_match_ffi(token: &CxxWString, position: abbrs_position_t) -> Vec<abbrs_
 }
 
 fn abbrs_has_match_ffi(token: &CxxWString, position: abbrs_position_t) -> bool {
-    abbrs
-        .lock()
-        .unwrap()
-        .has_match(&token.from_ffi(), position.into())
+    with_abbrs(|set| set.has_match(&token.from_ffi(), position.into()))
+}
+
+fn abbrs_list_ffi() -> Vec<abbreviation_t> {
+    with_abbrs(|set| -> Vec<abbreviation_t> {
+        let list = set.list();
+        let mut result = Vec::with_capacity(list.len());
+        for abbr in list {
+            result.push(abbreviation_t {
+                key: abbr.key.to_ffi(),
+                replacement: abbr.replacement.to_ffi(),
+                is_regex: abbr.is_regex(),
+            })
+        }
+
+        result
+    })
+}
+
+fn abbrs_get_set_ffi<'a>() -> Box<GlobalAbbrs<'a>> {
+    let abbrs_g = abbrs.lock().unwrap();
+    Box::new(GlobalAbbrs { g: abbrs_g })
+}
+
+
+fn abbrs_replacement_from_ffi(
+    range: SourceRange,
+    text: &CxxWString,
+    set_cursor_marker: &CxxWString,
+    has_cursor_marker: bool,
+) -> abbrs_replacement_t {
+    let mut cursor_marker = None;
+    if has_cursor_marker {
+        let _ = cursor_marker.insert(set_cursor_marker.from_ffi());
+    }
+
+    let replacement = Replacement::from(
+        SourceRange {
+            start: range.start,
+            length: range.length,
+        },
+        text.from_ffi(),
+        cursor_marker,
+    );
+
+    abbrs_replacement_t {
+        range,
+        text: replacement.text.to_ffi(),
+        cursor: replacement.cursor.unwrap_or_default(),
+        has_cursor: replacement.cursor.is_some(),
+    }
+}
+
+
+pub struct GlobalAbbrs<'a> {
+    g: MutexGuard<'a, AbbreviationSet>,
+}
+
+impl<'a> GlobalAbbrs<'a> {
+    fn add(
+        &mut self,
+        name: &CxxWString,
+        key: &CxxWString,
+        replacement: &CxxWString,
+        position: abbrs_position_t,
+        from_universal: bool,
+    ) {
+        self.g.add(Abbreviation::new(
+            name.from_ffi(),
+            key.from_ffi(),
+            replacement.from_ffi(),
+            position.into(),
+            from_universal,
+        ));
+    }
 }

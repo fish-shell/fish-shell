@@ -392,6 +392,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     env_stack_t &vars() { return *variables; }
     const env_stack_t &vars() const { return *variables; }
 
+    int remove_var_ffi(const wcstring &key, int mode) { return vars().remove(key, mode); }
+
     /// Get the library data.
     library_data_t &libdata() { return library_data; }
     const library_data_t &libdata() const { return library_data; }

@@ -34,8 +34,14 @@ mod builtins_ffi {
 /// A handy return value for successful builtins.
 pub const STATUS_CMD_OK: Option<c_int> = Some(0);
 
+/// The status code used for failure exit in a command (but not if the args were invalid).
+pub const STATUS_CMD_ERROR: Option<c_int> = Some(1);
+
 /// A handy return value for invalid args.
 pub const STATUS_INVALID_ARGS: Option<c_int> = Some(2);
+
+/// Error message when too many arguments are supplied to a builtin.
+pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
 
 /// A wrapper around output_stream_t.
 pub struct output_stream_t(*mut ffi::output_stream_t);
@@ -109,6 +115,7 @@ pub fn run_builtin(
     builtin: RustBuiltin,
 ) -> Option<c_int> {
     match builtin {
+        RustBuiltin::Abbr => super::abbr::abbr(parser, streams, args),
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),
@@ -156,6 +163,10 @@ pub fn builtin_print_help(parser: &mut parser_t, streams: &io_streams_t, cmd: &w
         c_str!(cmd),
         empty_wstring(),
     );
+}
+
+pub fn builtin_print_error_trailer(parser: &mut parser_t, streams: &mut io_streams_t, cmd: &wstr) {
+    ffi::builtin_print_error_trailer(parser.pin(), streams.err.ffi(), c_str!(cmd));
 }
 
 pub struct HelpOnlyCmdOpts {

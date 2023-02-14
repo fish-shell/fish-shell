@@ -31,12 +31,13 @@ using parse_error_list_t = ParseErrorList;
 
 #include "config.h"
 
-struct source_range_t {
+struct SourceRange {
     source_offset_t start;
     source_offset_t length;
 };
+using source_range_t = SourceRange;
 
-enum class parse_token_type_t : uint8_t {
+enum class parse_token_type_t:uint8_t {
     invalid = 1,
     string,
     pipe,

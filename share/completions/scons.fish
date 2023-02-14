@@ -9,7 +9,7 @@ complete -c scons -l config -d 'How the Configure call should run the config tes
 	force\t"Rerun all tests"
 	cache\t"Take all results from cache"' -x
 
-complete -c scons -s C -d 'Directory, --directory=directory Change to the specified directory before searching for the SCon struct, Sconstruct, or sconstruct file, or doing anything else'
+complete -c scons -s C -l directory -d 'Change to this directory before searching for the sconstruct file'
 complete -c scons -s D -d 'Like -u except for the way default targets are handled'
 
 complete -c scons -l debug -d 'Debug the build process' -a "count dtree explain findlibs includes memoizer memory nomemoizer objects pdb presub stacktrace stree time tree" -x

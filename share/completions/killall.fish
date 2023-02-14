@@ -25,7 +25,7 @@ complete -c killall -xa '(__fish_complete_proc | string replace -r -- "^-" "")'
 if killall --version >/dev/null 2>/dev/null # GNU
     complete -c killall -s e -l exact -d 'Require an exact match for very long names'
     complete -c killall -s I -l ignore-case -d 'Do case insensitive process name match'
-    complete -c killall -s g -l process-group -d 'Kill the process group to which the process belongs. The kill signal is only sent once per group, even if multiple processes belonging to the same process group were found'
+    complete -c killall -s g -l process-group -d 'Kill the process group to which the process belongs with one signal'
     complete -c killall -s i -l interactive -d 'Interactively ask for confirmation before killing'
     complete -c killall -s u -l user -x -a "(__fish_complete_users)" -d 'Kill only processes the specified user owns. Command names are optional'
     complete -c killall -s w -l wait -d 'Wait for all killed processes to die'

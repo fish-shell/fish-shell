@@ -751,6 +751,13 @@ block_t event_block(rust::Box<Event> evt) {
     return b;
 }
 
+block_t event_block_hack(void *evt_ptr) {
+    auto evt = static_cast<rust::Box<Event> *>(evt_ptr);
+    block_t result = event_block(std::move(*evt));
+    free(evt);
+    return result;
+}
+
 block_t block_t::function_block(wcstring name, wcstring_list_t args, bool shadows) {
     block_t b{shadows ? block_type_t::function_call : block_type_t::function_call_no_shadow};
     b.function_name = std::move(name);

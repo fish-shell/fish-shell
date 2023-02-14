@@ -23,7 +23,7 @@ use widestring_suffix::widestrs;
 use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, EscapeFlags, EscapeStringStyle, ScopedPush};
 use crate::ffi::{
-    self, block_type_t, event_block, event_block_list_blocks_type, io_chain_t, parser_t,
+    self, block_type_t, event_block_hack, event_block_list_blocks_type, io_chain_t, parser_t,
     signal_check_cancel, signal_handle, termsize_container_t, Repin,
 };
 use crate::flog::FLOG;
@@ -729,8 +729,6 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         let _interactive = ScopedPush::new(&mut ld.is_interactive, false);
-        todo!();
-        /*
         let prev_statuses = parser.get_last_statuses().within_unique_ptr();
 
         FLOG!(
@@ -743,7 +741,9 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         );
 
         let parser = parser.pin();
-        let b = parser.push_block(event_block(Box::new(event)).within_unique_ptr());
+        let event_box = Box::new(event.clone());
+        let event_box_ptr = Box::leak(Box::new(event_box)) as *mut _;
+        let b = parser.push_block(event_block_hack(event_box_ptr as *mut _).within_unique_ptr());
         parser.eval(
             &buffer.to_ffi(),
             &io_chain_t::new().within_unique_ptr(),
@@ -755,7 +755,6 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
 
         handler.fired.store(true, Ordering::Relaxed);
         fired_one_shot |= handler.is_one_shot();
-        */
     }
 
     if fired_one_shot {

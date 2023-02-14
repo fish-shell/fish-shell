@@ -126,6 +126,8 @@ class block_t {
 };
 
 block_t event_block(rust::Box<Event> evt);
+// https://github.com/google/autocxx/issues/1237
+block_t event_block_hack(void * evt);
 
 struct profile_item_t {
     using microseconds_t = long long;

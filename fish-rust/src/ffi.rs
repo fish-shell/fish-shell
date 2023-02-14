@@ -28,6 +28,8 @@ include_cpp! {
 
     safety!(unsafe_ffi)
 
+    //extern_rust_type!(Event)
+
     generate_pod!("wcharz_t")
     generate!("make_fd_nonblocking")
     generate!("wperror")
@@ -79,9 +81,9 @@ include_cpp! {
     generate!("event_block_list_blocks_type")
     generate!("block_t")
     generate!("block_type_t")
+    generate!("event_block_hack")
     generate!("statuses_t")
     generate!("io_chain_t")
-    generate!("event_block")
 
     generate!("termsize_container_t")
 }

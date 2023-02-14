@@ -46,6 +46,10 @@ complete -c t -l fileoption -rF
 complete -C't --fileoption ' | string match test.fish
 # CHECK: test.fish
 
+# See that an empty command gets files
+complete -C'"" t' | string match test.fish
+# CHECK: test.fish
+
 # Make sure bare `complete` is reasonable,
 complete -p '/complete test/beta1' -d 'desc, desc' -sZ
 complete -c 'complete test beta2' -r -d 'desc \' desc2 [' -a 'foo bar'

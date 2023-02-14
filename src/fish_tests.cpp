@@ -92,7 +92,6 @@
 #include "signals.h"
 #include "smoke.rs.h"
 #include "termsize.h"
-#include "timer.h"
 #include "tokenizer.h"
 #include "topic_monitor.h"
 #include "utf8.h"
@@ -6752,41 +6751,6 @@ static void test_fd_event_signaller() {
     do_test(!sema.try_consume());
 }
 
-static void test_timer_format() {
-    say(L"Testing timer format");
-    // This test uses numeric output, so we need to set the locale.
-    char *saved_locale = strdup(std::setlocale(LC_NUMERIC, nullptr));
-    std::setlocale(LC_NUMERIC, "C");
-    auto t1 = timer_snapshot_t::take();
-    t1.cpu_fish.ru_utime.tv_usec = 0;
-    t1.cpu_fish.ru_stime.tv_usec = 0;
-    t1.cpu_children.ru_utime.tv_usec = 0;
-    t1.cpu_children.ru_stime.tv_usec = 0;
-    auto t2 = t1;
-    t2.cpu_fish.ru_utime.tv_usec = 999995;
-    t2.cpu_fish.ru_stime.tv_usec = 999994;
-    t2.cpu_children.ru_utime.tv_usec = 1000;
-    t2.cpu_children.ru_stime.tv_usec = 500;
-    t2.wall += std::chrono::microseconds(500);
-    auto expected =
-        LR"(
-________________________________________________________
-Executed in  500.00 micros    fish         external
-   usr time    1.00 secs      1.00 secs    1.00 millis
-   sys time    1.00 secs      1.00 secs    0.50 millis
-)";  //        (a)            (b)            (c)
-     // (a) remaining columns should align even if there are different units
-     // (b) carry to the next unit when it would overflow %6.2F
-     // (c) carry to the next unit when the larger one exceeds 1000
-    std::wstring actual = timer_snapshot_t::print_delta(t1, t2, true);
-    if (actual != expected) {
-        err(L"Failed to format timer snapshot\nExpected: %ls\nActual:%ls\n", expected,
-            actual.c_str());
-    }
-    std::setlocale(LC_NUMERIC, saved_locale);
-    free(saved_locale);
-}
-
 static void test_killring() {
     say(L"Testing killring");
 
@@ -7213,7 +7177,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("topics"), test_topic_monitor_torture},
     {TEST_GROUP("pipes"), test_pipes},
     {TEST_GROUP("fd_event"), test_fd_event_signaller},
-    {TEST_GROUP("timer_format"), test_timer_format},
     {TEST_GROUP("termsize"), termsize_tester_t::test},
     {TEST_GROUP("killring"), test_killring},
     {TEST_GROUP("re"), test_re_errs},

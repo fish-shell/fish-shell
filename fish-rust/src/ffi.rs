@@ -1,4 +1,4 @@
-use crate::wchar::{self};
+use crate::wchar;
 #[rustfmt::skip]
 use ::std::pin::Pin;
 #[rustfmt::skip]

@@ -39,7 +39,7 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "timer.h"
+#include "timer.rs.h"
 #include "tokenizer.h"
 #include "trace.h"
 #include "wildcard.h"
@@ -1307,7 +1307,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipel
     if (job_is_simple_block(job_node)) {
         bool do_time = job_node.time.has_value();
         // If no-exec has been given, there is nothing to time.
-        cleanup_t timer = push_timer(do_time && !no_exec());
+        auto timer = push_timer(do_time && !no_exec());
         const block_t *block = nullptr;
         end_execution_reason_t result =
             this->apply_variable_assignments(nullptr, job_node.variables, &block);

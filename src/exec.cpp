@@ -47,7 +47,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "redirection.h"
-#include "timer.h"
+#include "timer.rs.h"
 #include "trace.h"
 #include "wait_handle.h"
 #include "wcstringutil.h"
@@ -1019,7 +1019,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         }
         return false;
     }
-    cleanup_t timer = push_timer(j->wants_timing() && !no_exec());
+    auto timer = push_timer(j->wants_timing() && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
     autoclose_pipes_t deferred_pipes;

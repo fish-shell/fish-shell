@@ -49,6 +49,7 @@ complete -c cargo -n '__fish_seen_subcommand_from add install' -n '__fish_is_nth
 
 
 ## --- AUTO-GENERATED WITH `cargo complete fish` ---
+# Manually massaged to improve some descriptions
 complete -c cargo -n __fish_use_subcommand -l explain -d 'Run `rustc --explain CODE`'
 complete -c cargo -n __fish_use_subcommand -l color -d 'Coloring: auto, always, never'
 complete -c cargo -n __fish_use_subcommand -l config -d 'Override a configuration value (unstable)'
@@ -76,7 +77,7 @@ complete -c cargo -n __fish_use_subcommand -f -a install -d 'Install a Rust bina
 complete -c cargo -n __fish_use_subcommand -f -a locate-project -d 'Print a JSON representation of a Cargo.toml file\'s location'
 complete -c cargo -n __fish_use_subcommand -f -a login -d 'Save an api token from the registry locally. If token is not specified, it will be read from stdin.'
 complete -c cargo -n __fish_use_subcommand -f -a logout -d 'Remove an API token from the registry locally'
-complete -c cargo -n __fish_use_subcommand -f -a metadata -d 'Output the resolved dependencies of a package, the concrete used versions including overrides, in machine-readable format'
+complete -c cargo -n __fish_use_subcommand -f -a metadata -d 'Output the resolved dependencies of a package in machine-readable format'
 complete -c cargo -n __fish_use_subcommand -f -a new -d 'Create a new cargo package at <path>'
 complete -c cargo -n __fish_use_subcommand -f -a owner -d 'Manage the owners of a crate on the registry'
 complete -c cargo -n __fish_use_subcommand -f -a package -d 'Assemble the local package into a distributable tarball'
@@ -166,7 +167,7 @@ complete -c cargo -n "__fish_seen_subcommand_from build" -l no-default-features 
 complete -c cargo -n "__fish_seen_subcommand_from build" -l ignore-rust-version -d 'Ignore `rust-version` specification in packages (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from build" -l build-plan -d 'Output the build plan in JSON (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from build" -l unit-graph -d 'Output build graph in JSON (unstable)'
-complete -c cargo -n "__fish_seen_subcommand_from build" -l future-incompat-report -d 'Ouputs a future incompatibility report at the end of the build (unstable)'
+complete -c cargo -n "__fish_seen_subcommand_from build" -l future-incompat-report -d 'Output a future incompatibility report after build (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from build" -s h -l help -d 'Prints help information'
 complete -c cargo -n "__fish_seen_subcommand_from build" -s V -l version -d 'Prints version information'
 complete -c cargo -n "__fish_seen_subcommand_from build" -s v -l verbose -d 'Use verbose output (-vv very verbose/build.rs output)'
@@ -203,7 +204,7 @@ complete -c cargo -n "__fish_seen_subcommand_from check" -l all-features -d 'Act
 complete -c cargo -n "__fish_seen_subcommand_from check" -l no-default-features -d 'Do not activate the `default` feature'
 complete -c cargo -n "__fish_seen_subcommand_from check" -l ignore-rust-version -d 'Ignore `rust-version` specification in packages (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from check" -l unit-graph -d 'Output build graph in JSON (unstable)'
-complete -c cargo -n "__fish_seen_subcommand_from check" -l future-incompat-report -d 'Ouputs a future incompatibility report at the end of the build (unstable)'
+complete -c cargo -n "__fish_seen_subcommand_from check" -l future-incompat-report -d 'Output a future incompatibility report after build (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from check" -s h -l help -d 'Prints help information'
 complete -c cargo -n "__fish_seen_subcommand_from check" -s V -l version -d 'Prints version information'
 complete -c cargo -n "__fish_seen_subcommand_from check" -s v -l verbose -d 'Use verbose output (-vv very verbose/build.rs output)'
@@ -342,7 +343,7 @@ complete -c cargo -n "__fish_seen_subcommand_from git-checkout" -l frozen -d 'Re
 complete -c cargo -n "__fish_seen_subcommand_from git-checkout" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from git-checkout" -l offline -d 'Run without accessing the network'
 complete -c cargo -n "__fish_seen_subcommand_from init" -l registry -d 'Registry to use'
-complete -c cargo -n "__fish_seen_subcommand_from init" -l vcs -d 'Initialize a new repository for the given version control system (git, hg, pijul, or fossil) or do not initialize any version control at all (none), overriding a global configuration.' -r -f -a "git hg pijul fossil none"
+complete -c cargo -n "__fish_seen_subcommand_from init" -l vcs -d 'Initialize a new repository for the given version control system' -r -f -a "git hg pijul fossil none"
 complete -c cargo -n "__fish_seen_subcommand_from init" -l edition -d 'Edition to set for the crate generated' -r -f -a "2015 2018 2021"
 complete -c cargo -n "__fish_seen_subcommand_from init" -l name -d 'Set the resulting package name, defaults to the directory name'
 complete -c cargo -n "__fish_seen_subcommand_from init" -l color -d 'Coloring: auto, always, never'
@@ -444,7 +445,7 @@ complete -c cargo -n "__fish_seen_subcommand_from metadata" -l frozen -d 'Requir
 complete -c cargo -n "__fish_seen_subcommand_from metadata" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from metadata" -l offline -d 'Run without accessing the network'
 complete -c cargo -n "__fish_seen_subcommand_from new" -l registry -d 'Registry to use'
-complete -c cargo -n "__fish_seen_subcommand_from new" -l vcs -d 'Initialize a new repository for the given version control system (git, hg, pijul, or fossil) or do not initialize any version control at all (none), overriding a global configuration.' -r -f -a "git hg pijul fossil none"
+complete -c cargo -n "__fish_seen_subcommand_from new" -l vcs -d 'Initialize a new repository for the given version control system' -r -f -a "git hg pijul fossil none"
 complete -c cargo -n "__fish_seen_subcommand_from new" -l edition -d 'Edition to set for the crate generated' -r -f -a "2015 2018 2021"
 complete -c cargo -n "__fish_seen_subcommand_from new" -l name -d 'Set the resulting package name, defaults to the directory name'
 complete -c cargo -n "__fish_seen_subcommand_from new" -l color -d 'Coloring: auto, always, never'
@@ -695,8 +696,8 @@ complete -c cargo -n "__fish_seen_subcommand_from tree" -l manifest-path -d 'Pat
 complete -c cargo -n "__fish_seen_subcommand_from tree" -s p -l package -d 'Package to be used as the root of the tree'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l exclude -d 'Exclude specific workspace members'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l features -d 'Space or comma separated list of features to activate'
-complete -c cargo -n "__fish_seen_subcommand_from tree" -l target -d 'Filter dependencies matching the given target-triple (default host platform). Pass `all` to include all targets.'
-complete -c cargo -n "__fish_seen_subcommand_from tree" -s e -l edges -d 'The kinds of dependencies to display (features, normal, build, dev, all, no-dev, no-build, no-normal)'
+complete -c cargo -n "__fish_seen_subcommand_from tree" -l target -d 'Filter dependencies matching the given target-triple (or `all` for all targets)'
+complete -c cargo -n "__fish_seen_subcommand_from tree" -s e -l edges -d 'The kinds of dependencies to display' -xa "features normal build dev all no-dev no-build no-normal"
 complete -c cargo -n "__fish_seen_subcommand_from tree" -s i -l invert -d 'Invert the tree direction and focus on the given package'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l prefix -d 'Change the prefix (indentation) of how each entry is displayed' -r -f -a "depth indent none"
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l charset -d 'Character set to use in output: utf8, ascii' -r -f -a "utf8 ascii"

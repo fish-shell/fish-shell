@@ -1099,12 +1099,13 @@ Here is an example of local vs function-scoped variables::
           set gnu "In the beginning there was nothing, which exploded"
       end
 
-      echo $pirate
       # This will not output anything, since the pirate was local
+      echo $pirate
+      # This will output the good Captain's speech
+      # since $captain had function-scope.
       echo $captain
-      # This will output the good Captain's speech since $captain had function-scope.
+      # This will output Sir Terry's wisdom.
       echo $gnu
-      # Will output Sir Terry's wisdom.
   end
 
 When a function calls another, local variables aren't visible::
@@ -1141,7 +1142,8 @@ If you want to override a variable for a single command, you can use "var=val" s
 Unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
 
   set foo banana
-  foo=gagaga echo $foo # prints gagaga, while in other shells it might print "banana"
+  foo=gagaga echo $foo
+  # prints gagaga, while in other shells it might print "banana"
 
 Multiple elements can be given in a :ref:`brace expansion<expand-brace>`::
 
@@ -1318,10 +1320,14 @@ That covers the positional arguments, but commandline tools often get various op
 A more robust approach to option handling is :doc:`argparse <cmds/argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
 
   function mybetterfunction
-      # We tell argparse about -h/--help and -s/--second - these are short and long forms of the same option.
-      # The "--" here is mandatory, it tells it from where to read the arguments.
+      # We tell argparse about -h/--help and -s/--second
+      # - these are short and long forms of the same option.
+      # The "--" here is mandatory,
+      # it tells it from where to read the arguments.
       argparse h/help s/second -- $argv
-      # exit if argparse failed because it found an option it didn't recognize - it will print an error
+      # exit if argparse failed because
+      # it found an option it didn't recognize
+      # - it will print an error
       or return
 
       # If -h or --help is given, we print a little help text and return
@@ -1760,7 +1766,8 @@ Let's make up an example. This function will :ref:`glob <expand-wildcard>` the f
 
         # If there are more than 5 files
         if test (count $files) -gt 5
-            # and both stdin (for reading input) and stdout (for writing the prompt)
+            # and both stdin (for reading input)
+            # and stdout (for writing the prompt)
             # are terminals
             and isatty stdin
             and isatty stdout

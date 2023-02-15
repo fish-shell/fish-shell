@@ -155,14 +155,14 @@ set -g __fish_git_prompt_status_order stashstate
 set -g ___fish_git_prompt_char_stashstate ''
 set -g ___fish_git_prompt_char_cleanstate ''
 
-git commit -m 'Init' >/dev/null 2>&1
+git -c user.email=banana@example.com -c user.name=banana commit -m Init >/dev/null
 echo 'changed' > foo
-git stash >/dev/null 2>&1
+git stash >/dev/null
 fish_git_prompt
 echo
 #CHECK: (newbranch|1)
 
-git stash pop >/dev/null 2>&1
+git stash pop >/dev/null
 fish_git_prompt
 echo
 #CHECK: (newbranch)

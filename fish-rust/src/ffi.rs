@@ -7,6 +7,7 @@ use ::std::slice;
 use crate::wchar::wstr;
 use autocxx::prelude::*;
 use cxx::SharedPtr;
+use ::std::fmt::{Debug, Formatter, Result};
 
 // autocxx has been hacked up to know about this.
 pub type wchar_t = u32;
@@ -129,6 +130,12 @@ pub trait Repin {
 
     fn unpin(self: Pin<&mut Self>) -> &mut Self {
         unsafe { self.get_unchecked_mut() }
+    }
+}
+
+impl Debug for re::regex_t {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        f.write_str("regex_t")
     }
 }
 

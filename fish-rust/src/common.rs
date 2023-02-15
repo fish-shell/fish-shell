@@ -1,4 +1,5 @@
 use crate::wchar::{wstr, WExt};
+use crate::wchar_ffi::c_str;
 use crate::{
     ffi,
     wchar_ffi::{WCharFromFFI, WString},
@@ -78,5 +79,5 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
         EscapeStringStyle::Regex => ffi::escape_string_style_t::STRING_STYLE_REGEX,
     };
 
-    ffi::escape_string(s.as_ptr(), flags_int.into(), style).from_ffi()
+    ffi::escape_string(c_str!(s), flags_int.into(), style).from_ffi()
 }

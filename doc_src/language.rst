@@ -693,9 +693,28 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
     # 20
     # 30
 
-``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
+``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``".
 
 When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1..-1][5]`` (take all elements of ``$foo``, use them as variable names, then give the fifth element of those).
+
+Some more examples::
+
+  set listone 1 2 3
+  set listtwo 4 5 6
+  set var listone listtwo
+
+  echo $$var
+  # Output is 1 2 3 4 5 6
+
+  echo $$var[1]
+  # Output is 1 2 3
+
+  echo $$var[2][3]
+  # $var[1] is listtwo, third element of that is 6, output is 6
+
+  echo $$var[..][2]
+  # The second element of every variable, so output is
+  # 2 5
 
 .. _expand-command-substitution:
 

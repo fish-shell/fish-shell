@@ -155,14 +155,16 @@ set -g __fish_git_prompt_status_order stashstate
 set -g ___fish_git_prompt_char_stashstate ''
 set -g ___fish_git_prompt_char_cleanstate ''
 
-git -c user.email=banana@example.com -c user.name=banana commit -m Init >/dev/null
+set -l identity -c user.email=banana@example.com -c user.name=banana
+git $identity commit -m Init >/dev/null
 echo 'changed' > foo
-git stash >/dev/null
+# (some git versions don't allow stash without giving an email)
+git $identity stash >/dev/null
 fish_git_prompt
 echo
 #CHECK: (newbranch|1)
 
-git stash pop >/dev/null
+git $identity stash pop >/dev/null
 fish_git_prompt
 echo
 #CHECK: (newbranch)

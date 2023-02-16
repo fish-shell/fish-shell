@@ -378,7 +378,8 @@ class reader_history_search_t {
         inactive,  // no search
         line,      // searching by line
         prefix,    // searching by prefix
-        token      // searching by token
+        token,     // searching by token
+        any        // match anything
     };
 
     struct match_t {
@@ -447,6 +448,9 @@ class reader_history_search_t {
             for (auto i = local_tokens.rbegin(); i != local_tokens.rend(); ++i) {
                 add_if_new(std::move(*i));
             }
+        } else if (mode_ == any) {
+            size_t offset = 0; // TODO the match might not exist anywhere in the text
+            matches_.push_back(std::move(match_t {std::move(text), offset}));
         }
         return matches_.size() > before;
     }
@@ -491,6 +495,8 @@ class reader_history_search_t {
     bool by_line() const { return mode_ == line; }
 
     bool by_prefix() const { return mode_ == prefix; }
+
+    bool by_any() const { return mode_ == any; }
 
     /// Move the history search in the given direction \p dir.
     bool move_in_direction(history_search_direction_t dir) {
@@ -544,7 +550,8 @@ class reader_history_search_t {
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
             hist, text,
-            by_prefix() ? history_search_type_t::prefix : history_search_type_t::contains, flags);
+            by_prefix() ? history_search_type_t::prefix :
+                          by_any() ? history_search_type_t::match_everything : history_search_type_t::contains, flags);
     }
 
     /// Reset to inactive search.
@@ -2630,7 +2637,7 @@ void reader_data_t::update_command_line_from_history_search() {
     if (history_search.by_token()) {
         replace_current_token(std::move(new_text));
     } else {
-        assert(history_search.by_line() || history_search.by_prefix());
+        assert(history_search.by_line() || history_search.by_prefix() || history_search.by_any());
         replace_substring(&command_line, 0, command_line.size(), std::move(new_text));
     }
     command_line_has_transient_edit = true;
@@ -3678,6 +3685,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
 
+        case rl::history_backward:
+        case rl::history_forward:
         case rl::history_prefix_search_backward:
         case rl::history_prefix_search_forward:
         case rl::history_search_backward:
@@ -3690,7 +3699,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 : (c == rl::history_prefix_search_backward ||
                    c == rl::history_prefix_search_forward)
                     ? reader_history_search_t::prefix
-                    : reader_history_search_t::line;
+                    : (c == rl::history_search_backward || c == rl::history_search_forward)
+                      ? reader_history_search_t::line
+                      : reader_history_search_t::any;
 
             bool was_active_before = history_search.active();
 
@@ -3710,7 +3721,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                         history_search.reset();
                     }
                 } else {
-                    // Searching by line.
+                    // Searching by line or matching any.
                     history_search.reset_to_mode(el->text(), history, mode, 0);
 
                     // Skip the autosuggestion in the history unless it was truncated.

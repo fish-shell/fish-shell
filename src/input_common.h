@@ -28,6 +28,8 @@ enum class readline_cmd_t {
     history_search_forward,
     history_prefix_search_backward,
     history_prefix_search_forward,
+    history_backward,
+    history_forward,
     history_pager,
     delete_char,
     backward_delete_char,

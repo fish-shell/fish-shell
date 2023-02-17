@@ -46,6 +46,7 @@ Completions
   - ``neovim``
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore``
   - ``apkanalyzer``
+  - ``scrypt``
 
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)

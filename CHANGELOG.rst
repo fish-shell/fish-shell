@@ -39,11 +39,13 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+  - ``apkanalyzer``
   - ``otool``
   - ``pre-commit`` (:issue:`9521`)
   - ``proxychains`` (:issue:`9486`)
   - ``mix phx``
   - ``neovim``
+  - ``scrypt``
   - ``stow``
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore``
 - Improvements to many completions.

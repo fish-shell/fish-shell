@@ -73,17 +73,15 @@ pub fn random(
     }
     let mut parse_ll = |num : &wstr| {
         let res: Result<i64, wutil::Error> = fish_wcstoi_radix_all(num.chars(), None, true);
-        if res.is_err() || res.unwrap() < 0 {
-            match res {
-                Err(_) => {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: invalid integer\n",
-                        cmd,
-                        num,
-                    ));
-                },
-                Ok(_) => {}
-            }
+        match res {
+            Err(_) => {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: %ls: invalid integer\n",
+                    cmd,
+                    num,
+                ));
+            },
+            Ok(_) => {}
         }
         return res;
     };
@@ -95,62 +93,57 @@ pub fn random(
         1 => {
             // Seed the engine persistently
             let num = parse_ll(argv[i]);
-            if num.is_err() {
-                return STATUS_INVALID_ARGS;
+            match num {
+                Err(_) => return STATUS_INVALID_ARGS,
+                Ok(x) => *engine = SmallRng::seed_from_u64(x as u64)
             }
-            *engine = SmallRng::seed_from_u64(num.unwrap() as u64);
             return STATUS_CMD_OK;
         },
         2 => {
             // start is first, end is second
-            let num = parse_ll(argv[i]);
-            if num.is_err() {
-                return STATUS_INVALID_ARGS;
+            match parse_ll(argv[i]) {
+                Err(_) => return STATUS_INVALID_ARGS,
+                Ok(x) => start = x
             }
-            start = num.unwrap();
 
-            let num = parse_ll(argv[i + 1]);
-            if num.is_err() {
-                return STATUS_INVALID_ARGS;
+            match parse_ll(argv[i + 1]) {
+                Err(_) => return STATUS_INVALID_ARGS,
+                Ok(x) => end = x
             }
-            end = num.unwrap();
         },
         3 => {
             // start, step, end
-            let num = parse_ll(argv[i]);
-            if num.is_err() {
-                return STATUS_INVALID_ARGS;
+            match parse_ll(argv[i]) {
+                Err(_) => return STATUS_INVALID_ARGS,
+                Ok(x) => start = x
             }
-            start = num.unwrap();
 
-            let num = parse_ll(argv[i + 1]);
-            if num.is_err() {
-                return STATUS_INVALID_ARGS;
+            match parse_ll(argv[i + 1]) {
+                Err(_) => return STATUS_INVALID_ARGS,
+                Ok(x) if x < 0 => {
+                    // XXX: Historical, this read an "unsigned long long"
+                    // This should actually be "must be a positive integer"
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: %ls: invalid integer\n",
+                        cmd,
+                        argv[i + 1],
+                    ));
+                    return STATUS_INVALID_ARGS;
+                },
+                Ok(0) => {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: STEP must be a positive integer\n",
+                        cmd,
+                    ));
+                    return STATUS_INVALID_ARGS;
+                }
+                Ok(x) => step = x
             }
-            if num.unwrap() < 0 {
-                // XXX: Historical, this read an "unsigned long long"
-                // This should actually be "must be a positive integer"
-                streams.err.append(wgettext_fmt!(
-                    "%ls: %ls: invalid integer\n",
-                    cmd,
-                    argv[i + 1],
-                ));
-                return STATUS_INVALID_ARGS;
-            }
-            if num.unwrap() == 0 {
-                streams.err.append(wgettext_fmt!(
-                    "%ls: STEP must be a positive integer\n",
-                    cmd,
-                ));
-                return STATUS_INVALID_ARGS;
-            }
-            step = num.unwrap();
 
-            let num = parse_ll(argv[i + 2]);
-            if num.is_err() {
-                return STATUS_INVALID_ARGS;
+            match parse_ll(argv[i + 2]) {
+                Err(_) => return STATUS_INVALID_ARGS,
+                Ok(x) => end = x
             }
-            end = num.unwrap();
         },
         _ => {
             streams.err.append(wgettext_fmt!(

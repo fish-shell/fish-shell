@@ -8,6 +8,7 @@ use crate::ffi::{parser_t};
 use crate::wchar::{widestrs, wstr};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{self, format, fish_wcstoi_radix_all, wgettext_fmt};
+use num_traits::PrimInt;
 use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
 use once_cell::sync::Lazy;
@@ -71,8 +72,8 @@ pub fn random(
         streams.out.append(format::printf::sprintf!("%ls\n"L, argv[i + 1 + rand]));
         return STATUS_CMD_OK;
     }
-    let mut parse_ll = |num : &wstr| {
-        let res: Result<i64, wutil::Error> = fish_wcstoi_radix_all(num.chars(), None, true);
+    fn parse<T: PrimInt>(streams: &mut io_streams_t, cmd: &wstr, num : &wstr) -> Result<T, wutil::Error> {
+        let res = fish_wcstoi_radix_all(num.chars(), None, true);
         match res {
             Err(_) => {
                 streams.err.append(wgettext_fmt!(
@@ -84,7 +85,7 @@ pub fn random(
             Ok(_) => {}
         }
         return res;
-    };
+    }
 
     match arg_count {
         0 => {
@@ -92,7 +93,7 @@ pub fn random(
         },
         1 => {
             // Seed the engine persistently
-            let num = parse_ll(argv[i]);
+            let num = parse::<i64>(streams, cmd, argv[i]);
             match num {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => *engine = SmallRng::seed_from_u64(x as u64)
@@ -101,37 +102,26 @@ pub fn random(
         },
         2 => {
             // start is first, end is second
-            match parse_ll(argv[i]) {
+            match parse::<i64>(streams, cmd, argv[i]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => start = x
             }
 
-            match parse_ll(argv[i + 1]) {
+            match parse::<i64>(streams, cmd, argv[i + 1]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => end = x
             }
         },
         3 => {
             // start, step, end
-            match parse_ll(argv[i]) {
+            match parse::<i64>(streams, cmd, argv[i]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => start = x
             }
 
-            // Unfortunately we can't use parse_ll here because step is a u64 so it can go
-            // from i64::MIN to i64::MAX
-            //
-            // If we figured out how to tell it to return a u64 we could use it
-            let res: Result<u64, wutil::Error> = fish_wcstoi_radix_all(argv[i + 1].chars(), None, true);
-            match res {
-                Err(_) => {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: invalid integer\n",
-                        cmd,
-                        argv[i + 1],
-                    ));
-                    return STATUS_INVALID_ARGS;
-                },
+            // start, step, end
+            match parse::<u64>(streams, cmd, argv[i + 1]) {
+                Err(_) => return STATUS_INVALID_ARGS,
                 Ok(0) => {
                     streams.err.append(wgettext_fmt!(
                         "%ls: STEP must be a positive integer\n",
@@ -142,17 +132,8 @@ pub fn random(
                 Ok(x) => step = x
             }
 
-            // XXX Because we've used streams.err above, we can't use parse_ll here because
-            // it needs to be borrowed mutably apparently?
-            let res: Result<i64, wutil::Error> = fish_wcstoi_radix_all(argv[i + 2].chars(), None, true);
-            match res {
-                Err(_) => {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: invalid integer\n",
-                        cmd,
-                        argv[i + 1],
-                    ));
-                },
+            match parse::<i64>(streams, cmd, argv[i + 2]) {
+                Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => end = x
             }
         },

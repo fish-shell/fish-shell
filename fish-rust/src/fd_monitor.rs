@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use self::fd_monitor::{c_void, new_fd_event_signaller, FdEventSignaller, ItemWakeReason};
+use self::fd_monitor::{new_fd_event_signaller, FdEventSignaller, ItemWakeReason};
 use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
 use crate::ffi::void_ptr;
@@ -23,11 +23,6 @@ mod fd_monitor {
         Timeout,
         /// The item was "poked" (woken up explicitly)
         Poke,
-    }
-
-    // Defines and exports a type shared between C++ and rust
-    struct c_void {
-        _unused: u8,
     }
 
     unsafe extern "C++" {
@@ -59,8 +54,8 @@ mod fd_monitor {
         fn new_fd_monitor_item_ffi(
             fd: i32,
             timeout_usecs: u64,
-            callback: *const c_void,
-            param: *const c_void,
+            callback: *const u8,
+            param: *const u8,
         ) -> Box<FdMonitorItem>;
     }
 
@@ -76,8 +71,8 @@ mod fd_monitor {
             &mut self,
             fd: i32,
             timeout_usecs: u64,
-            callback: *const c_void,
-            param: *const c_void,
+            callback: *const u8,
+            param: *const u8,
         ) -> u64;
 
         #[cxx_name = "poke_item"]
@@ -221,13 +216,13 @@ impl FdMonitorItem {
         }
     }
 
-    fn set_callback_ffi(&mut self, callback: *const c_void, param: *const c_void) {
+    fn set_callback_ffi(&mut self, callback: *const u8, param: *const u8) {
         // Safety: we are just marshalling our function pointers with identical definitions on both
         // sides of the ffi bridge as void pointers to keep cxx bridge happy. Whether we invoke the
         // raw function as a void pointer or as a typed fn that helps us keep track of what we're
         // doing is unsafe in all cases, so might as well make the best of it.
         let callback = unsafe { std::mem::transmute(callback) };
-        self.callback = FdMonitorCallback::Ffi(callback, void_ptr(param as _));
+        self.callback = FdMonitorCallback::Ffi(callback, param.into());
     }
 }
 
@@ -240,8 +235,8 @@ fn new_fd_monitor_ffi() -> Box<FdMonitor> {
 fn new_fd_monitor_item_ffi(
     fd: RawFd,
     timeout_usecs: u64,
-    callback: *const c_void,
-    param: *const c_void,
+    callback: *const u8,
+    param: *const u8,
 ) -> Box<FdMonitorItem> {
     // Safety: we are just marshalling our function pointers with identical definitions on both
     // sides of the ffi bridge as void pointers to keep cxx bridge happy. Whether we invoke the
@@ -250,7 +245,7 @@ fn new_fd_monitor_item_ffi(
     let callback = unsafe { std::mem::transmute(callback) };
     let mut item = FdMonitorItem::new();
     item.fd.reset(fd);
-    item.callback = FdMonitorCallback::Ffi(callback, void_ptr(param as _));
+    item.callback = FdMonitorCallback::Ffi(callback, param.into());
     if timeout_usecs != FdReadableSet::kNoTimeout {
         item.timeout = Some(Duration::from_micros(timeout_usecs));
     }
@@ -354,8 +349,8 @@ impl FdMonitor {
         &mut self,
         fd: RawFd,
         timeout_usecs: u64,
-        callback: *const c_void,
-        param: *const c_void,
+        callback: *const u8,
+        param: *const u8,
     ) -> u64 {
         // Safety: we are just marshalling our function pointers with identical definitions on both
         // sides of the ffi bridge as void pointers to keep cxx bridge happy. Whether we invoke the
@@ -364,7 +359,7 @@ impl FdMonitor {
         let callback = unsafe { std::mem::transmute(callback) };
         let mut item = FdMonitorItem::new();
         item.fd.reset(fd);
-        item.callback = FdMonitorCallback::Ffi(callback, void_ptr(param as _));
+        item.callback = FdMonitorCallback::Ffi(callback, param.into());
         if timeout_usecs != FdReadableSet::kNoTimeout {
             item.timeout = Some(Duration::from_micros(timeout_usecs));
         }

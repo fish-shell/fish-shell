@@ -151,3 +151,21 @@ impl core::fmt::Debug for void_ptr {
 
 unsafe impl Send for void_ptr {}
 unsafe impl Sync for void_ptr {}
+
+impl core::convert::From<*const core::ffi::c_void> for void_ptr {
+    fn from(value: *const core::ffi::c_void) -> Self {
+        Self(value as *const _)
+    }
+}
+
+impl core::convert::From<*const u8> for void_ptr {
+    fn from(value: *const u8) -> Self {
+        Self(value as *const _)
+    }
+}
+
+impl core::convert::From<*const autocxx::c_void> for void_ptr {
+    fn from(value: *const autocxx::c_void) -> Self {
+        Self(value as *const _)
+    }
+}

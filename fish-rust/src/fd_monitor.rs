@@ -188,8 +188,7 @@ impl FdMonitorItem {
     }
 
     /// Invoke this item's callback with a poke, if its id is present in the sorted poke list.
-    // TODO: Rename to `maybe_poke_item()` to reflect its actual behavior.
-    fn poke_item(&mut self, pokelist: &[FdMonitorItemId]) -> ItemAction {
+    fn maybe_poke_item(&mut self, pokelist: &[FdMonitorItemId]) -> ItemAction {
         if self.item_id.0 == 0 || pokelist.binary_search(&self.item_id).is_err() {
             // Not pokeable or not in the poke list.
             return ItemAction::Retain;
@@ -379,14 +378,10 @@ impl FdMonitor {
         let needs_notification = {
             let mut data = self.data.lock().expect("Mutex poisoned!");
             let needs_notification = data.pokelist.is_empty();
-            // Insert it, sorted.
-            // TODO: The C++ code inserts it even if it's already in the poke list. That seems
-            // unnecessary?
-            let pos = match data.pokelist.binary_search(&item_id) {
-                Ok(pos) => pos,
-                Err(pos) => pos,
+            // Insert it, sorted. But not if it already exists.
+            if let Err(pos) = data.pokelist.binary_search(&item_id) {
+                data.pokelist.insert(pos, item_id);
             };
-            data.pokelist.insert(pos, item_id);
             needs_notification
         };
 
@@ -491,9 +486,6 @@ impl BackgroundFdMonitor {
             // Service all items that are either readable or have timed out, and remove any which
             // say to do so.
 
-            // This line is from the C++ codebase (fd_monitor.cpp:170) but this write is never read.
-            // now = Instant::now();
-
             self.items
                 .retain_mut(|item| servicer(item) == ItemAction::Retain);
 
@@ -540,7 +532,7 @@ impl BackgroundFdMonitor {
     /// poke list is consumed after this. This is only called from the background thread.
     fn poke(&mut self, pokelist: &[FdMonitorItemId]) {
         self.items.retain_mut(|item| {
-            let action = item.poke_item(&*pokelist);
+            let action = item.maybe_poke_item(&*pokelist);
             if action == ItemAction::Remove {
                 FLOG!(fd_monitor, "Removing fd", item.fd.as_raw_fd());
             }

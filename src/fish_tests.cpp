@@ -835,7 +835,7 @@ static void test_fd_monitor() {
             }
         }
 
-        static void trampoline(autoclose_fd_t2 &fd, item_wake_reason_t reason, c_void *param) {
+        static void trampoline(autoclose_fd_t2 &fd, item_wake_reason_t reason, uint8_t *param) {
             auto &instance = *(item_maker_t*)(param);
             instance.callback(fd, reason);
         }
@@ -843,7 +843,7 @@ static void test_fd_monitor() {
         explicit item_maker_t(uint64_t timeout_usec) {
             auto pipes = make_autoclose_pipes().acquire();
             writer = std::move(pipes.write);
-            item = std::make_unique<rust::Box<fd_monitor_item_t>>(make_fd_monitor_item_t(pipes.read.acquire(), timeout_usec, (c_void *)item_maker_t::trampoline, (c_void*)this));
+            item = std::make_unique<rust::Box<fd_monitor_item_t>>(make_fd_monitor_item_t(pipes.read.acquire(), timeout_usec, (uint8_t *)item_maker_t::trampoline, (uint8_t*)this));
         }
 
         // Write 42 bytes to our write end.

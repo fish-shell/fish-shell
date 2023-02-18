@@ -450,19 +450,22 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
 
         // Test all long options for either exact match or abbreviated matches.
         for (option_index, p) in self.longopts.iter().enumerate() {
+            // Check if current option is prefix of long opt
             if p.name.starts_with(&self.nextchar[..nameend]) {
-                // Exact match found.
-                pfound = Some(*p);
-                *indfound = option_index;
-                *exact = true;
-                break;
-            } else if pfound.is_none() {
-                // First nonexact match found.
-                pfound = Some(*p);
-                *indfound = option_index;
-            } else {
-                // Second or later nonexact match found.
-                *ambig = true;
+                if nameend == p.name.len() {
+                    // The current option is exact match of this long option
+                    pfound = Some(*p);
+                    *indfound = option_index;
+                    *exact = true;
+                    break;
+                } else if pfound.is_none() {
+                    // current option is first prefix match but not exact match
+                    pfound = Some(*p);
+                    *indfound = option_index;
+                } else {
+                    // current option is second or later prefix match but not exact match
+                    *ambig = true;
+                }
             }
         }
         return pfound;

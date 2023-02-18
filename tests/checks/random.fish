@@ -88,8 +88,7 @@ for i in (seq 10)
     check_contains (random -- $min $max 0) $min 0
     check_contains (random -- $min $close_max 0) $min -1
     check_contains (random -- $min $max $max) $min 0 $max
-    # TODO: This test now errors out because of overflow!
-    # check_contains (random -- $min $diff_max $max) $min $max
+    check_contains (random -- $min $diff_max $max) $min $max
 
     test_step 0 $i 10
     test_step -5 $i 5

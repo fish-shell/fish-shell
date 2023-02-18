@@ -118,11 +118,13 @@ pub fn random(
                 Ok(x) => start = x
             }
 
-            match parse_ll(argv[i + 1]) {
-                Err(_) => return STATUS_INVALID_ARGS,
-                Ok(x) if x < 0 => {
-                    // XXX: Historical, this read an "unsigned long long"
-                    // This should actually be "must be a positive integer"
+            // Unfortunately we can't use parse_ll here because step is a u64 so it can go
+            // from i64::MIN to i64::MAX
+            //
+            // If we figured out how to tell it to return a u64 we could use it
+            let res: Result<u64, wutil::Error> = fish_wcstoi_radix_all(argv[i + 1].chars(), None, true);
+            match res {
+                Err(_) => {
                     streams.err.append(wgettext_fmt!(
                         "%ls: %ls: invalid integer\n",
                         cmd,
@@ -140,8 +142,17 @@ pub fn random(
                 Ok(x) => step = x
             }
 
-            match parse_ll(argv[i + 2]) {
-                Err(_) => return STATUS_INVALID_ARGS,
+            // XXX Because we've used streams.err above, we can't use parse_ll here because
+            // it needs to be borrowed mutably apparently?
+            let res: Result<i64, wutil::Error> = fish_wcstoi_radix_all(argv[i + 2].chars(), None, true);
+            match res {
+                Err(_) => {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: %ls: invalid integer\n",
+                        cmd,
+                        argv[i + 1],
+                    ));
+                },
                 Ok(x) => end = x
             }
         },
@@ -162,24 +173,11 @@ pub fn random(
         return STATUS_INVALID_ARGS;
     }
 
-    let real_end : i64 = if start >= 0 || end < 0 {
-        // 0 <= start <= end
-        let diff : i64 = end - start;
-        // 0 <= diff <= LL_MAX
-        start + diff / step
-    } else {
-        // This is based on a "safe_abs" function
-        // in the C++ that just casted a "long long" to "-unsigned long long"
-        // start < 0 <= end
-        let abs_start : u64 = start.abs() as u64;
-        let diff : u64 = (end as u64 + abs_start) as u64;
-        (diff / (step as u64) - abs_start) as i64
-    };
+    // Possibilities can be abs(i64::MIN) + i64::MAX,
+    // so we do this as i128
+    let possibilities = (end as i128 - start as i128) / (step as i128);
 
-    let a = if start < real_end { start } else { real_end };
-    let b = if start > real_end { start } else { real_end };
-
-    if a == b {
+    if possibilities == 0 {
         streams.err.append(wgettext_fmt!(
             "%ls: range contains only one possible value\n",
             cmd,
@@ -187,16 +185,31 @@ pub fn random(
         return STATUS_INVALID_ARGS;
     }
 
-    let rand = engine.gen_range(a..b);
+    let rand = engine.gen_range(0..=possibilities);
 
-    let result = if start >= 0 {
-        start + (rand - start) * step
-    } else if rand < 0 {
-        (rand - start) * step - start.abs()
-    } else {
-        (rand + start.abs()) * step - start.abs()
-    };
-    streams.out.append(format::printf::sprintf!("%d\n"L, result));
+    let result = start as i128 + rand as i128 * step as i128;
 
-    return STATUS_CMD_OK;
+    // We do our math as i128, 
+    // and then we check if it fits in 64 bit - signed or unsigned!
+    match i64::try_from(result) {
+        Ok(x) => {
+            streams.out.append(format::printf::sprintf!("%d\n"L, x));
+            return STATUS_CMD_OK;
+        },
+        Err(_) => {
+            match u64::try_from(result) {
+                Ok(x) => {
+                    streams.out.append(format::printf::sprintf!("%d\n"L, x));
+                    return STATUS_CMD_OK;
+                },
+                Err(_) => {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: range contains only one possible value\n",
+                        cmd,
+                    ));
+                    return STATUS_INVALID_ARGS;
+                },
+            }
+        },
+    }
 }

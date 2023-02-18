@@ -775,6 +775,22 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 }
 
+// For Issue#8877
+// Valid commands following redirection symbols at command line start are colored
+// as $fish_color_command instead of $fish_color_error 
+static bool symbol_text_before_command(const wcstring &buffer, size_t before_cmd_len) {
+    wcstring before_str = buffer.substr(0, before_cmd_len);
+
+    if (before_str.find(L'>') != wcstring::npos
+     || before_str.find(L'&') != wcstring::npos
+     || before_str.find(L'|') != wcstring::npos
+     || before_str.find(L'<') != wcstring::npos) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 namespace {
 /// Syntax highlighter helper.
 class highlighter_t {
@@ -1089,6 +1105,12 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
             is_valid_cmd =
                 command_is_valid(expanded_cmd, stmt.decoration(), working_directory, ctx.vars);
         }
+    }
+
+    // Check if some symbols occur textually before the statement's command as '>echo'
+    if (stmt.command.source_range().start &&
+        symbol_text_before_command(this->buff, stmt.parent->source_range().start)) {
+        is_valid_cmd = false;
     }
 
     // Color our statement.

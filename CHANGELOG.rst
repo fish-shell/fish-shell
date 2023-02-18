@@ -45,6 +45,7 @@ Completions
   - ``otool``
   - ``mix phx``
   - ``neovim``
+  - ``stow``
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore``
   - ``apkanalyzer``
 

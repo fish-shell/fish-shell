@@ -312,7 +312,13 @@ function fish_git_prompt --description "Prompt function for Git"
 
             if contains -- "$__fish_git_prompt_showstashstate" yes true 1
                 and test -r $git_dir/logs/refs/stash
-                set stashstate 1
+                # If we have informative status but don't want to actually
+                # *compute* the informative status, we might still count the stash.
+                if contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+                    set stashstate (count < $git_dir/logs/refs/stash)
+                else
+                    set stashstate 1
+                end
             end
         end
 
@@ -349,7 +355,12 @@ function fish_git_prompt --description "Prompt function for Git"
             set -l color_done $$color_done_var
             set -l symbol $$symbol_var
 
-            set f "$f$color$symbol$color_done"
+            # If we count some things, print the number
+            # This won't be done if we actually do the full informative status
+            # because that does the printing.
+            contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+            and set f "$f$color$symbol$$i$color_done"
+            or set f "$f$color$symbol$color_done"
         end
     end
 

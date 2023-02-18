@@ -10,6 +10,7 @@ Notable improvements and fixes
 
   can now be used to clean out all old abbreviations (:issue:`9468`).
 - ``abbr --add --universal`` now warns about --universal being non-functional, to make it easier to detect old-style ``abbr`` calls (:issue:`9475`).
+- ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 
 Deprecations and removed features
 ---------------------------------
@@ -18,6 +19,8 @@ Scripting improvements
 ----------------------
 - ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
 - ``read`` will now print an error if told to set a read-only variable instead of silently doing nothing (:issue:`9346`).
+- ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively``.
+- Stack trace now shows line numbers for copied functions.
 
 Interactive improvements
 ------------------------
@@ -43,7 +46,9 @@ Completions
   - ``mix phx``
   - ``neovim``
   - ``stow``
-  
+  - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore``
+  - ``apkanalyzer``
+
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)
 

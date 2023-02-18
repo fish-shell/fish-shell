@@ -133,32 +133,44 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
             res = true;
             if (!opts.query && !opts.type) {
                 auto path = func->definition_file;
+                auto copy_path = func->copy_definition_file;
+                auto final_path = func->is_copy ? copy_path : path;
+                wcstring comment;
+
+                if (!path) {
+                    append_format(comment, _(L"Defined interactively"));
+                } else if (*path == L"-") {
+                    append_format(comment, _(L"Defined via `source`"));
+                } else {
+                    append_format(comment, _(L"Defined in %ls @ line %d"), path->c_str(),
+                                  func->definition_lineno());
+                }
+
+                if (func->is_copy) {
+                    if (!copy_path) {
+                        append_format(comment, _(L", copied interactively"));
+                    } else if (*copy_path == L"-") {
+                        append_format(comment, _(L", copied via `source`"));
+                    } else {
+                        append_format(comment, _(L", copied in %ls @ line %d"), copy_path->c_str(),
+                                      func->copy_definition_lineno);
+                    }
+                }
+
                 if (opts.path) {
-                    if (path) {
-                        streams.out.append(*path);
+                    if (final_path) {
+                        streams.out.append(*final_path);
                         streams.out.append(L"\n");
                     }
                 } else if (!opts.short_output) {
                     streams.out.append_format(_(L"%ls is a function"), name);
                     streams.out.append(_(L" with definition"));
                     streams.out.append(L"\n");
-                    // Function path
-                    wcstring def = func->annotated_definition(name);
-                    if (path) {
-                        int line_number = func->definition_lineno();
-                        wcstring comment;
-                        if (*path != L"-") {
-                            append_format(comment, L"# Defined in %ls @ line %d\n", path->c_str(),
-                                          line_number);
-                        } else {
-                            append_format(comment, L"# Defined via `source`\n");
-                        }
-                        def = comment.append(def);
-                    } else {
-                        wcstring comment;
-                        append_format(comment, L"# Defined interactively\n");
-                        def = comment.append(def);
-                    }
+
+                    wcstring def;
+                    append_format(def, L"# %ls\n%ls", comment.c_str(),
+                                  func->annotated_definition(name).c_str());
+
                     if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                         std::vector<highlight_spec_t> colors;
                         highlight_shell(def, colors, parser.context());
@@ -168,11 +180,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
                     }
                 } else {
                     streams.out.append_format(_(L"%ls is a function"), name);
-                    auto path = func->definition_file;
-                    if (path) {
-                        streams.out.append_format(_(L" (defined in %ls)"), path->c_str());
-                    }
-                    streams.out.append(L"\n");
+                    streams.out.append_format(_(L" (%ls)\n"), comment.c_str());
                 }
             } else if (opts.type) {
                 streams.out.append(L"function\n");

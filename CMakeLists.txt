@@ -104,11 +104,11 @@ set(FISH_BUILTIN_SRCS
     src/builtins/builtin.cpp src/builtins/cd.cpp src/builtins/command.cpp
     src/builtins/commandline.cpp src/builtins/complete.cpp src/builtins/contains.cpp
     src/builtins/disown.cpp
-    src/builtins/eval.cpp src/builtins/exit.cpp src/builtins/fg.cpp
+    src/builtins/eval.cpp src/builtins/fg.cpp
     src/builtins/function.cpp src/builtins/functions.cpp src/builtins/history.cpp
     src/builtins/jobs.cpp src/builtins/math.cpp src/builtins/printf.cpp src/builtins/path.cpp
     src/builtins/pwd.cpp src/builtins/random.cpp src/builtins/read.cpp
-    src/builtins/realpath.cpp src/builtins/return.cpp src/builtins/set.cpp
+    src/builtins/realpath.cpp src/builtins/set.cpp
     src/builtins/set_color.cpp src/builtins/source.cpp src/builtins/status.cpp
     src/builtins/string.cpp src/builtins/test.cpp src/builtins/type.cpp src/builtins/ulimit.cpp
 )

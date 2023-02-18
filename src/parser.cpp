@@ -39,6 +39,14 @@ static wcstring user_presentable_path(const wcstring &path, const environment_t 
     return replace_home_directory_with_tilde(path, vars);
 }
 
+void library_data_t::set_exit_current_script(bool val) {
+    exit_current_script = val;
+};
+
+void library_data_t::set_returning(bool val) {
+    returning = val;
+};
+
 parser_t::parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal)
     : variables(std::move(vars)), is_principal_(is_principal) {
     assert(variables.get() && "Null variables in parser initializer");
@@ -667,6 +675,15 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
 RustFFIJobList parser_t::ffi_jobs() const {
     return RustFFIJobList{const_cast<job_ref_t *>(job_list.data()), job_list.size()};
+}
+
+bool parser_t::ffi_has_funtion_block() const {
+    for (const auto &b : blocks()) {
+        if (b.is_function_call()) {
+             return true;
+        }
+    }
+    return false;
 }
 
 block_t::block_t(block_type_t t) : block_type(t) {}

@@ -31,6 +31,12 @@ mod builtins_ffi {
     impl Vec<wcharz_t> {}
 }
 
+/// Error message when too many arguments are supplied to a builtin.
+pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
+
+/// Error message when integer expected
+pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
+
 /// A handy return value for successful builtins.
 pub const STATUS_CMD_OK: Option<c_int> = Some(0);
 
@@ -111,6 +117,8 @@ pub fn run_builtin(
     match builtin {
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
+        RustBuiltin::Exit => super::exit::exit(parser, streams, args),
+        RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),
     }
 }
@@ -156,6 +164,10 @@ pub fn builtin_print_help(parser: &mut parser_t, streams: &io_streams_t, cmd: &w
         c_str!(cmd),
         empty_wstring(),
     );
+}
+
+pub fn builtin_print_error_trailer(parser: &mut parser_t, streams: &mut io_streams_t, cmd: &wstr) {
+    ffi::builtin_print_error_trailer(parser.pin(), streams.err.ffi(), c_str!(cmd));
 }
 
 pub struct HelpOnlyCmdOpts {

@@ -48,6 +48,7 @@ include_cpp! {
     generate!("parser_t")
     generate!("job_t")
     generate!("process_t")
+    generate!("library_data_t")
 
     generate!("proc_wait_any")
 
@@ -61,6 +62,7 @@ include_cpp! {
     generate!("builtin_missing_argument")
     generate!("builtin_unknown_option")
     generate!("builtin_print_help")
+    generate!("builtin_print_error_trailer")
 
     generate!("wait_handle_t")
     generate!("wait_handle_store_t")

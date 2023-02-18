@@ -231,6 +231,9 @@ struct library_data_t {
         /// Used to get the full text of the current job for `status current-commandline`.
         wcstring commandline;
     } status_vars;
+
+    void set_exit_current_script(bool val);
+    void set_returning(bool val);
 };
 
 /// The result of parser_t::eval family.
@@ -483,6 +486,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// autocxx junk.
     RustFFIJobList ffi_jobs() const;
+
+    /// autocxx junk.
+    bool ffi_has_funtion_block() const;
 
     ~parser_t();
 };

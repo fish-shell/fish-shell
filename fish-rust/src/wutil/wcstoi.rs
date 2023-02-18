@@ -106,11 +106,19 @@ where
         negative = false;
     }
     let consumed_all = chars.peek() == None;
-    Ok(ParseResult { result, negative, consumed_all })
+    Ok(ParseResult {
+        result,
+        negative,
+        consumed_all,
+    })
 }
 
 /// Parse some iterator over Chars into some Integer type, optionally with a radix.
-fn fish_wcstoi_impl<Int, Chars>(src: Chars, mradix: Option<u32>, consume_all: bool) -> Result<Int, Error>
+fn fish_wcstoi_impl<Int, Chars>(
+    src: Chars,
+    mradix: Option<u32>,
+    consume_all: bool,
+) -> Result<Int, Error>
 where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
@@ -120,7 +128,10 @@ where
     let signed = Int::min_value() < Int::zero();
 
     let ParseResult {
-        result, negative, consumed_all, ..
+        result,
+        negative,
+        consumed_all,
+        ..
     } = fish_parse_radix(src, mradix)?;
 
     if !signed && negative {
@@ -169,7 +180,11 @@ where
     fish_wcstoi_impl(src, Some(radix), false)
 }
 
-pub fn fish_wcstoi_radix_all<Int, Chars>(src: Chars, radix: Option<u32>, consume_all: bool) -> Result<Int, Error>
+pub fn fish_wcstoi_radix_all<Int, Chars>(
+    src: Chars,
+    radix: Option<u32>,
+    consume_all: bool,
+) -> Result<Int, Error>
 where
     Chars: Iterator<Item = char>,
     Int: PrimInt,

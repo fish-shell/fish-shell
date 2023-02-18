@@ -40,7 +40,7 @@ random choic a b c
 #CHECKERR: random: too many arguments
 
 function check_boundaries
-    if not test $argv[1] -ge $argv[2] -a $argv[1] -le $argv[3]
+    if not test "$argv[1]" -ge "$argv[2]" -a "$argv[1]" -le "$argv[3]"
         printf "Unexpected: %s <= %s <= %s not verified\n" $argv[2] $argv[1] $argv[3] >&2
         return 1
     end

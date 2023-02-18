@@ -1,6 +1,8 @@
 use libc::c_int;
 use std::os::unix::io::RawFd;
 
+pub use fd_readable_set_t as FdReadableSet;
+
 #[cxx::bridge]
 mod fd_readable_set_ffi {
     extern "Rust" {
@@ -20,13 +22,13 @@ pub fn new_fd_readable_set() -> Box<fd_readable_set_t> {
     Box::new(fd_readable_set_t::new())
 }
 
-/// \return true if the fd is or becomes readable within the given timeout.
-/// This returns false if the waiting is interrupted by a signal.
+/// Returns `true` if the fd is or becomes readable within the given timeout.
+/// This returns `false` if the waiting is interrupted by a signal.
 pub fn is_fd_readable(fd: i32, timeout_usec: u64) -> bool {
     fd_readable_set_t::is_fd_readable(fd, timeout_usec)
 }
 
-/// \return whether an fd is readable.
+/// Returns whether an fd is readable.
 pub fn poll_fd_readable(fd: i32) -> bool {
     fd_readable_set_t::poll_fd_readable(fd)
 }
@@ -75,13 +77,14 @@ impl fd_readable_set_t {
         }
     }
 
-    /// \return true if the given fd is marked as set, in our set. \returns false if negative.
+    /// Returns `true` if the given `fd` is marked as set, in our set. Returns `false` if `fd` is
+    /// negative.
     pub fn test(&self, fd: RawFd) -> bool {
         fd >= 0 && unsafe { libc::FD_ISSET(fd, &self.fdset_) }
     }
 
-    /// Call select() or poll(), according to FISH_READABLE_SET_USE_POLL. Note this destructively
-    /// modifies the set. \return the result of select() or poll().
+    /// Call `select()` or `poll()`, according to FISH_READABLE_SET_USE_POLL. Note this
+    /// destructively modifies the set. Returns the result of `select()` or `poll()`.
     pub fn check_readable(&mut self, timeout_usec: u64) -> c_int {
         let null = std::ptr::null_mut();
         if timeout_usec == Self::kNoTimeout {
@@ -106,7 +109,7 @@ impl fd_readable_set_t {
     }
 
     /// Check if a single fd is readable, with a given timeout.
-    /// \return true if readable, false if not.
+    /// Returns `true` if readable, `false` otherwise.
     pub fn is_fd_readable(fd: RawFd, timeout_usec: u64) -> bool {
         if fd < 0 {
             return false;
@@ -118,7 +121,7 @@ impl fd_readable_set_t {
     }
 
     /// Check if a single fd is readable, without blocking.
-    /// \return true if readable, false if not.
+    /// Returns `true` if readable, `false` if not.
     pub fn poll_fd_readable(fd: RawFd) -> bool {
         return Self::is_fd_readable(fd, 0);
     }
@@ -151,23 +154,29 @@ impl fd_readable_set_t {
         pollfd.fd
     }
 
-    /// Add an fd to the set. The fd is ignored if negative (for convenience).
+    /// Add an fd to the set. The fd is ignored if negative (for convenience). The fd is also
+    /// ignored if it's already in the set.
     pub fn add(&mut self, fd: RawFd) {
-        if fd >= 0 {
-            if let Err(pos) = self.pollfds_.binary_search_by_key(&fd, Self::pollfd_get_fd) {
-                self.pollfds_.insert(
-                    pos,
-                    libc::pollfd {
-                        fd,
-                        events: libc::POLLIN,
-                        revents: 0,
-                    },
-                );
-            }
+        if fd < 0 {
+            return;
         }
+        let pos = match self.pollfds_.binary_search_by_key(&fd, Self::pollfd_get_fd) {
+            Ok(_) => return,
+            Err(pos) => pos,
+        };
+
+        self.pollfds_.insert(
+            pos,
+            libc::pollfd {
+                fd,
+                events: libc::POLLIN,
+                revents: 0,
+            },
+        );
     }
 
-    /// \return true if the given fd is marked as set, in our set. \returns false if negative.
+    /// Returns `true` if the given `fd` has input available to read or has been HUP'd.
+    /// Returns `false` if `fd` is negative or was not found in the set.
     pub fn test(&self, fd: RawFd) -> bool {
         // If a pipe is widowed with no data, Linux sets POLLHUP but not POLLIN, so test for both.
         if let Ok(pos) = self.pollfds_.binary_search_by_key(&fd, Self::pollfd_get_fd) {
@@ -178,7 +187,7 @@ impl fd_readable_set_t {
         return false;
     }
 
-    // Convert from a usec to a poll-friendly msec.
+    /// Convert from usecs to poll-friendly msecs.
     fn usec_to_poll_msec(timeout_usec: u64) -> c_int {
         let mut timeout_msec: u64 = timeout_usec / kUsecPerMsec;
         // Round to nearest, down for halfway.
@@ -206,6 +215,8 @@ impl fd_readable_set_t {
 
     /// Call select() or poll(), according to FISH_READABLE_SET_USE_POLL. Note this destructively
     /// modifies the set. \return the result of select() or poll().
+    ///
+    /// TODO: Change to [`Duration`](std::time::Duration) once FFI usage is done.
     pub fn check_readable(&mut self, timeout_usec: u64) -> c_int {
         if self.pollfds_.is_empty() {
             return 0;
@@ -214,7 +225,7 @@ impl fd_readable_set_t {
     }
 
     /// Check if a single fd is readable, with a given timeout.
-    /// \return true if readable, false if not.
+    /// \return true if `fd` is our set and is readable, `false` otherwise.
     pub fn is_fd_readable(fd: RawFd, timeout_usec: u64) -> bool {
         if fd < 0 {
             return false;

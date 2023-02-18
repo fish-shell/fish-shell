@@ -275,6 +275,9 @@ class io_bufferfill_t final : public io_data_t {
     static separated_buffer_t finish(std::shared_ptr<io_bufferfill_t> &&filler);
 };
 
+struct callback_args_t;
+struct autoclose_fd_t2;
+
 /// An io_buffer_t is a buffer which can populate itself by reading from an fd.
 /// It is not an io_data_t.
 class io_buffer_t {
@@ -290,6 +293,9 @@ class io_buffer_t {
 
     /// \return true if output was discarded due to exceeding the read limit.
     bool discarded() { return buffer_.acquire()->discarded(); }
+
+    /// FFI callback workaround.
+    void item_callback(autoclose_fd_t2 &fd, uint8_t reason, callback_args_t *args);
 
    private:
     /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is

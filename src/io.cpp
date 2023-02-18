@@ -14,7 +14,9 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "fd_monitor.h"
+#include "fd_monitor.rs.h"
+#include "fds.h"
+#include "fds.rs.h"
 #include "flog.h"
 #include "maybe.h"
 #include "path.h"
@@ -31,7 +33,7 @@
 /// Provide the fd monitor used for background fillthread operations.
 static fd_monitor_t &fd_monitor() {
     // Deliberately leaked to avoid shutdown dtors.
-    static auto fdm = new fd_monitor_t();
+    static auto fdm = make_fd_monitor_t();
     return *fdm;
 }
 
@@ -75,6 +77,18 @@ ssize_t io_buffer_t::read_once(int fd, acquired_lock<separated_buffer_t> &buffer
     return amt;
 }
 
+struct callback_args_t {
+    io_buffer_t *instance;
+    std::shared_ptr<std::promise<void>> promise;
+};
+
+extern "C" {
+static void item_callback_trampoline(autoclose_fd_t2 &fd, item_wake_reason_t reason,
+                                     callback_args_t *args) {
+    (args->instance)->item_callback(fd, (uint8_t)reason, args);
+}
+}
+
 void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     assert(!fillthread_running() && "Already have a fillthread");
 
@@ -102,37 +116,50 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
 
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' waits for the promise in its dtor.
-    fd_monitor_item_t item;
-    item.fd = std::move(fd);
-    item.callback = [this, promise](autoclose_fd_t &fd, item_wake_reason_t reason) {
-        ASSERT_IS_BACKGROUND_THREAD();
-        // Only check the shutdown flag if we timed out or were poked.
-        // It's important that if select() indicated we were readable, that we call select() again
-        // allowing it to time out. Note the typical case is that the fd will be closed, in which
-        // case select will return immediately.
-        bool done = false;
-        if (reason == item_wake_reason_t::readable) {
-            // select() reported us as readable; read a bit.
-            auto buffer = buffer_.acquire();
-            ssize_t ret = read_once(fd.fd(), buffer);
-            done = (ret == 0 || (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK));
-        } else if (shutdown_fillthread_) {
-            // Here our caller asked us to shut down; read while we keep getting data.
-            // This will stop when the fd is closed or if we get EAGAIN.
-            auto buffer = buffer_.acquire();
-            ssize_t ret;
-            do {
-                ret = read_once(fd.fd(), buffer);
-            } while (ret > 0);
-            done = true;
-        }
-        if (done) {
-            fd.close();
-            promise->set_value();
-        }
-    };
-    this->item_id_ = fd_monitor().add(std::move(item));
+    auto args = new callback_args_t;
+    args->instance = this;
+    args->promise = std::move(promise);
+
+    item_id_ =
+        fd_monitor().add_item(fd.acquire(), kNoTimeout, (::c_void *)item_callback_trampoline, (::c_void *)args);
 }
+
+/// This is a hack to work around the difficulties in passing a capturing lambda across FFI
+/// boundaries. A static function that takes a generic/untyped callback parameter is easy to
+/// marshall with the basic C ABI.
+void io_buffer_t::item_callback(autoclose_fd_t2 &fd, uint8_t r, callback_args_t *args) {
+    item_wake_reason_t reason = (item_wake_reason_t)r;
+    auto &promise = *args->promise;
+
+    // Only check the shutdown flag if we timed out or were poked.
+    // It's important that if select() indicated we were readable, that we call select() again
+    // allowing it to time out. Note the typical case is that the fd will be closed, in which
+    // case select will return immediately.
+    bool done = false;
+    if (reason == item_wake_reason_t::Readable) {
+        // select() reported us as readable; read a bit.
+        auto buffer = buffer_.acquire();
+        ssize_t ret = read_once(fd.fd(), buffer);
+        done = (ret == 0 || (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK));
+    } else if (shutdown_fillthread_) {
+        // Here our caller asked us to shut down; read while we keep getting data.
+        // This will stop when the fd is closed or if we get EAGAIN.
+        auto buffer = buffer_.acquire();
+        ssize_t ret;
+        do {
+            ret = read_once(fd.fd(), buffer);
+        } while (ret > 0);
+        done = true;
+    }
+    if (done) {
+        fd.close();
+        promise.set_value();
+        // When we close the fd, we signal to the caller that the fd should be removed from its set
+        // and that this callback should never be called again.
+        // Manual memory management is not nice but this is just during the cpp-to-rust transition.
+        delete args;
+    }
+};
 
 separated_buffer_t io_buffer_t::complete_background_fillthread_and_take_buffer() {
     // Mark that our fillthread is done, then wake it up.

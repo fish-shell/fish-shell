@@ -5,6 +5,7 @@
 #![allow(clippy::manual_is_ascii_check)]
 
 mod common;
+mod fd_monitor;
 mod fd_readable_set;
 mod fds;
 #[allow(rustdoc::broken_intra_doc_links)]
@@ -22,6 +23,7 @@ mod parse_constants;
 mod redirection;
 mod signal;
 mod smoke;
+mod threads;
 mod timer;
 mod tokenizer;
 mod topic_monitor;

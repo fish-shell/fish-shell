@@ -1,9 +1,7 @@
 use crate::wchar;
-#[rustfmt::skip]
-use ::std::pin::Pin;
-#[rustfmt::skip]
-use ::std::slice;
 use autocxx::prelude::*;
+use core::pin::Pin;
+use core::slice;
 use cxx::SharedPtr;
 
 // autocxx has been hacked up to know about this.
@@ -73,6 +71,8 @@ include_cpp! {
     generate!("sig2wcs")
     generate!("wcs2sig")
     generate!("signal_get_desc")
+
+    generate!("fd_event_signaller_t")
 }
 
 impl parser_t {
@@ -135,3 +135,19 @@ impl Repin for output_stream_t {}
 pub use autocxx::c_int;
 pub use ffi::*;
 pub use libc::c_char;
+
+/// A version of [`* const core::ffi::c_void`] (or [`* const libc::c_void`], if you prefer) that
+/// implements `Copy` and `Clone`, because those two don't. Used to represent a `void *` ptr for ffi
+/// purposes.
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+pub struct void_ptr(pub *const core::ffi::c_void);
+
+impl core::fmt::Debug for void_ptr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:p}", &self.0)
+    }
+}
+
+unsafe impl Send for void_ptr {}
+unsafe impl Sync for void_ptr {}

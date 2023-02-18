@@ -7,7 +7,7 @@ use crate::builtins::shared::{
 use crate::ffi::{parser_t};
 use crate::wchar::{widestrs, wstr};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{self, format, fish_wcstoi_radix_all, wgettext_fmt};
+use crate::wutil::{self, format::printf::sprintf, fish_wcstoi_radix_all, wgettext_fmt};
 use num_traits::PrimInt;
 use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
@@ -69,20 +69,17 @@ pub fn random(
         }
 
         let rand = engine.gen_range(0..arg_count - 1);
-        streams.out.append(format::printf::sprintf!("%ls\n"L, argv[i + 1 + rand]));
+        streams.out.append(sprintf!("%ls\n"L, argv[i + 1 + rand]));
         return STATUS_CMD_OK;
     }
     fn parse<T: PrimInt>(streams: &mut io_streams_t, cmd: &wstr, num : &wstr) -> Result<T, wutil::Error> {
         let res = fish_wcstoi_radix_all(num.chars(), None, true);
-        match res {
-            Err(_) => {
-                streams.err.append(wgettext_fmt!(
-                    "%ls: %ls: invalid integer\n",
-                    cmd,
-                    num,
-                ));
-            },
-            Ok(_) => {}
+        if res.is_err() {
+            streams.err.append(wgettext_fmt!(
+                "%ls: %ls: invalid integer\n",
+                cmd,
+                num,
+            ));
         }
         return res;
     }
@@ -174,13 +171,13 @@ pub fn random(
     // and then we check if it fits in 64 bit - signed or unsigned!
     match i64::try_from(result) {
         Ok(x) => {
-            streams.out.append(format::printf::sprintf!("%d\n"L, x));
+            streams.out.append(sprintf!("%d\n"L, x));
             return STATUS_CMD_OK;
         },
         Err(_) => {
             match u64::try_from(result) {
                 Ok(x) => {
-                    streams.out.append(format::printf::sprintf!("%d\n"L, x));
+                    streams.out.append(sprintf!("%d\n"L, x));
                     return STATUS_CMD_OK;
                 },
                 Err(_) => {

@@ -15,6 +15,7 @@ libc = "0.2.137"
 nix = { version = "0.25.0", default-features = false, features = [] }
 num-traits = "0.2.15"
 once_cell = "1.17.0"
+rand = { version = "0.8.5", features = ["small_rng"] }
 unixstring = "0.2.7"
 widestring = "1.0.2"
 

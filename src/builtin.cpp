@@ -401,7 +401,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"path", &builtin_path, N_(L"Handle paths")},
     {L"printf", &builtin_printf, N_(L"Prints formatted text")},
     {L"pwd", &builtin_pwd, N_(L"Print the working directory")},
-    {L"random", &builtin_random, N_(L"Generate random number")},
+    {L"random", &implemented_in_rust, N_(L"Generate random number")},
     {L"read", &builtin_read, N_(L"Read a line of input into variables")},
     {L"realpath", &builtin_realpath, N_(L"Show absolute path sans symlinks")},
     {L"return", &implemented_in_rust, N_(L"Stop the currently evaluated function")},
@@ -533,6 +533,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"exit") {
         return RustBuiltin::Exit;
+    }
+    if (cmd == L"random") {
+        return RustBuiltin::Random;
     }
     if (cmd == L"wait") {
         return RustBuiltin::Wait;

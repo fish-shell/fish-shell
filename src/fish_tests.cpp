@@ -41,6 +41,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include "fds.rs.h"
+#include "parse_constants.rs.h"
 
 #ifdef FISH_CI_SAN
 #include <sanitizer/lsan_interface.h>
@@ -59,7 +61,7 @@
 #include "env_universal_common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "fd_monitor.h"
+#include "fd_monitor.rs.h"
 #include "fd_readable_set.rs.h"
 #include "fds.h"
 #include "ffi_init.rs.h"
@@ -806,36 +808,42 @@ static void test_fd_monitor() {
         std::atomic<size_t> length_read{0};
         std::atomic<size_t> pokes{0};
         std::atomic<size_t> total_calls{0};
-        fd_monitor_item_id_t item_id{0};
+        uint64_t item_id{0};
         bool always_exit{false};
-        fd_monitor_item_t item;
+        std::unique_ptr<rust::Box<fd_monitor_item_t>> item;
         autoclose_fd_t writer;
+
+        void callback(autoclose_fd_t2 &fd, item_wake_reason_t reason) {
+            bool was_closed = false;
+            switch (reason) {
+                case item_wake_reason_t::Timeout:
+                    this->did_timeout = true;
+                    break;
+                case item_wake_reason_t::Poke:
+                    this->pokes += 1;
+                    break;
+                case item_wake_reason_t::Readable:
+                    char buff[4096];
+                    ssize_t amt = read(fd.fd(), buff, sizeof buff);
+                    this->length_read += amt;
+                    was_closed = (amt == 0);
+                    break;
+            }
+            total_calls += 1;
+            if (always_exit || was_closed) {
+                fd.close();
+            }
+        }
+
+        static void trampoline(autoclose_fd_t2 &fd, item_wake_reason_t reason, c_void *param) {
+            auto &instance = *(item_maker_t*)(param);
+            instance.callback(fd, reason);
+        }
 
         explicit item_maker_t(uint64_t timeout_usec) {
             auto pipes = make_autoclose_pipes().acquire();
             writer = std::move(pipes.write);
-            auto callback = [this](autoclose_fd_t &fd, item_wake_reason_t reason) {
-                bool was_closed = false;
-                switch (reason) {
-                    case item_wake_reason_t::timeout:
-                        this->did_timeout = true;
-                        break;
-                    case item_wake_reason_t::poke:
-                        this->pokes += 1;
-                        break;
-                    case item_wake_reason_t::readable:
-                        char buff[4096];
-                        ssize_t amt = read(fd.fd(), buff, sizeof buff);
-                        this->length_read += amt;
-                        was_closed = (amt == 0);
-                        break;
-                }
-                total_calls += 1;
-                if (always_exit || was_closed) {
-                    fd.close();
-                }
-            };
-            item = fd_monitor_item_t(std::move(pipes.read), std::move(callback), timeout_usec);
+            item = std::make_unique<rust::Box<fd_monitor_item_t>>(make_fd_monitor_item_t(pipes.read.acquire(), timeout_usec, (c_void *)item_maker_t::trampoline, (c_void*)this));
         }
 
         // Write 42 bytes to our write end.
@@ -871,18 +879,18 @@ static void test_fd_monitor() {
     item_oneshot.always_exit = true;
 
     {
-        fd_monitor_t monitor;
+        auto monitor = make_fd_monitor_t();
         for (item_maker_t *item :
              {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout, &item42_nottimeout,
               &item42_thenclose, &item_pokee, &item_oneshot}) {
-            item->item_id = monitor.add(std::move(item->item));
+            item->item_id = monitor->add(std::move(*(std::move(item->item))));
         }
         item42_timeout.write42();
         item42_nottimeout.write42();
         item42_thenclose.write42();
         item42_thenclose.writer.close();
         item_oneshot.write42();
-        monitor.poke_item(item_pokee.item_id);
+        monitor->poke_item(item_pokee.item_id);
 
         // May need to loop here to ensure our fd_monitor gets scheduled - see #7699.
         for (int i = 0; i < 100; i++) {

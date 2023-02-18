@@ -109,7 +109,7 @@ class fd_event_signaller_t {
 
     /// Mark that an event has been received. This may be coalesced.
     /// This retries on EINTR.
-    void post();
+    void post() const;
 
     /// Perform a poll to see if an event is received.
     /// If \p wait is set, wait until it is readable; this does not consume the event
@@ -134,6 +134,8 @@ class fd_event_signaller_t {
     autoclose_fd_t write_;
 #endif
 };
+
+std::shared_ptr<fd_event_signaller_t> ffi_new_fd_event_signaller_t();
 
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.
 int set_cloexec(int fd, bool should_set = true);

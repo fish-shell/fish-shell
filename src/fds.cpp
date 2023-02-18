@@ -29,6 +29,10 @@ void autoclose_fd_t::close() {
     fd_ = -1;
 }
 
+std::shared_ptr<fd_event_signaller_t> ffi_new_fd_event_signaller_t() {
+    return std::make_shared<fd_event_signaller_t>();
+}
+
 #ifdef HAVE_EVENTFD
 // Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.
 fd_event_signaller_t::fd_event_signaller_t() {
@@ -78,7 +82,7 @@ bool fd_event_signaller_t::try_consume() const {
     return ret > 0;
 }
 
-void fd_event_signaller_t::post() {
+void fd_event_signaller_t::post() const {
     // eventfd writes uint64; pipes write 1 byte.
 #ifdef HAVE_EVENTFD
     const uint64_t c = 1;

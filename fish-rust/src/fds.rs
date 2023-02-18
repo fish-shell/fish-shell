@@ -1,13 +1,30 @@
 use crate::ffi;
 use nix::unistd;
-use std::os::unix::io::RawFd;
+use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 
 /// A helper type for managing and automatically closing a file descriptor
-pub struct autoclose_fd_t {
+///
+/// This was implemented in rust as a port of the existing C++ code but it didn't take its place
+/// (yet) and there's still the original cpp implementation in `src/fds.h`, so its name is
+/// disambiguated because some code uses a mix of both for interop purposes.
+pub struct AutoCloseFd {
     fd_: RawFd,
 }
 
-impl autoclose_fd_t {
+#[cxx::bridge]
+mod autoclose_fd_t {
+    extern "Rust" {
+        #[cxx_name = "autoclose_fd_t2"]
+        type AutoCloseFd;
+
+        #[cxx_name = "valid"]
+        fn is_valid(&self) -> bool;
+        fn close(&mut self);
+        fn fd(&self) -> i32;
+    }
+}
+
+impl AutoCloseFd {
     // Closes the fd if not already closed.
     pub fn close(&mut self) {
         if self.fd_ != -1 {
@@ -37,24 +54,41 @@ impl autoclose_fd_t {
         self.fd_ = fd;
     }
 
-    // \return if this has a valid fd.
-    pub fn valid(&self) -> bool {
+    // Returns if this has a valid fd.
+    pub fn is_valid(&self) -> bool {
         self.fd_ >= 0
     }
 
-    // Construct, taking ownership of an fd.
-    pub fn new(fd: RawFd) -> autoclose_fd_t {
-        autoclose_fd_t { fd_: fd }
+    // Create a new AutoCloseFd instance taking ownership of the passed fd
+    pub fn new(fd: RawFd) -> Self {
+        AutoCloseFd { fd_: fd }
+    }
+
+    // Create a new AutoCloseFd without an open fd
+    pub fn empty() -> Self {
+        AutoCloseFd { fd_: -1 }
     }
 }
 
-impl Default for autoclose_fd_t {
-    fn default() -> autoclose_fd_t {
-        autoclose_fd_t { fd_: -1 }
+impl FromRawFd for AutoCloseFd {
+    unsafe fn from_raw_fd(fd: RawFd) -> Self {
+        AutoCloseFd { fd_: fd }
     }
 }
 
-impl Drop for autoclose_fd_t {
+impl AsRawFd for AutoCloseFd {
+    fn as_raw_fd(&self) -> RawFd {
+        self.fd()
+    }
+}
+
+impl Default for AutoCloseFd {
+    fn default() -> AutoCloseFd {
+        AutoCloseFd { fd_: -1 }
+    }
+}
+
+impl Drop for AutoCloseFd {
     fn drop(&mut self) {
         self.close()
     }
@@ -64,10 +98,10 @@ impl Drop for autoclose_fd_t {
 #[derive(Default)]
 pub struct autoclose_pipes_t {
     /// Read end of the pipe.
-    pub read: autoclose_fd_t,
+    pub read: AutoCloseFd,
 
     /// Write end of the pipe.
-    pub write: autoclose_fd_t,
+    pub write: AutoCloseFd,
 }
 
 /// Construct a pair of connected pipes, set to close-on-exec.
@@ -75,9 +109,9 @@ pub struct autoclose_pipes_t {
 pub fn make_autoclose_pipes() -> Option<autoclose_pipes_t> {
     let pipes = ffi::make_pipes_ffi();
 
-    let readp = autoclose_fd_t::new(pipes.read);
-    let writep = autoclose_fd_t::new(pipes.write);
-    if !readp.valid() || !writep.valid() {
+    let readp = AutoCloseFd::new(pipes.read);
+    let writep = AutoCloseFd::new(pipes.write);
+    if !readp.is_valid() || !writep.is_valid() {
         None
     } else {
         Some(autoclose_pipes_t {

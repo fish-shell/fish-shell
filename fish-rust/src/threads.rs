@@ -65,3 +65,68 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
 
     result
 }
+
+#[test]
+/// Verify that spawing a thread normally via [`std::thread::spawn()`] causes the calling thread's
+/// sigmask to be inherited by the newly spawned thread.
+fn std_thread_inherits_sigmask() {
+    // First change our own thread mask
+    let (saved_set, t1_set) = unsafe {
+        let mut new_set: libc::sigset_t = std::mem::zeroed();
+        let new_set = &mut new_set as *mut _;
+        libc::sigemptyset(new_set);
+        libc::sigaddset(new_set, libc::SIGILL); // mask bad jump
+
+        let mut saved_set: libc::sigset_t = std::mem::zeroed();
+        let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set as *mut _);
+        assert_eq!(result, 0, "Failed to set thread mask!");
+
+        // Now get the current set that includes the masked SIGILL
+        let mut t1_set: libc::sigset_t = std::mem::zeroed();
+        let mut empty_set = std::mem::zeroed();
+        let empty_set = &mut empty_set as *mut _;
+        libc::sigemptyset(empty_set);
+        let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &mut t1_set as *mut _);
+        assert_eq!(result, 0, "Failed to get own altered thread mask!");
+
+        (saved_set, t1_set)
+    };
+
+    // Launch a new thread that can access existing variables
+    let t2_set = std::thread::scope(|_| {
+        unsafe {
+            // Set a new thread sigmask and verify that the old one is what we expect it to be
+            let mut new_set: libc::sigset_t = std::mem::zeroed();
+            let new_set = &mut new_set as *mut _;
+            libc::sigemptyset(new_set);
+            let mut saved_set2: libc::sigset_t = std::mem::zeroed();
+            let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set2 as *mut _);
+            assert_eq!(result, 0, "Failed to get existing sigmask for new thread");
+            saved_set2
+        }
+    });
+
+    // Compare the sigset_t values
+    unsafe {
+        let t1_sigset_slice = std::slice::from_raw_parts(
+            &t1_set as *const _ as *const u8,
+            core::mem::size_of::<libc::sigset_t>(),
+        );
+        let t2_sigset_slice = std::slice::from_raw_parts(
+            &t2_set as *const _ as *const u8,
+            core::mem::size_of::<libc::sigset_t>(),
+        );
+
+        assert_eq!(t1_sigset_slice, t2_sigset_slice);
+    };
+
+    // Restore the thread sigset so we don't affect `cargo test`'s multithreaded test harnesses
+    unsafe {
+        let result = libc::pthread_sigmask(
+            libc::SIG_SETMASK,
+            &saved_set as *const _,
+            core::ptr::null_mut(),
+        );
+        assert_eq!(result, 0, "Failed to restore sigmask!");
+    }
+}

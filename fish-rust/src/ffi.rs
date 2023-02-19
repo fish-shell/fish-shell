@@ -23,6 +23,7 @@ include_cpp! {
     #include "builtin.h"
     #include "fallback.h"
     #include "event.h"
+    #include "env.h"
 
     safety!(unsafe_ffi)
 
@@ -44,6 +45,8 @@ include_cpp! {
 
     generate!("wildcard_match")
     generate!("wgettext_ptr")
+
+    generate!("env_stack_t")
 
     generate!("parser_t")
     generate!("job_t")

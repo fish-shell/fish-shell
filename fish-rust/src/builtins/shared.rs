@@ -37,6 +37,8 @@ pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
 /// Error message when integer expected
 pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 
+pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
+
 /// A handy return value for successful builtins.
 pub const STATUS_CMD_OK: Option<c_int> = Some(0);
 

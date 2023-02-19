@@ -8,6 +8,7 @@ use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
 use crate::ffi::void_ptr;
 use crate::flog::FLOG;
+use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
 use cxx::SharedPtr;
 
@@ -407,6 +408,8 @@ impl BackgroundFdMonitor {
     /// Starts monitoring the fd set and listening for new fds to add to the set. Takes ownership
     /// over its instance so that this method cannot be called again.
     fn run(mut self) {
+        assert_is_background_thread();
+
         let mut pokelist: Vec<FdMonitorItemId> = Vec::new();
         let mut fds = FdReadableSet::new();
 

@@ -1,8 +1,7 @@
-use crate::{
-    ffi,
-    wchar_ffi::{wstr, WCharFromFFI, WString},
-};
-use std::{ffi::c_uint, mem};
+use crate::ffi;
+use crate::wchar_ffi::{wstr, WCharFromFFI, WString};
+use std::ffi::c_uint;
+use std::mem;
 
 /// A scoped manager to save the current value of some variable, and optionally set it to a new
 /// value. When dropped, it restores the variable to its old value.

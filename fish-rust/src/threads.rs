@@ -2,6 +2,65 @@
 //! ported directly from the cpp code so we can use rust threads instead of using pthreads.
 
 use crate::flog::FLOG;
+use std::thread::{self, ThreadId};
+
+// We don't want to use a full-blown Lazy<T> for the cached main thread id, but we can't use
+// AtomicU64 since std::thread::ThreadId::as_u64() is a nightly-only feature (issue #67939,
+// thread_id_value). We also can't safely transmute `ThreadId` to `NonZeroU64` because there's no
+// guarantee that's what the underlying type will always be on all platforms and in all cases,
+// `ThreadId` isn't marked `#[repr(transparent)]`. We could generate our own thread-local value, but
+// `#[thread_local]` is nightly-only while the stable `thread_local!()` macro doesn't generate
+// efficient/fast/low-overhead code.
+
+/// The thread id of the main thread, as set by [`init()`] at startup.
+static mut MAIN_THREAD_ID: Option<ThreadId> = None;
+
+/// Initialize some global static variables. Must be called at startup from the main thread.
+pub fn init() {
+    unsafe {
+        if MAIN_THREAD_ID.is_some() {
+            panic!("threads::init() must only be called once (at startup)!");
+        }
+        MAIN_THREAD_ID = Some(thread::current().id());
+    }
+}
+
+#[inline(always)]
+fn main_thread_id() -> ThreadId {
+    #[cold]
+    fn init_not_called() -> ! {
+        panic!("threads::init() was not called at startup!");
+    }
+
+    match unsafe { MAIN_THREAD_ID } {
+        None => init_not_called(),
+        Some(id) => id,
+    }
+}
+
+#[inline(always)]
+pub fn assert_is_main_thread() {
+    #[cold]
+    fn not_main_thread() -> ! {
+        panic!("Function is not running on the main thread!");
+    }
+
+    if thread::current().id() != main_thread_id() {
+        not_main_thread();
+    }
+}
+
+#[inline(always)]
+pub fn assert_is_background_thread() {
+    #[cold]
+    fn not_background_thread() -> ! {
+        panic!("Function is not allowed to be called on the main thread!");
+    }
+
+    if thread::current().id() == main_thread_id() {
+        not_background_thread();
+    }
+}
 
 /// The rusty version of `iothreads::make_detached_pthread()`. We will probably need a
 /// `spawn_scoped` version of the same to handle some more advanced borrow cases safely, and maybe

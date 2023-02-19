@@ -32,5 +32,6 @@ mod wchar_ffi;
 mod wgetopt;
 mod wutil;
 
-mod builtins;
 mod abbrs;
+mod builtins;
+mod env;

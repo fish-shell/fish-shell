@@ -40,6 +40,9 @@ pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 /// A handy return value for successful builtins.
 pub const STATUS_CMD_OK: Option<c_int> = Some(0);
 
+/// The status code used for failure exit in a command (but not if the args were invalid).
+pub const STATUS_CMD_ERROR: Option<c_int> = Some(1);
+
 /// A handy return value for invalid args.
 pub const STATUS_INVALID_ARGS: Option<c_int> = Some(2);
 
@@ -115,6 +118,7 @@ pub fn run_builtin(
     builtin: RustBuiltin,
 ) -> Option<c_int> {
     match builtin {
+        RustBuiltin::Abbr => super::abbr::abbr(parser, streams, args),
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
         RustBuiltin::Exit => super::exit::exit(parser, streams, args),

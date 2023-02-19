@@ -5,7 +5,7 @@ use crate::builtins::shared::{
     STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::ffi::parser_t;
-use crate::wchar::{widestrs, wstr};
+use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{self, fish_wcstoi_radix_all, format::printf::sprintf, wgettext_fmt};
 use num_traits::PrimInt;
@@ -14,9 +14,8 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::sync::Mutex;
 
-static seeded_engine: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
+static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
 
-#[widestrs]
 pub fn random(
     parser: &mut parser_t,
     streams: &mut io_streams_t,
@@ -26,8 +25,8 @@ pub fn random(
     let argc = argv.len();
     let print_hints = false;
 
-    const shortopts: &wstr = "+:h"L;
-    const longopts: &[woption] = &[wopt("help"L, woption_argument_t::no_argument, 'h')];
+    const shortopts: &wstr = L!("+:h");
+    const longopts: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
 
     let mut w = wgetopter_t::new(shortopts, longopts, argv);
     while let Some(c) = w.wgetopt_long() {
@@ -50,7 +49,6 @@ pub fn random(
         }
     }
 
-    let mut engine = seeded_engine.lock().unwrap();
     let mut start = 0;
     let mut end = 32767;
     let mut step = 1;
@@ -64,8 +62,10 @@ pub fn random(
             return STATUS_INVALID_ARGS;
         }
 
-        let rand = engine.gen_range(0..arg_count - 1);
-        streams.out.append(sprintf!("%ls\n"L, argv[i + 1 + rand]));
+        let rand = RNG.lock().unwrap().gen_range(0..arg_count - 1);
+        streams
+            .out
+            .append(sprintf!(L!("%ls\n"), argv[i + 1 + rand]));
         return STATUS_CMD_OK;
     }
     fn parse<T: PrimInt>(
@@ -91,7 +91,10 @@ pub fn random(
             let num = parse::<i64>(streams, cmd, argv[i]);
             match num {
                 Err(_) => return STATUS_INVALID_ARGS,
-                Ok(x) => *engine = SmallRng::seed_from_u64(x as u64),
+                Ok(x) => {
+                    let mut engine = RNG.lock().unwrap();
+                    *engine = SmallRng::seed_from_u64(x as u64);
+                }
             }
             return STATUS_CMD_OK;
         }
@@ -156,12 +159,17 @@ pub fn random(
         return STATUS_INVALID_ARGS;
     }
 
-    let rand = engine.gen_range(0..=possibilities);
+    let rand = {
+        let mut engine = RNG.lock().unwrap();
+        engine.gen_range(0..=possibilities)
+    };
 
     // Safe because end was a valid i64 and the result here is in the range start..=end.
-    let result: i64 = start.checked_add_unsigned(rand * step)
-        .and_then(|x| x.try_into().ok()).unwrap();
+    let result: i64 = start
+        .checked_add_unsigned(rand * step)
+        .and_then(|x| x.try_into().ok())
+        .unwrap();
 
-    streams.out.append(sprintf!("%d\n"L, result));
+    streams.out.append(sprintf!(L!("%d\n"), result));
     return STATUS_CMD_OK;
 }

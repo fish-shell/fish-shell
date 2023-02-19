@@ -148,7 +148,7 @@ pub fn random(
 
     // Possibilities can be abs(i64::MIN) + i64::MAX,
     // so we do this as i128
-    let possibilities = (end as i128 - start as i128) / (step as i128);
+    let possibilities = end.abs_diff(start) / step;
 
     if possibilities == 0 {
         streams.err.append(wgettext_fmt!(
@@ -160,29 +160,10 @@ pub fn random(
 
     let rand = engine.gen_range(0..=possibilities);
 
-    let result = start as i128 + rand as i128 * step as i128;
+    let result = start.checked_add_unsigned(rand * step).unwrap();
 
     // We do our math as i128,
     // and then we check if it fits in 64 bit - signed or unsigned!
-    match i64::try_from(result) {
-        Ok(x) => {
-            streams.out.append(sprintf!("%d\n"L, x));
-            return STATUS_CMD_OK;
-        },
-        Err(_) => {
-            match u64::try_from(result) {
-                Ok(x) => {
-                    streams.out.append(sprintf!("%d\n"L, x));
-                    return STATUS_CMD_OK;
-                },
-                Err(_) => {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: range contains only one possible value\n",
-                        cmd,
-                    ));
-                    return STATUS_INVALID_ARGS;
-                },
-            }
-        },
-    }
+    streams.out.append(sprintf!("%d\n"L, result));
+    return STATUS_CMD_OK;
 }

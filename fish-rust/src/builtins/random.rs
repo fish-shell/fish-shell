@@ -146,10 +146,8 @@ pub fn random(
         return STATUS_INVALID_ARGS;
     }
 
-    // Possibilities can be abs(i64::MIN) + i64::MAX,
-    // so we do this as i128
+    // Using abs_diff() avoids an i64 overflow if start is i64::MIN and end is i64::MAX
     let possibilities = end.abs_diff(start) / step;
-
     if possibilities == 0 {
         streams.err.append(wgettext_fmt!(
             "%ls: range contains only one possible value\n",
@@ -160,10 +158,10 @@ pub fn random(
 
     let rand = engine.gen_range(0..=possibilities);
 
-    let result = start.checked_add_unsigned(rand * step).unwrap();
+    // Safe because end was a valid i64 and the result here is in the range start..=end.
+    let result: i64 = start.checked_add_unsigned(rand * step)
+        .and_then(|x| x.try_into().ok()).unwrap();
 
-    // We do our math as i128,
-    // and then we check if it fits in 64 bit - signed or unsigned!
     streams.out.append(sprintf!("%d\n"L, result));
     return STATUS_CMD_OK;
 }

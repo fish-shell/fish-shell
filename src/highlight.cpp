@@ -779,14 +779,10 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
 // Valid commands following redirection symbols at command line start are colored
 // as $fish_color_command instead of $fish_color_error 
 static bool symbol_text_before_command(const wcstring &buffer, size_t before_cmd_len) {
-    wcstring before_str = buffer.substr(0, before_cmd_len);
+    const std::wstring before_str = buffer.substr(0, before_cmd_len);
 
-    if (before_str.find(L'>') != wcstring::npos
-     || before_str.find(L'<') != wcstring::npos) {
-        return true;
-    } else {
-        return false;
-    }
+    const auto is_symbol = [](wchar_t c) { return c == L'>' || c == L'<'; };
+    return std::any_of(before_str.begin(), before_str.end(), is_symbol);
 }
 
 namespace {

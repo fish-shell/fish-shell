@@ -19,7 +19,7 @@ ELEMLIST(argument_or_redirection_list, argument_or_redirection)
 ELEM(variable_assignment)
 ELEMLIST(variable_assignment_list, variable_assignment)
 
-ELEM(job)
+ELEM(job_pipeline)
 ELEM(job_conjunction)
 // For historical reasons, a job list is a list of job *conjunctions*. This should be fixed.
 ELEMLIST(job_list, job_conjunction)

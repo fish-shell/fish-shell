@@ -12,6 +12,7 @@
 #include <bitset>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -20,7 +21,7 @@
 #include "maybe.h"
 #include "parser.h"
 #include "proc.h"
-#include "signal.h"
+#include "signals.h"
 #include "termsize.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -486,6 +487,14 @@ void event_print(io_streams_t &streams, const wcstring &type_filter) {
                 break;
         }
     }
+}
+
+void event_fire_generic(parser_t &parser, wcstring name, const wcharz_t *argv, int argc) {
+    wcstring_list_t args_vec{};
+    for (int i = 0; i < argc; i++) {
+        args_vec.push_back(argv[i]);
+    }
+    event_fire_generic(parser, std::move(name), std::move(args_vec));
 }
 
 void event_fire_generic(parser_t &parser, wcstring name, wcstring_list_t args) {

@@ -37,6 +37,11 @@ struct wait_handle_t {
 
     /// Set to true when the process is completed.
     bool completed{false};
+
+    /// Autocxx junk.
+    bool is_completed() const { return completed; }
+    int get_pid() const { return pid; }
+    const wcstring &get_base_name() const { return base_name; }
 };
 using wait_handle_ref_t = std::shared_ptr<wait_handle_t>;
 
@@ -69,6 +74,9 @@ class wait_handle_store_t : noncopyable_t {
 
     /// Get the list of all wait handles.
     const wait_handle_list_t &get_list() const { return handles_; }
+
+    /// autocxx does not support std::list so allow accessing by index.
+    wait_handle_ref_t get(size_t idx) const;
 
     /// Convenience to return the size, for testing.
     size_t size() const { return handles_.size(); }

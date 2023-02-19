@@ -214,37 +214,37 @@ bool io_chain_t::append(const io_chain_t &chain) {
 
 bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd) {
     bool have_error = false;
-    for (const auto &spec : specs) {
-        switch (spec.mode) {
+    for (size_t i = 0; i < specs.size(); i++) {
+        const redirection_spec_t *spec = specs.at(i);
+        switch (spec->mode()) {
             case redirection_mode_t::fd: {
-                if (spec.is_close()) {
-                    this->push_back(make_unique<io_close_t>(spec.fd));
+                if (spec->is_close()) {
+                    this->push_back(make_unique<io_close_t>(spec->fd()));
                 } else {
-                    auto target_fd = spec.get_target_as_fd();
-                    assert(target_fd.has_value() &&
-                           "fd redirection should have been validated already");
-                    this->push_back(make_unique<io_fd_t>(spec.fd, *target_fd));
+                    auto target_fd = spec->get_target_as_fd();
+                    assert(target_fd && "fd redirection should have been validated already");
+                    this->push_back(make_unique<io_fd_t>(spec->fd(), *target_fd));
                 }
                 break;
             }
             default: {
                 // We have a path-based redireciton. Resolve it to a file.
                 // Mark it as CLO_EXEC because we don't want it to be open in any child.
-                wcstring path = path_apply_working_directory(spec.target, pwd);
-                int oflags = spec.oflags();
+                wcstring path = path_apply_working_directory(*spec->target(), pwd);
+                int oflags = spec->oflags();
                 autoclose_fd_t file{wopen_cloexec(path, oflags, OPEN_MASK)};
                 if (!file.valid()) {
                     if ((oflags & O_EXCL) && (errno == EEXIST)) {
-                        FLOGF(warning, NOCLOB_ERROR, spec.target.c_str());
+                        FLOGF(warning, NOCLOB_ERROR, spec->target()->c_str());
                     } else {
                         if (should_flog(warning)) {
-                            FLOGF(warning, FILE_ERROR, spec.target.c_str());
+                            FLOGF(warning, FILE_ERROR, spec->target()->c_str());
                             auto err = errno;
                             // If the error is that the file doesn't exist
                             // or there's a non-directory component,
                             // find the first problematic component for a better message.
                             if (err == ENOENT || err == ENOTDIR) {
-                                auto dname = spec.target;
+                                auto dname = *spec->target();
                                 struct stat buf;
 
                                 while (!dname.empty()) {
@@ -269,11 +269,11 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                     // If opening a file fails, insert a closed FD instead of the file redirection
                     // and return false. This lets execution potentially recover and at least gives
                     // the shell a chance to gracefully regain control of the shell (see #7038).
-                    this->push_back(make_unique<io_close_t>(spec.fd));
+                    this->push_back(make_unique<io_close_t>(spec->fd()));
                     have_error = true;
                     break;
                 }
-                this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file)));
+                this->push_back(std::make_shared<io_file_t>(spec->fd(), std::move(file)));
                 break;
             }
         }
@@ -309,6 +309,15 @@ shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
     return nullptr;
 }
 
+dup2_list_t dup2_list_resolve_chain_shim(const io_chain_t &io_chain) {
+    ASSERT_IS_NOT_FORKED_CHILD();
+    std::vector<dup2_action_t> chain;
+    for (const auto &io_data : io_chain) {
+        chain.push_back(dup2_action_t{io_data->source_fd, io_data->fd});
+    }
+    return dup2_list_resolve_chain(chain);
+}
+
 bool output_stream_t::append_narrow_buffer(const separated_buffer_t &buffer) {
     for (const auto &rhs_elem : buffer.elements()) {
         if (!append_with_separation(str2wcstring(rhs_elem.contents), rhs_elem.separation, false)) {
@@ -333,6 +342,10 @@ bool output_stream_t::append_with_separation(const wchar_t *s, size_t len, separ
 const wcstring &output_stream_t::contents() const { return g_empty_string; }
 
 int output_stream_t::flush_and_check_error() { return STATUS_CMD_OK; }
+
+fd_output_stream_t::fd_output_stream_t(int fd) : fd_(fd), sigcheck_(topic_t::sighupint) {
+    assert(fd_ >= 0 && "Invalid fd");
+}
 
 bool fd_output_stream_t::append(const wchar_t *s, size_t amt) {
     if (errored_) return false;

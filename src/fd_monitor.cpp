@@ -116,7 +116,8 @@ bool fd_monitor_item_t::poke_item(const poke_list_t &pokelist) {
 void fd_monitor_t::run_in_background() {
     ASSERT_IS_BACKGROUND_THREAD();
     poke_list_t pokelist;
-    fd_readable_set_t fds;
+    auto fds_box = new_fd_readable_set();
+    auto &fds = *fds_box;
     for (;;) {
         // Poke any items that need it.
         if (!pokelist.empty()) {
@@ -131,7 +132,7 @@ void fd_monitor_t::run_in_background() {
         fds.add(change_signal_fd);
 
         auto now = std::chrono::steady_clock::now();
-        uint64_t timeout_usec = fd_monitor_item_t::kNoTimeout;
+        uint64_t timeout_usec = kNoTimeout;
 
         for (auto &item : items_) {
             fds.add(item.fd.fd());
@@ -145,8 +146,7 @@ void fd_monitor_t::run_in_background() {
         // We refer to this as the wait-lap.
         bool is_wait_lap = (items_.size() == 0);
         if (is_wait_lap) {
-            assert(timeout_usec == fd_monitor_item_t::kNoTimeout &&
-                   "Should not have a timeout on wait-lap");
+            assert(timeout_usec == kNoTimeout && "Should not have a timeout on wait-lap");
             timeout_usec = 256 * kUsecPerMsec;
         }
 

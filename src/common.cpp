@@ -39,7 +39,7 @@
 #include "future_feature_flags.h"
 #include "global_safety.h"
 #include "iothread.h"
-#include "signal.h"
+#include "signals.h"
 #include "termsize.h"
 #include "topic_monitor.h"
 #include "wcstringutil.h"
@@ -863,7 +863,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     const bool escape_printables = !(flags & ESCAPE_NO_PRINTABLES);
     const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
     const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
-    const bool no_qmark = feature_test(features_t::qmark_noglob);
+    const bool no_qmark = feature_test(feature_flag_t::qmark_noglob);
     const bool symbolic = static_cast<bool>(flags & ESCAPE_SYMBOLIC) && (MB_CUR_MAX > 1);
     assert((!symbolic || !escape_printables) && "symbolic implies escape-no-printables");
 
@@ -1061,9 +1061,7 @@ static wcstring escape_string_pcre2(const wcstring &in) {
             case L'-':
             case L']':
                 out.push_back('\\');
-                __fallthrough__
-            default:
-                out.push_back(c);
+                __fallthrough__ default : out.push_back(c);
         }
     }
 
@@ -1225,8 +1223,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                         // that are valid on their own, which is true for UTF-8)
                         byte_buff.push_back(static_cast<char>(res));
                         result_char_or_none = none();
-                        if (input[in_pos] == L'\\'
-                            && (input[in_pos + 1] == L'X' || input[in_pos + 1] == L'x')) {
+                        if (input[in_pos] == L'\\' &&
+                            (input[in_pos + 1] == L'X' || input[in_pos + 1] == L'x')) {
                             in_pos++;
                             continue;
                         }
@@ -1403,7 +1401,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     break;
                 }
                 case L'?': {
-                    if (unescape_special && !feature_test(features_t::qmark_noglob)) {
+                    if (unescape_special && !feature_test(feature_flag_t::qmark_noglob)) {
                         to_append_or_none = ANY_CHAR;
                     }
                     break;

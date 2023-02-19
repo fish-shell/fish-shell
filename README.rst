@@ -148,6 +148,7 @@ Dependencies
 
 Compiling fish requires:
 
+-  Rust (version 1.67 or later)
 -  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
 -  CMake (version 3.5 or later)
 -  a curses implementation such as ncurses (headers and libraries)

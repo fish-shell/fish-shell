@@ -342,7 +342,7 @@ void format_ullong_safe(wchar_t buff[64], unsigned long long val);
 void narrow_string_safe(char buff[64], const wchar_t *s);
 
 /// Stored in blocks to reference the file which created the block.
-using filename_ref_t = std::shared_ptr<const wcstring>;
+using filename_ref_t = std::shared_ptr<wcstring>;
 
 using scoped_lock = std::lock_guard<std::mutex>;
 
@@ -446,15 +446,16 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig);
 
-#ifdef HAVE_STD__MAKE_UNIQUE
-using std::make_unique;
-#else
+#ifndef HAVE_STD__MAKE_UNIQUE
 /// make_unique implementation
+namespace std {
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args &&...args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+}  // namespace std
 #endif
+using std::make_unique;
 
 /// This functions returns the end of the quoted substring beginning at \c pos. Returns 0 on error.
 ///

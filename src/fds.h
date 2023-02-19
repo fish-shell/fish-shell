@@ -24,6 +24,9 @@
 /// (like >&5).
 extern const int k_first_high_fd;
 
+/// A sentinel value indicating no timeout.
+#define kNoTimeout (std::numeric_limits<uint64_t>::max())
+
 /// A helper class for managing and automatically closing a file descriptor.
 class autoclose_fd_t : noncopyable_t {
     int fd_;
@@ -63,62 +66,6 @@ class autoclose_fd_t : noncopyable_t {
     ~autoclose_fd_t() { close(); }
 };
 
-// Resolve whether to use poll() or select().
-#ifndef FISH_READABLE_SET_USE_POLL
-#ifdef __APPLE__
-//  Apple's `man poll`: "The poll() system call currently does not support devices."
-#define FISH_READABLE_SET_USE_POLL 0
-#else
-// Use poll other places so we can support unlimited fds.
-#define FISH_READABLE_SET_USE_POLL 1
-#endif
-#endif
-
-/// A modest wrapper around select() or poll(), according to FISH_READABLE_SET_USE_POLL.
-/// This allows accumulating a set of fds and then seeing if they are readable.
-/// This only handles readability.
-struct fd_readable_set_t {
-    /// Construct an empty set.
-    fd_readable_set_t();
-
-    /// Reset back to an empty set.
-    void clear();
-
-    /// Add an fd to the set. The fd is ignored if negative (for convenience).
-    void add(int fd);
-
-    /// \return true if the given fd is marked as set, in our set. \returns false if negative.
-    bool test(int fd) const;
-
-    /// Call select() or poll(), according to FISH_READABLE_SET_USE_POLL. Note this destructively
-    /// modifies the set. \return the result of select() or poll().
-    int check_readable(uint64_t timeout_usec = fd_readable_set_t::kNoTimeout);
-
-    /// Check if a single fd is readable, with a given timeout.
-    /// \return true if readable, false if not.
-    static bool is_fd_readable(int fd, uint64_t timeout_usec);
-
-    /// Check if a single fd is readable, without blocking.
-    /// \return true if readable, false if not.
-    static bool poll_fd_readable(int fd);
-
-    /// A special timeout value which may be passed to indicate no timeout.
-    static constexpr uint64_t kNoTimeout = std::numeric_limits<uint64_t>::max();
-
-   private:
-#if FISH_READABLE_SET_USE_POLL
-    // Our list of FDs, sorted by fd.
-    std::vector<struct pollfd> pollfds_{};
-
-    // Helper function.
-    static int do_poll(struct pollfd *fds, size_t count, uint64_t timeout_usec);
-#else
-    // The underlying fdset and nfds value to pass to select().
-    fd_set fdset_;
-    int nfds_{0};
-#endif
-};
-
 /// Helper type returned from making autoclose pipes.
 struct autoclose_pipes_t {
     /// Read end of the pipe.
@@ -136,6 +83,14 @@ struct autoclose_pipes_t {
 /// The pipes are marked CLO_EXEC and are placed in the high fd range.
 /// \return pipes on success, none() on error.
 maybe_t<autoclose_pipes_t> make_autoclose_pipes();
+
+/// Create pipes.
+/// Upon failure both values will be negative.
+struct pipes_ffi_t {
+    int read;
+    int write;
+};
+pipes_ffi_t make_pipes_ffi();
 
 /// An event signaller implemented using a file descriptor, so it can plug into select().
 /// This is like a binary semaphore. A call to post() will signal an event, making the fd readable.

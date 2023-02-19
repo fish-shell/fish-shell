@@ -2,6 +2,7 @@
 // programs, allowing fish to test its behavior.
 
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
 

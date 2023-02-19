@@ -864,7 +864,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
             if (wildcard_match(match, key.first)) {
                 // Copy all of their options into our list. Oof, this is a lot of copying.
                 // We have to copy them in reverse order to preserve legacy behavior (#9221).
-                const auto& options = kv.second.get_options();
+                const auto &options = kv.second.get_options();
                 all_options.emplace_back(options.rbegin(), options.rend());
             }
         }
@@ -894,7 +894,8 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
 
                     if (this->conditions_test(o.conditions)) {
                         if (o.type == option_type_short) {
-                            // Only override a true last_option_requires_param value with a false one
+                            // Only override a true last_option_requires_param value with a false
+                            // one
                             if (last_option_requires_param.has_value()) {
                                 last_option_requires_param =
                                     *last_option_requires_param && o.result_mode.requires_param;
@@ -1325,8 +1326,8 @@ cleanup_t completer_t::apply_var_assignments(const wcstring_list_t &var_assignme
     const expand_flags_t expand_flags = expand_flag::skip_cmdsubst;
     const block_t *block = ctx.parser->push_block(block_t::variable_assignment_block());
     for (const wcstring &var_assign : var_assignments) {
-        maybe_t<size_t> equals_pos = variable_assignment_equals_pos(var_assign);
-        assert(equals_pos.has_value() && "All variable assignments should have equals position");
+        auto equals_pos = variable_assignment_equals_pos(var_assign);
+        assert(equals_pos && "All variable assignments should have equals position");
         const wcstring variable_name = var_assign.substr(0, *equals_pos);
         const wcstring expression = var_assign.substr(*equals_pos + 1);
 
@@ -1409,11 +1410,11 @@ void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
 
         // Separate the wrap target into any variable assignments VAR=... and the command itself.
         wcstring wrapped_command;
-        tokenizer_t tokenizer(wt.c_str(), 0);
+        auto tokenizer = new_tokenizer(wt.c_str(), 0);
         size_t wrapped_command_offset_in_wt = wcstring::npos;
-        while (auto tok = tokenizer.next()) {
-            wcstring tok_src = tok->get_source(wt);
-            if (variable_assignment_equals_pos(tok_src).has_value()) {
+        while (auto tok = tokenizer->next()) {
+            wcstring tok_src = *tok->get_source(wt);
+            if (variable_assignment_equals_pos(tok_src)) {
                 ad->var_assignments->push_back(std::move(tok_src));
             } else {
                 wrapped_command_offset_in_wt = tok->offset;
@@ -1492,7 +1493,7 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &cmd,
     // Get all the arguments, unescaped, into an array that we're going to bsearch.
     wcstring_list_t arg_strs;
     for (const auto &arg : args) {
-        wcstring argstr = arg.get_source(cmd);
+        wcstring argstr = *arg.get_source(cmd);
         wcstring argstr_unesc;
         if (unescape_string(argstr, &argstr_unesc, UNESCAPE_DEFAULT)) {
             arg_strs.push_back(std::move(argstr_unesc));
@@ -1549,7 +1550,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         tokens.erase(
             std::remove_if(tokens.begin(), tokens.end(),
                            [&cmdline](const tok_t &token) {
-                               return parser_keywords_is_subcommand(token.get_source(cmdline));
+                               return parser_keywords_is_subcommand(*token.get_source(cmdline));
                            }),
             tokens.end());
     }
@@ -1559,8 +1560,8 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     wcstring_list_t var_assignments;
     for (const tok_t &tok : tokens) {
         if (tok.location_in_or_at_end_of_source_range(cursor_pos)) break;
-        wcstring tok_src = tok.get_source(cmdline);
-        if (!variable_assignment_equals_pos(tok_src).has_value()) break;
+        wcstring tok_src = *tok.get_source(cmdline);
+        if (!variable_assignment_equals_pos(tok_src)) break;
         var_assignments.push_back(std::move(tok_src));
     }
     tokens.erase(tokens.begin(), tokens.begin() + var_assignments.size());
@@ -1583,26 +1584,27 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         effective_cmdline = &effective_cmdline_buf;
     }
 
-    if (tokens.back().type == token_type_t::comment) {
+    if (tokens.back().type_ == token_type_t::comment) {
         return;
     }
-    tokens.erase(std::remove_if(tokens.begin(), tokens.end(),
-                                [](const tok_t &tok) { return tok.type == token_type_t::comment; }),
-                 tokens.end());
+    tokens.erase(
+        std::remove_if(tokens.begin(), tokens.end(),
+                       [](const tok_t &tok) { return tok.type_ == token_type_t::comment; }),
+        tokens.end());
     assert(!tokens.empty());
 
     const tok_t &cmd_tok = tokens.front();
     const tok_t &cur_tok = tokens.back();
 
     // Since fish does not currently support redirect in command position, we return here.
-    if (cmd_tok.type != token_type_t::string) return;
-    if (cur_tok.type == token_type_t::error) return;
+    if (cmd_tok.type_ != token_type_t::string) return;
+    if (cur_tok.type_ == token_type_t::error) return;
     for (const auto &tok : tokens) {  // If there was an error, it was in the last token.
-        assert(tok.type == token_type_t::string || tok.type == token_type_t::redirect);
+        assert(tok.type_ == token_type_t::string || tok.type_ == token_type_t::redirect);
     }
     // If we are completing a variable name or a tilde expansion user name, we do that and
     // return. No need for any other completions.
-    const wcstring current_token = cur_tok.get_source(cmdline);
+    const wcstring current_token = *cur_tok.get_source(cmdline);
     if (cur_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
         if (try_complete_variable(current_token) || try_complete_user(current_token)) {
             return;
@@ -1610,8 +1612,8 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     }
 
     if (cmd_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
-        maybe_t<size_t> equal_sign_pos = variable_assignment_equals_pos(current_token);
-        if (equal_sign_pos.has_value()) {
+        auto equal_sign_pos = variable_assignment_equals_pos(current_token);
+        if (equal_sign_pos) {
             complete_param_expand(current_token, true /* do_file */);
             return;
         }
@@ -1621,11 +1623,11 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         return;
     }
     // See whether we are in an argument, in a redirection or in the whitespace in between.
-    bool in_redirection = cur_tok.type == token_type_t::redirect;
+    bool in_redirection = cur_tok.type_ == token_type_t::redirect;
 
     bool had_ddash = false;
     wcstring current_argument, previous_argument;
-    if (cur_tok.type == token_type_t::string &&
+    if (cur_tok.type_ == token_type_t::string &&
         cur_tok.location_in_or_at_end_of_source_range(position_in_statement)) {
         // If the cursor is in whitespace, then the "current" argument is empty and the
         // previous argument is the matching one. But if the cursor was in or at the end
@@ -1639,15 +1641,15 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
             current_argument = current_token;
             if (tokens.size() >= 2) {
                 tok_t prev_tok = tokens.at(tokens.size() - 2);
-                if (prev_tok.type == token_type_t::string)
-                    previous_argument = prev_tok.get_source(cmdline);
-                in_redirection = prev_tok.type == token_type_t::redirect;
+                if (prev_tok.type_ == token_type_t::string)
+                    previous_argument = *prev_tok.get_source(cmdline);
+                in_redirection = prev_tok.type_ == token_type_t::redirect;
             }
         }
 
         // Check to see if we have a preceding double-dash.
         for (size_t i = 0; i < tokens.size() - 1; i++) {
-            if (tokens.at(i).get_source(cmdline) == L"--") {
+            if (*tokens.at(i).get_source(cmdline) == L"--") {
                 had_ddash = true;
                 break;
             }
@@ -1665,7 +1667,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         source_offset_t bias = cmdline.size() - effective_cmdline->size();
         source_range_t command_range = {cmd_tok.offset - bias, cmd_tok.length};
 
-        wcstring exp_command = cmd_tok.get_source(cmdline);
+        wcstring exp_command = *cmd_tok.get_source(cmdline);
         bool unescaped =
             expand_command_token(ctx, exp_command) &&
             unescape_string(previous_argument, &arg_data.previous_argument, UNESCAPE_DEFAULT) &&

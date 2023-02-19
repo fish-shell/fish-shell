@@ -337,12 +337,12 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
     }
 
     for (const auto &condition_string : condition) {
-        parse_error_list_t errors;
-        if (parse_util_detect_errors(condition_string, &errors)) {
-            for (const auto &error : errors) {
+        auto errors = new_parse_error_list();
+        if (parse_util_detect_errors(condition_string, &*errors)) {
+            for (size_t i = 0; i < errors->size(); i++) {
                 wcstring prefix(wcstring(cmd) + L": -n '" + condition_string + L"': ");
-                streams.err.append(error.describe_with_prefix(condition_string, prefix,
-                                                              parser.is_interactive(), false));
+                streams.err.append(*errors->at(i)->describe_with_prefix(
+                    condition_string, prefix, parser.is_interactive(), false));
                 streams.err.push_back(L'\n');
             }
             return STATUS_CMD_ERROR;

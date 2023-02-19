@@ -103,12 +103,12 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
         // std::fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
         wcstring out;
         wcstring buff(begin, end - begin);
-        tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED);
-        while (auto token = tok.next()) {
+        auto tok = new_tokenizer(buff.c_str(), TOK_ACCEPT_UNFINISHED);
+        while (auto token = tok->next()) {
             if ((cut_at_cursor) && (token->offset + token->length >= pos)) break;
 
-            if (token->type == token_type_t::string) {
-                wcstring tmp = tok.text_of(*token);
+            if (token->type_ == token_type_t::string) {
+                wcstring tmp = *tok->text_of(*token);
                 unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
                 out.append(tmp);
                 out.push_back(L'\n');

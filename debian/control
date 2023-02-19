@@ -6,7 +6,7 @@ Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
 # Debhelper should be bumped to >= 10 once Ubuntu Xenial is no longer supported
 Build-Depends: debhelper (>= 9.20160115), libncurses5-dev, cmake (>= 3.5.0), gettext, libpcre2-dev,
 # Test dependencies
- locales-all, python3
+ locales-all, python3, rust (>= 1.67) | rust-mozilla (>= 1.67)
 Standards-Version: 4.1.5
 Homepage: https://fishshell.com/
 Vcs-Git: https://github.com/fish-shell/fish-shell.git

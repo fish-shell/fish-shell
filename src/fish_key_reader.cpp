@@ -20,8 +20,10 @@
 #include <vector>
 
 #include "common.h"
+#include "cxxgen.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "input.h"
 #include "input_common.h"
@@ -30,7 +32,7 @@
 #include "print_help.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signals.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
@@ -271,6 +273,7 @@ static void process_input(bool continuous_mode, bool verbose) {
     set_interactive_session(true);
     set_main_thread();
     setup_fork_guards();
+    rust_init();
     env_init();
     reader_init();
     parser_t &parser = parser_t::principal_parser();

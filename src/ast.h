@@ -497,7 +497,7 @@ struct statement_t final : public branch_t<type_t::statement> {
 
 // A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 // like if statements, where we require a command).
-struct job_t final : public branch_t<type_t::job> {
+struct job_pipeline_t final : public branch_t<type_t::job_pipeline> {
     // Maybe the time keyword.
     optional_t<keyword_t<parse_keyword_t::kw_time>> time;
 
@@ -523,7 +523,7 @@ struct job_conjunction_t final : public branch_t<type_t::job_conjunction> {
     optional_t<decorator_t> decorator{};
 
     // The job itself.
-    job_t job;
+    job_pipeline_t job;
 
     // The rest of the job conjunction, with && or ||s.
     job_conjunction_continuation_list_t continuations;
@@ -727,7 +727,7 @@ struct job_conjunction_continuation_t final
     maybe_newlines_t newlines;
 
     // The job itself.
-    job_t job;
+    job_pipeline_t job;
 
     FIELDS(conjunction, newlines, job)
 };

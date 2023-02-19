@@ -11,6 +11,7 @@
 #include <sys/select.h>  // IWYU pragma: keep
 
 #include "common.h"
+#include "fd_readable_set.rs.h"
 #include "fds.h"
 #include "maybe.h"
 
@@ -32,9 +33,6 @@ struct fd_monitor_item_t {
     /// The callback type for the item. It is passed \p fd, and the reason for waking \p reason.
     /// The callback may close \p fd, in which case the item is removed.
     using callback_t = std::function<void(autoclose_fd_t &fd, item_wake_reason_t reason)>;
-
-    /// A sentinel value meaning no timeout.
-    static constexpr uint64_t kNoTimeout = fd_readable_set_t::kNoTimeout;
 
     /// The fd to monitor.
     autoclose_fd_t fd{};

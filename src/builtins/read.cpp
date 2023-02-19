@@ -425,7 +425,8 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
             return STATUS_INVALID_ARGS;
         }
         if (env_var_t::flags_for(argv[i]) & env_var_t::flag_read_only) {
-            streams.err.append_format(_(L"%ls: %ls: cannot overwrite read-only variable"), cmd, argv[i]);
+            streams.err.append_format(_(L"%ls: %ls: cannot overwrite read-only variable"), cmd,
+                                      argv[i]);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
@@ -529,13 +530,13 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
         }
 
         if (opts.tokenize) {
-            tokenizer_t tok{buff.c_str(), TOK_ACCEPT_UNFINISHED};
+            auto tok = new_tokenizer(buff.c_str(), TOK_ACCEPT_UNFINISHED);
             wcstring out;
             if (opts.array) {
                 // Array mode: assign each token as a separate element of the sole var.
                 wcstring_list_t tokens;
-                while (auto t = tok.next()) {
-                    auto text = tok.text_of(*t);
+                while (auto t = tok->next()) {
+                    auto text = *tok->text_of(*t);
                     if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
                         tokens.push_back(out);
                     } else {
@@ -545,9 +546,9 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
 
                 parser.set_var_and_fire(*var_ptr++, opts.place, std::move(tokens));
             } else {
-                maybe_t<tok_t> t;
-                while ((vars_left() - 1 > 0) && (t = tok.next())) {
-                    auto text = tok.text_of(*t);
+                std::unique_ptr<tok_t> t;
+                while ((vars_left() - 1 > 0) && (t = tok->next())) {
+                    auto text = *tok->text_of(*t);
                     if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
                         parser.set_var_and_fire(*var_ptr++, opts.place, out);
                     } else {
@@ -556,7 +557,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 }
 
                 // If we still have tokens, set the last variable to them.
-                if ((t = tok.next())) {
+                if ((t = tok->next())) {
                     wcstring rest = wcstring(buff, t->offset);
                     parser.set_var_and_fire(*var_ptr++, opts.place, std::move(rest));
                 }

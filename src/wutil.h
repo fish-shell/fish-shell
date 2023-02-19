@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #ifdef __APPLE__
 // This include is required on macOS 10.10 for locale_t
-#include <xlocale.h> // IWYU pragma: keep
+#include <xlocale.h>  // IWYU pragma: keep
 #endif
 
 #include <ctime>
@@ -23,6 +23,19 @@
 
 #include "common.h"
 #include "maybe.h"
+
+/// A POD wrapper around a null-terminated string, for ffi purposes.
+/// This trivial type may be converted to and from const wchar_t *.
+struct wcharz_t {
+    const wchar_t *str;
+
+    /* implicit */ wcharz_t(const wchar_t *s) : str(s) {}
+    operator const wchar_t *() const { return str; }
+    operator wcstring() const { return str; }
+
+    inline size_t size() const { return wcslen(str); }
+    inline size_t length() const { return size(); }
+};
 
 class autoclose_fd_t;
 
@@ -43,7 +56,7 @@ int waccess(const wcstring &file_name, int mode);
 int wunlink(const wcstring &file_name);
 
 /// Wide character version of perror().
-void wperror(const wchar_t *s);
+void wperror(wcharz_t s);
 
 /// Wide character version of getcwd().
 wcstring wgetcwd();
@@ -78,6 +91,7 @@ std::wstring wbasename(std::wstring path);
 /// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
 /// will be nothing more than a wrapper around gettext, like all other functions in this file.
 const wcstring &wgettext(const wchar_t *in);
+const wchar_t *wgettext_ptr(const wchar_t *in);
 
 /// Wide character version of mkdir.
 int wmkdir(const wcstring &name, int mode);
@@ -174,6 +188,7 @@ class dir_iter_t : noncopyable_t {
    private:
     /// Whether this dir_iter considers the "." and ".." filesystem entries.
     bool withdot_{false};
+
    public:
     struct entry_t;
 

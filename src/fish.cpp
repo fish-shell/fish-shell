@@ -39,11 +39,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "ast.h"
 #include "common.h"
+#include "cxxgen.h"
 #include "env.h"
 #include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
+#include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "function.h"
@@ -59,7 +61,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signals.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -261,11 +263,11 @@ static int run_command_list(parser_t &parser, const std::vector<std::string> &cm
     for (const auto &cmd : cmds) {
         wcstring cmd_wcs = str2wcstring(cmd);
         // Parse into an ast and detect errors.
-        parse_error_list_t errors;
-        auto ast = ast::ast_t::parse(cmd_wcs, parse_flag_none, &errors);
+        auto errors = new_parse_error_list();
+        auto ast = ast::ast_t::parse(cmd_wcs, parse_flag_none, &*errors);
         bool errored = ast.errored();
         if (!errored) {
-            errored = parse_util_detect_errors(ast, cmd_wcs, &errors);
+            errored = parse_util_detect_errors(ast, cmd_wcs, &*errors);
         }
         if (!errored) {
             // Construct a parsed source ref.
@@ -275,7 +277,7 @@ static int run_command_list(parser_t &parser, const std::vector<std::string> &cm
             parser.eval(ps, io);
         } else {
             wcstring sb;
-            parser.get_backtrace(cmd_wcs, errors, sb);
+            parser.get_backtrace(cmd_wcs, *errors, sb);
             std::fwprintf(stderr, L"%ls", sb.c_str());
         }
     }
@@ -319,6 +321,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             }
             case 'd': {
                 activate_flog_categories_by_pattern(str2wcstring(optarg));
+                rust_activate_flog_categories_by_pattern(str2wcstring(optarg).c_str());
                 for (auto cat : get_flog_categories()) {
                     if (cat->enabled) {
                         std::fwprintf(stdout, L"Debug enabled for category: %ls\n", cat->name);
@@ -427,6 +430,7 @@ int main(int argc, char **argv) {
     program_name = L"fish";
     set_main_thread();
     setup_fork_guards();
+    rust_init();
     signal_unblock_all();
 
     setlocale(LC_ALL, "");
@@ -496,10 +500,10 @@ int main(int argc, char **argv) {
     // command line takes precedence).
     if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features().set_from_string(s);
+            mutable_fish_features()->set_from_string(s.c_str());
         }
     }
-    mutable_fish_features().set_from_string(opts.features);
+    mutable_fish_features()->set_from_string(opts.features.c_str());
     proc_init();
     misc_init();
     reader_init();

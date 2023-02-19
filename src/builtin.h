@@ -106,4 +106,13 @@ struct help_only_cmd_opts_t {
 };
 int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc,
                              const wchar_t **argv, parser_t &parser, io_streams_t &streams);
+
+/// An enum of the builtins implemented in Rust.
+enum RustBuiltin : int32_t {
+    Echo,
+    Emit,
+    Exit,
+    Wait,
+    Return,
+};
 #endif

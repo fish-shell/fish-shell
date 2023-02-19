@@ -16,6 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: beta
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -42,6 +46,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: beta
+        targets: "i686-unknown-linux-gnu" # setup-rust wants this space-separated
     - name: Install deps
       run: |
         sudo apt update
@@ -53,10 +62,10 @@ jobs:
           CFLAGS: "-m32"
       run: |
         mkdir build && cd build
-        cmake -DFISH_USE_SYSTEM_PCRE2=OFF ..
+        cmake -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i686-unknown-linux-gnu ..
     - name: make
       run: |
-        make
+        make VERBOSE=1
     - name: make test
       run: |
         make test
@@ -67,6 +76,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: beta
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -101,6 +114,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: beta
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -127,6 +144,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: beta
     - name: Install deps
       run: |
         sudo pip3 install pexpect

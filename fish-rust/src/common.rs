@@ -1,7 +1,8 @@
-use crate::wchar_ext::WExt;
+use crate::wchar::{wstr, WExt};
+use crate::wchar_ffi::c_str;
 use crate::{
     ffi,
-    wchar_ffi::{wstr, WCharFromFFI, WString},
+    wchar_ffi::{WCharFromFFI, WString},
 };
 use std::{ffi::c_uint, mem};
 
@@ -92,7 +93,7 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
         EscapeStringStyle::Regex => ffi::escape_string_style_t::STRING_STYLE_REGEX,
     };
 
-    ffi::escape_string(s.as_ptr(), flags_int.into(), style).from_ffi()
+    ffi::escape_string(c_str!(s), flags_int.into(), style).from_ffi()
 }
 
 /// Test if the string is a valid function name.

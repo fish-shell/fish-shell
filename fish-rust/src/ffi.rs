@@ -119,11 +119,13 @@ impl From<wcharz_t> for wchar::WString {
         Self::from_vec(v).expect("Invalid UTF-32")
     }
 }
+
 impl Debug for re::regex_t {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str("regex_t")
     }
 }
+
 /// A bogus trait for turning &mut Foo into Pin<&mut Foo>.
 /// autocxx enforces that non-const methods must be called through Pin,
 /// but this means we can't pass around mutable references to types like parser_t.

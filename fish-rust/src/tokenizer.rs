@@ -11,6 +11,7 @@ use crate::wutil::wgettext;
 use cxx::{CxxWString, SharedPtr, UniquePtr};
 use libc::{c_int, STDIN_FILENO, STDOUT_FILENO};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
+use std::os::fd::RawFd;
 use widestring_suffix::widestrs;
 
 #[cxx::bridge]
@@ -1125,18 +1126,20 @@ impl PipeOrRedir {
 
 // Parse an fd from the non-empty string [start, end), all of which are digits.
 // Return the fd, or -1 on overflow.
-fn parse_fd(s: &wstr) -> i32 {
+fn parse_fd(s: &wstr) -> RawFd {
     assert!(!s.is_empty());
-    let mut big_fd: usize = 0;
-    for c in s.chars() {
-        assert!(c.is_ascii_digit());
-        big_fd = big_fd * 10 + (c.to_digit(10).unwrap() as usize);
-        if big_fd > (i32::MAX as usize) {
-            return -1;
-        }
+    let chars: Vec<u8> = s
+        .chars()
+        .map(|c| {
+            assert!(c.is_ascii_digit());
+            c as u8
+        })
+        .collect();
+    let s = std::str::from_utf8(chars.as_slice()).unwrap();
+    match s.parse() {
+        Ok(val) => val,
+        Err(_) => -1,
     }
-    assert!(big_fd <= (i32::MAX as usize), "big_fd should be in range");
-    big_fd as i32
 }
 
 fn new_move_word_state_machine(syl: MoveWordStyle) -> Box<MoveWordStateMachine> {

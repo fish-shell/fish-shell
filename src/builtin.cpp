@@ -39,7 +39,6 @@
 #include "builtins/command.h"
 #include "builtins/commandline.h"
 #include "builtins/complete.h"
-#include "builtins/contains.h"
 #include "builtins/disown.h"
 #include "builtins/eval.h"
 #include "builtins/fg.h"
@@ -375,7 +374,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"command", &builtin_command, N_(L"Run a command specifically")},
     {L"commandline", &builtin_commandline, N_(L"Set or get the commandline")},
     {L"complete", &builtin_complete, N_(L"Edit command specific completions")},
-    {L"contains", &builtin_contains, N_(L"Search for a specified string in a list")},
+    {L"contains", &implemented_in_rust, N_(L"Search for a specified string in a list")},
     {L"continue", &builtin_break_continue, N_(L"Skip over remaining innermost loop")},
     {L"count", &builtin_count, N_(L"Count the number of arguments")},
     {L"disown", &builtin_disown, N_(L"Remove job from job list")},
@@ -524,6 +523,9 @@ const wchar_t *builtin_get_desc(const wcstring &name) {
 }
 
 static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
+    if (cmd == L"contains") {
+        return RustBuiltin::Contains;
+    }
     if (cmd == L"echo") {
         return RustBuiltin::Echo;
     }

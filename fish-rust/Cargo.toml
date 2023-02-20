@@ -53,3 +53,6 @@ cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
 #autocxx = { path = "../../autocxx" }
 #autocxx-build = { path = "../../autocxx/gen/build" }
 #autocxx-bindgen = { path = "../../autocxx-bindgen" }
+
+[profile.release]
+overflow-checks = true

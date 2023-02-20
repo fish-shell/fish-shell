@@ -19,7 +19,7 @@ jobs:
     - name: SetupRust
       uses: ATiltedTree/setup-rust@v1
       with:
-        rust-version: beta
+        rust-version: 1.67
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -49,7 +49,7 @@ jobs:
     - name: SetupRust
       uses: ATiltedTree/setup-rust@v1
       with:
-        rust-version: beta
+        rust-version: 1.67
         targets: "i686-unknown-linux-gnu" # setup-rust wants this space-separated
     - name: Install deps
       run: |
@@ -79,7 +79,7 @@ jobs:
     - name: SetupRust
       uses: ATiltedTree/setup-rust@v1
       with:
-        rust-version: beta
+        rust-version: 1.67
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -121,7 +121,7 @@ jobs:
   #   - name: SetupRust
   #     uses: ATiltedTree/setup-rust@v1
   #     with:
-  #       rust-version: beta
+  #       rust-version: 1.67
   #   - name: Install deps
   #     run: |
   #       sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -151,7 +151,7 @@ jobs:
     - name: SetupRust
       uses: ATiltedTree/setup-rust@v1
       with:
-        rust-version: beta
+        rust-version: 1.67
     - name: Install deps
       run: |
         sudo pip3 install pexpect

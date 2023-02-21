@@ -1,7 +1,9 @@
 fn main() -> miette::Result<()> {
+    let out_dir =
+        std::path::PathBuf::from(std::env::var("OUT_DIR").expect("Env var OUT_DIR missing"));
     let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
-    let target_dir =
-        std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));
+    let target_dir = std::env::var("FISH_RUST_TARGET_DIR")
+        .unwrap_or(out_dir.ancestors().nth(4).unwrap().display().to_string());
     let fish_src_dir = format!("{}/{}", rust_dir, "../src/");
 
     // Where cxx emits its header.

@@ -179,15 +179,6 @@ wcstring describe_char(wint_t c) {
     return format_string(L"%02x", c);
 }
 
-using mapping_list_t = std::vector<input_mapping_t>;
-input_mapping_set_t::input_mapping_set_t() = default;
-input_mapping_set_t::~input_mapping_set_t() = default;
-
-acquired_lock<input_mapping_set_t> input_mappings() {
-    static owning_lock<input_mapping_set_t> s_mappings{input_mapping_set_t()};
-    return s_mappings.acquire();
-}
-
 /// Terminfo map list.
 static latch_t<std::vector<terminfo_mapping_t>> s_terminfo_mappings;
 
@@ -224,55 +215,6 @@ static int input_function_arity(readline_cmd_t function) {
     }
 }
 
-/// Helper function to compare the lengths of sequences.
-static bool length_is_greater_than(const input_mapping_t &m1, const input_mapping_t &m2) {
-    return m1.seq.size() > m2.seq.size();
-}
-
-static bool specification_order_is_less_than(const input_mapping_t &m1, const input_mapping_t &m2) {
-    return m1.specification_order < m2.specification_order;
-}
-
-/// Inserts an input mapping at the correct position. We sort them in descending order by length, so
-/// that we test longer sequences first.
-static void input_mapping_insert_sorted(mapping_list_t &ml, input_mapping_t new_mapping) {
-    auto loc = std::lower_bound(ml.begin(), ml.end(), new_mapping, length_is_greater_than);
-    ml.insert(loc, std::move(new_mapping));
-}
-
-/// Adds an input mapping.
-void input_mapping_set_t::add(wcstring sequence, const wchar_t *const *commands,
-                              size_t commands_len, const wchar_t *mode, const wchar_t *sets_mode,
-                              bool user) {
-    assert(commands && mode && sets_mode && "Null parameter");
-
-    // Clear cached mappings.
-    all_mappings_cache_.reset();
-
-    // Remove existing mappings with this sequence.
-    const wcstring_list_t commands_vector(commands, commands + commands_len);
-
-    mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
-
-    for (input_mapping_t &m : ml) {
-        if (m.seq == sequence && m.mode == mode) {
-            m.commands = commands_vector;
-            m.sets_mode = sets_mode;
-            return;
-        }
-    }
-
-    // Add a new mapping, using the next order.
-    input_mapping_t new_mapping =
-        input_mapping_t(std::move(sequence), commands_vector, mode, sets_mode);
-    input_mapping_insert_sorted(ml, std::move(new_mapping));
-}
-
-void input_mapping_set_t::add(wcstring sequence, const wchar_t *command, const wchar_t *mode,
-                              const wchar_t *sets_mode, bool user) {
-    input_mapping_set_t::add(std::move(sequence), &command, 1, mode, sets_mode, user);
-}
-
 /// Set up arrays used by readch to detect escape sequences for special keys and perform related
 /// initializations for our input subsystem.
 void init_input() {
@@ -280,40 +222,7 @@ void init_input() {
 
     if (s_terminfo_mappings.is_set()) return;
     s_terminfo_mappings = create_input_terminfo();
-
-    auto input_mapping = input_mappings();
-
-    // If we have no keybindings, add a few simple defaults.
-    if (input_mapping->preset_mapping_list_.empty()) {
-        input_mapping->add(L"", L"self-insert", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\n", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\r", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\t", L"complete", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x3", L"cancel-commandline", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
-                           false);
-        input_mapping->add(L"\x4", L"exit", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x5", L"bind", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        // ctrl-s
-        input_mapping->add(L"\x13", L"pager-toggle-search", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
-                           false);
-        // ctrl-u
-        input_mapping->add(L"\x15", L"backward-kill-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
-                           false);
-        // del/backspace
-        input_mapping->add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
-                           false);
-        // Arrows - can't have functions, so *-or-search isn't available.
-        input_mapping->add(L"\x1B[A", L"up-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x1B[B", L"down-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x1B[C", L"forward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x1B[D", L"backward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
-                           false);
-        // emacs-style ctrl-p/n/b/f
-        input_mapping->add(L"\x10", L"up-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x0e", L"down-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x02", L"backward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x06", L"forward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-    }
+    // Init default Input mappings
 }
 
 inputter_t::inputter_t(parser_t &parser, int in)
@@ -785,69 +694,6 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
             // it.
         }
     }
-}
-
-std::vector<input_mapping_name_t> input_mapping_set_t::get_names(bool user) const {
-    // Sort the mappings by the user specification order, so we can return them in the same order
-    // that the user specified them in.
-    std::vector<input_mapping_t> local_list = user ? mapping_list_ : preset_mapping_list_;
-    std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
-    std::vector<input_mapping_name_t> result;
-    result.reserve(local_list.size());
-
-    for (const auto &m : local_list) {
-        result.push_back((input_mapping_name_t){m.seq, m.mode});
-    }
-    return result;
-}
-
-void input_mapping_set_t::clear(const wchar_t *mode, bool user) {
-    all_mappings_cache_.reset();
-    mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
-    auto should_erase = [=](const input_mapping_t &m) { return mode == nullptr || mode == m.mode; };
-    ml.erase(std::remove_if(ml.begin(), ml.end(), should_erase), ml.end());
-}
-
-bool input_mapping_set_t::erase(const wcstring &sequence, const wcstring &mode, bool user) {
-    // Clear cached mappings.
-    all_mappings_cache_.reset();
-
-    bool result = false;
-    mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
-    for (auto it = ml.begin(), end = ml.end(); it != end; ++it) {
-        if (sequence == it->seq && mode == it->mode) {
-            ml.erase(it);
-            result = true;
-            break;
-        }
-    }
-    return result;
-}
-
-bool input_mapping_set_t::get(const wcstring &sequence, const wcstring &mode,
-                              wcstring_list_t *out_cmds, bool user, wcstring *out_sets_mode) const {
-    bool result = false;
-    const auto &ml = user ? mapping_list_ : preset_mapping_list_;
-    for (const input_mapping_t &m : ml) {
-        if (sequence == m.seq && mode == m.mode) {
-            *out_cmds = m.commands;
-            *out_sets_mode = m.sets_mode;
-            result = true;
-            break;
-        }
-    }
-    return result;
-}
-
-std::shared_ptr<const mapping_list_t> input_mapping_set_t::all_mappings() {
-    // Populate the cache if needed.
-    if (!all_mappings_cache_) {
-        mapping_list_t all_mappings = mapping_list_;
-        all_mappings.insert(all_mappings.end(), preset_mapping_list_.begin(),
-                            preset_mapping_list_.end());
-        all_mappings_cache_ = std::make_shared<const mapping_list_t>(std::move(all_mappings));
-    }
-    return all_mappings_cache_;
 }
 
 /// Create a list of terminfo mappings.

@@ -40,3 +40,4 @@ mod builtins;
 mod env;
 mod input_common;
 mod re;
+mod input;

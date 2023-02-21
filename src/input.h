@@ -84,60 +84,6 @@ class inputter_t final : private input_event_queue_t {
     std::vector<char_event_t> event_storage_{};
 };
 
-struct input_mapping_name_t {
-    wcstring seq;
-    wcstring mode;
-};
-
-/// The input mapping set is the set of mappings from character sequences to commands.
-class input_mapping_set_t {
-    friend acquired_lock<input_mapping_set_t> input_mappings();
-    friend void init_input();
-
-    using mapping_list_t = std::vector<input_mapping_t>;
-
-    mapping_list_t mapping_list_;
-    mapping_list_t preset_mapping_list_;
-    std::shared_ptr<const mapping_list_t> all_mappings_cache_;
-
-    input_mapping_set_t();
-
-   public:
-    ~input_mapping_set_t();
-
-    /// Erase all bindings.
-    void clear(const wchar_t *mode = nullptr, bool user = true);
-
-    /// Erase binding for specified key sequence.
-    bool erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE,
-               bool user = true);
-
-    /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
-    /// it exists, false if not.
-    bool get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
-             wcstring *out_sets_mode) const;
-
-    /// Returns all mapping names and modes.
-    std::vector<input_mapping_name_t> get_names(bool user = true) const;
-
-    /// Add a key mapping from the specified sequence to the specified command.
-    ///
-    /// \param sequence the sequence to bind
-    /// \param command an input function that will be run whenever the key sequence occurs
-    void add(wcstring sequence, const wchar_t *command, const wchar_t *mode = DEFAULT_BIND_MODE,
-             const wchar_t *sets_mode = DEFAULT_BIND_MODE, bool user = true);
-
-    void add(wcstring sequence, const wchar_t *const *commands, size_t commands_len,
-             const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *sets_mode = DEFAULT_BIND_MODE,
-             bool user = true);
-
-    /// \return a snapshot of the list of input mappings.
-    std::shared_ptr<const mapping_list_t> all_mappings();
-};
-
-/// Access the singleton input mapping set.
-acquired_lock<input_mapping_set_t> input_mappings();
-
 /// Return the sequence for the terminfo variable of the specified name.
 ///
 /// If no terminfo variable of the specified name could be found, return false and set errno to

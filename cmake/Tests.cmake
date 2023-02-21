@@ -179,7 +179,7 @@ endforeach(PEXPECT)
 # Rust stuff.
 add_test(
     NAME "cargo-test"
-    COMMAND cargo test
+    COMMAND cargo test --target-dir target
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fish-rust"
 )
 set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
@@ -187,7 +187,7 @@ add_test_target("cargo-test")
 
 add_test(
     NAME "cargo-test-widestring"
-    COMMAND cargo test
+    COMMAND cargo test --target-dir target
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fish-rust/widestring-suffix/"
 )
 add_test_target("cargo-test-widestring")

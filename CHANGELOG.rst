@@ -1,7 +1,7 @@
 fish 3.6.1 (released ???)
 ===================================
 
-.. ignore: 9439 9440 9442 9452 9469 9480 9482
+.. ignore: 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9509 9513 9518 9546 
 
 Notable improvements and fixes
 ------------------------------
@@ -9,10 +9,11 @@ Notable improvements and fixes
     abbr --erase (abbr --list)
 
   can now be used to clean out all old abbreviations (:issue:`9468`).
-- ``abbr --add --universal`` now warns about --universal being non-functional, to make it easier to detect old-style ``abbr`` calls (:issue:`9475`).
+- ``abbr --add --universal`` now warns about ``--universal`` being non-functional, to make it easier to detect old-style ``abbr`` calls (:issue:`9475`).
 
 Deprecations and removed features
 ---------------------------------
+- The Web-based configuration for abbreviations has been removed, as it was not functional with the changes abbreviations introduced in 3.6.0 (:issue:`9460`).
 
 Scripting improvements
 ----------------------
@@ -24,8 +25,10 @@ Interactive improvements
 - Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`)
 - Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
-- Escape during history search restores the original commandline again (regressed in 3.6.0).
-- Using ``--help`` on builtins now respects the $MANPAGER variable in preference to $PAGER (:issue:`9488`).
+- Escape during history search restores the original command line again (regressed in 3.6.0).
+- Using ``--help`` on builtins now respects the ``$MANPAGER`` variable, in preference to ``$PAGER`` (:issue:`9488`).
+- :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
+- The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -36,10 +39,10 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
-
   - ``otool``
-  - ``mix phx``
-  
+  - ``pre-commit`` (:issue:`9521`)
+  - ``proxychains`` (:issue:`9486`)
+- Improvements to many completions.
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)
 - Completion for ``terraform`` now asks for a parameter after ``terraform init -backend-config``. (:issue:`9498`)
@@ -49,11 +52,11 @@ Improved terminal support
 
 Other improvements
 ------------------
-
+- Improvements and corrections to the documentation.
 
 For distributors
 ----------------
-- *Placeholder to fix Sphinx warning*
+- fish 3.6.1 builds correctly on Cygwin (:issue:`9502`).
 
 --------------
 

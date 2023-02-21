@@ -2,7 +2,7 @@
 #include "config.h"
 
 #include <errno.h>
-#include <pthread.h> // IWYU pragma: keep
+#include <pthread.h>  // IWYU pragma: keep
 #include <signal.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -22,6 +22,7 @@
 #include "env.h"
 #include "env_universal_common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fd_readable_set.rs.h"
 #include "fds.h"
 #include "flog.h"
 #include "input_common.h"
@@ -58,7 +59,8 @@ using readb_result_t = int;
 static readb_result_t readb(int in_fd) {
     assert(in_fd >= 0 && "Invalid in fd");
     universal_notifier_t& notifier = universal_notifier_t::default_notifier();
-    fd_readable_set_t fdset;
+    auto fdset_box = new_fd_readable_set();
+    fd_readable_set_t& fdset = *fdset_box;
     for (;;) {
         fdset.clear();
         fdset.add(in_fd);
@@ -73,7 +75,7 @@ static readb_result_t readb(int in_fd) {
 
         // Get its suggested delay (possibly none).
         // Note a 0 here means do not poll.
-        uint64_t timeout = fd_readable_set_t::kNoTimeout;
+        uint64_t timeout = kNoTimeout;
         if (uint64_t usecs_delay = notifier.usec_delay_between_polls()) {
             timeout = usecs_delay;
         }

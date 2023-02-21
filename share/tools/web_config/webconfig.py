@@ -1508,6 +1508,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     "fish_pager_color_secondary_description",
                 )
             )
+            output=""
             for item in postvars.get("colors"):
                 what = item.get("what")
                 color = item.get("color")

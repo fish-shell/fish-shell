@@ -251,10 +251,10 @@ int wunlink(const wcstring &file_name) {
     return unlink(tmp.c_str());
 }
 
-void wperror(const wchar_t *s) {
+void wperror(wcharz_t s) {
     int e = errno;
-    if (s[0] != L'\0') {
-        std::fwprintf(stderr, L"%ls: ", s);
+    if (s.str[0] != L'\0') {
+        std::fwprintf(stderr, L"%ls: ", s.str);
     }
     std::fwprintf(stderr, L"%s\n", std::strerror(e));
 }
@@ -514,6 +514,8 @@ const wcstring &wgettext(const wchar_t *in) {
     // TODO: If we want to shrink the map, this would be a problem.
     return val;
 }
+
+const wchar_t *wgettext_ptr(const wchar_t *in) { return wgettext(in).c_str(); }
 
 int wmkdir(const wcstring &name, int mode) {
     cstring name_narrow = wcs2string(name);

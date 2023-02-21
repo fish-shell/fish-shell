@@ -16,7 +16,7 @@
 #include "fds.h"
 #include "global_safety.h"
 #include "redirection.h"
-#include "signal.h"
+#include "signals.h"
 #include "topic_monitor.h"
 
 using std::shared_ptr;
@@ -275,6 +275,9 @@ class io_bufferfill_t final : public io_data_t {
     static separated_buffer_t finish(std::shared_ptr<io_bufferfill_t> &&filler);
 };
 
+struct callback_args_t;
+struct autoclose_fd_t2;
+
 /// An io_buffer_t is a buffer which can populate itself by reading from an fd.
 /// It is not an io_data_t.
 class io_buffer_t {
@@ -290,6 +293,9 @@ class io_buffer_t {
 
     /// \return true if output was discarded due to exceeding the read limit.
     bool discarded() { return buffer_.acquire()->discarded(); }
+
+    /// FFI callback workaround.
+    void item_callback(autoclose_fd_t2 &fd, uint8_t reason, callback_args_t *args);
 
    private:
     /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
@@ -345,6 +351,8 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     /// Output debugging information to stderr.
     void print() const;
 };
+
+dup2_list_t dup2_list_resolve_chain_shim(const io_chain_t &io_chain);
 
 /// Base class representing the output that a builtin can generate.
 /// This has various subclasses depending on the ultimate output destination.
@@ -413,9 +421,7 @@ class null_output_stream_t final : public output_stream_t {
 class fd_output_stream_t final : public output_stream_t {
    public:
     /// Construct from a file descriptor, which must be nonegative.
-    explicit fd_output_stream_t(int fd) : fd_(fd), sigcheck_(topic_t::sighupint) {
-        assert(fd_ >= 0 && "Invalid fd");
-    }
+    explicit fd_output_stream_t(int fd);
 
     int flush_and_check_error() override;
 
@@ -496,6 +502,11 @@ struct io_streams_t : noncopyable_t {
     std::shared_ptr<job_group_t> job_group{};
 
     io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
+
+    /// autocxx junk.
+    output_stream_t &get_out() { return out; };
+    output_stream_t &get_err() { return err; };
+    io_streams_t(const io_streams_t &) = delete;
 };
 
 #endif

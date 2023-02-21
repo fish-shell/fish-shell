@@ -11,10 +11,8 @@
 
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
-    enum parse_token_type_t type;  // The type of the token as represented by the parser
-    enum parse_keyword_t keyword {
-        parse_keyword_t::none
-    };                             // Any keyword represented by this token
+    parse_token_type_t type;  // The type of the token as represented by the parser
+    parse_keyword_t keyword{parse_keyword_t::none};  // Any keyword represented by this token
     bool has_dash_prefix{false};   // Hackish: whether the source contains a dash prefix
     bool is_help_argument{false};  // Hackish: whether the source looks like '-h' or '--help'
     bool is_newline{false};        // Hackish: if TOK_END, whether the source is a newline.
@@ -38,9 +36,6 @@ struct parse_token_t {
 
     constexpr parse_token_t(parse_token_type_t type) : type(type) {}
 };
-
-const wchar_t *token_type_description(parse_token_type_t type);
-const wchar_t *keyword_description(parse_keyword_t type);
 
 parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err);
 

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "common.h"
+#include "cxx.h"
 #include "env.h"
 #include "expand.h"
 #include "job_group.h"
@@ -38,7 +39,7 @@ inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
 }
 
 /// Types of blocks.
-enum class block_type_t : uint16_t {
+enum class block_type_t : uint8_t {
     while_block,              /// While loop block
     for_block,                /// For loop block
     if_block,                 /// If block
@@ -145,8 +146,8 @@ struct profile_item_t {
 
 class parse_execution_context_t;
 
-/// Miscellaneous data used to avoid recursion and others.
-struct library_data_t {
+/// Plain-Old-Data components of `struct library_data_t` that can be shared over FFI
+struct library_data_pod_t {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
 
@@ -206,7 +207,10 @@ struct library_data_t {
 
     /// The read limit to apply to captured subshell output, or 0 for none.
     size_t read_limit{0};
+};
 
+/// Miscellaneous data used to avoid recursion and others.
+struct library_data_t : public library_data_pod_t {
     /// The current filename we are evaluating, either from builtin source or on the command line.
     filename_ref_t current_filename{};
 
@@ -469,13 +473,23 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     std::shared_ptr<parser_t> shared();
 
     /// \return a cancel poller for checking if this parser has been signalled.
+    /// autocxx falls over with this so hide it.
+#if INCLUDE_RUST_HEADERS
     cancel_checker_t cancel_checker() const;
+#endif
 
     /// \return the operation context for this parser.
     operation_context_t context();
 
     /// Checks if the max eval depth has been exceeded
     bool is_eval_depth_exceeded() const { return eval_level >= FISH_MAX_EVAL_DEPTH; }
+
+    /// autocxx junk.
+    RustFFIJobList ffi_jobs() const;
+    library_data_pod_t *ffi_libdata_pod();
+
+    /// autocxx junk.
+    bool ffi_has_funtion_block() const;
 
     ~parser_t();
 };

@@ -68,5 +68,6 @@ complete -c $progname -s S -d 'Shows information of an installed package' -x
 complete -c $progname -s s -d 'Search for packages by matching PATTERN on pkgver or short_desc'
 complete -c $progname -s f -d 'Show the package files for PKG' -x
 complete -c $progname -s x -d 'Show the required dependencies for PKG.  Only direct dependencies are shown' -x
-complete -c $progname -s X -d 'Show the reverse dependencies for PKG' -x
+complete -c $progname -s X -d 'Show the reverse dependencies for PKG' -xa "$listinstalled"
+complete -c $progname -s X -d 'Show the reverse dependencies for PKG' -x -n "__fish_contains_opt -s R" -a "$listall"
 complete -c $progname -l cat -d 'Prints the file FILE stored in binary package PKG to stdout' -F

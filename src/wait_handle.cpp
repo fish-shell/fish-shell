@@ -40,6 +40,12 @@ void wait_handle_store_t::remove_by_pid(pid_t pid) {
     }
 }
 
+wait_handle_ref_t wait_handle_store_t::get(size_t idx) const {
+    // TODO: this is O(N)!
+    assert(idx < handles_.size() && "index out of range");
+    return *std::next(std::begin(handles_), idx);
+}
+
 wait_handle_ref_t wait_handle_store_t::get_by_pid(pid_t pid) const {
     auto iter = handle_map_.find(pid);
     if (iter == handle_map_.end()) return nullptr;

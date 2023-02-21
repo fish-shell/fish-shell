@@ -24,7 +24,7 @@
 #include "postfork.h"
 #include "proc.h"
 #include "redirection.h"
-#include "signal.h"
+#include "signals.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 #ifndef JOIN_THREADS_BEFORE_FORK

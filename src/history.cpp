@@ -586,8 +586,8 @@ void history_impl_t::populate_from_file_contents() {
     if (file_contents) {
         size_t cursor = 0;
         maybe_t<size_t> offset;
-        while ((offset =
-                    file_contents->offset_of_next_item(&cursor, boundary_timestamp)).has_value()) {
+        while ((offset = file_contents->offset_of_next_item(&cursor, boundary_timestamp))
+                   .has_value()) {
             // Remember this item.
             old_item_offsets.push_back(*offset);
         }
@@ -1205,9 +1205,9 @@ static bool should_import_bash_history_line(const wcstring &line) {
     if (ast::ast_t::parse(line).errored()) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
-    parse_error_list_t errors;
-    parse_util_detect_errors(line, &errors);
-    return errors.empty();
+    auto errors = new_parse_error_list();
+    parse_util_detect_errors(line, &*errors);
+    return errors->empty();
 }
 
 /// Import a bash command history file. Bash's history format is very simple: just lines with #s for

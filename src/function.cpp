@@ -28,7 +28,7 @@
 #include "parse_constants.h"
 #include "parser.h"
 #include "parser_keywords.h"
-#include "signal.h"
+#include "signals.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -231,7 +231,10 @@ void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &par
     }
 }
 
-bool function_copy(const wcstring &name, const wcstring &new_name) {
+bool function_copy(const wcstring &name, const wcstring &new_name, parser_t &parser) {
+    auto filename = parser.current_filename();
+    auto lineno = parser.get_lineno();
+
     auto funcset = function_set.acquire();
     auto props = funcset->get_props(name);
     if (!props) {
@@ -239,11 +242,11 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
         return false;
     }
     // Copy the function's props.
-    // This new instance of the function shouldn't be tied to the definition file of the
-    // original, so clear the filename, etc.
     auto new_props = copy_props(props);
     new_props->is_autoload = false;
-    new_props->definition_file = nullptr;
+    new_props->is_copy = true;
+    new_props->copy_definition_file = filename;
+    new_props->copy_definition_lineno = lineno;
 
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.

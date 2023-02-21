@@ -16,6 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: 1.67
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -42,6 +46,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: 1.67
+        targets: "i686-unknown-linux-gnu" # setup-rust wants this space-separated
     - name: Install deps
       run: |
         sudo apt update
@@ -53,10 +62,10 @@ jobs:
           CFLAGS: "-m32"
       run: |
         mkdir build && cd build
-        cmake -DFISH_USE_SYSTEM_PCRE2=OFF ..
+        cmake -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i686-unknown-linux-gnu ..
     - name: make
       run: |
-        make
+        make VERBOSE=1
     - name: make test
       run: |
         make test
@@ -67,6 +76,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: 1.67
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -95,31 +108,39 @@ jobs:
       run: |
         make test
 
-  ubuntu-threadsan:
+  # Our clang++ tsan builds are not recognizing safe rust patterns (such as the fact that Drop
+  # cannot be called while a thread is using the object in question). Rust has its own way of
+  # running TSAN, but for the duration of the port from C++ to Rust, we'll keep this disabled.
 
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install deps
-      run: |
-        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
-        sudo pip3 install pexpect
-    - name: cmake
-      env:
-          FISH_CI_SAN: 1
-          CC: clang
-          CXX: clang++
-          CXXFLAGS: "-fsanitize=thread"
-      run: |
-        mkdir build && cd build
-        cmake ..
-    - name: make
-      run: |
-        make
-    - name: make test
-      run: |
-        make test
+  # ubuntu-threadsan:
+  #
+  #   runs-on: ubuntu-latest
+  #
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: SetupRust
+  #     uses: ATiltedTree/setup-rust@v1
+  #     with:
+  #       rust-version: 1.67
+  #   - name: Install deps
+  #     run: |
+  #       sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
+  #       sudo pip3 install pexpect
+  #   - name: cmake
+  #     env:
+  #         FISH_CI_SAN: 1
+  #         CC: clang
+  #         CXX: clang++
+  #         CXXFLAGS: "-fsanitize=thread"
+  #     run: |
+  #       mkdir build && cd build
+  #       cmake ..
+  #   - name: make
+  #     run: |
+  #       make
+  #   - name: make test
+  #     run: |
+  #       make test
 
   macos:
 
@@ -127,6 +148,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: 1.67
     - name: Install deps
       run: |
         sudo pip3 install pexpect

@@ -394,7 +394,7 @@ rgb_color_t highlight_color_resolver_t::resolve_spec(const highlight_spec_t &hig
     return iter->second;
 }
 
-static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
+static bool command_is_valid(const wcstring &cmd, statement_decoration_t decoration,
                              const wcstring &working_directory, const environment_t &vars);
 
 static bool has_expand_reserved(const wcstring &str) {
@@ -665,7 +665,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                             break;
                         }
                         case L'?': {
-                            if (!feature_test(features_t::qmark_noglob)) {
+                            if (!feature_test(feature_flag_t::qmark_noglob)) {
                                 colors[in_pos] = highlight_role_t::operat;
                             }
                             break;
@@ -1057,7 +1057,7 @@ void highlighter_t::visit(const ast::variable_assignment_t &varas) {
     color_as_argument(varas);
     // Highlight the '=' in variable assignments as an operator.
     auto where = variable_assignment_equals_pos(varas.source(this->buff));
-    if (where.has_value()) {
+    if (where) {
         size_t equals_loc = varas.source_range().start + *where;
         this->color_array.at(equals_loc) = highlight_role_t::operat;
         auto var_name = varas.source(this->buff).substr(0, *where);
@@ -1079,7 +1079,7 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     if (!this->io_still_ok()) {
         // We cannot check if the command is invalid, so just assume it's valid.
         is_valid_cmd = true;
-    } else if (variable_assignment_equals_pos(*cmd).has_value()) {
+    } else if (variable_assignment_equals_pos(*cmd)) {
         is_valid_cmd = true;
     } else {
         // Check to see if the command is valid.
@@ -1158,12 +1158,10 @@ static bool contains_pending_variable(const std::vector<wcstring> &pending_varia
 }
 
 void highlighter_t::visit(const ast::redirection_t &redir) {
-    maybe_t<pipe_or_redir_t> oper =
-        pipe_or_redir_t::from_string(redir.oper.source(this->buff));  // like 2>
-    wcstring target = redir.target.source(this->buff);                // like &1 or file path
+    auto oper = pipe_or_redir_from_string(redir.oper.source(this->buff).c_str());  // like 2>
+    wcstring target = redir.target.source(this->buff);  // like &1 or file path
 
-    assert(oper.has_value() &&
-           "Should have successfully parsed a pipe_or_redir_t since it was in our ast");
+    assert(oper && "Should have successfully parsed a pipe_or_redir_t since it was in our ast");
 
     // Color the > part.
     // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)
@@ -1305,7 +1303,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
 }  // namespace
 
 /// Determine if a command is valid.
-static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
+static bool command_is_valid(const wcstring &cmd, statement_decoration_t decoration,
                              const wcstring &working_directory, const environment_t &vars) {
     // Determine which types we check, based on the decoration.
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,

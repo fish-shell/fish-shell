@@ -60,7 +60,8 @@ And here is fish::
 
   > set foo "bar baz"
   > printf '"%s"\n' $foo
-  # foo was set as one element, so it will be passed as one element, so this is one line
+  # foo was set as one element,
+  # so it will be passed as one element, so this is one line
   "bar baz"
 
 All variables are "arrays" (we use the term "lists"), and expanding a variable expands to all its elements, with each element as its own argument (like bash's ``"${var[@]}"``::

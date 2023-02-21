@@ -39,7 +39,7 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "timer.h"
+#include "timer.rs.h"
 #include "tokenizer.h"
 #include "trace.h"
 #include "wildcard.h"
@@ -112,9 +112,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const ast::node_t &nod
 }
 
 /// Get a redirection from stderr to stdout (i.e. 2>&1).
-static redirection_spec_t get_stderr_merge() {
+static rust::Box<redirection_spec_t> get_stderr_merge() {
     const wchar_t *stdout_fileno_str = L"1";
-    return redirection_spec_t{STDERR_FILENO, redirection_mode_t::fd, stdout_fileno_str};
+    return new_redirection_spec(STDERR_FILENO, redirection_mode_t::fd, stdout_fileno_str);
 }
 
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree,
@@ -150,7 +150,7 @@ parse_execution_context_t::infinite_recursive_statement_in_job_list(const ast::j
     // Get the first job in the job list.
     const ast::job_conjunction_t *jc = jobs.at(0);
     if (!jc) return nullptr;
-    const ast::job_t *job = &jc->job;
+    const ast::job_pipeline_t *job = &jc->job;
 
     // Helper to return if a statement is infinitely recursive in this function.
     auto statement_recurses =
@@ -245,7 +245,7 @@ maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution()
 }
 
 /// Return whether the job contains a single statement, of block type, with no redirections.
-bool parse_execution_context_t::job_is_simple_block(const ast::job_t &job) const {
+bool parse_execution_context_t::job_is_simple_block(const ast::job_pipeline_t &job) const {
     using namespace ast;
     // Must be no pipes.
     if (!job.continuation.empty()) {
@@ -450,7 +450,8 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     auto var = parser->vars().get(for_var_name, ENV_DEFAULT);
     if (env_var_t::flags_for(for_var_name.c_str()) & env_var_t::flag_read_only) {
         return report_error(STATUS_INVALID_ARGS, header.var_name,
-                            _(L"%ls: %ls: cannot overwrite read-only variable"), L"for", for_var_name.c_str());
+                            _(L"%ls: %ls: cannot overwrite read-only variable"), L"for",
+                            for_var_name.c_str());
     }
 
     auto &vars = parser->vars();
@@ -502,14 +503,14 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
 
     // Expand it. We need to offset any errors by the position of the string.
     completion_list_t switch_values_expanded;
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
     auto expand_ret =
-        expand_string(switch_value, &switch_values_expanded, expand_flags_t{}, ctx, &errors);
-    parse_error_offset_source_start(&errors, statement.argument.range.start);
+        expand_string(switch_value, &switch_values_expanded, expand_flags_t{}, ctx, &*errors);
+    errors->offset_source_start(statement.argument.range.start);
 
     switch (expand_ret.result) {
         case expand_result_t::error:
-            return report_errors(expand_ret.status, errors);
+            return report_errors(expand_ret.status, *errors);
 
         case expand_result_t::cancel:
             return end_execution_reason_t::cancelled;
@@ -665,18 +666,20 @@ end_execution_reason_t parse_execution_context_t::report_error(int status, const
     auto r = node.source_range();
 
     // Create an error.
-    parse_error_list_t error_list = parse_error_list_t(1);
-    parse_error_t *error = &error_list.at(0);
-    error->source_start = r.start;
-    error->source_length = r.length;
-    error->code = parse_error_syntax;  // hackish
+    auto error_list = new_parse_error_list();
+    parse_error_t error;
+    error.source_start = r.start;
+    error.source_length = r.length;
+    error.code = parse_error_code_t::syntax;  // hackish
 
     va_list va;
     va_start(va, fmt);
-    error->text = vformat_string(fmt, va);
+    error.text = std::make_unique<wcstring>(vformat_string(fmt, va));
     va_end(va);
 
-    return this->report_errors(status, error_list);
+    error_list->push_back(std::move(error));
+
+    return this->report_errors(status, *error_list);
 }
 
 end_execution_reason_t parse_execution_context_t::report_errors(
@@ -735,19 +738,20 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
             // If the original command did not include a "/", assume we found it via $PATH.
             auto src = get_source(statement.command);
             if (src.find(L"/") == wcstring::npos) {
-                return this->report_error(
-                                          STATUS_NOT_EXECUTABLE, statement.command,
-                                          _(L"Unknown command. A component of '%ls' is not a directory. Check your $PATH."), cmd);
+                return this->report_error(STATUS_NOT_EXECUTABLE, statement.command,
+                                          _(L"Unknown command. A component of '%ls' is not a "
+                                            L"directory. Check your $PATH."),
+                                          cmd);
             } else {
                 return this->report_error(
-                                          STATUS_NOT_EXECUTABLE, statement.command,
-                                          _(L"Unknown command. A component of '%ls' is not a directory."), cmd);
+                    STATUS_NOT_EXECUTABLE, statement.command,
+                    _(L"Unknown command. A component of '%ls' is not a directory."), cmd);
             }
         }
 
         return this->report_error(
-                                  STATUS_NOT_EXECUTABLE, statement.command,
-                                  _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
+            STATUS_NOT_EXECUTABLE, statement.command,
+            _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
     }
 
     // Handle unrecognized commands with standard command not found handler that can make better
@@ -770,7 +774,9 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
     // Redirect to stderr
     auto io = io_chain_t{};
-    io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}}, L"");
+    auto list = new_redirection_spec_list();
+    list->push_back(new_redirection_spec(STDOUT_FILENO, redirection_mode_t::fd, L"2"));
+    io.append_from_specs(*list, L"");
 
     if (function_exists(L"fish_command_not_found", *parser)) {
         buffer = L"fish_command_not_found";
@@ -810,7 +816,7 @@ end_execution_reason_t parse_execution_context_t::expand_command(
     // Here we're expanding a command, for example $HOME/bin/stuff or $randomthing. The first
     // completion becomes the command itself, everything after becomes arguments. Command
     // substitutions are not supported.
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
 
     // Get the unexpanded command string. We expect to always get it here.
     wcstring unexp_cmd = get_source(statement.command);
@@ -818,14 +824,14 @@ end_execution_reason_t parse_execution_context_t::expand_command(
 
     // Expand the string to produce completions, and report errors.
     expand_result_t expand_err =
-        expand_to_command_and_args(unexp_cmd, ctx, out_cmd, out_args, &errors);
+        expand_to_command_and_args(unexp_cmd, ctx, out_cmd, out_args, &*errors);
     if (expand_err == expand_result_t::error) {
         // Issue #5812 - the expansions were done on the command token,
         // excluding prefixes such as " " or "if ".
         // This means that the error positions are relative to the beginning
         // of the token; we need to make them relative to the original source.
-        parse_error_offset_source_start(&errors, pos_of_command_token);
-        return report_errors(STATUS_ILLEGAL_CMD, errors);
+        errors->offset_source_start(pos_of_command_token);
+        return report_errors(STATUS_ILLEGAL_CMD, *errors);
     } else if (expand_err == expand_result_t::wildcard_no_match) {
         return report_error(STATUS_UNMATCHED_WILDCARD, statement, WILDCARD_ERR_MSG,
                             get_source(statement).c_str());
@@ -890,7 +896,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
 
     // Produce the full argument list and the set of IO redirections.
     wcstring_list_t cmd_args;
-    redirection_spec_list_t redirections;
+    auto redirections = new_redirection_spec_list();
     if (use_implicit_cd) {
         // Implicit cd is simple.
         cmd_args = {L"cd", cmd};
@@ -917,7 +923,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         }
 
         // The set of IO redirections that we construct for the process.
-        auto reason = this->determine_redirections(statement.args_or_redirs, &redirections);
+        auto reason = this->determine_redirections(statement.args_or_redirs, &*redirections);
         if (reason != end_execution_reason_t::ok) {
             return reason;
         }
@@ -945,14 +951,14 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
         assert(arg_node->has_source() && "Argument should have source");
 
         // Expand this string.
-        parse_error_list_t errors;
+        auto errors = new_parse_error_list();
         arg_expanded.clear();
         auto expand_ret =
-            expand_string(get_source(*arg_node), &arg_expanded, expand_flags_t{}, ctx, &errors);
-        parse_error_offset_source_start(&errors, arg_node->range.start);
+            expand_string(get_source(*arg_node), &arg_expanded, expand_flags_t{}, ctx, &*errors);
+        errors->offset_source_start(arg_node->range.start);
         switch (expand_ret.result) {
             case expand_result_t::error: {
-                return this->report_errors(expand_ret.status, errors);
+                return this->report_errors(expand_ret.status, *errors);
             }
 
             case expand_result_t::cancel: {
@@ -999,7 +1005,7 @@ end_execution_reason_t parse_execution_context_t::determine_redirections(
         if (!arg_or_redir.is_redirection()) continue;
         const ast::redirection_t &redir_node = arg_or_redir.redirection();
 
-        maybe_t<pipe_or_redir_t> oper = pipe_or_redir_t::from_string(get_source(redir_node.oper));
+        auto oper = pipe_or_redir_from_string(get_source(redir_node.oper).c_str());
         if (!oper || !oper->is_valid()) {
             // TODO: figure out if this can ever happen. If so, improve this error message.
             return report_error(STATUS_INVALID_ARGS, redir_node, _(L"Invalid redirection: %ls"),
@@ -1018,14 +1024,14 @@ end_execution_reason_t parse_execution_context_t::determine_redirections(
 
         // Make a redirection spec from the redirect token.
         assert(oper && oper->is_valid() && "expected to have a valid redirection");
-        redirection_spec_t spec{oper->fd, oper->mode, std::move(target)};
+        auto spec = new_redirection_spec(oper->fd, oper->mode, target.c_str());
 
         // Validate this spec.
-        if (spec.mode == redirection_mode_t::fd && !spec.is_close() &&
-                !spec.get_target_as_fd().has_value()) {
+        if (spec->mode() == redirection_mode_t::fd && !spec->is_close() &&
+            !spec->get_target_as_fd()) {
             const wchar_t *fmt =
                 _(L"Requested redirection to '%ls', which is not a valid file descriptor");
-            return report_error(STATUS_INVALID_ARGS, redir_node, fmt, spec.target.c_str());
+            return report_error(STATUS_INVALID_ARGS, redir_node, fmt, spec->target()->c_str());
         }
         out_redirections->push_back(std::move(spec));
 
@@ -1077,8 +1083,8 @@ end_execution_reason_t parse_execution_context_t::populate_block_process(
     }
     assert(args_or_redirs && "Should have args_or_redirs");
 
-    redirection_spec_list_t redirections;
-    auto reason = this->determine_redirections(*args_or_redirs, &redirections);
+    auto redirections = new_redirection_spec_list();
+    auto reason = this->determine_redirections(*args_or_redirs, &*redirections);
     if (reason == end_execution_reason_t::ok) {
         proc->type = process_type_t::block_node;
         proc->block_node_source = pstree;
@@ -1096,18 +1102,18 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
     for (const ast::variable_assignment_t &variable_assignment : variable_assignment_list) {
         const wcstring &source = get_source(variable_assignment);
         auto equals_pos = variable_assignment_equals_pos(source);
-        assert(equals_pos.has_value());
+        assert(equals_pos);
         const wcstring variable_name = source.substr(0, *equals_pos);
         const wcstring expression = source.substr(*equals_pos + 1);
         completion_list_t expression_expanded;
-        parse_error_list_t errors;
+        auto errors = new_parse_error_list();
         // TODO this is mostly copied from expand_arguments_from_nodes, maybe extract to function
         auto expand_ret =
-            expand_string(expression, &expression_expanded, expand_flags_t{}, ctx, &errors);
-        parse_error_offset_source_start(&errors, variable_assignment.range.start + *equals_pos + 1);
+            expand_string(expression, &expression_expanded, expand_flags_t{}, ctx, &*errors);
+        errors->offset_source_start(variable_assignment.range.start + *equals_pos + 1);
         switch (expand_ret.result) {
             case expand_result_t::error:
-                return this->report_errors(expand_ret.status, errors);
+                return this->report_errors(expand_ret.status, *errors);
 
             case expand_result_t::cancel:
                 return end_execution_reason_t::cancelled;
@@ -1180,7 +1186,7 @@ end_execution_reason_t parse_execution_context_t::populate_job_process(
 }
 
 end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
-    job_t *j, const ast::job_t &job_node, const block_t *associated_block) {
+    job_t *j, const ast::job_pipeline_t &job_node, const block_t *associated_block) {
     UNUSED(associated_block);
 
     // We are going to construct process_t structures for every statement in the job.
@@ -1196,8 +1202,8 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
             break;
         }
         // Handle the pipe, whose fd may not be the obvious stdout.
-        auto parsed_pipe = pipe_or_redir_t::from_string(get_source(jc.pipe));
-        assert(parsed_pipe.has_value() && parsed_pipe->is_pipe && "Failed to parse valid pipe");
+        auto parsed_pipe = pipe_or_redir_from_string(get_source(jc.pipe).c_str());
+        assert(parsed_pipe && parsed_pipe->is_pipe && "Failed to parse valid pipe");
         if (!parsed_pipe->is_valid()) {
             result = report_error(STATUS_INVALID_ARGS, jc.pipe, ILLEGAL_FD_ERR_MSG,
                                   get_source(jc.pipe).c_str());
@@ -1207,8 +1213,8 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
         if (parsed_pipe->stderr_merge) {
             // This was a pipe like &| which redirects both stdout and stderr.
             // Also redirect stderr to stdout.
-            auto specs = processes.back()->redirection_specs();
-            specs.push_back(get_stderr_merge());
+            auto specs = processes.back()->redirection_specs().clone();
+            specs->push_back(get_stderr_merge());
             processes.back()->set_redirection_specs(std::move(specs));
         }
 
@@ -1244,7 +1250,7 @@ static bool remove_job(parser_t &parser, const job_t *job) {
 /// For historical reasons the 'not' and 'time' prefix are "inside out". That is, it's
 /// 'not time cmd'. Note that a time appearing anywhere in the pipeline affects the whole job.
 /// `sleep 1 | not time true` will time the whole job!
-static bool job_node_wants_timing(const ast::job_t &job_node) {
+static bool job_node_wants_timing(const ast::job_pipeline_t &job_node) {
     // Does our job have the job-level time prefix?
     if (job_node.time) return true;
 
@@ -1266,7 +1272,7 @@ static bool job_node_wants_timing(const ast::job_t &job_node) {
     return false;
 }
 
-end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &job_node,
+end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipeline_t &job_node,
                                                             const block_t *associated_block) {
     if (auto ret = check_end_execution()) {
         return *ret;
@@ -1288,7 +1294,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     scoped_push<int> saved_eval_level(&parser->eval_level, parser->eval_level + 1);
 
     // Save the node index.
-    scoped_push<const ast::job_t *> saved_node(&executing_job_node, &job_node);
+    scoped_push<const ast::job_pipeline_t *> saved_node(&executing_job_node, &job_node);
 
     // Profiling support.
     profile_item_t *profile_item = this->parser->create_profile_item();
@@ -1301,7 +1307,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     if (job_is_simple_block(job_node)) {
         bool do_time = job_node.time.has_value();
         // If no-exec has been given, there is nothing to time.
-        cleanup_t timer = push_timer(do_time && !no_exec());
+        auto timer = push_timer(do_time && !no_exec());
         const block_t *block = nullptr;
         end_execution_reason_t result =
             this->apply_variable_assignments(nullptr, job_node.variables, &block);
@@ -1577,7 +1583,7 @@ bool parse_execution_context_t::use_job_control() const {
     DIE("Unreachable");
 }
 
-int parse_execution_context_t::line_offset_of_node(const ast::job_t *node) {
+int parse_execution_context_t::line_offset_of_node(const ast::job_pipeline_t *node) {
     // If we're not executing anything, return -1.
     if (!node) {
         return -1;

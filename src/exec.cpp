@@ -47,7 +47,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "redirection.h"
-#include "timer.h"
+#include "timer.rs.h"
 #include "trace.h"
 #include "wait_handle.h"
 #include "wcstringutil.h"
@@ -240,7 +240,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
     }
 
     // child_setup_process makes sure signals are properly set up.
-    dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
+    dup2_list_t redirs = dup2_list_resolve_chain_shim(all_ios);
     if (child_setup_process(false /* not claim_tty */, *j, false /* not is_forked */, redirs) ==
         0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
@@ -306,7 +306,7 @@ static void run_internal_process(process_t *p, std::string &&outdata, std::strin
     // Note it's important we do this even if we have no out or err data, because we may have been
     // asked to truncate a file (e.g. `echo -n '' > /tmp/truncateme.txt'). The open() in the dup2
     // list resolution will ensure this happens.
-    f->dup2s = dup2_list_t::resolve_chain(ios);
+    f->dup2s = dup2_list_resolve_chain_shim(ios);
 
     // Figure out which source fds to write to. If they are closed (unlikely) we just exit
     // successfully.
@@ -514,7 +514,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
     null_terminated_array_t<char> argv_array(narrow_argv);
 
     // Convert our IO chain to a dup2 sequence.
-    auto dup2s = dup2_list_t::resolve_chain(proc_io_chain);
+    auto dup2s = dup2_list_resolve_chain_shim(proc_io_chain);
 
     // Ensure that stdin is blocking before we hand it off (see issue #176).
     // Note this will also affect stdout and stderr if they refer to the same tty.
@@ -717,8 +717,9 @@ static proc_performer_t get_performer_for_builtin(
     } else {
         // We are not a pipe. Check if there is a redirection local to the process
         // that's not io_mode_t::close.
-        for (const auto &redir : p->redirection_specs()) {
-            if (redir.fd == STDIN_FILENO && !redir.is_close()) {
+        for (size_t i = 0; i < p->redirection_specs().size(); i++) {
+            const auto *redir = p->redirection_specs().at(i);
+            if (redir->fd() == STDIN_FILENO && !redir->is_close()) {
                 stdin_is_directly_redirected = true;
                 break;
             }
@@ -1018,7 +1019,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         }
         return false;
     }
-    cleanup_t timer = push_timer(j->wants_timing() && !no_exec());
+    auto timer = push_timer(j->wants_timing() && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
     autoclose_pipes_t deferred_pipes;

@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "env.h"
 #include "expand.h"
 #include "fds.h"
+#include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "future_feature_flags.h"
@@ -194,7 +195,7 @@ struct pretty_printer_t {
                         p = p->parent;
                         assert(p->type == type_t::statement);
                         p = p->parent;
-                        if (auto job = p->try_as<job_t>()) {
+                        if (auto job = p->try_as<job_pipeline_t>()) {
                             if (!job->variables.empty()) result |= allow_escaped_newlines;
                         } else if (auto job_cnt = p->try_as<job_continuation_t>()) {
                             if (!job_cnt->variables.empty()) result |= allow_escaped_newlines;
@@ -419,9 +420,9 @@ struct pretty_printer_t {
         // always emit one.
         bool needs_nl = false;
 
-        tokenizer_t tokenizer(gap_text.c_str(), TOK_SHOW_COMMENTS | TOK_SHOW_BLANK_LINES);
-        while (maybe_t<tok_t> tok = tokenizer.next()) {
-            wcstring tok_text = tokenizer.text_of(*tok);
+        auto tokenizer = new_tokenizer(gap_text.c_str(), TOK_SHOW_COMMENTS | TOK_SHOW_BLANK_LINES);
+        while (auto tok = tokenizer->next()) {
+            wcstring tok_text = *tokenizer->text_of(*tok);
 
             if (needs_nl) {
                 emit_newline();
@@ -433,11 +434,11 @@ struct pretty_printer_t {
                 if (tok_text == L"\n") continue;
             }
 
-            if (tok->type == token_type_t::comment) {
+            if (tok->type_ == token_type_t::comment) {
                 emit_space_or_indent();
                 output.append(tok_text);
                 needs_nl = true;
-            } else if (tok->type == token_type_t::end) {
+            } else if (tok->type_ == token_type_t::end) {
                 // This may be either a newline or semicolon.
                 // Semicolons found here are not part of the ast and can simply be removed.
                 // Newlines are preserved unless mask_newline is set.
@@ -448,7 +449,7 @@ struct pretty_printer_t {
                 fprintf(stderr,
                         "Gap text should only have comments and newlines - instead found token "
                         "type %d with text: %ls\n",
-                        (int)tok->type, tok_text.c_str());
+                        (int)tok->type_, tok_text.c_str());
                 DIE("Gap text should only have comments and newlines");
             }
         }
@@ -873,6 +874,7 @@ int main(int argc, char *argv[]) {
     program_name = L"fish_indent";
     set_main_thread();
     setup_fork_guards();
+    rust_init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
     // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
     //
@@ -884,7 +886,7 @@ int main(int argc, char *argv[]) {
 
     if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features().set_from_string(s);
+            mutable_fish_features()->set_from_string(s.c_str());
         }
     }
 

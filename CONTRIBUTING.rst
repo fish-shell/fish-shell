@@ -420,8 +420,8 @@ Include What You Use
 You should not depend on symbols being visible to a ``*.cpp`` module
 from ``#include`` statements inside another header file. In other words
 if your module does ``#include "common.h"`` and that header does
-``#include "signal.h"`` your module should not assume the sub-include is
-present. It should instead directly ``#include "signal.h"`` if it needs
+``#include "signals.h"`` your module should not assume the sub-include is
+present. It should instead directly ``#include "signals.h"`` if it needs
 any symbol from that header. That makes the actual dependencies much
 clearer. It also makes it easy to modify the headers included by a
 specific header file without having to worry that will break any module

@@ -31,7 +31,7 @@ static tok_flags_t tokenizer_flags_from_parse_flags(parse_tree_flags_t flags) {
 
 // Given an expanded string, returns any keyword it matches.
 static parse_keyword_t keyword_with_name(const wcstring &name) {
-    return str_to_enum(name.c_str(), keyword_enum_map, keyword_enum_map_len);
+    return keyword_from_string(name.c_str());
 }
 
 static bool is_keyword_char(wchar_t c) {
@@ -77,8 +77,7 @@ static parse_keyword_t keyword_for_token(token_type_t tok, const wcstring &token
 }
 
 /// Convert from tokenizer_t's token type to a parse_token_t type.
-static parse_token_type_t parse_token_type_from_tokenizer_token(
-    enum token_type_t tokenizer_token_type) {
+static parse_token_type_t parse_token_type_from_tokenizer_token(token_type_t tokenizer_token_type) {
     switch (tokenizer_token_type) {
         case token_type_t::string:
             return parse_token_type_t::string;
@@ -111,7 +110,7 @@ class token_stream_t {
     explicit token_stream_t(const wcstring &src, parse_tree_flags_t flags,
                             std::vector<source_range_t> &comments)
         : src_(src),
-          tok_(src_.c_str(), tokenizer_flags_from_parse_flags(flags)),
+          tok_(new_tokenizer(src_.c_str(), tokenizer_flags_from_parse_flags(flags))),
           comment_ranges(comments) {}
 
     /// \return the token at the given index, without popping it. If the token stream is exhausted,
@@ -161,8 +160,8 @@ class token_stream_t {
     /// \return a new parse token, advancing the tokenizer.
     /// This returns comments.
     parse_token_t advance_1() {
-        auto mtoken = tok_.next();
-        if (!mtoken.has_value()) {
+        auto mtoken = tok_->next();
+        if (!mtoken) {
             return parse_token_t{parse_token_type_t::terminate};
         }
         const tok_t &token = *mtoken;
@@ -171,13 +170,13 @@ class token_stream_t {
         // `builtin --names` lists builtins, but `builtin "--names"` attempts to run --names as a
         // command. Amazingly as of this writing (10/12/13) nobody seems to have noticed this.
         // Squint at it really hard and it even starts to look like a feature.
-        parse_token_t result{parse_token_type_from_tokenizer_token(token.type)};
-        const wcstring &text = tok_.copy_text_of(token, &storage_);
-        result.keyword = keyword_for_token(token.type, text);
+        parse_token_t result{parse_token_type_from_tokenizer_token(token.type_)};
+        const wcstring &text = storage_ = *tok_->text_of(token);
+        result.keyword = keyword_for_token(token.type_, text);
         result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
         result.is_help_argument = (text == L"-h" || text == L"--help");
         result.is_newline = (result.type == parse_token_type_t::end && text == L"\n");
-        result.may_be_variable_assignment = variable_assignment_equals_pos(text).has_value();
+        result.may_be_variable_assignment = variable_assignment_equals_pos(text) != nullptr;
         result.tok_error = token.error;
 
         // These assertions are totally bogus. Basically our tokenizer works in size_t but we work
@@ -222,7 +221,7 @@ class token_stream_t {
     const wcstring &src_;
 
     // The tokenizer to generate new tokens.
-    tokenizer_t tok_;
+    rust::Box<tokenizer_t> tok_;
 
     /// Any comment nodes are collected here.
     /// These are only collected if parse_flag_include_comments is set.
@@ -396,13 +395,15 @@ static wcstring token_types_user_presentable_description(
     std::initializer_list<parse_token_type_t> types) {
     assert(types.size() > 0 && "Should not be empty list");
     if (types.size() == 1) {
-        return token_type_user_presentable_description(*types.begin());
+        return *token_type_user_presentable_description(*types.begin(), parse_keyword_t::none);
     }
     size_t idx = 0;
     wcstring res;
     for (parse_token_type_t type : types) {
         const wchar_t *optor = (idx++ ? L" or " : L"");
-        append_format(res, L"%ls%ls", optor, token_type_user_presentable_description(type).c_str());
+        append_format(
+            res, L"%ls%ls", optor,
+            token_type_user_presentable_description(type, parse_keyword_t::none)->c_str());
     }
     return res;
 }
@@ -635,7 +636,7 @@ struct populator_t {
 
         if (out_errors_) {
             parse_error_t err;
-            err.text = vformat_string(fmt, va);
+            err.text = std::make_unique<wcstring>(vformat_string(fmt, va));
             err.code = code;
             err.source_start = range.start;
             err.source_length = range.length;
@@ -682,9 +683,10 @@ struct populator_t {
                "Should not attempt to consume terminate token");
         auto tok = consume_any_token();
         if (tok.type != type) {
-            parse_error(tok, parse_error_generic, _(L"Expected %ls, but found %ls"),
-                        token_type_user_presentable_description(type).c_str(),
-                        tok.user_presentable_description().c_str());
+            parse_error(
+                tok, parse_error_code_t::generic, _(L"Expected %ls, but found %ls"),
+                token_type_user_presentable_description(type, parse_keyword_t::none)->c_str(),
+                tok.user_presentable_description().c_str());
             return source_range_t{0, 0};
         }
         return tok.range();
@@ -702,10 +704,11 @@ struct populator_t {
         // TODO: this is a crummy message if we get a tokenizer error, for example:
         //   complete -c foo -a "'abc"
         if (this->top_type_ == type_t::freestanding_argument_list) {
-            this->parse_error(
-                tok, parse_error_generic, _(L"Expected %ls, but found %ls"),
-                token_type_user_presentable_description(parse_token_type_t::string).c_str(),
-                tok.user_presentable_description().c_str());
+            this->parse_error(tok, parse_error_code_t::generic, _(L"Expected %ls, but found %ls"),
+                              token_type_user_presentable_description(parse_token_type_t::string,
+                                                                      parse_keyword_t::none)
+                                  ->c_str(),
+                              tok.user_presentable_description().c_str());
             return;
         }
 
@@ -715,15 +718,15 @@ struct populator_t {
                 // There are three keywords which end a job list.
                 switch (tok.keyword) {
                     case parse_keyword_t::kw_end:
-                        this->parse_error(tok, parse_error_unbalancing_end,
+                        this->parse_error(tok, parse_error_code_t::unbalancing_end,
                                           _(L"'end' outside of a block"));
                         break;
                     case parse_keyword_t::kw_else:
-                        this->parse_error(tok, parse_error_unbalancing_else,
+                        this->parse_error(tok, parse_error_code_t::unbalancing_else,
                                           _(L"'else' builtin not inside of if block"));
                         break;
                     case parse_keyword_t::kw_case:
-                        this->parse_error(tok, parse_error_unbalancing_case,
+                        this->parse_error(tok, parse_error_code_t::unbalancing_case,
                                           _(L"'case' builtin not inside of switch block"));
                         break;
                     default:
@@ -738,13 +741,14 @@ struct populator_t {
             case parse_token_type_t::background:
             case parse_token_type_t::andand:
             case parse_token_type_t::oror:
-                parse_error(tok, parse_error_generic, _(L"Expected a string, but found %ls"),
+                parse_error(tok, parse_error_code_t::generic,
+                            _(L"Expected a string, but found %ls"),
                             tok.user_presentable_description().c_str());
                 break;
 
             case parse_token_type_t::tokenizer_error:
                 parse_error(tok, parse_error_from_tokenizer_error(tok.tok_error), L"%ls",
-                            tokenizer_get_error_message(tok.tok_error));
+                            tokenizer_get_error_message(tok.tok_error)->c_str());
                 break;
 
             case parse_token_type_t::end:
@@ -968,14 +972,15 @@ struct populator_t {
         } else if (token1.type != parse_token_type_t::string) {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
-            parse_error(token1, parse_error_generic, _(L"Expected a command, but found %ls"),
+            parse_error(token1, parse_error_code_t::generic,
+                        _(L"Expected a command, but found %ls"),
                         token1.user_presentable_description().c_str());
             return got_error();
         } else if (token1.may_be_variable_assignment) {
             // Here we have a variable assignment which we chose to not parse as a variable
             // assignment because there was no string after it.
             // Ensure we consume the token, so we don't get back here again at the same place.
-            parse_error(consume_any_token(), parse_error_bare_variable_assignment, L"");
+            parse_error(consume_any_token(), parse_error_code_t::bare_variable_assignment, L"");
             return got_error();
         }
 
@@ -1025,7 +1030,8 @@ struct populator_t {
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
                 // we can't leave our pointer as null.
-                parse_error(token1, parse_error_generic, _(L"Expected a command, but found %ls"),
+                parse_error(token1, parse_error_code_t::generic,
+                            _(L"Expected a command, but found %ls"),
                             token1.user_presentable_description().c_str());
                 return got_error();
 
@@ -1083,7 +1089,8 @@ struct populator_t {
         const auto &tok = peek_token(1);
         if (tok.keyword == parse_keyword_t::kw_and || tok.keyword == parse_keyword_t::kw_or) {
             const wchar_t *cmdname = (tok.keyword == parse_keyword_t::kw_and ? L"and" : L"or");
-            parse_error(tok, parse_error_andor_in_pipeline, INVALID_PIPELINE_CMD_ERR_MSG, cmdname);
+            parse_error(tok, parse_error_code_t::andor_in_pipeline, INVALID_PIPELINE_CMD_ERR_MSG,
+                        cmdname);
         }
         node.accept(*this);
     }
@@ -1112,7 +1119,7 @@ struct populator_t {
                 return;
             }
 
-            parse_error(peek, parse_error_generic, L"Expected %ls, but found %ls",
+            parse_error(peek, parse_error_code_t::generic, L"Expected %ls, but found %ls",
                         token_types_user_presentable_description({TokTypes...}).c_str(),
                         peek.user_presentable_description().c_str());
             token.unsourced = true;
@@ -1149,11 +1156,11 @@ struct populator_t {
                 source_range_t kw_range = p.first;
                 const wchar_t *kw_name = p.second;
                 if (kw_name) {
-                    this->parse_error(kw_range, parse_error_generic,
+                    this->parse_error(kw_range, parse_error_code_t::generic,
                                       L"Missing end to balance this %ls", kw_name);
                 }
             }
-            parse_error(peek, parse_error_generic, L"Expected %ls, but found %ls",
+            parse_error(peek, parse_error_code_t::generic, L"Expected %ls, but found %ls",
                         keywords_user_presentable_description({KWs...}).c_str(),
                         peek.user_presentable_description().c_str());
             return;
@@ -1372,7 +1379,7 @@ wcstring ast_t::dump(const wcstring &orig) const {
                     desc = L"<error>";
                     break;
                 default:
-                    desc = token_type_user_presentable_description(n->type);
+                    desc = *token_type_user_presentable_description(n->type, parse_keyword_t::none);
                     break;
             }
             append_format(result, L"%ls", desc.c_str());

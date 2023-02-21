@@ -41,10 +41,7 @@
 #include "builtins/complete.h"
 #include "builtins/contains.h"
 #include "builtins/disown.h"
-#include "builtins/echo.h"
-#include "builtins/emit.h"
 #include "builtins/eval.h"
-#include "builtins/exit.h"
 #include "builtins/fg.h"
 #include "builtins/functions.h"
 #include "builtins/history.h"
@@ -53,20 +50,20 @@
 #include "builtins/path.h"
 #include "builtins/printf.h"
 #include "builtins/pwd.h"
-#include "builtins/random.h"
 #include "builtins/read.h"
 #include "builtins/realpath.h"
-#include "builtins/return.h"
 #include "builtins/set.h"
 #include "builtins/set_color.h"
+#include "builtins/shared.rs.h"
 #include "builtins/source.h"
 #include "builtins/status.h"
 #include "builtins/string.h"
 #include "builtins/test.h"
 #include "builtins/type.h"
 #include "builtins/ulimit.h"
-#include "builtins/wait.h"
 #include "complete.h"
+#include "cxx.h"
+#include "cxxgen.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "io.h"
@@ -78,6 +75,10 @@
 #include "reader.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
+
+static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd);
+static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
+                                     const wcstring_list_t &argv, RustBuiltin builtin);
 
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
@@ -221,6 +222,10 @@ static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, con
     }
 
     return STATUS_CMD_ERROR;
+}
+
+static maybe_t<int> implemented_in_rust(parser_t &, io_streams_t &, const wchar_t **) {
+    DIE("builtin is implemented in Rust, this should not be called");
 }
 
 // How many bytes we read() at once.
@@ -374,13 +379,13 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"continue", &builtin_break_continue, N_(L"Skip over remaining innermost loop")},
     {L"count", &builtin_count, N_(L"Count the number of arguments")},
     {L"disown", &builtin_disown, N_(L"Remove job from job list")},
-    {L"echo", &builtin_echo, N_(L"Print arguments")},
+    {L"echo", &implemented_in_rust, N_(L"Print arguments")},
     {L"else", &builtin_generic, N_(L"Evaluate block if condition is false")},
-    {L"emit", &builtin_emit, N_(L"Emit an event")},
+    {L"emit", &implemented_in_rust, N_(L"Emit an event")},
     {L"end", &builtin_generic, N_(L"End a block of commands")},
     {L"eval", &builtin_eval, N_(L"Evaluate a string as a statement")},
     {L"exec", &builtin_generic, N_(L"Run command in current process")},
-    {L"exit", &builtin_exit, N_(L"Exit the shell")},
+    {L"exit", &implemented_in_rust, N_(L"Exit the shell")},
     {L"false", &builtin_false, N_(L"Return an unsuccessful result")},
     {L"fg", &builtin_fg, N_(L"Send job to foreground")},
     {L"for", &builtin_generic, N_(L"Perform a set of commands multiple times")},
@@ -395,10 +400,10 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"path", &builtin_path, N_(L"Handle paths")},
     {L"printf", &builtin_printf, N_(L"Prints formatted text")},
     {L"pwd", &builtin_pwd, N_(L"Print the working directory")},
-    {L"random", &builtin_random, N_(L"Generate random number")},
+    {L"random", &implemented_in_rust, N_(L"Generate random number")},
     {L"read", &builtin_read, N_(L"Read a line of input into variables")},
     {L"realpath", &builtin_realpath, N_(L"Show absolute path sans symlinks")},
-    {L"return", &builtin_return, N_(L"Stop the currently evaluated function")},
+    {L"return", &implemented_in_rust, N_(L"Stop the currently evaluated function")},
     {L"set", &builtin_set, N_(L"Handle environment variables")},
     {L"set_color", &builtin_set_color, N_(L"Set the terminal color")},
     {L"source", &builtin_source, N_(L"Evaluate contents of file")},
@@ -410,7 +415,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"true", &builtin_true, N_(L"Return a successful result")},
     {L"type", &builtin_type, N_(L"Check if a thing is a thing")},
     {L"ulimit", &builtin_ulimit, N_(L"Get/set resource usage limits")},
-    {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},
+    {L"wait", &implemented_in_rust, N_(L"Wait for background processes completed")},
     {L"while", &builtin_generic, N_(L"Perform a command multiple times")},
 };
 ASSERT_SORTED_BY_NAME(builtin_datas);
@@ -450,38 +455,43 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
         return proc_status_t::from_exit_code(STATUS_CMD_OK);
     }
 
-    if (const builtin_data_t *data = builtin_lookup(cmdname)) {
+    maybe_t<int> builtin_ret;
+
+    auto rust_builtin = try_get_rust_builtin(cmdname);
+    if (rust_builtin.has_value()) {
+        builtin_ret = builtin_run_rust(parser, streams, argv, *rust_builtin);
+    } else if (const builtin_data_t *data = builtin_lookup(cmdname)) {
         // Construct the permutable argv array which the builtin expects, and execute the builtin.
         null_terminated_array_t<wchar_t> argv_arr(argv);
-        maybe_t<int> builtin_ret = data->func(parser, streams, argv_arr.get());
-
-        // Flush our out and error streams, and check for their errors.
-        int out_ret = streams.out.flush_and_check_error();
-        int err_ret = streams.err.flush_and_check_error();
-
-        // Resolve our status code.
-        // If the builtin itself produced an error, use that error.
-        // Otherwise use any errors from writing to out and writing to err, in that order.
-        int code = builtin_ret.has_value() ? *builtin_ret : 0;
-        if (code == 0) code = out_ret;
-        if (code == 0) code = err_ret;
-
-        // The exit code is cast to an 8-bit unsigned integer, so saturate to 255. Otherwise,
-        // multiples of 256 are reported as 0.
-        if (code > 255) code = 255;
-
-        // Handle the case of an empty status.
-        if (code == 0 && !builtin_ret.has_value()) {
-            return proc_status_t::empty();
-        }
-        if (code < 0) {
-            FLOGF(warning, "builtin %ls returned invalid exit code %d", cmdname.c_str(), code);
-        }
-        return proc_status_t::from_exit_code(code);
+        builtin_ret = data->func(parser, streams, argv_arr.get());
+    } else {
+        FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, cmdname.c_str());
+        return proc_status_t::from_exit_code(STATUS_CMD_ERROR);
     }
 
-    FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, cmdname.c_str());
-    return proc_status_t::from_exit_code(STATUS_CMD_ERROR);
+    // Flush our out and error streams, and check for their errors.
+    int out_ret = streams.out.flush_and_check_error();
+    int err_ret = streams.err.flush_and_check_error();
+
+    // Resolve our status code.
+    // If the builtin itself produced an error, use that error.
+    // Otherwise use any errors from writing to out and writing to err, in that order.
+    int code = builtin_ret.has_value() ? *builtin_ret : 0;
+    if (code == 0) code = out_ret;
+    if (code == 0) code = err_ret;
+
+    // The exit code is cast to an 8-bit unsigned integer, so saturate to 255. Otherwise,
+    // multiples of 256 are reported as 0.
+    if (code > 255) code = 255;
+
+    // Handle the case of an empty status.
+    if (code == 0 && !builtin_ret.has_value()) {
+        return proc_status_t::empty();
+    }
+    if (code < 0) {
+        FLOGF(warning, "builtin %ls returned invalid exit code %d", cmdname.c_str(), code);
+    }
+    return proc_status_t::from_exit_code(code);
 }
 
 /// Returns a list of all builtin names.
@@ -511,4 +521,42 @@ const wchar_t *builtin_get_desc(const wcstring &name) {
         result = _(builtin->desc);
     }
     return result;
+}
+
+static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
+    if (cmd == L"echo") {
+        return RustBuiltin::Echo;
+    }
+    if (cmd == L"emit") {
+        return RustBuiltin::Emit;
+    }
+    if (cmd == L"exit") {
+        return RustBuiltin::Exit;
+    }
+    if (cmd == L"random") {
+        return RustBuiltin::Random;
+    }
+    if (cmd == L"wait") {
+        return RustBuiltin::Wait;
+    }
+    if (cmd == L"return") {
+        return RustBuiltin::Return;
+    }
+    return none();
+}
+
+static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
+                                     const wcstring_list_t &argv, RustBuiltin builtin) {
+    ::rust::Vec<wcharz_t> rust_argv;
+    for (const wcstring &arg : argv) {
+        rust_argv.emplace_back(arg.c_str());
+    }
+
+    int status_code;
+    bool update_status = rust_run_builtin(parser, streams, rust_argv, builtin, status_code);
+    if (update_status) {
+        return status_code;
+    } else {
+        return none();
+    }
 }

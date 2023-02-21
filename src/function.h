@@ -46,6 +46,15 @@ struct function_properties_t {
     /// The file from which the function was created, or nullptr if not from a file.
     filename_ref_t definition_file{};
 
+    /// Whether the function was copied.
+    bool is_copy{false};
+
+    /// The file from which the function was copied, or nullptr if not from a file.
+    filename_ref_t copy_definition_file{};
+
+    /// The line number where the specified function was copied.
+    int copy_definition_lineno{};
+
     /// \return the description, localized via _.
     const wchar_t *localized_description() const;
 
@@ -95,7 +104,7 @@ wcstring_list_t function_get_names(bool get_hidden);
 
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.
-bool function_copy(const wcstring &name, const wcstring &new_name);
+bool function_copy(const wcstring &name, const wcstring &new_name, parser_t &parser);
 
 /// Observes that fish_function_path has changed.
 void function_invalidate_path();

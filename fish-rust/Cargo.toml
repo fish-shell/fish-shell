@@ -1,0 +1,58 @@
+[package]
+name = "fish-rust"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+widestring-suffix = { path = "./widestring-suffix/" }
+
+autocxx = "0.23.1"
+cxx = "1.0"
+errno = "0.2.8"
+inventory = { version = "0.3.3", optional = true}
+libc = "0.2.137"
+nix = { version = "0.25.0", default-features = false, features = [] }
+num-traits = "0.2.15"
+once_cell = "1.17.0"
+rand = { version = "0.8.5", features = ["small_rng"] }
+unixstring = "0.2.7"
+widestring = "1.0.2"
+
+[build-dependencies]
+autocxx-build = "0.23.1"
+cxx-build = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+cxx-gen = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+miette = { version = "5", features = ["fancy"] }
+
+[lib]
+crate-type=["staticlib"]
+
+[features]
+# The fish-ffi-tests feature causes tests to be built which need to use the FFI.
+# These tests are run by fish_tests().
+default = ["fish-ffi-tests"]
+fish-ffi-tests = ["inventory"]
+
+[patch.crates-io]
+cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
+cxx = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+cxx-gen = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+autocxx = { git = "https://github.com/ridiculousfish/autocxx", branch = "fish" }
+autocxx-build = { git = "https://github.com/ridiculousfish/autocxx", branch = "fish" }
+autocxx-bindgen = { git = "https://github.com/ridiculousfish/autocxx-bindgen", branch = "fish" }
+
+[patch.'https://github.com/ridiculousfish/cxx']
+cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
+
+[patch.'https://github.com/ridiculousfish/autocxx']
+cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
+
+#cxx = { path = "../../cxx" }
+#cxx-gen = { path="../../cxx/gen/lib" }
+#autocxx = { path = "../../autocxx" }
+#autocxx-build = { path = "../../autocxx/gen/build" }
+#autocxx-bindgen = { path = "../../autocxx-bindgen" }
+
+[profile.release]
+overflow-checks = true

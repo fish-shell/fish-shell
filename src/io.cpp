@@ -14,7 +14,9 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "fd_monitor.h"
+#include "fd_monitor.rs.h"
+#include "fds.h"
+#include "fds.rs.h"
 #include "flog.h"
 #include "maybe.h"
 #include "path.h"
@@ -31,7 +33,7 @@
 /// Provide the fd monitor used for background fillthread operations.
 static fd_monitor_t &fd_monitor() {
     // Deliberately leaked to avoid shutdown dtors.
-    static auto fdm = new fd_monitor_t();
+    static auto fdm = make_fd_monitor_t();
     return *fdm;
 }
 
@@ -75,6 +77,18 @@ ssize_t io_buffer_t::read_once(int fd, acquired_lock<separated_buffer_t> &buffer
     return amt;
 }
 
+struct callback_args_t {
+    io_buffer_t *instance;
+    std::shared_ptr<std::promise<void>> promise;
+};
+
+extern "C" {
+static void item_callback_trampoline(autoclose_fd_t2 &fd, item_wake_reason_t reason,
+                                     callback_args_t *args) {
+    (args->instance)->item_callback(fd, (uint8_t)reason, args);
+}
+}
+
 void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     assert(!fillthread_running() && "Already have a fillthread");
 
@@ -102,37 +116,50 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
 
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' waits for the promise in its dtor.
-    fd_monitor_item_t item;
-    item.fd = std::move(fd);
-    item.callback = [this, promise](autoclose_fd_t &fd, item_wake_reason_t reason) {
-        ASSERT_IS_BACKGROUND_THREAD();
-        // Only check the shutdown flag if we timed out or were poked.
-        // It's important that if select() indicated we were readable, that we call select() again
-        // allowing it to time out. Note the typical case is that the fd will be closed, in which
-        // case select will return immediately.
-        bool done = false;
-        if (reason == item_wake_reason_t::readable) {
-            // select() reported us as readable; read a bit.
-            auto buffer = buffer_.acquire();
-            ssize_t ret = read_once(fd.fd(), buffer);
-            done = (ret == 0 || (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK));
-        } else if (shutdown_fillthread_) {
-            // Here our caller asked us to shut down; read while we keep getting data.
-            // This will stop when the fd is closed or if we get EAGAIN.
-            auto buffer = buffer_.acquire();
-            ssize_t ret;
-            do {
-                ret = read_once(fd.fd(), buffer);
-            } while (ret > 0);
-            done = true;
-        }
-        if (done) {
-            fd.close();
-            promise->set_value();
-        }
-    };
-    this->item_id_ = fd_monitor().add(std::move(item));
+    auto args = new callback_args_t;
+    args->instance = this;
+    args->promise = std::move(promise);
+
+    item_id_ =
+        fd_monitor().add_item(fd.acquire(), kNoTimeout, (uint8_t *)item_callback_trampoline, (uint8_t *)args);
 }
+
+/// This is a hack to work around the difficulties in passing a capturing lambda across FFI
+/// boundaries. A static function that takes a generic/untyped callback parameter is easy to
+/// marshall with the basic C ABI.
+void io_buffer_t::item_callback(autoclose_fd_t2 &fd, uint8_t r, callback_args_t *args) {
+    item_wake_reason_t reason = (item_wake_reason_t)r;
+    auto &promise = *args->promise;
+
+    // Only check the shutdown flag if we timed out or were poked.
+    // It's important that if select() indicated we were readable, that we call select() again
+    // allowing it to time out. Note the typical case is that the fd will be closed, in which
+    // case select will return immediately.
+    bool done = false;
+    if (reason == item_wake_reason_t::Readable) {
+        // select() reported us as readable; read a bit.
+        auto buffer = buffer_.acquire();
+        ssize_t ret = read_once(fd.fd(), buffer);
+        done = (ret == 0 || (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK));
+    } else if (shutdown_fillthread_) {
+        // Here our caller asked us to shut down; read while we keep getting data.
+        // This will stop when the fd is closed or if we get EAGAIN.
+        auto buffer = buffer_.acquire();
+        ssize_t ret;
+        do {
+            ret = read_once(fd.fd(), buffer);
+        } while (ret > 0);
+        done = true;
+    }
+    if (done) {
+        fd.close();
+        promise.set_value();
+        // When we close the fd, we signal to the caller that the fd should be removed from its set
+        // and that this callback should never be called again.
+        // Manual memory management is not nice but this is just during the cpp-to-rust transition.
+        delete args;
+    }
+};
 
 separated_buffer_t io_buffer_t::complete_background_fillthread_and_take_buffer() {
     // Mark that our fillthread is done, then wake it up.
@@ -214,37 +241,37 @@ bool io_chain_t::append(const io_chain_t &chain) {
 
 bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd) {
     bool have_error = false;
-    for (const auto &spec : specs) {
-        switch (spec.mode) {
+    for (size_t i = 0; i < specs.size(); i++) {
+        const redirection_spec_t *spec = specs.at(i);
+        switch (spec->mode()) {
             case redirection_mode_t::fd: {
-                if (spec.is_close()) {
-                    this->push_back(make_unique<io_close_t>(spec.fd));
+                if (spec->is_close()) {
+                    this->push_back(make_unique<io_close_t>(spec->fd()));
                 } else {
-                    auto target_fd = spec.get_target_as_fd();
-                    assert(target_fd.has_value() &&
-                           "fd redirection should have been validated already");
-                    this->push_back(make_unique<io_fd_t>(spec.fd, *target_fd));
+                    auto target_fd = spec->get_target_as_fd();
+                    assert(target_fd && "fd redirection should have been validated already");
+                    this->push_back(make_unique<io_fd_t>(spec->fd(), *target_fd));
                 }
                 break;
             }
             default: {
                 // We have a path-based redireciton. Resolve it to a file.
                 // Mark it as CLO_EXEC because we don't want it to be open in any child.
-                wcstring path = path_apply_working_directory(spec.target, pwd);
-                int oflags = spec.oflags();
+                wcstring path = path_apply_working_directory(*spec->target(), pwd);
+                int oflags = spec->oflags();
                 autoclose_fd_t file{wopen_cloexec(path, oflags, OPEN_MASK)};
                 if (!file.valid()) {
                     if ((oflags & O_EXCL) && (errno == EEXIST)) {
-                        FLOGF(warning, NOCLOB_ERROR, spec.target.c_str());
+                        FLOGF(warning, NOCLOB_ERROR, spec->target()->c_str());
                     } else {
                         if (should_flog(warning)) {
-                            FLOGF(warning, FILE_ERROR, spec.target.c_str());
+                            FLOGF(warning, FILE_ERROR, spec->target()->c_str());
                             auto err = errno;
                             // If the error is that the file doesn't exist
                             // or there's a non-directory component,
                             // find the first problematic component for a better message.
                             if (err == ENOENT || err == ENOTDIR) {
-                                auto dname = spec.target;
+                                auto dname = *spec->target();
                                 struct stat buf;
 
                                 while (!dname.empty()) {
@@ -269,11 +296,11 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                     // If opening a file fails, insert a closed FD instead of the file redirection
                     // and return false. This lets execution potentially recover and at least gives
                     // the shell a chance to gracefully regain control of the shell (see #7038).
-                    this->push_back(make_unique<io_close_t>(spec.fd));
+                    this->push_back(make_unique<io_close_t>(spec->fd()));
                     have_error = true;
                     break;
                 }
-                this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file)));
+                this->push_back(std::make_shared<io_file_t>(spec->fd(), std::move(file)));
                 break;
             }
         }
@@ -309,6 +336,15 @@ shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
     return nullptr;
 }
 
+dup2_list_t dup2_list_resolve_chain_shim(const io_chain_t &io_chain) {
+    ASSERT_IS_NOT_FORKED_CHILD();
+    std::vector<dup2_action_t> chain;
+    for (const auto &io_data : io_chain) {
+        chain.push_back(dup2_action_t{io_data->source_fd, io_data->fd});
+    }
+    return dup2_list_resolve_chain(chain);
+}
+
 bool output_stream_t::append_narrow_buffer(const separated_buffer_t &buffer) {
     for (const auto &rhs_elem : buffer.elements()) {
         if (!append_with_separation(str2wcstring(rhs_elem.contents), rhs_elem.separation, false)) {
@@ -333,6 +369,10 @@ bool output_stream_t::append_with_separation(const wchar_t *s, size_t len, separ
 const wcstring &output_stream_t::contents() const { return g_empty_string; }
 
 int output_stream_t::flush_and_check_error() { return STATUS_CMD_OK; }
+
+fd_output_stream_t::fd_output_stream_t(int fd) : fd_(fd), sigcheck_(topic_t::sighupint) {
+    assert(fd_ >= 0 && "Invalid fd");
+}
 
 bool fd_output_stream_t::append(const wchar_t *s, size_t amt) {
     if (errored_) return false;

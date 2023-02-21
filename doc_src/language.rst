@@ -693,9 +693,28 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
     # 20
     # 30
 
-``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
+``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``".
 
 When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1..-1][5]`` (take all elements of ``$foo``, use them as variable names, then give the fifth element of those).
+
+Some more examples::
+
+  set listone 1 2 3
+  set listtwo 4 5 6
+  set var listone listtwo
+
+  echo $$var
+  # Output is 1 2 3 4 5 6
+
+  echo $$var[1]
+  # Output is 1 2 3
+
+  echo $$var[2][3]
+  # $var[1] is listtwo, third element of that is 6, output is 6
+
+  echo $$var[..][2]
+  # The second element of every variable, so output is
+  # 2 5
 
 .. _expand-command-substitution:
 
@@ -1080,12 +1099,13 @@ Here is an example of local vs function-scoped variables::
           set gnu "In the beginning there was nothing, which exploded"
       end
 
-      echo $pirate
       # This will not output anything, since the pirate was local
+      echo $pirate
+      # This will output the good Captain's speech
+      # since $captain had function-scope.
       echo $captain
-      # This will output the good Captain's speech since $captain had function-scope.
+      # This will output Sir Terry's wisdom.
       echo $gnu
-      # Will output Sir Terry's wisdom.
   end
 
 When a function calls another, local variables aren't visible::
@@ -1122,7 +1142,8 @@ If you want to override a variable for a single command, you can use "var=val" s
 Unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
 
   set foo banana
-  foo=gagaga echo $foo # prints gagaga, while in other shells it might print "banana"
+  foo=gagaga echo $foo
+  # prints gagaga, while in other shells it might print "banana"
 
 Multiple elements can be given in a :ref:`brace expansion<expand-brace>`::
 
@@ -1299,10 +1320,14 @@ That covers the positional arguments, but commandline tools often get various op
 A more robust approach to option handling is :doc:`argparse <cmds/argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
 
   function mybetterfunction
-      # We tell argparse about -h/--help and -s/--second - these are short and long forms of the same option.
-      # The "--" here is mandatory, it tells it from where to read the arguments.
+      # We tell argparse about -h/--help and -s/--second
+      # - these are short and long forms of the same option.
+      # The "--" here is mandatory,
+      # it tells it from where to read the arguments.
       argparse h/help s/second -- $argv
-      # exit if argparse failed because it found an option it didn't recognize - it will print an error
+      # exit if argparse failed because
+      # it found an option it didn't recognize
+      # - it will print an error
       or return
 
       # If -h or --help is given, we print a little help text and return
@@ -1741,7 +1766,8 @@ Let's make up an example. This function will :ref:`glob <expand-wildcard>` the f
 
         # If there are more than 5 files
         if test (count $files) -gt 5
-            # and both stdin (for reading input) and stdout (for writing the prompt)
+            # and both stdin (for reading input)
+            # and stdout (for writing the prompt)
             # are terminals
             and isatty stdin
             and isatty stdout

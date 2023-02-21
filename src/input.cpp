@@ -28,8 +28,8 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"  // IWYU pragma: keep
-#include "wutil.h"   // IWYU pragma: keep
+#include "signals.h"  // IWYU pragma: keep
+#include "wutil.h"    // IWYU pragma: keep
 
 /// A name for our own key mapping for nul.
 static const wchar_t *k_nul_mapping_name = L"nul";

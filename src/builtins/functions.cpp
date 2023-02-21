@@ -135,6 +135,9 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
     const wchar_t *shadows_scope = L"n/a";
     wcstring description = L"n/a";
     int line_number = 0;
+    bool is_copy = false;
+    wcstring copy_path = L"n/a";
+    int copy_line_number = 0;
 
     if (auto props = function_get_props_autoload(funcname, parser)) {
         if (props->definition_file) {
@@ -144,6 +147,16 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
         } else {
             path = L"stdin";
         }
+
+        is_copy = props->is_copy;
+
+        if (props->copy_definition_file) {
+            copy_path = *props->copy_definition_file;
+            copy_line_number = props->copy_definition_lineno;
+        } else {
+            copy_path = L"stdin";
+        }
+
         shadows_scope = props->shadow_scope ? L"scope-shadowing" : L"no-scope-shadowing";
         description = escape_string(props->description, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
     }
@@ -152,12 +165,26 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
         // "stdin" means it was defined interactively, "-" means it was defined via `source`.
         // Neither is useful information.
         wcstring comment;
+
         if (path == L"stdin") {
-            append_format(comment, L"# Defined interactively\n");
+            append_format(comment, L"# Defined interactively");
         } else if (path == L"-") {
-            append_format(comment, L"# Defined via `source`\n");
+            append_format(comment, L"# Defined via `source`");
         } else {
-            append_format(comment, L"# Defined in %ls @ line %d\n", path.c_str(), line_number);
+            append_format(comment, L"# Defined in %ls @ line %d", path.c_str(), line_number);
+        }
+
+        if (is_copy) {
+            if (copy_path == L"stdin") {
+                append_format(comment, L", copied interactively\n");
+            } else if (copy_path == L"-") {
+                append_format(comment, L", copied via `source`\n");
+            } else {
+                append_format(comment, L", copied in %ls @ line %d\n", copy_path.c_str(),
+                              copy_line_number);
+            }
+        } else {
+            append_format(comment, L"\n");
         }
 
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
@@ -168,9 +195,10 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
             streams.out.append(comment);
         }
     } else {
-        streams.out.append_format(L"%ls\n", path.c_str());
+        streams.out.append_format(L"%ls\n", is_copy ? copy_path.c_str() : path.c_str());
+
         if (verbose) {
-            streams.out.append_format(L"%ls\n", autoloaded);
+            streams.out.append_format(L"%ls\n", is_copy ? path.c_str() : autoloaded);
             streams.out.append_format(L"%d\n", line_number);
             streams.out.append_format(L"%ls\n", shadows_scope);
             streams.out.append_format(L"%ls\n", description.c_str());
@@ -331,7 +359,7 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
             return STATUS_CMD_ERROR;
         }
 
-        if (function_copy(current_func, new_func)) return STATUS_CMD_OK;
+        if (function_copy(current_func, new_func, parser)) return STATUS_CMD_OK;
         return STATUS_CMD_ERROR;
     }
 

@@ -1,0 +1,17 @@
+[package]
+name = "corrosion-generator"
+version = "0.1.0"
+authors = ["Andrew Gaspar <andrew.gaspar@outlook.com>"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+cargo_metadata = "0.15"
+
+[dependencies.clap]
+version = "2.34"
+default-features = false
+
+# Make sure this crate still compiles while it is checked out
+# in a sub-directory of a repository that has a Cargo.toml.
+[workspace]

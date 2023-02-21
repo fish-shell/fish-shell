@@ -1,15 +1,7 @@
-include(FetchContent)
-
 # Don't let Corrosion's tests interfere with ours.
 set(CORROSION_TESTS OFF CACHE BOOL "" FORCE)
 
-FetchContent_Declare(
-    Corrosion
-    GIT_REPOSITORY https://github.com/ridiculousfish/corrosion
-    GIT_TAG fish
-)
-
-FetchContent_MakeAvailable(Corrosion)
+add_subdirectory(${CMAKE_SOURCE_DIR}/cmake/corrosion)
 
 set(fish_rust_target "fish-rust")
 

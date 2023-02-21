@@ -1,0 +1,18 @@
+@PACKAGE_INIT@
+
+if (Corrosion_FOUND)
+    return()
+endif()
+
+list(APPEND CMAKE_MODULE_PATH "@CMAKE_INSTALL_FULL_DATADIR@/cmake")
+
+set(CORROSION_NATIVE_TOOLING_INSTALLED @CORROSION_NATIVE_TOOLING@)
+if(CORROSION_NATIVE_TOOLING_INSTALLED AND NOT TARGET Corrosion::Generator)
+    add_executable(Corrosion::Generator IMPORTED GLOBAL)
+
+    set_property(
+        TARGET Corrosion::Generator
+        PROPERTY IMPORTED_LOCATION "@CMAKE_INSTALL_FULL_LIBEXECDIR@/corrosion-generator")
+endif()
+
+include(Corrosion)

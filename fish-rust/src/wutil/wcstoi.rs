@@ -59,6 +59,7 @@ enum Radix {
 struct ParseOptions {
     sign_prefix: bool,
     leading_whitespace: bool,
+    allow_underscores: bool,
 }
 
 /// Parse the given \p src as an integer.
@@ -80,12 +81,22 @@ where
     }
     let chars = &mut ichars.peekable();
 
-    // Skip leading whitespace.
+    let skip_underscores = |chars| {
+        if options.allow_underscores {
+            while current(chars) == '_' {
+                chars.next();
+            }
+        }
+    };
+
+    // Skip leading whitespace and underscores.
     if options.leading_whitespace {
         while current(chars).is_whitespace() {
             chars.next();
         }
     }
+
+    skip_underscores(chars);
 
     if chars.peek().is_none() {
         return Err(Error::Empty);
@@ -102,6 +113,8 @@ where
         }
     }
 
+    skip_underscores(chars);
+
     let mut num_digits = 0;
 
     // Determine the radix.
@@ -113,10 +126,12 @@ where
 
             // Skip the `0`
             chars.next();
+            skip_underscores(chars);
 
             if recognize.hexadecimal && matches!(current(chars), 'x' | 'X') {
                 // Skip the `x`
                 chars.next();
+                skip_underscores(chars);
                 16
             } else if recognize.octal {
                 // If no more numbers follow, that's fine, then it's just 0.
@@ -148,6 +163,8 @@ where
             .ok_or(Error::Overflow)?;
         chars.next();
         num_digits += 1;
+
+        skip_underscores(chars);
     }
 
     // Did we consume at least one char?
@@ -160,6 +177,9 @@ where
         negative = false;
     }
     let consumed_all = chars.peek().is_none();
+
+    skip_underscores(chars);
+
     Ok(ParseResult {
         result,
         negative,
@@ -190,6 +210,7 @@ where
         ParseOptions {
             sign_prefix: true,
             leading_whitespace: true,
+            allow_underscores: false,
         },
     )?;
 

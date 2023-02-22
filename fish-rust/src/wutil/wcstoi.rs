@@ -26,17 +26,45 @@ where
     }
 }
 
+struct RecognizedRadices {
+    /// Octal numbers prefixed with `0`
+    octal: bool,
+    /// Decimal numbers, no prefix
+    decimal: bool,
+    /// Hexadecimal numbers prefixed with `0x`
+    hexadecimal: bool,
+}
+
+impl RecognizedRadices {
+    const ALL: Self = RecognizedRadices {
+        octal: true,
+        decimal: true,
+        hexadecimal: true,
+    };
+
+    pub fn any(&self) -> bool {
+        self.octal || self.decimal || self.hexadecimal
+    }
+}
+
+enum Radix {
+    /// Input is interpreted purely as digits of the specified radix
+    Plain(u32),
+    /// Input may be prefixed to indicate the radix
+    Prefixed(RecognizedRadices),
+}
+
 /// Parse the given \p src as an integer.
 /// If mradix is not None, it is used as the radix; otherwise the radix is inferred:
 ///   - Leading 0x or 0X means 16.
 ///   - Leading 0 means 8.
 ///   - Otherwise 10.
 /// The parse result contains the number as a u64, and whether it was negative.
-fn fish_parse_radix<Chars>(ichars: Chars, mradix: Option<u32>) -> Result<ParseResult, Error>
+fn fish_parse_radix<Chars>(ichars: Chars, mradix: Radix) -> Result<ParseResult, Error>
 where
     Chars: Iterator<Item = char>,
 {
-    if let Some(r) = mradix {
+    if let Radix::Plain(r) = mradix {
         assert!((2..=36).contains(&r), "fish_parse_radix: invalid radix {r}");
     }
     let chars = &mut ichars.peekable();
@@ -60,32 +88,44 @@ where
         _ => negative = false,
     }
 
+    let mut consumed1 = false;
+
     // Determine the radix.
-    let radix = if let Some(radix) = mradix {
-        radix
-    } else if current(chars) == '0' {
-        chars.next();
-        match current(chars) {
-            'x' | 'X' => {
+    let radix = match mradix {
+        Radix::Plain(radix) => radix,
+        Radix::Prefixed(recognize) if current(chars) == '0' => {
+            // Leading `0` - either an octal prefix, part of a hex prefix, or a leading zero in a
+            // decimal number if octal numbers aren't allowed.
+
+            // Skip the `0`
+            chars.next();
+
+            if recognize.hexadecimal && matches!(current(chars), 'x' | 'X') {
+                // Skip the `x`
                 chars.next();
                 16
-            }
-            c if ('0'..='9').contains(&c) => 8,
-            _ => {
-                // Just a 0.
-                return Ok(ParseResult {
-                    result: 0,
-                    negative: false,
-                    consumed_all: chars.peek().is_none(),
-                });
+            } else if recognize.octal {
+                // If no more numbers follow, that's fine, then it's just 0.
+                consumed1 = true;
+                8
+            } else if recognize.decimal {
+                // Octal numbers are not allowed, so this must simply be a leading zero of a decimal
+                // number.
+                consumed1 = true;
+                10
+            } else {
+                // no prefix, and no (un-prefixed) decimal numbers allowed.
+                return Err(Error::InvalidDigit);
             }
         }
-    } else {
-        10
+        Radix::Prefixed(recognize) if recognize.decimal => 10,
+        _ => {
+            // No valid prefix, and no decimal numbers allowed.
+            return Err(Error::InvalidDigit);
+        }
     };
 
     // Compute as u64.
-    let mut consumed1 = false;
     let mut result: u64 = 0;
     while let Some(digit) = current(chars).to_digit(radix) {
         result = result
@@ -114,11 +154,7 @@ where
 }
 
 /// Parse some iterator over Chars into some Integer type, optionally with a radix.
-fn fish_wcstoi_impl<Int, Chars>(
-    src: Chars,
-    mradix: Option<u32>,
-    consume_all: bool,
-) -> Result<Int, Error>
+fn fish_wcstoi_impl<Int, Chars>(src: Chars, mradix: Radix, consume_all: bool) -> Result<Int, Error>
 where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
@@ -167,7 +203,7 @@ where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src, None, false)
+    fish_wcstoi_impl(src, Radix::Prefixed(RecognizedRadices::ALL), false)
 }
 
 /// Convert the given wide string to an integer using the given radix.
@@ -177,7 +213,7 @@ where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src, Some(radix), false)
+    fish_wcstoi_impl(src, Radix::Plain(radix), false)
 }
 
 pub fn fish_wcstoi_radix_all<Int, Chars>(
@@ -189,6 +225,11 @@ where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
 {
+    let radix = if let Some(radix) = radix {
+        Radix::Plain(radix)
+    } else {
+        Radix::Prefixed(RecognizedRadices::ALL)
+    };
     fish_wcstoi_impl(src, radix, consume_all)
 }
 

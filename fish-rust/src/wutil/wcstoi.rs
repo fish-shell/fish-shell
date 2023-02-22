@@ -56,13 +56,22 @@ enum Radix {
     Prefixed(RecognizedRadices),
 }
 
+enum SignPrefix {
+    Allowed,
+    Forbidden,
+}
+
 /// Parse the given \p src as an integer.
 /// If mradix is not None, it is used as the radix; otherwise the radix is inferred:
 ///   - Leading 0x or 0X means 16.
 ///   - Leading 0 means 8.
 ///   - Otherwise 10.
 /// The parse result contains the number as a u64, and whether it was negative.
-fn fish_parse_radix<Chars>(ichars: Chars, mradix: Radix) -> Result<ParseResult, Error>
+fn fish_parse_radix<Chars>(
+    ichars: Chars,
+    mradix: Radix,
+    sign_prefix: SignPrefix,
+) -> Result<ParseResult, Error>
 where
     Chars: Iterator<Item = char>,
 {
@@ -81,13 +90,14 @@ where
     }
 
     // Consume leading +/-.
-    let mut negative;
-    match current(chars) {
-        '-' | '+' => {
-            negative = current(chars) == '-';
+    let mut negative = false;
+    if let SignPrefix::Allowed = sign_prefix {
+        if current(chars) == '+' {
+            chars.next();
+        } else if current(chars) == '-' {
+            negative = true;
             chars.next();
         }
-        _ => negative = false,
     }
 
     let mut num_digits = 0;
@@ -172,7 +182,7 @@ where
         negative,
         consumed_all,
         ..
-    } = fish_parse_radix(src, mradix)?;
+    } = fish_parse_radix(src, mradix, SignPrefix::Allowed)?;
 
     if !signed && negative {
         Err(Error::InvalidDigit)

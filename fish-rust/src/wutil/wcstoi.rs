@@ -13,6 +13,8 @@ struct ParseResult {
     result: u64,
     negative: bool,
     consumed_all: bool,
+    radix: u32,
+    num_digits: u32,
 }
 
 /// Helper to get the current char, or \0.
@@ -88,7 +90,7 @@ where
         _ => negative = false,
     }
 
-    let mut consumed1 = false;
+    let mut num_digits = 0;
 
     // Determine the radix.
     let radix = match mradix {
@@ -106,12 +108,12 @@ where
                 16
             } else if recognize.octal {
                 // If no more numbers follow, that's fine, then it's just 0.
-                consumed1 = true;
+                num_digits += 1;
                 8
             } else if recognize.decimal {
                 // Octal numbers are not allowed, so this must simply be a leading zero of a decimal
                 // number.
-                consumed1 = true;
+                num_digits += 1;
                 10
             } else {
                 // no prefix, and no (un-prefixed) decimal numbers allowed.
@@ -133,11 +135,11 @@ where
             .and_then(|r| r.checked_add(digit as u64))
             .ok_or(Error::Overflow)?;
         chars.next();
-        consumed1 = true;
+        num_digits += 1;
     }
 
     // Did we consume at least one char?
-    if !consumed1 {
+    if num_digits == 0 {
         return Err(Error::InvalidDigit);
     }
 
@@ -150,6 +152,8 @@ where
         result,
         negative,
         consumed_all,
+        radix,
+        num_digits,
     })
 }
 

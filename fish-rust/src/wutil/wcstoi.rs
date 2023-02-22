@@ -56,9 +56,9 @@ enum Radix {
     Prefixed(RecognizedRadices),
 }
 
-enum SignPrefix {
-    Allowed,
-    Forbidden,
+struct ParseOptions {
+    sign_prefix: bool,
+    leading_whitespace: bool,
 }
 
 /// Parse the given \p src as an integer.
@@ -70,7 +70,7 @@ enum SignPrefix {
 fn fish_parse_radix<Chars>(
     ichars: Chars,
     mradix: Radix,
-    sign_prefix: SignPrefix,
+    options: ParseOptions,
 ) -> Result<ParseResult, Error>
 where
     Chars: Iterator<Item = char>,
@@ -81,8 +81,10 @@ where
     let chars = &mut ichars.peekable();
 
     // Skip leading whitespace.
-    while current(chars).is_whitespace() {
-        chars.next();
+    if options.leading_whitespace {
+        while current(chars).is_whitespace() {
+            chars.next();
+        }
     }
 
     if chars.peek().is_none() {
@@ -91,7 +93,7 @@ where
 
     // Consume leading +/-.
     let mut negative = false;
-    if let SignPrefix::Allowed = sign_prefix {
+    if options.sign_prefix {
         if current(chars) == '+' {
             chars.next();
         } else if current(chars) == '-' {
@@ -182,7 +184,14 @@ where
         negative,
         consumed_all,
         ..
-    } = fish_parse_radix(src, mradix, SignPrefix::Allowed)?;
+    } = fish_parse_radix(
+        src,
+        mradix,
+        ParseOptions {
+            sign_prefix: true,
+            leading_whitespace: true,
+        },
+    )?;
 
     if !signed && negative {
         Err(Error::InvalidDigit)

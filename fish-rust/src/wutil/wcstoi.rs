@@ -90,7 +90,7 @@ where
 ///   - Otherwise 10.
 /// The parse result contains the number as a u64, and whether it was negative.
 fn fish_parse_radix<Chars>(
-    ichars: Chars,
+    chars: &mut Peekable<Chars>,
     mradix: Radix,
     options: ParseOptions,
 ) -> Result<ParseResult, Error>
@@ -100,9 +100,8 @@ where
     if let Radix::Plain(r) = mradix {
         assert!((2..=36).contains(&r), "fish_parse_radix: invalid radix {r}");
     }
-    let chars = &mut ichars.peekable();
 
-    let skip_underscores = |chars| {
+    let skip_underscores = |chars: &mut _| {
         if options.allow_underscores {
             while current(chars) == '_' {
                 chars.next();
@@ -213,6 +212,8 @@ where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
 {
+    let src = &mut src.peekable();
+
     let bits = Int::zero().count_zeros();
     assert!(bits <= 64, "fish_wcstoi: Int must be <= 64 bits");
     let signed = Int::min_value() < Int::zero();

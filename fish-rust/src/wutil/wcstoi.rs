@@ -1,5 +1,4 @@
 use num_traits::{NumCast, PrimInt};
-use std::iter::Peekable;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Error {
@@ -17,14 +16,38 @@ struct ParseResult {
     num_digits: u32,
 }
 
-/// Helper to get the current char, or \0.
-fn current<Chars>(chars: &mut Peekable<Chars>) -> char
-where
-    Chars: Iterator<Item = char>,
-{
-    match chars.peek() {
-        Some(c) => *c,
-        None => '\0',
+/// A peekable iterator adapter that counts the number of characters consumed.
+struct CountedPeekable<I: Iterator> {
+    iter: I,
+    current: Option<char>,
+    consumed: usize,
+}
+
+impl<I: Iterator<Item = char>> CountedPeekable<I> {
+    pub fn new(mut iter: I) -> Self {
+        Self {
+            current: iter.next(),
+            iter,
+            consumed: 0,
+        }
+    }
+
+    pub fn is_exhausted(&self) -> bool {
+        self.current.is_none()
+    }
+
+    /// Helper to get the current char, or \0.
+    pub fn current(&self) -> char {
+        self.current.unwrap_or('\0')
+    }
+
+    /// Consume the current character, advancing the iterator.
+    pub fn next(&mut self) {
+        if self.current.is_some() {
+            self.consumed += 1;
+        }
+
+        self.current = self.iter.next();
     }
 }
 
@@ -68,14 +91,14 @@ enum Sign {
 }
 
 /// Tries to consume a `+` or `-` sign, or returns `None` if no sign prefix is present.
-fn parse_sign<Chars>(chars: &mut Peekable<Chars>) -> Option<Sign>
+fn parse_sign<Chars>(chars: &mut CountedPeekable<Chars>) -> Option<Sign>
 where
     Chars: Iterator<Item = char>,
 {
-    if current(chars) == '+' {
+    if chars.current() == '+' {
         chars.next();
         Some(Sign::Positive)
-    } else if current(chars) == '-' {
+    } else if chars.current() == '-' {
         chars.next();
         Some(Sign::Negative)
     } else {
@@ -90,7 +113,7 @@ where
 ///   - Otherwise 10.
 /// The parse result contains the number as a u64, and whether it was negative.
 fn fish_parse_radix<Chars>(
-    chars: &mut Peekable<Chars>,
+    chars: &mut CountedPeekable<Chars>,
     mradix: Radix,
     options: ParseOptions,
 ) -> Result<ParseResult, Error>
@@ -101,9 +124,9 @@ where
         assert!((2..=36).contains(&r), "fish_parse_radix: invalid radix {r}");
     }
 
-    let skip_underscores = |chars: &mut _| {
+    let skip_underscores = |chars: &mut CountedPeekable<_>| {
         if options.allow_underscores {
-            while current(chars) == '_' {
+            while chars.current() == '_' {
                 chars.next();
             }
         }
@@ -111,14 +134,14 @@ where
 
     // Skip leading whitespace and underscores.
     if options.leading_whitespace {
-        while current(chars).is_whitespace() {
+        while chars.current().is_whitespace() {
             chars.next();
         }
     }
 
     skip_underscores(chars);
 
-    if chars.peek().is_none() {
+    if chars.is_exhausted() {
         return Err(Error::Empty);
     }
 
@@ -137,7 +160,7 @@ where
     // Determine the radix.
     let radix = match mradix {
         Radix::Plain(radix) => radix,
-        Radix::Prefixed(recognize) if current(chars) == '0' => {
+        Radix::Prefixed(recognize) if chars.current() == '0' => {
             // Leading `0` - either an octal prefix, part of a hex prefix, or a leading zero in a
             // decimal number if octal numbers aren't allowed.
 
@@ -145,7 +168,7 @@ where
             chars.next();
             skip_underscores(chars);
 
-            if recognize.hexadecimal && matches!(current(chars), 'x' | 'X') {
+            if recognize.hexadecimal && matches!(chars.current(), 'x' | 'X') {
                 // Skip the `x`
                 chars.next();
                 skip_underscores(chars);
@@ -173,7 +196,7 @@ where
 
     // Compute as u64.
     let mut result: u64 = 0;
-    while let Some(digit) = current(chars).to_digit(radix) {
+    while let Some(digit) = chars.current().to_digit(radix) {
         result = result
             .checked_mul(radix as u64)
             .and_then(|r| r.checked_add(digit as u64))
@@ -193,7 +216,7 @@ where
     if result == 0 {
         negative = false;
     }
-    let consumed_all = chars.peek().is_none();
+    let consumed_all = chars.is_exhausted();
 
     skip_underscores(chars);
 
@@ -212,7 +235,7 @@ where
     Chars: Iterator<Item = char>,
     Int: PrimInt,
 {
-    let src = &mut src.peekable();
+    let src = &mut CountedPeekable::new(src);
 
     let bits = Int::zero().count_zeros();
     assert!(bits <= 64, "fish_wcstoi: Int must be <= 64 bits");

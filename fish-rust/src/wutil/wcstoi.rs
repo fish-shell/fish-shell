@@ -51,6 +51,18 @@ impl<I: Iterator<Item = char>> CountedPeekable<I> {
     }
 }
 
+impl ParseResult {
+    fn signed_result(&self) -> Result<i64, Error> {
+        let result = i64::try_from(self.result).map_err(|_| Error::Overflow)?;
+
+        if self.negative {
+            Ok(-result)
+        } else {
+            Ok(result)
+        }
+    }
+}
+
 struct RecognizedRadices {
     /// Octal numbers prefixed with `0`
     octal: bool,
@@ -104,6 +116,21 @@ where
     } else {
         None
     }
+}
+
+/// Tries to parse a fixed string, case-insensitively.
+fn parse_string<Chars>(chars: &mut CountedPeekable<Chars>, s: &str) -> Result<(), Error>
+where
+    Chars: Iterator<Item = char>,
+{
+    for c in s.chars() {
+        if chars.current().to_ascii_lowercase() == c.to_ascii_lowercase() {
+            chars.next();
+        } else {
+            return Err(Error::InvalidDigit);
+        }
+    }
+    Ok(())
 }
 
 /// Parse the given \p src as an integer.
@@ -319,6 +346,177 @@ where
     fish_wcstoi_impl(src, radix, consume_all)
 }
 
+/// Parses the fractional part of a floating-point literal (`.` and following digits).
+///
+/// Returns `Ok(None)` when no fractional part is present.
+fn parse_float_fractional<Chars>(
+    src: &mut CountedPeekable<Chars>,
+    significand_radix: u32,
+    allow_underscores: bool,
+) -> Result<Option<f64>, Error>
+where
+    Chars: Iterator<Item = char>,
+{
+    // FIXME: do this properly instead of parsing as an integer and dividing
+    if src.current() == '.' {
+        // skip `.`
+        src.next();
+
+        let frac = fish_parse_radix(
+            src,
+            Radix::Plain(significand_radix),
+            ParseOptions {
+                sign_prefix: false,
+                leading_whitespace: false,
+                allow_underscores,
+            },
+        )?;
+
+        let num_digits = i32::try_from(frac.num_digits)
+            .expect("float literal should have less than 2^31 fractional digits");
+
+        let frac = frac.result as f64 * (significand_radix as f64).powi(-num_digits);
+
+        Ok(Some(frac))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Parses the exponent part of a floating-point literal of the given radix. For decimal literals,
+/// the exponent has a base of 10, for hexadecimal it has a base of 2.
+///
+/// Returns `Ok(None)` when no exponent is present.
+fn parse_float_exponent<Chars>(
+    src: &mut CountedPeekable<Chars>,
+    significand_radix: u32,
+    allow_underscores: bool,
+) -> Result<Option<f64>, Error>
+where
+    Chars: Iterator<Item = char>,
+{
+    let (exponent_base, has_exponent) = match significand_radix {
+        10 => (10.0_f64, matches!(src.current(), 'e' | 'E')),
+        16 => (2.0_f64, matches!(src.current(), 'p' | 'P')),
+        _ => unreachable!("float literal integer part can only be decimal or hexadecimal"),
+    };
+
+    if has_exponent {
+        // skip `e`/`p`
+        src.next();
+
+        let exponent = fish_parse_radix(
+            src,
+            Radix::Plain(10),
+            ParseOptions {
+                sign_prefix: true,
+                leading_whitespace: false,
+                allow_underscores,
+            },
+        )?;
+        let exponent = exponent
+            .signed_result()?
+            .try_into()
+            .map_err(|_| Error::Overflow)?;
+
+        Ok(Some(exponent_base.powi(exponent)))
+    } else {
+        Ok(None)
+    }
+}
+
+fn fish_wcstod_impl<Chars>(src: Chars, allow_underscores: bool) -> Result<(f64, usize), Error>
+where
+    Chars: Iterator<Item = char>,
+{
+    let src = &mut CountedPeekable::new(src);
+
+    // skip leading whitespace
+    while src.current().is_whitespace() {
+        src.next();
+    }
+
+    let mut leading_underscore = false;
+    if allow_underscores {
+        // skip leading underscores
+        while src.current() == '_' {
+            src.next();
+            leading_underscore = true;
+        }
+    }
+
+    let sig_sign = parse_sign(src);
+
+    if !leading_underscore {
+        // decode `infinity`/`nan`
+        match src.current() {
+            'i' | 'I' => {
+                parse_string(src, "infinity")?;
+
+                let inf = if let Some(Sign::Negative) = sig_sign {
+                    f64::NEG_INFINITY
+                } else {
+                    f64::INFINITY
+                };
+                return Ok((inf, src.consumed));
+            }
+            'n' | 'N' => {
+                parse_string(src, "nan")?;
+
+                return Ok((f64::NAN, src.consumed));
+            }
+            _ => {}
+        }
+    }
+
+    let mut sig_int = fish_parse_radix(
+        src,
+        Radix::Prefixed(RecognizedRadices {
+            octal: false,
+            decimal: true,
+            hexadecimal: true,
+        }),
+        ParseOptions {
+            // already done above
+            sign_prefix: false,
+            leading_whitespace: false,
+            allow_underscores,
+        },
+    )?;
+    sig_int.negative = matches!(sig_sign, Some(Sign::Negative));
+
+    let sig_frac = parse_float_fractional(src, sig_int.radix, allow_underscores)?.unwrap_or(0.0);
+    let exponent = parse_float_exponent(src, sig_int.radix, allow_underscores)?.unwrap_or(1.0);
+
+    let mut significand = sig_int.result as f64 + sig_frac;
+    if let Some(Sign::Negative) = sig_sign {
+        significand = -significand;
+    }
+
+    Ok((significand * exponent, src.consumed))
+}
+
+/// Parses a floating-point literal and returns the number of characters consumed.
+pub fn fish_wcstod<Chars>(src: Chars) -> Result<(f64, usize), Error>
+where
+    Chars: Iterator<Item = char>,
+{
+    fish_wcstod_impl(src, false)
+}
+
+/// Like [`fish_wcstod()`], but allows underscore separators. Leading, trailing, and multiple
+/// underscores are allowed, as are underscores next to decimal (`.`), exponent (`E`/`e`/`P`/`p`),
+/// and hexadecimal (`X`/`x`) delimiters. This consumes trailing underscores. Free-floating leading
+/// underscores (`"_ 3"`) are not allowed and will result in a no-parse. Underscores are not allowed
+/// before or inside of `"infinity"` or `"nan"` input. Trailing underscores after `"infinity"` or
+/// `"nan"` are not consumed.
+pub fn fish_wcstod_underscores<Chars>(src: Chars) -> Result<(f64, usize), Error>
+where
+    Chars: Iterator<Item = char>,
+{
+    fish_wcstod_impl(src, true)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -329,7 +527,7 @@ mod tests {
     }
 
     #[test]
-    fn tests() {
+    fn wcstoi() {
         let run1 = |s: &str| -> Result<i32, Error> { fish_wcstoi(s.chars()) };
         let run1_rad =
             |s: &str, radix: u32| -> Result<i32, Error> { fish_wcstoi_radix(s.chars(), radix) };
@@ -368,5 +566,57 @@ mod tests {
         test_min_max(std::u16::MIN, std::u16::MAX);
         test_min_max(std::u32::MIN, std::u32::MAX);
         test_min_max(std::u64::MIN, std::u64::MAX);
+    }
+
+    #[test]
+    fn wcstod() {
+        let run = |s: &str| fish_wcstod(s.chars());
+        let run_us = |s: &str| fish_wcstod_underscores(s.chars());
+
+        assert_eq!(run("0"), Ok((0.0, 1)));
+        assert_eq!(run("+42.5.3"), Ok((42.5, 5)));
+        assert_eq!(run("   -123e-4x"), Ok((-0.0123, 10)));
+
+        assert_eq!(run(""), Err(Error::Empty));
+        assert_eq!(run("1.2"), Ok((1.2, 3)));
+        assert_eq!(run("1.5"), Ok((1.5, 3)));
+        assert_eq!(run("-1000"), Ok((-1000.0, 5)));
+        assert_eq!(run("0.12345"), Ok((0.12345, 7)));
+        assert_eq!(run("nope"), Err(Error::InvalidDigit));
+
+        assert_eq!(run_us("123"), Ok((123.0, 3)));
+        assert_eq!(run_us("1_2.3_4.5_6"), Ok((12.34, 7)));
+        assert_eq!(run_us("_-__1_23e-2.5"), Ok((-1.23, 11)));
+        assert_eq!(run_us("1_2"), Ok((12.0, 3)));
+        assert_eq!(run_us("1_._2"), Ok((1.2, 5)));
+        assert_eq!(run_us("1__2"), Ok((12.0, 4)));
+        assert_eq!(run_us(" 1__2 3__4 "), Ok((12.0, 5)));
+        assert_eq!(run_us("1_2 3_4"), Ok((12.0, 3)));
+        assert_eq!(run_us(" 1"), Ok((1.0, 2)));
+        assert_eq!(run_us(" 1_"), Ok((1.0, 3)));
+        assert_eq!(run_us(" 1__"), Ok((1.0, 4)));
+        assert_eq!(run_us(" 1___"), Ok((1.0, 5)));
+        assert_eq!(run_us(" 1___ 2___"), Ok((1.0, 5)));
+        assert_eq!(run_us(" _1"), Ok((1.0, 3)));
+        assert_eq!(run_us("1 "), Ok((1.0, 1)));
+        assert_eq!(run_us("infinity_"), Ok((f64::INFINITY, 8)));
+        assert_eq!(run_us(" -INFINITY"), Ok((-f64::INFINITY, 10)));
+        assert_eq!(run_us("_-INFINITY"), Err(Error::InvalidDigit));
+        assert_eq!(run_us("_infinity"), Err(Error::InvalidDigit));
+        //FIXME
+        //assert_eq!(run_us("nan(0)"), Ok((nan, 6)));
+        //assert_eq!(run_us("nan(0)_"), Ok((nan, 6)));
+        assert_eq!(run_us("_nan(0)"), Err(Error::InvalidDigit));
+        // We don't strip the underscores in this commented-out test case, and the behavior is
+        // implementation-defined, so we don't actually know how many characters will get consumed. On
+        // macOS the strtod man page only says what happens with an alphanumeric string passed to nan(),
+        // but the strtod consumes all of the characters even if there are underscores.
+        // test_case(L"nan(0_1_2)", Ok((???, 3)));
+        assert_eq!(run_us(" _ 1"), Err(Error::InvalidDigit));
+        assert_eq!(run_us("0x_dead_beef"), Ok((0xdeadbeef_u32 as f64, 12)));
+        assert_eq!(run_us("None"), Err(Error::InvalidDigit));
+        assert_eq!(run_us(" None"), Err(Error::InvalidDigit));
+        assert_eq!(run_us("Also none"), Err(Error::InvalidDigit));
+        assert_eq!(run_us(" Also none"), Err(Error::InvalidDigit));
     }
 }

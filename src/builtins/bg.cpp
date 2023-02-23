@@ -14,11 +14,11 @@
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
-#include "../job_group.h"
 #include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "job_group.rs.h"
 
 /// Helper function for builtin_bg().
 static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {

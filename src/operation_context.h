@@ -9,7 +9,7 @@
 
 class environment_t;
 class parser_t;
-class job_group_t;
+struct job_group_t;
 
 /// A common helper which always returns false.
 bool no_cancel();

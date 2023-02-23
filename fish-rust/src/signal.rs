@@ -1,8 +1,7 @@
-use widestring::U32CStr;
-
 use crate::ffi;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
 use crate::wchar_ffi::{c_str, wstr};
+use widestring::U32CStr;
 
 /// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
 pub struct sigchecker_t {

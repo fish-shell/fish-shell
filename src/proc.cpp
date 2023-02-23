@@ -41,7 +41,7 @@
 #include "flog.h"
 #include "global_safety.h"
 #include "io.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
@@ -124,10 +124,10 @@ bool job_t::posts_job_exit_events() const {
 
 bool job_t::signal(int signal) {
     auto pgid = group->get_pgid();
-    if (pgid.has_value()) {
-        if (killpg(*pgid, signal) == -1) {
+    if (pgid) {
+        if (killpg(pgid->value, signal) == -1) {
             char buffer[512];
-            snprintf(buffer, 512, "killpg(%d, %s)", *pgid, strsignal(signal));
+            snprintf(buffer, 512, "killpg(%d, %s)", pgid->value, strsignal(signal));
             wperror(str2wcstring(buffer).c_str());
             return false;
         }
@@ -805,7 +805,7 @@ bool tty_transfer_t::try_transfer(const job_group_ref_t &jg) {
     }
 
     // Get the pgid; we must have one if we want the terminal.
-    pid_t pgid = *jg->get_pgid();
+    pid_t pgid = jg->get_pgid()->value;
     assert(pgid >= 0 && "Invalid pgid");
 
     // It should never be fish's pgroup.
@@ -904,7 +904,7 @@ bool tty_transfer_t::try_transfer(const job_group_ref_t &jg) {
             return false;
         } else {
             FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
-                  jg->get_job_id(), jg->get_command().c_str(), pgid);
+                  jg->get_job_id(), jg->get_command()->c_str(), pgid);
             wperror(L"tcsetpgrp");
             return false;
         }
@@ -926,7 +926,13 @@ bool tty_transfer_t::try_transfer(const job_group_ref_t &jg) {
 
 bool job_t::is_foreground() const { return group->is_foreground(); }
 
-maybe_t<pid_t> job_t::get_pgid() const { return group->get_pgid(); }
+maybe_t<pid_t> job_t::get_pgid() const {
+    auto pgid = group->get_pgid();
+    if (!pgid) {
+        return none();
+    }
+    return maybe_t<pid_t>{pgid->value};
+}
 
 maybe_t<pid_t> job_t::get_last_pid() const {
     for (auto iter = processes.rbegin(); iter != processes.rend(); ++iter) {
@@ -1004,7 +1010,7 @@ void tty_transfer_t::save_tty_modes() {
     if (owner_) {
         struct termios tmodes {};
         if (tcgetattr(STDIN_FILENO, &tmodes) == 0) {
-            owner_->tmodes = tmodes;
+            owner_->set_modes_ffi((uint8_t *)&tmodes, sizeof(struct termios));
         } else if (errno != ENOTTY) {
             wperror(L"tcgetattr");
         }

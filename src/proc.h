@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "common.h"
-#include "job_group.h"
 #include "maybe.h"
 #include "parse_tree.h"
 #include "redirection.h"
@@ -58,6 +57,7 @@ namespace ast {
 struct statement_t;
 }
 
+struct job_group_t;
 using job_group_ref_t = std::shared_ptr<job_group_t>;
 
 /// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,

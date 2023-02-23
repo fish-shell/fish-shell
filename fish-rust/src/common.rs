@@ -91,3 +91,11 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
 
     ffi::escape_string(s.as_ptr(), flags_int.into(), style).from_ffi()
 }
+
+pub const fn assert_send<T: Send>() -> () {
+    ()
+}
+
+pub const fn assert_sync<T: Sync>() -> () {
+    ()
+}

@@ -18,6 +18,7 @@ mod ffi_init;
 mod ffi_tests;
 mod flog;
 mod future_feature_flags;
+mod job_group;
 mod nix;
 mod parse_constants;
 mod redirection;

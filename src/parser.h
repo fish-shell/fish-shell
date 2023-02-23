@@ -16,7 +16,6 @@
 #include "cxx.h"
 #include "env.h"
 #include "expand.h"
-#include "job_group.h"
 #include "maybe.h"
 #include "operation_context.h"
 #include "parse_constants.h"
@@ -32,6 +31,7 @@ class autoclose_fd_t;
 /// event_blockage_t represents a block on events.
 struct event_blockage_t {};
 
+struct job_group_t;
 typedef std::list<event_blockage_t> event_blockage_list_t;
 
 inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {

@@ -3043,6 +3043,7 @@ static void test_fish_wcstod_underscores() {
 
     test_case(L"123", 3);
     test_case(L"1_2.3_4.5_6", 7);
+    test_case(L"_-__1_23e-2.5", 11);
     test_case(L"1_2", 3);
     test_case(L"1_._2", 5);
     test_case(L"1__2", 4);
@@ -3057,6 +3058,7 @@ static void test_fish_wcstod_underscores() {
     test_case(L"1 ", 1);
     test_case(L"infinity_", 8);
     test_case(L" -INFINITY", 10);
+    test_case(L"_-INFINITY", 0);
     test_case(L"_infinity", 0);
     test_case(L"nan(0)", 6);
     test_case(L"nan(0)_", 6);

@@ -1,12 +1,12 @@
 use crate::wchar;
-use crate::wchar_ffi::WCharToFFI;
+use crate::wchar_ffi::{WCharToFFI, WCharFromFFI};
 #[rustfmt::skip]
 use ::std::fmt::{self, Debug, Formatter};
 #[rustfmt::skip]
 use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
-use crate::wchar::wstr;
+use crate::wchar::{wstr, WString};
 use autocxx::prelude::*;
 use cxx::SharedPtr;
 
@@ -34,6 +34,8 @@ include_cpp! {
     #include "env_universal_common.h"
     #include "input_common.h"
     #include "iothread.h"
+    #include "input_common.h"
+    #include "reader.h"
 
     safety!(unsafe_ffi)
 
@@ -107,6 +109,8 @@ include_cpp! {
     generate!("is_single_byte_locale")
     generate!("iothread_service_main")
     generate!("is_windows_subsystem_for_linux")
+
+    generate!("reader_reset_interrupted")
 }
 
 impl parser_t {
@@ -123,6 +127,17 @@ impl parser_t {
 
     pub fn remove_var(&mut self, var: &wstr, flags: u16) -> c_int {
         self.pin().remove_var_ffi(&var.to_ffi(), flags)
+    }
+}
+
+impl env_stack_t {
+    pub fn get_or_default(&mut self, name: &wstr, def: &wstr, flag: u16) -> WString {
+        let val = self.pin().get_or_default_ffi(
+            &name.to_ffi(),
+            &def.to_ffi(),
+            flag,
+        );
+        val.from_ffi()
     }
 }
 

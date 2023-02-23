@@ -14,6 +14,13 @@
 #include "input_common.h"
 #include "maybe.h"
 
+#if INCLUDE_RUST_HEADERS
+#include "input.rs.h"
+#else
+// Hacks to allow us to compile without Rust headers.
+
+#endif
+
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 #define DEFAULT_BIND_MODE L"default"
 
@@ -26,7 +33,6 @@ wcstring describe_char(wint_t c);
 /// initializations for our input subsystem.
 void init_input();
 
-struct input_mapping_t;
 class inputter_t final : private input_event_queue_t {
    public:
     /// Construct from a parser, and the fd from which to read.
@@ -83,24 +89,5 @@ class inputter_t final : private input_event_queue_t {
     // Transient storage to avoid repeated allocations.
     std::vector<char_event_t> event_storage_{};
 };
-
-/// Return the sequence for the terminfo variable of the specified name.
-///
-/// If no terminfo variable of the specified name could be found, return false and set errno to
-/// ENOENT. If the terminfo variable does not have a value, return false and set errno to EILSEQ.
-bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq);
-
-/// Return the name of the terminfo variable with the specified sequence, in out_name. Returns true
-/// if found, false if not found.
-bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name);
-
-/// Return a list of all known terminfo names.
-wcstring_list_t input_terminfo_get_names(bool skip_null);
-
-/// Returns the input function code for the given input function name.
-maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name);
-
-/// Returns a list of all existing input function names.
-const wcstring_list_t &input_function_get_names(void);
 
 #endif

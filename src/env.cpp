@@ -1371,6 +1371,15 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
     return acquire_impl()->get(key, mode);
 }
 
+wcstring env_stack_t::get_or_default_ffi(const wcstring &key, const wcstring &def,
+                                         env_mode_flags_t mode) const {
+    auto var = acquire_impl()->get(key, mode);
+    if (var) {
+        return var->as_string();
+    }
+    return def;
+}
+
 wcstring_list_t env_stack_t::get_names(env_mode_flags_t flags) const {
     return acquire_impl()->get_names(flags);
 }

@@ -386,7 +386,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     env_stack_t &vars() { return *variables; }
     const env_stack_t &vars() const { return *variables; }
 
-    int remove_var_ffi(const wcstring &key, env_mode_flags_t mode) { return vars().remove(key, mode); }
+    int remove_var_ffi(const wcstring &key, env_mode_flags_t mode) {
+        return vars().remove(key, mode);
+    }
 
     /// Get the library data.
     library_data_t &libdata() { return library_data; }
@@ -433,7 +435,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     job_t *job_get_from_pid(pid_t pid) const;
 
     /// Returns the job and position with the given pid.
-    job_t *job_get_from_pid(int64_t pid, size_t& job_pos) const;
+    job_t *job_get_from_pid(int64_t pid, size_t &job_pos) const;
 
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The parser_t will deallocate it.

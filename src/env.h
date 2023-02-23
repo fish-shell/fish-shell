@@ -232,6 +232,11 @@ class env_stack_t final : public environment_t {
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
     /// Implementation of environment_t.
+    wcstring get_or_default_ffi(const wcstring &key,
+                                const wcstring &def,
+                                env_mode_flags_t mode) const;
+
+    /// Implementation of environment_t.
     wcstring_list_t get_names(env_mode_flags_t flags) const override;
 
     /// Sets the variable with the specified name to the given values.

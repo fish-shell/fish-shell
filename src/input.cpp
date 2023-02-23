@@ -31,55 +31,7 @@
 #include "signals.h"  // IWYU pragma: keep
 #include "wutil.h"    // IWYU pragma: keep
 
-/// A name for our own key mapping for nul.
-static const wchar_t *k_nul_mapping_name = L"nul";
-
-/// Struct representing a keybinding. Returned by input_get_mappings.
-struct input_mapping_t {
-    /// Character sequence which generates this event.
-    wcstring seq;
-    /// Commands that should be evaluated by this mapping.
-    wcstring_list_t commands;
-    /// We wish to preserve the user-specified order. This is just an incrementing value.
-    unsigned int specification_order;
-    /// Mode in which this command should be evaluated.
-    wcstring mode;
-    /// New mode that should be switched to after command evaluation.
-    wcstring sets_mode;
-
-    input_mapping_t(wcstring s, wcstring_list_t c, wcstring m, wcstring sm)
-        : seq(std::move(s)), commands(std::move(c)), mode(std::move(m)), sets_mode(std::move(sm)) {
-        static unsigned int s_last_input_map_spec_order = 0;
-        specification_order = ++s_last_input_map_spec_order;
-    }
-
-    /// \return true if this is a generic mapping, i.e. acts as a fallback.
-    bool is_generic() const { return seq.empty(); }
-};
-
-/// A struct representing the mapping from a terminfo key name to a terminfo character sequence.
-struct terminfo_mapping_t {
-    // name of key
-    const wchar_t *name;
-
-    // character sequence generated on keypress, or none if there was no mapping.
-    maybe_t<std::string> seq;
-
-    terminfo_mapping_t(const wchar_t *name, const char *s) : name(name) {
-        if (s) seq.emplace(s);
-    }
-
-    terminfo_mapping_t(const wchar_t *name, std::string s) : name(name), seq(std::move(s)) {}
-};
-
 static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS;
-
-/// Input function metadata. This list should be kept in sync with the key code list in
-/// input_common.h.
-struct input_function_metadata_t {
-    const wchar_t *name;
-    readline_cmd_t code;
-};
 
 /// A static mapping of all readline commands as strings to their readline_cmd_t equivalent.
 /// Keep this list sorted alphabetically!
@@ -172,58 +124,11 @@ static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0
               "input_function_metadata size mismatch with input_common. Did you forget to update "
               "input_function_metadata?");
 
-wcstring describe_char(wint_t c) {
-    if (c < R_END_INPUT_FUNCTIONS) {
-        return format_string(L"%02x (%ls)", c, input_function_metadata[c].name);
-    }
-    return format_string(L"%02x", c);
-}
-
 /// Terminfo map list.
 static latch_t<std::vector<terminfo_mapping_t>> s_terminfo_mappings;
 
 /// \return the input terminfo.
-static std::vector<terminfo_mapping_t> create_input_terminfo();
-
-/// Return the current bind mode.
-static wcstring input_get_bind_mode(const environment_t &vars) {
-    auto mode = vars.get(FISH_BIND_MODE_VAR);
-    return mode ? mode->as_string() : DEFAULT_BIND_MODE;
-}
-
-/// Set the current bind mode.
-static void input_set_bind_mode(parser_t &parser, const wcstring &bm) {
-    // Only set this if it differs to not execute variable handlers all the time.
-    // modes may not be empty - empty is a sentinel value meaning to not change the mode
-    assert(!bm.empty());
-    if (input_get_bind_mode(parser.vars()) != bm) {
-        // Must send events here - see #6653.
-        parser.set_var_and_fire(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
-    }
-}
-
-/// Returns the arity of a given input function.
-static int input_function_arity(readline_cmd_t function) {
-    switch (function) {
-        case readline_cmd_t::forward_jump:
-        case readline_cmd_t::backward_jump:
-        case readline_cmd_t::forward_jump_till:
-        case readline_cmd_t::backward_jump_till:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
-/// Set up arrays used by readch to detect escape sequences for special keys and perform related
-/// initializations for our input subsystem.
-void init_input() {
-    ASSERT_IS_MAIN_THREAD();
-
-    if (s_terminfo_mappings.is_set()) return;
-    s_terminfo_mappings = create_input_terminfo();
-    // Init default Input mappings
-}
+static std::vector<terminfo_mapping_t> create_input_terminfo();\
 
 inputter_t::inputter_t(parser_t &parser, int in)
     : input_event_queue_t(in), parser_(parser.shared()) {}
@@ -301,7 +206,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
     // has_commands: there are shell commands that need to be evaluated
     bool has_commands = false, has_functions = false;
 
-    for (const wcstring &cmd : m.commands) {
+    for (const wcstring &cmd : m.commands.get()) {
         if (input_function_get_code(cmd)) {
             has_functions = true;
         } else {
@@ -329,7 +234,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
         for (auto it = m.commands.rbegin(), end = m.commands.rend(); it != end; ++it) {
             readline_cmd_t code = input_function_get_code(*it).value();
             function_push_args(code);
-            this->push_front(char_event_t(code, m.seq));
+            this->push_front(char_event_t(code, *m.seq));
         }
     } else if (has_commands && !has_functions) {
         // Execute all commands.
@@ -744,73 +649,4 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
         // #3189. This can typically be generated via control-space.
         terminfo_mapping_t(k_nul_mapping_name, std::string{'\0'})};
 #undef TERMINFO_ADD
-}
-
-bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq) {
-    assert(s_terminfo_mappings.is_set());
-    for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
-        if (name == m.name) {
-            // Found the mapping.
-            if (!m.seq) {
-                errno = EILSEQ;
-                return false;
-            } else {
-                *out_seq = str2wcstring(*m.seq);
-                return true;
-            }
-        }
-    }
-    errno = ENOENT;
-    return false;
-}
-
-bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
-    assert(s_terminfo_mappings.is_set());
-    for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
-        if (m.seq && seq == str2wcstring(*m.seq)) {
-            out_name->assign(m.name);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-wcstring_list_t input_terminfo_get_names(bool skip_null) {
-    assert(s_terminfo_mappings.is_set());
-    wcstring_list_t result;
-    const auto &mappings = *s_terminfo_mappings;
-    result.reserve(mappings.size());
-    for (const terminfo_mapping_t &m : mappings) {
-        if (skip_null && !m.seq) {
-            continue;
-        }
-        result.emplace_back(m.name);
-    }
-    return result;
-}
-
-const wcstring_list_t &input_function_get_names() {
-    // The list and names of input functions are hard-coded and never change
-    static wcstring_list_t result = ([&]() {
-        wcstring_list_t result;
-        result.reserve(input_function_count);
-        for (const auto &md : input_function_metadata) {
-            if (md.name[0]) {
-                result.push_back(md.name);
-            }
-        }
-        return result;
-    })();
-
-    return result;
-}
-
-maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name) {
-    // `input_function_metadata` is required to be kept in asciibetical order, making it OK to do
-    // a binary search for the matching name.
-    if (const input_function_metadata_t *md = get_by_sorted_name(name, input_function_metadata)) {
-        return md->code;
-    }
-    return none();
 }

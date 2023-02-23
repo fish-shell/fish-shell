@@ -62,6 +62,27 @@ struct ParseOptions {
     allow_underscores: bool,
 }
 
+enum Sign {
+    Positive,
+    Negative,
+}
+
+/// Tries to consume a `+` or `-` sign, or returns `None` if no sign prefix is present.
+fn parse_sign<Chars>(chars: &mut Peekable<Chars>) -> Option<Sign>
+where
+    Chars: Iterator<Item = char>,
+{
+    if current(chars) == '+' {
+        chars.next();
+        Some(Sign::Positive)
+    } else if current(chars) == '-' {
+        chars.next();
+        Some(Sign::Negative)
+    } else {
+        None
+    }
+}
+
 /// Parse the given \p src as an integer.
 /// If mradix is not None, it is used as the radix; otherwise the radix is inferred:
 ///   - Leading 0x or 0X means 16.
@@ -105,11 +126,8 @@ where
     // Consume leading +/-.
     let mut negative = false;
     if options.sign_prefix {
-        if current(chars) == '+' {
-            chars.next();
-        } else if current(chars) == '-' {
+        if let Some(Sign::Negative) = parse_sign(chars) {
             negative = true;
-            chars.next();
         }
     }
 

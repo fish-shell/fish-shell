@@ -8,19 +8,19 @@ use cxx::SharedPtr;
 pub type wchar_t = u32;
 
 include_cpp! {
+    #include "builtin.h"
+    #include "common.h"
+    #include "event.h"
+    #include "fallback.h"
     #include "fds.h"
-    #include "wutil.h"
     #include "flog.h"
     #include "io.h"
-    #include "parse_util.h"
-    #include "wildcard.h"
-    #include "tokenizer.h"
     #include "parser.h"
+    #include "parse_util.h"
     #include "proc.h"
-    #include "common.h"
-    #include "builtin.h"
-    #include "fallback.h"
-    #include "event.h"
+    #include "tokenizer.h"
+    #include "wildcard.h"
+    #include "wutil.h"
 
     safety!(unsafe_ffi)
 
@@ -133,11 +133,11 @@ pub trait Repin {
 }
 
 // Implement Repin for our types.
-impl Repin for parser_t {}
-impl Repin for job_t {}
-impl Repin for process_t {}
 impl Repin for io_streams_t {}
+impl Repin for job_t {}
 impl Repin for output_stream_t {}
+impl Repin for parser_t {}
+impl Repin for process_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

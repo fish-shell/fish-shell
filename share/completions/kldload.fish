@@ -1,6 +1,6 @@
 # Completions for the FreeBSD `kldload` kernel module load utility
 function __fish_list_kldload_options
-    set -l klds (__fish_complete_suffix /boot/kernel/(commandline -ct) ".ko" | string replace -r '.*/(.+)\\.ko' '$1')
+    set -l klds (__fish_complete_suffix --complete=/boot/kernel/(commandline -ct) ".ko" | string replace -r '.*/(.+)\\.ko' '$1')
     # Completing available klds is fast, but completing it with a call to __fish_whatis
     # is decidedly not. With 846 modules (FreeBSD 11.1), fish --profile 'complete -C"kldload "' returns the following:
     # 10671   11892698    > complete -C"kldload "

@@ -1,12 +1,5 @@
 complete -c xz -s z -l compress -d Compress
-complete -c xz -s d -l decompress -l uncompress -d Decompress -k -x -a "
-(
-    __fish_complete_suffix .xz
-    __fish_complete_suffix .txz
-    __fish_complete_suffix .lzma
-    __fish_complete_suffix .tlz
-)
-"
+complete -c xz -s d -l decompress -l uncompress -d Decompress -k -x -a "(__fish_complete_suffix .xz .txz .lzma .tlz)"
 
 complete -c xz -s t -l test -d 'Test the integrity of compressed files'
 complete -c xz -s l -l list -d 'Print information about compressed files'

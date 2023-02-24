@@ -30,7 +30,6 @@
 #include <string>
 
 #include "builtins/argparse.h"
-#include "builtins/bg.h"
 #include "builtins/bind.h"
 #include "builtins/builtin.h"
 #include "builtins/cd.h"
@@ -361,7 +360,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"and", &builtin_generic, N_(L"Run command if last command succeeded")},
     {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
-    {L"bg", &builtin_bg, N_(L"Send job to background")},
+    {L"bg", &implemented_in_rust, N_(L"Send job to background")},
     {L"bind", &builtin_bind, N_(L"Handle fish key bindings")},
     {L"block", &implemented_in_rust, N_(L"Temporarily block delivery of events")},
     {L"break", &builtin_break_continue, N_(L"Stop the innermost loop")},
@@ -523,6 +522,9 @@ const wchar_t *builtin_get_desc(const wcstring &name) {
 static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     if (cmd == L"abbr") {
         return RustBuiltin::Abbr;
+    }
+    if (cmd == L"bg") {
+        return RustBuiltin::Bg;
     }
     if (cmd == L"block") {
         return RustBuiltin::Block;

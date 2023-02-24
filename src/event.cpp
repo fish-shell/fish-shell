@@ -173,9 +173,9 @@ static bool event_is_blocked(parser_t &parser, const event_t &e) {
     const block_t *block;
     size_t idx = 0;
     while ((block = parser.block_at_index(idx++))) {
-        if (event_block_list_blocks_type(block->event_blocks)) return true;
+        if (block->event_blocks) return true;
     }
-    return event_block_list_blocks_type(parser.global_event_blocks);
+    return parser.global_event_blocks;
 }
 
 wcstring event_get_desc(const parser_t &parser, const event_t &evt) {

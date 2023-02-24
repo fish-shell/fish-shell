@@ -91,18 +91,16 @@ maybe_t<int> builtin_block(parser_t &parser, io_streams_t &streams, const wchar_
             return STATUS_INVALID_ARGS;
         }
 
-        if (parser.global_event_blocks.empty()) {
+        if (!parser.global_event_blocks) {
             streams.err.append_format(_(L"%ls: No blocks defined\n"), cmd);
             return STATUS_CMD_ERROR;
         }
-        parser.global_event_blocks.pop_front();
+        --parser.global_event_blocks;
         return STATUS_CMD_OK;
     }
 
     size_t block_idx = 0;
     block_t *block = parser.block_at_index(block_idx);
-
-    event_blockage_t eb = {};
 
     switch (opts.scope) {
         case LOCAL: {
@@ -128,9 +126,9 @@ maybe_t<int> builtin_block(parser_t &parser, io_streams_t &streams, const wchar_
         }
     }
     if (block) {
-        block->event_blocks.push_front(eb);
+        ++block->event_blocks;
     } else {
-        parser.global_event_blocks.push_front(eb);
+        ++parser.global_event_blocks;
     }
 
     return STATUS_CMD_OK;

@@ -43,6 +43,7 @@ include_cpp! {
     generate!("wildcard_match")
     generate!("wgettext_ptr")
 
+    generate!("block_t")
     generate!("parser_t")
     generate!("job_t")
     generate!("process_t")
@@ -134,6 +135,7 @@ pub trait Repin {
 
 // Implement Repin for our types.
 impl Repin for parser_t {}
+impl Repin for block_t {}
 impl Repin for job_t {}
 impl Repin for process_t {}
 impl Repin for io_streams_t {}

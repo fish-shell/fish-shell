@@ -1,5 +1,6 @@
 pub mod shared;
 
+pub mod block;
 pub mod contains;
 pub mod echo;
 pub mod emit;

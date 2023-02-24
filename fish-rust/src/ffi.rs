@@ -31,6 +31,7 @@ include_cpp! {
     #include "parse_constants.h"
     #include "parser.h"
     #include "parse_util.h"
+    #include "path.h"
     #include "proc.h"
     #include "tokenizer.h"
     #include "wildcard.h"
@@ -81,6 +82,7 @@ include_cpp! {
     generate_pod!("RustFFIProcList")
     generate_pod!("RustBuiltin")
 
+    generate!("builtin_exists")
     generate!("builtin_missing_argument")
     generate!("builtin_unknown_option")
     generate!("builtin_print_help")
@@ -103,6 +105,9 @@ include_cpp! {
 
     generate!("env_var_t")
 
+    generate!("function_properties_t")
+    generate!("function_properties_ref_t")
+    generate!("function_get_props_autoload")
     generate!("function_get_definition_file")
     generate!("function_get_copy_definition_file")
     generate!("function_get_definition_lineno")
@@ -110,6 +115,7 @@ include_cpp! {
     generate!("function_get_annotated_definition")
     generate!("function_is_copy")
     generate!("function_exists")
+    generate!("path_get_paths_ffi")
 
     generate!("colorize_shell")
 }
@@ -288,6 +294,7 @@ impl Repin for job_t {}
 impl Repin for output_stream_t {}
 impl Repin for parser_t {}
 impl Repin for process_t {}
+impl Repin for function_properties_ref_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

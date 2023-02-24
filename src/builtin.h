@@ -121,6 +121,7 @@ enum RustBuiltin : int32_t {
     Random,
     Realpath,
     Return,
+    Type,
     Wait,
 };
 #endif

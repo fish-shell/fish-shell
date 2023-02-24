@@ -108,7 +108,7 @@ set(FISH_BUILTIN_SRCS
     src/builtins/jobs.cpp src/builtins/math.cpp src/builtins/path.cpp
     src/builtins/read.cpp src/builtins/set.cpp
     src/builtins/set_color.cpp src/builtins/source.cpp src/builtins/status.cpp
-    src/builtins/string.cpp src/builtins/test.cpp src/builtins/type.cpp src/builtins/ulimit.cpp
+    src/builtins/string.cpp src/builtins/test.cpp src/builtins/ulimit.cpp
 )
 
 # List of other sources.

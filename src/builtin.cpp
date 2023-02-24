@@ -52,7 +52,6 @@
 #include "builtins/status.h"
 #include "builtins/string.h"
 #include "builtins/test.h"
-#include "builtins/type.h"
 #include "builtins/ulimit.h"
 #include "complete.h"
 #include "cxx.h"
@@ -407,7 +406,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"test", &builtin_test, N_(L"Test a condition")},
     {L"time", &builtin_generic, N_(L"Measure how long a command or block takes")},
     {L"true", &builtin_true, N_(L"Return a successful result")},
-    {L"type", &builtin_type, N_(L"Check if a thing is a thing")},
+    {L"type", &implemented_in_rust, N_(L"Check if a thing is a thing")},
     {L"ulimit", &builtin_ulimit, N_(L"Get/set resource usage limits")},
     {L"wait", &implemented_in_rust, N_(L"Wait for background processes completed")},
     {L"while", &builtin_generic, N_(L"Perform a command multiple times")},
@@ -553,6 +552,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"realpath") {
         return RustBuiltin::Realpath;
+    }
+    if (cmd == L"type") {
+        return RustBuiltin::Type;
     }
     if (cmd == L"wait") {
         return RustBuiltin::Wait;

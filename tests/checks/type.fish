@@ -134,3 +134,9 @@ type -p other-test-type3
 
 type -s other-test-type3
 # CHECK: other-test-type3 is a function (Defined via `source`, copied via `source`)
+
+touch ./test
+chmod +x ./test
+
+PATH=.:$PATH type -P test
+# CHECK: ./test

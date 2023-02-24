@@ -1376,16 +1376,17 @@ void reader_data_t::pager_selection_changed() {
 
 /// Expand an abbreviation replacer, which may mean running its function.
 /// \return the replacement, or none to skip it. This may run fish script!
-maybe_t<abbrs_replacement_t> expand_replacer(source_range_t range, const wcstring &token,
+maybe_t<abbrs_replacement_t> expand_replacer(SourceRange range, const wcstring &token,
                                              const abbrs_replacer_t &repl, parser_t &parser) {
     if (!repl.is_function) {
         // Literal replacement cannot fail.
         FLOGF(abbrs, L"Expanded literal abbreviation <%ls> -> <%ls>", token.c_str(),
-              repl.replacement.c_str());
-        return abbrs_replacement_t::from(range, repl.replacement, repl);
+              (*repl.replacement).c_str());
+        return abbrs_replacement_from(range, *repl.replacement, *repl.set_cursor_marker,
+                                      repl.has_cursor_marker);
     }
 
-    wcstring cmd = escape_string(repl.replacement);
+    wcstring cmd = escape_string(*repl.replacement);
     cmd.push_back(L' ');
     cmd.append(escape_string(token));
 
@@ -1398,7 +1399,7 @@ maybe_t<abbrs_replacement_t> expand_replacer(source_range_t range, const wcstrin
     }
     wcstring result = join_strings(outputs, L'\n');
     FLOGF(abbrs, L"Expanded function abbreviation <%ls> -> <%ls>", token.c_str(), result.c_str());
-    return abbrs_replacement_t::from(range, std::move(result), repl);
+    return abbrs_replacement_from(range, result, *repl.set_cursor_marker, repl.has_cursor_marker);
 }
 
 // Extract all the token ranges in \p str, along with whether they are an undecorated command.
@@ -1501,8 +1502,12 @@ bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack) {
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
         if (auto replacement =
                 reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, this->parser())) {
-            push_edit(el, edit_t{replacement->range, std::move(replacement->text)});
-            update_buff_pos(el, replacement->cursor);
+            push_edit(el, edit_t{replacement->range, *replacement->text});
+            if (replacement->has_cursor) {
+                update_buff_pos(el, replacement->cursor);
+            } else {
+                update_buff_pos(el, none());
+            }
             result = true;
         }
     }

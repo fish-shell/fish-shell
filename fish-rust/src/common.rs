@@ -1,4 +1,5 @@
 use crate::ffi;
+use crate::wchar_ext::WExt;
 use crate::wchar_ffi::c_str;
 use crate::wchar_ffi::{wstr, WCharFromFFI, WString};
 use std::{ffi::c_uint, mem};
@@ -91,4 +92,22 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
     };
 
     ffi::escape_string(c_str!(s), flags_int.into(), style).from_ffi()
+}
+
+/// Test if the string is a valid function name.
+pub fn valid_func_name(name: &wstr) -> bool {
+    if name.is_empty() {
+        return false;
+    };
+    if name.char_at(0) == '-' {
+        return false;
+    };
+    // A function name needs to be a valid path, so no / and no NULL.
+    if name.find_char('/').is_some() {
+        return false;
+    };
+    if name.find_char('\0').is_some() {
+        return false;
+    };
+    true
 }

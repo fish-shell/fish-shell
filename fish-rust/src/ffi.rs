@@ -38,6 +38,7 @@ include_cpp! {
     generate!("wperror")
 
     generate_pod!("pipes_ffi_t")
+    generate!("env_stack_t")
     generate!("make_pipes_ffi")
 
     generate!("valid_var_name_char")
@@ -101,6 +102,10 @@ impl parser_t {
         let libdata = self.pin().ffi_libdata_pod();
 
         unsafe { &mut *libdata }
+    }
+
+    pub fn remove_var(&mut self, var: &wstr, flags: c_int) -> c_int {
+        self.pin().remove_var_ffi(&var.to_ffi(), flags)
     }
 }
 

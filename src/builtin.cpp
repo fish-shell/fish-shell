@@ -32,7 +32,6 @@
 #include "builtins/argparse.h"
 #include "builtins/bg.h"
 #include "builtins/bind.h"
-#include "builtins/block.h"
 #include "builtins/builtin.h"
 #include "builtins/cd.h"
 #include "builtins/command.h"
@@ -364,7 +363,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
     {L"bg", &builtin_bg, N_(L"Send job to background")},
     {L"bind", &builtin_bind, N_(L"Handle fish key bindings")},
-    {L"block", &builtin_block, N_(L"Temporarily block delivery of events")},
+    {L"block", &implemented_in_rust, N_(L"Temporarily block delivery of events")},
     {L"break", &builtin_break_continue, N_(L"Stop the innermost loop")},
     {L"breakpoint", &builtin_breakpoint, N_(L"Halt execution and start debug prompt")},
     {L"builtin", &builtin_builtin, N_(L"Run a builtin specifically")},
@@ -524,6 +523,9 @@ const wchar_t *builtin_get_desc(const wcstring &name) {
 static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     if (cmd == L"abbr") {
         return RustBuiltin::Abbr;
+    }
+    if (cmd == L"block") {
+        return RustBuiltin::Block;
     }
     if (cmd == L"contains") {
         return RustBuiltin::Contains;

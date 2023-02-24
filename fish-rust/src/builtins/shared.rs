@@ -119,6 +119,7 @@ pub fn run_builtin(
 ) -> Option<c_int> {
     match builtin {
         RustBuiltin::Abbr => super::abbr::abbr(parser, streams, args),
+        RustBuiltin::Block => super::block::block(parser, streams, args),
         RustBuiltin::Contains => super::contains::contains(parser, streams, args),
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),

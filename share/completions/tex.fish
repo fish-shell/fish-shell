@@ -1,8 +1,6 @@
 complete -c tex -o help -d "Display help and exit"
 complete -c tex -o version -d "Display version and exit"
-complete -c tex -k -x -a "(
-__fish_complete_suffix (commandline -ct) .tex '(La)TeX file'
-)"
+complete -c tex -k -x -a "(__fish_complete_suffix --description='(La)TeX file' .tex)"
 
 complete -c tex -o file-line-error -d "Show errors in style file:line"
 complete -c tex -o no-file-line-error -d "Show errors not in style file:line"

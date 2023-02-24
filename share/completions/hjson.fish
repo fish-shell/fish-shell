@@ -11,4 +11,4 @@ complete -c hjson -n __fish_should_complete_switches -a -rt -d "round trip comme
 complete -c hjson -n __fish_should_complete_switches -a -nocol -d "disable color output"
 complete -c hjson -n __fish_should_complete_switches -a "-cond=" -d "set condense option [default 60]"
 
-complete -c hjson -k -xa "(__fish_complete_suffix .hjson; __fish_complete_suffix .json)"
+complete -c hjson -k -xa "(__fish_complete_suffix .hjson .json)"

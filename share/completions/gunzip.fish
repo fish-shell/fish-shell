@@ -1,9 +1,5 @@
 complete -c gunzip -s c -l stdout -d "Compress to stdout"
-complete -c gunzip -k -x -a "(
-	__fish_complete_suffix .gz
-	__fish_complete_suffix .tgz
-)
-"
+complete -c gunzip -k -x -a "(__fish_complete_suffix .gz .tgz)"
 complete -c gunzip -s f -l force -d Overwrite
 complete -c gunzip -s h -l help -d "Display help and exit"
 complete -c gunzip -s k -l keep -d "Keep input files"

@@ -77,9 +77,7 @@ static size_t try_sequence(const char *seq, const wchar_t *str) {
 
 static bool midnight_commander_hack = false;
 
-void screen_set_midnight_commander_hack() {
-    midnight_commander_hack = true;
-}
+void screen_set_midnight_commander_hack() { midnight_commander_hack = true; }
 
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 static size_t next_tab_stop(size_t current_line_width) {

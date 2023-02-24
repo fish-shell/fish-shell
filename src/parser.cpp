@@ -674,7 +674,7 @@ RustFFIJobList parser_t::ffi_jobs() const {
 bool parser_t::ffi_has_funtion_block() const {
     for (const auto &b : blocks()) {
         if (b.is_function_call()) {
-             return true;
+            return true;
         }
     }
     return false;

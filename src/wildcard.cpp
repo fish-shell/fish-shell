@@ -954,7 +954,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         }
 
         // return "." and ".." entries if we're doing completions
-        dir_iter_t dir = open_dir(base_dir, /* return . and .. */ flags & expand_flag::for_completions);
+        dir_iter_t dir =
+            open_dir(base_dir, /* return . and .. */ flags & expand_flag::for_completions);
         if (dir.valid()) {
             if (is_last_segment) {
                 // Last wildcard segment, nonempty wildcard.

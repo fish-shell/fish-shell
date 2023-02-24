@@ -8,7 +8,7 @@ complete -c lpadmin -s v -d 'Sets the device-uri attribute of the printer queue'
 complete -c lpadmin -s D -d 'Provides a textual description of the destination' -x
 complete -c lpadmin -s E -d 'Enables the destination and accepts jobs'
 complete -c lpadmin -s L -d 'Provides a textual location of the destination' -x
-complete -c lpadmin -s P -d 'Specify a PDD file to use with the printer' -k -xa "(__fish_complete_suffix .ppd; __fish_complete_suffix .ppd.gz)"
+complete -c lpadmin -s P -d 'Specify a PDD file to use with the printer' -k -xa "(__fish_complete_suffix .ppd .ppd.gz)"
 complete -c lpadmin -s o -xa cupsIPPSupplies=true -d 'Specify if IPP supply level values should be reported'
 complete -c lpadmin -s o -xa cupsIPPSupplies=false -d 'Specify if IPP supply level values should be reported'
 complete -c lpadmin -s o -xa cupsSNMPSupplies=true -d 'Specify if SNMP supply level values should be reported'

@@ -1,6 +1,5 @@
 __fish_complete_lpr lp
-complete -c lpr -k -xa "(__fish_complete_suffix .pdf)"
-complete -c lpr -k -xa "(__fish_complete_suffix .ps)"
+complete -c lpr -k -xa "(__fish_complete_suffix .pdf .ps)"
 complete -c lp -s d -d 'Prints files to the named printer' -xa '(__fish_print_lpr_printers)'
 complete -c lp -s i -d 'Specifies an existing job to modify' -x
 complete -c lp -s n -d 'Sets the number of copies to print from 1 to 100' -x

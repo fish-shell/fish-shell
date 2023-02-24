@@ -24,19 +24,10 @@
 #include "util.h"
 #include "wait_handle.h"
 
-struct event_t;
-class io_chain_t;
 class autoclose_fd_t;
-
-/// event_blockage_t represents a block on events.
-struct event_blockage_t {};
-
+class io_chain_t;
+struct event_t;
 struct job_group_t;
-typedef std::list<event_blockage_t> event_blockage_list_t;
-
-inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
-    return !ebls.empty();
-}
 
 /// Types of blocks.
 enum class block_type_t : uint8_t {
@@ -73,7 +64,7 @@ class block_t {
     wcstring function_name{};
 
     /// List of event blocks.
-    event_blockage_list_t event_blocks{};
+    uint64_t event_blocks{};
 
     // If this is a function block, the function args. Otherwise empty.
     wcstring_list_t function_args{};
@@ -329,7 +320,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     void assert_can_execute() const;
 
     /// Global event blocks.
-    event_blockage_list_t global_event_blocks;
+    uint64_t global_event_blocks{};
 
     /// Evaluate the expressions contained in cmd.
     ///

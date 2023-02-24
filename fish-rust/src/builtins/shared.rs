@@ -36,8 +36,14 @@ pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
 /// Error message when integer expected
 pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 
+/// Error messages for unexpected args.
+pub const BUILTIN_ERR_ARG_COUNT0: &str = "%ls: missing argument\n";
 pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
+pub const BUILTIN_ERR_ARG_COUNT2: &str = "%ls: %ls: expected %d arguments; got %d\n";
+pub const BUILTIN_ERR_MIN_ARG_COUNT1: &str = "%ls: expected >= %d arguments; got %d\n";
+pub const BUILTIN_ERR_MAX_ARG_COUNT1: &str = "%ls: expected <= %d arguments; got %d\n";
 
+/// Error message on invalid combination of options.
 pub const BUILTIN_ERR_COMBO: &str = "%ls: invalid option combination\n";
 pub const BUILTIN_ERR_COMBO2: &str = "%ls: invalid option combination, %ls\n";
 

@@ -20,7 +20,7 @@
 #include "fds.h"
 #include "flog.h"
 #include "iothread.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "postfork.h"
 #include "proc.h"
 #include "redirection.h"
@@ -283,8 +283,8 @@ posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
     maybe_t<pid_t> desired_pgid = none();
     {
         auto pgid = j->group->get_pgid();
-        if (pgid.has_value()) {
-            desired_pgid = *pgid;
+        if (pgid) {
+            desired_pgid = pgid->value;
         } else if (j->processes.front()->leads_pgrp) {
             desired_pgid = 0;
         }

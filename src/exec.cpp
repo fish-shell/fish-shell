@@ -38,7 +38,7 @@
 #include "global_safety.h"
 #include "io.h"
 #include "iothread.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "maybe.h"
 #include "null_terminated_array.h"
 #include "parse_tree.h"
@@ -417,9 +417,9 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
     }
     {
         auto pgid = job->group->get_pgid();
-        if (pgid.has_value()) {
-            if (int err = execute_setpgid(p->pid, *pgid, is_parent)) {
-                report_setpgid_error(err, is_parent, *pgid, job.get(), p);
+        if (pgid) {
+            if (int err = execute_setpgid(p->pid, pgid->value, is_parent)) {
+                report_setpgid_error(err, is_parent, pgid->value, job.get(), p);
             }
         }
     }

@@ -25,7 +25,7 @@
 #include "fds.h"
 #include "flog.h"
 #include "function.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "proc.h"

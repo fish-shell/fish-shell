@@ -27,10 +27,11 @@
 #include "event.h"
 #include "exec.h"
 #include "expand.h"
+#include "ffi.h"
 #include "flog.h"
 #include "function.h"
 #include "io.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "maybe.h"
 #include "operation_context.h"
 #include "parse_constants.h"
@@ -1557,12 +1558,14 @@ void parse_execution_context_t::setup_group(job_t *j) {
 
     if (j->processes.front()->is_internal() || !this->use_job_control()) {
         // This job either doesn't have a pgroup (e.g. a simple block), or lives in fish's pgroup.
-        j->group = job_group_t::create(j->command(), j->wants_job_id());
+        rust::Box<job_group_t> group = create_job_group_ffi(j->command(), j->wants_job_id());
+        j->group = box_to_shared_ptr(std::move(group));
     } else {
         // This is a "real job" that gets its own pgroup.
         j->processes.front()->leads_pgrp = true;
         bool wants_terminal = !parser->libdata().is_event;
-        j->group = job_group_t::create_with_job_control(j->command(), wants_terminal);
+        auto group = create_job_group_with_job_control_ffi(j->command(), wants_terminal);
+        j->group = box_to_shared_ptr(std::move(group));
     }
     j->group->set_is_foreground(!j->is_initially_background());
     j->mut_flags().is_group_root = true;

@@ -1,7 +1,8 @@
 use crate::ffi;
+use crate::wchar_ext::WExt;
+use crate::wchar_ffi::c_str;
 use crate::wchar_ffi::{wstr, WCharFromFFI, WString};
-use std::ffi::c_uint;
-use std::mem;
+use std::{ffi::c_uint, mem};
 
 /// A scoped manager to save the current value of some variable, and optionally set it to a new
 /// value. When dropped, it restores the variable to its old value.
@@ -35,6 +36,7 @@ impl<'a, T> Drop for ScopedPush<'a, T> {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeStringStyle {
     Script(EscapeFlags),
     Url,
@@ -89,5 +91,23 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
         EscapeStringStyle::Regex => ffi::escape_string_style_t::STRING_STYLE_REGEX,
     };
 
-    ffi::escape_string(s.as_ptr(), flags_int.into(), style).from_ffi()
+    ffi::escape_string(c_str!(s), flags_int.into(), style).from_ffi()
+}
+
+/// Test if the string is a valid function name.
+pub fn valid_func_name(name: &wstr) -> bool {
+    if name.is_empty() {
+        return false;
+    };
+    if name.char_at(0) == '-' {
+        return false;
+    };
+    // A function name needs to be a valid path, so no / and no NULL.
+    if name.find_char('/').is_some() {
+        return false;
+    };
+    if name.find_char('\0').is_some() {
+        return false;
+    };
+    true
 }

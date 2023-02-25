@@ -70,7 +70,7 @@ mod parse_constants_ffi {
     }
 
     /// A range of source code.
-    #[derive(PartialEq, Eq)]
+    #[derive(PartialEq, Eq, Clone, Copy)]
     struct SourceRange {
         start: u32,
         length: u32,

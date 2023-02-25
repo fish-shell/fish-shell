@@ -478,7 +478,7 @@ impl Printf for &wstr {
 impl Printf for &str {
     fn format(&self, spec: &ConversionSpecifier) -> Result<WString> {
         if spec.conversion_type == ConversionType::String {
-            Ok((*self).into())
+            add_padding((*self).into(), spec)
         } else {
             Err(PrintfError::WrongType)
         }
@@ -513,4 +513,20 @@ impl Printf for &WString {
     fn format(&self, spec: &ConversionSpecifier) -> Result<WString> {
         self.as_utfstr().format(spec)
     }
+}
+
+fn add_padding(mut s: WString, spec: &ConversionSpecifier) -> Result<WString> {
+    let width: usize = match spec.width {
+        NumericParam::Literal(w) => w,
+        _ => {
+            return Err(PrintfError::Unknown); // should not happen at this point!!
+        }
+    }
+    .try_into()
+    .unwrap_or_default();
+    if s.len() < width {
+        let padding = L!(" ").repeat(width - s.len());
+        s.insert_utfstr(0, &padding);
+    };
+    Ok(s)
 }

@@ -1,7 +1,13 @@
 use crate::wchar;
+use crate::wchar_ffi::WCharToFFI;
+#[rustfmt::skip]
+use ::std::fmt::{self, Debug, Formatter};
+#[rustfmt::skip]
+use ::std::pin::Pin;
+#[rustfmt::skip]
+use ::std::slice;
+use crate::wchar::wstr;
 use autocxx::prelude::*;
-use core::pin::Pin;
-use core::slice;
 use cxx::SharedPtr;
 
 // autocxx has been hacked up to know about this.
@@ -10,14 +16,17 @@ pub type wchar_t = u32;
 include_cpp! {
     #include "builtin.h"
     #include "common.h"
+    #include "env.h"
     #include "event.h"
     #include "fallback.h"
     #include "fds.h"
     #include "flog.h"
     #include "io.h"
+    #include "parse_constants.h"
     #include "parser.h"
     #include "parse_util.h"
     #include "proc.h"
+    #include "re.h"
     #include "tokenizer.h"
     #include "wildcard.h"
     #include "wutil.h"
@@ -29,6 +38,7 @@ include_cpp! {
     generate!("wperror")
 
     generate_pod!("pipes_ffi_t")
+    generate!("env_stack_t")
     generate!("make_pipes_ffi")
 
     generate!("valid_var_name_char")
@@ -74,6 +84,12 @@ include_cpp! {
     generate!("signal_get_desc")
 
     generate!("fd_event_signaller_t")
+
+    generate_pod!("re::flags_t")
+    generate_pod!("re::re_error_t")
+    generate!("re::regex_t")
+    generate!("re::regex_result_ffi")
+    generate!("re::try_compile_ffi")
 }
 
 impl parser_t {
@@ -87,6 +103,14 @@ impl parser_t {
 
         unsafe { &mut *libdata }
     }
+
+    pub fn remove_var(&mut self, var: &wstr, flags: c_int) -> c_int {
+        self.pin().remove_var_ffi(&var.to_ffi(), flags)
+    }
+}
+
+pub fn try_compile(anchored: &wstr, flags: &re::flags_t) -> Pin<Box<re::regex_result_ffi>> {
+    re::try_compile_ffi(&anchored.to_ffi(), flags).within_box()
 }
 
 impl job_t {
@@ -115,6 +139,12 @@ impl From<wcharz_t> for wchar::WString {
     }
 }
 
+impl Debug for re::regex_t {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str("regex_t")
+    }
+}
+
 /// A bogus trait for turning &mut Foo into Pin<&mut Foo>.
 /// autocxx enforces that non-const methods must be called through Pin,
 /// but this means we can't pass around mutable references to types like parser_t.
@@ -133,11 +163,15 @@ pub trait Repin {
 }
 
 // Implement Repin for our types.
+impl Repin for env_stack_t {}
 impl Repin for io_streams_t {}
 impl Repin for job_t {}
 impl Repin for output_stream_t {}
 impl Repin for parser_t {}
 impl Repin for process_t {}
+impl Repin for re::regex_result_ffi {}
+
+unsafe impl Send for re::regex_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

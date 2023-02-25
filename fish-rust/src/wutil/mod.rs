@@ -1,12 +1,14 @@
 pub mod format;
 pub mod gettext;
 mod wcstoi;
+mod wrealpath;
 
 use std::io::Write;
 
 pub(crate) use format::printf::sprintf;
 pub(crate) use gettext::{wgettext, wgettext_fmt};
 pub use wcstoi::*;
+pub use wrealpath::*;
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
 pub fn perror(s: &str) {

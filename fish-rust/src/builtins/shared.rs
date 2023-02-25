@@ -4,6 +4,7 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{c_str, empty_wstring, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use libc::c_int;
+use std::os::fd::RawFd;
 use std::pin::Pin;
 
 #[cxx::bridge]
@@ -121,6 +122,20 @@ impl io_streams_t {
 
     pub fn ffi_ref(&self) -> &builtins_ffi::io_streams_t {
         unsafe { &*self.streams }
+    }
+
+    pub fn stdin_is_directly_redirected(&self) -> bool {
+        self.ffi_ref().ffi_stdin_is_directly_redirected()
+    }
+
+    pub fn stdin_fd(&self) -> Option<RawFd> {
+        let ret = self.ffi_ref().ffi_stdin_fd().0;
+
+        if ret < 0 {
+            None
+        } else {
+            Some(ret)
+        }
     }
 }
 

@@ -143,3 +143,15 @@ impl WCharFromFFI<WString> for cxx::SharedPtr<cxx::CxxWString> {
         WString::from_chars(self.as_chars())
     }
 }
+
+impl WCharFromFFI<Vec<u8>> for cxx::UniquePtr<cxx::CxxString> {
+    fn from_ffi(&self) -> Vec<u8> {
+        self.as_bytes().to_vec()
+    }
+}
+
+impl WCharFromFFI<Vec<u8>> for cxx::SharedPtr<cxx::CxxString> {
+    fn from_ffi(&self) -> Vec<u8> {
+        self.as_bytes().to_vec()
+    }
+}

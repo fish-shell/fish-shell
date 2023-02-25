@@ -1,25 +1,25 @@
 use std::{ffi::OsStr, fs::canonicalize, os::unix::prelude::OsStrExt};
 
-use cxx::{CxxString, UniquePtr};
+use cxx::let_cxx_string;
 
 use crate::{
-    ffi::{make_string, str2wcstring, wcs2string},
+    ffi::{str2wcstring, wcs2string},
     wchar::{wstr, WString},
     wchar_ffi::{WCharFromFFI, WCharToFFI},
 };
 
+/// Wide character realpath. The last path component does not need to be valid. If an error occurs,
+/// `wrealpath()` returns `None`
 pub fn wrealpath(pathname: &wstr) -> Option<WString> {
     if pathname.is_empty() {
         return None;
     }
 
-    let mut real_path: UniquePtr<CxxString> = make_string("");
-    let narrow_path_ptr: UniquePtr<CxxString> = wcs2string(&pathname.to_ffi());
-    // We can't `pop` from a `UniquePtr<CxxString>` so we copy it into a vector
-    let mut narrow_path = narrow_path_ptr.as_bytes().to_vec();
+    let mut real_path = Vec::new();
+    let mut narrow_path: Vec<u8> = wcs2string(&pathname.to_ffi()).from_ffi();
 
     // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
-    while narrow_path.len() > 1 && narrow_path[narrow_path.len() - 1] as char == '/' {
+    while narrow_path.len() > 1 && narrow_path[narrow_path.len() - 1] == b'/' {
         narrow_path.pop();
     }
 
@@ -29,18 +29,16 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
     let narrow_res = canonicalize(OsStr::from_bytes(&narrow_path));
 
     if let Ok(result) = narrow_res {
-        real_path
-            .pin_mut()
-            .push_bytes(result.as_os_str().as_bytes());
+        real_path.extend_from_slice(result.as_os_str().as_bytes());
     } else {
         // Check if everything up to the last path component is valid.
-        let pathsep_idx = narrow_path.iter().rposition(|&c| c as char == '/');
+        let pathsep_idx = narrow_path.iter().rposition(|&c| c == b'/');
 
         if let Some(0) = pathsep_idx {
             // If the only pathsep is the first character then it's an absolute path with a
             // single path component and thus doesn't need conversion.
-            real_path.pin_mut().clear();
-            real_path.pin_mut().push_bytes(&narrow_path);
+            real_path.clear();
+            real_path.extend(narrow_path);
         } else {
             // Only call realpath() on the portion up to the last component.
             let narrow_res = if let Some(pathsep_idx) = pathsep_idx {
@@ -55,18 +53,18 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
 
             let pathsep_idx = pathsep_idx.map_or(0, |idx| idx + 1);
 
-            real_path
-                .pin_mut()
-                .push_bytes(narrow_result.as_os_str().as_bytes());
+            real_path.extend_from_slice(narrow_result.as_os_str().as_bytes());
 
             // This test is to deal with cases such as /../../x => //x.
             if real_path.len() > 1 {
-                real_path.pin_mut().push_str("/");
+                real_path.push(b'/');
             }
 
-            real_path.pin_mut().push_bytes(&narrow_path[pathsep_idx..]);
+            real_path.extend_from_slice(&narrow_path[pathsep_idx..]);
         }
     }
 
-    Some(str2wcstring(real_path.as_ref()?).from_ffi())
+    let_cxx_string!(s = real_path);
+
+    Some(str2wcstring(&s).from_ffi())
 }

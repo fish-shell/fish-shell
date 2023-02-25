@@ -76,7 +76,7 @@ where
                 return Ok(ParseResult {
                     result: 0,
                     negative: false,
-                    consumed_all: chars.peek() == None,
+                    consumed_all: chars.peek().is_none(),
                 });
             }
         }
@@ -105,7 +105,7 @@ where
     if result == 0 {
         negative = false;
     }
-    let consumed_all = chars.peek() == None;
+    let consumed_all = chars.peek().is_none();
     Ok(ParseResult {
         result,
         negative,

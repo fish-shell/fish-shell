@@ -55,6 +55,7 @@ pub fn push_timer(enabled: bool) -> Option<PrintElapsedOnDrop> {
 /// cxx bridge does not support UniquePtr<NativeRustType> so we can't use a null UniquePtr to
 /// represent a None, and cxx bridge does not support Box<Option<NativeRustType>> so we need to make
 /// our own wrapper type that incorporates the Some/None states directly into it.
+#[allow(clippy::large_enum_variant)]
 enum PrintElapsedOnDropFfi {
     Some(PrintElapsedOnDrop),
     None,

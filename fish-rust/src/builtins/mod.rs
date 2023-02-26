@@ -1,7 +1,7 @@
 pub mod shared;
 
 pub mod abbr;
-pub mode block;
+pub mod block;
 pub mod contains;
 pub mod echo;
 pub mod emit;

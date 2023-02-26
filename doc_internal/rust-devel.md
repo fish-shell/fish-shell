@@ -60,6 +60,7 @@ The basic development loop for this port:
 4. Decide whether any existing C++ callers should invoke the Rust implementation, or whether we should keep the C++ one.
    - Utility functions may have both a Rust and C++ implementation. An example is `FLOG` where interop is too hard.
    - Major components (e.g. builtin implementations) should _not_ be duplicated; instead the Rust should call C++ or vice-versa.
+5. Remember to run `cargo fmt` and `cargo clippy` to keep the codebase somewhat clean (otherwise CI will fail). If you use rust-analyzer, you can run clippy automatically by setting `rust-analyzer.checkOnSave.command = "clippy"`.
 
 You will likely run into limitations of [`autocxx`](https://google.github.io/autocxx/) and to a lesser extent [`cxx`](https://cxx.rs/). See the [FFI sections](#ffi) below.
 

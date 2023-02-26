@@ -98,7 +98,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     // We don't have to port the PTHREAD_CREATE_DETACHED logic. Rust threads are detached
     // automatically if the returned join handle is dropped.
 
-    let result = match std::thread::Builder::new().spawn(|| callback()) {
+    let result = match std::thread::Builder::new().spawn(callback) {
         Ok(handle) => {
             let id = handle.thread().id();
             FLOG!(iothread, "rust thread", id, "spawned");

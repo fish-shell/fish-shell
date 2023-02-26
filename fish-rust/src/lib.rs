@@ -18,6 +18,7 @@ mod ffi_init;
 mod ffi_tests;
 mod flog;
 mod future_feature_flags;
+mod job_group;
 mod nix;
 mod parse_constants;
 mod redirection;
@@ -34,4 +35,7 @@ mod wchar_ffi;
 mod wgetopt;
 mod wutil;
 
+mod abbrs;
 mod builtins;
+mod env;
+mod re;

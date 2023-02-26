@@ -12,8 +12,8 @@
 #include <unistd.h>  // IWYU pragma: keep
 #include <wctype.h>
 
-#include <cwchar>
 #include <cstdlib>
+#include <cwchar>
 #if HAVE_GETTEXT
 #include <libintl.h>
 #endif
@@ -57,9 +57,9 @@ int fish_mkstemp_cloexec(char *name_template) {
     return result_fd;
 }
 
-/// Fallback implementations of wcsncasecmp and wcscasecmp. On systems where these are not needed (e.g.
-/// building on Linux) these should end up just being stripped, as they are static functions that
-/// are not referenced in this file.
+/// Fallback implementations of wcsncasecmp and wcscasecmp. On systems where these are not needed
+/// (e.g. building on Linux) these should end up just being stripped, as they are static functions
+/// that are not referenced in this file.
 // cppcheck-suppress unusedFunction
 [[gnu::unused]] static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {

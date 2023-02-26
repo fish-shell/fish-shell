@@ -1333,8 +1333,7 @@ static bool command_is_valid(const wcstring &cmd, statement_decoration_t decorat
     if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd);
 
     // Abbreviations
-    if (!is_valid && abbreviation_ok)
-        is_valid = abbrs_get_set()->has_match(cmd, abbrs_position_t::command);
+    if (!is_valid && abbreviation_ok) is_valid = abbrs_has_match(cmd, abbrs_position_t::command);
 
     // Regular commands
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, vars).has_value();

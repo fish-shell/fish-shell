@@ -135,6 +135,10 @@ maybe_t<match_range_t> regex_t::match(const wcstring &subject) const {
     return this->match(md, subject);
 }
 
+bool regex_t::matches_ffi(const wcstring &subject) const {
+    return this->match(subject).has_value();
+}
+
 maybe_t<match_range_t> regex_t::group(const match_data_t &md, size_t group_idx) const {
     if (group_idx >= md.max_capture || group_idx >= pcre2_get_ovector_count(get_md(md.data))) {
         return none();
@@ -295,12 +299,18 @@ regex_t::regex_t(adapters::bytecode_ptr_t &&code) : code_(std::move(code)) {
 
 wcstring re_error_t::message() const { return message_for_code(this->code); }
 
-wcstring re::make_anchored(wcstring pattern) {
-    // PATTERN -> ^(:?PATTERN)$.
-    const wchar_t *prefix = L"^(?:";
-    const wchar_t *suffix = L")$";
-    pattern.reserve(pattern.size() + wcslen(prefix) + wcslen(suffix));
-    pattern.insert(0, prefix);
-    pattern.append(suffix);
-    return pattern;
+re::regex_result_ffi re::try_compile_ffi(const wcstring &pattern, const flags_t &flags) {
+    re_error_t error{};
+    auto regex = regex_t::try_compile(pattern, flags, &error);
+
+    if (regex) {
+        return regex_result_ffi{std::make_unique<re::regex_t>(regex.acquire()), error};
+    }
+
+    return re::regex_result_ffi{nullptr, error};
 }
+
+bool re::regex_result_ffi::has_error() const { return error.code != 0; }
+re::re_error_t re::regex_result_ffi::get_error() const { return error; };
+
+std::unique_ptr<re::regex_t> re::regex_result_ffi::get_regex() { return std::move(regex); }

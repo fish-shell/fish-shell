@@ -41,6 +41,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
 #include "fds.rs.h"
 #include "parse_constants.rs.h"
 
@@ -836,14 +837,16 @@ static void test_fd_monitor() {
         }
 
         static void trampoline(autoclose_fd_t2 &fd, item_wake_reason_t reason, uint8_t *param) {
-            auto &instance = *(item_maker_t*)(param);
+            auto &instance = *(item_maker_t *)(param);
             instance.callback(fd, reason);
         }
 
         explicit item_maker_t(uint64_t timeout_usec) {
             auto pipes = make_autoclose_pipes().acquire();
             writer = std::move(pipes.write);
-            item = std::make_unique<rust::Box<fd_monitor_item_t>>(make_fd_monitor_item_t(pipes.read.acquire(), timeout_usec, (uint8_t *)item_maker_t::trampoline, (uint8_t*)this));
+            item = std::make_unique<rust::Box<fd_monitor_item_t>>(
+                make_fd_monitor_item_t(pipes.read.acquire(), timeout_usec,
+                                       (uint8_t *)item_maker_t::trampoline, (uint8_t *)this));
         }
 
         // Write 42 bytes to our write end.
@@ -2400,15 +2403,11 @@ static void test_ifind_fuzzy() {
 static void test_abbreviations() {
     say(L"Testing abbreviations");
     {
-        auto literal_abbr = [](const wchar_t *name, const wchar_t *repl,
-                               abbrs_position_t pos = abbrs_position_t::command) {
-            return abbreviation_t(name, name /* key */, repl, pos);
-        };
         auto abbrs = abbrs_get_set();
-        abbrs->add(literal_abbr(L"gc", L"git checkout"));
-        abbrs->add(literal_abbr(L"foo", L"bar"));
-        abbrs->add(literal_abbr(L"gx", L"git checkout"));
-        abbrs->add(literal_abbr(L"yin", L"yang", abbrs_position_t::anywhere));
+        abbrs->add(L"gc", L"gc", L"git checkout", abbrs_position_t::command, false);
+        abbrs->add(L"foo", L"foo", L"bar", abbrs_position_t::command, false);
+        abbrs->add(L"gx", L"gx", L"git checkout", abbrs_position_t::command, false);
+        abbrs->add(L"yin", L"yin", L"yang", abbrs_position_t::anywhere, false);
     }
 
     // Helper to expand an abbreviation, enforcing we have no more than one result.
@@ -2420,7 +2419,7 @@ static void test_abbreviations() {
         if (result.empty()) {
             return none();
         }
-        return result.front().replacement;
+        return *result.front().replacement;
     };
 
     auto cmd = abbrs_position_t::command;
@@ -2442,7 +2441,7 @@ static void test_abbreviations() {
                 cmdline, cursor_pos.value_or(cmdline.size()), parser_t::principal_parser())) {
             wcstring cmdline_expanded = cmdline;
             std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
-            apply_edit(&cmdline_expanded, &colors, edit_t{replacement->range, replacement->text});
+            apply_edit(&cmdline_expanded, &colors, edit_t{replacement->range, *replacement->text});
             return cmdline_expanded;
         }
         return none_t();
@@ -2495,19 +2494,6 @@ static void test_abbreviations() {
     if (result != L"command yang") {
         err(L"command yin incorrectly expanded on line %ld to '%ls'", (long)__LINE__,
             result->c_str());
-    }
-
-    // Renaming works.
-    {
-        auto abbrs = abbrs_get_set();
-        do_test(!abbrs->has_name(L"gcc"));
-        do_test(abbrs->has_name(L"gc"));
-        abbrs->rename(L"gc", L"gcc");
-        do_test(abbrs->has_name(L"gcc"));
-        do_test(!abbrs->has_name(L"gc"));
-        do_test(!abbrs->erase(L"gc"));
-        do_test(abbrs->erase(L"gcc"));
-        do_test(!abbrs->erase(L"gcc"));
     }
 }
 
@@ -3483,7 +3469,8 @@ static void test_complete() {
 
     // Test abbreviations.
     function_add(L"testabbrsonetwothreefour", func_props);
-    abbrs_get_set()->add(abbreviation_t(L"somename", L"testabbrsonetwothreezero", L"expansion"));
+    abbrs_get_set()->add(L"somename", L"testabbrsonetwothreezero", L"expansion",
+                         abbrs_position_t::command, false);
     completions = complete(L"testabbrsonetwothree", {}, parser->context());
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"four");
@@ -6825,23 +6812,6 @@ static void test_re_basic() {
     }
     do_test(join_strings(matches, L',') == L"AA,CC,11");
     do_test(join_strings(captures, L',') == L"A,C,1");
-
-    // Test make_anchored
-    re = regex_t::try_compile(make_anchored(L"ab(.+?)"));
-    do_test(re.has_value());
-    do_test(!re->match(L""));
-    do_test(!re->match(L"ab"));
-    do_test((re->match(L"abcd") == match_range_t{0, 4}));
-    do_test(!re->match(L"xabcd"));
-    do_test((re->match(L"abcdefghij") == match_range_t{0, 10}));
-
-    re = regex_t::try_compile(make_anchored(L"(a+)|(b+)"));
-    do_test(re.has_value());
-    do_test(!re->match(L""));
-    do_test(!re->match(L"aabb"));
-    do_test((re->match(L"aaaa") == match_range_t{0, 4}));
-    do_test((re->match(L"bbbb") == match_range_t{0, 4}));
-    do_test(!re->match(L"aaaax"));
 }
 
 static void test_re_reset() {

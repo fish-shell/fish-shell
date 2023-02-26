@@ -679,11 +679,11 @@ void completer_t::complete_abbr(const wcstring &cmd) {
     completion_list_t possible_comp;
     std::unordered_map<wcstring, wcstring> descs;
     {
-        auto abbrs = abbrs_get_set();
-        for (const auto &abbr : abbrs->list()) {
-            if (!abbr.is_regex()) {
-                possible_comp.emplace_back(abbr.key);
-                descs[abbr.key] = abbr.replacement;
+        auto abbrs = abbrs_list();
+        for (const auto &abbr : abbrs) {
+            if (!abbr.is_regex) {
+                possible_comp.emplace_back(*abbr.key);
+                descs[*abbr.key] = *abbr.replacement;
             }
         }
     }
@@ -1203,7 +1203,7 @@ bool completer_t::try_complete_variable(const wcstring &str) {
         wchar_t c = str.at(in_pos);
         if (!valid_var_name_char(c)) {
             // This character cannot be in a variable, reset the dollar.
-            variable_start = -1;
+            variable_start = wcstring::npos;
         }
 
         switch (c) {

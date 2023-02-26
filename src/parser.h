@@ -16,7 +16,6 @@
 #include "cxx.h"
 #include "env.h"
 #include "expand.h"
-#include "job_group.h"
 #include "maybe.h"
 #include "operation_context.h"
 #include "parse_constants.h"
@@ -25,9 +24,10 @@
 #include "util.h"
 #include "wait_handle.h"
 
-struct event_t;
-class io_chain_t;
 class autoclose_fd_t;
+class io_chain_t;
+struct event_t;
+struct job_group_t;
 
 /// Types of blocks.
 enum class block_type_t : uint8_t {
@@ -385,6 +385,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Get the variables.
     env_stack_t &vars() { return *variables; }
     const env_stack_t &vars() const { return *variables; }
+
+    int remove_var_ffi(const wcstring &key, int mode) { return vars().remove(key, mode); }
 
     /// Get the library data.
     library_data_t &libdata() { return library_data; }

@@ -25,7 +25,7 @@
 #include "fds.h"
 #include "flog.h"
 #include "function.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "proc.h"
@@ -674,7 +674,7 @@ RustFFIJobList parser_t::ffi_jobs() const {
 bool parser_t::ffi_has_funtion_block() const {
     for (const auto &b : blocks()) {
         if (b.is_function_call()) {
-             return true;
+            return true;
         }
     }
     return false;

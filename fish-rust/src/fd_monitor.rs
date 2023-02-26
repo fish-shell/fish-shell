@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use self::fd_monitor::{new_fd_event_signaller, FdEventSignaller, ItemWakeReason};
+use self::fd_monitor_ffi::{new_fd_event_signaller, FdEventSignaller, ItemWakeReason};
 use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
 use crate::ffi::void_ptr;
@@ -13,7 +13,7 @@ use crate::wutil::perror;
 use cxx::SharedPtr;
 
 #[cxx::bridge]
-mod fd_monitor {
+mod fd_monitor_ffi {
     /// Reason for waking an item
     #[repr(u8)]
     #[cxx_name = "item_wake_reason_t"]
@@ -106,6 +106,7 @@ type FfiCallback = extern "C" fn(*mut AutoCloseFd, u8, void_ptr);
 /// only `src/io.cpp`) is ported to rust
 enum FdMonitorCallback {
     None,
+    #[allow(clippy::type_complexity)]
     Native(Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>),
     Ffi(FfiCallback /* fn ptr */, void_ptr /* param */),
 }
@@ -300,6 +301,7 @@ struct BackgroundFdMonitor {
 }
 
 impl FdMonitor {
+    #[allow(clippy::boxed_local)]
     pub fn add_ffi(&self, item: Box<FdMonitorItem>) -> u64 {
         self.add(*item).0
     }
@@ -364,8 +366,7 @@ impl FdMonitor {
         if timeout_usecs != FdReadableSet::kNoTimeout {
             item.timeout = Some(Duration::from_micros(timeout_usecs));
         }
-        let item_id = self.add(item).0;
-        item_id
+        self.add(item).0
     }
 
     /// Mark that the item with the given ID needs to be woken up explicitly.
@@ -416,7 +417,7 @@ impl BackgroundFdMonitor {
         loop {
             // Poke any items that need it
             if !pokelist.is_empty() {
-                self.poke(&mut pokelist);
+                self.poke(&pokelist);
                 pokelist.clear();
             }
             fds.clear();
@@ -431,7 +432,7 @@ impl BackgroundFdMonitor {
 
             for item in &mut self.items {
                 fds.add(item.fd.as_raw_fd());
-                if !item.last_time.is_some() {
+                if item.last_time.is_none() {
                     item.last_time = Some(now);
                 }
                 timeout = timeout.min(item.timeout.unwrap_or(Duration::MAX));
@@ -530,7 +531,7 @@ impl BackgroundFdMonitor {
     /// poke list is consumed after this. This is only called from the background thread.
     fn poke(&mut self, pokelist: &[FdMonitorItemId]) {
         self.items.retain_mut(|item| {
-            let action = item.maybe_poke_item(&*pokelist);
+            let action = item.maybe_poke_item(pokelist);
             if action == ItemAction::Remove {
                 FLOG!(fd_monitor, "Removing fd", item.fd.as_raw_fd());
             }

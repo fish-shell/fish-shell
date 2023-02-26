@@ -87,9 +87,9 @@ struct termsize_t;
 // Make sure the ranges defined above don't exceed the range for non-characters.
 // This is to make sure we didn't do something stupid in subdividing the
 // Unicode range for our needs.
-//#if WILDCARD_RESERVED_END > RESERVED_CHAR_END
-//#error
-//#endif
+// #if WILDCARD_RESERVED_END > RESERVED_CHAR_END
+// #error
+// #endif
 
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.

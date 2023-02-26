@@ -218,4 +218,6 @@ class universal_notifier_t {
 
 wcstring get_runtime_path();
 
+universal_notifier_t *default_notifier_ffi();
+
 #endif

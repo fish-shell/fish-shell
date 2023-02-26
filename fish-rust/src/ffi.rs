@@ -30,6 +30,10 @@ include_cpp! {
     #include "tokenizer.h"
     #include "wildcard.h"
     #include "wutil.h"
+    #include "iothread.h"
+    #include "env_universal_common.h"
+    #include "input_common.h"
+    #include "iothread.h"
 
     safety!(unsafe_ffi)
 
@@ -93,6 +97,16 @@ include_cpp! {
     generate!("re::try_compile_ffi")
     generate!("wcs2string")
     generate!("str2wcstring")
+
+    generate!("iothread_port")
+    generate!("default_notifier_ffi")
+    generate!("universal_notifier_t")
+    generate!("read_blocked")
+    generate!("read_mbtowc_t")
+    generate!("read_mbtowc_t_create")
+    generate!("is_single_byte_locale")
+    generate!("iothread_service_main")
+    generate!("is_windows_subsystem_for_linux")
 }
 
 impl parser_t {
@@ -107,7 +121,7 @@ impl parser_t {
         unsafe { &mut *libdata }
     }
 
-    pub fn remove_var(&mut self, var: &wstr, flags: c_int) -> c_int {
+    pub fn remove_var(&mut self, var: &wstr, flags: u16) -> c_int {
         self.pin().remove_var_ffi(&var.to_ffi(), flags)
     }
 }
@@ -168,16 +182,20 @@ pub trait Repin {
 // Implement Repin for our types.
 impl Repin for block_t {}
 impl Repin for env_stack_t {}
+impl Repin for environment_t {}
 impl Repin for io_streams_t {}
 impl Repin for job_t {}
 impl Repin for output_stream_t {}
 impl Repin for parser_t {}
 impl Repin for process_t {}
 impl Repin for re::regex_result_ffi {}
+impl Repin for universal_notifier_t {}
+impl Repin for read_mbtowc_t {}
 
 unsafe impl Send for re::regex_t {}
 
 pub use autocxx::c_int;
+pub use autocxx::moveit::moveit;
 pub use ffi::*;
 pub use libc::c_char;
 

@@ -112,10 +112,6 @@ pub fn valid_func_name(name: &wstr) -> bool {
     true
 }
 
-pub const fn assert_send<T: Send>() -> () {
-    ()
-}
+pub const fn assert_send<T: Send>() {}
 
-pub const fn assert_sync<T: Sync>() -> () {
-    ()
-}
+pub const fn assert_sync<T: Sync>() {}

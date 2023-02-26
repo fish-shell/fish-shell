@@ -1,0 +1,42 @@
+name: Rust checks
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  rustfmt:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: stable
+    - name: cargo fmt
+      run: |
+        cd fish-rust
+        cargo fmt --check --all
+
+  clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: SetupRust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: stable
+    - name: Install deps
+      run: |
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
+        sudo pip3 install pexpect
+    - name: cmake
+      run: |
+        cmake -B build
+    - name: cargo clippy
+      run: |
+        cd fish-rust
+        cargo clippy --workspace --all-targets -- --deny=warnings

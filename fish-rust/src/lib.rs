@@ -4,6 +4,7 @@
 #![allow(clippy::needless_return)]
 #![allow(clippy::manual_is_ascii_check)]
 
+#[macro_use]
 mod common;
 mod fd_monitor;
 mod fd_readable_set;

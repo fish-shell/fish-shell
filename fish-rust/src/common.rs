@@ -115,3 +115,75 @@ pub fn valid_func_name(name: &wstr) -> bool {
 pub const fn assert_send<T: Send>() {}
 
 pub const fn assert_sync<T: Sync>() {}
+
+/// Asserts that a slice is alphabetically sorted by a [`&wstr`] `name` field.
+///
+/// Mainly useful for static asserts/const eval.
+///
+/// # Panics
+///
+/// This function panics if the given slice is unsorted.
+///
+/// # Examples
+///
+/// ```rust
+/// const COLORS: &[(&wstr, u32)] = &[
+///     // must be in alphabetical order
+///     (L!("blue"), 0x0000ff),
+///     (L!("green"), 0x00ff00),
+///     (L!("red"), 0xff0000),
+/// ];
+///
+/// assert_sorted_by_name!(COLORS, 0);
+/// ```
+macro_rules! assert_sorted_by_name {
+    ($slice:expr, $field:tt) => {
+        const _: () = {
+            use std::cmp::Ordering;
+
+            // ugly const eval workarounds below.
+            const fn cmp_slice(s1: &[char], s2: &[char]) -> Ordering {
+                let mut i = 0;
+                while i < s1.len() {
+                    if s2.len() <= i {
+                        return Ordering::Greater;
+                    }
+                    if s1[i] < s2[i] {
+                        return Ordering::Less;
+                    } else if s1[i] > s2[i] {
+                        return Ordering::Greater;
+                    }
+                    i += 1;
+                }
+
+                if s1.len() < s2.len() {
+                    Ordering::Less
+                } else {
+                    Ordering::Equal
+                }
+            }
+
+            let mut i = 0;
+            let mut prev: Option<&wstr> = None;
+            while i < $slice.len() {
+                let cur = $slice[i].$field;
+                if let Some(prev) = prev {
+                    assert!(
+                        matches!(
+                            cmp_slice(prev.as_char_slice(), cur.as_char_slice()),
+                            Ordering::Equal | Ordering::Less
+                        ),
+                        "array must be sorted"
+                    );
+                }
+
+                prev = Some(cur);
+
+                i += 1;
+            }
+        };
+    };
+    ($slice:expr) => {
+        assert_sorted_by_name!($slice, name);
+    };
+}

@@ -6,6 +6,7 @@
 
 #[macro_use]
 mod common;
+mod color;
 mod fd_monitor;
 mod fd_readable_set;
 mod fds;

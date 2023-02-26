@@ -1,4 +1,4 @@
-use self::job_group::pgid_t;
+use self::ffi::pgid_t;
 use crate::common::{assert_send, assert_sync};
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use cxx::{CxxWString, UniquePtr};
@@ -8,7 +8,7 @@ use std::sync::Mutex;
 use widestring::WideUtfString;
 
 #[cxx::bridge]
-mod job_group {
+mod ffi {
     // Not only does cxx bridge not recognize libc::pid_t, it doesn't even recognize i32 as a POD
     // type! :sadface:
     struct pgid_t {

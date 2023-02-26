@@ -37,7 +37,7 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
         // Check if everything up to the last path component is valid.
         let pathsep_idx = narrow_path.iter().rposition(|&c| c == b'/');
 
-        if let Some(0) = pathsep_idx {
+        if pathsep_idx == Some(0) {
             // If the only pathsep is the first character then it's an absolute path with a
             // single path component and thus doesn't need conversion.
             narrow_path

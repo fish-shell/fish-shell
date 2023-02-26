@@ -1,1 +1,2 @@
 deno completions fish | source
+complete -f -c deno -n "__fish_seen_subcommand_from task" -a "(deno eval \"try {console.log(Object.keys(JSON.parse(Deno.readTextFileSync('deno.json')).tasks).join('\n'))} catch {} \")"

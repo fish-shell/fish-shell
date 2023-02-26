@@ -942,7 +942,7 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     mod_result_t set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t val);
 
     /// Remove a variable under the name \p key.
-    mod_result_t remove(const wcstring &key, int var_mode);
+    mod_result_t remove(const wcstring &key, env_mode_flags_t var_mode);
 
     /// Push a new shadowing local scope.
     void push_shadowing();
@@ -1274,7 +1274,7 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
     return result;
 }
 
-mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
+mod_result_t env_stack_impl_t::remove(const wcstring &key, env_mode_flags_t mode) {
     const query_t query(mode);
 
     // Users can't remove read-only keys.
@@ -1415,7 +1415,7 @@ int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode) {
     return set(key, mode, {});
 }
 
-int env_stack_t::remove(const wcstring &key, int mode) {
+int env_stack_t::remove(const wcstring &key, env_mode_flags_t mode) {
     mod_result_t ret = acquire_impl()->remove(key, mode);
     if (ret.status == ENV_OK) {
         if (ret.global_modified || is_principal()) {

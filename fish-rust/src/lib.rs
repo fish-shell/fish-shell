@@ -38,4 +38,5 @@ mod wutil;
 mod abbrs;
 mod builtins;
 mod env;
+mod input_common;
 mod re;

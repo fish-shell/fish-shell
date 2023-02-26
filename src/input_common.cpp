@@ -120,26 +120,6 @@ static readb_result_t readb(int in_fd) {
     }
 }
 
-// Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
-// set.
-void update_wait_on_escape_ms(const environment_t& vars) {
-    auto escape_time_ms = vars.get(L"fish_escape_delay_ms");
-    if (escape_time_ms.missing_or_empty()) {
-        wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
-        return;
-    }
-
-    long tmp = fish_wcstol(escape_time_ms->as_string().c_str());
-    if (errno || tmp < 10 || tmp >= 5000) {
-        std::fwprintf(stderr,
-                      L"ignoring fish_escape_delay_ms: value '%ls' "
-                      L"is not an integer or is < 10 or >= 5000 ms\n",
-                      escape_time_ms->as_string().c_str());
-    } else {
-        wait_on_escape_ms = static_cast<int>(tmp);
-    }
-}
-
 maybe_t<char_event_t> input_event_queue_t::try_pop() {
     if (queue_.empty()) {
         return none();
@@ -272,3 +252,48 @@ void input_event_queue_t::prepare_to_select() {}
 void input_event_queue_t::select_interrupted() {}
 void input_event_queue_t::uvar_change_notified() {}
 input_event_queue_t::~input_event_queue_t() = default;
+
+// Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
+// set.
+void update_wait_on_escape_ms(const environment_t& vars) {
+    auto escape_time_ms = vars.get(L"fish_escape_delay_ms");
+    if (escape_time_ms.missing_or_empty()) {
+        wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
+        return;
+    }
+
+    long tmp = fish_wcstol(escape_time_ms->as_string().c_str());
+    if (errno || tmp < 10 || tmp >= 5000) {
+        std::fwprintf(stderr,
+                      L"ignoring fish_escape_delay_ms: value '%ls' "
+                      L"is not an integer or is < 10 or >= 5000 ms\n",
+                      escape_time_ms->as_string().c_str());
+    } else {
+        wait_on_escape_ms = static_cast<int>(tmp);
+    }
+}
+
+bool is_single_byte_locale() { return MB_CUR_MAX == 1; }
+
+int read_mbtowc_t::read_mbtowc(char rb) {
+    size_t sz = std::mbrtowc(&res, &rb, 1, &inner);
+    switch (sz) {
+        case static_cast<size_t>(-1):
+            std::memset(&inner, '\0', sizeof(inner));
+            return -1;
+
+        case static_cast<size_t>(-2):
+            // Sequence not yet complete.
+            return -2;
+
+        case 0:
+            // Actual nul char.
+            return 0;
+
+        default:
+            // Sequence complete.
+            return 1;
+    }
+}
+
+read_mbtowc_t read_mbtowc_t_create() { return read_mbtowc_t{}; }

@@ -11,6 +11,9 @@
 
 #include "common.h"
 #include "maybe.h"
+#if INCLUDE_RUST_HEADERS
+#include "input_common.rs.h"
+#endif
 
 enum class readline_cmd_t {
     beginning_of_line,
@@ -183,10 +186,6 @@ class char_event_t {
     }
 };
 
-/// Adjust the escape timeout.
-class environment_t;
-void update_wait_on_escape_ms(const environment_t &vars);
-
 /// A class which knows how to produce a stream of input events.
 /// This is a base class; you may subclass it for its override points.
 class input_event_queue_t {
@@ -246,5 +245,20 @@ class input_event_queue_t {
     int in_{0};
     std::deque<char_event_t> queue_;
 };
+
+/// Adjust the escape timeout.
+class environment_t;
+void update_wait_on_escape_ms(const environment_t &vars);
+
+bool is_single_byte_locale();
+
+struct read_mbtowc_t {
+    wchar_t res{};
+    mbstate_t inner = {};
+    int read_mbtowc(char rb);
+    wchar_t get_char() const { return res; };
+};
+
+read_mbtowc_t read_mbtowc_t_create();
 
 #endif

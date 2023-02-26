@@ -26,6 +26,7 @@ fn main() -> miette::Result<()> {
         "src/ffi_init.rs",
         "src/ffi_tests.rs",
         "src/future_feature_flags.rs",
+        "src/input_common.rs",
         "src/job_group.rs",
         "src/parse_constants.rs",
         "src/redirection.rs",

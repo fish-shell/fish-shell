@@ -2,6 +2,9 @@ use crate::ffi;
 use nix::unistd;
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 
+/// A sentinel value indicating no timeout.
+pub const kNoTimeout: u64 = u64::MAX;
+
 /// A helper type for managing and automatically closing a file descriptor
 ///
 /// This was implemented in rust as a port of the existing C++ code but it didn't take its place

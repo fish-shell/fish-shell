@@ -1388,6 +1388,8 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
 #endif
 }
 
+universal_notifier_t *default_notifier_ffi() { return &universal_notifier_t::default_notifier(); }
+
 universal_notifier_t &universal_notifier_t::default_notifier() {
     static std::unique_ptr<universal_notifier_t> result =
         new_notifier_for_strategy(universal_notifier_t::resolve_default_strategy());

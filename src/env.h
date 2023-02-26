@@ -254,7 +254,7 @@ class env_stack_t final : public environment_t {
     /// the scope of the variable that should be erased.
     ///
     /// \return zero if the variable existed, and non-zero if the variable did not exist
-    int remove(const wcstring &key, int mode);
+    int remove(const wcstring &key, env_mode_flags_t mode);
 
     /// Push the variable stack. Used for implementing local variables for functions and for-loops.
     void push(bool new_scope);

@@ -39,15 +39,14 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
-  - ``apkanalyzer``
+  - ``apkanalyzer`` (:issue:`9558`)
+  - ``neovim`` (:issue:`9543`)
   - ``otool``
   - ``pre-commit`` (:issue:`9521`)
   - ``proxychains`` (:issue:`9486`)
-  - ``mix phx``
-  - ``neovim``
-  - ``scrypt``
-  - ``stow``
-  - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore``
+  - ``scrypt`` (:issue:`9583`)
+  - ``stow`` (:issue:`9571`)
+  - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
 - Improvements to many completions.
 - git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)

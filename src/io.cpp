@@ -120,8 +120,8 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     args->instance = this;
     args->promise = std::move(promise);
 
-    item_id_ =
-        fd_monitor().add_item(fd.acquire(), kNoTimeout, (uint8_t *)item_callback_trampoline, (uint8_t *)args);
+    item_id_ = fd_monitor().add_item(fd.acquire(), kNoTimeout, (uint8_t *)item_callback_trampoline,
+                                     (uint8_t *)args);
 }
 
 /// This is a hack to work around the difficulties in passing a capturing lambda across FFI

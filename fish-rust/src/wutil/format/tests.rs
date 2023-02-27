@@ -29,6 +29,12 @@ fn check_fmt<T: Printf>(nfmt: &str, arg: T, expected: &str) {
     assert_eq!(our_result, expected);
 }
 
+fn check_fmt_2<T: Printf, T2: Printf>(nfmt: &str, arg: T, arg2: T2, expected: &str) {
+    let fmt: WString = nfmt.into();
+    let our_result = sprintf!(&fmt, arg, arg2);
+    assert_eq!(our_result, expected);
+}
+
 #[test]
 fn test_int() {
     check_fmt("%d", 12, "12");
@@ -89,6 +95,7 @@ fn test_str() {
         "test % with string: FOO yay\n",
     );
     check_fmt("test char %c", '~', "test char ~");
+    check_fmt_2("%*ls", 5, "^", "    ^");
 }
 
 #[test]

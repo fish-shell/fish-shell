@@ -1136,10 +1136,7 @@ fn parse_fd(s: &wstr) -> RawFd {
         })
         .collect();
     let s = std::str::from_utf8(chars.as_slice()).unwrap();
-    match s.parse() {
-        Ok(val) => val,
-        Err(_) => -1,
-    }
+    s.parse().unwrap_or(-1)
 }
 
 fn new_move_word_state_machine(syl: MoveWordStyle) -> Box<MoveWordStateMachine> {

@@ -165,10 +165,7 @@ pub fn random(
     };
 
     // Safe because end was a valid i64 and the result here is in the range start..=end.
-    let result: i64 = start
-        .checked_add_unsigned(rand * step)
-        .and_then(|x| x.try_into().ok())
-        .unwrap();
+    let result: i64 = start.checked_add_unsigned(rand * step).unwrap();
 
     streams.out.append(sprintf!(L!("%d\n"), result));
     return STATUS_CMD_OK;

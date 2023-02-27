@@ -25,7 +25,7 @@
 #include "fds.h"
 #include "flog.h"
 #include "function.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "proc.h"
@@ -674,11 +674,17 @@ RustFFIJobList parser_t::ffi_jobs() const {
 bool parser_t::ffi_has_funtion_block() const {
     for (const auto &b : blocks()) {
         if (b.is_function_call()) {
-             return true;
+            return true;
         }
     }
     return false;
 }
+
+uint64_t parser_t::ffi_global_event_blocks() const { return global_event_blocks; }
+void parser_t::ffi_incr_global_event_blocks() { ++global_event_blocks; }
+void parser_t::ffi_decr_global_event_blocks() { --global_event_blocks; }
+
+size_t parser_t::ffi_blocks_size() const { return block_list.size(); }
 
 block_t::block_t(block_type_t t) : block_type(t) {}
 
@@ -748,6 +754,10 @@ wcstring block_t::description() const {
     return result;
 }
 
+bool block_t::is_function_call() const {
+    return type() == block_type_t::function_call || type() == block_type_t::function_call_no_shadow;
+}
+
 // Various block constructors.
 
 block_t block_t::if_block() { return block_t(block_type_t::if_block); }
@@ -782,3 +792,7 @@ block_t block_t::scope_block(block_type_t type) {
 }
 block_t block_t::breakpoint_block() { return block_t(block_type_t::breakpoint); }
 block_t block_t::variable_assignment_block() { return block_t(block_type_t::variable_assignment); }
+
+void block_t::ffi_incr_event_blocks() {
+    ++event_blocks;
+}

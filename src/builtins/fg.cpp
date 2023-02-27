@@ -20,13 +20,13 @@
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../fds.h"
 #include "../io.h"
-#include "../job_group.h"
 #include "../maybe.h"
 #include "../parser.h"
 #include "../proc.h"
 #include "../reader.h"
 #include "../tokenizer.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "job_group.rs.h"
 
 /// Builtin for putting a job in the foreground.
 maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
@@ -122,8 +122,9 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
     parser.job_promote(job);
     make_fd_blocking(STDIN_FILENO);
     job->group->set_is_foreground(true);
-    if (job->group->wants_terminal() && job->group->tmodes) {
-        int res = tcsetattr(STDIN_FILENO, TCSADRAIN, &job->group->tmodes.value());
+    if (job->group->wants_terminal() && (job->group->get_modes_ffi(sizeof(termios)) != nullptr)) {
+        auto *termios = (struct termios *)job->group->get_modes_ffi(sizeof(struct termios));
+        int res = tcsetattr(STDIN_FILENO, TCSADRAIN, termios);
         if (res < 0) wperror(L"tcsetattr");
     }
     tty_transfer_t transfer;

@@ -87,9 +87,9 @@ struct termsize_t;
 // Make sure the ranges defined above don't exceed the range for non-characters.
 // This is to make sure we didn't do something stupid in subdividing the
 // Unicode range for our needs.
-//#if WILDCARD_RESERVED_END > RESERVED_CHAR_END
-//#error
-//#endif
+// #if WILDCARD_RESERVED_END > RESERVED_CHAR_END
+// #error
+// #endif
 
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
@@ -289,10 +289,10 @@ void show_stackframe(int frame_count = 100, int skip_levels = 0);
 ///
 /// This function encodes illegal character sequences in a reversible way using the private use
 /// area.
-wcstring str2wcstring(const char *in);
-wcstring str2wcstring(const char *in, size_t len);
 wcstring str2wcstring(const std::string &in);
 wcstring str2wcstring(const std::string &in, size_t len);
+wcstring str2wcstring(const char *in);
+wcstring str2wcstring(const char *in, size_t len);
 
 /// Returns a newly allocated multibyte character string equivalent of the specified wide character
 /// string.

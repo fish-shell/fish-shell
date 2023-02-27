@@ -109,6 +109,9 @@ int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc,
 
 /// An enum of the builtins implemented in Rust.
 enum RustBuiltin : int32_t {
+    Abbr,
+    Block,
+    Contains,
     Echo,
     Emit,
     Exit,

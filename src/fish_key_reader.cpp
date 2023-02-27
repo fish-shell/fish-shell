@@ -38,9 +38,9 @@
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
 static const wchar_t *ctrl_symbolic_names[] = {
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-    L"\\b",  L"\\t",  L"\\n",  nullptr, nullptr, L"\\r",  nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr,  nullptr, nullptr, nullptr,
+    L"\\b",  L"\\t",  L"\\n",  nullptr, nullptr,  L"\\r",  nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr,  nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, L"\\e",  L"\\x1c", nullptr, nullptr, nullptr};
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.

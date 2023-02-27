@@ -21,7 +21,7 @@
 
 using std::shared_ptr;
 
-class job_group_t;
+struct job_group_t;
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just

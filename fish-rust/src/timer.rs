@@ -55,6 +55,7 @@ pub fn push_timer(enabled: bool) -> Option<PrintElapsedOnDrop> {
 /// cxx bridge does not support UniquePtr<NativeRustType> so we can't use a null UniquePtr to
 /// represent a None, and cxx bridge does not support Box<Option<NativeRustType>> so we need to make
 /// our own wrapper type that incorporates the Some/None states directly into it.
+#[allow(clippy::large_enum_variant)]
 enum PrintElapsedOnDropFfi {
     Some(PrintElapsedOnDrop),
     None,
@@ -137,7 +138,7 @@ impl TimerSnapshot {
 
         let mut output = String::new();
         if !verbose {
-            output += &"\n_______________________________";
+            output += "\n_______________________________";
             output += &format!("\nExecuted in  {:6.2} {}", wall_time, wall_unit.long_name());
             output += &format!("\n   usr time  {:6.2} {}", usr_time, cpu_unit.long_name());
             output += &format!("\n   sys time  {:6.2} {}", sys_time, cpu_unit.long_name());
@@ -158,17 +159,15 @@ impl TimerSnapshot {
             let fish_unit = fish_unit.short_name();
             let child_unit = child_unit.short_name();
 
-            output += &"\n________________________________________________________";
+            output += "\n________________________________________________________";
             output += &format!(
                 "\nExecuted in  {wall_time:6.2} {wall_unit:<width1$}    {fish:<width2$}  external",
                 width1 = column2_unit_len,
                 fish = "fish",
                 width2 = fish_unit.len() + 7
             );
-            output += &format!("\n   usr time  {usr_time:6.2} {cpu_unit:<width1$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}",
-                width1 = column2_unit_len);
-            output += &format!("\n   sys time  {sys_time:6.2} {cpu_unit:<width1$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}",
-                width1 = column2_unit_len);
+            output += &format!("\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}");
+            output += &format!("\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}");
         }
         output += "\n";
 
@@ -209,29 +208,29 @@ impl Unit {
     }
 
     const fn short_name(&self) -> &'static str {
-        match self {
-            &Unit::Minutes => "mins",
-            &Unit::Seconds => "secs",
-            &Unit::Millis => "millis",
-            &Unit::Micros => "micros",
+        match *self {
+            Unit::Minutes => "mins",
+            Unit::Seconds => "secs",
+            Unit::Millis => "millis",
+            Unit::Micros => "micros",
         }
     }
 
     const fn long_name(&self) -> &'static str {
-        match self {
-            &Unit::Minutes => "minutes",
-            &Unit::Seconds => "seconds",
-            &Unit::Millis => "milliseconds",
-            &Unit::Micros => "microseconds",
+        match *self {
+            Unit::Minutes => "minutes",
+            Unit::Seconds => "seconds",
+            Unit::Millis => "milliseconds",
+            Unit::Micros => "microseconds",
         }
     }
 
     fn convert_micros(&self, micros: i64) -> f64 {
-        match self {
-            &Unit::Minutes => micros as f64 / 1.0E6 / 60.0,
-            &Unit::Seconds => micros as f64 / 1.0E6,
-            &Unit::Millis => micros as f64 / 1.0E3,
-            &Unit::Micros => micros as f64 / 1.0,
+        match *self {
+            Unit::Minutes => micros as f64 / 1.0E6 / 60.0,
+            Unit::Seconds => micros as f64 / 1.0E6,
+            Unit::Millis => micros as f64 / 1.0E3,
+            Unit::Micros => micros as f64 / 1.0,
         }
     }
 }

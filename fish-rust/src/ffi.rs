@@ -91,6 +91,8 @@ include_cpp! {
     generate!("re::regex_t")
     generate!("re::regex_result_ffi")
     generate!("re::try_compile_ffi")
+    generate!("wcs2string")
+    generate!("str2wcstring")
 }
 
 impl parser_t {

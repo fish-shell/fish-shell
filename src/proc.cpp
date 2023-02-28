@@ -176,6 +176,14 @@ RustFFIProcList job_t::ffi_processes() const {
     return RustFFIProcList{const_cast<process_ptr_t *>(processes.data()), processes.size()};
 }
 
+const job_group_t& job_t::ffi_group() const {
+    return *group;
+}
+
+bool job_t::ffi_resume() const {
+    return const_cast<job_t*>(this)->resume();
+}
+
 void internal_proc_t::mark_exited(proc_status_t status) {
     assert(!exited() && "Process is already exited");
     status_.store(status, std::memory_order_relaxed);

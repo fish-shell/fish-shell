@@ -99,8 +99,7 @@ endif()
 
 # List of sources for builtin functions.
 set(FISH_BUILTIN_SRCS
-    src/builtin.cpp src/builtins/argparse.cpp
-    src/builtins/bg.cpp src/builtins/bind.cpp
+    src/builtin.cpp src/builtins/argparse.cpp src/builtins/bind.cpp
     src/builtins/builtin.cpp src/builtins/cd.cpp src/builtins/command.cpp
     src/builtins/commandline.cpp src/builtins/complete.cpp
     src/builtins/disown.cpp

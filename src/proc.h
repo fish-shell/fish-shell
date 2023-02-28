@@ -540,6 +540,14 @@ class job_t : noncopyable_t {
 
     /// autocxx junk.
     RustFFIProcList ffi_processes() const;
+
+    /// autocxx junk.
+    const job_group_t &ffi_group() const;
+
+    /// autocxx junk.
+    /// The const is a lie and is only necessary since at the moment cxx's SharedPtr doesn't support
+    /// getting a mutable reference.
+    bool ffi_resume() const;
 };
 using job_ref_t = std::shared_ptr<job_t>;
 

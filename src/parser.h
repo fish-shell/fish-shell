@@ -422,13 +422,18 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     maybe_t<wcstring> get_function_name(int level = 1);
 
     /// Promotes a job to the front of the list.
-    void job_promote(job_t *job);
+    void job_promote(job_list_t::iterator job_it);
+    void job_promote(const job_t *job);
+    void job_promote_at(size_t job_pos);
 
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
     const job_t *job_with_id(job_id_t job_id) const;
 
     /// Returns the job with the given pid.
     job_t *job_get_from_pid(pid_t pid) const;
+
+    /// Returns the job and position with the given pid.
+    job_t *job_get_from_pid(int64_t pid, size_t& job_pos) const;
 
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The parser_t will deallocate it.

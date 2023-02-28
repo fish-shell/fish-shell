@@ -458,7 +458,12 @@ void parser_t::job_add(shared_ptr<job_t> job) {
     job_list.insert(job_list.begin(), std::move(job));
 }
 
-void parser_t::job_promote(job_t *job) {
+void parser_t::job_promote(job_list_t::iterator job_it) {
+    // Move the job to the beginning.
+    std::rotate(job_list.begin(), job_it, std::next(job_it));
+}
+
+void parser_t::job_promote(const job_t *job) {
     job_list_t::iterator loc;
     for (loc = job_list.begin(); loc != job_list.end(); ++loc) {
         if (loc->get() == job) {
@@ -466,9 +471,12 @@ void parser_t::job_promote(job_t *job) {
         }
     }
     assert(loc != job_list.end());
+    job_promote(loc);
+}
 
-    // Move the job to the beginning.
-    std::rotate(job_list.begin(), loc, std::next(loc));
+void parser_t::job_promote_at(size_t job_pos) {
+    assert(job_pos < job_list.size());
+    job_promote(job_list.begin() + job_pos);
 }
 
 const job_t *parser_t::job_with_id(job_id_t id) const {
@@ -479,10 +487,16 @@ const job_t *parser_t::job_with_id(job_id_t id) const {
 }
 
 job_t *parser_t::job_get_from_pid(pid_t pid) const {
-    for (const auto &job : jobs()) {
-        for (const process_ptr_t &p : job->processes) {
+    size_t job_pos{};
+    return job_get_from_pid(pid, job_pos);
+}
+
+job_t *parser_t::job_get_from_pid(int64_t pid, size_t& job_pos) const {
+    for (auto it = job_list.begin(); it != job_list.end(); ++it) {
+        for (const process_ptr_t &p : (*it)->processes) {
             if (p->pid == pid) {
-                return job.get();
+                job_pos = it - job_list.begin();
+                return (*it).get();
             }
         }
     }

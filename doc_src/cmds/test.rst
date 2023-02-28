@@ -11,7 +11,6 @@ Synopsis
     test [EXPRESSION]
     [ [EXPRESSION] ]
 
-
 Description
 -----------
 
@@ -21,13 +20,11 @@ Description
           To see the documentation on the ``test`` command you might have,
           use ``command man test``.
 
-Tests the expression given and sets the exit status to 0 if true, and 1 if false. An expression is made up of one or more operators and their arguments.
+``test`` checks the given conditions and sets the exit status to 0 if they are true, 1 if they are false.
 
 The first form (``test``) is preferred. For compatibility with other shells, the second form is available: a matching pair of square brackets (``[ [EXPRESSION] ]``).
 
-This test is mostly POSIX-compatible.
-
-When using a variable as an argument for a test operator you should almost always enclose it in double-quotes. There are only two situations it is safe to omit the quote marks. The first is when the argument is a literal string with no whitespace or other characters special to the shell (e.g., semicolon). For example, ``test -b /my/file``. The second is using a variable that expands to exactly one element including if that element is the empty string (e.g., ``set x ''``). If the variable is not set, set but with no value, or set to more than one value you must enclose it in double-quotes. For example, ``test "$x" = "$y"``. Since it is always safe to enclose variables in double-quotes when used as ``test`` arguments that is the recommended practice.
+When using a variable as an argument with ``test`` you should almost always enclose it in double-quotes, as variables expanding to zero or more than one argument will most likely interact badly with ``test``.
 
 Operators for files and directories
 -----------------------------------
@@ -163,8 +160,6 @@ Examples
 
 If the ``/tmp`` directory exists, copy the ``/etc/motd`` file to it:
 
-
-
 ::
 
     if test -d /tmp
@@ -173,8 +168,6 @@ If the ``/tmp`` directory exists, copy the ``/etc/motd`` file to it:
 
 
 If the variable :envvar:`MANPATH` is defined and not empty, print the contents. (If :envvar:`MANPATH` is not defined, then it will expand to zero arguments, unless quoted.)
-
-
 
 ::
 
@@ -185,8 +178,6 @@ If the variable :envvar:`MANPATH` is defined and not empty, print the contents. 
 
 Parentheses and the ``-o`` and ``-a`` operators can be combined to produce more complicated expressions. In this example, success is printed if there is a ``/foo`` or ``/bar`` file as well as a ``/baz`` or ``/bat`` file.
 
-
-
 ::
 
     if test \( -f /foo -o -f /bar \) -a \( -f /baz -o -f /bat \)
@@ -196,18 +187,13 @@ Parentheses and the ``-o`` and ``-a`` operators can be combined to produce more 
 
 Numerical comparisons will simply fail if one of the operands is not a number:
 
-
-
 ::
 
     if test 42 -eq "The answer to life, the universe and everything"
         echo So long and thanks for all the fish # will not be executed
     end
 
-
 A common comparison is with :envvar:`status`:
-
-
 
 ::
 
@@ -215,10 +201,7 @@ A common comparison is with :envvar:`status`:
         echo "Previous command succeeded"
     end
 
-
 The previous test can likewise be inverted:
-
-
 
 ::
 
@@ -228,8 +211,6 @@ The previous test can likewise be inverted:
 
 
 which is logically equivalent to the following:
-
-
 
 ::
 
@@ -241,10 +222,16 @@ which is logically equivalent to the following:
 Standards
 ---------
 
-``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <https://www.unix.com/man-page/posix/1p/test/>`__. The following exceptions apply:
+Unlike many things in fish, ``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <https://www.unix.com/man-page/posix/1p/test/>`__. The following exceptions apply:
 
 - The ``<`` and ``>`` operators for comparing strings are not implemented.
 
-- Because this test is a shell builtin and not a standalone utility, using the -c flag on a special file descriptors like standard input and output may not return the same result when invoked from within a pipe as one would expect when invoking the ``test`` utility in another shell.
-
  In cases such as this, one can use ``command`` ``test`` to explicitly use the system's standalone ``test`` rather than this ``builtin`` ``test``.
+
+See also
+--------
+
+Other commands that may be useful as a condition, and are often easier to use:
+
+- :doc:`string`, which can do string operations including wildcard and regular expression matching
+- :doc:`path`, which can do file checks and operations, including filters on multiple paths at once

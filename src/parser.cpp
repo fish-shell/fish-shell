@@ -474,7 +474,7 @@ void parser_t::job_promote(const job_t *job) {
     job_promote(loc);
 }
 
-void parser_t::job_promote(size_t job_pos) {
+void parser_t::job_promote_at(size_t job_pos) {
     assert(job_pos < job_list.size());
     job_promote(job_list.begin() + job_pos);
 }

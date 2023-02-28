@@ -52,7 +52,7 @@ fn send_to_bg(
     if !job.ffi_resume() {
         return STATUS_CMD_ERROR;
     }
-    parser.pin().job_promote2(job_pos);
+    parser.pin().job_promote_at(job_pos);
 
     return STATUS_CMD_OK;
 }

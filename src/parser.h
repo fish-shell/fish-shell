@@ -424,7 +424,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Promotes a job to the front of the list.
     void job_promote(job_list_t::iterator job_it);
     void job_promote(const job_t *job);
-    void job_promote(size_t job_pos);
+    void job_promote_at(size_t job_pos);
 
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
     const job_t *job_with_id(job_id_t job_id) const;

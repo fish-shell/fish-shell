@@ -29,8 +29,6 @@ Example
 
 The following code will print ``foo.txt exists`` if the file foo.txt exists and is a regular file, otherwise it will print ``bar.txt exists`` if the file bar.txt exists and is a regular file, otherwise it will print ``foo.txt and bar.txt do not exist``.
 
-
-
 ::
 
     if test -f foo.txt
@@ -44,7 +42,6 @@ The following code will print ``foo.txt exists`` if the file foo.txt exists and 
 
 The following code will print "foo.txt exists and is readable" if foo.txt is a regular file and readable
 
-
 ::
 
     if test -f foo.txt
@@ -52,3 +49,15 @@ The following code will print "foo.txt exists and is readable" if foo.txt is a r
        echo "foo.txt exists and is readable"
     end
 
+
+See also
+--------
+
+``if`` is only as useful as the command used as the condition.
+
+Fish ships a few:
+
+- :doc:`test` can compare numbers, strings and check paths
+- :doc:`string` can perform string operations including wildcard and regular expression matches
+- :doc:`path` can check paths for permissions, existence or type
+- :doc:`contains` can check if an element is in a list

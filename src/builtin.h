@@ -116,6 +116,7 @@ enum RustBuiltin : int32_t {
     Echo,
     Emit,
     Exit,
+    Pwd,
     Random,
     Return,
     Wait,

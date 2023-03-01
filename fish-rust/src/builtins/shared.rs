@@ -37,6 +37,8 @@ pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
 /// Error message when integer expected
 pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 
+pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
+
 /// A handy return value for successful builtins.
 pub const STATUS_CMD_OK: Option<c_int> = Some(0);
 
@@ -125,6 +127,7 @@ pub fn run_builtin(
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
         RustBuiltin::Exit => super::exit::exit(parser, streams, args),
+        RustBuiltin::Pwd => super::pwd::pwd(parser, streams, args),
         RustBuiltin::Random => super::random::random(parser, streams, args),
         RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),

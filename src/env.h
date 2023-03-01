@@ -290,6 +290,9 @@ class env_stack_t final : public environment_t {
     /// \return a list of events for changed variables.
     std::vector<rust::Box<Event>> universal_sync(bool always);
 
+    __attribute__((unused)) std::unique_ptr<env_var_t> get_or_null(
+        const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const;
+
     // Compatibility hack; access the "environment stack" from back when there was just one.
     static const std::shared_ptr<env_stack_t> &principal_ref();
     static env_stack_t &principal() { return *principal_ref(); }

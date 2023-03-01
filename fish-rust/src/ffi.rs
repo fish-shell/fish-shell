@@ -103,6 +103,7 @@ include_cpp! {
     generate!("io_chain_t")
 
     generate!("termsize_container_t")
+    generate!("env_var_t")
 }
 
 impl parser_t {

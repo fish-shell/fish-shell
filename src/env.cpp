@@ -1476,6 +1476,13 @@ const std::shared_ptr<env_stack_t> &env_stack_t::principal_ref() {
         new env_stack_t(env_stack_impl_t::create())};
     return s_principal;
 }
+__attribute__((unused)) std::unique_ptr<env_var_t> env_stack_t::get_or_null(
+    wcstring const &key, env_mode_flags_t mode) const {
+    auto variable = get(key, mode);
+    return variable.missing_or_empty()
+               ? std::unique_ptr<env_var_t>()
+               : std::unique_ptr<env_var_t>(new env_var_t(variable.value()));
+}
 
 env_stack_t::~env_stack_t() = default;
 

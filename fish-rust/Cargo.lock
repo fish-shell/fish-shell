@@ -348,6 +348,7 @@ version = "0.1.0"
 dependencies = [
  "autocxx",
  "autocxx-build",
+ "bitflags",
  "cxx",
  "cxx-build",
  "cxx-gen",

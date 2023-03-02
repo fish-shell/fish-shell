@@ -1530,12 +1530,6 @@ static void test_indents() {
              0, "\nend"                                           //
     );
 
-    tests.clear();
-    add_test(&tests,                            //
-             0, "echo 'continuation line' \\",  //
-             1, "\ncont",                       //
-             0, "\n"                            //
-    );
     int test_idx = 0;
     for (const indent_test_t &test : tests) {
         // Construct the input text and expected indents.
@@ -5709,13 +5703,6 @@ static void test_highlighting() {
         {L"\\U110000", highlight_role_t::error},
     });
 #endif
-
-    highlight_tests.clear();
-    highlight_tests.push_back({
-        {L"echo", highlight_role_t::command},
-        {L"stuff", highlight_role_t::param},
-        {L"# comment", highlight_role_t::comment},
-    });
 
     bool saved_flag = feature_test(feature_flag_t::ampersand_nobg_in_token);
     mutable_fish_features()->set(feature_flag_t::ampersand_nobg_in_token, true);

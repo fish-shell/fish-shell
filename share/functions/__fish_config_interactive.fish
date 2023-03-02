@@ -193,8 +193,10 @@ end" >$__fish_config_dir/config.fish
     # the sequences to bind.expect
     if not set -q FISH_UNIT_TESTS_RUNNING
         # Enable bracketed paste before every prompt (see __fish_shared_bindings for the bindings).
-        # Enable bracketed paste when the read builtin is used.
-        function __fish_enable_bracketed_paste --on-event fish_prompt --on-event fish_read
+        # We used to do this for read, but that would break non-interactive use and
+        # compound commandlines like `read; cat`, because
+        # it won't disable it after the read.
+        function __fish_enable_bracketed_paste --on-event fish_prompt
             printf "\e[?2004h"
         end
 
@@ -205,7 +207,9 @@ end" >$__fish_config_dir/config.fish
 
         # Tell the terminal we support BP. Since we are in __f_c_i, the first fish_prompt
         # has already fired.
-        __fish_enable_bracketed_paste
+        # But only if we're interactive, in case we are in `read`
+        status is-interactive
+        and __fish_enable_bracketed_paste
     end
 
     # Similarly, enable TMUX's focus reporting when in tmux.

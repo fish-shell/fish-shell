@@ -2383,6 +2383,10 @@ static void test_ifind() {
     do_test(ifind(std::string{"alphab"}, std::string{"balpha"}) == std::string::npos);
     do_test(ifind(std::string{"balpha"}, std::string{"lPh"}) == 2);
     do_test(ifind(std::string{"balpha"}, std::string{"Plh"}) == std::string::npos);
+    // FIXME: This should match instead of returning npos
+    // If this test fails, that means you fixed it!
+    // (unfortunately I don't believe we really have an "expected failure" state?)
+    do_test(ifind(wcstring{L"echo Ö"}, wcstring{L"ö"}) == wcstring::npos);
 }
 
 static void test_ifind_fuzzy() {

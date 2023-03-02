@@ -428,8 +428,15 @@ class reader_history_search_t {
         const wcstring &needle = search_string();
         if (mode_ == line || mode_ == prefix) {
             size_t offset = find(text, needle);
-            assert(offset != wcstring::npos && "Should have found a match in the search result");
-            add_if_new({std::move(text), offset});
+            // FIXME: Previous versions asserted out if this wasn't true.
+            // This could be hit with a needle of "ö" and haystack of "echo Ö"
+            // I'm not sure why - this points to a bug in ifind (probably wrong locale?)
+            // However, because the user experience of having it crash is horrible,
+            // and the worst thing that can otherwise happen here is that a search is unsuccessful,
+            // we just check it instead.
+            if (offset != wcstring::npos) {
+                add_if_new({std::move(text), offset});
+            }
         } else if (mode_ == token) {
             tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
 

@@ -29,6 +29,7 @@ Interactive improvements
 - Using ``--help`` on builtins now respects the ``$MANPAGER`` variable, in preference to ``$PAGER`` (:issue:`9488`).
 - :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
 - The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
+- Fish no longer crashes when searching history for non-ascii codepoints case-insensitively (:issue:`9628`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

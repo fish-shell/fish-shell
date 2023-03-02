@@ -5827,34 +5827,6 @@ static void test_wwrite_to_fd() {
     (void)remove(t);
 }
 
-static void test_pcre2_escape() {
-    say(L"Testing escaping strings as pcre2 literals");
-    // plain text should not be needlessly escaped
-    auto input = L"hello world!";
-    auto escaped = escape_string(input, 0, STRING_STYLE_REGEX);
-    if (escaped != input) {
-        err(L"Input string %ls unnecessarily PCRE2 escaped as %ls", input, escaped.c_str());
-    }
-
-    // all the following are intended to be ultimately matched literally - even if they don't look
-    // like that's the intent - so we escape them.
-    const wchar_t *const tests[][2] = {
-        {L".ext", L"\\.ext"},
-        {L"{word}", L"\\{word\\}"},
-        {L"hola-mundo", L"hola\\-mundo"},
-        {L"$17.42 is your total?", L"\\$17\\.42 is your total\\?"},
-        {L"not really escaped\\?", L"not really escaped\\\\\\?"},
-    };
-
-    for (const auto &test : tests) {
-        auto escaped = escape_string(test[0], 0, STRING_STYLE_REGEX);
-        if (escaped != test[1]) {
-            err(L"pcre2_escape error: pcre2_escape(%ls) -> %ls, expected %ls", test[0],
-                escaped.c_str(), test[1]);
-        }
-    }
-}
-
 maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
 static void run_one_string_test(const wchar_t *const *argv_raw, int expected_rc,
                                 const wchar_t *expected_out) {
@@ -7092,7 +7064,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("indents"), test_indents},
     {TEST_GROUP("utf8"), test_utf8},
     {TEST_GROUP("escape_sequences"), test_escape_sequences},
-    {TEST_GROUP("pcre2_escape"), test_pcre2_escape},
     {TEST_GROUP("lru"), test_lru},
     {TEST_GROUP("expand"), test_expand},
     {TEST_GROUP("expand"), test_expand_overflow},

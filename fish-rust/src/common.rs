@@ -187,3 +187,33 @@ macro_rules! assert_sorted_by_name {
         assert_sorted_by_name!($slice, name);
     };
 }
+mod tests {
+    use crate::{
+        common::{escape_string, EscapeStringStyle},
+        wchar::widestrs,
+    };
+
+    #[widestrs]
+    pub fn test_escape_string() {
+        let regex = |input| escape_string(input, EscapeStringStyle::Regex);
+
+        // plain text should not be needlessly escaped
+        assert_eq!(regex("hello world!"L), "hello world!"L);
+
+        // all the following are intended to be ultimately matched literally - even if they don't look
+        // like that's the intent - so we escape them.
+        assert_eq!(regex(".ext"L), "\\.ext"L);
+        assert_eq!(regex("{word}"L), "\\{word\\}"L);
+        assert_eq!(regex("hola-mundo"L), "hola\\-mundo"L);
+        assert_eq!(
+            regex("$17.42 is your total?"L),
+            "\\$17\\.42 is your total\\?"L
+        );
+        assert_eq!(
+            regex("not really escaped\\?"L),
+            "not really escaped\\\\\\?"L
+        );
+    }
+}
+
+crate::ffi_tests::add_test!("escape_string", tests::test_escape_string);

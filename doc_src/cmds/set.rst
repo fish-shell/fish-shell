@@ -175,7 +175,7 @@ Remove _$smurf_ from the scope::
 
     > set -e smurf
 
-Remove _$smurf_ from the global and universal scoeps::
+Remove _$smurf_ from the global and universal scopes::
 
     > set -e -Ug smurf
 

@@ -136,6 +136,28 @@ pub mod categories {
     );
 }
 
+/// FLOG formats values. By default we would like to use Display, and fall back to Debug.
+/// However that would require specialization. So instead we make two "separate" traits, bring them both in scope,
+/// and let Rust figure it out.
+/// Clients can opt a Debug type into Floggable by implementing FloggableDebug:
+///    impl FloggableDebug for MyType {}
+pub trait FloggableDisplay {
+    /// Return a string representation of this thing.
+    fn to_flog_str(&self) -> String;
+}
+
+impl<T: std::fmt::Display> FloggableDisplay for T {
+    fn to_flog_str(&self) -> String {
+        format!("{}", self)
+    }
+}
+
+pub trait FloggableDebug: std::fmt::Debug {
+    fn to_flog_str(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
 /// Write to our FLOG file.
 pub fn flog_impl(s: &str) {
     let fd = get_flog_file_fd().0 as RawFd;
@@ -151,9 +173,13 @@ pub fn flog_impl(s: &str) {
 macro_rules! FLOG {
     ($category:ident, $($elem:expr),+) => {
         if crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
+            #[allow(unused_imports)]
+            use crate::flog::{FloggableDisplay, FloggableDebug};
             let mut vs = Vec::new();
             $(
-                vs.push(format!("{:?}", $elem));
+                {
+                   vs.push($elem.to_flog_str())
+                }
             )+
             // We don't use locking here so we have to append our own newline to avoid multiple writes.
             let mut v = vs.join(" ");

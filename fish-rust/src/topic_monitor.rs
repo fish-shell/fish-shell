@@ -23,7 +23,7 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 use crate::fd_readable_set::fd_readable_set_t;
 use crate::fds::{self, autoclose_pipes_t};
 use crate::ffi::{self as ffi, c_int};
-use crate::flog::FLOG;
+use crate::flog::{FloggableDebug, FLOG};
 use crate::wchar::{widestrs, wstr, WString};
 use crate::wchar_ffi::wcharz;
 use nix::errno::Errno;
@@ -78,6 +78,8 @@ mod topic_monitor_ffi {
 
 pub use topic_monitor_ffi::{generation_list_t, topic_t};
 pub type generation_t = u64;
+
+impl FloggableDebug for topic_t {}
 
 /// A generation value which indicates the topic is not of interest.
 pub const invalid_generation: generation_t = std::u64::MAX;

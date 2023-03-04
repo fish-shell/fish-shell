@@ -1,8 +1,10 @@
 //! The rusty version of iothreads from the cpp code, to be consumed by native rust code. This isn't
 //! ported directly from the cpp code so we can use rust threads instead of using pthreads.
 
-use crate::flog::FLOG;
+use crate::flog::{FloggableDebug, FLOG};
 use std::thread::{self, ThreadId};
+
+impl FloggableDebug for ThreadId {}
 
 // We don't want to use a full-blown Lazy<T> for the cached main thread id, but we can't use
 // AtomicU64 since std::thread::ThreadId::as_u64() is a nightly-only feature (issue #67939,

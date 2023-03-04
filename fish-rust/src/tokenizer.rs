@@ -180,6 +180,11 @@ impl BitOr for TokFlags {
         Self(self.0 | rhs.0)
     }
 }
+impl BitOrAssign for TokFlags {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0
+    }
+}
 
 /// Flag telling the tokenizer to accept incomplete parameters, i.e. parameters with mismatching
 /// parenthesis, etc. This is useful for tab-completion.

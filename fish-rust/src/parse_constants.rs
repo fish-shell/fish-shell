@@ -6,7 +6,7 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcharz, WCharFromFFI, WCharToFFI};
 use crate::wutil::{sprintf, wgettext_fmt};
 use cxx::{CxxWString, UniquePtr};
-use std::ops::{BitAnd, BitOrAssign};
+use std::ops::{BitAnd, BitOr, BitOrAssign};
 use widestring_suffix::widestrs;
 
 pub type SourceOffset = u32;
@@ -37,6 +37,12 @@ impl BitAnd for ParseTreeFlags {
     type Output = bool;
     fn bitand(self, rhs: Self) -> Self::Output {
         (self.0 & rhs.0) != 0
+    }
+}
+impl BitOr for ParseTreeFlags {
+    type Output = ParseTreeFlags;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self(self.0 | rhs.0)
     }
 }
 impl BitOrAssign for ParseTreeFlags {

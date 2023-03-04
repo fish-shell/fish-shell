@@ -77,7 +77,7 @@ mod parse_constants_ffi {
     }
 
     /// A range of source code.
-    #[derive(PartialEq, Eq, Clone, Copy)]
+    #[derive(PartialEq, Eq, Clone, Copy, Debug)]
     struct SourceRange {
         start: u32,
         length: u32,
@@ -90,7 +90,7 @@ mod parse_constants_ffi {
 
     /// IMPORTANT: If the following enum table is modified you must also update token_type_description below.
     /// TODO above comment can be removed when we drop the FFI and get real enums.
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, Debug)]
     enum ParseTokenType {
         invalid = 1,
 
@@ -111,7 +111,7 @@ mod parse_constants_ffi {
     }
 
     #[repr(u8)]
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, Debug)]
     enum ParseKeyword {
         // 'none' is not a keyword, it is a sentinel indicating nothing.
         none,

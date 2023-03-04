@@ -14,7 +14,7 @@ pub use widestring::{Utf32Str as wstr, Utf32String as WString};
 /// The result is of type wstr.
 /// It is NOT nul-terminated.
 macro_rules! L {
-    ($string:literal) => {
+    ($string:expr) => {
         widestring::utf32str!($string)
     };
 }

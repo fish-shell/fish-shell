@@ -29,7 +29,7 @@
 struct wcharz_t {
     const wchar_t *str;
 
-    /* implicit */ wcharz_t(const wchar_t *s) : str(s) {}
+    /* implicit */ wcharz_t(const wchar_t *s) : str(s) { assert(s && "wcharz_t must be non-null"); }
     operator const wchar_t *() const { return str; }
     operator wcstring() const { return str; }
 

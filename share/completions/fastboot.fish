@@ -5,7 +5,9 @@ function __fish_fastboot_list_partition_or_file
     # if last 2 token is flash, then list file
     if test (count $tokens) -gt 2
         if test $tokens[-2] = flash
-            __fish_complete_path
+            # complete files
+            __fish_complete_suffix .img
+            __fish_complete_suffix $tokens[-1]
             return
         end
     end
@@ -46,7 +48,7 @@ complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a fetch 
 complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a boot -d 'Download and boot kernel from RAM'
 
 # flash
-complete -n '__fish_seen_subcommand_from flash' -c fastboot -f -a "(__fish_fastboot_list_partition_or_file)"
+complete -n '__fish_seen_subcommand_from flash' -c fastboot -f -k -a "(__fish_fastboot_list_partition_or_file)"
 complete -n '__fish_seen_subcommand_from flash' -c fastboot -l skip-secondary -d 'Don\'t flash secondary slots in flashall/update'
 complete -n '__fish_seen_subcommand_from flash' -c fastboot -l skip-reboot -d 'Don\'t reboot device after flashing'
 complete -n '__fish_seen_subcommand_from flash' -c fastboot -l disable-verity -d 'Sets disable-verity when flashing vbmeta'
@@ -64,7 +66,7 @@ complete -n '__fish_seen_subcommand_from devices' -c fastboot -f
 complete -n '__fish_seen_subcommand_from devices' -c fastboot -s l -d 'device paths'
 
 # format
-complete -n '__fish_seen_subcommand_from format' -c fastboot -f -a "(__fish_fastboot_list_partition_or_file)"
+complete -n '__fish_seen_subcommand_from format' -c fastboot -f -a "(__fish_fastboot_list_partition)"
 
 # erase
 complete -n '__fish_seen_subcommand_from erase' -c fastboot -f -a "(__fish_fastboot_list_partition)"

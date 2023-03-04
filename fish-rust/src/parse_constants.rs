@@ -238,6 +238,9 @@ pub use parse_constants_ffi::{
 };
 
 impl SourceRange {
+    pub fn new(start: SourceOffset, length: SourceOffset) -> Self {
+        SourceRange { start, length }
+    }
     pub fn end(&self) -> SourceOffset {
         self.start.checked_add(self.length).expect("Overflow")
     }
@@ -245,6 +248,12 @@ impl SourceRange {
     // \return true if a location is in this range, including one-past-the-end.
     pub fn contains_inclusive(&self, loc: SourceOffset) -> bool {
         self.start <= loc && loc - self.start <= self.length
+    }
+}
+
+impl Default for ParseTokenType {
+    fn default() -> Self {
+        ParseTokenType::invalid
     }
 }
 
@@ -272,6 +281,12 @@ impl From<ParseTokenType> for &'static wstr {
 fn token_type_description(token_type: ParseTokenType) -> wcharz_t {
     let s: &'static wstr = token_type.into();
     wcharz!(s)
+}
+
+impl Default for ParseKeyword {
+    fn default() -> Self {
+        ParseKeyword::none
+    }
 }
 
 impl From<ParseKeyword> for &'static wstr {

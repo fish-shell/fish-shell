@@ -37,7 +37,7 @@ struct SourceRange {
 };
 using source_range_t = SourceRange;
 
-enum class parse_token_type_t : uint8_t {
+enum class ParseTokenType : uint8_t {
     invalid = 1,
     string,
     pipe,
@@ -51,8 +51,9 @@ enum class parse_token_type_t : uint8_t {
     tokenizer_error,
     comment,
 };
+using parse_token_type_t = ParseTokenType;
 
-enum class parse_keyword_t : uint8_t {
+enum class ParseKeyword : uint8_t {
     none,
     kw_and,
     kw_begin,
@@ -73,13 +74,15 @@ enum class parse_keyword_t : uint8_t {
     kw_time,
     kw_while,
 };
+using parse_keyword_t = ParseKeyword;
 
-enum class statement_decoration_t : uint8_t {
+enum class StatementDecoration : uint8_t {
     none,
     command,
     builtin,
     exec,
 };
+using statement_decoration_t = StatementDecoration;
 
 enum class parse_error_code_t : uint8_t {
     none,

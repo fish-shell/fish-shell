@@ -9,12 +9,12 @@ use cxx::{CxxWString, UniquePtr};
 use std::ops::{BitAnd, BitOrAssign};
 use widestring_suffix::widestrs;
 
-type SourceOffset = u32;
+pub type SourceOffset = u32;
 
 pub const SOURCE_OFFSET_INVALID: SourceOffset = SourceOffset::MAX;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
-pub struct ParseTreeFlags(u8);
+pub struct ParseTreeFlags(pub u8);
 
 pub const PARSE_FLAG_NONE: ParseTreeFlags = ParseTreeFlags(0);
 /// attempt to build a "parse tree" no matter what. this may result in a 'forest' of
@@ -134,7 +134,7 @@ mod parse_constants_ffi {
     }
 
     // Statement decorations like 'command' or 'exec'.
-    enum StatementDecoration {
+    pub enum StatementDecoration {
         none,
         command,
         builtin,
@@ -142,7 +142,7 @@ mod parse_constants_ffi {
     }
 
     // Parse error code list.
-    enum ParseErrorCode {
+    pub enum ParseErrorCode {
         none,
 
         // Matching values from enum parser_error.
@@ -231,16 +231,16 @@ mod parse_constants_ffi {
 }
 
 pub use parse_constants_ffi::{
-    parse_error_t, ParseErrorCode, ParseKeyword, ParseTokenType, SourceRange,
+    parse_error_t, ParseErrorCode, ParseKeyword, ParseTokenType, SourceRange, StatementDecoration,
 };
 
 impl SourceRange {
-    fn end(&self) -> SourceOffset {
+    pub fn end(&self) -> SourceOffset {
         self.start.checked_add(self.length).expect("Overflow")
     }
 
     // \return true if a location is in this range, including one-past-the-end.
-    fn contains_inclusive(&self, loc: SourceOffset) -> bool {
+    pub fn contains_inclusive(&self, loc: SourceOffset) -> bool {
         self.start <= loc && loc - self.start <= self.length
     }
 }
@@ -336,14 +336,14 @@ fn keyword_from_string<'a>(s: impl Into<&'a wstr>) -> ParseKeyword {
 }
 
 #[derive(Clone)]
-struct ParseError {
+pub struct ParseError {
     /// Text of the error.
-    text: WString,
+    pub text: WString,
     /// Code for the error.
-    code: ParseErrorCode,
+    pub code: ParseErrorCode,
     /// Offset and length of the token in the source code that triggered this error.
-    source_start: usize,
-    source_length: usize,
+    pub source_start: usize,
+    pub source_length: usize,
 }
 
 impl Default for ParseError {
@@ -588,7 +588,7 @@ fn token_type_user_presentable_description_ffi(
 }
 
 /// TODO This should be type alias once we drop the FFI.
-pub struct ParseErrorList(Vec<ParseError>);
+pub struct ParseErrorList(pub Vec<ParseError>);
 
 /// Helper function to offset error positions by the given amount. This is used when determining
 /// errors in a substring of a larger source buffer.

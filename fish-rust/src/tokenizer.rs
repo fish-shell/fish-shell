@@ -166,7 +166,7 @@ pub use tokenizer_ffi::{
 };
 
 #[derive(Clone, Copy)]
-pub struct TokFlags(u8);
+pub struct TokFlags(pub u8);
 
 impl BitAnd for TokFlags {
     type Output = bool;
@@ -196,7 +196,7 @@ pub const TOK_SHOW_BLANK_LINES: TokFlags = TokFlags(4);
 pub const TOK_CONTINUE_AFTER_ERROR: TokFlags = TokFlags(8);
 
 /// Get the error message for an error \p err.
-fn tokenizer_get_error_message(err: TokenizerError) -> UniquePtr<CxxWString> {
+pub fn tokenizer_get_error_message(err: TokenizerError) -> UniquePtr<CxxWString> {
     let s: &'static wstr = err.into();
     s.to_ffi()
 }
@@ -303,7 +303,7 @@ impl Tokenizer {
     /// \param flags Flags to the tokenizer. Setting TOK_ACCEPT_UNFINISHED will cause the tokenizer
     /// to accept incomplete tokens, such as a subshell without a closing parenthesis, as a valid
     /// token. Setting TOK_SHOW_COMMENTS will return comments as tokens
-    fn new(start: &wstr, flags: TokFlags) -> Self {
+    pub fn new(start: &wstr, flags: TokFlags) -> Self {
         Tokenizer {
             token_cursor: 0,
             start: start.to_owned(),

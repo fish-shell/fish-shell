@@ -2,6 +2,7 @@
 #define FISH_MAYBE_H
 
 #include <cassert>
+#include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
@@ -192,6 +193,10 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     // Copy and move constructors.
     maybe_t(const maybe_t &) = default;
     maybe_t(maybe_t &&) = default;
+
+    /* implicit */ maybe_t(std::unique_ptr<T> v) : maybe_t() {
+        if (v) *this = std::move(*v);
+    }
 
     // Construct a value in-place.
     template <class... Args>

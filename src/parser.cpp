@@ -491,7 +491,7 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
     return job_get_from_pid(pid, job_pos);
 }
 
-job_t *parser_t::job_get_from_pid(int64_t pid, size_t& job_pos) const {
+job_t *parser_t::job_get_from_pid(int64_t pid, size_t &job_pos) const {
     for (auto it = job_list.begin(); it != job_list.end(); ++it) {
         for (const process_ptr_t &p : (*it)->processes) {
             if (p->pid == pid) {
@@ -807,6 +807,4 @@ block_t block_t::scope_block(block_type_t type) {
 block_t block_t::breakpoint_block() { return block_t(block_type_t::breakpoint); }
 block_t block_t::variable_assignment_block() { return block_t(block_type_t::variable_assignment); }
 
-void block_t::ffi_incr_event_blocks() {
-    ++event_blocks;
-}
+void block_t::ffi_incr_event_blocks() { ++event_blocks; }

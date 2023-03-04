@@ -433,7 +433,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     job_t *job_get_from_pid(pid_t pid) const;
 
     /// Returns the job and position with the given pid.
-    job_t *job_get_from_pid(int64_t pid, size_t& job_pos) const;
+    job_t *job_get_from_pid(int64_t pid, size_t &job_pos) const;
 
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The parser_t will deallocate it.

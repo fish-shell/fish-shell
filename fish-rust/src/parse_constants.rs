@@ -392,18 +392,21 @@ impl ParseError {
         skip_caret: bool,
     ) -> WString {
         let mut result = prefix.to_owned();
-        let context = wstr::from_char_slice(
-            &src.as_char_slice()[self.source_start..self.source_start + self.source_length],
-        );
         // Some errors don't have their message passed in, so we construct them here.
         // This affects e.g. `eval "a=(foo)"`
         match self.code {
             ParseErrorCode::andor_in_pipeline => {
+                let context = wstr::from_char_slice(
+                    &src.as_char_slice()[self.source_start..self.source_start + self.source_length],
+                );
                 result += wstr::from_char_slice(
                     wgettext_fmt!(INVALID_PIPELINE_CMD_ERR_MSG, context).as_char_slice(),
                 );
             }
             ParseErrorCode::bare_variable_assignment => {
+                let context = wstr::from_char_slice(
+                    &src.as_char_slice()[self.source_start..self.source_start + self.source_length],
+                );
                 let assignment_src = context;
                 #[allow(clippy::explicit_auto_deref)]
                 let equals_pos = variable_assignment_equals_pos(assignment_src).unwrap();

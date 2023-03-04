@@ -14,6 +14,7 @@ pub type SourceOffset = u32;
 pub const SOURCE_OFFSET_INVALID: SourceOffset = SourceOffset::MAX;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
+#[derive(Copy, Clone)]
 pub struct ParseTreeFlags(pub u8);
 
 pub const PARSE_FLAG_NONE: ParseTreeFlags = ParseTreeFlags(0);
@@ -44,7 +45,7 @@ impl BitOrAssign for ParseTreeFlags {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub struct ParserTestErrorBits(u8);
 
 pub const PARSER_TEST_ERROR: ParserTestErrorBits = ParserTestErrorBits(1);
@@ -83,6 +84,7 @@ mod parse_constants_ffi {
 
     /// IMPORTANT: If the following enum table is modified you must also update token_type_description below.
     /// TODO above comment can be removed when we drop the FFI and get real enums.
+    #[derive(Clone, Copy)]
     enum ParseTokenType {
         invalid = 1,
 
@@ -103,6 +105,7 @@ mod parse_constants_ffi {
     }
 
     #[repr(u8)]
+    #[derive(Clone, Copy)]
     enum ParseKeyword {
         // 'none' is not a keyword, it is a sentinel indicating nothing.
         none,

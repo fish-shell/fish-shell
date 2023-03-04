@@ -142,43 +142,32 @@ macro_rules! assert_sorted_by_name {
             use std::cmp::Ordering;
 
             // ugly const eval workarounds below.
-            const fn cmp_slice(s1: &[char], s2: &[char]) -> Ordering {
-                let mut i = 0;
-                while i < s1.len() {
-                    if s2.len() <= i {
-                        return Ordering::Greater;
-                    }
-                    if s1[i] < s2[i] {
-                        return Ordering::Less;
-                    } else if s1[i] > s2[i] {
-                        return Ordering::Greater;
-                    }
-                    i += 1;
-                }
-
-                if s1.len() < s2.len() {
-                    Ordering::Less
-                } else {
-                    Ordering::Equal
+            const fn cmp_i32(lhs: i32, rhs: i32) -> Ordering {
+                match lhs - rhs {
+                    ..=-1 => Ordering::Less,
+                    0 => Ordering::Equal,
+                    1.. => Ordering::Greater,
                 }
             }
 
-            let mut i = 0;
-            let mut prev: Option<&wstr> = None;
-            while i < $slice.len() {
-                let cur = $slice[i].$field;
-                if let Some(prev) = prev {
-                    assert!(
-                        matches!(
-                            cmp_slice(prev.as_char_slice(), cur.as_char_slice()),
-                            Ordering::Equal | Ordering::Less
-                        ),
-                        "array must be sorted"
-                    );
+            const fn cmp_slice(s1: &[char], s2: &[char]) -> Ordering {
+                let mut i = 0;
+                while i < s1.len() && i < s2.len() {
+                    match cmp_i32(s1[i] as i32, s2[i] as i32) {
+                        Ordering::Equal => i += 1,
+                        other => return other,
+                    }
                 }
+                cmp_i32(s1.len() as i32, s2.len() as i32)
+            }
 
-                prev = Some(cur);
-
+            let mut i = 1;
+            while i < $slice.len() {
+                let prev = $slice[i - 1].$field.as_char_slice();
+                let cur = $slice[i].$field.as_char_slice();
+                if matches!(cmp_slice(prev, cur), Ordering::Greater) {
+                    panic!("array must be sorted");
+                }
                 i += 1;
             }
         };

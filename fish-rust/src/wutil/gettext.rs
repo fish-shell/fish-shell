@@ -1,6 +1,6 @@
 use crate::ffi;
-use crate::wchar::{wchar_t, wstr};
-use crate::wchar_ffi::wcslen;
+use crate::wchar::wstr;
+use crate::wchar_ffi::{wchar_t, wcslen};
 
 /// Support for wgettext.
 

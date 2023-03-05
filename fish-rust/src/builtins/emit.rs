@@ -5,7 +5,8 @@ use super::shared::{
     builtin_print_help, io_streams_t, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::ffi::{self, parser_t, Repin};
-use crate::wchar_ffi::{wstr, W0String, WCharToFFI};
+use crate::wchar::wstr;
+use crate::wchar_ffi::{W0String, WCharToFFI};
 use crate::wutil::format::printf::sprintf;
 
 #[widestrs]

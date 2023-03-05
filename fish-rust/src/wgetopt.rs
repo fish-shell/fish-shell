@@ -23,7 +23,7 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-use crate::wchar::{utf32str, wstr, WExt};
+use crate::wchar::{wstr, WExt, L};
 
 /// Describe how to deal with options that follow non-option ARGV-elements.
 ///
@@ -344,7 +344,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
 
         let temp = match self.shortopts.chars().position(|sc| sc == c) {
             Some(pos) => &self.shortopts[pos..],
-            None => utf32str!(""),
+            None => L!(""),
         };
 
         // Increment `woptind' when we start to process its last character.

@@ -6,13 +6,11 @@
 //!   - wcharz_t: a "newtyped" pointer to a nul-terminated string, implemented in C++.
 //!               This is useful for FFI boundaries, to work around autocxx limitations on pointers.
 
-use crate::ffi;
-pub use cxx::CxxWString;
-pub use ffi::{wchar_t, wcharz_t};
+pub use crate::ffi::{wchar_t, wcharz_t};
+use crate::wchar::{wstr, WString};
 use once_cell::sync::Lazy;
+pub use widestring::u32cstr;
 pub use widestring::U32CString as W0String;
-pub use widestring::{u32cstr, utf32str};
-pub use widestring::{Utf32Str as wstr, Utf32String as WString};
 
 /// \return the length of a nul-terminated raw string.
 pub fn wcslen(str: *const wchar_t) -> usize {
@@ -64,7 +62,7 @@ macro_rules! c_str {
 /// Convert a wstr to a wcharz_t.
 macro_rules! wcharz {
     ($string:expr) => {
-        crate::wchar::wcharz_t {
+        crate::wchar_ffi::wcharz_t {
             str_: crate::wchar_ffi::c_str!($string),
         }
     };

@@ -1,7 +1,8 @@
 //! This file supports specifying and applying redirections.
 
-use crate::wchar::L;
-use crate::wchar_ffi::{wcharz_t, WCharToFFI, WString};
+use crate::ffi::wcharz_t;
+use crate::wchar::{WString, L};
+use crate::wchar_ffi::WCharToFFI;
 use crate::wutil::fish_wcstoi;
 use cxx::{CxxVector, CxxWString, SharedPtr, UniquePtr};
 use libc::{c_int, O_APPEND, O_CREAT, O_EXCL, O_RDONLY, O_TRUNC, O_WRONLY};

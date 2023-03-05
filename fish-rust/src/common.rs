@@ -1,7 +1,8 @@
 use crate::ffi;
+use crate::wchar::{wstr, WString};
 use crate::wchar_ext::WExt;
 use crate::wchar_ffi::c_str;
-use crate::wchar_ffi::{wstr, WCharFromFFI, WString};
+use crate::wchar_ffi::WCharFromFFI;
 use std::os::fd::AsRawFd;
 use std::{ffi::c_uint, mem};
 

@@ -120,7 +120,6 @@ type NativeCallback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync
 /// only `src/io.cpp`) is ported to rust
 enum FdMonitorCallback {
     None,
-    #[allow(clippy::type_complexity)]
     Native(NativeCallback),
     Ffi(FfiCallback /* fn ptr */, void_ptr /* param */),
 }

@@ -359,7 +359,13 @@ fn keyword_from_string<'a>(s: impl Into<&'a wstr>) -> ParseKeyword {
     ParseKeyword::from(s)
 }
 
-#[derive(Clone)]
+impl Default for ParseErrorCode {
+    fn default() -> Self {
+        ParseErrorCode::none
+    }
+}
+
+#[derive(Clone, Default)]
 pub struct ParseError {
     /// Text of the error.
     pub text: WString,
@@ -368,17 +374,6 @@ pub struct ParseError {
     /// Offset and length of the token in the source code that triggered this error.
     pub source_start: usize,
     pub source_length: usize,
-}
-
-impl Default for ParseError {
-    fn default() -> ParseError {
-        ParseError {
-            text: L!("").to_owned(),
-            code: ParseErrorCode::none,
-            source_start: 0,
-            source_length: 0,
-        }
-    }
 }
 
 impl ParseError {

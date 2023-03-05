@@ -1,5 +1,6 @@
 use crate::ffi;
 use nix::unistd;
+use std::io::{Read, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 
 /// A helper type for managing and automatically closing a file descriptor
@@ -9,6 +10,33 @@ use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 /// disambiguated because some code uses a mix of both for interop purposes.
 pub struct AutoCloseFd {
     fd_: RawFd,
+}
+
+impl Read for AutoCloseFd {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        unsafe {
+            match libc::read(self.as_raw_fd(), buf.as_mut_ptr() as *mut _, buf.len()) {
+                -1 => Err(std::io::Error::from_raw_os_error(errno::errno().0)),
+                bytes => Ok(bytes as usize),
+            }
+        }
+    }
+}
+
+impl Write for AutoCloseFd {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        unsafe {
+            match libc::write(self.as_raw_fd(), buf.as_ptr() as *const _, buf.len()) {
+                -1 => Err(std::io::Error::from_raw_os_error(errno::errno().0)),
+                bytes => Ok(bytes as usize),
+            }
+        }
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        // We don't buffer anything so this is a no-op.
+        Ok(())
+    }
 }
 
 #[cxx::bridge]

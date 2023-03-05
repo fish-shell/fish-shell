@@ -1,9 +1,9 @@
+use std::io::Write;
 use std::os::fd::AsRawFd;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use crate::common::write_loop;
 use crate::fd_monitor::{FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason};
 use crate::fds::{make_autoclose_pipes, AutoCloseFd};
 use crate::ffi_tests::add_test;
@@ -96,7 +96,7 @@ impl ItemMaker {
     fn write42(&self) {
         let buf = [0u8; 42];
         let mut writer = self.writer.lock().expect("Mutex poisoned!");
-        write_loop(&mut *writer, &buf).expect("Error writing 42 bytes to pipe!");
+        writer.write_all(&buf).expect("Error writing 42 bytes to pipe!");
     }
 }
 

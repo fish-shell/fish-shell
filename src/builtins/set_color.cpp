@@ -90,7 +90,7 @@ static void print_colors(io_streams_t &streams, wcstring_list_t args, bool bold,
     streams.out.append(str2wcstring(outp.contents()));
 }
 
-static const wchar_t *const short_options = L":b:hvoidrcu";
+static const wchar_t *const short_options = L":b:hoidrcu";
 static const struct woption long_options[] = {{L"background", required_argument, 'b'},
                                               {L"help", no_argument, 'h'},
                                               {L"bold", no_argument, 'o'},
@@ -98,7 +98,6 @@ static const struct woption long_options[] = {{L"background", required_argument,
                                               {L"italics", no_argument, 'i'},
                                               {L"dim", no_argument, 'd'},
                                               {L"reverse", no_argument, 'r'},
-                                              {L"version", no_argument, 'v'},
                                               {L"print-colors", no_argument, 'c'},
                                               {}};
 

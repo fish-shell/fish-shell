@@ -2,28 +2,11 @@ use super::errors::Error;
 use crate::wchar::IntoCharIter;
 use fast_float::parse_partial_iter;
 
-/// Parses a 64-bit floating point number.
-///
-/// Leading whitespace and trailing characters are ignored. If the input
-/// string does not contain a valid floating point number (where e.g.
-/// `"."` is seen as a valid floating point number), `None` is returned.
-/// Otherwise the parsed floating point number is returned.
-///
-/// The `decimal_sep` parameter is used to specify the decimal separator.
-/// '.' is a normal default.
-///
-/// The `consumed` parameter is used to return the number of characters
-/// consumed, similar to the "end" parameter to strtod.
-/// This is only meaningful if parsing succeeds.
-///
-/// Error::Overflow is returned if the value is too large in magnitude.
-pub fn wcstod<Chars>(input: Chars, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>
+fn wcstod_inner<I>(mut chars: I, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>
 where
-    Chars: IntoCharIter,
+    I: Iterator<Item = char> + Clone,
 {
-    let mut chars = input.chars();
     let mut whitespace_skipped = 0;
-
     // Skip leading whitespace.
     loop {
         match chars.clone().next() {
@@ -71,6 +54,28 @@ where
     }
     *consumed = n + whitespace_skipped;
     Ok(val)
+}
+
+/// Parses a 64-bit floating point number.
+///
+/// Leading whitespace and trailing characters are ignored. If the input
+/// string does not contain a valid floating point number (where e.g.
+/// `"."` is seen as a valid floating point number), `None` is returned.
+/// Otherwise the parsed floating point number is returned.
+///
+/// The `decimal_sep` parameter is used to specify the decimal separator.
+/// '.' is a normal default.
+///
+/// The `consumed` parameter is used to return the number of characters
+/// consumed, similar to the "end" parameter to strtod.
+/// This is only meaningful if parsing succeeds.
+///
+/// Error::Overflow is returned if the value is too large in magnitude.
+pub fn wcstod<Chars>(input: Chars, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>
+where
+    Chars: IntoCharIter,
+{
+    wcstod_inner(input.chars(), decimal_sep, consumed)
 }
 
 /// Check if a character iterator appears to be a hex float.

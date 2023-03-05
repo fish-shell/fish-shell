@@ -2,6 +2,7 @@ use crate::ffi;
 use crate::wchar_ext::WExt;
 use crate::wchar_ffi::c_str;
 use crate::wchar_ffi::{wstr, WCharFromFFI, WString};
+use std::os::fd::AsRawFd;
 use std::{ffi::c_uint, mem};
 
 /// A scoped manager to save the current value of some variable, and optionally set it to a new
@@ -115,6 +116,47 @@ pub fn valid_func_name(name: &wstr) -> bool {
 pub const fn assert_send<T: Send>() {}
 
 pub const fn assert_sync<T: Sync>() {}
+
+/// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in
+/// favor of native rust read/write methods at some point.
+///
+/// Returns the number of bytes written or an IO error.
+pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<usize> {
+    let fd = fd.as_raw_fd();
+    let mut total = 0;
+    while total < buf.len() {
+        let written =
+            unsafe { libc::write(fd, buf[total..].as_ptr() as *const _, buf.len() - total) };
+        if written < 0 {
+            let errno = errno::errno().0;
+            if matches!(errno, libc::EAGAIN | libc::EINTR) {
+                continue;
+            }
+            return Err(std::io::Error::from_raw_os_error(errno));
+        }
+        total += written as usize;
+    }
+    Ok(total)
+}
+
+/// A rusty port of the C++ `read_loop()` function from `common.cpp`. This should be deprecated in
+/// favor of native rust read/write methods at some point.
+///
+/// Returns the number of bytes read or an IO error.
+pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize> {
+    let fd = fd.as_raw_fd();
+    loop {
+        let read = unsafe { libc::read(fd, buf.as_mut_ptr() as *mut _, buf.len()) };
+        if read < 0 {
+            let errno = errno::errno().0;
+            if matches!(errno, libc::EAGAIN | libc::EINTR) {
+                continue;
+            }
+            return Err(std::io::Error::from_raw_os_error(errno));
+        }
+        return Ok(read as usize);
+    }
+}
 
 /// Asserts that a slice is alphabetically sorted by a [`&wstr`] `name` field.
 ///

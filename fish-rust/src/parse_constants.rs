@@ -90,8 +90,9 @@ mod parse_constants_ffi {
 
     /// IMPORTANT: If the following enum table is modified you must also update token_type_description below.
     /// TODO above comment can be removed when we drop the FFI and get real enums.
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, Default)]
     enum ParseTokenType {
+        #[default]
         invalid = 1,
 
         // Terminal types.
@@ -111,9 +112,10 @@ mod parse_constants_ffi {
     }
 
     #[repr(u8)]
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, Default)]
     enum ParseKeyword {
         // 'none' is not a keyword, it is a sentinel indicating nothing.
+        #[default]
         none,
 
         kw_and,
@@ -151,7 +153,9 @@ mod parse_constants_ffi {
     }
 
     // Parse error code list.
+    #[derive(Default)]
     pub enum ParseErrorCode {
+        #[default]
         none,
 
         // Matching values from enum parser_error.
@@ -257,12 +261,6 @@ impl SourceRange {
     }
 }
 
-impl Default for ParseTokenType {
-    fn default() -> Self {
-        ParseTokenType::invalid
-    }
-}
-
 impl From<ParseTokenType> for &'static wstr {
     #[widestrs]
     fn from(token_type: ParseTokenType) -> Self {
@@ -287,12 +285,6 @@ impl From<ParseTokenType> for &'static wstr {
 fn token_type_description(token_type: ParseTokenType) -> wcharz_t {
     let s: &'static wstr = token_type.into();
     wcharz!(s)
-}
-
-impl Default for ParseKeyword {
-    fn default() -> Self {
-        ParseKeyword::none
-    }
 }
 
 impl From<ParseKeyword> for &'static wstr {
@@ -359,7 +351,7 @@ fn keyword_from_string<'a>(s: impl Into<&'a wstr>) -> ParseKeyword {
     ParseKeyword::from(s)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ParseError {
     /// Text of the error.
     pub text: WString,
@@ -368,17 +360,6 @@ pub struct ParseError {
     /// Offset and length of the token in the source code that triggered this error.
     pub source_start: usize,
     pub source_length: usize,
-}
-
-impl Default for ParseError {
-    fn default() -> ParseError {
-        ParseError {
-            text: L!("").to_owned(),
-            code: ParseErrorCode::none,
-            source_start: 0,
-            source_length: 0,
-        }
-    }
 }
 
 impl ParseError {

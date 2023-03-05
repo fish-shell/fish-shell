@@ -3,7 +3,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use self::fd_monitor_ffi::{new_fd_event_signaller, FdEventSignaller, ItemWakeReason};
+pub use self::fd_monitor_ffi::ItemWakeReason;
+use self::fd_monitor_ffi::{new_fd_event_signaller, FdEventSignaller};
 use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
 use crate::ffi::void_ptr;
@@ -93,7 +94,20 @@ unsafe impl Send for FdEventSignaller {}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FdMonitorItemId(u64);
 
+impl From<FdMonitorItemId> for u64 {
+    fn from(value: FdMonitorItemId) -> Self {
+        value.0
+    }
+}
+
+impl From<u64> for FdMonitorItemId {
+    fn from(value: u64) -> Self {
+        FdMonitorItemId(value)
+    }
+}
+
 type FfiCallback = extern "C" fn(*mut AutoCloseFd, u8, void_ptr);
+type NativeCallback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>;
 
 /// The callback type used by [`FdMonitorItem`]. It is passed a mutable reference to the
 /// `FdMonitorItem`'s [`FdMonitorItem::fd`] and [the reason](ItemWakeupReason) for the wakeup. The
@@ -107,7 +121,7 @@ type FfiCallback = extern "C" fn(*mut AutoCloseFd, u8, void_ptr);
 enum FdMonitorCallback {
     None,
     #[allow(clippy::type_complexity)]
-    Native(Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>),
+    Native(NativeCallback),
     Ffi(FfiCallback /* fn ptr */, void_ptr /* param */),
 }
 
@@ -139,6 +153,11 @@ enum ItemAction {
 }
 
 impl FdMonitorItem {
+    /// Returns the id for this `FdMonitorItem` that is registered with the [`FdMonitor`].
+    pub fn id(&self) -> FdMonitorItemId {
+        self.item_id
+    }
+
     /// Return the duration until the timeout should trigger or `None`. A return of `0` means we are
     /// at or past the timeout.
     fn remaining_time(&self, now: &Instant) -> Option<Duration> {
@@ -208,14 +227,25 @@ impl FdMonitorItem {
         }
     }
 
-    fn new() -> Self {
-        Self {
-            callback: FdMonitorCallback::None,
-            fd: AutoCloseFd::empty(),
-            timeout: None,
-            last_time: None,
+    pub fn new(
+        fd: AutoCloseFd,
+        timeout: Option<Duration>,
+        callback: Option<NativeCallback>,
+    ) -> Self {
+        FdMonitorItem {
+            fd,
+            timeout,
+            callback: match callback {
+                Some(callback) => FdMonitorCallback::Native(callback),
+                None => FdMonitorCallback::None,
+            },
             item_id: FdMonitorItemId(0),
+            last_time: None,
         }
+    }
+
+    pub fn set_callback(&mut self, callback: NativeCallback) {
+        self.callback = FdMonitorCallback::Native(callback);
     }
 
     fn set_callback_ffi(&mut self, callback: *const u8, param: *const u8) {
@@ -225,6 +255,18 @@ impl FdMonitorItem {
         // doing is unsafe in all cases, so might as well make the best of it.
         let callback = unsafe { std::mem::transmute(callback) };
         self.callback = FdMonitorCallback::Ffi(callback, param.into());
+    }
+}
+
+impl Default for FdMonitorItem {
+    fn default() -> Self {
+        Self {
+            callback: FdMonitorCallback::None,
+            fd: AutoCloseFd::empty(),
+            timeout: None,
+            last_time: None,
+            item_id: FdMonitorItemId(0),
+        }
     }
 }
 
@@ -245,7 +287,7 @@ fn new_fd_monitor_item_ffi(
     // raw function as a void pointer or as a typed fn that helps us keep track of what we're
     // doing is unsafe in all cases, so might as well make the best of it.
     let callback = unsafe { std::mem::transmute(callback) };
-    let mut item = FdMonitorItem::new();
+    let mut item = FdMonitorItem::default();
     item.fd.reset(fd);
     item.callback = FdMonitorCallback::Ffi(callback, param.into());
     if timeout_usecs != FdReadableSet::kNoTimeout {
@@ -360,7 +402,7 @@ impl FdMonitor {
         // raw function as a void pointer or as a typed fn that helps us keep track of what we're
         // doing is unsafe in all cases, so might as well make the best of it.
         let callback = unsafe { std::mem::transmute(callback) };
-        let mut item = FdMonitorItem::new();
+        let mut item = FdMonitorItem::default();
         item.fd.reset(fd);
         item.callback = FdMonitorCallback::Ffi(callback, param.into());
         if timeout_usecs != FdReadableSet::kNoTimeout {

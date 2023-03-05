@@ -19,6 +19,7 @@ Scripting improvements
 ----------------------
 - ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
 - ``read`` will now print an error if told to set a read-only variable instead of silently doing nothing (:issue:`9346`).
+- ``set_color -v`` no longer crashes fish (:issue:`9640`).
 
 Interactive improvements
 ------------------------
@@ -30,6 +31,7 @@ Interactive improvements
 - :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
 - The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
 - Fish no longer crashes when searching history for non-ascii codepoints case-insensitively (:issue:`9628`).
+- The alt+s binding will now also use ``please`` if available (:issue:`9635`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

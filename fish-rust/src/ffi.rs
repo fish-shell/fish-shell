@@ -93,6 +93,8 @@ include_cpp! {
     generate!("re::try_compile_ffi")
     generate!("wcs2string")
     generate!("str2wcstring")
+
+    generate!("env_var_t")
 }
 
 impl parser_t {

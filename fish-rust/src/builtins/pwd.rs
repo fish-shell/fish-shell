@@ -1,10 +1,12 @@
+//! Implementation of the pwd builtin.
 use std::ffi::c_int;
 
 use crate::{
     builtins::shared::{io_streams_t, BUILTIN_ERR_ARG_COUNT1},
+    env::env_mode_flags_t,
     ffi::parser_t,
     wchar::{wstr, WString, L},
-    wchar_ffi::WCharFromFFI,
+    wchar_ffi::{WCharFromFFI, WCharToFFI},
     wgetopt::{wgetopter_t, wopt, woption, woption_argument_t},
     wutil::{wgettext_fmt, wrealpath},
 };
@@ -14,6 +16,7 @@ use super::shared::{
     STATUS_INVALID_ARGS,
 };
 
+/// The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");
 const long_options: &[woption] = &[
     wopt(L!("help"), woption_argument_t::no_argument, 'h'),
@@ -50,15 +53,17 @@ pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]
     }
 
     let mut pwd = WString::new();
-    let tmp = parser.vars1().get_pwd_slash();
+    let tmp = parser
+        .vars1()
+        .get_or_null(&L!("PWD").to_ffi(), env_mode_flags_t::ENV_DEFAULT as u16);
     if !tmp.is_null() {
-        pwd = tmp.from_ffi();
-        pwd.pop();
+        pwd = tmp.as_string().from_ffi();
     }
     if resolve_symlinks {
         if let Some(real_pwd) = wrealpath(&pwd) {
             pwd = real_pwd;
         } else {
+            // TODO: get error from errno
             streams
                 .err
                 .append(wgettext_fmt!("%ls: realpath failed\n", cmd));

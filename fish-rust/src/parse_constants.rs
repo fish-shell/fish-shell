@@ -359,9 +359,7 @@ fn keyword_from_string<'a>(s: impl Into<&'a wstr>) -> ParseKeyword {
 
 impl Default for ParseErrorCode {
     fn default() -> Self {
-        Self {
-            ParseErrorCode::none
-        }
+        ParseErrorCode::none
     }
 }
 

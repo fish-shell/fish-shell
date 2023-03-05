@@ -96,7 +96,9 @@ impl ItemMaker {
     fn write42(&self) {
         let buf = [0u8; 42];
         let mut writer = self.writer.lock().expect("Mutex poisoned!");
-        writer.write_all(&buf).expect("Error writing 42 bytes to pipe!");
+        writer
+            .write_all(&buf)
+            .expect("Error writing 42 bytes to pipe!");
     }
 }
 

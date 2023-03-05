@@ -3,6 +3,9 @@
 #![allow(non_upper_case_globals)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::manual_is_ascii_check)]
+#![allow(clippy::bool_assert_comparison)]
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::derivable_impls)]
 
 #[macro_use]
 mod common;

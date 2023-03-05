@@ -90,9 +90,7 @@ mod parse_constants_ffi {
 
     /// IMPORTANT: If the following enum table is modified you must also update token_type_description below.
     /// TODO above comment can be removed when we drop the FFI and get real enums.
-    #[derive(Clone, Copy, Default)]
     enum ParseTokenType {
-        #[default]
         invalid = 1,
 
         // Terminal types.
@@ -112,10 +110,8 @@ mod parse_constants_ffi {
     }
 
     #[repr(u8)]
-    #[derive(Clone, Copy, Default)]
     enum ParseKeyword {
         // 'none' is not a keyword, it is a sentinel indicating nothing.
-        #[default]
         none,
 
         kw_and,
@@ -153,9 +149,7 @@ mod parse_constants_ffi {
     }
 
     // Parse error code list.
-    #[derive(Default)]
     pub enum ParseErrorCode {
-        #[default]
         none,
 
         // Matching values from enum parser_error.
@@ -261,6 +255,12 @@ impl SourceRange {
     }
 }
 
+impl Default for ParseTokenType {
+    fn default() -> Self {
+        ParseTokenType::invalid
+    }
+}
+
 impl From<ParseTokenType> for &'static wstr {
     #[widestrs]
     fn from(token_type: ParseTokenType) -> Self {
@@ -285,6 +285,12 @@ impl From<ParseTokenType> for &'static wstr {
 fn token_type_description(token_type: ParseTokenType) -> wcharz_t {
     let s: &'static wstr = token_type.into();
     wcharz!(s)
+}
+
+impl Default for ParseKeyword {
+    fn default() -> Self {
+        ParseKeyword::none
+    }
 }
 
 impl From<ParseKeyword> for &'static wstr {
@@ -349,6 +355,14 @@ impl From<&wstr> for ParseKeyword {
 fn keyword_from_string<'a>(s: impl Into<&'a wstr>) -> ParseKeyword {
     let s: &wstr = s.into();
     ParseKeyword::from(s)
+}
+
+impl Default for ParseErrorCode {
+    fn default() -> Self {
+        Self {
+            ParseErrorCode::none
+        }
+    }
 }
 
 #[derive(Clone, Default)]

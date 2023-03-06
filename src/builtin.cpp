@@ -557,6 +557,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     if (cmd == L"wait") {
         return RustBuiltin::Wait;
     }
+    if (cmd == L"printf") {
+        return RustBuiltin::Printf;
+    }
     if (cmd == L"return") {
         return RustBuiltin::Return;
     }

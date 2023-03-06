@@ -112,7 +112,7 @@ impl RedirectionSpec {
 
     /// Attempt to parse target as an fd.
     pub fn get_target_as_fd(&self) -> Option<RawFd> {
-        fish_wcstoi(self.target.as_char_slice().iter().copied()).ok()
+        fish_wcstoi(&self.target).ok()
     }
     fn get_target_as_fd_ffi(&self) -> SharedPtr<i32> {
         match self.get_target_as_fd() {

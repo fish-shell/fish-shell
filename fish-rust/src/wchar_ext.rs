@@ -116,6 +116,22 @@ impl<'a> IntoCharIter for &'a WString {
     }
 }
 
+// Also support `str.chars()` itself.
+impl<'a> IntoCharIter for std::str::Chars<'a> {
+    type Iter = Self;
+    fn chars(self) -> Self::Iter {
+        self
+    }
+}
+
+// Also support `wstr.chars()` itself.
+impl<'a> IntoCharIter for CharsUtf32<'a> {
+    type Iter = Self;
+    fn chars(self) -> Self::Iter {
+        self
+    }
+}
+
 /// \return true if \p prefix is a prefix of \p contents.
 fn iter_prefixes_iter<Prefix, Contents>(prefix: Prefix, mut contents: Contents) -> bool
 where

@@ -99,12 +99,12 @@ pub fn bg(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
     let mut retval = STATUS_CMD_OK;
     let pids: Vec<i64> = args[opts.optind..]
         .iter()
-        .map(|arg| {
-            fish_wcstoi(arg.chars()).unwrap_or_else(|_| {
+        .map(|&arg| {
+            fish_wcstoi(arg).unwrap_or_else(|_| {
                 streams.err.append(wgettext_fmt!(
                     "%ls: '%ls' is not a valid job specifier\n",
                     cmd,
-                    *arg
+                    arg
                 ));
                 retval = STATUS_INVALID_ARGS;
                 0

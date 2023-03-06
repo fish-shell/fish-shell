@@ -196,7 +196,7 @@ pub fn wait(
     for i in w.woptind..argc {
         if iswnumeric(argv[i]) {
             // argument is pid
-            let mpid: Result<pid_t, wutil::Error> = fish_wcstoi(argv[i].chars());
+            let mpid: Result<pid_t, wutil::Error> = fish_wcstoi(argv[i]);
             if mpid.is_err() || mpid.unwrap() <= 0 {
                 streams.err.append(wgettext_fmt!(
                     "%ls: '%ls' is not a valid process id\n",

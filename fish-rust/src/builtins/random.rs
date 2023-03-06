@@ -73,7 +73,7 @@ pub fn random(
         cmd: &wstr,
         num: &wstr,
     ) -> Result<T, wutil::Error> {
-        let res = fish_wcstoi_radix_all(num.chars(), None, true);
+        let res = fish_wcstoi_radix_all(num, None, true);
         if res.is_err() {
             streams
                 .err

@@ -117,7 +117,7 @@ pub fn parse_return_value(
     if optind == args.len() {
         Ok(parser.get_last_status().into())
     } else {
-        match fish_wcstoi(args[optind].chars()) {
+        match fish_wcstoi(args[optind]) {
             Ok(i) => Ok(i),
             Err(_e) => {
                 streams

@@ -7,11 +7,14 @@ use crate::builtins::shared::{
 use crate::ffi::parser_t;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{self, fish_wcstoi_radix_all, format::printf::sprintf, wgettext_fmt};
+use crate::wutil::{
+    self, fish_wcstoi_opts, format::printf::sprintf, wgettext_fmt, Options as WcstoiOptions,
+};
 use num_traits::PrimInt;
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use std::default::Default;
 use std::sync::Mutex;
 
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
@@ -73,7 +76,13 @@ pub fn random(
         cmd: &wstr,
         num: &wstr,
     ) -> Result<T, wutil::Error> {
-        let res = fish_wcstoi_radix_all(num, None, true);
+        let res = fish_wcstoi_opts(
+            num,
+            WcstoiOptions {
+                consume_all: true,
+                ..Default::default()
+            },
+        );
         if res.is_err() {
             streams
                 .err

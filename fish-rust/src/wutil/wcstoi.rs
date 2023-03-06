@@ -1,6 +1,7 @@
 pub use super::errors::Error;
 use crate::wchar::IntoCharIter;
 use num_traits::{NumCast, PrimInt};
+use std::default::Default;
 use std::iter::{Fuse, Peekable};
 use std::result::Result;
 
@@ -9,6 +10,20 @@ struct ParseResult {
     negative: bool,
     consumed_all: bool,
     consumed: usize,
+}
+
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Options {
+    /// If set, and the requested type is unsigned, then negative values are wrapped
+    /// to positive, as strtoul does.
+    /// For example, strtoul("-2") returns ULONG_MAX - 1.
+    pub wrap_negatives: bool,
+
+    /// If set, it is an error to have unconsumed characters.
+    pub consume_all: bool,
+
+    /// The radix, or None to infer it.
+    pub mradix: Option<u32>,
 }
 
 struct CharsIterator<Iter: Iterator<Item = char>> {
@@ -43,9 +58,10 @@ impl<Iter: Iterator<Item = char>> CharsIterator<Iter> {
 ///   - Leading 0 means 8.
 ///   - Otherwise 10.
 /// The parse result contains the number as a u64, and whether it was negative.
-fn fish_parse_radix<Iter: Iterator<Item = char>>(
+fn parse_radix<Iter: Iterator<Item = char>>(
     iter: Iter,
     mradix: Option<u32>,
+    error_if_negative: bool,
 ) -> Result<ParseResult, Error> {
     if let Some(r) = mradix {
         assert!((2..=36).contains(&r), "fish_parse_radix: invalid radix {r}");
@@ -74,6 +90,10 @@ fn fish_parse_radix<Iter: Iterator<Item = char>>(
             chars.next();
         }
         _ => negative = false,
+    }
+
+    if negative && error_if_negative {
+        return Err(Error::InvalidChar);
     }
 
     // Determine the radix.
@@ -134,8 +154,7 @@ fn fish_parse_radix<Iter: Iterator<Item = char>>(
 /// Parse some iterator over Chars into some Integer type, optionally with a radix.
 fn fish_wcstoi_impl<Int, Chars>(
     src: Chars,
-    mradix: Option<u32>,
-    consume_all: bool,
+    options: Options,
     out_consumed: &mut usize,
 ) -> Result<Int, Error>
 where
@@ -146,22 +165,40 @@ where
     assert!(bits <= 64, "fish_wcstoi: Int must be <= 64 bits");
     let signed = Int::min_value() < Int::zero();
 
+    let Options {
+        wrap_negatives,
+        consume_all,
+        mradix,
+    } = options;
+
     let ParseResult {
         result,
         negative,
         consumed_all,
         consumed,
-    } = fish_parse_radix(src, mradix)?;
+    } = parse_radix(src, mradix, !signed && !wrap_negatives)?;
     *out_consumed = consumed;
 
-    if !signed && negative {
-        Err(Error::InvalidChar)
-    } else if consume_all && !consumed_all {
+    assert!(!negative || result > 0, "Should never get negative zero");
+
+    if consume_all && !consumed_all {
         Err(Error::CharsLeft)
-    } else if !signed || !negative {
+    } else if !negative {
         match Int::from(result) {
             Some(r) => Ok(r),
             None => Err(Error::Overflow),
+        }
+    } else if !signed {
+        // strtoul documents "if there was a leading minus sign, the negation of the result of the conversion".
+        // However in practice it's modulo the base. For example strtoul("-1") returns ULONG_MAX.
+        // We wish to check if `val + base` is in the range [0, base), where val is negative.
+        // Rewrite this as `base - -val`; this will be in range iff val is at least 1 and less than base.
+        assert!(result > 0, "Should never get negative zero");
+        let max_val = Int::max_value().to_u64().unwrap();
+        if result > max_val {
+            Err(Error::Overflow)
+        } else {
+            Ok(Int::from(max_val - result + 1).expect("value should be in range"))
         }
     } else {
         assert!(signed && negative);
@@ -187,29 +224,17 @@ where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), None, false, &mut 0)
+    fish_wcstoi_impl(src.chars(), Default::default(), &mut 0)
 }
 
 /// Convert the given wide string to an integer using the given radix.
 /// Leading whitespace is skipped.
-pub fn fish_wcstoi_radix<Int, Chars>(src: Chars, radix: u32) -> Result<Int, Error>
+pub fn fish_wcstoi_opts<Int, Chars>(src: Chars, options: Options) -> Result<Int, Error>
 where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), Some(radix), false, &mut 0)
-}
-
-pub fn fish_wcstoi_radix_all<Int, Chars>(
-    src: Chars,
-    radix: Option<u32>,
-    consume_all: bool,
-) -> Result<Int, Error>
-where
-    Chars: IntoCharIter,
-    Int: PrimInt,
-{
-    fish_wcstoi_impl(src.chars(), radix, consume_all, &mut 0)
+    fish_wcstoi_impl(src.chars(), options, &mut 0)
 }
 
 /// Convert the given wide string to an integer.
@@ -218,12 +243,16 @@ where
 ///  - 0 means octal, 0x means hex
 ///  - Leading + is supported.
 /// The number of consumed characters is returned in out_consumed.
-pub fn fish_wcstoi_partial<Int, Chars>(src: Chars, out_consumed: &mut usize) -> Result<Int, Error>
+pub fn fish_wcstoi_partial<Int, Chars>(
+    src: Chars,
+    options: Options,
+    out_consumed: &mut usize,
+) -> Result<Int, Error>
 where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), None, false, out_consumed)
+    fish_wcstoi_impl(src.chars(), options, out_consumed)
 }
 
 #[cfg(test)]
@@ -236,10 +265,17 @@ mod tests {
     }
 
     #[test]
-    fn tests() {
+    fn test_signed() {
         let run1 = |s: &str| -> Result<i32, Error> { fish_wcstoi(s.chars()) };
-        let run1_rad =
-            |s: &str, radix: u32| -> Result<i32, Error> { fish_wcstoi_radix(s.chars(), radix) };
+        let run1_rad = |s: &str, radix: u32| -> Result<i32, Error> {
+            fish_wcstoi_opts(
+                s.chars(),
+                Options {
+                    mradix: Some(radix),
+                    ..Default::default()
+                },
+            )
+        };
         assert_eq!(run1(""), Err(Error::Empty));
         assert_eq!(run1("   \n   "), Err(Error::Empty));
         assert_eq!(run1("0"), Ok(0));
@@ -284,11 +320,89 @@ mod tests {
     }
 
     #[test]
+    fn test_unsigned() {
+        fn negu(x: u64) -> u64 {
+            std::u64::MAX - x + 1
+        }
+
+        let run1 = |s: &str| -> Result<u64, Error> {
+            fish_wcstoi_opts(
+                s.chars(),
+                Options {
+                    wrap_negatives: true,
+                    ..Default::default()
+                },
+            )
+        };
+        let run1_rad = |s: &str, radix: u32| -> Result<u64, Error> {
+            fish_wcstoi_opts(
+                s.chars(),
+                Options {
+                    wrap_negatives: true,
+                    mradix: Some(radix),
+                    ..Default::default()
+                },
+            )
+        };
+        assert_eq!(run1("-5"), Ok(negu(5)));
+        assert_eq!(run1(""), Err(Error::Empty));
+        assert_eq!(run1("   \n   "), Err(Error::Empty));
+        assert_eq!(run1("0"), Ok(0));
+        assert_eq!(run1("-0"), Ok(0));
+        assert_eq!(run1("+0"), Ok(0));
+        assert_eq!(run1("+00"), Ok(0));
+        assert_eq!(run1("-00"), Ok(0));
+        assert_eq!(run1("+0x00"), Ok(0));
+        assert_eq!(run1("-0x00"), Ok(0));
+        assert_eq!(run1("+-0"), Err(Error::InvalidChar));
+        assert_eq!(run1("-+0"), Err(Error::InvalidChar));
+        assert_eq!(run1("5"), Ok(5));
+        assert_eq!(run1("-5"), Ok(negu(5)));
+        assert_eq!(run1("123"), Ok(123));
+        assert_eq!(run1("+123"), Ok(123));
+        assert_eq!(run1("-123"), Ok(negu(123)));
+        assert_eq!(run1("123"), Ok(123));
+        assert_eq!(run1("+0x123"), Ok(291));
+        assert_eq!(run1("-0x123"), Ok(negu(291)));
+        assert_eq!(run1("+0X123"), Ok(291));
+        assert_eq!(run1("-0X123"), Ok(negu(291)));
+        assert_eq!(run1("+0123"), Ok(83));
+        assert_eq!(run1("-0123"), Ok(negu(83)));
+        assert_eq!(run1("  345  "), Ok(345));
+        assert_eq!(run1("  -345  "), Ok(negu(345)));
+        assert_eq!(run1("  x345"), Err(Error::InvalidChar));
+        assert_eq!(run1("456x"), Ok(456));
+        assert_eq!(run1("456 x"), Ok(456));
+        assert_eq!(run1("99999999999999999999999"), Err(Error::Overflow));
+        assert_eq!(run1("-99999999999999999999999"), Err(Error::Overflow));
+        // This is subtle. "567" in base 8 is "375" in base 10. The final "8" is not converted.
+        assert_eq!(run1_rad("5678", 8), Ok(375));
+    }
+
+    #[test]
+    fn test_wrap_neg() {
+        fn negu(x: u64) -> u64 {
+            std::u64::MAX - x + 1
+        }
+
+        let run1 = |s: &str, opts: Options| -> Result<u64, Error> { fish_wcstoi_opts(s, opts) };
+        let mut opts = Options::default();
+        assert_eq!(run1("-123", opts), Err(Error::InvalidChar));
+        assert_eq!(run1("-0x123", opts), Err(Error::InvalidChar));
+        assert_eq!(run1("-0", opts), Err(Error::InvalidChar));
+
+        opts.wrap_negatives = true;
+        assert_eq!(run1("-123", opts), Ok(negu(123)));
+        assert_eq!(run1("-0x123", opts), Ok(negu(0x123)));
+        assert_eq!(run1("-0", opts), Ok(0));
+    }
+
+    #[test]
     fn test_partial() {
         let run1 = |s: &str| -> (i32, usize) {
             let mut consumed = 0;
-            let res =
-                fish_wcstoi_partial(s.chars(), &mut consumed).expect("Should have parsed an int");
+            let res = fish_wcstoi_partial(s, Default::default(), &mut consumed)
+                .expect("Should have parsed an int");
             (res, consumed)
         };
 

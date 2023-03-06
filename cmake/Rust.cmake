@@ -5,7 +5,7 @@ set(CORROSION_TESTS OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     Corrosion
-    GIT_REPOSITORY https://github.com/ridiculousfish/corrosion
+    GIT_REPOSITORY https://github.com/mqudsi/corrosion
     GIT_TAG fish
 )
 

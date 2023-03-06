@@ -73,13 +73,22 @@ jobs:
   ubuntu-asan:
 
     runs-on: ubuntu-latest
+    env:
+        # Rust has two different memory sanitizers of interest; they can't be used at the same time:
+        # * AddressSanitizer detects out-of-bound access, use-after-free, use-after-return,
+        #   use-after-scope, double-free, invalid-free, and memory leaks.
+        # * MemorySanitizer detects uninitialized reads.
+        #
+        RUSTFLAGS: "-Zsanitizer=address"
+        # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
 
     steps:
     - uses: actions/checkout@v3
     - name: SetupRust
       uses: ATiltedTree/setup-rust@v1
       with:
-        rust-version: 1.67
+        # All -Z options require running nightly
+        rust-version: nightly
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -91,7 +100,9 @@ jobs:
           CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address -DFISH_CI_SAN"
       run: |
         mkdir build && cd build
-        cmake ..
+        # Rust's ASAN requires the build system to explicitly pass a --target triple. We read that
+        # value from CMake variable Rust_CARGO_TARGET (shared with corrosion).
+        cmake .. -DASAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu
     - name: make
       run: |
         make

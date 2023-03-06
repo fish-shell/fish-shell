@@ -96,11 +96,21 @@ fn parse_radix<Iter: Iterator<Item = char>>(
         return Err(Error::InvalidChar);
     }
 
+    // We eagerly attempt to parse "0" as octal and "0x" as hex, but
+    // we may backtrack to just returning 0.
+    let mut leading_zero_result: Option<ParseResult> = None;
+
     // Determine the radix.
     let radix = if let Some(radix) = mradix {
         radix
     } else if chars.current() == '0' {
         chars.next();
+        leading_zero_result = Some(ParseResult {
+            result: 0,
+            negative: false,
+            consumed_all: chars.peek().is_none(),
+            consumed: chars.consumed,
+        });
         match chars.current() {
             'x' | 'X' => {
                 chars.next();
@@ -109,12 +119,7 @@ fn parse_radix<Iter: Iterator<Item = char>>(
             c if ('0'..='9').contains(&c) => 8,
             _ => {
                 // Just a 0.
-                return Ok(ParseResult {
-                    result: 0,
-                    negative: false,
-                    consumed_all: chars.peek().is_none(),
-                    consumed: chars.consumed,
-                });
+                return Ok(leading_zero_result.unwrap());
             }
         }
     } else {
@@ -133,8 +138,12 @@ fn parse_radix<Iter: Iterator<Item = char>>(
     }
 
     // Did we consume at least one char after the prefix?
+    // If not, but we also had a leading 0 (say 08 or 0x), then we just parsed a zero.
     let consumed = chars.consumed;
     if consumed == start_consumed {
+        if let Some(leading_zero_result) = leading_zero_result {
+            return Ok(leading_zero_result);
+        }
         return Err(Error::InvalidChar);
     }
 
@@ -417,5 +426,8 @@ mod tests {
         assert_eq!(run1("  -0345  "), (-229, 7));
         assert_eq!(run1(" 0x345  "), (0x345, 6));
         assert_eq!(run1(" -0x345  "), (-0x345, 7));
+        assert_eq!(run1("08"), (0, 1));
+        assert_eq!(run1("0x"), (0, 1));
+        assert_eq!(run1("0xx"), (0, 1));
     }
 }

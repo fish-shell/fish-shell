@@ -115,6 +115,16 @@ fn vsprintfp(format: &[FormatElement], args: &[&dyn Printf]) -> Result<WString> 
 ///
 /// Wrapper around [vsprintf].
 macro_rules! sprintf {
+    // Variant which allows a string literal.
+    (
+        $fmt:literal, // format string
+        $($arg:expr),* // arguments
+        $(,)? // optional trailing comma
+    ) => {
+        crate::wutil::format::printf::vsprintf(&crate::wchar::L!($fmt), &[$( &($arg) as &dyn crate::wutil::format::printf::Printf),* ][..]).expect("Invalid format string and/or arguments")
+    };
+
+    // Variant which allows a runtime format string, which must be of type &wstr.
     (
         $fmt:expr, // format string
         $($arg:expr),* // arguments
@@ -123,4 +133,19 @@ macro_rules! sprintf {
         crate::wutil::format::printf::vsprintf($fmt, &[$( &($arg) as &dyn crate::wutil::format::printf::Printf),* ][..]).expect("Invalid format string and/or arguments")
     };
 }
+
 pub(crate) use sprintf;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::wchar::L;
+
+    // Test basic printf with both literals and wide strings.
+    #[test]
+    fn test_sprintf() {
+        assert_eq!(sprintf!("Hello, %s!", "world"), "Hello, world!");
+        assert_eq!(sprintf!(L!("Hello, %ls!"), "world"), "Hello, world!");
+        assert_eq!(sprintf!(L!("Hello, %ls!"), L!("world")), "Hello, world!");
+    }
+}

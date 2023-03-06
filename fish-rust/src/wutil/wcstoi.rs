@@ -1,13 +1,7 @@
+pub use super::errors::Error;
 use num_traits::{NumCast, PrimInt};
 use std::iter::Peekable;
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Error {
-    Overflow,
-    Empty,
-    InvalidDigit,
-    CharsLeft,
-}
+use std::result::Result;
 
 struct ParseResult {
     result: u64,
@@ -98,7 +92,7 @@ where
 
     // Did we consume at least one char?
     if !consumed1 {
-        return Err(Error::InvalidDigit);
+        return Err(Error::InvalidChar);
     }
 
     // Do not return -0.
@@ -135,7 +129,7 @@ where
     } = fish_parse_radix(src, mradix)?;
 
     if !signed && negative {
-        Err(Error::InvalidDigit)
+        Err(Error::InvalidChar)
     } else if consume_all && !consumed_all {
         Err(Error::CharsLeft)
     } else if !signed || !negative {
@@ -211,8 +205,8 @@ mod tests {
         assert_eq!(run1("0"), Ok(0));
         assert_eq!(run1("-0"), Ok(0));
         assert_eq!(run1("+0"), Ok(0));
-        assert_eq!(run1("+-0"), Err(Error::InvalidDigit));
-        assert_eq!(run1("-+0"), Err(Error::InvalidDigit));
+        assert_eq!(run1("+-0"), Err(Error::InvalidChar));
+        assert_eq!(run1("-+0"), Err(Error::InvalidChar));
         assert_eq!(run1("123"), Ok(123));
         assert_eq!(run1("+123"), Ok(123));
         assert_eq!(run1("-123"), Ok(-123));
@@ -225,7 +219,7 @@ mod tests {
         assert_eq!(run1("-0123"), Ok(-83));
         assert_eq!(run1("  345  "), Ok(345));
         assert_eq!(run1("  -345  "), Ok(-345));
-        assert_eq!(run1("  x345"), Err(Error::InvalidDigit));
+        assert_eq!(run1("  x345"), Err(Error::InvalidChar));
         assert_eq!(run1("456x"), Ok(456));
         assert_eq!(run1("456 x"), Ok(456));
         assert_eq!(run1("99999999999999999999999"), Err(Error::Overflow));

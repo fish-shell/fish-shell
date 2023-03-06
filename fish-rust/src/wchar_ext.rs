@@ -80,35 +80,36 @@ fn test_to_wstring() {
     assert_eq!(i64::MAX.to_wstring(), "9223372036854775807");
 }
 
-/// A thing that a wide string can start with or end with.
-/// It must have a chars() method which returns a double-ended char iterator.
-pub trait CharPrefixSuffix {
-    type Iter: DoubleEndedIterator<Item = char>;
+/// A trait for a thing that can produce a double-ended, cloneable
+/// iterator of chars.
+/// Common implementations include char, &str, &wstr, &WString.
+pub trait IntoCharIter {
+    type Iter: DoubleEndedIterator<Item = char> + Clone;
     fn chars(self) -> Self::Iter;
 }
 
-impl CharPrefixSuffix for char {
+impl IntoCharIter for char {
     type Iter = std::iter::Once<char>;
     fn chars(self) -> Self::Iter {
         std::iter::once(self)
     }
 }
 
-impl<'a> CharPrefixSuffix for &'a str {
+impl<'a> IntoCharIter for &'a str {
     type Iter = std::str::Chars<'a>;
     fn chars(self) -> Self::Iter {
         str::chars(self)
     }
 }
 
-impl<'a> CharPrefixSuffix for &'a wstr {
+impl<'a> IntoCharIter for &'a wstr {
     type Iter = CharsUtf32<'a>;
     fn chars(self) -> Self::Iter {
         wstr::chars(self)
     }
 }
 
-impl<'a> CharPrefixSuffix for &'a WString {
+impl<'a> IntoCharIter for &'a WString {
     type Iter = CharsUtf32<'a>;
     fn chars(self) -> Self::Iter {
         wstr::chars(self)
@@ -155,13 +156,13 @@ pub trait WExt {
 
     /// \return whether we start with a given Prefix.
     /// The Prefix can be a char, a &str, a &wstr, or a &WString.
-    fn starts_with<Prefix: CharPrefixSuffix>(&self, prefix: Prefix) -> bool {
+    fn starts_with<Prefix: IntoCharIter>(&self, prefix: Prefix) -> bool {
         iter_prefixes_iter(prefix.chars(), self.as_char_slice().iter().copied())
     }
 
     /// \return whether we end with a given Suffix.
     /// The Suffix can be a char, a &str, a &wstr, or a &WString.
-    fn ends_with<Suffix: CharPrefixSuffix>(&self, suffix: Suffix) -> bool {
+    fn ends_with<Suffix: IntoCharIter>(&self, suffix: Suffix) -> bool {
         iter_prefixes_iter(
             suffix.chars().rev(),
             self.as_char_slice().iter().copied().rev(),

@@ -6,6 +6,9 @@
 
 pub use widestring::{Utf32Str as wstr, Utf32String as WString};
 
+/// Pull in our extensions.
+pub use crate::wchar_ext::{IntoCharIter, WExt};
+
 /// Creates a wstr string slice, like the "L" prefix of C++.
 /// The result is of type wstr.
 /// It is NOT nul-terminated.
@@ -26,9 +29,6 @@ pub(crate) use L;
 /// ```
 /// Note: the resulting string is NOT nul-terminated.
 pub use widestring_suffix::widestrs;
-
-/// Pull in our extensions.
-pub use crate::wchar_ext::{CharPrefixSuffix, WExt};
 
 // Use Unicode "non-characters" for internal characters as much as we can. This
 // gives us 32 "characters" for internal use that we can guarantee should not

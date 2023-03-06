@@ -1,7 +1,9 @@
+pub mod errors;
 pub mod format;
 pub mod gettext;
 mod normalize_path;
-mod wcstoi;
+pub mod wcstod;
+pub mod wcstoi;
 mod wrealpath;
 
 use std::io::Write;

@@ -33,6 +33,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
+#include "ffi_init.rs.h"
 #include "flog.h"
 #include "wcstringutil.h"
 
@@ -633,7 +634,10 @@ locale_t fish_c_locale() {
 
 static bool fish_numeric_locale_is_valid = false;
 
-void fish_invalidate_numeric_locale() { fish_numeric_locale_is_valid = false; }
+void fish_invalidate_numeric_locale() {
+    fish_numeric_locale_is_valid = false;
+    rust_invalidate_numeric_locale();
+}
 
 locale_t fish_numeric_locale() {
     // The current locale, except LC_NUMERIC isn't forced to C.

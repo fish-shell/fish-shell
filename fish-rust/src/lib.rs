@@ -29,6 +29,7 @@ mod ffi_tests;
 mod flog;
 mod future_feature_flags;
 mod job_group;
+mod locale;
 mod nix;
 mod parse_constants;
 mod path;

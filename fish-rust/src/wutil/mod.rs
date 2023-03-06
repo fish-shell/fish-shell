@@ -1,5 +1,6 @@
 pub mod format;
 pub mod gettext;
+mod normalize_path;
 mod wcstoi;
 mod wrealpath;
 
@@ -7,6 +8,7 @@ use std::io::Write;
 
 pub(crate) use format::printf::sprintf;
 pub(crate) use gettext::{wgettext, wgettext_fmt};
+pub use normalize_path::*;
 pub use wcstoi::*;
 pub use wrealpath::*;
 

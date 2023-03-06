@@ -129,6 +129,7 @@ pub fn run_builtin(
         RustBuiltin::Exit => super::exit::exit(parser, streams, args),
         RustBuiltin::Pwd => super::pwd::pwd(parser, streams, args),
         RustBuiltin::Random => super::random::random(parser, streams, args),
+        RustBuiltin::Realpath => super::realpath::realpath(parser, streams, args),
         RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),
     }

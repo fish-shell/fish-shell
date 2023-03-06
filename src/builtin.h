@@ -118,6 +118,7 @@ enum RustBuiltin : int32_t {
     Exit,
     Pwd,
     Random,
+    Realpath,
     Return,
     Wait,
 };

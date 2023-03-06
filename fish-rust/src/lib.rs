@@ -46,5 +46,7 @@ mod builtins;
 mod env;
 mod re;
 
+mod path;
+
 // Don't use `#[cfg(test)]` here to make sure ffi tests are built and tested
 mod tests;

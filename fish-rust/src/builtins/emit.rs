@@ -7,7 +7,7 @@ use super::shared::{
 use crate::event;
 use crate::ffi::parser_t;
 use crate::wchar::{wstr, WString};
-use crate::wutil::format::printf::sprintf;
+use crate::wutil::printf::sprintf;
 
 #[widestrs]
 pub fn emit(

@@ -7,9 +7,7 @@ use crate::builtins::shared::{
 use crate::ffi::parser_t;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{
-    self, fish_wcstoi_opts, format::printf::sprintf, wgettext_fmt, Options as WcstoiOptions,
-};
+use crate::wutil::{self, fish_wcstoi_opts, sprintf, wgettext_fmt, Options as WcstoiOptions};
 use num_traits::PrimInt;
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
@@ -176,6 +174,6 @@ pub fn random(
     // Safe because end was a valid i64 and the result here is in the range start..=end.
     let result: i64 = start.checked_add_unsigned(rand * step).unwrap();
 
-    streams.out.append(sprintf!(L!("%d\n"), result));
+    streams.out.append(sprintf!(L!("%lld\n"), result));
     return STATUS_CMD_OK;
 }

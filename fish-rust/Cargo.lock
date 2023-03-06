@@ -81,7 +81,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "autocxx"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "aquamarine",
  "autocxx-macro",
@@ -114,7 +114,7 @@ dependencies = [
 [[package]]
 name = "autocxx-build"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "autocxx-engine",
  "env_logger",
@@ -125,7 +125,7 @@ dependencies = [
 [[package]]
 name = "autocxx-engine"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "aquamarine",
  "autocxx-bindgen",
@@ -154,7 +154,7 @@ dependencies = [
 [[package]]
 name = "autocxx-macro"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "autocxx-parser",
  "proc-macro-error",
@@ -166,7 +166,7 @@ dependencies = [
 [[package]]
 name = "autocxx-parser"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "indexmap",
  "itertools 0.10.5",
@@ -258,7 +258,7 @@ dependencies = [
 [[package]]
 name = "cxx"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "cc",
  "cxxbridge-flags",
@@ -270,7 +270,7 @@ dependencies = [
 [[package]]
 name = "cxx-build"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -284,7 +284,7 @@ dependencies = [
 [[package]]
 name = "cxx-gen"
 version = "0.7.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "codespan-reporting",
  "proc-macro2",
@@ -295,12 +295,12 @@ dependencies = [
 [[package]]
 name = "cxxbridge-flags"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 
 [[package]]
 name = "cxxbridge-macro"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -381,6 +381,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "pcre2",
+ "printf-compat",
  "rand",
  "unixstring",
  "widestring",
@@ -788,6 +789,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "printf-compat"
+version = "0.1.1"
+source = "git+https://github.com/fish-shell/printf-compat.git?branch=fish#d5f98dc8ce7a63e6639b08082ffbc6499021260c"
+dependencies = [
+ "bitflags",
+ "itertools 0.9.0",
+ "libc",
+ "widestring",
+]
+
+[[package]]
 name = "proc-macro-error"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -813,9 +825,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.53"
+version = "1.0.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba466839c78239c09faf015484e5cc04860f88242cff4d03eb038f04b4699b73"
+checksum = "e472a104799c74b514a57226160104aa483546de37e839ec50e3c2e41dd87534"
 dependencies = [
  "unicode-ident",
 ]

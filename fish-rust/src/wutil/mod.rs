@@ -1,21 +1,20 @@
 pub mod errors;
-pub mod format;
 pub mod gettext;
 mod normalize_path;
+pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
 mod wrealpath;
 
-use std::io::Write;
-
 use crate::wchar::{wstr, WString};
-pub(crate) use format::printf::sprintf;
 pub(crate) use gettext::{wgettext, wgettext_fmt};
 pub use normalize_path::*;
+pub(crate) use printf::sprintf;
 pub use wcstoi::*;
 pub use wrealpath::*;
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
+use std::io::Write;
 pub fn perror(s: &str) {
     let e = errno::errno().0;
     let mut stderr = std::io::stderr().lock();

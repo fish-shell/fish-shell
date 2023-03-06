@@ -42,7 +42,7 @@ static TTY_TERMSIZE_GEN_COUNT: AtomicU32 = AtomicU32::new(0);
 fn var_to_int_or(var: Option<WString>, default: isize) -> isize {
     match var {
         Some(s) => {
-            let proposed = fish_wcstoi(s.chars());
+            let proposed = fish_wcstoi(&s);
             if let Ok(proposed) = proposed {
                 proposed
             } else {

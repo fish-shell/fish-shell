@@ -191,7 +191,7 @@ fn abbr_list(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
             "%ls %ls: Unexpected argument -- '%ls'\n",
             CMD,
             subcmd,
-            opts.args[0]
+            &opts.args[0]
         ));
         return STATUS_INVALID_ARGS;
     }

@@ -46,7 +46,6 @@
 #include "builtins/path.h"
 #include "builtins/printf.h"
 #include "builtins/read.h"
-#include "builtins/realpath.h"
 #include "builtins/set.h"
 #include "builtins/set_color.h"
 #include "builtins/shared.rs.h"
@@ -397,7 +396,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"pwd", &implemented_in_rust, N_(L"Print the working directory")},
     {L"random", &implemented_in_rust, N_(L"Generate random number")},
     {L"read", &builtin_read, N_(L"Read a line of input into variables")},
-    {L"realpath", &builtin_realpath, N_(L"Show absolute path sans symlinks")},
+    {L"realpath", &implemented_in_rust, N_(L"Show absolute path sans symlinks")},
     {L"return", &implemented_in_rust, N_(L"Stop the currently evaluated function")},
     {L"set", &builtin_set, N_(L"Handle environment variables")},
     {L"set_color", &builtin_set_color, N_(L"Set the terminal color")},
@@ -545,6 +544,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"random") {
         return RustBuiltin::Random;
+    }
+    if (cmd == L"realpath") {
+        return RustBuiltin::Realpath;
     }
     if (cmd == L"wait") {
         return RustBuiltin::Wait;

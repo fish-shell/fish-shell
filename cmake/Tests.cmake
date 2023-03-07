@@ -193,7 +193,7 @@ endif()
 if(NOT DEFINED ASAN)
     add_test(
         NAME "cargo-test"
-        COMMAND cargo test --target-dir target ${cargo_target_opt}
+        COMMAND cargo test ${CARGO_FLAGS} --target-dir target ${cargo_target_opt}
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fish-rust"
     )
     set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
@@ -202,7 +202,7 @@ endif()
 
 add_test(
     NAME "cargo-test-widestring"
-    COMMAND cargo test --target-dir target ${cargo_target_opt}
+    COMMAND cargo test ${CARGO_FLAGS} --target-dir target ${cargo_target_opt}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fish-rust/widestring-suffix/"
 )
 add_test_target("cargo-test-widestring")

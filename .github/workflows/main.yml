@@ -89,6 +89,8 @@ jobs:
       with:
         # All -Z options require running nightly
         rust-version: nightly
+        # ASAN uses `cargo build -Zbuild-std` which requires the rust-src component
+        components: rust-src
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux

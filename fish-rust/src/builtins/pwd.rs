@@ -1,5 +1,5 @@
 //! Implementation of the pwd builtin.
-use std::ffi::c_int;
+use std::{ffi::c_int, io};
 
 use crate::{
     builtins::shared::{io_streams_t, BUILTIN_ERR_ARG_COUNT1},
@@ -63,10 +63,11 @@ pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]
         if let Some(real_pwd) = wrealpath(&pwd) {
             pwd = real_pwd;
         } else {
-            // TODO: get error from errno
-            streams
-                .err
-                .append(wgettext_fmt!("%ls: realpath failed\n", cmd));
+            streams.err.append(wgettext_fmt!(
+                "%ls: realpath failed: %s\n",
+                cmd,
+                io::Error::last_os_error().to_string()
+            ));
             return STATUS_CMD_ERROR;
         }
     }

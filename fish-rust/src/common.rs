@@ -150,6 +150,12 @@ pub enum EscapeStringStyle {
     Regex,
 }
 
+impl Default for EscapeStringStyle {
+    fn default() -> Self {
+        Self::Script(EscapeFlags::default())
+    }
+}
+
 bitflags! {
     /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
     /// [`EscapeStringStyle::Script`].

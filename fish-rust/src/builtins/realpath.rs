@@ -1,9 +1,7 @@
 //! Implementation of the realpath builtin.
 
-use std::io::Error;
-
+use errno::errno;
 use libc::c_int;
-use nix::errno::errno;
 
 use crate::{
     ffi::parser_t,
@@ -98,14 +96,15 @@ pub fn realpath(
         if let Some(real_path) = wrealpath(arg) {
             streams.out.append(real_path);
         } else {
-            if errno() != 0 {
+            let errno = errno();
+            if errno.0 != 0 {
                 // realpath() just couldn't do it. Report the error and make it clear
                 // this is an error from our builtin, not the system's realpath.
                 streams.err.append(wgettext_fmt!(
                     "builtin %ls: %ls: %s\n",
                     cmd,
                     arg,
-                    Error::last_os_error().to_string()
+                    errno.to_string()
                 ));
             } else {
                 // Who knows. Probably a bug in our wrealpath() implementation.
@@ -131,7 +130,7 @@ pub fn realpath(
             streams.err.append(wgettext_fmt!(
                 "builtin %ls: realpath failed: %s\n",
                 cmd,
-                std::io::Error::last_os_error().to_string()
+                errno().to_string()
             ));
             return STATUS_CMD_ERROR;
         }

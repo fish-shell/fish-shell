@@ -3,10 +3,11 @@ use crate::wchar::{wstr, WString};
 use crate::wchar_ext::WExt;
 use crate::wchar_ffi::c_str;
 use crate::wchar_ffi::WCharFromFFI;
+use bitflags::bitflags;
+use std::mem;
 use std::mem::ManuallyDrop;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::AsRawFd;
-use std::{ffi::c_uint, mem};
 
 /// Like [`std::mem::replace()`] but provides a reference to the old value in a callback to obtain
 /// the replacement value. Useful to avoid errors about multiple references (`&mut T` for `old` then
@@ -149,54 +150,45 @@ pub enum EscapeStringStyle {
     Regex,
 }
 
-/// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
-/// [`EscapeStringStyle::Script`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct EscapeFlags {
-    /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
-    /// characters and backslashes.
-    pub no_printables: bool,
-    /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
-    /// string.
-    pub no_quoted: bool,
-    /// Do not escape tildes.
-    pub no_tilde: bool,
-    /// Replace non-printable control characters with Unicode symbols.
-    pub symbolic: bool,
+bitflags! {
+    /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
+    /// [`EscapeStringStyle::Script`].
+    #[derive(Default)]
+    pub struct EscapeFlags : u32 {
+        /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
+        /// characters and backslashes.
+        const NO_PRINTABLES = 1 << 0;
+        /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
+        /// string.
+        const NO_QUOTED = 1 << 1;
+        /// Do not escape tildes.
+        const NO_TILDE = 1 << 2;
+        /// Replace non-printable control characters with Unicode symbols.
+        const SYMBOLIC = 1 << 3;
+    }
 }
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with `\n`, etc.
 pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
-    let mut flags_int = 0;
-
-    let style = match style {
+    let (style, flags) = match style {
         EscapeStringStyle::Script(flags) => {
-            const ESCAPE_NO_PRINTABLES: c_uint = 1 << 0;
-            const ESCAPE_NO_QUOTED: c_uint = 1 << 1;
-            const ESCAPE_NO_TILDE: c_uint = 1 << 2;
-            const ESCAPE_SYMBOLIC: c_uint = 1 << 3;
-
-            if flags.no_printables {
-                flags_int |= ESCAPE_NO_PRINTABLES;
-            }
-            if flags.no_quoted {
-                flags_int |= ESCAPE_NO_QUOTED;
-            }
-            if flags.no_tilde {
-                flags_int |= ESCAPE_NO_TILDE;
-            }
-            if flags.symbolic {
-                flags_int |= ESCAPE_SYMBOLIC;
-            }
-
-            ffi::escape_string_style_t::STRING_STYLE_SCRIPT
+            (ffi::escape_string_style_t::STRING_STYLE_SCRIPT, flags)
         }
-        EscapeStringStyle::Url => ffi::escape_string_style_t::STRING_STYLE_URL,
-        EscapeStringStyle::Var => ffi::escape_string_style_t::STRING_STYLE_VAR,
-        EscapeStringStyle::Regex => ffi::escape_string_style_t::STRING_STYLE_REGEX,
+        EscapeStringStyle::Url => (
+            ffi::escape_string_style_t::STRING_STYLE_URL,
+            Default::default(),
+        ),
+        EscapeStringStyle::Var => (
+            ffi::escape_string_style_t::STRING_STYLE_VAR,
+            Default::default(),
+        ),
+        EscapeStringStyle::Regex => (
+            ffi::escape_string_style_t::STRING_STYLE_REGEX,
+            Default::default(),
+        ),
     };
 
-    ffi::escape_string(c_str!(s), flags_int.into(), style).from_ffi()
+    ffi::escape_string(c_str!(s), flags.bits().into(), style).from_ffi()
 }
 
 /// Test if the string is a valid function name.

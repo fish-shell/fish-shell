@@ -1,6 +1,9 @@
 //! Implementation of the realpath builtin.
 
+use std::io::Error;
+
 use libc::c_int;
+use nix::errno::errno;
 
 use crate::{
     ffi::parser_t,
@@ -95,12 +98,22 @@ pub fn realpath(
         if let Some(real_path) = wrealpath(arg) {
             streams.out.append(real_path);
         } else {
-            // TODO: get error from errno
-            // Report the error and make it clear this is an error
-            // from our builtin, not the system's realpath.
-            streams
-                .err
-                .append(wgettext_fmt!("builtin %ls: %ls\n", cmd, arg));
+            if errno() != 0 {
+                // realpath() just couldn't do it. Report the error and make it clear
+                // this is an error from our builtin, not the system's realpath.
+                streams.err.append(wgettext_fmt!(
+                    "builtin %ls: %ls: %s\n",
+                    cmd,
+                    arg,
+                    Error::last_os_error().to_string()
+                ));
+            } else {
+                // Who knows. Probably a bug in our wrealpath() implementation.
+                streams
+                    .err
+                    .append(wgettext_fmt!("builtin %ls: Invalid arg: %ls\n", cmd, arg));
+            }
+
             return STATUS_CMD_ERROR;
         }
     } else {
@@ -115,10 +128,11 @@ pub fn realpath(
             };
             streams.out.append(normalize_path(&absolute_arg, false));
         } else {
-            // TODO: get error from errno
-            streams
-                .err
-                .append(wgettext_fmt!("builtin %ls: realpath failed\n", cmd));
+            streams.err.append(wgettext_fmt!(
+                "builtin %ls: realpath failed: %s\n",
+                cmd,
+                std::io::Error::last_os_error().to_string()
+            ));
             return STATUS_CMD_ERROR;
         }
     }

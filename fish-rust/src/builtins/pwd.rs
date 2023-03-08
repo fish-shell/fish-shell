@@ -1,13 +1,14 @@
 //! Implementation of the pwd builtin.
-use std::{ffi::c_int, io};
+use errno::errno;
+use libc::c_int;
 
 use crate::{
     builtins::shared::{io_streams_t, BUILTIN_ERR_ARG_COUNT1},
-    env::env_mode_flags_t,
+    env::env_mode_flags_t::ENV_DEFAULT,
     ffi::parser_t,
     wchar::{wstr, WString, L},
     wchar_ffi::{WCharFromFFI, WCharToFFI},
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t},
+    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::no_argument},
     wutil::{wgettext_fmt, wrealpath},
 };
 
@@ -19,9 +20,9 @@ use super::shared::{
 /// The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");
 const long_options: &[woption] = &[
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("logical"), woption_argument_t::no_argument, 'L'),
-    wopt(L!("physical"), woption_argument_t::no_argument, 'P'),
+    wopt(L!("help"), no_argument, 'h'),
+    wopt(L!("logical"), no_argument, 'L'),
+    wopt(L!("physical"), no_argument, 'P'),
 ];
 
 pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]) -> Option<c_int> {
@@ -55,7 +56,7 @@ pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]
     let mut pwd = WString::new();
     let tmp = parser
         .vars1()
-        .get_or_null(&L!("PWD").to_ffi(), env_mode_flags_t::ENV_DEFAULT as u16);
+        .get_or_null(&L!("PWD").to_ffi(), ENV_DEFAULT as u16);
     if !tmp.is_null() {
         pwd = tmp.as_string().from_ffi();
     }
@@ -66,7 +67,7 @@ pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]
             streams.err.append(wgettext_fmt!(
                 "%ls: realpath failed: %s\n",
                 cmd,
-                io::Error::last_os_error().to_string()
+                errno().to_string()
             ));
             return STATUS_CMD_ERROR;
         }

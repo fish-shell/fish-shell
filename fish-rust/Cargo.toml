@@ -22,8 +22,8 @@ widestring = "1.0.2"
 
 [build-dependencies]
 autocxx-build = "0.23.1"
-cxx-build = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
-cxx-gen = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
+cxx-build = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
+cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
 miette = { version = "5", features = ["fancy"] }
 
 [lib]
@@ -37,16 +37,16 @@ fish-ffi-tests = ["inventory"]
 
 [patch.crates-io]
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
-cxx = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
-cxx-gen = { git = "https://github.com/ridiculousfish/cxx", branch = "fish" }
-autocxx = { git = "https://github.com/ridiculousfish/autocxx", branch = "fish" }
-autocxx-build = { git = "https://github.com/ridiculousfish/autocxx", branch = "fish" }
-autocxx-bindgen = { git = "https://github.com/ridiculousfish/autocxx-bindgen", branch = "fish" }
+cxx = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
+cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
+autocxx = { git = "https://github.com/fish-shell/autocxx", branch = "fish" }
+autocxx-build = { git = "https://github.com/fish-shell/autocxx", branch = "fish" }
+autocxx-bindgen = { git = "https://github.com/fish-shell/autocxx-bindgen", branch = "fish" }
 
-[patch.'https://github.com/ridiculousfish/cxx']
+[patch.'https://github.com/fish-shell/cxx']
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
 
-[patch.'https://github.com/ridiculousfish/autocxx']
+[patch.'https://github.com/fish-shell/autocxx']
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
 
 #cxx = { path = "../../cxx" }

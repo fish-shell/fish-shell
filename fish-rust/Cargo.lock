@@ -70,7 +70,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "autocxx"
 version = "0.23.1"
-source = "git+https://github.com/ridiculousfish/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
 dependencies = [
  "aquamarine",
  "autocxx-macro",
@@ -81,7 +81,7 @@ dependencies = [
 [[package]]
 name = "autocxx-bindgen"
 version = "0.62.0"
-source = "git+https://github.com/ridiculousfish/autocxx-bindgen?branch=fish#a229d3473bd90d2d10fc61a244408cfc1958934a"
+source = "git+https://github.com/fish-shell/autocxx-bindgen?branch=fish#a229d3473bd90d2d10fc61a244408cfc1958934a"
 dependencies = [
  "bitflags",
  "cexpr",
@@ -103,7 +103,7 @@ dependencies = [
 [[package]]
 name = "autocxx-build"
 version = "0.23.1"
-source = "git+https://github.com/ridiculousfish/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
 dependencies = [
  "autocxx-engine",
  "env_logger",
@@ -114,7 +114,7 @@ dependencies = [
 [[package]]
 name = "autocxx-engine"
 version = "0.23.1"
-source = "git+https://github.com/ridiculousfish/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
 dependencies = [
  "aquamarine",
  "autocxx-bindgen",
@@ -143,7 +143,7 @@ dependencies = [
 [[package]]
 name = "autocxx-macro"
 version = "0.23.1"
-source = "git+https://github.com/ridiculousfish/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
 dependencies = [
  "autocxx-parser",
  "proc-macro-error",
@@ -155,7 +155,7 @@ dependencies = [
 [[package]]
 name = "autocxx-parser"
 version = "0.23.1"
-source = "git+https://github.com/ridiculousfish/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
+source = "git+https://github.com/fish-shell/autocxx?branch=fish#311485f38289a352dcaddaad7f819f93f6e7df99"
 dependencies = [
  "indexmap",
  "itertools 0.10.5",
@@ -244,7 +244,7 @@ dependencies = [
 [[package]]
 name = "cxx"
 version = "1.0.81"
-source = "git+https://github.com/ridiculousfish/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
 dependencies = [
  "cc",
  "cxxbridge-flags",
@@ -256,7 +256,7 @@ dependencies = [
 [[package]]
 name = "cxx-build"
 version = "1.0.81"
-source = "git+https://github.com/ridiculousfish/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -270,7 +270,7 @@ dependencies = [
 [[package]]
 name = "cxx-gen"
 version = "0.7.81"
-source = "git+https://github.com/ridiculousfish/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
 dependencies = [
  "codespan-reporting",
  "proc-macro2",
@@ -281,12 +281,12 @@ dependencies = [
 [[package]]
 name = "cxxbridge-flags"
 version = "1.0.81"
-source = "git+https://github.com/ridiculousfish/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
 
 [[package]]
 name = "cxxbridge-macro"
 version = "1.0.81"
-source = "git+https://github.com/ridiculousfish/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#24d1bac1da6abbc2b483760358676e95262aca63"
 dependencies = [
  "proc-macro2",
  "quote",

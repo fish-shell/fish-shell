@@ -12,6 +12,7 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use widestring_suffix::widestrs;
 
+use crate::bitset::BitSet;
 use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, EscapeFlags, EscapeStringStyle};
 use crate::ffi::{
@@ -475,7 +476,10 @@ fn event_add_handler_ffi(desc: &event_description_t, name: &CxxWString) {
     add_handler(EventHandler::new(desc.into(), Some(name.from_ffi())));
 }
 
-const SIGNAL_COUNT: usize = 65; // FIXME: NSIG
+/// All the signals we are interested in are in the 1-32 range (with 32 being the typical SIGRTMAX),
+/// but we can expand it to 64 just to be safe. All code checks if a signal value is within bounds
+/// before handling it.
+const SIGNAL_COUNT: usize = 64;
 
 struct PendingSignals {
     /// A counter that is incremented each time a pending signal is received.
@@ -498,9 +502,8 @@ impl PendingSignals {
         }
     }
 
-    /// \return the list of signals that were set, clearing them.
-    // TODO: return bitvec?
-    pub fn acquire_pending(&self) -> [bool; SIGNAL_COUNT] {
+    /// Return the list of signals that were set, clearing them.
+    pub fn acquire_pending(&self) -> BitSet<u64> {
         let mut current = self
             .last_counter
             .lock()
@@ -508,7 +511,7 @@ impl PendingSignals {
 
         // Check the counter first. If it hasn't changed, no signals have been received.
         let count = self.counter.load(Ordering::Acquire);
-        let mut result = [false; SIGNAL_COUNT];
+        let mut result = BitSet::<u64>::new();
         if count == *current {
             return result;
         }
@@ -517,7 +520,7 @@ impl PendingSignals {
         *current = count;
         for (i, received) in self.received.iter().enumerate() {
             if received.load(Ordering::Relaxed) {
-                result[i] = true;
+                result.set(i);
                 received.store(false, Ordering::Relaxed);
             }
         }
@@ -773,7 +776,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
 
     // Append all signal events to to_send.
     let signals = PENDING_SIGNALS.acquire_pending();
-    for (sig, _) in signals.iter().enumerate().filter(|(_, pending)| **pending) {
+    for sig in signals.iter_set_bits() {
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH as usize {

@@ -2,7 +2,7 @@
 
 function __fish_adb_no_subcommand -d 'Test if adb has yet to be given the subcommand'
     for i in (commandline -opc)
-        if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect
+        if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect unroot
             return 1
         end
     end
@@ -118,6 +118,7 @@ complete -f -n __fish_adb_no_subcommand -c adb -a get-serialno -d 'Prints serial
 complete -f -n __fish_adb_no_subcommand -c adb -a get-devpath -d 'Prints device path'
 complete -f -n __fish_adb_no_subcommand -c adb -a status-window -d 'Continuously print the device status'
 complete -f -n __fish_adb_no_subcommand -c adb -a root -d 'Restart the adbd daemon with root permissions'
+complete -f -n __fish_adb_no_subcommand -c adb -a unroot -d 'Restart the adbd daemon without root permissions'
 complete -f -n __fish_adb_no_subcommand -c adb -a usb -d 'Restart the adbd daemon listening on USB'
 complete -f -n __fish_adb_no_subcommand -c adb -a tcpip -d 'Restart the adbd daemon listening on TCP'
 complete -f -n __fish_adb_no_subcommand -c adb -a ppp -d 'Run PPP over USB'

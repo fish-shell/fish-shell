@@ -153,3 +153,20 @@ impl WCharFromFFI<Vec<u8>> for cxx::SharedPtr<cxx::CxxString> {
         self.as_bytes().to_vec()
     }
 }
+
+/// Convert from FFI types to a reference to a wide string (i.e. a [`wstr`]) without allocating.
+pub trait AsWstr<'a> {
+    fn as_wstr(&'a self) -> &'a wstr;
+}
+
+impl<'a> AsWstr<'a> for cxx::UniquePtr<cxx::CxxWString> {
+    fn as_wstr(&'a self) -> &'a wstr {
+        wstr::from_char_slice(self.as_chars())
+    }
+}
+
+impl<'a> AsWstr<'a> for cxx::CxxWString {
+    fn as_wstr(&'a self) -> &'a wstr {
+        wstr::from_char_slice(self.as_chars())
+    }
+}

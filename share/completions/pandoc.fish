@@ -2,14 +2,14 @@
 # Copyright (c) 2018 David Sanson
 # Licensed under the GNU General Public License version 2
 
-set -l informats commonmark creole docbook docx epub gfm haddock html jats json latex markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki muse native odt opml org rst t2t textile tikiwiki twiki vimwiki
-set -l outformats asciidoc beamer commonmark context docbook docbook4 docbook5 docx dokuwiki dzslides epub epub2 epub3 fb2 gfm haddock html html4 html5 icml jats json latex man markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki ms muse native odt opendocument opml org plain pptx revealjs rst rtf s5 slideous slidy tei texinfo textile zimwiki
-set -l highlight_styles pygments tango espresso zenburn kate monochrome breezedark haddock
+set -l informats (pandoc --list-input-formats)
+set -l outformats (pandoc --list-output-formats)
+set -l highlight_styles (pandoc --list-highlight-styles)
 set -l datadir $HOME/.pandoc
 
 # Only suggest installed engines
 set -l pdfengines
-for engine in pdflatex lualatex xelatex wkhtmltopdf weasyprint prince context pdfroff
+for engine in pdflatex lualatex xelatex latexmk tectonic wkhtmltopdf weasyprint pagedjs-cli prince context pdfroff
     if type -q $engine
         set pdfengines $pdfengines $engine
     end

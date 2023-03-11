@@ -1,7 +1,7 @@
 fish 3.6.1 (released ???)
 ===================================
 
-.. ignore: 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9509 9513 9518 9546 9629 9631
+.. ignore: 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9509 9513 9518 9535 9546 9629 9631 9634 9650 9651 
 
 Notable improvements and fixes
 ------------------------------
@@ -18,20 +18,21 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
-- ``read`` will now print an error if told to set a read-only variable instead of silently doing nothing (:issue:`9346`).
+- ``read`` will now print an error if told to set a read-only variable, instead of silently doing nothing (:issue:`9346`).
 - ``set_color -v`` no longer crashes fish (:issue:`9640`).
 
 Interactive improvements
 ------------------------
 - Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`)
-- Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
+- Variables that were set while the locale was C (the default ASCII-only locale) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
 - Escape during history search restores the original command line again (regressed in 3.6.0).
 - Using ``--help`` on builtins now respects the ``$MANPAGER`` variable, in preference to ``$PAGER`` (:issue:`9488`).
 - :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
 - The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
-- Fish no longer crashes when searching history for non-ascii codepoints case-insensitively (:issue:`9628`).
-- The alt+s binding will now also use ``please`` if available (:issue:`9635`).
+- fish no longer crashes when searching history for non-ascii codepoints case-insensitively (:issue:`9628`).
+- The :kbd:`Alt-S`` binding will now also use ``please`` if available (:issue:`9635`).
+- Themes that don't specify every color option can be installed correctly in the Web-based configuration (:issue:`9590`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -50,8 +51,8 @@ Completions
   - ``scrypt`` (:issue:`9583`)
   - ``stow`` (:issue:`9571`)
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
-- Improvements to many completions.
-- git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
+- Improvements to many completions, including the speed of completing directories in WSL2 (:issue:`9574`).
+- ``git`` completions for ``git-foo``-style commands was fixed (:issue:`9457`)
 - File completion now offers ``../`` and ``./`` again (:issue:`9477`)
 - Completion for ``terraform`` now asks for a parameter after ``terraform init -backend-config``. (:issue:`9498`)
 

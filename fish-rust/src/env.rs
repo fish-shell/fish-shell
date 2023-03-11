@@ -33,9 +33,9 @@ pub mod flags {
         }
     }
 
-    impl Into<c_int> for EnvMode {
-        fn into(self) -> c_int {
-            c_int(i32::from(self.bits()))
+    impl From<EnvMode> for c_int {
+        fn from(val: EnvMode) -> Self {
+            c_int(i32::from(val.bits()))
         }
     }
 }

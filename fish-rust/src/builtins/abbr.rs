@@ -5,7 +5,7 @@ use crate::builtins::shared::{
     STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::common::{escape_string, valid_func_name, EscapeStringStyle};
-use crate::env::flags::ENV_UNIVERSAL;
+use crate::env::flags::EnvMode;
 use crate::env::status::{ENV_NOT_FOUND, ENV_OK};
 use crate::ffi::{self, parser_t};
 use crate::re::regex_make_anchored;
@@ -417,7 +417,7 @@ fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
             let esc_src = escape_string(arg, EscapeStringStyle::Script(Default::default()));
             if !esc_src.is_empty() {
                 let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
-                let ret = parser.remove_var(&var_name, ENV_UNIVERSAL);
+                let ret = parser.remove_var(&var_name, EnvMode::UNIVERSAL.into());
 
                 if ret == autocxx::c_int(ENV_OK) {
                     result = STATUS_CMD_OK

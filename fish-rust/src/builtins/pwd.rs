@@ -4,7 +4,7 @@ use libc::c_int;
 
 use crate::{
     builtins::shared::{io_streams_t, BUILTIN_ERR_ARG_COUNT1},
-    env::EnvMode,
+    env::flags::EnvMode,
     ffi::parser_t,
     wchar::{wstr, WString, L},
     wchar_ffi::{WCharFromFFI, WCharToFFI},

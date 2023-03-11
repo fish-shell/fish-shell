@@ -4,7 +4,7 @@ use libc::c_int;
 
 use crate::{
     builtins::shared::{io_streams_t, BUILTIN_ERR_ARG_COUNT1},
-    env::EnvMode::Default,
+    env::EnvMode,
     ffi::parser_t,
     wchar::{wstr, WString, L},
     wchar_ffi::{WCharFromFFI, WCharToFFI},
@@ -56,7 +56,7 @@ pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]
     let mut pwd = WString::new();
     let tmp = parser
         .vars1()
-        .get_or_null(&L!("PWD").to_ffi(), Default as u16);
+        .get_or_null(&L!("PWD").to_ffi(), EnvMode::DEFAULT.bits());
     if !tmp.is_null() {
         pwd = tmp.as_string().from_ffi();
     }

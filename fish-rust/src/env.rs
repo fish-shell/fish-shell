@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 /// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 pub mod flags {
     use autocxx::c_int;
@@ -36,16 +37,18 @@ pub mod status {
     pub const ENV_NOT_FOUND: i32 = 4;
 }
 
-#[repr(u16)]
-pub enum EnvMode {
-    Default = 0,
-    Local = 1 << 0,
-    Function = 1 << 1,
-    Global = 1 << 2,
-    Universal = 1 << 3,
-    Export = 1 << 4,
-    Unexport = 1 << 5,
-    Pathvar = 1 << 6,
-    Unpathvar = 1 << 7,
-    User = 1 << 8,
+bitflags! {
+    #[repr(C)]
+    pub struct EnvMode: u16 {
+        const DEFAULT = 0;
+        const LOCAL = 1 << 0;
+        const FUNCTION = 1 << 1;
+        const GLOBAL = 1 << 2;
+        const UNIVERSAL = 1 << 3;
+        const EXPORT = 1 << 4;
+        const UNEXPORT = 1 << 5;
+        const PATHVAR = 1 << 6;
+        const UNPATHVAR = 1 << 7;
+        const USER = 1 << 8;
+    }
 }

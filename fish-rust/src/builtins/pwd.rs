@@ -17,7 +17,7 @@ use super::shared::{
     STATUS_INVALID_ARGS,
 };
 
-/// The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
+// The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");
 const long_options: &[woption] = &[
     wopt(L!("help"), no_argument, 'h'),

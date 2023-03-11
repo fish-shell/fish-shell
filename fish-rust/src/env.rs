@@ -37,15 +37,15 @@ pub mod status {
 }
 
 #[repr(u16)]
-pub enum env_mode_flags_t {
-    ENV_DEFAULT = 0,
-    ENV_LOCAL = 1 << 0,
-    ENV_FUNCTION = 1 << 1,
-    ENV_GLOBAL = 1 << 2,
-    ENV_UNIVERSAL = 1 << 3,
-    ENV_EXPORT = 1 << 4,
-    ENV_UNEXPORT = 1 << 5,
-    ENV_PATHVAR = 1 << 6,
-    ENV_UNPATHVAR = 1 << 7,
-    ENV_USER = 1 << 8,
+pub enum EnvMode {
+    Default = 0,
+    Local = 1 << 0,
+    Function = 1 << 1,
+    Global = 1 << 2,
+    Universal = 1 << 3,
+    Export = 1 << 4,
+    Unexport = 1 << 5,
+    Pathvar = 1 << 6,
+    Unpathvar = 1 << 7,
+    User = 1 << 8,
 }

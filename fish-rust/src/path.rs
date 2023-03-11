@@ -1,4 +1,7 @@
-use crate::wchar::{wstr, WExt, WString, L};
+use crate::{
+    expand::ExpandChars::HomeDirectory,
+    wchar::{wstr, WExt, WString, L},
+};
 
 /// If the given path looks like it's relative to the working directory, then prepend that working
 /// directory. This operates on unescaped paths only (so a ~ means a literal ~).
@@ -9,7 +12,8 @@ pub fn path_apply_working_directory(path: &wstr, working_directory: &wstr) -> WS
 
     // We're going to make sure that if we want to prepend the wd, that the string has no leading
     // "/".
-    let prepend_wd = path.as_char_slice()[0] != '/' && path.as_char_slice()[0] != '\u{FDD0}';
+    let prepend_wd =
+        path.as_char_slice()[0] != '/' && path.as_char_slice()[0] != HomeDirectory.into();
 
     if !prepend_wd {
         // No need to prepend the wd, so just return the path we were given.

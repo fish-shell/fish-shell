@@ -597,7 +597,7 @@ int main(int argc, char **argv) {
     }
 
     int exit_status = res ? STATUS_CMD_UNKNOWN : parser.get_last_status();
-    event_fire(parser, event_t::process_exit(getpid(), exit_status));
+    event_fire(parser, *new_event_process_exit(getpid(), exit_status));
 
     // Trigger any exit handlers.
     event_fire_generic(parser, L"fish_exit", {to_string(exit_status)});

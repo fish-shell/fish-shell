@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "common.h"
+#include "cxx.h"
 #include "maybe.h"
 
 class owning_null_terminated_array_t;
@@ -20,7 +21,7 @@ class owning_null_terminated_array_t;
 extern size_t read_byte_limit;
 extern bool curses_initialized;
 
-struct event_t;
+struct Event;
 
 // Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum : uint16_t {
@@ -213,7 +214,7 @@ class env_stack_t final : public environment_t {
     friend class parser_t;
 
     /// The implementation. Do not access this directly.
-    const std::unique_ptr<env_stack_impl_t> impl_;
+    std::unique_ptr<env_stack_impl_t> impl_;
 
     /// All environment stacks are guarded by a global lock.
     acquired_lock<env_stack_impl_t> acquire_impl();
@@ -287,7 +288,7 @@ class env_stack_t final : public environment_t {
     /// If \p always is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
     /// \return a list of events for changed variables.
-    std::vector<event_t> universal_sync(bool always);
+    std::vector<rust::Box<Event>> universal_sync(bool always);
 
     __attribute__((unused)) std::unique_ptr<env_var_t> get_or_null(
         const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const;

@@ -9,6 +9,7 @@ use ::std::slice;
 use crate::wchar::wstr;
 use autocxx::prelude::*;
 use cxx::SharedPtr;
+use libc::pid_t;
 
 // autocxx has been hacked up to know about this.
 pub type wchar_t = u32;
@@ -30,6 +31,7 @@ include_cpp! {
     #include "tokenizer.h"
     #include "wildcard.h"
     #include "wutil.h"
+    #include "termsize.h"
 
     safety!(unsafe_ffi)
 
@@ -77,8 +79,6 @@ include_cpp! {
     generate!("wait_handle_t")
     generate!("wait_handle_store_t")
 
-    generate!("event_fire_generic")
-
     generate!("escape_string")
     generate!("sig2wcs")
     generate!("wcs2sig")
@@ -95,9 +95,23 @@ include_cpp! {
     generate!("str2wcstring")
 
     generate!("env_var_t")
+    generate!("signal_handle")
+    generate!("signal_check_cancel")
+
+    generate!("block_t")
+    generate!("block_type_t")
+    generate!("statuses_t")
+    generate!("io_chain_t")
+
+    generate!("termsize_container_t")
 }
 
 impl parser_t {
+    pub fn get_block_at_index(&self, i: usize) -> Option<&block_t> {
+        let b = self.block_at_index(i);
+        unsafe { b.as_ref() }
+    }
+
     pub fn get_jobs(&self) -> &[SharedPtr<job_t>] {
         let ffi_jobs = self.ffi_jobs();
         unsafe { slice::from_raw_parts(ffi_jobs.jobs, ffi_jobs.count) }
@@ -111,6 +125,11 @@ impl parser_t {
 
     pub fn remove_var(&mut self, var: &wstr, flags: c_int) -> c_int {
         self.pin().remove_var_ffi(&var.to_ffi(), flags)
+    }
+
+    pub fn job_get_from_pid(&self, pid: pid_t) -> Option<&job_t> {
+        let job = self.ffi_job_get_from_pid(pid.into());
+        unsafe { job.as_ref() }
     }
 }
 

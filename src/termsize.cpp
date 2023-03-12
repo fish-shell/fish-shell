@@ -50,6 +50,10 @@ termsize_container_t &termsize_container_t::shared() {
     return *res;
 }
 
+termsize_t termsize_container_t::ffi_updating(parser_t &parser) {
+    return shared().updating(parser);
+}
+
 termsize_t termsize_container_t::data_t::current() const {
     // This encapsulates our ordering logic. If we have a termsize from a tty, use it; otherwise use
     // what we have seen from the environment.

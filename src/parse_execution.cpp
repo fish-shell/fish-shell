@@ -464,7 +464,7 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     block_t *fb = parser->push_block(block_t::for_block());
 
     // We fire the same event over and over again, just construct it once.
-    event_t evt = event_t::variable_set(for_var_name);
+    auto evt = new_event_variable_set(for_var_name);
 
     // Now drive the for loop.
     for (const wcstring &val : arguments) {
@@ -476,7 +476,7 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
         retval = vars.set(for_var_name, ENV_DEFAULT | ENV_USER, {val});
         assert(retval == ENV_OK && "for loop variable should have been successfully set");
         (void)retval;
-        event_fire(*parser, evt);
+        event_fire(*parser, *evt);
 
         auto &ld = parser->libdata();
         ld.loop_status = loop_status_t::normals;
@@ -787,9 +787,8 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         }
         auto prev_statuses = parser->get_last_statuses();
 
-        event_t event(event_type_t::generic);
-        event.desc.str_param1 = L"fish_command_not_found";
-        block_t *b = parser->push_block(block_t::event_block(event));
+        auto event = new_event_generic(L"fish_command_not_found");
+        block_t *b = parser->push_block(block_t::event_block(&*event));
         parser->eval(buffer, io);
         parser->pop_block(b);
         parser->set_last_statuses(std::move(prev_statuses));

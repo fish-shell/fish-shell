@@ -7,9 +7,11 @@
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::derivable_impls)]
 
+mod bitset;
 #[macro_use]
 mod common;
 mod color;
+mod event;
 mod fd_monitor;
 mod fd_readable_set;
 mod fds;

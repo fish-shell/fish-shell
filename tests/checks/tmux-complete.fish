@@ -1,5 +1,6 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
+#REQUIRES: uname -r | grep -qv Microsoft
 
 isolated-tmux-start
 

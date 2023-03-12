@@ -3,13 +3,108 @@ use crate::wchar::{wstr, WString};
 use crate::wchar_ext::WExt;
 use crate::wchar_ffi::c_str;
 use crate::wchar_ffi::WCharFromFFI;
+use std::mem::ManuallyDrop;
+use std::ops::{Deref, DerefMut};
 use std::os::fd::AsRawFd;
 use std::{ffi::c_uint, mem};
+
+/// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a
+/// callback that modifies live objects willy-nilly because then there would be two &mut references
+/// to the same object - the original variables we keep around to use and their captured references
+/// held by the closure until its scope expires.
+///
+/// Instead we have a `ScopeGuard` type that takes exclusive ownership of (a mutable reference to)
+/// the object to be managed. In lieu of keeping the original value around, we obtain a regular or
+/// mutable reference to it via ScopeGuard's [`Deref`] and [`DerefMut`] impls.
+///
+/// The `ScopeGuard` is considered to be the exclusively owner of the passed value for the
+/// duration of its lifetime. If you need to use the value again, use `ScopeGuard` to shadow the
+/// value and obtain a reference to it via the `ScopeGuard` itself:
+///
+/// ```rust
+/// use std::io::prelude::*;
+///
+/// let file = std::fs::File::open("/dev/null");
+/// // Create a scope guard to write to the file when the scope expires.
+/// // To be able to still use the file, shadow `file` with the ScopeGuard itself.
+/// let mut file = ScopeGuard::new(file, |file| file.write_all(b"goodbye\n").unwrap());
+/// // Now write to the file normally "through" the capturing ScopeGuard instance.
+/// file.write_all(b"hello\n").unwrap();
+///
+/// // hello will be written first, then goodbye.
+/// ```
+pub struct ScopeGuard<T, F: FnOnce(&mut T)> {
+    captured: ManuallyDrop<T>,
+    on_drop: Option<F>,
+}
+
+impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
+    /// Creates a new `ScopeGuard` wrapping `value`. The `on_drop` callback is executed when the
+    /// ScopeGuard's lifetime expires or when it is manually dropped.
+    pub fn new(value: T, on_drop: F) -> Self {
+        Self {
+            captured: ManuallyDrop::new(value),
+            on_drop: Some(on_drop),
+        }
+    }
+
+    /// Cancel the unwind operation, e.g. do not call the previously passed-in `on_drop` callback
+    /// when the current scope expires.
+    pub fn cancel(guard: &mut Self) {
+        guard.on_drop.take();
+    }
+
+    /// Cancels the unwind operation like [`ScopeGuard::cancel()`] but also returns the captured
+    /// value (consuming the `ScopeGuard` in the process).
+    pub fn rollback(mut guard: Self) -> T {
+        let _ = guard.on_drop;
+        // Safety: we're about to forget the guard altogether
+        let value = unsafe { ManuallyDrop::take(&mut guard.captured) };
+        std::mem::forget(guard);
+        value
+    }
+
+    /// Commits the unwind operation (i.e. applies the provided callback) and returns the captured
+    /// value (consuming the `ScopeGuard` in the process).
+    pub fn commit(mut guard: Self) -> T {
+        (guard.on_drop.take().expect("ScopeGuard already canceled!"))(&mut guard.captured);
+        // Safety: we're about to forget the guard altogether
+        let value = unsafe { ManuallyDrop::take(&mut guard.captured) };
+        std::mem::forget(guard);
+        value
+    }
+}
+
+impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.captured
+    }
+}
+
+impl<T, F: FnOnce(&mut T)> DerefMut for ScopeGuard<T, F> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.captured
+    }
+}
+
+impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
+    fn drop(&mut self) {
+        if let Some(on_drop) = self.on_drop.take() {
+            on_drop(&mut self.captured);
+        }
+        // Safety: we're in the Drop so `self` will never be accessed again.
+        unsafe { ManuallyDrop::drop(&mut self.captured) };
+    }
+}
 
 /// A scoped manager to save the current value of some variable, and optionally set it to a new
 /// value. When dropped, it restores the variable to its old value.
 ///
-/// This can be handy when there are multiple code paths to exit a block.
+/// This can be handy when there are multiple code paths to exit a block. Note that this can only be
+/// used if the code does not access the captured variable again for the duration of the scope. If
+/// that's not the case (the code will refuse to compile), use a [`ScopeGuard`] instance instead.
 pub struct ScopedPush<'a, T> {
     var: &'a mut T,
     saved_value: Option<T>,

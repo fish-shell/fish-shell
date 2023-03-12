@@ -12,7 +12,6 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use widestring_suffix::widestrs;
 
-use crate::bitset::BitSet;
 use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, EscapeFlags, EscapeStringStyle};
 use crate::ffi::{
@@ -495,13 +494,12 @@ impl PendingSignals {
     pub fn mark(&self, which: usize) {
         if let Some(received) = self.received.get(which) {
             received.store(true, Ordering::Relaxed);
-            let count = self.counter.load(Ordering::Relaxed);
-            self.counter.store(count + 1, Ordering::Release);
+            self.counter.fetch_add(1, Ordering::Relaxed);
         }
     }
 
-    /// Return the list of signals that were set, clearing them.
-    pub fn acquire_pending(&self) -> BitSet<u64> {
+    /// Return the list of signals that were set as the bits in a u64, clearing them.
+    pub fn acquire_pending(&self) -> u64 {
         let mut current = self
             .last_counter
             .lock()
@@ -509,16 +507,16 @@ impl PendingSignals {
 
         // Check the counter first. If it hasn't changed, no signals have been received.
         let count = self.counter.load(Ordering::Acquire);
-        let mut result = BitSet::<u64>::new();
         if count == *current {
-            return result;
+            return 0;
         }
 
         // The signal count has changed. Store the new counter and fetch all set signals.
         *current = count;
+        let mut result = 0;
         for (i, received) in self.received.iter().enumerate() {
             if received.load(Ordering::Relaxed) {
-                result.set(i);
+                result |= 1_u64 << i;
                 received.store(false, Ordering::Relaxed);
             }
         }
@@ -773,8 +771,12 @@ pub fn fire_delayed(parser: &mut parser_t) {
     let mut to_send = std::mem::take(&mut *BLOCKED_EVENTS.lock().expect("Mutex poisoned!"));
 
     // Append all signal events to to_send.
-    let signals = PENDING_SIGNALS.acquire_pending();
-    for sig in signals.iter_set_bits() {
+    // 'signals' contains a bit set for each signal that has been received.
+    let mut signals: u64 = PENDING_SIGNALS.acquire_pending();
+    while signals != 0 {
+        let sig = signals.trailing_zeros() as usize;
+        signals &= !(1_u64 << sig);
+
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH as usize {

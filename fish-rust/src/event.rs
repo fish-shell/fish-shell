@@ -169,18 +169,16 @@ impl EventType {
         }
 
         match self {
-            EventType::Any => return false,
+            EventType::Any => false,
             EventType::ProcessExit { .. }
             | EventType::JobExit { .. }
-            | EventType::CallerExit { .. } => {
-                if filter == L!("exit") {
-                    return true;
-                }
+            | EventType::CallerExit { .. }
+                if filter == L!("exit") =>
+            {
+                true
             }
-            _ => {}
+            _ => filter == self.name(),
         }
-
-        filter == self.name()
     }
 }
 

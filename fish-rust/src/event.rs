@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 use widestring_suffix::widestrs;
 
 use crate::builtins::shared::io_streams_t;
-use crate::common::{escape_string, EscapeFlags, EscapeStringStyle};
+use crate::common::{escape_string, replace_with, EscapeFlags, EscapeStringStyle, ScopeGuard};
 use crate::ffi::{
     self, block_t, parser_t, signal_check_cancel, signal_handle, termsize_container_t, Repin,
 };
@@ -680,11 +680,14 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         "is_event should not be negative"
     );
 
-    let saved_is_event = parser.libdata_pod().is_event;
-    parser.libdata_pod().is_event += 1;
     // Suppress fish_trace during events.
-    let saved_suppress_fish_trace = parser.libdata_pod().suppress_fish_trace;
-    parser.libdata_pod().suppress_fish_trace = true;
+    let saved_is_event = replace_with(&mut parser.libdata_pod().is_event, |old| old + 1);
+    let saved_suppress_fish_trace =
+        std::mem::replace(&mut parser.libdata_pod().suppress_fish_trace, true);
+    let mut parser = ScopeGuard::new(parser, |parser| {
+        parser.libdata_pod().is_event = saved_is_event;
+        parser.libdata_pod().suppress_fish_trace = saved_suppress_fish_trace;
+    });
 
     // Capture the event handlers that match this event.
     let fire: Vec<_> = EVENT_HANDLERS
@@ -716,9 +719,13 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
 
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
-        let saved_is_interactive = parser.libdata_pod().is_interactive;
-        parser.libdata_pod().is_interactive = false;
-        let prev_statuses = parser.get_last_statuses().within_unique_ptr();
+        let saved_is_interactive =
+            std::mem::replace(&mut parser.libdata_pod().is_interactive, false);
+        let saved_statuses = parser.get_last_statuses().within_unique_ptr();
+        let mut parser = ScopeGuard::new(&mut parser, |parser| {
+            parser.pin().set_last_statuses(saved_statuses);
+            parser.libdata_pod().is_interactive = saved_is_interactive;
+        });
 
         FLOG!(
             event,
@@ -737,19 +744,14 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
             .eval_string_ffi1(&buffer.to_ffi())
             .within_unique_ptr();
         parser.pin().pop_block(b);
-        parser.pin().set_last_statuses(prev_statuses);
 
         handler.fired.store(true, Ordering::Relaxed);
         fired_one_shot |= handler.is_one_shot();
-        parser.libdata_pod().is_interactive = saved_is_interactive;
     }
 
     if fired_one_shot {
         remove_handlers_if(|h| h.fired.load(Ordering::Relaxed) && h.is_one_shot());
     }
-
-    parser.libdata_pod().suppress_fish_trace = saved_suppress_fish_trace;
-    parser.libdata_pod().is_event = saved_is_event;
 }
 
 /// Fire all delayed events attached to the given parser.

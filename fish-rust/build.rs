@@ -48,9 +48,16 @@ fn main() -> miette::Result<()> {
     // Emit autocxx junk.
     // This allows "C++ to be used from Rust."
     let include_paths = [&fish_src_dir, &fish_build_dir, &cxx_include_dir];
-    let mut b = autocxx_build::Builder::new("src/ffi.rs", include_paths)
-        .custom_gendir(autocxx_gen_dir.into())
-        .build()?;
+    let mut builder = autocxx_build::Builder::new("src/ffi.rs", include_paths);
+    // Use autocxx's custom output directory unless we're being called by `rust-analyzer` and co.,
+    // in which case stick to the default target directory so code intelligence continues to work.
+    if std::env::var("RUSTC_WRAPPER").map_or(true, |wrapper| {
+        !(wrapper.contains("rust-analyzer") || wrapper.contains("intellij-rust-native-helper"))
+    }) {
+        // We need this reassignment because of how the builder pattern works
+        builder = builder.custom_gendir(autocxx_gen_dir.into());
+    }
+    let mut b = builder.build()?;
     b.flag_if_supported("-std=c++11")
         .flag("-Wno-comment")
         .compile("fish-rust-autocxx");

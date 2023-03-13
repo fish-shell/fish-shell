@@ -1,16 +1,19 @@
-use std::iter::repeat;
-
 use crate::wchar::{wstr, WString, L};
+use crate::wutil::join_strings;
 
+/// Given an input path, "normalize" it:
+/// 1. Collapse multiple /s into a single /, except maybe at the beginning.
+/// 2. .. goes up a level.
+/// 3. Remove /./ in the middle.
 pub fn normalize_path(path: &wstr, allow_leading_double_slashes: bool) -> WString {
     // Count the leading slashes.
     let sep = '/';
     let mut leading_slashes: usize = 0;
-    for (i, &c) in path.as_char_slice().iter().enumerate() {
+    for c in path.chars() {
         if c != sep {
-            leading_slashes = i;
             break;
         }
+        leading_slashes += 1;
     }
 
     let comps = path
@@ -20,11 +23,11 @@ pub fn normalize_path(path: &wstr, allow_leading_double_slashes: bool) -> WStrin
         .collect::<Vec<_>>();
     let mut new_comps = Vec::new();
     for comp in comps {
-        if comp.is_empty() || comp == L!(".") {
+        if comp.is_empty() || comp == "." {
             continue;
-        } else if comp != L!("..") {
+        } else if comp != ".." {
             new_comps.push(comp);
-        } else if !new_comps.is_empty() && new_comps.last().map_or(L!(""), |&s| s) != L!("..") {
+        } else if !new_comps.is_empty() && new_comps.last().unwrap() != ".." {
             // '..' with a real path component, drop that path component.
             new_comps.pop();
         } else if leading_slashes == 0 {
@@ -32,12 +35,7 @@ pub fn normalize_path(path: &wstr, allow_leading_double_slashes: bool) -> WStrin
             new_comps.push(L!(".."));
         }
     }
-    let mut result = new_comps.into_iter().fold(Vec::new(), |mut acc, x| {
-        acc.extend_from_slice(x.as_char_slice());
-        acc.push('/');
-        acc
-    });
-    result.pop();
+    let mut result = join_strings(&new_comps, sep);
     // If we don't allow leading double slashes, collapse them to 1 if there are any.
     let mut numslashes = if leading_slashes > 0 { 1 } else { 0 };
     // If we do, prepend one or two leading slashes.
@@ -45,10 +43,42 @@ pub fn normalize_path(path: &wstr, allow_leading_double_slashes: bool) -> WStrin
     if allow_leading_double_slashes && leading_slashes == 2 {
         numslashes = 2;
     }
-    result.splice(0..0, repeat(sep).take(numslashes));
+    for _ in 0..numslashes {
+        result.insert(0, sep);
+    }
     // Ensure ./ normalizes to . and not empty.
     if result.is_empty() {
         result.push('.');
     }
-    WString::from_chars(result)
+    result
+}
+
+#[test]
+fn test_normalize_path() {
+    fn norm_path(path: &wstr) -> WString {
+        normalize_path(path, true)
+    }
+    assert_eq!(norm_path(L!("")), ".");
+    assert_eq!(norm_path(L!("..")), "..");
+    assert_eq!(norm_path(L!("./")), ".");
+    assert_eq!(norm_path(L!("./.")), ".");
+    assert_eq!(norm_path(L!("/")), "/");
+    assert_eq!(norm_path(L!("//")), "//");
+    assert_eq!(norm_path(L!("///")), "/");
+    assert_eq!(norm_path(L!("////")), "/");
+    assert_eq!(norm_path(L!("/.///")), "/");
+    assert_eq!(norm_path(L!(".//")), ".");
+    assert_eq!(norm_path(L!("/.//../")), "/");
+    assert_eq!(norm_path(L!("////abc")), "/abc");
+    assert_eq!(norm_path(L!("/abc")), "/abc");
+    assert_eq!(norm_path(L!("/abc/")), "/abc");
+    assert_eq!(norm_path(L!("/abc/..def/")), "/abc/..def");
+    assert_eq!(norm_path(L!("//abc/../def/")), "//def");
+    assert_eq!(norm_path(L!("abc/../abc/../abc/../abc")), "abc");
+    assert_eq!(norm_path(L!("../../")), "../..");
+    assert_eq!(norm_path(L!("foo/./bar")), "foo/bar");
+    assert_eq!(norm_path(L!("foo/../")), ".");
+    assert_eq!(norm_path(L!("foo/../foo")), "foo");
+    assert_eq!(norm_path(L!("foo/../foo/")), "foo");
+    assert_eq!(norm_path(L!("foo/././bar/.././baz")), "foo/baz");
 }

@@ -207,7 +207,7 @@ impl From<&event_description_t> for EventDescription {
             typ: match desc.typ {
                 event_type_t::any => EventType::Any,
                 event_type_t::signal => EventType::Signal {
-                    signal: desc.signal.try_into().unwrap(),
+                    signal: desc.signal,
                 },
                 event_type_t::variable => EventType::Variable {
                     name: desc.str_param1.from_ffi(),
@@ -244,7 +244,7 @@ impl From<&EventDescription> for event_description_t {
         };
         match desc.typ {
             EventType::Any => (),
-            EventType::Signal { signal } => result.signal = signal.try_into().unwrap(),
+            EventType::Signal { signal } => result.signal = signal,
             EventType::Variable { .. } => (),
             EventType::ProcessExit { pid } => result.pid = pid,
             EventType::JobExit {

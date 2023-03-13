@@ -12,8 +12,7 @@ pub fn path_apply_working_directory(path: &wstr, working_directory: &wstr) -> WS
 
     // We're going to make sure that if we want to prepend the wd, that the string has no leading
     // "/".
-    let prepend_wd =
-        path.as_char_slice()[0] != '/' && path.as_char_slice()[0] != HomeDirectory.into();
+    let prepend_wd = path.char_at(0) != '/' && path.char_at(0) != HomeDirectory.into();
 
     if !prepend_wd {
         // No need to prepend the wd, so just return the path we were given.
@@ -42,7 +41,7 @@ pub fn append_path_component(path: &mut WString, component: &wstr) {
         path.push_utfstr(component);
     } else {
         let path_len = path.len();
-        let path_slash = path.as_char_slice()[path_len - 1] == '/';
+        let path_slash = path.char_at(path_len - 1) == '/';
         let comp_slash = component.as_char_slice()[0] == '/';
         if !path_slash && !comp_slash {
             // Need a slash

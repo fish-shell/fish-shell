@@ -20,6 +20,7 @@ Description
 Without arguments or with the ``browse`` command it starts the web-based configuration interface. The web interface allows you to view your functions, variables and history, and to make changes to your prompt and color configuration. It starts a local web server and opens a browser window. When you are finished, close the browser window and press the Enter key to terminate the configuration session.
 
 If the ``BROWSER`` environment variable is set, it will be used as the name of the web browser to open instead of the system default.
+Note that if you use a snap or flatpak packaged browser, you might be unable to browse to the ``/tmp/...`` that is created. In that case, you can use ``curl`` to get the HTTP link instead, e.g. ``curl file:///tmp/web_configdeadbeef.html``. In the output from that command there is a ``<a href=[...]>`` link. Paste this link into your browser and you will be able to use the configurator.
 
 With the ``prompt`` command ``fish_config`` can be used to view and choose a prompt from fish's sample prompts inside the terminal directly.
 

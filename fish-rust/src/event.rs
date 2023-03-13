@@ -108,7 +108,7 @@ pub enum EventType {
     /// well).
     Any,
     /// An event triggered by a signal.
-    Signal { signal: usize },
+    Signal { signal: i32 },
     /// An event triggered by a variable update.
     Variable { name: WString },
     /// An event triggered by a process exit.
@@ -552,15 +552,19 @@ static OBSERVED_SIGNALS: [AtomicU32; SIGNAL_COUNT] = [ATOMIC_U32_0; SIGNAL_COUNT
 /// temporarily moved here. There was no mutex around this in the cpp code. TODO: Move it back.
 static BLOCKED_EVENTS: Mutex<Vec<Event>> = Mutex::new(Vec::new());
 
-fn inc_signal_observed(sig: usize) {
-    if let Some(sig) = OBSERVED_SIGNALS.get(sig) {
-        sig.fetch_add(1, Ordering::Relaxed);
+fn inc_signal_observed(sig: i32) {
+    if let Ok(index) = usize::try_from(sig) {
+        if let Some(sig) = OBSERVED_SIGNALS.get(index) {
+            sig.fetch_add(1, Ordering::Relaxed);
+        }
     }
 }
 
-fn dec_signal_observed(sig: usize) {
-    if let Some(sig) = OBSERVED_SIGNALS.get(sig) {
-        sig.fetch_sub(1, Ordering::Relaxed);
+fn dec_signal_observed(sig: i32) {
+    if let Ok(index) = usize::try_from(sig) {
+        if let Some(sig) = OBSERVED_SIGNALS.get(index) {
+            sig.fetch_sub(1, Ordering::Relaxed);
+        }
     }
 }
 
@@ -608,11 +612,7 @@ fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString> {
 /// Add an event handler.
 pub fn add_handler(eh: EventHandler) {
     if let EventType::Signal { signal } = eh.desc.typ {
-        signal_handle(
-            i32::try_from(signal)
-                .expect("signal should be < 2^31")
-                .into(),
-        );
+        signal_handle(ffi::c_int(signal));
         inc_signal_observed(signal);
     }
 
@@ -774,12 +774,13 @@ pub fn fire_delayed(parser: &mut parser_t) {
     // 'signals' contains a bit set for each signal that has been received.
     let mut signals: u64 = PENDING_SIGNALS.acquire_pending();
     while signals != 0 {
-        let sig = signals.trailing_zeros() as usize;
+        let sig = signals.trailing_zeros();
         signals &= !(1_u64 << sig);
+        let sig = sig as i32;
 
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
-        if sig == libc::SIGWINCH as usize {
+        if sig == libc::SIGWINCH {
             termsize_container_t::ffi_updating(parser.pin()).within_unique_ptr();
         }
         let event = Event {

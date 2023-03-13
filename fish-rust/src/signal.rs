@@ -51,16 +51,16 @@ pub fn wcs2sig(s: &wstr) -> Option<usize> {
 }
 
 /// Get string representation of a signal.
-pub fn sig2wcs(sig: usize) -> &'static wstr {
-    let s = ffi::sig2wcs(i32::try_from(sig).expect("signal should be < 2^31").into());
+pub fn sig2wcs(sig: i32) -> &'static wstr {
+    let s = ffi::sig2wcs(ffi::c_int(sig));
     let s = unsafe { U32CStr::from_ptr_str(s) };
 
     wstr::from_ucstr(s).expect("signal name should be valid utf-32")
 }
 
 /// Returns a description of the specified signal.
-pub fn signal_get_desc(sig: usize) -> &'static wstr {
-    let s = ffi::signal_get_desc(i32::try_from(sig).expect("signal should be < 2^31").into());
+pub fn signal_get_desc(sig: i32) -> &'static wstr {
+    let s = ffi::signal_get_desc(ffi::c_int(sig));
     let s = unsafe { U32CStr::from_ptr_str(s) };
 
     wstr::from_ucstr(s).expect("signal description should be valid utf-32")

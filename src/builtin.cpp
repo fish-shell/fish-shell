@@ -44,7 +44,6 @@
 #include "builtins/jobs.h"
 #include "builtins/math.h"
 #include "builtins/path.h"
-#include "builtins/printf.h"
 #include "builtins/read.h"
 #include "builtins/set.h"
 #include "builtins/set_color.h"
@@ -392,7 +391,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"not", &builtin_generic, N_(L"Negate exit status of job")},
     {L"or", &builtin_generic, N_(L"Execute command if previous command failed")},
     {L"path", &builtin_path, N_(L"Handle paths")},
-    {L"printf", &builtin_printf, N_(L"Prints formatted text")},
+    {L"printf", &implemented_in_rust, N_(L"Prints formatted text")},
     {L"pwd", &implemented_in_rust, N_(L"Print the working directory")},
     {L"random", &implemented_in_rust, N_(L"Generate random number")},
     {L"read", &builtin_read, N_(L"Read a line of input into variables")},

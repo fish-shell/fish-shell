@@ -87,6 +87,7 @@ pub fn realpath(
             0,
             args.len() - 1
         ));
+        builtin_print_help(parser, streams, cmd);
         return STATUS_INVALID_ARGS;
     }
 

@@ -65,7 +65,7 @@ impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
     /// Cancels the unwind operation like [`ScopeGuard::cancel()`] but also returns the captured
     /// value (consuming the `ScopeGuard` in the process).
     pub fn rollback(mut guard: Self) -> T {
-        let _ = guard.on_drop;
+        guard.on_drop.take();
         // Safety: we're about to forget the guard altogether
         let value = unsafe { ManuallyDrop::take(&mut guard.captured) };
         std::mem::forget(guard);

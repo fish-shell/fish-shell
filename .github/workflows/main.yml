@@ -79,7 +79,7 @@ jobs:
         #   use-after-scope, double-free, invalid-free, and memory leaks.
         # * MemorySanitizer detects uninitialized reads.
         #
-        RUSTFLAGS: "-Zsanitizer=address"
+        RUSTFLAGS: "-Zsanitizer=address -C link-args=-lasan"
         # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
 
     steps:

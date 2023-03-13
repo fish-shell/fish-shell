@@ -50,7 +50,9 @@ fn main() -> miette::Result<()> {
     let include_paths = [&fish_src_dir, &fish_build_dir, &cxx_include_dir];
     let mut builder = autocxx_build::Builder::new("src/ffi.rs", include_paths);
     // Detect `rust-analyzer` and output the autocxx stuff into `target` so we get code intelligence on it
-    if std::env::var("RUSTC_WRAPPER").map_or(true, |wrapper| !wrapper.contains("rust-analyzer")) {
+    if std::env::var("RUSTC_WRAPPER").map_or(true, |wrapper| {
+        !(wrapper.contains("rust-analyzer") || wrapper.contains("intellij-rust-native-helper"))
+    }) {
         // We need this reassignment because of how the builder pattern works
         builder = builder.custom_gendir(autocxx_gen_dir.into());
     }

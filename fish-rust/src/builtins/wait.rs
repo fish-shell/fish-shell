@@ -4,8 +4,9 @@ use crate::builtins::shared::{
     builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
     STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
-use crate::ffi::{job_t, parser_t, proc_wait_any, wait_handle_ref_t, Repin};
+use crate::ffi::{job_t, parser_t, proc_wait_any, Repin};
 use crate::signal::sigchecker_t;
+use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 use crate::wchar::{widestrs, wstr};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{self, fish_wcstoi, wgettext_fmt};
@@ -16,30 +17,16 @@ fn can_wait_on_job(j: &cxx::SharedPtr<job_t>) -> bool {
 }
 
 /// \return true if a wait handle matches a pid or a process name.
-/// For convenience, this returns false if the wait handle is null.
-fn wait_handle_matches(query: WaitHandleQuery, wh: &wait_handle_ref_t) -> bool {
-    if wh.is_null() {
-        return false;
-    }
+fn wait_handle_matches(query: WaitHandleQuery, wh: &WaitHandleRef) -> bool {
     match query {
-        WaitHandleQuery::Pid(pid) => wh.get_pid().0 == pid,
-        WaitHandleQuery::ProcName(proc_name) => proc_name == wh.get_base_name(),
+        WaitHandleQuery::Pid(pid) => wh.pid == pid,
+        WaitHandleQuery::ProcName(proc_name) => proc_name == wh.base_name,
     }
 }
 
 /// \return true if all chars are numeric.
 fn iswnumeric(s: &wstr) -> bool {
     s.chars().all(|c| c.is_ascii_digit())
-}
-
-// Hack to copy wait handles into a vector.
-fn get_wait_handle_list(parser: &parser_t) -> Vec<wait_handle_ref_t> {
-    let mut handles = Vec::new();
-    let whs = parser.get_wait_handles1();
-    for idx in 0..whs.size() {
-        handles.push(whs.get(idx));
-    }
-    handles
 }
 
 #[derive(Copy, Clone)]
@@ -53,15 +40,16 @@ enum WaitHandleQuery<'a> {
 /// \return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
-    parser: &parser_t,
-    handles: &mut Vec<wait_handle_ref_t>,
+    parser: &mut parser_t,
+    handles: &mut Vec<WaitHandleRef>,
 ) -> bool {
     // Has a job already completed?
     // TODO: we can avoid traversing this list if searching by pid.
     let mut matched = false;
-    for wh in get_wait_handle_list(parser) {
-        if wait_handle_matches(query, &wh) {
-            handles.push(wh);
+    let wait_handles: &mut WaitHandleStore = parser.get_wait_handles_mut();
+    for wh in wait_handles.iter() {
+        if wait_handle_matches(query, wh) {
+            handles.push(wh.clone());
             matched = true;
         }
     }
@@ -71,11 +59,17 @@ fn find_wait_handles(
         // We want to set 'matched' to true if we could have matched, even if the job was stopped.
         let provide_handle = can_wait_on_job(j);
         for proc in j.get_procs() {
-            let wh = proc.pin_mut().make_wait_handle(j.get_internal_job_id());
+            let wh = proc
+                .pin_mut()
+                .unpin()
+                .make_wait_handle(j.get_internal_job_id());
+            let Some(wh) = wh else {
+                continue;
+            };
             if wait_handle_matches(query, &wh) {
                 matched = true;
                 if provide_handle {
-                    handles.push(wh);
+                    handles.push(wh.clone());
                 }
             }
         }
@@ -83,13 +77,9 @@ fn find_wait_handles(
     matched
 }
 
-fn get_all_wait_handles(parser: &parser_t) -> Vec<wait_handle_ref_t> {
-    let mut result = Vec::new();
+fn get_all_wait_handles(parser: &parser_t) -> Vec<WaitHandleRef> {
     // Get wait handles for reaped jobs.
-    let wait_handles = parser.get_wait_handles1();
-    for idx in 0..wait_handles.size() {
-        result.push(wait_handles.get(idx));
-    }
+    let mut result = parser.get_wait_handles().get_list();
 
     // Get wait handles for running jobs.
     for j in parser.get_jobs() {
@@ -97,9 +87,8 @@ fn get_all_wait_handles(parser: &parser_t) -> Vec<wait_handle_ref_t> {
             continue;
         }
         for proc_ptr in j.get_procs().iter_mut() {
-            let proc = proc_ptr.pin_mut();
-            let wh = proc.make_wait_handle(j.get_internal_job_id());
-            if !wh.is_null() {
+            let proc = proc_ptr.pin_mut().unpin();
+            if let Some(wh) = proc.make_wait_handle(j.get_internal_job_id()) {
                 result.push(wh);
             }
         }
@@ -107,7 +96,7 @@ fn get_all_wait_handles(parser: &parser_t) -> Vec<wait_handle_ref_t> {
     result
 }
 
-fn is_completed(wh: &wait_handle_ref_t) -> bool {
+fn is_completed(wh: &WaitHandleRef) -> bool {
     wh.is_completed()
 }
 
@@ -116,7 +105,7 @@ fn is_completed(wh: &wait_handle_ref_t) -> bool {
 /// \return a status code.
 fn wait_for_completion(
     parser: &mut parser_t,
-    whs: &[wait_handle_ref_t],
+    whs: &[WaitHandleRef],
     any_flag: bool,
 ) -> Option<c_int> {
     if whs.is_empty() {
@@ -135,7 +124,7 @@ fn wait_for_completion(
             // Remove completed wait handles (at most 1 if any_flag is set).
             for wh in whs {
                 if is_completed(wh) {
-                    parser.pin().get_wait_handles().remove(wh);
+                    parser.get_wait_handles_mut().remove(wh);
                     if any_flag {
                         break;
                     }
@@ -203,7 +192,7 @@ pub fn wait(
     }
 
     // Get the list of wait handles for our waiting.
-    let mut wait_handles: Vec<wait_handle_ref_t> = Vec::new();
+    let mut wait_handles: Vec<WaitHandleRef> = Vec::new();
     for i in w.woptind..argc {
         if iswnumeric(argv[i]) {
             // argument is pid

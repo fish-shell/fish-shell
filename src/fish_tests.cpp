@@ -99,7 +99,6 @@
 #include "topic_monitor.h"
 #include "utf8.h"
 #include "util.h"
-#include "wait_handle.h"
 #include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wildcard.h"
@@ -3405,42 +3404,6 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     }
     do_test(result == expected);
     do_test(cursor_pos == out_cursor_pos);
-}
-
-static void test_wait_handles() {
-    say(L"Testing wait handles");
-    constexpr size_t limit = 4;
-    wait_handle_store_t whs(limit);
-    do_test(whs.size() == 0);
-
-    // Null handles ignored.
-    whs.add(wait_handle_ref_t{});
-    do_test(whs.size() == 0);
-    do_test(whs.get_by_pid(5) == nullptr);
-
-    // Duplicate pids drop oldest.
-    whs.add(std::make_shared<wait_handle_t>(5, 0, L"first"));
-    whs.add(std::make_shared<wait_handle_t>(5, 0, L"second"));
-    do_test(whs.size() == 1);
-    do_test(whs.get_by_pid(5)->base_name == L"second");
-
-    whs.remove_by_pid(123);
-    do_test(whs.size() == 1);
-    whs.remove_by_pid(5);
-    do_test(whs.size() == 0);
-
-    // Test evicting oldest.
-    whs.add(std::make_shared<wait_handle_t>(1, 0, L"1"));
-    whs.add(std::make_shared<wait_handle_t>(2, 0, L"2"));
-    whs.add(std::make_shared<wait_handle_t>(3, 0, L"3"));
-    whs.add(std::make_shared<wait_handle_t>(4, 0, L"4"));
-    whs.add(std::make_shared<wait_handle_t>(5, 0, L"5"));
-    do_test(whs.size() == 4);
-    auto start = whs.get_list().begin();
-    do_test(std::next(start, 0)->get()->base_name == L"5");
-    do_test(std::next(start, 1)->get()->base_name == L"4");
-    do_test(std::next(start, 2)->get()->base_name == L"3");
-    do_test(std::next(start, 3)->get()->base_name == L"2");
 }
 
 static void test_completion_insertions() {
@@ -6955,7 +6918,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("universal"), test_universal_formats},
     {TEST_GROUP("universal"), test_universal_ok_to_save},
     {TEST_GROUP("universal"), test_universal_notifiers},
-    {TEST_GROUP("wait_handles"), test_wait_handles},
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("autosuggestion_ignores"), test_autosuggestion_ignores},
     {TEST_GROUP("autosuggestion_combining"), test_autosuggestion_combining},

@@ -49,7 +49,6 @@
 #include "redirection.h"
 #include "timer.rs.h"
 #include "trace.h"
-#include "wait_handle.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -917,7 +916,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
             }
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.
-            parser.get_wait_handles().remove_by_pid(p->pid);
+            parser.get_wait_handles_ffi()->remove_by_pid(p->pid);
             break;
         }
 

@@ -242,7 +242,7 @@ class tty_transfer_t : nonmovable_t, noncopyable_t {
 ///
 /// If the process is of type process_type_t::function, argv is the argument vector, and argv[0] is
 /// the name of the shellscript function.
-class process_t : noncopyable_t {
+class process_t {
    public:
     process_t();
 
@@ -294,12 +294,16 @@ class process_t : noncopyable_t {
     bool is_internal() const;
 
     /// \return the wait handle for the process, if it exists.
-    wait_handle_ref_t get_wait_handle() { return wait_handle_; }
+    rust::Box<WaitHandleRefFFI> *get_wait_handle_ffi() const;
 
     /// Create a wait handle for the process.
     /// As a process does not know its job id, we pass it in.
     /// Note this will return null if the process is not waitable (has no pid).
-    wait_handle_ref_t make_wait_handle(internal_job_id_t jid);
+    rust::Box<WaitHandleRefFFI> *make_wait_handle_ffi(internal_job_id_t jid);
+
+    /// Variants of get and make that return void*, to satisfy autocxx.
+    void *get_wait_handle_void() const;
+    void *make_wait_handle_void(internal_job_id_t jid);
 
     /// Actual command to pass to exec in case of process_type_t::external or process_type_t::exec.
     wcstring actual_cmd;
@@ -338,12 +342,18 @@ class process_t : noncopyable_t {
     /// Number of jiffies spent in process at last cpu time check.
     clock_ticks_t last_jiffies{0};
 
+    process_t(process_t &&) = delete;
+    process_t &operator=(process_t &&) = delete;
+    process_t(const process_t &) = delete;
+    process_t &operator=(const process_t &) = delete;
+
    private:
     wcstring_list_t argv_;
     rust::Box<redirection_spec_list_t> proc_redirection_specs_;
 
     // The wait handle. This is constructed lazily, and cached.
-    wait_handle_ref_t wait_handle_{};
+    // This may be null.
+    std::unique_ptr<rust::Box<WaitHandleRefFFI>> wait_handle_;
 };
 
 using process_ptr_t = std::unique_ptr<process_t>;

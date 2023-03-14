@@ -35,6 +35,7 @@ mod timer;
 mod tokenizer;
 mod topic_monitor;
 mod util;
+mod wait_handle;
 mod wchar;
 mod wchar_ext;
 mod wchar_ffi;

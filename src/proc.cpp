@@ -290,16 +290,22 @@ bool process_t::is_internal() const {
     return true;
 }
 
-wait_handle_ref_t process_t::make_wait_handle(internal_job_id_t jid) {
+rust::Box<WaitHandleRefFFI> *process_t::get_wait_handle_ffi() const { return wait_handle_.get(); }
+
+rust::Box<WaitHandleRefFFI> *process_t::make_wait_handle_ffi(internal_job_id_t jid) {
     if (type != process_type_t::external || pid <= 0) {
         // Not waitable.
         return nullptr;
     }
     if (!wait_handle_) {
-        wait_handle_ = std::make_shared<wait_handle_t>(this->pid, jid, wbasename(this->actual_cmd));
+        wait_handle_ = make_unique<rust::Box<WaitHandleRefFFI>>(
+            new_wait_handle_ffi(this->pid, jid, wbasename(this->actual_cmd)));
     }
-    return wait_handle_;
+    return wait_handle_.get();
 }
+
+void *process_t::get_wait_handle_void() const { return get_wait_handle_ffi(); }
+void *process_t::make_wait_handle_void(internal_job_id_t jid) { return make_wait_handle_ffi(jid); }
 
 static uint64_t next_internal_job_id() {
     static std::atomic<uint64_t> s_next{};
@@ -632,20 +638,19 @@ static void remove_disowned_jobs(job_list_t &jobs) {
 /// Given that a job has completed, check if it may be wait'ed on; if so add it to the wait handle
 /// store. Then mark all wait handles as complete.
 static void save_wait_handle_for_completed_job(const shared_ptr<job_t> &job,
-                                               wait_handle_store_t &store) {
+                                               WaitHandleStoreFFI &store) {
     assert(job && job->is_completed() && "Job null or not completed");
     // Are we a background job?
     if (!job->is_foreground()) {
         for (auto &proc : job->processes) {
-            store.add(proc->make_wait_handle(job->internal_job_id));
+            store.add(proc->make_wait_handle_ffi(job->internal_job_id));
         }
     }
 
     // Mark all wait handles as complete (but don't create just for this).
     for (auto &proc : job->processes) {
-        if (wait_handle_ref_t wh = proc->get_wait_handle()) {
-            wh->status = proc->status.status_value();
-            wh->completed = true;
+        if (auto *wh = proc->get_wait_handle_ffi()) {
+            (*wh)->set_status_and_complete(proc->status.status_value());
         }
     }
 }
@@ -712,7 +717,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         // finished in the background.
         if (job_or_proc_wants_summary(j)) jobs_to_summarize.push_back(j);
         generate_job_exit_events(j, &exit_events);
-        save_wait_handle_for_completed_job(j, parser.get_wait_handles());
+        save_wait_handle_for_completed_job(j, *parser.get_wait_handles_ffi());
 
         // Remove it.
         iter = parser.jobs().erase(iter);

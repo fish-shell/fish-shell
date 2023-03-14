@@ -28,9 +28,9 @@
 #include "../parser_keywords.h"
 #include "../proc.h"
 #include "../signals.h"
-#include "../wait_handle.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "cxx.h"
 
 namespace {
 struct function_cmd_opts_t {
@@ -66,10 +66,7 @@ static internal_job_id_t job_id_for_pid(pid_t pid, parser_t &parser) {
     if (const auto *job = parser.job_get_from_pid(pid)) {
         return job->internal_job_id;
     }
-    if (wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid)) {
-        return wh->internal_job_id;
-    }
-    return 0;
+    return parser.get_wait_handles_ffi()->get_job_id_by_pid(pid);
 }
 
 static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
@@ -314,16 +311,20 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         if (ed.typ == event_type_t::process_exit) {
             pid_t pid = ed.pid;
             if (pid == EVENT_ANY_PID) continue;
-            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid);
-            if (wh && wh->completed) {
-                event_fire(parser, *new_event_process_exit(pid, wh->status));
+            int status{};
+            uint64_t internal_job_id{};
+            if (parser.get_wait_handles_ffi()->try_get_status_and_job_id(pid, true, status,
+                                                                         internal_job_id)) {
+                event_fire(parser, *new_event_process_exit(pid, status));
             }
         } else if (ed.typ == event_type_t::job_exit) {
             pid_t pid = ed.pid;
             if (pid == EVENT_ANY_PID) continue;
-            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid);
-            if (wh && wh->completed) {
-                event_fire(parser, *new_event_job_exit(pid, wh->internal_job_id));
+            int status{};
+            uint64_t internal_job_id{};
+            if (parser.get_wait_handles_ffi()->try_get_status_and_job_id(pid, true, status,
+                                                                         internal_job_id)) {
+                event_fire(parser, *new_event_job_exit(pid, internal_job_id));
             }
         }
     }

@@ -35,6 +35,7 @@ fn main() -> miette::Result<()> {
         "src/tokenizer.rs",
         "src/topic_monitor.rs",
         "src/util.rs",
+        "src/wait_handle.rs",
         "src/builtins/shared.rs",
     ];
     cxx_build::bridges(&source_files)

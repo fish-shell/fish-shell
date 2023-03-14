@@ -265,7 +265,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Our store of recorded wait-handles. These are jobs that finished in the background, and have
     /// been reaped, but may still be wait'ed on.
-    wait_handle_store_t wait_handles;
+    rust::Box<WaitHandleStoreFFI> wait_handles;
 
     /// The list of blocks. This is a deque because we give out raw pointers to callers, who hold
     /// them across manipulating this stack.
@@ -395,8 +395,14 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     const library_data_t &libdata() const { return library_data; }
 
     /// Get our wait handle store.
-    wait_handle_store_t &get_wait_handles() { return wait_handles; }
-    const wait_handle_store_t &get_wait_handles() const { return wait_handles; }
+    rust::Box<WaitHandleStoreFFI> &get_wait_handles_ffi();
+    const rust::Box<WaitHandleStoreFFI> &get_wait_handles_ffi() const;
+
+    /// As get_wait_handles(), but void* pointer-to-Box to satisfy autocxx.
+    void *get_wait_handles_void() const {
+        const void *ptr = &get_wait_handles_ffi();
+        return const_cast<void *>(ptr);
+    }
 
     /// Get and set the last proc statuses.
     int get_last_status() const { return vars().get_last_status(); }

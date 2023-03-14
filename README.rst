@@ -44,7 +44,7 @@ Packages for Linux
 
 Packages for Debian, Fedora, openSUSE, and Red Hat Enterprise
 Linux/CentOS are available from the `openSUSE Build
-Service <https://software.opensuse.org/download.html?project=shells%3Afish&package=fish>`__.
+Service <https://software.opensuse.org/download.html?project=shells%3Afish&package=fish>`__ or official repositories.
 
 Packages for Ubuntu are available from the `fish
 PPA <https://launchpad.net/~fish-shell/+archive/ubuntu/release-3>`__,
@@ -134,9 +134,19 @@ to permit fish to be your login shell:
 
    echo /usr/local/bin/fish | sudo tee -a /etc/shells
 
+On Fedora and other RHEL-based systems, the `chsh` command is not available for security reasons. Use this instead:
+
+::
+
+    sudo lchsh $USER /usr/bin/fish
+
+(It is often not recommended to replace bash with fish systemwide.)
+
 To switch your default shell back, you can run ``chsh -s /bin/bash``
 (substituting ``/bin/bash`` with ``/bin/tcsh`` or ``/bin/zsh`` as
 appropriate).
+
+On e.g. Fedora you run `sudo -chsh $USER /usr/bin/bash` to switch back to bash.
 
 Building
 --------

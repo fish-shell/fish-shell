@@ -31,6 +31,7 @@ Interactive improvements
 - Escape during history search restores the original commandline again (regressed in 3.6.0).
 - Using ``--help`` on builtins now respects the $MANPAGER variable in preference to $PAGER (:issue:`9488`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
+- A new variable, :envvar:`fish_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`fish_cursor_default` (:issue:`4656`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

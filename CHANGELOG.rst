@@ -47,6 +47,7 @@ Interactive improvements
 - The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes alt+something bindings in vi-mode (:issue:`7910`).
 - A new ``clear-screen`` bind function is used for :kbd:`Alt`\ +\ :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
   so it eliminates visible flicker unless the terminal is very slow (:issue:`10044`).
+- A new variable, :envvar:`fish_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`fish_cursor_default` (:issue:`4656`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

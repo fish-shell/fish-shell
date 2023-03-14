@@ -146,7 +146,7 @@ To switch your default shell back, you can run ``chsh -s /bin/bash``
 (substituting ``/bin/bash`` with ``/bin/tcsh`` or ``/bin/zsh`` as
 appropriate).
 
-On e.g. Fedora you run `sudo -chsh $USER /usr/bin/bash` to switch back to bash.
+On e.g. Fedora you run ``sudo lchsh $USER /usr/bin/bash`` to switch back to bash.
 
 Building
 --------

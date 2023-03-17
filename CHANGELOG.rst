@@ -1,7 +1,7 @@
 fish 3.6.1 (released ???)
 ===================================
 
-.. ignore: 9402 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9498 9509 9513 9518 9535 9539 9546 9611 9629 9631 9634 9650 9651
+.. ignore: 9402 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9498 9509 9513 9518 9535 9539 9546 9611 9629 9631 9634 9650 9651 
 
 Notable improvements and fixes
 ------------------------------
@@ -35,6 +35,8 @@ Interactive improvements
 - Themes that don't specify every color option can be installed correctly in the Web-based configuration (:issue:`9590`).
 - Compatibility with Midnight Commander's prompt integration has been improved (:issue:`9540`).
 - A spurious error, noted when using fish in Google Drive directories under WSL 2, has been silenced (:issue:`9550`).
+- Using ``read`` in ``fish_greeting`` or similar functions will not trigger an infinite loop (:issue:`9564`).
+- Compatibility when upgrading from old versions of fish (before 3.4.0) has been improved (:issue:`9569`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,7 +1,7 @@
 fish 3.6.1 (released ???)
 ===================================
 
-.. ignore: 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9509 9513 9518 9535 9546 9629 9631 9634 9650 9651 
+.. ignore: 9402 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9498 9509 9513 9518 9535 9539 9546 9611 9629 9631 9634 9650 9651
 
 Notable improvements and fixes
 ------------------------------
@@ -26,19 +26,22 @@ Interactive improvements
 - Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`)
 - Variables that were set while the locale was C (the default ASCII-only locale) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
-- Escape during history search restores the original command line again (regressed in 3.6.0).
+- Escape during history search restores the original command line again (fixing a regression in 3.6.0).
 - Using ``--help`` on builtins now respects the ``$MANPAGER`` variable, in preference to ``$PAGER`` (:issue:`9488`).
 - :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
 - The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
 - fish no longer crashes when searching history for non-ascii codepoints case-insensitively (:issue:`9628`).
 - The :kbd:`Alt-S`` binding will now also use ``please`` if available (:issue:`9635`).
 - Themes that don't specify every color option can be installed correctly in the Web-based configuration (:issue:`9590`).
+- Compatibility with Midnight Commander's prompt integration has been improved (:issue:`9540`).
+- A spurious error, noted when using fish in Google Drive directories under WSL 2, has been silenced (:issue:`9550`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
+- The git prompt will compute the stash count to be used independently of the informative status (:issue:`9572`).
 
 Completions
 ^^^^^^^^^^^
@@ -51,10 +54,11 @@ Completions
   - ``scrypt`` (:issue:`9583`)
   - ``stow`` (:issue:`9571`)
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
-- Improvements to many completions, including the speed of completing directories in WSL2 (:issue:`9574`).
-- ``git`` completions for ``git-foo``-style commands was fixed (:issue:`9457`)
-- File completion now offers ``../`` and ``./`` again (:issue:`9477`)
-- Completion for ``terraform`` now asks for a parameter after ``terraform init -backend-config``. (:issue:`9498`)
+- Improvements to many completions, including the speed of completing directories in WSL 2 (:issue:`9574`).
+- Completions using ``__fish_complete_suffix`` are now offered in the correct order, fixing a regression in 3.6.0 (:issue:`8924`).
+- ``git`` completions for ``git-foo``-style commands was restored, fixing a regression in 3.6.0 (:issue:`9457`).
+- File completion now offers ``../`` and ``./`` again, fixing a regression in 3.6.0 (:issue:`9477`).
+- The behaviour of completions using ``__fish_complete_path`` matches standard path completions (:issue:`9285`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

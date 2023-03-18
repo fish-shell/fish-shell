@@ -3,6 +3,8 @@ use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{c_str, empty_wstring, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use crate::common::str2wcstring;
+use errno::errno;
 use libc::c_int;
 use std::os::fd::RawFd;
 use std::pin::Pin;
@@ -231,6 +233,17 @@ pub fn builtin_print_help(parser: &mut parser_t, streams: &io_streams_t, cmd: &w
 
 pub fn builtin_print_error_trailer(parser: &mut parser_t, streams: &mut io_streams_t, cmd: &wstr) {
     ffi::builtin_print_error_trailer(parser.pin(), streams.err.ffi(), c_str!(cmd));
+}
+
+/// This function works like wperror, but it prints its result into the streams.err string instead
+/// to stderr. Used by the builtin commands.
+pub fn builtin_wperror(program_name: &wstr, streams: &mut io_streams_t) {
+    let err = errno();
+    streams.err.append(program_name);
+    streams.err.append(L!(": "));
+    let werr = str2wcstring(&err.to_string().into_bytes());
+    streams.err.append(werr);
+    streams.err.append(L!("\n"));
 }
 
 pub struct HelpOnlyCmdOpts {

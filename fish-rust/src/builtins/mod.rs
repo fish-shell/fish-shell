@@ -16,4 +16,5 @@ pub mod random;
 pub mod realpath;
 pub mod r#return;
 pub mod r#type;
+pub mod ulimit;
 pub mod wait;

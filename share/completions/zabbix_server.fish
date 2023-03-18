@@ -21,18 +21,8 @@ set -l runtime config_cache_reload \
 set -l scope rwlock mutex processing 
 
 
-function __fish_has_target 
-    if string match -rq '=' (commandline)
-        return 0
-    end
-    return 1
-end
-
 function __fish_string_in_command -a ch
-    if string match -rq $ch (commandline)
-        return 0
-    end
-    return 1
+    string match -rq $ch (commandline)
 end
 
 function __fish_prepend -a prefix
@@ -90,16 +80,16 @@ complete -c zabbix_server -f -s V -l version -d "Display version number"
 
 
 # Log levels
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command log_level_increase" -a "(__fish_prepend log_level_increase)"
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command log_level_decrease" -a "(__fish_prepend log_level_decrease)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_increase" -a "(__fish_prepend log_level_increase)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_decrease" -a "(__fish_prepend log_level_decrease)"
 
 # Prof enable
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command prof_enable" -a "(__fish_prepend prof_enable)"
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command prof_disable" -a "(__fish_prepend prof_disable)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command prof_enable" -a "(__fish_prepend prof_enable)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command prof_disable" -a "(__fish_prepend prof_disable)"
 
 # HA nodes
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command ha_remove_node" -a "(__fish_list_nodes)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command ha_remove_node" -a "(__fish_list_nodes)"
 
 # diaginfo
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
 

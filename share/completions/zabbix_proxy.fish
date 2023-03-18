@@ -9,18 +9,8 @@ set -l runtime config_cache_reload \
     log_level_decrease=
 
 
-function __fish_has_target
-    if string match -rq '=' (commandline)
-        return 0
-    end
-    return 1
-end
-
 function __fish_string_in_command -a ch
-    if string match -rq $ch (commandline )
-        return 0
-    end
-    return 1
+    string match -rq $ch (commandline)
 end
 
 function __fish_prepend -a prefix
@@ -62,9 +52,9 @@ complete -c zabbix_proxy -f -s h -l help -d "Display this help and exit."
 complete -c zabbix_proxy -f -s V -l version -d "Output version information and exit."
 
 # Logs
-complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command log_level_increase" -a "(__fish_prepend log_level_increase)"
-complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command log_level_decrease" -a "(__fish_prepend log_level_decrease)"
+complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_increase" -a "(__fish_prepend log_level_increase)"
+complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_decrease" -a "(__fish_prepend log_level_decrease)"
 
 # Diag info
-complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_has_target; __fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
+complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
 

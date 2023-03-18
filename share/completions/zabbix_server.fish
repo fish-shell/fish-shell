@@ -77,6 +77,7 @@ complete -c zabbix_server -s c -l config -d "Path to the configuration file"
 complete -c zabbix_server -f -s f -l foreground -d "Run Zabbix server in foreground"
 complete -c zabbix_server -f -s h -l help -d "Display this help message"
 complete -c zabbix_server -f -s V -l version -d "Display version number"
+complete -c zabbix_server -f -s R -l runtime-control -a "$runtime" -d "Perform administrative functions according to runtime-option."
 
 
 # Log levels

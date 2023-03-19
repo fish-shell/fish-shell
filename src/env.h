@@ -194,6 +194,10 @@ class environment_t {
     virtual wcstring_list_t get_names(env_mode_flags_t flags) const = 0;
     virtual ~environment_t();
 
+    /// \return a environment variable as a unique pointer, or nullptr if none.
+    std::unique_ptr<env_var_t> get_or_null(const wcstring &key,
+                                           env_mode_flags_t mode = ENV_DEFAULT) const;
+
     /// Returns the PWD with a terminating slash.
     virtual wcstring get_pwd_slash() const;
 };
@@ -284,14 +288,17 @@ class env_stack_t final : public environment_t {
     /// Slightly optimized implementation.
     wcstring get_pwd_slash() const override;
 
+    /// "Override" of get_or_null, as autocxx doesn't understand inheritance.
+    std::unique_ptr<env_var_t> get_or_null(const wcstring &key,
+                                           env_mode_flags_t mode = ENV_DEFAULT) const {
+        return environment_t::get_or_null(key, mode);
+    }
+
     /// Synchronizes universal variable changes.
     /// If \p always is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
     /// \return a list of events for changed variables.
     std::vector<rust::Box<Event>> universal_sync(bool always);
-
-    __attribute__((unused)) std::unique_ptr<env_var_t> get_or_null(
-        const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const;
 
     // Compatibility hack; access the "environment stack" from back when there was just one.
     static const std::shared_ptr<env_stack_t> &principal_ref();

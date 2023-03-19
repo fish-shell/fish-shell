@@ -189,6 +189,15 @@ wcstring environment_t::get_pwd_slash() const {
     return pwd;
 }
 
+std::unique_ptr<env_var_t> environment_t::get_or_null(wcstring const &key,
+                                                      env_mode_flags_t mode) const {
+    auto variable = this->get(key, mode);
+    if (!variable.has_value()) {
+        return nullptr;
+    }
+    return make_unique<env_var_t>(variable.acquire());
+}
+
 null_environment_t::~null_environment_t() = default;
 maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t mode) const {
     UNUSED(key);
@@ -1475,13 +1484,6 @@ const std::shared_ptr<env_stack_t> &env_stack_t::principal_ref() {
     static const std::shared_ptr<env_stack_t> s_principal{
         new env_stack_t(env_stack_impl_t::create())};
     return s_principal;
-}
-__attribute__((unused)) std::unique_ptr<env_var_t> env_stack_t::get_or_null(
-    wcstring const &key, env_mode_flags_t mode) const {
-    auto variable = get(key, mode);
-    return variable.missing_or_empty()
-               ? std::unique_ptr<env_var_t>()
-               : std::unique_ptr<env_var_t>(new env_var_t(variable.value()));
 }
 
 env_stack_t::~env_stack_t() = default;

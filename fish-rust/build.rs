@@ -1,3 +1,5 @@
+use miette::miette;
+
 fn main() -> miette::Result<()> {
     let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
     let target_dir =
@@ -14,6 +16,8 @@ fn main() -> miette::Result<()> {
     // Where autocxx should put its stuff.
     let autocxx_gen_dir = std::env::var("FISH_AUTOCXX_GEN_DIR")
         .unwrap_or(format!("{}/{}", fish_build_dir, "fish-autocxx-gen/"));
+
+    detect_features();
 
     // Emit cxx junk.
     // This allows "Rust to be used from C++"
@@ -67,4 +71,40 @@ fn main() -> miette::Result<()> {
     }
 
     Ok(())
+}
+
+/// Dynamically enables certain features at build-time, without their having to be explicitly
+/// enabled in the `cargo build --features xxx` invocation.
+///
+/// This can be used to enable features that we check for and conditionally compile according to in
+/// our own codebase, but [can't be used to pull in dependencies](0) even if they're gated (in
+/// `Cargo.toml`) behind a feature we just enabled.
+///
+/// [0]: https://github.com/rust-lang/cargo/issues/5499
+fn detect_features() {
+    for (feature, detector) in [
+        ("bsd", detect_bsd),
+    ]
+    {
+        match detector() {
+            Err(e) => eprintln!("{feature} detect: {e}"),
+            Ok(true) => println!("cargo:rustc-cfg=feature=\"{feature}\""),
+            Ok(false) => (),
+        }
+    }
+}
+
+/// Detect if we're being compiled on a BSD-derived OS. Does not yet play nicely with
+/// cross-compilation.
+///
+/// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
+/// doesn't necessarily include less-popular forks nor does it group them into families more
+/// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
+fn detect_bsd() -> miette::Result<bool> {
+    let uname = std::process::Command::new("uname").output()
+        .map_err(|_| miette!("Error executing uname!"))?;
+    Ok(std::str::from_utf8(&uname.stdout)
+        .map(|s| s.to_ascii_lowercase())
+        .map(|s| s.contains("bsd"))
+        .unwrap_or(false))
 }

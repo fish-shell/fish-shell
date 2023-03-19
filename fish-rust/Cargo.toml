@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.67"
 
-
 [dependencies]
 widestring-suffix = { path = "./widestring-suffix/" }
 
@@ -29,13 +28,16 @@ cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
 miette = { version = "5", features = ["fancy"] }
 
 [lib]
-crate-type=["staticlib"]
+crate-type = ["staticlib"]
 
 [features]
 # The fish-ffi-tests feature causes tests to be built which need to use the FFI.
 # These tests are run by fish_tests().
 default = ["fish-ffi-tests"]
 fish-ffi-tests = ["inventory"]
+
+# The following features are auto-detected by the build-script and should not be enabled manually.
+bsd = []
 
 [patch.crates-io]
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }

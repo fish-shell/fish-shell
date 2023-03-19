@@ -62,6 +62,8 @@ parser_t &parser_t::principal_parser() {
     return *principal;
 }
 
+parser_t *parser_t::principal_parser_ffi() { return &principal_parser(); }
+
 void parser_t::assert_can_execute() const { ASSERT_IS_MAIN_THREAD(); }
 
 rust::Box<WaitHandleStoreFFI> &parser_t::get_wait_handles_ffi() { return wait_handles; }

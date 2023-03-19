@@ -6,10 +6,12 @@ use ::std::fmt::{self, Debug, Formatter};
 use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
+use crate::env::flags::EnvMode;
 pub use crate::wait_handle::{
     WaitHandleRef, WaitHandleRefFFI, WaitHandleStore, WaitHandleStoreFFI,
 };
-use crate::wchar::wstr;
+use crate::wchar::{wstr, WString};
+use crate::wchar_ffi::WCharFromFFI;
 use autocxx::prelude::*;
 use cxx::SharedPtr;
 use libc::pid_t;
@@ -47,7 +49,9 @@ include_cpp! {
     generate!("wperror")
 
     generate_pod!("pipes_ffi_t")
+    generate!("environment_t")
     generate!("env_stack_t")
+    generate!("env_var_t")
     generate!("make_pipes_ffi")
 
     generate!("valid_var_name_char")
@@ -147,6 +151,66 @@ impl parser_t {
     pub fn job_get_from_pid(&self, pid: pid_t) -> Option<&job_t> {
         let job = self.ffi_job_get_from_pid(pid.into());
         unsafe { job.as_ref() }
+    }
+
+    /// Helper to get a variable as a string, using the default flags.
+    pub fn var_as_string(&mut self, name: &wstr) -> Option<WString> {
+        self.pin().vars().unpin().get_as_string(name)
+    }
+
+    pub fn get_var_stack(&mut self) -> &mut env_stack_t {
+        self.pin().vars().unpin()
+    }
+
+    pub fn get_var_stack_env(&mut self) -> &environment_t {
+        self.vars_env_ffi()
+    }
+
+    pub fn set_var(&mut self, name: &wstr, value: &[&wstr], flags: EnvMode) -> libc::c_int {
+        self.get_var_stack().set_var(name, value, flags)
+    }
+}
+
+impl environment_t {
+    /// Helper to get a variable as a string, using the default flags.
+    pub fn get_as_string(&self, name: &wstr) -> Option<WString> {
+        self.get_as_string_flags(name, EnvMode::DEFAULT)
+    }
+
+    /// Helper to get a variable as a string, using the given flags.
+    pub fn get_as_string_flags(&self, name: &wstr, flags: EnvMode) -> Option<WString> {
+        self.get_or_null(&name.to_ffi(), flags.bits())
+            .as_ref()
+            .map(|s| s.as_string().from_ffi())
+    }
+}
+
+impl env_stack_t {
+    /// Helper to get a variable as a string, using the default flags.
+    pub fn get_as_string(&self, name: &wstr) -> Option<WString> {
+        self.get_as_string_flags(name, EnvMode::DEFAULT)
+    }
+
+    /// Helper to get a variable as a string, using the given flags.
+    pub fn get_as_string_flags(&self, name: &wstr, flags: EnvMode) -> Option<WString> {
+        self.get_or_null(&name.to_ffi(), flags.bits())
+            .as_ref()
+            .map(|s| s.as_string().from_ffi())
+    }
+
+    /// Helper to set a value.
+    pub fn set_var(&mut self, name: &wstr, value: &[&wstr], flags: EnvMode) -> libc::c_int {
+        use crate::wchar_ffi::{wstr_to_u32string, W0String};
+        let strings: Vec<W0String> = value.iter().map(wstr_to_u32string).collect();
+        let ptrs: Vec<*const u32> = strings.iter().map(|s| s.as_ptr()).collect();
+        self.pin()
+            .set_ffi(
+                &name.to_ffi(),
+                flags.bits(),
+                ptrs.as_ptr() as *const c_void,
+                ptrs.len(),
+            )
+            .into()
     }
 }
 

@@ -30,6 +30,7 @@ mod parse_constants;
 mod redirection;
 mod signal;
 mod smoke;
+mod termsize;
 mod threads;
 mod timer;
 mod tokenizer;

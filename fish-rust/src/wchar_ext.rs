@@ -1,6 +1,89 @@
 use crate::wchar::{wstr, WString};
 use widestring::utfstr::CharsUtf32;
 
+/// Helpers to convert things to widestring.
+/// This is like std::string::ToString.
+pub trait ToWString {
+    fn to_wstring(&self) -> WString;
+}
+
+#[inline]
+fn to_wstring_impl(mut val: u64, neg: bool) -> WString {
+    // 20 digits max in u64: 18446744073709551616.
+    let mut digits = [0; 24];
+    let mut ndigits = 0;
+    while val > 0 {
+        digits[ndigits] = (val % 10) as u8;
+        val /= 10;
+        ndigits += 1;
+    }
+    if ndigits == 0 {
+        digits[0] = 0;
+        ndigits = 1;
+    }
+    let mut result = WString::with_capacity(ndigits + neg as usize);
+    if neg {
+        result.push('-');
+    }
+    for i in (0..ndigits).rev() {
+        result.push((digits[i] + b'0') as char);
+    }
+    result
+}
+
+/// Implement to_wstring() for signed types.
+macro_rules! impl_to_wstring_signed {
+    ($t:ty) => {
+        impl ToWString for $t {
+            fn to_wstring(&self) -> WString {
+                let val = *self as i64;
+                to_wstring_impl(val.unsigned_abs(), val < 0)
+            }
+        }
+    };
+}
+impl_to_wstring_signed!(i8);
+impl_to_wstring_signed!(i16);
+impl_to_wstring_signed!(i32);
+impl_to_wstring_signed!(i64);
+impl_to_wstring_signed!(isize);
+
+/// Implement to_wstring() for unsigned types.
+macro_rules! impl_to_wstring_unsigned {
+    ($t:ty) => {
+        impl ToWString for $t {
+            fn to_wstring(&self) -> WString {
+                to_wstring_impl(*self as u64, false)
+            }
+        }
+    };
+}
+
+impl_to_wstring_unsigned!(u8);
+impl_to_wstring_unsigned!(u16);
+impl_to_wstring_unsigned!(u32);
+impl_to_wstring_unsigned!(u64);
+impl_to_wstring_unsigned!(usize);
+
+#[test]
+fn test_to_wstring() {
+    assert_eq!(0_u64.to_wstring(), "0");
+    assert_eq!(1_u64.to_wstring(), "1");
+    assert_eq!(0_i64.to_wstring(), "0");
+    assert_eq!(1_i64.to_wstring(), "1");
+    assert_eq!((-1_i64).to_wstring(), "-1");
+    assert_eq!((-5_i64).to_wstring(), "-5");
+    let mut val: i64 = 1;
+    loop {
+        assert_eq!(val.to_wstring(), val.to_string());
+        let Some(next) = val.checked_mul(-3) else { break; };
+        val = next;
+    }
+    assert_eq!(u64::MAX.to_wstring(), "18446744073709551615");
+    assert_eq!(i64::MIN.to_wstring(), "-9223372036854775808");
+    assert_eq!(i64::MAX.to_wstring(), "9223372036854775807");
+}
+
 /// A thing that a wide string can start with or end with.
 /// It must have a chars() method which returns a double-ended char iterator.
 pub trait CharPrefixSuffix {

@@ -242,6 +242,10 @@ class env_stack_t final : public environment_t {
     /// Sets the variable with the specified name to the given values.
     int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
 
+    /// Sets the variable with the specified name to the given values.
+    /// The values should have type const wchar_t *const * (but autocxx doesn't support that).
+    int set_ffi(const wcstring &key, env_mode_flags_t mode, const void *vals, size_t count);
+
     /// Sets the variable with the specified name to a single value.
     int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
 

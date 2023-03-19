@@ -315,6 +315,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Get the "principal" parser, whatever that is.
     static parser_t &principal_parser();
 
+    /// ffi helper. Obviously this is totally bogus.
+    static parser_t *principal_parser_ffi();
+
     /// Assert that this parser is allowed to execute on the current thread.
     void assert_can_execute() const;
 
@@ -387,6 +390,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Get the variables.
     env_stack_t &vars() { return *variables; }
     const env_stack_t &vars() const { return *variables; }
+
+    /// Rust helper - variables as an environment_t.
+    const environment_t &vars_env_ffi() const { return *variables; }
 
     int remove_var_ffi(const wcstring &key, int mode) { return vars().remove(key, mode); }
 

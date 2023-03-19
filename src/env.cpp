@@ -1414,6 +1414,12 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
     return ret.status;
 }
 
+int env_stack_t::set_ffi(const wcstring &key, env_mode_flags_t mode, const void *vals,
+                         size_t count) {
+    const wchar_t *const *ptr = static_cast<const wchar_t *const *>(vals);
+    return this->set(key, mode, wcstring_list_t(ptr, ptr + count));
+}
+
 int env_stack_t::set_one(const wcstring &key, env_mode_flags_t mode, wcstring val) {
     wcstring_list_t vals;
     vals.push_back(std::move(val));

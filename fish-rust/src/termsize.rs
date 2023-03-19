@@ -10,6 +10,30 @@ use crate::wutil::fish_wcstoi;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Mutex;
 
+#[cxx::bridge]
+mod termsize_ffi {
+    #[cxx_name = "termsize_t"]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct Termsize {
+        /// Width of the terminal, in columns.
+        pub width: isize,
+
+        /// Height of the terminal, in rows.
+        pub height: isize,
+    }
+
+    extern "Rust" {
+        pub fn termsize_default() -> Termsize;
+        pub fn termsize_last() -> Termsize;
+        pub fn termsize_initialize_ffi(vars: *const u8) -> Termsize;
+        pub fn termsize_invalidate_tty();
+        pub fn handle_columns_lines_var_change_ffi(vars: *const u8);
+        pub fn termsize_update_ffi(parser: *mut u8) -> Termsize;
+        pub fn termsize_handle_winch();
+    }
+}
+use termsize_ffi::Termsize;
+
 // A counter which is incremented every SIGWINCH, or when the tty is otherwise invalidated.
 static TTY_TERMSIZE_GEN_COUNT: AtomicU32 = AtomicU32::new(0);
 
@@ -56,15 +80,6 @@ fn read_termsize_from_tty() -> Option<Termsize> {
         ));
     }
     ret
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Termsize {
-    /// Width of the terminal, in columns.
-    pub width: isize,
-
-    /// Height of the terminal, in rows.
-    pub height: isize,
 }
 
 impl Termsize {
@@ -150,7 +165,7 @@ impl TermsizeContainer {
     /// Initialize our termsize, using the given environment stack.
     /// This will prefer to use COLUMNS and LINES, but will fall back to the tty size reader.
     /// This does not change any variables in the environment.
-    pub fn initialize(&mut self, vars: &environment_t) -> Termsize {
+    pub fn initialize(&self, vars: &environment_t) -> Termsize {
         let new_termsize = Termsize {
             width: var_to_int_or(vars.get_as_string_flags(L!("COLUMNS"), EnvMode::GLOBAL), -1),
             height: var_to_int_or(vars.get_as_string_flags(L!("LINES"), EnvMode::GLOBAL), -1),
@@ -166,10 +181,11 @@ impl TermsizeContainer {
         data.current()
     }
 
-    /// If our termsize is stale, update it, using \p parser firing any events that may be
+    /// If our termsize is stale, update it, using \p parser to fire any events that may be
     /// registered for COLUMNS and LINES.
+    /// This requires a shared reference so it can work from a static.
     /// \return the updated termsize.
-    pub fn updating(&mut self, parser: &mut parser_t) -> Termsize {
+    pub fn updating(&self, parser: &mut parser_t) -> Termsize {
         let new_size;
         let prev_size;
 
@@ -198,7 +214,7 @@ impl TermsizeContainer {
         new_size
     }
 
-    fn set_columns_lines_vars(&mut self, val: Termsize, parser: &mut parser_t) {
+    fn set_columns_lines_vars(&self, val: Termsize, parser: &mut parser_t) {
         let saved = self.setting_env_vars.swap(true, Ordering::Relaxed);
         parser.pin().set_var_and_fire(
             &L!("COLUMNS").to_ffi(),
@@ -249,7 +265,7 @@ impl TermsizeContainer {
     }
 }
 
-static SHARED_CONTAINER: TermsizeContainer = TermsizeContainer {
+pub static SHARED_CONTAINER: TermsizeContainer = TermsizeContainer {
     data: Mutex::new(TermsizeData::defaults()),
     setting_env_vars: AtomicBool::new(false),
     tty_size_reader: read_termsize_from_tty,
@@ -257,9 +273,46 @@ static SHARED_CONTAINER: TermsizeContainer = TermsizeContainer {
 
 const _: () = assert_sync::<TermsizeContainer>();
 
+/// Helper to return the default termsize.
+pub fn termsize_default() -> Termsize {
+    Termsize::defaults()
+}
+
 /// Convenience helper to return the last known termsize.
 pub fn termsize_last() -> Termsize {
     return SHARED_CONTAINER.last();
+}
+
+/// Called when the COLUMNS or LINES variables are changed.
+/// The pointer is to an environment_t, but has the wrong type to satisfy cxx.
+pub fn handle_columns_lines_var_change_ffi(vars_ptr: *const u8) {
+    assert!(!vars_ptr.is_null());
+    let vars: &environment_t = unsafe { &*(vars_ptr as *const environment_t) };
+    SHARED_CONTAINER.handle_columns_lines_var_change(vars);
+}
+
+/// Called to initialize the termsize.
+/// The pointer is to an environment_t, but has the wrong type to satisfy cxx.
+pub fn termsize_initialize_ffi(vars_ptr: *const u8) -> Termsize {
+    assert!(!vars_ptr.is_null());
+    let vars: &environment_t = unsafe { &*(vars_ptr as *const environment_t) };
+    SHARED_CONTAINER.initialize(vars)
+}
+
+/// Called to update termsize.
+pub fn termsize_update_ffi(parser_ptr: *mut u8) -> Termsize {
+    assert!(!parser_ptr.is_null());
+    let parser: &mut parser_t = unsafe { &mut *(parser_ptr as *mut parser_t) };
+    SHARED_CONTAINER.updating(parser)
+}
+
+/// FFI bridge for WINCH.
+pub fn termsize_handle_winch() {
+    TermsizeContainer::handle_winch();
+}
+
+pub fn termsize_invalidate_tty() {
+    TermsizeContainer::invalidate_tty();
 }
 
 use crate::ffi_tests::add_test;
@@ -272,7 +325,7 @@ add_test!("test_termsize", || {
     fn stubby_termsize() -> Option<Termsize> {
         *STUBBY_TERMSIZE.lock().unwrap()
     }
-    let mut ts = TermsizeContainer {
+    let ts = TermsizeContainer {
         data: Mutex::new(TermsizeData::defaults()),
         setting_env_vars: AtomicBool::new(false),
         tty_size_reader: stubby_termsize,
@@ -325,7 +378,7 @@ add_test!("test_termsize", || {
     assert_eq!(ts.last(), Termsize::new(83, 38));
 
     // initialize() even beats the tty reader until a sigwinch.
-    let mut ts2 = TermsizeContainer {
+    let ts2 = TermsizeContainer {
         data: Mutex::new(TermsizeData::defaults()),
         setting_env_vars: AtomicBool::new(false),
         tty_size_reader: stubby_termsize,

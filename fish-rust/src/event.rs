@@ -14,11 +14,10 @@ use widestring_suffix::widestrs;
 
 use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, replace_with, EscapeFlags, EscapeStringStyle, ScopeGuard};
-use crate::ffi::{
-    self, block_t, parser_t, signal_check_cancel, signal_handle, termsize_container_t, Repin,
-};
+use crate::ffi::{self, block_t, parser_t, signal_check_cancel, signal_handle, Repin};
 use crate::flog::FLOG;
 use crate::signal::{sig2wcs, signal_get_desc};
+use crate::termsize;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcharz_t, AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wutil::sprintf;
@@ -783,7 +782,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH {
-            termsize_container_t::ffi_updating(parser.pin()).within_unique_ptr();
+            termsize::SHARED_CONTAINER.updating(parser);
         }
         let event = Event {
             desc: EventDescription {

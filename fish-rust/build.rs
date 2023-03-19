@@ -35,6 +35,7 @@ fn main() -> miette::Result<()> {
         "src/parse_constants.rs",
         "src/redirection.rs",
         "src/smoke.rs",
+        "src/termsize.rs",
         "src/timer.rs",
         "src/tokenizer.rs",
         "src/topic_monitor.rs",

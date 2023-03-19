@@ -234,7 +234,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
 #ifdef SIGWINCH
         case SIGWINCH:
             // Respond to a winch signal by telling the termsize container.
-            termsize_container_t::handle_winch();
+            termsize_handle_winch();
             break;
 #endif
 

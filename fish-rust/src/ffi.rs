@@ -36,7 +36,6 @@ include_cpp! {
     #include "tokenizer.h"
     #include "wildcard.h"
     #include "wutil.h"
-    #include "termsize.h"
 
     // We need to block these types so when exposing C++ to Rust.
     block!("WaitHandleStoreFFI")
@@ -111,7 +110,6 @@ include_cpp! {
     generate!("statuses_t")
     generate!("io_chain_t")
 
-    generate!("termsize_container_t")
     generate!("env_var_t")
 }
 

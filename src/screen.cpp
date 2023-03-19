@@ -1209,8 +1209,9 @@ void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
 
     // Re-render our completions page if necessary. Limit the term size of the pager to the true
     // term size, minus the number of lines consumed by our string.
-    pager.set_term_size(termsize_t{std::max(1, curr_termsize.width),
-                                   std::max(1, curr_termsize.height - full_line_count)});
+    pager.set_term_size(
+        termsize_t{std::max((rust::isize)1, curr_termsize.width),
+                   std::max((rust::isize)1, curr_termsize.height - full_line_count)});
     pager.update_rendering(&page_rendering);
     // Append pager_data (none if empty).
     this->desired.append_lines(page_rendering.screen_data);

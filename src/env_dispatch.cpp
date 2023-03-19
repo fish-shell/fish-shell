@@ -207,7 +207,9 @@ static void handle_change_ambiguous_width(const env_stack_t &vars) {
 }
 
 static void handle_term_size_change(const env_stack_t &vars) {
-    termsize_container_t::shared().handle_columns_lines_var_change(vars);
+    // Need to use a pointer to send this through cxx ffi.
+    const environment_t &env_vars = vars;
+    handle_columns_lines_var_change_ffi(reinterpret_cast<const unsigned char *>(&env_vars));
 }
 
 static void handle_fish_history_change(const env_stack_t &vars) {

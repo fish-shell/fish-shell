@@ -417,7 +417,8 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     }
 
     // Initialize termsize variables.
-    auto termsize = termsize_container_t::shared().initialize(vars);
+    environment_t &env_vars = vars;
+    auto termsize = termsize_initialize_ffi(reinterpret_cast<const unsigned char *>(&env_vars));
     if (vars.get(L"COLUMNS").missing_or_empty())
         vars.set_one(L"COLUMNS", ENV_GLOBAL, to_string(termsize.width));
     if (vars.get(L"LINES").missing_or_empty())

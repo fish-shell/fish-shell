@@ -931,7 +931,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void delete_char(bool backward = true);
 
     /// Called to update the termsize, including $COLUMNS and $LINES, as necessary.
-    void update_termsize() { (void)termsize_container_t::shared().updating(parser()); }
+    void update_termsize() { termsize_update_ffi(reinterpret_cast<unsigned char *>(&parser())); }
 
     // Import history from older location (config path) if our current history is empty.
     void import_history_if_necessary();
@@ -1064,7 +1064,7 @@ static void term_steal() {
         }
     }
 
-    termsize_container_t::shared().invalidate_tty();
+    termsize_invalidate_tty();
 }
 
 bool fish_is_unwinding_for_exit() {
@@ -1292,7 +1292,7 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     // We can still push fish further upward in case the first entry is multiline,
     // but that can't really be helped.
     // (subtract 2 for the search line and the prompt)
-    size_t page_size = std::max(termsize_last().height / 2 - 2, 12);
+    size_t page_size = std::max(termsize_last().height / 2 - 2, (rust::isize)12);
 
     completion_list_t completions;
     history_search_t search{history, search_string, history_search_type_t::contains,
@@ -2587,7 +2587,7 @@ static void reader_interactive_init(parser_t &parser) {
         }
     }
 
-    termsize_container_t::shared().invalidate_tty();
+    termsize_invalidate_tty();
 
     // Provide value for `status current-command`
     parser.libdata().status_vars.command = L"fish";
@@ -3353,7 +3353,7 @@ void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
     if (res < 0) {
         wperror(L"tcsetattr");
     }
-    termsize_container_t::shared().invalidate_tty();
+    termsize_invalidate_tty();
 }
 
 /// Read normal characters, inserting them into the command line.

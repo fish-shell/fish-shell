@@ -2402,7 +2402,7 @@ static void test_pager_navigation() {
 
     pager_t pager;
     pager.set_completions(completions);
-    pager.set_term_size(termsize_t::defaults());
+    pager.set_term_size(termsize_default());
     page_rendering_t render = pager.render();
 
     if (render.term_width != 80) err(L"Wrong term width");
@@ -6715,72 +6715,6 @@ static void test_re_substitute() {
 }
 }  // namespace
 
-struct termsize_tester_t {
-    static void test();
-};
-
-void termsize_tester_t::test() {
-    say(L"Testing termsize");
-
-    parser_t &parser = parser_t::principal_parser();
-    env_stack_t &vars = parser.vars();
-
-    // Use a static variable so we can pretend we're the kernel exposing a terminal size.
-    static maybe_t<termsize_t> stubby_termsize{};
-    termsize_container_t ts([] { return stubby_termsize; });
-
-    // Initially default value.
-    do_test(ts.last() == termsize_t::defaults());
-
-    // Haha we change the value, it doesn't even know.
-    stubby_termsize = termsize_t{42, 84};
-    do_test(ts.last() == termsize_t::defaults());
-
-    // Ok let's tell it. But it still doesn't update right away.
-    ts.handle_winch();
-    do_test(ts.last() == termsize_t::defaults());
-
-    // Ok now we tell it to update.
-    ts.updating(parser);
-    do_test(ts.last() == *stubby_termsize);
-    do_test(vars.get(L"COLUMNS")->as_string() == L"42");
-    do_test(vars.get(L"LINES")->as_string() == L"84");
-
-    // Wow someone set COLUMNS and LINES to a weird value.
-    // Now the tty's termsize doesn't matter.
-    vars.set(L"COLUMNS", ENV_GLOBAL, {L"75"});
-    vars.set(L"LINES", ENV_GLOBAL, {L"150"});
-    ts.handle_columns_lines_var_change(vars);
-    do_test(ts.last() == termsize_t(75, 150));
-    do_test(vars.get(L"COLUMNS")->as_string() == L"75");
-    do_test(vars.get(L"LINES")->as_string() == L"150");
-
-    vars.set(L"COLUMNS", ENV_GLOBAL, {L"33"});
-    ts.handle_columns_lines_var_change(vars);
-    do_test(ts.last() == termsize_t(33, 150));
-
-    // Oh it got SIGWINCH, now the tty matters again.
-    ts.handle_winch();
-    do_test(ts.last() == termsize_t(33, 150));
-    do_test(ts.updating(parser) == *stubby_termsize);
-    do_test(vars.get(L"COLUMNS")->as_string() == L"42");
-    do_test(vars.get(L"LINES")->as_string() == L"84");
-
-    // Test initialize().
-    vars.set(L"COLUMNS", ENV_GLOBAL, {L"83"});
-    vars.set(L"LINES", ENV_GLOBAL, {L"38"});
-    ts.initialize(vars);
-    do_test(ts.last() == termsize_t(83, 38));
-
-    // initialize() even beats the tty reader until a sigwinch.
-    termsize_container_t ts2([] { return stubby_termsize; });
-    ts.initialize(vars);
-    ts2.updating(parser);
-    do_test(ts.last() == termsize_t(83, 38));
-    ts2.handle_winch();
-    do_test(ts2.updating(parser) == *stubby_termsize);
-}
-
 void test_wgetopt() {
     // Regression test for a crash.
     const wchar_t *const short_options = L"-a";
@@ -6938,7 +6872,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("topics"), test_topic_monitor_torture},
     {TEST_GROUP("pipes"), test_pipes},
     {TEST_GROUP("fd_event"), test_fd_event_signaller},
-    {TEST_GROUP("termsize"), termsize_tester_t::test},
     {TEST_GROUP("killring"), test_killring},
     {TEST_GROUP("re"), test_re_errs},
     {TEST_GROUP("re"), test_re_basic},

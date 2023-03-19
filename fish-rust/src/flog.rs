@@ -175,7 +175,7 @@ macro_rules! FLOG {
         if crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             #[allow(unused_imports)]
             use crate::flog::{FloggableDisplay, FloggableDebug};
-            let mut vs = Vec::new();
+            let mut vs = vec![format!("{}:", crate::flog::categories::$category.name)];
             $(
                 {
                    vs.push($elem.to_flog_str())

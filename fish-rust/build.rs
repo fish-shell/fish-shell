@@ -83,9 +83,11 @@ fn main() -> miette::Result<()> {
 /// [0]: https://github.com/rust-lang/cargo/issues/5499
 fn detect_features() {
     for (feature, detector) in [
-        ("bsd", detect_bsd),
-    ]
-    {
+        // Ignore the first line, it just sets up the type inference. Model new entries after the
+        // second line.
+        ("", &(|| Ok(false)) as &dyn Fn() -> miette::Result<bool>),
+        ("bsd", &detect_bsd),
+    ] {
         match detector() {
             Err(e) => eprintln!("{feature} detect: {e}"),
             Ok(true) => println!("cargo:rustc-cfg=feature=\"{feature}\""),
@@ -101,7 +103,8 @@ fn detect_features() {
 /// doesn't necessarily include less-popular forks nor does it group them into families more
 /// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
 fn detect_bsd() -> miette::Result<bool> {
-    let uname = std::process::Command::new("uname").output()
+    let uname = std::process::Command::new("uname")
+        .output()
         .map_err(|_| miette!("Error executing uname!"))?;
     Ok(std::str::from_utf8(&uname.stdout)
         .map(|s| s.to_ascii_lowercase())

@@ -1,3 +1,5 @@
+use std::{iter, slice};
+
 use crate::wchar::{wstr, WString};
 use widestring::utfstr::CharsUtf32;
 
@@ -99,6 +101,14 @@ impl<'a> IntoCharIter for &'a str {
     type Iter = std::str::Chars<'a>;
     fn chars(self) -> Self::Iter {
         str::chars(self)
+    }
+}
+
+impl<'a> IntoCharIter for &'a [char] {
+    type Iter = iter::Copied<slice::Iter<'a, char>>;
+
+    fn chars(self) -> Self::Iter {
+        self.iter().copied()
     }
 }
 

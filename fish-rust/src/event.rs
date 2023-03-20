@@ -16,7 +16,7 @@ use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, replace_with, EscapeFlags, EscapeStringStyle, ScopeGuard};
 use crate::ffi::{self, block_t, parser_t, signal_check_cancel, signal_handle, Repin};
 use crate::flog::FLOG;
-use crate::signal::{sig2wcs, signal_get_desc};
+use crate::signal::Signal;
 use crate::termsize;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcharz_t, AsWstr, WCharFromFFI, WCharToFFI};
@@ -107,7 +107,7 @@ pub enum EventType {
     /// well).
     Any,
     /// An event triggered by a signal.
-    Signal { signal: i32 },
+    Signal { signal: Signal },
     /// An event triggered by a variable update.
     Variable { name: WString },
     /// An event triggered by a process exit.
@@ -206,7 +206,7 @@ impl From<&event_description_t> for EventDescription {
             typ: match desc.typ {
                 event_type_t::any => EventType::Any,
                 event_type_t::signal => EventType::Signal {
-                    signal: desc.signal,
+                    signal: Signal::new(desc.signal),
                 },
                 event_type_t::variable => EventType::Variable {
                     name: desc.str_param1.from_ffi(),
@@ -243,7 +243,7 @@ impl From<&EventDescription> for event_description_t {
         };
         match desc.typ {
             EventType::Any => (),
-            EventType::Signal { signal } => result.signal = signal,
+            EventType::Signal { signal } => result.signal = signal.code(),
             EventType::Variable { .. } => (),
             EventType::ProcessExit { pid } => result.pid = pid,
             EventType::JobExit {
@@ -490,8 +490,8 @@ struct PendingSignals {
 impl PendingSignals {
     /// Mark a signal as pending. This may be called from a signal handler. We expect only one
     /// signal handler to execute at once. Also note that these may be coalesced.
-    pub fn mark(&self, which: usize) {
-        if let Some(received) = self.received.get(which) {
+    pub fn mark(&self, sig: usize) {
+        if let Some(received) = self.received.get(sig) {
             received.store(true, Ordering::Relaxed);
             self.counter.fetch_add(1, Ordering::Relaxed);
         }
@@ -551,19 +551,17 @@ static OBSERVED_SIGNALS: [AtomicU32; SIGNAL_COUNT] = [ATOMIC_U32_0; SIGNAL_COUNT
 /// temporarily moved here. There was no mutex around this in the cpp code. TODO: Move it back.
 static BLOCKED_EVENTS: Mutex<Vec<Event>> = Mutex::new(Vec::new());
 
-fn inc_signal_observed(sig: i32) {
-    if let Ok(index) = usize::try_from(sig) {
-        if let Some(sig) = OBSERVED_SIGNALS.get(index) {
-            sig.fetch_add(1, Ordering::Relaxed);
-        }
+fn inc_signal_observed(sig: Signal) {
+    let index: usize = sig.into();
+    if let Some(sig) = OBSERVED_SIGNALS.get(index) {
+        sig.fetch_add(1, Ordering::Relaxed);
     }
 }
 
-fn dec_signal_observed(sig: i32) {
-    if let Ok(index) = usize::try_from(sig) {
-        if let Some(sig) = OBSERVED_SIGNALS.get(index) {
-            sig.fetch_sub(1, Ordering::Relaxed);
-        }
+fn dec_signal_observed(sig: Signal) {
+    let index: usize = sig.into();
+    if let Some(sig) = OBSERVED_SIGNALS.get(index) {
+        sig.fetch_sub(1, Ordering::Relaxed);
     }
 }
 
@@ -578,11 +576,9 @@ pub fn is_signal_observed(sig: usize) -> bool {
 
 pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
     let s = match &evt.desc.typ {
-        EventType::Signal { signal } => format!(
-            "signal handler for {} ({})",
-            sig2wcs(*signal),
-            signal_get_desc(*signal)
-        ),
+        EventType::Signal { signal } => {
+            format!("signal handler for {} ({})", signal.name(), signal.desc(),)
+        }
         EventType::Variable { name } => format!("handler for variable '{name}'"),
         EventType::ProcessExit { pid } => format!("exit handler for process {pid}"),
         EventType::JobExit { pid, .. } => {
@@ -611,7 +607,7 @@ fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString> {
 /// Add an event handler.
 pub fn add_handler(eh: EventHandler) {
     if let EventType::Signal { signal } = eh.desc.typ {
-        signal_handle(ffi::c_int(signal));
+        signal_handle(ffi::c_int(signal.code()));
         inc_signal_observed(signal);
     }
 
@@ -775,20 +771,20 @@ pub fn fire_delayed(parser: &mut parser_t) {
     // 'signals' contains a bit set for each signal that has been received.
     let mut signals: u64 = PENDING_SIGNALS.acquire_pending();
     while signals != 0 {
-        let sig = signals.trailing_zeros();
+        let sig = signals.trailing_zeros() as i32;
         signals &= !(1_u64 << sig);
-        let sig = sig as i32;
+        let sig = Signal::new(sig);
 
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
-        if sig == libc::SIGWINCH {
+        if sig == Signal::SIGWINCH {
             termsize::SHARED_CONTAINER.updating(parser);
         }
         let event = Event {
             desc: EventDescription {
                 typ: EventType::Signal { signal: sig },
             },
-            arguments: vec![sig2wcs(sig).into()],
+            arguments: vec![sig.name().into()],
         };
         to_send.push(event);
     }
@@ -875,11 +871,10 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
 
         match &evt.desc.typ {
             EventType::Signal { signal } => {
-                streams.out.append(&sprintf!(
-                    L!("%ls %ls\n"),
-                    sig2wcs(*signal),
-                    evt.function_name
-                ));
+                let name: WString = signal.name().into();
+                streams
+                    .out
+                    .append(&sprintf!(L!("%ls %ls\n"), name, evt.function_name));
             }
             EventType::ProcessExit { .. } | EventType::JobExit { .. } => {}
             EventType::CallerExit { .. } => {

@@ -1,8 +1,9 @@
 use self::ffi::pgid_t;
 use crate::common::{assert_send, assert_sync};
+use crate::signal::Signal;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use cxx::{CxxWString, UniquePtr};
-use std::num::{NonZeroI32, NonZeroU32};
+use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Mutex;
 use widestring::WideUtfString;
@@ -100,7 +101,7 @@ pub struct JobGroup {
     /// "Simple block" groups like function calls do not have a job id.
     pub job_id: Option<JobId>,
     /// The signal causing the group to cancel or `0` if none.
-    /// Not using an `Option<NonZeroI32>` to be able to atomically load/store to this field.
+    /// Not using an `Option<Signal>` to be able to atomically load/store to this field.
     signal: AtomicI32,
 }
 
@@ -146,31 +147,31 @@ impl JobGroup {
     }
 
     /// Gets the cancellation signal, if any.
-    pub fn get_cancel_signal(&self) -> Option<NonZeroI32> {
+    pub fn get_cancel_signal(&self) -> Option<Signal> {
         match self.signal.load(Ordering::Relaxed) {
             0 => None,
-            s => Some(NonZeroI32::new(s).unwrap()),
+            s => Some(Signal::new(s)),
         }
     }
 
     /// Gets the cancellation signal or `0` if none.
     pub fn get_cancel_signal_ffi(&self) -> i32 {
         // Legacy C++ code expects a zero in case of no signal.
-        self.get_cancel_signal().map(|s| s.into()).unwrap_or(0)
+        self.get_cancel_signal().map(|s| s.code()).unwrap_or(0)
     }
 
     /// Mark that a process in this group got a signal and should cancel.
-    pub fn cancel_with_signal(&self, signal: NonZeroI32) {
+    pub fn cancel_with_signal(&self, signal: Signal) {
         // We only assign the signal if one hasn't yet been assigned. This means the first signal to
         // register wins over any that come later.
         self.signal
-            .compare_exchange(0, signal.into(), Ordering::Relaxed, Ordering::Relaxed)
+            .compare_exchange(0, signal.code(), Ordering::Relaxed, Ordering::Relaxed)
             .ok();
     }
 
     /// Mark that a process in this group got a signal and should cancel
     pub fn cancel_with_signal_ffi(&self, signal: i32) {
-        self.cancel_with_signal(signal.try_into().expect("Invalid zero signal!"));
+        self.cancel_with_signal(Signal::new(signal))
     }
 
     /// Set the pgid for this job group, latching it to this value. This should only be called if

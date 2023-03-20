@@ -33,37 +33,33 @@ fn to_wstring_impl(mut val: u64, neg: bool) -> WString {
 
 /// Implement to_wstring() for signed types.
 macro_rules! impl_to_wstring_signed {
-    ($t:ty) => {
+    ($($t:ty), *) => {
+        $(
         impl ToWString for $t {
             fn to_wstring(&self) -> WString {
                 let val = *self as i64;
                 to_wstring_impl(val.unsigned_abs(), val < 0)
             }
         }
+    )*
     };
 }
-impl_to_wstring_signed!(i8);
-impl_to_wstring_signed!(i16);
-impl_to_wstring_signed!(i32);
-impl_to_wstring_signed!(i64);
-impl_to_wstring_signed!(isize);
+impl_to_wstring_signed!(i8, i16, i32, i64, isize);
 
 /// Implement to_wstring() for unsigned types.
 macro_rules! impl_to_wstring_unsigned {
-    ($t:ty) => {
+    ($($t:ty), *) => {
+        $(
         impl ToWString for $t {
             fn to_wstring(&self) -> WString {
                 to_wstring_impl(*self as u64, false)
             }
         }
+    )*
     };
 }
 
-impl_to_wstring_unsigned!(u8);
-impl_to_wstring_unsigned!(u16);
-impl_to_wstring_unsigned!(u32);
-impl_to_wstring_unsigned!(u64);
-impl_to_wstring_unsigned!(usize);
+impl_to_wstring_unsigned!(u8, u16, u32, u64, usize);
 
 #[test]
 fn test_to_wstring() {

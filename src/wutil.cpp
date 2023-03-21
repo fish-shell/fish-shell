@@ -167,7 +167,12 @@ void dir_iter_t::entry_t::do_stat() const {
                 break;
 
             default:
-                wperror(L"fstatat");
+                this->type_ = none();
+                // This used to print an error, but given that we have seen
+                // both ENODEV (above) and ENOTCONN,
+                // and that the error isn't actionable and shows up while typing,
+                // let's not do that.
+                // wperror(L"fstatat");
                 break;
         }
     }

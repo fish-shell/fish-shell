@@ -84,7 +84,7 @@ impl Signal {
     pub const SIGTRAP: Signal = Signal::new(libc::SIGTRAP);
     pub const SIGABRT: Signal = Signal::new(libc::SIGABRT);
     /// Available on BSD and macOS only.
-    #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+    #[cfg(any(feature = "bsd", target_os = "macos"))]
     pub const SIGEMT: Signal = Signal::new(libc::SIGEMT);
     pub const SIGFPE: Signal = Signal::new(libc::SIGFPE);
     pub const SIGKILL: Signal = Signal::new(libc::SIGKILL);
@@ -108,7 +108,7 @@ impl Signal {
     pub const SIGPROF: Signal = Signal::new(libc::SIGPROF);
     pub const SIGWINCH: Signal = Signal::new(libc::SIGWINCH);
     /// Available on BSD and macOS only.
-    #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+    #[cfg(any(feature = "bsd", target_os = "macos"))]
     pub const SIGINFO: Signal = Signal::new(libc::SIGINFO);
     pub const SIGUSR1: Signal = Signal::new(libc::SIGUSR1);
     pub const SIGUSR2: Signal = Signal::new(libc::SIGUSR2);
@@ -158,7 +158,7 @@ impl Signal {
             Signal::SIGILL => "SIGILL",
             Signal::SIGTRAP => "SIGTRAP",
             Signal::SIGABRT => "SIGABRT",
-            #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+            #[cfg(any(feature = "bsd", target_os = "macos"))]
             Signal::SIGEMT => "SIGEMT",
             Signal::SIGFPE => "SIGFPE",
             Signal::SIGKILL => "SIGKILL",
@@ -181,7 +181,7 @@ impl Signal {
             Signal::SIGVTALRM => "SIGVTALRM",
             Signal::SIGPROF => "SIGPROF",
             Signal::SIGWINCH => "SIGWINCH",
-            #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+            #[cfg(any(feature = "bsd", target_os = "macos"))]
             Signal::SIGINFO => "SIGINFO",
             Signal::SIGUSR1 => "SIGUSR1",
             Signal::SIGUSR2 => "SIGUSR2",
@@ -209,7 +209,7 @@ impl Signal {
             Signal::SIGILL => "Illegal instruction",
             Signal::SIGTRAP => "Trace or breakpoint trap",
             Signal::SIGABRT => "Abort",
-            #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+            #[cfg(any(feature = "bsd", target_os = "macos"))]
             Signal::SIGEMT => "Emulator trap",
             Signal::SIGFPE => "Floating point exception",
             Signal::SIGKILL => "Forced quit",
@@ -232,7 +232,7 @@ impl Signal {
             Signal::SIGVTALRM => "Virtual timer expired",
             Signal::SIGPROF => "Profiling timer expired",
             Signal::SIGWINCH => "Window size change",
-            #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+            #[cfg(any(feature = "bsd", target_os = "macos"))]
             Signal::SIGINFO => "Information request",
             Signal::SIGUSR1 => "User-defined signal 1",
             Signal::SIGUSR2 => "User-defined signal 2",
@@ -271,7 +271,7 @@ impl Signal {
             "ILL" => Some(Signal::SIGILL),
             "TRAP" => Some(Signal::SIGTRAP),
             "ABRT" => Some(Signal::SIGABRT),
-            #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+            #[cfg(any(feature = "bsd", target_os = "macos"))]
             "EMT" => Some(Signal::SIGEMT),
             "FPE" => Some(Signal::SIGFPE),
             "KILL" => Some(Signal::SIGKILL),
@@ -294,7 +294,7 @@ impl Signal {
             "VTALRM" => Some(Signal::SIGVTALRM),
             "PROF" => Some(Signal::SIGPROF),
             "WINCH" => Some(Signal::SIGWINCH),
-            #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+            #[cfg(any(feature = "bsd", target_os = "macos"))]
             "INFO" => Some(Signal::SIGINFO),
             "USR1" => Some(Signal::SIGUSR1),
             "USR2" => Some(Signal::SIGUSR2),
@@ -363,4 +363,14 @@ fn parse_signal() {
     assert_eq!(Signal::parse(""), None);
     assert_eq!(Signal::parse("SIG"), None);
     assert_eq!(Signal::parse("سلام"), None);
+}
+
+#[test]
+#[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
+/// Verify bsd feature is detected on the known BSDs, which gives us greater confidence it'll work
+/// for the unknown ones too. We don't need to do this for Linux and macOS because we're using
+/// rust's native OS targeting for those.
+fn bsd_signals() {
+    assert_eq!(Signal::SIGEMT.code(), libc::SIGEMT);
+    assert_eq!(Signal::SIGINFO.code(), libc::SIGINFO);
 }

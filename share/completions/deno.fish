@@ -21,4 +21,4 @@ for (const file of denoFile) {
   }
 }
 '
-complete -f -c deno -n "__fish_seen_subcommand_from task" -a "(deno eval '$searchForDenoFilesCode')"
+complete -f -c deno -n "__fish_seen_subcommand_from task" -n "__fish_is_nth_token 2" -a "(deno eval '$searchForDenoFilesCode')"

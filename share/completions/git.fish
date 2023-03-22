@@ -2039,7 +2039,7 @@ complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify s
 complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting existing tag'
 complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_git_commits)' -d 'List tags that contain a commit'
-complete -f -c git -n '__fish_git_using_command tag' -n '__fish_git_contains_opt -s d delete -s v verify' -ka '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command tag' -n '__fish_git_contains_opt -s d delete -s v verify -s f force' -ka '(__fish_git_tags)' -d Tag
 # TODO options
 
 ### worktree

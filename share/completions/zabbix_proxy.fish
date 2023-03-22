@@ -45,9 +45,9 @@ end
 
 
 # General
-complete -c zabbix_proxy -s c -l config -d "Use the alternate config-file instead of the default one."
+complete -c zabbix_proxy -s c -l config -d "Use an alternate config-file."
 complete -c zabbix_proxy -f -s f -l foreground -d "Run Zabbix agent in foreground."
-complete -c zabbix_proxy -f -s R -l runtime-control -a "$runtime" -d "Perform administrative functions according to runtime-option."
+complete -c zabbix_proxy -f -s R -l runtime-control -a "$runtime" -d "Perform administrative functions."
 complete -c zabbix_proxy -f -s h -l help -d "Display this help and exit."
 complete -c zabbix_proxy -f -s V -l version -d "Output version information and exit."
 

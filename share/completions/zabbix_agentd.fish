@@ -20,9 +20,9 @@ function __fish_prepend -a prefix
 end
 
 # General
-complete -c zabbix_agentd -s c -l config -d "Use the alternate config-file instead of the default one."
+complete -c zabbix_agentd -s c -l config -d "Specify an alternate config-file."
 complete -c zabbix_agentd -f -s f -l foreground -d "Run Zabbix agent in foreground."
-complete -c zabbix_agentd -r -f -s R -l runtime-control -a "$runtime" -d "Perform administrative functions according to runtime-option."
+complete -c zabbix_agentd -r -f -s R -l runtime-control -a "$runtime" -d "Perform administrative functions."
 complete -c zabbix_agentd -f -s p -l print -d "Print known items and exit."
 complete -c zabbix_agentd -f -s t -l test -d "Test single item and exit."
 complete -c zabbix_agentd -f -s h -l help -d "Display this help and exit."

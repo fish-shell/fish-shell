@@ -2,16 +2,10 @@
 complete -c ssh-copy-id -d Remote -xa "(__fish_complete_user_at_hosts)"
 complete -c ssh-copy-id -d Remote -k -fa '(__ssh_history_completions)'
 
-
+# Options
 complete -c ssh-copy-id -s i -d IdentityFile -r -F
 complete -c ssh-copy-id -s p -d Port -r -x
 complete -c ssh-copy-id -s F -d 'Alternate ssh config file' -r -F
-# Options
-complete -c ssh-copy-id -s f -d 'Force mode'
-complete -c ssh-copy-id -s n -d 'Dry run'
-complete -c ssh-copy-id -s s -d 'Use sftp'
-complete -c ssh-copy-id -s h -s \? -d 'Show help'
-
 
 # Load completions shared by various ssh tools like ssh, scp and sftp.
 complete -c ssh-copy-id -s o -d Options -xa "
@@ -107,3 +101,8 @@ complete -c ssh-copy-id -s o -d Options -xa "
         VisualHostKey
         XAuthLocation
     "
+
+complete -c ssh-copy-id -s f -d 'Force mode'
+complete -c ssh-copy-id -s n -d 'Dry run'
+complete -c ssh-copy-id -s s -d 'Use sftp'
+complete -c ssh-copy-id -s h -s \? -d 'Show help'

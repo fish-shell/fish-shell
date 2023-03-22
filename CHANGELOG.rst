@@ -56,6 +56,7 @@ Completions
   - ``scrypt`` (:issue:`9583`)
   - ``stow`` (:issue:`9571`)
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
+  - ``ssh-copy-id`` (:issue:`9675`)
 - Improvements to many completions, including the speed of completing directories in WSL 2 (:issue:`9574`).
 - Completions using ``__fish_complete_suffix`` are now offered in the correct order, fixing a regression in 3.6.0 (:issue:`8924`).
 - ``git`` completions for ``git-foo``-style commands was restored, fixing a regression in 3.6.0 (:issue:`9457`).

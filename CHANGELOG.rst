@@ -43,7 +43,7 @@ For distributors
 
 --------------
 
-fish 3.6.1 (released March 25, 2022)
+fish 3.6.1 (released March 25, 2023)
 ====================================
 
 This release of fish contains a number of fixes for problems identified in fish 3.6.0, as well as some enhancements.

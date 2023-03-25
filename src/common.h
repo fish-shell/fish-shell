@@ -502,11 +502,6 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags = 0,
 /// This permits ownership transfer.
 wcstring escape_string_for_double_quotes(wcstring in);
 
-/// \return a string representation suitable for debugging (not for presenting to the user). This
-/// replaces non-ASCII characters with either tokens like <BRACE_SEP> or <\xfdd7>. No other escapes
-/// are made (i.e. this is a lossy escape).
-wcstring debug_escape(const wcstring &in);
-
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also
 /// optionally change the wildcards, the tilde character and a few more into constants which are
 /// defined in a private use area of Unicode. This assumes wchar_t is a unicode character set.

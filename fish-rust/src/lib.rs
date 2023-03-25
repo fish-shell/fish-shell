@@ -9,8 +9,12 @@
 
 #[macro_use]
 mod common;
+mod abbrs;
+mod builtins;
 mod color;
+mod env;
 mod event;
+mod expand;
 mod fd_monitor;
 mod fd_readable_set;
 mod fds;
@@ -27,6 +31,8 @@ mod future_feature_flags;
 mod job_group;
 mod nix;
 mod parse_constants;
+mod path;
+mod re;
 mod redirection;
 mod signal;
 mod smoke;
@@ -42,14 +48,6 @@ mod wchar_ext;
 mod wchar_ffi;
 mod wgetopt;
 mod wutil;
-
-mod abbrs;
-mod builtins;
-mod env;
-mod re;
-
-mod expand;
-mod path;
 
 // Don't use `#[cfg(test)]` here to make sure ffi tests are built and tested
 mod tests;

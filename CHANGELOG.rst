@@ -1,7 +1,7 @@
-fish 3.6.1 (released ???)
-===================================
+fish 3.6.1 (released March 25, 2022)
+====================================
 
-.. ignore: 9402 9439 9440 9442 9452 9469 9480 9482 9483 9490 9492 9495 9498 9509 9513 9518 9535 9539 9546 9611 9629 9631 9634 9650 9651 9663 9674 9676 9678 
+This release of fish contains a number of fixes for problems identified in fish 3.6.1, as well as some enhancements.
 
 Notable improvements and fixes
 ------------------------------
@@ -30,16 +30,13 @@ Interactive improvements
 - Using ``--help`` on builtins now respects the ``$MANPAGER`` variable, in preference to ``$PAGER`` (:issue:`9488`).
 - :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
 - The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
-- fish no longer crashes when searching history for non-ascii codepoints case-insensitively (:issue:`9628`).
-- The :kbd:`Alt-S`` binding will now also use ``please`` if available (:issue:`9635`).
+- fish no longer crashes when searching history for non-ASCII codepoints case-insensitively (:issue:`9628`).
+- The :kbd:`Alt-S` binding will now also use ``please`` if available (:issue:`9635`).
 - Themes that don't specify every color option can be installed correctly in the Web-based configuration (:issue:`9590`).
 - Compatibility with Midnight Commander's prompt integration has been improved (:issue:`9540`).
 - A spurious error, noted when using fish in Google Drive directories under WSL 2, has been silenced (:issue:`9550`).
 - Using ``read`` in ``fish_greeting`` or similar functions will not trigger an infinite loop (:issue:`9564`).
 - Compatibility when upgrading from old versions of fish (before 3.4.0) has been improved (:issue:`9569`).
-
-New or improved bindings
-^^^^^^^^^^^^^^^^^^^^^^^^
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -63,9 +60,6 @@ Completions
 - File completion now offers ``../`` and ``./`` again, fixing a regression in 3.6.0 (:issue:`9477`).
 - The behaviour of completions using ``__fish_complete_path`` matches standard path completions (:issue:`9285`).
 
-Improved terminal support
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Other improvements
 ------------------
 - Improvements and corrections to the documentation.
@@ -75,7 +69,6 @@ For distributors
 - fish 3.6.1 builds correctly on Cygwin (:issue:`9502`).
 
 --------------
-
 
 fish 3.6.0 (released January 7, 2023)
 =====================================

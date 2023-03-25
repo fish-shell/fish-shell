@@ -14,6 +14,12 @@ pub fn regex_make_anchored(pattern: &wstr) -> WString {
     anchored
 }
 
+/// Copy a wstr to a Box<[char]>.
+pub fn to_boxed_chars(s: &wstr) -> Box<[char]> {
+    let chars = s.as_char_slice();
+    chars.into()
+}
+
 use crate::ffi_tests::add_test;
 add_test!("test_regex_make_anchored", || {
     use crate::ffi;

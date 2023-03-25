@@ -9,12 +9,12 @@ use crate::{
     wchar::L,
     wchar_ffi::{WCharFromFFI, WCharToFFI},
 };
-use cxx::{CxxWString, UniquePtr};
+use cxx::CxxWString;
 use once_cell::sync::Lazy;
 
 use crate::abbrs::abbrs_ffi::abbrs_replacer_t;
-use crate::ffi::re::regex_t;
 use crate::parse_constants::SourceRange;
+use pcre2::utf32::Regex;
 
 use self::abbrs_ffi::{abbreviation_t, abbrs_position_t, abbrs_replacement_t};
 
@@ -130,7 +130,7 @@ pub struct Abbreviation {
     /// If unset, the key is to be interpreted literally.
     /// Note that the fish interface enforces that regexes match the entire token;
     /// we accomplish this by surrounding the regex in ^ and $.
-    pub regex: Option<UniquePtr<regex_t>>,
+    pub regex: Option<Regex>,
 
     /// Replacement string.
     pub replacement: WString,
@@ -180,10 +180,12 @@ impl Abbreviation {
         if !self.matches_position(position) {
             return false;
         }
-        self.regex
-            .as_ref()
-            .map(|r| r.matches_ffi(&token.to_ffi()))
-            .unwrap_or(self.key == token)
+        match &self.regex {
+            Some(r) => r
+                .is_match(token.as_char_slice())
+                .expect("regex match should not error"),
+            None => self.key == token,
+        }
     }
 
     // \return if we expand in a given position.

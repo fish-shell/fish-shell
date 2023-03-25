@@ -7,13 +7,13 @@ use crate::builtins::shared::{
 use crate::common::{escape_string, valid_func_name, EscapeStringStyle};
 use crate::env::flags::EnvMode;
 use crate::env::status::{ENV_NOT_FOUND, ENV_OK};
-use crate::ffi::{self, parser_t};
-use crate::re::regex_make_anchored;
+use crate::ffi::parser_t;
+use crate::re::{regex_make_anchored, to_boxed_chars};
 use crate::wchar::{wstr, L};
-use crate::wchar_ffi::WCharFromFFI;
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::wgettext_fmt;
 use libc::c_int;
+use pcre2::utf32::{Regex, RegexBuilder};
 pub use widestring::Utf32String as WString;
 
 const CMD: &wstr = L!("abbr");
@@ -312,43 +312,44 @@ fn abbr_add(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
         return STATUS_INVALID_ARGS;
     }
 
-    let mut regex = None;
-
-    let key = if let Some(ref regex_pattern) = opts.regex_pattern {
+    let key: &wstr;
+    let regex: Option<Regex>;
+    if let Some(regex_pattern) = &opts.regex_pattern {
         // Compile the regex as given; if that succeeds then wrap it in our ^$ so it matches the
         // entire token.
-        let flags = ffi::re::flags_t { icase: false };
-        let result = ffi::try_compile(regex_pattern, &flags);
+        // We have historically disabled the "(*UTF)" sequence.
+        let mut builder = RegexBuilder::new();
+        builder.caseless(false).never_utf(true);
 
-        if result.has_error() {
-            let error = result.get_error();
+        let result = builder.build(to_boxed_chars(regex_pattern));
+
+        if let Err(error) = result {
             streams.err.append(wgettext_fmt!(
                 "%ls: Regular expression compile error: %ls\n",
                 CMD,
-                &error.message().from_ffi()
+                error.error_message(),
             ));
-            streams
-                .err
-                .append(wgettext_fmt!("%ls: %ls\n", CMD, regex_pattern.as_utfstr()));
-            streams
-                .err
-                .append(wgettext_fmt!("%ls: %*ls\n", CMD, error.offset, "^"));
+            if let Some(offset) = error.offset() {
+                streams
+                    .err
+                    .append(wgettext_fmt!("%ls: %ls\n", CMD, regex_pattern.as_utfstr()));
+                streams
+                    .err
+                    .append(wgettext_fmt!("%ls: %*ls\n", CMD, offset, "^"));
+            }
             return STATUS_INVALID_ARGS;
         }
         let anchored = regex_make_anchored(regex_pattern);
-        let mut result = ffi::try_compile(&anchored, &flags);
-        assert!(
-            !result.has_error(),
-            "Anchored compilation should have succeeded"
-        );
-        let re = result.as_mut().get_regex();
-        assert!(!re.is_null(), "Anchored compilation should have succeeded");
+        let re = builder
+            .build(to_boxed_chars(&anchored))
+            .expect("Anchored compilation should have succeeded");
 
-        let _ = regex.insert(re);
-        regex_pattern
+        key = regex_pattern;
+        regex = Some(re);
     } else {
         // The name plays double-duty as the token to replace.
-        name
+        key = name;
+        regex = None;
     };
 
     if opts.function.is_some() && opts.args.len() > 1 {
@@ -386,7 +387,7 @@ fn abbr_add(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
     abbrs::with_abbrs_mut(move |abbrs| {
         abbrs.add(Abbreviation {
             name: name.clone(),
-            key: key.clone(),
+            key: key.to_owned(),
             regex,
             replacement,
             replacement_is_function: opts.function.is_some(),

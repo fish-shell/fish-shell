@@ -4690,7 +4690,9 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     }
 
     /* FreeBSD allows read() on directories. Error explicitly in that case. */
-    if (buf.st_mode & S_IFDIR) {
+    // XXX: This can be triggered spuriously, so we'll not do that for stdin.
+    // This can be seen e.g. with node's "spawn" api.
+    if (fd != STDIN_FILENO && buf.st_mode & S_IFDIR) {
         FLOGF(error, _(L"Unable to read input file: %s"), strerror(EISDIR));
         return 1;
     }

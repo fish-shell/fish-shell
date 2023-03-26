@@ -49,6 +49,7 @@ mod wait_handle;
 mod wchar;
 mod wchar_ext;
 mod wchar_ffi;
+mod wcstringutil;
 mod wgetopt;
 mod wutil;
 

@@ -1,5 +1,5 @@
 use crate::wchar::{wstr, WString, L};
-use crate::wutil::join_strings;
+use crate::wcstringutil::join_strings;
 
 /// Given an input path, "normalize" it:
 /// 1. Collapse multiple /s into a single /, except maybe at the beginning.

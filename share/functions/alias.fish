@@ -38,8 +38,25 @@ function alias --description 'Creates a function wrapping a command'
         printf ( _ "%s: name cannot be empty\n") alias >&2
         return 1
     else if test -z "$body"
-        printf ( _ "%s: body cannot be empty\n") alias >&2
-        return 1
+        # if there is no body, try to see if the alias has already been defined
+        set -l found_alias_definition 0
+        for func in (functions -n)
+            set -l output (functions $func | string match -r -- "^function .* --description (?:'alias (.*)'|alias\\\\ (.*))\$")
+            if set -q output[2]
+                if test "$name" = "$func"
+                    # if the alias is found, print it.
+                    set output (string replace -r -- '^'$func'[= ]' '' $output[2])
+                    echo alias $func (string escape -- $output[1])
+                    set found_alias_definition 1
+                end
+            end
+        end
+        if test $found_alias_definition = 1
+            return 0
+        else
+            printf ( _ "%s: body cannot be empty\n") alias >&2
+            return 1
+        end
     end
 
     # Extract the first command from the body.

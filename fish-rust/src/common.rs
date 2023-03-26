@@ -9,6 +9,120 @@ use std::mem::ManuallyDrop;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::AsRawFd;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EscapeStringStyle {
+    Script(EscapeFlags),
+    Url,
+    Var,
+    Regex,
+}
+
+impl Default for EscapeStringStyle {
+    fn default() -> Self {
+        Self::Script(EscapeFlags::default())
+    }
+}
+
+bitflags! {
+    /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
+    /// [`EscapeStringStyle::Script`].
+    #[derive(Default)]
+    pub struct EscapeFlags: u32 {
+        /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
+        /// characters and backslashes.
+        const NO_PRINTABLES = 1 << 0;
+        /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
+        /// string.
+        const NO_QUOTED = 1 << 1;
+        /// Do not escape tildes.
+        const NO_TILDE = 1 << 2;
+        /// Replace non-printable control characters with Unicode symbols.
+        const SYMBOLIC = 1 << 3;
+    }
+}
+
+/// Replace special characters with backslash escape sequences. Newline is replaced with `\n`, etc.
+pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
+    let (style, flags) = match style {
+        EscapeStringStyle::Script(flags) => {
+            (ffi::escape_string_style_t::STRING_STYLE_SCRIPT, flags)
+        }
+        EscapeStringStyle::Url => (
+            ffi::escape_string_style_t::STRING_STYLE_URL,
+            Default::default(),
+        ),
+        EscapeStringStyle::Var => (
+            ffi::escape_string_style_t::STRING_STYLE_VAR,
+            Default::default(),
+        ),
+        EscapeStringStyle::Regex => (
+            ffi::escape_string_style_t::STRING_STYLE_REGEX,
+            Default::default(),
+        ),
+    };
+
+    ffi::escape_string(c_str!(s), flags.bits().into(), style).from_ffi()
+}
+
+/// Test if the string is a valid function name.
+pub fn valid_func_name(name: &wstr) -> bool {
+    if name.is_empty() {
+        return false;
+    };
+    if name.char_at(0) == '-' {
+        return false;
+    };
+    // A function name needs to be a valid path, so no / and no NULL.
+    if name.find_char('/').is_some() {
+        return false;
+    };
+    if name.find_char('\0').is_some() {
+        return false;
+    };
+    true
+}
+
+/// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in
+/// favor of native rust read/write methods at some point.
+///
+/// Returns the number of bytes written or an IO error.
+pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<usize> {
+    let fd = fd.as_raw_fd();
+    let mut total = 0;
+    while total < buf.len() {
+        let written =
+            unsafe { libc::write(fd, buf[total..].as_ptr() as *const _, buf.len() - total) };
+        if written < 0 {
+            let errno = errno::errno().0;
+            if matches!(errno, libc::EAGAIN | libc::EINTR) {
+                continue;
+            }
+            return Err(std::io::Error::from_raw_os_error(errno));
+        }
+        total += written as usize;
+    }
+    Ok(total)
+}
+
+/// A rusty port of the C++ `read_loop()` function from `common.cpp`. This should be deprecated in
+/// favor of native rust read/write methods at some point.
+///
+/// Returns the number of bytes read or an IO error.
+pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize> {
+    let fd = fd.as_raw_fd();
+    loop {
+        let read = unsafe { libc::read(fd, buf.as_mut_ptr() as *mut _, buf.len()) };
+        if read < 0 {
+            let errno = errno::errno().0;
+            if matches!(errno, libc::EAGAIN | libc::EINTR) {
+                continue;
+            }
+            return Err(std::io::Error::from_raw_os_error(errno));
+        }
+        return Ok(read as usize);
+    }
+}
+
 /// Like [`std::mem::replace()`] but provides a reference to the old value in a callback to obtain
 /// the replacement value. Useful to avoid errors about multiple references (`&mut T` for `old` then
 /// `&T` again in the `new` expression).
@@ -142,123 +256,9 @@ impl<'a, T> Drop for ScopedPush<'a, T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EscapeStringStyle {
-    Script(EscapeFlags),
-    Url,
-    Var,
-    Regex,
-}
-
-impl Default for EscapeStringStyle {
-    fn default() -> Self {
-        Self::Script(EscapeFlags::default())
-    }
-}
-
-bitflags! {
-    /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
-    /// [`EscapeStringStyle::Script`].
-    #[derive(Default)]
-    pub struct EscapeFlags : u32 {
-        /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
-        /// characters and backslashes.
-        const NO_PRINTABLES = 1 << 0;
-        /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
-        /// string.
-        const NO_QUOTED = 1 << 1;
-        /// Do not escape tildes.
-        const NO_TILDE = 1 << 2;
-        /// Replace non-printable control characters with Unicode symbols.
-        const SYMBOLIC = 1 << 3;
-    }
-}
-
-/// Replace special characters with backslash escape sequences. Newline is replaced with `\n`, etc.
-pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
-    let (style, flags) = match style {
-        EscapeStringStyle::Script(flags) => {
-            (ffi::escape_string_style_t::STRING_STYLE_SCRIPT, flags)
-        }
-        EscapeStringStyle::Url => (
-            ffi::escape_string_style_t::STRING_STYLE_URL,
-            Default::default(),
-        ),
-        EscapeStringStyle::Var => (
-            ffi::escape_string_style_t::STRING_STYLE_VAR,
-            Default::default(),
-        ),
-        EscapeStringStyle::Regex => (
-            ffi::escape_string_style_t::STRING_STYLE_REGEX,
-            Default::default(),
-        ),
-    };
-
-    ffi::escape_string(c_str!(s), flags.bits().into(), style).from_ffi()
-}
-
-/// Test if the string is a valid function name.
-pub fn valid_func_name(name: &wstr) -> bool {
-    if name.is_empty() {
-        return false;
-    };
-    if name.char_at(0) == '-' {
-        return false;
-    };
-    // A function name needs to be a valid path, so no / and no NULL.
-    if name.find_char('/').is_some() {
-        return false;
-    };
-    if name.find_char('\0').is_some() {
-        return false;
-    };
-    true
-}
-
 pub const fn assert_send<T: Send>() {}
 
 pub const fn assert_sync<T: Sync>() {}
-
-/// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in
-/// favor of native rust read/write methods at some point.
-///
-/// Returns the number of bytes written or an IO error.
-pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<usize> {
-    let fd = fd.as_raw_fd();
-    let mut total = 0;
-    while total < buf.len() {
-        let written =
-            unsafe { libc::write(fd, buf[total..].as_ptr() as *const _, buf.len() - total) };
-        if written < 0 {
-            let errno = errno::errno().0;
-            if matches!(errno, libc::EAGAIN | libc::EINTR) {
-                continue;
-            }
-            return Err(std::io::Error::from_raw_os_error(errno));
-        }
-        total += written as usize;
-    }
-    Ok(total)
-}
-
-/// A rusty port of the C++ `read_loop()` function from `common.cpp`. This should be deprecated in
-/// favor of native rust read/write methods at some point.
-///
-/// Returns the number of bytes read or an IO error.
-pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize> {
-    let fd = fd.as_raw_fd();
-    loop {
-        let read = unsafe { libc::read(fd, buf.as_mut_ptr() as *mut _, buf.len()) };
-        if read < 0 {
-            let errno = errno::errno().0;
-            if matches!(errno, libc::EAGAIN | libc::EINTR) {
-                continue;
-            }
-            return Err(std::io::Error::from_raw_os_error(errno));
-        }
-        return Ok(read as usize);
-    }
-}
 
 /// Asserts that a slice is alphabetically sorted by a [`&wstr`] `name` field.
 ///

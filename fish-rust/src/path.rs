@@ -1,5 +1,5 @@
 use crate::{
-    expand::ExpandChars::HomeDirectory,
+    expand::HOME_DIRECTORY,
     wchar::{wstr, WExt, WString, L},
 };
 
@@ -12,7 +12,7 @@ pub fn path_apply_working_directory(path: &wstr, working_directory: &wstr) -> WS
 
     // We're going to make sure that if we want to prepend the wd, that the string has no leading
     // "/".
-    let prepend_wd = path.char_at(0) != '/' && path.char_at(0) != HomeDirectory.into();
+    let prepend_wd = path.char_at(0) != '/' && path.char_at(0) != HOME_DIRECTORY;
 
     if !prepend_wd {
         // No need to prepend the wd, so just return the path we were given.

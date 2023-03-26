@@ -521,15 +521,15 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
 
 /// Reverse the effects of calling `escape_string`. Returns the unescaped value by reference. On
 /// failure, the output is set to an empty string.
-bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
-                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+std::unique_ptr<wcstring> unescape_string(const wchar_t *input, unescape_flags_t escape_special,
+                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
 
-bool unescape_string(const wchar_t *input, size_t len, wcstring *output,
-                     unescape_flags_t escape_special,
-                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+std::unique_ptr<wcstring> unescape_string(const wchar_t *input, size_t len,
+                                          unescape_flags_t escape_special,
+                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
 
-bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
-                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+std::unique_ptr<wcstring> unescape_string(const wcstring &input, unescape_flags_t escape_special,
+                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
 
 /// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
 wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize);

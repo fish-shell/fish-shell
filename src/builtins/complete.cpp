@@ -204,12 +204,11 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
             }
             case 'p':
             case 'c': {
-                wcstring tmp;
-                if (unescape_string(w.woptarg, &tmp, UNESCAPE_SPECIAL)) {
+                if (auto tmp = unescape_string(w.woptarg, UNESCAPE_SPECIAL)) {
                     if (opt == 'p')
-                        path.push_back(tmp);
+                        path.push_back(*tmp);
                     else
-                        cmd_to_complete.push_back(tmp);
+                        cmd_to_complete.push_back(*tmp);
                 } else {
                     streams.err.append_format(_(L"%ls: Invalid token '%ls'\n"), cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;

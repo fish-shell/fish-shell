@@ -376,27 +376,26 @@ static void test_unescape_sane() {
         {L"\"abcd\\n\"", L"abcd\\n"}, {L"\\143", L"c"},
         {L"'\\143'", L"\\143"},       {L"\\n", L"\n"}  // \n normally becomes newline
     };
-    wcstring output;
     for (const auto &test : tests) {
-        bool ret = unescape_string(test.input, &output, UNESCAPE_DEFAULT);
-        if (!ret) {
+        auto output = unescape_string(test.input, UNESCAPE_DEFAULT);
+        if (!output) {
             err(L"Failed to unescape '%ls'\n", test.input);
-        } else if (output != test.expected) {
+        } else if (*output != test.expected) {
             err(L"In unescaping '%ls', expected '%ls' but got '%ls'\n", test.input, test.expected,
-                output.c_str());
+                output->c_str());
         }
     }
 
     // Test for overflow.
-    if (unescape_string(L"echo \\UFFFFFF", &output, UNESCAPE_DEFAULT)) {
+    if (unescape_string(L"echo \\UFFFFFF", UNESCAPE_DEFAULT)) {
         err(L"Should not have been able to unescape \\UFFFFFF\n");
     }
-    if (unescape_string(L"echo \\U110000", &output, UNESCAPE_DEFAULT)) {
+    if (unescape_string(L"echo \\U110000", UNESCAPE_DEFAULT)) {
         err(L"Should not have been able to unescape \\U110000\n");
     }
 #if WCHAR_MAX != 0xffff
     // TODO: Make this work on MS Windows.
-    if (!unescape_string(L"echo \\U10FFFF", &output, UNESCAPE_DEFAULT)) {
+    if (!unescape_string(L"echo \\U10FFFF", UNESCAPE_DEFAULT)) {
         err(L"Should have been able to unescape \\U10FFFF\n");
     }
 #endif
@@ -408,8 +407,6 @@ static void test_escape_crazy() {
     say(L"Testing escaping and unescaping");
     wcstring random_string;
     wcstring escaped_string;
-    wcstring unescaped_string;
-    bool unescaped_success;
     for (size_t i = 0; i < ESCAPE_TEST_COUNT; i++) {
         random_string.clear();
         while (random() % ESCAPE_TEST_LENGTH) {
@@ -417,14 +414,14 @@ static void test_escape_crazy() {
         }
 
         escaped_string = escape_string(random_string);
-        unescaped_success = unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
+        auto unescaped_string = unescape_string(escaped_string, UNESCAPE_DEFAULT);
 
-        if (!unescaped_success) {
+        if (!unescaped_string) {
             err(L"Failed to unescape string <%ls>", escaped_string.c_str());
             break;
-        } else if (unescaped_string != random_string) {
+        } else if (*unescaped_string != random_string) {
             err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'",
-                random_string.c_str(), unescaped_string.c_str());
+                random_string.c_str(), unescaped_string->c_str());
             break;
         }
     }
@@ -432,12 +429,12 @@ static void test_escape_crazy() {
     // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
     random_string = L"line 1\\n\nline 2";
     escaped_string = escape_string(random_string, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
-    unescaped_success = unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
-    if (!unescaped_success) {
+    auto unescaped_string = unescape_string(escaped_string, UNESCAPE_DEFAULT);
+    if (!unescaped_string) {
         err(L"Failed to unescape string <%ls>", escaped_string.c_str());
-    } else if (unescaped_string != random_string) {
+    } else if (*unescaped_string != random_string) {
         err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'",
-            random_string.c_str(), unescaped_string.c_str());
+            random_string.c_str(), unescaped_string->c_str());
     }
 }
 

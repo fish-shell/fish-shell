@@ -1,6 +1,8 @@
 use miette::miette;
 
 fn main() -> miette::Result<()> {
+    cc::Build::new().file("src/compat.c").compile("libcompat.a");
+
     let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
     let target_dir =
         std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));
@@ -25,6 +27,7 @@ fn main() -> miette::Result<()> {
     let source_files = vec![
         "src/abbrs.rs",
         "src/event.rs",
+        "src/common.rs",
         "src/fd_monitor.rs",
         "src/fd_readable_set.rs",
         "src/fds.rs",

@@ -53,8 +53,6 @@ include_cpp! {
     generate!("env_var_t")
     generate!("make_pipes_ffi")
 
-    generate!("valid_var_name_char")
-
     generate!("get_flog_file_fd")
     generate!("log_extra_to_flog_file")
 
@@ -100,9 +98,6 @@ include_cpp! {
     generate!("re::regex_t")
     generate!("re::regex_result_ffi")
     generate!("re::try_compile_ffi")
-    generate!("wcs2string")
-    generate!("wcs2zstring")
-    generate!("str2wcstring")
 
     generate!("signal_handle")
     generate!("signal_check_cancel")

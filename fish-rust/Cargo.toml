@@ -26,6 +26,7 @@ widestring = "1.0.2"
 
 [build-dependencies]
 autocxx-build = "0.23.1"
+cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
 cxx-build = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
 cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
 miette = { version = "5", features = ["fancy"] }

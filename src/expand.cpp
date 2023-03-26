@@ -971,7 +971,8 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.
     wcstring next;
-    unescape_string(input, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
+    if (auto unescaped = unescape_string(input, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE))
+        next = *unescaped;
 
     if (flags & expand_flag::skip_variables) {
         for (auto &i : next) {

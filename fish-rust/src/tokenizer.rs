@@ -1,7 +1,8 @@
 //! A specialized tokenizer for tokenizing the fish language. In the future, the tokenizer should be
 //! extended to support marks, tokenizing multiple strings and disposing of unused string segments.
 
-use crate::ffi::{valid_var_name_char, wcharz_t};
+use crate::common::valid_var_name_char;
+use crate::ffi::wcharz_t;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::redirection::RedirectionMode;
@@ -1357,7 +1358,7 @@ pub fn variable_assignment_equals_pos(txt: &wstr) -> Option<usize> {
     // TODO bracket indexing
     for (i, c) in txt.chars().enumerate() {
         if !found_potential_variable {
-            if !valid_var_name_char(c as wchar_t) {
+            if !valid_var_name_char(c) {
                 return None;
             }
             found_potential_variable = true;
@@ -1365,7 +1366,7 @@ pub fn variable_assignment_equals_pos(txt: &wstr) -> Option<usize> {
             if c == '=' {
                 return Some(i);
             }
-            if !valid_var_name_char(c as wchar_t) {
+            if !valid_var_name_char(c) {
                 return None;
             }
         }

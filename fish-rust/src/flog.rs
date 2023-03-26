@@ -188,7 +188,15 @@ macro_rules! FLOG {
         }
     };
 }
-pub(crate) use FLOG;
+
+// TODO implement.
+macro_rules! FLOGF {
+    ($category:ident, $($elem:expr),+) => {
+        crate::flog::FLOG!($category, $($elem),*);
+    }
+}
+
+pub(crate) use {FLOG, FLOGF};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {

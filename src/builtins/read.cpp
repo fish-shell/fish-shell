@@ -531,14 +531,13 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
 
         if (opts.tokenize) {
             auto tok = new_tokenizer(buff.c_str(), TOK_ACCEPT_UNFINISHED);
-            wcstring out;
             if (opts.array) {
                 // Array mode: assign each token as a separate element of the sole var.
                 wcstring_list_t tokens;
                 while (auto t = tok->next()) {
                     auto text = *tok->text_of(*t);
-                    if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
-                        tokens.push_back(out);
+                    if (auto out = unescape_string(text, UNESCAPE_DEFAULT)) {
+                        tokens.push_back(*out);
                     } else {
                         tokens.push_back(text);
                     }
@@ -549,8 +548,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 std::unique_ptr<tok_t> t;
                 while ((vars_left() - 1 > 0) && (t = tok->next())) {
                     auto text = *tok->text_of(*t);
-                    if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
-                        parser.set_var_and_fire(*var_ptr++, opts.place, out);
+                    if (auto out = unescape_string(text, UNESCAPE_DEFAULT)) {
+                        parser.set_var_and_fire(*var_ptr++, opts.place, *out);
                     } else {
                         parser.set_var_and_fire(*var_ptr++, opts.place, text);
                     }

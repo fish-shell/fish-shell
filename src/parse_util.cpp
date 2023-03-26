@@ -960,8 +960,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
     parser_test_error_bits_t err = 0;
 
     auto check_subtoken = [&arg_src, &out_errors, source_start](size_t begin, size_t end) -> int {
-        wcstring unesc;
-        if (!unescape_string(arg_src.c_str() + begin, end - begin, &unesc, UNESCAPE_SPECIAL)) {
+        auto maybe_unesc = unescape_string(arg_src.c_str() + begin, end - begin, UNESCAPE_SPECIAL);
+        if (!maybe_unesc) {
             if (out_errors) {
                 const wchar_t *fmt = L"Invalid token '%ls'";
                 if (arg_src.length() == 2 && arg_src[0] == L'\\' &&
@@ -975,6 +975,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
             }
             return 1;
         }
+        const wcstring &unesc = *maybe_unesc;
 
         parser_test_error_bits_t err = 0;
         // Check for invalid variable expansions.

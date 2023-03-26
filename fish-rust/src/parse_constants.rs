@@ -328,27 +328,27 @@ fn keyword_description(keyword: ParseKeyword) -> wcharz_t {
 }
 
 impl From<&wstr> for ParseKeyword {
+    #[widestrs]
     fn from(s: &wstr) -> Self {
-        let s: Vec<u8> = s.encode_utf8().collect();
-        match unsafe { std::str::from_utf8_unchecked(&s) } {
-            "!" => ParseKeyword::kw_exclam,
-            "and" => ParseKeyword::kw_and,
-            "begin" => ParseKeyword::kw_begin,
-            "builtin" => ParseKeyword::kw_builtin,
-            "case" => ParseKeyword::kw_case,
-            "command" => ParseKeyword::kw_command,
-            "else" => ParseKeyword::kw_else,
-            "end" => ParseKeyword::kw_end,
-            "exec" => ParseKeyword::kw_exec,
-            "for" => ParseKeyword::kw_for,
-            "function" => ParseKeyword::kw_function,
-            "if" => ParseKeyword::kw_if,
-            "in" => ParseKeyword::kw_in,
-            "not" => ParseKeyword::kw_not,
-            "or" => ParseKeyword::kw_or,
-            "switch" => ParseKeyword::kw_switch,
-            "time" => ParseKeyword::kw_time,
-            "while" => ParseKeyword::kw_while,
+        match s {
+            _ if s == "!"L => ParseKeyword::kw_exclam,
+            _ if s == "and"L => ParseKeyword::kw_and,
+            _ if s == "begin"L => ParseKeyword::kw_begin,
+            _ if s == "builtin"L => ParseKeyword::kw_builtin,
+            _ if s == "case"L => ParseKeyword::kw_case,
+            _ if s == "command"L => ParseKeyword::kw_command,
+            _ if s == "else"L => ParseKeyword::kw_else,
+            _ if s == "end"L => ParseKeyword::kw_end,
+            _ if s == "exec"L => ParseKeyword::kw_exec,
+            _ if s == "for"L => ParseKeyword::kw_for,
+            _ if s == "function"L => ParseKeyword::kw_function,
+            _ if s == "if"L => ParseKeyword::kw_if,
+            _ if s == "in"L => ParseKeyword::kw_in,
+            _ if s == "not"L => ParseKeyword::kw_not,
+            _ if s == "or"L => ParseKeyword::kw_or,
+            _ if s == "switch"L => ParseKeyword::kw_switch,
+            _ if s == "time"L => ParseKeyword::kw_time,
+            _ if s == "while"L => ParseKeyword::kw_while,
             _ => ParseKeyword::none,
         }
     }

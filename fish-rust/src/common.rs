@@ -1,5 +1,6 @@
 //! Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 
+use crate::compat::MB_CUR_MAX;
 use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
@@ -8,9 +9,9 @@ use crate::ffi::{self, fish_wcwidth};
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::termsize::Termsize;
-use crate::wchar::{encode_byte_to_char, wstr, WString, L};
+use crate::wchar::{decode_byte_from_char, encode_byte_to_char, wstr, WString, L};
 use crate::wchar_ext::WExt;
-use crate::wchar_ffi::{c_str, WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::WCharToFFI;
 use crate::wcstringutil::wcs2string_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
@@ -19,6 +20,7 @@ use bitflags::bitflags;
 use core::slice;
 use cxx::{CxxWString, UniquePtr};
 use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::cell::RefCell;
 use std::env;
@@ -139,25 +141,258 @@ bitflags! {
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with `\n`, etc.
 pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
-    let (style, flags) = match style {
-        EscapeStringStyle::Script(flags) => {
-            (ffi::escape_string_style_t::STRING_STYLE_SCRIPT, flags)
-        }
-        EscapeStringStyle::Url => (
-            ffi::escape_string_style_t::STRING_STYLE_URL,
-            Default::default(),
-        ),
-        EscapeStringStyle::Var => (
-            ffi::escape_string_style_t::STRING_STYLE_VAR,
-            Default::default(),
-        ),
-        EscapeStringStyle::Regex => (
-            ffi::escape_string_style_t::STRING_STYLE_REGEX,
-            Default::default(),
-        ),
-    };
+    match style {
+        EscapeStringStyle::Script(flags) => escape_string_script(s, flags),
+        EscapeStringStyle::Url => escape_string_url(s),
+        EscapeStringStyle::Var => escape_string_var(s),
+        EscapeStringStyle::Regex => escape_string_pcre2(s),
+    }
+}
 
-    ffi::escape_string(c_str!(s), flags.bits().into(), style).from_ffi()
+/// Escape a string in a fashion suitable for using in fish script.
+#[widestrs]
+fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
+    let escape_printables = !flags.contains(EscapeFlags::NO_PRINTABLES);
+    let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
+    let no_tilde = flags.contains(EscapeFlags::NO_TILDE);
+    let no_qmark = feature_test(FeatureFlag::qmark_noglob);
+    let symbolic = flags.contains(EscapeFlags::SYMBOLIC) && MB_CUR_MAX() > 1;
+
+    assert!(
+        !symbolic || !escape_printables,
+        "symbolic implies escape-no-printables"
+    );
+
+    let mut need_escape = false;
+    let mut need_complex_escape = false;
+
+    if !no_quoted && input.is_empty() {
+        return "''"L.to_owned();
+    }
+
+    let mut out = WString::new();
+
+    for c in input.chars() {
+        if let Some(val) = decode_byte_from_char(c) {
+            out += "\\X";
+
+            let nibble1 = val / 16;
+            let nibble2 = val % 16;
+
+            out.push(char::from_digit(nibble1.into(), 16).unwrap());
+            out.push(char::from_digit(nibble2.into(), 16).unwrap());
+            need_escape = true;
+            need_complex_escape = true;
+            continue;
+        }
+        match c {
+            '\t' => {
+                if symbolic {
+                    out.push('␉');
+                } else {
+                    out += "\\t"L;
+                }
+                need_escape = true;
+                need_complex_escape = true;
+            }
+            '\n' => {
+                if symbolic {
+                    out.push('␤');
+                } else {
+                    out += "\\n"L;
+                }
+                need_escape = true;
+                need_complex_escape = true;
+            }
+            '\x08' => {
+                if symbolic {
+                    out.push('␈');
+                } else {
+                    out += "\\b"L;
+                }
+                need_escape = true;
+                need_complex_escape = true;
+            }
+            '\r' => {
+                if symbolic {
+                    out.push('␍');
+                } else {
+                    out += "\\r"L;
+                }
+                need_escape = true;
+                need_complex_escape = true;
+            }
+            '\x1B' => {
+                if symbolic {
+                    out.push('␛');
+                } else {
+                    out += "\\e"L;
+                }
+                need_escape = true;
+                need_complex_escape = true;
+            }
+            '\x7F' => {
+                if symbolic {
+                    out.push('␡');
+                } else {
+                    out += "\\x7f"L;
+                }
+                need_escape = true;
+                need_complex_escape = true;
+            }
+            '\\' | '\'' => {
+                need_escape = true;
+                need_complex_escape = true;
+                if escape_printables || (c == '\\' && !symbolic) {
+                    out.push('\\');
+                }
+                out.push(c);
+            }
+            ANY_CHAR => {
+                // See #1614
+                out.push('?');
+            }
+            ANY_STRING => {
+                out.push('*');
+            }
+            ANY_STRING_RECURSIVE => {
+                out += "**"L;
+            }
+
+            '&' | '$' | ' ' | '#' | '<' | '>' | '(' | ')' | '[' | ']' | '{' | '}' | '?' | '*'
+            | '|' | ';' | '"' | '%' | '~' => {
+                let char_is_normal = (c == '~' && no_tilde) || (c == '?' && no_qmark);
+                if !char_is_normal {
+                    need_escape = true;
+                    if escape_printables {
+                        out.push('\\')
+                    };
+                }
+                out.push(c);
+            }
+            _ => {
+                let cval = u32::from(c);
+                if cval < 32 {
+                    need_escape = true;
+                    need_complex_escape = true;
+
+                    if symbolic {
+                        out.push(char::from_u32(0x2400 + cval).unwrap());
+                        break;
+                    }
+
+                    if cval < 27 && cval != 0 {
+                        out.push('\\');
+                        out.push('c');
+                        out.push(char::from_u32(u32::from(b'a') + cval - 1).unwrap());
+                        break;
+                    }
+
+                    let nibble = cval % 16;
+                    out.push('\\');
+                    out.push('x');
+                    out.push(if cval > 15 { '1' } else { '0' });
+                    out.push(char::from_digit(nibble, 16).unwrap());
+                } else {
+                    out.push(c);
+                }
+            }
+        }
+    }
+
+    // Use quoted escaping if possible, since most people find it easier to read.
+    if !no_quoted && need_escape && !need_complex_escape && escape_printables {
+        let single_quote = '\'';
+        out.clear();
+        out.reserve(2 + input.len());
+        out.push(single_quote);
+        out.push_utfstr(input);
+        out.push(single_quote);
+    }
+
+    out
+}
+
+/// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
+#[widestrs]
+fn escape_string_url(input: &wstr) -> WString {
+    let narrow = wcs2string(input);
+    let mut out = WString::new();
+    for byte in narrow.into_iter() {
+        if (byte & 0x80) == 0 {
+            let c = char::from_u32(u32::from(byte)).unwrap();
+            if c.is_alphanumeric() || [b'/', b'.', b'~', b'-', b'_'].contains(&byte) {
+                // The above characters don't need to be encoded.
+                out.push(c);
+                continue;
+            }
+        }
+        // All other chars need to have their UTF-8 representation encoded in hex.
+        out += &sprintf!("%%%02X"L, byte)[..];
+    }
+    out
+}
+
+/// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
+#[widestrs]
+fn escape_string_var(input: &wstr) -> WString {
+    let mut prev_was_hex_encoded = false;
+    let narrow = wcs2string(input);
+    let mut out = WString::new();
+    for byte in narrow.into_iter() {
+        if (byte & 0x80) == 0 {
+            let c = char::from_u32(u32::from(byte)).unwrap();
+            if c.is_alphanumeric() && (!prev_was_hex_encoded || c.to_digit(16).is_none()) {
+                // ASCII alphanumerics don't need to be encoded.
+                if prev_was_hex_encoded {
+                    out.push('_');
+                    prev_was_hex_encoded = false;
+                }
+                out.push(c);
+                continue;
+            }
+        } else if byte == b'_' {
+            // Underscores are encoded by doubling them.
+            out += "__"L;
+            prev_was_hex_encoded = false;
+            continue;
+        }
+        // All other chars need to have their UTF-8 representation encoded in hex.
+        out += &sprintf!("_%02X"L, byte)[..];
+        prev_was_hex_encoded = true;
+    }
+    out
+}
+
+/// Escapes a string for use in a regex string. Not safe for use with `eval` as only
+/// characters reserved by PCRE2 are escaped.
+/// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
+fn escape_string_pcre2(input: &wstr) -> WString {
+    let mut out = WString::new();
+    out.reserve(
+        (f64::from(u32::try_from(input.len()).unwrap()) * 1.3) // a wild guess
+            .to_i128()
+            .unwrap()
+            .try_into()
+            .unwrap(),
+    );
+
+    for c in input.chars() {
+        if [
+            '.', '^', '$', '*', '+', '(', ')', '?', '[', '{', '}', '\\', '|',
+            // these two only *need* to be escaped within a character class, and technically it
+            // makes no sense to ever use process substitution output to compose a character class,
+            // but...
+            '-', ']',
+        ]
+        .contains(&c)
+        {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+
+    out
 }
 
 /// Escape a string so that it may be inserted into a double-quoted string.

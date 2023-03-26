@@ -158,6 +158,9 @@ echo -e 'abc\x211def'
 #CHECK: abc!def
 #CHECK: abc!1def
 
+echo \UDE01
+#CHECK: �
+
 # Comments allowed in between lines (#1987)
 echo before comment \
   # comment

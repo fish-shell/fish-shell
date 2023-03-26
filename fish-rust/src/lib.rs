@@ -12,6 +12,7 @@ mod common;
 mod abbrs;
 mod builtins;
 mod color;
+mod compat;
 mod env;
 mod event;
 mod expand;
@@ -51,6 +52,7 @@ mod wchar_ext;
 mod wchar_ffi;
 mod wcstringutil;
 mod wgetopt;
+mod wildcard;
 mod wutil;
 
 // Don't use `#[cfg(test)]` here to make sure ffi tests are built and tested

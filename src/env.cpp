@@ -472,11 +472,11 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
         for (const auto &kv : table) {
             if (string_prefixes_string(prefix, kv.first)) {
                 wcstring escaped_name = kv.first.substr(prefix_len);
-                wcstring name;
-                if (unescape_string(escaped_name, &name, unescape_flags_t{}, STRING_STYLE_VAR)) {
-                    wcstring key = name;
+                if (auto name =
+                        unescape_string(escaped_name, unescape_flags_t{}, STRING_STYLE_VAR)) {
+                    wcstring key = *name;
                     wcstring replacement = join_strings(kv.second.as_list(), L' ');
-                    abbrs->add(std::move(name), std::move(key), std::move(replacement),
+                    abbrs->add(std::move(*name), std::move(key), std::move(replacement),
                                abbrs_position_t::command, from_universal);
                 }
             }

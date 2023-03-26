@@ -737,10 +737,9 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc,
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        wcstring result;
         wcstring sep = aiter.want_newline() ? L"\n" : L"";
-        if (unescape_string(*arg, &result, flags, opts.escape_style)) {
-            streams.out.append(result + sep);
+        if (auto result = unescape_string(*arg, flags, opts.escape_style)) {
+            streams.out.append(*result + sep);
             nesc++;
         }
     }

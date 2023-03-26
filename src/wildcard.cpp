@@ -60,7 +60,9 @@ bool wildcard_has(const wchar_t *str, size_t len) {
         return false;
     }
     wcstring unescaped;
-    unescape_string(str, len, &unescaped, UNESCAPE_SPECIAL);
+    if (auto tmp = unescape_string(wcstring{str, len}, UNESCAPE_SPECIAL)) {
+        unescaped = *tmp;
+    }
     return wildcard_has_internal(unescaped);
 }
 

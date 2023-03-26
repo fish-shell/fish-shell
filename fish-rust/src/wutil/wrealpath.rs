@@ -4,13 +4,8 @@ use std::{
     os::unix::prelude::{OsStrExt, OsStringExt},
 };
 
-use cxx::let_cxx_string;
-
-use crate::{
-    ffi::{str2wcstring, wcs2zstring},
-    wchar::{wstr, WString},
-    wchar_ffi::{WCharFromFFI, WCharToFFI},
-};
+use crate::common::{str2wcstring, wcs2zstring};
+use crate::wchar::{wstr, WString};
 
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,
 /// `wrealpath()` returns `None`
@@ -19,7 +14,7 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
         return None;
     }
 
-    let mut narrow_path: Vec<u8> = wcs2zstring(&pathname.to_ffi()).from_ffi();
+    let mut narrow_path: Vec<u8> = wcs2zstring(pathname).into();
 
     // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
     while narrow_path.len() > 1 && narrow_path[narrow_path.len() - 1] == b'/' {
@@ -68,7 +63,5 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
         }
     };
 
-    let_cxx_string!(s = real_path);
-
-    Some(str2wcstring(&s).from_ffi())
+    Some(str2wcstring(&real_path))
 }

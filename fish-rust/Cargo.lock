@@ -368,6 +368,7 @@ dependencies = [
  "autocxx",
  "autocxx-build",
  "bitflags",
+ "cc",
  "cxx",
  "cxx-build",
  "cxx-gen",

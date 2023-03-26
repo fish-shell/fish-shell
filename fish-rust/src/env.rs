@@ -38,6 +38,11 @@ pub mod flags {
             c_int(i32::from(val.bits()))
         }
     }
+    impl From<EnvMode> for u16 {
+        fn from(val: EnvMode) -> Self {
+            val.bits()
+        }
+    }
 }
 
 /// Return values for `env_stack_t::set()`.

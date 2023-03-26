@@ -800,9 +800,11 @@ bool env_universal_t::populate_1_variable(const wchar_t *input, env_var_t::env_v
 
     // Parse out the value into storage, and decode it into a variable.
     storage->clear();
-    if (!unescape_string(colon + 1, storage, 0)) {
+    auto unescaped = unescape_string(colon + 1, 0);
+    if (!unescaped) {
         return false;
     }
+    *storage = *unescaped;
     env_var_t var{decode_serialized(*storage), flags};
 
     // Parse out the key and write into the map.

@@ -1469,8 +1469,8 @@ void completer_t::escape_opening_brackets(const wcstring &argument) {
     if (!have_unquoted_unescaped_bracket) return;
     // Since completion_apply_to_command_line will escape the completion, we need to provide an
     // unescaped version.
-    wcstring unescaped_argument;
-    if (!unescape_string(argument, &unescaped_argument, UNESCAPE_INCOMPLETE)) return;
+    auto unescaped_argument = unescape_string(argument, UNESCAPE_INCOMPLETE);
+    if (!unescaped_argument) return;
     for (completion_t &comp : completions.get_list()) {
         if (comp.flags & COMPLETE_REPLACES_TOKEN) continue;
         comp.flags |= COMPLETE_REPLACES_TOKEN;
@@ -1482,7 +1482,7 @@ void completer_t::escape_opening_brackets(const wcstring &argument) {
         if (comp.flags & COMPLETE_DONT_ESCAPE) {
             FLOG(warning, L"unexpected completion flag");
         }
-        comp.completion = unescaped_argument + comp.completion;
+        comp.completion = *unescaped_argument + comp.completion;
     }
 }
 
@@ -1494,9 +1494,8 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &cmd,
     wcstring_list_t arg_strs;
     for (const auto &arg : args) {
         wcstring argstr = *arg.get_source(cmd);
-        wcstring argstr_unesc;
-        if (unescape_string(argstr, &argstr_unesc, UNESCAPE_DEFAULT)) {
-            arg_strs.push_back(std::move(argstr_unesc));
+        if (auto argstr_unesc = unescape_string(argstr, UNESCAPE_DEFAULT)) {
+            arg_strs.push_back(std::move(*argstr_unesc));
         }
     }
     std::sort(arg_strs.begin(), arg_strs.end());
@@ -1668,11 +1667,14 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         source_range_t command_range = {cmd_tok.offset - bias, cmd_tok.length};
 
         wcstring exp_command = *cmd_tok.get_source(cmdline);
-        bool unescaped =
-            expand_command_token(ctx, exp_command) &&
-            unescape_string(previous_argument, &arg_data.previous_argument, UNESCAPE_DEFAULT) &&
-            unescape_string(current_argument, &arg_data.current_argument, UNESCAPE_INCOMPLETE);
+        std::unique_ptr<wcstring> prev;
+        std::unique_ptr<wcstring> cur;
+        bool unescaped = expand_command_token(ctx, exp_command) &&
+                         (prev = unescape_string(previous_argument, UNESCAPE_DEFAULT)) &&
+                         (cur = unescape_string(current_argument, UNESCAPE_INCOMPLETE));
         if (unescaped) {
+            arg_data.previous_argument = *prev;
+            arg_data.current_argument = *cur;
             // Have to walk over the command and its entire wrap chain. If any command
             // disables do_file, then they all do.
             walk_wrap_chain(exp_command, *effective_cmdline, command_range, &arg_data);

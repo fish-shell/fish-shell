@@ -67,9 +67,8 @@ static parse_keyword_t keyword_for_token(token_type_t tok, const wcstring &token
         if (!needs_expand) {
             result = keyword_with_name(token);
         } else {
-            wcstring storage;
-            if (unescape_string(token, &storage, 0)) {
-                result = keyword_with_name(storage);
+            if (auto unescaped = unescape_string(token, 0)) {
+                result = keyword_with_name(*unescaped);
             }
         }
     }

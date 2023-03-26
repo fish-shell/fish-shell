@@ -7,6 +7,7 @@ rust-version = "1.67"
 [dependencies]
 widestring-suffix = { path = "./widestring-suffix/" }
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", branch = "master", default-features = false, features = ["utf32"] }
+fast-float = { git = "https://github.com/fish-shell/fast-float-rust", branch="fish" }
 
 autocxx = "0.23.1"
 bitflags = "1.3.2"

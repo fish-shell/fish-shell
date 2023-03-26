@@ -348,6 +348,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "fast-float"
+version = "0.2.0"
+source = "git+https://github.com/fish-shell/fast-float-rust?branch=fish#9590c33a3f166a3533ba1cbb7a03e1105acec034"
+
+[[package]]
 name = "fastrand"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -367,6 +372,7 @@ dependencies = [
  "cxx-build",
  "cxx-gen",
  "errno",
+ "fast-float",
  "inventory",
  "libc",
  "lru",

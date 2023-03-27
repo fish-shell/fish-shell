@@ -1,4 +1,5 @@
-#RUN: %fish %s
+#RUN: %fish --interactive %s
+# ^ interactive so we can do `complete`
 mkdir -p __fish_complete_directories/
 cd __fish_complete_directories
 mkdir -p test/buildroot
@@ -25,3 +26,7 @@ __fish_complete_directories test/data/
 __fish_complete_directories test/data/abc 'abc dirs'
 #CHECK: test/data/abc/	abc dirs
 #CHECK: test/data/abcd/	abc dirs
+
+complete -c mydirs -l give-me-dir -a '(__fish_complete_directories)'
+complete -C'mydirs --give-me-dir='
+#CHECK: --give-me-dir=test/{{\t}}Directory

@@ -61,8 +61,8 @@ pub const WILDCARD_RESERVED_END: char = match char::from_u32(WILDCARD_RESERVED_B
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-const ENCODE_DIRECT_BASE: char = '\u{F600}';
-const ENCODE_DIRECT_END: char = match char::from_u32(ENCODE_DIRECT_BASE as u32 + 256) {
+pub const ENCODE_DIRECT_BASE: char = '\u{F600}';
+pub const ENCODE_DIRECT_END: char = match char::from_u32(ENCODE_DIRECT_BASE as u32 + 256) {
     Some(c) => c,
     None => panic!("private use codepoint in encode direct region should be valid char"),
 };

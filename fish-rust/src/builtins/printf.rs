@@ -53,9 +53,9 @@ use num_traits;
 use std::result::Result;
 
 use crate::builtins::shared::{io_streams_t, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-use crate::common::ENCODE_DIRECT_BASE;
 use crate::ffi::parser_t;
 use crate::locale::{get_numeric_locale, Locale};
+use crate::wchar::ENCODE_DIRECT_BASE;
 use crate::wchar::{wstr, WExt, WString, L};
 use crate::wutil::errors::Error;
 use crate::wutil::gettext::{wgettext, wgettext_fmt};
@@ -632,7 +632,7 @@ impl<'a> builtin_printf_state_t<'a> {
                 self.fatal_error(wgettext!("missing hexadecimal number in escape"));
             }
             self.append_output(
-                char::from_u32(ENCODE_DIRECT_BASE + esc_value % 256)
+                char::from_u32(ENCODE_DIRECT_BASE as u32 + esc_value % 256)
                     .expect("Escape should be encodeable"),
             );
         } else if is_octal_digit(p.char_at(0)) {
@@ -649,7 +649,7 @@ impl<'a> builtin_printf_state_t<'a> {
                 p = &p[1..];
             }
             self.append_output(
-                char::from_u32(ENCODE_DIRECT_BASE + esc_value % 256)
+                char::from_u32(ENCODE_DIRECT_BASE as u32 + esc_value % 256)
                     .expect("Escape should be encodeable"),
             );
         } else if "\"\\abcefnrtv".contains(p.char_at(0)) {

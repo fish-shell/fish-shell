@@ -1231,7 +1231,7 @@ complete -f -c git -n '__fish_git_using_command branch' -s a -l all -d 'Lists bo
 complete -f -c git -n '__fish_git_using_command branch' -s r -l remotes -d 'List or delete (if used with -d) the remote-tracking branches.'
 complete -f -c git -n '__fish_git_using_command branch' -s t -l track -l track -d 'Track remote branch'
 complete -f -c git -n '__fish_git_using_command branch' -l no-track -d 'Do not track remote branch'
-complete -f -c git -n '__fish_git_using_command branch' -l set-upstream-to -d 'Set remote branch to track'
+complete -f -c git -n '__fish_git_using_command branch' -l set-upstream-to -d 'Set remote branch to track' -ka '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command branch' -l merged -d 'List branches that have been merged'
 complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List branches that have not been merged'
 complete -f -c git -n '__fish_git_using_command branch' -l unset-upstream -d 'Remove branch upstream information'

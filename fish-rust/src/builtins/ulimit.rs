@@ -31,7 +31,7 @@ struct Resource<'a> {
 }
 
 /// Array of `Resource` structs, describing all known resource types.
-const resource_arr: &[Resource] = &[
+const RESOURCE_ARR: &[Resource] = &[
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     Resource {
         resource: resource::Resource::RLIMIT_SBSIZE,
@@ -185,7 +185,7 @@ const RLIMIT_UNKNOWN: i32 = -1;
 
 /// Get the implicit multiplication factor for the specified resource limit.
 fn get_multiplier(what: resource::Resource) -> i32 {
-    for resource in resource_arr {
+    for resource in RESOURCE_ARR {
         if resource.resource == what {
             return resource.multiplier;
         }
@@ -218,11 +218,11 @@ fn print(resource: resource::Resource, hard: bool, streams: &mut io_streams_t) {
 fn print_all(hard: bool, streams: &mut io_streams_t) {
     let mut w = 0;
 
-    for resource in resource_arr {
+    for resource in RESOURCE_ARR {
         w = max(w, fish_wcswidth2(&resource.desc.to_ffi()).0);
     }
 
-    for resource in resource_arr {
+    for resource in RESOURCE_ARR {
         let (soft_limit, hard_limit) =
             getrlimit(resource.resource).expect("getrlimit should return valid limits");
         let l = if hard { hard_limit } else { soft_limit };
@@ -255,7 +255,7 @@ fn print_all(hard: bool, streams: &mut io_streams_t) {
 }
 
 fn get_desc(what: resource::Resource) -> &'static wstr {
-    for resource in resource_arr {
+    for resource in RESOURCE_ARR {
         if resource.resource == what {
             return resource.desc;
         }

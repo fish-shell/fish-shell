@@ -552,6 +552,10 @@ aside.footnote > p {
     line-height: 1.5em;
 }
 
+div.documentwrapper {
+    width: 100%;
+}
+
 /* On screens that are less than 700px wide remove anything non-essential
    - the sidebar, the gradient background, ... */
 @media screen and (max-width: 700px) {

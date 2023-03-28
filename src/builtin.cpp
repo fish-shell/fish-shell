@@ -59,6 +59,7 @@
 #include "cxx.h"
 #include "cxxgen.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "ffi.h"
 #include "flog.h"
 #include "io.h"
 #include "null_terminated_array.h"
@@ -565,13 +566,8 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
 
 static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
                                      const wcstring_list_t &argv, RustBuiltin builtin) {
-    ::rust::Vec<wcharz_t> rust_argv;
-    for (const wcstring &arg : argv) {
-        rust_argv.emplace_back(arg.c_str());
-    }
-
     int status_code;
-    bool update_status = rust_run_builtin(parser, streams, rust_argv, builtin, status_code);
+    bool update_status = rust_run_builtin(parser, streams, to_rust_string_vec(argv), builtin, status_code);
     if (update_status) {
         return status_code;
     } else {

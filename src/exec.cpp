@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include "trace.rs.h"
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
@@ -33,6 +34,7 @@
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
+#include "ffi.h"
 #include "flog.h"
 #include "function.h"
 #include "global_safety.h"
@@ -48,7 +50,7 @@
 #include "reader.h"
 #include "redirection.h"
 #include "timer.rs.h"
-#include "trace.h"
+#include "trace.rs.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -827,9 +829,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
 
     // Maybe trace this process.
     // TODO: 'and' and 'or' will not show.
-    if (trace_enabled(parser)) {
-        trace_argv(parser, nullptr, p->argv());
-    }
+    trace_if_enabled(parser, L"", p->argv());
 
     // The IO chain for this process.
     io_chain_t process_net_io_chain = block_io;

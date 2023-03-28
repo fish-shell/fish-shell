@@ -47,7 +47,7 @@
 #include "reader.h"
 #include "screen.h"
 #include "termsize.h"
-#include "trace.h"
+#include "trace.rs.h"
 #include "wcstringutil.h"
 #include "wutil.h"
 

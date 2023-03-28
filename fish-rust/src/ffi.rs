@@ -56,6 +56,7 @@ include_cpp! {
     generate!("valid_var_name_char")
 
     generate!("get_flog_file_fd")
+    generate!("log_extra_to_flog_file")
 
     generate!("parse_util_unescape_wildcards")
 

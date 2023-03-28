@@ -1,4 +1,4 @@
-use crate::builtins::{printf, wait};
+use crate::builtins::wait;
 use crate::ffi::{self, parser_t, wcharz_t, Repin, RustBuiltin};
 use crate::wchar::{self, wstr, L};
 use crate::wchar_ffi::{c_str, empty_wstring};
@@ -45,9 +45,7 @@ pub const STATUS_CMD_OK: Option<c_int> = Some(0);
 /// The status code used for failure exit in a command (but not if the args were invalid).
 pub const STATUS_CMD_ERROR: Option<c_int> = Some(1);
 
-/// The status code used for invalid arguments given to a command. This is distinct from valid
-/// arguments that might result in a command failure. An invalid args condition is something
-/// like an unrecognized flag, missing or too many arguments, an invalid integer, etc.
+/// A handy return value for invalid args.
 pub const STATUS_INVALID_ARGS: Option<c_int> = Some(2);
 
 /// A wrapper around output_stream_t.
@@ -62,11 +60,6 @@ impl output_stream_t {
     /// Append a &wtr or WString.
     pub fn append<Str: AsRef<wstr>>(&mut self, s: Str) -> bool {
         self.ffi().append1(c_str!(s))
-    }
-
-    /// Append a char.
-    pub fn append1(&mut self, c: char) -> bool {
-        self.append(wstr::from_char_slice(&[c]))
     }
 }
 
@@ -139,7 +132,6 @@ pub fn run_builtin(
         RustBuiltin::Realpath => super::realpath::realpath(parser, streams, args),
         RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),
-        RustBuiltin::Printf => printf::printf(parser, streams, args),
     }
 }
 

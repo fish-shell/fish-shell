@@ -116,7 +116,6 @@ enum RustBuiltin : int32_t {
     Echo,
     Emit,
     Exit,
-    Printf,
     Pwd,
     Random,
     Realpath,

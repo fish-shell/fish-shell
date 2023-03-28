@@ -383,6 +383,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Return the list of blocks. The first block is at the top.
     const std::deque<block_t> &blocks() const { return block_list; }
 
+    size_t blocks_size() const { return block_list.size(); }
+
     /// Get the list of jobs.
     job_list_t &jobs() { return job_list; }
     const job_list_t &jobs() const { return job_list; }
@@ -500,6 +502,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     RustFFIJobList ffi_jobs() const;
     library_data_pod_t *ffi_libdata_pod();
     job_t *ffi_job_get_from_pid(int pid) const;
+    const library_data_pod_t &ffi_libdata_pod_const() const;
 
     /// autocxx junk.
     bool ffi_has_funtion_block() const;

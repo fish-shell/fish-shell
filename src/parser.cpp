@@ -514,6 +514,7 @@ job_t *parser_t::job_get_from_pid(int64_t pid, size_t &job_pos) const {
 library_data_pod_t *parser_t::ffi_libdata_pod() { return &library_data; }
 
 job_t *parser_t::ffi_job_get_from_pid(int pid) const { return job_get_from_pid(pid); }
+const library_data_pod_t &parser_t::ffi_libdata_pod_const() const { return library_data; }
 
 profile_item_t *parser_t::create_profile_item() {
     if (g_profiling_active) {

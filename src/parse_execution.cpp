@@ -42,7 +42,7 @@
 #include "reader.h"
 #include "timer.rs.h"
 #include "tokenizer.h"
-#include "trace.h"
+#include "trace.rs.h"
 #include "wildcard.h"
 #include "wutil.h"
 
@@ -390,6 +390,7 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
     if (result != end_execution_reason_t::ok) {
         return result;
     }
+
     trace_if_enabled(*parser, L"function", arguments);
     null_output_stream_t outs;
     string_output_stream_t errs;
@@ -537,7 +538,8 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
     }
 
     end_execution_reason_t result = end_execution_reason_t::ok;
-    if (trace_enabled(*parser)) trace_argv(*parser, L"switch", {switch_value_expanded});
+
+    trace_if_enabled(*parser, L"switch", {switch_value_expanded});
     block_t *sb = parser->push_block(block_t::switch_block());
 
     // Expand case statements.

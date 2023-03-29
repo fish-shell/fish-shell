@@ -4,7 +4,7 @@ use libc::c_int;
 
 use super::shared::{builtin_missing_argument, io_streams_t, STATUS_CMD_OK, STATUS_INVALID_ARGS};
 use crate::ffi::parser_t;
-use crate::wchar::{wchar_literal_byte, wstr, WString, L};
+use crate::wchar::{encode_byte_to_char, wstr, WString, L};
 use crate::wgetopt::{wgetopter_t, woption};
 
 #[derive(Debug, Clone, Copy)]
@@ -201,7 +201,7 @@ pub fn echo(
                     {
                         consumed = digits_consumed;
                         // The narrow_val is a literal byte that we want to output (#1894).
-                        wchar_literal_byte(narrow_val)
+                        encode_byte_to_char(narrow_val)
                     } else {
                         consumed = 0;
                         '\\'

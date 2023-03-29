@@ -74,7 +74,7 @@ pub const ENCODE_DIRECT_END: char = match char::from_u32(ENCODE_DIRECT_BASE as u
 /// character.
 ///
 /// See https://github.com/fish-shell/fish-shell/issues/1894.
-pub fn wchar_literal_byte(byte: u8) -> char {
+pub fn encode_byte_to_char(byte: u8) -> char {
     char::from_u32(u32::from(ENCODE_DIRECT_BASE) + u32::from(byte))
         .expect("private-use codepoint should be valid char")
 }

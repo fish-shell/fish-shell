@@ -68,6 +68,11 @@ $TAR_APPEND --no-recursion user_doc
 $TAR_APPEND user_doc/html user_doc/man
 $TAR_APPEND version
 
+if [ -n "$VENDOR_TARBALLS" ]; then
+  $BUILD_TOOL corrosion-vendor.tar.gz
+  mv corrosion-vendor.tar.gz ${FISH_ARTEFACT_PATH:-~/fish_built}/${prefix}_corrosion-vendor.tar.gz
+fi
+
 cd -
 rm -r "$PREFIX_TMPDIR"
 

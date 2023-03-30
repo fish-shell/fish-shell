@@ -74,6 +74,6 @@ rm -r "$PREFIX_TMPDIR"
 # xz it
 xz "$path"
 
-# Output what we did, and the sha1 hash
+# Output what we did, and the sha256 hash
 echo "Tarball written to $path".xz
 openssl dgst -sha256 "$path".xz

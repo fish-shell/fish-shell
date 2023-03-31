@@ -429,6 +429,8 @@ The ``fish_vi_cursor`` function will be used to change the cursor's shape depend
 
 Additionally, ``blink`` can be added after each of the cursor shape parameters to set a blinking cursor in the specified shape.
 
+Fish knows the shapes "block", "line" and "underscore", other values will be ignored.
+
 If the cursor shape does not appear to be changing after setting the above variables, it's likely your terminal emulator does not support the capabilities necessary to do this. It may also be the case, however, that ``fish_vi_cursor`` has not detected your terminal's features correctly (for example, if you are using ``tmux``). If this is the case, you can force ``fish_vi_cursor`` to set the cursor shape by setting ``$fish_vi_force_cursor`` in ``config.fish``. You'll have to restart fish for any changes to take effect. If cursor shape setting remains broken after this, it's almost certainly an issue with your terminal emulator, and not fish.
 
 .. _vi-mode-command:

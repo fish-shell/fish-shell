@@ -35,7 +35,7 @@ Improved terminal support
 
 Other improvements
 ------------------
-
+- A bug that prevented certain executables from being offered in tab-completions when root has been fixed (:issue:`9639`).
 
 For distributors
 ----------------

@@ -23,6 +23,7 @@ Interactive improvements
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
+- The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

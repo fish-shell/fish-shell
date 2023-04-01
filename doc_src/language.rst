@@ -238,6 +238,37 @@ As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same p
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
 
+
+Combining pipes and redirections
+--------------------------------
+
+It is possible to use multiple redirections and a pipe at the same time. In that case, they are read in this order:
+
+1. First the pipe is set up.
+2. Then the redirections are evaluated from left-to-right.
+
+This is important when any redirections reference other file descriptors with the ``&N`` syntax. When you say ``>&2``, that will redirect stdout to where stderr is pointing to *at that time*.
+
+Consider this helper function::
+
+  # Just make a function that prints something to stdout and stderr
+  function print
+      echo out
+      echo err >&2
+  end
+
+Now let's see a few cases::
+
+  # Redirect both stderr and stdout to less
+  # (can also be spelt as `&|`)
+  print 2>&1 | less
+
+  # Show the "out" on stderr, silence the "err"
+  print >&2 2>/dev/null
+  
+  # Silence both
+  print >/dev/null 2>&1
+
 .. _syntax-job-control:
 
 Job control

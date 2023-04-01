@@ -21,10 +21,22 @@ pub fn wcstod<Chars>(input: Chars, decimal_sep: char, consumed: &mut usize) -> R
 where
     Chars: IntoCharIter,
 {
-    let chars = input.chars();
-    if chars.clone().next().is_none() {
-        *consumed = 0;
-        return Err(Error::Empty);
+    let mut chars = input.chars();
+    let mut whitespace_skipped = 0;
+
+    // Skip leading whitespace.
+    loop {
+        match chars.clone().next() {
+            Some(c) if c.is_whitespace() => {
+                whitespace_skipped += 1;
+                chars.next();
+            }
+            None => {
+                *consumed = 0;
+                return Err(Error::Empty);
+            }
+            _ => break,
+        }
     }
 
     let ret = parse_partial_iter(chars.clone().fuse(), decimal_sep);
@@ -47,7 +59,7 @@ where
             }
         }
     }
-    *consumed = n;
+    *consumed = n + whitespace_skipped;
     Ok(val)
 }
 
@@ -61,7 +73,10 @@ mod test {
     #[test]
     #[allow(clippy::all)]
     pub fn tests() {
-        test("12.345", Ok(12.345));
+        test_consumed("12.345", Ok(12.345), 6);
+        test_consumed("  12.345", Ok(12.345), 8);
+        test_consumed("  12.345  ", Ok(12.345), 8);
+        test_consumed("12.345    ", Ok(12.345), 6);
         test("12.345e19", Ok(12.345e19));
         test("-.1e+9", Ok(-0.1e+9));
         test(".125", Ok(0.125));

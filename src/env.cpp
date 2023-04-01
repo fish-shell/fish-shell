@@ -220,7 +220,7 @@ static void setup_user(env_stack_t &vars) {
     // If we have a $USER, we try to get the passwd entry for the name.
     // If that has the same UID that we use, we assume the data is correct.
     if (!user_var.missing_or_empty()) {
-        std::string unam_narrow = wcs2string(user_var->as_string());
+        std::string unam_narrow = wcs2zstring(user_var->as_string());
         int retval = getpwnam_r(unam_narrow.c_str(), &userinfo, buf, sizeof(buf), &result);
         if (!retval && result) {
             if (result->pw_uid == uid) {
@@ -730,9 +730,9 @@ std::shared_ptr<owning_null_terminated_array_t> env_scoped_impl_t::create_export
     std::vector<std::string> export_list;
     export_list.reserve(vals.size());
     for (const auto &kv : vals) {
-        std::string str = wcs2string(kv.first);
+        std::string str = wcs2zstring(kv.first);
         str.push_back('=');
-        str.append(wcs2string(kv.second.as_string()));
+        str.append(wcs2zstring(kv.second.as_string()));
         export_list.push_back(std::move(str));
     }
     return std::make_shared<owning_null_terminated_array_t>(std::move(export_list));

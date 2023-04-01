@@ -101,6 +101,7 @@ include_cpp! {
     generate!("re::regex_result_ffi")
     generate!("re::try_compile_ffi")
     generate!("wcs2string")
+    generate!("wcs2zstring")
     generate!("str2wcstring")
 
     generate!("signal_handle")

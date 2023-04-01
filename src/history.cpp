@@ -791,7 +791,7 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
 // Returns the fd of an opened temporary file, or an invalid fd on failure.
 static autoclose_fd_t create_temporary_file(const wcstring &name_template, wcstring *out_path) {
     for (int attempt = 0; attempt < 10; attempt++) {
-        std::string narrow_str = wcs2string(name_template);
+        std::string narrow_str = wcs2zstring(name_template);
         autoclose_fd_t out_fd{fish_mkstemp_cloexec(&narrow_str[0])};
         if (out_fd.valid()) {
             *out_path = str2wcstring(narrow_str);

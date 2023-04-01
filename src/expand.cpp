@@ -822,7 +822,7 @@ static void expand_home_directory(wcstring &input, const environment_t &vars) {
             tail_idx = 1;
         } else {
             // Some other user's home directory.
-            std::string name_cstr = wcs2string(username);
+            std::string name_cstr = wcs2zstring(username);
             struct passwd userinfo;
             struct passwd *result;
             char buf[8192];

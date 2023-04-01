@@ -56,7 +56,7 @@ wcstring wgetcwd() {
 }
 
 DIR *wopendir(const wcstring &name) {
-    const cstring tmp = wcs2string(name);
+    const cstring tmp = wcs2zstring(name);
     return opendir(tmp.c_str());
 }
 
@@ -146,7 +146,7 @@ void dir_iter_t::entry_t::do_stat() const {
     if (this->dirfd_ < 0) {
         return;
     }
-    std::string narrow = wcs2string(this->name);
+    std::string narrow = wcs2zstring(this->name);
     struct stat s {};
     if (fstatat(this->dirfd_, narrow.c_str(), &s, 0) == 0) {
         this->stat_ = s;
@@ -238,22 +238,22 @@ const dir_iter_t::entry_t *dir_iter_t::next() {
 }
 
 int wstat(const wcstring &file_name, struct stat *buf) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return stat(tmp.c_str(), buf);
 }
 
 int lwstat(const wcstring &file_name, struct stat *buf) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return lstat(tmp.c_str(), buf);
 }
 
 int waccess(const wcstring &file_name, int mode) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return access(tmp.c_str(), mode);
 }
 
 int wunlink(const wcstring &file_name) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return unlink(tmp.c_str());
 }
 
@@ -292,7 +292,7 @@ maybe_t<wcstring> wreadlink(const wcstring &file_name) {
     }
     ssize_t bufsize = buf.st_size + 1;
     char target_buf[bufsize];
-    const std::string tmp = wcs2string(file_name);
+    const std::string tmp = wcs2zstring(file_name);
     ssize_t nbytes = readlink(tmp.c_str(), target_buf, bufsize);
     if (nbytes == -1) {
         wperror(L"readlink");
@@ -314,7 +314,7 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     if (pathname.empty()) return none();
 
     cstring real_path;
-    cstring narrow_path = wcs2string(pathname);
+    cstring narrow_path = wcs2zstring(pathname);
 
     // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
     while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
@@ -510,7 +510,7 @@ const wcstring &wgettext(const wchar_t *in) {
     auto wmap = wgettext_map.acquire();
     wcstring &val = (*wmap)[key];
     if (val.empty()) {
-        cstring mbs_in = wcs2string(key);
+        cstring mbs_in = wcs2zstring(key);
         char *out = fish_gettext(mbs_in.c_str());
         val = format_string(L"%s", out);
     }
@@ -524,13 +524,13 @@ const wcstring &wgettext(const wchar_t *in) {
 const wchar_t *wgettext_ptr(const wchar_t *in) { return wgettext(in).c_str(); }
 
 int wmkdir(const wcstring &name, int mode) {
-    cstring name_narrow = wcs2string(name);
+    cstring name_narrow = wcs2zstring(name);
     return mkdir(name_narrow.c_str(), mode);
 }
 
 int wrename(const wcstring &old, const wcstring &newv) {
-    cstring old_narrow = wcs2string(old);
-    cstring new_narrow = wcs2string(newv);
+    cstring old_narrow = wcs2zstring(old);
+    cstring new_narrow = wcs2zstring(newv);
     return rename(old_narrow.c_str(), new_narrow.c_str());
 }
 

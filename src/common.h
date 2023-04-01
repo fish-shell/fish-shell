@@ -306,6 +306,10 @@ wcstring str2wcstring(const char *in, size_t len);
 std::string wcs2string(const wcstring &input);
 std::string wcs2string(const wchar_t *in, size_t len);
 
+/// Same as wcs2string. Meant to be used when we need a zero-terminated string to feed legacy APIs.
+std::string wcs2zstring(const wcstring &input);
+std::string wcs2zstring(const wchar_t *in, size_t len);
+
 /// Like wcs2string, but appends to \p receiver instead of returning a new string.
 void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver);
 

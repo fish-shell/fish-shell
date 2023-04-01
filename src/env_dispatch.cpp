@@ -137,11 +137,11 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
     const auto var = vars.get(env_var_name, ENV_DEFAULT);
     FLOGF(env_dispatch, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
           !var ? L"MISSING" : var->as_string().c_str());
-    std::string name = wcs2string(env_var_name);
+    std::string name = wcs2zstring(env_var_name);
     if (var.missing_or_empty()) {
         unsetenv_lock(name.c_str());
     } else {
-        const std::string value = wcs2string(var->as_string());
+        const std::string value = wcs2zstring(var->as_string());
         setenv_lock(name.c_str(), value.c_str(), 1);
     }
     tzset();
@@ -164,7 +164,7 @@ static void guess_emoji_width(const environment_t &vars) {
 
     double version = 0;
     if (auto version_var = vars.get(L"TERM_PROGRAM_VERSION")) {
-        std::string narrow_version = wcs2string(version_var->as_string());
+        std::string narrow_version = wcs2zstring(version_var->as_string());
         version = strtod(narrow_version.c_str(), nullptr);
     }
 
@@ -465,7 +465,7 @@ static void initialize_curses_using_fallbacks(const environment_t &vars) {
         }
 
         int err_ret = 0;
-        std::string term = wcs2string(fallback);
+        std::string term = wcs2zstring(fallback);
         bool success = (setupterm(&term[0], STDOUT_FILENO, &err_ret) == OK);
 
         if (is_interactive_session()) {
@@ -566,13 +566,13 @@ static bool does_term_support_setting_title(const environment_t &vars) {
 /// Initialize the curses subsystem.
 static void init_curses(const environment_t &vars) {
     for (const auto &var_name : curses_variables) {
-        std::string name = wcs2string(var_name);
+        std::string name = wcs2zstring(var_name);
         const auto var = vars.get(var_name, ENV_EXPORT);
         if (var.missing_or_empty()) {
             FLOGF(term_support, L"curses var %s missing or empty", name.c_str());
             unsetenv_lock(name.c_str());
         } else {
-            std::string value = wcs2string(var->as_string());
+            std::string value = wcs2zstring(var->as_string());
             FLOGF(term_support, L"curses var %s='%s'", name.c_str(), value.c_str());
             setenv_lock(name.c_str(), value.c_str(), 1);
         }
@@ -618,12 +618,12 @@ static void init_locale(const environment_t &vars) {
 
     for (const auto &var_name : locale_variables) {
         const auto var = vars.get(var_name, ENV_EXPORT);
-        std::string name = wcs2string(var_name);
+        std::string name = wcs2zstring(var_name);
         if (var.missing_or_empty()) {
             FLOGF(env_locale, L"locale var %s missing or empty", name.c_str());
             unsetenv_lock(name.c_str());
         } else {
-            const std::string value = wcs2string(var->as_string());
+            const std::string value = wcs2zstring(var->as_string());
             FLOGF(env_locale, L"locale var %s='%s'", name.c_str(), value.c_str());
             setenv_lock(name.c_str(), value.c_str(), 1);
         }

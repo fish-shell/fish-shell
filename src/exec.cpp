@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+
 #include "trace.rs.h"
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
@@ -197,7 +198,7 @@ bool is_thompson_shell_script(const char *path) {
     // Construct envp.
     auto export_vars = vars.export_arr();
     const char **envp = export_vars->get();
-    std::string actual_cmd = wcs2string(p->actual_cmd);
+    std::string actual_cmd = wcs2zstring(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
@@ -525,7 +526,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
     const char *const *argv = argv_array.get();
     const char *const *envv = export_arr->get();
 
-    std::string actual_cmd_str = wcs2string(p->actual_cmd);
+    std::string actual_cmd_str = wcs2zstring(p->actual_cmd);
     const char *actual_cmd = actual_cmd_str.c_str();
     filename_ref_t file = parser.libdata().current_filename;
 

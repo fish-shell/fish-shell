@@ -400,6 +400,15 @@ std::string wcs2string(const wchar_t *in, size_t len) {
     return result;
 }
 
+std::string wcs2zstring(const wcstring &input) { return wcs2zstring(input.data(), input.size()); }
+
+std::string wcs2zstring(const wchar_t *in, size_t len) {
+    if (len == 0) return std::string{};
+    std::string result;
+    wcs2string_appending(in, len, &result);
+    return result;
+}
+
 void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver) {
     assert(receiver && "Null receiver");
     receiver->reserve(receiver->size() + len);

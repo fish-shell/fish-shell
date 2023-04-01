@@ -326,61 +326,6 @@ wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,
                                       out, true /* first call */);
 }
 
-static int fast_waccess(const struct stat &stat_buf, uint8_t mode) {
-    // Cache the effective user id and group id of our own shell process. These can't change on us
-    // because we don't change them.
-    static const uid_t euid = geteuid();
-    static const gid_t egid = getegid();
-
-    // Cache a list of our group memberships.
-    static const std::vector<gid_t> groups = ([&]() {
-        std::vector<gid_t> groups;
-        while (true) {
-            int ngroups = getgroups(0, nullptr);
-            // It is not defined if getgroups(2) includes the effective group of the calling process
-            groups.reserve(ngroups + 1);
-            groups.resize(ngroups, 0);
-            if (getgroups(groups.size(), groups.data()) == -1) {
-                if (errno == EINVAL) {
-                    // Race condition, ngroups has changed between the two getgroups() calls
-                    continue;
-                }
-                wperror(L"getgroups");
-            }
-            break;
-        }
-
-        groups.push_back(egid);
-        std::sort(groups.begin(), groups.end());
-        return groups;
-    })();
-
-    bool have_suid = (stat_buf.st_mode & S_ISUID);
-    if (euid == stat_buf.st_uid || have_suid) {
-        // Check permissions granted to owner
-        if (((stat_buf.st_mode & S_IRWXU) >> 6) & mode) {
-            return 0;
-        }
-    }
-    bool have_sgid = (stat_buf.st_mode & S_ISGID);
-    auto binsearch = std::lower_bound(groups.begin(), groups.end(), stat_buf.st_gid);
-    bool have_group = binsearch != groups.end() && !(stat_buf.st_gid < *binsearch);
-    if (have_group || have_sgid) {
-        // Check permissions granted to group
-        if (((stat_buf.st_mode & S_IRWXG) >> 3) & mode) {
-            return 0;
-        }
-    }
-    if (euid != stat_buf.st_uid && !have_group) {
-        // Check permissions granted to other
-        if ((stat_buf.st_mode & S_IRWXO) & mode) {
-            return 0;
-        }
-    }
-
-    return -1;
-}
-
 /// Obtain a description string for the file specified by the filename.
 ///
 /// The returned value is a string constant and should not be free'd.
@@ -391,8 +336,9 @@ static int fast_waccess(const struct stat &stat_buf, uint8_t mode) {
 /// \param stat_res The result of calling stat on the file
 /// \param buf The struct buf output of calling stat on the file
 /// \param err The errno value after a failed stat call on the file.
-static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int stat_res,
-                                    const struct stat &buf, int err) {
+static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
+                                    const struct stat &lbuf, int stat_res, const struct stat &buf,
+                                    int err) {
     if (lstat_res) {
         return COMPLETE_FILE_DESC;
     }
@@ -402,7 +348,10 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
             if (S_ISDIR(buf.st_mode)) {
                 return COMPLETE_DIRECTORY_SYMLINK_DESC;
             }
-            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && fast_waccess(buf, X_OK) == 0) {
+            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0) {
+                // Weird group permissions and other such issues make it non-trivial to find out if
+                // we can actually execute a file using the result from stat. It is much safer to
+                // use the access function, since it tells us exactly what we want to know.
                 return COMPLETE_EXEC_LINK_DESC;
             }
 
@@ -423,7 +372,10 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
         return COMPLETE_SOCKET_DESC;
     } else if (S_ISDIR(buf.st_mode)) {
         return COMPLETE_DIRECTORY_DESC;
-    } else if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && fast_waccess(buf, X_OK) == 0) {
+    } else if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0) {
+        // Weird group permissions and other such issues make it non-trivial to find out if we can
+        // actually execute a file using the result from stat. It is much safer to use the access
+        // function, since it tells us exactly what we want to know.
         return COMPLETE_EXEC_DESC;
     }
 
@@ -478,7 +430,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
-    if (executables_only && (!is_executable || fast_waccess(stat_buf, X_OK) != 0)) {
+    if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
         return false;
     }
 
@@ -490,7 +442,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     // Compute the description.
     wcstring desc;
     if (expand_flags & expand_flag::gen_descriptions) {
-        desc = file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
+        desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
 
         if (!is_directory && !is_executable && file_size >= 0) {
             if (!desc.empty()) desc.append(L", ");

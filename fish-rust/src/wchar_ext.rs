@@ -153,6 +153,13 @@ pub trait WExt {
     /// Access the chars of a WString or wstr.
     fn as_char_slice(&self) -> &[char];
 
+    /// Return a char slice from a *char index*.
+    /// This is different from Rust string slicing, which takes a byte index.
+    fn slice_from(&self, start: usize) -> &wstr {
+        let chars = self.as_char_slice();
+        wstr::from_char_slice(&chars[start..])
+    }
+
     /// \return the char at an index.
     /// If the index is equal to the length, return '\0'.
     /// If the index exceeds the length, then panic.

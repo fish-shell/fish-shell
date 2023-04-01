@@ -7,7 +7,7 @@ use std::{
 use cxx::let_cxx_string;
 
 use crate::{
-    ffi::{str2wcstring, wcs2string},
+    ffi::{str2wcstring, wcs2zstring},
     wchar::{wstr, WString},
     wchar_ffi::{WCharFromFFI, WCharToFFI},
 };
@@ -19,7 +19,7 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
         return None;
     }
 
-    let mut narrow_path: Vec<u8> = wcs2string(&pathname.to_ffi()).from_ffi();
+    let mut narrow_path: Vec<u8> = wcs2zstring(&pathname.to_ffi()).from_ffi();
 
     // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
     while narrow_path.len() > 1 && narrow_path[narrow_path.len() - 1] == b'/' {

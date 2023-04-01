@@ -235,7 +235,7 @@ int open_cloexec(const char *path, int flags, mode_t mode) {
 }
 
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode) {
-    return open_cloexec(wcs2string(pathname), flags, mode);
+    return open_cloexec(wcs2zstring(pathname), flags, mode);
 }
 
 void exec_close(int fd) {

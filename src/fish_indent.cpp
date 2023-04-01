@@ -865,10 +865,10 @@ static std::string html_colorize(const wcstring &text,
         }
     }
     html.append(L"</span></code></pre>");
-    return wcs2string(html);
+    return wcs2zstring(html);
 }
 
-static std::string no_colorize(const wcstring &text) { return wcs2string(text); }
+static std::string no_colorize(const wcstring &text) { return wcs2zstring(text); }
 
 int main(int argc, char *argv[]) {
     program_name = L"fish_indent";

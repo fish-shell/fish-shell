@@ -1521,7 +1521,7 @@ void test_dir_iter() {
     char t1[] = "/tmp/fish_test_dir_iter.XXXXXX";
     const std::string basepathn = mkdtemp(t1);
     const wcstring basepath = str2wcstring(basepathn);
-    auto makepath = [&](const wcstring &s) { return wcs2string(basepath + L"/" + s); };
+    auto makepath = [&](const wcstring &s) { return wcs2zstring(basepath + L"/" + s); };
 
     const wcstring dirname = L"dir";
     const wcstring regname = L"reg";
@@ -2995,7 +2995,7 @@ struct autoload_tester_t {
         wcstring cmd = vformat_string(fmt, va);
         va_end(va);
 
-        int status = system(wcs2string(cmd).c_str());
+        int status = system(wcs2zstring(cmd).c_str());
         do_test(status == 0);
     }
 
@@ -3606,7 +3606,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/has_loop/", L"loopy/loop/", vars,
                                        __LINE__);
 
-    if (!pushd(wcs2string(wd).c_str())) return;
+    if (!pushd(wcs2zstring(wd).c_str())) return;
     perform_one_autosuggestion_cd_test(L"cd 0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '0", L"foobar/", vars, __LINE__);
@@ -4022,7 +4022,7 @@ static void test_universal_ok_to_save() {
     say(L"Testing universal Ok to save");
     if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
     constexpr const char contents[] = "# VERSION: 99999.99\n";
-    FILE *fp = fopen(wcs2string(UVARS_TEST_PATH).c_str(), "w");
+    FILE *fp = fopen(wcs2zstring(UVARS_TEST_PATH).c_str(), "w");
     assert(fp && "Failed to open UVARS_TEST_PATH for writing");
     fwrite(contents, const_strlen(contents), 1, fp);
     fclose(fp);
@@ -4509,7 +4509,7 @@ void history_tests_t::test_history_path_detection() {
 
     // Place one valid file in the directory.
     wcstring filename = L"testfile";
-    std::string path = wcs2string(tmpdir + filename);
+    std::string path = wcs2zstring(tmpdir + filename);
     FILE *f = fopen(path.c_str(), "w");
     if (!f) {
         err(L"Failed to open test file from history path detection");

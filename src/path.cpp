@@ -35,7 +35,7 @@ static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_
     /// Test if the given path can be executed.
     /// \return 0 on success, an errno value on failure.
     auto test_path = [](const wcstring &path) -> int {
-        std::string narrow = wcs2string(path);
+        std::string narrow = wcs2zstring(path);
         struct stat buff;
         if (access(narrow.c_str(), X_OK) != 0 || stat(narrow.c_str(), &buff) != 0) {
             return errno;
@@ -108,7 +108,7 @@ static bool path_is_executable(const std::string &path) {
 
 /// \return whether the given path is on a remote filesystem.
 static dir_remoteness_t path_remoteness(const wcstring &path) {
-    std::string narrow = wcs2string(path);
+    std::string narrow = wcs2zstring(path);
 #if defined(__linux__)
     struct statfs buf {};
     if (statfs(narrow.c_str(), &buf) < 0) {
@@ -149,7 +149,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for matching commands in the PATH var.
     if (cmd.find(L'/') != wcstring::npos) {
-        std::string narrow = wcs2string(cmd);
+        std::string narrow = wcs2zstring(cmd);
         if (path_is_executable(narrow)) paths.push_back(cmd);
         return paths;
     }
@@ -161,7 +161,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     for (auto path : pathsv) {
         if (path.empty()) continue;
         append_path_component(path, cmd);
-        std::string narrow = wcs2string(path);
+        std::string narrow = wcs2zstring(path);
         if (path_is_executable(narrow)) paths.push_back(path);
     }
 

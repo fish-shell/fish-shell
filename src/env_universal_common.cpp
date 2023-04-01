@@ -369,7 +369,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
 }
 
 bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
-    return load_from_path(wcs2string(path), callbacks);
+    return load_from_path(wcs2zstring(path), callbacks);
 }
 
 bool env_universal_t::load_from_path(const std::string &path, callback_data_list_t &callbacks) {
@@ -449,7 +449,7 @@ void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstri
     if (path.empty()) return;
     assert(!initialized() && "Already initialized");
     vars_path_ = std::move(path);
-    narrow_vars_path_ = wcs2string(vars_path_);
+    narrow_vars_path_ = wcs2zstring(vars_path_);
 
     if (load_from_path(narrow_vars_path_, callbacks)) {
         // Successfully loaded from our normal path.
@@ -475,7 +475,7 @@ autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, w
     autoclose_fd_t result;
     std::string narrow_str;
     for (size_t attempt = 0; attempt < 10 && !result.valid(); attempt++) {
-        narrow_str = wcs2string(tmp_name_template);
+        narrow_str = wcs2zstring(tmp_name_template);
         result.reset(fish_mkstemp_cloexec(&narrow_str[0]));
         saved_errno = errno;
     }
@@ -1127,7 +1127,7 @@ static wcstring default_named_pipe_path() {
 static autoclose_fd_t make_fifo(const wchar_t *test_path, const wchar_t *suffix) {
     wcstring vars_path = test_path ? wcstring(test_path) : default_named_pipe_path();
     vars_path.append(suffix);
-    const std::string narrow_path = wcs2string(vars_path);
+    const std::string narrow_path = wcs2zstring(vars_path);
 
     int mkfifo_status = mkfifo(narrow_path.c_str(), 0600);
     if (mkfifo_status == -1 && errno != EEXIST) {

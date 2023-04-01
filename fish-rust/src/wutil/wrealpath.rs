@@ -21,9 +21,6 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
         narrow_path.pop();
     }
 
-    // `from_bytes` is Unix specific but there isn't really any other way to do this
-    // since `libc::realpath` is also Unix specific. I also don't think we support Windows
-    // outside of WSL + Cygwin (which should be fairly Unix-like anyways)
     let narrow_res = canonicalize(OsStr::from_bytes(&narrow_path));
 
     let real_path = if let Ok(result) = narrow_res {

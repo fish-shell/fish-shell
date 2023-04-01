@@ -102,7 +102,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset w forward-word forward-single-char
     bind -s --preset W forward-bigword forward-single-char
     bind -s --preset e forward-single-char forward-word backward-char
-    bind -s --preset E forward-bigword backward-char
+    bind -s --preset E forward-single-char forward-bigword backward-char
 
     # Vi/Vim doesn't support these keys in insert mode but that seems silly so we do so anyway.
     bind -s --preset -M insert -k home beginning-of-line

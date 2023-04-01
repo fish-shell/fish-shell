@@ -1,10 +1,10 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 #REQUIRES: command -v tmux
 # disable on github actions because it's flakey
 #REQUIRES: test -z "$CI"
 
-set -g isolated_tmux_fish_extra_args -C '
-    set -g fish_autosuggestion_enabled 0
+set -g isolated_tmux_ghoti_extra_args -C '
+    set -g ghoti_autosuggestion_enabled 0
 '
 isolated-tmux-start
 

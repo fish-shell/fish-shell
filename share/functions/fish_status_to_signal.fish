@@ -1,5 +1,5 @@
-function fish_status_to_signal --description "Convert exit code to signal name"
-    __fish_make_completion_signals # Make sure signals are cached
+function ghoti_status_to_signal --description "Convert exit code to signal name"
+    __ghoti_make_completion_signals # Make sure signals are cached
     for arg in $argv
         if test $arg -gt 128
             # Important: each element of $__kill_signals is a string like "10 USR1"

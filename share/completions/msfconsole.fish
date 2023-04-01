@@ -4,7 +4,7 @@ complete -c msfconsole -f
 complete -c msfconsole -s E -l environment -x -d 'Set Rails environment'
 
 # Database options
-complete -c msfconsole -s M -l migration-path -xa "(__fish_complete_directories)" -d 'Directory containing additional DB migrations'
+complete -c msfconsole -s M -l migration-path -xa "(__ghoti_complete_directories)" -d 'Directory containing additional DB migrations'
 complete -c msfconsole -s n -l no-database -d 'Disable database support'
 complete -c msfconsole -s y -l yaml -F -d 'YAML file containing database settings'
 
@@ -14,7 +14,7 @@ complete -c msfconsole -s v -s V -l version -d 'Show version'
 
 # Module options
 complete -c msfconsole -l defer-module-loads -d 'Defer module loading'
-complete -c msfconsole -s m -l module-path -xa "(__fish_complete_directories)" -d 'Load an additional module path'
+complete -c msfconsole -s m -l module-path -xa "(__ghoti_complete_directories)" -d 'Load an additional module path'
 
 # Console options
 complete -c msfconsole -s a -l ask -d 'Ask before exiting Metasploit'

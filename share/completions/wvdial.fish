@@ -1,4 +1,4 @@
-function __fish_complete_wvdial_peers --description 'Complete wvdial peers' --argument-names cfgfiles
+function __ghoti_complete_wvdial_peers --description 'Complete wvdial peers' --argument-names cfgfiles
     set -q cfgfiles[1]
     or set -l cfgfiles /etc/wvdial.conf ~/.wvdialrc
 
@@ -28,7 +28,7 @@ function __fish_complete_wvdial_peers --description 'Complete wvdial peers' --ar
 
 end
 
-complete -c wvdial -xa "(__fish_complete_wvdial_peers)" -d "wvdial connections"
+complete -c wvdial -xa "(__ghoti_complete_wvdial_peers)" -d "wvdial connections"
 complete -c wvdial -s c -l chat -d 'Run wvdial as chat replacement from within pppd'
 complete -c wvdial -s C -l config -r -d 'Run wvdial with alternative config file'
 complete -c wvdial -s n -l no-syslog -d 'Don\'t output debug information'

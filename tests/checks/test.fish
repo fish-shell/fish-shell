@@ -1,15 +1,15 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 #
 # Tests for the `test` builtin, aka `[`.
 test inf -gt 0
 # CHECKERR: Number is infinite
-# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: {{.*}}test.ghoti (line {{\d+}}):
 # CHECKERR: test inf -gt 0
 # CHECKERR: ^
 
 test 5 -eq nan
 # CHECKERR: Not a number
-# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: {{.*}}test.ghoti (line {{\d+}}):
 # CHECKERR: test 5 -eq nan
 # CHECKERR: ^
 
@@ -20,7 +20,7 @@ test 1 =
 # CHECKERR: test: Missing argument at index 3
 # CHECKERR: 1 =
 # CHECKERR: ^
-# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: {{.*}}test.ghoti (line {{\d+}}):
 # CHECKERR: test 1 =
 # CHECKERR: ^
 
@@ -28,7 +28,7 @@ test 1 = 2 and echo true or echo false
 # CHECKERR: test: Expected a combining operator like '-a' at index 4
 # CHECKERR: 1 = 2 and echo true or echo false
 # CHECKERR: ^
-# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: {{.*}}test.ghoti (line {{\d+}}):
 # CHECKERR: test 1 = 2 and echo true or echo false
 # CHECKERR: ^
 
@@ -38,25 +38,25 @@ end
 
 t foo
 # CHECKERR: Argument is not a number: 'foo'
-# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: {{.*}}test.ghoti (line {{\d+}}):
 # CHECKERR: test $argv[1] -eq 5
 # CHECKERR: ^
 # CHECKERR: in function 't' with arguments 'foo'
-# CHECKERR: called on line {{\d+}} of file {{.*}}test.fish
+# CHECKERR: called on line {{\d+}} of file {{.*}}test.ghoti
 
 t 5,2
 # CHECKERR: Integer 5 in '5,2' followed by non-digit
-# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: {{.*}}test.ghoti (line {{\d+}}):
 # CHECKERR: test $argv[1] -eq 5
 # CHECKERR: ^
 # CHECKERR: in function 't' with arguments '5,2'
-# CHECKERR: called on line {{\d+}} of file {{.*}}test.fish
+# CHECKERR: called on line {{\d+}} of file {{.*}}test.ghoti
 
 test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: test: unexpected argument at index 3: '/usr/local/bin/go'
 # CHECKERR: -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: {{               \^}}
-# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: {{.*}}test.ghoti (line {{\d+}}):
 # CHECKERR: test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: ^
 

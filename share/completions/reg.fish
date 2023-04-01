@@ -26,7 +26,7 @@ REG_EXPAND_SZ'
         return
     end
 
-    if not __fish_seen_argument -w v -w ve
+    if not __ghoti_seen_argument -w v -w ve
         echo -e '/v\tSpecify the name of the add registry entry
 /ve\tSpecify that the added registry entry has a null value'
     end
@@ -39,12 +39,12 @@ REG_EXPAND_SZ'
 end
 
 function __reg_compare_complete_args
-    if not __fish_seen_argument -w v -w ve
+    if not __ghoti_seen_argument -w v -w ve
         echo -e '/v\tSpecify the value name
 /ve\tSpecify that only entries that have a value name of null should be compared'
     end
 
-    if not __fish_seen_argument -w oa -w od -w os -w on
+    if not __ghoti_seen_argument -w oa -w od -w os -w on
         echo -e '/oa\tSpecify that all differences and matches are displayed
 /od\tSpecify that only differences are displayed
 /os\tSpecify that only matches are displayed
@@ -68,7 +68,7 @@ function __reg_delete_complete_args -a previous_token
         return
     end
 
-    if not __fish_seen_argument -w v -w ve -w va
+    if not __ghoti_seen_argument -w v -w ve -w va
         echo -e '/v\tDelete a specific entry under the subkey
 /ve\tSpecify that only entries that have no value will be deleted
 /va\tDelete all entries under the specified subkey'
@@ -106,12 +106,12 @@ REG_NONE'
         return
     end
 
-    if not __fish_seen_argument -w v -w ve
+    if not __ghoti_seen_argument -w v -w ve
         echo -e '/v\tSpecify the registry value name
 /ve\tRun a query for value names that are empty'
     end
 
-    if not __fish_seen_argument -w k -w d
+    if not __ghoti_seen_argument -w k -w d
         echo -e '/k\tSpecify to search in key names only
 /d\tSpecify to search in data only'
     end
@@ -139,19 +139,19 @@ end
 function __reg_complete_args -d 'Function to generate args'
     set -l previous_token (commandline -oc)[-1]
 
-    if __fish_seen_subcommand_from add
+    if __ghoti_seen_subcommand_from add
         __reg_add_complete_args $previous_token
-    else if __fish_seen_subcommand_from compare
+    else if __ghoti_seen_subcommand_from compare
         __reg_compare_complete_args
-    else if __fish_seen_subcommand_from copy
+    else if __ghoti_seen_subcommand_from copy
         __reg_copy_complete_args
-    else if __fish_seen_subcommand_from delete
+    else if __ghoti_seen_subcommand_from delete
         __reg_delete_complete_args $previous_token
-    else if __fish_seen_subcommand_from export
+    else if __ghoti_seen_subcommand_from export
         __reg_export_complete_args $previous_token
-    else if __fish_seen_subcommand_from query
+    else if __ghoti_seen_subcommand_from query
         __reg_query_complete_args $previous_token
-    else if __fish_seen_subcommand_from save
+    else if __ghoti_seen_subcommand_from save
         __reg_save_complete_args $previous_token
     end
 end
@@ -159,35 +159,35 @@ end
 complete -c reg -f -a '(__reg_complete_args)'
 
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a add \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a add \
     -d 'Add a new subkey or entry'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a compare \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a compare \
     -d 'Compare specified registry subkeys or entries'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a copy \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a copy \
     -d 'Copy a registry entry'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a delete \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a delete \
     -d 'Delete a subkey or entries'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a export \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a export \
     -d 'Copy the specified subkeys, entries, and values of the local computer into a file'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a import \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a import \
     -d 'Copy the contents of a file that contains registry data into the registry of the local computer'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a load \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a load \
     -d 'Write saved subkeys and entries into a different subkey in the registry'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a query \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a query \
     -d 'Return a list of the next tier of subkeys and entries'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a restore \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a restore \
     -d 'Write saved subkeys and entries back'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a save \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a save \
     -d 'Save a copy of specified subkeys, entries, and values of the registry in a specified file'
 complete -c reg -f \
-    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a unload \
+    -n 'not __ghoti_seen_subcommand_from add compare copy delete export import load query restore save unload' -a unload \
     -d 'Remove a section of the registry that was loaded using the reg load operation'

@@ -2,7 +2,7 @@
 
 complete -c zstdcat -k -x -a "
 (
-    __fish_complete_suffix .zst
+    __ghoti_complete_suffix .zst
 )
 "
 

@@ -1,5 +1,5 @@
 # Commands
-complete -c ssh-copy-id -d Remote -xa "(__fish_complete_user_at_hosts)"
+complete -c ssh-copy-id -d Remote -xa "(__ghoti_complete_user_at_hosts)"
 complete -c ssh-copy-id -d Remote -k -fa '(__ssh_history_completions)'
 
 # Options

@@ -84,7 +84,7 @@ expect_str("normal")
 expect_prompt()
 
 # ENABLE RGB MODE - turn this off if you want to test anything after this!
-sendline("set -g fish_term24bit 1")
+sendline("set -g ghoti_term24bit 1")
 expect_prompt()
 
 # See that --print-colors prints the given colors.

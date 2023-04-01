@@ -1,4 +1,4 @@
-function __fish_tokenizer_state --description "Print the state of the tokenizer at the end of the given string"
+function __ghoti_tokenizer_state --description "Print the state of the tokenizer at the end of the given string"
     # Go through the token char-by-char in a state machine.
     # The states are:
     # - normal - no quoting is active (the starting state)

@@ -20,7 +20,7 @@ Description
 
 Each ``case`` command is given one or more parameters. The first ``case`` command with a parameter that matches the string specified in the switch command will be evaluated. ``case`` parameters may contain wildcards. These need to be escaped or quoted in order to avoid regular wildcard expansion using filenames.
 
-Note that fish does not fall through on case statements. Only the first matching case is executed.
+Note that ghoti does not fall through on case statements. Only the first matching case is executed.
 
 Note that command substitutions in a case statement will be evaluated even if its body is not taken. All substitutions, including command substitutions, must be performed before the value can be compared against the parameter.
 
@@ -39,7 +39,7 @@ Say \$animal contains the name of an animal. Then this code would classify it:
         case duck goose albatross
             echo bird
         case shark trout stingray
-            echo fish
+            echo ghoti
         # Note that the next case has a wildcard which is quoted
         case '*'
             echo I have no idea what a $animal is

@@ -1,1 +1,1 @@
-complete -c pstack -xa '(__fish_complete_pids)'
+complete -c pstack -xa '(__ghoti_complete_pids)'

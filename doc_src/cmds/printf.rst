@@ -15,13 +15,13 @@ Description
 
 .. only:: builder_man
 
-          NOTE: This page documents the fish builtin ``printf``.
+          NOTE: This page documents the ghoti builtin ``printf``.
           To see the documentation on the ``printf`` command you might have,
           use ``command man printf``.
 
 ``printf`` uses the format string *FORMAT* to print the *ARGUMENT* arguments. This means that it takes format specifiers in the format string and replaces each with an argument.
 
-The *FORMAT* argument is re-used as many times as necessary to convert all of the given arguments. So ``printf %s\n flounder catfish clownfish shark`` will print four lines.
+The *FORMAT* argument is re-used as many times as necessary to convert all of the given arguments. So ``printf %s\n flounder catghoti clownghoti shark`` will print four lines.
 
 Unlike :doc:`echo <echo>`, ``printf`` does not append a new line unless it is specified as part of the string.
 
@@ -86,9 +86,9 @@ Example
 
 ::
 
-    printf '%s\t%s\n' flounder fish
+    printf '%s\t%s\n' flounder ghoti
 
-Will print "flounder	fish" (separated with a tab character), followed by a newline character. This is useful for writing completions, as fish expects completion scripts to output the option followed by the description, separated with a tab character.
+Will print "flounder	ghoti" (separated with a tab character), followed by a newline character. This is useful for writing completions, as ghoti expects completion scripts to output the option followed by the description, separated with a tab character.
 
 ::
 
@@ -103,4 +103,4 @@ See Also
 
 Footnotes
 ---------
-.. [#] In fact, while fish's ``echo`` supports ``--``, POSIX forbids it, so other implementations can't be used if the input contains anything starting with ``-``.
+.. [#] In fact, while ghoti's ``echo`` supports ``--``, POSIX forbids it, so other implementations can't be used if the input contains anything starting with ``-``.

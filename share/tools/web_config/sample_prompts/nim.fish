@@ -2,7 +2,7 @@
 # author: Guilhem "Nim" Saurel − https://github.com/nim65s/dotfiles/
 
 
-function fish_prompt
+function ghoti_prompt
     # This prompt shows:
     # - green lines if the last return command is OK, red otherwise
     # - your user name, in red if root or yellow otherwise
@@ -10,7 +10,7 @@ function fish_prompt
     # - the current path (with prompt_pwd)
     # - date +%X
     # - the current virtual environment, if any
-    # - the current git status, if any, with fish_git_prompt
+    # - the current git status, if any, with ghoti_git_prompt
     # - the current battery state, if any, and if your power cable is unplugged, and if you have "acpi"
     # - current background jobs, if any
 
@@ -27,8 +27,8 @@ function fish_prompt
     set -l retc red
     test $status = 0; and set retc green
 
-    set -q __fish_git_prompt_showupstream
-    or set -g __fish_git_prompt_showupstream auto
+    set -q __ghoti_git_prompt_showupstream
+    or set -g __ghoti_git_prompt_showupstream auto
 
     function _nim_prompt_wrapper
         set retc $argv[1]
@@ -54,7 +54,7 @@ function fish_prompt
     set_color -o green
     echo -n [
 
-    if functions -q fish_is_root_user; and fish_is_root_user
+    if functions -q ghoti_is_root_user; and ghoti_is_root_user
         set_color -o red
     else
         set_color -o yellow
@@ -81,13 +81,13 @@ function fish_prompt
 
     # Vi-mode
     # The default mode prompt would be prefixed, which ruins our alignment.
-    function fish_mode_prompt
+    function ghoti_mode_prompt
     end
 
-    if test "$fish_key_bindings" = fish_vi_key_bindings
-        or test "$fish_key_bindings" = fish_hybrid_key_bindings
+    if test "$ghoti_key_bindings" = ghoti_vi_key_bindings
+        or test "$ghoti_key_bindings" = ghoti_hybrid_key_bindings
         set -l mode
-        switch $fish_bind_mode
+        switch $ghoti_bind_mode
             case default
                 set mode (set_color --bold red)N
             case insert
@@ -112,7 +112,7 @@ function fish_prompt
     and _nim_prompt_wrapper $retc V (path basename "$VIRTUAL_ENV")
 
     # git
-    set -l prompt_git (fish_git_prompt '%s')
+    set -l prompt_git (ghoti_git_prompt '%s')
     test -n "$prompt_git"
     and _nim_prompt_wrapper $retc G $prompt_git
 

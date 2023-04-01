@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Validate some things about command wrapping.
 
 set -g LANG C # For predictable error messages.

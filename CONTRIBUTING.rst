@@ -1,48 +1,48 @@
 Guidelines For Developers
 =========================
 
-This document provides guidelines for making changes to the fish-shell
+This document provides guidelines for making changes to the ghoti-shell
 project. This includes rules for how to format the code, naming
 conventions, et cetera.
 
 In short:
 
 - Be conservative in what you need (``C++11``, few dependencies)
-- Use automated tools to help you (including ``make test``, ``build_tools/style.fish`` and ``make lint``)
+- Use automated tools to help you (including ``make test``, ``build_tools/style.ghoti`` and ``make lint``)
 
 Contributing completions
 ------------------------
 
-Completion scripts are the most common contribution to fish, and they are very welcome.
+Completion scripts are the most common contribution to ghoti, and they are very welcome.
 
 In general, we'll take all well-written completion scripts for a command that is publically available.
 This means no private tools or personal scripts, and we do reserve the right to reject for other reasons.
 
-Before you try to contribute them to fish, consider if the authors of the tool you are completing want to maintain the script instead.
+Before you try to contribute them to ghoti, consider if the authors of the tool you are completing want to maintain the script instead.
 Often that makes more sense, specifically because they can add new options to the script immediately once they add them,
 and don't have to maintain one completion script for multiple versions. If the authors no longer wish to maintain the script,
-they can of course always contact the fish maintainers to hand it over, preferably by opening a PR.
+they can of course always contact the ghoti maintainers to hand it over, preferably by opening a PR.
 This isn't a requirement - if the authors don't want to maintain it, or you simply don't want to contact them,
-you can contribute your script to fish.
+you can contribute your script to ghoti.
 
 Completion scripts should
 
-1. Use as few dependencies as possible - try to use fish's builtins like ``string`` instead of ``grep`` and ``awk``,
-   use ``python`` to read json instead of ``jq`` (because it's already a soft dependency for fish's tools)
+1. Use as few dependencies as possible - try to use ghoti's builtins like ``string`` instead of ``grep`` and ``awk``,
+   use ``python`` to read json instead of ``jq`` (because it's already a soft dependency for ghoti's tools)
 2. If it uses a common unix tool, use posix-compatible invocations - ideally it would work on GNU/Linux, macOS, the BSDs and other systems
 3. Option and argument descriptions should be kept short.
-   The shorter the description, the more likely it is that fish can use more columns.
-4. Function names should start with ``__fish``, and functions should be kept in the completion file unless they're used elsewhere.
-5. Run ``fish_indent`` on your script.
-6. Try not to use minor convenience features right after they are available in fish - we do try to keep completion scripts backportable.
+   The shorter the description, the more likely it is that ghoti can use more columns.
+4. Function names should start with ``__ghoti``, and functions should be kept in the completion file unless they're used elsewhere.
+5. Run ``ghoti_indent`` on your script.
+6. Try not to use minor convenience features right after they are available in ghoti - we do try to keep completion scripts backportable.
    If something has a real impact on the correctness or performance, feel free to use it,
    but if it is just a shortcut, please leave it.
 
-Put your completion script into share/completions/name-of-command.fish. If you have multiple commands, you need multiple files.
+Put your completion script into share/completions/name-of-command.ghoti. If you have multiple commands, you need multiple files.
 
 If you want to add tests, you probably want to add a littlecheck test. See below for details.
 
-Contributing to fish's C++ core
+Contributing to ghoti's C++ core
 -------------------------------
 
 Fish uses C++11. Newer C++ features should not be used to make it possible to use on older systems.
@@ -67,7 +67,7 @@ to lint any modified but not committed ``*.cpp`` files, and
 
 Fish has custom cppcheck rules in the file ``.cppcheck.rule``. These
 help catch mistakes such as using ``wcwidth()`` rather than
-``fish_wcwidth()``. Please add a new rule if you find similar mistakes
+``ghoti_wcwidth()``. Please add a new rule if you find similar mistakes
 being made.
 
 Suppressing Lint Warnings
@@ -98,12 +98,12 @@ To ensure your changes conform to the style rules run
 
 ::
 
-   build_tools/style.fish
+   build_tools/style.ghoti
 
 before committing your change. That will run our autoformatters:
 
 - ``git-clang-format`` for c++
-- ``fish_indent`` (shipped with fish) for fish script
+- ``ghoti_indent`` (shipped with ghoti) for ghoti script
 - ``black`` for python
 
 If you’ve already committed your changes that’s okay since it will then
@@ -117,7 +117,7 @@ If you want to check the style of the entire code base run
 
 ::
 
-   build_tools/style.fish --all
+   build_tools/style.ghoti --all
 
 That command will refuse to restyle any files if you have uncommitted
 changes.
@@ -125,7 +125,7 @@ changes.
 Configuring Your Editor for Fish Scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you use Vim: Install `vim-fish <https://github.com/dag/vim-fish>`__,
+If you use Vim: Install `vim-ghoti <https://github.com/dag/vim-ghoti>`__,
 make sure you have syntax and filetype functionality in ``~/.vimrc``:
 
 ::
@@ -133,43 +133,43 @@ make sure you have syntax and filetype functionality in ``~/.vimrc``:
    syntax enable
    filetype plugin indent on
 
-Then turn on some options for nicer display of fish scripts in
-``~/.vim/ftplugin/fish.vim``:
+Then turn on some options for nicer display of ghoti scripts in
+``~/.vim/ftplugin/ghoti.vim``:
 
 ::
 
-   " Set up :make to use fish for syntax checking.
-   compiler fish
+   " Set up :make to use ghoti for syntax checking.
+   compiler ghoti
 
    " Set this to have long lines wrap inside comments.
    setlocal textwidth=79
 
-   " Enable folding of block structures in fish.
+   " Enable folding of block structures in ghoti.
    setlocal foldmethod=expr
 
 If you use Emacs: Install
-`fish-mode <https://github.com/wwwjfy/emacs-fish>`__ (also available in
+`ghoti-mode <https://github.com/wwwjfy/emacs-ghoti>`__ (also available in
 melpa and melpa-stable) and ``(setq-default indent-tabs-mode nil)`` for
 it (via a hook or in ``use-package``\ s “:init” block). It can also be
-made to run fish_indent via e.g.
+made to run ghoti_indent via e.g.
 
 .. code:: elisp
 
-   (add-hook 'fish-mode-hook (lambda ()
-       (add-hook 'before-save-hook 'fish_indent-before-save)))
+   (add-hook 'ghoti-mode-hook (lambda ()
+       (add-hook 'before-save-hook 'ghoti_indent-before-save)))
 
 Fish Script Style Guide
 -----------------------
 
-1. All fish scripts, such as those in the *share/functions* and *tests*
-   directories, should be formatted using the ``fish_indent`` command.
+1. All ghoti scripts, such as those in the *share/functions* and *tests*
+   directories, should be formatted using the ``ghoti_indent`` command.
 
 2. Function names should be in all lowercase with words separated by
    underscores. Private functions should begin with an underscore. The
-   first word should be ``fish`` if the function is unique to fish.
+   first word should be ``ghoti`` if the function is unique to ghoti.
 
-3. The first word of global variable names should generally be ``fish``
-   for public vars or ``_fish`` for private vars to minimize the
+3. The first word of global variable names should generally be ``ghoti``
+   for public vars or ``_ghoti`` for private vars to minimize the
    possibility of name clashes with user defined vars.
 
 C++ Style Guide
@@ -177,8 +177,8 @@ C++ Style Guide
 
 1. The `Google C++ Style
    Guide <https://google.github.io/styleguide/cppguide.html>`__ forms
-   the basis of the fish C++ style guide. There are two major deviations
-   for the fish project. First, a four, rather than two, space indent.
+   the basis of the ghoti C++ style guide. There are two major deviations
+   for the ghoti project. First, a four, rather than two, space indent.
    Second, line lengths up to 100, rather than 80, characters.
 
 2. The ``clang-format`` command is authoritative with respect to
@@ -218,25 +218,25 @@ or
 Testing
 -------
 
-The source code for fish includes a large collection of tests. If you
-are making any changes to fish, running these tests is a good way to make
+The source code for ghoti includes a large collection of tests. If you
+are making any changes to ghoti, running these tests is a good way to make
 sure the behaviour remains consistent and regressions are not
 introduced. Even if you don’t run the tests on your machine, they will
 still be run via Github Actions.
 
 You are strongly encouraged to add tests when changing the functionality
-of fish, especially if you are fixing a bug to help ensure there are no
+of ghoti, especially if you are fixing a bug to help ensure there are no
 regressions in the future (i.e., we don’t reintroduce the bug).
 
 The tests can be found in three places:
 
-- src/fish_tests.cpp for tests to the core C++ code
-- tests/checks for script tests, run by `littlecheck <https://github.com/ridiculousfish/littlecheck>`__
+- src/ghoti_tests.cpp for tests to the core C++ code
+- tests/checks for script tests, run by `littlecheck <https://github.com/ridiculousghoti/littlecheck>`__
 - tests/pexpects for interactive tests using `pexpect <https://pexpect.readthedocs.io/en/stable/>`__
 
-When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests. The syntax is fairly self-explanatory. It's a fish script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
+When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests. The syntax is fairly self-explanatory. It's a ghoti script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
 
-fish_tests.cpp is mostly useful for unit tests - if you wish to test that a function does the correct thing for given input, use it.
+ghoti_tests.cpp is mostly useful for unit tests - if you wish to test that a function does the correct thing for given input, use it.
 
 The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity. The runner is in build_tools/pexpect_helper.py, in case you need to modify something there.
 
@@ -247,7 +247,7 @@ The tests can be run on your local computer on all operating systems.
 
 ::
 
-   cmake path/to/fish-shell
+   cmake path/to/ghoti-shell
    make test
 
 Git hooks
@@ -261,7 +261,7 @@ One possibility is a pre-push hook script like this one:
 .. code:: sh
 
    #!/bin/sh
-   #### A pre-push hook for the fish-shell project
+   #### A pre-push hook for the ghoti-shell project
    # This will run the tests when a push to master is detected, and will stop that if the tests fail
    # Save this as .git/hooks/pre-push and make it executable
 
@@ -298,11 +298,11 @@ Coverity Scan
 
 We use Coverity’s static analysis tool which offers free access to open
 source projects. While access to the tool itself is restricted,
-fish-shell organization members should know that they can login
-`here <https://scan.coverity.com/projects/fish-shell-fish-shell?tab=overview>`__
+ghoti-shell organization members should know that they can login
+`here <https://scan.coverity.com/projects/ghoti-shell-ghoti-shell?tab=overview>`__
 with their GitHub account. Currently, tests are triggered upon merging
 the ``master`` branch into ``coverity_scan_master``. Even if you are not
-a fish developer, you can keep an eye on our statistics there.
+a ghoti developer, you can keep an eye on our statistics there.
 
 Installing the Required Tools
 -----------------------------
@@ -352,7 +352,7 @@ macro:
 
    streams.out.append_format(_(L"%ls: There are no jobs\n"), argv[0]);
 
-All messages in fish script must be enclosed in single or double quote
+All messages in ghoti script must be enclosed in single or double quote
 characters. They must also be translated via a subcommand. This means
 that the following are **not** valid:
 
@@ -380,14 +380,14 @@ German).
 
 To create a new translation, for example for German:
 
-* generate a ``messages.pot`` file by running ``build_tools/fish_xgettext.fish`` from
+* generate a ``messages.pot`` file by running ``build_tools/ghoti_xgettext.ghoti`` from
   the source tree
 * copy ``messages.pot`` to ``po/LANG.po``
 
 To update a translation:
 
 * generate a ``messages.pot`` file by running
-  ``build_tools/fish_xgettext.fish`` from the source tree
+  ``build_tools/ghoti_xgettext.ghoti`` from the source tree
 
 * update the existing translation by running
   ``msgmerge --update --no-fuzzy-matching po/LANG.po messages.pot``
@@ -402,13 +402,13 @@ matching. Therefore, in general, you need to carefully review any
 recommended deletions.
 
 Read the `translations
-wiki <https://github.com/fish-shell/fish-shell/wiki/Translations>`__ for
+wiki <https://github.com/ghoti-shell/ghoti-shell/wiki/Translations>`__ for
 more information.
 
 Versioning
 ----------
 
-The fish version is constructed by the *build_tools/git_version_gen.sh*
+The ghoti version is constructed by the *build_tools/git_version_gen.sh*
 script. For developers the version is the branch name plus the output of
 ``git describe --always --dirty``. Normally the main part of the version
 will be the closest annotated tag. Which itself is usually the most

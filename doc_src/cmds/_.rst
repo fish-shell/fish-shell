@@ -1,6 +1,6 @@
 .. _cmd-_:
 
-_ - call fish's translations
+_ - call ghoti's translations
 ============================
 
 Synopsis
@@ -15,9 +15,9 @@ Description
 
 ``_`` translates its arguments into the current language, if possible.
 
-It is equivalent to ``gettext fish STRING``, meaning it can only be used to look up fish's own translations.
+It is equivalent to ``gettext ghoti STRING``, meaning it can only be used to look up ghoti's own translations.
 
-It requires fish to be built with gettext support. If that support is disabled, or there is no translation it will simply echo the argument back.
+It requires ghoti to be built with gettext support. If that support is disabled, or there is no translation it will simply echo the argument back.
 
 The language depends on the current locale, set with :envvar:`LANG` and :envvar:`LC_MESSAGES`.
 

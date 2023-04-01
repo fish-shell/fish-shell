@@ -90,11 +90,11 @@ maybe_t<autoloadable_file_t> autoload_file_cache_t::locate_file(const wcstring &
     // Re-use the storage for path.
     wcstring path;
     for (const wcstring &dir : dirs()) {
-        // Construct the path as dir/cmd.fish
+        // Construct the path as dir/cmd.ghoti
         path = dir;
         path += L"/";
         path += cmd;
-        path += L".fish";
+        path += L".ghoti";
 
         file_id_t file_id = file_id_for_path(path);
         if (file_id != kInvalidFileID) {

@@ -32,7 +32,7 @@ The following operations (sub-commands) are available:
     Deletes history items. The ``--contains`` search option will be used if you don't specify a different search option. If you don't specify ``--exact`` a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports ``--exact --case-sensitive`` deletion.
 
 **merge**
-    Immediately incorporates history changes from other sessions. Ordinarily ``fish`` ignores history changes from sessions started after the current one. This command applies those changes immediately.
+    Immediately incorporates history changes from other sessions. Ordinarily ``ghoti`` ignores history changes from sessions started after the current one. This command applies those changes immediately.
 
 **save**
     Immediately writes all changes to the history file. The shell automatically saves the history file; this option is provided for internal use and should not normally need to be used by the user.
@@ -48,7 +48,7 @@ The following options are available:
 These flags can appear before or immediately after one of the sub-commands listed above.
 
 **-C** or **--case-sensitive**
-    Does a case-sensitive search. The default is case-insensitive. Note that prior to fish 2.4.0 the default was case-sensitive.
+    Does a case-sensitive search. The default is case-insensitive. Note that prior to ghoti 2.4.0 the default was case-sensitive.
 
 **-c** or **--contains**
     Searches items in the history that contain the specified text string. This is the default for the **--search** flag. This is not currently supported by the **delete** subcommand.
@@ -95,13 +95,13 @@ Example
 Customizing the name of the history file
 ----------------------------------------
 
-By default interactive commands are logged to ``$XDG_DATA_HOME/fish/fish_history`` (typically ``~/.local/share/fish/fish_history``).
+By default interactive commands are logged to ``$XDG_DATA_HOME/ghoti/ghoti_history`` (typically ``~/.local/share/ghoti/ghoti_history``).
 
-You can set the ``fish_history`` variable to another name for the current shell session. The default value (when the variable is unset) is ``fish`` which corresponds to ``$XDG_DATA_HOME/fish/fish_history``. If you set it to e.g. ``fun``, the history would be written to ``$XDG_DATA_HOME/fish/fun_history``. An empty string means history will not be stored at all. This is similar to the private session features in web browsers.
+You can set the ``ghoti_history`` variable to another name for the current shell session. The default value (when the variable is unset) is ``ghoti`` which corresponds to ``$XDG_DATA_HOME/ghoti/ghoti_history``. If you set it to e.g. ``fun``, the history would be written to ``$XDG_DATA_HOME/ghoti/fun_history``. An empty string means history will not be stored at all. This is similar to the private session features in web browsers.
 
-You can change ``fish_history`` at any time (by using ``set -x fish_history "session_name"``) and it will take effect right away. If you set it to ``"default"``, it will use the default session name (which is ``"fish"``).
+You can change ``ghoti_history`` at any time (by using ``set -x ghoti_history "session_name"``) and it will take effect right away. If you set it to ``"default"``, it will use the default session name (which is ``"ghoti"``).
 
-Other shells such as bash and zsh use a variable named ``HISTFILE`` for a similar purpose. Fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path). Also, if you set the var to anything other than ``fish`` or ``default`` it will inhibit importing the bash history. That's because the most common use case for this feature is to avoid leaking private or sensitive history when giving a presentation.
+Other shells such as bash and zsh use a variable named ``HISTFILE`` for a similar purpose. Fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path). Also, if you set the var to anything other than ``ghoti`` or ``default`` it will inhibit importing the bash history. That's because the most common use case for this feature is to avoid leaking private or sensitive history when giving a presentation.
 
 Notes
 -----

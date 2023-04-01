@@ -1,4 +1,4 @@
-#!/usr/bin/env fish
+#!/usr/bin/env ghoti
 
 # Finds global variables by parsing the output of 'nm'
 # for object files in this directory.
@@ -21,9 +21,9 @@ set -g nm_regex '^([^ ]+) ([dDbB])'
 
 set -l total_globals 0
 set -l boring_files \
-    fish_key_reader.cpp.o \
-    fish_tests.cpp.o \
-    fish_indent.cpp.o
+    ghoti_key_reader.cpp.o \
+    ghoti_tests.cpp.o \
+    ghoti_indent.cpp.o
 
 # return if we should ignore the given symbol name
 function should_ignore

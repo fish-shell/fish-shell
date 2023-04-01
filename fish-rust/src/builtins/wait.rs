@@ -9,7 +9,7 @@ use crate::signal::sigchecker_t;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 use crate::wchar::{widestrs, wstr};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{self, fish_wcstoi, wgettext_fmt};
+use crate::wutil::{self, ghoti_wcstoi, wgettext_fmt};
 
 /// \return true if we can wait on a job.
 fn can_wait_on_job(j: &cxx::SharedPtr<job_t>) -> bool {
@@ -196,7 +196,7 @@ pub fn wait(
     for i in w.woptind..argc {
         if iswnumeric(argv[i]) {
             // argument is pid
-            let mpid: Result<pid_t, wutil::Error> = fish_wcstoi(argv[i]);
+            let mpid: Result<pid_t, wutil::Error> = ghoti_wcstoi(argv[i]);
             if mpid.is_err() || mpid.unwrap() <= 0 {
                 streams.err.append(wgettext_fmt!(
                     "%ls: '%ls' is not a valid process id\n",

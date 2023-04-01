@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 commandline --input "echo foo | bar" --is-valid
 and echo Valid

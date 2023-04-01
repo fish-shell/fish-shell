@@ -33,7 +33,7 @@ expect_prompt(increment=False)
 #
 # Because common CI systems are awful, we have to increase this:
 
-sendline("set -g fish_escape_delay_ms 120")
+sendline("set -g ghoti_escape_delay_ms 120")
 expect_prompt("")
 
 # Verify the emacs transpose word (\et) behavior using various delays,
@@ -68,10 +68,10 @@ expect_prompt("\r\ndefault\r\npaste", unmatched="Unexpected bind modes")
 
 # Test vi key bindings.
 # This should leave vi mode in the insert state.
-sendline("set -g fish_key_bindings fish_vi_key_bindings")
+sendline("set -g ghoti_key_bindings ghoti_vi_key_bindings")
 expect_prompt()
 
-# Go through a prompt cycle to let fish catch up, it may be slow due to ASAN
+# Go through a prompt cycle to let ghoti catch up, it may be slow due to ASAN
 sendline("echo success: default escape timeout")
 expect_prompt(
     "\r\nsuccess: default escape timeout", unmatched="prime vi mode, default timeout"
@@ -81,8 +81,8 @@ send("echo fail: default escape timeout")
 expect_str("echo fail: default escape timeout")
 send("\033")
 
-# Delay needed to allow fish to transition to vi "normal" mode. The delay is
-# longer than strictly necessary to let fish catch up as it may be slow due to
+# Delay needed to allow ghoti to transition to vi "normal" mode. The delay is
+# longer than strictly necessary to let ghoti catch up as it may be slow due to
 # ASAN.
 sleep(0.250)
 send("ddi")
@@ -95,8 +95,8 @@ expect_prompt(
 # Test replacing a single character.
 send("echo TEXT")
 send("\033")
-# Delay needed to allow fish to transition to vi "normal" mode.
-# Specifically alt+h *is* bound to __fish_man_page,
+# Delay needed to allow ghoti to transition to vi "normal" mode.
+# Specifically alt+h *is* bound to __ghoti_man_page,
 # and I have seen this think that trigger with 300ms.
 #
 # The next step is to rip out this test because it's much more pain than it is worth
@@ -109,7 +109,7 @@ expect_prompt(
 # Test deleting characters with 'x'.
 send("echo MORE-TEXT")
 send("\033")
-# Delay needed to allow fish to transition to vi "normal" mode.
+# Delay needed to allow ghoti to transition to vi "normal" mode.
 sleep(0.400)
 send("xxxxx\r")
 
@@ -121,7 +121,7 @@ expect_prompt(
 # Test jumping forward til before a character with t
 send("echo MORE-TEXT-IS-NICE")
 send("\033")
-# Delay needed to allow fish to transition to vi "normal" mode.
+# Delay needed to allow ghoti to transition to vi "normal" mode.
 sleep(0.250)
 send("0tTD\r")
 
@@ -135,7 +135,7 @@ expect_prompt(
 # Test jumping backward til before a character with T
 # send("echo MORE-TEXT-IS-NICE")
 # send("\033")
-# # Delay needed to allow fish to transition to vi "normal" mode.
+# # Delay needed to allow ghoti to transition to vi "normal" mode.
 # sleep(0.250)
 # send("TSD\r")
 # # vi mode backward-jump-till character, default timeout: long delay
@@ -147,7 +147,7 @@ expect_prompt(
 # Test jumping backward with F and repeating
 send("echo MORE-TEXT-IS-NICE")
 send("\033")
-# Delay needed to allow fish to transition to vi "normal" mode.
+# Delay needed to allow ghoti to transition to vi "normal" mode.
 sleep(0.250)
 send("F-;D\r")
 # vi mode backward-jump-to character and repeat, default timeout: long delay
@@ -159,7 +159,7 @@ expect_prompt(
 # Test jumping backward with F w/reverse jump
 send("echo MORE-TEXT-IS-NICE")
 send("\033")
-# Delay needed to allow fish to transition to vi "normal" mode.
+# Delay needed to allow ghoti to transition to vi "normal" mode.
 sleep(0.250)
 send("F-F-,D\r")
 # vi mode backward-jump-to character, and reverse, default timeout: long delay
@@ -169,7 +169,7 @@ expect_prompt(
 )
 
 # Verify that changing the escape timeout has an effect.
-send("set -g fish_escape_delay_ms 100\r")
+send("set -g ghoti_escape_delay_ms 100\r")
 expect_prompt()
 
 send("echo fail: lengthened escape timeout")
@@ -196,11 +196,11 @@ expect_prompt(
 )
 
 # Now set it back to speed up the tests - these don't use any escape+thing bindings!
-send("set -g fish_escape_delay_ms 50\r")
+send("set -g ghoti_escape_delay_ms 50\r")
 expect_prompt()
 
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
-# by another function (and) https://github.com/fish-shell/fish-shell/issues/2357
+# by another function (and) https://github.com/ghoti-shell/ghoti-shell/issues/2357
 send("\033")
 sleep(0.200)
 send("ddiecho TEXT")
@@ -229,17 +229,17 @@ expect_prompt(
 )
 
 # Switch back to regular (emacs mode) key bindings.
-sendline("set -g fish_key_bindings fish_default_key_bindings")
+sendline("set -g ghoti_key_bindings ghoti_default_key_bindings")
 expect_prompt()
 
 # Verify the custom escape timeout set earlier is still in effect.
-sendline("echo fish_escape_delay_ms=$fish_escape_delay_ms")
+sendline("echo ghoti_escape_delay_ms=$ghoti_escape_delay_ms")
 expect_prompt(
-    "\r\nfish_escape_delay_ms=50\r\n",
+    "\r\nghoti_escape_delay_ms=50\r\n",
     unmatched="default-mode custom timeout not set correctly",
 )
 
-sendline("set -g fish_escape_delay_ms 200")
+sendline("set -g ghoti_escape_delay_ms 200")
 expect_prompt()
 
 # Verify the emacs transpose word (\et) behavior using various delays,
@@ -276,7 +276,7 @@ expect_prompt(
 )
 
 # Verify special characters, such as \cV, are not intercepted by the kernel
-# tty driver. Rather, they can be bound and handled by fish.
+# tty driver. Rather, they can be bound and handled by ghoti.
 sendline("bind \\cV 'echo ctrl-v seen'")
 expect_prompt()
 send("\026\r")
@@ -288,11 +288,11 @@ send("\017\r")
 expect_prompt("ctrl-o seen", unmatched="ctrl-o not seen")
 
 # \x17 is ctrl-w.
-send("echo git@github.com:fish-shell/fish-shell")
+send("echo git@github.com:ghoti-shell/ghoti-shell")
 send("\x17\x17\r")
 expect_prompt("git@github.com:", unmatched="ctrl-w does not stop at :")
 
-send("echo git@github.com:fish-shell/fish-shell")
+send("echo git@github.com:ghoti-shell/ghoti-shell")
 send("\x17\x17\x17\r")
 expect_prompt("git@", unmatched="ctrl-w does not stop at @")
 

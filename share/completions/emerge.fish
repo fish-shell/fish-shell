@@ -1,4 +1,4 @@
-#function __fish_emerge_print_all_pkgs_with_version_compare -d 'Print completions for all packages including the version compare if that is already typed'
+#function __ghoti_emerge_print_all_pkgs_with_version_compare -d 'Print completions for all packages including the version compare if that is already typed'
 #    set -l version_comparator (commandline -t | string match -r '^[\'"]*[<>]\?=\?' | \
 #                               sed -r 's/^[\'"]*(.*)/\1/g')
 #    set -l sedstring
@@ -9,10 +9,10 @@
 #        set sedstring 's/^(.*)/'$version_comparator'\1\tPackage/g'
 #    end
 #
-#    __fish_emerge_print_all_pkgs | sed -r $sedstring
+#    __ghoti_emerge_print_all_pkgs | sed -r $sedstring
 #end
 
-function __fish_emerge_print_sets
+function __ghoti_emerge_print_sets
     for s in '@'(emerge --list-sets)
         switch $s
             case @profile
@@ -34,22 +34,22 @@ function __fish_emerge_print_sets
 end
 
 # TODO <ebuild|tbz2file|file|@set|atom>...
-function __fish_emerge_possible_args
-    if __fish_contains_opt check-news -s h help list-sets metadata regen -s r resume \
+function __ghoti_emerge_possible_args
+    if __ghoti_contains_opt check-news -s h help list-sets metadata regen -s r resume \
             -s s search -s S searchdesc sync -s V version
         return
         # TODO deselect=y
-    else if __fish_contains_opt config -s c depclean info -s P prune -s C unmerge
-        __fish_emerge_print_sets
-        __fish_print_portage_installed_pkgs
+    else if __ghoti_contains_opt config -s c depclean info -s P prune -s C unmerge
+        __ghoti_emerge_print_sets
+        __ghoti_print_portage_installed_pkgs
         # TODO deselect=n
     else
-        __fish_emerge_print_sets
-        __fish_print_portage_available_pkgs
+        __ghoti_emerge_print_sets
+        __ghoti_print_portage_available_pkgs
     end
 end
 
-complete -c emerge -xa "(__fish_emerge_possible_args)"
+complete -c emerge -xa "(__ghoti_emerge_possible_args)"
 
 #########################
 # Actions               #

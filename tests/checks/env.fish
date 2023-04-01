@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 function getenvs
     env | string match FISH_ENV_TEST_\*

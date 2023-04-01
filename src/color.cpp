@@ -36,7 +36,7 @@ bool rgb_color_t::try_parse_special(const wcstring &special) {
     const wchar_t *name = special.c_str();
 
     // wcscasecmp is so slow that using it directly causes `try_parse_special` to consume up to
-    // 3% of all of fish's cpu time due to extremely inefficient invariant case lookups for wide
+    // 3% of all of ghoti's cpu time due to extremely inefficient invariant case lookups for wide
     // characters (tested: Fedora Server 32 w/ glibc 2.31 with -O2). (This function is also called
     // virtually non-stop while emitting output to determine colorization.)
 

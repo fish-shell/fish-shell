@@ -4,9 +4,9 @@ Type=Application
 Terminal=true
 # This file is for use in appimages, which rewrite the path.
 # Other uses would have to replace these with the correct path.
-Exec=fish
-Name=fish
+Exec=ghoti
+Name=ghoti
 Comment=The user-friendly command line shell
-Icon=fish
+Icon=ghoti
 # "Shell" would be the proper category, but it's reserved so we can't use it.
 Categories=ConsoleOnly;System;

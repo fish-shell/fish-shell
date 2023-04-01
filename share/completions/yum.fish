@@ -5,7 +5,7 @@
 # All yum commands
 
 # Test if completing using package names is appropriate
-function __fish_yum_package_ok
+function __ghoti_yum_package_ok
     for i in (commandline -poc)
         if contains -- $i update upgrade remove erase install reinstall
             return 0
@@ -14,18 +14,18 @@ function __fish_yum_package_ok
     return 1
 end
 
-complete -c yum -n __fish_use_subcommand -xa install -d "Install the latest version of a package"
-complete -c yum -n __fish_use_subcommand -xa 'update upgrade' -d "Update specified packages (defaults to all packages)"
-complete -c yum -n __fish_use_subcommand -xa check-update -d "Print list of available updates"
-complete -c yum -n __fish_use_subcommand -xa 'remove erase' -d "Remove the specified packages and packages that depend on them"
-complete -c yum -n __fish_use_subcommand -xa list -d "List available packages"
-complete -c yum -n __fish_use_subcommand -xa info -d "Describe available packages"
-complete -c yum -n __fish_use_subcommand -xa 'provides whatprovides' -d "Find package providing a feature or file"
-complete -c yum -n __fish_use_subcommand -xa search -d "find packages matching description regexp"
-complete -c yum -n __fish_use_subcommand -xa clean -d "Clean up cache directory"
-complete -c yum -n __fish_use_subcommand -xa generate-rss -d "Generate rss changelog"
+complete -c yum -n __ghoti_use_subcommand -xa install -d "Install the latest version of a package"
+complete -c yum -n __ghoti_use_subcommand -xa 'update upgrade' -d "Update specified packages (defaults to all packages)"
+complete -c yum -n __ghoti_use_subcommand -xa check-update -d "Print list of available updates"
+complete -c yum -n __ghoti_use_subcommand -xa 'remove erase' -d "Remove the specified packages and packages that depend on them"
+complete -c yum -n __ghoti_use_subcommand -xa list -d "List available packages"
+complete -c yum -n __ghoti_use_subcommand -xa info -d "Describe available packages"
+complete -c yum -n __ghoti_use_subcommand -xa 'provides whatprovides' -d "Find package providing a feature or file"
+complete -c yum -n __ghoti_use_subcommand -xa search -d "find packages matching description regexp"
+complete -c yum -n __ghoti_use_subcommand -xa clean -d "Clean up cache directory"
+complete -c yum -n __ghoti_use_subcommand -xa generate-rss -d "Generate rss changelog"
 
-complete -c yum -n __fish_yum_package_ok -a "(__fish_print_rpm_packages)"
+complete -c yum -n __ghoti_yum_package_ok -a "(__ghoti_print_rpm_packages)"
 
 complete -c yum -s h -l help -d "Display help and exit"
 complete -c yum -s y -d "Assume yes to all questions"
@@ -41,7 +41,7 @@ complete -c yum -l enablerepo -d "Enable repository" -r
 complete -c yum -l disablerepo -d "Disable repository" -r
 complete -c yum -l obsoletes -d "Enables obsolets processing logic"
 complete -c yum -l rss-filename -d "Output rss-data to file" -r
-complete -c yum -l exclude -d "Exclude specified package from updates" -a "(__fish_print_rpm_packages)"
+complete -c yum -l exclude -d "Exclude specified package from updates" -a "(__ghoti_print_rpm_packages)"
 
 complete -c yum -n 'contains list (commandline -poc)' -a all -d 'List all packages'
 complete -c yum -n 'contains list (commandline -poc)' -a available -d 'List packages available for installation'

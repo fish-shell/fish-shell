@@ -161,7 +161,7 @@ bitflags! {
     /// [`EscapeStringStyle::Script`].
     #[derive(Default)]
     pub struct EscapeFlags : u32 {
-        /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
+        /// Do not escape special ghoti syntax characters like the semicolon. Only escape non-printable
         /// characters and backslashes.
         const NO_PRINTABLES = 1 << 0;
         /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty

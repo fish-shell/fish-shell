@@ -1,15 +1,15 @@
-#RUN: %fish -C "set -g helper %fish_test_helper; set -g fish %fish" %s
+#RUN: %ghoti -C "set -g helper %ghoti_test_helper; set -g ghoti %ghoti" %s
 
 # Check that nohup is propagated.
 set output_path (mktemp)
-nohup $fish -c "$helper print_ignored_signals" 2>&1 > $output_path
+nohup $ghoti -c "$helper print_ignored_signals" 2>&1 > $output_path
 cat $output_path
 # CHECK: Hangup: 1
 rm $output_path
 
 # Block some signals if job control is off (#6828).
 status job-control none
-for fish_use_posix_spawn in 0 1
+for ghoti_use_posix_spawn in 0 1
 	$helper print_blocked_signals &
 	wait
 end

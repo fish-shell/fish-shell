@@ -1,33 +1,33 @@
-function __fish_ipset_nosubcommand
-    if __fish_seen_subcommand_from create add del test destroy list save restore flush rename swap help version
+function __ghoti_ipset_nosubcommand
+    if __ghoti_seen_subcommand_from create add del test destroy list save restore flush rename swap help version
         return 1
     end
     return 0
 end
 
-function __fish_ipset_needs_setname
-    if __fish_seen_subcommand_from add del test destroy list save restore flush rename swap
+function __ghoti_ipset_needs_setname
+    if __ghoti_seen_subcommand_from add del test destroy list save restore flush rename swap
         return 0
     end
     return 1
 end
 
-function __fish_ipset_list_sets
+function __ghoti_ipset_list_sets
     set -l ipset_list (ipset list --name 2>/dev/null)
-    if not __fish_seen_subcommand_from $ipset_list
+    if not __ghoti_seen_subcommand_from $ipset_list
         echo $ipset_list
     end
 end
 
-complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a create -d 'Create a set identified with SETNAME'
-complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a add -d 'Add a given entry to a SET'
-complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a del -d 'Delete an entry from a SET'
-complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a test -d 'Test whether an entry is in a set'
-complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a x -d 'Destroy the specified set or all sets'
-complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a destroy -d 'Destroy the specified set or all sets'
-complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a list -d a
+complete -c ipset --no-files --condition __ghoti_ipset_nosubcommand -a create -d 'Create a set identified with SETNAME'
+complete -c ipset --no-files --condition __ghoti_ipset_nosubcommand -a add -d 'Add a given entry to a SET'
+complete -c ipset --no-files --condition __ghoti_ipset_nosubcommand -a del -d 'Delete an entry from a SET'
+complete -c ipset --no-files --condition __ghoti_ipset_nosubcommand -a test -d 'Test whether an entry is in a set'
+complete -c ipset --no-files --condition __ghoti_ipset_nosubcommand -a x -d 'Destroy the specified set or all sets'
+complete -c ipset --no-files --condition __ghoti_ipset_nosubcommand -a destroy -d 'Destroy the specified set or all sets'
+complete -c ipset --no-files --condition __ghoti_ipset_nosubcommand -a list -d a
 
-complete -c ipset --no-files --condition __fish_ipset_needs_setname -a '(__fish_ipset_list_sets)'
+complete -c ipset --no-files --condition __ghoti_ipset_needs_setname -a '(__ghoti_ipset_list_sets)'
 
 complete -c ipset --no-files -s ! -o exist -d 'Ignore errors'
 complete -c ipset --no-files -s o -o output -a 'plain save xml' -d 'Output format to the list command'

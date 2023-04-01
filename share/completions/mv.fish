@@ -22,7 +22,7 @@ if mv --version >/dev/null 2>/dev/null
     complete -c mv -l strip-trailing-slashes -d "Remove trailing '/' from source args"
     complete -c mv -s S -l suffix -x -d "Override default backup suffix"
     complete -c mv -s t -l target-directory -d "Move all source args into DIR" \
-        -x -a "(__fish_complete_directories (commandline -ct) 'Directory')"
+        -x -a "(__ghoti_complete_directories (commandline -ct) 'Directory')"
     complete -c mv -s T -l no-target-directory -d "Treat DEST as a normal file"
     complete -c mv -s u -l update -d "Don't overwrite newer"
     complete -c mv -s v -l verbose -d "Print filenames as it goes"

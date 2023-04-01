@@ -1,4 +1,4 @@
-complete -c pg_dump --no-files -a '(__fish_complete_pg_database)'
+complete -c pg_dump --no-files -a '(__ghoti_complete_pg_database)'
 
 # General options:
 complete -c pg_dump -s f -l file -r -d "Output file or directory name"
@@ -51,10 +51,10 @@ complete -c pg_dump -l strict-names -d "Require table/schema include patterns to
 complete -c pg_dump -l use-set-session-authorization -d "Use SET SESSION AUTHORIZATION instead of ALTER OWNER"
 
 # Connection options:
-complete -c pg_dump -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Database to dump"
-complete -c pg_dump -s h -l host -x -a '(__fish_print_hostnames)' -d "Database server host or socket directory"
+complete -c pg_dump -s d -l dbname -x -a '(__ghoti_complete_pg_database)' -d "Database to dump"
+complete -c pg_dump -s h -l host -x -a '(__ghoti_print_hostnames)' -d "Database server host or socket directory"
 complete -c pg_dump -s p -l port -x -d "Database server port number"
-complete -c pg_dump -s U -l username -x -a '(__fish_complete_pg_user)' -d "Connect as specified database user"
+complete -c pg_dump -s U -l username -x -a '(__ghoti_complete_pg_user)' -d "Connect as specified database user"
 complete -c pg_dump -s w -l no-password -d "Never prompt for password"
 complete -c pg_dump -s W -l password -d "Force password prompt (should happen automatically)"
 complete -c pg_dump -l role -x -d "Do SET ROLE before dump"

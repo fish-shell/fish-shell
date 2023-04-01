@@ -21,5 +21,5 @@ end
 complete chown -s H -d "Follow given symlinks with -R"
 complete chown -s L -d "Follow all symlinks with -R"
 complete chown -s P -d "Follow no symlinks with -R"
-complete chown -d User -a "(__fish_print_users):"
-complete chown -d User -a "(string match -r -- '.*:' (commandline -ct))(__fish_complete_groups)"
+complete chown -d User -a "(__ghoti_print_users):"
+complete chown -d User -a "(string match -r -- '.*:' (commandline -ct))(__ghoti_complete_groups)"

@@ -4,7 +4,7 @@ Frequently asked questions
 What is the equivalent to this thing from bash (or other shells)?
 -----------------------------------------------------------------
 
-See :ref:`Fish for bash users <fish_for_bash_users>`
+See :ref:`Fish for bash users <ghoti_for_bash_users>`
 
 How do I set or clear an environment variable?
 ----------------------------------------------
@@ -13,7 +13,7 @@ Use the :doc:`set <cmds/set>` command::
     set -x key value # typically set -gx key value
     set -e key
 
-Since fish 3.1 you can set an environment variable for just one command using the ``key=value some command`` syntax, like in other shells.  The two lines below behave identically - unlike other shells, fish will output ``value`` both times::
+Since ghoti 3.1 you can set an environment variable for just one command using the ``key=value some command`` syntax, like in other shells.  The two lines below behave identically - unlike other shells, ghoti will output ``value`` both times::
 
     key=value echo $key
     begin; set -lx key value; echo $key; end
@@ -56,22 +56,22 @@ Why doesn't ``set -Ux`` (exported universal variables) seem to work?
 A global variable of the same name already exists.
 
 Environment variables such as ``EDITOR`` or ``TZ`` can be set universally using ``set -Ux``.  However, if
-there is an environment variable already set before fish starts (such as by login scripts or system
-administrators), it is imported into fish as a global variable. The :ref:`variable scopes <variables-scope>` are searched from the "inside out", which
+there is an environment variable already set before ghoti starts (such as by login scripts or system
+administrators), it is imported into ghoti as a global variable. The :ref:`variable scopes <variables-scope>` are searched from the "inside out", which
 means that local variables are checked first, followed by global variables, and finally universal
 variables.
 
 This means that the global value takes precedence over the universal value.
 
-To avoid this problem, consider changing the setting which fish inherits. If this is not possible,
+To avoid this problem, consider changing the setting which ghoti inherits. If this is not possible,
 add a statement to your :ref:`configuration file <configuration>` (usually
-``~/.config/fish/config.fish``)::
+``~/.config/ghoti/config.ghoti``)::
 
     set -gx EDITOR vim
 
-How do I run a command every login? What's fish's equivalent to .bashrc or .profile?
+How do I run a command every login? What's ghoti's equivalent to .bashrc or .profile?
 ------------------------------------------------------------------------------------
-Edit the file ``~/.config/fish/config.fish`` [#]_, creating it if it does not exist (Note the leading period).
+Edit the file ``~/.config/ghoti/config.ghoti`` [#]_, creating it if it does not exist (Note the leading period).
 
 Unlike .bashrc and .profile, this file is always read, even in non-interactive or login shells.
 
@@ -79,78 +79,78 @@ To do something only in interactive shells, check ``status is-interactive`` like
 
   if status is-interactive
       # use the coolbeans theme
-      fish_config theme choose coolbeans
+      ghoti_config theme choose coolbeans
   end
 
 .. [#] The "~/.config" part of this can be set via $XDG_CONFIG_HOME, that's just the default.
 
 How do I set my prompt?
 -----------------------
-The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/fish/functions/fish_prompt.fish``. For example, a simple prompt is::
+The prompt is the output of the ``ghoti_prompt`` function. Put it in ``~/.config/ghoti/functions/ghoti_prompt.ghoti``. For example, a simple prompt is::
 
-    function fish_prompt
-        set_color $fish_color_cwd
+    function ghoti_prompt
+        set_color $ghoti_color_cwd
         echo -n (prompt_pwd)
         set_color normal
         echo -n ' > '
     end
 
 
-You can also use the Web configuration tool, :doc:`fish_config <cmds/fish_config>`, to preview and choose from a gallery of sample prompts.
+You can also use the Web configuration tool, :doc:`ghoti_config <cmds/ghoti_config>`, to preview and choose from a gallery of sample prompts.
 
-Or you can use fish_config from the commandline::
+Or you can use ghoti_config from the commandline::
 
-  > fish_config prompt show
-  # displays all the prompts fish ships with
-  > fish_config prompt choose disco
+  > ghoti_config prompt show
+  # displays all the prompts ghoti ships with
+  > ghoti_config prompt choose disco
   # loads the disco prompt in the current shell
-  > fish_config prompt save
+  > ghoti_config prompt save
   # makes the change permanent
 
 If you want to modify your existing prompt, you can use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` like::
 
-  >_ funced fish_prompt
+  >_ funced ghoti_prompt
   # This opens up your editor (set in $EDITOR).
   # Modify the function,
   # save the file and repeat to your liking.
   # Once you are happy with it:
-  >_ funcsave fish_prompt
+  >_ funcsave ghoti_prompt
 
-This also applies to :doc:`fish_right_prompt <cmds/fish_right_prompt>` and :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`.
+This also applies to :doc:`ghoti_right_prompt <cmds/ghoti_right_prompt>` and :doc:`ghoti_mode_prompt <cmds/ghoti_mode_prompt>`.
 
 Why does my prompt show a ``[I]``?
 ----------------------------------
 
-That's the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
+That's the :doc:`ghoti_mode_prompt <cmds/ghoti_mode_prompt>`. It is displayed by default when you've activated vi mode using ``ghoti_vi_key_bindings``.
 
 If you haven't activated vi mode on purpose, you might have installed a third-party theme or plugin that does it.
 
-If you want to change or disable this display, modify the ``fish_mode_prompt`` function, for instance via :doc:`funced <cmds/funced>`.
+If you want to change or disable this display, modify the ``ghoti_mode_prompt`` function, for instance via :doc:`funced <cmds/funced>`.
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, :doc:`fish_config <cmds/fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
+Use the web configuration tool, :doc:`ghoti_config <cmds/ghoti_config>`, or alter the :ref:`ghoti_color family of environment variables <variables-color>`.
 
-You can also use ``fish_config`` on the commandline, like::
+You can also use ``ghoti_config`` on the commandline, like::
 
-  > fish_config theme show
+  > ghoti_config theme show
   # to demonstrate all the colorschemes
-  > fish_config theme choose coolbeans
+  > ghoti_config theme choose coolbeans
   # to load the "coolbeans" theme
-  > fish_config theme save
+  > ghoti_config theme save
   # to make the change permanent
 
 How do I change the greeting message?
 -------------------------------------
-Change the value of the variable ``fish_greeting`` or create a :doc:`fish_greeting <cmds/fish_greeting>` function. For example, to remove the greeting use::
+Change the value of the variable ``ghoti_greeting`` or create a :doc:`ghoti_greeting <cmds/ghoti_greeting>` function. For example, to remove the greeting use::
 
-    set -U fish_greeting
+    set -U ghoti_greeting
 
 Or if you prefer not to use a universal variable, use::
 
-    set -g fish_greeting
+    set -g ghoti_greeting
 
-in :ref:`config.fish <configuration>`.
+in :ref:`config.ghoti <configuration>`.
 
 How do I run a command from history?
 ------------------------------------
@@ -160,11 +160,11 @@ Additional default key bindings include :kbd:`Control`\ +\ :kbd:`P` (up) and :kb
 
 Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
-Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.
+Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, ghoti opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.
 
 As a special case, most of the time history substitution is used as ``sudo !!``. In that case just press :kbd:`Alt`\ +\ :kbd:`S`, and it will recall your last commandline with ``sudo`` prefixed (or toggle a ``sudo`` prefix on the current commandline if there is anything).
 
-In general, fish's history recall works like this:
+In general, ghoti's history recall works like this:
 
 - Like other shells, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last executed line.  A single press replaces "!!", later presses replace "!-3" and the like.
 
@@ -176,11 +176,11 @@ In general, fish's history recall works like this:
 
 - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt`\ +\ :kbd:`D` and :kbd:`Alt`\ +\ :kbd:`Backspace` are your friends).
 
-See :ref:`documentation <editor>` for more details about line editing in fish.
+See :ref:`documentation <editor>` for more details about line editing in ghoti.
 
 How do I run a subcommand? The backtick doesn't work!
 -----------------------------------------------------
-``fish`` uses parentheses for subcommands. For example::
+``ghoti`` uses parentheses for subcommands. For example::
 
     for i in (ls)
         echo $i
@@ -190,7 +190,7 @@ It also supports the familiar ``$()`` syntax, even in quotes. Backticks are not 
 
 My command (pkg-config) gives its output as a single long string?
 -----------------------------------------------------------------
-Unlike other shells, fish splits command substitutions only on newlines, not spaces or tabs or the characters in $IFS.
+Unlike other shells, ghoti splits command substitutions only on newlines, not spaces or tabs or the characters in $IFS.
 
 That means if you run
 
@@ -252,12 +252,12 @@ In short: :ref:`quote <quotes>` or :ref:`escape <escapes>` the wildcard::
 
   scp user@ip:/dir/"string-*"
 
-When fish sees an unquoted ``*``, it performs :ref:`wildcard expansion <expand-wildcard>`. That means it tries to match filenames to the given string.
+When ghoti sees an unquoted ``*``, it performs :ref:`wildcard expansion <expand-wildcard>`. That means it tries to match filenames to the given string.
 
-If the wildcard doesn't match any files, fish prints an error instead of running the command::
+If the wildcard doesn't match any files, ghoti prints an error instead of running the command::
 
   > echo *this*does*not*exist
-  fish: No matches for wildcard '*this*does*not*exist'. See `help expand`.
+  ghoti: No matches for wildcard '*this*does*not*exist'. See `help expand`.
   echo *this*does*not*exist
        ^
 
@@ -290,13 +290,13 @@ But it also means that these commands can stop working at any moment once a matc
 
 (from http://mywiki.wooledge.org/BashFAQ/004)
 
-For these reasons, fish does not do this, and instead expects asterisks to be quoted or escaped if they aren't supposed to be expanded.
+For these reasons, ghoti does not do this, and instead expects asterisks to be quoted or escaped if they aren't supposed to be expanded.
 
 This is similar to bash's "failglob" option.
 
-I accidentally entered a directory path and fish changed directory. What happened?
+I accidentally entered a directory path and ghoti changed directory. What happened?
 ----------------------------------------------------------------------------------
-If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it assumes that you want to change your directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
+If ghoti is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, ghoti will test if a directory of that name exists. If it does, it assumes that you want to change your directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
 
 The open command doesn't work.
 ------------------------------
@@ -304,26 +304,26 @@ The ``open`` command uses the MIME type database and the ``.desktop`` files used
 
 .. _faq-ssh-interactive:
 
-Why won't SSH/SCP/rsync connect properly when fish is my login shell?
+Why won't SSH/SCP/rsync connect properly when ghoti is my login shell?
 ---------------------------------------------------------------------
 
 This problem may show up as messages like "``Received message too long``", "``open terminal
 failed: not a terminal``", "``Bad packet length``", or "``Connection refused``" with strange output
 in ``ssh_exchange_identification`` messages in the debug log.
 
-This usually happens because fish reads the :ref:`user configuration file <configuration>` (``~/.config/fish/config.fish``) *always*,
+This usually happens because ghoti reads the :ref:`user configuration file <configuration>` (``~/.config/ghoti/config.ghoti``) *always*,
 whether it's in an interactive or login or non-interactive or non-login shell.
 
-This simplifies matters, but it also means when config.fish generates output, it will do that even in non-interactive shells like the one ssh/scp/rsync start when they connect.
+This simplifies matters, but it also means when config.ghoti generates output, it will do that even in non-interactive shells like the one ssh/scp/rsync start when they connect.
 
-Anything in config.fish that produces output should be guarded with ``status is-interactive`` (or ``status is-login`` if you prefer)::
+Anything in config.ghoti that produces output should be guarded with ``status is-interactive`` (or ``status is-login`` if you prefer)::
 
 
   if status is-interactive
     ...
   end
 
-The same applies for example when you start ``tmux`` in config.fish without guards, which will cause a message like ``sessions should be nested with care, unset $TMUX to force``.
+The same applies for example when you start ``tmux`` in config.ghoti without guards, which will cause a message like ``sessions should be nested with care, unset $TMUX to force``.
 
 .. _faq-unicode:
 
@@ -331,40 +331,40 @@ I'm getting weird graphical glitches (a staircase effect, ghost characters, curs
 --------------------------------------------------------------------------------------------------------------
 In a terminal, the application running inside it and the terminal itself need to agree on the width of characters in order to handle cursor movement.
 
-This is more important to fish than other shells because features like syntax highlighting and autosuggestions are implemented by moving the cursor.
+This is more important to ghoti than other shells because features like syntax highlighting and autosuggestions are implemented by moving the cursor.
 
 Sometimes, there is disagreement on the width. There are numerous causes and fixes for this:
 
 - It is possible the character is simply too new for your system to know - in this case you need to refrain from using it.
-- Fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
-- The character has an "ambiguous" width and fish thinks that means a width of X while your terminal thinks it's Y. In this case you either need to change your terminal's configuration or set $fish_ambiguous_width to the correct value.
-- The character is an emoji and the host system only supports Unicode 8, while you are running the terminal on a system that uses Unicode >= 9. In this case set $fish_emoji_width to 2.
+- Fish or your terminal might not know about the character or handle it wrong - in this case ghoti or your terminal needs to be fixed, or you need to update to a fixed version.
+- The character has an "ambiguous" width and ghoti thinks that means a width of X while your terminal thinks it's Y. In this case you either need to change your terminal's configuration or set $ghoti_ambiguous_width to the correct value.
+- The character is an emoji and the host system only supports Unicode 8, while you are running the terminal on a system that uses Unicode >= 9. In this case set $ghoti_emoji_width to 2.
 
 This also means that a few things are unsupportable:
 
-- Non-monospace fonts - there is *no way* for fish to figure out what width a specific character has as it has no influence on the terminal's font rendering.
-- Different widths for multiple ambiguous width characters - there is no way for fish to know which width you assign to each character.
+- Non-monospace fonts - there is *no way* for ghoti to figure out what width a specific character has as it has no influence on the terminal's font rendering.
+- Different widths for multiple ambiguous width characters - there is no way for ghoti to know which width you assign to each character.
 
 .. _faq-uninstalling:
 
-Uninstalling fish
+Uninstalling ghoti
 -----------------
-If you want to uninstall fish, first make sure fish is not set as your shell. Run ``chsh -s /bin/bash`` if you are not sure.
+If you want to uninstall ghoti, first make sure ghoti is not set as your shell. Run ``chsh -s /bin/bash`` if you are not sure.
 
-If you installed it with a package manager, just use that package manager's uninstall function. If you built fish yourself, assuming you installed it to /usr/local, do this::
+If you installed it with a package manager, just use that package manager's uninstall function. If you built ghoti yourself, assuming you installed it to /usr/local, do this::
 
-    rm -Rf /usr/local/etc/fish /usr/local/share/fish ~/.config/fish
-    rm /usr/local/share/man/man1/fish*.1
+    rm -Rf /usr/local/etc/ghoti /usr/local/share/ghoti ~/.config/ghoti
+    rm /usr/local/share/man/man1/ghoti*.1
     cd /usr/local/bin
-    rm -f fish fish_indent
+    rm -f ghoti ghoti_indent
 
-Where can I find extra tools for fish?
+Where can I find extra tools for ghoti?
 --------------------------------------
-The fish user community extends fish in unique and useful ways via scripts that aren't always appropriate for bundling with the fish package. Typically because they solve a niche problem unlikely to appeal to a broad audience. You can find those extensions, including prompts, themes and useful functions, in various third-party repositories. These include:
+The ghoti user community extends ghoti in unique and useful ways via scripts that aren't always appropriate for bundling with the ghoti package. Typically because they solve a niche problem unlikely to appeal to a broad audience. You can find those extensions, including prompts, themes and useful functions, in various third-party repositories. These include:
 
-- `Fisher <https://github.com/jorgebucaran/fisher>`_
+- `Fisher <https://github.com/jorgebucaran/ghotier>`_
 - `Fundle <https://github.com/tuvistavie/fundle>`_
-- `Oh My Fish <https://github.com/oh-my-fish/oh-my-fish>`_
+- `Oh My Fish <https://github.com/oh-my-ghoti/oh-my-ghoti>`_
 - `Tacklebox <https://github.com/justinmayer/tacklebox>`_
 
-This is not an exhaustive list and the fish project has no opinion regarding the merits of the repositories listed above or the scripts found therein.
+This is not an exhaustive list and the ghoti project has no opinion regarding the merits of the repositories listed above or the scripts found therein.

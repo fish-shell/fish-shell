@@ -76,10 +76,10 @@ job_control_t get_job_control_mode() { return job_control_mode; }
 void set_job_control_mode(job_control_t mode) {
     job_control_mode = mode;
 
-    // HACK: when fish (or any shell) launches a job with job control, it will put the job into its
-    // own pgroup and call tcsetpgrp() to allow that pgroup to own the terminal (making fish a
-    // background process). When the job finishes, fish will try to reclaim the terminal via
-    // tcsetpgrp(), but as fish is now a background process it will receive SIGTTOU and stop! Ensure
+    // HACK: when ghoti (or any shell) launches a job with job control, it will put the job into its
+    // own pgroup and call tcsetpgrp() to allow that pgroup to own the terminal (making ghoti a
+    // background process). When the job finishes, ghoti will try to reclaim the terminal via
+    // tcsetpgrp(), but as ghoti is now a background process it will receive SIGTTOU and stop! Ensure
     // that doesn't happen by ignoring SIGTTOU.
     // Note that if we become interactive, we also ignore SIGTTOU.
     if (mode == job_control_t::all) {
@@ -132,7 +132,7 @@ bool job_t::signal(int signal) {
             return false;
         }
     } else {
-        // This job lives in fish's pgroup and we need to signal procs individually.
+        // This job lives in ghoti's pgroup and we need to signal procs individually.
         for (const auto &p : processes) {
             if (!p->completed && p->pid && kill(p->pid, signal) == -1) {
                 return false;
@@ -233,7 +233,7 @@ static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
     // If the child was killed by SIGINT or SIGQUIT, then cancel the entire group if interactive. If
     // not interactive, we have historically re-sent the signal to ourselves; however don't do that
     // if the signal is trapped (#6649).
-    // Note the asymmetry: if the fish process gets SIGINT we will run SIGINT handlers. If a child
+    // Note the asymmetry: if the ghoti process gets SIGINT we will run SIGINT handlers. If a child
     // process gets SIGINT we do not run SIGINT handlers; we just don't exit. This should be
     // rationalized.
     if (status.signal_exited()) {
@@ -281,7 +281,7 @@ bool process_t::is_internal() const {
             return false;
         default:
             assert(false &&
-                   "The fish developers forgot to include a process_t. Please report a bug");
+                   "The ghoti developers forgot to include a process_t. Please report a bug");
             return true;
     }
     assert(false &&
@@ -503,7 +503,7 @@ static void generate_job_exit_events(const job_ref_t &j, std::vector<rust::Box<E
     out_evts->push_back(new_event_caller_exit(j->internal_job_id, j->job_id()));
 }
 
-/// \return whether to emit a fish_job_summary call for a process.
+/// \return whether to emit a ghoti_job_summary call for a process.
 static bool proc_wants_summary(const shared_ptr<job_t> &j, const process_ptr_t &p) {
     // Are we completed with a pid?
     if (!p->completed || !p->pid) return false;
@@ -519,7 +519,7 @@ static bool proc_wants_summary(const shared_ptr<job_t> &j, const process_ptr_t &
     return true;
 }
 
-/// \return whether to emit a fish_job_summary call for a job as a whole. We may also emit this for
+/// \return whether to emit a ghoti_job_summary call for a job as a whole. We may also emit this for
 /// its individual processes.
 static bool job_wants_summary(const shared_ptr<job_t> &j) {
     // Do we just skip notifications?
@@ -536,7 +536,7 @@ static bool job_wants_summary(const shared_ptr<job_t> &j) {
     return true;
 }
 
-/// \return whether we want to emit a fish_job_summary call for a job or any of its processes.
+/// \return whether we want to emit a ghoti_job_summary call for a job or any of its processes.
 bool job_or_proc_wants_summary(const shared_ptr<job_t> &j) {
     if (job_wants_summary(j)) return true;
     for (const auto &p : j->processes) {
@@ -545,9 +545,9 @@ bool job_or_proc_wants_summary(const shared_ptr<job_t> &j) {
     return false;
 }
 
-/// Invoke the fish_job_summary function by executing the given command.
+/// Invoke the ghoti_job_summary function by executing the given command.
 static void call_job_summary(parser_t &parser, const wcstring &cmd) {
-    auto event = new_event_generic(L"fish_job_summary");
+    auto event = new_event_generic(L"ghoti_job_summary");
     block_t *b = parser.push_block(block_t::event_block(&*event));
     auto saved_status = parser.get_last_statuses();
     parser.eval(cmd, io_chain_t());
@@ -555,11 +555,11 @@ static void call_job_summary(parser_t &parser, const wcstring &cmd) {
     parser.pop_block(b);
 }
 
-// \return a command which invokes fish_job_summary.
+// \return a command which invokes ghoti_job_summary.
 // The process pointer may be null, in which case it represents the entire job.
-// Note this implements the arguments which fish_job_summary expects.
+// Note this implements the arguments which ghoti_job_summary expects.
 wcstring summary_command(const job_ref_t &j, const process_ptr_t &p = nullptr) {
-    wcstring buffer = L"fish_job_summary";
+    wcstring buffer = L"ghoti_job_summary";
 
     // Job id.
     append_format(buffer, L" %d", j->job_id());
@@ -595,8 +595,8 @@ wcstring summary_command(const job_ref_t &j, const process_ptr_t &p = nullptr) {
     return buffer;
 }
 
-// Summarize a list of jobs, by emitting calls to fish_job_summary.
-// Note the given list must NOT be the parser's own job list, since the call to fish_job_summary
+// Summarize a list of jobs, by emitting calls to ghoti_job_summary.
+// Note the given list must NOT be the parser's own job list, since the call to ghoti_job_summary
 // could modify it.
 static bool summarize_jobs(parser_t &parser, const std::vector<job_ref_t> &jobs) {
     if (jobs.empty()) return false;
@@ -723,7 +723,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         iter = parser.jobs().erase(iter);
     }
 
-    // Emit calls to fish_job_summary.
+    // Emit calls to ghoti_job_summary.
     bool printed = summarize_jobs(parser, jobs_to_summarize);
 
     // Post pending exit events.
@@ -817,13 +817,13 @@ bool tty_transfer_t::try_transfer(const job_group_ref_t &jg) {
     pid_t pgid = jg->get_pgid()->value;
     assert(pgid >= 0 && "Invalid pgid");
 
-    // It should never be fish's pgroup.
-    pid_t fish_pgrp = getpgrp();
-    assert(pgid != fish_pgrp && "Job should not have fish's pgroup");
+    // It should never be ghoti's pgroup.
+    pid_t ghoti_pgrp = getpgrp();
+    assert(pgid != ghoti_pgrp && "Job should not have ghoti's pgroup");
 
     // Ok, we want to transfer to the child.
     // Note it is important to be very careful about calling tcsetpgrp()!
-    // fish ignores SIGTTOU which means that it has the power to reassign the tty even if it doesn't
+    // ghoti ignores SIGTTOU which means that it has the power to reassign the tty even if it doesn't
     // own it. This means that other processes may get SIGTTOU and become zombies.
     // Check who own the tty now. There's four cases of interest:
     //   1. There is no tty at all (tcgetpgrp() returns -1). For example running from a pure script.
@@ -832,9 +832,9 @@ bool tty_transfer_t::try_transfer(const job_group_ref_t &jg) {
     //      tcsetpgrp() on itself between fork ane exec. This is the essential race inherent in
     //      tcsetpgrp(). In this case we want to reclaim the tty, but do not need to transfer it
     //      ourselves since the child won the race.
-    //   3. The tty is owned by a different process. This may come about if fish is running in the
+    //   3. The tty is owned by a different process. This may come about if ghoti is running in the
     //      background with job control enabled. Do not transfer it.
-    //   4. The tty is owned by fish. In that case we want to transfer the pgid.
+    //   4. The tty is owned by ghoti. In that case we want to transfer the pgid.
     pid_t current_owner = tcgetpgrp(STDIN_FILENO);
     if (current_owner < 0) {
         // Case 1.
@@ -842,7 +842,7 @@ bool tty_transfer_t::try_transfer(const job_group_ref_t &jg) {
     } else if (current_owner == pgid) {
         // Case 2.
         return true;
-    } else if (current_owner != pgid && current_owner != fish_pgrp) {
+    } else if (current_owner != pgid && current_owner != ghoti_pgrp) {
         // Case 3.
         return false;
     }
@@ -973,7 +973,7 @@ void job_t::continue_job(parser_t &parser) {
           parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     // Wait for the status of our own job to change.
-    while (!fish_is_unwinding_for_exit() && !is_stopped() && !is_completed()) {
+    while (!ghoti_is_unwinding_for_exit() && !is_stopped() && !is_completed()) {
         process_mark_finished_children(parser, true);
     }
     if (is_completed()) {
@@ -996,10 +996,10 @@ void proc_wait_any(parser_t &parser) {
 }
 
 void hup_jobs(const job_list_t &jobs) {
-    pid_t fish_pgrp = getpgrp();
+    pid_t ghoti_pgrp = getpgrp();
     for (const auto &j : jobs) {
         auto pgid = j->get_pgid();
-        if (pgid.has_value() && *pgid != fish_pgrp && !j->is_completed()) {
+        if (pgid.has_value() && *pgid != ghoti_pgrp && !j->is_completed()) {
             if (j->is_stopped()) {
                 j->signal(SIGCONT);
             }
@@ -1028,7 +1028,7 @@ void tty_transfer_t::save_tty_modes() {
 
 void tty_transfer_t::reclaim() {
     if (this->owner_) {
-        FLOG(proc_pgroup, "fish reclaiming terminal");
+        FLOG(proc_pgroup, "ghoti reclaiming terminal");
         if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
             FLOGF(warning, _(L"Could not return shell to foreground"));
             wperror(L"tcsetpgrp");

@@ -1,7 +1,7 @@
 
-complete -c msgfmt -s D -l directory -d "Add specified directory to list for input files search" -x -a "(__fish_complete_directories (commandline -ct))"
+complete -c msgfmt -s D -l directory -d "Add specified directory to list for input files search" -x -a "(__ghoti_complete_directories (commandline -ct))"
 
-set -l cond "not __fish_contains_opt -s j java java2 csharp csharp-resource tcl qt"
+set -l cond "not __ghoti_contains_opt -s j java java2 csharp csharp-resource tcl qt"
 complete -c msgfmt -n $cond -s j -l java -d "Generate a Java ResourceBundle class"
 complete -c msgfmt -n $cond -l java2 -d "Like --java, and assume Java2 (JDK 1.2 or higher)"
 complete -c msgfmt -n $cond -l csharp -d "Generate a .NET .dll file"
@@ -13,10 +13,10 @@ complete -c msgfmt -s o -l output-file -d "Write output to specified file" -r
 complete -c msgfmt -l strict -d "Enable strict Uniforum mode"
 
 
-set -l cond "__fish_contains_opt -s j java java2 csharp csharp-resource tcl"
+set -l cond "__ghoti_contains_opt -s j java java2 csharp csharp-resource tcl"
 complete -c msgfmt -n $cond -s r -l resource -d "Resource name"
 complete -c msgfmt -n $cond -s l -l locale -d "Locale name, either language or language_COUNTRY"
-complete -c msgfmt -n $cond -s d -d "Base directory for output" -x -a "(__fish_complete_directories (commandline -ct))"
+complete -c msgfmt -n $cond -s d -d "Base directory for output" -x -a "(__ghoti_complete_directories (commandline -ct))"
 
 complete -c msgfmt -s P -l properties-input -d "Input files are in Java .properties syntax"
 complete -c msgfmt -l stringtable-input -d "Input files are in NeXTstep/GNUstep .strings syntax"

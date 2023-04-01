@@ -6,7 +6,7 @@ use crate::flog::FLOG;
 use crate::wchar::{WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wchar_ffi::WCharToFFI;
-use crate::wutil::fish_wcstoi;
+use crate::wutil::ghoti_wcstoi;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Mutex;
 
@@ -42,7 +42,7 @@ static TTY_TERMSIZE_GEN_COUNT: AtomicU32 = AtomicU32::new(0);
 fn var_to_int_or(var: Option<WString>, default: isize) -> isize {
     match var {
         Some(s) => {
-            let proposed = fish_wcstoi(&s);
+            let proposed = ghoti_wcstoi(&s);
             if let Ok(proposed) = proposed {
                 proposed
             } else {

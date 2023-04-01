@@ -1,4 +1,4 @@
-//! A specialized tokenizer for tokenizing the fish language. In the future, the tokenizer should be
+//! A specialized tokenizer for tokenizing the ghoti language. In the future, the tokenizer should be
 //! extended to support marks, tokenizing multiple strings and disposing of unused string segments.
 
 use crate::ffi::{valid_var_name_char, wcharz_t};
@@ -230,7 +230,7 @@ impl From<TokenizerError> for &'static wstr {
                 wgettext!("Cannot use stdin (fd 0) as pipe output")
             }
             TokenizerError::invalid_pipe_ampersand => {
-                wgettext!("|& is not valid. In fish, use &| to pipe both stdout and stderr.")
+                wgettext!("|& is not valid. In ghoti, use &| to pipe both stdout and stderr.")
             }
             TokenizerError::closing_unopened_subshell => {
                 wgettext!("Unexpected ')' for unopened parenthesis")
@@ -446,7 +446,7 @@ impl Tokenizer {
                     self.token_cursor += 2;
                     Some(result)
                 } else if next_char == Some('&') {
-                    // |& is a bashism; in fish it's &|.
+                    // |& is a bashism; in ghoti it's &|.
                     Some(self.call_error(TokenizerError::invalid_pipe_ampersand,
                                             self.token_cursor, self.token_cursor, Some(2), 2))
                 } else {
@@ -1013,7 +1013,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
                 if try_consume(&mut cursor, '|') {
                     // Note we differ from bash here.
                     // Consider `echo foo 2>| bar`
-                    // In fish, this is a *pipe*. Run bar as a command and attach foo's stderr to bar's
+                    // In ghoti, this is a *pipe*. Run bar as a command and attach foo's stderr to bar's
                     // stdin, while leaving stdout as tty.
                     // In bash, this is a *redirection* to bar as a file. It is like > but ignores
                     // noclobber.

@@ -1,4 +1,4 @@
-function __fish_qdbus_complete
+function __ghoti_qdbus_complete
     argparse system 'bus=' literal help -- (commandline --cut-at-cursor --tokenize) 2>/dev/null
     or return
     if set -q _flag_help
@@ -22,4 +22,4 @@ complete -c qdbus -l bus -r -d 'connect to a custom bus'
 complete -c qdbus -l literal -d 'print replies literally'
 complete -c qdbus -l help -d 'print usage'
 
-complete -c qdbus -a '(__fish_qdbus_complete)'
+complete -c qdbus -a '(__ghoti_qdbus_complete)'

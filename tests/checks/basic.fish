@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %ghoti -C 'set -g ghoti %ghoti' %s
 #
 # Test function, loops, conditionals and some basic elements
 #
@@ -46,12 +46,12 @@ end
 # Simple function tests
 
 function foo
-    echo > $tmpdir/fish_foo.txt $argv
+    echo > $tmpdir/ghoti_foo.txt $argv
 end
 
 foo hello
 
-cat $tmpdir/fish_foo.txt |read foo
+cat $tmpdir/ghoti_foo.txt |read foo
 
 if test $foo = hello;
   echo Test 2 pass
@@ -122,7 +122,7 @@ test_builtin_status_clamp_to_255
 echo $status
 #CHECK: 255
 
-$fish -c "exit 300"
+$ghoti -c "exit 300"
 echo $status
 #CHECK: 255
 
@@ -306,7 +306,7 @@ end
 #CHECK: epsilon5.2
 
 # Ensure builtins work
-# https://github.com/fish-shell/fish-shell/issues/359
+# https://github.com/ghoti-shell/ghoti-shell/issues/359
 if not echo skip1 > /dev/null
 	echo "zeta 6.1"
 else if echo skip2 > /dev/null
@@ -318,15 +318,15 @@ echo '###'
 #CHECK: ###
 
 # Ensure 'type' works
-# https://github.com/fish-shell/fish-shell/issues/513
-function fish_test_type_zzz
+# https://github.com/ghoti-shell/ghoti-shell/issues/513
+function ghoti_test_type_zzz
 	true
 end
 # Should succeed
-type -q fish_test_type_zzz ; echo $status
+type -q ghoti_test_type_zzz ; echo $status
 #CHECK: 0
 # Should fail
-type -q -f fish_test_type_zzz ; echo $status
+type -q -f ghoti_test_type_zzz ; echo $status
 #CHECK: 1
 
 # ensure that builtins that produce no output can still truncate files
@@ -421,8 +421,8 @@ for foo in 1 2 3
 end
 
 # Check that these error correctly.
-# Simplify __fish_print_help, as it's noisy.
-function __fish_print_help
+# Simplify __ghoti_print_help, as it's noisy.
+function __ghoti_print_help
     echo $argv[2..]
 end
 $dyn_break
@@ -456,7 +456,7 @@ status -n'
 
 # Test support for unbalanced blocks
 function try_unbalanced_block
-    $fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
+    $ghoti -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
 end
 try_unbalanced_block 'begin'
 #CHECKERR: - (line 1): Missing end to balance this begin
@@ -545,8 +545,8 @@ echo (#"
 # CHECK: baz
 
 # Make sure we don't match up brackets within comments (#8022).
-$fish -c 'echo f[oo # not valid, no matching ]'
-# CHECKERR: fish: Unexpected end of string, square brackets do not match
+$ghoti -c 'echo f[oo # not valid, no matching ]'
+# CHECKERR: ghoti: Unexpected end of string, square brackets do not match
 # CHECKERR: echo f[oo # not valid, no matching ]
 # CHECKERR: {{      }}^
 
@@ -554,36 +554,36 @@ $fish -c 'echo f[oo # not valid, no matching ]'
 for PWD in foo bar
     true
 end
-# CHECKERR: {{.*}}/basic.fish (line {{\d+}}): for: PWD: cannot overwrite read-only variable
+# CHECKERR: {{.*}}/basic.ghoti (line {{\d+}}): for: PWD: cannot overwrite read-only variable
 # CHECKERR: for PWD in foo bar
 # CHECKERR:     ^~^
 # XXX FIXME carat should point at PWD
 
-$fish -c 'echo \xtest'
-# CHECKERR: fish: Invalid token '\xtest'
+$ghoti -c 'echo \xtest'
+# CHECKERR: ghoti: Invalid token '\xtest'
 # CHECKERR: echo \xtest
 # CHECKERR:      ^~~~~^
 
-$fish -c 'echo \utest'
-# CHECKERR: fish: Invalid token '\utest'
+$ghoti -c 'echo \utest'
+# CHECKERR: ghoti: Invalid token '\utest'
 # CHECKERR: echo \utest
 # CHECKERR:      ^~~~~^
 
-$fish -c 'echo \c'
-# CHECKERR: fish: Incomplete escape sequence '\c'
+$ghoti -c 'echo \c'
+# CHECKERR: ghoti: Incomplete escape sequence '\c'
 # CHECKERR: echo \c
 # CHECKERR:      ^^
 
-$fish -c 'echo \C'
+$ghoti -c 'echo \C'
 # CHECK: C
 
-$fish -c 'echo \U'
-# CHECKERR: fish: Incomplete escape sequence '\U'
+$ghoti -c 'echo \U'
+# CHECKERR: ghoti: Incomplete escape sequence '\U'
 # CHECKERR: echo \U
 # CHECKERR:      ^^
 
-$fish -c 'echo \x'
-# CHECKERR: fish: Incomplete escape sequence '\x'
+$ghoti -c 'echo \x'
+# CHECKERR: ghoti: Incomplete escape sequence '\x'
 # CHECKERR: echo \x
 # CHECKERR:      ^^
 

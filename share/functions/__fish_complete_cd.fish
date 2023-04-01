@@ -1,6 +1,6 @@
 # This function only emits completions that might result from matches against $CDPATH. We rely on
 # the core file name completion logic to include all other possible matches.
-function __fish_complete_cd -d "Completions for the cd command"
+function __ghoti_complete_cd -d "Completions for the cd command"
     set -q CDPATH[1]
     or return 0 # no CDPATH so rely solely on the core file name completions
 

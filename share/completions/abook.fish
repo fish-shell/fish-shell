@@ -1,4 +1,4 @@
-function __fish_complete_abook_formats --description 'Complete abook formats'
+function __ghoti_complete_abook_formats --description 'Complete abook formats'
     set -l format
     abook --formats | while read -l x
         switch $x
@@ -34,8 +34,8 @@ complete -c abook -l add-email-quiet -d 'Same as --add-email. Without confirmati
 complete -c abook -l convert -d 'Convert address book files'
 
 set -l convert 'contains -- --convert (commandline -po)'
-complete -c abook -l informat -d 'Input file format' -xa '(__fish_complete_abook_formats in)' -n $convert
-complete -c abook -l outformat -d 'Output file format' -xa '(__fish_complete_abook_formats out)' -n $convert
+complete -c abook -l informat -d 'Input file format' -xa '(__ghoti_complete_abook_formats in)' -n $convert
+complete -c abook -l outformat -d 'Output file format' -xa '(__ghoti_complete_abook_formats out)' -n $convert
 complete -c abook -l infile -d 'Input file (default: stdin)' -r -n $convert
 complete -c abook -l outfile -d 'Output file (default: stdout)' -r -n $convert
 

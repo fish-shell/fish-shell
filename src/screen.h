@@ -72,7 +72,7 @@ struct line_t {
     }
 
     /// \return the width of this line, counting up to no more than \p max characters.
-    /// This follows fish_wcswidth() semantics, except that characters whose width would be -1 are
+    /// This follows ghoti_wcswidth() semantics, except that characters whose width would be -1 are
     /// treated as 0.
     int wcswidth_min_0(size_t max = std::numeric_limits<size_t>::max()) const;
 };
@@ -228,7 +228,7 @@ class screen_t {
     /// is used when resizing the window larger: if the cursor jumps to the line above, we need to
     /// remember to clear the subsequent lines.
     size_t actual_lines_before_reset{0};
-    /// These status buffers are used to check if any output has occurred other than from fish's
+    /// These status buffers are used to check if any output has occurred other than from ghoti's
     /// main loop, in which case we need to redraw.
     struct stat prev_buff_1 {};
     struct stat prev_buff_2 {};

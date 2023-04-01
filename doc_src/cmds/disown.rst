@@ -13,9 +13,9 @@ Synopsis
 Description
 -----------
 
-``disown`` removes the specified :ref:`job <syntax-job-control>` from the list of jobs. The job itself continues to exist, but fish does not keep track of it any longer.
+``disown`` removes the specified :ref:`job <syntax-job-control>` from the list of jobs. The job itself continues to exist, but ghoti does not keep track of it any longer.
 
-Jobs in the list of jobs are sent a hang-up signal when fish terminates, which usually causes the job to terminate; ``disown`` allows these processes to continue regardless.
+Jobs in the list of jobs are sent a hang-up signal when ghoti terminates, which usually causes the job to terminate; ``disown`` allows these processes to continue regardless.
 
 If no process is specified, the most recently-used job is removed (like :doc:`bg <bg>` and :doc:`fg <fg>`).  If one or more PIDs are specified, jobs with the specified process IDs are removed from the job list. Invalid jobs are ignored and a warning is printed.
 
@@ -28,6 +28,6 @@ The **--help** or **-h** option displays help about using this command.
 Example
 -------
 
-``firefox &; disown`` will start the Firefox web browser in the background and remove it from the job list, meaning it will not be closed when the fish process is closed.
+``firefox &; disown`` will start the Firefox web browser in the background and remove it from the job list, meaning it will not be closed when the ghoti process is closed.
 
 ``disown (jobs -p)`` removes all :doc:`jobs <jobs>` from the job list without terminating them.

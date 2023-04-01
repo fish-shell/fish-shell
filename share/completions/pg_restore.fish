@@ -1,5 +1,5 @@
 # General options:
-complete -c pg_restore -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Connect to database name"
+complete -c pg_restore -s d -l dbname -x -a '(__ghoti_complete_pg_database)' -d "Connect to database name"
 complete -c pg_restore -s f -l file -a - -r -d "Output file name (- for stdout)"
 complete -c pg_restore -s F -l format -x -a "c\t'Custom format (pg_dump)' d\t'Directory archive' t\t'Tar archive'" -d "Backup file format (should be automatic)"
 complete -c pg_restore -s l -l list -d "Print summarized TOC of the archive"
@@ -20,7 +20,7 @@ complete -c pg_restore -s N -l exclude-schema -x -d "Do not restore objects in t
 complete -c pg_restore -s O -l no-owner -d "Skip restoration of object ownership"
 complete -c pg_restore -s P -l function -x -d "Restore named function"
 complete -c pg_restore -s s -l schema-only -d "Restore only the schema, no data"
-complete -c pg_restore -s S -l superuser -x -a '(__fish_complete_pg_user)' -d "Superuser user name to use for disabling triggers"
+complete -c pg_restore -s S -l superuser -x -a '(__ghoti_complete_pg_user)' -d "Superuser user name to use for disabling triggers"
 complete -c pg_restore -s t -l table -x -d "Restore named relation (table, view, etc.)"
 complete -c pg_restore -s T -l trigger -x -d "Restore named trigger"
 complete -c pg_restore -s x -l no-privileges -d "Skip restoration of access privileges (grant/revoke)"
@@ -39,9 +39,9 @@ complete -c pg_restore -l strict-names -d "Require table/schema include patterns
 complete -c pg_restore -l use-set-session-authorization -d "Use SET SESSION AUTHORIZATION instead of ALTER OWNER"
 
 # Connection options:
-complete -c pg_restore -s h -l host -x -a '(__fish_print_hostnames)' -d "Database server host or socket directory"
+complete -c pg_restore -s h -l host -x -a '(__ghoti_print_hostnames)' -d "Database server host or socket directory"
 complete -c pg_restore -s p -l port -x -d "Database server port number"
-complete -c pg_restore -s U -l username -x -a '(__fish_complete_pg_user)' -d "Connect as specified database user"
+complete -c pg_restore -s U -l username -x -a '(__ghoti_complete_pg_user)' -d "Connect as specified database user"
 complete -c pg_restore -s w -l no-password -d "Never prompt for password"
 complete -c pg_restore -s W -l password -d "Force password prompt (should happen automatically)"
 complete -c pg_restore -l role -x -d "Do SET ROLE before restore"

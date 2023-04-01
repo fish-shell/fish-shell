@@ -1,5 +1,5 @@
 # returns 0 only if previous argument is one of the supplied arguments
-function __fish_prev_arg_in
+function __ghoti_prev_arg_in
     set -l tokens (commandline -co)
     set -l tokenCount (count $tokens)
     if test $tokenCount -lt 2

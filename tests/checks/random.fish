@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 set -l max 9223372036854775807
 set -l close_max 9223372036854775806
 set -l min -9223372036854775807

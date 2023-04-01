@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 #REQUIRES: command -v tmux
 
 isolated-tmux-start

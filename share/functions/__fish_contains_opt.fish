@@ -1,4 +1,4 @@
-function __fish_contains_opt -d "Checks if a specific option has been given in the current commandline"
+function __ghoti_contains_opt -d "Checks if a specific option has been given in the current commandline"
     set -l next_short
     set -l short_opt
     set -l long_opt
@@ -12,7 +12,7 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
                 case -s
                     set next_short 1
                 case '-*'
-                    echo __fish_contains_opt: Unknown option $i >&2
+                    echo __ghoti_contains_opt: Unknown option $i >&2
                     return 1
                 case '*'
                     set -a long_opt $i

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 ulimit --core-size
 #CHECK: {{unlimited|\d+}}

@@ -1,1 +1,1 @@
-__fish_complete_ftp pftp
+__ghoti_complete_ftp pftp

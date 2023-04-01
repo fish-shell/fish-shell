@@ -1,11 +1,11 @@
-function __fish_print_figlet_fonts
+function __ghoti_print_figlet_fonts
     set -l dir (figlet -I 2)
     set -l files $dir/*.flf $dir/*.tlf
 
     printf '%s\tFont\n' (string replace -r '.*/([^/]+)\.[ft]lf' '$1' -- $files)
 end
 
-complete -c figlet -s f -d "Select font" -x -a "(__fish_print_figlet_fonts)"
+complete -c figlet -s f -d "Select font" -x -a "(__ghoti_print_figlet_fonts)"
 complete -c figlet -s d -d "Change font directory"
 complete -c figlet -s c -d "Center output horizontally"
 complete -c figlet -s l -d "Make output flush-left"
@@ -17,7 +17,7 @@ complete -c figlet -s p -d "Put FIGlet into `paragraph mode`"
 complete -c figlet -s n -d "Put FIGlet back to normal"
 complete -c figlet -s D -d "Switch to German (ISO 646-DE) character set"
 complete -c figlet -s E -d "Turns off German character set processing"
-complete -c figlet -s C -d "Add given control file" -k -a "(__fish_complete_suffix .flc)" -x
+complete -c figlet -s C -d "Add given control file" -k -a "(__ghoti_complete_suffix .flc)" -x
 complete -c figlet -s N -d "Clear control file list"
 complete -c figlet -s s -d "Cause `smushing`"
 complete -c figlet -s S -d "Cause `smushing`"

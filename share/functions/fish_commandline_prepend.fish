@@ -1,4 +1,4 @@
-function fish_commandline_prepend --description "Prepend the given string to the command-line, or remove the prefix if already there"
+function ghoti_commandline_prepend --description "Prepend the given string to the command-line, or remove the prefix if already there"
     if not commandline | string length -q
         commandline -r $history[1]
     end

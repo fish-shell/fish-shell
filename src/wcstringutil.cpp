@@ -322,7 +322,7 @@ void wcs2string_bad_char(wchar_t wc) {
     FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", wc);
 }
 
-int fish_wcwidth_visible(wchar_t widechar) {
+int ghoti_wcwidth_visible(wchar_t widechar) {
     if (widechar == L'\b') return -1;
-    return std::max(0, fish_wcwidth(widechar));
+    return std::max(0, ghoti_wcwidth(widechar));
 }

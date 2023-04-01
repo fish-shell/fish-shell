@@ -21,7 +21,7 @@ Description
 
 ``string length`` reports the length of each string argument in characters. Exit status: 0 if at least one non-empty *STRING* was given, or 1 otherwise.
 
-With **-V** or **--visible**, it uses the visible width of the arguments. That means it will discount escape sequences fish knows about, account for $fish_emoji_width and $fish_ambiguous_width. It will also count each line (separated by ``\n``) on its own, and with a carriage return (``\r``) count only the widest stretch on a line. The intent is to measure the number of columns the *STRING* would occupy in the current terminal.
+With **-V** or **--visible**, it uses the visible width of the arguments. That means it will discount escape sequences ghoti knows about, account for $ghoti_emoji_width and $ghoti_ambiguous_width. It will also count each line (separated by ``\n``) on its own, and with a carriage return (``\r``) count only the widest stretch on a line. The intent is to measure the number of columns the *STRING* would occupy in the current terminal.
 
 .. END DESCRIPTION
 
@@ -45,7 +45,7 @@ Examples
     6
 
     >_ string length --visible 🐟🐟🐟🐟
-    # depending on $fish_emoji_width, this is either 4 or 8
+    # depending on $ghoti_emoji_width, this is either 4 or 8
     # in new terminals it should be
     8
     

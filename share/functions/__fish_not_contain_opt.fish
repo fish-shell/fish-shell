@@ -1,4 +1,4 @@
-function __fish_not_contain_opt -d "Checks that a specific option is not in the current command line"
+function __ghoti_not_contain_opt -d "Checks that a specific option is not in the current command line"
     set -l next_short
     set -l short_opt
     set -l long_opt
@@ -12,7 +12,7 @@ function __fish_not_contain_opt -d "Checks that a specific option is not in the 
                 case -s
                     set next_short 1
                 case '-*'
-                    echo __fish_not_contain_opt: Unknown option $i >&2
+                    echo __ghoti_not_contain_opt: Unknown option $i >&2
                     return 1
 
                 case '*'

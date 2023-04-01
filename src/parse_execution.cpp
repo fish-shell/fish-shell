@@ -228,8 +228,8 @@ process_type_t parse_execution_context_t::process_type_for_command(
 
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
     // If one of our jobs ended with SIGINT, we stop execution.
-    // Likewise if fish itself got a SIGINT, or if something ran exit, etc.
-    if (cancel_signal || ctx.check_cancel() || fish_is_unwinding_for_exit()) {
+    // Likewise if ghoti itself got a SIGINT, or if something ran exit, etc.
+    if (cancel_signal || ctx.check_cancel() || ghoti_is_unwinding_for_exit()) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();
@@ -653,7 +653,7 @@ end_execution_reason_t parse_execution_context_t::run_while_statement(
             }
         }
 
-        // no_exec means that fish was invoked with -n or --no-execute. If set, we allow the loop to
+        // no_exec means that ghoti was invoked with -n or --no-execute. If set, we allow the loop to
         // not-execute once so its contents can be checked, and then break.
         if (no_exec()) {
             break;
@@ -781,15 +781,15 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
     list->push_back(new_redirection_spec(STDOUT_FILENO, redirection_mode_t::fd, L"2"));
     io.append_from_specs(*list, L"");
 
-    if (function_exists(L"fish_command_not_found", *parser)) {
-        buffer = L"fish_command_not_found";
+    if (function_exists(L"ghoti_command_not_found", *parser)) {
+        buffer = L"ghoti_command_not_found";
         for (const wcstring &arg : event_args) {
             buffer.push_back(L' ');
             buffer.append(escape_string(arg));
         }
         auto prev_statuses = parser->get_last_statuses();
 
-        auto event = new_event_generic(L"fish_command_not_found");
+        auto event = new_event_generic(L"ghoti_command_not_found");
         block_t *b = parser->push_block(block_t::event_block(&*event));
         parser->eval(buffer, io);
         parser->pop_block(b);
@@ -1558,7 +1558,7 @@ void parse_execution_context_t::setup_group(job_t *j) {
     }
 
     if (j->processes.front()->is_internal() || !this->use_job_control()) {
-        // This job either doesn't have a pgroup (e.g. a simple block), or lives in fish's pgroup.
+        // This job either doesn't have a pgroup (e.g. a simple block), or lives in ghoti's pgroup.
         rust::Box<job_group_t> group = create_job_group_ffi(j->command(), j->wants_job_id());
         j->group = box_to_shared_ptr(std::move(group));
     } else {

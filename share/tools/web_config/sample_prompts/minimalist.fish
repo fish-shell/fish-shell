@@ -1,8 +1,8 @@
 # name: Minimalist
-# author: ridiculous_fish
+# author: ridiculous_ghoti
 
-function fish_prompt
-    set_color $fish_color_cwd
+function ghoti_prompt
+    set_color $ghoti_color_cwd
     echo -n (path basename $PWD)
     set_color normal
     echo -n ' ) '

@@ -1,11 +1,11 @@
 # Completions for nmap (https://www.nmap.org)
 
-complete -c nmap -f -a "(__fish_print_hostnames)"
+complete -c nmap -f -a "(__ghoti_print_hostnames)"
 
 # TARGET SPECIFICATION
 complete -c nmap -o iL -F -d 'Input target from file'
 complete -c nmap -o iR -x -d 'Choose random targets'
-complete -c nmap -l exclude -x -a "(__fish_print_hostnames)" -d 'Exclude hosts/networks'
+complete -c nmap -l exclude -x -a "(__ghoti_print_hostnames)" -d 'Exclude hosts/networks'
 complete -c nmap -l excludefile -r -d 'Exclude list from file'
 
 # HOST DISCOVERY
@@ -26,7 +26,7 @@ complete -c nmap -l traceroute -d 'Trace path to host'
 complete -c nmap -s n -d 'No DNS resolution'
 complete -c nmap -s R -d 'DNS resolution for all targets'
 complete -c nmap -l system-dns -d 'Use system DNS resolver'
-complete -c nmap -l dns-servers -x -a "(__fish_print_hostnames)" -d 'Servers to use for reverse DNS queries'
+complete -c nmap -l dns-servers -x -a "(__ghoti_print_hostnames)" -d 'Servers to use for reverse DNS queries'
 
 # PORT SCANNING TECHNIQUES
 complete -c nmap -o sS -d 'Scan: TCP SYN'
@@ -41,9 +41,9 @@ complete -c nmap -o sW -d 'Scan: Window'
 complete -c nmap -o sM -d 'Scan: Mainmon'
 complete -c nmap -l scanflags -d 'Custom TCP scan flags'
 complete -c nmap -o sZ -d 'Scan: SCTP COOKIE ECHO'
-complete -c nmap -o sI -x -a"(__fish_print_hostnames)" -d 'Scan: Idle Scan'
+complete -c nmap -o sI -x -a"(__ghoti_print_hostnames)" -d 'Scan: Idle Scan'
 complete -c nmap -o sO -d 'Scan: IP protocol'
-complete -c nmap -s b -x -a"(__fish_print_hostnames)" -d 'FTP bounce scan'
+complete -c nmap -s b -x -a"(__ghoti_print_hostnames)" -d 'FTP bounce scan'
 
 # PORT SPECIFICATION AND SCAN ORDER
 complete -c nmap -s p -d 'Only scan specified ports'
@@ -70,33 +70,33 @@ complete -c nmap -l max-os-tries -d 'Set the maximum number of OS detection trie
 
 # NMAP SCRIPTING ENGINE (NSE)
 complete -c nmap -o sC -d 'Scan: Scripts (default)'
-function __fish_complete_nmap_script
+function __ghoti_complete_nmap_script
     set -l now (date "+%s")
 
     # cache completion for 5 minutes (`nmap --script-help all` is slow)
     # must use `math` because of differences between BSD and GNU `date`
-    if test -z "$__fish_nmap_script_completion_cache" -o (math $now - 5 "*" 60) -gt "$__fish_nmap_script_completion_cache_time"
-        set -g __fish_nmap_script_completion_cache_time $now
-        set -g __fish_nmap_script_completion_cache ""
+    if test -z "$__ghoti_nmap_script_completion_cache" -o (math $now - 5 "*" 60) -gt "$__ghoti_nmap_script_completion_cache_time"
+        set -g __ghoti_nmap_script_completion_cache_time $now
+        set -g __ghoti_nmap_script_completion_cache ""
         set -l cmd
         for l in (nmap --script-help all 2> /dev/null | grep -A2 -B1 Categories: | grep -v '^\\(--\\|Categories:\\|https:\\)')
             if string match -q -v --regex "^ " $l
                 set cmd $l
             else
-                set __fish_nmap_script_completion_cache $__fish_nmap_script_completion_cache\n$cmd\t(string trim -l $l)
+                set __ghoti_nmap_script_completion_cache $__ghoti_nmap_script_completion_cache\n$cmd\t(string trim -l $l)
             end
         end
         for cat in all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln
-            set __fish_nmap_script_completion_cache $__fish_nmap_script_completion_cache\n$cat\tCategory\n
+            set __ghoti_nmap_script_completion_cache $__ghoti_nmap_script_completion_cache\n$cat\tCategory\n
         end
     end
-    echo -e $__fish_nmap_script_completion_cache
+    echo -e $__ghoti_nmap_script_completion_cache
 end
-complete -c nmap -l script -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
+complete -c nmap -l script -r -a "(__ghoti_complete_list , __ghoti_complete_nmap_script)"
 complete -c nmap -l script -r -d 'Runs a script scan'
 complete -c nmap -l script-args -d 'provide arguments to NSE scripts'
 complete -c nmap -l script-args-file -r -d 'load arguments to NSE scripts from a file'
-complete -c nmap -l script-help -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
+complete -c nmap -l script-help -r -a "(__ghoti_complete_list , __ghoti_complete_nmap_script)"
 complete -c nmap -l script-help -r -d "Shows help about scripts"
 complete -c nmap -l script-trace
 complete -c nmap -l script-updatedb
@@ -113,7 +113,7 @@ complete -c nmap -l min-rate -l max-rate -x -d 'Directly control the scanning ra
 complete -c nmap -l defeat-rst-ratelimit -d 'ignore ICMP-RST rate limits'
 complete -c nmap -l defeat-icmp-ratelimit -d 'ignore ICMP unreachable in UDP'
 complete -c nmap -l nsock-engine -x -d 'Enforce use of a given nsock IO multiplexing engine' -a "epoll kqueue poll select"
-function __fish_complete_nmap_timing-template
+function __ghoti_complete_nmap_timing-template
     set -l i 0
     for t in paranoid sneaky polite normal aggressive insane
         printf "%i\t%s timing\n" $i $t
@@ -121,27 +121,27 @@ function __fish_complete_nmap_timing-template
         set i (math $i + 1)
     end
 end
-complete -c nmap -s T -x -a "(__fish_complete_nmap_timing-template)" -d 'Set a timing template'
+complete -c nmap -s T -x -a "(__ghoti_complete_nmap_timing-template)" -d 'Set a timing template'
 
 # FIREWALL/IDS EVASION AND SPOOFING
-complete -c nmap -s f -d 'fragment packets' -n "not __fish_contains_opt -s f"
-complete -c nmap -s f -d 'use 16 bytes per fragment' -n "__fish_contains_opt -s f"
-complete -c nmap -l mtu -d 'use specified mtu' -n "__fish_contains_opt -s f"
+complete -c nmap -s f -d 'fragment packets' -n "not __ghoti_contains_opt -s f"
+complete -c nmap -s f -d 'use 16 bytes per fragment' -n "__ghoti_contains_opt -s f"
+complete -c nmap -l mtu -d 'use specified mtu' -n "__ghoti_contains_opt -s f"
 complete -c nmap -s D -x -d 'Cloak a scan with decoys'
 complete -c nmap -s S -x -d 'Spoof source address'
-complete -c nmap -s e -x -d 'Use specified interface' -a "(__fish_print_interfaces)"
+complete -c nmap -s e -x -d 'Use specified interface' -a "(__ghoti_print_interfaces)"
 complete -c nmap -l source-port -s g -x -d 'Spoof source port number'
 complete -c nmap -l data -x -d 'Append custom binary data to sent packets'
 complete -c nmap -l data-string -x -d 'Append custom string to sent packets'
 complete -c nmap -l data-length -x -d 'Append random data to sent packets'
-function __fish_complete_nmap_ip-options
+function __ghoti_complete_nmap_ip-options
     printf "S\tstrict source routing\n" # may be followed by ip addresses
     printf "R\trecord route\n" # may be followed by ip addresses
     printf "L\tloose source routing\n" # may be followed by ip addresses
     printf "T\trecord internet timestamps\n"
     printf "U\trecord timestamps and ip addresses\n"
 end
-complete -c nmap -l ip-options -x -a "(__fish_complete_nmap_ip-options)" -d 'Send packets with specified ip options'
+complete -c nmap -l ip-options -x -a "(__ghoti_complete_nmap_ip-options)" -d 'Send packets with specified ip options'
 complete -c nmap -l ttl -x -d 'Set IP time-to-live field'
 complete -c nmap -l randomize-hosts -d 'Randomize target host order'
 complete -c nmap -l spoof-mac -x -d 'Spoof MAC address'
@@ -171,7 +171,7 @@ complete -c nmap -l no-stylesheet -d 'Omit XSL stylesheet declaration from XML'
 # MISCELLANEOUS OPTIONS
 complete -c nmap -s 6 -d 'Enable IPv6 scanning'
 complete -c nmap -s A -d 'Aggressive scan options'
-complete -c nmap -l datadir -x -a "(__fish_complete_directories)" -d 'Specify custom Nmap data file location'
+complete -c nmap -l datadir -x -a "(__ghoti_complete_directories)" -d 'Specify custom Nmap data file location'
 complete -c nmap -l servicedb -r -d 'Specify custom services file'
 complete -c nmap -l versiondb -r -d 'Specify custom service probes file'
 complete -c nmap -l send-eth -d 'Use raw ethernet sending'

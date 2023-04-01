@@ -17,7 +17,7 @@ send, sendline, sleep, expect_prompt, expect_str, expect_re = (
 expect_prompt()
 
 # Allow for long delays before matching escape.
-sendline(r"set -g fish_escape_delay_ms 2000")
+sendline(r"set -g ghoti_escape_delay_ms 2000")
 expect_prompt()
 
 # Set up a handler for SIGUSR1.

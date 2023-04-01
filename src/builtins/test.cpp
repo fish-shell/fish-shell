@@ -584,7 +584,7 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
             commandline.append(arg);
             narg++;
             if (narg == parser.error_idx) {
-                len_to_err = fish_wcswidth(commandline.c_str(), commandline.length());
+                len_to_err = ghoti_wcswidth(commandline.c_str(), commandline.length());
             }
         }
         err.append(program_name);
@@ -686,7 +686,7 @@ static bool parse_double(const wcstring &argstr, double *out_res) {
     if (!arg) return false;
     errno = 0;
     wchar_t *end = nullptr;
-    *out_res = fish_wcstod(arg, &end, argstr.size() - (arg - argstr.c_str()));
+    *out_res = ghoti_wcstod(arg, &end, argstr.size() - (arg - argstr.c_str()));
     // Consume trailing spaces.
     while (end && *end != L'\0' && iswspace(*end)) end++;
     return errno == 0 && end > arg && *end == L'\0';
@@ -701,7 +701,7 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
     double floating = 0;
     bool got_float = parse_double(arg, &floating);
     errno = 0;
-    long long integral = fish_wcstoll(argcs);
+    long long integral = ghoti_wcstoll(argcs);
     bool got_int = (errno == 0);
     if (got_int) {
         // Here the value is just an integer; ignore the floating point parse because it may be
@@ -723,7 +723,7 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         return true;
     } else {
         // We could not parse a float or an int.
-        // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
+        // Check for special ghoti_wcsto* value or show standard EINVAL/ERANGE error.
         if (errno == -1) {
             errors.push_back(
                 format_string(_(L"Integer %lld in '%ls' followed by non-digit"), integral, argcs));

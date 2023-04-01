@@ -1,4 +1,4 @@
-function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowing
+function __ghoti_complete_subcommand -d "Complete subcommand" --no-scope-shadowing
     # How many non-option tokens we skip in the input commandline before completing the subcommand
     # Usually 1; for ssh 2.
     set -l skip_next 1

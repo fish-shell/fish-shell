@@ -4,7 +4,7 @@ complete -c pidof -s n -d "Avoid stat(2) for binaries on NFS shares"
 complete -c pidof -s x -d "Include PIDs of shell scripts matching name"
 
 # Dynamically complete all PIDs + special variable %PPID for parent process
-complete -c pidof -s o -d "Exclude processes with PID" -xa '%PPID\t"Parent process, i.e. fish" (__fish_complete_pids)'
+complete -c pidof -s o -d "Exclude processes with PID" -xa '%PPID\t"Parent process, i.e. ghoti" (__ghoti_complete_pids)'
 
 # Dynamically complete all running processes
-complete -c pidof -xa '(__fish_complete_proc)'
+complete -c pidof -xa '(__ghoti_complete_proc)'

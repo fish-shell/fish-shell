@@ -1,2 +1,2 @@
-#RUN: %fish -c '%fish -c false; echo RC: $status'
+#RUN: %ghoti -c '%ghoti -c false; echo RC: $status'
 # CHECK: RC: 1

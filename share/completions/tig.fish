@@ -1,9 +1,9 @@
 # tig - text-mode interface for Git
 
-not functions -q __fish_git && source $__fish_data_dir/completions/git.fish
+not functions -q __ghoti_git && source $__ghoti_data_dir/completions/git.ghoti
 
 set -l subcommands log show reflog blame grep refs statsh status
-complete -c tig -n "not contains -- -- (commandline -opc) && not __fish_seen_subcommand_from $subcommands" -xa 'show\t"Open diff view using the given git-show(1) options"
+complete -c tig -n "not contains -- -- (commandline -opc) && not __ghoti_seen_subcommand_from $subcommands" -xa 'show\t"Open diff view using the given git-show(1) options"
 blame\t"Annotate the given file, takes git-blame(1) options"
 status\t"Start up in status view"
 log\t"Start up in log view view, displaying git-log(1) output"
@@ -18,10 +18,10 @@ complete -c tig -n 'not contains -- -- (commandline -opc)' -s C -r -d 'Run as if
 complete -c tig -n 'not contains -- -- (commandline -opc)' -s v -l version -d 'Show version and exit'
 complete -c tig -n 'not contains -- -- (commandline -opc)' -s h -l help -d 'Show help message and exit'
 
-complete -c tig -n 'not contains -- -- (commandline -opc) && __fish_seen_subcommand_from show' -xa '(set -l t (commandline -ct); complete -C"git show $t")'
-complete -c tig -n 'not contains -- -- (commandline -opc) && __fish_seen_subcommand_from blame' -xa '(set -l t (commandline -ct); complete -C"git blame $t")'
-complete -c tig -n 'not contains -- -- (commandline -opc) && __fish_seen_subcommand_from log' -xa '(set -l t (commandline -ct); complete -C"git log $t")'
-complete -c tig -n 'not contains -- -- (commandline -opc) && __fish_seen_subcommand_from grep' -xa '(set -l t (commandline -ct); complete -C"git grep $t")'
+complete -c tig -n 'not contains -- -- (commandline -opc) && __ghoti_seen_subcommand_from show' -xa '(set -l t (commandline -ct); complete -C"git show $t")'
+complete -c tig -n 'not contains -- -- (commandline -opc) && __ghoti_seen_subcommand_from blame' -xa '(set -l t (commandline -ct); complete -C"git blame $t")'
+complete -c tig -n 'not contains -- -- (commandline -opc) && __ghoti_seen_subcommand_from log' -xa '(set -l t (commandline -ct); complete -C"git log $t")'
+complete -c tig -n 'not contains -- -- (commandline -opc) && __ghoti_seen_subcommand_from grep' -xa '(set -l t (commandline -ct); complete -C"git grep $t")'
 
-complete -c tig -f -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
+complete -c tig -f -n 'not contains -- -- (commandline -opc)' -a '(__ghoti_git_ranges)'
 complete -c tig -n 'contains -- -- (commandline -opc)' -F

@@ -1,4 +1,4 @@
-function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument-names item error_message
+function __ghoti_print_help --description "Print help message for the specified ghoti function or builtin" --argument-names item error_message
     switch $item
         case .
             set item source
@@ -9,7 +9,7 @@ function __fish_print_help --description "Print help message for the specified f
     end
 
     # Do nothing if the file does not exist
-    if not test -e "$__fish_data_dir/man/man1/$item.1" -o -e "$__fish_data_dir/man/man1/$item.1.gz"
+    if not test -e "$__ghoti_data_dir/man/man1/$item.1" -o -e "$__ghoti_data_dir/man/man1/$item.1.gz"
         return 2
     end
 
@@ -30,31 +30,31 @@ function __fish_print_help --description "Print help message for the specified f
         end
     else if command -qs nroff
         set format nroff -c -man -t
-        if test -e $__fish_data_dir/groff/fish.tmac
-            set -a format -M$__fish_data_dir/groff -mfish
+        if test -e $__ghoti_data_dir/groff/ghoti.tmac
+            set -a format -M$__ghoti_data_dir/groff -mghoti
         end
         if test -n "$cols"
             set -a format -rLL={$cols}n
         end
     else
-        echo fish: (_ "Cannot format help; no parser found") >&2
+        echo ghoti: (_ "Cannot format help; no parser found") >&2
         return 1
     end
 
-    if test -e "$__fish_data_dir/man/man1/$item.1"
+    if test -e "$__ghoti_data_dir/man/man1/$item.1"
         # Some nroff versions screw up non-ascii characters.
         # (even with the locale set correctly!)
         # Work around that by running preconv first.
         if command -sq preconv; and test "$format[1]" = nroff
-            set help (preconv -e UTF-8 "$__fish_data_dir/man/man1/$item.1" | $format 2>/dev/null)
+            set help (preconv -e UTF-8 "$__ghoti_data_dir/man/man1/$item.1" | $format 2>/dev/null)
         else
-            set help ($format "$__fish_data_dir/man/man1/$item.1" 2>/dev/null)
+            set help ($format "$__ghoti_data_dir/man/man1/$item.1" 2>/dev/null)
         end
-    else if test -e "$__fish_data_dir/man/man1/$item.1.gz"
+    else if test -e "$__ghoti_data_dir/man/man1/$item.1.gz"
         if command -sq preconv; and test "$format[1]" = nroff
-            set help (gunzip -c "$__fish_data_dir/man/man1/$item.1.gz" 2>/dev/null | preconv -e UTF-8 | $format 2>/dev/null)
+            set help (gunzip -c "$__ghoti_data_dir/man/man1/$item.1.gz" 2>/dev/null | preconv -e UTF-8 | $format 2>/dev/null)
         else
-            set help (gunzip -c "$__fish_data_dir/man/man1/$item.1.gz" 2>/dev/null | $format 2>/dev/null)
+            set help (gunzip -c "$__ghoti_data_dir/man/man1/$item.1.gz" 2>/dev/null | $format 2>/dev/null)
         end
     end
 
@@ -62,7 +62,7 @@ function __fish_print_help --description "Print help message for the specified f
     # from the nroff output. Perhaps that's reliable, but the magic numbers make
     # me extremely nervous. Instead, let's just strip out any lines that start
     # in the first column. "normal" manpages put all section headers in the first
-    # column, but fish manpages only leave NAME like that, which we want to trim
+    # column, but ghoti manpages only leave NAME like that, which we want to trim
     # away anyway.
     #
     # While we're at it, let's compress sequences of blank lines down to a single

@@ -1,4 +1,4 @@
-#!/usr/bin/env fish
+#!/usr/bin/env ghoti
 #
 # Tool to generate messages.pot
 # Extended to replace the old Makefile rule which did not port easily to CMake
@@ -23,28 +23,28 @@ set -l implicit_regex '(?:^| +)(?:complete|function).*? (?:-d|--description) (([
 set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
 
 # Create temporary directory for these operations. OS X `mktemp` is somewhat restricted, so this block
-# works around that - based on share/functions/funced.fish.
+# works around that - based on share/functions/funced.ghoti.
 set -q TMPDIR
 or set -l TMPDIR /tmp
-set -l tmpdir (mktemp -d $TMPDIR/fish.XXXXXX)
+set -l tmpdir (mktemp -d $TMPDIR/ghoti.XXXXXX)
 or exit 1
 
 mkdir -p $tmpdir/implicit/share/completions $tmpdir/implicit/share/functions
 mkdir -p $tmpdir/explicit/share/completions $tmpdir/explicit/share/functions
 
-for f in share/config.fish share/completions/*.fish share/functions/*.fish
+for f in share/config.ghoti share/completions/*.ghoti share/functions/*.ghoti
     # Extract explicit attempts to translate a message. That is, those that are of the form
     # `(_ "message")`.
-    string replace --filter --regex $explicit_regex 'echo $1' <$f | fish >$tmpdir/explicit/$f.tmp 2>/dev/null
+    string replace --filter --regex $explicit_regex 'echo $1' <$f | ghoti >$tmpdir/explicit/$f.tmp 2>/dev/null
     while read description
         echo 'N_ "'(string replace --all '"' '\\"' -- $description)'"'
     end <$tmpdir/explicit/$f.tmp >$tmpdir/explicit/$f
     rm $tmpdir/explicit/$f.tmp
 
-    # Handle `complete` / `function` description messages. The `| fish` is subtle. It basically
+    # Handle `complete` / `function` description messages. The `| ghoti` is subtle. It basically
     # avoids the need to use `source` with a command substitution that could affect the current
     # shell.
-    string replace --filter --regex $implicit_regex 'echo $1' <$f | fish >$tmpdir/implicit/$f.tmp 2>/dev/null
+    string replace --filter --regex $implicit_regex 'echo $1' <$f | ghoti >$tmpdir/implicit/$f.tmp 2>/dev/null
     while read description
         # We don't use `string escape` as shown in the next comment because it produces output that
         # is not parsed correctly by xgettext. Instead just escape double-quotes and quote the
@@ -54,7 +54,7 @@ for f in share/config.fish share/completions/*.fish share/functions/*.fish
     rm $tmpdir/implicit/$f.tmp
 end
 
-xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot $tmpdir/explicit/share/*/*.fish
-xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot $tmpdir/implicit/share/*/*.fish
+xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot $tmpdir/explicit/share/*/*.ghoti
+xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot $tmpdir/implicit/share/*/*.ghoti
 
 rm -r $tmpdir

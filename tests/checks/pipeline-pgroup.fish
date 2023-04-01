@@ -1,4 +1,4 @@
-# RUN: env fth=%fish_test_helper fish=%fish %fish %s
+# RUN: env fth=%ghoti_test_helper ghoti=%ghoti %ghoti %s
 
 status job-control full
 
@@ -8,7 +8,7 @@ function save_pgroup -a var_name
     $fth print_pgrp | read -g $var_name
 end
 
-# Here everything should live in the pgroup of the first fish_test_helper.
+# Here everything should live in the pgroup of the first ghoti_test_helper.
 $fth print_pgrp | read -g global_group | save_pgroup g1 | begin
     save_pgroup g2
 end | begin
@@ -20,8 +20,8 @@ and echo "All pgroups agreed"
 or echo "Pgroups disagreed. Should be in $global_group but found $g1, $g2, $g3"
 # CHECK: All pgroups agreed
 
-# Here everything should live in fish's pgroup.
-# Unfortunately we don't know what fish's pgroup is (it may not be fish's pid).
+# Here everything should live in ghoti's pgroup.
+# Unfortunately we don't know what ghoti's pgroup is (it may not be ghoti's pid).
 # So run it twice and verify that everything agrees; this implies that it could
 # not have used any of the pids of the child procs.
 function nothing

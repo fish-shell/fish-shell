@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %ghoti -C 'set -g ghoti %ghoti' %s
 # Test the umask command. In particular the symbolic modes since they've been
 # broken for four years (see issue #738) at the time I added these tests.
 
@@ -23,8 +23,8 @@ umask 0282
 #
 # When I wrote these tests I based all of the results on the behavior of bash
 # when executing identical commands. So if bash has a bug with the umask
-# command it's possible fish will as well. However, I did verify the result of
-# each interaction and did not find any bugs in how bash or fish handled these
+# command it's possible ghoti will as well. However, I did verify the result of
+# each interaction and did not find any bugs in how bash or ghoti handled these
 # scenarios.
 #
 umask 0777

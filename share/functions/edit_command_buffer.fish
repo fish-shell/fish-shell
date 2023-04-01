@@ -2,14 +2,14 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     set -l f (mktemp)
     or return 1
     if set -q f[1]
-        command mv $f $f.fish
-        set f $f.fish
+        command mv $f $f.ghoti
+        set f $f.ghoti
     else
         # We should never execute this block but better to be paranoid.
         if set -q TMPDIR
-            set f $TMPDIR/fish.$fish_pid.fish
+            set f $TMPDIR/ghoti.$ghoti_pid.ghoti
         else
-            set f /tmp/fish.$fish_pid.fish
+            set f /tmp/ghoti.$ghoti_pid.ghoti
         end
         command touch $f
         or return 1
@@ -61,10 +61,10 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
             set -a editor $f
     end
 
-    __fish_disable_bracketed_paste
+    __ghoti_disable_bracketed_paste
     $editor
     set -l editor_status $status
-    __fish_enable_bracketed_paste
+    __ghoti_enable_bracketed_paste
 
     # Here we're checking the exit status of the editor.
     if test $editor_status -eq 0 -a -s $f

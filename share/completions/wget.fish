@@ -16,7 +16,7 @@ complete -c wget -o nv -d "Turn off verbose without being completely quiet"
 complete -c wget -s i -l input-file -d "Read URLs from file" -r
 complete -c wget -s F -l force-html -d "Force input to be treated as HTML"
 complete -c wget -s B -l base -d "Prepend string to relative links" -x
-complete -c wget -l bind-address -d "Bind address on local machine" -xa "(__fish_print_addresses; __fish_print_hostnames)"
+complete -c wget -l bind-address -d "Bind address on local machine" -xa "(__ghoti_print_addresses; __ghoti_print_hostnames)"
 complete -c wget -s t -l tries -d "Set number of retries to number" -xa "0 1 2 4 8 16 32 64 128"
 complete -c wget -s O -l output-document -d "Concatenate output to file" -r
 complete -c wget -l no-clobber -d "Never overwrite files with same name"
@@ -59,7 +59,7 @@ complete -c wget -l protocal-directories -d "Use the protocol name as a director
 complete -c wget -l cut-dirs -d "Ignore specified number of directory components" -xa "1 2 3 4 5"
 complete -c wget -s P -l directory-prefix -d "Set directory prefix" -r
 complete -c wget -s E -l html-extension -d "Force html files to have html extension"
-complete -c wget -l http-user -d "Specify the http username" -xa "(__fish_complete_users)"
+complete -c wget -l http-user -d "Specify the http username" -xa "(__ghoti_complete_users)"
 complete -c wget -l http-passwd -d "Specify the http password" -x
 complete -c wget -l no-cache -d "Disable server-side cache"
 complete -c wget -l no-cookies -d "Disable the use of cookies"
@@ -68,7 +68,7 @@ complete -c wget -l save-cookies -d "Save cookies to file"
 complete -c wget -l keep-session-cookies -d "Save session cookies"
 complete -c wget -l ignore-length -d "Ignore 'Content-Length' header"
 complete -c wget -l header -d "Define an additional-header to be passed to the HTTP servers" -x
-complete -c wget -l proxy-user -d "Specify the proxy username" -xa "(__fish_complete_users)"
+complete -c wget -l proxy-user -d "Specify the proxy username" -xa "(__ghoti_complete_users)"
 complete -c wget -l proxy-password -d "Specify the proxy password" -x
 complete -c wget -l referer -d "Set referer URL" -x
 complete -c wget -l save-headers -d "Save the headers sent by the HTTP server"
@@ -107,7 +107,7 @@ complete -c wget -l retr-symlinks -d "Traverse symlinks and retrieve pointed-to 
 # Recursive options
 
 complete -c wget -s r -l recursive -d "Turn on recursive retrieving"
-complete -c wget -n '__fish_contains_opt -s r recursive' -s l -l level -d "Specify recursion maximum depth" -x
+complete -c wget -n '__ghoti_contains_opt -s r recursive' -s l -l level -d "Specify recursion maximum depth" -x
 complete -c wget -l delete-after -d "Delete every single file downloaded"
 complete -c wget -s k -l convert-links -d "Convert the links in the document to make them suitable for local viewing"
 complete -c wget -s K -l backup-converted -d "Back up the original version"

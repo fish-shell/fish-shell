@@ -1,4 +1,4 @@
-// The fish parser.
+// The ghoti parser.
 #ifndef FISH_PARSER_H
 #define FISH_PARSER_H
 
@@ -153,8 +153,8 @@ struct library_data_pod_t {
     /// Number of recursive calls to the internal completion function.
     uint32_t complete_recursion_level{0};
 
-    /// If set, we are currently within fish's initialization routines.
-    bool within_fish_init{false};
+    /// If set, we are currently within ghoti's initialization routines.
+    bool within_ghoti_init{false};
 
     /// If we're currently repainting the commandline.
     /// Useful to stop infinite loops.
@@ -180,9 +180,9 @@ struct library_data_pod_t {
     /// Whether we are currently interactive.
     bool is_interactive{false};
 
-    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
+    /// Whether to suppress ghoti_trace output. This occurs in the prompt, event handlers, and key
     /// bindings.
-    bool suppress_fish_trace{false};
+    bool suppress_ghoti_trace{false};
 
     /// Whether we should break or continue the current loop.
     /// This is set by the 'break' and 'continue' commands.
@@ -273,7 +273,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// top down using range-based for loops.
     std::deque<block_t> block_list;
 
-    /// The 'depth' of the fish call stack.
+    /// The 'depth' of the ghoti call stack.
     int eval_level = -1;
 
     /// Set of variables for the parser.
@@ -362,7 +362,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Returns a string describing the current parser position in the format 'FILENAME (line
     /// LINE_NUMBER): LINE'. Example:
     ///
-    /// init.fish (line 127): ls|grep pancake
+    /// init.ghoti (line 127): ls|grep pancake
     wcstring current_line();
 
     /// Returns the current line number.
@@ -424,7 +424,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Update any universal variables and send event handlers.
     /// If \p always is set, then do it even if we have no pending changes (that is, look for
-    /// changes from other fish instances); otherwise only sync if this instance has changed uvars.
+    /// changes from other ghoti instances); otherwise only sync if this instance has changed uvars.
     void sync_uvars_and_fire(bool always = false);
 
     /// Pushes a new block. Returns a pointer to the block, stored in the parser. The pointer is

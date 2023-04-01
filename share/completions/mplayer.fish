@@ -69,13 +69,13 @@ complete -c mplayer -o ao -x -d "Audio output" -a "
 
 complete -c mplayer -o afm -x -d "Audio output" -a "
 (
-	__fish_append ',' (mplayer -afm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
+	__ghoti_append ',' (mplayer -afm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
 )
 "
 
 complete -c mplayer -o vfm -x -d "Video output" -a "
 (
-	__fish_append ',' (mplayer -vfm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
+	__ghoti_append ',' (mplayer -vfm help | string match -ar '\t.*\t|^ *[a-zA-Z0-9]+  ' | sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
 )
 "
 

@@ -1,6 +1,6 @@
 # Startup
-complete -c strace -s p -l attach -xa '(__fish_complete_pids)'
-complete -c strace -s u -l user -xa '(__fish_complete_users)'
+complete -c strace -s p -l attach -xa '(__ghoti_complete_pids)'
+complete -c strace -s u -l user -xa '(__ghoti_complete_users)'
 
 # Tracing
 complete -c strace -s b -l detach-on -d 'Detach when the specified syscall is reached'

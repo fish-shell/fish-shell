@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 # Verify the '--on-job-exit caller' misfeature.
 function make_call_observer -a type

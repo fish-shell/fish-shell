@@ -434,7 +434,7 @@ class completer_t {
 };
 
 // Autoloader for completions.
-static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_path")};
+static owning_lock<autoload_t> completion_autoloader{autoload_t(L"ghoti_complete_path")};
 
 /// Test if the specified script returns zero. The result is cached, so that if multiple completions
 /// use the same condition, it needs only be evaluated once. condition_cache_clear must be called
@@ -569,7 +569,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
         return;
     }
 
-    wcstring lookup_cmd(L"__fish_describe_command ");
+    wcstring lookup_cmd(L"__ghoti_describe_command ");
     lookup_cmd.append(escape_string(cmd));
 
     // First locate a list of possible descriptions using a single call to apropos or a direct
@@ -1596,7 +1596,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     const tok_t &cmd_tok = tokens.front();
     const tok_t &cur_tok = tokens.back();
 
-    // Since fish does not currently support redirect in command position, we return here.
+    // Since ghoti does not currently support redirect in command position, we return here.
     if (cmd_tok.type_ != token_type_t::string) return;
     if (cur_tok.type_ == token_type_t::error) return;
     for (const auto &tok : tokens) {  // If there was an error, it was in the last token.
@@ -1845,7 +1845,7 @@ bool complete_load(const wcstring &cmd, parser_t &parser) {
     // It's important to NOT hold the lock around completion loading.
     // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
     // it.
-    // Note we only look at the global fish_function_path and fish_complete_path.
+    // Note we only look at the global ghoti_function_path and ghoti_complete_path.
     maybe_t<wcstring> path_to_load =
         completion_autoloader.acquire()->resolve_command(cmd, env_stack_t::globals());
     if (path_to_load) {
@@ -1904,7 +1904,7 @@ void complete_invalidate_path() {
     }
 }
 
-/// Add a new target that wraps a command. Example: __fish_XYZ (function) wraps XYZ (target).
+/// Add a new target that wraps a command. Example: __ghoti_XYZ (function) wraps XYZ (target).
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
     if (command.empty() || new_target.empty()) {
         return false;

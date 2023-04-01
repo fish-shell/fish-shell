@@ -3,7 +3,7 @@
 
 set -l progname xbps-fbulk
 
-complete -c $progname -f -a "(__fish_complete_directories) (__fish_print_xbps_packages)"
+complete -c $progname -f -a "(__ghoti_complete_directories) (__ghoti_print_xbps_packages)"
 
 complete -c $progname -s a -d 'Set a different target architecture, useful for cross compiling.' -x
 complete -c $progname -s j -d 'Set number of parallel builds running at the same time.  By default set to 1.' -x

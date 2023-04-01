@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 function outnerr
     command echo out $argv
@@ -30,7 +30,7 @@ echo noclobber &>>?$tmpdir/file.txt
 #CHECKERR: {{.*}} The file {{.*}} already exists
 
 eval "echo foo |& false"
-#CHECKERR: {{.*}} |& is not valid. In fish, use &| to pipe both stdout and stderr.
+#CHECKERR: {{.*}} |& is not valid. In ghoti, use &| to pipe both stdout and stderr.
 #CHECKERR: echo foo |& false
 #CHECKERR:          ^^
 
@@ -117,7 +117,7 @@ echo hooray2 >&2
 # "Verify that pipes don't conflict with fd redirections"
 # This code is very similar to eval. We go over a bunch of fads
 # to make it likely that we will nominally conflict with a pipe
-# fish is supposed to detect this case and dup the pipe to something else
+# ghoti is supposed to detect this case and dup the pipe to something else
 echo "/bin/echo pipe 3 <&3 3<&-" | source 3<&0
 echo "/bin/echo pipe 4 <&4 4<&-" | source 4<&0
 echo "/bin/echo pipe 5 <&5 5<&-" | source 5<&0

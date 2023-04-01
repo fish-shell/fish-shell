@@ -1,6 +1,6 @@
 # Visual Studio Code
 
-function __fish_complete_vscode_extensions
+function __ghoti_complete_vscode_extensions
     command --quiet code; and code --list-extensions
 end
 
@@ -11,7 +11,7 @@ complete -c code -s n -l new-window -d 'Force to open a new window'
 complete -c code -s r -l reuse-window -d 'Force to open a file or folder in an already opened window'
 complete -c code -s w -l wait -d 'Wait for the files to be closed before returning'
 complete -c code -l locale -x -d 'The locale to use (e.g. en-US or zh-TW)'
-complete -c code -l user-data-dir -ra "(__fish_complete_directories)" -d 'Specifies the directory that user data is kept in'
+complete -c code -l user-data-dir -ra "(__ghoti_complete_directories)" -d 'Specifies the directory that user data is kept in'
 complete -c code -s v -l version -d 'Print version'
 complete -c code -s h -l help -d 'Print usage'
 complete -c code -l folder-uri -d 'Opens a window with given folder uri(s)'
@@ -20,12 +20,12 @@ complete -c code -l file-uri -d 'Opens a window with given file uri(s)'
 # Extensions management
 complete -c code -l extensions-dir -d 'Set the root path for extensions'
 complete -c code -l list-extensions -d 'List the installed extensions'
-complete -c code -l show-versions -d 'Show versions of installed extensions' -n '__fish_seen_argument -l list-extensions'
-complete -c code -l install-extension -ra "(__fish_complete_vscode_extensions)" -d 'Installs or updates the extension'
-complete -c code -l force -n '__fish_seen_argument -l install-extension' -d 'Avoid prompts when installing'
-complete -c code -l enable-proposed-api -xa "(__fish_complete_vscode_extensions)" -d 'Enables proposed API features for extensions'
-complete -c code -l uninstall-extension -xa "(__fish_complete_vscode_extensions)" -d 'Uninstall extension'
-complete -c code -l disable-extension -xa "(__fish_complete_vscode_extensions)" -d 'Disable extension(s)'
+complete -c code -l show-versions -d 'Show versions of installed extensions' -n '__ghoti_seen_argument -l list-extensions'
+complete -c code -l install-extension -ra "(__ghoti_complete_vscode_extensions)" -d 'Installs or updates the extension'
+complete -c code -l force -n '__ghoti_seen_argument -l install-extension' -d 'Avoid prompts when installing'
+complete -c code -l enable-proposed-api -xa "(__ghoti_complete_vscode_extensions)" -d 'Enables proposed API features for extensions'
+complete -c code -l uninstall-extension -xa "(__ghoti_complete_vscode_extensions)" -d 'Uninstall extension'
+complete -c code -l disable-extension -xa "(__ghoti_complete_vscode_extensions)" -d 'Disable extension(s)'
 complete -c code -l disable-extensions -d 'Disable all installed extensions'
 
 # Troubleshooting

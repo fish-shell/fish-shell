@@ -1,11 +1,11 @@
 # Only GNU and BSD sysctl seem to know "-h", so others should exit non-zero
 if sysctl -h >/dev/null 2>/dev/null
     # Print sysctl keys and values, separated by a tab
-    function __fish_sysctl_values
+    function __ghoti_sysctl_values
         sysctl -a 2>/dev/null | string replace -a " = " \t
     end
 
-    complete -c sysctl -a '(__fish_sysctl_values)' -f
+    complete -c sysctl -a '(__ghoti_sysctl_values)' -f
 
     complete -c sysctl -s n -l values -d 'Only print values'
     complete -c sysctl -s e -l ignore -d 'Ignore errors about unknown keys'
@@ -29,11 +29,11 @@ if sysctl -h >/dev/null 2>/dev/null
     complete -c sysctl -s V -l version -d 'Display version information and exit.'
 else
     # OSX sysctl
-    function __fish_sysctl_values
+    function __ghoti_sysctl_values
         sysctl -a 2>/dev/null | string replace -a ":" \t
     end
 
-    complete -c sysctl -a '(__fish_sysctl_values)' -f
+    complete -c sysctl -a '(__ghoti_sysctl_values)' -f
     complete -c sysctl -s a -d 'Display all non-opaque values currently available'
     complete -c sysctl -s A -d 'Display all MIB variables'
     complete -c sysctl -s b -d 'Output values in a binary format'

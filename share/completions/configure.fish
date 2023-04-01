@@ -1,4 +1,4 @@
-function __fish_parse_configure
+function __ghoti_parse_configure
     if test (count $argv) -ne 1
         echo "Usage: parse_configure path/to/configure" 1>&2
         return 1
@@ -20,7 +20,7 @@ function __fish_parse_configure
     set -l next_line
     set -l line
     set -l buffer
-    # Just fish's `./configure --help` takes ~350ms to run, before parsing
+    # Just ghoti's `./configure --help` takes ~350ms to run, before parsing
     # The following chain attempts to extract the help message:
     cat $argv[1] | tr \n \u0e | sed -n 's/.*Report the --help message\(.*\?\)ac_status.*/\1/; s/ac_status.*//p' | tr \u0e \n |
         while test -n "$next_line" || read -lL next_line
@@ -77,9 +77,9 @@ complete -c configure -s q -l quiet -d "Quiet mode"
 complete -c configure -l cache-file -f -d "Cache test results in specified file"
 complete -c configure -s C -l config-cache -d "Cache test results in file config.cache"
 complete -c configure -s n -l no-create -d "Do not create output files"
-complete -c configure -l srcdir -d "Set source directory" -a "(__fish_complete_directories)" -x
-complete -c configure -l prefix -d "Architecture-independent install directory" -a "(__fish_complete_directories)" -x
-complete -c configure -l exec-prefix -d "Architecture-dependent install directory" -a "(__fish_complete_directories)" -x
+complete -c configure -l srcdir -d "Set source directory" -a "(__ghoti_complete_directories)" -x
+complete -c configure -l prefix -d "Architecture-independent install directory" -a "(__ghoti_complete_directories)" -x
+complete -c configure -l exec-prefix -d "Architecture-dependent install directory" -a "(__ghoti_complete_directories)" -x
 complete -c configure -l build -d "Configure for building on BUILD" -x
 complete -c configure -l host -d "Cross-compile to build programs to run on HOST" -x
 complete -c configure -l target -d "Configure for building compilers for TARGET" -x
@@ -87,7 +87,7 @@ complete -c configure -l target -d "Configure for building compilers for TARGET"
 # use autoconf's --help to generate completions:
 complete -c configure -a '(for tok in (commandline -opc)
     if string match -q "*configure" -- $tok
-        __fish_parse_configure $tok
+        __ghoti_parse_configure $tok
         break
     end
 end)'

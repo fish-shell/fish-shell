@@ -4,7 +4,7 @@ function alias --description 'Creates a function wrapping a command'
     or return
 
     if set -q _flag_help
-        __fish_print_help alias
+        __ghoti_print_help alias
         return 0
     end
 

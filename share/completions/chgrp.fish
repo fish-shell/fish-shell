@@ -9,7 +9,7 @@ if chgrp --version &>/dev/null # not unix
     complete -c chgrp -s v -l verbose -d "Output diagnostic for every file"
     complete -c chgrp -l help -d "Display help and exit"
     complete -c chgrp -l version -d "Display version and exit"
-    complete -c chgrp -d Group -a "(__fish_complete_groups)"
+    complete -c chgrp -d Group -a "(__ghoti_complete_groups)"
 else # not Linux
     complete -c chgrp -s h -d "Don't dereference symlinks"
     complete -c chgrp -s H -d "Follow specified symlinks with -R"
@@ -20,5 +20,5 @@ else # not Linux
     complete -c chgrp -s R -d "Operate recursively"
     complete -c chgrp -s v -d "Output filenames"
     complete -c chgrp -s x -d "Don't traverse fs mountpoints"
-    complete -c chgrp -d Group -a "(__fish_complete_groups)"
+    complete -c chgrp -d Group -a "(__ghoti_complete_groups)"
 end

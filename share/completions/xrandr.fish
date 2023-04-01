@@ -1,8 +1,8 @@
-function __fish_print_xrandr_outputs --description 'Print xrandr outputs'
+function __ghoti_print_xrandr_outputs --description 'Print xrandr outputs'
     xrandr | string replace -r --filter '^(\S+)\s+(.*)$' '$1\t$2' | string match -v -e Screen
 end
 
-function __fish_print_xrandr_modes --description 'Print xrandr modes'
+function __ghoti_print_xrandr_modes --description 'Print xrandr modes'
     set -l output
     xrandr | string match -v -r '^(Screen|\s{4,})' | while read -l line
         switch $line
@@ -48,22 +48,22 @@ complete -c xrandr -l fb -d 'Set screen size' -x
 complete -c xrandr -l fbmm -d 'Set reported physical screen size' -x
 complete -c xrandr -l dpi -d 'Set dpi to calculate reported physical screen size'
 complete -c xrandr -l newmode -d 'Add new mode' -r
-complete -c xrandr -l rmmode -d 'Removes a mode from the server' -xa '(__fish_print_xrandr_modes)'
-complete -c xrandr -l addmode -d 'Add a mode to the set of valid modes for an output' -xa '(__fish_print_xrandr_outputs)'
-complete -c xrandr -l delmode -d 'Remove a mode from the set of valid modes for an output' -xa '(__fish_print_xrandr_outputs)'
-complete -c xrandr -l output -d 'Selects an output to reconfigure' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l rmmode -d 'Removes a mode from the server' -xa '(__ghoti_print_xrandr_modes)'
+complete -c xrandr -l addmode -d 'Add a mode to the set of valid modes for an output' -xa '(__ghoti_print_xrandr_outputs)'
+complete -c xrandr -l delmode -d 'Remove a mode from the set of valid modes for an output' -xa '(__ghoti_print_xrandr_outputs)'
+complete -c xrandr -l output -d 'Selects an output to reconfigure' -xa '(__ghoti_print_xrandr_outputs)'
 complete -c xrandr -l auto -d 'Enable connected but disabled outputs'
-complete -c xrandr -l mode -d 'This selects a mode' -xa '(__fish_print_xrandr_modes)'
+complete -c xrandr -l mode -d 'This selects a mode' -xa '(__ghoti_print_xrandr_modes)'
 complete -c xrandr -l preferred -d 'Select the same mode as --auto, but it do not automatically enable or disable the output'
 complete -c xrandr -l pos -d 'Set output position within the secreen in pixels' -x
 complete -c xrandr -l rate -d 'Set refresh rate' -x
 complete -c xrandr -l reflect -d 'Set reflection' -xa 'normal x y xy'
 complete -c xrandr -l rotate -d 'Set rotation' -xa 'normal left right inverted'
-complete -c xrandr -l left-of -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-complete -c xrandr -l right-of -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-complete -c xrandr -l above -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-complete -c xrandr -l below -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-complete -c xrandr -l same-as -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l left-of -d 'Set position relative to the output' -xa '(__ghoti_print_xrandr_outputs)'
+complete -c xrandr -l right-of -d 'Set position relative to the output' -xa '(__ghoti_print_xrandr_outputs)'
+complete -c xrandr -l above -d 'Set position relative to the output' -xa '(__ghoti_print_xrandr_outputs)'
+complete -c xrandr -l below -d 'Set position relative to the output' -xa '(__ghoti_print_xrandr_outputs)'
+complete -c xrandr -l same-as -d 'Set position relative to the output' -xa '(__ghoti_print_xrandr_outputs)'
 complete -c xrandr -l set -d 'Set the property value: --set <prop> <value>' -x
 complete -c xrandr -l off -d 'Disables the output'
 complete -c xrandr -l crtc -d 'Set the crtc' -x

@@ -1,7 +1,7 @@
 # Load completions shared by various ssh tools like ssh, scp and sftp.
-__fish_complete_ssh sftp
+__ghoti_complete_ssh sftp
 
-complete -c sftp -x -a "(__fish_complete_user_at_hosts)"
+complete -c sftp -x -a "(__ghoti_complete_user_at_hosts)"
 
 complete -c sftp -s a -d 'Attempt to continue interrupted transfers'
 complete -c sftp -s B -x -d 'Size of the buffer when transferring files'

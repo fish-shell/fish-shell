@@ -1,4 +1,4 @@
-complete -c modinfo -a "(__fish_print_modules)"
+complete -c modinfo -a "(__ghoti_print_modules)"
 complete -c modinfo -l author -s a -d "Print only 'author'"
 complete -c modinfo -l description -s d -d "Print only 'description'"
 complete -c modinfo -l license -s l -d "Print only 'license'"

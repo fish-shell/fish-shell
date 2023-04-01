@@ -19,7 +19,7 @@ function cd --description "Change directory"
     set -l previous $PWD
 
     if test "$argv" = -
-        if test "$__fish_cd_direction" = next
+        if test "$__ghoti_cd_direction" = next
             nextd
         else
             prevd
@@ -36,7 +36,7 @@ function cd --description "Change directory"
         set -q dirprev[$MAX_DIR_HIST]
         and set -e dirprev[1]
 
-        # If dirprev, dirnext, __fish_cd_direction
+        # If dirprev, dirnext, __ghoti_cd_direction
         # are set as universal variables, honor their scope.
 
         set -U -q dirprev
@@ -47,9 +47,9 @@ function cd --description "Change directory"
         and set -U -e dirnext
         or set -e dirnext
 
-        set -U -q __fish_cd_direction
-        and set -U __fish_cd_direction prev
-        or set -g __fish_cd_direction prev
+        set -U -q __ghoti_cd_direction
+        and set -U __ghoti_cd_direction prev
+        or set -g __ghoti_cd_direction prev
     end
 
     return $cd_status

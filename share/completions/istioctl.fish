@@ -1,1 +1,1 @@
-istioctl completion fish | source
+istioctl completion ghoti | source

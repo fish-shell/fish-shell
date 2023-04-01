@@ -1,4 +1,4 @@
-// Various functions, mostly string utilities, that are used by most parts of fish.
+// Various functions, mostly string utilities, that are used by most parts of ghoti.
 #include "config.h"
 
 #ifdef HAVE_BACKTRACE_SYMBOLS
@@ -150,20 +150,20 @@ bool is_windows_subsystem_for_linux() {
             const char *dash = std::strchr(info.release, '-');
             if (dash == nullptr || strtod(dash + 1, nullptr) < 17763) {
                 // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
-                // job control under early WSL releases that prevent fish from running correctly,
+                // job control under early WSL releases that prevent ghoti from running correctly,
                 // with unexpected failures when piping. Fish 3.0 nightly builds worked around this
                 // issue with some needlessly complicated code that was later stripped from the
-                // fish 3.0 release, so we just bail. Note that fish 2.0 was also broken, but we
+                // ghoti 3.0 release, so we just bail. Note that ghoti 2.0 was also broken, but we
                 // just didn't warn about it.
 
                 // #6038 & 5101bde: It's been requested that there be some sort of way to disable
                 // this check: if the environment variable FISH_NO_WSL_CHECK is present, this test
                 // is bypassed. We intentionally do not include this in the error message because
-                // it'll only allow fish to run but not to actually work. Here be dragons!
+                // it'll only allow ghoti to run but not to actually work. Here be dragons!
                 if (getenv("FISH_NO_WSL_CHECK") == nullptr) {
                     FLOGF(error,
-                          "This version of WSL has known bugs that prevent fish from working."
-                          "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
+                          "This version of WSL has known bugs that prevent ghoti from working."
+                          "Please upgrade to Windows 10 1809 (17763) or higher to use ghoti!");
                 }
             }
 
@@ -181,7 +181,7 @@ bool is_windows_subsystem_for_linux() {
 
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
-// https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
+// https://gist.github.com/fmela/591333 but adapted to the style of the ghoti project.
 [[gnu::noinline]] static wcstring_list_t demangled_backtrace(int max_frames, int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
@@ -510,7 +510,7 @@ const wchar_t *comment_end(const wchar_t *pos) {
     return pos;
 }
 
-void fish_setlocale() {
+void ghoti_setlocale() {
     // Use various Unicode symbols if they can be encoded using the current locale, else a simple
     // ASCII char alternative. All of the can_be_encoded() invocations should return the same
     // true/false value since the code points are in the BMP but we're going to be paranoid. This
@@ -581,7 +581,7 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
 
 /// Hack to not print error messages in the tests. Do not call this from functions in this module
 /// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
-/// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
+/// ghoti parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
     return program_name && !std::wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
@@ -676,12 +676,12 @@ wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
             while (*pos && (!std::wcschr(L" \n\r\t", *pos))) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
-                if ((tok_width + fish_wcwidth(*pos)) > (screen_width - 1)) {
+                if ((tok_width + ghoti_wcwidth(*pos)) > (screen_width - 1)) {
                     overflow = 1;
                     break;
                 }
 
-                tok_width += fish_wcwidth(*pos);
+                tok_width += ghoti_wcwidth(*pos);
                 pos++;
             }
 
@@ -770,7 +770,7 @@ static bool unescape_string_url(const wchar_t *in, wcstring *out) {
     return true;
 }
 
-/// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
+/// Escape a string in a fashion suitable for using as a ghoti var name. Store the result in out_str.
 static void escape_string_var(const wcstring &in, wcstring &out) {
     bool prev_was_hex_encoded = false;
     const std::string narrow = wcs2string(in);
@@ -857,7 +857,7 @@ wcstring escape_string_for_double_quotes(wcstring in) {
     return result;
 }
 
-/// Escape a string in a fashion suitable for using in fish script. Store the result in out_str.
+/// Escape a string in a fashion suitable for using in ghoti script. Store the result in out_str.
 static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
                                  escape_flags_t flags) {
     const wchar_t *in = orig_in;
@@ -1810,7 +1810,7 @@ void assert_is_locked(std::mutex &mutex, const char *who, const char *caller) {
     }
 }
 
-/// Test if the specified character is in a range that fish uses internally to store special tokens.
+/// Test if the specified character is in a range that ghoti uses internally to store special tokens.
 ///
 /// NOTE: This is used when tokenizing the input. It is also used when reading input, before
 /// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
@@ -1818,7 +1818,7 @@ void assert_is_locked(std::mutex &mutex, const char *who, const char *caller) {
 /// lexer/parser or code evaluator.
 //
 // TODO: Actually implement the replacement as documented above.
-bool fish_reserved_codepoint(wchar_t c) {
+bool ghoti_reserved_codepoint(wchar_t c) {
     return (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
            (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END);
 }
@@ -1829,7 +1829,7 @@ void redirect_tty_output() {
     struct termios t;
     int fd = open("/dev/null", O_WRONLY);
     if (fd == -1) {
-        __fish_assert("Could not open /dev/null!", __FILE__, __LINE__, errno);
+        __ghoti_assert("Could not open /dev/null!", __FILE__, __LINE__, errno);
     }
     if (tcgetattr(STDIN_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDIN_FILENO);
     if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDOUT_FILENO);
@@ -1838,7 +1838,7 @@ void redirect_tty_output() {
 }
 
 /// Display a failed assertion message, dump a stack trace if possible, then die.
-[[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
+[[noreturn]] void __ghoti_assert(const char *msg, const char *file, size_t line, int error) {
     if (unlikely(error)) {
         FLOGF(error, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
               std::strerror(error));
@@ -1850,7 +1850,7 @@ void redirect_tty_output() {
 }
 
 /// Test if the given char is valid in a variable name.
-bool valid_var_name_char(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'; }
+bool valid_var_name_char(wchar_t chr) { return ghoti_iswalnum(chr) || chr == L'_'; }
 
 /// Test if the given string is a valid variable name.
 bool valid_var_name(const wcstring &str) {
@@ -1961,7 +1961,7 @@ std::string get_path_to_tmp_dir() {
 // This function attempts to distinguish between a console session (at the actual login vty) and a
 // session within a terminal emulator inside a desktop environment or over SSH. Unfortunately
 // there are few values of $TERM that we can interpret as being exclusively console sessions, and
-// most common operating systems do not use them. The value is cached for the duration of the fish
+// most common operating systems do not use them. The value is cached for the duration of the ghoti
 // session. We err on the side of assuming it's not a console session. This approach isn't
 // bullet-proof and that's OK.
 bool is_console_session() {

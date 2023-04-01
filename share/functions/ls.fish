@@ -1,4 +1,4 @@
-function __fish_set_lscolors --description 'Set $LS_COLORS if possible'
+function __ghoti_set_lscolors --description 'Set $LS_COLORS if possible'
     if ! set -qx LS_COLORS && set -l cmd (command -s {g,}dircolors)[1]
         set -l colorfile
         for file in ~/.dir_colors ~/.dircolors /etc/DIR_COLORS
@@ -26,20 +26,20 @@ function ls --description "List contents of directory"
     # Solaris 11's ls command takes a --color flag.
     # OpenBSD requires the separate colorls program for color support.
     # Also test -F because we'll want to define this function even with an ls that can't do colors (like NetBSD).
-    if not set -q __fish_ls_color_opt
-        set -g __fish_ls_color_opt
-        set -g __fish_ls_command ls
+    if not set -q __ghoti_ls_color_opt
+        set -g __ghoti_ls_color_opt
+        set -g __ghoti_ls_command ls
         # OpenBSD ships a command called "colorls" that takes "-G" and "-F",
         # but there's also a ruby implementation that doesn't understand "-F".
         # Since that one's quite different, don't use it.
         if command -sq colorls
             and command colorls -GF >/dev/null 2>/dev/null
-            set -g __fish_ls_color_opt -GF
-            set -g __fish_ls_command colorls
+            set -g __ghoti_ls_color_opt -GF
+            set -g __ghoti_ls_command colorls
         else
             for opt in --color=auto -G --color -F
                 if command ls $opt / >/dev/null 2>/dev/null
-                    set -g __fish_ls_color_opt $opt
+                    set -g __ghoti_ls_color_opt $opt
                     break
                 end
             end
@@ -47,7 +47,7 @@ function ls --description "List contents of directory"
     end
 
     # Set the colors to the default via `dircolors` if none is given.
-    __fish_set_lscolors
+    __ghoti_set_lscolors
 
     isatty stdout
     and set -a opt -F
@@ -61,5 +61,5 @@ function ls --description "List contents of directory"
     test "$TERM_PROGRAM" = Apple_Terminal
     and set -lx CLICOLOR 1
 
-    command $__fish_ls_command $__fish_ls_color_opt $opt $argv
+    command $__ghoti_ls_command $__ghoti_ls_color_opt $opt $argv
 end

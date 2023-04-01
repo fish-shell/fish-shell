@@ -15,7 +15,7 @@ Description
 
 ``bg`` sends :ref:`jobs <syntax-job-control>` to the background, resuming them if they are stopped.
 
-A background job is executed simultaneously with fish, and does not have access to the keyboard. If no job is specified, the last job to be used is put in the background. If ``PID`` is specified, the jobs containing the specified process IDs are put in the background.
+A background job is executed simultaneously with ghoti, and does not have access to the keyboard. If no job is specified, the last job to be used is put in the background. If ``PID`` is specified, the jobs containing the specified process IDs are put in the background.
 
 For compatibility with other shells, job expansion syntax is supported for ``bg``. A PID of the format ``%1`` will be interpreted as the PID of job 1. Job numbers can be seen in the output of :doc:`jobs <jobs>`.
 

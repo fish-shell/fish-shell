@@ -17,7 +17,7 @@ Description
 
 Each ``case`` command is given one or more parameters. The first ``case`` command with a parameter that matches the string specified in the switch command will be evaluated. ``case`` parameters may contain globs. These need to be escaped or quoted in order to avoid regular glob expansion using filenames.
 
-Note that fish does not fall through on case statements. Only the first matching case is executed.
+Note that ghoti does not fall through on case statements. Only the first matching case is executed.
 
 Note that :doc:`break <break>` cannot be used to exit a case/switch block early like in other languages. It can only be used in loops.
 
@@ -39,7 +39,7 @@ If the variable ``$animal`` contains the name of an animal, the following code w
         case duck goose albatross
             echo bird
         case shark trout stingray
-            echo fish
+            echo ghoti
         case '*'
             echo I have no idea what a $animal is
     end

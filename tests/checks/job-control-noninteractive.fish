@@ -1,4 +1,4 @@
-#RUN: env fth=%fish_test_helper fish=%fish %fish %s
+#RUN: env fth=%ghoti_test_helper ghoti=%ghoti %ghoti %s
 
 # Ensure job control works in non-interactive environments.
 
@@ -13,8 +13,8 @@ and echo "pgroups differed, meaning job control worked"
 or echo "pgroups were the same, job control did not work"
 #CHECK: pgroups differed, meaning job control worked
 
-# fish ignores SIGTTIN and so may transfer the tty even if it
+# ghoti ignores SIGTTIN and so may transfer the tty even if it
 # doesn't own the tty. Ensure that doesn't happen.
-$fish -c 'status job-control full ; $fth report_foreground' &
+$ghoti -c 'status job-control full ; $fth report_foreground' &
 wait
 #CHECKERR: background

@@ -1,4 +1,4 @@
-// Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
+// Various mostly unrelated utility functions related to parsing, loading and evaluating ghoti code.
 #ifndef FISH_PARSE_UTIL_H
 #define FISH_PARSE_UTIL_H
 
@@ -116,7 +116,7 @@ wchar_t parse_util_get_quote_type(const wcstring &cmd, size_t pos);
 wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
                                              bool no_tilde = false);
 
-/// Given a string, parse it as fish code and then return the indents. The return value has the same
+/// Given a string, parse it as ghoti code and then return the indents. The return value has the same
 /// size as the string.
 std::vector<int> parse_util_compute_indents(const wcstring &src);
 

@@ -9,7 +9,7 @@ complete -c ln -s P -l physical -d 'Make hard links directly to symbolic links'
 complete -c ln -s r -l relative -d 'With -s, create links relative to link location'
 complete -c ln -s s -l symbolic -d 'Make symbolic links instead of hard links'
 complete -c ln -s S -l suffix -d 'Override the usual ~ backup suffix'
-complete -c ln -s t -l target-directory -d 'Specify the DIRECTORY in which to create the links' -a '(__fish_complete_directories)'
+complete -c ln -s t -l target-directory -d 'Specify the DIRECTORY in which to create the links' -a '(__ghoti_complete_directories)'
 complete -c ln -s T -l no-target-directory -d 'Treat LINK_NAME as a normal file'
 complete -c ln -s v -l verbose -d 'Print name of each linked file'
 

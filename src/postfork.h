@@ -21,7 +21,7 @@ class job_t;
 class process_t;
 
 /// Tell the proc \p pid to join process group \p pgroup.
-/// If \p is_child is true, we are the child process; otherwise we are fish.
+/// If \p is_child is true, we are the child process; otherwise we are ghoti.
 /// Called by both parent and child; this is an unavoidable race inherent to Unix.
 /// If is_parent is set, then we are the parent process and should swallow EACCESS.
 /// \return 0 on success, an errno error code on failure.

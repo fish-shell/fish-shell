@@ -1,6 +1,6 @@
 .. _cmd-abbr:
 
-abbr - manage fish abbreviations
+abbr - manage ghoti abbreviations
 ================================
 
 Synopsis
@@ -28,14 +28,14 @@ For example, a frequently-run command like ``git checkout`` can be abbreviated t
 After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
 To avoid expanding something that looks like an abbreviation, the default :kbd:`Control`\ +\ :kbd:`Space` binding inserts a space without expanding.
 
-An abbreviation may match a literal word, or it may match a pattern given by a regular expression. When an abbreviation matches a word, that word is replaced by new text, called its *expansion*. This expansion may be a fixed new phrase, or it can be dynamically created via a fish function. This expansion occurs after pressing space or enter.
+An abbreviation may match a literal word, or it may match a pattern given by a regular expression. When an abbreviation matches a word, that word is replaced by new text, called its *expansion*. This expansion may be a fixed new phrase, or it can be dynamically created via a ghoti function. This expansion occurs after pressing space or enter.
 
 Combining these features, it is possible to create custom syntaxes, where a regular expression recognizes matching tokens, and the expansion function interprets them. See the `Examples`_ section.
 
 .. versionchanged:: 3.6.0
    Previous versions of this allowed saving abbreviations in universal variables.
    That's no longer possible. Existing variables will still be imported and ``abbr --erase`` will also erase the variables.
-   We recommend adding abbreviations to :ref:`config.fish <configuration>` by just adding the ``abbr --add`` command.
+   We recommend adding abbreviations to :ref:`config.ghoti <configuration>` by just adding the ``abbr --add`` command.
    When you run ``abbr``, you will see output like this
 
    ::
@@ -43,10 +43,10 @@ Combining these features, it is possible to create custom syntaxes, where a regu
      > abbr
      abbr -a -- foo bar # imported from a universal variable, see `help abbr`
 
-   In that case you should take the part before the ``#`` comment and save it in :ref:`config.fish <configuration>`,
+   In that case you should take the part before the ``#`` comment and save it in :ref:`config.ghoti <configuration>`,
    then you can run ``abbr --erase`` to remove the universal variable::
 
-     > abbr >> ~/.config/fish/config.fish
+     > abbr >> ~/.config/ghoti/config.ghoti
      > abbr --erase (abbr --list)
    
 
@@ -66,7 +66,7 @@ With **--regex**, the abbreviation matches using the regular expression given by
 
 With **--set-cursor=MARKER**, the cursor is moved to the first occurrence of **MARKER** in the expansion. The **MARKER** value is erased. The **MARKER** may be omitted (i.e. simply ``--set-cursor``), in which case it defaults to ``%``.
 
-With **-f FUNCTION** or **--function FUNCTION**, **FUNCTION** is treated as the name of a fish function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged. No **EXPANSION** may be given separately.
+With **-f FUNCTION** or **--function FUNCTION**, **FUNCTION** is treated as the name of a ghoti function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged. No **EXPANSION** may be given separately.
 
 
 Examples

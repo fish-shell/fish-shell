@@ -1,8 +1,8 @@
-function fish_delta
+function ghoti_delta
     argparse h/help f/no-functions c/no-completions C/no-config d/no-diff n/new V/vendor= -- $argv
 
     if set -q _flag_help
-        __fish_print_help fish_delta
+        __ghoti_print_help ghoti_delta
         return 0
     end
 
@@ -20,36 +20,36 @@ function fish_delta
     end
 
     # TODO: Do we want to keep the vendor dirs in here?
-    set -l default_function_path $__fish_data_dir/functions
-    test "$vendormode" = default && set -a default_function_path $__fish_vendor_functionsdirs
+    set -l default_function_path $__ghoti_data_dir/functions
+    test "$vendormode" = default && set -a default_function_path $__ghoti_vendor_functionsdirs
 
-    set -l default_complete_path $__fish_data_dir/completions
-    test "$vendormode" = default && set -a default_completions_path $__fish_vendor_completionsdirs
+    set -l default_complete_path $__ghoti_data_dir/completions
+    test "$vendormode" = default && set -a default_completions_path $__ghoti_vendor_completionsdirs
 
     set -l default_conf_path
-    test "$vendormode" = default && set -a default_conf_path $__fish_vendor_confdirs
+    test "$vendormode" = default && set -a default_conf_path $__ghoti_vendor_confdirs
 
     set -l user_function_path
     set -l user_complete_path
-    set -l user_conf_path $__fish_config_dir/conf.d $__fish_sysconf_dir/conf.d
-    test "$vendormode" = user && set -a user_conf_path $__fish_vendor_confdirs
+    set -l user_conf_path $__ghoti_config_dir/conf.d $__ghoti_sysconf_dir/conf.d
+    test "$vendormode" = user && set -a user_conf_path $__ghoti_vendor_confdirs
 
-    for dir in $fish_function_path
+    for dir in $ghoti_function_path
         if contains -- $vendormode ignore default
-            contains -- $dir $__fish_vendor_functionsdirs
+            contains -- $dir $__ghoti_vendor_functionsdirs
             and continue
         end
         contains -- $dir $default_function_path
         or set -a user_function_path $dir
     end
-    for dir in $fish_complete_path
+    for dir in $ghoti_complete_path
         if contains -- $vendormode ignore default
-            contains -- $dir $__fish_vendor_completionsdirs
+            contains -- $dir $__ghoti_vendor_completionsdirs
             and continue
         end
         # We don't care about generated completions.
         # They shouldn't be compared at all.
-        contains -- $dir $default_complete_path $__fish_user_data_dir/generated_completions
+        contains -- $dir $default_complete_path $__ghoti_user_data_dir/generated_completions
         or set -a user_complete_path $dir
     end
 
@@ -97,7 +97,7 @@ function fish_delta
             test "$vars[1]" = user_conf_path
             and set all_changed 1
             set -e vars[..2]
-            set -l files (path filter -rf -- $user_var/$argv.fish)
+            set -l files (path filter -rf -- $user_var/$argv.ghoti)
             set -q argv[1]
             or set files (path filter -rf -- $user_var/*)
             set -q files[1]
@@ -133,14 +133,14 @@ function fish_delta
                 end
             end
         end
-        # config.fish is special - it's a single file, not a directory,
-        # and it's not precedenced - *both* ~/.config/fish/config.fish and /etc/fish/config.fish
+        # config.ghoti is special - it's a single file, not a directory,
+        # and it's not precedenced - *both* ~/.config/ghoti/config.ghoti and /etc/ghoti/config.ghoti
         # are executed.
         if not set -ql _flag_C[1]; and begin
                 not set -q argv[1]
                 or contains -- config $argv
             end
-            for file in (path filter -rf -- $__fish_sysconf_dir/config.fish $__fish_config_dir/config.fish)
+            for file in (path filter -rf -- $__ghoti_sysconf_dir/config.ghoti $__ghoti_config_dir/config.ghoti)
                 # We count these as "changed" so they show up.
                 printf (_ "%sChanged%s: %s\n") $colors[3] $colors[1] $file
                 not set -ql _flag_d[1]

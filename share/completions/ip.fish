@@ -1,4 +1,4 @@
-# ip(8) completion for fish
+# ip(8) completion for ghoti
 
 # The difficulty here is that ip allows abbreviating options, so we need to complete "ip a" like "ip address", but not "ip m" like "ip mroute"
 # Also the manpage and even the grammar it accepts is utter shite (options can only be before commands, some things are only in the BNF, others only in the text)
@@ -10,7 +10,7 @@ set -l ip_link l li lin link
 set -l ip_route r ro rou rout route
 set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_route
 
-function __fish_ip_commandwords
+function __ghoti_ip_commandwords
     set -l skip 0
     set -l cmd (commandline -opc)
     # HACK: Handle and/or/not specially because they have hardcoded completion behavior
@@ -176,13 +176,13 @@ function __fish_ip_commandwords
     echo $token
 end
 
-function __fish_ip_device
+function __ghoti_ip_device
     command ip -o link show | while read -l a b c
         printf '%s\t%s\n' (string replace -r '(@.*)?:' '' -- $b) Device
     end
 end
 
-function __fish_ip_scope
+function __ghoti_ip_scope
     if test -r /etc/iproute2/rt_scopes
         string replace -r '#.*' '' </etc/iproute2/rt_scopes \
             | string match -v '^\s*$' \
@@ -195,13 +195,13 @@ function __fish_ip_scope
         host "Address is only valid on this host"
 end
 
-function __fish_ip_netns_list
+function __ghoti_ip_netns_list
     command ip netns list | while read -l a b c
         echo -- $a
     end
 end
 
-function __fish_ip_types
+function __ghoti_ip_types
     printf '%s\t%s\n' \
         bridge "Ethernet Bridge device" \
         bond "Bonding device" \
@@ -239,8 +239,8 @@ function __fish_ip_types
         xfrm "Virtual xfrm interface"
 end
 
-function __fish_complete_ip
-    set -l cmd (__fish_ip_commandwords)
+function __ghoti_complete_ip
+    set -l cmd (__ghoti_ip_commandwords)
     set -l count (count $cmd)
     switch "$cmd[1]"
         case address
@@ -256,13 +256,13 @@ function __fish_complete_ip
                     case add change replace
                         switch $count
                             case 3
-                                # __fish_ip_complete_ip
+                                # __ghoti_ip_complete_ip
                             case '*'
                                 switch $cmd[-2]
                                     case dev
-                                        __fish_ip_device
+                                        __ghoti_ip_device
                                     case scope
-                                        __fish_ip_scope
+                                        __ghoti_ip_scope
                                         # TODO: Figure out how to complete these
                                     case label
                                         # Prefix
@@ -303,9 +303,9 @@ function __fish_complete_ip
                     case show save flush # These take the same args
                         switch $cmd[-2]
                             case dev
-                                __fish_ip_device
+                                __ghoti_ip_device
                             case scope
-                                __fish_ip_scope
+                                __ghoti_ip_scope
                             case to
                                 # Prefix
                             case label
@@ -318,7 +318,7 @@ function __fish_complete_ip
                                     label "Limit by label" \
                                     dynamic "(Ipv6 only) Limit to dynamic addresses" \
                                     permanent "(Ipv6 only) Limit to permanent addresses"
-                                __fish_ip_device
+                                __ghoti_ip_device
                                 # TODO: Moar
                         end
                 end
@@ -336,10 +336,10 @@ function __fish_complete_ip
                     case add
                         switch $cmd[-2]
                             case link
-                                __fish_ip_device
+                                __ghoti_ip_device
                             case name # freeform, uncompleteable.
                             case type
-                                __fish_ip_types
+                                __ghoti_ip_types
                             case txqueuelen
                             case address
                             case broadcast
@@ -365,14 +365,14 @@ function __fish_complete_ip
                     case delete
                         switch $cmd[-2]
                             case delete
-                                __fish_ip_device
+                                __ghoti_ip_device
                                 echo dev
                                 echo group
                             case dev
-                                __fish_ip_device
+                                __ghoti_ip_device
                             case group
                             case type
-                                __fish_ip_types
+                                __ghoti_ip_types
                             case '*'
                                 if not set -q cmd[6]
                                     echo type
@@ -381,7 +381,7 @@ function __fish_complete_ip
                     case set
                         switch $cmd[-2]
                             case type
-                                __fish_ip_types
+                                __ghoti_ip_types
                                 echo bridge_slave
                                 echo bond_slave
                             case arp dynamic {all,}multicast pro{misc,todown} trailers spoofchk query_rss trust
@@ -400,7 +400,7 @@ function __fish_complete_ip
                                 echo enable
                                 echo disable
                             case master dev # Yes, the word "dev" is allowed here!
-                                __fish_ip_device
+                                __ghoti_ip_device
                             case nomaster
                             case vrf
                             case xdp'*'
@@ -409,7 +409,7 @@ function __fish_complete_ip
                             case macaddr
                             case group
                             case set '*'
-                                __fish_ip_device
+                                __ghoti_ip_device
                                 echo group
                                 echo up
                                 echo down
@@ -436,7 +436,7 @@ function __fish_complete_ip
                 # for now just complete device names when dev was the last token
                 switch $cmd[-2]
                     case dev
-                        __fish_ip_device
+                        __ghoti_ip_device
                 end
             end
         case netns
@@ -455,31 +455,31 @@ function __fish_complete_ip
                 switch $cmd[2]
                     case delete
                         if not set -q cmd[4]
-                            __fish_ip_netns_list
+                            __ghoti_ip_netns_list
                         end
                     case exec
                         if not set -q cmd[4]
-                            __fish_ip_netns_list
+                            __ghoti_ip_netns_list
                         else
-                            __fish_complete_subcommand --commandline $cmd[4..-1]
+                            __ghoti_complete_subcommand --commandline $cmd[4..-1]
                         end
                     case pids
                         if not set -q cmd[4]
-                            __fish_ip_netns_list
+                            __ghoti_ip_netns_list
                         end
                     case set
                         if not set -q cmd[4]
-                            __fish_ip_netns_list
+                            __ghoti_ip_netns_list
                         end
                     case attach
                         if not set -q cmd[4]
-                            __fish_ip_netns_list
+                            __ghoti_ip_netns_list
                         else
-                            __fish_complete_pids
+                            __ghoti_complete_pids
                         end
                     case identify
                         if not set -q cmd[4]
-                            __fish_complete_pids
+                            __ghoti_complete_pids
                         end
                 end
             end
@@ -487,31 +487,31 @@ function __fish_complete_ip
 end
 
 complete -f -c ip
-complete -f -c ip -a '(__fish_complete_ip)'
-complete -f -c ip -n "not __fish_seen_subcommand_from $ip_all_commands" -a "$ip_commands"
+complete -f -c ip -a '(__ghoti_complete_ip)'
+complete -f -c ip -n "not __ghoti_seen_subcommand_from $ip_all_commands" -a "$ip_commands"
 # Yes, ip only takes options before "objects"
-complete -c ip -s h -l human -d "Output statistics with human readable values" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -s b -l batch -d "Read commands from file or stdin" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -l force -d "Don't terminate on errors in batch mode" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -s V -l Version -d "Print the version" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s s -l stats -d "Output more information" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s d -l details -d "Output more detailed information" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s l -l loops -d "Specify maximum number of loops for 'ip addr flush'" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s f -l family -d "The protocol family to use" -a "inet inet6 bridge ipx dnet link any" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s 4 -d "Short for --family inet" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s 6 -d "Short for --family inet6" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s B -d "Short for --family bridge" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s M -d "Short for --family mpls" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s 0 -d "Short for --family link" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s o -l oneline -d "Output on one line" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s r -l resolve -d "Resolve names and print them instead of addresses" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s n -l netns -d "Use specified network namespace" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s a -l all -d "Execute command for all objects" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s c -l color -d "Configure color output" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s t -l timestamp -d "Display current time when using monitor" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -o ts -l tshort -d "Like -timestamp, but shorter format" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -o rc -l rcvbuf -d "Set the netlink socket receive buffer size" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -o iec -d "Print human readable rates in IEC units" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -o br -l brief -d "Print only basic information in a tabular format" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s j -l json -d "Output results in JSON" -n "not __fish_seen_subcommand_from $ip_commands"
-complete -c ip -f -s p -l pretty -d "Output results in pretty JSON" -n "not __fish_seen_subcommand_from $ip_commands"
+complete -c ip -s h -l human -d "Output statistics with human readable values" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -s b -l batch -d "Read commands from file or stdin" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -l force -d "Don't terminate on errors in batch mode" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -s V -l Version -d "Print the version" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s s -l stats -d "Output more information" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s d -l details -d "Output more detailed information" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s l -l loops -d "Specify maximum number of loops for 'ip addr flush'" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s f -l family -d "The protocol family to use" -a "inet inet6 bridge ipx dnet link any" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s 4 -d "Short for --family inet" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s 6 -d "Short for --family inet6" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s B -d "Short for --family bridge" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s M -d "Short for --family mpls" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s 0 -d "Short for --family link" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s o -l oneline -d "Output on one line" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s r -l resolve -d "Resolve names and print them instead of addresses" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s n -l netns -d "Use specified network namespace" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s a -l all -d "Execute command for all objects" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s c -l color -d "Configure color output" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s t -l timestamp -d "Display current time when using monitor" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -o ts -l tshort -d "Like -timestamp, but shorter format" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -o rc -l rcvbuf -d "Set the netlink socket receive buffer size" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -o iec -d "Print human readable rates in IEC units" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -o br -l brief -d "Print only basic information in a tabular format" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s j -l json -d "Output results in JSON" -n "not __ghoti_seen_subcommand_from $ip_commands"
+complete -c ip -f -s p -l pretty -d "Output results in pretty JSON" -n "not __ghoti_seen_subcommand_from $ip_commands"

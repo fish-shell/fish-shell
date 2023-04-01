@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 ech\
 o echo
 #CHECK: echo

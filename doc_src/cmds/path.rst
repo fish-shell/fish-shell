@@ -79,7 +79,7 @@ Examples
    # This prints all files in /usr/bin/
    # A selection:
    cp
-   fish
+   ghoti
    grep
    rm
 
@@ -189,25 +189,25 @@ Examples
    # The (hopefully) nonexistent argagagji is filtered implicitly:
    /usr/bin
 
-   >_ path filter --type file /usr/bin /usr/bin/fish
-   # Only fish is a file
-   /usr/bin/fish
+   >_ path filter --type file /usr/bin /usr/bin/ghoti
+   # Only ghoti is a file
+   /usr/bin/ghoti
 
-   >_ path filter --type file,dir --perm exec,write /usr/bin/fish /home/me
-   # fish is a file, which passes, and executable, which passes,
+   >_ path filter --type file,dir --perm exec,write /usr/bin/ghoti /home/me
+   # ghoti is a file, which passes, and executable, which passes,
    # but probably not writable, which fails.
    #
    # $HOME is a directory and both writable and executable, typically.
    # So it passes.
    /home/me
 
-   >_ path filter -fdxw /usr/bin/fish /home/me
+   >_ path filter -fdxw /usr/bin/ghoti /home/me
    # This is the same as above: "-f" is "--type=file", "-d" is "--type=dir",
    # "-x" is short for "--perm=exec" and "-w" short for "--perm=write"!
    /home/me
    
    >_ path filter -fx $PATH/*
-   # Prints all possible commands - the first entry of each name is what fish would execute!
+   # Prints all possible commands - the first entry of each name is what ghoti would execute!
 
 .. _cmd-path-is:
 
@@ -292,9 +292,9 @@ Examples
 
 ::
 
-    >_ path normalize /usr/bin//../../etc/fish
+    >_ path normalize /usr/bin//../../etc/ghoti
     # The "//" is squashed and the ".." components neutralize the components before
-    /etc/fish
+    /etc/ghoti
 
     >_ path normalize /bin//bash
     # The "//" is squashed, but /bin isn't resolved even if your system links it to /usr/bin.
@@ -414,18 +414,18 @@ Examples
    10-foo
    2-bar
 
-   >_ path sort --unique --key=basename $fish_function_path/*.fish
-   # prints a list of all function files fish would use, sorted by name.
+   >_ path sort --unique --key=basename $ghoti_function_path/*.ghoti
+   # prints a list of all function files ghoti would use, sorted by name.
 
 
 Combining ``path``
 -------------------
 
-``path`` is meant to be easy to combine with itself, other tools and fish.
+``path`` is meant to be easy to combine with itself, other tools and ghoti.
 
 This is why
 
-- ``path``'s output is automatically split by fish if it goes into a command substitution, so just doing ``(path ...)`` handles all paths, even those containing newlines, correctly
+- ``path``'s output is automatically split by ghoti if it goes into a command substitution, so just doing ``(path ...)`` handles all paths, even those containing newlines, correctly
 - ``path`` has ``--null-in`` to handle null-delimited input (typically automatically detected!), and ``--null-out`` to pass on null-delimited output
 
 Some examples of combining ``path``::
@@ -439,4 +439,4 @@ Some examples of combining ``path``::
   # it will split on NULL automatically.
   find . -maxdepth 1 -type f -executable -print0 | path resolve -z
 
-  set -l paths (path filter -p exec $PATH/fish -Z | path resolve)
+  set -l paths (path filter -p exec $PATH/ghoti -Z | path resolve)

@@ -1,4 +1,4 @@
-function __fish_complete_zfs_mountpoint_properties -d "Completes with ZFS mountpoint properties"
+function __ghoti_complete_zfs_mountpoint_properties -d "Completes with ZFS mountpoint properties"
     set -l OS ""
     switch (uname)
         case Linux

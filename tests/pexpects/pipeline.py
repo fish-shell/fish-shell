@@ -15,7 +15,7 @@ expect_prompt()
 
 for i in range(5):
     sendline(
-        "echo_wrap 1 2 3 4 | $fish_test_helper become_foreground_then_print_stderr ; or exit 1"
+        "echo_wrap 1 2 3 4 | $ghoti_test_helper become_foreground_then_print_stderr ; or exit 1"
     )
     expect_prompt("become_foreground_then_print_stderr done")
 
@@ -27,14 +27,14 @@ sendline("function inner ; command true ; end; function outer; inner; end")
 expect_prompt()
 for i in range(5):
     sendline(
-        "outer | $fish_test_helper become_foreground_then_print_stderr ; or exit 1"
+        "outer | $ghoti_test_helper become_foreground_then_print_stderr ; or exit 1"
     )
     expect_prompt("become_foreground_then_print_stderr done")
 
 sendline("not jobs")
 expect_prompt("jobs: There are no jobs", unmatched="Should be no jobs")
 
-# Check that this weird invalid double-redirection doesn't crash fish.
+# Check that this weird invalid double-redirection doesn't crash ghoti.
 sendline("cat | cat </non/existent/file")
 expect_str("warning: An error occurred while redirecting file '/non/existent/file'")
 expect_str("warning: Path '/non' does not exist")

@@ -20,7 +20,7 @@ Description
 
 If you want to ease your interactive use, to save typing, consider using an :doc:`abbreviation <abbr>` instead.
 
-``fish`` marks functions that have been created by ``alias`` by including the command used to create them in the function description. You can list ``alias``-created functions by running ``alias`` without arguments. They must be erased using ``functions -e``.
+``ghoti`` marks functions that have been created by ``alias`` by including the command used to create them in the function description. You can list ``alias``-created functions by running ``alias`` without arguments. They must be erased using ``functions -e``.
 
 - ``NAME`` is the name of the alias
 - ``DEFINITION`` is the actual command to execute. ``alias`` automatically appends ``$argv``, so that all parameters used with the alias are passed to the actual command.
@@ -33,7 +33,7 @@ The following options are available:
     Displays help about using this command.
 
 **-s** or **--save**
-    Saves the function created by the alias into your fish configuration directory using :doc:`funcsave <funcsave>`.
+    Saves the function created by the alias into your ghoti configuration directory using :doc:`funcsave <funcsave>`.
 
 Example
 -------

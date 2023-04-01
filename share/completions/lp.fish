@@ -1,6 +1,6 @@
-__fish_complete_lpr lp
-complete -c lpr -k -xa "(__fish_complete_suffix .pdf .ps)"
-complete -c lp -s d -d 'Prints files to the named printer' -xa '(__fish_print_lpr_printers)'
+__ghoti_complete_lpr lp
+complete -c lpr -k -xa "(__ghoti_complete_suffix .pdf .ps)"
+complete -c lp -s d -d 'Prints files to the named printer' -xa '(__ghoti_print_lpr_printers)'
 complete -c lp -s i -d 'Specifies an existing job to modify' -x
 complete -c lp -s n -d 'Sets the number of copies to print from 1 to 100' -x
 complete -c lp -s q -d 'Sets the job priority from 1 (lowest) to 100 (highest)'

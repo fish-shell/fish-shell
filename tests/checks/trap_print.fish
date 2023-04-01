@@ -1,4 +1,4 @@
-# RUN: env fth=%fish_test_helper %fish %s
+# RUN: env fth=%ghoti_test_helper %ghoti %s
 
 # These tests check how installed trap handlers are listed. Run separately from the main trap
 # handler to ensure a clean environment.
@@ -11,7 +11,7 @@ trap "true" SIGTERM kill ExIT INT
 
 trap -p
 # CHECK: # Defined via `source`
-# CHECK: function __trap_handler_EXIT --on-event fish_exit
+# CHECK: function __trap_handler_EXIT --on-event ghoti_exit
 # CHECK:  true;
 # CHECK: end
 # CHECK: # Defined via `source`

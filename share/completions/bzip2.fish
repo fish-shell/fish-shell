@@ -1,5 +1,5 @@
 complete -c bzip2 -s c -l stdout -d "Compress to stdout"
-complete -c bzip2 -s d -l decompress -k -x -a "(__fish_complete_suffix .tbz .tbz2 .bz .bz2)"
+complete -c bzip2 -s d -l decompress -k -x -a "(__ghoti_complete_suffix .tbz .tbz2 .bz .bz2)"
 
 complete -c bzip2 -s z -l compress -d "Compress file"
 complete -c bzip2 -s t -l test -d "Check integrity"

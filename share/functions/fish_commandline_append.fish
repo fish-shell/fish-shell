@@ -1,4 +1,4 @@
-function fish_commandline_append --description "Append the given string to the command-line, or remove the suffix if already there"
+function ghoti_commandline_append --description "Append the given string to the command-line, or remove the suffix if already there"
     if not commandline | string length -q
         commandline -r $history[1]
     end

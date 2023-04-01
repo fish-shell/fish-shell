@@ -174,8 +174,8 @@ void reader_set_autosuggestion_enabled(const env_stack_t &vars);
 /// Write the title to the titlebar. This function is called just before a new application starts
 /// executing and just after it finishes.
 ///
-/// \param cmd Command line string passed to \c fish_title if is defined.
-/// \param parser The parser to use for autoloading fish_title.
+/// \param cmd Command line string passed to \c ghoti_title if is defined.
+/// \param parser The parser to use for autoloading ghoti_title.
 /// \param reset_cursor_position If set, issue a \r so the line driver knows where we are
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position = true);
 
@@ -209,10 +209,10 @@ maybe_t<wcstring> reader_readline(int nchars);
 
 /// Configuration that we provide to a reader.
 struct reader_config_t {
-    /// Left prompt command, typically fish_prompt.
+    /// Left prompt command, typically ghoti_prompt.
     wcstring left_prompt_cmd{};
 
-    /// Right prompt command, typically fish_right_prompt.
+    /// Right prompt command, typically ghoti_right_prompt.
     wcstring right_prompt_cmd{};
 
     /// Name of the event to trigger once we're set up.
@@ -256,8 +256,8 @@ void reader_pop();
 /// The readers interrupt signal handler. Cancels all currently running blocks.
 void reader_handle_sigint();
 
-/// \return whether fish is currently unwinding the stack in preparation to exit.
-bool fish_is_unwinding_for_exit();
+/// \return whether ghoti is currently unwinding the stack in preparation to exit.
+bool ghoti_is_unwinding_for_exit();
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 /// Exposed for testing purposes only.

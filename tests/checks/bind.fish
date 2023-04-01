@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Test various `bind` command invocations. This is meant to verify that
 # invalid flags, mode names, etc. are caught as well as to verify that valid
 # ones are allowed.

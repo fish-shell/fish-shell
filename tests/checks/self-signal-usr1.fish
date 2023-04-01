@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 # See #6397
 
@@ -11,7 +11,7 @@ function f --on-signal USR1
     end
 end
 
-kill -USR1 $fish_pid
+kill -USR1 $ghoti_pid
 
 #CHECK: a
 #CHECK: b

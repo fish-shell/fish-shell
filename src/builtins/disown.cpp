@@ -84,7 +84,7 @@ maybe_t<int> builtin_disown(parser_t &parser, io_streams_t &streams, const wchar
         // Non-existent jobs aren't an error, but information about them is useful.
         // Multiple PIDs may refer to the same job; include the job only once by using a set.
         for (int i = 1; argv[i]; i++) {
-            int pid = fish_wcstoi(argv[i]);
+            int pid = ghoti_wcstoi(argv[i]);
             if (errno || pid < 0) {
                 streams.err.append_format(_(L"%ls: '%ls' is not a valid job specifier\n"), cmd,
                                           argv[i]);

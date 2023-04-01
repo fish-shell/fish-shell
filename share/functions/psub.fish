@@ -4,7 +4,7 @@ function psub --description "Read from stdin into a file and output the filename
     or return
 
     if set -q _flag_help
-        __fish_print_help psub
+        __ghoti_print_help psub
         return 0
     end
 
@@ -54,7 +54,7 @@ function psub --description "Read from stdin into a file and output the filename
 
     # Find unique function name
     while true
-        set funcname __fish_psub_(random)
+        set funcname __ghoti_psub_(random)
         if not functions $funcname >/dev/null 2>/dev/null
             break
         end

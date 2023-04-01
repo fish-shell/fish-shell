@@ -5,7 +5,7 @@ import sys
 from time import sleep
 import os
 
-os.environ["fish_escape_delay_ms"] = "10"
+os.environ["ghoti_escape_delay_ms"] = "10"
 SpawnedProc()
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -18,7 +18,7 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
-sendline("exec $fish_key_reader -c -V")
+sendline("exec $ghoti_key_reader -c -V")
 
 # Do we get the expected startup prompt?
 expect_str("Press a key:")

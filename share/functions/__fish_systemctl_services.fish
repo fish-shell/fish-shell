@@ -1,6 +1,6 @@
-function __fish_systemctl_services
+function __ghoti_systemctl_services
     if type -q systemctl
-        if __fish_contains_opt user
+        if __ghoti_contains_opt user
             systemctl --user list-unit-files --full --no-legend --no-pager --plain --type=service 2>/dev/null $argv | string split -f 1 ' '
             systemctl --user list-units --state=loaded --full --no-legend --no-pager --plain --type=service 2>/dev/null | string split -f 1 ' '
         else

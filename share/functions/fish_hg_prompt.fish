@@ -1,33 +1,33 @@
 # Adapted from __terlar_git_prompt
 
-set -g fish_color_hg_clean green
-set -g fish_color_hg_modified yellow
-set -g fish_color_hg_dirty red
+set -g ghoti_color_hg_clean green
+set -g ghoti_color_hg_modified yellow
+set -g ghoti_color_hg_dirty red
 
-set -g fish_color_hg_added green
-set -g fish_color_hg_renamed magenta
-set -g fish_color_hg_copied magenta
-set -g fish_color_hg_deleted red
-set -g fish_color_hg_untracked yellow
-set -g fish_color_hg_unmerged red
+set -g ghoti_color_hg_added green
+set -g ghoti_color_hg_renamed magenta
+set -g ghoti_color_hg_copied magenta
+set -g ghoti_color_hg_deleted red
+set -g ghoti_color_hg_untracked yellow
+set -g ghoti_color_hg_unmerged red
 
-set -g fish_prompt_hg_status_added '✚'
-set -g fish_prompt_hg_status_modified '*'
-set -g fish_prompt_hg_status_copied '⇒'
-set -g fish_prompt_hg_status_deleted '✖'
-set -g fish_prompt_hg_status_untracked '?'
-set -g fish_prompt_hg_status_unmerged !
+set -g ghoti_prompt_hg_status_added '✚'
+set -g ghoti_prompt_hg_status_modified '*'
+set -g ghoti_prompt_hg_status_copied '⇒'
+set -g ghoti_prompt_hg_status_deleted '✖'
+set -g ghoti_prompt_hg_status_untracked '?'
+set -g ghoti_prompt_hg_status_unmerged !
 
-set -g fish_prompt_hg_status_order added modified copied deleted untracked unmerged
+set -g ghoti_prompt_hg_status_order added modified copied deleted untracked unmerged
 
-function fish_hg_prompt --description 'Write out the hg prompt'
+function ghoti_hg_prompt --description 'Write out the hg prompt'
     # If hg isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
     if not command -sq hg
         return 1
     end
 
-    set -l root (fish_print_hg_root)
+    set -l root (ghoti_print_hg_root)
     or return 1
 
     # Read branch and bookmark
@@ -36,7 +36,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
         set branch "$branch|$bookmark"
     end
 
-    if not set -q fish_prompt_hg_show_informative_status
+    if not set -q ghoti_prompt_hg_show_informative_status
         set_color normal
         echo -n " ($branch)"
         return
@@ -49,7 +49,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
 
     # Show nice color for a clean repo
     if test -z "$repo_status"
-        set_color $fish_color_hg_clean
+        set_color $ghoti_color_hg_clean
         echo -n "($branch)"'✓'
         set_color normal
 
@@ -80,18 +80,18 @@ function fish_hg_prompt --description 'Write out the hg prompt'
         end
 
         if string match -qr '^[AMCD]' $repo_status
-            set_color $fish_color_hg_modified
+            set_color $ghoti_color_hg_modified
         else
-            set_color $fish_color_hg_dirty
+            set_color $ghoti_color_hg_dirty
         end
 
         echo -n "($branch)"'⚡'
 
         # Sort status symbols
-        for i in $fish_prompt_hg_status_order
+        for i in $ghoti_prompt_hg_status_order
             if contains -- $i $hg_statuses
-                set -l color_name fish_color_hg_$i
-                set -l status_name fish_prompt_hg_status_$i
+                set -l color_name ghoti_color_hg_$i
+                set -l status_name ghoti_prompt_hg_status_$i
 
                 set_color $$color_name
                 echo -n $$status_name

@@ -79,7 +79,7 @@ complete -c as -o mrelax-relocations -a 'yes no' -x -d 'Generate relax relocatio
 complete -c as -o mamd64 -d 'Accept only AMD64 ISA'
 complete -c as -o mintel64 -d 'Accept only Intel64 ISA'
 
-function __fish_complete_as_march
+function __ghoti_complete_as_march
     # Complete: CPU[,EXTENSION...]
 
     set -l cpus generic32 generic64 i386 i486 i586 i686 pentium pentiumpro pentiumii pentiumiii pentium4 prescott nocona core core2 corei7 l1om k1om iamcu k6 k6_2 athlon opteron k8 amdfam10 bdver1 bdver2 bdver3 bdver4 znver1 btver1 btver2
@@ -98,5 +98,5 @@ function __fish_complete_as_march
     end
 end
 
-complete -c as -o march -x -a '(__fish_complete_as_march)'
+complete -c as -o march -x -a '(__ghoti_complete_as_march)'
 complete -c as -o mtune -x -a 'generic32 generic64 i8086 i186 i286 i386 i486 i586 i686 pentium pentiumpro pentiumii pentiumiii pentium4 prescott nocona core core2 corei7 l1om k1om iamcu k6 k6_2 athlon opteron k8 amdfam10 bdver1 bdver2 bdver3 bdver4 znver1 btver1 btver2' -d 'Optimize for given CPU'

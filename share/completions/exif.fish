@@ -1,12 +1,12 @@
-function __fish_exif_target_file_tags
+function __ghoti_exif_target_file_tags
     for target in (string match -v -- '-*' (commandline -po)[2..])
         string replace -f '*' '' (exif --list-tags "$target" 2> /dev/null)[2..] | string replace -r '(\s+-){4}' '' | string split -m1 ' ' | string trim
     end
 end
 
-function __fish_exif_potential_targets
+function __ghoti_exif_potential_targets
     set -l token (commandline -t)
-    set -l matching_files (complete -C "__fish_command_without_completions $token")
+    set -l matching_files (complete -C "__ghoti_command_without_completions $token")
     for file in $matching_files
         if eval "test -d \"$file\""
             echo $file
@@ -21,11 +21,11 @@ function __fish_exif_potential_targets
     end
 end
 
-function __fish_exif_token_begins_with_arg
+function __ghoti_exif_token_begins_with_arg
     not string match -- '-*' (commandline -t)
 end
 
-complete -c exif -f -a "(__fish_exif_potential_targets)" -n __fish_exif_token_begins_with_arg
+complete -c exif -f -a "(__ghoti_exif_potential_targets)" -n __ghoti_exif_token_begins_with_arg
 
 for line in (exif --help)
     set -l short
@@ -46,7 +46,7 @@ for line in (exif --help)
         set long "$sub_parts[1]"
         switch (string lower "$sub_parts[2]")
             case tag
-                complete -c exif -s$short -l $long -d "$description" -x -a "(__fish_exif_target_file_tags)"
+                complete -c exif -s$short -l $long -d "$description" -x -a "(__ghoti_exif_target_file_tags)"
             case ifd
                 complete -c exif -s$short -l $long -d "$description" -x -a "0 1 EXIF GPS Interoperability"
             case file

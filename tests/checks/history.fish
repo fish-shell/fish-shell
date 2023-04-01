@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Verify that specifying unexpected options or arguments results in an error.
 
 # First using the legacy, now deprecated, long options to specify a
@@ -67,6 +67,6 @@ builtin history -t merge
 # success, status.
 builtin history save
 
-set -g fish_private_mode 1
+set -g ghoti_private_mode 1
 builtin history merge
 #CHECKERR: history: can't merge history in private mode

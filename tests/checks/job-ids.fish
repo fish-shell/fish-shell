@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # Ensure that job IDs are sequential.
 

@@ -1,2 +1,2 @@
-__fish_complete_lpr reject
+__ghoti_complete_lpr reject
 complete -c reject -s r -d 'Reject reason' -x

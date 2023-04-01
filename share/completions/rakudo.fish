@@ -1,4 +1,4 @@
-complete -c rakudo -n __fish_is_first_token -F -a - -d 'Read program source from STDIN or start REPL if a TTY'
+complete -c rakudo -n __ghoti_is_first_token -F -a - -d 'Read program source from STDIN or start REPL if a TTY'
 complete -c rakudo -s c -d 'Check syntax only. Runs BEGIN and CHECK blocks'
 complete -c rakudo -l doc -d 'Extract documentation and print it as text'
 complete -c rakudo -s e -x -d 'One line of program, strict is enabled by default'

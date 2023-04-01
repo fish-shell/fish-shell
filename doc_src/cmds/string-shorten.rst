@@ -18,9 +18,9 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string shorten`` truncates each *STRING* to the given visible width and adds an ellipsis to indicate it. "Visible width" means the width of all visible characters added together, excluding escape sequences and accounting for :envvar:`fish_emoji_width` and :envvar:`fish_ambiguous_width`. It is the amount of columns in a terminal the *STRING* occupies.
+``string shorten`` truncates each *STRING* to the given visible width and adds an ellipsis to indicate it. "Visible width" means the width of all visible characters added together, excluding escape sequences and accounting for :envvar:`ghoti_emoji_width` and :envvar:`ghoti_ambiguous_width`. It is the amount of columns in a terminal the *STRING* occupies.
 
-The escape sequences reflect what fish knows about, and how it computes its output. Your terminal might support more escapes, or not support escape sequences that fish knows about.
+The escape sequences reflect what ghoti knows about, and how it computes its output. Your terminal might support more escapes, or not support escape sequences that ghoti knows about.
 
 If **-m** or **--max** is given, truncate at the given width. Otherwise, the lowest non-zero width of all input strings is used. A max of 0 means no shortening takes place, all STRINGs are printed as-is.
 
@@ -32,7 +32,7 @@ If **-l** or **--left** is given, remove text from the left on instead, so this 
 
 If **-q** or **--quiet** is given, ``string shorten`` only runs for the return value - if anything would be shortened, it returns 0, else 1.
 
-The default ellipsis is ``…``. If fish thinks your system is incapable because of your locale, it will use ``...`` instead.
+The default ellipsis is ``…``. If ghoti thinks your system is incapable because of your locale, it will use ``...`` instead.
 
 The return value is 0 if any shortening occured, 1 otherwise.
 
@@ -88,6 +88,6 @@ See Also
   
 - The :doc:`printf <printf>` command can do simple padding, for example ``printf %10s\n`` works like ``string pad -w10``.
 
-- :doc:`string length <string-length>` with the ``--visible`` option can be used to show what fish thinks the width is.
+- :doc:`string length <string-length>` with the ``--visible`` option can be used to show what ghoti thinks the width is.
 
 .. END EXAMPLES

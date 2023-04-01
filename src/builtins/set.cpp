@@ -53,7 +53,7 @@ enum {
 };
 
 // Variables used for parsing the argument list. This command is atypical in using the "+"
-// (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
+// (REQUIRE_ORDER) option for flag parsing. This is not typical of most ghoti commands. It means
 // we stop scanning for flags when the first non-flag argument is seen.
 static const wchar_t *const short_options = L"+:LSUaefghlnpqux";
 static const struct woption long_options[] = {{L"export", no_argument, 'x'},
@@ -164,11 +164,11 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
                 // Specifically detect `set -o` because people might be bringing over bashisms.
                 if (wcsncmp(argv[w.woptind - 1], L"-o", 2) == 0) {
                     streams.err.append(
-                        L"Fish does not have shell options. See `help fish-for-bash-users`.\n");
+                        L"Fish does not have shell options. See `help ghoti-for-bash-users`.\n");
                     if (w.woptind < argc) {
                         if (wcscmp(argv[w.woptind], L"vi") == 0) {
                             // Tell the vi users how to get what they need.
-                            streams.err.append(L"To enable vi-mode, run `fish_vi_key_bindings`.\n");
+                            streams.err.append(L"To enable vi-mode, run `ghoti_vi_key_bindings`.\n");
                         } else if (wcscmp(argv[w.woptind], L"ed") == 0) {
                             // This should be enough for make ed users feel at home
                             streams.err.append(L"?\n?\n?\n");
@@ -253,7 +253,7 @@ static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts, int
 }
 
 // Check if we are setting a uvar and a global of the same name exists. See
-// https://github.com/fish-shell/fish-shell/issues/806
+// https://github.com/ghoti-shell/ghoti-shell/issues/806
 static void warn_if_uvar_shadows_global(const wchar_t *cmd, const set_cmd_opts_t &opts,
                                         const wcstring &dest, io_streams_t &streams,
                                         const parser_t &parser) {
@@ -353,7 +353,7 @@ static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_f
             l_ind = 1;  // first index
         } else {
             const wchar_t *end = nullptr;
-            l_ind = fish_wcstol(p, &end);
+            l_ind = ghoti_wcstol(p, &end);
             if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
                 streams.err.append_format(_(L"%ls: Invalid index starting at '%ls'\n"), L"set",
                                           res.varname.c_str());
@@ -373,7 +373,7 @@ static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_f
             if (res.indexes.empty() && *p == L']') {
                 l_ind2 = -1;
             } else {
-                l_ind2 = fish_wcstol(p, &end);
+                l_ind2 = ghoti_wcstol(p, &end);
                 if (errno > 0) {  // ignore errno == -1 meaning there was text after the int
                     return none();
                 }

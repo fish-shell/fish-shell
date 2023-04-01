@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # Ensure that we can wait for stuff.
 status job-control full
@@ -12,7 +12,7 @@ for i in (seq 16)
     set -a pids $last_pid
 end
 
-# Note fish does not (yet) report the exit status of waited-on commands.
+# Note ghoti does not (yet) report the exit status of waited-on commands.
 for pid in $pids
     wait $pid
 end

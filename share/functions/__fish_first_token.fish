@@ -1,5 +1,5 @@
 # Retrieves the first non-switch argument from the command line buffer
-function __fish_first_token
+function __ghoti_first_token
     set -l tokens (commandline -co)
     set -e tokens[1]
     set -l tokens (string replace -r --filter '^([^-].*)' '$1' -- $tokens)

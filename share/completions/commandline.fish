@@ -25,4 +25,4 @@ complete -c commandline -l paging-full-mode -d "Return true if pager is showing 
 complete -c commandline -l is-valid -d "Return true if the command line is syntactically valid and complete"
 
 
-complete -c commandline -n '__fish_contains_opt -s f function' -a '(bind --function-names)' -d 'Function name' -x
+complete -c commandline -n '__ghoti_contains_opt -s f function' -a '(bind --function-names)' -d 'Function name' -x

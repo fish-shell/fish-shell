@@ -17,7 +17,7 @@ Description
 
 .. only:: builder_man
 
-          NOTE: This page documents the fish builtin ``pwd``.
+          NOTE: This page documents the ghoti builtin ``pwd``.
           To see the documentation on the ``pwd`` command you might have,
           use ``command man pwd``.
 

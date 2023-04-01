@@ -1,12 +1,12 @@
 Summary:                Friendly interactive shell
-Name:                   fish
+Name:                   ghoti
 
 Version:                @RPMVERSION@
 Release:                0.%{?dist}
 
 License:                GPL-2.0
 Group:                  System/Shells
-URL:                    https://fishshell.com/
+URL:                    https://ghotishell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
 BuildRequires:          ncurses-devel gettext gcc-c++ xz pcre2-devel
@@ -39,12 +39,12 @@ Requires:		man
 # Although the build scripts mangle the version number to be RPM compatible
 # for continuous builds (transforming the output of `git describe`), Fedora 32+
 # also validates the version inside the pkgconfig file. There's no impetus for this
-# with fish.
+# with ghoti.
 %define _wrong_version_format_terminate_build 0
 
 %description
 
-fish is a shell geared towards interactive use. Its features are
+ghoti is a shell geared towards interactive use. Its features are
 focused on user friendliness and discoverability. The language syntax
 is simple but incompatible with other shell languages.
 
@@ -74,10 +74,10 @@ make %{?_smp_mflags}
 %find_lang %{name}
 # OpenSUSE has strong opinions about categories which do not apply to other systems
 %if 0%{?suse_version}
-%suse_update_desktop_file fish "System;TerminalEmulator"
+%suse_update_desktop_file ghoti "System;TerminalEmulator"
 %endif
-cp -a README.rst %{buildroot}%{_datadir}/doc/fish/
-cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
+cp -a README.rst %{buildroot}%{_datadir}/doc/ghoti/
+cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/ghoti/
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
@@ -88,29 +88,29 @@ cd %__builddir
 %if 0%{?__cmake_builddir:1}
 cd %__cmake_builddir
 %endif
-make fish_run_tests
+make ghoti_run_tests
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
-# Add fish to the list of allowed shells in /etc/shells
-if ! grep %{_bindir}/fish %{_sysconfdir}/shells >/dev/null; then
-	echo %{_bindir}/fish >>%{_sysconfdir}/shells
+# Add ghoti to the list of allowed shells in /etc/shells
+if ! grep %{_bindir}/ghoti %{_sysconfdir}/shells >/dev/null; then
+	echo %{_bindir}/ghoti >>%{_sysconfdir}/shells
 fi
 
 %postun
-# Remove fish from the list of allowed shells in /etc/shells
+# Remove ghoti from the list of allowed shells in /etc/shells
 if [ "$1" = 0 ]; then
-	grep -v %{_bindir}/fish %{_sysconfdir}/shells >%{_sysconfdir}/fish.tmp
-	mv %{_sysconfdir}/fish.tmp %{_sysconfdir}/shells
+	grep -v %{_bindir}/ghoti %{_sysconfdir}/shells >%{_sysconfdir}/ghoti.tmp
+	mv %{_sysconfdir}/ghoti.tmp %{_sysconfdir}/shells
 fi
 
 %files -f %{name}.lang
 %defattr(-,root,root,-)
 
 # The documentation directory
-%doc %{_datadir}/doc/fish/
+%doc %{_datadir}/doc/ghoti/
 
 # man files
 %{_mandir}/man1/*
@@ -119,15 +119,15 @@ fi
 %attr(0755,root,root) %{_bindir}/*
 
 # Configuration files
-%dir %{_sysconfdir}/fish/
-%config(noreplace) %{_sysconfdir}/fish/config.fish
+%dir %{_sysconfdir}/ghoti/
+%config(noreplace) %{_sysconfdir}/ghoti/config.ghoti
 
 # Support files
-%{_datadir}/fish/
+%{_datadir}/ghoti/
 
 # pkgconfig
-%{_datadir}/pkgconfig/fish.pc
+%{_datadir}/pkgconfig/ghoti.pc
 
 # FreeDesktop entry
-%{_datadir}/applications/fish.desktop
-%{_datadir}/pixmaps/fish.png
+%{_datadir}/applications/ghoti.desktop
+%{_datadir}/pixmaps/ghoti.png

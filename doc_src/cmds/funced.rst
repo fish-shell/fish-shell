@@ -22,7 +22,7 @@ If the ``$VISUAL`` environment variable is set, it will be used as the program t
 If there is no function called *NAME*, a new function will be created with the specified name.
 
 **-e command** or **--editor command**
-    Open the function body inside the text editor given by the command (for example, **-e vi**). The special command ``fish`` will use the built-in editor (same as specifying **-i**).
+    Open the function body inside the text editor given by the command (for example, **-e vi**). The special command ``ghoti`` will use the built-in editor (same as specifying **-i**).
 
 **-i** or **--interactive**
     Force opening the function body in the built-in editor even if ``$VISUAL`` or ``$EDITOR`` is defined.
@@ -40,12 +40,12 @@ Say you want to modify your prompt.
 
 Run::
 
-  >_ funced fish_prompt
+  >_ funced ghoti_prompt
 
 This will open up your editor, allowing you to modify the function. When you're done, save and quit. Fish will reload the function, so you should see the changes right away.
 
 When you're done, use::
 
-  >_ funcsave fish_prompt
+  >_ funcsave ghoti_prompt
 
 For more, see :doc:`funcsave <funcsave>`.

@@ -1,4 +1,4 @@
-function __fish_complete_zfs_write_once_properties -d "Completes with ZFS properties which can only be written at filesystem creation, and only be read thereafter"
+function __ghoti_complete_zfs_write_once_properties -d "Completes with ZFS properties which can only be written at filesystem creation, and only be read thereafter"
     set -l OS ""
     switch (uname)
         case Linux

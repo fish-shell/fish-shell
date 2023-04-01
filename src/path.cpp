@@ -275,7 +275,7 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
 
 /// We separate this from path_create() for two reasons. First it's only caused if there is a
 /// problem, and thus is not central to the behavior of that function. Second, we only want to issue
-/// the message once. If the current shell starts a new fish shell (e.g., by running `fish -c` from
+/// the message once. If the current shell starts a new ghoti shell (e.g., by running `ghoti -c` from
 /// a function) we don't want that subshell to issue the same warnings.
 static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &custom_error_msg,
                                      bool using_xdg, const wcstring &xdg_var, const wcstring &path,
@@ -290,7 +290,7 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
     if (path.empty()) {
         FLOGF(warning_path, _(L"Unable to locate the %ls directory."), which_dir.c_str());
         FLOGF(warning_path,
-              _(L"Please set the %ls or HOME environment variable before starting fish."),
+              _(L"Please set the %ls or HOME environment variable before starting ghoti."),
               xdg_var.c_str());
     } else {
         const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";
@@ -350,7 +350,7 @@ static base_directory_t make_base_directory(const wcstring &xdg_var,
     base_directory_t result{};
     const auto xdg_dir = vars.get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
     if (!xdg_dir.missing_or_empty()) {
-        result.path = xdg_dir->as_string() + L"/fish";
+        result.path = xdg_dir->as_string() + L"/ghoti";
         result.used_xdg = true;
     } else {
         const auto home = vars.get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
@@ -373,12 +373,12 @@ static base_directory_t make_base_directory(const wcstring &xdg_var,
 }
 
 static const base_directory_t &get_data_directory() {
-    static base_directory_t s_dir = make_base_directory(L"XDG_DATA_HOME", L"/.local/share/fish");
+    static base_directory_t s_dir = make_base_directory(L"XDG_DATA_HOME", L"/.local/share/ghoti");
     return s_dir;
 }
 
 static const base_directory_t &get_config_directory() {
-    static base_directory_t s_dir = make_base_directory(L"XDG_CONFIG_HOME", L"/.config/fish");
+    static base_directory_t s_dir = make_base_directory(L"XDG_CONFIG_HOME", L"/.config/ghoti");
     return s_dir;
 }
 

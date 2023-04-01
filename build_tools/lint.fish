@@ -1,4 +1,4 @@
-#!/usr/bin/env fish
+#!/usr/bin/env ghoti
 #
 # This is meant to be run by "make lint" or "make lint-all". It is not meant to
 # be run directly from a shell prompt.

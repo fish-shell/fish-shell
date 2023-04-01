@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # Verify the correct behavior of the `setenv` compatibility shim.
 

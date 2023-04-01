@@ -1,6 +1,6 @@
-.. _cmd-fish_update_completions:
+.. _cmd-ghoti_update_completions:
 
-fish_update_completions - update completions using manual pages
+ghoti_update_completions - update completions using manual pages
 ===============================================================
 
 Synopsis
@@ -8,13 +8,13 @@ Synopsis
 
 .. synopsis::
 
-    fish_update_completions
+    ghoti_update_completions
 
 Description
 -----------
 
-``fish_update_completions`` parses manual pages installed on the system, and attempts to create completion files in the ``fish`` configuration directory.
+``ghoti_update_completions`` parses manual pages installed on the system, and attempts to create completion files in the ``ghoti`` configuration directory.
 
 This does not overwrite custom completions.
 
-There are no parameters for ``fish_update_completions``.
+There are no parameters for ``ghoti_update_completions``.

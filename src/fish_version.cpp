@@ -2,7 +2,7 @@
 //
 // This file has a specific purpose of shortening compilation times when
 // the only change is different `git describe` version.
-#include "fish_version.h"
+#include "ghoti_version.h"
 
 #ifndef FISH_BUILD_VERSION
 // The contents of FISH-BUILD-VERSION-FILE looks like:
@@ -13,5 +13,5 @@ static const char *const
     ;
 #endif
 
-/// Return fish shell version.
-const char *get_fish_version() { return FISH_BUILD_VERSION; }
+/// Return ghoti shell version.
+const char *get_ghoti_version() { return FISH_BUILD_VERSION; }

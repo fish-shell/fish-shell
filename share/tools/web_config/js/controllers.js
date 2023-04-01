@@ -147,21 +147,21 @@ controllers.controller("colorsController", function($scope, $http) {
                             // Cheesy hardcoded variable names ahoy!
                             // These are all the pager vars,
                             // we should really just save all these in a dictionary.
-                            "fish_pager_color_background",
-                            "fish_pager_color_prefix",
-                            "fish_pager_color_progress",
-                            "fish_pager_color_completion",
-                            "fish_pager_color_description",
-                            "fish_pager_color_selected_background",
-                            "fish_pager_color_selected_prefix",
-                            "fish_pager_color_selected_completion",
-                            "fish_pager_color_selected_description",
+                            "ghoti_pager_color_background",
+                            "ghoti_pager_color_prefix",
+                            "ghoti_pager_color_progress",
+                            "ghoti_pager_color_completion",
+                            "ghoti_pager_color_description",
+                            "ghoti_pager_color_selected_background",
+                            "ghoti_pager_color_selected_prefix",
+                            "ghoti_pager_color_selected_completion",
+                            "ghoti_pager_color_selected_description",
                             // TODO: Setting these to empty currently makes them weird. Figure out why!
                             /*
-                            "fish_pager_color_secondary_background",
-                            "fish_pager_color_secondary_prefix",
-                            "fish_pager_color_secondary_completion",
-                            "fish_pager_color_secondary_description",
+                            "ghoti_pager_color_secondary_background",
+                            "ghoti_pager_color_secondary_prefix",
+                            "ghoti_pager_color_secondary_completion",
+                            "ghoti_pager_color_secondary_description",
                             */
                            ];
         var remaining = settingNames.length;
@@ -216,7 +216,7 @@ controllers.controller("promptController", function($scope, $http) {
     }
 
     $scope.setNewPrompt = function(selectedPrompt) {
-        $http.post("set_prompt/", {'fish_prompt': selectedPrompt.function,}).then(function(arg){
+        $http.post("set_prompt/", {'ghoti_prompt': selectedPrompt.function,}).then(function(arg){
 
             // Update attributes of current prompt and select it
             $scope.samplePrompts[0].demo = selectedPrompt.demo;

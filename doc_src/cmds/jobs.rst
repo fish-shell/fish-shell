@@ -31,7 +31,7 @@ Description
     Prints the process ID for each process in all jobs.
 
 **-q** or **--query**
-    Prints no output for evaluation of jobs by exit status only. For compatibility with old fish versions this is also **--quiet** (but this is deprecated).
+    Prints no output for evaluation of jobs by exit status only. For compatibility with old ghoti versions this is also **--quiet** (but this is deprecated).
 
 **-h** or **--help**
     Displays help about using this command.

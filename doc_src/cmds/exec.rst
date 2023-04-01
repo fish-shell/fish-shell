@@ -20,4 +20,4 @@ The **--help** or **-h** option displays help about using this command.
 Example
 -------
 
-``exec emacs`` starts up the emacs text editor, and exits ``fish``. When emacs exits, the session will terminate.
+``exec emacs`` starts up the emacs text editor, and exits ``ghoti``. When emacs exits, the session will terminate.

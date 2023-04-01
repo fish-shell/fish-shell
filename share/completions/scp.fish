@@ -1,5 +1,5 @@
 # Load completions shared by various ssh tools like ssh, scp and sftp.
-__fish_complete_ssh scp
+__ghoti_complete_ssh scp
 
 
 # Helper functions to simplify the completions.
@@ -21,9 +21,9 @@ function __scp_remote_path_prefix
     and echo $path_prefix[2]
 end
 
-function __fish_no_scp_remote_specified
+function __ghoti_no_scp_remote_specified
     set -l tokens (commandline -t)
-    # can't use `for token in tokens[1..-2]` due to https://github.com/fish-shell/fish-shell/issues/4897
+    # can't use `for token in tokens[1..-2]` due to https://github.com/ghoti-shell/ghoti-shell/issues/4897
     set -e tokens[-1]
     for token in $tokens # ignoring current token
         if string match -e @ -- $token
@@ -40,7 +40,7 @@ end
 #
 # Inherit user/host completions from ssh
 #
-complete -c scp -d Remote -n "__fish_no_scp_remote_specified; and not string match -e : (commandline -ct)" -a "(complete -C'ssh ' | string replace -r '\t.*' ':')"
+complete -c scp -d Remote -n "__ghoti_no_scp_remote_specified; and not string match -e : (commandline -ct)" -a "(complete -C'ssh ' | string replace -r '\t.*' ':')"
 
 #
 # Local path

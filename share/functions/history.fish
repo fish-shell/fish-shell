@@ -1,7 +1,7 @@
 #
 # Wrap the builtin history command to provide additional functionality.
 #
-function __fish_unexpected_hist_args --no-scope-shadowing
+function __ghoti_unexpected_hist_args --no-scope-shadowing
     if test -n "$search_mode"
         or set -q show_time[1]
         printf (_ "%ls: %ls: subcommand takes no options\n") $cmd $hist_cmd >&2
@@ -26,7 +26,7 @@ function history --description "display or manipulate interactive command histor
     or return
 
     if set -q _flag_help
-        __fish_print_help history
+        __ghoti_print_help history
         return 0
     end
 
@@ -170,19 +170,19 @@ function history --description "display or manipulate interactive command histor
             end
 
         case save # save our interactive command history to the persistent history
-            __fish_unexpected_hist_args $argv
+            __ghoti_unexpected_hist_args $argv
             and return 1
 
             builtin history save -- $argv
 
         case merge # merge the persistent interactive command history with our history
-            __fish_unexpected_hist_args $argv
+            __ghoti_unexpected_hist_args $argv
             and return 1
 
             builtin history merge -- $argv
 
         case clear # clear the interactive command history
-            __fish_unexpected_hist_args $argv
+            __ghoti_unexpected_hist_args $argv
             and return 1
 
             printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
@@ -194,7 +194,7 @@ function history --description "display or manipulate interactive command histor
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
         case clear-session # clears only session
-            __fish_unexpected_hist_args $argv
+            __ghoti_unexpected_hist_args $argv
             and return 1
 
             builtin history clear-session -- $argv

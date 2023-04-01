@@ -1,4 +1,4 @@
-__fish_make_completion_signals
+__ghoti_make_completion_signals
 
 complete -c timeout -l foreground -d 'Run COMMAND in the foreground'
 complete -c timeout -s k -l kill-after -d 'Send a KILL signal after DURATION' -x

@@ -1,12 +1,12 @@
 """pexpect_helper provides a wrapper around the pexpect module.
 
 This module exposes a single class SpawnedProc, which wraps pexpect.spawn().
-This exposes a pseudo-tty, which fish or another process may talk to.
-The send() function may be used to send data to fish, and the expect_* family
+This exposes a pseudo-tty, which ghoti or another process may talk to.
+The send() function may be used to send data to ghoti, and the expect_* family
 of functions may be used to match what is output to the tty.
 
 Example usage:
-  sp = SpawnedProc() # this launches fish
+  sp = SpawnedProc() # this launches ghoti
   sp.expect_prompt() # wait for a prompt
   sp.sendline("echo hello world")
   sp.expect_prompt("hello world")
@@ -97,10 +97,10 @@ class Message(object):
         when: a timestamp of when the message was sent
     """
 
-    # Input is input into fish shell ("sent data").
+    # Input is input into ghoti shell ("sent data").
     DIR_INPUT = " INPUT"
 
-    # Output means output from fish shell ("received data").
+    # Output means output from ghoti shell ("received data").
     DIR_OUTPUT = "OUTPUT"
 
     MODULE = sys.modules[__name__]
@@ -131,18 +131,18 @@ class SpawnedProc(object):
         messages: list of Message sent and received, in-order
         start_time: the timestamp of the first message, or None if none yet
         spawn: the pexpect.spawn value
-        prompt_counter: the index of the prompt. This cooperates with the fish_prompt
+        prompt_counter: the index of the prompt. This cooperates with the ghoti_prompt
             function to ensure that each printed prompt is distinct.
     """
 
     def __init__(
-        self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy(), **kwargs
+        self, name="ghoti", timeout=TIMEOUT_SECS, env=os.environ.copy(), **kwargs
     ):
         """Construct from a name, timeout, and environment.
 
         Args:
             name: the name of the executable to launch, as a key into the
-                  environment dictionary. By default this is 'fish' but may be
+                  environment dictionary. By default this is 'ghoti' but may be
                   other executables.
             timeout: A timeout to pass to pexpect. This indicates how long to wait
                      before giving up on some expected output.

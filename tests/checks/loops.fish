@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish %fish' %s
+#RUN: %ghoti -C 'set -g ghoti %ghoti' %s
 
 function never_runs
     while false
@@ -101,13 +101,13 @@ if false; or --help
 end
 
 # Make sure while loops don't run forever with no-exec (#1543)
-echo "while true; end" | $fish --no-execute
+echo "while true; end" | $ghoti --no-execute
 
 # For loops with read-only vars is an error (#4342)
 for status in a b c
     echo $status
 end
-#CHECKERR: {{.*}}loops.fish (line {{\d+}}): for: status: cannot overwrite read-only variable
+#CHECKERR: {{.*}}loops.ghoti (line {{\d+}}): for: status: cannot overwrite read-only variable
 #CHECKERR: for status in a b c
 #CHECKERR:     ^~~~~^
 
@@ -115,7 +115,7 @@ end
 for hostname in a b c
     echo $hostname
 end
-#CHECKERR: {{.*}}loops.fish (line {{\d+}}): for: hostname: cannot overwrite read-only variable
+#CHECKERR: {{.*}}loops.ghoti (line {{\d+}}): for: hostname: cannot overwrite read-only variable
 #CHECKERR: for hostname in a b c
 #CHECKERR:     ^~~~~~~^
 

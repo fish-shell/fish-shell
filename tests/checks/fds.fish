@@ -1,4 +1,4 @@
-# RUN: %fish -C "set helper %fish_test_helper" %s
+# RUN: %ghoti -C "set helper %ghoti_test_helper" %s
 
 # Check that we don't leave stray FDs.
 
@@ -34,7 +34,7 @@ $helper print_fds 3</dev/null
 $helper print_fds 5>&2
 # CHECK: 0 1 2 5
 
-# This attempts to trip a case where the file opened in fish
+# This attempts to trip a case where the file opened in ghoti
 # has the same fd as the redirection. In this case, the dup2
 # does not clear the CLO_EXEC bit.
 

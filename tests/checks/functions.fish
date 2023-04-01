@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Test the `functions` builtin
 
 function f1
@@ -13,7 +13,7 @@ functions    --details f1 f2
 # Verify that `functions --details` works as expected when given the name of a
 # known function.
 functions --details f1
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.ghoti
 
 # ==========
 # Verify that `functions --details` works as expected when given the name of an
@@ -26,7 +26,7 @@ functions -D f2
 # function that could be autoloaded but isn't currently loaded.
 set x (functions -D vared)
 if test (count $x) -ne 1
-    or not string match -q '*/share/functions/vared.fish' "$x"
+    or not string match -q '*/share/functions/vared.ghoti' "$x"
     echo "Unexpected output for 'functions -D vared': $x" >&2
 end
 
@@ -35,7 +35,7 @@ end
 # function that was autoloaded.
 set x (functions -v -D vared)
 if test (count $x) -ne 5
-    or not string match -q '*/share/functions/vared.fish' $x[1]
+    or not string match -q '*/share/functions/vared.ghoti' $x[1]
     or test $x[2] != autoloaded
     or test $x[3] != 6
     or test $x[4] != scope-shadowing
@@ -59,10 +59,10 @@ end
 # function that is copied. (Prints the filename where it was copied.)
 functions -c f1 f1a
 functions -D f1a
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.ghoti
 functions -Dv f1a
-#CHECK: {{.*}}checks/functions.fish
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.ghoti
+#CHECK: {{.*}}checks/functions.ghoti
 #CHECK: {{\d+}}
 #CHECK: scope-shadowing
 #CHECK:
@@ -71,7 +71,7 @@ functions -D f1b
 #CHECK: -
 functions -Dv f1b
 #CHECK: -
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.ghoti
 #CHECK: {{\d+}}
 #CHECK: scope-shadowing
 #CHECK:
@@ -130,14 +130,14 @@ functions --no-details t
 
 functions -c t t2
 functions t2
-# CHECK: # Defined via `source`, copied in {{.*}}checks/functions.fish @ line {{\d+}}
+# CHECK: # Defined via `source`, copied in {{.*}}checks/functions.ghoti @ line {{\d+}}
 # CHECK: function t2
 # CHECK: echo tttt;
 # CHECK: end
 functions -D t2
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.ghoti
 functions -Dv t2
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.ghoti
 #CHECK: -
 #CHECK: {{\d+}}
 #CHECK: scope-shadowing
@@ -166,7 +166,7 @@ functions --no-details t2
 functions --no-details --details t
 # CHECKERR: functions: invalid option combination
 # CHECKERR:
-# CHECKERR: checks/functions.fish (line {{\d+}}):
+# CHECKERR: checks/functions.ghoti (line {{\d+}}):
 # CHECKERR: functions --no-details --details t
 # CHECKERR: ^
 # CHECKERR: (Type 'help functions' for related documentation)

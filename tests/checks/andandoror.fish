@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # "Basic && and || support"
 
 echo first && echo second
@@ -113,12 +113,12 @@ echo comment after conjunction
 
 # --help works
 builtin and --help >/dev/null
-# CHECKERR: fish: and: missing man page
+# CHECKERR: ghoti: and: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help and` will show an online version
 echo $status
 and --help >/dev/null
-# CHECKERR: fish: and: missing man page
+# CHECKERR: ghoti: and: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help and` will show an online version
 echo $status
@@ -126,12 +126,12 @@ echo $status
 # CHECK: 0
 
 builtin or --help >/dev/null
-# CHECKERR: fish: or: missing man page
+# CHECKERR: ghoti: or: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help or` will show an online version
 echo $status
 or --help >/dev/null
-# CHECKERR: fish: or: missing man page
+# CHECKERR: ghoti: or: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help or` will show an online version
 echo $status
@@ -139,12 +139,12 @@ echo $status
 # CHECK: 0
 
 builtin not --help >/dev/null
-# CHECKERR: fish: not: missing man page
+# CHECKERR: ghoti: not: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help not` will show an online version
 echo $status
 not --help >/dev/null
-# CHECKERR: fish: not: missing man page
+# CHECKERR: ghoti: not: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help not` will show an online version
 echo $status

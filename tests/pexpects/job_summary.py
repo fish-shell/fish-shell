@@ -19,17 +19,17 @@ import signal
 # Test job summary for interactive shells.
 expect_prompt()
 
-sendline("function fish_job_summary; string join ':' $argv; end")
+sendline("function ghoti_job_summary; string join ':' $argv; end")
 expect_prompt()
 
-# fish_job_summary is called when background job ends.
+# ghoti_job_summary is called when background job ends.
 sendline("sleep 0.5 &")
 expect_prompt()
 expect_re("[0-9]+:0:sleep 0.5 &:ENDED", timeout=20)
 sendline("")
 expect_prompt()
 
-# fish_job_summary is called when background job is signalled.
+# ghoti_job_summary is called when background job is signalled.
 # cmd_line correctly prints only the actually backgrounded job.
 sendline("false; sleep 20 &; true")
 expect_prompt()
@@ -47,7 +47,7 @@ expect_re("[0-9]+:0:sleep 20 &:SIGTERM:Polite quit request", timeout=20)
 sendline("")
 expect_prompt()
 
-# fish_job_summary is called when foreground job is signalled.
+# ghoti_job_summary is called when foreground job is signalled.
 # cmd_line contains the entire pipeline. proc_id and proc_name are set in a pipeline.
 sendline("true | sleep 6")
 sleep(0.100)

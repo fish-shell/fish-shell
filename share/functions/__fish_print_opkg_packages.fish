@@ -1,4 +1,4 @@
-function __fish_print_opkg_packages
+function __ghoti_print_opkg_packages
     type -q -f opkg || return 1
 
     argparse i/installed -- $argv

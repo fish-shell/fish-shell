@@ -11,7 +11,7 @@ use crate::builtins::shared::BUILTIN_ERR_TOO_MANY_ARGUMENTS;
 use crate::ffi::parser_t;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::fish_wcstoi;
+use crate::wutil::ghoti_wcstoi;
 use crate::wutil::wgettext_fmt;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -117,7 +117,7 @@ pub fn parse_return_value(
     if optind == args.len() {
         Ok(parser.get_last_status().into())
     } else {
-        match fish_wcstoi(args[optind]) {
+        match ghoti_wcstoi(args[optind]) {
             Ok(i) => Ok(i),
             Err(_e) => {
                 streams

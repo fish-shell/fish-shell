@@ -24,7 +24,7 @@
 #include "env_universal_common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "fish_version.h"
+#include "ghoti_version.h"
 #include "flog.h"
 #include "global_safety.h"
 #include "history.h"
@@ -39,12 +39,12 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Some configuration path environment variables.
-#define FISH_DATADIR_VAR L"__fish_data_dir"
-#define FISH_SYSCONFDIR_VAR L"__fish_sysconf_dir"
-#define FISH_HELPDIR_VAR L"__fish_help_dir"
-#define FISH_BIN_DIR L"__fish_bin_dir"
-#define FISH_CONFIG_DIR L"__fish_config_dir"
-#define FISH_USER_DATA_DIR L"__fish_user_data_dir"
+#define FISH_DATADIR_VAR L"__ghoti_data_dir"
+#define FISH_SYSCONFDIR_VAR L"__ghoti_sysconf_dir"
+#define FISH_HELPDIR_VAR L"__ghoti_help_dir"
+#define FISH_BIN_DIR L"__ghoti_bin_dir"
+#define FISH_CONFIG_DIR L"__ghoti_config_dir"
+#define FISH_USER_DATA_DIR L"__ghoti_user_data_dir"
 
 /// At init, we read all the environment variables from this array.
 extern char **environ;
@@ -98,9 +98,9 @@ static constexpr const electric_var_t electric_variables[] = {
     {L"PWD", electric_var_t::freadonly | electric_var_t::fcomputed | electric_var_t::fexports},
     {L"SHLVL", electric_var_t::freadonly | electric_var_t::fexports},
     {L"_", electric_var_t::freadonly},
-    {L"fish_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
-    {L"fish_killring", electric_var_t::freadonly | electric_var_t::fcomputed},
-    {L"fish_pid", electric_var_t::freadonly},
+    {L"ghoti_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"ghoti_killring", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"ghoti_pid", electric_var_t::freadonly},
     {L"history", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"hostname", electric_var_t::freadonly},
     {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
@@ -177,7 +177,7 @@ environment_t::~environment_t() = default;
 
 wcstring environment_t::get_pwd_slash() const {
     // Return "/" if PWD is missing.
-    // See https://github.com/fish-shell/fish-shell/issues/5080
+    // See https://github.com/ghoti-shell/ghoti-shell/issues/5080
     auto pwd_var = get(L"PWD");
     wcstring pwd;
     if (!pwd_var.missing_or_empty()) {
@@ -250,7 +250,7 @@ static void setup_user(env_stack_t &vars) {
             if (userinfo.pw_dir) {
                 vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, str2wcstring(userinfo.pw_dir));
             } else {
-                // We cannot get $HOME. This triggers warnings for history and config.fish already,
+                // We cannot get $HOME. This triggers warnings for history and config.ghoti already,
                 // so it isn't necessary to warn here as well.
                 vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
             }
@@ -320,10 +320,10 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
             val.assign(key_and_val, eql + 1, wcstring::npos);
             inheriteds[key] = val;
             if (!electric_var_t::for_name(key)) {
-                // fish_user_paths should not be exported; attempting to re-import it from
+                // ghoti_user_paths should not be exported; attempting to re-import it from
                 // a value we previously (due to user error) exported will cause impossibly
                 // difficult to debug PATH problems.
-                if (key != L"fish_user_paths") {
+                if (key != L"ghoti_user_paths") {
                     vars.set(key, ENV_EXPORT | ENV_GLOBAL, {val});
                 }
             }
@@ -339,7 +339,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
         if (default_paths) {
             wcstring scstr = paths->data;
             scstr.append(L"/functions");
-            vars.set_one(L"fish_function_path", ENV_GLOBAL, scstr);
+            vars.set_one(L"ghoti_function_path", ENV_GLOBAL, scstr);
         }
     }
 
@@ -359,24 +359,24 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // Set up a default PATH
     setup_path();
 
-    // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
+    // Set up $IFS - this used to be in share/config.ghoti, but really breaks if it isn't done.
     vars.set_one(L"IFS", ENV_GLOBAL, L"\n \t");
 
     // Ensure this var is present even before an interactive command is run so that if it is used
-    // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
+    // in a function like `ghoti_prompt` or `ghoti_right_prompt` it is defined at the time the first
     // prompt is written.
     vars.set_one(L"CMD_DURATION", ENV_UNEXPORT, L"0");
 
     // Set up the version variable.
-    wcstring version = str2wcstring(get_fish_version());
+    wcstring version = str2wcstring(get_ghoti_version());
     vars.set_one(L"version", ENV_GLOBAL, version);
     vars.set_one(L"FISH_VERSION", ENV_GLOBAL, version);
 
-    // Set the $fish_pid variable.
-    vars.set_one(L"fish_pid", ENV_GLOBAL, to_string(getpid()));
+    // Set the $ghoti_pid variable.
+    vars.set_one(L"ghoti_pid", ENV_GLOBAL, to_string(getpid()));
 
     // Set the $hostname variable
-    wcstring hostname = L"fish";
+    wcstring hostname = L"ghoti";
     get_hostname_identifier(hostname);
     vars.set_one(L"hostname", ENV_GLOBAL, hostname);
 
@@ -387,7 +387,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
         if (const char *shlvl_var = getenv("SHLVL")) {
             // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a
             // diagnostic?
-            long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str());
+            long shlvl_i = ghoti_wcstol(str2wcstring(shlvl_var).c_str());
             if (!errno && shlvl_i >= 0) {
                 nshlvl_str = to_string(shlvl_i + 1);
             }
@@ -424,7 +424,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     if (vars.get(L"LINES").missing_or_empty())
         vars.set_one(L"LINES", ENV_GLOBAL, to_string(termsize.height));
 
-    // Set fish_bind_mode to "default".
+    // Set ghoti_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
 
     // Allow changes to variables to produce events.
@@ -465,7 +465,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
 
         // Import any abbreviations from uvars.
         // Note we do not dynamically react to changes.
-        const wchar_t *const prefix = L"_fish_abbr_";
+        const wchar_t *const prefix = L"_ghoti_abbr_";
         size_t prefix_len = wcslen(prefix);
         const bool from_universal = true;
         auto abbrs = abbrs_get_set();
@@ -487,7 +487,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
 static int set_umask(const wcstring_list_t &list_val) {
     long mask = -1;
     if (list_val.size() == 1 && !list_val.front().empty()) {
-        mask = fish_wcstol(list_val.front().c_str(), nullptr, 8);
+        mask = ghoti_wcstol(list_val.front().c_str(), nullptr, 8);
     }
 
     if (errno || mask > 0777 || mask < 0) return ENV_INVALID;
@@ -591,7 +591,7 @@ class env_node_t {
 using env_node_ref_t = std::shared_ptr<env_node_t>;
 class env_scoped_impl_t : public environment_t, noncopyable_t {
     /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
-    /// different fish internal processes.
+    /// different ghoti internal processes.
     struct perproc_data_t {
         wcstring pwd{};
         statuses_t statuses{statuses_t::just(0)};
@@ -772,8 +772,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
         wcstring_list_t result;
         if (history) history->get_history(result);
         return env_var_t(L"history", std::move(result));
-    } else if (key == L"fish_killring") {
-        return env_var_t(L"fish_killring", kill_entries());
+    } else if (key == L"ghoti_killring") {
+        return env_var_t(L"ghoti_killring", kill_entries());
     } else if (key == L"pipestatus") {
         const auto &js = perproc_data().statuses;
         wcstring_list_t result;
@@ -788,9 +788,9 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
     } else if (key == L"status_generation") {
         auto status_generation = reader_status_count();
         return env_var_t(L"status_generation", to_string(status_generation));
-    } else if (key == L"fish_kill_signal") {
+    } else if (key == L"ghoti_kill_signal") {
         const auto &js = perproc_data().statuses;
-        return env_var_t(L"fish_kill_signal", to_string(js.kill_signal));
+        return env_var_t(L"ghoti_kill_signal", to_string(js.kill_signal));
     } else if (key == L"umask") {
         // note umask() is an absurd API: you call it to set the value and it returns the old
         // value. Thus we have to call it twice, to reset the value. The env_lock protects
@@ -1542,19 +1542,19 @@ wcstring env_get_runtime_path() {
         result = str2wcstring(dir);
     } else {
         // Don't rely on $USER being set, as setup_user() has not yet been called.
-        // See https://github.com/fish-shell/fish-shell/issues/5180
+        // See https://github.com/ghoti-shell/ghoti-shell/issues/5180
         // getpeuid() can't fail, but getpwuid sure can.
         auto pwuid = getpwuid(geteuid());
         const char *uname = pwuid ? pwuid->pw_name : nullptr;
-        // /tmp/fish.user
-        std::string tmpdir = get_path_to_tmp_dir() + "/fish.";
+        // /tmp/ghoti.user
+        std::string tmpdir = get_path_to_tmp_dir() + "/ghoti.";
         if (uname) {
             tmpdir.append(uname);
         }
 
         if (!uname || check_runtime_path(tmpdir.c_str()) != 0) {
             FLOG(error, L"Runtime path not available.");
-            FLOGF(error, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
+            FLOGF(error, L"Try deleting the directory %s and restarting ghoti.", tmpdir.c_str());
             return result;
         }
 

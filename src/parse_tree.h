@@ -1,4 +1,4 @@
-// Programmatic representation of fish code.
+// Programmatic representation of ghoti code.
 #ifndef FISH_PARSE_PRODUCTIONS_H
 #define FISH_PARSE_PRODUCTIONS_H
 

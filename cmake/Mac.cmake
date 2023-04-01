@@ -9,8 +9,8 @@ set(MAC_CODESIGN_ID "" CACHE STRING "Mac code-signing identity")
 # on the Mac.
 set(MAC_INJECT_GET_TASK_ALLOW ON CACHE BOOL "Inject get-task-allow on Mac")
 
-# When building a Mac build, it is common for fish to link against a
-# pcre2 built for the host platform (e.g. macOS 10.15) while fish wants
+# When building a Mac build, it is common for ghoti to link against a
+# pcre2 built for the host platform (e.g. macOS 10.15) while ghoti wants
 # to link for macOS 10.9. This warning would be of interest for releases,
 # but is just noise for daily development. Unfortunately it has no flag
 # of its own, so suppress all linker warnings in debug builds.
@@ -20,7 +20,7 @@ function(CODESIGN_ON_MAC target)
   if((APPLE) AND (MAC_CODESIGN_ID))
     execute_process(COMMAND sw_vers "-productVersion" OUTPUT_VARIABLE OSX_VERSION)
     if(MAC_INJECT_GET_TASK_ALLOW)
-      set(ENTITLEMENTS "--entitlements" "${CMAKE_SOURCE_DIR}/osx/fish_debug.entitlements")
+      set(ENTITLEMENTS "--entitlements" "${CMAKE_SOURCE_DIR}/osx/ghoti_debug.entitlements")
     else()
       set(ENTITLEMENTS "")
     endif(MAC_INJECT_GET_TASK_ALLOW)

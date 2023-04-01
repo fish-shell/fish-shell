@@ -6,18 +6,18 @@ set -l devices "(networkctl list --no-legend 2>/dev/null | string trim | string 
 
 # Commands
 complete -c networkctl -f
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a list -d 'List links'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a status -d 'Show link status'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a lldp -d 'Show LLDP neighbors'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a label -d 'Show current address label'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a delete -d 'Delete virtual netdevs'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a up -d 'Bring devices up'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a down -d 'Bring devices down'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a renew -d 'Renew dynamic configurations'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a forcerenew -d 'Trigger DHCP reconfiguration of all connected clients'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a reconfigure -d 'Reconfigure interfaces'
-complete -c networkctl -n "not __fish_seen_subcommand_from $commands" -a reload -d 'Reload .network and .netdev files'
-complete -c networkctl -n "__fish_seen_subcommand_from $command_with_devices" -a "$devices"
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a list -d 'List links'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a status -d 'Show link status'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a lldp -d 'Show LLDP neighbors'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a label -d 'Show current address label'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a delete -d 'Delete virtual netdevs'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a up -d 'Bring devices up'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a down -d 'Bring devices down'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a renew -d 'Renew dynamic configurations'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a forcerenew -d 'Trigger DHCP reconfiguration of all connected clients'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a reconfigure -d 'Reconfigure interfaces'
+complete -c networkctl -n "not __ghoti_seen_subcommand_from $commands" -a reload -d 'Reload .network and .netdev files'
+complete -c networkctl -n "__ghoti_seen_subcommand_from $command_with_devices" -a "$devices"
 
 # Options
 complete -c networkctl -s h -l help -d 'Show help'

@@ -133,7 +133,7 @@ fn join(list: &[&wstr], sep: &wstr) -> WString {
     result
 }
 
-// Print abbreviations in a fish-script friendly way.
+// Print abbreviations in a ghoti-script friendly way.
 fn abbr_show(streams: &mut io_streams_t) -> Option<c_int> {
     let style = EscapeStringStyle::Script(Default::default());
 
@@ -417,7 +417,7 @@ fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
             // Erase the old uvar - this makes `abbr -e` work.
             let esc_src = escape_string(arg, EscapeStringStyle::Script(Default::default()));
             if !esc_src.is_empty() {
-                let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
+                let var_name = WString::from_str("_ghoti_abbr_") + esc_src.as_utfstr();
                 let ret = parser.remove_var(&var_name, EnvMode::UNIVERSAL.into());
 
                 if ret == autocxx::c_int(ENV_OK) {

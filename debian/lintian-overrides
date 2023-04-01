@@ -1,4 +1,4 @@
 # These directories are intentionally empty.
-fish: package-contains-empty-directory usr/share/fish/vendor_completions.d/
-fish: package-contains-empty-directory usr/share/fish/vendor_conf.d/
-fish: package-contains-empty-directory usr/share/fish/vendor_functions.d/
+ghoti: package-contains-empty-directory usr/share/ghoti/vendor_completions.d/
+ghoti: package-contains-empty-directory usr/share/ghoti/vendor_conf.d/
+ghoti: package-contains-empty-directory usr/share/ghoti/vendor_functions.d/

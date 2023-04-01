@@ -1,1 +1,1 @@
-__fish_complete_bittorrent btdownloadheadless.py
+__ghoti_complete_bittorrent btdownloadheadless.py

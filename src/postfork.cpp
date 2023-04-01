@@ -113,7 +113,7 @@ int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent) {
         } else if (err == EPERM && eperm_count++ < 100) {
             // The setpgid(2) man page says that EPERM is returned only if attempts are made
             // to move processes into groups across session boundaries (which can never be
-            // the case in fish, anywhere) or to change the process group ID of a session
+            // the case in ghoti, anywhere) or to change the process group ID of a session
             // leader (again, can never be the case). I'm pretty sure this is a WSL bug, as
             // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
             FLOGF_SAFE(proc_pgroup, "setpgid(2) returned EPERM. Retrying");
@@ -166,7 +166,7 @@ int child_setup_process(pid_t claim_tty_from, const job_t &job, bool is_forked,
         // the parent and the child executing. We are not interested in error handling here, except
         // we try to avoid this for non-terminals; in particular pipelines often make non-terminal
         // stdin.
-        // Only do this if the tty currently belongs to fish's pgrp. Don't try to steal it away from
+        // Only do this if the tty currently belongs to ghoti's pgrp. Don't try to steal it away from
         // another process which may happen if we are run in the background with job control
         // enabled. Note if stdin is not a tty, then tcgetpgrp() will return -1 and we will not
         // enter this.
@@ -224,7 +224,7 @@ pid_t execute_fork() {
 
     // These are all the errno numbers for fork() I can find.
     // Also ENOSYS, but I doubt anyone is running
-    // fish on a platform without an MMU.
+    // ghoti on a platform without an MMU.
     switch (errno) {
         case EAGAIN: {
             // We should have retried these already?
@@ -436,12 +436,12 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             const char *interpreter =
                 get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
             if (!interpreter) {
-                // Paths ending in ".fish" need to start with a shebang
+                // Paths ending in ".ghoti" need to start with a shebang
                 if (const char *lastdot = strrchr(actual_cmd, '.')) {
-                    if (0 == strcmp(lastdot, ".fish")) {
+                    if (0 == strcmp(lastdot, ".ghoti")) {
                         FLOGF_SAFE(exec,
-                                   "fish scripts require an interpreter directive (must start with "
-                                   "'#!/path/to/fish').");
+                                   "ghoti scripts require an interpreter directive (must start with "
+                                   "'#!/path/to/ghoti').");
                     }
                 }
             } else {

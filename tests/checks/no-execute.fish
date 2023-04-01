@@ -1,23 +1,23 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %ghoti -C 'set -l ghoti %ghoti' %s
 
-# Test that fish -n doesn't check for command existence - function autoloading throws a wrench in that.
-echo "type foo" | $fish -n
+# Test that ghoti -n doesn't check for command existence - function autoloading throws a wrench in that.
+echo "type foo" | $ghoti -n
 echo $status
 #CHECK: 0
 
 # Test that it doesn't time non-execution.
-echo "time echo foo" | $fish -n
+echo "time echo foo" | $ghoti -n
 echo $status
 #CHECK: 0
 
 # Test that it doesn't check globs.
-echo "echo /asfjidhfiusnlkxcnvklxcvlkmcxlv*" | $fish -n
+echo "echo /asfjidhfiusnlkxcnvklxcvlkmcxlv*" | $ghoti -n
 echo $status
 #CHECK: 0
 
 # Test that it does print syntax errors.
-echo "begin; echo oops" | $fish -n
-#CHECKERR: fish: Missing end to balance this begin
+echo "begin; echo oops" | $ghoti -n
+#CHECKERR: ghoti: Missing end to balance this begin
 #CHECKERR: begin; echo oops
 #CHECKERR: ^~~~^
 echo $status

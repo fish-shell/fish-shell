@@ -106,8 +106,8 @@ expect_prompt("wait: Could not find child processes with the name 'wait'")
 sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 
-# test with fish script
-sendline("fish -c 'sleep 0.2 &; sleep 0.3 &; sleep 0.1 &; wait -n sleep; jobs | wc -l'")
+# test with ghoti script
+sendline("ghoti -c 'sleep 0.2 &; sleep 0.3 &; sleep 0.1 &; wait -n sleep; jobs | wc -l'")
 expect_str("1")
 expect_prompt()
 

@@ -1,7 +1,7 @@
-function __fish_print_portage_packages
+function __ghoti_print_portage_packages
     # This completes the package name from the portage tree.
     # True for installing new packages. Function for printing
-    # installed on the system packages is in completions/emerge.fish
+    # installed on the system packages is in completions/emerge.ghoti
 
     # eix is MUCH faster than emerge so use it if it is available
     if type -q -f eix

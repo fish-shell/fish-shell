@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %ghoti -C 'set -l ghoti %ghoti' %s
 function complete_test_alpha1
     echo $argv
 end
@@ -43,12 +43,12 @@ complete -C't '
 # Ensure file completion happens even though it was disabled above.
 complete -c t -l fileoption -rF
 # Only match one file because I don't want to touch this any time we add a test file.
-complete -C't --fileoption ' | string match test.fish
-# CHECK: test.fish
+complete -C't --fileoption ' | string match test.ghoti
+# CHECK: test.ghoti
 
 # See that an empty command gets files
-complete -C'"" t' | string match test.fish
-# CHECK: test.fish
+complete -C'"" t' | string match test.ghoti
+# CHECK: test.ghoti
 
 # Make sure bare `complete` is reasonable,
 complete -p '/complete test/beta1' -d 'desc, desc' -sZ
@@ -268,7 +268,7 @@ complete -C'TestDoubleDash -' | sort
 echo "Expect no output:" (complete -C'TestDoubleDash -- -' | sort)
 #CHECK: Expect no output:
 
-# fish seems to have always handled "exclusive" options strangely
+# ghoti seems to have always handled "exclusive" options strangely
 # It seems to treat them the same as "old-style" (single-dash) long options
 echo "Testing exclusive options"
 #CHECK: Testing exclusive options
@@ -379,7 +379,7 @@ complete banana
 complete banana bar
 #CHECKERR: complete: too many arguments
 #CHECKERR:
-#CHECKERR: {{.*}}checks/complete.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/complete.ghoti (line {{\d+}}):
 #CHECKERR: complete banana bar
 #CHECKERR: ^
 #CHECKERR:
@@ -400,7 +400,7 @@ rm $dir/target
 cd $dir
 touch yummyinmytummy
 complete -c fudge -f
-complete -c fudge -n '__fish_seen_subcommand_from eat' -F
+complete -c fudge -n '__ghoti_seen_subcommand_from eat' -F
 complete -C'fudge eat yummyin'
 # CHECK: yummyinmytummy
 complete -C"echo no commpletion inside comment # "
@@ -513,7 +513,7 @@ echo $oops
 #
 # Currently, tr fits the bill (it does `tr --version` to check for GNUisms)
 begin
-    $fish -c "complete -C'tr -'" | string match -- '-d*'
+    $ghoti -c "complete -C'tr -'" | string match -- '-d*'
     # CHECK: -d{{\t.*}}
 end
 

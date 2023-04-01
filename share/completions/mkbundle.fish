@@ -1,11 +1,11 @@
-function __fish_mkbundle_cross_args
+function __ghoti_mkbundle_cross_args
     mkbundle --list-targets | awk -F '	- ' '/^Targets available/ { exit } !/^Available targets/ { printf "%s\t%s\n", gensub(/^\t/, "", 1, $1), $2 }'
 end
 
 # Options
 complete -c mkbundle -l config -r -d 'Bundle DLLMAP Mono config file'
 complete -c mkbundle -l config-dir -r -d 'Use MONO_CFG_DIR environment variable as config dir'
-complete -c mkbundle -n 'not __fish_seen_argument -l sdk -l cross' -l cross -x -a '(__fish_mkbundle_cross_args)' \
+complete -c mkbundle -n 'not __ghoti_seen_argument -l sdk -l cross' -l cross -x -a '(__ghoti_mkbundle_cross_args)' \
     -d 'Create bundle for the specified target platform'
 complete -c mkbundle -l deps \
     -d 'Bundle all of the referenced assemblies for the assemblies listed on the command line option'
@@ -30,7 +30,7 @@ complete -c mkbundle -l nodeps \
     -d 'Exclude all the assemblies but those were specified on the command line'
 complete -c mkbundle -s o -r -d 'Use output file name'
 complete -c mkbundle -l options -r -d 'Specify configuration options to the Mono runtime'
-complete -c mkbundle -n 'not __fish_seen_argument -l sdk -l cross' -l sdk -r \
+complete -c mkbundle -n 'not __ghoti_seen_argument -l sdk -l cross' -l sdk -r \
     -d 'Use a path from which mkbundle will resolve the Mono SDK from'
 complete -c mkbundle -l target-server -r -d 'Use a different server to provide cross-compiled runtimes'
 complete -c mkbundle -l mono-api-struct-path -r \

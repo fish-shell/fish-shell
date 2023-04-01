@@ -12,11 +12,11 @@ complete -c gdb -o exec -s e -d 'Set executable' -r
 complete -c gdb -o se -d 'Read symbol table from <file> and execute it' -r
 complete -c gdb -o core -s c -d 'Use <file> as a core dump to examine' -r
 complete -c gdb -o command -s x -d 'Execute GDB commands from <file>' -r
-complete -c gdb -o directory -s d -d 'Add directory with source files' -x -a '(__fish_complete_directories (commandline -ct))'
+complete -c gdb -o directory -s d -d 'Add directory with source files' -x -a '(__ghoti_complete_directories (commandline -ct))'
 complete -c gdb -o nx -s n -d 'Do not execute commands from any .gdbinit files'
 complete -c gdb -o quiet -s q -d Quiet
 complete -c gdb -o batch -d 'Run in batch mode'
-complete -c gdb -o cd -d 'Set GDB\'s working directory' -x -a '(__fish_complete_directories (commandline -ct))'
+complete -c gdb -o cd -d 'Set GDB\'s working directory' -x -a '(__ghoti_complete_directories (commandline -ct))'
 complete -c gdb -o fullname -s f -d 'Used by Emacs'
 complete -c gdb -s b -d 'Set throughput in bps for remote debugging'
 complete -c gdb -o tty -d 'Set device for the program\'s stdin/stdout' -r

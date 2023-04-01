@@ -1,5 +1,5 @@
-#!fish
-# Maven fish auto completion
+#!ghoti
+# Maven ghoti auto completion
 #
 # Possible calls to mvn
 #
@@ -35,7 +35,7 @@ complete -c mvn -f -o C -l strict-checksums -d "Fail the build if checksums don'
 complete -c mvn -f -o c -l lax-checksums -d "Warn if checksums don't match"
 complete -c mvn -f -o cpu -l check-plugin-updates -d "Ineffective, only kept for backward compatibility"
 
-function __fish_mvn_complete_definition
+function __ghoti_mvn_complete_definition
     set -l current_token (commandline -t)
     set -l previous_token (commandline -opc)[-1]
     string match -qr -- '^(-D|--define\b)' $current_token $previous_token
@@ -43,11 +43,11 @@ function __fish_mvn_complete_definition
     set -l keyval (string split --max=1 -- = $current_token)
     or return
     # Use normal file completion for the value.
-    printf -- "$keyval[1]=%s\n" (complete -C "__fish_command_without_completions $keyval[2]")
+    printf -- "$keyval[1]=%s\n" (complete -C "__ghoti_command_without_completions $keyval[2]")
 end
 
 complete -c mvn -f -o D -l define -d "Define a system property"
-complete -c mvn -f -a "(__fish_mvn_complete_definition)"
+complete -c mvn -f -a "(__ghoti_mvn_complete_definition)"
 complete -c mvn -f -o e -l errors -d "Produce execution error messages"
 complete -c mvn -f -o emp -l encrypt-master-password -d "Encrypt master security password"
 complete -c mvn -f -o ep -l encrypt-password -d "Encrypt server password"
@@ -80,20 +80,20 @@ complete -c mvn -f -o X -l debug -d "Produce execution debug output"
 # Profiles
 #
 #TODO search pom.xml hierarchy
-function __fish_mvn_profiles
+function __ghoti_mvn_profiles
     # find line opening the profile-tag
     # read next line
     # extract contents of id-tag
     sed -n -e '/<profile>/{n; s!^.*<id>\([^<]*\)</id>.*$!\1!; p}' ~/.m2/settings.xml pom.xml 2>/dev/null
 end
 
-function __fish_mvn_projects
+function __ghoti_mvn_projects
     grep "<module>" pom.xml 2>/dev/null | sed 's/\s*<[^<]*>\(.*\)<[^<]*>/\1/'
 end
 
-complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles)" -d "Comma-delimited list of profiles to activate"
+complete -c mvn -f -r -o P -l activate-profiles -a "(__ghoti_mvn_profiles)" -d "Comma-delimited list of profiles to activate"
 
-complete -c mvn -f -r -o pl -l projects -a "(__fish_mvn_projects)" -d "Projects to build"
+complete -c mvn -f -r -o pl -l projects -a "(__ghoti_mvn_projects)" -d "Projects to build"
 
 #default properties for some plugins / profiles
 complete -c mvn -o DskipTests -d "Skipping JUnit Tests"

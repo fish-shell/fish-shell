@@ -1,1 +1,1 @@
-__fish_complete_netcat nc.openbsd
+__ghoti_complete_netcat nc.openbsd

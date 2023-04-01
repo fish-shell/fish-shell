@@ -1,4 +1,4 @@
-/// fish logging
+/// ghoti logging
 #include "config.h"  // IWYU pragma: keep
 
 #include "flog.h"

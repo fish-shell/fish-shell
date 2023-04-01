@@ -17,13 +17,13 @@ const wchar_t *signal_get_desc(int sig);
 /// Set all signal handlers to SIG_DFL.
 void signal_reset_handlers();
 
-/// Set signal handlers to fish default handlers.
+/// Set signal handlers to ghoti default handlers.
 void signal_set_handlers(bool interactive);
 
 /// Latch function. This sets signal handlers, but only the first time it is called.
 void signal_set_handlers_once(bool interactive);
 
-/// Tell fish what to do on the specified signal.
+/// Tell ghoti what to do on the specified signal.
 ///
 /// \param sig The signal to specify the action of
 void signal_handle(int sig);
@@ -34,7 +34,7 @@ void signal_unblock_all();
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);
 
-/// \return the most recent cancellation signal received by the fish process.
+/// \return the most recent cancellation signal received by the ghoti process.
 /// Currently only SIGINT is considered a cancellation signal.
 /// This is thread safe.
 int signal_check_cancel();

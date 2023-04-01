@@ -4,7 +4,7 @@ completionsdir=${datadir}/@rel_completionsdir@
 functionsdir=${datadir}/@rel_functionsdir@
 confdir=${datadir}/@rel_confdir@
 
-Name: fish
-Description: fish, the friendly interactive shell
-URL: https://fishshell.com/
-Version: @fish_build_version@
+Name: ghoti
+Description: ghoti, the friendly interactive shell
+URL: https://ghotishell.com/
+Version: @ghoti_build_version@

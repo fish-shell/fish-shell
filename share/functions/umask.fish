@@ -1,17 +1,17 @@
 # Support the usual (i.e., bash compatible) `umask` UI. This reports or modifies the magic global
-# `umask` variable which is monitored by the fish process.
+# `umask` variable which is monitored by the ghoti process.
 
 # This table is indexed by the base umask value to be modified. Each digit represents the new umask
 # value when the permissions to add are applied to the base umask value.
-set __fish_umask_add_table 0101010 2002200 2103210 4440000 4541010 6442200 6543210
+set __ghoti_umask_add_table 0101010 2002200 2103210 4440000 4541010 6442200 6543210
 
-function __fish_umask_add
+function __ghoti_umask_add
     set -l mask_digit $argv[1]
     set -l to_add $argv[2]
 
     set -l mask_table 0000000
     if test $mask_digit -gt 0
-        set mask_table $__fish_umask_add_table[$mask_digit]
+        set mask_table $__ghoti_umask_add_table[$mask_digit]
     end
     set -l new_vals (string split '' $mask_table)
     echo $new_vals[$to_add]
@@ -19,15 +19,15 @@ end
 
 # This table is indexed by the base umask value to be modified. Each digit represents the new umask
 # value when the permissions to remove are applied to the base umask value.
-set __fish_umask_remove_table 1335577 3236767 3337777 5674567 5775577 7676767 7777777
+set __ghoti_umask_remove_table 1335577 3236767 3337777 5674567 5775577 7676767 7777777
 
-function __fish_umask_remove
+function __ghoti_umask_remove
     set -l mask_digit $argv[1]
     set -l to_remove $argv[2]
 
     set -l mask_table 1234567
     if test $mask_digit -gt 0
-        set mask_table $__fish_umask_remove_table[$mask_digit]
+        set mask_table $__ghoti_umask_remove_table[$mask_digit]
     end
     set -l new_vals (string split '' $mask_table)
     echo $new_vals[$to_remove]
@@ -35,18 +35,18 @@ end
 
 # This returns the mask corresponding to allowing the permissions to allow. In other words it
 # returns the inverse of the mask passed in.
-set __fish_umask_set_table 6 5 4 3 2 1 0
-function __fish_umask_set
+set __ghoti_umask_set_table 6 5 4 3 2 1 0
+function __ghoti_umask_set
     set -l to_set $argv[1]
     if test $to_set -eq 0
         return 7
     end
-    echo $__fish_umask_set_table[$to_set]
+    echo $__ghoti_umask_set_table[$to_set]
 end
 
 # Given a umask string, possibly in symbolic mode, return an octal value with leading zeros.
 # This function expects to be called with a single value.
-function __fish_umask_parse
+function __ghoti_umask_parse
     # Test if already a valid octal mask. If so pad it with zeros and return it.
     # Note that umask values are always base 8 so they don't require a leading zero.
     if string match -qr '^0?[0-7]{1,3}$' -- $argv
@@ -107,13 +107,13 @@ function __fish_umask_parse
         for j in $scopes_to_modify
             switch $mode
                 case '='
-                    set res[$j] (__fish_umask_set $val)
+                    set res[$j] (__ghoti_umask_set $val)
 
                 case '+'
-                    set res[$j] (__fish_umask_add $res[$j] $val)
+                    set res[$j] (__ghoti_umask_add $res[$j] $val)
 
                 case -
-                    set res[$j] (__fish_umask_remove $res[$j] $val)
+                    set res[$j] (__ghoti_umask_remove $res[$j] $val)
             end
         end
     end
@@ -122,7 +122,7 @@ function __fish_umask_parse
     return 0
 end
 
-function __fish_umask_print_symbolic
+function __ghoti_umask_print_symbolic
     set -l val
     set -l res ""
     set -l letter a u g o
@@ -154,7 +154,7 @@ function umask --description "Set default file permission mask"
     or return
 
     if set -q _flag_help
-        __fish_print_help umask
+        __ghoti_print_help umask
         return 0
     end
 
@@ -166,13 +166,13 @@ function umask --description "Set default file permission mask"
             if set -q _flag_as_command
                 echo umask $umask
             else if set -q _flag_symbolic
-                __fish_umask_print_symbolic $umask
+                __ghoti_umask_print_symbolic $umask
             else
                 echo $umask
             end
 
         case 1
-            if set -l parsed (__fish_umask_parse $argv)
+            if set -l parsed (__ghoti_umask_parse $argv)
                 set -g umask $parsed
                 return 0
             end

@@ -158,7 +158,7 @@ int wcs2sig(const wchar_t *str) {
         }
     }
 
-    int res = fish_wcstoi(str);
+    int res = ghoti_wcstoi(str);
     if (errno || res < 0) return -1;
     return res;
 }
@@ -188,7 +188,7 @@ static const pid_t s_main_pid = getpid();
 
 /// It's possible that we receive a signal after we have forked, but before we have reset the signal
 /// handlers (or even run the pthread_atfork calls). In that event we will do something dumb like
-/// swallow SIGINT. Ensure that doesn't happen. Check if we are the main fish process; if not, reset
+/// swallow SIGINT. Ensure that doesn't happen. Check if we are the main ghoti process; if not, reset
 /// and re-raise the signal. \return whether we re-raised the signal.
 static bool reraise_if_forked_child(int sig) {
     // Don't use is_forked_child: it relies on atfork handlers which may have not yet run.
@@ -210,7 +210,7 @@ int signal_check_cancel() { return s_cancellation_signal; }
 
 /// The single signal handler. By centralizing signal handling we ensure that we can never install
 /// the "wrong" signal handler (see #5969).
-static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
+static void ghoti_signal_handler(int sig, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
 
@@ -223,7 +223,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
         return;
     }
 
-    // Check if fish script cares about this.
+    // Check if ghoti script cares about this.
     const bool observed = event_is_signal_observed(sig);
     if (observed) {
         event_enqueue_signal(sig);
@@ -306,29 +306,29 @@ static void set_interactive_handlers() {
     sigaction(SIGTTOU, &act, nullptr);
 
     // We don't ignore SIGTTIN because we might send it to ourself.
-    act.sa_sigaction = &fish_signal_handler;
+    act.sa_sigaction = &ghoti_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGTTIN, &act, nullptr);
 
     // SIGTERM restores the terminal controlling process before dying.
-    act.sa_sigaction = &fish_signal_handler;
+    act.sa_sigaction = &ghoti_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGTERM, &act, nullptr);
 
     sigaction(SIGHUP, nullptr, &oact);
     if (oact.sa_handler == SIG_DFL) {
-        act.sa_sigaction = &fish_signal_handler;
+        act.sa_sigaction = &ghoti_signal_handler;
         act.sa_flags = SA_SIGINFO;
         sigaction(SIGHUP, &act, nullptr);
     }
 
     // SIGALARM as part of our signal torture test
-    act.sa_sigaction = &fish_signal_handler;
+    act.sa_sigaction = &ghoti_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGALRM, &act, nullptr);
 
 #ifdef SIGWINCH
-    act.sa_sigaction = &fish_signal_handler;
+    act.sa_sigaction = &ghoti_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGWINCH, &act, nullptr);
 #endif
@@ -351,12 +351,12 @@ void signal_set_handlers(bool interactive) {
     sigaction(SIGQUIT, &act, nullptr);
 
     // Apply our SIGINT handler.
-    act.sa_sigaction = &fish_signal_handler;
+    act.sa_sigaction = &ghoti_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGINT, &act, nullptr);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
-    act.sa_sigaction = &fish_signal_handler;
+    act.sa_sigaction = &ghoti_signal_handler;
     act.sa_flags = SA_SIGINFO | SA_RESTART;
     if (sigaction(SIGCHLD, &act, nullptr)) {
         wperror(L"sigaction");
@@ -399,7 +399,7 @@ void signal_handle(int sig) {
     act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_SIGINFO;
-    act.sa_sigaction = &fish_signal_handler;
+    act.sa_sigaction = &ghoti_signal_handler;
     sigaction(sig, &act, nullptr);
 }
 

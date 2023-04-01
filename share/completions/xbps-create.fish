@@ -4,7 +4,7 @@
 set -l progname xbps-create
 set -l modes none gzip bzip2 xz lz4 zstd
 
-complete -c $progname -f -a "(__fish_complete_directories)"
+complete -c $progname -f -a "(__ghoti_complete_directories)"
 
 complete -c $progname -s A -d 'The target architecture for this package (required)' -x
 complete -c $progname -s B -d 'The package builder string, free form' -x

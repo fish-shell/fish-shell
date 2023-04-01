@@ -1,4 +1,4 @@
-complete -x -c asciidoctor -k -a "(__fish_complete_suffix .asciidoc .adoc .ad .asc .txt)"
+complete -x -c asciidoctor -k -a "(__ghoti_complete_suffix .asciidoc .adoc .ad .asc .txt)"
 
 # Security Settings
 complete -c asciidoctor -s B -l base-dir -d "Base directory containing the document"

@@ -285,7 +285,7 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_
 /// Returns a list of wrap targets for a given command.
 wcstring_list_t complete_get_wrap_targets(const wcstring &command);
 
-// Observes that fish_complete_path has changed.
+// Observes that ghoti_complete_path has changed.
 void complete_invalidate_path();
 
 #endif

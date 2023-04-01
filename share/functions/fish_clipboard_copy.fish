@@ -1,4 +1,4 @@
-function fish_clipboard_copy
+function ghoti_clipboard_copy
     set -l cmdline
     if isatty stdin
         # Copy the current selection, or the entire commandline if that is empty.
@@ -28,7 +28,7 @@ function fish_clipboard_copy
     # a container.
     if type -q base64
         if not isatty stdout
-            echo "fish_clipboard_copy: stdout is not a terminal" >&2
+            echo "ghoti_clipboard_copy: stdout is not a terminal" >&2
             return 1
         end
         set -l encoded (printf %s $cmdline | base64 | string join '')

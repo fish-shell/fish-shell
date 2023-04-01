@@ -20,7 +20,7 @@ If you give it a single argument it is equivalent to ``cd DIRECTORY``.
 
 Note that the ``cd`` command limits directory history to the 25 most recently visited directories.
 The history is stored in the :envvar:`dirprev` and :envvar:`dirnext` variables, which this command manipulates.
-If you make those universal variables, your ``cd`` history is shared among all fish instances.
+If you make those universal variables, your ``cd`` history is shared among all ghoti instances.
 
 See Also
 --------

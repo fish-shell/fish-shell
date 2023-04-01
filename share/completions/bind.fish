@@ -1,4 +1,4 @@
-function __fish_bind_test1
+function __ghoti_bind_test1
     set -l args
     set -l use_keys no
     for i in (commandline -poc)
@@ -23,7 +23,7 @@ function __fish_bind_test1
     return 1
 end
 
-function __fish_bind_test2
+function __ghoti_bind_test2
     set -l args
     for i in (commandline -poc)
         switch $i
@@ -57,5 +57,5 @@ complete -c bind -s s -l silent -d 'Operate silently'
 complete -c bind -l preset -d 'Operate on preset bindings'
 complete -c bind -l user -d 'Operate on user bindings'
 
-complete -c bind -n __fish_bind_test1 -a '(bind --key-names)' -d 'Key name' -x
-complete -c bind -n __fish_bind_test2 -a '(bind --function-names)' -d 'Function name' -x
+complete -c bind -n __ghoti_bind_test1 -a '(bind --key-names)' -d 'Key name' -x
+complete -c bind -n __ghoti_bind_test2 -a '(bind --function-names)' -d 'Function name' -x

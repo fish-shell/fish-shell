@@ -82,7 +82,7 @@ expect_prompt("jobs: There are no jobs")
 # Regression test for #2214: foregrounding from a key binding works!
 sendline(r"bind \cr 'fg >/dev/null 2>/dev/null'")
 expect_prompt()
-sendline("$fish_test_helper print_stop_cont")
+sendline("$ghoti_test_helper print_stop_cont")
 sleep(0.2)
 
 send("\x1A")  # ctrl-z

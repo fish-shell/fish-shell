@@ -17,32 +17,32 @@ else
     set commands $ctlcommands
 end
 
-function __fish_pa_complete_type
+function __ghoti_pa_complete_type
     pactl list short $argv
     # The default is to show the number, then the name and then some info - also show the name, then the number as it's a bit friendlier
     pactl list short $argv | string replace -r '(\w+)\t([-\w]+)' '$2\t$1'
 end
 
-function __fish_pa_print_type
+function __ghoti_pa_print_type
     pactl list short $argv
     # Pa allows both a numerical index and a name
     pactl list short $argv | string replace -r '(\w+)\t.*' '$1'
 end
 
-function __fish_pa_list_ports
+function __ghoti_pa_list_ports
     # Yes, this is localized
     env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Ports:/,$p' | string match -r '^\t\t\w.*$' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
 end
 
-function __fish_pa_list_profiles
+function __ghoti_pa_list_profiles
     env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Profiles:/,/Active Profile/p' | string match -r '\t\t.*' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
 end
 
 # This is needed to filter out loaded modules
-function __fish_pa_complete_unloaded_modules
+function __ghoti_pa_complete_unloaded_modules
     if command -sq pulseaudio
         # We need to get just the module names
-        set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
+        set -l loaded (__ghoti_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
         pulseaudio --dump-modules | while read -l name description
             # This is a potential source of slowness, but on my system it's instantaneous
             # with 73 modules
@@ -54,68 +54,68 @@ function __fish_pa_complete_unloaded_modules
 end
 
 complete -f -c pactl
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a "$ctlcommands"
+complete -f -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a "$ctlcommands"
 
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a stat -d 'Show statistics about memory usage'
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a info -d 'Show info about the daemon'
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a list -d 'Show all loaded things of the specified type'
-complete -f -c pactl -n "__fish_seen_subcommand_from list" -a "modules sinks sources sink-inputs source-outputs clients samples cards"
-complete -f -c pactl -n "__fish_seen_subcommand_from list" -a short -d "Show shorter output"
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a exit -d 'Ask the daemon to exit'
+complete -f -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a stat -d 'Show statistics about memory usage'
+complete -f -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a info -d 'Show info about the daemon'
+complete -f -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a list -d 'Show all loaded things of the specified type'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from list" -a "modules sinks sources sink-inputs source-outputs clients samples cards"
+complete -f -c pactl -n "__ghoti_seen_subcommand_from list" -a short -d "Show shorter output"
+complete -f -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a exit -d 'Ask the daemon to exit'
 
-complete -c pactl -n "not __fish_seen_subcommand_from $commands" -a upload-sample -d 'Upload a file to the sample cache'
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a play-sample -d 'Play a sample from the cache'
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a remove-sample -d 'Remove a sample from the cache'
-complete -f -c pactl -n "__fish_seen_subcommand_from play-sample remove-sample" -a '(__fish_pa_complete_type samples)'
+complete -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a upload-sample -d 'Upload a file to the sample cache'
+complete -f -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a play-sample -d 'Play a sample from the cache'
+complete -f -c pactl -n "not __ghoti_seen_subcommand_from $commands" -a remove-sample -d 'Remove a sample from the cache'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from play-sample remove-sample" -a '(__ghoti_pa_complete_type samples)'
 
-complete -f -c pactl -n "__fish_seen_subcommand_from unload-module" -a '(__fish_pa_complete_type modules)'
-complete -f -c pactl -n "__fish_seen_subcommand_from load-module" -a '(__fish_pa_complete_unloaded_modules)'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from unload-module" -a '(__ghoti_pa_complete_type modules)'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from load-module" -a '(__ghoti_pa_complete_unloaded_modules)'
 
-complete -f -c pactl -n "__fish_seen_subcommand_from move-sink-input; and not __fish_seen_subcommand_from (__fish_pa_print_type sink-inputs)" \
-    -a '(__fish_pa_complete_type sink-inputs)'
-complete -f -c pactl -n "__fish_seen_subcommand_from move-sink-input; and __fish_seen_subcommand_from (__fish_pa_print_type sink-inputs)" \
-    -a '(__fish_pa_complete_type sinks)'
-complete -f -c pactl -n "__fish_seen_subcommand_from move-source-output; and not __fish_seen_subcommand_from (__fish_pa_print_type source-outputs)" \
-    -a '(__fish_pa_complete_type source-outputs)'
-complete -f -c pactl -n "__fish_seen_subcommand_from move-source-output; and __fish_seen_subcommand_from (__fish_pa_print_type source-outputs)" \
-    -a '(__fish_pa_complete_type sources)'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from move-sink-input; and not __ghoti_seen_subcommand_from (__ghoti_pa_print_type sink-inputs)" \
+    -a '(__ghoti_pa_complete_type sink-inputs)'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from move-sink-input; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type sink-inputs)" \
+    -a '(__ghoti_pa_complete_type sinks)'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from move-source-output; and not __ghoti_seen_subcommand_from (__ghoti_pa_print_type source-outputs)" \
+    -a '(__ghoti_pa_complete_type source-outputs)'
+complete -f -c pactl -n "__ghoti_seen_subcommand_from move-source-output; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type source-outputs)" \
+    -a '(__ghoti_pa_complete_type sources)'
 
 # Suspend
 for t in source sink
-    complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "(__fish_pa_complete_type "$t"s)"
-    complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from suspend-$t; and not __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
+        -a "(__ghoti_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from suspend-$t; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
         -a '0 false off' -d Resume
-    complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from suspend-$t; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
         -a '1 true on' -d Suspend
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "(__fish_pa_complete_type "$t"s)"
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "(__fish_pa_list_ports)"
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-port; and not __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
+        -a "(__ghoti_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-port; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
+        -a "(__ghoti_pa_list_ports)"
 end
 
 # Volume and mute
 for t in source sink source-output sink-input
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-volume; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "(__fish_pa_complete_type "$t"s)"
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-volume; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-volume; and not __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
+        -a "(__ghoti_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-volume; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
         -a "(seq 0 100)%"
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "(__fish_pa_complete_type "$t"s)"
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-mute; and not __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
+        -a "(__ghoti_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-mute; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
         -a "1 true on" -d Muted
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-mute; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
         -a "0 false off" -d Unmuted
-    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+    complete -f -c pactl -n "__ghoti_seen_subcommand_from set-$t-mute; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type "$t"s)" \
         -a toggle
 end
 
-complete -f -c pactl -n "__fish_seen_subcommand_from set-card-profile; and not __fish_seen_subcommand_from (__fish_pa_print_type cards)" \
-    -a "(__fish_pa_complete_type cards)"
-complete -f -c pactl -n "__fish_seen_subcommand_from set-card-profile; and __fish_seen_subcommand_from (__fish_pa_print_type cards)" \
-    -a "(__fish_pa_list_profiles)"
+complete -f -c pactl -n "__ghoti_seen_subcommand_from set-card-profile; and not __ghoti_seen_subcommand_from (__ghoti_pa_print_type cards)" \
+    -a "(__ghoti_pa_complete_type cards)"
+complete -f -c pactl -n "__ghoti_seen_subcommand_from set-card-profile; and __ghoti_seen_subcommand_from (__ghoti_pa_print_type cards)" \
+    -a "(__ghoti_pa_list_profiles)"
 
-complete -f -c pactl -n "__fish_seen_subcommand_from set-default-sink" -a "(__fish_pa_complete_type sinks)"
+complete -f -c pactl -n "__ghoti_seen_subcommand_from set-default-sink" -a "(__ghoti_pa_complete_type sinks)"
 
 complete -f -c pactl -l version -d 'Print a short version and exit'
 complete -f -c pactl -s h -l help -d 'Print help text and exit'

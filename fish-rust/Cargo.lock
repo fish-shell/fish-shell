@@ -81,7 +81,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "autocxx"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
+source = "git+https://github.com/ghoti-shell/autocxx?branch=ghoti#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "aquamarine",
  "autocxx-macro",
@@ -92,7 +92,7 @@ dependencies = [
 [[package]]
 name = "autocxx-bindgen"
 version = "0.62.0"
-source = "git+https://github.com/fish-shell/autocxx-bindgen?branch=fish#a229d3473bd90d2d10fc61a244408cfc1958934a"
+source = "git+https://github.com/ghoti-shell/autocxx-bindgen?branch=ghoti#a229d3473bd90d2d10fc61a244408cfc1958934a"
 dependencies = [
  "bitflags",
  "cexpr",
@@ -114,7 +114,7 @@ dependencies = [
 [[package]]
 name = "autocxx-build"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
+source = "git+https://github.com/ghoti-shell/autocxx?branch=ghoti#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "autocxx-engine",
  "env_logger",
@@ -125,7 +125,7 @@ dependencies = [
 [[package]]
 name = "autocxx-engine"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
+source = "git+https://github.com/ghoti-shell/autocxx?branch=ghoti#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "aquamarine",
  "autocxx-bindgen",
@@ -154,7 +154,7 @@ dependencies = [
 [[package]]
 name = "autocxx-macro"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
+source = "git+https://github.com/ghoti-shell/autocxx?branch=ghoti#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "autocxx-parser",
  "proc-macro-error",
@@ -166,7 +166,7 @@ dependencies = [
 [[package]]
 name = "autocxx-parser"
 version = "0.23.1"
-source = "git+https://github.com/fish-shell/autocxx?branch=fish#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
+source = "git+https://github.com/ghoti-shell/autocxx?branch=ghoti#f9ed164fed6a35a572d19f1495b0691e4b3fd92b"
 dependencies = [
  "indexmap",
  "itertools 0.10.5",
@@ -204,7 +204,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 [[package]]
 name = "cc"
 version = "1.0.79"
-source = "git+https://github.com/mqudsi/cc-rs?branch=fish#cdc3a376eb0f56c2fb2cf640cc0e9192feaa621b"
+source = "git+https://github.com/mqudsi/cc-rs?branch=ghoti#cdc3a376eb0f56c2fb2cf640cc0e9192feaa621b"
 dependencies = [
  "jobserver",
 ]
@@ -258,7 +258,7 @@ dependencies = [
 [[package]]
 name = "cxx"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/ghoti-shell/cxx?branch=ghoti#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "cc",
  "cxxbridge-flags",
@@ -270,7 +270,7 @@ dependencies = [
 [[package]]
 name = "cxx-build"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/ghoti-shell/cxx?branch=ghoti#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -284,7 +284,7 @@ dependencies = [
 [[package]]
 name = "cxx-gen"
 version = "0.7.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/ghoti-shell/cxx?branch=ghoti#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "codespan-reporting",
  "proc-macro2",
@@ -295,12 +295,12 @@ dependencies = [
 [[package]]
 name = "cxxbridge-flags"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/ghoti-shell/cxx?branch=ghoti#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 
 [[package]]
 name = "cxxbridge-macro"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/ghoti-shell/cxx?branch=ghoti#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -350,7 +350,7 @@ dependencies = [
 [[package]]
 name = "fast-float"
 version = "0.2.0"
-source = "git+https://github.com/fish-shell/fast-float-rust?branch=fish#9590c33a3f166a3533ba1cbb7a03e1105acec034"
+source = "git+https://github.com/ghoti-shell/fast-float-rust?branch=ghoti#9590c33a3f166a3533ba1cbb7a03e1105acec034"
 
 [[package]]
 name = "fastrand"
@@ -362,7 +362,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fish-rust"
+name = "ghoti-rust"
 version = "0.1.0"
 dependencies = [
  "autocxx",
@@ -742,7 +742,7 @@ checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
 [[package]]
 name = "pcre2"
 version = "0.2.3"
-source = "git+https://github.com/fish-shell/rust-pcre2?branch=master#824dd1460562f7b724a9acef218d4edb2ed7c289"
+source = "git+https://github.com/ghoti-shell/rust-pcre2?branch=master#824dd1460562f7b724a9acef218d4edb2ed7c289"
 dependencies = [
  "libc",
  "log",
@@ -753,7 +753,7 @@ dependencies = [
 [[package]]
 name = "pcre2-sys"
 version = "0.2.4"
-source = "git+https://github.com/fish-shell/rust-pcre2?branch=master#824dd1460562f7b724a9acef218d4edb2ed7c289"
+source = "git+https://github.com/ghoti-shell/rust-pcre2?branch=master#824dd1460562f7b724a9acef218d4edb2ed7c289"
 dependencies = [
  "cc",
  "libc",
@@ -791,7 +791,7 @@ dependencies = [
 [[package]]
 name = "printf-compat"
 version = "0.1.1"
-source = "git+https://github.com/fish-shell/printf-compat.git?branch=fish#d5f98dc8ce7a63e6639b08082ffbc6499021260c"
+source = "git+https://github.com/ghoti-shell/printf-compat.git?branch=ghoti#d5f98dc8ce7a63e6639b08082ffbc6499021260c"
 dependencies = [
  "bitflags",
  "itertools 0.9.0",

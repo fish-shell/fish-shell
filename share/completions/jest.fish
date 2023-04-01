@@ -1,4 +1,4 @@
-# fish for Jest
+# ghoti for Jest
 
 complete -f -c jest -l help -s h -d 'Show help'
 complete -f -c jest -l automock -d 'Automock all files by default'

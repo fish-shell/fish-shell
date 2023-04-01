@@ -1,4 +1,4 @@
-function fish_print_hg_root
+function ghoti_print_hg_root
     # If hg isn't installed, there's nothing we can do
     if not command -sq hg
         return 1

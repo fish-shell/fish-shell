@@ -1,5 +1,5 @@
 # Define the default debugging prompt command.
-function fish_breakpoint_prompt --description "A right prompt to be used when `breakpoint` is executed"
+function ghoti_breakpoint_prompt --description "A right prompt to be used when `breakpoint` is executed"
     set -l saved_status $status
     set -l function (status -L0 function)
     set -l line (status -L0 line-number)
@@ -19,5 +19,5 @@ function fish_breakpoint_prompt --description "A right prompt to be used when `b
         set prompt ...(string sub -s -(math $max_len - 3) -- $prompt)
     end
 
-    echo -ns (set_color $fish_color_status) "BP $prompt" (set_color normal) ' '
+    echo -ns (set_color $ghoti_color_status) "BP $prompt" (set_color normal) ' '
 end

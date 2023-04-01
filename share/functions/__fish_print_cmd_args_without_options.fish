@@ -1,3 +1,3 @@
-function __fish_print_cmd_args_without_options
-    __fish_print_cmd_args | string match -re '^[^-]'
+function __ghoti_print_cmd_args_without_options
+    __ghoti_print_cmd_args | string match -re '^[^-]'
 end

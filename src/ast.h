@@ -1,4 +1,4 @@
-// Programmatic representation of fish grammar.
+// Programmatic representation of ghoti grammar.
 
 #ifndef FISH_AST_H
 #define FISH_AST_H
@@ -18,8 +18,8 @@
 
 namespace ast {
 /**
- * This defines the fish abstract syntax tree.
- * The fish ast is a tree data structure. The nodes of the tree
+ * This defines the ghoti abstract syntax tree.
+ * The ghoti ast is a tree data structure. The nodes of the tree
  * are divided into three categories:
  *
  * - leaf nodes refer to a range of source, and have no child nodes.
@@ -743,7 +743,7 @@ struct andor_job_t final : public branch_t<type_t::andor_job> {
 
 // A freestanding_argument_list is equivalent to a normal argument list, except it may contain
 // TOK_END (newlines, and even semicolons, for historical reasons).
-// In practice the tok_ends are ignored by fish code so we do not bother to store them.
+// In practice the tok_ends are ignored by ghoti code so we do not bother to store them.
 struct freestanding_argument_list_t final : public branch_t<type_t::freestanding_argument_list> {
     argument_list_t arguments;
     FIELDS(arguments)

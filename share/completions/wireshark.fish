@@ -1,6 +1,6 @@
 # Wireshark - Interactively dump and analyze network traffic
 
-__fish_complete_wireshark wireshark
+__ghoti_complete_wireshark wireshark
 
 complete -c wireshark -l display -d 'Specifies the X display to use' -x
 complete -c wireshark -l fullscreen -d 'Start Wireshark in full screen' -x

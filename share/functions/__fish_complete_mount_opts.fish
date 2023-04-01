@@ -1,4 +1,4 @@
-function __fish_print_user_ids
+function __ghoti_print_user_ids
     if command -sq getent
         for line in (getent passwd)
             set -l v (string split : -- $line)
@@ -7,7 +7,7 @@ function __fish_print_user_ids
     end
 end
 
-function __fish_print_group_ids
+function __ghoti_print_group_ids
     if command -sq getent
         for line in (getent group)
             set -l v (string split : -- $line)
@@ -16,8 +16,8 @@ function __fish_print_group_ids
     end
 end
 
-function __fish_complete_mount_opts
-    set -l fish_mount_opts \
+function __ghoti_complete_mount_opts
+    set -l ghoti_mount_opts \
         async\t'Use asynchronous I/O' \
         atime\t'Update time on each access' \
         noatime\t'Do not update time on each access' \
@@ -144,13 +144,13 @@ function __fish_complete_mount_opts
 
         switch (string replace -r '=.*' '=' -- $last_arg)
             case uid=
-                set -a fish_mount_opts uid=(__fish_print_user_ids)
+                set -a ghoti_mount_opts uid=(__ghoti_print_user_ids)
             case gid=
-                set -a fish_mount_opts gid=(__fish_print_group_ids)
+                set -a ghoti_mount_opts gid=(__ghoti_print_group_ids)
             case setuid=
-                set -a fish_mount_opts setuid=(__fish_print_user_ids)
+                set -a ghoti_mount_opts setuid=(__ghoti_print_user_ids)
             case setgid=
-                set -a fish_mount_opts setgid=(__fish_print_group_ids)
+                set -a ghoti_mount_opts setgid=(__ghoti_print_group_ids)
         end
     end
 
@@ -159,5 +159,5 @@ function __fish_complete_mount_opts
         set prefix (string join , -- $args),
     end
 
-    printf '%s\n' $prefix$fish_mount_opts
+    printf '%s\n' $prefix$ghoti_mount_opts
 end

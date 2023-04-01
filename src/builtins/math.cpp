@@ -54,7 +54,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 if (std::wcscmp(w.woptarg, L"max") == 0) {
                     opts.scale = 15;
                 } else {
-                    opts.scale = fish_wcstoi(w.woptarg);
+                    opts.scale = ghoti_wcstoi(w.woptarg);
                     if (errno || opts.scale < 0 || opts.scale > 15) {
                         streams.err.append_format(_(L"%ls: %ls: invalid scale value\n"), cmd,
                                                   w.woptarg);
@@ -69,7 +69,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 } else if (std::wcscmp(w.woptarg, L"octal") == 0) {
                     opts.base = 8;
                 } else {
-                    opts.base = fish_wcstoi(w.woptarg);
+                    opts.base = ghoti_wcstoi(w.woptarg);
                     if (errno || (opts.base != 8 && opts.base != 16)) {
                         streams.err.append_format(_(L"%ls: %ls: invalid base value\n"), cmd,
                                                   w.woptarg);

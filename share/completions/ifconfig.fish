@@ -22,4 +22,4 @@ complete -x -c ifconfig -a "
 	address
 	txqueuelen
 "
-complete -x -c ifconfig -a "(__fish_print_interfaces)" -d "Network interface"
+complete -x -c ifconfig -a "(__ghoti_print_interfaces)" -d "Network interface"

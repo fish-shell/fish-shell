@@ -24,7 +24,7 @@
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "ffi_init.rs.h"
-#include "fish_version.h"
+#include "ghoti_version.h"
 #include "input.h"
 #include "input_common.h"
 #include "maybe.h"
@@ -155,7 +155,7 @@ static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
         std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\u%04X", wc);
     } else {
         // Our support for UTF-16 surrogate pairs is non-existent.
-        // See https://github.com/fish-shell/fish-shell/issues/6585#issuecomment-783669903 for what
+        // See https://github.com/ghoti-shell/ghoti-shell/issues/6585#issuecomment-783669903 for what
         // correct handling of surrogate pairs would look like - except it would need to be done
         // everywhere.
 
@@ -280,7 +280,7 @@ static void process_input(bool continuous_mode, bool verbose) {
     scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
-    // in fish-proper this is done once a command is run.
+    // in ghoti-proper this is done once a command is run.
     tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);
 
     if (continuous_mode) {
@@ -313,11 +313,11 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode, bool *verb
                 break;
             }
             case 'h': {
-                print_help("fish_key_reader", 1);
+                print_help("ghoti_key_reader", 1);
                 exit(0);
             }
             case 'v': {
-                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_fish_version());
+                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_ghoti_version());
                 exit(0);
             }
             case 'V': {
@@ -344,7 +344,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode, bool *verb
 }
 
 int main(int argc, char **argv) {
-    program_name = L"fish_key_reader";
+    program_name = L"ghoti_key_reader";
     bool continuous_mode = false;
     bool verbose = false;
 

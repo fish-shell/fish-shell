@@ -1,6 +1,6 @@
-.. _cmd-fish_opt:
+.. _cmd-ghoti_opt:
 
-fish_opt - create an option specification for the argparse command
+ghoti_opt - create an option specification for the argparse command
 ==================================================================
 
 Synopsis
@@ -8,8 +8,8 @@ Synopsis
 
 .. synopsis::
 
-    fish_opt [(-slor | --multiple-vals=) OPTNAME]
-    fish_opt --help
+    ghoti_opt [(-slor | --multiple-vals=) OPTNAME]
+    ghoti_opt --help
 
 Description
 -----------
@@ -48,7 +48,7 @@ Define a single option specification for the boolean help flag:
 
 ::
 
-    set -l options (fish_opt -s h -l help)
+    set -l options (ghoti_opt -s h -l help)
     argparse $options -- $argv
 
 
@@ -58,8 +58,8 @@ Same as above but with a second flag that requires a value:
 
 ::
 
-    set -l options (fish_opt -s h -l help)
-    set options $options (fish_opt -s m -l max --required-val)
+    set -l options (ghoti_opt -s h -l help)
+    set options $options (ghoti_opt -s m -l max --required-val)
     argparse $options -- $argv
 
 
@@ -69,8 +69,8 @@ Same as above but with a third flag that can be given multiple times saving the 
 
 ::
 
-    set -l options (fish_opt --short=h --long=help)
-    set options $options (fish_opt --short=m --long=max --required-val)
-    set options $options (fish_opt --short=t --long=token --multiple-vals --long-only)
+    set -l options (ghoti_opt --short=h --long=help)
+    set options $options (ghoti_opt --short=m --long=max --required-val)
+    set options $options (ghoti_opt --short=t --long=token --multiple-vals --long-only)
     argparse $options -- $argv
 

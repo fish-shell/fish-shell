@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-``block`` prevents events triggered by ``fish`` or the :doc:`emit <emit>` command from being delivered and acted upon while the block is in place.
+``block`` prevents events triggered by ``ghoti`` or the :doc:`emit <emit>` command from being delivered and acted upon while the block is in place.
 
 In functions, ``block`` can be useful while performing work that should not be interrupted by the shell.
 
@@ -57,4 +57,4 @@ Example
 Notes
 -----
 
-Events are only received from the current fish process as there is no way to send events from one fish process to another (yet).
+Events are only received from the current ghoti process as there is no way to send events from one ghoti process to another (yet).

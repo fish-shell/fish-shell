@@ -38,7 +38,7 @@ The following options are available:
     ``N`` must be an integer or the word "max" for the maximum scale.
     A scale of zero causes results to be truncated, not rounded. Any non-integer component is thrown away.
     So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to.
-    This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0.
+    This is for compatibility with ``bc`` which was the basis for this command prior to ghoti 3.0.0.
     Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
 
 **-b** *BASE* or **--base** *BASE*
@@ -210,6 +210,6 @@ Examples
 Compatibility notes
 -------------------
 
-Fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
+Fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with ghoti 3.0.0 ghoti uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
 
 You don't need to use ``--`` before the expression, even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert ``--`` before the expression, it will cause option scanning to stop just like for every other command and it won't be part of the expression.

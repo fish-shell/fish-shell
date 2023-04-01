@@ -1,6 +1,6 @@
 .. _cmd-status:
 
-status - query fish runtime information
+status - query ghoti runtime information
 =======================================
 
 Synopsis
@@ -22,7 +22,7 @@ Synopsis
     status filename
     status basename
     status dirname
-    status fish-path
+    status ghoti-path
     status function
     status line-number
     status stack-trace
@@ -38,19 +38,19 @@ With no arguments, ``status`` displays a summary of the current login and job co
 The following operations (subcommands) are available:
 
 **is-command-substitution**, **-c** or **--is-command-substitution**
-    Returns 0 if fish is currently executing a command substitution.
+    Returns 0 if ghoti is currently executing a command substitution.
 
 **is-block**, **-b** or **--is-block**
-    Returns 0 if fish is currently executing a block of code.
+    Returns 0 if ghoti is currently executing a block of code.
 
 **is-breakpoint**
-    Returns 0 if fish is currently showing a prompt in the context of a :doc:`breakpoint <breakpoint>` command. See also the :doc:`fish_breakpoint_prompt <fish_breakpoint_prompt>` function.
+    Returns 0 if ghoti is currently showing a prompt in the context of a :doc:`breakpoint <breakpoint>` command. See also the :doc:`ghoti_breakpoint_prompt <ghoti_breakpoint_prompt>` function.
 
 **is-interactive**, **-i** or **--is-interactive**
-    Returns 0 if fish is interactive - that is, connected to a keyboard.
+    Returns 0 if ghoti is interactive - that is, connected to a keyboard.
 
 **is-login**, **-l** or **--is-login**
-    Returns 0 if fish is a login shell - that is, if fish should perform login tasks such as setting up :envvar:`PATH`.
+    Returns 0 if ghoti is a login shell - that is, if ghoti should perform login tasks such as setting up :envvar:`PATH`.
 
 **is-full-job-control** or **--is-full-job-control**
     Returns 0 if full job control is enabled.
@@ -76,8 +76,8 @@ The following operations (subcommands) are available:
 **dirname**
     Prints just the path to the running script, without the actual filename itself. This can be relative to :envvar:`PWD` (including just "."), depending on how the script was called. This is the same as passing the filename to ``dirname(3)``. It's useful if you want to use other files in the current script's directory or similar.
 
-**fish-path**
-    Prints the absolute path to the currently executing instance of fish. This is a best-effort attempt and the exact output is down to what the platform gives fish. In some cases you might only get "fish".
+**ghoti-path**
+    Prints the absolute path to the currently executing instance of ghoti. This is a best-effort attempt and the exact output is down to what the platform gives ghoti. In some cases you might only get "ghoti".
 
 **function** or **current-function**
     Prints the name of the currently called function if able, when missing displays "Not a function" (or equivalent translated string).
@@ -100,6 +100,6 @@ The following operations (subcommands) are available:
 Notes
 -----
 
-For backwards compatibility most subcommands can also be specified as a long or short option. For example, rather than ``status is-login`` you can type ``status --is-login``. The flag forms are deprecated and may be removed in a future release (but not before fish 4.0).
+For backwards compatibility most subcommands can also be specified as a long or short option. For example, rather than ``status is-login`` you can type ``status --is-login``. The flag forms are deprecated and may be removed in a future release (but not before ghoti 4.0).
 
 You can only specify one subcommand per invocation even if you use the flag form of the subcommand.

@@ -1,4 +1,4 @@
-__fish_complete_lpr cupsenable
+__ghoti_complete_lpr cupsenable
 
 complete -c cupsenable -s c -d 'Cancels all jobs on the named destination'
 complete -c cupsenable -l hold -d 'Holds remaining jobs on the named printer'

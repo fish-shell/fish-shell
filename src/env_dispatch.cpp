@@ -52,7 +52,7 @@
 #include "wutil.h"
 
 // Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
-// fish_read_limit variable.
+// ghoti_read_limit variable.
 constexpr size_t DEFAULT_READ_BYTE_LIMIT = 100 * 1024 * 1024;
 size_t read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
 
@@ -61,7 +61,7 @@ size_t read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
 static const wcstring locale_variables[] = {
     L"LANG",       L"LANGUAGE", L"LC_ALL",
     L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES",
-    L"LC_NUMERIC", L"LC_TIME",  L"fish_allow_singlebyte_locale",
+    L"LC_NUMERIC", L"LC_TIME",  L"ghoti_allow_singlebyte_locale",
     L"LOCPATH"};
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
@@ -109,7 +109,7 @@ class var_dispatch_table_t {
 // Forward declarations.
 static void init_curses(const environment_t &vars);
 static void init_locale(const environment_t &vars);
-static void update_fish_color_support(const environment_t &vars);
+static void update_ghoti_color_support(const environment_t &vars);
 
 /// True if we think we can set the terminal title.
 static relaxed_atomic_bool_t can_set_term_title{false};
@@ -147,13 +147,13 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
     tzset();
 }
 
-/// Update the value of g_fish_emoji_width
+/// Update the value of g_ghoti_emoji_width
 static void guess_emoji_width(const environment_t &vars) {
-    if (auto width_str = vars.get(L"fish_emoji_width")) {
-        int new_width = fish_wcstol(width_str->as_string().c_str());
-        g_fish_emoji_width = std::min(2, std::max(1, new_width));
-        FLOGF(term_support, "'fish_emoji_width' preference: %d, overwriting default",
-              g_fish_emoji_width);
+    if (auto width_str = vars.get(L"ghoti_emoji_width")) {
+        int new_width = ghoti_wcstol(width_str->as_string().c_str());
+        g_ghoti_emoji_width = std::min(2, std::max(1, new_width));
+        FLOGF(term_support, "'ghoti_emoji_width' preference: %d, overwriting default",
+              g_ghoti_emoji_width);
         return;
     }
 
@@ -170,18 +170,18 @@ static void guess_emoji_width(const environment_t &vars) {
 
     if (term == L"Apple_Terminal" && version >= 400) {
         // Apple Terminal on High Sierra
-        g_fish_emoji_width = 2;
+        g_ghoti_emoji_width = 2;
         FLOGF(term_support, "default emoji width: 2 for %ls", term.c_str());
     } else if (term == L"iTerm.app") {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12.
-        g_fish_emoji_width = 2;
+        g_ghoti_emoji_width = 2;
         FLOGF(term_support, "default emoji width for iTerm: 2");
     } else {
         // Default to whatever system wcwidth says to U+1F603,
         // but only if it's at least 1 and at most 2.
         int w = wcwidth(L'😃');
-        g_fish_emoji_width = std::min(2, std::max(1, w));
-        FLOGF(term_support, "default emoji width: %d", g_fish_emoji_width);
+        g_ghoti_emoji_width = std::min(2, std::max(1, w));
+        FLOGF(term_support, "default emoji width: %d", g_ghoti_emoji_width);
     }
 }
 
@@ -193,17 +193,17 @@ void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
     s_var_dispatch_table->dispatch(key, vars);
 }
 
-static void handle_fish_term_change(const env_stack_t &vars) {
-    update_fish_color_support(vars);
+static void handle_ghoti_term_change(const env_stack_t &vars) {
+    update_ghoti_color_support(vars);
     reader_schedule_prompt_repaint();
 }
 
 static void handle_change_ambiguous_width(const env_stack_t &vars) {
     int new_width = 1;
-    if (auto width_str = vars.get(L"fish_ambiguous_width")) {
-        new_width = fish_wcstol(width_str->as_string().c_str());
+    if (auto width_str = vars.get(L"ghoti_ambiguous_width")) {
+        new_width = ghoti_wcstol(width_str->as_string().c_str());
     }
-    g_fish_ambiguous_width = std::max(0, new_width);
+    g_ghoti_ambiguous_width = std::max(0, new_width);
 }
 
 static void handle_term_size_change(const env_stack_t &vars) {
@@ -212,12 +212,12 @@ static void handle_term_size_change(const env_stack_t &vars) {
     handle_columns_lines_var_change_ffi(reinterpret_cast<const unsigned char *>(&env_vars));
 }
 
-static void handle_fish_history_change(const env_stack_t &vars) {
+static void handle_ghoti_history_change(const env_stack_t &vars) {
     reader_change_history(history_session_id(vars));
 }
 
-static void handle_fish_cursor_selection_mode_change(const env_stack_t &vars) {
-    auto mode = vars.get(L"fish_cursor_selection_mode");
+static void handle_ghoti_cursor_selection_mode_change(const env_stack_t &vars) {
+    auto mode = vars.get(L"ghoti_cursor_selection_mode");
     reader_change_cursor_selection_mode(mode && mode->as_string() == L"inclusive"
                                             ? cursor_selection_mode_t::inclusive
                                             : cursor_selection_mode_t::exclusive);
@@ -272,11 +272,11 @@ static bool allow_use_posix_spawn() {
     return true;
 }
 
-static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
+static void handle_ghoti_use_posix_spawn_change(const environment_t &vars) {
     // Note if the variable is missing or empty, we default to true if allowed.
     if (!allow_use_posix_spawn()) {
         g_use_posix_spawn = false;
-    } else if (auto var = vars.get(L"fish_use_posix_spawn")) {
+    } else if (auto var = vars.get(L"ghoti_use_posix_spawn")) {
         g_use_posix_spawn = var->empty() || bool_from_string(var->as_string());
     } else {
         g_use_posix_spawn = true;
@@ -286,11 +286,11 @@ static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
 /// Allow the user to override the limit on how much data the `read` command will process.
 /// This is primarily for testing but could be used by users in special situations.
 static void handle_read_limit_change(const environment_t &vars) {
-    auto read_byte_limit_var = vars.get(L"fish_read_limit");
+    auto read_byte_limit_var = vars.get(L"ghoti_read_limit");
     if (!read_byte_limit_var.missing_or_empty()) {
-        size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
+        size_t limit = ghoti_wcstoull(read_byte_limit_var->as_string().c_str());
         if (errno) {
-            FLOGF(warning, "Ignoring fish_read_limit since it is not valid");
+            FLOGF(warning, "Ignoring ghoti_read_limit since it is not valid");
         } else {
             read_byte_limit = limit;
         }
@@ -299,8 +299,8 @@ static void handle_read_limit_change(const environment_t &vars) {
     }
 }
 
-static void handle_fish_trace(const environment_t &vars) {
-    trace_set_enabled(!vars.get(L"fish_trace").missing_or_empty());
+static void handle_ghoti_trace(const environment_t &vars) {
+    trace_set_enabled(!vars.get(L"ghoti_trace").missing_or_empty());
 }
 
 /// Populate the dispatch table used by `env_dispatch_var_change()` to efficiently call the
@@ -316,23 +316,23 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
         var_dispatch_table->add(var_name, handle_curses_change);
     }
 
-    var_dispatch_table->add(L"fish_term256", handle_fish_term_change);
-    var_dispatch_table->add(L"fish_term24bit", handle_fish_term_change);
-    var_dispatch_table->add(L"fish_escape_delay_ms", update_wait_on_escape_ms);
-    var_dispatch_table->add(L"fish_emoji_width", guess_emoji_width);
-    var_dispatch_table->add(L"fish_ambiguous_width", handle_change_ambiguous_width);
+    var_dispatch_table->add(L"ghoti_term256", handle_ghoti_term_change);
+    var_dispatch_table->add(L"ghoti_term24bit", handle_ghoti_term_change);
+    var_dispatch_table->add(L"ghoti_escape_delay_ms", update_wait_on_escape_ms);
+    var_dispatch_table->add(L"ghoti_emoji_width", guess_emoji_width);
+    var_dispatch_table->add(L"ghoti_ambiguous_width", handle_change_ambiguous_width);
     var_dispatch_table->add(L"LINES", handle_term_size_change);
     var_dispatch_table->add(L"COLUMNS", handle_term_size_change);
-    var_dispatch_table->add(L"fish_complete_path", handle_complete_path_change);
-    var_dispatch_table->add(L"fish_function_path", handle_function_path_change);
-    var_dispatch_table->add(L"fish_read_limit", handle_read_limit_change);
-    var_dispatch_table->add(L"fish_history", handle_fish_history_change);
-    var_dispatch_table->add(L"fish_autosuggestion_enabled", handle_autosuggestion_change);
+    var_dispatch_table->add(L"ghoti_complete_path", handle_complete_path_change);
+    var_dispatch_table->add(L"ghoti_function_path", handle_function_path_change);
+    var_dispatch_table->add(L"ghoti_read_limit", handle_read_limit_change);
+    var_dispatch_table->add(L"ghoti_history", handle_ghoti_history_change);
+    var_dispatch_table->add(L"ghoti_autosuggestion_enabled", handle_autosuggestion_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
-    var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
-    var_dispatch_table->add(L"fish_trace", handle_fish_trace);
-    var_dispatch_table->add(L"fish_cursor_selection_mode",
-                            handle_fish_cursor_selection_mode_change);
+    var_dispatch_table->add(L"ghoti_use_posix_spawn", handle_ghoti_use_posix_spawn_change);
+    var_dispatch_table->add(L"ghoti_trace", handle_ghoti_trace);
+    var_dispatch_table->add(L"ghoti_cursor_selection_mode",
+                            handle_ghoti_cursor_selection_mode_change);
 
     // This std::move is required to avoid a build error on old versions of libc++ (#5801),
     // but it causes a different warning under newer versions of GCC (observed under GCC 9.3.0,
@@ -354,13 +354,13 @@ static void run_inits(const environment_t &vars) {
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     handle_read_limit_change(vars);
-    handle_fish_use_posix_spawn_change(vars);
-    handle_fish_trace(vars);
+    handle_ghoti_use_posix_spawn_change(vars);
+    handle_ghoti_trace(vars);
 }
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).
-static void update_fish_color_support(const environment_t &vars) {
-    // Detect or infer term256 support. If fish_term256 is set, we respect it;
+static void update_ghoti_color_support(const environment_t &vars) {
+    // Detect or infer term256 support. If ghoti_term256 is set, we respect it;
     // otherwise infer it from the TERM variable or use terminfo.
     wcstring term;
     bool support_term256 = false;
@@ -368,10 +368,10 @@ static void update_fish_color_support(const environment_t &vars) {
 
     if (auto term_var = vars.get(L"TERM")) term = term_var->as_string();
 
-    if (auto fish_term256 = vars.get(L"fish_term256")) {
-        // $fish_term256
-        support_term256 = bool_from_string(fish_term256->as_string());
-        FLOGF(term_support, L"256 color support determined by '$fish_term256'");
+    if (auto ghoti_term256 = vars.get(L"ghoti_term256")) {
+        // $ghoti_term256
+        support_term256 = bool_from_string(ghoti_term256->as_string());
+        FLOGF(term_support, L"256 color support determined by '$ghoti_term256'");
     } else if (term.find(L"256color") != wcstring::npos) {
         // TERM is *256color*: 256 colors explicitly supported
         support_term256 = true;
@@ -387,10 +387,10 @@ static void update_fish_color_support(const environment_t &vars) {
               term.c_str());
     }
 
-    // Handle $fish_term24bit
-    if (auto fish_term24bit = vars.get(L"fish_term24bit")) {
-        support_term24bit = bool_from_string(fish_term24bit->as_string());
-        FLOGF(term_support, L"'fish_term24bit' preference: 24-bit color %ls",
+    // Handle $ghoti_term24bit
+    if (auto ghoti_term24bit = vars.get(L"ghoti_term24bit")) {
+        support_term24bit = bool_from_string(ghoti_term24bit->as_string());
+        FLOGF(term_support, L"'ghoti_term24bit' preference: 24-bit color %ls",
               support_term24bit ? L"enabled" : L"disabled");
     } else {
         if (vars.get(L"STY") || string_prefixes_string(L"eterm", term)) {
@@ -429,7 +429,7 @@ static void update_fish_color_support(const environment_t &vars) {
                 FLOGF(term_support, L"Truecolor support: Enabling for st");
                 support_term24bit = true;
             } else if (auto vte = vars.get(L"VTE_VERSION")) {
-                if (fish_wcstod(vte->as_string(), nullptr) > 3600) {
+                if (ghoti_wcstod(vte->as_string(), nullptr) > 3600) {
                     FLOGF(term_support, L"Truecolor support: Enabling for VTE version %ls",
                           vte->as_string().c_str());
                     support_term24bit = true;
@@ -600,7 +600,7 @@ static void init_curses(const environment_t &vars) {
     can_set_term_title = does_term_support_setting_title(vars);
     term_has_xn =
         tigetflag(const_cast<char *>("xenl")) == 1;  // does terminal have the eat_newline_glitch
-    update_fish_color_support(vars);
+    update_ghoti_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
     layout_cache_t::shared.clear();
     curses_initialized = true;
@@ -635,7 +635,7 @@ static void init_locale(const environment_t &vars) {
     // A "C" locale is broken for our purposes - any wchar functions will break on it.
     // So we try *really really really hard* to not have one.
     bool fix_locale = true;
-    if (auto allow_c = vars.get(L"fish_allow_singlebyte_locale")) {
+    if (auto allow_c = vars.get(L"ghoti_allow_singlebyte_locale")) {
         fix_locale = allow_c.missing_or_empty() ? true : !bool_from_string(allow_c->as_string());
     }
     if (fix_locale && MB_CUR_MAX == 1) {
@@ -656,9 +656,9 @@ static void init_locale(const environment_t &vars) {
     setlocale(LC_NUMERIC, "C");
 
     // See that we regenerate our special locale for numbers.
-    fish_invalidate_numeric_locale();
+    ghoti_invalidate_numeric_locale();
 
-    fish_setlocale();
+    ghoti_setlocale();
     FLOGF(env_locale, L"init_locale() setlocale(): '%s'", locale);
 
     const char *new_msg_locale = setlocale(LC_MESSAGES, nullptr);

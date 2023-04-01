@@ -138,7 +138,7 @@ where
 /// The echo builtin.
 ///
 /// Bash only respects `-n` if it's the first argument. We'll do the same. We also support a new,
-/// fish specific, option `-s` to mean "no spaces".
+/// ghoti specific, option `-s` to mean "no spaces".
 pub fn echo(
     parser: &mut parser_t,
     streams: &mut io_streams_t,

@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 # $XDG_DATA_HOME can itself be a relative path. So force it to an absolute
 # path so we can remove it from any resolved paths below. This is needed
 # because the contents of the builtin realpath.out file can't include any $PWD
@@ -52,36 +52,36 @@ builtin realpath .
 popd
 
 # A single symlink to a directory is correctly resolved.
-ln -fs fish $XDG_DATA_HOME/fish-symlink
-set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink)
-set -l expected_real_path "$data_home_realpath/fish"
+ln -fs ghoti $XDG_DATA_HOME/ghoti-symlink
+set -l real_path (builtin realpath $XDG_DATA_HOME/ghoti-symlink)
+set -l expected_real_path "$data_home_realpath/ghoti"
 if test "$real_path" = "$expected_real_path"
-    echo "fish-symlink handled correctly"
-    # CHECK: fish-symlink handled correctly
+    echo "ghoti-symlink handled correctly"
+    # CHECK: ghoti-symlink handled correctly
 else
-    echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
+    echo "ghoti-symlink not handled correctly: $real_path != $expected_real_path" >&2
 end
 
 # With "-s" the symlink is not resolved.
-set -l real_path (builtin realpath -s $data_home_realpath/fish-symlink)
-set -l expected_real_path "$data_home_realpath/fish-symlink"
+set -l real_path (builtin realpath -s $data_home_realpath/ghoti-symlink)
+set -l expected_real_path "$data_home_realpath/ghoti-symlink"
 if test "$real_path" = "$expected_real_path"
-    echo "fish-symlink handled correctly"
-    # CHECK: fish-symlink handled correctly
+    echo "ghoti-symlink handled correctly"
+    # CHECK: ghoti-symlink handled correctly
 else
-    echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
+    echo "ghoti-symlink not handled correctly: $real_path != $expected_real_path" >&2
 end
 
 # But the $PWD is still resolved
 set -l oldpwd $PWD
-cd $XDG_DATA_HOME/fish-symlink
-set -l real_path (builtin realpath -s $data_home_realpath/fish-symlink)
-set -l expected_real_path "$data_home_realpath/fish-symlink"
+cd $XDG_DATA_HOME/ghoti-symlink
+set -l real_path (builtin realpath -s $data_home_realpath/ghoti-symlink)
+set -l expected_real_path "$data_home_realpath/ghoti-symlink"
 if test "$real_path" = "$expected_real_path"
-    echo "fish-symlink handled correctly"
-    # CHECK: fish-symlink handled correctly
+    echo "ghoti-symlink handled correctly"
+    # CHECK: ghoti-symlink handled correctly
 else
-    echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
+    echo "ghoti-symlink not handled correctly: $real_path != $expected_real_path" >&2
 end
 cd $oldpwd
 
@@ -99,11 +99,11 @@ or echo builtin realpath -s does not resolve .. or resolves symlink wrong
 
 # A nonexistent file relative to a valid symlink to a directory gets converted.
 # This depends on the symlink created by the previous test.
-set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/nonexistent-file-relative-to-a-symlink)
-set -l expected_real_path "$data_home_realpath/fish/nonexistent-file-relative-to-a-symlink"
+set -l real_path (builtin realpath $XDG_DATA_HOME/ghoti-symlink/nonexistent-file-relative-to-a-symlink)
+set -l expected_real_path "$data_home_realpath/ghoti/nonexistent-file-relative-to-a-symlink"
 if test "$real_path" = "$expected_real_path"
-    echo "fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted"
-    # CHECK: fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted
+    echo "ghoti-symlink/nonexistent-file-relative-to-a-symlink correctly converted"
+    # CHECK: ghoti-symlink/nonexistent-file-relative-to-a-symlink correctly converted
 else
     echo "failure nonexistent-file-relative-to-a-symlink: $real_path != $expected_real_path" >&2
 end
@@ -118,16 +118,16 @@ builtin realpath -s //bin
 # CHECK: /bin
 
 # A path with two symlinks, first to a directory, second to a file, is correctly resolved.
-ln -fs fish $XDG_DATA_HOME/fish-symlink2
-touch $XDG_DATA_HOME/fish/real_file
-ln -fs real_file $XDG_DATA_HOME/fish/symlink_file
-set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/symlink_file)
-set -l expected_real_path "$data_home_realpath/fish/real_file"
+ln -fs ghoti $XDG_DATA_HOME/ghoti-symlink2
+touch $XDG_DATA_HOME/ghoti/real_file
+ln -fs real_file $XDG_DATA_HOME/ghoti/symlink_file
+set -l real_path (builtin realpath $XDG_DATA_HOME/ghoti-symlink/symlink_file)
+set -l expected_real_path "$data_home_realpath/ghoti/real_file"
 if test "$real_path" = "$expected_real_path"
-    echo "fish-symlink/symlink_file handled correctly"
-    # CHECK: fish-symlink/symlink_file handled correctly
+    echo "ghoti-symlink/symlink_file handled correctly"
+    # CHECK: ghoti-symlink/symlink_file handled correctly
 else
-    echo "fish-symlink/symlink_file not handled correctly: $real_path != expected_real_path" >&2
+    echo "ghoti-symlink/symlink_file not handled correctly: $real_path != expected_real_path" >&2
 end
 
 exit 0

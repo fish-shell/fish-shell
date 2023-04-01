@@ -94,4 +94,4 @@ Examples
 See more
 --------
 
-For more explanation of how functions fit into fish, see :ref:`Functions <syntax-function>`.
+For more explanation of how functions fit into ghoti, see :ref:`Functions <syntax-function>`.

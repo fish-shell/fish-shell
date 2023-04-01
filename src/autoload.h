@@ -19,7 +19,7 @@ class environment_t;
 class parser_t;
 struct autoload_tester_t;
 
-/// autoload_t is a class that knows how to autoload .fish files from a list of directories. This
+/// autoload_t is a class that knows how to autoload .ghoti files from a list of directories. This
 /// is used by autoloading functions and completions. It maintains a file cache, which is
 /// responsible for potentially cached accesses of files, and then a list of files that have
 /// actually been autoloaded. A client may request a file to autoload given a command name, and may
@@ -59,8 +59,8 @@ class autoload_t {
     ~autoload_t();
 
     /// Given a command, get a path to autoload.
-    /// For example, if the environment variable is 'fish_function_path' and the command is 'foo',
-    /// this will look for a file 'foo.fish' in one of the directories given by fish_function_path.
+    /// For example, if the environment variable is 'ghoti_function_path' and the command is 'foo',
+    /// this will look for a file 'foo.ghoti' in one of the directories given by ghoti_function_path.
     /// If there is no such file, OR if the file has been previously resolved and is now unchanged,
     /// this will return none. But if the file is either new or changed, this will return the path.
     /// After returning a path, the command is marked in-progress until the caller calls
@@ -69,7 +69,7 @@ class autoload_t {
     maybe_t<wcstring> resolve_command(const wcstring &cmd, const environment_t &env);
 
     /// Helper to actually perform an autoload.
-    /// This is a static function because it executes fish script, and so must be called without
+    /// This is a static function because it executes ghoti script, and so must be called without
     /// holding any particular locks.
     static void perform_autoload(const wcstring &path, parser_t &parser);
 

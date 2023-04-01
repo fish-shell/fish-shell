@@ -1,1 +1,1 @@
-pip completion --fish 2>/dev/null | source
+pip completion --ghoti 2>/dev/null | source

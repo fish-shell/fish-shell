@@ -1,4 +1,4 @@
-function __fish_complete_netcat
+function __ghoti_complete_netcat
     set -l nc $argv[1]
     set -l flavor $argv[-1]
 
@@ -46,13 +46,13 @@ function __fish_complete_netcat
             complete -c $nc -s v -d "Have nc give more verbose output"
             complete -c $nc -s W -x -d "Terminate after receiving recvlimit packets from the network"
             complete -c $nc -s w -x -d "Connections which cannot be established or are idle timeout after timeout seconds"
-            function __fish_complete_nc-connect-openbsd
+            function __ghoti_complete_nc-connect-openbsd
                 printf "connect\tHTTPS proxy\n"
                 printf "4\tSOCKS v.4\n"
                 printf "5\tSOCKS v.5\n"
             end
-            complete -c $nc -s X -x -a "(__fish_complete_nc-connect-openbsd)" -d "Requests that nc should use the specified protocol when talking to the proxy server"
-            complete -c $nc -s x -x -a "(__fish_print_hostnames)" -d "Requests that nc should connect to destination using a proxy at proxy_address and port"
+            complete -c $nc -s X -x -a "(__ghoti_complete_nc-connect-openbsd)" -d "Requests that nc should use the specified protocol when talking to the proxy server"
+            complete -c $nc -s x -x -a "(__ghoti_print_hostnames)" -d "Requests that nc should connect to destination using a proxy at proxy_address and port"
             complete -c $nc -s Z -d "DCCP mode"
             complete -c $nc -s z -d "Specifies that nc should just scan for listening daemons, without sending any data to them"
 

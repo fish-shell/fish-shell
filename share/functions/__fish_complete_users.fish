@@ -1,8 +1,8 @@
 # This should be used where you want user names with a description. Such as in an argument
-# completion. If you just want a list of user names use __fish_print_users.
+# completion. If you just want a list of user names use __ghoti_print_users.
 # The string replace command takes into account GECOS-formatted description fields, by retaining
 # only the first field, the relevant one, from the comma-separated list
-function __fish_complete_users --description "Print a list of local users, with the real user name as a description"
+function __ghoti_complete_users --description "Print a list of local users, with the real user name as a description"
     if command -sq getent
         command getent passwd | while read -l line
             string split -f 1,5 : -- $line | string join \t | string replace -r ',.*' ''

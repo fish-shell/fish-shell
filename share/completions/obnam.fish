@@ -1,6 +1,6 @@
 
-function __fish_obnam_nosubcommand
-    if __fish_seen_subcommand_from add-key backup client-keys clients diff dump-repo force-lock forget fsck \
+function __ghoti_obnam_nosubcommand
+    if __ghoti_seen_subcommand_from add-key backup client-keys clients diff dump-repo force-lock forget fsck \
             generations genids help help-all kdirstat list-errors list-formats list-keys list-toplevels \
             ls mount nagios-last-backup-age remove-client remove-key restore verify
         return 1
@@ -8,31 +8,31 @@ function __fish_obnam_nosubcommand
     return 0
 end
 
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a add-key -d 'Add a key to the repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a backup -d 'Backup data to repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a client-keys -d 'List clients and their keys in the repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a clients -d 'List clients using the repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a diff -d 'Show difference between two generations'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a dump-repo -d 'Dump (some) data structures from a repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a force-lock -d 'Force a locked repository to be open'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a forget -d 'Forget (remove) specified backup generations'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a fsck -d 'Verify internal consistency of backup repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a generations -d 'List backup generations for client'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a genids -d 'List generation ids for client'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a help -d 'Print help'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a help-all -d 'Print help, including hidden subcommands'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a kdirstat -d 'List contents of a generation in kdirstat cache format'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a list-errors -d 'List error codes and explanations'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a list-formats -d 'List available repository formats'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a list-keys -d 'List keys and repository toplevels they are used in'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a list-toplevels -d 'List repository toplevel directories and their keys'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a ls -d 'List contents of a generation'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a mount -d 'Mount a backup repository as a FUSE filesystem'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a nagios-last-backup-age -d 'Check if the most recent generation is recent enough'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a remove-client -d 'Remove client and its key from repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a remove-key -d 'Remove a key from the repository'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a restore -d 'Restore some or all files from a generation'
-complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a verify -d 'Verify that live data and backed up data match'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a add-key -d 'Add a key to the repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a backup -d 'Backup data to repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a client-keys -d 'List clients and their keys in the repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a clients -d 'List clients using the repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a diff -d 'Show difference between two generations'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a dump-repo -d 'Dump (some) data structures from a repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a force-lock -d 'Force a locked repository to be open'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a forget -d 'Forget (remove) specified backup generations'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a fsck -d 'Verify internal consistency of backup repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a generations -d 'List backup generations for client'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a genids -d 'List generation ids for client'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a help -d 'Print help'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a help-all -d 'Print help, including hidden subcommands'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a kdirstat -d 'List contents of a generation in kdirstat cache format'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a list-errors -d 'List error codes and explanations'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a list-formats -d 'List available repository formats'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a list-keys -d 'List keys and repository toplevels they are used in'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a list-toplevels -d 'List repository toplevel directories and their keys'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a ls -d 'List contents of a generation'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a mount -d 'Mount a backup repository as a FUSE filesystem'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a nagios-last-backup-age -d 'Check if the most recent generation is recent enough'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a remove-client -d 'Remove client and its key from repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a remove-key -d 'Remove a key from the repository'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a restore -d 'Restore some or all files from a generation'
+complete -c obnam --no-files --condition __ghoti_obnam_nosubcommand -a verify -d 'Verify that live data and backed up data match'
 
 complete -c obnam --no-files -l always-restore-setuid -d 'Restore setuid/setgid bits in restored files'
 complete -c obnam --no-files -l no-always-restore-setuid -d 'Do not restore setuid/setgid bits in restored files'

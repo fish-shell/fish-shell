@@ -479,7 +479,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     if (cursor_mode) {
         if (argc - w.woptind) {
-            long new_pos = fish_wcstol(argv[w.woptind]) + (begin - current_buffer);
+            long new_pos = ghoti_wcstol(argv[w.woptind]) + (begin - current_buffer);
             if (errno) {
                 streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]);
                 builtin_print_error_trailer(parser, streams.err, cmd);

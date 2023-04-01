@@ -241,7 +241,7 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
     }
 
     // For historical reasons, we skip trailing whitespace
-    // like fish_wcstol does!
+    // like ghoti_wcstol does!
     // This is used in sorting globs, and that's supposed to be stable.
     ai += a
         .as_char_slice()

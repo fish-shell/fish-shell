@@ -20,7 +20,7 @@ expect_prompt()
 #
 # Because common CI systems are awful, we have to increase this:
 
-sendline("set -g fish_escape_delay_ms 120")
+sendline("set -g ghoti_escape_delay_ms 120")
 expect_prompt("")
 
 # Validate standalone behavior

@@ -44,9 +44,9 @@ Examples
     example
     com
 
-    >_ string split -r -m1 / /usr/local/bin/fish
+    >_ string split -r -m1 / /usr/local/bin/ghoti
     /usr/local/bin
-    fish
+    ghoti
 
     >_ string split '' abc
     a

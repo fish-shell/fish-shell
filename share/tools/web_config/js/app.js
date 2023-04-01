@@ -1,13 +1,13 @@
-fishconfig = angular.module("fishconfig", ["filters", "controllers", "ngRoute", "ngSanitize"]);
+ghoticonfig = angular.module("ghoticonfig", ["filters", "controllers", "ngRoute", "ngSanitize"]);
 
-angular.module('fishconfig')
+angular.module('ghoticonfig')
     .filter('to_trusted', ['$sce', function($sce){
         return function(text) {
             return $sce.trustAsHtml(text);
         };
     }]);
 
-fishconfig.config(
+ghoticonfig.config(
     ["$routeProvider", function($routeProvider) {
         $routeProvider
         .when("/colors", {
@@ -40,7 +40,7 @@ fishconfig.config(
     }]);
 
 /* Inspired from http://blog.tomaka17.com/2012/12/random-tricks-when-using-angularjs/ */
-fishconfig.config(function($httpProvider, $compileProvider) {
+ghoticonfig.config(function($httpProvider, $compileProvider) {
     var global_error_element = null;
 
     var showMessage = function(content) {

@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # A for-loop-variable is a local variable in the enclosing scope.
 set -g i global

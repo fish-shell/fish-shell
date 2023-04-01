@@ -51,8 +51,8 @@
 //
 //   Newlines are replaced by \n. Backslashes are replaced by \\.
 
-// This is the history session ID we use by default if the user has not set env var fish_history.
-#define DFLT_FISH_HISTORY_SESSION_ID L"fish"
+// This is the history session ID we use by default if the user has not set env var ghoti_history.
+#define DFLT_FISH_HISTORY_SESSION_ID L"ghoti"
 
 // When we rewrite the history, the number of items we keep.
 #define HISTORY_SAVE_MAX (1024 * 256)
@@ -792,7 +792,7 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
 static autoclose_fd_t create_temporary_file(const wcstring &name_template, wcstring *out_path) {
     for (int attempt = 0; attempt < 10; attempt++) {
         std::string narrow_str = wcs2string(name_template);
-        autoclose_fd_t out_fd{fish_mkstemp_cloexec(&narrow_str[0])};
+        autoclose_fd_t out_fd{ghoti_mkstemp_cloexec(&narrow_str[0])};
         if (out_fd.valid()) {
             *out_path = str2wcstring(narrow_str);
             return out_fd;
@@ -1178,7 +1178,7 @@ void history_impl_t::populate_from_config_path() {
     }
 }
 
-/// Decide whether we ought to import a bash history line into fish. This is a very crude heuristic.
+/// Decide whether we ought to import a bash history line into ghoti. This is a very crude heuristic.
 static bool should_import_bash_history_line(const wcstring &line) {
     if (line.empty()) return false;
 
@@ -1276,7 +1276,7 @@ void history_impl_t::incorporate_external_changes() {
 wcstring history_session_id(const environment_t &vars) {
     wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 
-    const auto var = vars.get(L"fish_history");
+    const auto var = vars.get(L"ghoti_history");
     if (var) {
         wcstring session_id = var->as_string();
         if (session_id.empty()) {
@@ -1300,7 +1300,7 @@ path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_
     wcstring working_directory = vars.get_pwd_slash();
     operation_context_t ctx(vars, kExpansionLimitBackground);
     for (const wcstring &path : paths) {
-        // Suppress cmdsubs since we are on a background thread and don't want to execute fish
+        // Suppress cmdsubs since we are on a background thread and don't want to execute ghoti
         // script.
         // Suppress wildcards because we want to suggest e.g. `rm *` even if the directory
         // is empty (and so rm will fail); this is nevertheless a useful command because it
@@ -1576,10 +1576,10 @@ std::shared_ptr<history_t> history_t::with_name(const wcstring &name) {
 }
 
 void start_private_mode(env_stack_t &vars) {
-    vars.set_one(L"fish_history", ENV_GLOBAL, L"");
-    vars.set_one(L"fish_private_mode", ENV_GLOBAL, L"1");
+    vars.set_one(L"ghoti_history", ENV_GLOBAL, L"");
+    vars.set_one(L"ghoti_private_mode", ENV_GLOBAL, L"1");
 }
 
 bool in_private_mode(const environment_t &vars) {
-    return !vars.get(L"fish_private_mode").missing_or_empty();
+    return !vars.get(L"ghoti_private_mode").missing_or_empty();
 }

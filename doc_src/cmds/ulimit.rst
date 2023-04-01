@@ -102,11 +102,11 @@ The following additional options are also understood by ``ulimit``:
 **-h** or **--help**
     Displays help about using this command.
 
-The ``fish`` implementation of ``ulimit`` should behave identically to the implementation in bash, except for these differences:
+The ``ghoti`` implementation of ``ulimit`` should behave identically to the implementation in bash, except for these differences:
 
 - Fish ``ulimit`` supports GNU-style long options for all switches.
 
-- Fish ``ulimit`` does not support the **-p** option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE. Fish does not do this because this method of determining pipe size is unreliable. Depending on bash version, there may also be further additional limits to set in bash that do not exist in fish.
+- Fish ``ulimit`` does not support the **-p** option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE. Fish does not do this because this method of determining pipe size is unreliable. Depending on bash version, there may also be further additional limits to set in bash that do not exist in ghoti.
 
 - Fish ``ulimit`` does not support getting or setting multiple limits in one command, except reporting all values using the **-a** switch.
 

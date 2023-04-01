@@ -12,7 +12,7 @@ RUN yum install -y expect vim-common
 ADD . /src
 WORKDIR /src
 
-# Build fish
+# Build ghoti
 RUN cmake3 . &&\
   make &&\
   make install

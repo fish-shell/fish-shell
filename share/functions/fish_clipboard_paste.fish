@@ -1,4 +1,4 @@
-function fish_clipboard_paste
+function ghoti_clipboard_paste
     set -l data
     if type -q pbpaste
         set data (pbpaste 2>/dev/null | string collect -N)
@@ -31,7 +31,7 @@ function fish_clipboard_paste
     # in order to turn it into a single literal token.
     #
     # This eases pasting non-code (e.g. markdown or git commitishes).
-    set -l quote_state (__fish_tokenizer_state -- (commandline -ct | string collect))
+    set -l quote_state (__ghoti_tokenizer_state -- (commandline -ct | string collect))
     if contains -- $quote_state single single-escaped
         if status test-feature regex-easyesc
             set data (string replace -ra "(['\\\])" '\\\\$1' -- $data)
@@ -40,7 +40,7 @@ function fish_clipboard_paste
         end
     else if not contains -- $quote_state double double-escaped
         and set -q data[2]
-        # Leading whitespace in subsequent lines is unneded, since fish
+        # Leading whitespace in subsequent lines is unneded, since ghoti
         # already indents. Also gets rid of tabs (issue #5274).
         set -l tmp
         for line in $data
@@ -50,7 +50,7 @@ function fish_clipboard_paste
                 case single single-escaped double double-escaped escaped
                     set -a tmp $line
             end
-            set quote_state (__fish_tokenizer_state -i $quote_state -- $line)
+            set quote_state (__ghoti_tokenizer_state -i $quote_state -- $line)
         end
         set data $data[1] $tmp[2..]
     end

@@ -1,6 +1,6 @@
 # Completions for ncat (https://www.nmap.org)
 
-complete -c ncat -f -a "(__fish_print_hostnames)"
+complete -c ncat -f -a "(__ghoti_print_hostnames)"
 
 # PROTOCOL OPTIONS
 complete -c ncat -s 4 -d "IPv4 only"
@@ -28,13 +28,13 @@ complete -c ncat -l ssl-verify -d "Verify server certificates"
 complete -c ncat -l ssl-cert -r -d "Specify SSL certificate"
 complete -c ncat -l ssl-key -r -d "Specify SSL private key"
 complete -c ncat -l ssl-trustfile -r -d "List trusted certificates"
-function __fish_complete_openssl_ciphers
+function __ghoti_complete_openssl_ciphers
     openssl ciphers -s -stdname | string replace -r '^([^ ]*) - ([^ ]*).*$' '$2\t$1'
     for cs in COMPLEMENTOFDEFAULT ALL COMPLEMENTOFALL HIGH MEDIUM LOW eNULL NULL aNULL kRSA aRSA RSA kDHr kDHd kDH kDHE kEDH DH DHE EDH ADH kEECDH kECDHE ECDH ECDHE EECDH AECDH aDSS DSS aDH aECDSA ECDSA TLSv1.2 TLSv1.0 SSLv3 AES128 AES256 AES AESGCM AESCCM AESCCM8 ARIA128 ARIA256 ARIA CAMELLIA128 CAMELLIA256 CAMELLIA CHACHA20 3DES DES RC4 RC2 IDEA SEED MD5 SHA1 SHA SHA256 SHA384 aGOST aGOST01 kGOST GOST94 GOST89MAC PSK kPSK kECDHEPSK kDHEPSK kRSAPSK aPSK SUITEB128 SUITEB128ONLY SUITEB192
         printf "%s\tCipher String\n" $cs
     end
 end
-complete -c ncat -l ssl-ciphers -x -a "(__fish_complete_list : __fish_complete_openssl_ciphers)" -d "Specify SSL ciphersuites"
+complete -c ncat -l ssl-ciphers -x -a "(__ghoti_complete_list : __ghoti_complete_openssl_ciphers)" -d "Specify SSL ciphersuites"
 complete -c ncat -l ssl-alpn -x -d "Specify ALPN protocol list"
 
 # PROXY OPTIONS
@@ -48,9 +48,9 @@ complete -c ncat -s c -l sh-exec -r -d "Execute command via sh"
 complete -c ncat -l lua-exec -r -d "Execute a .lua script"
 
 # ACCESS CONTROL OPTIONS
-complete -c ncat -l allow -x -a "(__fish_print_hostnames)" -d "Allow connections"
+complete -c ncat -l allow -x -a "(__ghoti_print_hostnames)" -d "Allow connections"
 complete -c ncat -l allowfile -r -d "Allow connections from file"
-complete -c ncat -l deny -x -a "(__fish_print_hostnames)" -d "Deny connections"
+complete -c ncat -l deny -x -a "(__ghoti_print_hostnames)" -d "Deny connections"
 complete -c ncat -l denyfile -r -d "Deny connections from file"
 
 # TIMING OPTIONS

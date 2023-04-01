@@ -1,13 +1,13 @@
 # based off of the git-prompt script that ships with git
-# hence licensed under GPL version 2 (like the rest of fish).
+# hence licensed under GPL version 2 (like the rest of ghoti).
 #
-# Written by Lily Ballard and updated by Brian Gernhardt and fish contributors
+# Written by Lily Ballard and updated by Brian Gernhardt and ghoti contributors
 #
 # This is based on git's git-prompt.bash script, Copyright (C) 2006,2007 Shawn O. Pearce <spearce@spearce.org>.
 # The act of porting the code, along with any new code, are Copyright (C) 2012 Lily Ballard.
 
-function __fish_git_prompt_show_upstream --description "Helper function for fish_git_prompt"
-    set -l show_upstream $__fish_git_prompt_showupstream
+function __ghoti_git_prompt_show_upstream --description "Helper function for ghoti_git_prompt"
+    set -l show_upstream $__ghoti_git_prompt_showupstream
     set -l svn_prefix # For better SVN upstream information
     set -l informative
 
@@ -17,8 +17,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     set -l verbose
     set -l name
 
-    # Default to informative if __fish_git_prompt_show_informative_status is set
-    if contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+    # Default to informative if __ghoti_git_prompt_show_informative_status is set
+    if contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
         set informative 1
     end
 
@@ -117,9 +117,9 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     # calculate the result
     if test -n "$verbose"
         # Verbose has a space by default
-        set -l prefix "$___fish_git_prompt_char_upstream_prefix"
+        set -l prefix "$___ghoti_git_prompt_char_upstream_prefix"
         # Using two underscore version to check if user explicitly set to nothing
-        if not set -q __fish_git_prompt_char_upstream_prefix
+        if not set -q __ghoti_git_prompt_char_upstream_prefix
             set prefix " "
         end
 
@@ -127,13 +127,13 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         switch "$count"
             case '' # no upstream
             case "0 0" # equal to upstream
-                echo "$prefix$___fish_git_prompt_char_upstream_equal"
+                echo "$prefix$___ghoti_git_prompt_char_upstream_equal"
             case "0 *" # ahead of upstream
-                echo "$prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+                echo "$prefix$___ghoti_git_prompt_char_upstream_ahead$ahead"
             case "* 0" # behind upstream
-                echo "$prefix$___fish_git_prompt_char_upstream_behind$behind"
+                echo "$prefix$___ghoti_git_prompt_char_upstream_behind$behind"
             case '*' # diverged from upstream
-                echo "$prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
+                echo "$prefix$___ghoti_git_prompt_char_upstream_diverged$ahead-$behind"
         end
         if test -n "$count" -a -n "$name"
             echo " "(command git rev-parse --abbrev-ref "$upstream" 2>/dev/null)
@@ -144,23 +144,23 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
             case '' # no upstream
             case "0 0" # equal to upstream
             case "0 *" # ahead of upstream
-                echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+                echo "$___ghoti_git_prompt_char_upstream_prefix$___ghoti_git_prompt_char_upstream_ahead$ahead"
             case "* 0" # behind upstream
-                echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+                echo "$___ghoti_git_prompt_char_upstream_prefix$___ghoti_git_prompt_char_upstream_behind$behind"
             case '*' # diverged from upstream
-                echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
+                echo "$___ghoti_git_prompt_char_upstream_prefix$___ghoti_git_prompt_char_upstream_ahead$ahead$___ghoti_git_prompt_char_upstream_behind$behind"
         end
     else
         switch "$count"
             case '' # no upstream
             case "0 0" # equal to upstream
-                echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
+                echo "$___ghoti_git_prompt_char_upstream_prefix$___ghoti_git_prompt_char_upstream_equal"
             case "0 *" # ahead of upstream
-                echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead"
+                echo "$___ghoti_git_prompt_char_upstream_prefix$___ghoti_git_prompt_char_upstream_ahead"
             case "* 0" # behind upstream
-                echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind"
+                echo "$___ghoti_git_prompt_char_upstream_prefix$___ghoti_git_prompt_char_upstream_behind"
             case '*' # diverged from upstream
-                echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged"
+                echo "$___ghoti_git_prompt_char_upstream_prefix$___ghoti_git_prompt_char_upstream_diverged"
         end
     end
 
@@ -174,7 +174,7 @@ if string match -q Darwin -- (uname) && string match -q /usr/bin/git -- (command
     if not xcode-select --print-path &>/dev/null
         # Only the stub git is installed.
         # Do not try to run it.
-        function __fish_git_prompt_ready
+        function __ghoti_git_prompt_ready
             return 1
         end
     else
@@ -182,23 +182,23 @@ if string match -q Darwin -- (uname) && string match -q /usr/bin/git -- (command
         # Kick it off in the background to populate the cache.
         command git --version &>/dev/null &
         disown $last_pid &>/dev/null
-        function __fish_git_prompt_ready
+        function __ghoti_git_prompt_ready
             path is (xcrun --show-cache-path 2>/dev/null) || return 1
             # git is ready, erase the function.
-            functions -e __fish_git_prompt_ready
+            functions -e __ghoti_git_prompt_ready
             return 0
         end
     end
 end
 
-function fish_git_prompt --description "Prompt function for Git"
+function ghoti_git_prompt --description "Prompt function for Git"
     # If git isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
     if not command -sq git
         return 1
     end
-    # Fail if __fish_git_prompt_ready is defined and fails.
-    if functions -q __fish_git_prompt_ready && not __fish_git_prompt_ready
+    # Fail if __ghoti_git_prompt_ready is defined and fails.
+    if functions -q __ghoti_git_prompt_ready && not __ghoti_git_prompt_ready
         return 1
     end
     set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD 2>/dev/null)
@@ -212,7 +212,7 @@ function fish_git_prompt --description "Prompt function for Git"
     set -q repo_info[5]
     and set -l sha $repo_info[5]
 
-    set -l rbc (__fish_git_prompt_operation_branch_bare $repo_info)
+    set -l rbc (__ghoti_git_prompt_operation_branch_bare $repo_info)
     set -l r $rbc[1] # current operation
     set -l b $rbc[2] # current branch
     set -l detached $rbc[3]
@@ -225,18 +225,18 @@ function fish_git_prompt --description "Prompt function for Git"
     set -l p #upstream
     set -l informative_status
 
-    set -q __fish_git_prompt_status_order
-    or set -g __fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
+    set -q __ghoti_git_prompt_status_order
+    or set -g __ghoti_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 
-    if not set -q ___fish_git_prompt_init
+    if not set -q ___ghoti_git_prompt_init
         # This takes a while, so it only needs to be done once,
         # and then whenever the configuration changes.
-        __fish_git_prompt_validate_chars
-        __fish_git_prompt_validate_colors
-        set -g ___fish_git_prompt_init
+        __ghoti_git_prompt_validate_chars
+        __ghoti_git_prompt_validate_colors
+        set -g ___ghoti_git_prompt_init
     end
 
-    set -l space "$___fish_git_prompt_color$___fish_git_prompt_char_stateseparator$___fish_git_prompt_color_done"
+    set -l space "$___ghoti_git_prompt_color$___ghoti_git_prompt_char_stateseparator$___ghoti_git_prompt_color_done"
 
     # Use our variables as defaults, but allow overrides via the local git config.
     # That means if neither is set, this stays empty.
@@ -258,30 +258,30 @@ function fish_git_prompt --description "Prompt function for Git"
 
     # If we don't print these, there is no need to compute them. Note: For now, staged and dirty are coupled.
     if not set -q dirty[1]
-        contains -- "$__fish_git_prompt_showdirtystate" yes true 1
+        contains -- "$__ghoti_git_prompt_showdirtystate" yes true 1
         and set dirty true
     end
-    contains dirtystate $__fish_git_prompt_status_order || contains stagedstate $__fish_git_prompt_status_order
+    contains dirtystate $__ghoti_git_prompt_status_order || contains stagedstate $__ghoti_git_prompt_status_order
     or set dirty false
 
     if not set -q untracked[1]
-        contains -- "$__fish_git_prompt_showuntrackedfiles" yes true 1
+        contains -- "$__ghoti_git_prompt_showuntrackedfiles" yes true 1
         and set untracked true
     end
-    contains untrackedfiles $__fish_git_prompt_status_order
+    contains untrackedfiles $__ghoti_git_prompt_status_order
     or set untracked false
 
     if test true = $inside_worktree
         # Use informative status if it has been enabled locally, or it has been
-        # enabled globally (via the fish variable) and dirty or untracked are not false.
+        # enabled globally (via the ghoti variable) and dirty or untracked are not false.
         #
         # This is to allow overrides for the repository.
         if test "$informative" = true
             or begin
-                contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+                contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
                 and test "$dirty" != false
             end
-            set informative_status (untracked=$untracked __fish_git_prompt_informative_status $git_dir)
+            set informative_status (untracked=$untracked __ghoti_git_prompt_informative_status $git_dir)
             if test -n "$informative_status"
                 set informative_status "$space$informative_status"
             end
@@ -310,11 +310,11 @@ function fish_git_prompt --description "Prompt function for Git"
                 and set untrackedfiles (string match -qr '\?\?' -- $stat; and echo 1)
             end
 
-            if contains -- "$__fish_git_prompt_showstashstate" yes true 1
+            if contains -- "$__ghoti_git_prompt_showstashstate" yes true 1
                 and test -r $git_dir/logs/refs/stash
                 # If we have informative status but don't want to actually
                 # *compute* the informative status, we might still count the stash.
-                if contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+                if contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
                     set stashstate (count < $git_dir/logs/refs/stash)
                 else
                     set stashstate 1
@@ -323,33 +323,33 @@ function fish_git_prompt --description "Prompt function for Git"
         end
 
         # (showupstream has a variety of options, not just bool)
-        if set -q __fish_git_prompt_showupstream
-            or contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-            set p (__fish_git_prompt_show_upstream)
+        if set -q __ghoti_git_prompt_showupstream
+            or contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
+            set p (__ghoti_git_prompt_show_upstream)
         end
     end
 
-    set -l branch_color $___fish_git_prompt_color_branch
-    set -l branch_done $___fish_git_prompt_color_branch_done
-    if contains -- "$__fish_git_prompt_showcolorhints" yes true 1
+    set -l branch_color $___ghoti_git_prompt_color_branch
+    set -l branch_done $___ghoti_git_prompt_color_branch_done
+    if contains -- "$__ghoti_git_prompt_showcolorhints" yes true 1
         if test $detached = yes
-            set branch_color $___fish_git_prompt_color_branch_detached
-            set branch_done $___fish_git_prompt_color_branch_detached_done
-        else if test -n "$dirtystate$untrackedfiles"; and set -q __fish_git_prompt_color_branch_dirty
-            set branch_color (set_color $__fish_git_prompt_color_branch_dirty)
-            set branch_done (set_color $__fish_git_prompt_color_branch_dirty_done)
-        else if test -n "$stagedstate"; and set -q __fish_git_prompt_color_branch_staged
-            set branch_color (set_color $__fish_git_prompt_color_branch_staged)
-            set branch_done (set_color $__fish_git_prompt_color_branch_staged_done)
+            set branch_color $___ghoti_git_prompt_color_branch_detached
+            set branch_done $___ghoti_git_prompt_color_branch_detached_done
+        else if test -n "$dirtystate$untrackedfiles"; and set -q __ghoti_git_prompt_color_branch_dirty
+            set branch_color (set_color $__ghoti_git_prompt_color_branch_dirty)
+            set branch_done (set_color $__ghoti_git_prompt_color_branch_dirty_done)
+        else if test -n "$stagedstate"; and set -q __ghoti_git_prompt_color_branch_staged
+            set branch_color (set_color $__ghoti_git_prompt_color_branch_staged)
+            set branch_done (set_color $__ghoti_git_prompt_color_branch_staged_done)
         end
     end
 
     set -l f ""
-    for i in $__fish_git_prompt_status_order
+    for i in $__ghoti_git_prompt_status_order
         if test -n "$$i"
-            set -l color_var ___fish_git_prompt_color_$i
-            set -l color_done_var ___fish_git_prompt_color_{$i}_done
-            set -l symbol_var ___fish_git_prompt_char_$i
+            set -l color_var ___ghoti_git_prompt_color_$i
+            set -l color_done_var ___ghoti_git_prompt_color_{$i}_done
+            set -l symbol_var ___ghoti_git_prompt_char_$i
 
             set -l color $$color_var
             set -l color_done $$color_done_var
@@ -358,33 +358,33 @@ function fish_git_prompt --description "Prompt function for Git"
             # If we count some things, print the number
             # This won't be done if we actually do the full informative status
             # because that does the printing.
-            contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+            contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
             and set f "$f$color$symbol$$i$color_done"
             or set f "$f$color$symbol$color_done"
         end
     end
 
     set b (string replace refs/heads/ '' -- $b)
-    if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"
-        set -q __fish_git_prompt_shorten_branch_char_suffix
-        and set -l char -c "$__fish_git_prompt_shorten_branch_char_suffix"
-        set b (string shorten -m "$__fish_git_prompt_shorten_branch_len" $char -- "$b")
+    if string match -qr '^\d+$' "$__ghoti_git_prompt_shorten_branch_len"
+        set -q __ghoti_git_prompt_shorten_branch_char_suffix
+        and set -l char -c "$__ghoti_git_prompt_shorten_branch_char_suffix"
+        set b (string shorten -m "$__ghoti_git_prompt_shorten_branch_len" $char -- "$b")
     end
     if test -n "$b"
         set b "$branch_color$b$branch_done"
-        if test -z "$dirtystate$untrackedfiles$stagedstate"; and test -n "$___fish_git_prompt_char_cleanstate"
-            and not contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-            set b "$b$___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done"
+        if test -z "$dirtystate$untrackedfiles$stagedstate"; and test -n "$___ghoti_git_prompt_char_cleanstate"
+            and not contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
+            set b "$b$___ghoti_git_prompt_color_cleanstate$___ghoti_git_prompt_char_cleanstate$___ghoti_git_prompt_color_cleanstate_done"
         end
     end
     if test -n "$c"
-        set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
+        set c "$___ghoti_git_prompt_color_bare$c$___ghoti_git_prompt_color_bare_done"
     end
     if test -n "$r"
-        set r "$___fish_git_prompt_color_merging$r$___fish_git_prompt_color_merging_done"
+        set r "$___ghoti_git_prompt_color_merging$r$___ghoti_git_prompt_color_merging_done"
     end
     if test -n "$p"
-        set p "$___fish_git_prompt_color_upstream$p$___fish_git_prompt_color_upstream_done"
+        set p "$___ghoti_git_prompt_color_upstream$p$___ghoti_git_prompt_color_upstream_done"
     end
 
     # Formatting
@@ -396,15 +396,15 @@ function fish_git_prompt --description "Prompt function for Git"
         set format " (%s)"
     end
 
-    printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___fish_git_prompt_color_suffix" "$___fish_git_prompt_color_suffix_done"
+    printf "%s$format%s" "$___ghoti_git_prompt_color_prefix" "$___ghoti_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___ghoti_git_prompt_color_suffix" "$___ghoti_git_prompt_color_suffix_done"
 end
 
 ### helper functions
 
-function __fish_git_prompt_informative_status
+function __ghoti_git_prompt_informative_status
     set -l stashstate 0
     set -l stashfile "$argv[1]/logs/refs/stash"
-    if contains -- "$__fish_git_prompt_showstashstate" yes true 1; and test -e "$stashfile"
+    if contains -- "$__ghoti_git_prompt_showstashstate" yes true 1; and test -e "$stashfile"
         set stashstate (count < $stashfile)
     end
 
@@ -430,15 +430,15 @@ function __fish_git_prompt_informative_status
     set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles + $stashstate 2>/dev/null)
     if test -z "$state"
         or test "$state" = 0
-        if test -n "$___fish_git_prompt_char_cleanstate"
-            set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
+        if test -n "$___ghoti_git_prompt_char_cleanstate"
+            set info $___ghoti_git_prompt_color_cleanstate$___ghoti_git_prompt_char_cleanstate$___ghoti_git_prompt_color_cleanstate_done
         end
     else
-        for i in $__fish_git_prompt_status_order
+        for i in $__ghoti_git_prompt_status_order
             if test $$i != 0
-                set -l color_var ___fish_git_prompt_color_$i
-                set -l color_done_var ___fish_git_prompt_color_{$i}_done
-                set -l symbol_var ___fish_git_prompt_char_$i
+                set -l color_var ___ghoti_git_prompt_color_$i
+                set -l color_done_var ___ghoti_git_prompt_color_{$i}_done
+                set -l symbol_var ___ghoti_git_prompt_char_$i
 
                 set -l color $$color_var
                 set -l color_done $$color_done_var
@@ -446,7 +446,7 @@ function __fish_git_prompt_informative_status
 
                 set -l count
 
-                if not set -q __fish_git_prompt_hide_$i
+                if not set -q __ghoti_git_prompt_hide_$i
                     set count $$i
                 end
 
@@ -460,7 +460,7 @@ function __fish_git_prompt_informative_status
 end
 
 # Keeping these together avoids many duplicated checks
-function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt helper, returns the current Git operation and branch"
+function __ghoti_git_prompt_operation_branch_bare --description "ghoti_git_prompt helper, returns the current Git operation and branch"
     # This function is passed the full repo_info array
     set -l git_dir $argv[1]
     set -l inside_gitdir $argv[2]
@@ -514,7 +514,7 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     if test -z "$branch"
         if not set branch (command git symbolic-ref HEAD 2>/dev/null)
             set detached yes
-            set branch (switch "$__fish_git_prompt_describe_style"
+            set branch (switch "$__ghoti_git_prompt_describe_style"
 						case contains
 							command git describe --contains HEAD
 						case branch
@@ -553,14 +553,14 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     echo $bare
 end
 
-function __fish_git_prompt_set_char
+function __ghoti_git_prompt_set_char
     set -l user_variable_name "$argv[1]"
     set -l char $argv[2]
 
     if set -q argv[3]
         and begin
-            contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-            or contains -- "$__fish_git_prompt_use_informative_chars" yes true 1
+            contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
+            or contains -- "$__ghoti_git_prompt_use_informative_chars" yes true 1
         end
         set char $argv[3]
     end
@@ -573,34 +573,34 @@ function __fish_git_prompt_set_char
     end
 end
 
-function __fish_git_prompt_validate_chars --description "fish_git_prompt helper, checks char variables"
+function __ghoti_git_prompt_validate_chars --description "ghoti_git_prompt helper, checks char variables"
     # cleanstate is only defined with actual informative status.
-    contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-    and __fish_git_prompt_set_char __fish_git_prompt_char_cleanstate '✔'
-    or __fish_git_prompt_set_char __fish_git_prompt_char_cleanstate ''
+    contains -- "$__ghoti_git_prompt_show_informative_status" yes true 1
+    and __ghoti_git_prompt_set_char __ghoti_git_prompt_char_cleanstate '✔'
+    or __ghoti_git_prompt_set_char __ghoti_git_prompt_char_cleanstate ''
 
-    __fish_git_prompt_set_char __fish_git_prompt_char_dirtystate '*' '✚'
-    __fish_git_prompt_set_char __fish_git_prompt_char_invalidstate '#' '✖'
-    __fish_git_prompt_set_char __fish_git_prompt_char_stagedstate '+' '●'
-    __fish_git_prompt_set_char __fish_git_prompt_char_stashstate '$' '⚑'
-    __fish_git_prompt_set_char __fish_git_prompt_char_stateseparator ' ' '|'
-    __fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles '%' '…'
-    __fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead '>' '↑'
-    __fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind '<' '↓'
-    __fish_git_prompt_set_char __fish_git_prompt_char_upstream_diverged '<>'
-    __fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal '='
-    __fish_git_prompt_set_char __fish_git_prompt_char_upstream_prefix ''
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_dirtystate '*' '✚'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_invalidstate '#' '✖'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_stagedstate '+' '●'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_stashstate '$' '⚑'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_stateseparator ' ' '|'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_untrackedfiles '%' '…'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_upstream_ahead '>' '↑'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_upstream_behind '<' '↓'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_upstream_diverged '<>'
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_upstream_equal '='
+    __ghoti_git_prompt_set_char __ghoti_git_prompt_char_upstream_prefix ''
 
 end
 
-function __fish_git_prompt_set_color
+function __ghoti_git_prompt_set_color
     set -l user_variable_name "$argv[1]"
 
     set -l default default_done
     switch (count $argv)
         case 1 # No defaults given, use prompt color
-            set default $___fish_git_prompt_color
-            set default_done $___fish_git_prompt_color_done
+            set default $___ghoti_git_prompt_color
+            set default_done $___ghoti_git_prompt_color_done
         case 2 # One default given, use normal for done
             set default "$argv[2]"
             set default_done (set_color normal)
@@ -624,69 +624,69 @@ function __fish_git_prompt_set_color
 end
 
 
-function __fish_git_prompt_validate_colors --description "fish_git_prompt helper, checks color variables"
+function __ghoti_git_prompt_validate_colors --description "ghoti_git_prompt helper, checks color variables"
 
     # Base color defaults to nothing (must be done first)
-    __fish_git_prompt_set_color __fish_git_prompt_color '' ''
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color '' ''
 
     # Normal colors
-    __fish_git_prompt_set_color __fish_git_prompt_color_prefix
-    __fish_git_prompt_set_color __fish_git_prompt_color_suffix
-    __fish_git_prompt_set_color __fish_git_prompt_color_bare
-    __fish_git_prompt_set_color __fish_git_prompt_color_merging
-    __fish_git_prompt_set_color __fish_git_prompt_color_cleanstate
-    __fish_git_prompt_set_color __fish_git_prompt_color_invalidstate
-    __fish_git_prompt_set_color __fish_git_prompt_color_upstream
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_prefix
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_suffix
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_bare
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_merging
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_cleanstate
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_invalidstate
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_upstream
 
     # Colors with defaults with showcolorhints
-    if contains -- "$__fish_git_prompt_showcolorhints" yes true 1
-        __fish_git_prompt_set_color __fish_git_prompt_color_flags (set_color --bold blue)
-        __fish_git_prompt_set_color __fish_git_prompt_color_branch (set_color green)
-        __fish_git_prompt_set_color __fish_git_prompt_color_dirtystate (set_color red)
-        __fish_git_prompt_set_color __fish_git_prompt_color_stagedstate (set_color green)
+    if contains -- "$__ghoti_git_prompt_showcolorhints" yes true 1
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_flags (set_color --bold blue)
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_branch (set_color green)
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_dirtystate (set_color red)
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_stagedstate (set_color green)
     else
-        __fish_git_prompt_set_color __fish_git_prompt_color_flags
-        __fish_git_prompt_set_color __fish_git_prompt_color_branch
-        __fish_git_prompt_set_color __fish_git_prompt_color_dirtystate $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
-        __fish_git_prompt_set_color __fish_git_prompt_color_stagedstate $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_flags
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_branch
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_dirtystate $___ghoti_git_prompt_color_flags $___ghoti_git_prompt_color_flags_done
+        __ghoti_git_prompt_set_color __ghoti_git_prompt_color_stagedstate $___ghoti_git_prompt_color_flags $___ghoti_git_prompt_color_flags_done
     end
 
     # Branch_detached has a default, but is only used with showcolorhints
-    __fish_git_prompt_set_color __fish_git_prompt_color_branch_detached (set_color red)
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_branch_detached (set_color red)
 
     # Colors that depend on flags color
-    __fish_git_prompt_set_color __fish_git_prompt_color_stashstate $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
-    __fish_git_prompt_set_color __fish_git_prompt_color_untrackedfiles $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_stashstate $___ghoti_git_prompt_color_flags $___ghoti_git_prompt_color_flags_done
+    __ghoti_git_prompt_set_color __ghoti_git_prompt_color_untrackedfiles $___ghoti_git_prompt_color_flags $___ghoti_git_prompt_color_flags_done
 
 end
 
-function __fish_git_prompt_reset -a type -a op -a var --description "Event handler, resets prompt when functionality changes" \
-    --on-variable=__fish_git_prompt_{show_informative_status,use_informative_chars}
+function __ghoti_git_prompt_reset -a type -a op -a var --description "Event handler, resets prompt when functionality changes" \
+    --on-variable=__ghoti_git_prompt_{show_informative_status,use_informative_chars}
     if status --is-interactive
         # Clear characters that have different defaults with/without informative status
-        set -e ___fish_git_prompt_char_{name,cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind}
+        set -e ___ghoti_git_prompt_char_{name,cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind}
         # Clear init so we reset the chars next time.
-        set -e ___fish_git_prompt_init
+        set -e ___ghoti_git_prompt_init
     end
 end
 
-function __fish_git_prompt_reset_color -a type -a op -a var --description "Event handler, resets prompt when any color changes" \
-    --on-variable=__fish_git_prompt_color{'',_prefix,_suffix,_bare,_merging,_cleanstate,_invalidstate,_upstream,_flags,_branch,_dirtystate,_stagedstate,_branch_detached,_stashstate,_untrackedfiles} --on-variable=__fish_git_prompt_showcolorhints
+function __ghoti_git_prompt_reset_color -a type -a op -a var --description "Event handler, resets prompt when any color changes" \
+    --on-variable=__ghoti_git_prompt_color{'',_prefix,_suffix,_bare,_merging,_cleanstate,_invalidstate,_upstream,_flags,_branch,_dirtystate,_stagedstate,_branch_detached,_stashstate,_untrackedfiles} --on-variable=__ghoti_git_prompt_showcolorhints
     if status --is-interactive
         set -e _$var
         set -e _{$var}_done
-        set -e ___fish_git_prompt_init
-        if contains -- $var __fish_git_prompt_color __fish_git_prompt_color_flags __fish_git_prompt_showcolorhints
+        set -e ___ghoti_git_prompt_init
+        if contains -- $var __ghoti_git_prompt_color __ghoti_git_prompt_color_flags __ghoti_git_prompt_showcolorhints
             # reset all the other colors too
-            set -e ___fish_git_prompt_color_{prefix,suffix,bare,merging,branch,dirtystate,stagedstate,invalidstate,stashstate,untrackedfiles,upstream,flags}{,_done}
+            set -e ___ghoti_git_prompt_color_{prefix,suffix,bare,merging,branch,dirtystate,stagedstate,invalidstate,stashstate,untrackedfiles,upstream,flags}{,_done}
         end
     end
 end
 
-function __fish_git_prompt_reset_char -a type -a op -a var --description "Event handler, resets prompt when any char changes" \
-    --on-variable=__fish_git_prompt_char_{cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind,upstream_diverged,upstream_equal,upstream_prefix}
+function __ghoti_git_prompt_reset_char -a type -a op -a var --description "Event handler, resets prompt when any char changes" \
+    --on-variable=__ghoti_git_prompt_char_{cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind,upstream_diverged,upstream_equal,upstream_prefix}
     if status --is-interactive
-        set -e ___fish_git_prompt_init
+        set -e ___ghoti_git_prompt_init
         set -e _$var
     end
 end

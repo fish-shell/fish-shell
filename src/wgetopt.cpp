@@ -1,17 +1,17 @@
 // A version of the getopt library for use with wide character strings.
 //
 // This is simply the gnu getopt library, but converted for use with wchar_t instead of char. This
-// is not usually useful since the argv array is always defined to be of type char**, but in fish,
+// is not usually useful since the argv array is always defined to be of type char**, but in ghoti,
 // all internal commands use wide characters and hence this library is useful.
 //
-// If you want to use this version of getopt in your program, download the fish sourcecode,
-// available at <a href='https://fishshell.com'>the fish homepage</a>. Extract the sourcode, copy
+// If you want to use this version of getopt in your program, download the ghoti sourcecode,
+// available at <a href='https://ghotishell.com'>the ghoti homepage</a>. Extract the sourcode, copy
 // wgetopt.c and wgetopt.h into your program directory, include wgetopt.h in your program, and use
 // all the regular getopt functions, prefixing every function, global variable and structure with a
 // 'w', and use only wide character strings. There are no other functional changes in this version
 // of getopt besides using wide character strings.
 //
-// For examples of how to use wgetopt, see the fish builtin functions, many of which are defined in
+// For examples of how to use wgetopt, see the ghoti builtin functions, many of which are defined in
 // builtin.c.
 
 // Getopt for GNU.

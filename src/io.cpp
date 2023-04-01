@@ -93,7 +93,7 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     assert(!fillthread_running() && "Already have a fillthread");
 
     // We want to fill buffer_ by reading from fd. fd is the read end of a pipe; the write end is
-    // owned by another process, or something else writing in fish.
+    // owned by another process, or something else writing in ghoti.
     // Pass fd to an fd_monitor. It will add fd to its select() loop, and give us a callback when
     // the fd is readable, or when our item is poked. The usual path is that we will get called
     // back, read a bit from the fd, and append it to the buffer. Eventually the write end of the

@@ -51,7 +51,7 @@ expect_prompt("hoge")
 sendline("echo hoge >|  \n cat")
 expect_prompt("hoge")
 
-sendline("$fish --no-execute 2>&1")
+sendline("$ghoti --no-execute 2>&1")
 expect_prompt("error: no-execute mode enabled and no script given. Exiting")
 
 sendline("source; or echo failed")

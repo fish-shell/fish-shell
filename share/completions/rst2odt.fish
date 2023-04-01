@@ -1,8 +1,8 @@
 # Completions for Docutils common options
-__fish_complete_docutils rst2odt
+__ghoti_complete_docutils rst2odt
 
 # Completions for Docutils standalone reader options
-__fish_complete_docutils_standalone_reader rst2odt
+__ghoti_complete_docutils_standalone_reader rst2odt
 
 # Completions for Docutils ODF options
 complete -c rst2odt -l stylesheet -d "Specify a stylesheet"

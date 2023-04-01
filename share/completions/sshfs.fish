@@ -1,11 +1,11 @@
 #
 # Completions for sshfs
 #
-complete -x -c sshfs -d Hostname -a "(__fish_complete_user_at_hosts):"
+complete -x -c sshfs -d Hostname -a "(__ghoti_complete_user_at_hosts):"
 #
 # Mount Points
 #
-complete -c sshfs -x -a '(__fish_complete_directories (commandline -ct) "Mount point")'
+complete -c sshfs -x -a '(__ghoti_complete_directories (commandline -ct) "Mount point")'
 #
 # Command options
 #

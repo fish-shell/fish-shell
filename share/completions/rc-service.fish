@@ -1,9 +1,9 @@
 # First argument is the names of the service, i.e. a file in /etc/init.d
-complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
-    -xa "(__fish_print_service_names)" -d "Service name"
+complete -c rc-service -n "test (__ghoti_number_of_cmd_args_wo_opts) = 1" \
+    -xa "(__ghoti_print_service_names)" -d "Service name"
 
 # The second argument is what action to take with the service
-complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) -gt 1" \
+complete -c rc-service -n "test (__ghoti_number_of_cmd_args_wo_opts) -gt 1" \
     -xa "start stop restart"
 
 # Complete rc-service the options

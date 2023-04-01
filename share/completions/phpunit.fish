@@ -1,15 +1,15 @@
 # Lists PHPUnit test suites
-function __fish_phpunit_list_suites
-    __fish_phpunit_list --list-suites
+function __ghoti_phpunit_list_suites
+    __ghoti_phpunit_list --list-suites
 end
 
 # Lists PHPUnit test groups
-function __fish_phpunit_list_groups
-    __fish_phpunit_list --list-groups
+function __ghoti_phpunit_list_groups
+    __ghoti_phpunit_list --list-groups
 end
 
 # Lists PHPUnit objects corresponding to the given option
-function __fish_phpunit_list --argument-names option
+function __ghoti_phpunit_list --argument-names option
     # Use the same PHPUnit binary as in the command being completed
     set -l phpunit (commandline -opc)[1]
     test -x $phpunit
@@ -40,8 +40,8 @@ complete -f -c phpunit -l reverse-list -d 'Print defects in reverse order'
 
 # Test Selection Options:
 complete -x -c phpunit -l filter -d 'Filter which tests to run'
-complete -x -c phpunit -l testsuite -a '(__fish_phpunit_list_suites)' -d 'Filter which testsuite to run'
-complete -x -c phpunit -l group -a '(__fish_phpunit_list_groups)' -d 'Only runs tests from the specified group(s)'
+complete -x -c phpunit -l testsuite -a '(__ghoti_phpunit_list_suites)' -d 'Filter which testsuite to run'
+complete -x -c phpunit -l group -a '(__ghoti_phpunit_list_groups)' -d 'Only runs tests from the specified group(s)'
 complete -f -c phpunit -l exclude-group -d 'Exclude tests from the specified group(s)'
 complete -f -c phpunit -l list-groups -d 'List available test groups'
 complete -f -c phpunit -l list-suites -d 'List available test suites'
@@ -95,7 +95,7 @@ complete -f -c phpunit -l do-not-cache-result -d 'Do not write test results to c
 # Configuration Options:
 complete -x -c phpunit -l prepend -d 'A PHP script that is included as early as possible'
 complete -x -c phpunit -l bootstrap -d 'A PHP script that is included before the tests run'
-complete -x -c phpunit -s c -l configuration -k -a '(__fish_complete_suffix .xml .xml.dist)' -d 'Read configuration from XML file'
+complete -x -c phpunit -s c -l configuration -k -a '(__ghoti_complete_suffix .xml .xml.dist)' -d 'Read configuration from XML file'
 complete -f -c phpunit -l no-configuration -d 'Ignore default configuration file (phpunit.xml)'
 complete -f -c phpunit -l no-logging -d 'Ignore logging configuration'
 complete -f -c phpunit -l no-extensions -d 'Do not load PHPUnit extensions'

@@ -3,7 +3,7 @@ import os
 from pexpect_helper import SpawnedProc
 
 # Regression test for #8873.
-# fish doesn't crash if TERM is unset.
+# ghoti doesn't crash if TERM is unset.
 env = os.environ.copy()
 env.pop("TERM", None)
 

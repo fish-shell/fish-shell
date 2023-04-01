@@ -1,11 +1,11 @@
 # name: Arrow
 # author: Bruno Ferreira Pinto, Pawel Zubrycki
 
-function fish_prompt
+function ghoti_prompt
     set -l __last_command_exit_status $status
 
-    if not set -q -g __fish_arrow_functions_defined
-        set -g __fish_arrow_functions_defined
+    if not set -q -g __ghoti_arrow_functions_defined
+        set -g __ghoti_arrow_functions_defined
         function _git_branch_name
             set -l branch (git symbolic-ref --quiet HEAD 2>/dev/null)
             if set -q branch[1]
@@ -36,7 +36,7 @@ function fish_prompt
         end
 
         function _is_hg_repo
-            fish_print_hg_root >/dev/null
+            ghoti_print_hg_root >/dev/null
         end
 
         function _repo_branch_name
@@ -72,7 +72,7 @@ function fish_prompt
     end
 
     set -l arrow "$arrow_color➜ "
-    if fish_is_root_user
+    if ghoti_is_root_user
         set arrow "$arrow_color# "
     end
 

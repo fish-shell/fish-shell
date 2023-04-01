@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 # musl currently does not have a `locale` command, so we skip this test there.
 # REQUIRES: command -v locale
 # We need a comma-using locale we know.

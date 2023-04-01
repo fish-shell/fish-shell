@@ -48,10 +48,10 @@ The following options are available:
     Uses the output of the shell command *RIGHT_PROMPT_CMD* as the right prompt for the interactive mode. There is no default right prompt command.
 
 **-S** or **--shell**
-    Enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode. NOTE: Prior to fish 3.0, the short opt for **--shell** was **-s**, but it has been changed for compatibility with bash's **-s** short opt for **--silent**.
+    Enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode. NOTE: Prior to ghoti 3.0, the short opt for **--shell** was **-s**, but it has been changed for compatibility with bash's **-s** short opt for **--silent**.
 
 **-t** -or **--tokenize**
-    Causes read to split the input into variables by the shell's tokenization rules. This means it will honor quotes and escaping. This option is of course incompatible with other options to control splitting like **--delimiter** and does not honor :envvar:`IFS` (like fish's tokenizer). It saves the tokens in the manner they'd be passed to commands on the commandline, so e.g. ``a\ b`` is stored as ``a b``. Note that currently it leaves command substitutions intact along with the parentheses.
+    Causes read to split the input into variables by the shell's tokenization rules. This means it will honor quotes and escaping. This option is of course incompatible with other options to control splitting like **--delimiter** and does not honor :envvar:`IFS` (like ghoti's tokenizer). It saves the tokens in the manner they'd be passed to commands on the commandline, so e.g. ``a\ b`` is stored as ``a b``. Note that currently it leaves command substitutions intact along with the parentheses.
 
 **-u** or **--unexport**
     Prevents the variables from being exported to child processes (default behaviour).
@@ -77,7 +77,7 @@ If no option to determine how to split like ``--delimiter``, ``--line`` or ``--t
 
 With the ``--line`` option, ``read`` reads a line of input from standard input into each provided variable, stopping when each variable has been filled. The line is not tokenized.
 
-If no variable names are provided, ``read`` enters a special case that simply provides redirection from standard input to standard output, useful for command substitution. For instance, the fish shell command below can be used to read data that should be provided via a command line argument from the console instead of hardcoding it in the command itself, allowing the command to both be reused as-is in various contexts with different input values and preventing possibly sensitive text from being included in the shell history::
+If no variable names are provided, ``read`` enters a special case that simply provides redirection from standard input to standard output, useful for command substitution. For instance, the ghoti shell command below can be used to read data that should be provided via a command line argument from the console instead of hardcoding it in the command itself, allowing the command to both be reused as-is in various contexts with different input values and preventing possibly sensitive text from being included in the shell history::
 
     mysql -uuser -p(read)
 
@@ -93,7 +93,7 @@ Otherwise, it is set to 0.
 In order to protect the shell from consuming too many system resources, ``read`` will only consume a
 maximum of 100 MiB (104857600 bytes); if the terminator is not reached before this limit then *VARIABLE*
 is set to empty and the exit status is set to 122. This limit can be altered with the
-:envvar:`fish_read_limit` variable. If set to 0 (zero), the limit is removed.
+:envvar:`ghoti_read_limit` variable. If set to 0 (zero), the limit is removed.
 
 Example
 -------

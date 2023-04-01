@@ -22,7 +22,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-// This version was altered and ported to C++ for inclusion in fish.
+// This version was altered and ported to C++ for inclusion in ghoti.
 
 #ifndef TINYEXPR_H
 #define TINYEXPR_H

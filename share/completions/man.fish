@@ -1,22 +1,22 @@
-complete -xc man -a "(__fish_complete_man)"
+complete -xc man -a "(__ghoti_complete_man)"
 
-complete -xc man -n 'not __fish_complete_man' -a 1 -d 'Program section'
-complete -xc man -n 'not __fish_complete_man' -a 2 -d 'Syscall section'
-complete -xc man -n 'not __fish_complete_man' -a 3 -d 'Library section'
-complete -xc man -n 'not __fish_complete_man' -a 4 -d 'Device section'
-complete -xc man -n 'not __fish_complete_man' -a 5 -d 'File format section'
-complete -xc man -n 'not __fish_complete_man' -a 6 -d 'Games section'
-complete -xc man -n 'not __fish_complete_man' -a 7 -d 'Misc section'
-complete -xc man -n 'not __fish_complete_man' -a 8 -d 'Admin section'
-complete -xc man -n 'not __fish_complete_man' -a 9 -d 'Kernel section'
-complete -xc man -n 'not __fish_complete_man' -a tcl -d 'Tcl section'
-complete -xc man -n 'not __fish_complete_man' -a n -d 'New section'
-complete -xc man -n 'not __fish_complete_man' -a l -d 'Local section'
-complete -xc man -n 'not __fish_complete_man' -a p
-complete -xc man -n 'not __fish_complete_man' -a o -d 'Old section'
+complete -xc man -n 'not __ghoti_complete_man' -a 1 -d 'Program section'
+complete -xc man -n 'not __ghoti_complete_man' -a 2 -d 'Syscall section'
+complete -xc man -n 'not __ghoti_complete_man' -a 3 -d 'Library section'
+complete -xc man -n 'not __ghoti_complete_man' -a 4 -d 'Device section'
+complete -xc man -n 'not __ghoti_complete_man' -a 5 -d 'File format section'
+complete -xc man -n 'not __ghoti_complete_man' -a 6 -d 'Games section'
+complete -xc man -n 'not __ghoti_complete_man' -a 7 -d 'Misc section'
+complete -xc man -n 'not __ghoti_complete_man' -a 8 -d 'Admin section'
+complete -xc man -n 'not __ghoti_complete_man' -a 9 -d 'Kernel section'
+complete -xc man -n 'not __ghoti_complete_man' -a tcl -d 'Tcl section'
+complete -xc man -n 'not __ghoti_complete_man' -a n -d 'New section'
+complete -xc man -n 'not __ghoti_complete_man' -a l -d 'Local section'
+complete -xc man -n 'not __ghoti_complete_man' -a p
+complete -xc man -n 'not __ghoti_complete_man' -a o -d 'Old section'
 
 complete -rc man -s C -d "Configuration file"
-complete -xc man -s M -a "(__fish_complete_directories (commandline -ct))" -d Manpath
+complete -xc man -s M -a "(__ghoti_complete_directories (commandline -ct))" -d Manpath
 complete -rc man -s P -d Pager
 complete -xc man -s S -d "Manual sections"
 complete -c man -s a -d "Display all matches"

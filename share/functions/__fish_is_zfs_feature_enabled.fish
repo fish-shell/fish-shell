@@ -1,4 +1,4 @@
-function __fish_is_zfs_feature_enabled -a feature target -d "Returns 0 if the given ZFS feature is available or enabled for the given full-path target (zpool or dataset), or any target if none given"
+function __ghoti_is_zfs_feature_enabled -a feature target -d "Returns 0 if the given ZFS feature is available or enabled for the given full-path target (zpool or dataset), or any target if none given"
     type -q zpool
     or return
     set -l pool (string replace -r '/.*' '' -- $target)

@@ -3,7 +3,7 @@
 complete -c lz4 -s z -l compress -d "Compress (default)"
 complete -c lz4 -s d -l decompress -l uncompress -d Decompress -k -x -a "
 (
-    __fish_complete_suffix .lz4
+    __ghoti_complete_suffix .lz4
 )
 "
 

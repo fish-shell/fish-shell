@@ -1,12 +1,12 @@
-function __fish_print_abook_emails --description 'Print email addresses (abook)'
+function __ghoti_print_abook_emails --description 'Print email addresses (abook)'
     abook --mutt-query "" | string match -r -v '^\s*$'
 
 end
 
 if command -sq abook
-    complete -c mutt -f -a '(__fish_print_abook_emails)'
-    complete -c mutt -s c -x -d 'Specify a carbon-copy (CC) recipient' -a '(__fish_print_abook_emails)'
-    complete -c mutt -s b -x -d 'Specify a blind-carbon-copy (BCC) recipient' -a '(__fish_print_abook_emails)'
+    complete -c mutt -f -a '(__ghoti_print_abook_emails)'
+    complete -c mutt -s c -x -d 'Specify a carbon-copy (CC) recipient' -a '(__ghoti_print_abook_emails)'
+    complete -c mutt -s b -x -d 'Specify a blind-carbon-copy (BCC) recipient' -a '(__ghoti_print_abook_emails)'
 end
 
 complete -c mutt -s D -d 'Print the value of all configuration options to stdout'

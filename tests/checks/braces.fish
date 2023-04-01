@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 echo x-{1}
 #CHECK: x-{1}

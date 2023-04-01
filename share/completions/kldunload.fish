@@ -1,7 +1,7 @@
-function __fish_list_loaded_klds
+function __ghoti_list_loaded_klds
     set -l klds (kldstat | string match -r '\b\S+.ko$')
     for kld in $klds
-        if set -l description (__fish_whatis (string replace '.ko' '' -- $kld) "kernel module")
+        if set -l description (__ghoti_whatis (string replace '.ko' '' -- $kld) "kernel module")
             printf '%s\t%s\n' $kld $description
         else
             printf '%s\n' $kld
@@ -9,4 +9,4 @@ function __fish_list_loaded_klds
     end
 end
 
-complete -c kldunload -xa '(__fish_list_loaded_klds)'
+complete -c kldunload -xa '(__ghoti_list_loaded_klds)'

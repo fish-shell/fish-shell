@@ -95,5 +95,5 @@ end
 
 function _mktemp_help
     echo 'usage: mktemp [-d] [-t] [template]'
-    echo 'note: mktemp is a test function, see tests/test_functions/mktemp.fish'
+    echo 'note: mktemp is a test function, see tests/test_functions/mktemp.ghoti'
 end

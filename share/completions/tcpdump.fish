@@ -1,4 +1,4 @@
-function __fish_complete_tcpdump_interfaces --description "Complete network interfaces available on the system and on which tcpdump can capture packets"
+function __ghoti_complete_tcpdump_interfaces --description "Complete network interfaces available on the system and on which tcpdump can capture packets"
     tcpdump --list-interfaces | string replace -r '\d+\.(\S+( \(.*\))?).*' '$1' | string replace -r ' \((.*)\)' '\t$1'
 end
 
@@ -20,7 +20,7 @@ complete -c tcpdump -s G -x -d 'Rotate the dump file every rotate_seconds second
 complete -c tcpdump -s h -l help -d 'Print version strings and a usage message'
 complete -c tcpdump -l version -d 'Print the tcpdump and libpcap version strings'
 complete -c tcpdump -s H -d 'Attempt to detect 802.11s draft mesh headers'
-complete -c tcpdump -s i -l interface -x -a "(__fish_complete_tcpdump_interfaces)"
+complete -c tcpdump -s i -l interface -x -a "(__ghoti_complete_tcpdump_interfaces)"
 complete -c tcpdump -s I -l monitor-mode -d 'Put the interface in monitor mode'
 complete -c tcpdump -l immediate-mode -d 'Capture in immediate mode'
 complete -c tcpdump -s j -l time-stamp-type -x -a 'host host_lowprec host_hiprec adapter adapter_unsynced' -d 'Set the time stamp type for the capture'
@@ -62,4 +62,4 @@ complete -c tcpdump -s X -d 'Print the data of each packet in hex and ASCII (min
 complete -c tcpdump -o XX -d 'Print the data of each packet in hex and ASCII (including link level header)'
 complete -c tcpdump -s y -l linktype -x -d 'Set the data link type to use while capturing packets'
 complete -c tcpdump -s z -x -d 'Make tcpdump run "postrotate-command file"'
-complete -c tcpdump -s Z -l relinquish-privileges -x -a "(__fish_print_users)" -d 'Change user ID before opening any savefiles for output'
+complete -c tcpdump -s Z -l relinquish-privileges -x -a "(__ghoti_print_users)" -d 'Change user ID before opening any savefiles for output'

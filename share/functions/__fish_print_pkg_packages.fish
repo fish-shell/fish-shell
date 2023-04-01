@@ -1,4 +1,4 @@
-function __fish_print_pkg_packages
+function __ghoti_print_pkg_packages
     # Pkg is fast on FreeBSD and provides versioning info which we want for
     # installed packages
     if type -q -f pkg

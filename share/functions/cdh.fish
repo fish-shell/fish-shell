@@ -46,12 +46,12 @@ function cdh --description "Menu based cd command"
     for i in (seq $dirc -1 1)
         set -l dir $uniq_dirs[$i]
         set -l label_color normal
-        set -q fish_color_cwd
-        and set label_color $fish_color_cwd
+        set -q ghoti_color_cwd
+        and set label_color $ghoti_color_cwd
         set -l dir_color_reset (set_color normal)
         set -l dir_color
         if test "$dir" = "$PWD"
-            set dir_color (set_color $fish_color_history_current)
+            set dir_color (set_color $ghoti_color_history_current)
         end
 
         set -l home_dir (string match -r "^$HOME(/.*|\$)" "$dir")

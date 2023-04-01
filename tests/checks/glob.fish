@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 set -l oldpwd $PWD
 cd (mktemp -d)

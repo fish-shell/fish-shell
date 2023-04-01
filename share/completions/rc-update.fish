@@ -1,4 +1,4 @@
-function __fish_complete_rc-update_actions
+function __ghoti_complete_rc-update_actions
     set -l actions add \
         'Add the service to the runlevel or the current one if non given'
     set -l actions $actions del \
@@ -8,7 +8,7 @@ function __fish_complete_rc-update_actions
     printf "%s\t%s\n" $actions
 end
 
-function __fish_complete_rc-update_runlevels
+function __ghoti_complete_rc-update_runlevels
     set -l levels sysinit \
         'First startup runlevel' \
         boot \
@@ -21,13 +21,13 @@ function __fish_complete_rc-update_runlevels
 end
 
 # The first argument is what action to take with the service
-complete -c rc-update -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
-    -xa "(__fish_complete_rc-update_actions)"
+complete -c rc-update -n "test (__ghoti_number_of_cmd_args_wo_opts) = 1" \
+    -xa "(__ghoti_complete_rc-update_actions)"
 
 # The second argument is the names of the service, i.e. a file in /etc/init.d
-complete -c rc-update -n "test (__fish_number_of_cmd_args_wo_opts) = 2" \
-    -xa "(__fish_print_service_names)" -d "Service name"
+complete -c rc-update -n "test (__ghoti_number_of_cmd_args_wo_opts) = 2" \
+    -xa "(__ghoti_print_service_names)" -d "Service name"
 
 # The third argument is the names of the service, i.e. a file in /etc/init.d
-complete -c rc-update -n "test (__fish_number_of_cmd_args_wo_opts) = 3" \
-    -xa "(__fish_complete_rc-update_runlevels)"
+complete -c rc-update -n "test (__ghoti_number_of_cmd_args_wo_opts) = 3" \
+    -xa "(__ghoti_complete_rc-update_runlevels)"

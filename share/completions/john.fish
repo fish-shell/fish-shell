@@ -1,15 +1,15 @@
-set -l __fish_john_encodings ASCII RAW UTF-8 ISO-8859-1 Latin1 ANSI ISO-8859-2 ISO-8859-7 ISO-8859-15 KOI8-R CP437 CP720 CP737 CP850 CP852 CP858 CP866 CP868 CP1250 CP1251 CP1252 CP1253 CP1254 CP1255 CP1256
+set -l __ghoti_john_encodings ASCII RAW UTF-8 ISO-8859-1 Latin1 ANSI ISO-8859-2 ISO-8859-7 ISO-8859-15 KOI8-R CP437 CP720 CP737 CP850 CP852 CP858 CP866 CP868 CP1250 CP1251 CP1252 CP1253 CP1254 CP1255 CP1256
 
-function __fish_john_rules --description "Print JohnTheRipper rules"
+function __ghoti_john_rules --description "Print JohnTheRipper rules"
     john --list=rules 2>/dev/null
 end
 
-function __fish_john_formats --description "Print JohnTheRipper hash formats"
+function __ghoti_john_formats --description "Print JohnTheRipper hash formats"
     john --list=format-details 2>/dev/null | cut -f1
 end
 
 complete -c john -l help -d "print usage summary"
-complete -c john -l single -fa "(__fish_complete_list , __fish_john_rules)" -d "single crack mode"
+complete -c john -l single -fa "(__ghoti_complete_list , __ghoti_john_rules)" -d "single crack mode"
 complete -c john -l single-seed -rf -d "add static seed word(s) for all salts in single mode"
 complete -c john -l single-wordlist -rF -d "short wordlist with static seed words/morphemes"
 complete -c john -l single-user-seed -rF -d "wordlist with seeds per username"
@@ -34,9 +34,9 @@ complete -c john -l prince-wl-max -rf -d "load only N words from input wordlist"
 complete -c john -l prince-case-permute -d "permute case of first letter"
 complete -c john -l prince-mmap -d "memory-map infile"
 complete -c john -l prince-keyspace -d "just show total keyspace that would be produced"
-complete -c john -l encoding -l input-encoding -fa "$__fish_john_encodings" -d "input encoding"
-complete -c john -l rules -fa "(__fish_complete_list , __fish_john_rules)" -d "enable word mangling rules"
-complete -c john -l rules-stack -fa "(__fish_complete_list , __fish_john_rules)" -d "stacked rules"
+complete -c john -l encoding -l input-encoding -fa "$__ghoti_john_encodings" -d "input encoding"
+complete -c john -l rules -fa "(__ghoti_complete_list , __ghoti_john_rules)" -d "enable word mangling rules"
+complete -c john -l rules-stack -fa "(__ghoti_complete_list , __ghoti_john_rules)" -d "stacked rules"
 complete -c john -l rules-skip-nop -d "skip any NOP rules"
 complete -c john -l incremental -fa "(john --list=inc-modes 2>/dev/null)" -d "incremental mode"
 complete -c john -l incremental-charcount -rf -d "override CharCount for incremental mode"
@@ -93,8 +93,8 @@ complete -c john -l regen-lost-salts -rf -d "brute force unknown salts"
 complete -c john -l fork -rf -d "fork N processes"
 complete -c john -l pot -rF -d "pot file to use"
 complete -c john -l list -fa "help subformats inc-modes rules externals ext-modes ext-hybrids ext-filters ext-filters-only build-info encodings formats format-details format-all-details format-methods format-tests sections parameters: list-data:" -d "list capabilities"
-complete -c john -l internal-codepage -fa "$__fish_john_encodings" -d "codepage used in rules/masks"
-complete -c john -l target-encoding -fa "$__fish_john_encodings" -d "output encoding"
+complete -c john -l internal-codepage -fa "$__ghoti_john_encodings" -d "codepage used in rules/masks"
+complete -c john -l target-encoding -fa "$__ghoti_john_encodings" -d "output encoding"
 complete -c john -l tune -fa "auto report N" -d "tuning options"
 complete -c john -l force-tty -d "set up terminal for reading keystrokes"
-complete -c john -l format -fa "(__fish_complete_list , __fish_john_formats)" -d "force hash type"
+complete -c john -l format -fa "(__ghoti_complete_list , __ghoti_john_formats)" -d "force hash type"

@@ -1,4 +1,4 @@
-function __fish_ffplay_help_type
+function __ghoti_ffplay_help_type
     printf '%s\t%s\n' long "Print more options"
     printf '%s\t%s\n' full "Print all options"
 
@@ -15,14 +15,14 @@ function __fish_ffplay_help_type
     end
 end
 
-function __fish_ffplay_codec_list
+function __ghoti_ffplay_codec_list
     printf '%s\t%s\n' copy "Stream copy"
     printf '%s\n' (ffplay -loglevel quiet -decoders | string trim | string match -rv '=|:$|^-' | string replace -rf '\S+\s+(\S+)\s+(\S+)' '$1\t$2')
 end
 
 # Main options
 complete -c ffplay -s L -d "Show license"
-complete -x -c ffplay -s h -s "?" -o help -l help -a "(__fish_ffplay_help_type)" -d "Show help"
+complete -x -c ffplay -s h -s "?" -o help -l help -a "(__ghoti_ffplay_help_type)" -d "Show help"
 complete -c ffplay -o version -d "Show version"
 complete -c ffplay -o buildconf -d "Show build configuration"
 complete -c ffplay -o formats -d "Show available formats"
@@ -62,5 +62,5 @@ complete -c ffplay -o window_title -d "Set window title"
 complete -c ffplay -o af -d "Set audio filters"
 complete -x -c ffplay -o showmode -a "(printf '%s\t%s\n' 0 video ; printf '%s\t%s\n' 1 waves ; printf '%s\t%s\n' 2 RDFT)" -d "Select show mode"
 complete -c ffplay -s i -d "Read specified file"
-complete -x -c ffplay -o codec -a "(__fish_ffplay_codec_list)" -d "Force decoder"
+complete -x -c ffplay -o codec -a "(__ghoti_ffplay_codec_list)" -d "Force decoder"
 complete -c ffplay -o autorotate -d "Automatically rotate video"

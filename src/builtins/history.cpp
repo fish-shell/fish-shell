@@ -54,8 +54,8 @@ struct history_cmd_opts_t {
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
 /// the non-flag subcommand form. While many of these flags are deprecated they must be
-/// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
-/// config.fish and other scripts.
+/// supported at least until ghoti 3.0 and possibly longer to avoid breaking everyones
+/// config.ghoti and other scripts.
 static const wchar_t *const short_options = L":CRcehmn:pt::z";
 static const struct woption long_options[] = {{L"prefix", no_argument, 'p'},
                                               {L"contains", no_argument, 'c'},
@@ -167,7 +167,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                 break;
             }
             case 'n': {
-                long x = fish_wcstol(w.woptarg);
+                long x = ghoti_wcstol(w.woptarg);
                 if (errno) {
                     streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
@@ -189,7 +189,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
             }
             case '?': {
                 // Try to parse it as a number; e.g., "-123".
-                opts.max_items = fish_wcstol(argv[w.woptind - 1] + 1);
+                opts.max_items = ghoti_wcstol(argv[w.woptind - 1] + 1);
                 if (errno) {
                     builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                     return STATUS_INVALID_ARGS;

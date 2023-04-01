@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 status -b
 and echo '"status -b" unexpectedly returned true at top level'
 
@@ -116,13 +116,13 @@ end
 
 printf "%s\n" (test-stack-trace-other | string replace \t '<TAB>')[1..4]
 # CHECK: in function 'test-stack-trace-main'
-# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.fish
+# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.ghoti
 # CHECK: in function 'test-stack-trace-other'
-# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.fish
+# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.ghoti
 
 functions -c test-stack-trace-other test-stack-trace-copy
 printf "%s\n" (test-stack-trace-copy | string replace \t '<TAB>')[1..4]
 # CHECK: in function 'test-stack-trace-main'
-# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.fish
+# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.ghoti
 # CHECK: in function 'test-stack-trace-copy'
-# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.fish
+# CHECK: <TAB>called on line {{\d+}} of file {{.*}}/status.ghoti

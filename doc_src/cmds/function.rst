@@ -33,28 +33,28 @@ The following options are available:
     Run this function when the specified named event is emitted. Fish internally generates named events, for example,when showing the prompt. Custom events can be emitted using the :doc:`emit <emit>` command.
 
 **-v** *VARIABLE_NAME* or **--on-variable** *VARIABLE_NAME*
-    Run this function when the variable *VARIABLE_NAME* changes value. Note that :program:`fish` makes no guarantees on any particular timing or even that the function will be run for every single ``set``. Rather it will be run when the variable has been set at least once, possibly skipping some values or being run when the variable has been set to the same value (except for universal variables set in other shells - only changes in the value will be picked up for those).
+    Run this function when the variable *VARIABLE_NAME* changes value. Note that :program:`ghoti` makes no guarantees on any particular timing or even that the function will be run for every single ``set``. Rather it will be run when the variable has been set at least once, possibly skipping some values or being run when the variable has been set to the same value (except for universal variables set in other shells - only changes in the value will be picked up for those).
 
 **-j** *PID* or **--on-job-exit** *PID*
     Run this function when the job containing a child process with the given process identifier *PID* exits. Instead of a PID, the string 'caller' can be specified. This is only allowed when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
 
 **-p** *PID* or **--on-process-exit** *PID*
-    Run this function when the fish child process with process ID PID exits. Instead of a PID, for backward compatibility, "``%self``" can be specified as an alias for ``$fish_pid``, and the function will be run when the current fish instance exits.
+    Run this function when the ghoti child process with process ID PID exits. Instead of a PID, for backward compatibility, "``%self``" can be specified as an alias for ``$ghoti_pid``, and the function will be run when the current ghoti instance exits.
 
 **-s** *SIGSPEC* or **--on-signal** *SIGSPEC*
-    Run this function when the signal ``SIGSPEC`` is delivered. ``SIGSPEC`` can be a signal number, or the signal name, such as ``SIGHUP`` (or just ``HUP``). Note that the signal must have been delivered to :program:`fish`; for example, :kbd:`Ctrl-C` sends ``SIGINT`` to the foreground process group, which will not be :program:`fish` if you are running another command at the time. Observing a signal will prevent fish from exiting in response to that signal.
+    Run this function when the signal ``SIGSPEC`` is delivered. ``SIGSPEC`` can be a signal number, or the signal name, such as ``SIGHUP`` (or just ``HUP``). Note that the signal must have been delivered to :program:`ghoti`; for example, :kbd:`Ctrl-C` sends ``SIGINT`` to the foreground process group, which will not be :program:`ghoti` if you are running another command at the time. Observing a signal will prevent ghoti from exiting in response to that signal.
 
 **-S** or **--no-scope-shadowing**
     Allows the function to access the variables of calling functions. Normally, any variables inside the function that have the same name as variables from the calling function are "shadowed", and their contents are independent of the calling function.
 
-    It's important to note that this does not capture referenced variables or the scope at the time of function declaration! At this time, fish does not have any concept of closures, and variable lifetimes are never extended. In other words, by using **--no-scope-shadowing** the scope of the function each time it is run is shared with the scope it was *called* from rather than the scope it was *defined* in.
+    It's important to note that this does not capture referenced variables or the scope at the time of function declaration! At this time, ghoti does not have any concept of closures, and variable lifetimes are never extended. In other words, by using **--no-scope-shadowing** the scope of the function each time it is run is shared with the scope it was *called* from rather than the scope it was *defined* in.
 
 **-V** or **--inherit-variable NAME**
     Snapshots the value of the variable ``NAME`` and defines a local variable with that same name and value when the function is defined. This is similar to a closure in other languages like Python but a bit different. Note the word "snapshot" in the first sentence. If you change the value of the variable after defining the function, even if you do so in the same scope (typically another function) the new value will not be used by the function you just created using this option. See the ``function notify`` example below for how this might be used.
 
 The event handler switches (``on-event``, ``on-variable``, ``on-job-exit``, ``on-process-exit`` and ``on-signal``) cause a function to run automatically at specific events. New named events for ``--on-event`` can be fired using the :doc:`emit <emit>` builtin. Fish already generates a few events, see :ref:`event` for more.
 
-Functions may not be named the same as a reserved keyword. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
+Functions may not be named the same as a reserved keyword. These are elements of ghoti syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
 
 Example
 -------
@@ -111,9 +111,9 @@ This will beep when the most recent job completes.
 Notes
 -----
 
-Events are only received from the current fish process as there is no way to send events from one fish process to another.
+Events are only received from the current ghoti process as there is no way to send events from one ghoti process to another.
 
 See more
 --------
 
-For more explanation of how functions fit into fish, see :ref:`Functions <syntax-function>`.
+For more explanation of how functions fit into ghoti, see :ref:`Functions <syntax-function>`.

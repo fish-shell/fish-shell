@@ -1,6 +1,6 @@
-.. _cmd-fish_clipboard_copy:
+.. _cmd-ghoti_clipboard_copy:
 
-fish_clipboard_copy - copy text to the system's clipboard
+ghoti_clipboard_copy - copy text to the system's clipboard
 ==============================================================
 
 Synopsis
@@ -8,20 +8,20 @@ Synopsis
 
 .. synopsis::
 
-    fish_clipboard_copy
+    ghoti_clipboard_copy
 
-    foo | fish_clipboard_copy
+    foo | ghoti_clipboard_copy
 
 Description
 -----------
 
-The ``fish_clipboard_copy`` function copies text to the system clipboard.
+The ``ghoti_clipboard_copy`` function copies text to the system clipboard.
 
 If stdin is not a terminal (see :doc:`isatty <isatty>`), it will read all input from there and copy it. If it is, it will use the current commandline, or the current selection if there is one.
 
 It is bound to :kbd:`Control`\ +\ :kbd:`X` by default.
 
-``fish_clipboard_copy`` works by calling a system-specific backend. If it doesn't appear to work you may need to install yours.
+``ghoti_clipboard_copy`` works by calling a system-specific backend. If it doesn't appear to work you may need to install yours.
 
 Currently supported are:
 
@@ -33,4 +33,4 @@ Currently supported are:
 See also
 --------
 
-- :doc:`fish_clipboard_paste` which does the inverse.
+- :doc:`ghoti_clipboard_paste` which does the inverse.

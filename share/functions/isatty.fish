@@ -4,7 +4,7 @@ function isatty -d "Tests if a file descriptor is a tty"
     or return
 
     if set -q _flag_help
-        __fish_print_help isatty
+        __ghoti_print_help isatty
         return 0
     end
 

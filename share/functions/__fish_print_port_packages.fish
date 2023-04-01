@@ -1,8 +1,8 @@
-function __fish_print_port_packages
+function __ghoti_print_port_packages
     type -q -f port || return 1
 
     # port needs caching, as it tends to be slow
-    set -l xdg_cache_home (__fish_make_cache_dir)
+    set -l xdg_cache_home (__ghoti_make_cache_dir)
     or return
 
     set -l cache_file $xdg_cache_home/.port-cache.$USER

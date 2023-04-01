@@ -1,26 +1,26 @@
-# iw(8) completion for fish
+# iw(8) completion for ghoti
 
 # The completions for iw are based off those for ip, which has a similar options structure.
 
 set -l iw_commands dev phy reg event features commands list
 # wdev not supported since it is barely documented
 
-function __fish_iw_device
-    __fish_print_interfaces | while read -l i
+function __ghoti_iw_device
+    __ghoti_print_interfaces | while read -l i
         printf '%s\t%s\n' $i Device
     end
 end
 
-function __fish_iw_phy
+function __ghoti_iw_phy
     set -l phys /sys/class/ieee80211/*
     string match --regex '[^/]*$' $phys
 end
 
-function __fish_iw_ssid
+function __ghoti_iw_ssid
     printf '%s\n' (iw dev $argv[1] scan dump | string match --regex --entire SSID | string split ' ')[2]
 end
 
-function __fish_complete_iw
+function __ghoti_complete_iw
     set -l cmd (commandline -opc)
 
     if string match --quiet -- '-*' $cmd[2]
@@ -31,9 +31,9 @@ function __fish_complete_iw
     else if not set -q cmd[3]
         switch $cmd[2]
             case dev
-                __fish_iw_device
+                __ghoti_iw_device
             case phy
-                __fish_iw_phy
+                __ghoti_iw_phy
         end
         return
     end
@@ -47,7 +47,7 @@ function __fish_complete_iw
                     end
                 case auth connect
                     if not set -q cmd[5]
-                        __fish_iw_ssid $cmd[3]
+                        __ghoti_iw_ssid $cmd[3]
                     end
                 case disconnect
                 case cqm
@@ -82,7 +82,7 @@ function __fish_complete_iw
                     if not set -q cmd[5]
                         echo ftm_request
                     else if not set -q cmd[6]
-                        __fish_complete_path
+                        __ghoti_complete_path
                     end
                     # options after config file?
                 case mesh
@@ -222,7 +222,7 @@ function __fish_complete_iw
                             disable "Disable coalesce" \
                             enable "Enable coalesce"
                     else if test "$cmd[5]" = enable && not set -q cmd[6]
-                        __fish_complete_path # Enable takes a config file
+                        __ghoti_complete_path # Enable takes a config file
                     end
                 case hwsim
                     if not set -q cmd[5]
@@ -276,16 +276,16 @@ function __fish_complete_iw
 end
 
 complete -f -c iw
-complete -f -c iw -a '(__fish_complete_iw)'
-complete -f -c iw -n "not __fish_seen_subcommand_from $iw_commands" -a "$iw_commands"
+complete -f -c iw -a '(__ghoti_complete_iw)'
+complete -f -c iw -n "not __ghoti_seen_subcommand_from $iw_commands" -a "$iw_commands"
 # Yes, iw only takes options before "objects"
-complete -f -c iw -l debug -d "Enable netlink message debugging" -n "not __fish_seen_subcommand_from $iw_commands"
-complete -f -c iw -l version -d "Print the version" -n "not __fish_seen_subcommand_from $iw_commands"
+complete -f -c iw -l debug -d "Enable netlink message debugging" -n "not __ghoti_seen_subcommand_from $iw_commands"
+complete -f -c iw -l version -d "Print the version" -n "not __ghoti_seen_subcommand_from $iw_commands"
 
-complete -f -c iw -n "__fish_seen_subcommand_from event" -s t -d 'Print timestamp'
-complete -f -c iw -n "__fish_seen_subcommand_from event" -s r -d 'Print relative timestamp'
-complete -f -c iw -n "__fish_seen_subcommand_from event" -s f -d 'Print full frame for auth/assoc'
+complete -f -c iw -n "__ghoti_seen_subcommand_from event" -s t -d 'Print timestamp'
+complete -f -c iw -n "__ghoti_seen_subcommand_from event" -s r -d 'Print relative timestamp'
+complete -f -c iw -n "__ghoti_seen_subcommand_from event" -s f -d 'Print full frame for auth/assoc'
 
-complete -f -c iw -n "__fish_seen_subcommand_from reg" -a reload -d 'Reload the kernel\'s regulatory database'
-complete -f -c iw -n "__fish_seen_subcommand_from reg" -a get -d 'Print the kernel\'s current regulatory domain information'
-complete -f -c iw -n "__fish_seen_subcommand_from reg" -a set -d 'Notify the kernel about the current regulatory domain'
+complete -f -c iw -n "__ghoti_seen_subcommand_from reg" -a reload -d 'Reload the kernel\'s regulatory database'
+complete -f -c iw -n "__ghoti_seen_subcommand_from reg" -a get -d 'Print the kernel\'s current regulatory domain information'
+complete -f -c iw -n "__ghoti_seen_subcommand_from reg" -a set -d 'Notify the kernel about the current regulatory domain'

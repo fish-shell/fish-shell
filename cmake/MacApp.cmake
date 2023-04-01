@@ -7,15 +7,15 @@ endif (NOT APPLE)
 set(OSX_DIR ${CMAKE_CURRENT_SOURCE_DIR}/osx)
 
 set(RESOURCE_FILES
-    ${OSX_DIR}/launch_fish.scpt
-    ${OSX_DIR}/fish_term_icon.icns
+    ${OSX_DIR}/launch_ghoti.scpt
+    ${OSX_DIR}/ghoti_term_icon.icns
     ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/osx_package_scripts/add-shell
     ${OSX_DIR}/install.sh
 )
 
 # Resource files must be present in the source list.
-add_executable(fish_macapp EXCLUDE_FROM_ALL
-    ${OSX_DIR}/osx_fish_launcher.m
+add_executable(ghoti_macapp EXCLUDE_FROM_ALL
+    ${OSX_DIR}/osx_ghoti_launcher.m
     ${RESOURCE_FILES}
 )
 
@@ -29,32 +29,32 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 
-# Note CMake appends .app, so the real output name will be fish.app. 
+# Note CMake appends .app, so the real output name will be ghoti.app. 
 # This target does not include the 'base' resource.
-set_target_properties(fish_macapp PROPERTIES OUTPUT_NAME "fish")
+set_target_properties(ghoti_macapp PROPERTIES OUTPUT_NAME "ghoti")
 
 find_library(FOUNDATION_LIB Foundation)
-target_link_libraries(fish_macapp ${FOUNDATION_LIB})
+target_link_libraries(ghoti_macapp ${FOUNDATION_LIB})
 
-set_target_properties(fish_macapp PROPERTIES
+set_target_properties(ghoti_macapp PROPERTIES
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST ${OSX_DIR}/CMakeMacAppInfo.plist.in
-    MACOSX_BUNDLE_GUI_IDENTIFIER "com.ridiculousfish.fish-shell"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.ridiculousghoti.ghoti-shell"
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${FISH_SHORT_VERSION}
     RESOURCE "${RESOURCE_FILES}"
 )
 
-# The fish Mac app contains a fish installation inside the package.
+# The ghoti Mac app contains a ghoti installation inside the package.
 # Here is where it gets built.
-# Copy into the fish mac app after.
+# Copy into the ghoti mac app after.
 set(MACAPP_FISH_BUILDROOT ${CMAKE_CURRENT_BINARY_DIR}/macapp_buildroot/base)
 
-add_custom_command(TARGET fish_macapp POST_BUILD
+add_custom_command(TARGET ghoti_macapp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${MACAPP_FISH_BUILDROOT}
     COMMAND DESTDIR=${MACAPP_FISH_BUILDROOT} ${CMAKE_COMMAND}
             --build ${CMAKE_CURRENT_BINARY_DIR} --target install
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${MACAPP_FISH_BUILDROOT}/..
-            $<TARGET_BUNDLE_CONTENT_DIR:fish_macapp>/Resources/
+            $<TARGET_BUNDLE_CONTENT_DIR:ghoti_macapp>/Resources/
     VERBATIM
 )
 
@@ -64,15 +64,15 @@ set(MACAPP_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/osx/MacApp.entitlements")
 # Target to sign the macapp.
 # Note that a POST_BUILD step happens before resources are copied,
 # and therefore would be too early.
-add_custom_target(signed_fish_macapp
-    DEPENDS fish_macapp "${MACAPP_ENTITLEMENTS}"
+add_custom_target(signed_ghoti_macapp
+    DEPENDS ghoti_macapp "${MACAPP_ENTITLEMENTS}"
     COMMAND codesign --force --deep
             --options runtime
             --entitlements "${MACAPP_ENTITLEMENTS}"
             --sign "${MAC_CODESIGN_ID}"
-            $<TARGET_BUNDLE_DIR:fish_macapp>
+            $<TARGET_BUNDLE_DIR:ghoti_macapp>
     VERBATIM
 )
 
 # Group our targets in a folder.
-set_property(TARGET fish_macapp signed_fish_macapp PROPERTY FOLDER macapp)
+set_property(TARGET ghoti_macapp signed_ghoti_macapp PROPERTY FOLDER macapp)

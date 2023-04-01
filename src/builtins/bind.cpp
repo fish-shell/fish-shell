@@ -50,7 +50,7 @@ class builtin_bind_t {
     bind_cmd_opts_t *opts;
 
     /// Note that builtin_bind_t holds the singleton lock.
-    /// It must not call out to anything which can execute fish shell code or attempt to acquire the
+    /// It must not call out to anything which can execute ghoti shell code or attempt to acquire the
     /// lock again.
     acquired_lock<input_mapping_set_t> input_mappings_;
 

@@ -1,4 +1,4 @@
-complete -c poff -d 'PPP connection' -xa '(__fish_complete_ppp_peer)'
+complete -c poff -d 'PPP connection' -xa '(__ghoti_complete_ppp_peer)'
 complete -c poff -s r -d 'Causes the connection to be redialed after it is dropped'
 complete -c poff -s d -d 'Toggles the state of pppd\'s debug option'
 complete -c poff -s c -d 'Causes pppd(8) to renegotiate compression'

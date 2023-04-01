@@ -26,7 +26,7 @@ complete -c rsync -s r -l recursive -d "Recurse into directories"
 complete -c rsync -s R -l relative -d "Use relative path names"
 complete -c rsync -l no-implied-dirs -d "Don’t send implied dirs with --relative"
 complete -c rsync -s b -l backup -d "Make backups (see --suffix & --backup-dir)"
-complete -c rsync -l backup-dir -xa '(__fish_complete_directories)' -d "Make backups into hierarchy based in DIR"
+complete -c rsync -l backup-dir -xa '(__ghoti_complete_directories)' -d "Make backups into hierarchy based in DIR"
 complete -c rsync -l suffix -d "Backup suffix (default ~ w/o --backup-dir)"
 complete -c rsync -s u -l update -d "Skip files that are newer on the receiver"
 complete -c rsync -l inplace -d "Update destination files in-place"
@@ -90,23 +90,23 @@ complete -c rsync -l max-size -xa '(seq 0 10){K,M,G}' -d "Don’t transfer any f
 complete -c rsync -l min-size -xa '(seq 0 10){K,M,G}' -d "Don’t transfer any file smaller than SIZE"
 complete -c rsync -l max-alloc -xa '(seq 0 10){K,M,G}' -d "Change process memory allocation limit"
 complete -c rsync -l partial -d "Keep partially transferred files"
-complete -c rsync -l partial-dir -xa '(__fish_complete_directories)' -d "Put a partially transferred file into DIR"
+complete -c rsync -l partial-dir -xa '(__ghoti_complete_directories)' -d "Put a partially transferred file into DIR"
 complete -c rsync -l delay-updates -d "Put all updated files into place at end"
 complete -c rsync -s m -l prune-empty-dirs -d "Prune empty directory chains from file-list"
 complete -c rsync -l numeric-ids -d "Don’t map uid/gid values by user/group name"
-complete -c rsync -l usermap -xa '(__fish_complete_users)' -d "Custom username mapping"
-complete -c rsync -l groupmap -xa '(__fish_complete_groups)' -d "Custom username mapping"
-complete -c rsync -l chown -xa '(__fish_complete_users;__fish_complete_groups)' -d "Combined username/groupname mapping"
+complete -c rsync -l usermap -xa '(__ghoti_complete_users)' -d "Custom username mapping"
+complete -c rsync -l groupmap -xa '(__ghoti_complete_groups)' -d "Custom username mapping"
+complete -c rsync -l chown -xa '(__ghoti_complete_users;__ghoti_complete_groups)' -d "Combined username/groupname mapping"
 complete -c rsync -l timeout -d "Set I/O timeout in seconds"
 complete -c rsync -l cotimeout -d "Set daemon connection timeout in seconds"
 complete -c rsync -s I -l ignore-times -d "Don’t skip files that match size and time"
 complete -c rsync -l size-only -d "Skip files that match in size"
 complete -c rsync -l modify-window -xa '(seq 0 10)' -d "Compare NUM mod-times with reduced accuracy"
-complete -c rsync -s T -l temp-dir -xa '(__fish_complete_directories)' -d "Create temporary files in directory DIR"
+complete -c rsync -s T -l temp-dir -xa '(__ghoti_complete_directories)' -d "Create temporary files in directory DIR"
 complete -c rsync -s y -l fuzzy -d "Find similar file for basis if no dest file"
-complete -c rsync -l compare-dest -xa '(__fish_complete_directories)' -d "Also compare received files relative to DIR"
-complete -c rsync -l copy-dest -xa '(__fish_complete_directories)' -d "Also compare received files relative to DIR and include copies of unchanged files"
-complete -c rsync -l link-dest -xa '(__fish_complete_directories)' -d "Hardlink to files in DIR when unchanged"
+complete -c rsync -l compare-dest -xa '(__ghoti_complete_directories)' -d "Also compare received files relative to DIR"
+complete -c rsync -l copy-dest -xa '(__ghoti_complete_directories)' -d "Also compare received files relative to DIR and include copies of unchanged files"
+complete -c rsync -l link-dest -xa '(__ghoti_complete_directories)' -d "Hardlink to files in DIR when unchanged"
 complete -c rsync -s z -l compress -d "Compress file data during the transfer"
 complete -c rsync -l zc -l compress-choice -xa 'zstd lz4 zlibx zlib none' -d "Choose the compression algorithm"
 complete -c rsync -l compress-level -x -d "Explicitly set compression level (aka --zl)"
@@ -121,7 +121,7 @@ complete -c rsync -l include-from -r -d "Read include patterns from FILE"
 complete -c rsync -l files-from -r -d "Read list of source-file names from FILE"
 complete -c rsync -s 0 -l from0 -d "All *from/filter files are delimited by 0s"
 complete -c rsync -s s -l protect-args -d "No space-splitting; wildcard chars only"
-complete -c rsync -l copy-as -xa '(__fish_complete_users;__fish_complete_groups)' -d "Specify user & optional group for the copy"
+complete -c rsync -l copy-as -xa '(__ghoti_complete_users;__ghoti_complete_groups)' -d "Specify user & optional group for the copy"
 complete -c rsync -l address -d "Bind address for outgoing socket to daemon"
 complete -c rsync -l port -d "Specify double-colon alternate port number"
 complete -c rsync -l sockopts -d "Specify custom TCP options"
@@ -162,14 +162,14 @@ complete -c rsync -s h -l help -d "Display help and exit"
 # Hostname completion
 #
 complete -c rsync -d Hostname -a "
-(__fish_print_hostnames):
+(__ghoti_print_hostnames):
 
 (
 	# Prepend any username specified in the completion to the hostname.
 	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
-)(__fish_print_hostnames):
+)(__ghoti_print_hostnames):
 
-(__fish_print_users)@\tUsername
+(__ghoti_print_users)@\tUsername
 "
 
 #

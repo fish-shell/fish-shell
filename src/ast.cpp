@@ -484,14 +484,14 @@ struct populator_t {
     /// \return whether we permit an incomplete parse tree.
     bool allow_incomplete() const { return flags_ & parse_flag_leave_unterminated; }
 
-    /// This indicates a bug in fish code.
+    /// This indicates a bug in ghoti code.
     void internal_error(const char *func, const wchar_t *fmt, ...) const {
         va_list va;
         va_start(va, fmt);
         wcstring msg = vformat_string(fmt, va);
         va_end(va);
 
-        FLOG(debug, "Internal parse error from", func, "- this indicates a bug in fish.", msg);
+        FLOG(debug, "Internal parse error from", func, "- this indicates a bug in ghoti.", msg);
         FLOG(debug, "Encountered while parsing:<<<\n%ls\n>>>", tokens_.source().c_str());
         abort();
     }

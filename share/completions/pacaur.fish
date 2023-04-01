@@ -1,27 +1,27 @@
 set -l progname pacaur
 complete -c $progname -f
 
-set -l listinstalled "(__fish_print_pacman_packages --installed)"
+set -l listinstalled "(__ghoti_print_pacman_packages --installed)"
 # This might be an issue if another package manager is also installed (e.g. for containers)
-set -l listall "(__fish_print_pacman_packages)"
-set -l listrepos "(__fish_print_pacman_repos)"
+set -l listall "(__ghoti_print_pacman_packages)"
+set -l listrepos "(__ghoti_print_pacman_repos)"
 set -l listgroups "(pacman -Sg)\t'Package Group'"
 
-set -l hasopt '__fish_contains_opt -s B backup -s C -s G getpkgbuild -s P pkgbuild -s D database -s Q query -s R remove -s S sync -s U upgrade -s F files stats'
+set -l hasopt '__ghoti_contains_opt -s B backup -s C -s G getpkgbuild -s P pkgbuild -s D database -s Q query -s R remove -s S sync -s U upgrade -s F files stats'
 set -l noopt "not $hasopt"
 
-set -l backup '__fish_contains_opt -s B backup'
-set -l clean '__fish_contains_opt -s C'
-set -l getpkgbuild '__fish_contains_opt -s G getpkgbuild'
-set -l pkgbuild '__fish_contains_opt -s P pkgbuild'
-set -l database '__fish_contains_opt -s D database'
-set -l query '__fish_contains_opt -s Q query'
-set -l remove '__fish_contains_opt -s R remove'
-set -l sync '__fish_contains_opt -s S sync'
-set -l upgrade '__fish_contains_opt -s U upgrade'
-set -l files '__fish_contains_opt -s F files'
+set -l backup '__ghoti_contains_opt -s B backup'
+set -l clean '__ghoti_contains_opt -s C'
+set -l getpkgbuild '__ghoti_contains_opt -s G getpkgbuild'
+set -l pkgbuild '__ghoti_contains_opt -s P pkgbuild'
+set -l database '__ghoti_contains_opt -s D database'
+set -l query '__ghoti_contains_opt -s Q query'
+set -l remove '__ghoti_contains_opt -s R remove'
+set -l sync '__ghoti_contains_opt -s S sync'
+set -l upgrade '__ghoti_contains_opt -s U upgrade'
+set -l files '__ghoti_contains_opt -s F files'
 
-# HACK: We only need these three to coerce fish to stop file completion and complete options
+# HACK: We only need these three to coerce ghoti to stop file completion and complete options
 complete -c $progname -n $noopt -a -D -d "Modify the package database"
 complete -c $progname -n $noopt -a -Q -d "Query the package database"
 complete -c $progname -n $noopt -a -C -d "Manage .pac* files"
@@ -42,13 +42,13 @@ complete -c $progname -n $noopt -s m -l makepkg -d "(AUR) Clone the packages' bu
 complete -c $progname -n $noopt -s y -l sync -d "(AUR) Clone build files, build and install packages"
 complete -c $progname -n $noopt -s k -l check -d "(AUR) Check foreign packages for updates"
 complete -c $progname -n $noopt -s u -l update -d "(AUR) Update foreign packages"
-complete -c $progname -n "$noopt; and not __fish_contains_opt -s d download" -s d -l download -d "(AUR) Clone the packages' build files"
-complete -c $progname -n "$noopt; and __fish_contains_opt -s d download" -s d -l download -d "Download dependencies recursively"
+complete -c $progname -n "$noopt; and not __ghoti_contains_opt -s d download" -s d -l download -d "(AUR) Clone the packages' build files"
+complete -c $progname -n "$noopt; and __ghoti_contains_opt -s d download" -s d -l download -d "Download dependencies recursively"
 
 
 # General options
 # Only offer these once a command has been given so they get prominent display
-complete -c $progname -n $noopt -s b -l dbpath -d 'Alternative database location' -xa '(__fish_complete_directories)'
+complete -c $progname -n $noopt -s b -l dbpath -d 'Alternative database location' -xa '(__ghoti_complete_directories)'
 complete -c $progname -n $hasopt -s r -l root -d 'Alternative installation root'
 complete -c $progname -n $hasopt -s v -l verbose -d 'Output more status messages'
 complete -c $progname -n $hasopt -l arch -d 'Alternate architecture' -f
@@ -130,21 +130,21 @@ complete -c $progname -n "$remove" -d 'Installed package' -xa $listinstalled -f
 # Sync options
 complete -c $progname -n $sync -s c -l clean -d 'Remove [all] packages from cache'
 complete -c $progname -n $sync -s l -l list -xa "$listrepos" -d 'List all packages in REPOSITORY'
-complete -c $progname -n "$sync; and not __fish_contains_opt -s u sysupgrade" -s u -l sysupgrade -d 'Upgrade all packages that are out of date'
-complete -c $progname -n "$sync; and __fish_contains_opt -s u sysupgrade" -s u -l sysupgrade -d 'Also downgrade packages'
+complete -c $progname -n "$sync; and not __ghoti_contains_opt -s u sysupgrade" -s u -l sysupgrade -d 'Upgrade all packages that are out of date'
+complete -c $progname -n "$sync; and __ghoti_contains_opt -s u sysupgrade" -s u -l sysupgrade -d 'Also downgrade packages'
 complete -c $progname -n $sync -s w -l downloadonly -d 'Only download the target packages'
 complete -c $progname -n $sync -s y -l refresh -d 'Download fresh copy of the package list'
 complete -c $progname -n "$sync" -xa "$listall $listgroups"
 
 # Database options
-set -l has_db_opt '__fish_contains_opt asdeps asexplicit'
+set -l has_db_opt '__ghoti_contains_opt asdeps asexplicit'
 complete -c $progname -n "$database; and not $has_db_opt" -xa --asdeps -d 'Mark PACKAGE as dependency'
 complete -c $progname -n "$database; and not $has_db_opt" -xa --asexplicit -d 'Mark PACKAGE as explicitly installed'
 complete -c $progname -n "$database; and not $has_db_opt" -s k -l check -d 'Check database validity'
 complete -c $progname -n "$has_db_opt; and $database" -xa "$listinstalled"
 
 # File options - since pacman 5
-set -l has_file_opt '__fish_contains_opt list search -s l -s s'
+set -l has_file_opt '__ghoti_contains_opt list search -s l -s s'
 complete -c $progname -n "$files; and not $has_file_opt" -xa --list -d 'List files owned by given packages'
 complete -c $progname -n "$files; and not $has_file_opt" -xa -l -d 'List files owned by given packages'
 complete -c $progname -n "$files; and not $has_file_opt" -xa --search -d 'Search packages for matching files'
@@ -159,4 +159,4 @@ complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readabl
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports
 # In practice, it's going to be tar.xz or tar.gz or tar.zst
-complete -c $progname -n "$upgrade" -k -xa '(__fish_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz)' -d 'Package file'
+complete -c $progname -n "$upgrade" -k -xa '(__ghoti_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz)' -d 'Package file'

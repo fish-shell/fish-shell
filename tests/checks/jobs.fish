@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 # Verify zombies are not left by disown (#7183, #5342)
 # Do this first to avoid colliding with the other disowned processes below, which may
@@ -14,12 +14,12 @@ sleep 0.1
 # does not print an error for non-existent PIDs, so instead look for zombies in this session.
 # There could already be zombies from previous tests run in this session or a test could be run
 # simultaneously that causes a zombie to spawn, so limit the output only to processes started by
-# this fish instance.
+# this ghoti instance.
 if not contains (uname) SunOS
     ps -o ppid,stat
 else
     ps -o ppid,s
-end | string match -e $fish_pid | string match '*Z*'
+end | string match -e $ghoti_pid | string match '*Z*'
 
 # Verify disown can be used with last_pid, even if it is separate from the pgroup.
 # This should silently succeed.
@@ -72,7 +72,7 @@ disown (jobs -p)
 or exit 0
 
 # Verify `jobs` output within a function lists background jobs
-# https://github.com/fish-shell/fish-shell/issues/5824
+# https://github.com/ghoti-shell/ghoti-shell/issues/5824
 function foo
     sleep 0.2 &
     jobs -c
@@ -89,7 +89,7 @@ end
 sleep 2
 
 # Verify `jobs -l` works and returns the right status codes
-# https://github.com/fish-shell/fish-shell/issues/6104
+# https://github.com/ghoti-shell/ghoti-shell/issues/6104
 jobs --last --command
 echo $status
 #CHECK: Command
@@ -119,10 +119,10 @@ emit bar
 #CHECK: caller
 
 # We can't rely on a *specific* pgid being assigned,
-# but we can rely on it not being fish's.
+# but we can rely on it not being ghoti's.
 command true &
 set -l truepid $last_pid
-test $truepid != $fish_pid || echo true has same pid as fish
+test $truepid != $ghoti_pid || echo true has same pid as ghoti
 
 # Job exit events work even after the job has exited!
 sleep .5

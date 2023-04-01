@@ -4,14 +4,14 @@ function funcsave --description "Save the current definition of all specified fu
     or return
 
     if set -q _flag_help
-        __fish_print_help funcsave
+        __ghoti_print_help funcsave
         return 0
     end
 
     if set -q _flag_directory
         set funcdir $_flag_directory
     else
-        set funcdir $__fish_config_dir/functions
+        set funcdir $__ghoti_config_dir/functions
     end
 
     if not set -q argv[1]
@@ -26,7 +26,7 @@ function funcsave --description "Save the current definition of all specified fu
 
     set -l retval 0
     for funcname in $argv
-        set -l funcpath "$funcdir/$funcname.fish"
+        set -l funcpath "$funcdir/$funcname.ghoti"
         if functions -q -- $funcname
             functions --no-details -- $funcname >$funcpath
             and set -q _flag_quiet || printf (_ "%s: wrote %s\n") funcsave $funcpath

@@ -8,11 +8,11 @@ set profiles (tuned-adm list 2>&1 < /dev/null  | awk  '{print $2}' | tail -n +2 
 set -l actions list available profiles active off profile profile_info recommend verify auto_profile profile_mode
 
 #first argument
-complete -k -c tuned-adm -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
+complete -k -c tuned-adm -n "test (__ghoti_number_of_cmd_args_wo_opts) = 1" \
     -xa "$actions"
 
 # second argument for profile subcommand
-complete -k -c tuned-adm -n "test (__fish_number_of_cmd_args_wo_opts) = 2; and __fish_seen_subcommand_from profile" \
+complete -k -c tuned-adm -n "test (__ghoti_number_of_cmd_args_wo_opts) = 2; and __ghoti_seen_subcommand_from profile" \
     -xa "$profiles"
 
 #options

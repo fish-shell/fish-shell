@@ -1,7 +1,7 @@
 # these don't work
 #complete vim -a - -d 'The file to edit is read from stdin. Commands are read from stderr, which should be a tty'
 
-function __fish_vim_find_tags_path
+function __ghoti_vim_find_tags_path
     set -l max_depth 10
     set -l tags_path tags
 
@@ -18,9 +18,9 @@ function __fish_vim_find_tags_path
 end
 
 # NB: This function is also used by the nvim completions
-function __fish_vim_tags
+function __ghoti_vim_tags
     set -l token (commandline -ct)
-    set -l tags_path (__fish_vim_find_tags_path)
+    set -l tags_path (__ghoti_vim_find_tags_path)
     or return
 
     # To prevent freezes on a huge tags file (e.g., on one from the Linux
@@ -50,7 +50,7 @@ complete -c nvim -o p2 -d 'Open two tab pages' # actually -p[N]
 complete -c vim -s q -r -d 'Start in quickFix mode'
 complete -c vim -s r -r -d 'Use swap files for recovery'
 complete -c vim -s s -r -d 'Source and execute script file'
-complete -c vim -s t -xa '(__fish_vim_tags)' -d 'Set the cursor to tag'
+complete -c vim -s t -xa '(__ghoti_vim_tags)' -d 'Set the cursor to tag'
 complete -c vim -s T -r -d 'Terminal name'
 complete -c vim -s u -r -d 'Use alternative vimrc'
 complete -c vim -s U -r -d 'Use alternative vimrc in GUI mode'

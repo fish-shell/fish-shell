@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``dirh`` prints the current :ref:`directory history <directory-history>`. The current position in the history is highlighted using the color defined in the ``fish_color_history_current`` environment variable.
+``dirh`` prints the current :ref:`directory history <directory-history>`. The current position in the history is highlighted using the color defined in the ``ghoti_color_history_current`` environment variable.
 
 ``dirh`` does not accept any parameters.
 

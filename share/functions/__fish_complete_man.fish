@@ -1,5 +1,5 @@
 
-function __fish_complete_man
+function __ghoti_complete_man
     # Try to guess what section to search in. If we don't know, we
     # use [^)]*, which should match any section.
     set -l section ""
@@ -17,10 +17,10 @@ function __fish_complete_man
         set -e prev[1]
     end
 
-    set -l exclude_fish_commands
-    # Only include fish commands when section is empty or 1
+    set -l exclude_ghoti_commands
+    # Only include ghoti commands when section is empty or 1
     if test -z "$section" -o "$section" = 1
-        set -e exclude_fish_commands
+        set -e exclude_ghoti_commands
     end
 
     set section $section"[^)]*"
@@ -32,7 +32,7 @@ function __fish_complete_man
 
     if test -n "$token"
         # Do the actual search
-        __fish_apropos ^$token 2>/dev/null | awk '
+        __ghoti_apropos ^$token 2>/dev/null | awk '
                 BEGIN { FS="[\t ]- "; OFS="\t"; }
                 # BSD/Darwin
                 /^[^( \t]+(, [^( \t]+)*\('$section'\)/ {
@@ -69,9 +69,9 @@ function __fish_complete_man
                 '
 
         # Fish commands are not given by apropos
-        if not set -ql exclude_fish_commands
-            set -l files $__fish_data_dir/man/man1/*.1
-            string replace -r '.*/([^/]+)\.1$' '$1\t1: fish command' -- $files
+        if not set -ql exclude_ghoti_commands
+            set -l files $__ghoti_data_dir/man/man1/*.1
+            string replace -r '.*/([^/]+)\.1$' '$1\t1: ghoti command' -- $files
         end
     else
         return 1

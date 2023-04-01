@@ -1,6 +1,6 @@
-type --quiet __fish_vim_tags || source (status dirname)/vim.fish
+type --quiet __ghoti_vim_tags || source (status dirname)/vim.ghoti
 
-# Options shared with vim, copied from vim.fish
+# Options shared with vim, copied from vim.ghoti
 complete -c nvim -s c -r -d 'Execute Ex command after the first file has been read'
 complete -c nvim -s S -r -d 'Source file after the first file has been read'
 complete -c nvim -l cmd -r -d 'Execute Ex command before loading any vimrc'
@@ -13,7 +13,7 @@ complete -c nvim -s p -d 'Open tab pages for each file'
 complete -c nvim -o p2 -d 'Open two tab pages' # actually -p[N]
 complete -c nvim -s q -r -d 'Start in quickFix mode'
 complete -c nvim -s r -r -d 'Use swap files for recovery'
-complete -c nvim -s t -xa '(__fish_vim_tags)' -d 'Set the cursor to tag'
+complete -c nvim -s t -xa '(__ghoti_vim_tags)' -d 'Set the cursor to tag'
 complete -c nvim -s u -r -d 'Use alternative vimrc'
 complete -c nvim -s w -r -d 'Record all typed characters'
 complete -c nvim -s W -r -d 'Record all typed characters (overwrite file)'

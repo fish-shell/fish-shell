@@ -14,7 +14,7 @@ sendline, sleep, expect_prompt, expect_str = (
 # Helper to sendline and add to our view of history.
 recorded_history = []
 private_mode_active = False
-fish_path = os.environ.get("fish")
+ghoti_path = os.environ.get("ghoti")
 
 # Send a line and record it in our history array if private mode is not active.
 def sendline_record(s):
@@ -29,18 +29,18 @@ expect_prompt()
 sendline(r" builtin history clear; builtin history save")
 expect_prompt()
 
-# Ensure that fish_private_mode can be changed - see #7589.
+# Ensure that ghoti_private_mode can be changed - see #7589.
 sendline_record(r"echo before_private_mode")
 expect_prompt("before_private_mode")
 sendline(r" builtin history save")
 expect_prompt()
 
 # Enter private mode.
-sendline_record(r"set -g fish_private_mode 1")
+sendline_record(r"set -g ghoti_private_mode 1")
 expect_prompt()
 private_mode_active = True
 
-sendline_record(r"echo check2 $fish_private_mode")
+sendline_record(r"echo check2 $ghoti_private_mode")
 expect_prompt("check2 1")
 
 # Nothing else gets added.
@@ -50,7 +50,7 @@ sendline_record(r"false")
 expect_prompt()
 
 # Leave private mode. The command to leave it is still private.
-sendline_record(r"set -ge fish_private_mode")
+sendline_record(r"set -ge ghoti_private_mode")
 expect_prompt()
 private_mode_active = False
 
@@ -66,5 +66,5 @@ while now - start < 1:
     sleep(now - start)
     now = time.time()
 
-sendline(r" builtin history save ; %s -c 'string join \n -- $history'" % fish_path)
+sendline(r" builtin history save ; %s -c 'string join \n -- $history'" % ghoti_path)
 expect_prompt("\r\n".join(reversed(recorded_history)))

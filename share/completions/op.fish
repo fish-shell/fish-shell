@@ -1,1 +1,1 @@
-op completion fish | source
+op completion ghoti | source

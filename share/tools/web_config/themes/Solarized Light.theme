@@ -2,33 +2,33 @@
 # preferred_background: fdf6e3
 # url: 'http://ethanschoonover.com/solarized'
 
-fish_color_normal normal
-fish_color_command 586e75
-fish_color_quote 839496
-fish_color_redirection 6c71c4
-fish_color_end 268bd2
-fish_color_error dc322f
-fish_color_param 657b83
-fish_color_comment 93a1a1
-fish_color_match --background=brblue
-fish_color_selection white --bold --background=brblack
-fish_color_search_match bryellow --background=white
-fish_color_history_current --bold
-fish_color_operator 00a6b2
-fish_color_escape 00a6b2
-fish_color_cwd green
-fish_color_cwd_root red
-fish_color_valid_path --underline
-fish_color_autosuggestion 93a1a1
-fish_color_user brgreen
-fish_color_host normal
-fish_color_cancel -r
-fish_pager_color_completion green
-fish_pager_color_description B3A06D
-fish_pager_color_prefix cyan --underline
-fish_pager_color_progress brwhite --background=cyan
-fish_pager_color_selected_background --background=white
-fish_color_option 657b83
-fish_color_keyword 586e75
-fish_color_host_remote yellow
-fish_color_status red
+ghoti_color_normal normal
+ghoti_color_command 586e75
+ghoti_color_quote 839496
+ghoti_color_redirection 6c71c4
+ghoti_color_end 268bd2
+ghoti_color_error dc322f
+ghoti_color_param 657b83
+ghoti_color_comment 93a1a1
+ghoti_color_match --background=brblue
+ghoti_color_selection white --bold --background=brblack
+ghoti_color_search_match bryellow --background=white
+ghoti_color_history_current --bold
+ghoti_color_operator 00a6b2
+ghoti_color_escape 00a6b2
+ghoti_color_cwd green
+ghoti_color_cwd_root red
+ghoti_color_valid_path --underline
+ghoti_color_autosuggestion 93a1a1
+ghoti_color_user brgreen
+ghoti_color_host normal
+ghoti_color_cancel -r
+ghoti_pager_color_completion green
+ghoti_pager_color_description B3A06D
+ghoti_pager_color_prefix cyan --underline
+ghoti_pager_color_progress brwhite --background=cyan
+ghoti_pager_color_selected_background --background=white
+ghoti_color_option 657b83
+ghoti_color_keyword 586e75
+ghoti_color_host_remote yellow
+ghoti_color_status red

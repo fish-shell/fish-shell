@@ -1,4 +1,4 @@
-function __fish_complete_command --description 'Complete using all available commands'
+function __ghoti_complete_command --description 'Complete using all available commands'
     set -l ctoken (commandline -ct)
     switch $ctoken
         case '*=*'

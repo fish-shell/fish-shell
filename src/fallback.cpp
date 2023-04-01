@@ -43,7 +43,7 @@ char *tparm_solaris_kludge(char *str, long p1, long p2, long p3, long p4, long p
 }
 #endif
 
-int fish_mkstemp_cloexec(char *name_template) {
+int ghoti_mkstemp_cloexec(char *name_template) {
 #if HAVE_MKOSTEMP
     // null check because mkostemp may be a weak symbol
     if (&mkostemp != nullptr) {
@@ -102,21 +102,21 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 #endif
 
 #if HAVE_GETTEXT
-char *fish_gettext(const char *msgid) { return gettext(msgid); }
+char *ghoti_gettext(const char *msgid) { return gettext(msgid); }
 
-char *fish_bindtextdomain(const char *domainname, const char *dirname) {
+char *ghoti_bindtextdomain(const char *domainname, const char *dirname) {
     return bindtextdomain(domainname, dirname);
 }
 
-char *fish_textdomain(const char *domainname) { return textdomain(domainname); }
+char *ghoti_textdomain(const char *domainname) { return textdomain(domainname); }
 #else
-char *fish_gettext(const char *msgid) { return (char *)msgid; }
-char *fish_bindtextdomain(const char *domainname, const char *dirname) {
+char *ghoti_gettext(const char *msgid) { return (char *)msgid; }
+char *ghoti_bindtextdomain(const char *domainname, const char *dirname) {
     UNUSED(domainname);
     UNUSED(dirname);
     return nullptr;
 }
-char *fish_textdomain(const char *domainname) {
+char *ghoti_textdomain(const char *domainname) {
     UNUSED(domainname);
     return nullptr;
 }
@@ -130,22 +130,22 @@ int killpg(int pgr, int sig) {
 #endif
 
 // Width of ambiguous characters. 1 is typical default.
-int g_fish_ambiguous_width = 1;
+int g_ghoti_ambiguous_width = 1;
 
 // Width of emoji characters.
 // 1 is the typical emoji width in Unicode 8.
-int g_fish_emoji_width = 1;
+int g_ghoti_emoji_width = 1;
 
-static int fish_get_emoji_width(wchar_t c) {
+static int ghoti_get_emoji_width(wchar_t c) {
     (void)c;
-    return g_fish_emoji_width;
+    return g_ghoti_emoji_width;
 }
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is
-// EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
+// EVERYWHERE (https://github.com/ghoti-shell/ghoti-shell/issues/2199)
 #include "widecharwidth/widechar_width.h"
 
-int fish_wcwidth(wchar_t wc) {
+int ghoti_wcwidth(wchar_t wc) {
     // The system version of wcwidth should accurately reflect the ability to represent characters
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.
@@ -179,19 +179,19 @@ int fish_wcwidth(wchar_t wc) {
         case widechar_ambiguous:
         case widechar_private_use:
             // TR11: "All private-use characters are by default classified as Ambiguous".
-            return g_fish_ambiguous_width;
+            return g_ghoti_ambiguous_width;
         case widechar_widened_in_9:
-            return fish_get_emoji_width(wc);
+            return ghoti_get_emoji_width(wc);
         default:
             assert(width > 0 && "Unexpectedly nonpositive width");
             return width;
     }
 }
 
-int fish_wcswidth(const wchar_t *str, size_t n) {
+int ghoti_wcswidth(const wchar_t *str, size_t n) {
     int result = 0;
     for (size_t i = 0; i < n && str[i] != L'\0'; i++) {
-        int w = fish_wcwidth(str[i]);
+        int w = ghoti_wcwidth(str[i]);
         if (w < 0) {
             result = -1;
             break;
@@ -275,7 +275,7 @@ int flock(int fd, int op) {
 #include <locale.h>
 // For platforms without wcstod_l C extension, wrap wcstod after changing the
 // thread-specific locale.
-double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
+double ghoti_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
     locale_t prev_locale = uselocale(loc);
     double ret = std::wcstod(enptr, endptr);
     uselocale(prev_locale);

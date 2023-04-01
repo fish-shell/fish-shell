@@ -30,7 +30,7 @@ os.kill(sp.spawn.pid, signal.SIGINT)
 sp.expect_str("not executed^C")
 expect_prompt(increment=False)
 
-sendline("function cancelhandler --on-event fish_cancel ; echo yay cancelled ; end")
+sendline("function cancelhandler --on-event ghoti_cancel ; echo yay cancelled ; end")
 expect_prompt()
 send("still not executed")
 sleep(timeout)

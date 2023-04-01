@@ -1,4 +1,4 @@
-function __fish_print_VBox_vms
+function __ghoti_print_VBox_vms
     set -l print_names true
     set -l print_uuids true
 

@@ -1,3 +1,3 @@
-function __fish_svn_prompt
-    fish_svn_prompt
+function __ghoti_svn_prompt
+    ghoti_svn_prompt
 end

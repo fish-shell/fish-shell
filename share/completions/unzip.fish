@@ -7,7 +7,7 @@ complete -c unzip -s l -d "list files (short format)"
 complete -c unzip -s t -d "test compressed archive datamodifiers:"
 complete -c unzip -s z -d "display archive comment only"
 complete -c unzip -s T -d "timestamp archive to latest"
-complete -c unzip -s d -d "extract files into dir" -xa '(__fish_complete_directories)'
+complete -c unzip -s d -d "extract files into dir" -xa '(__ghoti_complete_directories)'
 complete -c unzip -s n -d "never overwrite existing files"
 complete -c unzip -s o -d "overwrite files WITHOUT prompting"
 complete -c unzip -s q -d "quiet mode"
@@ -28,15 +28,15 @@ complete -c unzip -s M -d "pipe through `more` pager"
 if unzip -v 2>/dev/null | string match -eq Debian
 
     # the first non-switch argument should be the zipfile
-    complete -c unzip -n "__fish_is_nth_token 1" -k -xa '(__fish_complete_suffix .zip .jar .aar)'
+    complete -c unzip -n "__ghoti_is_nth_token 1" -k -xa '(__ghoti_complete_suffix .zip .jar .aar)'
 
     # Files thereafter are either files to include or exclude from the operation
     set -l zipfile
-    complete -c unzip -n 'not __fish_is_nth_token 1' -xa '(unzip -l (eval set zipfile (__fish_first_token); echo $zipfile) 2>/dev/null | string replace -r --filter ".*:\S+\s+(.*)" "\$1")'
+    complete -c unzip -n 'not __ghoti_is_nth_token 1' -xa '(unzip -l (eval set zipfile (__ghoti_first_token); echo $zipfile) 2>/dev/null | string replace -r --filter ".*:\S+\s+(.*)" "\$1")'
 
 else
 
     # all tokens should be zip files
-    complete -c unzip -k -xa '(__fish_complete_suffix .zip .jar .aar)'
+    complete -c unzip -k -xa '(__ghoti_complete_suffix .zip .jar .aar)'
 
 end

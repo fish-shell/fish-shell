@@ -15,8 +15,8 @@ complete -c $progname -s V -d 'Show the version information'
 complete -c $progname -l signedby -d 'Name and email of person signing the repository'
 complete -c $progname -l privkey -d 'Path to the private RSA key to sign the repository. Defaults to ~/.ssh/id_rsa' -F
 
-complete -c $progname -s a -d 'Register the binary package into the local repository' -k -xa "(__fish_complete_suffix .xbps)"
-complete -c $progname -s c -d 'Remove obsolete entries found in the local repository' -xa "(__fish_complete_directories)"
-complete -c $progname -s r -d 'Remove obsolete and currently unregistered packages from the local repository' -xa "(__fish_complete_directories)"
-complete -c $progname -s s -d 'Initialize a signed repository with your specified RSA key' -xa "(__fish_complete_directories)"
-complete -c $progname -s S -d 'Sign a binary package archive with your specified RSA key' -k -xa "(__fish_complete_suffix .xbps)"
+complete -c $progname -s a -d 'Register the binary package into the local repository' -k -xa "(__ghoti_complete_suffix .xbps)"
+complete -c $progname -s c -d 'Remove obsolete entries found in the local repository' -xa "(__ghoti_complete_directories)"
+complete -c $progname -s r -d 'Remove obsolete and currently unregistered packages from the local repository' -xa "(__ghoti_complete_directories)"
+complete -c $progname -s s -d 'Initialize a signed repository with your specified RSA key' -xa "(__ghoti_complete_directories)"
+complete -c $progname -s S -d 'Sign a binary package archive with your specified RSA key' -k -xa "(__ghoti_complete_suffix .xbps)"

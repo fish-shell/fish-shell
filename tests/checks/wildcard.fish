@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # Ensure that, if variable expansion results in multiple strings
 # and one of them fails a glob, that we don't fail the entire expansion.
@@ -18,13 +18,13 @@ rm -Rf $dir
 
 # Verify that we can do wildcard expansion when we don't have read access to some path components.
 # See #2099
-set -l where ./fish_wildcard_permissions_test/noaccess/yesaccess
+set -l where ./ghoti_wildcard_permissions_test/noaccess/yesaccess
 mkdir -p $where
 chmod 300 (dirname $where) # no read permissions
 mkdir -p $where
-# "__env.fish" here to confirm ordering - #6593.
-touch $where/alpha.txt $where/beta.txt $where/delta.txt $where/__env.fish
+# "__env.ghoti" here to confirm ordering - #6593.
+touch $where/alpha.txt $where/beta.txt $where/delta.txt $where/__env.ghoti
 echo $where/*
-#CHECK: ./fish_wildcard_permissions_test/noaccess/yesaccess/__env.fish ./fish_wildcard_permissions_test/noaccess/yesaccess/alpha.txt ./fish_wildcard_permissions_test/noaccess/yesaccess/beta.txt ./fish_wildcard_permissions_test/noaccess/yesaccess/delta.txt
+#CHECK: ./ghoti_wildcard_permissions_test/noaccess/yesaccess/__env.ghoti ./ghoti_wildcard_permissions_test/noaccess/yesaccess/alpha.txt ./ghoti_wildcard_permissions_test/noaccess/yesaccess/beta.txt ./ghoti_wildcard_permissions_test/noaccess/yesaccess/delta.txt
 chmod 700 (dirname $where) # so we can delete it
-rm -rf ./fish_wildcard_permissions_test
+rm -rf ./ghoti_wildcard_permissions_test

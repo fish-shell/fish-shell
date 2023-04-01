@@ -1,6 +1,6 @@
 #Keybase 5.6.1
 
-function __fish_keybase_line_ends_with
+function __ghoti_keybase_line_ends_with
     set -l line (commandline -poc | string match -v -r '^-')
     for i in (seq -1 -1 -(count $argv))
         if test "$line[$i]" != "$argv[$i]"
@@ -10,8 +10,8 @@ function __fish_keybase_line_ends_with
 end
 
 #variables
-set -l ends __fish_keybase_line_ends_with
-set -l seen __fish_seen_subcommand_from
+set -l ends __ghoti_keybase_line_ends_with
+set -l seen __ghoti_seen_subcommand_from
 #L1
 set -l keybase account blocks bot chat config ctl currency decrypt deprovision device encrypt follow fs git h help id kvstore list-followers list-following log login logout oneshot paperkey passphrase pgp ping prove rekey selfprovision service sign signup sigs status team track unfollow untrack update verify version wallet whoami
 #L2

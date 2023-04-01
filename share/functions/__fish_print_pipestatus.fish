@@ -1,7 +1,7 @@
-function __fish_print_pipestatus --description "Print pipestatus for prompt"
+function __ghoti_print_pipestatus --description "Print pipestatus for prompt"
     set -l last_status
-    if set -q __fish_last_status
-        set last_status $__fish_last_status
+    if set -q __ghoti_last_status
+        set last_status $__ghoti_last_status
     else
         set last_status $argv[-1] # default to $pipestatus[-1]
     end
@@ -23,7 +23,7 @@ function __fish_print_pipestatus --description "Print pipestatus for prompt"
     # SIGPIPE (141 = 128 + 13) is usually not a failure, see #6375.
     if not contains $last_status 0 141
         set -l sep $brace_sep_color$separator$status_color
-        set -l last_pipestatus_string (fish_status_to_signal $argv | string join "$sep")
+        set -l last_pipestatus_string (ghoti_status_to_signal $argv | string join "$sep")
         set -l last_status_string ""
         if test "$last_status" -ne "$argv[-1]"
             set last_status_string " "$status_color$last_status

@@ -1,4 +1,4 @@
-function __fish_print_portage_repository_paths --description 'Print the paths of all configured repositories'
+function __ghoti_print_portage_repository_paths --description 'Print the paths of all configured repositories'
     set -l a /etc/portage/repos.conf
     set -l b
     set -l c /usr/share/portage/config/repos.conf

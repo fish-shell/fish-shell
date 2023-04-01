@@ -208,6 +208,6 @@ void expand_tilde(wcstring &input, const environment_t &vars);
 wcstring replace_home_directory_with_tilde(const wcstring &str, const environment_t &vars);
 
 // Terrible hacks
-bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
+bool ghoti_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv);
 #endif

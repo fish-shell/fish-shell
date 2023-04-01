@@ -1,9 +1,9 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 echo untraced
 # CHECK: untraced
 
-set fish_trace 1
+set ghoti_trace 1
 
 for i in 1 2 3
     echo $i
@@ -65,8 +65,8 @@ end
 # CHECKERR: -> echo inside3
 # CHECKERR: > end if
 
-set -e fish_trace
-# CHECKERR: > set -e fish_trace
+set -e ghoti_trace
+# CHECKERR: > set -e ghoti_trace
 
 echo untraced
 # CHECK: untraced

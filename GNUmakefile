@@ -29,15 +29,15 @@ all:
 
 else
 
-all: .begin build/fish
+all: .begin build/ghoti
 
 .PHONY: .begin
 .begin:
 	@which $(CMAKE) > /dev/null 2> /dev/null || \
 		 (echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
 
-.PHONY: build/fish
-build/fish: build/$(BUILDFILE)
+.PHONY: build/ghoti
+build/ghoti: build/$(BUILDFILE)
 	$(CMAKE) --build build
 
 # Use build as an order-only dependency. This prevents the target from always being outdated
@@ -54,19 +54,19 @@ clean:
 	rm -rf build
 
 .PHONY: test
-test: build/fish
+test: build/ghoti
 	$(CMAKE) --build build --target test
 
 .PHONY: install
-install: build/fish
+install: build/ghoti
 	$(CMAKE) --build build --target install
 
 .PHONY: run
-run: build/fish
-	./build/fish || true
+run: build/ghoti
+	./build/ghoti || true
 
 .PHONY: exec
-exec: build/fish
-	exec ./build/fish
+exec: build/ghoti
+	exec ./build/ghoti
 
 endif # CMake in-tree build check

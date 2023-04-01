@@ -8,7 +8,7 @@ complete -c patch -l backup-if-mismatch -d "Back up files if patch doesn't match
 complete -c patch -l no-backup-if-mismatch -d "Don't back up for mismatching patches"
 complete -c patch -s B -l prefix -x -d "Prepend PREFIX to backup filenames"
 complete -c patch -s c -l context -d "Interpret patch as context diff"
-complete -c patch -s d -l directory -xa '(__fish_complete_directories (commandline -ct))' -d "Change directory to DIR first"
+complete -c patch -s d -l directory -xa '(__ghoti_complete_directories (commandline -ct))' -d "Change directory to DIR first"
 complete -c patch -s D -l ifdef -x -d "Make merged if-then-else output using NAME"
 complete -c patch -l dry-run -d "Don't change files; just print what would happen"
 complete -c patch -s e -l ed -d "Interpret patch as an 'ed' script"
@@ -17,7 +17,7 @@ complete -c patch -s f -l force -d "Like -t, but ignore bad-Prereq patches, assu
 complete -c patch -s F -l fuzz -x -d "Number of LINES for inexact 'fuzzy' matching" -a "(seq 0 9){\tfuzz lines}"
 complete -c patch -s g -l get -x -d "Get files from RCS etc. if positive; ask if negative" -a '(seq -1 1){\t\n}'
 complete -c patch -l help -f -d "Display help"
-complete -c patch -s i -l input -x -d "Read patch from FILE instead of stdin" -k -a "( __fish_complete_suffix .patch .diff)"
+complete -c patch -s i -l input -x -d "Read patch from FILE instead of stdin" -k -a "( __ghoti_complete_suffix .patch .diff)"
 complete -c patch -s l -l ignore-whitespace -d "Ignore whitespace changes between patch & input"
 complete -c patch -s n -l normal -d "Interpret patch as normal diff"
 complete -c patch -s N -l forward -d "Ignore patches that seem reversed or already applied"

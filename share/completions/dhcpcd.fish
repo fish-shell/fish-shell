@@ -1,7 +1,7 @@
 # dhcpcd is a DHCP client
 # See: https://roy.marples.name/projects/dhcpcd/index
 
-complete -c dhcpcd -f -a "(__fish_print_interfaces)"
+complete -c dhcpcd -f -a "(__ghoti_print_interfaces)"
 
 complete -c dhcpcd -l background -s b -d 'Background immediately'
 complete -c dhcpcd -l script -s c -r -F -d 'Use given script instead of default hook'

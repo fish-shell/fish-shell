@@ -70,7 +70,7 @@ pub struct JobId(NonZeroU32);
 
 /// `JobGroup` is conceptually similar to the idea of a process group. It represents data which
 /// is shared among all of the "subjobs" that may be spawned by a single job.
-/// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
+/// For example, two ghoti functions in a pipeline may themselves spawn multiple jobs, but all will
 /// share the same job group.
 /// There is also a notion of a "internal" job group. Internal groups are used when executing a
 /// foreground function or block with no pipeline. These are not jobs as the user understands them -
@@ -176,7 +176,7 @@ impl JobGroup {
 
     /// Set the pgid for this job group, latching it to this value. This should only be called if
     /// job control is active for this group. The pgid should not already have been set, and should
-    /// be different from fish's pgid. Of course this does not keep the pgid alive by itself.
+    /// be different from ghoti's pgid. Of course this does not keep the pgid alive by itself.
     ///
     /// Note we need not be concerned about thread safety. job_groups are intended to be shared
     /// across threads, but any pgid should always have been set beforehand, since it's set
@@ -195,7 +195,7 @@ impl JobGroup {
         self.pgid = Some(pgid);
     }
 
-    /// Returns the value of [`JobGroup::pgid`]. This is never fish's own pgid!
+    /// Returns the value of [`JobGroup::pgid`]. This is never ghoti's own pgid!
     pub fn get_pgid(&self) -> Option<libc::pid_t> {
         self.pgid
     }

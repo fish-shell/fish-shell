@@ -1,6 +1,6 @@
-function __fish_complete_ftp -d 'Complete ftp, pftp' --argument-names ftp
+function __ghoti_complete_ftp -d 'Complete ftp, pftp' --argument-names ftp
     # Common across all ftp implementations
-    complete -c $ftp -xa "(__fish_print_hostnames)" -d Hostname
+    complete -c $ftp -xa "(__ghoti_print_hostnames)" -d Hostname
     complete -c $ftp -s 4 -d 'Use IPv4 only'
     complete -c $ftp -s 6 -d 'Use IPv6 only'
     complete -c $ftp -s A -d 'Use active mode for data transfers'
@@ -18,7 +18,7 @@ function __fish_complete_ftp -d 'Complete ftp, pftp' --argument-names ftp
             complete -c $ftp -s a -d "Anonymous login"
             complete -c $ftp -s P -d 'Set port number' -x
             complete -c $ftp -s r -d 'Time between retry attempts' -x
-            complete -c $ftp -s s -d 'Local address to bind to' -xa "(__fish_print_addresses)"
+            complete -c $ftp -s s -d 'Local address to bind to' -xa "(__ghoti_print_addresses)"
     end
 
     switch (uname -s)

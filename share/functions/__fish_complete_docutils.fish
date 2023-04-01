@@ -1,5 +1,5 @@
-function __fish_complete_docutils -d "Completions for Docutils common options" -a cmd
-    complete -x -c $cmd -k -a "(__fish_complete_suffix .rst .txt)"
+function __ghoti_complete_docutils -d "Completions for Docutils common options" -a cmd
+    complete -x -c $cmd -k -a "(__ghoti_complete_suffix .rst .txt)"
 
     # General Docutils Options
     complete -c $cmd -l title -d "Specify the docs title"
@@ -65,7 +65,7 @@ function __fish_complete_docutils -d "Completions for Docutils common options" -
     complete -c $cmd -l character-level-inline-markup -d "Inline markup at character level"
 end
 
-function __fish_complete_docutils_standalone_reader -d "Completions for Docutils standalone reader options" -a cmd
+function __ghoti_complete_docutils_standalone_reader -d "Completions for Docutils standalone reader options" -a cmd
     # Standalone Reader
     complete -c $cmd -l no-doc-title -d "Disable the docs title"
     complete -c $cmd -l no-doc-info -d "Disable the docs info"
@@ -73,7 +73,7 @@ function __fish_complete_docutils_standalone_reader -d "Completions for Docutils
     complete -c $cmd -l no-section-subtitles -d "Disable section subtitles"
 end
 
-function __fish_complete_docutils_html -d "Completions for Docutils HTML options" -a cmd
+function __ghoti_complete_docutils_html -d "Completions for Docutils HTML options" -a cmd
     # HTML-Specific Options
     complete -c $cmd -l template -d "Specify the template"
     complete -c $cmd -l stylesheet -d "List of stylesheet URLs"
@@ -111,7 +111,7 @@ function __fish_complete_docutils_html -d "Completions for Docutils HTML options
     complete -c $cmd -l cloak-email-addresses -d "Obfuscate email addresses"
 end
 
-function __fish_complete_docutils_latex -d "Completions for Docutils LaTeX options" -a cmd
+function __ghoti_complete_docutils_latex -d "Completions for Docutils LaTeX options" -a cmd
     # LaTeX-Specific Options
     complete -c $cmd -l documentclass -d "Specify LaTeX documentclass"
     complete -c $cmd -l documentoptions -d "Specify docs options"

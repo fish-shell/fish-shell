@@ -1,6 +1,6 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
-# Check that we correctly detect an overflow of fish's function stack.
+# Check that we correctly detect an overflow of ghoti's function stack.
 # This is dependent on the internal max stack depth of course.
 
 function left

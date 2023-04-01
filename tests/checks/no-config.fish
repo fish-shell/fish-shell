@@ -1,4 +1,4 @@
-#RUN: %fish --no-config %s
+#RUN: %ghoti --no-config %s
 
 functions | string match help
 # CHECK: help
@@ -11,6 +11,6 @@ set -S foo
 # CHECK: $foo: set in global scope, unexported, with 1 elements
 # CHECK: $foo[1]: |bar|
 
-set -S fish_function_path fish_complete_path
-# CHECK: $fish_function_path: set in global scope, unexported, with 1 elements
-# CHECK: $fish_function_path[1]: |{{.*}}|
+set -S ghoti_function_path ghoti_complete_path
+# CHECK: $ghoti_function_path: set in global scope, unexported, with 1 elements
+# CHECK: $ghoti_function_path[1]: |{{.*}}|

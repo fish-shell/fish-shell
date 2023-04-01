@@ -26,14 +26,14 @@ static void die(const char *format, ...) {
     exit(EXIT_FAILURE);
 }
 
-static void launch_fish_with_applescript(NSString *fish_binary_path)
+static void launch_ghoti_with_applescript(NSString *ghoti_binary_path)
 {
     // load the script from a resource by fetching its URL from within our bundle
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"launch_fish" ofType:@"scpt"];
-    if (! path) die("Couldn't get path to launch_fish.scpt");
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"launch_ghoti" ofType:@"scpt"];
+    if (! path) die("Couldn't get path to launch_ghoti.scpt");
 
     NSURL *url = [NSURL fileURLWithPath:path isDirectory:NO];
-    if (! url) die("Couldn't get URL to launch_fish.scpt");
+    if (! url) die("Couldn't get URL to launch_ghoti.scpt");
 
     NSDictionary *errors = nil;
     NSAppleScript *appleScript = [[NSAppleScript alloc] initWithContentsOfURL:url error:&errors];
@@ -41,7 +41,7 @@ static void launch_fish_with_applescript(NSString *fish_binary_path)
 
     // create the first parameter
     NSAppleEventDescriptor *firstParameter =
-            [NSAppleEventDescriptor descriptorWithString:fish_binary_path];
+            [NSAppleEventDescriptor descriptorWithString:ghoti_binary_path];
 
     // create and populate the list of parameters (in our case just one)
     NSAppleEventDescriptor *parameters = [NSAppleEventDescriptor listDescriptor];
@@ -59,7 +59,7 @@ static void launch_fish_with_applescript(NSString *fish_binary_path)
     // this is used for the script statement: "on show_message(user_message)"
     // Note that the routine name must be in lower case.
     NSAppleEventDescriptor *handler = [NSAppleEventDescriptor descriptorWithString:
-            [@"launch_fish" lowercaseString]];
+            [@"launch_ghoti" lowercaseString]];
 
     // create the event for an AppleScript subroutine,
     // set the method name and the list of parameters
@@ -86,13 +86,13 @@ static void launch_fish_with_applescript(NSString *fish_binary_path)
 int main(void) {
 
     @autoreleasepool {
-        /* Get the fish executable. Make sure it's absolute. */
-        NSURL *fish_executable = [[NSBundle mainBundle] URLForResource:@"fish" withExtension:@""
+        /* Get the ghoti executable. Make sure it's absolute. */
+        NSURL *ghoti_executable = [[NSBundle mainBundle] URLForResource:@"ghoti" withExtension:@""
                                                           subdirectory:@"base/usr/local/bin"];
-        if (! fish_executable)
-            die("Could not find fish executable in bundle");
+        if (! ghoti_executable)
+            die("Could not find ghoti executable in bundle");
 
-        launch_fish_with_applescript([fish_executable path]);
+        launch_ghoti_with_applescript([ghoti_executable path]);
     }
 
     /* If we succeeded, it will clean itself up */

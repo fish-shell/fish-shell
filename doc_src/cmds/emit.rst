@@ -37,4 +37,4 @@ The following code first defines an event handler for the generic event named 't
 Notes
 -----
 
-Note that events are only sent to the current fish process as there is no way to send events from one fish process to another.
+Note that events are only sent to the current ghoti process as there is no way to send events from one ghoti process to another.

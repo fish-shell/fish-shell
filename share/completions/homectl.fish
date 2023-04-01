@@ -12,20 +12,20 @@ end
 
 # Commands
 complete -c homectl -f
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a list -d 'List home areas'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a activate -d 'Activate a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a deactivate -d 'Deactivate a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a inspect -d 'Inspect a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a authenticate -d 'Authenticate a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a create -d 'Create a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a remove -d 'Remove a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a update -d 'Update a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a passwd -d 'Change password of a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a resize -d 'Resize a home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a lock -d 'Temporarily lock an active home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a unlock -d 'Unlock a temporarily locked home area'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a lock-all -d 'Lock all suitable home areas'
-complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a with -d 'Run shell or command with access to a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a list -d 'List home areas'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a activate -d 'Activate a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a deactivate -d 'Deactivate a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a inspect -d 'Inspect a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a authenticate -d 'Authenticate a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a create -d 'Create a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a remove -d 'Remove a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a update -d 'Update a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a passwd -d 'Change password of a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a resize -d 'Resize a home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a lock -d 'Temporarily lock an active home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a unlock -d 'Unlock a temporarily locked home area'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a lock-all -d 'Lock all suitable home areas'
+complete -c homectl -n "not __ghoti_seen_subcommand_from $commands" -a with -d 'Run shell or command with access to a home area'
 complete -c homectl -n "__homectl_subcommand_is $commands_need_user" -xa '(__homectl_users)'
 
 # Options
@@ -44,7 +44,7 @@ complete -c homectl -s E -d 'Equals -j --export-format (twice to minimal)'
 complete -c homectl -o EE -d 'Equals -j --export-format=minimal'
 
 # User Record Properties
-set -l condition '__fish_seen_subcommand_from create update'
+set -l condition '__ghoti_seen_subcommand_from create update'
 
 # General User Record Properties
 complete -c homectl -n $condition -s c -l real-name -d 'Real name for user'

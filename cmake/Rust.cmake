@@ -9,7 +9,7 @@ else()
     FetchContent_Declare(
         Corrosion
         GIT_REPOSITORY https://github.com/mqudsi/corrosion
-        GIT_TAG fish
+        GIT_TAG ghoti
     )
 
     FetchContent_MakeAvailable(Corrosion)
@@ -21,9 +21,9 @@ else()
     )
 endif()
 
-set(fish_rust_target "fish-rust")
+set(ghoti_rust_target "ghoti-rust")
 
-set(fish_autocxx_gen_dir "${CMAKE_BINARY_DIR}/fish-autocxx-gen/")
+set(ghoti_autocxx_gen_dir "${CMAKE_BINARY_DIR}/ghoti-autocxx-gen/")
 
 if(NOT DEFINED CARGO_FLAGS)
     # Corrosion doesn't like an empty string as FLAGS. This is basically a no-op alternative.
@@ -35,8 +35,8 @@ if(DEFINED ASAN)
 endif()
 
 corrosion_import_crate(
-    MANIFEST_PATH "${CMAKE_SOURCE_DIR}/fish-rust/Cargo.toml"
-    FEATURES "fish-ffi-tests"
+    MANIFEST_PATH "${CMAKE_SOURCE_DIR}/ghoti-rust/Cargo.toml"
+    FEATURES "ghoti-ffi-tests"
     FLAGS "${CARGO_FLAGS}"
 )
 
@@ -46,24 +46,24 @@ if (Rust_CARGO_TARGET)
     set(rust_target_dir "${CMAKE_BINARY_DIR}/cargo/build/${_CORROSION_RUST_CARGO_TARGET}")
 else()
     set(rust_target_dir "${CMAKE_BINARY_DIR}/cargo/build/${_CORROSION_RUST_CARGO_HOST_TARGET}")
-    corrosion_set_hostbuild(${fish_rust_target})
+    corrosion_set_hostbuild(${ghoti_rust_target})
 endif()
 
 # Tell Cargo where our build directory is so it can find config.h.
-corrosion_set_env_vars(${fish_rust_target} "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}" "FISH_AUTOCXX_GEN_DIR=${fish_autocxx_gen_dir}" "FISH_RUST_TARGET_DIR=${rust_target_dir}")
+corrosion_set_env_vars(${ghoti_rust_target} "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}" "FISH_AUTOCXX_GEN_DIR=${ghoti_autocxx_gen_dir}" "FISH_RUST_TARGET_DIR=${rust_target_dir}")
 
-target_include_directories(${fish_rust_target} INTERFACE
-    "${rust_target_dir}/cxxbridge/${fish_rust_target}/src/"
-    "${fish_autocxx_gen_dir}/include/"
+target_include_directories(${ghoti_rust_target} INTERFACE
+    "${rust_target_dir}/cxxbridge/${ghoti_rust_target}/src/"
+    "${ghoti_autocxx_gen_dir}/include/"
 )
 
-# Tell fish what extra C++ files to compile.
+# Tell ghoti what extra C++ files to compile.
 define_property(
-    TARGET PROPERTY fish_extra_cpp_files
-    BRIEF_DOCS "Extra C++ files to compile for fish."
-    FULL_DOCS "Extra C++ files to compile for fish."
+    TARGET PROPERTY ghoti_extra_cpp_files
+    BRIEF_DOCS "Extra C++ files to compile for ghoti."
+    FULL_DOCS "Extra C++ files to compile for ghoti."
 )
 
-set_property(TARGET ${fish_rust_target} PROPERTY fish_extra_cpp_files
-    "${fish_autocxx_gen_dir}/cxx/gen0.cxx"
+set_property(TARGET ${ghoti_rust_target} PROPERTY ghoti_extra_cpp_files
+    "${ghoti_autocxx_gen_dir}/cxx/gen0.cxx"
 )

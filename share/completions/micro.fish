@@ -1,5 +1,5 @@
 complete -c micro -o clean -d 'Cleans the configuration directory'
-complete -c micro -o config-dir -xa '(__fish_complete_directories)' -d 'Custom location for the configuration directory'
+complete -c micro -o config-dir -xa '(__ghoti_complete_directories)' -d 'Custom location for the configuration directory'
 complete -c micro -o options -d 'Show all option help'
 complete -c micro -o debug -d 'Enable debug mode'
 complete -c micro -o version -d 'Show version information'

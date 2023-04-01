@@ -17,7 +17,7 @@ function funced --description 'Edit function definition'
     or return
 
     if set -q _flag_help
-        __fish_print_help funced
+        __ghoti_print_help funced
         return 0
     end
 
@@ -31,7 +31,7 @@ function funced --description 'Edit function definition'
     # Check VISUAL first since theoretically EDITOR could be ed.
     set -l editor
     if set -q _flag_interactive
-        set editor fish
+        set editor ghoti
     else if set -q _flag_editor
         set editor $_flag_editor
     else if set -q VISUAL
@@ -39,7 +39,7 @@ function funced --description 'Edit function definition'
     else if set -q EDITOR
         set editor $EDITOR
     else
-        set editor fish
+        set editor ghoti
     end
 
     set -l init
@@ -55,20 +55,20 @@ function funced --description 'Edit function definition'
     echo $editor | read -ta editor_cmd
     if not type -q -f "$editor_cmd[1]"
         echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found") >&2
-        set editor fish
+        set editor ghoti
     end
 
-    if test "$editor" = fish
+    if test "$editor" = ghoti
         if functions -q -- $funcname
-            command -q fish_indent
-            and functions --no-details -- $funcname | fish_indent --no-indent | read -z init
+            command -q ghoti_indent
+            and functions --no-details -- $funcname | ghoti_indent --no-indent | read -z init
             or functions --no-details -- $funcname | read -z init
         end
 
         set -l prompt 'printf "%s%s%s> " (set_color green) '$funcname' (set_color normal)'
         if read -p $prompt -c "$init" --shell cmd
-            command -q fish_indent
-            and echo -n $cmd | fish_indent | read -lz cmd
+            command -q ghoti_indent
+            and echo -n $cmd | ghoti_indent | read -lz cmd
             or echo -n $cmd | read -lz cmd
             eval "$cmd"
         end
@@ -79,13 +79,13 @@ function funced --description 'Edit function definition'
     end
 
     # OS X (macOS) `mktemp` is rather restricted - no suffix, no way to automatically use TMPDIR.
-    # Create a directory so we can use a ".fish" suffix for the file - makes editors pick up that
-    # it's a fish file.
+    # Create a directory so we can use a ".ghoti" suffix for the file - makes editors pick up that
+    # it's a ghoti file.
     set -q TMPDIR
     or set -l TMPDIR /tmp
-    set -l tmpdir (mktemp -d $TMPDIR/fish.XXXXXX)
+    set -l tmpdir (mktemp -d $TMPDIR/ghoti.XXXXXX)
     or return 1
-    set -l tmpname $tmpdir/$funcname.fish
+    set -l tmpname $tmpdir/$funcname.ghoti
 
     set -l writepath
 
@@ -136,7 +136,7 @@ function funced --description 'Edit function definition'
                 echo (_ "Cancelled function editing")
             else if test -n "$writepath"
                 if not set -q _flag_save
-                    echo (_ "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed.")
+                    echo (_ "Warning: the file containing this function has not been saved. Changes may be lost when ghoti is closed.")
                     set -l prompt (printf (_ 'Save function to %s? [Y/n]') "$writepath")
                     read --prompt-str "$prompt " response
                     if test -z "$response"
@@ -157,14 +157,14 @@ function funced --description 'Edit function definition'
                         source "$writepath"
                     else
                         echo (_ "Saving to original location failed; saving to user configuration instead.")
-                        set writepath $__fish_config_dir/functions/(path basename "$writepath")
+                        set writepath $__ghoti_config_dir/functions/(path basename "$writepath")
                         if cp $tmpname "$writepath"
                             printf (_ "Function saved to %s") "$writepath"
                             echo
                             # read it back again - this ensures that the output of `functions --details` is correct
                             source "$writepath"
                         else
-                            echo (_ "Saving to user configuration failed. Changes may be lost when fish is closed.")
+                            echo (_ "Saving to user configuration failed. Changes may be lost when ghoti is closed.")
                         end
                     end
                 end

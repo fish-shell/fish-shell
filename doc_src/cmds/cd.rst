@@ -24,7 +24,7 @@ Fish will also try to change directory if given a command that looks like a dire
 Fish also ships a wrapper function around the builtin **cd** that understands ``cd -`` as changing to the previous directory.
 See also :doc:`prevd <prevd>`.
 This wrapper function maintains a history of the 25 most recently visited directories in the ``$dirprev`` and ``$dirnext`` global variables.
-If you make those universal variables your **cd** history is shared among all fish instances.
+If you make those universal variables your **cd** history is shared among all ghoti instances.
 
 As a special case, ``cd .`` is equivalent to ``cd $PWD``, which is useful in cases where a mountpoint has been recycled or a directory has been removed and recreated.
 
@@ -38,8 +38,8 @@ Examples
     cd
     # changes the working directory to your home directory.
     
-    cd /usr/src/fish-shell
-    # changes the working directory to /usr/src/fish-shell
+    cd /usr/src/ghoti-shell
+    # changes the working directory to /usr/src/ghoti-shell
 
 See Also
 --------

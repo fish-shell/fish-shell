@@ -1,8 +1,8 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 #REQUIRES: command -v tmux
 
-set -g isolated_tmux_fish_extra_args -C '
-    function fish_prompt; printf "prompt $status_generation> <$prompt_var> "; end
+set -g isolated_tmux_ghoti_extra_args -C '
+    function ghoti_prompt; printf "prompt $status_generation> <$prompt_var> "; end
     function on_prompt_var --on-variable prompt_var
         commandline -f repaint
     end

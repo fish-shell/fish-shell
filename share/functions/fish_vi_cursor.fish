@@ -1,4 +1,4 @@
-function fish_vi_cursor -d 'Set cursor shape for different vi modes'
+function ghoti_vi_cursor -d 'Set cursor shape for different vi modes'
     # If we're not interactive, there is effectively no bind mode.
     if not status is-interactive
         return
@@ -11,7 +11,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     end
 
     # If this variable is set, skip all checks
-    if not set -q fish_vi_force_cursor
+    if not set -q ghoti_vi_force_cursor
 
         # Emacs Makes All Cursors Suck
         if set -q INSIDE_EMACS
@@ -61,29 +61,29 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     set -q terminal[1]
     or set terminal auto
 
-    set -l function __fish_cursor_xterm
+    set -l function __ghoti_cursor_xterm
 
-    set -q fish_cursor_unknown
-    or set -g fish_cursor_unknown block
+    set -q ghoti_cursor_unknown
+    or set -g ghoti_cursor_unknown block
 
     echo "
-          function fish_vi_cursor_handle --on-variable fish_bind_mode --on-event fish_postexec --on-event fish_focus_in
-              set -l varname fish_cursor_\$fish_bind_mode
+          function ghoti_vi_cursor_handle --on-variable ghoti_bind_mode --on-event ghoti_postexec --on-event ghoti_focus_in
+              set -l varname ghoti_cursor_\$ghoti_bind_mode
               if not set -q \$varname
-                set varname fish_cursor_unknown
+                set varname ghoti_cursor_unknown
               end
               $function \$\$varname
           end
          " | source
 
     echo "
-          function fish_vi_cursor_handle_preexec --on-event fish_preexec
-              set -l varname fish_cursor_external
+          function ghoti_vi_cursor_handle_preexec --on-event ghoti_preexec
+              set -l varname ghoti_cursor_external
               if not set -q \$varname
-                set varname fish_cursor_default
+                set varname ghoti_cursor_default
               end
               if not set -q \$varname
-                set varname fish_cursor_unknown
+                set varname ghoti_cursor_unknown
               end
               $function \$\$varname
           end

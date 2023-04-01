@@ -10,23 +10,23 @@
 #include <cwchar>  // IWYU pragma: keep
 
 /// The column width of ambiguous East Asian characters.
-extern int g_fish_ambiguous_width;
+extern int g_ghoti_ambiguous_width;
 
 /// The column width of emoji characters. This must be configurable because the value changed
 /// between Unicode 8 and Unicode 9, wcwidth() is emoji-ignorant, and terminal emulators do
 /// different things. See issues like #4539 and https://github.com/neovim/neovim/issues/4976 for how
 /// painful this is. A value of 0 means to use the guessed value.
-extern int g_fish_emoji_width;
+extern int g_ghoti_emoji_width;
 
-/// fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if
+/// ghoti's internal versions of wcwidth and wcswidth, which can use an internal implementation if
 /// the system one is busted.
-int fish_wcwidth(wchar_t wc);
-int fish_wcswidth(const wchar_t *str, size_t n);
+int ghoti_wcwidth(wchar_t wc);
+int ghoti_wcswidth(const wchar_t *str, size_t n);
 
 // Replacement for mkostemp(str, O_CLOEXEC)
 // This uses mkostemp if available,
 // otherwise it uses mkstemp followed by fcntl
-int fish_mkstemp_cloexec(char *);
+int ghoti_mkstemp_cloexec(char *);
 
 /// thread_local support.
 #if HAVE_CX11_THREAD_LOCAL
@@ -65,11 +65,11 @@ struct winsize {
 
 #if defined(TPARM_SOLARIS_KLUDGE)
 /// Solaris tparm has a set fixed of parameters in its curses implementation, work around this here.
-#define fish_tparm tparm_solaris_kludge
+#define ghoti_tparm tparm_solaris_kludge
 char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, long p4 = 0,
                            long p5 = 0, long p6 = 0, long p7 = 0, long p8 = 0, long p9 = 0);
 #else
-#define fish_tparm tparm
+#define ghoti_tparm tparm
 #endif
 
 /// These functions are missing from Solaris 10, and only accessible from
@@ -102,13 +102,13 @@ int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 // build errors.
 
 /// Cover for gettext().
-char *fish_gettext(const char *msgid);
+char *ghoti_gettext(const char *msgid);
 
 /// Cover for bindtextdomain().
-char *fish_bindtextdomain(const char *domainname, const char *dirname);
+char *ghoti_bindtextdomain(const char *domainname, const char *dirname);
 
 /// Cover for textdomain().
-char *fish_textdomain(const char *domainname);
+char *ghoti_textdomain(const char *domainname);
 
 #ifndef HAVE_KILLPG
 /// Send specified signal to specified process group.
@@ -138,10 +138,10 @@ int flock(int fd, int op);
 // Solution: namespace our implementation to make sure there is no symbol
 // duplication.
 #undef wcstod_l
-namespace fish_compat {
+namespace ghoti_compat {
 double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
 }
-#define wcstod_l(x, y, z) fish_compat::wcstod_l(x, y, z)
+#define wcstod_l(x, y, z) ghoti_compat::wcstod_l(x, y, z)
 #endif
 
 #endif  // FISH_FALLBACK_H

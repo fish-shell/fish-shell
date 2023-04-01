@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <installer-gui-script minSpecVersion="1">
-    <title>fish shell</title>
+    <title>ghoti shell</title>
     <welcome file="welcome.html" mime-type="text/html"/>
     <background file="terminal_logo.png" scaling="proportional" alignment="bottomleft"/>
-    <pkg-ref id="com.ridiculousfish.fish-shell-pkg"/>
+    <pkg-ref id="com.ridiculousghoti.ghoti-shell-pkg"/>
     <options hostArchitectures="arm64,x86_64" rootVolumeOnly="true"/>
     <options customize="never" require-scripts="true"/>
     <choices-outline>
         <line choice="default">
-            <line choice="com.ridiculousfish.fish-shell-pkg"/>
+            <line choice="com.ridiculousghoti.ghoti-shell-pkg"/>
         </line>
     </choices-outline>
     <choice id="default"/>
-    <choice id="com.ridiculousfish.fish-shell-pkg" visible="false">
-        <pkg-ref id="com.ridiculousfish.fish-shell-pkg"/>
+    <choice id="com.ridiculousghoti.ghoti-shell-pkg" visible="false">
+        <pkg-ref id="com.ridiculousghoti.ghoti-shell-pkg"/>
     </choice>
-    <pkg-ref id="com.ridiculousfish.fish-shell-pkg" version="0" onConclusion="none">fish.pkg</pkg-ref>
+    <pkg-ref id="com.ridiculousghoti.ghoti-shell-pkg" version="0" onConclusion="none">ghoti.pkg</pkg-ref>
 </installer-gui-script>

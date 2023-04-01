@@ -1,4 +1,4 @@
-function __fish_ninja
+function __ghoti_ninja
     set -l saved_args $argv
     set -l dir .
     if argparse -i C/dir= -- (commandline -opc)
@@ -7,17 +7,17 @@ function __fish_ninja
     end
 end
 
-function __fish_print_ninja_tools
-    __fish_ninja -t list | string match -v '*:' | string replace -r '\s+(\w+).*' '$1'
+function __ghoti_print_ninja_tools
+    __ghoti_ninja -t list | string match -v '*:' | string replace -r '\s+(\w+).*' '$1'
 end
 
-function __fish_print_ninja_targets
-    __fish_ninja -t targets 2>/dev/null | string replace -r ':.*' ''
+function __ghoti_print_ninja_targets
+    __ghoti_ninja -t targets 2>/dev/null | string replace -r ':.*' ''
 end
-complete -c ninja -f -a '(__fish_print_ninja_targets)' -d target
-complete -x -c ninja -s t -x -a "(__fish_print_ninja_tools)" -d subtool
-complete -x -c ninja -s C -x -a "(__fish_complete_directories (commandline -ct))" -d "change to specified directory"
-complete -c ninja -s f -k -x -a "(__fish_complete_suffix .ninja)" -d "specify build file [default=build.ninja]"
+complete -c ninja -f -a '(__ghoti_print_ninja_targets)' -d target
+complete -x -c ninja -s t -x -a "(__ghoti_print_ninja_tools)" -d subtool
+complete -x -c ninja -s C -x -a "(__ghoti_complete_directories (commandline -ct))" -d "change to specified directory"
+complete -c ninja -s f -k -x -a "(__ghoti_complete_suffix .ninja)" -d "specify build file [default=build.ninja]"
 complete -f -c ninja -s n -d "dry run"
 complete -f -c ninja -s v -d "show all command lines while building"
 complete -f -c ninja -s j -d "number of jobs to run in parallel [default derived from CPUs]"

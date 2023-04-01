@@ -60,8 +60,8 @@ include_cpp! {
 
     generate!("parse_util_unescape_wildcards")
 
-    generate!("fish_wcwidth")
-    generate!("fish_wcswidth")
+    generate!("ghoti_wcwidth")
+    generate!("ghoti_wcswidth")
 
     generate!("wildcard_match")
     generate!("wgettext_ptr")

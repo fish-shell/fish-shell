@@ -1,5 +1,5 @@
 // Prototypes for functions for storing and retrieving function information. These functions also
-// take care of autoloading functions in the $fish_function_path. Actual function evaluation is
+// take care of autoloading functions in the $ghoti_function_path. Actual function evaluation is
 // taken care of by the parser and to some degree the builtin handling library.
 #ifndef FISH_FUNCTION_H
 #define FISH_FUNCTION_H
@@ -106,7 +106,7 @@ wcstring_list_t function_get_names(bool get_hidden);
 /// is successful.
 bool function_copy(const wcstring &name, const wcstring &new_name, parser_t &parser);
 
-/// Observes that fish_function_path has changed.
+/// Observes that ghoti_function_path has changed.
 void function_invalidate_path();
 
 #endif

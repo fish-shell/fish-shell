@@ -42,61 +42,61 @@
 static const wchar_t *get_highlight_var_name(highlight_role_t role) {
     switch (role) {
         case highlight_role_t::normal:
-            return L"fish_color_normal";
+            return L"ghoti_color_normal";
         case highlight_role_t::error:
-            return L"fish_color_error";
+            return L"ghoti_color_error";
         case highlight_role_t::command:
-            return L"fish_color_command";
+            return L"ghoti_color_command";
         case highlight_role_t::keyword:
-            return L"fish_color_keyword";
+            return L"ghoti_color_keyword";
         case highlight_role_t::statement_terminator:
-            return L"fish_color_end";
+            return L"ghoti_color_end";
         case highlight_role_t::param:
-            return L"fish_color_param";
+            return L"ghoti_color_param";
         case highlight_role_t::option:
-            return L"fish_color_option";
+            return L"ghoti_color_option";
         case highlight_role_t::comment:
-            return L"fish_color_comment";
+            return L"ghoti_color_comment";
         case highlight_role_t::search_match:
-            return L"fish_color_search_match";
+            return L"ghoti_color_search_match";
         case highlight_role_t::operat:
-            return L"fish_color_operator";
+            return L"ghoti_color_operator";
         case highlight_role_t::escape:
-            return L"fish_color_escape";
+            return L"ghoti_color_escape";
         case highlight_role_t::quote:
-            return L"fish_color_quote";
+            return L"ghoti_color_quote";
         case highlight_role_t::redirection:
-            return L"fish_color_redirection";
+            return L"ghoti_color_redirection";
         case highlight_role_t::autosuggestion:
-            return L"fish_color_autosuggestion";
+            return L"ghoti_color_autosuggestion";
         case highlight_role_t::selection:
-            return L"fish_color_selection";
+            return L"ghoti_color_selection";
         case highlight_role_t::pager_progress:
-            return L"fish_pager_color_progress";
+            return L"ghoti_pager_color_progress";
         case highlight_role_t::pager_background:
-            return L"fish_pager_color_background";
+            return L"ghoti_pager_color_background";
         case highlight_role_t::pager_prefix:
-            return L"fish_pager_color_prefix";
+            return L"ghoti_pager_color_prefix";
         case highlight_role_t::pager_completion:
-            return L"fish_pager_color_completion";
+            return L"ghoti_pager_color_completion";
         case highlight_role_t::pager_description:
-            return L"fish_pager_color_description";
+            return L"ghoti_pager_color_description";
         case highlight_role_t::pager_secondary_background:
-            return L"fish_pager_color_secondary_background";
+            return L"ghoti_pager_color_secondary_background";
         case highlight_role_t::pager_secondary_prefix:
-            return L"fish_pager_color_secondary_prefix";
+            return L"ghoti_pager_color_secondary_prefix";
         case highlight_role_t::pager_secondary_completion:
-            return L"fish_pager_color_secondary_completion";
+            return L"ghoti_pager_color_secondary_completion";
         case highlight_role_t::pager_secondary_description:
-            return L"fish_pager_color_secondary_description";
+            return L"ghoti_pager_color_secondary_description";
         case highlight_role_t::pager_selected_background:
-            return L"fish_pager_color_selected_background";
+            return L"ghoti_pager_color_selected_background";
         case highlight_role_t::pager_selected_prefix:
-            return L"fish_pager_color_selected_prefix";
+            return L"ghoti_pager_color_selected_prefix";
         case highlight_role_t::pager_selected_completion:
-            return L"fish_pager_color_selected_completion";
+            return L"ghoti_pager_color_selected_completion";
         case highlight_role_t::pager_selected_description:
-            return L"fish_pager_color_selected_description";
+            return L"ghoti_pager_color_selected_description";
     }
     DIE("invalid highlight role");
 }
@@ -349,7 +349,7 @@ rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_sp
 
     // Handle modifiers.
     if (!is_background && highlight.valid_path) {
-        auto var2 = vars.get(L"fish_color_valid_path");
+        auto var2 = vars.get(L"ghoti_color_valid_path");
         if (var2) {
             rgb_color_t result2 = parse_color(*var2, is_background);
             if (result.is_normal()) {
@@ -1203,7 +1203,7 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
                     if (target == L"-") {
                         target_is_valid = true;
                     } else {
-                        int fd = fish_wcstoi(target.c_str());
+                        int fd = ghoti_wcstoi(target.c_str());
                         target_is_valid = !errno && fd >= 0;
                     }
                     break;

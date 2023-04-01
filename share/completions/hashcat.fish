@@ -1,4 +1,4 @@
-function __fish_hashcat_types --description "Get hashcat hash types"
+function __ghoti_hashcat_types --description "Get hashcat hash types"
     set -l modes (hashcat --example-hashes | string replace -f -r '^(?:MODE: |Hash mode #)(\d+)' '$1')
     set -l types (hashcat --example-hashes | string replace -f -r '^(?:TYPE:|\s+Name\.+:)\s+(.+)' '$1')
     for i in (seq (count $modes))
@@ -6,7 +6,7 @@ function __fish_hashcat_types --description "Get hashcat hash types"
     end
 end
 
-function __fish_hashcat_outfile_formats --description "Get hashcat outfile formats"
+function __ghoti_hashcat_outfile_formats --description "Get hashcat outfile formats"
     echo -e "
 1\t'hash[:salt]'
 2\t'plain'
@@ -16,14 +16,14 @@ function __fish_hashcat_outfile_formats --description "Get hashcat outfile forma
 6\t'timestamp relative'"
 end
 
-function __fish_hashcat_device_types --description "Get hashcat device types"
+function __ghoti_hashcat_device_types --description "Get hashcat device types"
     echo -e "
 1\t'CPU'
 2\t'GPU'
 3\t'FPGA, DSP, Co-Processor'"
 end
 
-complete -c hashcat -s m -l hash-type -xa "(__fish_hashcat_types)" -d Hash-type
+complete -c hashcat -s m -l hash-type -xa "(__ghoti_hashcat_types)" -d Hash-type
 complete -c hashcat -s a -l attack-mode -d Attack-mode -xa "
                                                 0\t'Straight'
                                                 1\t'Combination'
@@ -56,7 +56,7 @@ complete -c hashcat -l restore -d "Restore session from --session"
 complete -c hashcat -l restore-disable -d "Do not write restore file"
 complete -c hashcat -l restore-file-path -rF -d "Specific path to restore file"
 complete -c hashcat -s o -l outfile -rF -d "Define outfile for recovered hash"
-complete -c hashcat -l outfile-format -xa "(__fish_complete_list , __fish_hashcat_outfile_formats)" -d "Outfile formats to use"
+complete -c hashcat -l outfile-format -xa "(__ghoti_complete_list , __ghoti_hashcat_outfile_formats)" -d "Outfile formats to use"
 complete -c hashcat -l outfile-autohex-disable -d "Disable the use of \$HEX[] in output plains"
 complete -c hashcat -l outfile-check-timer -x -d "Sets seconds between outfile checks"
 complete -c hashcat -l wordlist-autohex-disable -d "Disable the conversion of \$HEX[] from the wordlist"
@@ -77,8 +77,8 @@ complete -c hashcat -l debug-mode -d "Defines the debug mode" -xa "
                                             3\t'Original-Word:Finding-Rule'
                                             4\t'Original-Word:Finding-Rule:Processed-Word'"
 complete -c hashcat -l debug-file -rF -d "Output file for debugging rules"
-complete -c hashcat -l induction-dir -xa "(__fish_complete_directories)" -d "Specify the induction directory to use for loopback"
-complete -c hashcat -l outfile-check-dir -xa "(__fish_complete_directories)" -d "Specify the outfile directory to monitor for plains"
+complete -c hashcat -l induction-dir -xa "(__ghoti_complete_directories)" -d "Specify the induction directory to use for loopback"
+complete -c hashcat -l outfile-check-dir -xa "(__ghoti_complete_directories)" -d "Specify the outfile directory to monitor for plains"
 complete -c hashcat -l logfile-disable -d "Disable the logfile"
 complete -c hashcat -l hccapx-message-pair -x -d "Load only message pairs from hccapx matching X"
 complete -c hashcat -l nonce-error-corrections -x -d "The BF size range to replace AP's nonce last bytes"
@@ -102,7 +102,7 @@ complete -c hashcat -l backend-ignore-cuda -d "Do not try to open CUDA interface
 complete -c hashcat -l backend-ignore-opencl -d "Do not try to open OpenCL interface on startup"
 complete -c hashcat -s I -l backend-info -d "Show info about detected backend API devices"
 complete -c hashcat -s d -l backend-devices -x -d "Backend devices to use"
-complete -c hashcat -s D -l opencl-device-types -xa "(__fish_complete_list , __fish_hashcat_device_types)" -d "OpenCL device-types to use"
+complete -c hashcat -s D -l opencl-device-types -xa "(__ghoti_complete_list , __ghoti_hashcat_device_types)" -d "OpenCL device-types to use"
 complete -c hashcat -s O -l optimized-kernel-enable -d "Enable optimized kernels (limits password length)"
 complete -c hashcat -s w -l workload-profile -d "Enable a specific workload profile" -xa "
                                                         1\tLow
@@ -142,7 +142,7 @@ complete -c hashcat -l brain-client-features -d "Define brain client features" -
                                                     1\t'Send hashed passwords'
                                                     2\t'Send attack positions'
                                                     3\t'Send hashed passwords and attack positions'"
-complete -c hashcat -l brain-host -xa "(__fish_print_hostnames)" -d "Brain server host (IP or domain)"
+complete -c hashcat -l brain-host -xa "(__ghoti_print_hostnames)" -d "Brain server host (IP or domain)"
 complete -c hashcat -l brain-port -x -d "Brain server port"
 complete -c hashcat -l brain-password -x -d "Brain server authentication password"
 complete -c hashcat -l brain-session -x -d "Overrides automatically calculated brain session"

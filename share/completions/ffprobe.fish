@@ -1,4 +1,4 @@
-function __fish_ffprobe_help_type
+function __ghoti_ffprobe_help_type
     printf '%s\t%s\n' long "Print more options"
     printf '%s\t%s\n' full "Print all options"
 
@@ -17,7 +17,7 @@ end
 
 # Main options
 complete -c ffprobe -s L -d "Show license"
-complete -x -c ffprobe -s h -s "?" -o help -l help -a "(__fish_ffprobe_help_type)" -d "Show help"
+complete -x -c ffprobe -s h -s "?" -o help -l help -a "(__ghoti_ffprobe_help_type)" -d "Show help"
 complete -c ffprobe -o version -d "Show version"
 complete -c ffprobe -o buildconf -d "Show build configuration"
 complete -c ffprobe -o formats -d "Show available formats"

@@ -1,7 +1,7 @@
 #cryptsetup 2.3.5
 
 #variables
-set -l seen __fish_seen_subcommand_from
+set -l seen __ghoti_seen_subcommand_from
 set -l actions benchmark bitlkDump close config convert erase isLuks luksAddKey luksChangeKey luksConvertKey luksDump luksFormat luksHeaderBackup luksHeaderRestore luksKillSlot luksRemoveKey luksResume luksSuspend luksUUID open reencrypt repair resize status tcryptDump token
 
 #actions

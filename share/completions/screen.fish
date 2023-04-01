@@ -1,12 +1,12 @@
-function __fish_detect_screen_socket_dir -d "Detect which folder screen uses"
+function __ghoti_detect_screen_socket_dir -d "Detect which folder screen uses"
     set -l screen_bin screen
-    if not set -q __fish_screen_socket_dir
-        set -g __fish_screen_socket_dir ($screen_bin -ls __fish_i_don_t_think_this_will_be_matched | string match -r "(?<=No Sockets found in ).*(?=\.)")
+    if not set -q __ghoti_screen_socket_dir
+        set -g __ghoti_screen_socket_dir ($screen_bin -ls __ghoti_i_don_t_think_this_will_be_matched | string match -r "(?<=No Sockets found in ).*(?=\.)")
     end
 end
 
-function __fish_complete_screen_general_list_mac -d "Get the socket list on mac"
-    pushd $__fish_screen_socket_dir >/dev/null
+function __ghoti_complete_screen_general_list_mac -d "Get the socket list on mac"
+    pushd $__ghoti_screen_socket_dir >/dev/null
     set -l sockets (ls)
     if test (count $sockets) -ne 0
         switch $argv
@@ -19,45 +19,45 @@ function __fish_complete_screen_general_list_mac -d "Get the socket list on mac"
     popd >/dev/null
 end
 
-function __fish_complete_screen_general_list -d "Get the socket list"
+function __ghoti_complete_screen_general_list -d "Get the socket list"
     set -l escaped (string escape --style=regex $argv)
     screen -list | string match -r '^\t.*\('$escaped'\)\s*$' | string replace -r '\t(.*)\s+(\(.*\))?\s*\((.*)\)' '$1\t$3'
 end
 
-function __fish_complete_screen_detached -d "Print a list of detached screen sessions"
+function __ghoti_complete_screen_detached -d "Print a list of detached screen sessions"
     switch (uname)
         case Darwin
-            __fish_complete_screen_general_list_mac Detached
+            __ghoti_complete_screen_general_list_mac Detached
         case '*'
-            __fish_complete_screen_general_list Detached
+            __ghoti_complete_screen_general_list Detached
     end
 end
 
-function __fish_complete_screen_attached -d "Print a list of attached screen sessions"
+function __ghoti_complete_screen_attached -d "Print a list of attached screen sessions"
     switch (uname)
         case Darwin
-            __fish_complete_screen_general_list_mac Attached
+            __ghoti_complete_screen_general_list_mac Attached
         case '*'
-            __fish_complete_screen_general_list Attached
+            __ghoti_complete_screen_general_list Attached
     end
 end
 
-function __fish_complete_screen -d "Print a list of running screen sessions"
-    string join \n (__fish_complete_screen_attached) (__fish_complete_screen_detached)
+function __ghoti_complete_screen -d "Print a list of running screen sessions"
+    string join \n (__ghoti_complete_screen_attached) (__ghoti_complete_screen_detached)
 end
 
 
 # detect socket directory for mac users
-__fish_detect_screen_socket_dir
+__ghoti_detect_screen_socket_dir
 
 complete -c screen -s a -d 'Include all capabilitys'
 complete -c screen -s A -d 'Adapt window size'
 complete -c screen -s c -r -d 'Specify init file'
-complete -c screen -o d -d 'Detach screen' -a '(__fish_complete_screen)' -x
-complete -c screen -o D -d 'Detach screen' -a '(__fish_complete_screen)' -x
-complete -c screen -o r -d 'Reattach session' -a '(__fish_complete_screen)' -x
-complete -c screen -o R -d 'Reattach/create session' -a '(__fish_complete_screen)' -x
-complete -c screen -o RR -d 'Reattach/create any session' -a '(__fish_complete_screen)' -x
+complete -c screen -o d -d 'Detach screen' -a '(__ghoti_complete_screen)' -x
+complete -c screen -o D -d 'Detach screen' -a '(__ghoti_complete_screen)' -x
+complete -c screen -o r -d 'Reattach session' -a '(__ghoti_complete_screen)' -x
+complete -c screen -o R -d 'Reattach/create session' -a '(__ghoti_complete_screen)' -x
+complete -c screen -o RR -d 'Reattach/create any session' -a '(__ghoti_complete_screen)' -x
 complete -c screen -s e -x -d 'Escape character'
 complete -c screen -s f -d 'Flow control on'
 complete -c screen -o fn -d 'Flow control off'
@@ -80,5 +80,5 @@ complete -c screen -o T -x -d 'Value to use for $TERM (default "screen")'
 complete -c screen -s U -d 'UTF-8 mode'
 complete -c screen -s v -d 'Display version and exit'
 complete -c screen -o wipe -d 'Wipe dead sessions'
-complete -c screen -o x -d 'Multi attach' -a '(__fish_complete_screen_attached)' -x
+complete -c screen -o x -d 'Multi attach' -a '(__ghoti_complete_screen_attached)' -x
 complete -c screen -o X -r -d 'Send command'

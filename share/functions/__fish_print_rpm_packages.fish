@@ -1,11 +1,11 @@
-function __fish_print_rpm_packages
+function __ghoti_print_rpm_packages
     type -q -f rpm /usr/share/yum-cli/completion-helper.py || return 1
 
     # We do not use "--installed", but we still allow passing it.
     argparse i/installed -- $argv
     or return 1
 
-    set -l xdg_cache_home (__fish_make_cache_dir)
+    set -l xdg_cache_home (__ghoti_make_cache_dir)
     or return
 
     if type -q -f /usr/share/yum-cli/completion-helper.py

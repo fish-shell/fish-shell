@@ -1,24 +1,24 @@
-function __fish_facl_list_spec_keyword
+function __ghoti_facl_list_spec_keyword
     for keyword in default user group mask other
         echo $keyword:
     end
 end
 
-function __fish_facl_starts_with_spec_user
+function __ghoti_facl_starts_with_spec_user
     commandline -ct | string match -r "u(ser)?:"
 end
 
-function __fish_facl_starts_with_spec_group
+function __ghoti_facl_starts_with_spec_group
     commandline -ct | string match -r "g(roup)?:"
 end
 
-function __fish_facl_extract_acl
+function __ghoti_facl_extract_acl
     commandline -ct | string replace -ar '.*(\w*:).*' '$1'
 end
 
-complete -c setfacl -s m -s x -l modify -l remove -l set -n __fish_facl_starts_with_spec_user -a '(__fish_facl_extract_acl)(__fish_complete_users  | string replace -a "\t" ":\t")'
-complete -c setfacl -s m -s x -l modify -l remove -l set -n __fish_facl_starts_with_spec_group -a '(__fish_facl_extract_acl)(__fish_complete_groups | string replace -a "\t" ":\t")'
-complete -c setfacl -f -s m -s x -l modify -l remove -l set -a '(__fish_facl_list_spec_keyword)'
+complete -c setfacl -s m -s x -l modify -l remove -l set -n __ghoti_facl_starts_with_spec_user -a '(__ghoti_facl_extract_acl)(__ghoti_complete_users  | string replace -a "\t" ":\t")'
+complete -c setfacl -s m -s x -l modify -l remove -l set -n __ghoti_facl_starts_with_spec_group -a '(__ghoti_facl_extract_acl)(__ghoti_complete_groups | string replace -a "\t" ":\t")'
+complete -c setfacl -f -s m -s x -l modify -l remove -l set -a '(__ghoti_facl_list_spec_keyword)'
 
 complete -c setfacl -s b -l remove-all -d 'Remove all extended ACL entries'
 complete -c setfacl -s k -l remove-default -d 'Remove the Default ACL'

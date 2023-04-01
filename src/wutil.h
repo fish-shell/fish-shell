@@ -113,30 +113,30 @@ inline ssize_t wwrite_to_fd(const wcstring &s, int fd) {
 // We need this because there are too many implementations that don't return the proper answer for
 // some code points. See issue #3050.
 #ifndef FISH_NO_ISW_WRAPPERS
-#define iswalnum fish_iswalnum
-#define iswgraph fish_iswgraph
+#define iswalnum ghoti_iswalnum
+#define iswgraph ghoti_iswgraph
 #endif
-int fish_iswalnum(wint_t wc);
-int fish_iswgraph(wint_t wc);
+int ghoti_iswalnum(wint_t wc);
+int ghoti_iswgraph(wint_t wc);
 
-int fish_wcswidth(const wchar_t *str);
-int fish_wcswidth(const wcstring &str);
+int ghoti_wcswidth(const wchar_t *str);
+int ghoti_wcswidth(const wcstring &str);
 
 // returns an immortal locale_t corresponding to the C locale.
-locale_t fish_c_locale();
+locale_t ghoti_c_locale();
 
-void fish_invalidate_numeric_locale();
-locale_t fish_numeric_locale();
+void ghoti_invalidate_numeric_locale();
+locale_t ghoti_numeric_locale();
 
-int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
-long fish_wcstol(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
-long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
-unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr = nullptr,
+int ghoti_wcstoi(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
+long ghoti_wcstol(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
+long long ghoti_wcstoll(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
+unsigned long long ghoti_wcstoull(const wchar_t *str, const wchar_t **endptr = nullptr,
                                  int base = 10);
-double fish_wcstod(const wchar_t *str, wchar_t **endptr, size_t len);
-double fish_wcstod(const wchar_t *str, wchar_t **endptr);
-double fish_wcstod(const wcstring &str, wchar_t **endptr);
-double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr);
+double ghoti_wcstod(const wchar_t *str, wchar_t **endptr, size_t len);
+double ghoti_wcstod(const wchar_t *str, wchar_t **endptr);
+double ghoti_wcstod(const wcstring &str, wchar_t **endptr);
+double ghoti_wcstod_underscores(const wchar_t *str, wchar_t **endptr);
 
 /// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux

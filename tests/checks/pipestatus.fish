@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 # pipestatus variable - builtins only
 false | false | false

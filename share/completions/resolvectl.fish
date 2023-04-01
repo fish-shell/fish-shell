@@ -39,13 +39,13 @@ function __resolvectl_commands
 end
 
 # variables
-set -l seen __fish_seen_subcommand_from
+set -l seen __ghoti_seen_subcommand_from
 set -l commands (__resolvectl_commands | string split -f 1 '\t')
 
 # commands
 complete -c resolvectl -f
 complete -c resolvectl -n "not $seen $commands" -xa "(__resolvectl_commands)"
-complete -c resolvectl -n "__fish_is_nth_token 2" -n "$seen status dns domain default-route llmnr mdns dnssec dnsovertls nta revert" -xa "(__resolvectl_interfaces)"
+complete -c resolvectl -n "__ghoti_is_nth_token 2" -n "$seen status dns domain default-route llmnr mdns dnssec dnsovertls nta revert" -xa "(__resolvectl_interfaces)"
 
 # global options
 complete -c resolvectl -s 4 -d "Resolve only IPv4"

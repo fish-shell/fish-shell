@@ -87,7 +87,7 @@ print_max(const wcstring &str, Func color, size_t max, bool has_more, line_t *li
     size_t remaining = max;
     for (size_t i = 0; i < str.size(); i++) {
         wchar_t c = str.at(i);
-        int iwidth_c = fish_wcwidth(c);
+        int iwidth_c = ghoti_wcwidth(c);
         if (iwidth_c < 0) {
             // skip non-printable characters
             continue;
@@ -99,7 +99,7 @@ print_max(const wcstring &str, Func color, size_t max, bool has_more, line_t *li
         wchar_t ellipsis = get_ellipsis_char();
         if ((width_c == remaining) && (has_more || i + 1 < str.size())) {
             line->append(ellipsis, color(i));
-            int ellipsis_width = fish_wcwidth(ellipsis);
+            int ellipsis_width = ghoti_wcwidth(ellipsis);
             remaining -= std::min(remaining, size_t(ellipsis_width));
             break;
         }
@@ -361,7 +361,7 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
 }
 
 void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &prefix) const {
-    size_t prefix_len = fish_wcswidth(prefix);
+    size_t prefix_len = ghoti_wcswidth(prefix);
     for (auto &info : *infos) {
         comp_t *comp = &info;
         const wcstring_list_t &comp_strings = comp->comp;
@@ -370,13 +370,13 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
             // If there's more than one, append the length of ', '.
             if (j >= 1) comp->comp_width += 2;
 
-            // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
-            int comp_width = fish_wcswidth(comp_strings.at(j));
+            // ghoti_wcswidth() can return -1 if it can't calculate the width. So be cautious.
+            int comp_width = ghoti_wcswidth(comp_strings.at(j));
             if (comp_width >= 0) comp->comp_width += prefix_len + comp_width;
         }
 
-        // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
-        int desc_width = fish_wcswidth(comp->desc);
+        // ghoti_wcswidth() can return -1 if it can't calculate the width. So be cautious.
+        int desc_width = ghoti_wcswidth(comp->desc);
         comp->desc_width = desc_width > 0 ? desc_width : 0;
     }
 }
@@ -462,7 +462,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         // We disclose between half and the entirety of the terminal height,
         // but at least 4 rows.
         //
-        // We do this so we show a useful amount but don't force fish to
+        // We do this so we show a useful amount but don't force ghoti to
         // THE VERY TOP, which is jarring.
         term_height =
             std::min(term_height,

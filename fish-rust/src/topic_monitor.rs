@@ -274,7 +274,7 @@ impl binary_semaphore_t {
             // We must read exactly one byte.
             loop {
                 // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
-                // call until data is available (that is, fish would use 100% cpu while waiting for
+                // call until data is available (that is, ghoti would use 100% cpu while waiting for
                 // processes). This call prevents that.
                 if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
                     let _ = fd_readable_set_t::is_fd_readable(fd, fd_readable_set_t::kNoTimeout);

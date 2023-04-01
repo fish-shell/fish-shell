@@ -1,1 +1,1 @@
-helm completion fish | source
+helm completion ghoti | source

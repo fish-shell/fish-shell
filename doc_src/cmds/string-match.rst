@@ -86,7 +86,7 @@ Match Regex Examples
 
 ::
 
-    >_ string match -r 'cat|dog|fish' 'nice dog'
+    >_ string match -r 'cat|dog|ghoti' 'nice dog'
     dog
 
     >_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
@@ -126,8 +126,8 @@ Match Regex Examples
     >_ echo $version
     3.1.2-1575-ga2ff32d90
     >_ string match -rq '(?<major>\d+).(?<minor>\d+).(?<revision>\d+)' -- $version
-    >_ echo "You are using fish $major!"
-    You are using fish 3!
+    >_ echo "You are using ghoti $major!"
+    You are using ghoti 3!
 
     >_ string match -raq ' *(?<sentence>[^.!?]+)(?<punctuation>[.!?])?' "hello, friend. goodbye"
     >_ printf "%s\n" -- $sentence

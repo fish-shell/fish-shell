@@ -4,7 +4,7 @@ function dirh --description "Print the current directory history (the prev and n
     or return
 
     if set -q _flag_help
-        __fish_print_help dirh
+        __ghoti_print_help dirh
         return 0
     end
 
@@ -18,7 +18,7 @@ function dirh --description "Print the current directory history (the prev and n
         end
     end
 
-    echo (set_color $fish_color_history_current)'   ' $PWD(set_color normal)
+    echo (set_color $ghoti_color_history_current)'   ' $PWD(set_color normal)
 
     set -l dirc (count $dirnext)
     if test $dirc -gt 0

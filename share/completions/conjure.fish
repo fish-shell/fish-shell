@@ -5,5 +5,5 @@ complete -c conjure -o seed -d 'Seed a new sequence of pseudo-random numbers [va
 complete -c conjure -o verbose -d 'Print detailed information about the image'
 complete -c conjure -o debug -d 'Display copious debugging information [events]' -xa '(convert -list debug)'
 complete -c conjure -o help -d 'Print program options'
-complete -c conjure -o log -d 'Format of debugging information [format]' -xa '(__fish_complete_convert_options format)'
+complete -c conjure -o log -d 'Format of debugging information [format]' -xa '(__ghoti_complete_convert_options format)'
 #complete -c conjure -o list                         -d 'Print a list of supported option arguments [type]' -xa '(convert -list list)'

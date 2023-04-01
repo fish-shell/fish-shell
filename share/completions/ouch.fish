@@ -1,19 +1,19 @@
-# fish completions for ouch https://github.com/ouch-org/ouch
+# ghoti completions for ouch https://github.com/ouch-org/ouch
 
 # subcommands list
 set -l commands c compress d decompress l list help
 
 # if no subcommand yet then no file completion
-complete -c ouch -f --condition "not __fish_seen_subcommand_from $commands"
+complete -c ouch -f --condition "not __ghoti_seen_subcommand_from $commands"
 
 # subcommand completions
-complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
+complete -c ouch --condition "not __ghoti_seen_subcommand_from $commands" \
     -a "compress" -d "Compress one or more files into one output file [aliases: c]"
-complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
+complete -c ouch --condition "not __ghoti_seen_subcommand_from $commands" \
     -a "decompress" -d "Decompresses one or more files, optionally into another folder [aliases: d]"
-complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
+complete -c ouch --condition "not __ghoti_seen_subcommand_from $commands" \
     -a "list" -d "List contents of an archive [aliases: l]"
-complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
+complete -c ouch --condition "not __ghoti_seen_subcommand_from $commands" \
     -a "help" -d "Print this message or the help of the given subcommand(s)"
 
 # options completions

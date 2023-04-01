@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 ##########
 
 # NOTE: This uses argparse, which touches the local variables.
@@ -11,7 +11,7 @@
 # No args (not even --) is an error
 argparse
 #CHECKERR: argparse: Missing -- separator
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: checks/argparse.ghoti (line {{\d+}}):
 #CHECKERR: argparse
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
@@ -19,7 +19,7 @@ argparse
 # Missing -- is an error
 argparse h/help
 #CHECKERR: argparse: Missing -- separator
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: checks/argparse.ghoti (line {{\d+}}):
 #CHECKERR: argparse h/help
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
@@ -40,27 +40,27 @@ argparse h/help:
 argparse h-help::
 argparse h-help=x
 #CHECKERR: argparse: Invalid option spec 'h-' at char '-'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: checks/argparse.ghoti (line {{\d+}}):
 #CHECKERR: argparse h-
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Short flag '+' invalid, must be alphanum or '#'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: checks/argparse.ghoti (line {{\d+}}):
 #CHECKERR: argparse +help
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Invalid option spec 'h/help:' at char ':'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: checks/argparse.ghoti (line {{\d+}}):
 #CHECKERR: argparse h/help:
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Invalid option spec 'h-help::' at char ':'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: checks/argparse.ghoti (line {{\d+}}):
 #CHECKERR: argparse h-help::
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Invalid option spec 'h-help=x' at char 'x'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: checks/argparse.ghoti (line {{\d+}}):
 #CHECKERR: argparse h-help=x
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
@@ -89,7 +89,7 @@ end
 begin
     argparse '#-val=' -- abc -x def
     # CHECKERR: argparse: Implicit int short flag '#' does not allow modifiers like '='
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: checks/argparse.ghoti (line {{\d+}}):
     #CHECKERR: argparse '#-val=' -- abc -x def
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -105,7 +105,7 @@ end
 begin
     argparse s/short x/xray s/long -- -s -x --long
     # CHECKERR: argparse: Short flag 's' already defined
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: checks/argparse.ghoti (line {{\d+}}):
     #CHECKERR: argparse s/short x/xray s/long -- -s -x --long
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -115,7 +115,7 @@ end
 begin
     argparse s/short x/xray l/short -- -s -x --long
     # CHECKERR: argparse: Long flag 'short' already defined
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: checks/argparse.ghoti (line {{\d+}}):
     #CHECKERR: argparse s/short x/xray l/short -- -s -x --long
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -125,7 +125,7 @@ end
 begin
     argparse '#-val' x/xray 'v#val' -- -s -x --long
     # CHECKERR: argparse: Implicit int flag '#' already defined
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: checks/argparse.ghoti (line {{\d+}}):
     #CHECKERR: argparse '#-val' x/xray 'v#val' -- -s -x --long
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -135,7 +135,7 @@ end
 begin
     argparse 'v#val=' --
     # CHECKERR: argparse: Implicit int short flag 'v' does not allow modifiers like '='
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: checks/argparse.ghoti (line {{\d+}}):
     #CHECKERR: argparse 'v#val=' --
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -412,81 +412,81 @@ argparse -n foo q r/required= -- foo -qr
 argparse r/required= -- foo --required
 # CHECKERR: argparse: --required: option requires an argument
 
-### The fish_opt wrapper:
+### The ghoti_opt wrapper:
 # No args is an error
-fish_opt
+ghoti_opt
 and echo unexpected status $status
-#CHECKERR: fish_opt: The --short flag is required and must be a single character
+#CHECKERR: ghoti_opt: The --short flag is required and must be a single character
 
 # No short flag or an invalid short flag is an error
-fish_opt -l help
+ghoti_opt -l help
 and echo unexpected status $status
-#CHECKERR: fish_opt: The --short flag is required and must be a single character
-fish_opt -s help
+#CHECKERR: ghoti_opt: The --short flag is required and must be a single character
+ghoti_opt -s help
 and echo unexpected status $status
-#CHECKERR: fish_opt: The --short flag is required and must be a single character
+#CHECKERR: ghoti_opt: The --short flag is required and must be a single character
 
 # A required and optional arg makes no sense
-fish_opt -s h -l help -r --optional-val
+ghoti_opt -s h -l help -r --optional-val
 and echo unexpected status $status
-#CHECKERR: fish_opt: o/optional-val r/required-val: options cannot be used together
+#CHECKERR: ghoti_opt: o/optional-val r/required-val: options cannot be used together
 # XXX FIXME the error should output -r and --optional-val: what the user used
 
 # A repeated and optional arg makes no sense
-fish_opt -s h -l help --multiple-vals --optional-val
+ghoti_opt -s h -l help --multiple-vals --optional-val
 and echo unexpected status $status
-#CHECKERR: fish_opt: multiple-vals o/optional-val: options cannot be used together
+#CHECKERR: ghoti_opt: multiple-vals o/optional-val: options cannot be used together
 
 # An unexpected arg not associated with a flag is an error
-fish_opt -s h -l help hello
+ghoti_opt -s h -l help hello
 and echo unexpected status $status
-#CHECKERR: fish_opt: expected <= 0 arguments; got 1
+#CHECKERR: ghoti_opt: expected <= 0 arguments; got 1
 
 # Now verify that valid combinations of options produces the correct output.
 
 # Bool, short only
-fish_opt -s h
+ghoti_opt -s h
 or echo unexpected status $status
 #CHECK: h
 
 # Bool, short and long
-fish_opt --short h --long help
+ghoti_opt --short h --long help
 or echo unexpected status $status
 #CHECK: h/help
 
 # Bool, short and long but the short var cannot be used
-fish_opt --short h --long help --long-only
+ghoti_opt --short h --long help --long-only
 #CHECK: h-help
 
 # Required val, short and long but the short var cannot be used
-fish_opt --short h --long help -r --long-only
+ghoti_opt --short h --long help -r --long-only
 or echo unexpected status $status
 #CHECK: h-help=
 
 # Optional val, short and long valid
-fish_opt --short h -l help --optional-val
+ghoti_opt --short h -l help --optional-val
 or echo unexpected status $status
 #CHECK: h/help=?
 
 # Optional val, short and long but the short var cannot be used
-fish_opt --short h -l help --optional-val --long-only
+ghoti_opt --short h -l help --optional-val --long-only
 or echo unexpected status $status
 #CHECK: h-help=?
 
 # Repeated val, short and long valid
-fish_opt --short h -l help --multiple-vals
+ghoti_opt --short h -l help --multiple-vals
 or echo unexpected status $status
 #CHECK: h/help=+
 
 # Repeated val, short and long but short not valid
-fish_opt --short h -l help --multiple-vals --long-only
+ghoti_opt --short h -l help --multiple-vals --long-only
 or echo unexpected status $status
 #CHECK: h-help=+
 
 # Repeated val, short only
-fish_opt -s h --multiple-vals
+ghoti_opt -s h --multiple-vals
 or echo unexpected status $status
-fish_opt -s h --multiple-vals --long-only
+ghoti_opt -s h --multiple-vals --long-only
 or echo unexpected status $status
 #CHECK: h=+
 #CHECK: h=+
@@ -500,7 +500,7 @@ end
 begin
     argparse ''
     #CHECKERR: argparse: An option spec must have at least a short or a long flag
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: checks/argparse.ghoti (line {{\d+}}):
     #CHECKERR: argparse ''
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)

@@ -1,1 +1,1 @@
-_YKMAN_COMPLETE=fish_source ykman | source
+_YKMAN_COMPLETE=ghoti_source ykman | source

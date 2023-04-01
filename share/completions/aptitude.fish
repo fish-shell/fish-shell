@@ -1,6 +1,6 @@
 #completion for aptitude
 
-function __fish_apt_no_subcommand -d 'Test if aptitude has yet to be given the subcommand'
+function __ghoti_apt_no_subcommand -d 'Test if aptitude has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i autoclean clean forget-new keep-all update safe-upgrade changelog full-upgrade download forbid-version hold install keep markauto purge reinstall remove show unhold unmarkauto search help
             return 1
@@ -9,7 +9,7 @@ function __fish_apt_no_subcommand -d 'Test if aptitude has yet to be given the s
     return 0
 end
 
-function __fish_apt_use_package -d 'Test if aptitude command should have packages as potential completion'
+function __ghoti_apt_use_package -d 'Test if aptitude command should have packages as potential completion'
     for i in (commandline -opc)
         if contains -- $i changelog full-upgrade download forbid-version hold install keep-all markauto purge reinstall remove show unhold unmarkauto
             return 0
@@ -18,31 +18,31 @@ function __fish_apt_use_package -d 'Test if aptitude command should have package
     return 1
 end
 
-complete -c aptitude -n __fish_apt_use_package -a '(__fish_print_apt_packages)' -d Package
+complete -c aptitude -n __ghoti_apt_use_package -a '(__ghoti_print_apt_packages)' -d Package
 
 complete -c aptitude -s h -l help -d 'Display a brief help message. Identical to the help action'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a autoclean -d 'Remove any cached packages which can no longer be downloaded'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a clean -d 'Remove all downloaded .deb files from the package cache directory'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a forget-new -d 'Forget all internal information about what packages are \'new\''
-complete -f -n __fish_apt_no_subcommand -c aptitude -a keep-all -d 'Cancel all scheduled actions on all packages'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a update -d 'Update the list of available packages from the apt sources'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a safe-upgrade -d 'Upgrade installed packages to their most recent version'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a changelog -d 'Download and displays the Debian changelog for the packages'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a full-upgrade -d 'Upgrade, removing or installing packages as necessary'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a download -d 'Download the packages to the current directory'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a forbid-version -d 'Forbid the upgrade to a particular version'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a hold -d 'Ignore the packages by future upgrade commands'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a install -d 'Install the packages'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a keep -d 'Cancel any scheduled actions on the packages'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a markauto -d 'Mark packages as automatically installed'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a purge -d 'Remove and delete all associated configuration and data files'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a reinstall -d 'Reinstall the packages'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a remove -d 'Remove the packages'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a show -d 'Display detailed information about the packages'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a unhold -d 'Consider the packages by future upgrade commands'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a unmarkauto -d 'Mark packages as manually installed'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a search -d 'Search for packages matching one of the patterns'
-complete -f -n __fish_apt_no_subcommand -c aptitude -a help -d 'Display brief summary of the available commands and options'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a autoclean -d 'Remove any cached packages which can no longer be downloaded'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a clean -d 'Remove all downloaded .deb files from the package cache directory'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a forget-new -d 'Forget all internal information about what packages are \'new\''
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a keep-all -d 'Cancel all scheduled actions on all packages'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a update -d 'Update the list of available packages from the apt sources'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a safe-upgrade -d 'Upgrade installed packages to their most recent version'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a changelog -d 'Download and displays the Debian changelog for the packages'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a full-upgrade -d 'Upgrade, removing or installing packages as necessary'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a download -d 'Download the packages to the current directory'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a forbid-version -d 'Forbid the upgrade to a particular version'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a hold -d 'Ignore the packages by future upgrade commands'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a install -d 'Install the packages'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a keep -d 'Cancel any scheduled actions on the packages'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a markauto -d 'Mark packages as automatically installed'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a purge -d 'Remove and delete all associated configuration and data files'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a reinstall -d 'Reinstall the packages'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a remove -d 'Remove the packages'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a show -d 'Display detailed information about the packages'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a unhold -d 'Consider the packages by future upgrade commands'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a unmarkauto -d 'Mark packages as manually installed'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a search -d 'Search for packages matching one of the patterns'
+complete -f -n __ghoti_apt_no_subcommand -c aptitude -a help -d 'Display brief summary of the available commands and options'
 
 complete -c aptitude -s D -l show-deps -d 'Show explanations of automatic installations and removals'
 complete -c aptitude -s d -l download-only -d 'Download Only'

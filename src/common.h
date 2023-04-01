@@ -1,4 +1,4 @@
-// Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
+// Prototypes for various functions, mostly string utilities, that are used by most parts of ghoti.
 #ifndef FISH_COMMON_H
 #define FISH_COMMON_H
 #include "config.h"  // IWYU pragma: keep
@@ -97,8 +97,8 @@ struct termsize_t;
 // them and we need at least 256 + 64.
 //
 // If sizeof(wchar_t))==4 we could avoid using private-use chars; however, that
-// would result in fish having different behavior on machines with 16 versus 32
-// bit wchar_t. It's better that fish behave the same on both types of systems.
+// would result in ghoti having different behavior on machines with 16 versus 32
+// bit wchar_t. It's better that ghoti behave the same on both types of systems.
 //
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
@@ -137,7 +137,7 @@ enum escape_string_style_t {
 // Flags for unescape_string functions.
 enum {
     UNESCAPE_DEFAULT = 0,              // default behavior
-    UNESCAPE_SPECIAL = 1 << 0,         // escape special fish syntax characters like the semicolon
+    UNESCAPE_SPECIAL = 1 << 0,         // escape special ghoti syntax characters like the semicolon
     UNESCAPE_INCOMPLETE = 1 << 1,      // allow incomplete escape sequences
     UNESCAPE_NO_BACKSLASHES = 1 << 2,  // don't handle backslash escapes
 };
@@ -146,7 +146,7 @@ typedef unsigned int unescape_flags_t;
 // Flags for the escape_string() function. These are only applicable when the escape style is
 // "script" (i.e., STRING_STYLE_SCRIPT).
 enum {
-    /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
+    /// Do not escape special ghoti syntax characters like the semicolon. Only escape non-printable
     /// characters and backslashes.
     ESCAPE_NO_PRINTABLES = 1 << 0,
     /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
@@ -219,21 +219,21 @@ extern const wcstring_list_t g_empty_string_list;
 /// stdio functions and should be writing the message to stderr rather than stdout. Second, if
 /// possible it is useful to provide additional context such as a stack backtrace.
 #undef assert
-#define assert(e) likely(e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, 0)
-#define assert_with_errno(e) likely(e) ? ((void)0) : __fish_assert(#e, __FILE__, __LINE__, errno)
-#define DIE(msg) __fish_assert(msg, __FILE__, __LINE__, 0)
-#define DIE_WITH_ERRNO(msg) __fish_assert(msg, __FILE__, __LINE__, errno)
+#define assert(e) likely(e) ? ((void)0) : __ghoti_assert(#e, __FILE__, __LINE__, 0)
+#define assert_with_errno(e) likely(e) ? ((void)0) : __ghoti_assert(#e, __FILE__, __LINE__, errno)
+#define DIE(msg) __ghoti_assert(msg, __FILE__, __LINE__, 0)
+#define DIE_WITH_ERRNO(msg) __ghoti_assert(msg, __FILE__, __LINE__, errno)
 /// This macro is meant to be used with functions that return zero on success otherwise return an
 /// errno value. Most notably the pthread family of functions which we never expect to fail.
 #define DIE_ON_FAILURE(e)                                  \
     do {                                                   \
         int status = e;                                    \
         if (unlikely(status != 0)) {                       \
-            __fish_assert(#e, __FILE__, __LINE__, status); \
+            __ghoti_assert(#e, __FILE__, __LINE__, status); \
         }                                                  \
     } while (0)
 
-[[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error);
+[[noreturn]] void __ghoti_assert(const char *msg, const char *file, size_t line, int error);
 
 /// Shorthand for wgettext call in situations where a C-style string is needed (e.g.,
 /// std::fwprintf()).
@@ -472,9 +472,9 @@ const wchar_t *quote_end(const wchar_t *pos, wchar_t quote);
 /// \param pos the position where the comment starts, including the '#' symbol.
 const wchar_t *comment_end(const wchar_t *pos);
 
-/// This function should be called after calling `setlocale()` to perform fish specific locale
+/// This function should be called after calling `setlocale()` to perform ghoti specific locale
 /// initialization.
-void fish_setlocale();
+void ghoti_setlocale();
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
 /// \return the number of bytes read, or 0 on EOF. On EAGAIN, returns -1 if nothing was read.
@@ -587,8 +587,8 @@ long convert_digit(wchar_t d, int base);
         (void)(expr); \
     } while (0)
 
-// Return true if the character is in a range reserved for fish's private use.
-bool fish_reserved_codepoint(wchar_t c);
+// Return true if the character is in a range reserved for ghoti's private use.
+bool ghoti_reserved_codepoint(wchar_t c);
 
 void redirect_tty_output();
 
@@ -599,7 +599,7 @@ bool valid_var_name(const wcstring &str);
 bool valid_var_name(const wchar_t *str);
 bool valid_func_name(const wcstring &str);
 
-// Return values (`$status` values for fish scripts) for various situations.
+// Return values (`$status` values for ghoti scripts) for various situations.
 enum {
     /// The status code used for normal exit in a command.
     STATUS_CMD_OK = 0,
@@ -655,7 +655,7 @@ struct hash<const wcstring> {
 }  // namespace std
 #endif
 
-/// Get the absolute path to the fish executable itself
+/// Get the absolute path to the ghoti executable itself
 std::string get_executable_path(const char *argv0);
 
 /// A RAII wrapper for resources that don't recur, so we don't have to create a separate RAII

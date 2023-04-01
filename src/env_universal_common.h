@@ -32,9 +32,9 @@ struct callback_data_t {
 
 using callback_data_list_t = std::vector<callback_data_t>;
 
-// List of fish universal variable formats.
+// List of ghoti universal variable formats.
 // This is exposed for testing.
-enum class uvar_format_t { fish_2_x, fish_3_0, future };
+enum class uvar_format_t { ghoti_2_x, ghoti_3_0, future };
 
 bool get_hostname_identifier(wcstring &result);
 
@@ -107,7 +107,7 @@ class env_universal_t {
     uint64_t export_generation{1};
 
     // Whether it's OK to save. This may be set to false if we discover that a future version of
-    // fish wrote the uvars contents.
+    // ghoti wrote the uvars contents.
     bool ok_to_save{true};
 
     // If true, attempt to flock the uvars file.

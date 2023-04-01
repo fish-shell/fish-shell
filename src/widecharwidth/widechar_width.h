@@ -1,6 +1,6 @@
 /**
  * widechar_width.h for Unicode 15.0.0
- * See https://github.com/ridiculousfish/widecharwidth/
+ * See https://github.com/ridiculousghoti/widecharwidth/
  *
  * SHA1 file hashes:
  *  (

@@ -4,34 +4,34 @@
 
 #####
 # Global options
-complete -c gem -n __fish_use_subcommand -s h -l help -d "Print usage informations and quit"
-complete -c gem -n __fish_use_subcommand -s v -l version -d "Print the version and quit"
+complete -c gem -n __ghoti_use_subcommand -s h -l help -d "Print usage informations and quit"
+complete -c gem -n __ghoti_use_subcommand -s v -l version -d "Print the version and quit"
 
 #####
 # Subcommands
-complete -c gem -n __fish_use_subcommand -xa build -d "Build a gem from a gemspec"
-complete -c gem -n __fish_use_subcommand -xa cert -d "Adjust RubyGems certificate settings"
-complete -c gem -n __fish_use_subcommand -xa check -d "Check installed gems"
-complete -c gem -n __fish_use_subcommand -xa cleanup -d "Cleanup old versions of installed gems in the local repository"
-complete -c gem -n __fish_use_subcommand -xa contents -d "Display the contents of the installed gems"
-complete -c gem -n __fish_use_subcommand -xa dependency -d "Show the dependencies of an installed gem"
-complete -c gem -n __fish_use_subcommand -xa environment -d "Display RubyGems environmental information"
-complete -c gem -n __fish_use_subcommand -xa help -d "Provide help on the 'gem' command"
-complete -c gem -n __fish_use_subcommand -xa install -d "Install a gem into the local repository"
-complete -c gem -n __fish_use_subcommand -xa list -d "Display all gems whose name starts with STRING"
-complete -c gem -n __fish_use_subcommand -xa query -d "Query gem information in local or remote repositories"
-complete -c gem -n __fish_use_subcommand -xa rdoc -d "Generates RDoc for pre-installed gems"
-complete -c gem -n __fish_use_subcommand -xa search -d "Display all gems whose name contains STRING"
-complete -c gem -n __fish_use_subcommand -xa specification -d "Display gem specification (in YAML)"
-complete -c gem -n __fish_use_subcommand -xa uninstall -d "Uninstall a gem from the local repository"
-complete -c gem -n __fish_use_subcommand -xa unpack -d "Unpack an installed gem to the current directory"
-complete -c gem -n __fish_use_subcommand -xa update -d "Update the named gem or all installed gems in the local repository"
+complete -c gem -n __ghoti_use_subcommand -xa build -d "Build a gem from a gemspec"
+complete -c gem -n __ghoti_use_subcommand -xa cert -d "Adjust RubyGems certificate settings"
+complete -c gem -n __ghoti_use_subcommand -xa check -d "Check installed gems"
+complete -c gem -n __ghoti_use_subcommand -xa cleanup -d "Cleanup old versions of installed gems in the local repository"
+complete -c gem -n __ghoti_use_subcommand -xa contents -d "Display the contents of the installed gems"
+complete -c gem -n __ghoti_use_subcommand -xa dependency -d "Show the dependencies of an installed gem"
+complete -c gem -n __ghoti_use_subcommand -xa environment -d "Display RubyGems environmental information"
+complete -c gem -n __ghoti_use_subcommand -xa help -d "Provide help on the 'gem' command"
+complete -c gem -n __ghoti_use_subcommand -xa install -d "Install a gem into the local repository"
+complete -c gem -n __ghoti_use_subcommand -xa list -d "Display all gems whose name starts with STRING"
+complete -c gem -n __ghoti_use_subcommand -xa query -d "Query gem information in local or remote repositories"
+complete -c gem -n __ghoti_use_subcommand -xa rdoc -d "Generates RDoc for pre-installed gems"
+complete -c gem -n __ghoti_use_subcommand -xa search -d "Display all gems whose name contains STRING"
+complete -c gem -n __ghoti_use_subcommand -xa specification -d "Display gem specification (in YAML)"
+complete -c gem -n __ghoti_use_subcommand -xa uninstall -d "Uninstall a gem from the local repository"
+complete -c gem -n __ghoti_use_subcommand -xa unpack -d "Unpack an installed gem to the current directory"
+complete -c gem -n __ghoti_use_subcommand -xa update -d "Update the named gem or all installed gems in the local repository"
 
 #####
 # Subcommand switches
 
 # common opts
-set -l common_opt -c gem -n 'not __fish_use_subcommand'
+set -l common_opt -c gem -n 'not __ghoti_use_subcommand'
 complete $common_opt -l source -d "Use URL as the remote source for gems" -x
 complete $common_opt -s p -l http-proxy -d "Use the given HTTP proxy for remote operations" -x
 complete $common_opt -l no-http-proxy -d "Use no HTTP proxy for remote operations"
@@ -100,7 +100,7 @@ complete $install_opt -s r -l remote -d "Restrict operations to the REMOTE domai
 complete $install_opt -s b -l both -d "Allow LOCAL and REMOTE operations"
 complete $install_opt -s i -l install-dir -d "Gem repository directory to get installed gems" -x
 complete $install_opt -s N -l no-document -d "Disable documentation generation on install"
-complete $install_opt -l document -a '(__fish_append , rdoc ri)' -d "Specify the documentation types you wish to generate"
+complete $install_opt -l document -a '(__ghoti_append , rdoc ri)' -d "Specify the documentation types you wish to generate"
 complete $install_opt -s f -l force -d "Force gem to install, bypassing dependency checks"
 complete $install_opt -l no-force -d "Don't force gem to install, bypassing dependency checks"
 complete $install_opt -s t -l test -d "Run unit tests prior to installation"
@@ -179,7 +179,7 @@ complete $unpack_opt -s v -l version -d "Specify version of gem to unpack" -x
 set -l update_opt -c gem -n 'contains update (commandline -poc)'
 complete $update_opt -s i -l install-dir -d "Gem repository directory to get installed gems"
 complete $update_opt -s N -l no-document -d "Disable documentation generation on update"
-complete $update_opt -l document -a '(__fish_append , rdoc ri)' -d "Specify the documentation types you wish to generate"
+complete $update_opt -l document -a '(__ghoti_append , rdoc ri)' -d "Specify the documentation types you wish to generate"
 complete $update_opt -s f -l force -d "Force gem to install, bypassing dependency checks"
 complete $update_opt -l no-force -d "Don't force gem to install, bypassing dependency checks"
 complete $update_opt -s t -l test -d "Run unit tests prior to installation"

@@ -1,4 +1,4 @@
-function __fish_anypython
+function __ghoti_anypython
     # Try python3 first, because that's usually faster and generally nicer.
     # Do not consider the stub /usr/bin/python3 that comes installed on Darwin to be Python
     # unless Xcode reports a real directory path.

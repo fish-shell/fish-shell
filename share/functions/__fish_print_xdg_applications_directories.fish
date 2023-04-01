@@ -1,4 +1,4 @@
-function __fish_print_xdg_applications_directories --description 'Print directories where desktop files are stored'
+function __ghoti_print_xdg_applications_directories --description 'Print directories where desktop files are stored'
     set -l data_home $XDG_DATA_HOME
     if test -z "$data_home"
         set data_home $HOME/.local/share/

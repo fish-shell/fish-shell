@@ -23,7 +23,7 @@ set(SKIP_RETURN_CODE 125)
 #  * CMake devs insist that it is appropriate for `make test` to never depend on `make all`, i.e.
 #    running `make test` does not require any of the binaries to be built before testing.
 #  * The only way to have a test depend on a binary is to add a fake test with a name like
-#    "build_fish" that executes CMake recursively to build the `fish` target.
+#    "build_ghoti" that executes CMake recursively to build the `ghoti` target.
 #  * It is not possible to set top-level CTest options/settings such as CTEST_PARALLEL_LEVEL from
 #    within the CMake configuration file.
 #  * Circling back to the point about individual tests not being actual Makefile targets, CMake does
@@ -31,13 +31,13 @@ set(SKIP_RETURN_CODE 125)
 #    way to manually invoke test `foo` is to to manually run `ctest` and specify a regex matching
 #    `foo` as an argument, e.g. `ctest -R ^foo$`... which is really crazy.
 
-# The top-level test target is "fish_run_tests".
-add_custom_target(fish_run_tests
+# The top-level test target is "ghoti_run_tests".
+add_custom_target(ghoti_run_tests
   COMMAND env CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL} FISH_FORCE_COLOR=1
           FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
-  DEPENDS fish_tests tests_buildroot_target
+  DEPENDS ghoti_tests tests_buildroot_target
   USES_TERMINAL
 )
 
@@ -46,34 +46,34 @@ add_custom_target(fish_run_tests
 cmake_policy(PUSH)
 if(POLICY CMP0037)
   cmake_policy(SET CMP0037 OLD)
-  add_custom_target(test DEPENDS fish_run_tests)
+  add_custom_target(test DEPENDS ghoti_run_tests)
 endif()
 cmake_policy(POP)
 
 # Build the low-level tests code
-add_executable(fish_tests EXCLUDE_FROM_ALL
-               src/fish_tests.cpp)
-fish_link_deps_and_sign(fish_tests)
+add_executable(ghoti_tests EXCLUDE_FROM_ALL
+               src/ghoti_tests.cpp)
+ghoti_link_deps_and_sign(ghoti_tests)
 
 # The "test" directory.
 set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)
 
 # CMake doesn't really support dynamic test discovery where a test harness is executed to list the
-# tests it contains, making fish_tests.cpp's tests opaque to CMake (whereas littlecheck tests can be
-# enumerated from the filesystem). We used to compile fish_tests.cpp without linking against
+# tests it contains, making ghoti_tests.cpp's tests opaque to CMake (whereas littlecheck tests can be
+# enumerated from the filesystem). We used to compile ghoti_tests.cpp without linking against
 # anything (-Wl,-undefined,dynamic_lookup,--unresolved-symbols=ignore-all) to get it to print its
 # tests at configuration time, but that's a little too much dark CMake magic.
 #
 # We now identify tests by checking against a magic regex that's #define'd as a no-op C-side.
-file(READ "${CMAKE_SOURCE_DIR}/src/fish_tests.cpp" FISH_TESTS_CPP)
+file(READ "${CMAKE_SOURCE_DIR}/src/ghoti_tests.cpp" FISH_TESTS_CPP)
 string(REGEX MATCHALL "TEST_GROUP\\( *\"([^\"]+)\"" "LOW_LEVEL_TESTS" "${FISH_TESTS_CPP}")
 string(REGEX REPLACE "TEST_GROUP\\( *\"([^\"]+)\"" "\\1" "LOW_LEVEL_TESTS" "${LOW_LEVEL_TESTS}")
 list(REMOVE_DUPLICATES LOW_LEVEL_TESTS)
 
-# The directory into which fish is installed.
+# The directory into which ghoti is installed.
 set(TEST_INSTALL_DIR ${TEST_DIR}/buildroot)
 
-# The directory where the tests expect to find the fish root (./bin, etc)
+# The directory where the tests expect to find the ghoti root (./bin, etc)
 set(TEST_ROOT_DIR ${TEST_DIR}/root)
 
 # Copy needed directories for out-of-tree builds
@@ -84,7 +84,7 @@ if(NOT FISH_IN_TREE_BUILD)
     # Don't run ln twice or it will create a new link in the link.
     COMMAND test -e ${CMAKE_BINARY_DIR}/share/functions || ln -sf
                           ${CMAKE_SOURCE_DIR}/share/functions/ ${CMAKE_BINARY_DIR}/share/functions
-                       COMMENT "Symlinking fish functions to binary dir"
+                       COMMENT "Symlinking ghoti functions to binary dir"
                        VERBATIM)
 
   add_custom_target(tests_dir DEPENDS tests)
@@ -94,7 +94,7 @@ if(NOT FISH_IN_TREE_BUILD)
                        COMMENT "Copying test files to binary dir"
                        VERBATIM)
 
-  add_dependencies(fish_tests tests_dir funcs_dir)
+  add_dependencies(ghoti_tests tests_dir funcs_dir)
 endif()
 
 # Copy littlecheck.py
@@ -108,12 +108,12 @@ set(CMAKE_XCODE_GENERATE_SCHEME 0)
 
 # CMake being CMake, you can't just add a DEPENDS argument to add_test to make it depend on any of
 # your binaries actually being built before `make test` is executed (requiring `make all` first),
-# and the only dependency a test can have is on another test. So we make building fish and
-# `fish_tests` prerequisites to our entire top-level `test` target.
+# and the only dependency a test can have is on another test. So we make building ghoti and
+# `ghoti_tests` prerequisites to our entire top-level `test` target.
 function(add_test_target NAME)
   string(REPLACE "/" "-" NAME ${NAME})
   add_custom_target("test_${NAME}" COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^${NAME}$$"
-    DEPENDS fish_tests tests_buildroot_target USES_TERMINAL )
+    DEPENDS ghoti_tests tests_buildroot_target USES_TERMINAL )
 endfunction()
 
 add_custom_target(tests_buildroot_target
@@ -121,14 +121,14 @@ add_custom_target(tests_buildroot_target
                   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
                   COMMAND env DESTDIR=${TEST_INSTALL_DIR} ${CMAKE_COMMAND}
                           --build ${CMAKE_CURRENT_BINARY_DIR} --target install
-                  # Put fish_test_helper there too:
-                  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/fish_test_helper
+                  # Put ghoti_test_helper there too:
+                  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ghoti_test_helper
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}/bin
-                  # Also symlink fish to where the tests expect it to be:
+                  # Also symlink ghoti to where the tests expect it to be:
                   COMMAND ${CMAKE_COMMAND} -E create_symlink
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
                           ${TEST_ROOT_DIR}
-                  DEPENDS fish fish_test_helper)
+                  DEPENDS ghoti ghoti_test_helper)
 
 # CMake less than 3.9.0 "fully supports" setting an exit code to denote a skipped test, but then
 # it just goes ahead and reports it as failed. Really?
@@ -142,20 +142,20 @@ foreach(LTEST ${LOW_LEVEL_TESTS})
   add_test(
     NAME ${LTEST}
     COMMAND sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_env.sh
-               ${CMAKE_BINARY_DIR}/fish_tests ${LTEST}
+               ${CMAKE_BINARY_DIR}/ghoti_tests ${LTEST}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
   set_tests_properties(${LTEST} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
   add_test_target("${LTEST}")
 endforeach(LTEST)
 
-FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
+FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.ghoti)
 foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
   get_filename_component(CHECK ${CHECK} NAME_WE)
   add_test(NAME ${CHECK_NAME}
     COMMAND ${CMAKE_SKIPPED_HACK} sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
-               ${CMAKE_CURRENT_BINARY_DIR}/tests/test.fish ${CHECK}
+               ${CMAKE_CURRENT_BINARY_DIR}/tests/test.ghoti ${CHECK}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
   set_tests_properties(${CHECK_NAME} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
@@ -168,7 +168,7 @@ foreach(PEXPECT ${PEXPECTS})
   get_filename_component(PEXPECT ${PEXPECT} NAME)
   add_test(NAME ${PEXPECT}
     COMMAND ${CMAKE_SKIPPED_HACK} sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
-      ${CMAKE_CURRENT_BINARY_DIR}/tests/interactive.fish ${PEXPECT}
+      ${CMAKE_CURRENT_BINARY_DIR}/tests/interactive.ghoti ${PEXPECT}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
   set_tests_properties(${PEXPECT} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
@@ -194,7 +194,7 @@ if(NOT DEFINED ASAN)
     add_test(
         NAME "cargo-test"
         COMMAND cargo test ${CARGO_FLAGS} --target-dir target ${cargo_target_opt}
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fish-rust"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/ghoti-rust"
     )
     set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
     add_test_target("cargo-test")
@@ -203,6 +203,6 @@ endif()
 add_test(
     NAME "cargo-test-widestring"
     COMMAND cargo test ${CARGO_FLAGS} --target-dir target ${cargo_target_opt}
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/fish-rust/widestring-suffix/"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/ghoti-rust/widestring-suffix/"
 )
 add_test_target("cargo-test-widestring")

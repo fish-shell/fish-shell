@@ -6,7 +6,7 @@
 //! as described at <https://www.infinyon.com/blog/2021/04/rust-custom-test-harness/>
 //! See smoke.rs add_test for an example of how to use this.
 
-#[cfg(all(feature = "fish-ffi-tests", not(test)))]
+#[cfg(all(feature = "ghoti-ffi-tests", not(test)))]
 mod ffi_tests_impl {
     /// A test which needs to cross the FFI.
     #[derive(Debug)]
@@ -43,7 +43,7 @@ mod ffi_tests_impl {
     }
 }
 
-#[cfg(not(all(feature = "fish-ffi-tests", not(test))))]
+#[cfg(not(all(feature = "ghoti-ffi-tests", not(test))))]
 mod ffi_tests_impl {
     macro_rules! add_test {
         ($name:literal, $func:expr) => {};

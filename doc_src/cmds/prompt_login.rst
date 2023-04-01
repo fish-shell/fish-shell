@@ -19,7 +19,7 @@ Examples
 --------
 ::
 
-    function fish_prompt
+    function ghoti_prompt
         echo -n (prompt_login) (prompt_pwd) '$ '
     end
 

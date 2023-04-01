@@ -1,4 +1,4 @@
-#RUN: echo 'status job-control full; command echo A ; echo B;' | %fish
+#RUN: echo 'status job-control full; command echo A ; echo B;' | %ghoti
 
 # Regression test for #6573.
 

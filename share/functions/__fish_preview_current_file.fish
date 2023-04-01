@@ -1,4 +1,4 @@
-function __fish_preview_current_file --description "Open the file at the cursor in a pager"
+function __ghoti_preview_current_file --description "Open the file at the cursor in a pager"
     set -l pager less --
     set -q PAGER && echo $PAGER | read -at pager
 

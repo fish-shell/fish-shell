@@ -3,7 +3,7 @@
 complete -c zstd -s z -l compress -d "Compress (default)"
 complete -c zstd -s d -l decompress -l uncompress -d Decompress -k -x -a "
 (
-    __fish_complete_suffix .zst
+    __ghoti_complete_suffix .zst
 )
 "
 

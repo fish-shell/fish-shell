@@ -1,7 +1,7 @@
 #zpaq 7.15
 
 #variables
-set -l seen __fish_seen_subcommand_from
+set -l seen __ghoti_seen_subcommand_from
 set -l commands a add l list x extract
 set -l command1 a add
 set -l command2 l list

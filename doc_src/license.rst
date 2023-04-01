@@ -1,12 +1,12 @@
 License
 ========
 
-License for fish
+License for ghoti
 ----------------
 
-``fish`` Copyright © 2005-2009 Axel Liljencrantz, 2009-2023 fish-shell contributors. ``fish`` is released under the GNU General Public License, version 2.
+``ghoti`` Copyright © 2005-2009 Axel Liljencrantz, 2009-2023 ghoti-shell contributors. ``ghoti`` is released under the GNU General Public License, version 2.
 
-``fish`` includes other code licensed under the GNU General Public License, version 2, including GNU ``printf``.
+``ghoti`` includes other code licensed under the GNU General Public License, version 2, including GNU ``printf``.
 
 Copyright © 1990-2007 Free Software Foundation, Inc. Printf (from GNU Coreutils 6.9) is released under the GNU General Public License, version 2.
 
@@ -109,7 +109,7 @@ The precise terms and conditions for copying, distribution and modification foll
 License for PCRE2
 -----------------
 
-``fish`` contains code from the [PCRE2](http://www.pcre.org) library to support regular expressions. This code, created by Philip Hazel, is distributed under the terms of the BSD license. Copyright © 1997-2015 University of Cambridge.
+``ghoti`` contains code from the [PCRE2](http://www.pcre.org) library to support regular expressions. This code, created by Philip Hazel, is distributed under the terms of the BSD license. Copyright © 1997-2015 University of Cambridge.
 
 The BSD license follows.
 

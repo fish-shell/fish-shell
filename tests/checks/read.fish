@@ -1,4 +1,4 @@
-# RUN: %fish -C "set fish %fish" %s
+# RUN: %ghoti -C "set ghoti %ghoti" %s
 # Set term again explicitly to ensure behavior.
 set -gx TERM xterm
 # Read with no vars is not an error
@@ -172,7 +172,7 @@ end
 #CHECK: 2 'baz' 'quux'
 
 # Chunked read tests
-set -l path /tmp/fish_chunked_read_test.txt
+set -l path /tmp/ghoti_chunked_read_test.txt
 set -l longstr (seq 1024 | string join ',')
 echo -n $longstr >$path
 read -l longstr2 <$path
@@ -186,13 +186,13 @@ rm $path
 # The following tests verify that `read` correctly handles the limit on the
 # number of bytes consumed.
 #
-set fish_read_limit 8192
+set ghoti_read_limit 8192
 set line abcdefghijklmnopqrstuvwxyz
 
 # Ensure the `read` command terminates if asked to read too much data. The var
 # should be empty. We throw away any data we read if it exceeds the limit on
 # what we consider reasonable.
-yes $line | head -c (math "1 + $fish_read_limit") | read --null x
+yes $line | head -c (math "1 + $ghoti_read_limit") | read --null x
 if test $status -ne 122
     echo reading too much data did not terminate with failure status
 end
@@ -206,7 +206,7 @@ and echo reading too much data resulted in a var with unexpected data
 # Ensure the `read` command terminates if asked to read too much data even if
 # given an explicit limit. The var should be empty. We throw away any data we
 # read if it exceeds the limit on what we consider reasonable.
-yes $line | read --null --nchars=(math "$fish_read_limit + 1") x
+yes $line | read --null --nchars=(math "$ghoti_read_limit + 1") x
 if test $status -ne 122
     echo reading too much data did not terminate with failure status
 end
@@ -229,26 +229,26 @@ if test $exp_length -ne $act_length
 end
 
 # Confirm we can read exactly up to the limit.
-yes $line | read --null --nchars $fish_read_limit x
+yes $line | read --null --nchars $ghoti_read_limit x
 if test $status -ne 0
     echo the read of the max amount of data with --nchars failed unexpectedly
 end
-if test (string length "$x") -ne $fish_read_limit
+if test (string length "$x") -ne $ghoti_read_limit
     echo reading the max amount of data with --nchars failed the length test
 end
 
 # Same as previous test but limit the amount of data fed to `read` rather than
 # using the `--nchars` flag.
-yes $line | head -c $fish_read_limit | read --null x
+yes $line | head -c $ghoti_read_limit | read --null x
 if test $status -ne 0
     echo the read of the max amount of data failed unexpectedly
 end
-if test (string length "$x") -ne $fish_read_limit
+if test (string length "$x") -ne $ghoti_read_limit
     echo reading with a limited amount of input data failed the length test
 end
 
 # Confirm reading non-interactively works -- \#4206 regression
-echo abc\ndef | $fish -i -c 'read a; read b; set --show a; set --show b'
+echo abc\ndef | $ghoti -i -c 'read a; read b; set --show a; set --show b'
 #CHECK: $a: set in global scope, unexported, with 1 elements
 #CHECK: $a[1]: |abc|
 #CHECK: $b: set in global scope, unexported, with 1 elements
@@ -383,7 +383,7 @@ echo $foo $bar
 
 echo foo | read status
 # CHECKERR: read: status: cannot overwrite read-only variable
-# CHECKERR: {{.*}}read.fish (line {{\d+}}):
+# CHECKERR: {{.*}}read.ghoti (line {{\d+}}):
 # CHECKERR: echo foo | read status
 # CHECKERR: ^
 # CHECKERR: (Type 'help read' for related documentation)

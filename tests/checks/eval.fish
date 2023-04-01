@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 # Regression test for issue #4443
 eval set -l previously_undefined foo
 echo $previously_undefined
@@ -22,14 +22,14 @@ false
 eval "("
 echo $status
 # CHECK: 123
-# CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): Unexpected end of string, expecting ')'
+# CHECKERR: {{.*}}checks/eval.ghoti (line {{\d+}}): Unexpected end of string, expecting ')'
 # CHECKERR: (
 # CHECKERR: ^
 false
 eval '""'
 echo $status
 # CHECK: 123
-# CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): The expanded command was empty.
+# CHECKERR: {{.*}}checks/eval.ghoti (line {{\d+}}): The expanded command was empty.
 # CHECKERR: ""
 # CHECKERR: ^^
 
@@ -65,7 +65,7 @@ source /banana/\t/foo
 function eval
     builtin eval $argv
 end
-# CHECKERR: checks/eval.fish (line {{\d+}}): function: eval: cannot use reserved keyword as function name
+# CHECKERR: checks/eval.ghoti (line {{\d+}}): function: eval: cannot use reserved keyword as function name
 # CHECKERR: function eval
 # CHECKERR: ^
 

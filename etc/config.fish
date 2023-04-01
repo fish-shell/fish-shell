@@ -1,9 +1,9 @@
-# Put system-wide fish configuration entries here
-# or in .fish files in conf.d/
+# Put system-wide ghoti configuration entries here
+# or in .ghoti files in conf.d/
 # Files in conf.d can be overridden by the user
-# by files with the same name in $XDG_CONFIG_HOME/fish/conf.d
+# by files with the same name in $XDG_CONFIG_HOME/ghoti/conf.d
 
-# This file is run by all fish instances.
+# This file is run by all ghoti instances.
 # To include configuration only for login shells, use
 # if status is-login
 #    ...

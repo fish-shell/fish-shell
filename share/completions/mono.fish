@@ -2,7 +2,7 @@
 complete -c mono -s h -l help -d 'Show help'
 complete -c mono -s V -l version -a number -f -d 'Show version'
 
-complete -c mono -l aot -a '(__fish_append , \\
+complete -c mono -l aot -a '(__ghoti_append , \\
   asmonly\t"Instruct the AOT compiler to output assembly code instead of an object file" \\
   bind-to-runtime-version\t"Force the generated AOT files to be bound to the runtime version of the compiling Mono" \\
   data-outfile\t"Instruct the AOT code generator to output certain data constructs into a separate file" \\
@@ -57,7 +57,7 @@ complete -c mono -l assembly-loader \
 complete -c mono -l attach -a disable -f -d 'Disable the attach functionality'
 complete -c mono -l config -d 'Read configuration from file instead of using default one'
 
-complete -c mono -l debugger-agent -a '(__fish_append , \\
+complete -c mono -l debugger-agent -a '(__ghoti_append , \\
   address\t"Specify the IP address where your debugger client is listening to" \\
   loglevel\t"Specify the diagnostics log level for" \\
   logfile\t"Instruct the AOT code generator to output certain data constructs into a separate file" \\
@@ -83,7 +83,7 @@ complete -c mono -l hybrid-aot -d 'Run assemblies that have been stripped of IL'
 complete -c mono -l llvm -d 'Use the LLVM optimization and code generation engine to JIT or AOT compile'
 complete -c mono -l ffast-math -d 'Use Mono and LLVM aggressive floating point optimizations'
 
-complete -c mono -s o -l optimize -a '(__fish_append , \\
+complete -c mono -s o -l optimize -a '(__ghoti_append , \\
   abcrem\t"Array bound checks removal" \\
   all\t"Turn on all optimizations" \\
   aot\t"Usage of Ahead Of Time compiled code" \\
@@ -118,7 +118,7 @@ complete -c mono -l verify-all \
     -d 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
 
 # Development options
-complete -c mono -l debug -a '(__fish_append , \\
+complete -c mono -l debug -a '(__ghoti_append , \\
   casts\t"Produce a detailed error when throwing a InvalidCastException" \\
   mdb-optimizations\t"Disable some JIT optimizations which are usually only disabled when running inside the debugger" \\
   gdb\t"Generate and register debugging information with gdb")' \

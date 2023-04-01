@@ -28,7 +28,7 @@ end
 complete -c gcc -s o -d 'Place output in file' -r
 complete -c gcc -o aux-info -d 'Output to given file prototyped declarations for all functions from a translation unit' -r
 complete -c gcc -o fabi-version -d 'Use specified version of the C++ ABI' -xa "0 1"
-complete -c gcc -l sysroot -x -a '(__fish_complete_directories)' -d 'Use dir as the root directory for headers and libraries'
+complete -c gcc -l sysroot -x -a '(__ghoti_complete_directories)' -d 'Use dir as the root directory for headers and libraries'
 
 
 #
@@ -451,9 +451,9 @@ complete -c gcc -o fdollars-in-identifiers -d 'Accept $ in identifiers'
 complete -c gcc -o fextended-identifiers -d 'Accept universal character names in identifiers'
 complete -c gcc -o fpreprocessed -d 'Indicate to the preprocessor that the input file has already been preprocessed'
 complete -c gcc -o ftabstop -d 'Set the distance between tab stops'
-complete -c gcc -o fexec-charset -d 'Set the execution character set, used for string and character constants' -a "(__fish_print_encodings)"
-complete -c gcc -o fwide-exec-charset -d 'Set the wide execution character set, used for wide string and character constants' -a "(__fish_print_encodings)"
-complete -c gcc -o finput-charset -d 'Set the input character set, used for translation from the character set of the input file to the source character set used by GCC' -a "(__fish_print_encodings)"
+complete -c gcc -o fexec-charset -d 'Set the execution character set, used for string and character constants' -a "(__ghoti_print_encodings)"
+complete -c gcc -o fwide-exec-charset -d 'Set the wide execution character set, used for wide string and character constants' -a "(__ghoti_print_encodings)"
+complete -c gcc -o finput-charset -d 'Set the input character set, used for translation from the character set of the input file to the source character set used by GCC' -a "(__ghoti_print_encodings)"
 complete -c gcc -o fworking-directory -d 'Enable generation of linemarkers in the preprocessor output that will let the compiler know the current working directory at the time of preprocessing'
 complete -c gcc -o fno-show-column -d 'Do not print column numbers in diagnostics'
 complete -c gcc -s A -d 'Make an assertion with the predicate predicate and answer answer'
@@ -497,7 +497,7 @@ complete -c gcc -o iquotedir -d 'Add the directory dir to the head of the list o
 complete -c gcc -o L -d 'Add directory dir to the list of directories to be searched for -l'
 complete -c gcc -o B -d 'This option specifies where to find the executables, libraries, include files, and data files of the compiler itself'
 complete -c gcc -o specs -r -d 'Process file after the compiler reads in the standard specs file, in order to override the defaults that the gcc driver program uses when determining what switches to pass to cc1, cc1plus, as, ld, etc'
-complete -c gcc -l sysroot -x -a '(__fish_complete_directories)' -d 'Use dir as the logical root directory for headers and libraries'
+complete -c gcc -l sysroot -x -a '(__ghoti_complete_directories)' -d 'Use dir as the logical root directory for headers and libraries'
 complete -c gcc -o I- -d 'This option has been deprecated'
 complete -c gcc -s b -d 'The argument machine specifies the target machine for compilation'
 complete -c gcc -s V -d 'The argument version specifies which version of GCC to run'

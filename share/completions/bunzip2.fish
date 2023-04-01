@@ -1,4 +1,4 @@
-complete -c bunzip2 -k -x -a "(__fish_complete_suffix .tbz .tbz2 .bz2 .bz)"
+complete -c bunzip2 -k -x -a "(__ghoti_complete_suffix .tbz .tbz2 .bz2 .bz)"
 
 complete -c bunzip2 -s c -l stdout -d "Decompress to stdout"
 complete -c bunzip2 -s f -l force -d Overwrite

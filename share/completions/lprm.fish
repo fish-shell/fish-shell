@@ -1,1 +1,1 @@
-__fish_complete_lpr lprm
+__ghoti_complete_lpr lprm

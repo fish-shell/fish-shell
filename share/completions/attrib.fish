@@ -19,9 +19,9 @@ end
 
 complete -c attrib -f -a '(__attrib_complete_args)'
 
-complete -c attrib -f -n '__fish_seen_argument -w s' -a d \
+complete -c attrib -f -n '__ghoti_seen_argument -w s' -a d \
     -d 'Apply attrib and any command-line options to directories'
-complete -c attrib -f -n '__fish_seen_argument -w s' -a l \
+complete -c attrib -f -n '__ghoti_seen_argument -w s' -a l \
     -d 'Apply attrib and any command-line options to the Symbolic Link'
 
 complete -c attrib -f -a + -d 'Set the file attribute'

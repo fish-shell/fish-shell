@@ -89,7 +89,7 @@ static size_t next_tab_stop(size_t current_line_width) {
 int line_t::wcswidth_min_0(size_t max) const {
     int result = 0;
     for (size_t idx = 0, end = std::min(max, text.size()); idx < end; idx++) {
-        auto w = fish_wcwidth_visible(text[idx].character);
+        auto w = ghoti_wcwidth_visible(text[idx].character);
         // A backspace at the start of the line does nothing.
         if (w > 0 || result > 0) {
             result += w;
@@ -233,10 +233,10 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 
     for (auto p : esc2) {
         if (!p) continue;
-        // Test both padded and unpadded version, just to be safe. Most versions of fish_tparm don't
+        // Test both padded and unpadded version, just to be safe. Most versions of ghoti_tparm don't
         // actually seem to do anything these days.
         size_t esc_seq_len =
-            std::max(try_sequence(fish_tparm(const_cast<char *>(p)), code), try_sequence(p, code));
+            std::max(try_sequence(ghoti_tparm(const_cast<char *>(p)), code), try_sequence(p, code));
         if (esc_seq_len) {
             *resulting_length = esc_seq_len;
             return true;
@@ -324,7 +324,7 @@ static size_t measure_run_from(const wchar_t *input, size_t start, size_t *out_e
             width = next_tab_stop(width);
         } else {
             // Ordinary char. Add its width with care to ignore control chars which have width -1.
-            auto w = fish_wcwidth_visible(input[idx]);
+            auto w = ghoti_wcwidth_visible(input[idx]);
             // A backspace at the start of the line does nothing.
             if (w != -1 || width > 0) {
                 width += w;
@@ -366,7 +366,7 @@ static void truncate_run(wcstring *run, size_t desired_width, size_t *width,
             curr_width = measure_run_from(run->c_str(), 0, nullptr, cache);
             idx = 0;
         } else {
-            size_t char_width = fish_wcwidth_visible(c);
+            size_t char_width = ghoti_wcwidth_visible(c);
             curr_width -= std::min(curr_width, char_width);
             run->erase(idx, 1);
         }
@@ -604,7 +604,7 @@ void screen_t::move(int new_x, int new_y) {
     bool use_multi = multi_str != nullptr && multi_str[0] != '\0' &&
                      abs(x_steps) * std::strlen(str) > std::strlen(multi_str);
     if (use_multi && cur_term) {
-        char *multi_param = fish_tparm(const_cast<char *>(multi_str), abs(x_steps));
+        char *multi_param = ghoti_tparm(const_cast<char *>(multi_str), abs(x_steps));
         writembs(outp, multi_param);
     } else {
         for (i = 0; i < abs(x_steps); i++) {
@@ -653,17 +653,17 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b) {
                 const line_t *c = nullptr;
                 // Possible combining mark, go back until we hit _two_ printable characters or idx
                 // of 0.
-                if (fish_wcwidth(a.char_at(idx)) < 1) {
+                if (ghoti_wcwidth(a.char_at(idx)) < 1) {
                     c = &a;
-                } else if (fish_wcwidth(b.char_at(idx)) < 1) {
+                } else if (ghoti_wcwidth(b.char_at(idx)) < 1) {
                     c = &b;
                 }
 
                 if (c) {
-                    while (idx > 1 && (fish_wcwidth(c->char_at(idx - 1)) < 1 ||
-                                       fish_wcwidth(c->char_at(idx)) < 1))
+                    while (idx > 1 && (ghoti_wcwidth(c->char_at(idx - 1)) < 1 ||
+                                       ghoti_wcwidth(c->char_at(idx)) < 1))
                         idx--;
-                    if (idx == 1 && fish_wcwidth(c->char_at(idx)) < 1) idx = 0;
+                    if (idx == 1 && ghoti_wcwidth(c->char_at(idx)) < 1) idx = 0;
                 }
             }
             break;
@@ -819,7 +819,7 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
         // Skip over skip_remaining width worth of characters.
         size_t j = 0;
         for (; j < o_line.size(); j++) {
-            size_t width = fish_wcwidth_visible(o_line.char_at(j));
+            size_t width = ghoti_wcwidth_visible(o_line.char_at(j));
             if (skip_remaining < width) break;
             skip_remaining -= width;
             current_width += width;
@@ -827,7 +827,7 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
 
         // Skip over zero-width characters (e.g. combining marks at the end of the prompt).
         for (; j < o_line.size(); j++) {
-            int width = fish_wcwidth_visible(o_line.char_at(j));
+            int width = ghoti_wcwidth_visible(o_line.char_at(j));
             if (width > 0) break;
         }
 
@@ -851,7 +851,7 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
             this->handle_soft_wrap(current_width, static_cast<int>(i));
             this->move(current_width, static_cast<int>(i));
             set_color(o_line.color_at(j));
-            auto width = fish_wcwidth_visible(o_line.char_at(j));
+            auto width = ghoti_wcwidth_visible(o_line.char_at(j));
             this->write_char(o_line.char_at(j), width);
             current_width += width;
         }
@@ -885,7 +885,7 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
         // Output any rprompt if this is the first line.
         if (i == 0 && right_prompt_width > 0) {  //!OCLINT(Use early exit/continue)
             // Move the cursor to the beginning of the line first to be independent of the width.
-            // This helps prevent staircase effects if fish and the terminal disagree.
+            // This helps prevent staircase effects if ghoti and the terminal disagree.
             this->move(0, 0);
             this->move(static_cast<int>(screen_width - right_prompt_width), static_cast<int>(i));
             set_color(highlight_spec_t{});
@@ -1004,7 +1004,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
             multiline = true;
             break;
         } else {
-            first_line_width += fish_wcwidth_visible(c);
+            first_line_width += ghoti_wcwidth_visible(c);
         }
     }
     const size_t first_command_line_width = first_line_width;
@@ -1019,7 +1019,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
         autosuggest_truncated_widths.reserve(1 + autosuggestion_str.size());
         for (size_t i = 0; autosuggestion[i] != L'\0'; i++) {
             autosuggest_truncated_widths.push_back(autosuggest_total_width);
-            autosuggest_total_width += fish_wcwidth_visible(autosuggestion[i]);
+            autosuggest_total_width += ghoti_wcwidth_visible(autosuggestion[i]);
         }
     }
 
@@ -1188,7 +1188,7 @@ void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
         }
         desired_append_char(effective_commandline.at(i), colors[i], indent[i],
                             first_line_prompt_space,
-                            fish_wcwidth_visible(effective_commandline.at(i)));
+                            ghoti_wcwidth_visible(effective_commandline.at(i)));
     }
 
     // Cursor may have been at the end too.
@@ -1258,14 +1258,14 @@ void screen_t::reset_abandoning_line(int screen_width) {
     wcstring abandon_line_string;
     abandon_line_string.reserve(screen_width + 32);
 
-    // Don't need to check for fish_wcwidth errors; this is done when setting up
+    // Don't need to check for ghoti_wcwidth errors; this is done when setting up
     // omitted_newline_char in common.cpp.
     int non_space_width = get_omitted_newline_width();
     // We do `>` rather than `>=` because the code below might require one extra space.
     if (screen_width > non_space_width) {
         bool justgrey = true;
         if (cur_term && enter_dim_mode) {
-            std::string dim = fish_tparm(const_cast<char *>(enter_dim_mode));
+            std::string dim = ghoti_tparm(const_cast<char *>(enter_dim_mode));
             if (!dim.empty()) {
                 // Use dim if they have it, so the color will be based on their actual normal
                 // color and the background of the terminal.
@@ -1277,24 +1277,24 @@ void screen_t::reset_abandoning_line(int screen_width) {
             if (max_colors >= 238) {
                 // draw the string in a particular grey
                 abandon_line_string.append(
-                    str2wcstring(fish_tparm(const_cast<char *>(set_a_foreground), 237)));
+                    str2wcstring(ghoti_tparm(const_cast<char *>(set_a_foreground), 237)));
             } else if (max_colors >= 9) {
                 // bright black (the ninth color, looks grey)
                 abandon_line_string.append(
-                    str2wcstring(fish_tparm(const_cast<char *>(set_a_foreground), 8)));
+                    str2wcstring(ghoti_tparm(const_cast<char *>(set_a_foreground), 8)));
             } else if (max_colors >= 2 && enter_bold_mode) {
                 // we might still get that color by setting black and going bold for bright
                 abandon_line_string.append(
-                    str2wcstring(fish_tparm(const_cast<char *>(enter_bold_mode))));
+                    str2wcstring(ghoti_tparm(const_cast<char *>(enter_bold_mode))));
                 abandon_line_string.append(
-                    str2wcstring(fish_tparm(const_cast<char *>(set_a_foreground), 0)));
+                    str2wcstring(ghoti_tparm(const_cast<char *>(set_a_foreground), 0)));
             }
         }
 
         abandon_line_string.append(get_omitted_newline_str());
 
         if (cur_term && exit_attribute_mode) {
-            abandon_line_string.append(str2wcstring(fish_tparm(
+            abandon_line_string.append(str2wcstring(ghoti_tparm(
                 const_cast<char *>(exit_attribute_mode))));  // normal text ANSI escape sequence
         }
 

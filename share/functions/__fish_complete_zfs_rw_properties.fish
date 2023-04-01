@@ -1,4 +1,4 @@
-function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write properties"
+function __ghoti_complete_zfs_rw_properties -d "Completes with ZFS read-write properties"
     set -l OS ""
     switch (uname)
         case Linux
@@ -20,17 +20,17 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
     if contains -- $OS FreeBSD SunOS
         set additional_algs "$additional_algs, noparity"
     end
-    if __fish_is_zfs_feature_enabled "feature@sha512"
+    if __ghoti_is_zfs_feature_enabled "feature@sha512"
         set additional_algs "$additional_algs, sha512"
     end
-    if __fish_is_zfs_feature_enabled "feature@skein"
+    if __ghoti_is_zfs_feature_enabled "feature@skein"
         set additional_algs "$additional_algs, skein"
     end
-    if __fish_is_zfs_feature_enabled "feature@edonr"
+    if __ghoti_is_zfs_feature_enabled "feature@edonr"
         set additional_algs "$additional_algs, edonr"
     end
     echo -e "checksum\tData checksum (on, off, fletcher2, fletcher4, sha256$additional_algs)"
-    if __fish_is_zfs_feature_enabled "feature@lz4_compress"
+    if __ghoti_is_zfs_feature_enabled "feature@lz4_compress"
         set additional_algs ", lz4"
     end
     echo -e "compression\tCompression algorithm (on, off, lzjb$additional_algs, gzip, gzip-[1-9], zle)"
@@ -59,12 +59,12 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
     echo -e "volsize\tVolume logical size (SIZE)"
 
     # Autogenerate userquota@$USER list; only usernames are supported by the completion, but the zfs command supports more formats
-    for user in (__fish_print_users)
+    for user in (__ghoti_print_users)
         set -l tabAndBefore (echo -e "userquota@$user\t")
         printf "%sMax usage by user %s\n" $tabAndBefore $user
     end
     # Autogenerate groupquota@$USER list
-    for group in (__fish_print_groups)
+    for group in (__ghoti_print_groups)
         set -l tabAndBefore (echo -e "groupquota@$group\t")
         printf "%sMax usage by group %s\n" $tabAndBefore $group
     end

@@ -191,7 +191,7 @@ maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, const wchar_t
                 const job_t *j = nullptr;
 
                 if (argv[i][0] == L'%') {
-                    int job_id = fish_wcstoi(argv[i] + 1);
+                    int job_id = ghoti_wcstoi(argv[i] + 1);
                     if (errno || job_id < 0) {
                         streams.err.append_format(_(L"%ls: '%ls' is not a valid job id\n"), cmd,
                                                   argv[i]);
@@ -199,7 +199,7 @@ maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, const wchar_t
                     }
                     j = parser.job_with_id(job_id);
                 } else {
-                    int pid = fish_wcstoi(argv[i]);
+                    int pid = ghoti_wcstoi(argv[i]);
                     if (errno || pid < 0) {
                         streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd,
                                                   argv[i]);

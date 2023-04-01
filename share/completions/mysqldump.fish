@@ -1,1 +1,1 @@
-__fish_complete_mysql mysqldump
+__ghoti_complete_mysql mysqldump

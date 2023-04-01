@@ -7,7 +7,7 @@ use crate::builtins::shared::{
 use crate::ffi::parser_t;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{self, fish_wcstoi_opts, sprintf, wgettext_fmt, Options as WcstoiOptions};
+use crate::wutil::{self, ghoti_wcstoi_opts, sprintf, wgettext_fmt, Options as WcstoiOptions};
 use num_traits::PrimInt;
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
@@ -74,7 +74,7 @@ pub fn random(
         cmd: &wstr,
         num: &wstr,
     ) -> Result<T, wutil::Error> {
-        let res = fish_wcstoi_opts(
+        let res = ghoti_wcstoi_opts(
             num,
             WcstoiOptions {
                 consume_all: true,

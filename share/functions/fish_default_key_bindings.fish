@@ -1,4 +1,4 @@
-function fish_default_key_bindings -d "emacs-like key binds"
+function ghoti_default_key_bindings -d "emacs-like key binds"
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help"
@@ -7,16 +7,16 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     if not set -q argv[1]
         bind --erase --all --preset # clear earlier bindings, if any
-        if test "$fish_key_bindings" != fish_default_key_bindings
+        if test "$ghoti_key_bindings" != ghoti_default_key_bindings
             # Allow the user to set the variable universally
-            set -q fish_key_bindings
-            or set -g fish_key_bindings
+            set -q ghoti_key_bindings
+            or set -g ghoti_key_bindings
             # This triggers the handler, which calls us again and ensures the user_key_bindings
             # are executed.
-            set fish_key_bindings fish_default_key_bindings
+            set ghoti_key_bindings ghoti_default_key_bindings
             # unless the handler somehow doesn't exist, which would leave us without bindings.
             # this happens in no-config mode.
-            functions -q __fish_reload_key_bindings
+            functions -q __ghoti_reload_key_bindings
             and return
         end
     end
@@ -27,7 +27,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     end
 
     # These are shell-specific bindings that we share with vi mode.
-    __fish_shared_key_bindings $argv
+    __ghoti_shared_key_bindings $argv
     or return # protect against invalid $argv
 
     bind --preset $argv \ck kill-line
@@ -44,7 +44,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv \x7f backward-delete-char
 
     # for PuTTY
-    # https://github.com/fish-shell/fish-shell/issues/180
+    # https://github.com/ghoti-shell/ghoti-shell/issues/180
     bind --preset $argv \e\[1~ beginning-of-line
     bind --preset $argv \e\[3~ delete-char
     bind --preset $argv \e\[4~ end-of-line
@@ -68,7 +68,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv \et transpose-words
     bind --preset $argv \eu upcase-word
 
-    # This clashes with __fish_list_current_token
+    # This clashes with __ghoti_list_current_token
     # bind --preset $argv \el downcase-word
     bind --preset $argv \ec capitalize-word
     # One of these is alt+backspace.
@@ -94,7 +94,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     # term-specific special bindings
     switch "$TERM"
         case st-256color
-            # suckless and bash/zsh/fish have a different approach to how the terminal should be configured;
+            # suckless and bash/zsh/ghoti have a different approach to how the terminal should be configured;
             # the major effect is that several keys do not work as intended.
             # This is a workaround, there will be additions in he future.
             bind --preset $argv \e\[P delete-char
@@ -106,8 +106,8 @@ function fish_default_key_bindings -d "emacs-like key binds"
         case xterm-256color
             # Microsoft's conemu uses xterm-256color plus
             # the following to tell a console to paste:
-            bind --preset $argv \e\x20ep fish_clipboard_paste
+            bind --preset $argv \e\x20ep ghoti_clipboard_paste
     end
 
-    set -e -g fish_cursor_selection_mode
+    set -e -g ghoti_cursor_selection_mode
 end

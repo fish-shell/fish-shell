@@ -2,7 +2,7 @@
 # author: davbo
 
 
-function fish_prompt
+function ghoti_prompt
     if not set -q VIRTUAL_ENV_DISABLE_PROMPT
         set -g VIRTUAL_ENV_DISABLE_PROMPT true
     end
@@ -16,7 +16,7 @@ function fish_prompt
     set_color normal
     printf ' in '
 
-    set_color $fish_color_cwd
+    set_color $ghoti_color_cwd
     printf '%s' (prompt_pwd)
     set_color normal
 

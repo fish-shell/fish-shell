@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # Do not run under sanitizers in CI, as they intercept a busted posix_spawn
 # which mishandles shebangless scripts.
@@ -16,12 +16,12 @@ function runfile
     # Run our file twice, printing status.
     # Arguments are passed to exercise the re-execve code paths; they have no other effect.
     true # clear status
-    set -g fish_use_posix_spawn 1
+    set -g ghoti_use_posix_spawn 1
     ./file arg1 arg2 arg3
     echo $status
 
     true # clear status
-    set -g fish_use_posix_spawn 0
+    set -g ghoti_use_posix_spawn 0
     ./file arg1 arg2 arg3 arg4 arg5
     echo $status
 end
@@ -39,17 +39,17 @@ runfile
 #CHECK: 0
 #CHECK: 0
 
-# Never implicitly pass files ending with .fish to /bin/sh.
-true >file.fish
+# Never implicitly pass files ending with .ghoti to /bin/sh.
+true >file.ghoti
 sleep 0.1
-chmod a+x file.fish
-set -g fish_use_posix_spawn 0
-./file.fish
+chmod a+x file.ghoti
+set -g ghoti_use_posix_spawn 0
+./file.ghoti
 echo $status
-set -g fish_use_posix_spawn 1
-./file.fish
+set -g ghoti_use_posix_spawn 1
+./file.ghoti
 echo $status
-rm file.fish
+rm file.ghoti
 #CHECK: 126
 #CHECKERR: exec: {{.*}}{{.*}}
 #CHECKERR: exec: {{.*}}

@@ -1,4 +1,4 @@
-function __fish_toxenvs
+function __ghoti_toxenvs
     echo ALL
     tox --listenvs-all 2>/dev/null
 end
@@ -12,7 +12,7 @@ complete -c tox -l showconfig -d "Show live configuration"
 complete -c tox -s l -l listenvs -d "Show list of test environments"
 complete -c tox -s a -l listenvs-all -d "Show list of all defined environments"
 complete -c tox -s c -F -r -d "Config file name or directory with 'tox.ini' file"
-complete -c tox -s e -f -r -a "(__fish_toxenvs)" -d "Work against specified environments"
+complete -c tox -s e -f -r -a "(__ghoti_toxenvs)" -d "Work against specified environments"
 complete -c tox -l devenv -F -r -d "Sets up a development environment at ENVIDR"
 complete -c tox -l notest -d "Skip invoking test commands"
 complete -c tox -l sdistonly -d "Only perform the sdist packaging activity"

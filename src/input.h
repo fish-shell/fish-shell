@@ -14,7 +14,7 @@
 #include "input_common.h"
 #include "maybe.h"
 
-#define FISH_BIND_MODE_VAR L"fish_bind_mode"
+#define FISH_BIND_MODE_VAR L"ghoti_bind_mode"
 #define DEFAULT_BIND_MODE L"default"
 
 class event_queue_peeker_t;
@@ -42,7 +42,7 @@ class inputter_t final : private input_event_queue_t {
     /// escape key press, and is returned as such.
     ///
     /// \p command_handler is used to run commands. If empty (in the std::function sense), when a
-    /// character is encountered that would invoke a fish command, it is unread and
+    /// character is encountered that would invoke a ghoti command, it is unread and
     /// char_event_type_t::check_exit is returned. Note the handler is not stored.
     using command_handler_t = std::function<void(const wcstring_list_t &)>;
     char_event_t read_char(const command_handler_t &command_handler = {});

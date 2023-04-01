@@ -720,7 +720,7 @@ div.body .internal.reference:link {
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
 
-    /* The table background on fishfish Beta r1 */
+    /* The table background on ghotighoti Beta r1 */
     th, dl.field-list > dt {
         background-color: #121;
     }

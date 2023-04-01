@@ -147,7 +147,7 @@ expect_prompt()
 
 # Long line so we don't have to count prompts
 sendline(
-    """set -g fish_prompt_fired 0; function dontfire --on-event fish_prompt; set -g fish_prompt_fired (math $fish_prompt_fired + 1); end; function dofire --on-event fish_read; set -g fish_read_fired 1; end"""
+    """set -g ghoti_prompt_fired 0; function dontfire --on-event ghoti_prompt; set -g ghoti_prompt_fired (math $ghoti_prompt_fired + 1); end; function dofire --on-event ghoti_read; set -g ghoti_read_fired 1; end"""
 )
 
 expect_prompt()
@@ -156,5 +156,5 @@ expect_read_prompt()
 sendline("text")
 expect_prompt()
 # Once for right after setting the listener, another for after the read.
-print_var_contents("fish_prompt_fired", "2")
-print_var_contents("fish_read_fired", "1")
+print_var_contents("ghoti_prompt_fired", "2")
+print_var_contents("ghoti_read_fired", "1")

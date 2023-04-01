@@ -1,8 +1,8 @@
-#!/usr/bin/env fish
+#!/usr/bin/env ghoti
 # Build a list of all sections in the html sphinx docs, separately by page,
-# so it can be added to share/functions/help.fish
+# so it can be added to share/functions/help.ghoti
 # Use like
-#    fish extract_help_sections.fish user_doc/html/{fish_for_bash_users.html,faq.html,interactive.html,language.html,tutorial.html}
+#    ghoti extract_help_sections.ghoti user_doc/html/{ghoti_for_bash_users.html,faq.html,interactive.html,language.html,tutorial.html}
 # TODO: Currently `help` uses variable names we can't generate, so it needs to be touched up manually.
 # Also this could easily be broken by changes in sphinx, ideally we'd have a way to let it print the section titles.
 #

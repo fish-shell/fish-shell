@@ -1,18 +1,18 @@
-# RUN: env fish_test_helper=%fish_test_helper %fish -C 'set -l fish %fish' %s
+# RUN: env ghoti_test_helper=%ghoti_test_helper %ghoti -C 'set -l ghoti %ghoti' %s
 
-$fish -c 'function main; exit 4; true; end; main'
+$ghoti -c 'function main; exit 4; true; end; main'
 echo $status
 #CHECK: 4
 
-$fish -c 'begin; exit 5; true; end'
+$ghoti -c 'begin; exit 5; true; end'
 echo $status
 #CHECK: 5
 
-$fish -c 'kill -SIGHUP $fish_pid'
+$ghoti -c 'kill -SIGHUP $ghoti_pid'
 echo $status
 #CHECK: 129
 
-$fish -c 'function main; kill -SIGTERM $fish_pid; true; end; main'
+$ghoti -c 'function main; kill -SIGTERM $ghoti_pid; true; end; main'
 echo $status
 #CHECK: 143
 
@@ -20,7 +20,7 @@ function alarm --on-signal ALRM
     echo ALRM received
 end
 
-kill -s ALRM $fish_pid
+kill -s ALRM $ghoti_pid
 # CHECK: ALRM received
 
 function anychild --on-process-exit 0
@@ -55,7 +55,7 @@ command false | command true
 
 # Signals are reported correctly.
 # SIGKILL $status is 128 + 9 = 137
-$fish_test_helper sigkill_self
+$ghoti_test_helper sigkill_self
 # CHECK: PROCESS_EXIT 137
 # CHECK: JOB_EXIT 0
 

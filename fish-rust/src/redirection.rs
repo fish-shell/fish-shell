@@ -3,7 +3,7 @@
 use crate::ffi::wcharz_t;
 use crate::wchar::{WString, L};
 use crate::wchar_ffi::WCharToFFI;
-use crate::wutil::fish_wcstoi;
+use crate::wutil::ghoti_wcstoi;
 use cxx::{CxxVector, CxxWString, SharedPtr, UniquePtr};
 use libc::{c_int, O_APPEND, O_CREAT, O_EXCL, O_RDONLY, O_TRUNC, O_WRONLY};
 use std::os::fd::RawFd;
@@ -112,7 +112,7 @@ impl RedirectionSpec {
 
     /// Attempt to parse target as an fd.
     pub fn get_target_as_fd(&self) -> Option<RawFd> {
-        fish_wcstoi(&self.target).ok()
+        ghoti_wcstoi(&self.target).ok()
     }
     fn get_target_as_fd_ffi(&self) -> SharedPtr<i32> {
         match self.get_target_as_fd() {

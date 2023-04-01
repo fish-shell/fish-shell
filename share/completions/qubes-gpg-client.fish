@@ -1,6 +1,6 @@
 
 # Completions for qubes-gpg-client.
-# These completions are mostly taken from fish's completions for gpg.
+# These completions are mostly taken from ghoti's completions for gpg.
 #
 # Functions to generate completion options through gpg invocations
 # are not implemented for this tool, as they are incompatible with

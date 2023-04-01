@@ -1,4 +1,4 @@
-complete -c ping -xa "(__fish_print_hostnames)"
+complete -c ping -xa "(__ghoti_print_hostnames)"
 
 set -l ping_version (ping -V 2>&1 | string collect)
 
@@ -17,7 +17,7 @@ switch $ping_version
         complete -c ping -s f -d "Flood ping"
         complete -c ping -s F -d "Define flow label (IPv6 only)" -x
         complete -c ping -s h -d "Print help and exit"
-        complete -c ping -s I -d "Set source address to specified interface address" -xa "(__fish_print_interfaces; __fish_print_addresses)"
+        complete -c ping -s I -d "Set source address to specified interface address" -xa "(__ghoti_print_interfaces; __ghoti_print_addresses)"
         complete -c ping -s i -d "Seconds between sending each packet" -x
         complete -c ping -s L -d "Suppress loopback of multicast packets"
         complete -c ping -s l -d "Send the specified number of packets without waiting for reply" -x
@@ -76,7 +76,7 @@ switch $ping_version
         complete -c ping -s i -d "Interval (seconds)" -x
         complete -c ping -s A -d "Ping as soon as reply is received"
         complete -c ping -s t -d "Set TTL" -x
-        complete -c ping -s I -d "Source interface or IP address" -xa "(__fish_print_interfaces; __fish_print_addresses)"
+        complete -c ping -s I -d "Source interface or IP address" -xa "(__ghoti_print_interfaces; __ghoti_print_addresses)"
         complete -c ping -s W -d "Seconds to wait for the first response" -x
         complete -c ping -s w -d "Seconds until ping exits" -x
         complete -c ping -s q -d Quiet
@@ -111,7 +111,7 @@ switch $ping_version
                 complete -c ping -s q -d "Quiet output"
                 complete -c ping -s R -d "Record route"
                 complete -c ping -s r -d "Bypass the normal routing tables"
-                complete -c ping -s S -d "Source address for outgoing packets" -xa "(__fish_print_addresses)"
+                complete -c ping -s S -d "Source address for outgoing packets" -xa "(__ghoti_print_addresses)"
                 complete -c ping -s s -d "The number of data bytes to be sent" -x
                 complete -c ping -s T -d "Time To Live for multicasted packets" -x
                 complete -c ping -s t -d "Timeout (seconds) before ping exits" -x
@@ -121,7 +121,7 @@ switch $ping_version
 
                 if string match -q '*Darwin*' $ping_os_version
                     # Apple specific
-                    complete -c ping -s b -d "Bind the socket to specified interface for sending" -xa "(__fish_print_interfaces)"
+                    complete -c ping -s b -d "Bind the socket to specified interface for sending" -xa "(__ghoti_print_interfaces)"
                     complete -c ping -s k -d "Traffic class to use for sending ICMP packets" -xa "BK_SYS BK BE RD OAM AV RV VI VO CTL"
                     complete -c ping -s K -d "Network service type to use for sending ICMP packets" -xa "BK_SYS BK BE RV AV RD OAM VI SIG VO"
                     complete -c ping -l apple-connect -d "Connects the socket to the destination address"

@@ -1,34 +1,34 @@
-function fish_add_path --description "Add paths to the PATH"
+function ghoti_add_path --description "Add paths to the PATH"
     # This is meant to be the easy one-stop shop to adding stuff to $PATH.
-    # By default it'll prepend the given paths to a universal $fish_user_paths, excluding the already-included ones.
+    # By default it'll prepend the given paths to a universal $ghoti_user_paths, excluding the already-included ones.
     #
-    # That means it can be executed once in an interactive session, or stuffed in config.fish,
+    # That means it can be executed once in an interactive session, or stuffed in config.ghoti,
     # and it will do The Right Thing.
     #
     # The options:
     # --prepend or --append to select whether to put the new paths first or last
-    # --global or --universal to decide whether to use a universal or global fish_user_paths
+    # --global or --universal to decide whether to use a universal or global ghoti_user_paths
     # --path to set $PATH instead
     # --move to move existing entries instead of ignoring them
     # --verbose to print the set-command used
     # --dry-run to print the set-command without running it
     # We do not allow setting $PATH universally.
     #
-    # It defaults to keeping $fish_user_paths or creating a universal, prepending and ignoring existing entries.
+    # It defaults to keeping $ghoti_user_paths or creating a universal, prepending and ignoring existing entries.
     argparse -x g,U -x P,U -x a,p g/global U/universal P/path p/prepend a/append h/help m/move v/verbose n/dry-run -- $argv
     or return
 
     if set -q _flag_help
-        __fish_print_help fish_add_path
+        __ghoti_print_help ghoti_add_path
         return 0
     end
 
     set -l scope $_flag_global $_flag_universal
-    if not set -q scope[1]; and not set -q fish_user_paths
+    if not set -q scope[1]; and not set -q ghoti_user_paths
         set scope -U
     end
 
-    set -l var fish_user_paths
+    set -l var ghoti_user_paths
     set -q _flag_path
     and set var PATH
     # $PATH should be global
@@ -78,7 +78,7 @@ function fish_add_path --description "Add paths to the PATH"
     set $mode newvar $newpaths
 
     # Finally, only set if there is anything *to* set.
-    # This saves us from setting, especially in the common case of someone putting this in config.fish
+    # This saves us from setting, especially in the common case of someone putting this in config.ghoti
     # to ensure a path is in $PATH.
     if set -q newpaths[1]; or set -q indexes[1]
         if set -q _flag_verbose; or set -q _flag_n

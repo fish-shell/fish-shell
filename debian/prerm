@@ -1,5 +1,5 @@
 #!/bin/sh
-# prerm script for fish
+# prerm script for ghoti
 #
 # see: dh_installdeb(1)
 
@@ -21,7 +21,7 @@ remove_shell() {
                 return
         fi
 
-        remove-shell /usr/bin/fish
+        remove-shell /usr/bin/ghoti
 }
 
 case "$1" in

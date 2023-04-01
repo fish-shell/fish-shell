@@ -1,4 +1,4 @@
-complete -c ethtool -xa '(__fish_print_interfaces)'
+complete -c ethtool -xa '(__ghoti_print_interfaces)'
 
 complete -c ethtool -s h -l help -d 'Shows help message'
 complete -c ethtool -l version -d 'Shows ethtool version'

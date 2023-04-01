@@ -224,65 +224,65 @@ set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_
 
 set -l rustup_profiles minimal default complete
 
-complete -c rustup -n __fish_should_complete_switches -s v -l verbose
-complete -c rustup -n __fish_should_complete_switches -s h -l help
-complete -c rustup -n __fish_should_complete_switches -s V -l version
+complete -c rustup -n __ghoti_should_complete_switches -s v -l verbose
+complete -c rustup -n __ghoti_should_complete_switches -s h -l help
+complete -c rustup -n __ghoti_should_complete_switches -s V -l version
 
-complete -c rustup -n "__fish_is_nth_token 1" -xa "$subcmds"
+complete -c rustup -n "__ghoti_is_nth_token 1" -xa "$subcmds"
 
-complete -c rustup -n "__fish_prev_arg_in default" -xa "$__rustup_toolchains_short $__rustup_toolchains"
-complete -c rustup -n "__fish_prev_arg_in toolchain" -xa "add install list remove uninstall link help"
-complete -c rustup -n "__fish_prev_arg_in target" -xa "list add install remove uninstall help"
-complete -c rustup -n "__fish_prev_arg_in component" -xa "list add install remove uninstall help"
-complete -c rustup -n "__fish_prev_arg_in override" -xa "list set unset help"
-complete -c rustup -n "__fish_prev_arg_in run" -xa "$__rustup_toolchains_short $__rustup_toolchains"
-complete -c rustup -n "__fish_prev_arg_in self" -xa "update remove uninstall upgrade-data help"
-complete -c rustup -n "__fish_prev_arg_in set" -xa "default-host profile help"
+complete -c rustup -n "__ghoti_prev_arg_in default" -xa "$__rustup_toolchains_short $__rustup_toolchains"
+complete -c rustup -n "__ghoti_prev_arg_in toolchain" -xa "add install list remove uninstall link help"
+complete -c rustup -n "__ghoti_prev_arg_in target" -xa "list add install remove uninstall help"
+complete -c rustup -n "__ghoti_prev_arg_in component" -xa "list add install remove uninstall help"
+complete -c rustup -n "__ghoti_prev_arg_in override" -xa "list set unset help"
+complete -c rustup -n "__ghoti_prev_arg_in run" -xa "$__rustup_toolchains_short $__rustup_toolchains"
+complete -c rustup -n "__ghoti_prev_arg_in self" -xa "update remove uninstall upgrade-data help"
+complete -c rustup -n "__ghoti_prev_arg_in set" -xa "default-host profile help"
 
-complete -c rustup -n "__fish_seen_subcommand_from toolchain; and __fish_prev_arg_in remove uninstall" \
+complete -c rustup -n "__ghoti_seen_subcommand_from toolchain; and __ghoti_prev_arg_in remove uninstall" \
     -xa "$__rustup_toolchains $__rustup_toolchains_short"
-complete -c rustup -n "__fish_seen_subcommand_from toolchain; and __fish_prev_arg_in add install" \
+complete -c rustup -n "__ghoti_seen_subcommand_from toolchain; and __ghoti_prev_arg_in add install" \
     -xa "(__rustup_installable_toolchains)"
 
-complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in remove uninstall" \
+complete -c rustup -n "__ghoti_seen_subcommand_from component; and __ghoti_prev_arg_in remove uninstall" \
     -xa "(__rustup_installed_components)"
-complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in add install" \
+complete -c rustup -n "__ghoti_seen_subcommand_from component; and __ghoti_prev_arg_in add install" \
     -xa "(__rustup_components)"
 
-complete -c rustup -n "__fish_seen_subcommand_from show;" -xa "$rustup_show"
+complete -c rustup -n "__ghoti_seen_subcommand_from show;" -xa "$rustup_show"
 
-complete -c rustup -n "__fish_seen_subcommand_from set; and __fish_prev_arg_in default-host" \
+complete -c rustup -n "__ghoti_seen_subcommand_from set; and __ghoti_prev_arg_in default-host" \
     -xa "(__rustup_triples)"
 
-complete -c rustup -n "__fish_seen_subcommand_from set; and __fish_prev_arg_in profile" \
+complete -c rustup -n "__ghoti_seen_subcommand_from set; and __ghoti_prev_arg_in profile" \
     -xa "$rustup_profiles"
 
 # Global argument completions where valid
-complete -c rustup -n "__fish_prev_arg_in --toolchain" -xa "$__rustup_toolchains_short $__rustup_toolchains"
+complete -c rustup -n "__ghoti_prev_arg_in --toolchain" -xa "$__rustup_toolchains_short $__rustup_toolchains"
 
-complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_primitives)'
-complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_keywords)'
-complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_macros)'
-complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_modules)'
+complete -f -c rustup -n '__ghoti_seen_subcommand_from doc' -a '(__ghoti_rustup_docs_primitives)'
+complete -f -c rustup -n '__ghoti_seen_subcommand_from doc' -a '(__ghoti_rustup_docs_keywords)'
+complete -f -c rustup -n '__ghoti_seen_subcommand_from doc' -a '(__ghoti_rustup_docs_macros)'
+complete -f -c rustup -n '__ghoti_seen_subcommand_from doc' -a '(__ghoti_rustup_docs_modules)'
 
-function __fish_rustup_docs_modules
+function __ghoti_rustup_docs_modules
     set -l doc_path (__rustup_doc_path)
     command find "$doc_path"/{std,core,alloc} -name index.html \
         | string replace --regex "$doc_path/(.+)/index\.html" '$1\tModule' \
         | string replace --all / ::
 end
 
-function __fish_rustup_docs_keywords
+function __ghoti_rustup_docs_keywords
     set -l doc_path (__rustup_doc_path)
     string replace --regex "$doc_path/std/keyword\.(.+)\.html" '$1\tKeyword' "$doc_path"/std/keyword.*.html
 end
 
-function __fish_rustup_docs_primitives
+function __ghoti_rustup_docs_primitives
     set -l doc_path (__rustup_doc_path)
     string replace --regex "$doc_path/std/primitive\.(.+)\.html" '$1\tPrimitive' "$doc_path"/std/primitive.*.html
 end
 
-function __fish_rustup_docs_macros
+function __ghoti_rustup_docs_macros
     set -l doc_path (__rustup_doc_path)
     string replace --regex "$doc_path/" '' "$doc_path"/{std,core,alloc}/macro.*.html \
         | string replace --regex 'macro\.(.+)\.html' '$1\tMacro' \

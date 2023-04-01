@@ -63,7 +63,7 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
         // try to locate the job $argv[1], since we need to determine which error message to
         // emit (ambigous job specification vs malformed job id).
         bool found_job = false;
-        int pid = fish_wcstoi(argv[optind]);
+        int pid = ghoti_wcstoi(argv[optind]);
         if (errno == 0 && pid > 0) {
             found_job = (parser.job_get_from_pid(pid) != nullptr);
         }
@@ -77,7 +77,7 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
         job = nullptr;
         builtin_print_error_trailer(parser, streams.err, cmd);
     } else {
-        int pid = abs(fish_wcstoi(argv[optind]));
+        int pid = abs(ghoti_wcstoi(argv[optind]));
         if (errno) {
             streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[optind]);
             builtin_print_error_trailer(parser, streams.err, cmd);
@@ -111,7 +111,7 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
     if (!ft.empty()) {
         // Provide value for `status current-command`
         parser.libdata().status_vars.command = ft;
-        // Also provide a value for the deprecated fish 2.0 $_ variable
+        // Also provide a value for the deprecated ghoti 2.0 $_ variable
         parser.set_var_and_fire(L"_", ENV_EXPORT, std::move(ft));
         // Provide value for `status current-commandline`
         parser.libdata().status_vars.commandline = job->command();

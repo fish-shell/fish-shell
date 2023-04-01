@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Test scoping rules for functions and status
 
 set -e smurf
@@ -241,7 +241,7 @@ echo 7 $status # no passthrough
 #CHECK: 7 4
 false
 set -h >/dev/null
-# CHECKERR: fish: set: missing man page
+# CHECKERR: ghoti: set: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help set` will show an online version
 

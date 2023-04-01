@@ -1,5 +1,5 @@
 FROM centos:8
-LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
+LABEL org.opencontainers.image.source=https://github.com/ghoti-shell/ghoti-shell
 
 # See https://stackoverflow.com/questions/70963985/error-failed-to-download-metadata-for-repo-appstream-cannot-prepare-internal
 
@@ -27,15 +27,15 @@ RUN dnf -y install dnf-plugins-core \
 
 RUN pip3 install pexpect
 
-RUN groupadd -g 1000 fishuser \
-  && useradd  -p $(openssl passwd -1 fish) -d /home/fishuser -m -u 1000 -g 1000 fishuser -G wheel \
-  && mkdir -p /home/fishuser/fish-build \
-  && mkdir /fish-source \
-  && chown -R fishuser:fishuser /home/fishuser /fish-source
+RUN groupadd -g 1000 ghotiuser \
+  && useradd  -p $(openssl passwd -1 ghoti) -d /home/ghotiuser -m -u 1000 -g 1000 ghotiuser -G wheel \
+  && mkdir -p /home/ghotiuser/ghoti-build \
+  && mkdir /ghoti-source \
+  && chown -R ghotiuser:ghotiuser /home/ghotiuser /ghoti-source
 
-USER fishuser
-WORKDIR /home/fishuser
+USER ghotiuser
+WORKDIR /home/ghotiuser
 
-COPY fish_run_tests.sh /
+COPY ghoti_run_tests.sh /
 
-CMD /fish_run_tests.sh
+CMD /ghoti_run_tests.sh

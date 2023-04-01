@@ -10,7 +10,7 @@ import re
 import subprocess
 
 output = subprocess.check_output(
-    "nm --radix=d -g --demangle -l --print-size CMakeFiles/fishlib.dir/src/*.o",
+    "nm --radix=d -g --demangle -l --print-size CMakeFiles/ghotilib.dir/src/*.o",
     shell=True,
     universal_newlines=True,
 )

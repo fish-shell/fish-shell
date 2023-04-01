@@ -9,7 +9,7 @@ if not command -sq open
         or return
 
         if set -q _flag_help
-            __fish_print_help open
+            __ghoti_print_help open
             return 0
         end
 

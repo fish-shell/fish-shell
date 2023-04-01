@@ -1,4 +1,4 @@
-function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mode"
+function __ghoti_shared_key_bindings -d "Bindings shared between emacs and vi mode"
     # These are some bindings that are supposed to be shared between vi mode and default mode.
     # They are supposed to be unrelated to text-editing (or movement).
     # This takes $argv so the vi-bindings can pass the mode they are valid in.
@@ -30,8 +30,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv -k npage end-of-history
 
     # Interaction with the system clipboard.
-    bind --preset $argv \cx fish_clipboard_copy
-    bind --preset $argv \cv fish_clipboard_paste
+    bind --preset $argv \cx ghoti_clipboard_copy
+    bind --preset $argv \cv ghoti_clipboard_paste
 
     bind --preset $argv \e cancel
     bind --preset $argv \t complete
@@ -80,12 +80,12 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \e\[1\;9A history-token-search-backward # iTerm2
     bind --preset $argv \e\[1\;9B history-token-search-forward # iTerm2
     # Bash compatibility
-    # https://github.com/fish-shell/fish-shell/issues/89
+    # https://github.com/ghoti-shell/ghoti-shell/issues/89
     bind --preset $argv \e. history-token-search-backward
 
-    bind --preset $argv \el __fish_list_current_token
-    bind --preset $argv \eo __fish_preview_current_file
-    bind --preset $argv \ew __fish_whatis_current_token
+    bind --preset $argv \el __ghoti_list_current_token
+    bind --preset $argv \eo __ghoti_preview_current_file
+    bind --preset $argv \ew __ghoti_whatis_current_token
     # ncurses > 6.0 sends a "delete scrollback" sequence along with clear.
     # This string replace removes it.
     bind --preset $argv \cl 'echo -n (clear | string replace \e\[3J ""); commandline -f repaint'
@@ -98,20 +98,20 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
     bind --preset $argv \cd delete-or-exit
 
-    bind --preset $argv \es 'for cmd in sudo doas please; if command -q $cmd; fish_commandline_prepend $cmd; break; end; end'
+    bind --preset $argv \es 'for cmd in sudo doas please; if command -q $cmd; ghoti_commandline_prepend $cmd; break; end; end'
 
     # Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh).
-    bind --preset $argv -k f1 __fish_man_page
-    bind --preset $argv \eh __fish_man_page
+    bind --preset $argv -k f1 __ghoti_man_page
+    bind --preset $argv \eh __ghoti_man_page
 
     # This will make sure the output of the current command is paged using the default pager when
     # you press Meta-p.
     # If none is set, less will be used.
-    bind --preset $argv \ep __fish_paginate
+    bind --preset $argv \ep __ghoti_paginate
 
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also,
     # remove the commenting chars so the command can be further edited then executed.
-    bind --preset $argv \e\# __fish_toggle_comment_commandline
+    bind --preset $argv \e\# __ghoti_toggle_comment_commandline
 
     # The [meta-e] and [meta-v] keystrokes invoke an external editor on the command buffer.
     bind --preset $argv \ee edit_command_buffer
@@ -121,7 +121,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Exclude paste mode because that should get _everything_ literally.
     for mode in (bind --list-modes | string match -v paste)
         # We only need the in-focus event currently (to redraw the vi-cursor).
-        bind --preset -M $mode \e\[I 'emit fish_focus_in'
+        bind --preset -M $mode \e\[I 'emit ghoti_focus_in'
         bind --preset -M $mode \e\[O false
         bind --preset -M $mode \e\[\?1004h false
     end
@@ -133,13 +133,13 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # \e\[200~ and \e\[201~
     # Every character in between those two will be part of the paste and should not cause a binding to execute (like \n executing commands).
     #
-    # We enable it after every command and disable it before (in __fish_config_interactive.fish)
+    # We enable it after every command and disable it before (in __ghoti_config_interactive.ghoti)
     #
     # Support for this seems to be ubiquitous - emacs enables it unconditionally (!) since 25.1
     # (though it only supports it since then, it seems to be the last term to gain support).
     #
     # NOTE: This is more of a "security" measure than a proper feature.
-    # The better way to paste remains the `fish_clipboard_paste` function (bound to \cv by default).
+    # The better way to paste remains the `ghoti_clipboard_paste` function (bound to \cv by default).
     # We don't disable highlighting here, so it will be redone after every character (which can be slow),
     # and it doesn't handle "paste-stop" sequences in the paste (which the terminal needs to strip).
     #
@@ -148,10 +148,10 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Bind the starting sequence in every bind mode, even user-defined ones.
     # Exclude paste mode or there'll be an additional binding after switching between emacs and vi
     for mode in (bind --list-modes | string match -v paste)
-        bind --preset -M $mode -m paste \e\[200~ __fish_start_bracketed_paste
+        bind --preset -M $mode -m paste \e\[200~ __ghoti_start_bracketed_paste
     end
     # This sequence ends paste-mode and returns to the previous mode we have saved before.
-    bind --preset -M paste \e\[201~ __fish_stop_bracketed_paste
+    bind --preset -M paste \e\[201~ __ghoti_stop_bracketed_paste
     # In paste-mode, everything self-inserts except for the sequence to get out of it
     bind --preset -M paste "" self-insert
     # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
@@ -161,8 +161,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # but when the current token contains an unbalanced single-quote (`'`),
     # we escape all single-quotes and backslashes, effectively turning the paste
     # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
-    bind --preset -M paste "'" "__fish_commandline_insert_escaped \' \$__fish_paste_quoted"
-    bind --preset -M paste \\ "__fish_commandline_insert_escaped \\\ \$__fish_paste_quoted"
+    bind --preset -M paste "'" "__ghoti_commandline_insert_escaped \' \$__ghoti_paste_quoted"
+    bind --preset -M paste \\ "__ghoti_commandline_insert_escaped \\\ \$__ghoti_paste_quoted"
     # Only insert spaces if we're either quoted or not at the beginning of the commandline
     # - this strips leading spaces if they would trigger histignore.
     bind --preset -M paste " " self-insert-notfirst
@@ -201,7 +201,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     end
 end
 
-function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'
+function __ghoti_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'
     if set -q argv[2]
         commandline -i \\$argv[1]
     else
@@ -209,19 +209,19 @@ function __fish_commandline_insert_escaped --description 'Insert the first arg e
     end
 end
 
-function __fish_start_bracketed_paste
+function __ghoti_start_bracketed_paste
     # Save the last bind mode so we can restore it.
-    set -g __fish_last_bind_mode $fish_bind_mode
+    set -g __ghoti_last_bind_mode $ghoti_bind_mode
     # If the token is currently single-quoted,
     # we escape single-quotes (and backslashes).
-    string match -q 'single*' (__fish_tokenizer_state -- (commandline -ct | string collect))
-    and set -g __fish_paste_quoted 1
+    string match -q 'single*' (__ghoti_tokenizer_state -- (commandline -ct | string collect))
+    and set -g __ghoti_paste_quoted 1
     commandline -f begin-undo-group
 end
 
-function __fish_stop_bracketed_paste
+function __ghoti_stop_bracketed_paste
     # Restore the last bind mode.
-    set fish_bind_mode $__fish_last_bind_mode
-    set -e __fish_paste_quoted
+    set ghoti_bind_mode $__ghoti_last_bind_mode
+    set -e __ghoti_paste_quoted
     commandline -f end-undo-group
 end

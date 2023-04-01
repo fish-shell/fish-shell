@@ -4,7 +4,7 @@ function suspend --description 'Suspend the current shell.'
     or return
 
     if set -q _flag_help
-        __fish_print_help suspend
+        __ghoti_print_help suspend
         return 0
     end
 
@@ -18,11 +18,11 @@ function suspend --description 'Suspend the current shell.'
     end
 
     if status is-interactive
-        echo -ns 'Suspending ' $fish_pid ': run'
-        echo -n (set_color --bold) 'kill -CONT' $fish_pid (set_color normal)
+        echo -ns 'Suspending ' $ghoti_pid ': run'
+        echo -n (set_color --bold) 'kill -CONT' $ghoti_pid (set_color normal)
         echo 'from another terminal to resume'
     end
 
     # XXX always causes a zombie until one fg's when we do this:
-    kill -STOP $fish_pid
+    kill -STOP $ghoti_pid
 end

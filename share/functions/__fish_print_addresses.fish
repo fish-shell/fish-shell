@@ -1,4 +1,4 @@
-function __fish_print_addresses --description "List own network addresses with interface as description"
+function __ghoti_print_addresses --description "List own network addresses with interface as description"
     # if --all is given, also print 0.0.0.0 and ::
     if contains -- --all $argv
         echo -e "0.0.0.0\tall"

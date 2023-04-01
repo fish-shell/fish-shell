@@ -20,5 +20,5 @@ complete -c ruby -s v -l verbose -d 'Verbose mode'
 complete -c ruby -s w -d 'Verbose mode without message'
 complete -c ruby -l version -d 'Display version and exit'
 complete -c ruby -s x -d 'Extract script'
-complete -c ruby -s X -x -a '(__fish_complete_directories (commandline -ct))' -d Directory
+complete -c ruby -s X -x -a '(__ghoti_complete_directories (commandline -ct))' -d Directory
 complete -c ruby -s y -l yydebug -d 'Compiler debug mode'

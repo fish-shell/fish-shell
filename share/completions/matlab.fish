@@ -1,19 +1,19 @@
 # Completion for: MATLAB R2021b
-function __fish_matlabcheck_no_desktop_nodesktop_opts
-    not __fish_seen_argument --old desktop --old nodesktop
+function __ghoti_matlabcheck_no_desktop_nodesktop_opts
+    not __ghoti_seen_argument --old desktop --old nodesktop
     return $status
 end
 
-function __fish_matlabcheck_no_batch_r_opts
-    not __fish_seen_argument --old batch --short r
+function __ghoti_matlabcheck_no_batch_r_opts
+    not __ghoti_seen_argument --old batch --short r
     return $status
 end
 
 complete -c matlab -s h -l help -d 'Show help'
 
 # Mode options
-complete -c matlab -o desktop -n __fish_matlabcheck_no_desktop_nodesktop_opts -d 'Start without a controlling terminal'
-complete -c matlab -o nodesktop -n __fish_matlabcheck_no_desktop_nodesktop_opts -d 'Run the JVM software without opening the desktop'
+complete -c matlab -o desktop -n __ghoti_matlabcheck_no_desktop_nodesktop_opts -d 'Start without a controlling terminal'
+complete -c matlab -o nodesktop -n __ghoti_matlabcheck_no_desktop_nodesktop_opts -d 'Run the JVM software without opening the desktop'
 complete -c matlab -o nojvm -d 'Start without the JVM software'
 
 # Display options
@@ -27,7 +27,7 @@ complete -c matlab -o sd -r -d 'Set the folder'
 complete -c matlab -o useStartupFolderPref -d 'Change the folder to the Initial working folder preference'
 
 # Debugging options
-complete -c matlab -o logfile -r -a '(__fish_complete_suffix .log)' -d 'Copy Command Window output into filename'
+complete -c matlab -o logfile -r -a '(__ghoti_complete_suffix .log)' -d 'Copy Command Window output into filename'
 complete -c matlab -s n -d 'Display the environment variables/arguments passed to the executable'
 complete -c matlab -s e -d 'Display all environment variables and their values to standard output'
 complete -c matlab -s Dgdb -x -d 'Start in debug mode'
@@ -37,8 +37,8 @@ complete -c matlab -o jdb -x -d 'Enable use of the Java debugger'
 complete -c matlab -o debug -d 'Display information for debugging X-based problems'
 
 # Execute MATLAB script or function
-complete -c matlab -o batch -x -n __fish_matlabcheck_no_batch_r_opts -d 'Execute script, statement, or function non-interactively'
-complete -c matlab -s r -x -n __fish_matlabcheck_no_batch_r_opts -d 'Execute the statement'
+complete -c matlab -o batch -x -n __ghoti_matlabcheck_no_batch_r_opts -d 'Execute script, statement, or function non-interactively'
+complete -c matlab -s r -x -n __ghoti_matlabcheck_no_batch_r_opts -d 'Execute the statement'
 
 # Use single computational thread
 complete -c matlab -o singleCompThread -d 'Limit to a single computational thread'

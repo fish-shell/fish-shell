@@ -1,1 +1,1 @@
-__fish_complete_gpg gpg
+__ghoti_complete_gpg gpg

@@ -98,13 +98,13 @@ complete -c minikube -f -n "__minikube_using_command addons" -a open -d "Open th
 
 complete -c minikube -n "__minikube_using_command addons" -l format -d "Go template format string for the addon list output"
 
-complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -l format -d "Format to output addons URL in (default http://{{.IP}}:{{.Port}}"
-complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -l https -d "Open the addons URL with https instead of http"
-complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -l url -d "Display the kubernetes addons URL instead of opening it"
+complete -c minikube -n "__minikube_using_command addons; and __ghoti_seen_subcommand_from open" -l format -d "Format to output addons URL in (default http://{{.IP}}:{{.Port}}"
+complete -c minikube -n "__minikube_using_command addons; and __ghoti_seen_subcommand_from open" -l https -d "Open the addons URL with https instead of http"
+complete -c minikube -n "__minikube_using_command addons; and __ghoti_seen_subcommand_from open" -l url -d "Display the kubernetes addons URL instead of opening it"
 
-complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from enable" -a "(__minikube_list_addons disabled)" -d Addon
-complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from disable" -a "(__minikube_list_addons enabled)" -d Addon
-complete -c minikube -n "__minikube_using_command addons; and __fish_seen_subcommand_from open" -a "(__minikube_list_addons)" -d Addon
+complete -c minikube -n "__minikube_using_command addons; and __ghoti_seen_subcommand_from enable" -a "(__minikube_list_addons disabled)" -d Addon
+complete -c minikube -n "__minikube_using_command addons; and __ghoti_seen_subcommand_from disable" -a "(__minikube_list_addons enabled)" -d Addon
+complete -c minikube -n "__minikube_using_command addons; and __ghoti_seen_subcommand_from open" -a "(__minikube_list_addons)" -d Addon
 
 # Sub-command: completion
 complete -c minikube -f -n "__minikube_using_command completion" -a bash -d Shell
@@ -115,11 +115,11 @@ complete -c minikube -f -n "__minikube_using_command config" -a set -d "Sets an 
 complete -c minikube -f -n "__minikube_using_command config" -a unset -d "Unsets an individual value in a minikube config file"
 complete -c minikube -f -n "__minikube_using_command config" -a view -d "Display values currently set in the minikube config file"
 
-complete -c minikube -n "__minikube_using_command config; and __fish_seen_subcommand_from get" -a "(__minikube_config_fields)" -d Property
-complete -c minikube -n "__minikube_using_command config; and __fish_seen_subcommand_from set" -a "(__minikube_config_fields)" -d Property
-complete -c minikube -n "__minikube_using_command config; and __fish_seen_subcommand_from unset" -a "(__minikube_config_fields)" -d Property
-complete -c minikube -n "__minikube_using_command config; and __fish_seen_subcommand_from view" -a "(__minikube_config_fields)" -d Property
-complete -c minikube -n "__minikube_using_command config; and __fish_seen_subcommand_from view" -l format -d "Go template format string for the config view output"
+complete -c minikube -n "__minikube_using_command config; and __ghoti_seen_subcommand_from get" -a "(__minikube_config_fields)" -d Property
+complete -c minikube -n "__minikube_using_command config; and __ghoti_seen_subcommand_from set" -a "(__minikube_config_fields)" -d Property
+complete -c minikube -n "__minikube_using_command config; and __ghoti_seen_subcommand_from unset" -a "(__minikube_config_fields)" -d Property
+complete -c minikube -n "__minikube_using_command config; and __ghoti_seen_subcommand_from view" -a "(__minikube_config_fields)" -d Property
+complete -c minikube -n "__minikube_using_command config; and __ghoti_seen_subcommand_from view" -l format -d "Go template format string for the config view output"
 
 # Sub-command: dashboard
 complete -c minikube -n "__minikube_using_command dashboard" -l url -d "Display the kubernetes dashboard URL instead of opening it"
@@ -129,7 +129,7 @@ complete -c minikube -n "__minikube_using_command docker-env" -l no-proxy -d "Ad
 complete -c minikube -f -n "__minikube_using_command docker-env" -l shell -d "Force environment to be configured for a specified shell"
 complete -c minikube -n "__minikube_using_command docker-env" -l unset -s u -d "Unset variables"
 
-complete -c minikube -f -n "__minikube_using_command docker-env; and __fish_seen_subcommand_from --shell" -a "fish cmd powershell tcsh bash zsh" -d Shell
+complete -c minikube -f -n "__minikube_using_command docker-env; and __ghoti_seen_subcommand_from --shell" -a "ghoti cmd powershell tcsh bash zsh" -d Shell
 
 # Sub-command: service
 complete -c minikube -f -n "__minikube_using_command config" -a list -d "List the URLs for the services in local cluster"

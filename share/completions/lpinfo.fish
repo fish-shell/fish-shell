@@ -1,4 +1,4 @@
-__fish_complete_lpr lpinfo
+__ghoti_complete_lpr lpinfo
 complete -c lpinfo -s l -d 'Shows a "long" listing of devices or drivers'
 complete -c lpinfo -l device-id -x -d 'Specifies the IEEE-1284 device ID to match when listing drivers with the -m option'
 complete -c lpinfo -l exclude-schemes -x -d 'Specifies  a  comma-separated  list  of  device  or  PPD  schemes that should be excluded from the results'

@@ -1,11 +1,11 @@
-#!/usr/bin/env fish
+#!/usr/bin/env ghoti
 #
-# This runs C++ files and fish scripts (*.fish) through their respective code
+# This runs C++ files and ghoti scripts (*.ghoti) through their respective code
 # formatting programs.
 #
 set -l git_clang_format no
 set -l c_files
-set -l fish_files
+set -l ghoti_files
 set -l python_files
 set -l all no
 
@@ -30,7 +30,7 @@ if test $all = yes
         end
     end
     set c_files src/*.h src/*.cpp src/*.c
-    set fish_files share/**.fish
+    set ghoti_files share/**.ghoti
     set python_files {doc_src,share,tests}/**.py
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
@@ -49,8 +49,8 @@ else
     for file in (string match -r '^.*\.(?:c|cpp|h)$' -- $files)
         test -f $file; and set c_files $c_files $file
     end
-    # Extract just the fish files.
-    set fish_files (string match -r '^.*\.fish$' -- $files)
+    # Extract just the ghoti files.
+    set ghoti_files (string match -r '^.*\.ghoti$' -- $files)
     set python_files (string match -r '^.*\.py$' -- $files)
 end
 
@@ -97,14 +97,14 @@ if set -q c_files[1]
     end
 end
 
-# Run the fish reformatter if we have any fish files.
-if set -q fish_files[1]
-    if not type -q fish_indent
-        make fish_indent
+# Run the ghoti reformatter if we have any ghoti files.
+if set -q ghoti_files[1]
+    if not type -q ghoti_indent
+        make ghoti_indent
         set PATH . $PATH
     end
-    echo === Running "$green"fish_indent"$normal"
-    fish_indent -w -- $fish_files
+    echo === Running "$green"ghoti_indent"$normal"
+    ghoti_indent -w -- $ghoti_files
 end
 
 if set -q python_files[1]

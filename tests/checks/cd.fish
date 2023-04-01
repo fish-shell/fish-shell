@@ -1,6 +1,6 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %ghoti -C 'set -g ghoti %ghoti' %s
 
-set -g fish (realpath $fish)
+set -g ghoti (realpath $ghoti)
 
 # Store pwd to later go back before cleaning up
 set -l oldpwd (pwd)
@@ -75,24 +75,24 @@ complete -C'cd ../'
 #CHECK: ../rabbithole/
 
 
-# PWD should be imported and respected by fish
+# PWD should be imported and respected by ghoti
 cd $oldpwd
 mkdir -p $base/realhome
 ln -s $base/realhome $base/linkhome
 cd $base/linkhome
 set -l real_getcwd (pwd -P)
-env HOME=$base/linkhome $fish -c 'echo PWD is $PWD'
+env HOME=$base/linkhome $ghoti -c 'echo PWD is $PWD'
 #CHECK: PWD is {{.*}}/linkhome
 
 
 # Do not inherit a virtual PWD that fails to resolve to getcwd (#5647)
-env HOME=$base/linkhome PWD=/tmp $fish -c 'echo $PWD' | read output_pwd
+env HOME=$base/linkhome PWD=/tmp $ghoti -c 'echo $PWD' | read output_pwd
 test (realpath $output_pwd) = $real_getcwd
 and echo "BogusPWD test 1 succeeded"
 or echo "BogusPWD test 1 failed: $output_pwd vs $real_getcwd"
 #CHECK: BogusPWD test 1 succeeded
 
-env HOME=$base/linkhome PWD=/path/to/nowhere $fish -c 'echo $PWD' | read output_pwd
+env HOME=$base/linkhome PWD=/path/to/nowhere $ghoti -c 'echo $PWD' | read output_pwd
 test (realpath $output_pwd) = $real_getcwd
 and echo "BogusPWD test 2 succeeded"
 or echo "BogusPWD test 2 failed: $output_pwd vs $real_getcwd"
@@ -131,31 +131,31 @@ set -l old_cdpath $CDPATH
 set -l old_path $PWD
 cd nonexistent
 #CHECKERR: cd: The directory 'nonexistent' does not exist
-#CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+#CHECKERR: {{.*}}/cd.ghoti (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
 #CHECKERR: in function 'cd' with arguments 'nonexistent'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.ghoti
 
 touch file
 cd file
 #CHECKERR: cd: 'file' is not a directory
-#CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+#CHECKERR: {{.*}}/cd.ghoti (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
 #CHECKERR: in function 'cd' with arguments 'file'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.ghoti
 
 # a directory that isn't executable
 mkdir bad-perms
 chmod -x bad-perms
 cd bad-perms
 #CHECKERR: cd: Permission denied: 'bad-perms'
-#CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+#CHECKERR: {{.*}}/cd.ghoti (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
 #CHECKERR: in function 'cd' with arguments 'bad-perms'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.ghoti
 
 cd $old_path
 mkdir -p cdpath-dir/bad-perms
@@ -185,11 +185,11 @@ cd $old_path
 cd bad-perms
 # Permission errors are still a problem!
 #CHECKERR: cd: Permission denied: 'bad-perms'
-#CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+#CHECKERR: {{.*}}/cd.ghoti (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
 #CHECKERR: in function 'cd' with arguments 'bad-perms'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.ghoti
 cd $old_path
 cd file
 cd $old_path
@@ -200,15 +200,15 @@ rm -Rf $base
 set -g CDPATH ./
 
 # Verify that PWD on-variable events are sent
-function __fish_test_changed_pwd --on-variable PWD
+function __ghoti_test_changed_pwd --on-variable PWD
     echo "Changed to $PWD"
 end
 cd /
-functions --erase __fish_test_changed_pwd
+functions --erase __ghoti_test_changed_pwd
 #CHECK: Changed to /
 
 # Verify that cds don't stomp on each other.
-function __fish_test_thrash_cd
+function __ghoti_test_thrash_cd
     set -l dir (mktemp -d)
     cd $dir
     for i in (seq 50)
@@ -218,19 +218,19 @@ function __fish_test_thrash_cd
         sleep .002
     end
 end
-__fish_test_thrash_cd |
-__fish_test_thrash_cd |
-__fish_test_thrash_cd |
-__fish_test_thrash_cd |
-__fish_test_thrash_cd
+__ghoti_test_thrash_cd |
+__ghoti_test_thrash_cd |
+__ghoti_test_thrash_cd |
+__ghoti_test_thrash_cd |
+__ghoti_test_thrash_cd
 
 cd ""
 # CHECKERR: cd: Empty directory '' does not exist
-# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: {{.*}}/cd.ghoti (line {{\d+}}):
 # CHECKERR: builtin cd $argv
 # CHECKERR: ^
 # CHECKERR: in function 'cd' with arguments '""'
-# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.ghoti
 echo $status
 # CHECK: 1
 
@@ -241,11 +241,11 @@ begin
     cd broken-symbolic-link
 end
 # CHECKERR: cd: '{{.*}}/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'
-# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: {{.*}}/cd.ghoti (line {{\d+}}):
 # CHECKERR: builtin cd $argv
 # CHECKERR: ^
 # CHECKERR: in function 'cd' with arguments 'broken-symbolic-link'
-# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.ghoti
 
 # Make sure that "broken symlink" is reported over "no such file or directory".
 begin
@@ -253,11 +253,11 @@ begin
     cd broken-symbolic-link
 end
 # CHECKERR: cd: '{{.*}}/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'
-# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: {{.*}}/cd.ghoti (line {{\d+}}):
 # CHECKERR: builtin cd $argv
 # CHECKERR: ^
 # CHECKERR: in function 'cd' with arguments 'broken-symbolic-link'
-# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.ghoti
 
 begin
     mkdir -p foo/bar/muf

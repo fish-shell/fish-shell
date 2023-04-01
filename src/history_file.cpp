@@ -20,12 +20,12 @@
 #include "wutil.h"
 
 // Some forward declarations.
-static history_item_t decode_item_fish_2_0(const char *base, size_t len);
-static history_item_t decode_item_fish_1_x(const char *begin, size_t length);
+static history_item_t decode_item_ghoti_2_0(const char *base, size_t len);
+static history_item_t decode_item_ghoti_1_x(const char *begin, size_t length);
 
-static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
+static maybe_t<size_t> offset_of_next_item_ghoti_2_0(const history_file_contents_t &contents,
                                                     size_t *inout_cursor, time_t cutoff_timestamp);
-static maybe_t<size_t> offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
+static maybe_t<size_t> offset_of_next_item_ghoti_1_x(const char *begin, size_t mmap_length,
                                                     size_t *inout_cursor);
 
 // Check if we should mmap the fd.
@@ -68,14 +68,14 @@ static void replace_all(std::string *str, const char *needle, const char *replac
     }
 }
 
-// Support for escaping and unescaping the nonstandard "yaml" format introduced in fish 2.0.
-static void escape_yaml_fish_2_0(std::string *str) {
+// Support for escaping and unescaping the nonstandard "yaml" format introduced in ghoti 2.0.
+static void escape_yaml_ghoti_2_0(std::string *str) {
     replace_all(str, "\\", "\\\\");  // replace one backslash with two
     replace_all(str, "\n", "\\n");   // replace newline with backslash + literal n
 }
 
 /// This function is called frequently, so it ought to be fast.
-static void unescape_yaml_fish_2_0(std::string *str) {
+static void unescape_yaml_ghoti_2_0(std::string *str) {
     size_t cursor = 0, size = str->size();
     while (cursor < size) {
         // Operate on a const version of str, to avoid needless COWs that at() does.
@@ -157,9 +157,9 @@ history_file_contents_t::history_file_contents_t(const char *start, size_t lengt
 bool history_file_contents_t::infer_file_type() {
     assert(length_ > 0 && "File should never be empty");
     if (start_[0] == '#') {
-        this->type_ = history_type_fish_1_x;
-    } else {  // assume new fish
-        this->type_ = history_type_fish_2_0;
+        this->type_ = history_type_ghoti_1_x;
+    } else {  // assume new ghoti
+        this->type_ = history_type_ghoti_2_0;
     }
     return true;
 }
@@ -191,20 +191,20 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
     const char *base = address_at(offset);
     size_t len = this->length() - offset;
     switch (this->type()) {
-        case history_type_fish_2_0:
-            return decode_item_fish_2_0(base, len);
-        case history_type_fish_1_x:
-            return decode_item_fish_1_x(base, len);
+        case history_type_ghoti_2_0:
+            return decode_item_ghoti_2_0(base, len);
+        case history_type_ghoti_1_x:
+            return decode_item_ghoti_1_x(base, len);
     }
     return history_item_t{};
 }
 
 maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) const {
     switch (this->type()) {
-        case history_type_fish_2_0:
-            return offset_of_next_item_fish_2_0(*this, cursor, cutoff);
-        case history_type_fish_1_x:
-            return offset_of_next_item_fish_1_x(this->begin(), this->length(), cursor);
+        case history_type_ghoti_2_0:
+            return offset_of_next_item_ghoti_2_0(*this, cursor, cutoff);
+        case history_type_ghoti_1_x:
+            return offset_of_next_item_ghoti_1_x(this->begin(), this->length(), cursor);
     }
     return none();
 }
@@ -246,14 +246,14 @@ static bool extract_prefix_and_unescape_yaml(std::string *key, std::string *valu
         if (val_start < line.size() && line.at(val_start) == ' ') val_start++;
         value->assign(line, val_start, line.size() - val_start);
 
-        unescape_yaml_fish_2_0(key);
-        unescape_yaml_fish_2_0(value);
+        unescape_yaml_ghoti_2_0(key);
+        unescape_yaml_ghoti_2_0(value);
     }
     return where != std::string::npos;
 }
 
-/// Decode an item via the fish 2.0 format.
-static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
+/// Decode an item via the ghoti 2.0 format.
+static history_item_t decode_item_ghoti_2_0(const char *base, size_t len) {
     wcstring cmd;
     time_t when = 0;
     path_list_t paths;
@@ -304,7 +304,7 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
 
                 // Skip the leading dash-space and then store this path it.
                 line.erase(0, 2);
-                unescape_yaml_fish_2_0(&line);
+                unescape_yaml_ghoti_2_0(&line);
                 paths.push_back(str2wcstring(line));
             }
         }
@@ -371,7 +371,7 @@ static const char *next_line(const char *start, const char *end) {
 /// Pass the file contents and a pointer to a cursor size_t, initially 0.
 /// If custoff_timestamp is nonzero, skip items created at or after that timestamp.
 /// Returns (size_t)-1 when done.
-static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
+static maybe_t<size_t> offset_of_next_item_ghoti_2_0(const history_file_contents_t &contents,
                                                     size_t *inout_cursor, time_t cutoff_timestamp) {
     size_t cursor = *inout_cursor;
     const size_t length = contents.length();
@@ -398,7 +398,7 @@ static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_
             !std::memcmp(line_start, "...", 3))
             continue;
 
-        // Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of
+        // Hackish: ghoti 1.x rewriting a ghoti 2.0 history file can produce lines with lots of
         // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
         constexpr const char double_cmd[] = "- cmd: - cmd: ";
         constexpr const size_t double_cmd_len = const_strlen(double_cmd);
@@ -408,7 +408,7 @@ static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_
             line_start += const_strlen("- cmd: ");
         }
 
-        // Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when:
+        // Hackish: ghoti 1.x rewriting a ghoti 2.0 history file can produce commands like "when:
         // 123456". Ignore those.
         constexpr const char cmd_when[] = "- cmd:    when:";
         constexpr const size_t cmd_when_len = const_strlen(cmd_when);
@@ -468,7 +468,7 @@ void append_history_item_to_buffer(const history_item_t &item, std::string *buff
     };
 
     std::string cmd = wcs2string(item.str());
-    escape_yaml_fish_2_0(&cmd);
+    escape_yaml_ghoti_2_0(&cmd);
     append("- cmd: ", cmd.c_str(), "\n");
     append("  when: ", std::to_string(item.timestamp()).c_str(), "\n");
     const path_list_t &paths = item.get_required_paths();
@@ -477,7 +477,7 @@ void append_history_item_to_buffer(const history_item_t &item, std::string *buff
 
         for (const auto &wpath : paths) {
             std::string path = wcs2string(wpath);
-            escape_yaml_fish_2_0(&path);
+            escape_yaml_ghoti_2_0(&path);
             append("    - ", path.c_str(), "\n");
         }
     }
@@ -485,7 +485,7 @@ void append_history_item_to_buffer(const history_item_t &item, std::string *buff
 
 /// Remove backslashes from all newlines. This makes a string from the history file better formated
 /// for on screen display.
-static wcstring history_unescape_newlines_fish_1_x(const wcstring &in_str) {
+static wcstring history_unescape_newlines_ghoti_1_x(const wcstring &in_str) {
     wcstring out;
     for (const wchar_t *in = in_str.c_str(); *in; in++) {
         if (*in == L'\\') {
@@ -499,8 +499,8 @@ static wcstring history_unescape_newlines_fish_1_x(const wcstring &in_str) {
     return out;
 }
 
-/// Decode an item via the fish 1.x format. Adapted from fish 1.x's item_get().
-static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
+/// Decode an item via the ghoti 1.x format. Adapted from ghoti 1.x's item_get().
+static history_item_t decode_item_ghoti_1_x(const char *begin, size_t length) {
     const char *end = begin + length;
     const char *pos = begin;
     wcstring out;
@@ -538,7 +538,7 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
                 while (*time_string && !iswdigit(*time_string)) time_string++;
 
                 if (*time_string) {
-                    auto tm = static_cast<time_t>(fish_wcstol(time_string));
+                    auto tm = static_cast<time_t>(ghoti_wcstol(time_string));
                     if (!errno && tm >= 0) {
                         timestamp = tm;
                     }
@@ -560,13 +560,13 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
         was_backslash = (c == L'\\') && !was_backslash;
     }
 
-    out = history_unescape_newlines_fish_1_x(out);
+    out = history_unescape_newlines_ghoti_1_x(out);
     return history_item_t(out, timestamp);
 }
 
-/// Same as offset_of_next_item_fish_2_0, but for fish 1.x (pre fishfish).
+/// Same as offset_of_next_item_ghoti_2_0, but for ghoti 1.x (pre ghotighoti).
 /// Adapted from history_populate_from_mmap in history.c
-static maybe_t<size_t> offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
+static maybe_t<size_t> offset_of_next_item_ghoti_1_x(const char *begin, size_t mmap_length,
                                                     size_t *inout_cursor) {
     if (mmap_length == 0 || *inout_cursor >= mmap_length) return none();
 

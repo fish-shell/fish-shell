@@ -1,7 +1,7 @@
 #Windscribe 1.4
 
 #variables
-set -l seen __fish_seen_subcommand_from
+set -l seen __ghoti_seen_subcommand_from
 set -l commands account connect disconnect examples firewall lanbypass locations login logout port protocol proxy sendlog speedtest status viewlog
 
 #options

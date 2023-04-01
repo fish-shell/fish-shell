@@ -8,7 +8,7 @@ use crate::{
     ffi::{self, parser_t, Repin},
     wchar::wstr,
     wchar_ffi::{c_str, WCharFromFFI, WCharToFFI},
-    wutil::{fish_wcstoi, wgettext_fmt},
+    wutil::{ghoti_wcstoi, wgettext_fmt},
 };
 use libc::c_int;
 
@@ -100,7 +100,7 @@ pub fn bg(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
     let pids: Vec<i64> = args[opts.optind..]
         .iter()
         .map(|&arg| {
-            fish_wcstoi(arg).unwrap_or_else(|_| {
+            ghoti_wcstoi(arg).unwrap_or_else(|_| {
                 streams.err.append(wgettext_fmt!(
                     "%ls: '%ls' is not a valid job specifier\n",
                     cmd,

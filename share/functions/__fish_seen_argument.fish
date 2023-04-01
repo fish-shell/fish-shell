@@ -1,4 +1,4 @@
-function __fish_seen_argument --description 'Check whether argument is used'
+function __ghoti_seen_argument --description 'Check whether argument is used'
     argparse --ignore-unknown 's/short=+' 'o/old=+' 'l/long=+' 'w/windows=+' -- $argv
 
     set --local tokens (commandline --current-process --tokenize --cut-at-cursor)

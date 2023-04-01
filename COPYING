@@ -1,15 +1,15 @@
 Fish is a smart and user-friendly command line shell.
 
 Copyright (C) 2005-2009 Axel Liljencrantz
-Copyright (C) 2009-2023 fish-shell contributors
+Copyright (C) 2009-2023 ghoti-shell contributors
 
-fish is free software.
+ghoti is free software.
 
-Most of fish is licensed under the GNU General Public License version 2, and
+Most of ghoti is licensed under the GNU General Public License version 2, and
 you can redistribute it and/or modify it under the terms of the GNU GPL as
 published by the Free Software Foundation.
 
-fish also includes software licensed under the GNU Lesser General Public
+ghoti also includes software licensed under the GNU Lesser General Public
 License version 2, the OpenBSD license, the ISC license, and the NetBSD license.
 
 Full licensing information is contained in doc_src/license.rst.

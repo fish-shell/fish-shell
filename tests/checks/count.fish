@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Validate the behavior of the `count` command.
 
 # no args

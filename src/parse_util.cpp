@@ -1,6 +1,6 @@
-// Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
+// Various mostly unrelated utility functions related to parsing, loading and evaluating ghoti code.
 //
-// This library can be seen as a 'toolbox' for functions that are used in many places in fish and
+// This library can be seen as a 'toolbox' for functions that are used in many places in ghoti and
 // that are somehow related to parsing the code.
 #include "config.h"  // IWYU pragma: keep
 
@@ -667,7 +667,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
                     // switch abc
                     //    cas
                     //
-                    // fish will see that 'cas' is not valid inside a switch statement because it is
+                    // ghoti will see that 'cas' is not valid inside a switch statement because it is
                     // not "case". It will then unwind back to the top level job list, producing a
                     // parse tree like:
                     //

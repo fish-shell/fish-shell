@@ -1,14 +1,14 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %ghoti -C 'set -g ghoti %ghoti' %s
 
 # caret position (#5812)
-printf '<%s>\n' ($fish -c ' $f[a]' 2>&1)
+printf '<%s>\n' ($ghoti -c ' $f[a]' 2>&1)
 
-# CHECK: <fish: Invalid index value>
+# CHECK: <ghoti: Invalid index value>
 # CHECK: < $f[a]>
 # CHECK: <    ^>
 
-printf '<%s>\n' ($fish -c 'if $f[a]; end' 2>&1)
-# CHECK: <fish: Invalid index value>
+printf '<%s>\n' ($ghoti -c 'if $f[a]; end' 2>&1)
+# CHECK: <ghoti: Invalid index value>
 # CHECK: <if $f[a]; end>
 # CHECK: <      ^>
 
@@ -224,32 +224,32 @@ set -l foo a
 expansion $foo[2..-1]
 #CHECK: 0
 expansion $foo[0]
-#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): array indices start at 1, not 0.
+#CHECKERR: {{.*}}expansion.ghoti (line {{\d+}}): array indices start at 1, not 0.
 #CHECKERR: expansion $foo[0]
 #CHECKERR: ^
-# see https://github.com/fish-shell/fish-shell/issues/8213
+# see https://github.com/ghoti-shell/ghoti-shell/issues/8213
 expansion $foo[1..0]
-#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): array indices start at 1, not 0.
+#CHECKERR: {{.*}}expansion.ghoti (line {{\d+}}): array indices start at 1, not 0.
 #CHECKERR: expansion $foo[1..0]
 #CHECKERR: ^
 expansion $foo[-0]
-#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): array indices start at 1, not 0.
+#CHECKERR: {{.*}}expansion.ghoti (line {{\d+}}): array indices start at 1, not 0.
 #CHECKERR: expansion $foo[-0]
 #CHECKERR: ^
 
 echo "$foo[d]"
-#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): Invalid index value
+#CHECKERR: {{.*}}expansion.ghoti (line {{\d+}}): Invalid index value
 #CHECKERR: echo "$foo[d]"
 #CHECKERR: ^
 echo $foo[d]
-#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): Invalid index value
+#CHECKERR: {{.*}}expansion.ghoti (line {{\d+}}): Invalid index value
 #CHECKERR: echo $foo[d]
 #CHECKERR: ^
 
 echo ()[1]
 # No output
 echo ()[d]
-#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): Invalid index value
+#CHECKERR: {{.*}}expansion.ghoti (line {{\d+}}): Invalid index value
 #CHECKERR: echo ()[d]
 #CHECKERR: ^
 
@@ -269,7 +269,7 @@ echo "All digits: $status"
 
 set paren ')'
 echo $$paren
-#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): $) is not a valid variable in fish.
+#CHECKERR: {{.*}}expansion.ghoti (line {{\d+}}): $) is not a valid variable in ghoti.
 #CHECKERR: echo $$paren
 #CHECKERR: ^
 
@@ -282,7 +282,7 @@ set tmpdir $PWD
 cd $saved
 mkdir $tmpdir/realhome
 ln -s $tmpdir/realhome $tmpdir/linkhome
-set expandedtilde (env HOME=$tmpdir/linkhome $fish -c 'echo ~')
+set expandedtilde (env HOME=$tmpdir/linkhome $ghoti -c 'echo ~')
 if test $expandedtilde != $tmpdir/linkhome
 	echo '~ expands to' $expandedtilde ' - expected ' $tmpdir/linkhome
 end
@@ -312,25 +312,25 @@ echo "Back to normal variable: $testvar" (count $testvar)
 #CHECK: Back to normal variable: ONE TWO THREE FOUR 4
 
 # Test fatal syntax errors
-$fish -c 'echo $,foo'
-#CHECKERR: fish: Expected a variable name after this $.
+$ghoti -c 'echo $,foo'
+#CHECKERR: ghoti: Expected a variable name after this $.
 #CHECKERR: echo $,foo
 #CHECKERR: ^
-$fish -c 'echo {'
-#CHECKERR: fish: Unexpected end of string, incomplete parameter expansion
+$ghoti -c 'echo {'
+#CHECKERR: ghoti: Unexpected end of string, incomplete parameter expansion
 #CHECKERR: echo {
 #CHECKERR: ^
-$fish -c 'echo {}}'
-#CHECKERR: fish: Unexpected '}' for unopened brace expansion
+$ghoti -c 'echo {}}'
+#CHECKERR: ghoti: Unexpected '}' for unopened brace expansion
 #CHECKERR: echo {}}
 #CHECKERR: ^
-printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)
-#CHECK: <fish: command substitutions not allowed here>
+printf '<%s>\n' ($ghoti -c 'command (asd)' 2>&1)
+#CHECK: <ghoti: command substitutions not allowed here>
 #CHECK: <command (asd)>
 #CHECK: <        ^~~~^>
 true
 
-printf '<%s>\n' ($fish -c 'echo "$abc["' 2>&1)
-#CHECK: <fish: Invalid index value>
+printf '<%s>\n' ($ghoti -c 'echo "$abc["' 2>&1)
+#CHECK: <ghoti: Invalid index value>
 #CHECK: <echo "$abc[">
 #CHECK: <           ^>

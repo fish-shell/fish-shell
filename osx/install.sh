@@ -17,15 +17,15 @@ PREFIX=/usr/local
 cd "$(dirname "$0")"
 
 # Add us to the shells list
-./add-shell "${PREFIX}/bin/fish"
+./add-shell "${PREFIX}/bin/ghoti"
 
 # Ditto the base directory to the right place
 ditto ./base "${PREFIX}"
 
 # Announce our success
-echo "fish has been installed under ${PREFIX}/ and added to /etc/shells (if it was not already present)"
-echo "To start fish, run:"
-echo "    ${PREFIX}/bin/fish"
-echo "If you wish to change your default shell to fish, run:"
-echo "    chsh -s ${PREFIX}/bin/fish"
+echo "ghoti has been installed under ${PREFIX}/ and added to /etc/shells (if it was not already present)"
+echo "To start ghoti, run:"
+echo "    ${PREFIX}/bin/ghoti"
+echo "If you wish to change your default shell to ghoti, run:"
+echo "    chsh -s ${PREFIX}/bin/ghoti"
 echo "Enjoy!"

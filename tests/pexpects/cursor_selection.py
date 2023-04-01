@@ -21,7 +21,7 @@ expect_prompt()
 
 # Test inclusive mode
 
-sendline("set fish_cursor_selection_mode inclusive")
+sendline("set ghoti_cursor_selection_mode inclusive")
 
 # at the beginning of the line
 sendline("echo" + home + select + dump)
@@ -49,7 +49,7 @@ expect_str("<o>")
 
 # Test exclusive mode
 
-sendline("set fish_cursor_selection_mode exclusive")
+sendline("set ghoti_cursor_selection_mode exclusive")
 
 # at the beginning of the line
 sendline("echo" + home + select + dump)
@@ -79,11 +79,11 @@ expect_str("<o>")
 # We only test that the correct implementation is chosen and rely on the detailed tests from above.
 
 # without a configured selection mode
-sendline("set -u fish_cursor_selection_mode")
+sendline("set -u ghoti_cursor_selection_mode")
 sendline("echo" + home + right + select + right + dump)
 expect_str("<c>")
 
 # with an unknown setting
-sendline("set fish_cursor_selection_mode unknown")
+sendline("set ghoti_cursor_selection_mode unknown")
 sendline("echo" + home + right + select + right + dump)
 expect_str("<c>")

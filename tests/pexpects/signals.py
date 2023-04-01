@@ -36,31 +36,31 @@ expect_prompt("sleep.10")
 sendline("kill %1")
 expect_prompt()
 
-# Verify that the fish_postexec handler is called after SIGINT.
-sendline("function postexec --on-event fish_postexec; echo fish_postexec spotted; end")
+# Verify that the ghoti_postexec handler is called after SIGINT.
+sendline("function postexec --on-event ghoti_postexec; echo ghoti_postexec spotted; end")
 expect_prompt()
 sendline("read")
 expect_re("\r\n?read> $")
 sleep(0.200)
 os.kill(sp.spawn.pid, signal.SIGINT)
-expect_str("fish_postexec spotted")
+expect_str("ghoti_postexec spotted")
 expect_prompt()
 
-# Verify that the fish_kill_signal is set.
+# Verify that the ghoti_kill_signal is set.
 sendline(
-    "functions -e postexec; function postexec --on-event fish_postexec; echo fish_kill_signal $fish_kill_signal; end"
+    "functions -e postexec; function postexec --on-event ghoti_postexec; echo ghoti_kill_signal $ghoti_kill_signal; end"
 )
 expect_prompt()
 sendline("sleep 5")
 sleep(0.200)
 subprocess.call(["pkill", "-INT", "-P", str(sp.spawn.pid), "sleep"])
-expect_str("fish_kill_signal 2")
+expect_str("ghoti_kill_signal 2")
 expect_prompt()
 
 sendline("sleep 5")
 sleep(0.200)
 subprocess.call(["pkill", "-TERM", "-P", str(sp.spawn.pid), "sleep"])
-expect_str("fish_kill_signal 15")
+expect_str("ghoti_kill_signal 15")
 expect_prompt()
 
 # Verify that sending SIGHUP to the shell, such as will happen when the tty is
@@ -76,10 +76,10 @@ send("sleep 131 & echo $last_pid\r")
 pids += [expect_re("\d+\r\n").group().strip()]
 expect_prompt()
 send("sleep 9999999\r")
-sleep(0.500)  # ensure fish kicks off the above sleep before it gets HUP - see #7288
+sleep(0.500)  # ensure ghoti kicks off the above sleep before it gets HUP - see #7288
 os.kill(sp.spawn.pid, signal.SIGHUP)
 
-# Verify the spawned fish shell has exited.
+# Verify the spawned ghoti shell has exited.
 sp.spawn.wait()
 
 # Verify all child processes have been killed. We don't use `-p $pid` because

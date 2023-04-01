@@ -1,4 +1,4 @@
-// Prototypes for functions for manipulating fish script variables.
+// Prototypes for functions for manipulating ghoti script variables.
 #ifndef FISH_ENV_H
 #define FISH_ENV_H
 
@@ -54,12 +54,12 @@ using env_mode_flags_t = uint16_t;
 /// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
 
-/// A struct of configuration directories, determined in main() that fish will optionally pass to
+/// A struct of configuration directories, determined in main() that ghoti will optionally pass to
 /// env_init.
 struct config_paths_t {
     wcstring data;     // e.g., /usr/local/share
     wcstring sysconf;  // e.g., /usr/local/etc
-    wcstring doc;      // e.g., /usr/local/share/doc/fish
+    wcstring doc;      // e.g., /usr/local/share/doc/ghoti
     wcstring bin;      // e.g., /usr/local/bin
 };
 
@@ -300,7 +300,7 @@ class env_stack_t final : public environment_t {
 
     /// Synchronizes universal variable changes.
     /// If \p always is set, perform synchronization even if there's no pending changes from this
-    /// instance (that is, look for changes from other fish instances).
+    /// instance (that is, look for changes from other ghoti instances).
     /// \return a list of events for changed variables.
     std::vector<rust::Box<Event>> universal_sync(bool always);
 

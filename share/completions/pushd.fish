@@ -1,4 +1,4 @@
-function __fish_complete_pushd_plus
+function __ghoti_complete_pushd_plus
     if count $dirstack >/dev/null
         # print each member of the stack, replace $HOME with ~
         for i in (seq (count $dirstack))
@@ -7,7 +7,7 @@ function __fish_complete_pushd_plus
     end
 end
 
-function __fish_complete_pushd_minus
+function __ghoti_complete_pushd_minus
     if count $dirstack >/dev/null
         # print each member of the stack, replace $HOME with ~
         # Negative arguments are expected to start at "-0"
@@ -17,7 +17,7 @@ function __fish_complete_pushd_minus
     end
 end
 
-function __fish_complete_pushd_swap
+function __ghoti_complete_pushd_swap
     if count $dirstack >/dev/null
         # replace $HOME with ~
         printf "\t%s\n" "Swap with "(string replace -r "^$HOME" "~" -- $dirstack[1])
@@ -25,11 +25,11 @@ function __fish_complete_pushd_swap
 end
 
 # support pushd <dir>
-complete -c pushd -a "(__fish_complete_cd)"
+complete -c pushd -a "(__ghoti_complete_cd)"
 
 # support pushd <>
-complete -c pushd -a '(__fish_complete_pushd_swap)'
+complete -c pushd -a '(__ghoti_complete_pushd_swap)'
 
 # support pushd <+n>
-complete -c pushd -a '(__fish_complete_pushd_plus)'
-complete -c pushd -a '(__fish_complete_pushd_minus)'
+complete -c pushd -a '(__ghoti_complete_pushd_plus)'
+complete -c pushd -a '(__ghoti_complete_pushd_minus)'

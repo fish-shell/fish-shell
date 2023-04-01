@@ -4,17 +4,17 @@ from pexpect_helper import SpawnedProc
 sp = SpawnedProc()
 sendline, expect_prompt, expect_str = sp.sendline, sp.expect_prompt, sp.expect_str
 
-# Test fish_postexec and $status_generation for interactive shells.
+# Test ghoti_postexec and $status_generation for interactive shells.
 expect_prompt()
 
 sendline(
-    "function test_fish_postexec --on-event fish_postexec; printf 'pipestatus:%s, generation:%d, command:%s\\n' (string join '|' $pipestatus) $status_generation $argv; end"
+    "function test_ghoti_postexec --on-event ghoti_postexec; printf 'pipestatus:%s, generation:%d, command:%s\\n' (string join '|' $pipestatus) $status_generation $argv; end"
 )
 expect_prompt()
 
 generation = 1
 
-# fish_postexec is called when foreground job ends.
+# ghoti_postexec is called when foreground job ends.
 sendline("true")
 generation += 1
 expect_str("pipestatus:0, generation:%d, command:true" % generation)
@@ -106,9 +106,9 @@ expect_str("pipestatus:2, generation:%d, command:set '!@#$' value" % generation)
 expect_prompt()
 
 # or a variable query
-sendline("set -q fish_pid")
+sendline("set -q ghoti_pid")
 generation += 1
-expect_str("pipestatus:0, generation:%d, command:set -q fish_pid" % generation)
+expect_str("pipestatus:0, generation:%d, command:set -q ghoti_pid" % generation)
 expect_prompt()
 
 # This is just to set a memorable pipestatus.

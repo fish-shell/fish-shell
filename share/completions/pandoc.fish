@@ -60,8 +60,8 @@ complete -c pandoc -x -s D -l print-default-template -a "$outformats"
 # TODO: add support for enabling and disabling extensions using the +/- switches
 
 # options that take directories
-complete -c pandoc -x -l data-dir -a "(__fish_complete_directories (commandline -ct) "")"
-complete -c pandoc -x -l extract-media -a "(__fish_complete_directories (commandline -ct) "")"
+complete -c pandoc -x -l data-dir -a "(__ghoti_complete_directories (commandline -ct) "")"
+complete -c pandoc -x -l extract-media -a "(__ghoti_complete_directories (commandline -ct) "")"
 
 # options that take files
 complete -c pandoc -r -s o -l output
@@ -80,12 +80,12 @@ complete -c pandoc -r -l citation-abbreviations
 
 # options that take files filtered by extension
 
-complete -c pandoc -r -f -l print-highlight-style -k -a "(__fish_complete_suffix 'theme' )"
-complete -c pandoc -r -f -l highlight_style -k -a "(__fish_complete_suffix 'theme' )"
-complete -c pandoc -r -f -l csl -k -a "(__fish_complete_suffix 'csl'   )"
-complete -c pandoc -r -f -l reference-file -k -a "(__fish_complete_suffix 'odt' 'docx')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'bib' 'bibtex' 'copac' 'json' 'yaml' 'enl' 'xml' 'wos' 'medline' 'mods' 'ria')"
-complete -c pandoc -r -f -l lua-filter -k -a "(__fish_complete_suffix 'lua')"
+complete -c pandoc -r -f -l print-highlight-style -k -a "(__ghoti_complete_suffix 'theme' )"
+complete -c pandoc -r -f -l highlight_style -k -a "(__ghoti_complete_suffix 'theme' )"
+complete -c pandoc -r -f -l csl -k -a "(__ghoti_complete_suffix 'csl'   )"
+complete -c pandoc -r -f -l reference-file -k -a "(__ghoti_complete_suffix 'odt' 'docx')"
+complete -c pandoc -r -f -l bibliography -k -a "(__ghoti_complete_suffix 'bib' 'bibtex' 'copac' 'json' 'yaml' 'enl' 'xml' 'wos' 'medline' 'mods' 'ria')"
+complete -c pandoc -r -f -l lua-filter -k -a "(__ghoti_complete_suffix 'lua')"
 
 # options that take files in DATADIR
 complete -c pandoc -r -s F -l filter -a "(find $datadir/filters -type f 2>/dev/null | string replace -- '$datadir/filters/' '')"

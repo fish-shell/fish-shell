@@ -7,5 +7,5 @@
 #        kmutil -h
 
 if test "$(command -s kmutil)" = /usr/bin/kmutil
-    command kmutil --generate-completion-script=fish | source
+    command kmutil --generate-completion-script=ghoti | source
 end

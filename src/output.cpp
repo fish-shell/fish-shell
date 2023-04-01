@@ -35,7 +35,7 @@
 /// Whether term256 and term24bit are supported.
 static color_support_t color_support = 0;
 
-/// Returns true if we think fish_tparm can handle outputting a color index
+/// Returns true if we think ghoti_tparm can handle outputting a color index
 static bool term_supports_color_natively(unsigned int c) {
     return static_cast<unsigned>(max_colors) >= c + 1;
 }
@@ -53,8 +53,8 @@ unsigned char index_for_color(rgb_color_t c) {
 
 static bool write_color_escape(outputter_t &outp, const char *todo, unsigned char idx, bool is_fg) {
     if (term_supports_color_natively(idx)) {
-        // Use fish_tparm to emit color escape.
-        writembs(outp, fish_tparm(const_cast<char *>(todo), idx));
+        // Use ghoti_tparm to emit color escape.
+        writembs(outp, ghoti_tparm(const_cast<char *>(todo), idx));
         return true;
     }
 
@@ -115,7 +115,7 @@ bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
         return (is_fg ? write_foreground_color : write_background_color)(*this, idx);
     }
 
-    // 24 bit! No fish_tparm here, just ANSI escape sequences.
+    // 24 bit! No ghoti_tparm here, just ANSI escape sequences.
     // Foreground: ^[38;2;<r>;<g>;<b>m
     // Background: ^[48;2;<r>;<g>;<b>m
     color24_t rgb = color.to_color24();
@@ -241,7 +241,7 @@ void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && enter_bold_mode[0] != '\0' && !bg_set) {
         // The unconst cast is for NetBSD's benefit. DO NOT REMOVE!
-        writembs_nofail(*this, fish_tparm(const_cast<char *>(enter_bold_mode)));
+        writembs_nofail(*this, ghoti_tparm(const_cast<char *>(enter_bold_mode)));
         was_bold = is_bold;
     }
 
@@ -303,7 +303,7 @@ int outputter_t::term_puts(const char *str, int affcnt) {
     scoped_push<outputter_t *> push(&s_tputs_receiver, this);
     s_tputs_receiver->begin_buffering();
     // On some systems, tputs takes a char*, on others a const char*.
-    // Like fish_tparm, we just cast it to unconst, that should work everywhere.
+    // Like ghoti_tparm, we just cast it to unconst, that should work everywhere.
     int res = tputs(const_cast<char *>(str), affcnt, tputs_writer);
     s_tputs_receiver->end_buffering();
     return res;

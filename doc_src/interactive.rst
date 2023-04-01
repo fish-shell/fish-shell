@@ -5,7 +5,7 @@ Interactive use
 
 Fish prides itself on being really nice to use interactively. That's down to a few features we'll explain in the next few sections.
 
-Fish is used by giving commands in the fish language, see :ref:`The Fish Language <language>` for information on that.
+Fish is used by giving commands in the ghoti language, see :ref:`The Fish Language <language>` for information on that.
 
 Help
 ----
@@ -16,29 +16,29 @@ Fish also has man pages for its commands, and translates the help pages to man p
 
 Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the :doc:`fg <cmds/fg>` builtin, either type ``fg -h`` or ``help fg``.
 
-The main page can be viewed via ``help index`` (or just ``help``) or ``man fish-doc``. The tutorial can be viewed with ``help tutorial`` or ``man fish-tutorial``.
+The main page can be viewed via ``help index`` (or just ``help``) or ``man ghoti-doc``. The tutorial can be viewed with ``help tutorial`` or ``man ghoti-tutorial``.
 
 .. _autosuggestions:
 
 Autosuggestions
 ---------------
 
-fish suggests commands as you type, based on :ref:`command history <history-search>`, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
+ghoti suggests commands as you type, based on :ref:`command history <history-search>`, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``ghoti_color_autosuggestion`` variable).
 
 To accept the autosuggestion (replacing the command line contents), press :kbd:`→` or :kbd:`Control`\ +\ :kbd:`F`. To accept the first suggested word, press :kbd:`Alt`\ +\ :kbd:`→` or :kbd:`Alt`\ +\ :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
-If you don't like autosuggestions, you can disable them by setting ``$fish_autosuggestion_enabled`` to 0::
+If you don't like autosuggestions, you can disable them by setting ``$ghoti_autosuggestion_enabled`` to 0::
 
-  set -g fish_autosuggestion_enabled 0
+  set -g ghoti_autosuggestion_enabled 0
 
 .. _tab-completion:
 
 Tab Completion
 --------------
 
-Tab completion is a time saving feature of any modern shell. When you type :kbd:`Tab`, fish tries to guess the rest of the word under the cursor. If it finds just one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
+Tab completion is a time saving feature of any modern shell. When you type :kbd:`Tab`, ghoti tries to guess the rest of the word under the cursor. If it finds just one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
 
 The pager can be navigated with the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Shift`\ +\ :kbd:`Tab`. Pressing :kbd:`Control`\ +\ :kbd:`S` (the ``pager-toggle-search`` binding - :kbd:`/` in vi-mode) opens up a search menu that you can use to filter the list.
 
@@ -56,7 +56,7 @@ It also provides a large number of program specific scripted completions. Most o
 
 You can also write your own completions or install some you got from someone else. For that, see :ref:`Writing your own completions <completion-own>`.
 
-Completion scripts are loaded on demand, just like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$fish_complete_path`` :ref:`list <variables-lists>` is used instead of ``$fish_function_path``. Typically you can drop new completions in ~/.config/fish/completions/name-of-command.fish and fish will find them automatically.
+Completion scripts are loaded on demand, just like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$ghoti_complete_path`` :ref:`list <variables-lists>` is used instead of ``$ghoti_function_path``. Typically you can drop new completions in ~/.config/ghoti/completions/name-of-command.ghoti and ghoti will find them automatically.
 
 .. _color:
 
@@ -74,107 +74,107 @@ Detected errors include:
 
 To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
 
-Fish also provides pre-made color themes you can pick with :doc:`fish_config <cmds/fish_config>`. Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
+Fish also provides pre-made color themes you can pick with :doc:`ghoti_config <cmds/ghoti_config>`. Running just ``ghoti_config`` opens a browser interface, or you can use ``ghoti_config theme`` in the terminal.
 
 For example, to disable nearly all coloring::
 
-  fish_config theme choose none
+  ghoti_config theme choose none
 
 Or, to see all themes, right in your terminal::
 
-  fish_config theme show
+  ghoti_config theme show
 
 .. _variables-color:
 
 Syntax highlighting variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
+The colors used by ghoti for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
 
 
 Example: to make errors highlighted and red, use::
 
-    set fish_color_error red --bold
+    set ghoti_color_error red --bold
 
 
-The following variables are available to change the highlighting colors in fish:
+The following variables are available to change the highlighting colors in ghoti:
 
 ==========================================        =====================================================================
 Variable                                          Meaning
 ==========================================        =====================================================================
-.. envvar:: fish_color_normal                     default color
-.. envvar:: fish_color_command                    commands like echo
-.. envvar:: fish_color_keyword                    keywords like if - this falls back on the command color if unset
-.. envvar:: fish_color_quote                      quoted text like ``"abc"``
-.. envvar:: fish_color_redirection                IO redirections like >/dev/null
-.. envvar:: fish_color_end                        process separators like ``;`` and ``&``
-.. envvar:: fish_color_error                      syntax errors
-.. envvar:: fish_color_param                      ordinary command parameters
-.. envvar:: fish_color_valid_path                 parameters that are filenames (if the file exists)
-.. envvar:: fish_color_option                     options starting with "-", up to the first "--" parameter
-.. envvar:: fish_color_comment                    comments like '# important'
-.. envvar:: fish_color_selection                  selected text in vi visual mode
-.. envvar:: fish_color_operator                   parameter expansion operators like ``*`` and ``~``
-.. envvar:: fish_color_escape                     character escapes like ``\n`` and ``\x70``
-.. envvar:: fish_color_autosuggestion             autosuggestions (the proposed rest of a command)
-.. envvar:: fish_color_cwd                        the current working directory in the default prompt
-.. envvar:: fish_color_cwd_root                   the current working directory in the default prompt for the root user
-.. envvar:: fish_color_user                       the username in the default prompt
-.. envvar:: fish_color_host                       the hostname in the default prompt
-.. envvar:: fish_color_host_remote                the hostname in the default prompt for remote sessions (like ssh)
-.. envvar:: fish_color_status                     the last command's nonzero exit code in the default prompt
-.. envvar:: fish_color_cancel                     the '^C' indicator on a canceled command
-.. envvar:: fish_color_search_match               history search matches and selected pager items (background only)
+.. envvar:: ghoti_color_normal                     default color
+.. envvar:: ghoti_color_command                    commands like echo
+.. envvar:: ghoti_color_keyword                    keywords like if - this falls back on the command color if unset
+.. envvar:: ghoti_color_quote                      quoted text like ``"abc"``
+.. envvar:: ghoti_color_redirection                IO redirections like >/dev/null
+.. envvar:: ghoti_color_end                        process separators like ``;`` and ``&``
+.. envvar:: ghoti_color_error                      syntax errors
+.. envvar:: ghoti_color_param                      ordinary command parameters
+.. envvar:: ghoti_color_valid_path                 parameters that are filenames (if the file exists)
+.. envvar:: ghoti_color_option                     options starting with "-", up to the first "--" parameter
+.. envvar:: ghoti_color_comment                    comments like '# important'
+.. envvar:: ghoti_color_selection                  selected text in vi visual mode
+.. envvar:: ghoti_color_operator                   parameter expansion operators like ``*`` and ``~``
+.. envvar:: ghoti_color_escape                     character escapes like ``\n`` and ``\x70``
+.. envvar:: ghoti_color_autosuggestion             autosuggestions (the proposed rest of a command)
+.. envvar:: ghoti_color_cwd                        the current working directory in the default prompt
+.. envvar:: ghoti_color_cwd_root                   the current working directory in the default prompt for the root user
+.. envvar:: ghoti_color_user                       the username in the default prompt
+.. envvar:: ghoti_color_host                       the hostname in the default prompt
+.. envvar:: ghoti_color_host_remote                the hostname in the default prompt for remote sessions (like ssh)
+.. envvar:: ghoti_color_status                     the last command's nonzero exit code in the default prompt
+.. envvar:: ghoti_color_cancel                     the '^C' indicator on a canceled command
+.. envvar:: ghoti_color_search_match               history search matches and selected pager items (background only)
 
 ==========================================        =====================================================================
 
-If a variable isn't set or is empty, fish usually tries ``$fish_color_normal``, except for:
+If a variable isn't set or is empty, ghoti usually tries ``$ghoti_color_normal``, except for:
 
-- ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
-- ``$fish_color_option``, where it tries ``$fish_color_param`` first.
-- For ``$fish_color_valid_path``, if that doesn't have a color, but only modifiers, it adds those to the color that would otherwise be used,
-  like ``$fish_color_param``. But if valid paths have a color, it uses that and adds in modifiers from the other color.
+- ``$ghoti_color_keyword``, where it tries ``$ghoti_color_command`` first.
+- ``$ghoti_color_option``, where it tries ``$ghoti_color_param`` first.
+- For ``$ghoti_color_valid_path``, if that doesn't have a color, but only modifiers, it adds those to the color that would otherwise be used,
+  like ``$ghoti_color_param``. But if valid paths have a color, it uses that and adds in modifiers from the other color.
 
 .. _variables-color-pager:
 
 Pager color variables
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-fish will sometimes present a list of choices in a table, called the pager.
+ghoti will sometimes present a list of choices in a table, called the pager.
 
 Example: to set the background of each pager row, use::
 
-    set fish_pager_color_background --background=white
+    set ghoti_pager_color_background --background=white
 
 To have black text on alternating white and gray backgrounds::
 
-    set fish_pager_color_prefix black
-    set fish_pager_color_completion black
-    set fish_pager_color_description black
-    set fish_pager_color_background --background=white
-    set fish_pager_color_secondary_background --background=brwhite
+    set ghoti_pager_color_prefix black
+    set ghoti_pager_color_completion black
+    set ghoti_pager_color_description black
+    set ghoti_pager_color_background --background=white
+    set ghoti_pager_color_secondary_background --background=brwhite
 
 Variables affecting the pager colors:
 
 ===================================================        ===========================================================
 Variable                                                   Meaning
 ===================================================        ===========================================================
-.. envvar:: fish_pager_color_progress                      the progress bar at the bottom left corner
-.. envvar:: fish_pager_color_background                    the background color of a line
-.. envvar:: fish_pager_color_prefix                        the prefix string, i.e. the string that is to be completed
-.. envvar:: fish_pager_color_completion                    the completion itself, i.e. the proposed rest of the string
-.. envvar:: fish_pager_color_description                   the completion description
-.. envvar:: fish_pager_color_selected_background           background of the selected completion
-.. envvar:: fish_pager_color_selected_prefix               prefix of the selected completion
-.. envvar:: fish_pager_color_selected_completion           suffix of the selected completion
-.. envvar:: fish_pager_color_selected_description          description of the selected completion
-.. envvar:: fish_pager_color_secondary_background          background of every second unselected completion
-.. envvar:: fish_pager_color_secondary_prefix              prefix of every second unselected completion
-.. envvar:: fish_pager_color_secondary_completion          suffix of every second unselected completion
-.. envvar:: fish_pager_color_secondary_description         description of every second unselected completion
+.. envvar:: ghoti_pager_color_progress                      the progress bar at the bottom left corner
+.. envvar:: ghoti_pager_color_background                    the background color of a line
+.. envvar:: ghoti_pager_color_prefix                        the prefix string, i.e. the string that is to be completed
+.. envvar:: ghoti_pager_color_completion                    the completion itself, i.e. the proposed rest of the string
+.. envvar:: ghoti_pager_color_description                   the completion description
+.. envvar:: ghoti_pager_color_selected_background           background of the selected completion
+.. envvar:: ghoti_pager_color_selected_prefix               prefix of the selected completion
+.. envvar:: ghoti_pager_color_selected_completion           suffix of the selected completion
+.. envvar:: ghoti_pager_color_selected_description          description of the selected completion
+.. envvar:: ghoti_pager_color_secondary_background          background of every second unselected completion
+.. envvar:: ghoti_pager_color_secondary_prefix              prefix of every second unselected completion
+.. envvar:: ghoti_pager_color_secondary_completion          suffix of every second unselected completion
+.. envvar:: ghoti_pager_color_secondary_description         description of every second unselected completion
 ===================================================        ===========================================================
 
-When the secondary or selected variables aren't set or are empty, the normal variables are used, except for ``$fish_pager_color_selected_background``, where the background of ``$fish_color_search_match`` is tried first.
+When the secondary or selected variables aren't set or are empty, the normal variables are used, except for ``$ghoti_pager_color_selected_background``, where the background of ``$ghoti_color_search_match`` is tried first.
 
 .. _abbreviations:
 
@@ -207,15 +207,15 @@ The advantage over aliases is that you can see the actual command before using i
 Programmable title
 ------------------
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :doc:`fish_title <cmds/fish_title>` function. The :doc:`fish_title <cmds/fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_prompt <cmds/fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in ghoti by defining the :doc:`ghoti_title <cmds/ghoti_title>` function. The :doc:`ghoti_title <cmds/ghoti_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``ghoti`` if control is returning to the shell) when the :doc:`ghoti_prompt <cmds/ghoti_prompt>` function is called. The first argument to ghoti_title will contain the most recently executed foreground command as a string.
 
-The default fish title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
+The default ghoti title shows the hostname if connected via ssh, the currently running command (unless it is ghoti) and the current working directory. All of this is shortened to not make the tab too wide.
 
 Examples:
 
 To show the last command and working directory in the title::
 
-    function fish_title
+    function ghoti_title
         # `prompt_pwd` shortens the title. This helps prevent tabs from becoming very wide.
         echo $argv[1] (prompt_pwd)
         pwd
@@ -226,62 +226,62 @@ To show the last command and working directory in the title::
 Programmable prompt
 -------------------
 
-When it is fish's turn to ask for input (like after it started or the command ended), it will show a prompt. It does this by running the :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` functions.
+When it is ghoti's turn to ask for input (like after it started or the command ended), it will show a prompt. It does this by running the :doc:`ghoti_prompt <cmds/ghoti_prompt>` and :doc:`ghoti_right_prompt <cmds/ghoti_right_prompt>` functions.
 
-The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left, though the default function only does this when in :ref:`vi-mode <vi-mode>`.
+The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :doc:`ghoti_mode_prompt <cmds/ghoti_mode_prompt>` will be prepended on the left, though the default function only does this when in :ref:`vi-mode <vi-mode>`.
 
 .. _greeting:
 
 Configurable greeting
 ---------------------
 
-When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple greeting. You can change its text by changing the ``$fish_greeting`` variable, for instance using a :ref:`universal variable <variables-universal>`::
+When it is started interactively, ghoti tries to run the :doc:`ghoti_greeting <cmds/ghoti_greeting>` function. The default ghoti_greeting prints a simple greeting. You can change its text by changing the ``$ghoti_greeting`` variable, for instance using a :ref:`universal variable <variables-universal>`::
 
-  set -U fish_greeting
+  set -U ghoti_greeting
 
-or you can set it :ref:`globally <variables-scope>` in :ref:`config.fish <configuration>`::
+or you can set it :ref:`globally <variables-scope>` in :ref:`config.ghoti <configuration>`::
 
-  set -g fish_greeting 'Hey, stranger!'
+  set -g ghoti_greeting 'Hey, stranger!'
 
 or you can script it by changing the function::
 
-  function fish_greeting
+  function ghoti_greeting
       random choice "Hello!" "Hi" "G'day" "Howdy"
   end
 
-save this in config.fish or :ref:`a function file <syntax-function-autoloading>`. You can also use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` to edit it easily.
+save this in config.ghoti or :ref:`a function file <syntax-function-autoloading>`. You can also use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` to edit it easily.
 
 .. _private-mode:
 
 Private mode
 -------------
 
-If ``$fish_private_mode`` is set to a non-empty value, commands will not be written to the history file on disk.
+If ``$ghoti_private_mode`` is set to a non-empty value, commands will not be written to the history file on disk.
 
-You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
+You can also launch with ``ghoti --private`` (or ``ghoti -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
 
-You can query the variable ``fish_private_mode`` (``if test -n "$fish_private_mode" ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
+You can query the variable ``ghoti_private_mode`` (``if test -n "$ghoti_private_mode" ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own ghoti scripts.
 
 .. _editor:
 
 Command line editor
 -------------------
 
-The fish editor features copy and paste, a :ref:`searchable history <history-search>` and many editor functions that can be bound to special keyboard shortcuts.
+The ghoti editor features copy and paste, a :ref:`searchable history <history-search>` and many editor functions that can be bound to special keyboard shortcuts.
 
-Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the Vi text editor. The default editing mode is Emacs. You can switch to Vi mode by running ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
+Like bash and other shells, ghoti includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the Vi text editor. The default editing mode is Emacs. You can switch to Vi mode by running ``ghoti_vi_key_bindings`` and switch back with ``ghoti_default_key_bindings``. You can also make your own key bindings by creating a function and setting the ``ghoti_key_bindings`` variable to its name. For example::
 
 
-    function fish_hybrid_key_bindings --description \
+    function ghoti_hybrid_key_bindings --description \
     "Vi-style bindings that inherit emacs-style bindings in all modes"
         for mode in default insert visual
-            fish_default_key_bindings -M $mode
+            ghoti_default_key_bindings -M $mode
         end
-        fish_vi_key_bindings --no-erase
+        ghoti_vi_key_bindings --no-erase
     end
-    set -g fish_key_bindings fish_hybrid_key_bindings
+    set -g ghoti_key_bindings ghoti_hybrid_key_bindings
 
-While the key bindings included with fish include many of the shortcuts popular from the respective text editors, they are not a complete implementation. They include a shortcut to open the current command line in your preferred editor (:kbd:`Alt`\ +\ :kbd:`E` by default) if you need the full power of your editor.
+While the key bindings included with ghoti include many of the shortcuts popular from the respective text editors, they are not a complete implementation. They include a shortcut to open the current command line in your preferred editor (:kbd:`Alt`\ +\ :kbd:`E` by default) if you need the full power of your editor.
 
 .. _shared-binds:
 
@@ -310,7 +310,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Control`\ +\ :kbd:`C` interrupt/kill whatever is running (SIGINT).
 
-- :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
+- :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit ghoti.
 
 - :kbd:`Control`\ +\ :kbd:`U` removes contents from the beginning of line to the cursor (moving it to the :ref:`killring <killring>`).
 
@@ -318,7 +318,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Control`\ +\ :kbd:`W` removes the previous path component (everything up to the previous "/", ":" or "@") (moving it to the :ref:`killring`).
 
-- :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
+- :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents. (see :doc:`ghoti_clipboard_copy <cmds/ghoti_clipboard_copy>` and :doc:`ghoti_clipboard_paste <cmds/ghoti_clipboard_paste>`)
 
 - :kbd:`Alt`\ +\ :kbd:`D` moves the next word to the :ref:`killring`.
 
@@ -345,7 +345,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 Emacs mode commands
 ^^^^^^^^^^^^^^^^^^^
 
-To enable emacs mode, use ``fish_default_key_bindings``. This is also the default.
+To enable emacs mode, use ``ghoti_default_key_bindings``. This is also the default.
 
 - :kbd:`Home` or :kbd:`Control`\ +\ :kbd:`A` moves the cursor to the beginning of the line.
 
@@ -390,48 +390,48 @@ Vi mode commands
 
 Vi mode allows for the use of Vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
 
-To enable vi mode, use ``fish_vi_key_bindings``.
+To enable vi mode, use ``ghoti_vi_key_bindings``.
 
 It is also possible to add all emacs-mode bindings to vi-mode by using something like::
 
 
-    function fish_user_key_bindings
+    function ghoti_user_key_bindings
         # Execute this once per mode that emacs bindings should be used in
-        fish_default_key_bindings -M insert
+        ghoti_default_key_bindings -M insert
 
         # Then execute the vi-bindings so they take precedence when there's a conflict.
-        # Without --no-erase fish_vi_key_bindings will default to
+        # Without --no-erase ghoti_vi_key_bindings will default to
         # resetting all bindings.
         # The argument specifies the initial mode (insert, "default" or visual).
-        fish_vi_key_bindings --no-erase insert
+        ghoti_vi_key_bindings --no-erase insert
     end
 
 
-When in vi-mode, the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function will display a mode indicator to the left of the prompt. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
+When in vi-mode, the :doc:`ghoti_mode_prompt <cmds/ghoti_mode_prompt>` function will display a mode indicator to the left of the prompt. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``ghoti_default_mode_prompt`` function.
 
-When a binding switches the mode, it will repaint the mode-prompt if it exists, and the rest of the prompt only if it doesn't. So if you want a mode-indicator in your ``fish_prompt``, you need to erase ``fish_mode_prompt`` e.g. by adding an empty file at ``~/.config/fish/functions/fish_mode_prompt.fish``. (Bindings that change the mode are supposed to call the `repaint-mode` bind function, see :doc:`bind <cmds/bind>`)
+When a binding switches the mode, it will repaint the mode-prompt if it exists, and the rest of the prompt only if it doesn't. So if you want a mode-indicator in your ``ghoti_prompt``, you need to erase ``ghoti_mode_prompt`` e.g. by adding an empty file at ``~/.config/ghoti/functions/ghoti_mode_prompt.ghoti``. (Bindings that change the mode are supposed to call the `repaint-mode` bind function, see :doc:`bind <cmds/bind>`)
 
-The ``fish_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. The following snippet can be used to manually configure cursors after enabling vi-mode::
+The ``ghoti_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. The following snippet can be used to manually configure cursors after enabling vi-mode::
 
    # Emulates vim's cursor shape behavior
    # Set the normal and visual mode cursors to a block
-   set fish_cursor_default block
+   set ghoti_cursor_default block
    # Set the insert mode cursor to a line
-   set fish_cursor_insert line
+   set ghoti_cursor_insert line
    # Set the replace mode cursor to an underscore
-   set fish_cursor_replace_one underscore
+   set ghoti_cursor_replace_one underscore
    # Set the external cursor to a line. The external cursor appears when a command is started. 
-   # The cursor shape takes the value of fish_cursor_default when fish_cursor_external is not specified.
-   set fish_cursor_external line
+   # The cursor shape takes the value of ghoti_cursor_default when ghoti_cursor_external is not specified.
+   set ghoti_cursor_external line
    # The following variable can be used to configure cursor shape in
-   # visual mode, but due to fish_cursor_default, is redundant here
-   set fish_cursor_visual block
+   # visual mode, but due to ghoti_cursor_default, is redundant here
+   set ghoti_cursor_visual block
 
 Additionally, ``blink`` can be added after each of the cursor shape parameters to set a blinking cursor in the specified shape.
 
 Fish knows the shapes "block", "line" and "underscore", other values will be ignored.
 
-If the cursor shape does not appear to be changing after setting the above variables, it's likely your terminal emulator does not support the capabilities necessary to do this. It may also be the case, however, that ``fish_vi_cursor`` has not detected your terminal's features correctly (for example, if you are using ``tmux``). If this is the case, you can force ``fish_vi_cursor`` to set the cursor shape by setting ``$fish_vi_force_cursor`` in ``config.fish``. You'll have to restart fish for any changes to take effect. If cursor shape setting remains broken after this, it's almost certainly an issue with your terminal emulator, and not fish.
+If the cursor shape does not appear to be changing after setting the above variables, it's likely your terminal emulator does not support the capabilities necessary to do this. It may also be the case, however, that ``ghoti_vi_cursor`` has not detected your terminal's features correctly (for example, if you are using ``tmux``). If this is the case, you can force ``ghoti_vi_cursor`` to set the cursor shape by setting ``$ghoti_vi_force_cursor`` in ``config.ghoti``. You'll have to restart ghoti for any changes to take effect. If cursor shape setting remains broken after this, it's almost certainly an issue with your terminal emulator, and not ghoti.
 
 .. _vi-mode-command:
 
@@ -479,7 +479,7 @@ Command mode is also known as normal mode.
 
 - :kbd:`g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
 
-- :kbd:`:q` exits fish.
+- :kbd:`:q` exits ghoti.
 
 .. _vi-mode-insert:
 
@@ -531,9 +531,9 @@ In addition to the standard bindings listed here, you can also define your own w
   # Just clear the commandline on control-c
   bind \cc 'commandline -r ""'
 
-Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
+Put ``bind`` statements into :ref:`config.ghoti <configuration>` or a function called ``ghoti_user_key_bindings``.
 
-If you change your mind on a binding and want to go back to fish's default, you can simply erase it again::
+If you change your mind on a binding and want to go back to ghoti's default, you can simply erase it again::
 
   bind --erase \cc
 
@@ -542,26 +542,26 @@ Fish remembers its preset bindings and so it will take effect again. This saves 
 Key sequences
 """""""""""""
 
-The terminal tells fish which keys you pressed by sending some sequences of bytes to describe that key. For some keys, this is easy - pressing :kbd:`a` simply means the terminal sends "a". In others it's more complicated and terminals disagree on which they send.
+The terminal tells ghoti which keys you pressed by sending some sequences of bytes to describe that key. For some keys, this is easy - pressing :kbd:`a` simply means the terminal sends "a". In others it's more complicated and terminals disagree on which they send.
 
-In these cases, :doc:`fish_key_reader <cmds/fish_key_reader>` can tell you how to write the key sequence for your terminal. Just start it and press the keys you are interested in::
+In these cases, :doc:`ghoti_key_reader <cmds/ghoti_key_reader>` can tell you how to write the key sequence for your terminal. Just start it and press the keys you are interested in::
 
-  > fish_key_reader # pressing control-c
+  > ghoti_key_reader # pressing control-c
   Press a key:
   Press [ctrl-C] again to exit
   bind \cC 'do something'
 
-  > fish_key_reader # pressing the right-arrow
+  > ghoti_key_reader # pressing the right-arrow
   Press a key:
   bind \e\[C 'do something'
 
-Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about.
+Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that ghoti can't do anything about.
 
-Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the ``fish_escape_delay_ms`` variable.
+Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), ghoti waits for a certain time after seeing an escape character. This is configurable via the ``ghoti_escape_delay_ms`` variable.
 
 If you want to be able to press :kbd:`Escape` and then a character and have it count as :kbd:`Alt`\ +\ that character, set it to a higher value, e.g.::
 
-  set -g fish_escape_delay_ms 100
+  set -g ghoti_escape_delay_ms 100
 
 .. _killring:
 
@@ -570,12 +570,12 @@ Copy and paste (Kill Ring)
 
 Fish uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control`\ +\ :kbd:`K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control`\ +\ :kbd:`Y` (the ``yank`` input function). After pasting, use :kbd:`Alt`\ +\ :kbd:`Y` (``yank-pop``) to rotate to the previous kill.
 
-Copy and paste from outside are also supported, both via the :kbd:`Control`\ +\ :kbd:`X` / :kbd:`Control`\ +\ :kbd:`V` bindings (the ``fish_clipboard_copy`` and ``fish_clipboard_paste`` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
+Copy and paste from outside are also supported, both via the :kbd:`Control`\ +\ :kbd:`X` / :kbd:`Control`\ +\ :kbd:`V` bindings (the ``ghoti_clipboard_copy`` and ``ghoti_clipboard_paste`` functions [#]_) and via the terminal's paste function, for which ghoti enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
 In addition, when pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
-Kill ring entries are stored in ``fish_killring`` variable.
+Kill ring entries are stored in ``ghoti_killring`` variable.
 
 The commands ``begin-selection`` and ``end-selection`` (unbound by default; used for selection in vi visual mode) control text selection together with cursor movement commands that extend the current selection.
-The variable :envvar:`fish_cursor_selection_mode` can be used to configure if that selection should include the character under the cursor (``inclusive``) or not (``exclusive``). The default is ``exclusive``, which works well with any cursor shape. For vi mode, and particularly for the ``block`` or ``underscore`` cursor shapes you may prefer ``inclusive``.
+The variable :envvar:`ghoti_cursor_selection_mode` can be used to configure if that selection should include the character under the cursor (``inclusive``) or not (``exclusive``). The default is ``exclusive``, which works well with any cursor shape. For vi mode, and particularly for the ``block`` or ``underscore`` cursor shapes you may prefer ``inclusive``.
 
 .. [#] These rely on external tools. Currently xsel, xclip, wl-copy/wl-paste and pbcopy/pbpaste are supported.
 
@@ -584,7 +584,7 @@ The variable :envvar:`fish_cursor_selection_mode` can be used to configure if th
 Multiline editing
 ^^^^^^^^^^^^^^^^^
 
-The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
+The ghoti commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
 
 - Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :doc:`end <cmds/end>` command.
 
@@ -592,7 +592,7 @@ The fish commandline editor can be used to work on commands that are several lin
 
 - By inserting a backslash (``\``) character before pressing the :kbd:`Enter` key, escaping the newline.
 
-The fish commandline editor works exactly the same in single line mode and in multiline mode. To move between lines use the left and right arrow keys and other such keyboard shortcuts.
+The ghoti commandline editor works exactly the same in single line mode and in multiline mode. To move between lines use the left and right arrow keys and other such keyboard shortcuts.
 
 .. _history-search:
 
@@ -609,9 +609,9 @@ History searches are case-insensitive unless the search string contains an upper
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history. It will still be available for recall until the next command is executed, but will not be stored on disk. This is to allow you to fix misspellings and such.
 
-The command history is stored in the file ``~/.local/share/fish/fish_history`` (or
-``$XDG_DATA_HOME/fish/fish_history`` if that variable is set) by default. However, you can set the
-``fish_history`` environment variable to change the name of the history session (resulting in a
+The command history is stored in the file ``~/.local/share/ghoti/ghoti_history`` (or
+``$XDG_DATA_HOME/ghoti/ghoti_history`` if that variable is set) by default. However, you can set the
+``ghoti_history`` environment variable to change the name of the history session (resulting in a
 ``<session>_history`` file); both before starting the shell and while the shell is running.
 
 See the :doc:`history <cmds/history>` command for other manipulations.
@@ -630,7 +630,7 @@ Navigating directories
 
 .. _directory-history:
 
-Navigating directories is usually done with the :doc:`cd <cmds/cd>` command, but fish offers some advanced features as well.
+Navigating directories is usually done with the :doc:`cd <cmds/cd>` command, but ghoti offers some advanced features as well.
 
 The current working directory can be displayed with the :doc:`pwd <cmds/pwd>` command, or the ``$PWD`` :ref:`special variable <variables-special>`. Usually your prompt already does this.
 

@@ -1,5 +1,5 @@
-#RUN: %fish %s
-# Tests for importing named regex groups as fish variables
+#RUN: %ghoti %s
+# Tests for importing named regex groups as ghoti variables
 
 # Invalid variable name?
 string match --regex -q '(?<FISH_VERSION>.*)' -- derp

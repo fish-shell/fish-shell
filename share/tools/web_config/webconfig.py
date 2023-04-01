@@ -82,14 +82,14 @@ def is_wsl():
     return False
 
 
-def is_sailfish_os():
-    """Return whether we are running on Sailfish OS"""
+def is_sailghoti_os():
+    """Return whether we are running on Sailghoti OS"""
     if "linux" in platform.system().lower() and os.access(
-        "/etc/sailfish-release", os.R_OK
+        "/etc/sailghoti-release", os.R_OK
     ):
-        with open("/etc/sailfish-release", "r") as f:
-            # Find 'ID=sailfishos'
-            if "sailfishos" in f.read():
+        with open("/etc/sailghoti-release", "r") as f:
+            # Find 'ID=sailghotios'
+            if "sailghotios" in f.read():
                 return True
     return False
 
@@ -112,14 +112,14 @@ def is_chromeos_garcon():
         return False
 
 
-def run_fish_cmd(text):
-    # Ensure that fish is using UTF-8.
+def run_ghoti_cmd(text):
+    # Ensure that ghoti is using UTF-8.
     ctype = os.environ.get("LC_ALL", os.environ.get("LC_CTYPE", os.environ.get("LANG")))
     env = None
     if ctype is None or re.search(r"\.utf-?8$", ctype, flags=re.I) is None:
         # override LC_CTYPE with en_US.UTF-8
         # We're assuming this locale exists.
-        # Fish makes the same assumption in config.fish
+        # Fish makes the same assumption in config.ghoti
         env = os.environ.copy()
         env.update(LC_CTYPE="en_US.UTF-8", LANG="en_US.UTF-8")
 
@@ -137,7 +137,7 @@ def run_fish_cmd(text):
     return out, err
 
 
-def escape_fish_cmd(text):
+def escape_ghoti_cmd(text):
     # Replace one backslash with two, and single quotes with backslash-quote
     escaped = text.replace("\\", "\\\\").replace("'", "\\'")
     return "'" + escaped + "'"
@@ -267,7 +267,7 @@ def parse_color(color_str):
 
 
 def unparse_color(col):
-    """A basic function to return the fish version of a color dict"""
+    """A basic function to return the ghoti version of a color dict"""
     if isinstance(col, str):
         return col
     ret = ""
@@ -954,7 +954,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_get_colors(self, path=None):
         """Read the colors from a .theme file in path, or the current shell if no path has been given"""
-        # Looks for fish_color_*.
+        # Looks for ghoti_color_*.
         # Returns an array of lists [color_name, color_description, color_value]
         result = []
 
@@ -1009,7 +1009,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # If we don't have a path, we get the current theme.
         if not path:
-            out, err = run_fish_cmd("set -L")
+            out, err = run_ghoti_cmd("set -L")
         else:
             with open(path) as f:
                 out = f.read()
@@ -1033,10 +1033,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                         value = "#" + value
                 extrainfo[key] = value
 
-            for match in re.finditer(r"^fish_(pager_)?color_(\S+) ?(.*)", line):
+            for match in re.finditer(r"^ghoti_(pager_)?color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(2, 3)]
                 if match.group(1):
-                    color_name = "fish_pager_color_" + color_name
+                    color_name = "ghoti_pager_color_" + color_name
                 color_desc = descriptions.get(color_name, "")
                 data = {"name": color_name, "description": color_desc}
                 data.update(parse_color(color_value))
@@ -1055,10 +1055,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return result, extrainfo
 
     def do_get_functions(self):
-        out, err = run_fish_cmd("functions")
+        out, err = run_ghoti_cmd("functions")
         out = out.strip()
 
-        # Not sure why fish sometimes returns this with newlines
+        # Not sure why ghoti sometimes returns this with newlines
         if "\n" in out:
             return out.split("\n")
         else:
@@ -1066,11 +1066,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_get_variable_names(self, cmd):
         "Given a command like 'set -U' return all the variable names"
-        out, err = run_fish_cmd(cmd)
+        out, err = run_ghoti_cmd(cmd)
         return out.split("\n")
 
     def do_get_variables(self):
-        out, err = run_fish_cmd("set -L")
+        out, err = run_ghoti_cmd("set -L")
 
         # Put all the variables into a dictionary
         vars = {}
@@ -1078,8 +1078,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             comps = line.split(" ", 1)
             if len(comps) < 2:
                 continue
-            fish_var = FishVar(comps[0], comps[1])
-            vars[fish_var.name] = fish_var
+            ghoti_var = FishVar(comps[0], comps[1])
+            vars[ghoti_var.name] = ghoti_var
 
         # Mark universal variables. L means don't abbreviate.
         for name in self.do_get_variable_names("set -nUL"):
@@ -1101,14 +1101,14 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_bindings(self):
         """Get key bindings"""
 
-        # Running __fish_config_interactive print fish greeting and
+        # Running __ghoti_config_interactive print ghoti greeting and
         # loads key bindings
-        greeting, err = run_fish_cmd(" __fish_config_interactive")
+        greeting, err = run_ghoti_cmd(" __ghoti_config_interactive")
 
         # Load the key bindings and then list them with bind
-        out, err = run_fish_cmd("__fish_config_interactive; bind")
+        out, err = run_ghoti_cmd("__ghoti_config_interactive; bind")
 
-        # Remove fish greeting from output
+        # Remove ghoti greeting from output
         out = out[len(greeting) :]
 
         # Put all the bindings into a list
@@ -1149,18 +1149,18 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             readable_binding = binding_parser.get_readable_binding()
             if command in command_to_binding:
-                fish_binding = command_to_binding[command]
-                fish_binding.add_binding(line, readable_binding)
+                ghoti_binding = command_to_binding[command]
+                ghoti_binding.add_binding(line, readable_binding)
             else:
-                fish_binding = FishBinding(command, line, readable_binding)
-                bindings.append(fish_binding)
-                command_to_binding[command] = fish_binding
+                ghoti_binding = FishBinding(command, line, readable_binding)
+                bindings.append(ghoti_binding)
+                command_to_binding[command] = ghoti_binding
 
         return [binding.get_json_obj() for binding in bindings]
 
     def do_get_history(self):
         # Use NUL to distinguish between history items.
-        out, err = run_fish_cmd("builtin history -z")
+        out, err = run_ghoti_cmd("builtin history -z")
         result = out.split("\0")
         if result:
             result.pop()  # trim off the trailing element
@@ -1168,22 +1168,22 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_get_color_for_variable(self, name):
         "Return the color with the given name, or the empty string if there is none."
-        out, err = run_fish_cmd("echo -n $" + name)
+        out, err = run_ghoti_cmd("echo -n $" + name)
         return out
 
     def do_set_color_for_variable(self, name, color):
-        "Sets a color for a fish color name, like 'autosuggestion'"
+        "Sets a color for a ghoti color name, like 'autosuggestion'"
         if not name:
             raise ValueError
         if not color and not color == "":
             color = "normal"
         else:
             color = unparse_color(color)
-        if not name.startswith("fish_pager_color_"):
-            varname = "fish_color_" + name
-        # If the name already starts with "fish_", use it as the varname
-        # This is needed for 'fish_pager_color' vars.
-        if name.startswith("fish_"):
+        if not name.startswith("ghoti_pager_color_"):
+            varname = "ghoti_color_" + name
+        # If the name already starts with "ghoti_", use it as the varname
+        # This is needed for 'ghoti_pager_color' vars.
+        if name.startswith("ghoti_"):
             varname = name
         # Check if the varname is allowable.
         varname = varname.strip()
@@ -1197,30 +1197,30 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         command = "set -U " + varname
         command += " " + color
 
-        out, err = run_fish_cmd(command)
+        out, err = run_ghoti_cmd(command)
         return out
 
     def do_get_function(self, func_name):
-        out, err = run_fish_cmd("functions " + func_name + " | fish_indent --html")
+        out, err = run_ghoti_cmd("functions " + func_name + " | ghoti_indent --html")
         return out
 
     def do_delete_history_item(self, history_item_text):
         # It's really lame that we always return success here
         cmd = (
             "builtin history delete --case-sensitive --exact -- %s; builtin history save"
-            % escape_fish_cmd(history_item_text)
+            % escape_ghoti_cmd(history_item_text)
         )
-        out, err = run_fish_cmd(cmd)
+        out, err = run_ghoti_cmd(cmd)
         return True
 
     def do_set_prompt_function(self, prompt_func):
         cmd = (
-            "functions -e fish_right_prompt; "
+            "functions -e ghoti_right_prompt; "
             + prompt_func
             + "\n"
-            + "funcsave fish_prompt && funcsave fish_right_prompt 2>/dev/null"
+            + "funcsave ghoti_prompt && funcsave ghoti_right_prompt 2>/dev/null"
         )
-        out, err = run_fish_cmd(cmd)
+        out, err = run_ghoti_cmd(cmd)
         return len(err) == 0
 
     def do_get_prompt(self, prompt_function_text, extras_dict):
@@ -1229,16 +1229,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             prompt_function_text
             + '\n builtin cd "'
             + initial_wd
-            + '" \n false \n fish_prompt\n'
+            + '" \n false \n ghoti_prompt\n'
         )
-        prompt_demo_ansi, err = run_fish_cmd(cmd)
+        prompt_demo_ansi, err = run_ghoti_cmd(cmd)
         prompt_demo_html = ansi_to_html(prompt_demo_ansi)
-        right_demo_ansi, err = run_fish_cmd(
-            "functions -e fish_right_prompt; "
+        right_demo_ansi, err = run_ghoti_cmd(
+            "functions -e ghoti_right_prompt; "
             + prompt_function_text
             + '\n builtin cd "'
             + initial_wd
-            + '" \n false \n functions -q fish_right_prompt && fish_right_prompt\n'
+            + '" \n false \n functions -q ghoti_right_prompt && ghoti_right_prompt\n'
         )
         right_demo_html = ansi_to_html(right_demo_ansi)
         prompt_demo_font_size = self.font_size_for_ansi_prompt(
@@ -1257,8 +1257,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_current_prompt(self):
         # Return the current prompt. We run 'false' to demonstrate how the
         # prompt shows the command status (#1624).
-        prompt_func, err = run_fish_cmd(
-            "functions fish_prompt; functions fish_right_prompt"
+        prompt_func, err = run_ghoti_cmd(
+            "functions ghoti_prompt; functions ghoti_right_prompt"
         )
         result = self.do_get_prompt(
             prompt_func.strip(),
@@ -1316,7 +1316,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return None
 
     def do_get_sample_prompts_list(self):
-        paths = sorted(glob.iglob("sample_prompts/*.fish"))
+        paths = sorted(glob.iglob("sample_prompts/*.ghoti"))
         result = []
         try:
             pool = multiprocessing.pool.ThreadPool(processes=8)
@@ -1382,9 +1382,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # Add the current scheme first, then the default.
             # The rest in alphabetical order.
             curcolors, curinfo = self.do_get_colors()
-            defcolors, definfo = self.do_get_colors("themes/fish default.theme")
+            defcolors, definfo = self.do_get_colors("themes/ghoti default.theme")
             curinfo.update({"theme": "Current", "colors": curcolors})
-            definfo.update({"theme": "fish default", "colors": defcolors})
+            definfo.update({"theme": "ghoti default", "colors": defcolors})
             output = [curinfo, definfo]
 
             confighome = (
@@ -1392,7 +1392,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if "XDG_CONFIG_HOME" in os.environ
                 else os.path.expanduser("~")
             )
-            paths = list(glob.iglob(os.path.join(confighome, "fish", "themes/*.theme")))
+            paths = list(glob.iglob(os.path.join(confighome, "ghoti", "themes/*.theme")))
             paths.extend(list(glob.iglob("themes/*.theme")))
             paths.sort(key=str.casefold)
 
@@ -1473,39 +1473,39 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             have_colors = set()
             known_colors = set(
                 (
-                    "fish_color_normal",
-                    "fish_color_command",
-                    "fish_color_keyword",
-                    "fish_color_quote",
-                    "fish_color_redirection",
-                    "fish_color_end",
-                    "fish_color_error",
-                    "fish_color_param",
-                    "fish_color_option",
-                    "fish_color_comment",
-                    "fish_color_selection",
-                    "fish_color_operator",
-                    "fish_color_escape",
-                    "fish_color_autosuggestion",
-                    "fish_color_cwd",
-                    "fish_color_user",
-                    "fish_color_host",
-                    "fish_color_host_remote",
-                    "fish_color_cancel",
-                    "fish_color_search_match",
-                    "fish_pager_color_progress",
-                    "fish_pager_color_background",
-                    "fish_pager_color_prefix",
-                    "fish_pager_color_completion",
-                    "fish_pager_color_description",
-                    "fish_pager_color_selected_background",
-                    "fish_pager_color_selected_prefix",
-                    "fish_pager_color_selected_completion",
-                    "fish_pager_color_selected_description",
-                    "fish_pager_color_secondary_background",
-                    "fish_pager_color_secondary_prefix",
-                    "fish_pager_color_secondary_completion",
-                    "fish_pager_color_secondary_description",
+                    "ghoti_color_normal",
+                    "ghoti_color_command",
+                    "ghoti_color_keyword",
+                    "ghoti_color_quote",
+                    "ghoti_color_redirection",
+                    "ghoti_color_end",
+                    "ghoti_color_error",
+                    "ghoti_color_param",
+                    "ghoti_color_option",
+                    "ghoti_color_comment",
+                    "ghoti_color_selection",
+                    "ghoti_color_operator",
+                    "ghoti_color_escape",
+                    "ghoti_color_autosuggestion",
+                    "ghoti_color_cwd",
+                    "ghoti_color_user",
+                    "ghoti_color_host",
+                    "ghoti_color_host_remote",
+                    "ghoti_color_cancel",
+                    "ghoti_color_search_match",
+                    "ghoti_pager_color_progress",
+                    "ghoti_pager_color_background",
+                    "ghoti_pager_color_prefix",
+                    "ghoti_pager_color_completion",
+                    "ghoti_pager_color_description",
+                    "ghoti_pager_color_selected_background",
+                    "ghoti_pager_color_selected_prefix",
+                    "ghoti_pager_color_selected_completion",
+                    "ghoti_pager_color_selected_description",
+                    "ghoti_pager_color_secondary_background",
+                    "ghoti_pager_color_secondary_prefix",
+                    "ghoti_pager_color_secondary_completion",
+                    "ghoti_pager_color_secondary_description",
                 )
             )
             output=""
@@ -1514,10 +1514,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 color = item.get("color")
 
                 if what:
-                    if not what.startswith("fish_pager_color_") and not what.startswith(
-                        "fish_color_"
+                    if not what.startswith("ghoti_pager_color_") and not what.startswith(
+                        "ghoti_color_"
                     ):
-                        have_colors.add("fish_color_" + what)
+                        have_colors.add("ghoti_color_" + what)
                     else:
                         have_colors.add(what)
                     output = self.do_set_color_for_variable(what, color)
@@ -1537,7 +1537,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 output = ["Unable to delete history item"]
         elif p == "/set_prompt/":
-            what = postvars.get("fish_prompt")
+            what = postvars.get("ghoti_prompt")
             if self.do_set_prompt_function(what):
                 output = ["OK"]
             else:
@@ -1580,28 +1580,28 @@ redirect_template_html = """
 </html>
 """
 
-# find fish
-fish_bin_dir = os.environ.get("__fish_bin_dir")
-fish_bin_path = None
-if not fish_bin_dir:
-    print("The $__fish_bin_dir environment variable is not set. " "Looking in $PATH...")
-    fish_bin_path = find_executable("fish")
-    if not fish_bin_path:
-        print("fish could not be found. Is fish installed correctly?")
+# find ghoti
+ghoti_bin_dir = os.environ.get("__ghoti_bin_dir")
+ghoti_bin_path = None
+if not ghoti_bin_dir:
+    print("The $__ghoti_bin_dir environment variable is not set. " "Looking in $PATH...")
+    ghoti_bin_path = find_executable("ghoti")
+    if not ghoti_bin_path:
+        print("ghoti could not be found. Is ghoti installed correctly?")
         sys.exit(-1)
     else:
-        print("fish found at '%s'" % fish_bin_path)
+        print("ghoti found at '%s'" % ghoti_bin_path)
 
 else:
-    fish_bin_path = os.path.join(fish_bin_dir, "fish")
+    ghoti_bin_path = os.path.join(ghoti_bin_dir, "ghoti")
 
-if not os.access(fish_bin_path, os.X_OK):
+if not os.access(ghoti_bin_path, os.X_OK):
     print(
-        "fish could not be executed at path '%s'. "
-        "Is fish installed correctly?" % fish_bin_path
+        "ghoti could not be executed at path '%s'. "
+        "Is ghoti installed correctly?" % ghoti_bin_path
     )
     sys.exit(-1)
-FISH_BIN_PATH = fish_bin_path
+FISH_BIN_PATH = ghoti_bin_path
 
 # We want to show the demo prompts in the directory from which this was invoked,
 # so get the current working directory
@@ -1663,7 +1663,7 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
-# CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
+# CVE-2014-2914 or https://github.com/ghoti-shell/ghoti-shell/issues/1438).
 f = tempfile.NamedTemporaryFile(prefix="web_config", suffix=".html", mode="w")
 
 f.write(redirect_template_html % (url, url))
@@ -1699,7 +1699,7 @@ def runThing():
         subprocess.call(["termux-open-url", url])
     elif is_chromeos_garcon():
         webbrowser.open(url)
-    elif is_sailfish_os():
+    elif is_sailghoti_os():
         subprocess.call(["xdg-open", url])
     else:
         webbrowser.open(fileurl)

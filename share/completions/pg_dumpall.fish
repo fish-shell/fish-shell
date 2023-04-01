@@ -38,11 +38,11 @@ complete -c pg_dumpall -l quote-all-identifiers -d "Quote all identifiers, even 
 complete -c pg_dumpall -l use-set-session-authorization -d "Use SET SESSION AUTHORIZATION instead of ALTER OWNER"
 
 # Connection options:
-complete -c pg_dumpall -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Database to dump"
-complete -c pg_dumpall -s h -l host -x -a '(__fish_print_hostnames)' -d "Database server host or socket directory"
-complete -c pg_dumpall -s l -l database -x -a '(__fish_complete_pg_database)' -d "Alternative default database"
+complete -c pg_dumpall -s d -l dbname -x -a '(__ghoti_complete_pg_database)' -d "Database to dump"
+complete -c pg_dumpall -s h -l host -x -a '(__ghoti_print_hostnames)' -d "Database server host or socket directory"
+complete -c pg_dumpall -s l -l database -x -a '(__ghoti_complete_pg_database)' -d "Alternative default database"
 complete -c pg_dumpall -s p -l port -x -d "Database server port number"
-complete -c pg_dumpall -s U -l username -x -a '(__fish_complete_pg_user)' -d "Connect as specified database user"
+complete -c pg_dumpall -s U -l username -x -a '(__ghoti_complete_pg_user)' -d "Connect as specified database user"
 complete -c pg_dumpall -s w -l no-password -d "Never prompt for password"
 complete -c pg_dumpall -s W -l password -d "Force password prompt (should happen automatically)"
 complete -c pg_dumpall -l role -x -d "Do SET ROLE before dump"

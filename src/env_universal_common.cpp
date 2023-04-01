@@ -58,33 +58,33 @@
 /// Error message.
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
 
-/// Small note about not editing ~/.fishd manually. Inserted at the top of all .fishd files.
-#define SAVE_MSG "# This file contains fish universal variable definitions.\n"
+/// Small note about not editing ~/.ghotid manually. Inserted at the top of all .ghotid files.
+#define SAVE_MSG "# This file contains ghoti universal variable definitions.\n"
 
-/// Version for fish 3.0
+/// Version for ghoti 3.0
 #define UVARS_VERSION_3_0 "3.0"
 
 // Maximum file size we'll read.
 static constexpr size_t k_max_read_size = 16 * 1024 * 1024;
 
-// Fields used in fish 2.x uvars.
-namespace fish2x_uvars {
+// Fields used in ghoti 2.x uvars.
+namespace ghoti2x_uvars {
 namespace {
 constexpr const char *SET = "SET";
 constexpr const char *SET_EXPORT = "SET_EXPORT";
 }  // namespace
-}  // namespace fish2x_uvars
+}  // namespace ghoti2x_uvars
 
-// Fields used in fish 3.0 uvars
-namespace fish3_uvars {
+// Fields used in ghoti 3.0 uvars
+namespace ghoti3_uvars {
 namespace {
 constexpr const char *SETUVAR = "SETUVAR";
 constexpr const char *EXPORT = "--export";
 constexpr const char *PATH = "--path";
 }  // namespace
-}  // namespace fish3_uvars
+}  // namespace ghoti3_uvars
 
-/// The different types of messages found in the fishd file.
+/// The different types of messages found in the ghotid file.
 enum class uvar_message_type_t { set, set_export };
 
 static maybe_t<wcstring> default_vars_path_directory() {
@@ -96,7 +96,7 @@ static maybe_t<wcstring> default_vars_path_directory() {
 /// \return the default variable path, or an empty string on failure.
 static wcstring default_vars_path() {
     if (auto path = default_vars_path_directory()) {
-        path->append(L"/fish_variables");
+        path->append(L"/ghoti_variables");
         return path.acquire();
     }
     return wcstring{};
@@ -150,11 +150,11 @@ static bool append_utf8(const wcstring &input, std::string *receiver, std::strin
     return result;
 }
 
-/// Creates a file entry like "SET fish_color_cwd:FF0". Appends the result to *result (as UTF8).
+/// Creates a file entry like "SET ghoti_color_cwd:FF0". Appends the result to *result (as UTF8).
 /// Returns true on success. storage may be used for temporary storage, to avoid allocations.
 static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &key_in,
                               const wcstring &val_in, std::string *result, std::string *storage) {
-    namespace f3 = fish3_uvars;
+    namespace f3 = ghoti3_uvars;
     assert(storage != nullptr);
     assert(result != nullptr);
 
@@ -176,7 +176,7 @@ static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &
         result->push_back(' ');
     }
 
-    // Append variable name like "fish_color_cwd".
+    // Append variable name like "ghoti_color_cwd".
     if (!valid_var_name(key_in)) {
         FLOGF(error, L"Illegal variable name: '%ls'", key_in.c_str());
         success = false;
@@ -471,12 +471,12 @@ autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, w
     assert(!string_suffixes_string(L"/", directory));  //!OCLINT(multiple unary operator)
 
     int saved_errno = 0;
-    const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
+    const wcstring tmp_name_template = directory + L"/ghotid.tmp.XXXXXX";
     autoclose_fd_t result;
     std::string narrow_str;
     for (size_t attempt = 0; attempt < 10 && !result.valid(); attempt++) {
         narrow_str = wcs2string(tmp_name_template);
-        result.reset(fish_mkstemp_cloexec(&narrow_str[0]));
+        result.reset(ghoti_mkstemp_cloexec(&narrow_str[0]));
         saved_errno = errno;
     }
     *out_path = str2wcstring(narrow_str);
@@ -595,9 +595,9 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // case, we risk data loss if two shells try to write their universal variables simultaneously.
     // In practice this is unlikely, since uvars are usually written interactively.
     //
-    // Prior versions of fish used a hard link scheme to support file locking on lockless NFS. The
+    // Prior versions of ghoti used a hard link scheme to support file locking on lockless NFS. The
     // risk here is that if the process crashes or is killed while holding the lock, future
-    // instances of fish will not be able to obtain it. This seems to be a greater risk than that of
+    // instances of ghoti will not be able to obtain it. This seems to be a greater risk than that of
     // data loss on lockless NFS. Users who put their home directory on lockless NFS are playing
     // with fire anyways.
     // If we have no changes, just load.
@@ -747,14 +747,14 @@ uvar_format_t env_universal_t::format_for_contents(const std::string &s) {
 
         // Try reading the version.
         if (!std::strcmp(versionbuf, UVARS_VERSION_3_0)) {
-            return uvar_format_t::fish_3_0;
+            return uvar_format_t::ghoti_3_0;
         } else {
             // Unknown future version.
             return uvar_format_t::future;
         }
     }
     // No version found, assume 2.x
-    return uvar_format_t::fish_2_x;
+    return uvar_format_t::ghoti_2_x;
 }
 
 uvar_format_t env_universal_t::populate_variables(const std::string &s, var_table_t *out_vars) {
@@ -774,10 +774,10 @@ uvar_format_t env_universal_t::populate_variables(const std::string &s, var_tabl
         if (!utf8_to_wchar(line.data(), line.size(), &wide_line, 0)) continue;
 
         switch (format) {
-            case uvar_format_t::fish_2_x:
+            case uvar_format_t::ghoti_2_x:
                 env_universal_t::parse_message_2x_internal(wide_line, out_vars, &storage);
                 break;
-            case uvar_format_t::fish_3_0:
+            case uvar_format_t::ghoti_3_0:
             // For future formats, just try with the most recent one.
             case uvar_format_t::future:
                 env_universal_t::parse_message_30_internal(wide_line, out_vars, &storage);
@@ -812,10 +812,10 @@ bool env_universal_t::populate_1_variable(const wchar_t *input, env_var_t::env_v
     return true;
 }
 
-/// Parse message msg per fish 3.0 format.
+/// Parse message msg per ghoti 3.0 format.
 void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_table_t *vars,
                                                 wcstring *storage) {
-    namespace f3 = fish3_uvars;
+    namespace f3 = ghoti3_uvars;
     const wchar_t *const msg = msgstr.c_str();
     if (msg[0] == L'#') return;
 
@@ -845,10 +845,10 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
     }
 }
 
-/// Parse message msg per fish 2.x format.
+/// Parse message msg per ghoti 2.x format.
 void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_table_t *vars,
                                                 wcstring *storage) {
-    namespace f2x = fish2x_uvars;
+    namespace f2x = ghoti2x_uvars;
     const wchar_t *const msg = msgstr.c_str();
     const wchar_t *cursor = msg;
 
@@ -912,7 +912,7 @@ class universal_notifier_shmem_poller_t final : public universal_notifier_t {
 
         // Use a path based on our uid to avoid collisions.
         char path[NAME_MAX];
-        snprintf(path, sizeof path, "/%ls_shmem_%d", program_name ? program_name : L"fish",
+        snprintf(path, sizeof path, "/%ls_shmem_%d", program_name ? program_name : L"ghoti",
                  getuid());
 
         autoclose_fd_t fd{shm_open(path, O_RDWR | O_CREAT, 0600)};
@@ -1041,7 +1041,7 @@ class universal_notifier_notifyd_t final : public universal_notifier_t {
         // Per notify(3), the user.uid.%d style is only accessible to processes with that uid.
         char local_name[256];
         snprintf(local_name, sizeof local_name, "user.uid.%d.%ls.uvars", getuid(),
-                 program_name ? program_name : L"fish");
+                 program_name ? program_name : L"ghoti");
         name.assign(local_name);
 
         uint32_t status =
@@ -1116,7 +1116,7 @@ class universal_notifier_notifyd_t final : public universal_notifier_t {
 static wcstring default_named_pipe_path() {
     wcstring result = env_get_runtime_path();
     if (!result.empty()) {
-        result.append(L"/fish_universal_variables");
+        result.append(L"/ghoti_universal_variables");
     }
     return result;
 }
@@ -1334,7 +1334,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 
             case polling_during_readable: {
                 // If we're no longer readable, go back to wait mode.
-                // Conversely, if we have been readable too long, perhaps some fish died while its
+                // Conversely, if we have been readable too long, perhaps some ghoti died while its
                 // written data was still on the pipe; drain some.
                 if (!poll_fd_readable(pipe_fd.fd())) {
                     set_state(waiting_for_readable);

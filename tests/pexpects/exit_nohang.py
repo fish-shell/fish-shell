@@ -22,47 +22,47 @@ def error_and_exit(text):
     sys.exit(1)
 
 
-fish_pid = sp.spawn.pid
+ghoti_pid = sp.spawn.pid
 
-# Launch fish_test_helper.
+# Launch ghoti_test_helper.
 expect_prompt()
-exe_path = os.environ.get("fish_test_helper")
+exe_path = os.environ.get("ghoti_test_helper")
 sp.sendline(exe_path + " nohup_wait")
 
-# We expect it to transfer tty ownership to fish_test_helper.
+# We expect it to transfer tty ownership to ghoti_test_helper.
 sleep(0.1)
 tty_owner = os.tcgetpgrp(sp.spawn.child_fd)
-if fish_pid == tty_owner:
-    os.kill(fish_pid, signal.SIGKILL)
+if ghoti_pid == tty_owner:
+    os.kill(ghoti_pid, signal.SIGKILL)
     error_and_exit(
-        "Test failed: outer fish %d did not transfer tty owner to fish_test_helper"
-        % (fish_pid)
+        "Test failed: outer ghoti %d did not transfer tty owner to ghoti_test_helper"
+        % (ghoti_pid)
     )
 
 
-# Now we are going to tell fish to exit.
+# Now we are going to tell ghoti to exit.
 # It must not hang. But it might hang when trying to restore the tty.
-os.kill(fish_pid, signal.SIGTERM)
+os.kill(ghoti_pid, signal.SIGTERM)
 
 # Loop a bit until the process exits (correct) or stops (incorrrect).
 # When it exits it should be due to the SIGTERM that we sent it.
 for i in range(50):
-    pid, status = os.waitpid(fish_pid, os.WUNTRACED | os.WNOHANG)
+    pid, status = os.waitpid(ghoti_pid, os.WUNTRACED | os.WNOHANG)
     if pid == 0:
         # No process ready yet, loop again.
         sleep(0.1)
-    elif pid != fish_pid:
+    elif pid != ghoti_pid:
         # Some other process exited (??)
-        os.kill(fish_pid, signal.SIGKILL)
+        os.kill(ghoti_pid, signal.SIGKILL)
         error_and_exit(
             "unexpected pid returned from waitpid. Got %d, expected %d"
-            % (pid, fish_pid)
+            % (pid, ghoti_pid)
         )
     elif os.WIFSTOPPED(status):
         # Our pid stopped instead of exiting.
         # Probably it stopped because of its tcsetpgrp call during exit.
         # Kill it and report a failure.
-        os.kill(fish_pid, signal.SIGKILL)
+        os.kill(ghoti_pid, signal.SIGKILL)
         error_and_exit("pid %d stopped instead of exiting on SIGTERM" % pid)
     elif not os.WIFSIGNALED(status):
         error_and_exit("pid %d did not signal-exit" % pid)
@@ -76,7 +76,7 @@ for i in range(50):
         sys.exit(0)
 else:
     # Our loop completed without the process being returned.
-    error_and_exit("fish with pid %d hung after SIGTERM" % fish_pid)
+    error_and_exit("ghoti with pid %d hung after SIGTERM" % ghoti_pid)
 
 # Should never get here.
 error_and_exit("unknown, should be unreachable")

@@ -1,47 +1,47 @@
 # Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %ghoti -C 'set -g ghoti %ghoti' %s
 
-mkdir -p $XDG_CONFIG_HOME/fish
+mkdir -p $XDG_CONFIG_HOME/ghoti
 
-# fish_variables
-set -l target_file $XDG_CONFIG_HOME/fish/target_fish_variables
-set -l fish_variables $XDG_CONFIG_HOME/fish/fish_variables
-set -l backup_file $XDG_CONFIG_HOME/fish/fish_variables_backup
+# ghoti_variables
+set -l target_file $XDG_CONFIG_HOME/ghoti/target_ghoti_variables
+set -l ghoti_variables $XDG_CONFIG_HOME/ghoti/ghoti_variables
+set -l backup_file $XDG_CONFIG_HOME/ghoti/ghoti_variables_backup
 
 echo >$target_file
 cp $target_file $backup_file
-ln -sf $target_file $fish_variables
-$fish -c 'set -U variable value'
+ln -sf $target_file $ghoti_variables
+$ghoti -c 'set -U variable value'
 
-if not test -L $fish_variables
-    echo fish_variables has been overwritten
+if not test -L $ghoti_variables
+    echo ghoti_variables has been overwritten
 else if cmp $target_file $backup_file >/dev/null
-    echo fish_variables was never written
+    echo ghoti_variables was never written
 else
-    echo fish_variables is still a symlink
+    echo ghoti_variables is still a symlink
 end
-# CHECK: fish_variables is still a symlink
+# CHECK: ghoti_variables is still a symlink
 
 
-# fish_history
-set -l history_file $XDG_DATA_HOME/fish/fish_history
-set -l target_file $XDG_DATA_HOME/fish/target_fish_history
-set -l backup_file $XDG_DATA_HOME/fish/fish_history_backup
+# ghoti_history
+set -l history_file $XDG_DATA_HOME/ghoti/ghoti_history
+set -l target_file $XDG_DATA_HOME/ghoti/target_ghoti_history
+set -l backup_file $XDG_DATA_HOME/ghoti/ghoti_history_backup
 
 echo '- cmd: echo I will be deleted from history
         when: 1614577746' >$target_file
 cp $target_file $backup_file
 ln -sf $target_file $history_file
-# The one way to ensure non-interactive fish writes to the history file
-$fish -c 'echo all | history delete deleted | grep echo'
+# The one way to ensure non-interactive ghoti writes to the history file
+$ghoti -c 'echo all | history delete deleted | grep echo'
 # CHECK: [1] echo I will be deleted from history
 
 if not test -L $history_file
-    echo fish_history has been overwritten
+    echo ghoti_history has been overwritten
 else if cmp $target_file $backup_file &>/dev/null
     # cmp writes to stderr when one file is empty, thus &> above
-    echo fish_history was never written
+    echo ghoti_history was never written
 else
-    echo fish_history is still a symlink
+    echo ghoti_history is still a symlink
 end
-# CHECK: fish_history is still a symlink
+# CHECK: ghoti_history is still a symlink

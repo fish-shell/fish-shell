@@ -42,11 +42,11 @@ def setup(app):
 
     this_dir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, this_dir)
-    from fish_indent_lexer import FishIndentLexer
-    from fish_synopsis import FishSynopsisDirective, FishSynopsisLexer
+    from ghoti_indent_lexer import FishIndentLexer
+    from ghoti_synopsis import FishSynopsisDirective, FishSynopsisLexer
 
-    lexers["fish-docs-samples"] = FishIndentLexer()
-    lexers["fish-synopsis"] = FishSynopsisLexer()
+    lexers["ghoti-docs-samples"] = FishIndentLexer()
+    lexers["ghoti-synopsis"] = FishSynopsisLexer()
     app.add_directive("synopsis", FishSynopsisDirective)
 
     app.add_config_value("issue_url", default=None, rebuild="html")
@@ -54,19 +54,19 @@ def setup(app):
 
 
 # The default language to assume
-highlight_language = "fish-docs-samples"
+highlight_language = "ghoti-docs-samples"
 
 # -- Project information -----------------------------------------------------
 
-project = "fish-shell"
-copyright = "2023, fish-shell developers"
-author = "fish-shell developers"
-issue_url = "https://github.com/fish-shell/fish-shell/issues"
+project = "ghoti-shell"
+copyright = "2023, ghoti-shell developers"
+author = "ghoti-shell developers"
+issue_url = "https://github.com/ghoti-shell/ghoti-shell/issues"
 
 # Parsing FISH-BUILD-VERSION-FILE is possible but hard to ensure that it is in the right place
-# fish_indent is guaranteed to be on PATH for the Pygments highlighter anyway
+# ghoti_indent is guaranteed to be on PATH for the Pygments highlighter anyway
 ret = subprocess.check_output(
-    ("fish_indent", "--version"), stderr=subprocess.STDOUT
+    ("ghoti_indent", "--version"), stderr=subprocess.STDOUT
 ).decode("utf-8")
 # The full version, including alpha/beta/rc tags
 release = ret.strip().split(" ")[-1]
@@ -147,9 +147,9 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "fish-shell.tex",
-        "fish-shell Documentation",
-        "fish-shell developers",
+        "ghoti-shell.tex",
+        "ghoti-shell Documentation",
+        "ghoti-shell developers",
         "manual",
     ),
 ]
@@ -181,20 +181,20 @@ man_make_section_directory = False
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "fish-doc", "", [author], 1),
-    ("tutorial", "fish-tutorial", "", [author], 1),
-    ("language", "fish-language", "", [author], 1),
-    ("interactive", "fish-interactive", "", [author], 1),
-    ("relnotes", "fish-releasenotes", "", [author], 1),
-    ("completions", "fish-completions", "", [author], 1),
+    (master_doc, "ghoti-doc", "", [author], 1),
+    ("tutorial", "ghoti-tutorial", "", [author], 1),
+    ("language", "ghoti-language", "", [author], 1),
+    ("interactive", "ghoti-interactive", "", [author], 1),
+    ("relnotes", "ghoti-releasenotes", "", [author], 1),
+    ("completions", "ghoti-completions", "", [author], 1),
     (
-        "fish_for_bash_users",
-        "fish-for-bash-users",
+        "ghoti_for_bash_users",
+        "ghoti-for-bash-users",
         "",
         [author],
         1,
     ),
-    ("faq", "fish-faq", "", [author], 1),
+    ("faq", "ghoti-faq", "", [author], 1),
 ]
 for path in sorted(glob.glob("cmds/*")):
     docname = os.path.splitext(path)[0]
@@ -210,10 +210,10 @@ for path in sorted(glob.glob("cmds/*")):
 texinfo_documents = [
     (
         master_doc,
-        "fish-shell",
-        "fish-shell Documentation",
+        "ghoti-shell",
+        "ghoti-shell Documentation",
         author,
-        "fish-shell",
+        "ghoti-shell",
         "the friendly interactive shell",
         "Miscellaneous",
     )
@@ -242,4 +242,4 @@ epub_exclude_files = ["search.html"]
 smartquotes = True
 smartquotes_action = "qe"
 
-linkcheck_ignore = [r"https://github.com/fish-shell/fish-shell/issues/\d+"]
+linkcheck_ignore = [r"https://github.com/ghoti-shell/ghoti-shell/issues/\d+"]

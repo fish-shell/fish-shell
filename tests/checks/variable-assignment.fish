@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # erase all lowercase variables to make sure they don't break our tests
 for varname in (set -xn | string match -r '^[a-z].*')
@@ -84,17 +84,17 @@ alias envxalias='a=b x'
 complete -C'a=b envxalias '
 # CHECK: arg
 
-# Eval invalid grammar to allow fish to parse this file
+# Eval invalid grammar to allow ghoti to parse this file
 eval 'a=(echo b)'
-# CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a (echo b)'.
+# CHECKERR: {{.*}}: Unsupported use of '='. In ghoti, please use 'set a (echo b)'.
 # CHECKERR: a=(echo b)
 # CHECKERR: ^~~~~~~~~^
 eval ': | a=b'
-# CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.
+# CHECKERR: {{.*}}: Unsupported use of '='. In ghoti, please use 'set a b'.
 # CHECKERR: : | a=b
 # CHECKERR:     ^~^
 eval 'not a=b'
-# CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.
+# CHECKERR: {{.*}}: Unsupported use of '='. In ghoti, please use 'set a b'.
 # CHECKERR: not a=b
 # CHECKERR:     ^~^
 

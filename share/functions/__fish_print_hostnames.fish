@@ -1,4 +1,4 @@
-function __fish_print_hostnames -d "Print a list of known hostnames"
+function __ghoti_print_hostnames -d "Print a list of known hostnames"
     # This function used to primarily query `getent hosts` and only read from `/etc/hosts` if
     # `getent` did not exist or `getent hosts` failed, based off the (documented) assumption that
     # the former *might* return more hosts than the latter, which has never been officially noted
@@ -125,7 +125,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         # Handle multiple comma-separated hostnames sharing a key, too.
         #
         # This one regex does everything we need, finding all matches including comma-separated
-        # values, but fish does not let us print only a capturing group without the entire match,
+        # values, but ghoti does not let us print only a capturing group without the entire match,
         # and we can't use `string replace` instead (because CSV then fails).
         # string match -ar "(?:^|,)(?![@|*!])\[?([^ ,:\]]+)\]?"
         #

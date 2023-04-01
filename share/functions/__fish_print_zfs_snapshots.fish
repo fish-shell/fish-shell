@@ -1,4 +1,4 @@
-function __fish_print_zfs_snapshots -d "Lists ZFS snapshots"
+function __ghoti_print_zfs_snapshots -d "Lists ZFS snapshots"
     set fast_results (zfs list -o name -H)
     printf "%s\n" $fast_results
 

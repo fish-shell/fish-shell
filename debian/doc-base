@@ -1,11 +1,11 @@
-Document: fish
-Title: Debian fish Manual
+Document: ghoti
+Title: Debian ghoti Manual
 Author: Axel Liljencrantz <axel@liljencrantz.se>
-Abstract: This guide documents fish, a shell
+Abstract: This guide documents ghoti, a shell
  geared towards interactive use.
 Section: Shells
 
 Format: HTML
-Index: /usr/share/doc/fish/index.html
-Files: /usr/share/doc/fish/*.html
+Index: /usr/share/doc/ghoti/index.html
+Files: /usr/share/doc/ghoti/*.html
 

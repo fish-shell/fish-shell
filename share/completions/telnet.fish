@@ -1,6 +1,6 @@
 # First written by:  Sean C. Higgins
 
-complete -x -c telnet -d Hostname -a "(__fish_print_hostnames)"
+complete -x -c telnet -d Hostname -a "(__ghoti_print_hostnames)"
 
 # Common across all telnet implementations
 complete -c telnet -s 4 -d "Use IPv4 addresses only"
@@ -11,7 +11,7 @@ complete -c telnet -s e -x -d "Set escape character"
 complete -c telnet -s K -d "Specifies no automatic login to remote system"
 complete -c telnet -s a -d "Attempt automatic login"
 complete -c telnet -s c -d "Disables reading user's .telnetrc"
-complete -c telnet -s l -x -a "(__fish_complete_users)" -d "User login"
+complete -c telnet -s l -x -a "(__ghoti_complete_users)" -d "User login"
 complete -c telnet -s L -d "Specifies an 8-bit data path"
 complete -c telnet -s n -x -d "Log to tracefile"
 complete -c telnet -s r -d "User interface similar to rlogin"
@@ -43,7 +43,7 @@ switch (uname -s)
         complete -c telnet -s 7 -d "Do not try to negotiate TELNET BINARY option"
         complete -c telnet -s V -x -d "Set routing table"
         complete -c telnet -s D -d "Disable rewriting of the DISPLAY var"
-        complete -c telnet -s b -x -a "(__fish_print_addresses)" -d "Local address to bind to"
+        complete -c telnet -s b -x -a "(__ghoti_print_addresses)" -d "Local address to bind to"
     case Linux
         complete -c telnet -s '?' -l help -d "Print help and exit"
         complete -c telnet -l usage -d "Print short usage and exit"

@@ -1,5 +1,5 @@
 # Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
-# RUN: env FISH=%fish %fish %s
+# RUN: env FISH=%ghoti %ghoti %s
 # Environment variable tests
 
 # Test if variables can be properly set
@@ -123,23 +123,23 @@ end
 
 # Test erasing variables in specific scope
 
-set -eU __fish_test_universal_variables_variable_foo
-set -g __fish_test_universal_variables_variable_foo bar
+set -eU __ghoti_test_universal_variables_variable_foo
+set -g __ghoti_test_universal_variables_variable_foo bar
 begin
-    set -l __fish_test_universal_variables_variable_foo baz
-    set -eg __fish_test_universal_variables_variable_foo
+    set -l __ghoti_test_universal_variables_variable_foo baz
+    set -eg __ghoti_test_universal_variables_variable_foo
 end
 
-if set -q __fish_test_universal_variables_variable_foo
+if set -q __ghoti_test_universal_variables_variable_foo
     echo Test 10 fail
 else
     echo Test 10 pass
 end
 # CHECK: Test 10 pass
 
-set __fish_test_universal_variables_variable_foo abc def
-set -e __fish_test_universal_variables_variable_foo[1]
-if test $__fish_test_universal_variables_variable_foo '=' def
+set __ghoti_test_universal_variables_variable_foo abc def
+set -e __ghoti_test_universal_variables_variable_foo[1]
+if test $__ghoti_test_universal_variables_variable_foo '=' def
     echo Test 11 pass
 else
     echo Test 11 fail
@@ -148,104 +148,104 @@ end
 
 # Test combinations of export and scope
 
-set -ge __fish_test_universal_variables_variable_foo
-set -Ue __fish_test_universal_variables_variable_foo
-set -Ux __fish_test_universal_variables_variable_foo bar
-set __fish_test_universal_variables_variable_foo baz
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a ($FISH -c 'echo $__fish_test_universal_variables_variable_foo') = baz
+set -ge __ghoti_test_universal_variables_variable_foo
+set -Ue __ghoti_test_universal_variables_variable_foo
+set -Ux __ghoti_test_universal_variables_variable_foo bar
+set __ghoti_test_universal_variables_variable_foo baz
+if test (/bin/sh -c 'echo $__ghoti_test_universal_variables_variable_foo') = baz -a ($FISH -c 'echo $__ghoti_test_universal_variables_variable_foo') = baz
     echo Test 12 pass
 else
     echo Test 12 fail
 end
 # CHECK: Test 12 pass
 
-set -Ue __fish_test_universal_variables_variable_foo
+set -Ue __ghoti_test_universal_variables_variable_foo
 
 # Should no longer be in environment (#2046)
-env | string match '__fish_test_universal_variables_variable_foo=*'
+env | string match '__ghoti_test_universal_variables_variable_foo=*'
 
-set -Ux __fish_test_universal_variables_variable_foo bar
-set -U __fish_test_universal_variables_variable_foo baz
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a ($FISH -c 'echo $__fish_test_universal_variables_variable_foo') = baz
+set -Ux __ghoti_test_universal_variables_variable_foo bar
+set -U __ghoti_test_universal_variables_variable_foo baz
+if test (/bin/sh -c 'echo $__ghoti_test_universal_variables_variable_foo') = baz -a ($FISH -c 'echo $__ghoti_test_universal_variables_variable_foo') = baz
     echo Test 13 pass
 else
     echo Test 13 fail
 end
 # CHECK: Test 13 pass
 
-set -Ux __fish_test_universal_variables_variable_foo bar
-set -u __fish_test_universal_variables_variable_foo bar
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a ($FISH -c 'echo $__fish_test_universal_variables_variable_foo') = bar
+set -Ux __ghoti_test_universal_variables_variable_foo bar
+set -u __ghoti_test_universal_variables_variable_foo bar
+if test (/bin/sh -c 'echo $__ghoti_test_universal_variables_variable_foo') = '' -a ($FISH -c 'echo $__ghoti_test_universal_variables_variable_foo') = bar
     echo Test 14 pass
 else
     echo Test 14 fail
 end
 # CHECK: Test 14 pass
 
-set -Ux __fish_test_universal_variables_variable_foo bar
-set -Uu __fish_test_universal_variables_variable_foo baz
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a ($FISH -c 'echo $__fish_test_universal_variables_variable_foo') = baz
+set -Ux __ghoti_test_universal_variables_variable_foo bar
+set -Uu __ghoti_test_universal_variables_variable_foo baz
+if test (/bin/sh -c 'echo $__ghoti_test_universal_variables_variable_foo') = '' -a ($FISH -c 'echo $__ghoti_test_universal_variables_variable_foo') = baz
     echo Test 15 pass
 else
     echo Test 15 fail
 end
 # CHECK: Test 15 pass
 
-set -eU __fish_test_universal_variables_variable_foo
-function watch_foo --on-variable __fish_test_universal_variables_variable_foo
+set -eU __ghoti_test_universal_variables_variable_foo
+function watch_foo --on-variable __ghoti_test_universal_variables_variable_foo
     echo Foo change detected
 end
 
-set -U __fish_test_universal_variables_variable_foo 1234
+set -U __ghoti_test_universal_variables_variable_foo 1234
 # CHECK: Foo change detected
-set -eU __fish_test_universal_variables_variable_foo
+set -eU __ghoti_test_universal_variables_variable_foo
 # CHECK: Foo change detected
-# WTF set -eg __fish_test_universal_variables_variable_foo
+# WTF set -eg __ghoti_test_universal_variables_variable_foo
 
 functions -e watch_foo
 
 # test erasing variables without a specified scope
 
 set -g test16res
-set -U __fish_test_universal_variables_variable_foo universal
-set -g __fish_test_universal_variables_variable_foo global
+set -U __ghoti_test_universal_variables_variable_foo universal
+set -g __ghoti_test_universal_variables_variable_foo global
 
 begin
-    set -l __fish_test_universal_variables_variable_foo blocklocal
+    set -l __ghoti_test_universal_variables_variable_foo blocklocal
 
     function test16
-        set -l __fish_test_universal_variables_variable_foo function
+        set -l __ghoti_test_universal_variables_variable_foo function
         begin
-            set -l __fish_test_universal_variables_variable_foo functionblock
-            set test16res $test16res $__fish_test_universal_variables_variable_foo
+            set -l __ghoti_test_universal_variables_variable_foo functionblock
+            set test16res $test16res $__ghoti_test_universal_variables_variable_foo
 
             # This sequence seems pointless but it's really verifying that we
             # successfully expose higher scopes as we erase the closest scope.
-            set -e __fish_test_universal_variables_variable_foo
-            set test16res $test16res $__fish_test_universal_variables_variable_foo
+            set -e __ghoti_test_universal_variables_variable_foo
+            set test16res $test16res $__ghoti_test_universal_variables_variable_foo
 
-            set -e __fish_test_universal_variables_variable_foo
-            set test16res $test16res $__fish_test_universal_variables_variable_foo
+            set -e __ghoti_test_universal_variables_variable_foo
+            set test16res $test16res $__ghoti_test_universal_variables_variable_foo
 
-            set -e __fish_test_universal_variables_variable_foo
-            set test16res $test16res $__fish_test_universal_variables_variable_foo
+            set -e __ghoti_test_universal_variables_variable_foo
+            set test16res $test16res $__ghoti_test_universal_variables_variable_foo
 
-            set -e __fish_test_universal_variables_variable_foo
-            set -q __fish_test_universal_variables_variable_foo
-            and set test16res $test16res $__fish_test_universal_variables_variable_foo
+            set -e __ghoti_test_universal_variables_variable_foo
+            set -q __ghoti_test_universal_variables_variable_foo
+            and set test16res $test16res $__ghoti_test_universal_variables_variable_foo
         end
 
-        set -q __fish_test_universal_variables_variable_foo
-        and echo __fish_test_universal_variables_variable_foo should set after test16 inner begin..end
+        set -q __ghoti_test_universal_variables_variable_foo
+        and echo __ghoti_test_universal_variables_variable_foo should set after test16 inner begin..end
     end
 
     test16
-    set test16res $test16res $__fish_test_universal_variables_variable_foo
+    set test16res $test16res $__ghoti_test_universal_variables_variable_foo
 end
 # CHECK: count:5 content:[functionblock function global universal blocklocal]
 
-set -q __fish_test_universal_variables_variable_foo
-and echo __fish_test_universal_variables_variable_foo should set after test16 outer begin..end
+set -q __ghoti_test_universal_variables_variable_foo
+and echo __ghoti_test_universal_variables_variable_foo should set after test16 outer begin..end
 
 echo count:(count $test16res) "content:[$test16res]"
 if test (count $test16res) = 5 -a "$test16res" = "functionblock function global universal blocklocal"
@@ -256,53 +256,53 @@ end
 # CHECK: Test 16 pass
 
 # Test that shadowing with a non-exported variable works
-set -gx __fish_test_env17 UNSHADOWED
-env | string match '__fish_test_env17=*'
-# CHECK: __fish_test_env17=UNSHADOWED
+set -gx __ghoti_test_env17 UNSHADOWED
+env | string match '__ghoti_test_env17=*'
+# CHECK: __ghoti_test_env17=UNSHADOWED
 
-function __fish_test_shadow
-    set -l __fish_test_env17
-    env | string match -q '__fish_test_env17=*'; or echo SHADOWED
+function __ghoti_test_shadow
+    set -l __ghoti_test_env17
+    env | string match -q '__ghoti_test_env17=*'; or echo SHADOWED
 end
-__fish_test_shadow
+__ghoti_test_shadow
 # CHECK: SHADOWED
 
 # Test that the variable is still exported (#2611)
-env | string match '__fish_test_env17=*'
-# CHECK: __fish_test_env17=UNSHADOWED
+env | string match '__ghoti_test_env17=*'
+# CHECK: __ghoti_test_env17=UNSHADOWED
 
 # Test that set var (command substitution) works with if/while.
 
-if set fish_test_18 (false)
+if set ghoti_test_18 (false)
     echo Test 18 fail
 else
     echo Test 18 pass
 end
 # CHECK: Test 18 pass
 
-if not set fish_test_18 (true)
+if not set ghoti_test_18 (true)
     echo Test 18 fail
 else
     echo Test 18 pass
 end
 # CHECK: Test 18 pass
 
-set __fish_test_18_status pass
-while set fish_test_18 (false); or not set fish_test_18 (true)
-    set __fish_test_18_status fail
+set __ghoti_test_18_status pass
+while set ghoti_test_18 (false); or not set ghoti_test_18 (true)
+    set __ghoti_test_18_status fail
     break
 end
-echo Test 18 $__fish_test_18_status
+echo Test 18 $__ghoti_test_18_status
 # CHECK: Test 18 pass
 
 # Test that local exported variables are copied to functions (#1091)
-function __fish_test_local_export
+function __ghoti_test_local_export
     echo $var
     set var boo
     echo $var
 end
 set -lx var wuwuwu
-__fish_test_local_export
+__ghoti_test_local_export
 # CHECK: wuwuwu
 # CHECK: boo
 echo $var
@@ -321,7 +321,7 @@ echo $var # should be "bar"
 # CHECK: bar
 
 # clear for other shells
-set -eU __fish_test_universal_variables_variable_foo
+set -eU __ghoti_test_universal_variables_variable_foo
 
 # Test behavior of universals on startup (#1526)
 echo Testing Universal Startup
@@ -352,8 +352,8 @@ env SHLVL= $FISH -ic 'echo SHLVL: $SHLVL; $FISH -ic \'echo SHLVL: $SHLVL\''
 # CHECK: SHLVL: 1
 # CHECK: SHLVL: 2
 
-# exec should decrement SHLVL - outer fish increments by 1, decrements for exec,
-# inner fish increments again so the value stays the same.
+# exec should decrement SHLVL - outer ghoti increments by 1, decrements for exec,
+# inner ghoti increments again so the value stays the same.
 env SHLVL=1 $FISH -ic 'echo SHLVL: $SHLVL; exec $FISH -ic \'echo SHLVL: $SHLVL\''
 # CHECK: SHLVL: 2
 # CHECK: SHLVL: 2
@@ -368,7 +368,7 @@ env SHLVL="  3" $FISH -ic 'echo SHLVL: $SHLVL'
 # CHECK: SHLVL: 4
 # CHECK: SHLVL: 4
 
-# Non-interactive fish doesn't touch $SHLVL
+# Non-interactive ghoti doesn't touch $SHLVL
 env SHLVL=2 $FISH -c 'echo SHLVL: $SHLVL'
 # CHECK: SHLVL: 2
 env SHLVL=banana $FISH -c 'echo SHLVL: $SHLVL'
@@ -406,65 +406,65 @@ env | grep '^DONT_ESCAPE_COLONS_PATH='
 
 
 # Path universal variables
-set -U __fish_test_path_not a b c
-set -U __fish_test_PATH 1 2 3
-echo "$__fish_test_path_not $__fish_test_PATH" $__fish_test_path_not $__fish_test_PATH
+set -U __ghoti_test_path_not a b c
+set -U __ghoti_test_PATH 1 2 3
+echo "$__ghoti_test_path_not $__ghoti_test_PATH" $__ghoti_test_path_not $__ghoti_test_PATH
 # CHECK: a b c 1:2:3 a b c 1 2 3
 
-set --unpath __fish_test_PATH $__fish_test_PATH
-echo "$__fish_test_path_not $__fish_test_PATH" $__fish_test_path_not $__fish_test_PATH
+set --unpath __ghoti_test_PATH $__ghoti_test_PATH
+echo "$__ghoti_test_path_not $__ghoti_test_PATH" $__ghoti_test_path_not $__ghoti_test_PATH
 # CHECK: a b c 1 2 3 a b c 1 2 3
 
-set -q --path __fish_test_PATH
-and echo __fish_test_PATH is a pathvar
-or echo __fish_test_PATH is not a pathvar
-# CHECK: __fish_test_PATH is not a pathvar
+set -q --path __ghoti_test_PATH
+and echo __ghoti_test_PATH is a pathvar
+or echo __ghoti_test_PATH is not a pathvar
+# CHECK: __ghoti_test_PATH is not a pathvar
 
-set -q --unpath __fish_test_PATH
-and echo __fish_test_PATH is not a pathvar
-or echo __fish_test_PATH is not not a pathvar
-# CHECK: __fish_test_PATH is not a pathvar
+set -q --unpath __ghoti_test_PATH
+and echo __ghoti_test_PATH is not a pathvar
+or echo __ghoti_test_PATH is not not a pathvar
+# CHECK: __ghoti_test_PATH is not a pathvar
 
-set --path __fish_test_path_not $__fish_test_path_not
-echo "$__fish_test_path_not $__fish_test_PATH" $__fish_test_path_not $__fish_test_PATH
+set --path __ghoti_test_path_not $__ghoti_test_path_not
+echo "$__ghoti_test_path_not $__ghoti_test_PATH" $__ghoti_test_path_not $__ghoti_test_PATH
 # CHECK: a:b:c 1 2 3 a b c 1 2 3
 
-set -q --path __fish_test_path_not
-and echo __fish_test_path_not is a pathvar
-or echo __fish_test_path_not is not a pathvar
-# CHECK: __fish_test_path_not is a pathvar
+set -q --path __ghoti_test_path_not
+and echo __ghoti_test_path_not is a pathvar
+or echo __ghoti_test_path_not is not a pathvar
+# CHECK: __ghoti_test_path_not is a pathvar
 
-set -q --unpath __fish_test_path_not
-and echo __fish_test_path_not is not a pathvar
-or echo __fish_test_path_not is not not a pathvar
-# CHECK: __fish_test_path_not is not not a pathvar
+set -q --unpath __ghoti_test_path_not
+and echo __ghoti_test_path_not is not a pathvar
+or echo __ghoti_test_path_not is not not a pathvar
+# CHECK: __ghoti_test_path_not is not not a pathvar
 
-set --path __fish_test_PATH $__fish_test_PATH
-echo "$__fish_test_path_not $__fish_test_PATH" $__fish_test_path_not $__fish_test_PATH
+set --path __ghoti_test_PATH $__ghoti_test_PATH
+echo "$__ghoti_test_path_not $__ghoti_test_PATH" $__ghoti_test_path_not $__ghoti_test_PATH
 # CHECK: a:b:c 1:2:3 a b c 1 2 3
 
-set -U __fish_test_PATH 1:2:3
-echo "$__fish_test_PATH" $__fish_test_PATH
+set -U __ghoti_test_PATH 1:2:3
+echo "$__ghoti_test_PATH" $__ghoti_test_PATH
 # CHECK: 1:2:3 1 2 3
 
-set -e __fish_test_PATH
-set -e __fish_test_path_not
+set -e __ghoti_test_PATH
+set -e __ghoti_test_path_not
 
-set -U --path __fish_test_path2 a:b
-echo "$__fish_test_path2" $__fish_test_path2
+set -U --path __ghoti_test_path2 a:b
+echo "$__ghoti_test_path2" $__ghoti_test_path2
 # CHECK: a:b a b
 
-set -e __fish_test_path2
+set -e __ghoti_test_path2
 
 # Test empty uvars (#5992)
-set -Ux __fish_empty_uvar
-set -Uq __fish_empty_uvar
+set -Ux __ghoti_empty_uvar
+set -Uq __ghoti_empty_uvar
 echo $status
 # CHECK: 0
-$FISH -c 'set -Uq __fish_empty_uvar; echo $status'
+$FISH -c 'set -Uq __ghoti_empty_uvar; echo $status'
 # CHECK: 0
-env | grep __fish_empty_uvar
-# CHECK: __fish_empty_uvar=
+env | grep __ghoti_empty_uvar
+# CHECK: __ghoti_empty_uvar=
 
 # Variable names in other commands
 # Test invalid variable names in loops (#5800)
@@ -476,25 +476,25 @@ end
 # CHECKERR:     ^~^
 
 # Global vs Universal Unspecified Scopes
-set -U __fish_test_global_vs_universal universal
-echo "global-vs-universal 1: $__fish_test_global_vs_universal"
+set -U __ghoti_test_global_vs_universal universal
+echo "global-vs-universal 1: $__ghoti_test_global_vs_universal"
 # CHECK: global-vs-universal 1: universal
 
-set -g __fish_test_global_vs_universal global
-echo "global-vs-universal 2: $__fish_test_global_vs_universal"
+set -g __ghoti_test_global_vs_universal global
+echo "global-vs-universal 2: $__ghoti_test_global_vs_universal"
 # CHECK: global-vs-universal 2: global
 
 
-set __fish_test_global_vs_universal global2
-echo "global-vs-universal 3: $__fish_test_global_vs_universal"
+set __ghoti_test_global_vs_universal global2
+echo "global-vs-universal 3: $__ghoti_test_global_vs_universal"
 # CHECK: global-vs-universal 3: global2
 
-set -e -g __fish_test_global_vs_universal
-echo "global-vs-universal 4: $__fish_test_global_vs_universal"
+set -e -g __ghoti_test_global_vs_universal
+echo "global-vs-universal 4: $__ghoti_test_global_vs_universal"
 # CHECK: global-vs-universal 4: universal
 
-set -e -U __fish_test_global_vs_universal
-echo "global-vs-universal 5: $__fish_test_global_vs_universal"
+set -e -U __ghoti_test_global_vs_universal
+echo "global-vs-universal 5: $__ghoti_test_global_vs_universal"
 # CHECK: global-vs-universal 5:
 
 # Export local variables from all parent scopes (issue #6153).
@@ -523,7 +523,7 @@ set -Ux EDITOR emacs -nw
 # CHECK: $EDITOR: set in universal scope, exported, with 2 elements
 $FISH -c 'set -S EDITOR' | string match -r -e 'global|universal'
 
-# When the variable has been changed outside of fish we accept it.
+# When the variable has been changed outside of ghoti we accept it.
 # CHECK: $EDITOR: set in global scope, exported, with 1 elements
 # CHECK: $EDITOR: set in universal scope, exported, with 2 elements
 sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'global|universal'
@@ -531,7 +531,7 @@ sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'globa
 # Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
 #CHECKERR: set: argle bargle: invalid variable name. See `help identifiers`
-#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: {{.*}}set.ghoti (line {{\d+}}):
 #CHECKERR: set --show 'argle bargle'
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
@@ -699,12 +699,12 @@ test_ifforwhile_scope
 set -g status 5
 #CHECKERR: set: Tried to change the read-only variable 'status'
 
-while set -e __fish_test_universal_exported_var
+while set -e __ghoti_test_universal_exported_var
 end
-set -xU __fish_test_universal_exported_var 1
-$FISH -c 'set __fish_test_universal_exported_var 2'
-env | string match -e __fish_test_universal_exported_var
-#CHECK: __fish_test_universal_exported_var=2
+set -xU __ghoti_test_universal_exported_var 1
+$FISH -c 'set __ghoti_test_universal_exported_var 2'
+env | string match -e __ghoti_test_universal_exported_var
+#CHECK: __ghoti_test_universal_exported_var=2
 
 # Test that computed variables are global.
 # If they can be set they can only be set in global scope,
@@ -757,14 +757,14 @@ true
 
 set "" foo
 #CHECKERR: set: : invalid variable name. See `help identifiers`
-#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: {{.*}}set.ghoti (line {{\d+}}):
 #CHECKERR: set "" foo
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
 
 set --show ""
 #CHECKERR: set: : invalid variable name. See `help identifiers`
-#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: {{.*}}set.ghoti (line {{\d+}}):
 #CHECKERR: set --show ""
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
@@ -772,7 +772,7 @@ set --show ""
 set foo="ba nana"
 #CHECKERR: set: foo=ba nana: invalid variable name. See `help identifiers`
 #CHECKERR: set: Did you mean `set foo 'ba nana'`?
-#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: {{.*}}set.ghoti (line {{\d+}}):
 #CHECKERR: set foo="ba nana"
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)

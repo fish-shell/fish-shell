@@ -104,7 +104,7 @@ complete -r -c xterm -o bcf -d 'Blinking cursor will be off for that many millis
 complete -r -c xterm -o bcn -d 'Blinking cursor will be on for that many milliseconds'
 complete -r -c xterm -o class -d 'Override xterm resource class'
 complete -r -c xterm -o cr -d 'Color for the text cursor'
-complete -r -c xterm -o en -xa "(__fish_print_encodings)" -d 'xterm encoding'
+complete -r -c xterm -o en -xa "(__ghoti_print_encodings)" -d 'xterm encoding'
 complete -r -c xterm -o fb -d 'Bold font'
 complete -r -c xterm -o fa -d 'FreeType font pattern'
 complete -r -c xterm -o fd -d 'FreeType double-width font pattern'

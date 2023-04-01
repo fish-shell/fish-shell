@@ -4,7 +4,7 @@ function dirs --description 'Print directory stack'
     or return
 
     if set -q _flag_help
-        __fish_print_help dirs
+        __ghoti_print_help dirs
         return 0
     end
 

@@ -1,5 +1,5 @@
-// fish_test_helper is a little program with no fish dependencies that acts like certain other
-// programs, allowing fish to test its behavior.
+// ghoti_test_helper is a little program with no ghoti dependencies that acts like certain other
+// programs, allowing ghoti to test its behavior.
 
 #include <fcntl.h>
 #include <signal.h>
@@ -53,14 +53,14 @@ static void nohup_wait() {
         perror("tcsetgrp");
         exit(EXIT_FAILURE);
     }
-    // Note: these silly close() calls are necessary to prevent our parent process (presumably fish)
+    // Note: these silly close() calls are necessary to prevent our parent process (presumably ghoti)
     // from getting stuck in the "E" state ("Trying to exit"). This appears to be a (kernel?) bug on
     // macOS: the process is no longer running but is not a zombie either, and so cannot be reaped.
     // It is unclear why closing these fds successfully works around this issue.
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
-    // To avoid leaving fish_test_helpers around, we exit once our parent changes, meaning the fish
+    // To avoid leaving ghoti_test_helpers around, we exit once our parent changes, meaning the ghoti
     // instance exited.
     while (getppid() == init_parent) {
         usleep(1000000 / 4);
@@ -207,7 +207,7 @@ static void stdin_make_nonblocking() {
 
 static void show_help();
 
-/// A thing that fish_test_helper can do.
+/// A thing that ghoti_test_helper can do.
 struct fth_command_t {
     /// The argument to match against.
     const char *arg;
@@ -241,11 +241,11 @@ static fth_command_t s_commands[] = {
     {"sigkill_self", sigkill_self, "Send SIGKILL to self"},
     {"stdin_make_nonblocking", stdin_make_nonblocking,
      "Print if stdin is blocking and then make it nonblocking"},
-    {"help", show_help, "Print list of fish_test_helper commands"},
+    {"help", show_help, "Print list of ghoti_test_helper commands"},
 };
 
 static void show_help() {
-    printf("fish_test_helper: helper utility for fish\n\n");
+    printf("ghoti_test_helper: helper utility for ghoti\n\n");
     printf("Commands\n");
     printf("--------\n");
     for (const auto &cmd : s_commands) {

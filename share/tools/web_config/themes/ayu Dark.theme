@@ -2,33 +2,33 @@
 # url: 'https://github.com/dempfi/ayu'
 # preferred_background: 0A0E14
 
-fish_color_normal B3B1AD
-fish_color_command 39BAE6
-fish_color_quote C2D94C
-fish_color_redirection FFEE99
-fish_color_end F29668
-fish_color_error FF3333
-fish_color_param B3B1AD
-fish_color_comment 626A73
-fish_color_match F07178
-fish_color_selection --background=E6B450
-fish_color_search_match --background=E6B450
-fish_color_history_current --bold
-fish_color_operator E6B450
-fish_color_escape 95E6CB
-fish_color_cwd 59C2FF
-fish_color_cwd_root red
-fish_color_valid_path --underline
-fish_color_autosuggestion 4D5566
-fish_color_user brgreen
-fish_color_host normal
-fish_color_cancel -r
-fish_pager_color_completion normal
-fish_pager_color_description B3A06D yellow
-fish_pager_color_prefix normal --bold --underline
-fish_pager_color_progress brwhite --background=cyan
-fish_pager_color_selected_background --background=E6B450
-fish_color_option B3B1AD
-fish_color_keyword 39BAE6
-fish_color_host_remote yellow
-fish_color_status red
+ghoti_color_normal B3B1AD
+ghoti_color_command 39BAE6
+ghoti_color_quote C2D94C
+ghoti_color_redirection FFEE99
+ghoti_color_end F29668
+ghoti_color_error FF3333
+ghoti_color_param B3B1AD
+ghoti_color_comment 626A73
+ghoti_color_match F07178
+ghoti_color_selection --background=E6B450
+ghoti_color_search_match --background=E6B450
+ghoti_color_history_current --bold
+ghoti_color_operator E6B450
+ghoti_color_escape 95E6CB
+ghoti_color_cwd 59C2FF
+ghoti_color_cwd_root red
+ghoti_color_valid_path --underline
+ghoti_color_autosuggestion 4D5566
+ghoti_color_user brgreen
+ghoti_color_host normal
+ghoti_color_cancel -r
+ghoti_pager_color_completion normal
+ghoti_pager_color_description B3A06D yellow
+ghoti_pager_color_prefix normal --bold --underline
+ghoti_pager_color_progress brwhite --background=cyan
+ghoti_pager_color_selected_background --background=E6B450
+ghoti_color_option B3B1AD
+ghoti_color_keyword 39BAE6
+ghoti_color_host_remote yellow
+ghoti_color_status red

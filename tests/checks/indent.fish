@@ -1,41 +1,41 @@
-# RUN: %fish -C 'set -g fish_indent %fish_indent' %s
-# Test file for fish_indent
+# RUN: %ghoti -C 'set -g ghoti_indent %ghoti_indent' %s
+# Test file for ghoti_indent
 # Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
 
 echo 'echo foo \\
-| cat' | $fish_indent
+| cat' | $ghoti_indent
 #CHECK: echo foo \
 #CHECK: | cat
 
 echo 'echo foo | \\
-cat' | $fish_indent
+cat' | $ghoti_indent
 #CHECK: echo foo | cat
 
 echo 'echo foo |
-cat' | $fish_indent
+cat' | $ghoti_indent
 #CHECK: echo foo |
 #CHECK: cat
 
 echo 'if true; \\
     or false
     echo something
-end' | $fish_indent
+end' | $ghoti_indent
 #CHECK: if true; or false
 #CHECK: echo something
 #CHECK: end
 
 echo '\\
-echo wurst' | $fish_indent
+echo wurst' | $ghoti_indent
 #CHECK: echo wurst
 
 echo 'echo foo \\
-brot' | $fish_indent
+brot' | $ghoti_indent
 #CHECK: echo foo \
 #CHECK: brot
 
 
 echo 'echo rabarber \\
-     banana' | $fish_indent
+     banana' | $ghoti_indent
 #CHECK: echo rabarber \
 #CHECK: banana
 
@@ -43,7 +43,7 @@ echo 'for x in a \\
     b \\
     c
     echo thing
-end' | $fish_indent
+end' | $ghoti_indent
 #CHECK: for x in a \
 #CHECK: b \
 #CHECK: c
@@ -51,16 +51,16 @@ end' | $fish_indent
 #CHECK: end
 
 echo 'echo foo |
-echo banana' | $fish_indent
+echo banana' | $ghoti_indent
 #CHECK: echo foo |
 #CHECK: echo banana
 
 echo 'echo foo \\
-;' | $fish_indent
+;' | $ghoti_indent
 #CHECK: echo foo
 
 echo 'echo foo \\
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: echo foo
 
 echo -n '
@@ -69,7 +69,7 @@ echo hi
 
 
 end | cat | cat | begin ; echo hi ; end | begin ; begin ; echo hi ; end ; end arg
-' | $fish_indent
+' | $ghoti_indent
 
 #CHECK: begin
 #CHECK: {{    }}echo hi
@@ -93,7 +93,7 @@ switch aloha
       echo hi
 
 end
-' | $fish_indent
+' | $ghoti_indent
 
 #CHECK: switch aloha
 #CHECK: 
@@ -117,7 +117,7 @@ function hello_world
 
    echo hello
                   end
-' | $fish_indent
+' | $ghoti_indent
 
 #CHECK: function hello_world
 #CHECK: 
@@ -149,7 +149,7 @@ switch foo #abc
 qqq
    case "*"
        echo sup
-end' | $fish_indent
+end' | $ghoti_indent
 #CHECK: 
 #CHECK: echo alpha #comment1
 #CHECK: #comment2
@@ -179,7 +179,7 @@ switch beta
        echo delta
 end
 end
-' | $fish_indent -i
+' | $ghoti_indent -i
 #CHECK: if true
 #CHECK: else if false
 #CHECK: {{^}}echo alpha
@@ -196,7 +196,7 @@ echo hi
 else
 echo bye
 end; echo alpha "
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: begin
 #CHECK: {{    }}echo hi
 #CHECK: else
@@ -208,7 +208,7 @@ end; echo alpha "
 echo -n '
 if begin ; false; end; echo hi ; end
 while begin ; false; end; echo hi ; end
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: if begin
 #CHECK: {{    }}{{    }}false
 #CHECK: {{    }}end
@@ -223,7 +223,7 @@ while begin ; false; end; echo hi ; end
 # issue 2899
 echo -n '
 echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: echo <stdin >>appended yes 2>&1 no >stdout maybe 2>&4 | cat 2>| cat
 
 
@@ -232,7 +232,7 @@ echo -n '
 begin
 # comment
 end
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: {{^}}begin
 #CHECK: {{^    }}# comment
 #CHECK: {{^}}end
@@ -242,7 +242,7 @@ begin
 cmd
 # comment
 end
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: {{^}}begin
 #CHECK: {{^    }}cmd
 #CHECK: {{^    }}# comment
@@ -251,7 +251,7 @@ end
 echo -n '
 cmd \\
 continuation
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: {{^}}cmd \
 #CHECK: {{^    }}continuation
 
@@ -260,7 +260,7 @@ begin
 cmd \
 continuation
 end
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: {{^}}begin
 #CHECK: {{^    }}cmd \
 #CHECK: {{^    }}{{    }}continuation
@@ -297,7 +297,7 @@ echo abc;end
 echo hi |
 
 echo bye
-' | $fish_indent
+' | $ghoti_indent
 #CHECK: i\
 #CHECK: f true
 #CHECK: {{    }}echo yes
@@ -327,48 +327,48 @@ echo bye
 #CHECK: 
 #CHECK: {{    }}echo bye
 
-echo 'a;;;;;;' | $fish_indent
+echo 'a;;;;;;' | $ghoti_indent
 #CHECK: a
-echo 'echo; echo' | $fish_indent
+echo 'echo; echo' | $ghoti_indent
 #CHECK: echo
 #CHECK: echo
 
 # Check that we keep semicolons for and and or, but only on the same line.
-printf '%s\n' "a; and b" | $fish_indent
+printf '%s\n' "a; and b" | $ghoti_indent
 #CHECK: a; and b
-printf '%s\n' "a;" "and b" | $fish_indent
+printf '%s\n' "a;" "and b" | $ghoti_indent
 #CHECK: a
 #CHECK: and b
-printf '%s\n' a "; and b" | $fish_indent
+printf '%s\n' a "; and b" | $ghoti_indent
 #CHECK: a
 #CHECK: and b
-printf '%s\n' "a; b" | $fish_indent
+printf '%s\n' "a; b" | $ghoti_indent
 #CHECK: a
 #CHECK: b
 
 echo 'foo &&
   #
-bar' | $fish_indent
+bar' | $ghoti_indent
 #CHECK: {{^}}foo &&
 #CHECK: {{^    }}#
 #CHECK: {{    }}bar
 
 echo 'command 1 |
 command 1 cont ||
-command 2' | $fish_indent
+command 2' | $ghoti_indent
 #CHECK: {{^}}command 1 |
 #CHECK: {{^    }}command 1 cont ||
 #CHECK: {{^    }}command 2
 
-echo " foo" | $fish_indent --check
+echo " foo" | $ghoti_indent --check
 echo $status
 #CHECK: 1
-echo foo | $fish_indent --check
+echo foo | $ghoti_indent --check
 echo $status
 #CHECK: 0
 
 echo 'thing | # comment
-    thing' | $fish_indent --check
+    thing' | $ghoti_indent --check
 echo $status
 #CHECK: 0
 
@@ -376,17 +376,17 @@ echo 'echo \
     # first indented comment
     # second indented comment
     indented argument
-echo' | $fish_indent --check
+echo' | $ghoti_indent --check
 echo $status
 #CHECK: 0
 
 echo 'if true;
-end' | $fish_indent
+end' | $ghoti_indent
 #CHECK: if true{{$}}
 #CHECK: end
 
 echo 'if true; and false; or true
-end' | $fish_indent --check
+end' | $ghoti_indent --check
 echo $status
 #CHECK: 0
 
@@ -397,7 +397,7 @@ function hello_continuations
    echo --opt2 \
    echo --opt3
                   end
-' | $fish_indent
+' | $ghoti_indent
 
 #CHECK: function hello_continuations
 #CHECK: {{^}}    echo cmd \
@@ -409,26 +409,26 @@ function hello_continuations
 echo "\
 a=1 \\
     a=2 \\
-    echo" | $fish_indent --check
+    echo" | $ghoti_indent --check
 echo $status #CHECK: 0
 
 echo "\
 a=1 \\
-    a=2 echo" | $fish_indent --check
+    a=2 echo" | $ghoti_indent --check
 echo $status #CHECK: 0
 
 echo 'first-word\\
- second-word' | $fish_indent
+ second-word' | $ghoti_indent
 # CHECK: first-word \
 # CHECK: {{^}}    second-word
 
 echo 'begin
     first-indented-word\\
-        second-indented-word' | $fish_indent
+        second-indented-word' | $ghoti_indent
 # CHECK: begin
 # CHECK: {{^}}    first-indented-word \
 # CHECK: {{^}}        second-indented-word
 
 echo 'multiline-\\
--word' | $fish_indent --check
+-word' | $ghoti_indent --check
 echo $status #CHECK: 0

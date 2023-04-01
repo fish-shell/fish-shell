@@ -1,4 +1,4 @@
-__fish_make_completion_signals
+__ghoti_make_completion_signals
 
 for sig in $__kill_signals[-1..1]
     set -l number (string split ' ' $sig)[1]
@@ -8,7 +8,7 @@ for sig in $__kill_signals[-1..1]
     complete -c kill -k -s s -x -a "$name\t$number"
 end
 
-complete -c kill -xa '(__fish_complete_pids)'
+complete -c kill -xa '(__ghoti_complete_pids)'
 
 if kill -L >/dev/null 2>/dev/null
     complete -c kill -s s -l signal -d "Signal to send"

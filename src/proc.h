@@ -159,7 +159,7 @@ class proc_status_t {
     }
 };
 
-/// A structure representing a "process" internal to fish. This is backed by a pthread instead of a
+/// A structure representing a "process" internal to ghoti. This is backed by a pthread instead of a
 /// separate process.
 class internal_proc_t {
     /// An identifier for internal processes.
@@ -221,8 +221,8 @@ class tty_transfer_t : nonmovable_t, noncopyable_t {
     job_group_ref_t owner_;
 };
 
-/// A structure representing a single fish process. Contains variables for tracking process state
-/// and the process argument list. Actually, a fish process can be either a regular external
+/// A structure representing a single ghoti process. Contains variables for tracking process state
+/// and the process argument list. Actually, a ghoti process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a
 /// shellscript function or a block of commands to be evaluated by calling eval. Lastly, this
 /// process can be the result of an exec command. The role of this process_t is determined by the
@@ -443,13 +443,13 @@ class job_t : noncopyable_t {
     // This is never null and not changed after construction.
     job_group_ref_t group{};
 
-    /// \return our pgid, or none if we don't have one, or are internal to fish
-    /// This never returns fish's own pgroup.
+    /// \return our pgid, or none if we don't have one, or are internal to ghoti
+    /// This never returns ghoti's own pgroup.
     maybe_t<pid_t> get_pgid() const;
 
     /// \return the pid of the last external process in the job.
-    /// This may be none if the job consists of just internal fish functions or builtins.
-    /// This will never be fish's own pid.
+    /// This may be none if the job consists of just internal ghoti functions or builtins.
+    /// This will never be ghoti's own pid.
     maybe_t<pid_t> get_last_pid() const;
 
     /// The id of this job.
@@ -575,8 +575,8 @@ void set_interactive_session(bool flag);
 bool get_login();
 void mark_login();
 
-/// If this flag is set, fish will never fork or run execve. It is used to put fish into a syntax
-/// verifier mode where fish tries to validate the syntax of a file but doesn't actually do
+/// If this flag is set, ghoti will never fork or run execve. It is used to put ghoti into a syntax
+/// verifier mode where ghoti tries to validate the syntax of a file but doesn't actually do
 /// anything.
 bool no_exec();
 void mark_no_exec();
@@ -621,7 +621,7 @@ void proc_init();
 /// Wait for any process finishing, or receipt of a signal.
 void proc_wait_any(parser_t &parser);
 
-/// Send SIGHUP to the list \p jobs, excepting those which are in fish's pgroup.
+/// Send SIGHUP to the list \p jobs, excepting those which are in ghoti's pgroup.
 void hup_jobs(const job_list_t &jobs);
 
 /// Add a job to the list of PIDs/PGIDs we wait on even though they are not associated with any

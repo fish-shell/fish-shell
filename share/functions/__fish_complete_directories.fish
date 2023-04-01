@@ -3,7 +3,7 @@
 # with description $argv[2] if defined, otherwise use 'Directory'.
 # If no arguments are provided, attempts to complete current commandline token.
 #
-function __fish_complete_directories -d "Complete directory prefixes" --argument-names comp desc
+function __ghoti_complete_directories -d "Complete directory prefixes" --argument-names comp desc
     if not set -q desc[1]
         set desc Directory
     end

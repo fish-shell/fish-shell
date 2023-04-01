@@ -1,4 +1,4 @@
-function __fish_complete_tar -d "Peek inside of archives and list all files"
+function __ghoti_complete_tar -d "Peek inside of archives and list all files"
     set -l args (commandline -poc)
     while count $args >/dev/null
         switch $args[1]
@@ -18,7 +18,7 @@ function __fish_complete_tar -d "Peek inside of archives and list all files"
     end
 end
 
-complete -c tar -a "(__fish_complete_tar)"
+complete -c tar -a "(__ghoti_complete_tar)"
 
 complete -c tar -s A -l catenate -l concatenate -d "Append archive to archive"
 complete -c tar -s c -l create -d "Create archive"

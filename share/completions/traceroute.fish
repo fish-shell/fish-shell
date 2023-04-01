@@ -1,4 +1,4 @@
-complete -c traceroute -x -a "(__fish_print_hostnames)"
+complete -c traceroute -x -a "(__ghoti_print_hostnames)"
 
 complete -c traceroute -l help -d 'Print help info and exit'
 complete -c traceroute -s 4 -d 'Force IPv4 tracerouting'
@@ -9,7 +9,7 @@ complete -c traceroute -s d -l debug -d 'Enable socket level debugging'
 complete -c traceroute -s F -l dont-fragment -d 'Do not fragment probe packets'
 complete -c traceroute -s f -l first -x -d 'Specifies with what TTL to start'
 complete -c traceroute -s g -l gateway -x -d 'Route the packet through the specified gateway'
-complete -c traceroute -s i -l interface -x -a "(__fish_print_interfaces)" -d 'Specify network interface'
+complete -c traceroute -s i -l interface -x -a "(__ghoti_print_interfaces)" -d 'Specify network interface'
 complete -c traceroute -s m -l max-hops -x -d 'Maximum number of hops'
 complete -c traceroute -s N -l sim-queries -x -d 'Number of probe packets sent out simultaneously'
 complete -c traceroute -s n -d 'Do not map IP addresses to host names'

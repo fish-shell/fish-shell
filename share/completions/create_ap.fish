@@ -1,5 +1,5 @@
 complete -c create_ap -f
-complete -c create_ap -a '(__fish_print_interfaces)'
+complete -c create_ap -a '(__ghoti_print_interfaces)'
 complete -c create_ap -s h -l help -d 'Show help'
 complete -c create_ap -l version -d 'Print version number'
 complete -c create_ap -s c -x -d 'Channel number'

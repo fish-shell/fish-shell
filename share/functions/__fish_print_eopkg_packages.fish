@@ -1,10 +1,10 @@
-function __fish_print_eopkg_packages
+function __ghoti_print_eopkg_packages
     type -q -f eopkg || return 1
 
     argparse i/installed -- $argv
     or return 1
 
-    set -l xdg_cache_home (__fish_make_cache_dir)
+    set -l xdg_cache_home (__ghoti_make_cache_dir)
     or return
 
     # If the cache is less than max_age, we do not recalculate it

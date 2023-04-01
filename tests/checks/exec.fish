@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 exec cat <nosuchfile
 #CHECKERR: warning: An error occurred while redirecting file 'nosuchfile'
 #CHECKERR: warning: Path 'nosuchfile' does not exist

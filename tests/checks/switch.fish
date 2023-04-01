@@ -1,4 +1,4 @@
-#RUN: %fish -C "set fish %fish" %s
+#RUN: %ghoti -C "set ghoti %ghoti" %s
 # Check that switch with an argument expanding to nothing still works.
 switch $foo
     case a
@@ -47,14 +47,14 @@ switch (echo; echo; echo)
     case ""
         echo banana
 end
-#CHECKERR: {{.*/?}}switch.fish (line {{\d+}}): switch: Expected at most one argument, got 3
+#CHECKERR: {{.*/?}}switch.ghoti (line {{\d+}}): switch: Expected at most one argument, got 3
 #CHECKERR:
 #CHECKERR: switch (echo; echo; echo)
 #CHECKERR:        ^~~~~~~~~~~~~~~~~^
 
 # As is no argument at all.
-# Because this is a syntax error, we need to start a sub-fish or we wouldn't execute anything else.
-$fish -c '
+# Because this is a syntax error, we need to start a sub-ghoti or we wouldn't execute anything else.
+$ghoti -c '
 switch
     case a
         echo a
@@ -66,7 +66,7 @@ switch
         echo banana
 end
 '
-#CHECKERR: fish: 'case' builtin not inside of switch block
+#CHECKERR: ghoti: 'case' builtin not inside of switch block
 #CHECKERR:      case a
 #CHECKERR:      ^~~^
 
@@ -88,7 +88,7 @@ switch $smurf
     case "*"
         echo Test 2 fail
 end
-#CHECKERR: {{.*}}switch.fish (line {{\d+}}): No matches for wildcard '*ee*'. See `help wildcards-globbing`.
+#CHECKERR: {{.*}}switch.ghoti (line {{\d+}}): No matches for wildcard '*ee*'. See `help wildcards-globbing`.
 #CHECKERR: case *ee*
 #CHECKERR:      ^~~^
 #CHECK: Test 2 pass
@@ -107,13 +107,13 @@ begin
         case '*'
             echo Matched!
     end
-    # CHECKERR: fish: Unknown command: doesnotexist
-    # CHECKERR: checks/switch.fish (line {{\d+}}):
+    # CHECKERR: ghoti: Unknown command: doesnotexist
+    # CHECKERR: checks/switch.ghoti (line {{\d+}}):
     # CHECKERR: doesnotexist
     # CHECKERR: ^~~~~~~~~~~^
     # CHECKERR: in command substitution
-    # CHECKERR: {{\t}}called on line {{\d+}} of file checks/switch.fish
-    # CHECKERR: checks/switch.fish (line {{\d+}}): Unknown command
+    # CHECKERR: {{\t}}called on line {{\d+}} of file checks/switch.ghoti
+    # CHECKERR: checks/switch.ghoti (line {{\d+}}): Unknown command
     # CHECKERR: switch (doesnotexist)
     # CHECKERR:        ^~~~~~~~~~~~~^
 end

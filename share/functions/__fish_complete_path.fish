@@ -1,4 +1,4 @@
-function __fish_complete_path --description "Complete using path"
+function __ghoti_complete_path --description "Complete using path"
     set -l target
     set -l description
     switch (count $argv)

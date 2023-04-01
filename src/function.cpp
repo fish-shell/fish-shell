@@ -1,5 +1,5 @@
 // Functions for storing and retrieving function information. These functions also take care of
-// autoloading functions in the $fish_function_path. Actual function evaluation is taken care of by
+// autoloading functions in the $ghoti_function_path. Actual function evaluation is taken care of by
 // the parser and to some degree the builtin handling library.
 //
 #include "config.h"  // IWYU pragma: keep
@@ -44,7 +44,7 @@ struct function_set_t {
     std::unordered_set<wcstring> autoload_tombstones;
 
     /// The autoloader for our functions.
-    autoload_t autoloader{L"fish_function_path"};
+    autoload_t autoloader{L"ghoti_function_path"};
 
     /// Remove a function.
     /// \return true if successful, false if it doesn't exist.
@@ -83,7 +83,7 @@ static std::shared_ptr<function_properties_t> copy_props(const function_properti
 
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded.
-/// Note this executes fish script code.
+/// Note this executes ghoti script code.
 bool function_load(const wcstring &name, parser_t &parser) {
     parser.assert_can_execute();
     maybe_t<wcstring> path_to_autoload;
@@ -111,7 +111,7 @@ static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden)
 
     // TODO: justify this.
     auto &vars = env_stack_t::principal();
-    const auto path_var = vars.get(L"fish_function_path");
+    const auto path_var = vars.get(L"ghoti_function_path");
     if (path_var.missing_or_empty()) return;
 
     const wcstring_list_t &path_list = path_var->as_list();
@@ -127,8 +127,8 @@ static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden)
             if (!get_hidden && fn[0] == L'_') continue;
 
             suffix = std::wcsrchr(fn, L'.');
-            // We need a ".fish" *suffix*, it can't be the entire name.
-            if (suffix && suffix != fn && (std::wcscmp(suffix, L".fish") == 0)) {
+            // We need a ".ghoti" *suffix*, it can't be the entire name.
+            if (suffix && suffix != fn && (std::wcscmp(suffix, L".ghoti") == 0)) {
                 // Also ignore directories.
                 if (!entry->is_dir()) {
                     wcstring name(fn, suffix - fn);
@@ -367,7 +367,7 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
     // Output any inherited variables as `set -l` lines.
     for (const auto &kv : this->inherit_vars) {
         // We don't know what indentation style the function uses,
-        // so we do what fish_indent would.
+        // so we do what ghoti_indent would.
         append_format(out, L"\n    set -l %ls", kv.first.c_str());
         for (const auto &arg : kv.second) {
             out.push_back(L' ');

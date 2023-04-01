@@ -1,1 +1,1 @@
-__fish_complete_lpr lpmove
+__ghoti_complete_lpr lpmove

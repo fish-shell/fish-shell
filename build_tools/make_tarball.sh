@@ -4,14 +4,14 @@
 # We use git to output a tree. But we also want to build the user documentation
 # and put that in the tarball, so that nobody needs to have sphinx installed
 # to build it.
-# Outputs to $FISH_ARTEFACT_PATH or ~/fish_built by default
+# Outputs to $FISH_ARTEFACT_PATH or ~/ghoti_built by default
 
 # Exit on error
 set -e
 
-# We wil generate a tarball with a prefix "fish-VERSION"
+# We wil generate a tarball with a prefix "ghoti-VERSION"
 # git can do that automatically for us via git-archive
-# but to get the documentation in, we need to make a symlink called "fish-VERSION"
+# but to get the documentation in, we need to make a symlink called "ghoti-VERSION"
 # and tar from that, so that the documentation gets the right prefix
 
 # Use Ninja if available, as it automatically paralellises
@@ -43,11 +43,11 @@ wd="$PWD"
 VERSION=$(git describe --dirty 2>/dev/null)
 
 # The name of the prefix, which is the directory that you get when you untar
-prefix="fish-$VERSION"
+prefix="ghoti-$VERSION"
 
 # The path where we will output the tar file
-# Defaults to ~/fish_built
-path=${FISH_ARTEFACT_PATH:-~/fish_built}/$prefix.tar
+# Defaults to ~/ghoti_built
+path=${FISH_ARTEFACT_PATH:-~/ghoti_built}/$prefix.tar
 
 # Clean up stuff we've written before
 rm -f "$path" "$path".xz
@@ -70,7 +70,7 @@ $TAR_APPEND version
 
 if [ -n "$VENDOR_TARBALLS" ]; then
   $BUILD_TOOL corrosion-vendor.tar.gz
-  mv corrosion-vendor.tar.gz "${FISH_ARTEFACT_PATH:-~/fish_built}"/"${prefix}"_corrosion-vendor.tar.gz
+  mv corrosion-vendor.tar.gz "${FISH_ARTEFACT_PATH:-~/ghoti_built}"/"${prefix}"_corrosion-vendor.tar.gz
 fi
 
 cd -

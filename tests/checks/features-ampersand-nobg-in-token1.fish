@@ -1,4 +1,4 @@
-#RUN: %fish --features=ampersand-nobg-in-token -C 'set -g fish_indent %fish_indent' %s
+#RUN: %ghoti --features=ampersand-nobg-in-token -C 'set -g ghoti_indent %ghoti_indent' %s
 
 echo no&background
 # CHECK: no&background
@@ -11,5 +11,5 @@ echo background &
 
 wait
 
-echo no&bg | fish_features=ampersand-nobg-in-token $fish_indent --check
+echo no&bg | ghoti_features=ampersand-nobg-in-token $ghoti_indent --check
 echo $status #CHECK: 0

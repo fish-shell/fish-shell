@@ -22,7 +22,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-// This version has been altered and ported to C++ for inclusion in fish.
+// This version has been altered and ported to C++ for inclusion in ghoti.
 #include "config.h"
 
 #include "tinyexpr.h"
@@ -294,7 +294,7 @@ void state::next_token() {
 
         /* Try reading a number. */
         if ((next_[0] >= '0' && next_[0] <= '9') || next_[0] == '.') {
-            current_ = fish_wcstod_underscores(next_, const_cast<wchar_t **>(&next_));
+            current_ = ghoti_wcstod_underscores(next_, const_cast<wchar_t **>(&next_));
             type_ = TOK_NUMBER;
         } else {
             /* Look for a function call. */

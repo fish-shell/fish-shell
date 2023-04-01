@@ -1,9 +1,9 @@
-.. _fish_for_bash_users:
+.. _ghoti_for_bash_users:
 
 Fish for bash users
 ===================
 
-This is to give you a quick overview if you come from bash (or to a lesser extent other shells like zsh or ksh) and want to know how fish differs. Fish is intentionally not POSIX-compatible and as such some of the things you are used to work differently.
+This is to give you a quick overview if you come from bash (or to a lesser extent other shells like zsh or ksh) and want to know how ghoti differs. Fish is intentionally not POSIX-compatible and as such some of the things you are used to work differently.
 
 Many things are similar - they both fundamentally expand commandlines to execute commands, have pipes, redirections, variables, globs, use command output in various ways. This document is there to quickly show you the differences.
 
@@ -56,7 +56,7 @@ For instance, here's bash
   "bar"
   "baz"
 
-And here is fish::
+And here is ghoti::
 
   > set foo "bar baz"
   > printf '"%s"\n' $foo
@@ -169,11 +169,11 @@ repeat strings, trim strings, escape strings or print a string's length or width
 Special variables
 -----------------
 
-Some bash variables and their closest fish equivalent:
+Some bash variables and their closest ghoti equivalent:
 
 - ``$*``, ``$@``, ``$1`` and so on: ``$argv``
 - ``$?``: ``$status``
-- ``$$``: ``$fish_pid``
+- ``$$``: ``$ghoti_pid``
 - ``$#``: No variable, instead use ``count $argv``
 - ``$!``: ``$last_pid``
 - ``$0``: ``status filename``
@@ -182,7 +182,7 @@ Some bash variables and their closest fish equivalent:
 Process substitution
 ----------------------
 
-Instead of ``<(command)`` fish uses ``(command | psub)``. There is no equivalent to ``>(command)``.
+Instead of ``<(command)`` ghoti uses ``(command | psub)``. There is no equivalent to ``>(command)``.
 
 Note that both of these are bashisms, and most things can easily be expressed without. E.g. instead of::
 
@@ -192,7 +192,7 @@ just use::
 
   command | source
 
-as fish's :doc:`source <cmds/source>` can read from stdin.
+as ghoti's :doc:`source <cmds/source>` can read from stdin.
 
 Heredocs
 --------
@@ -262,7 +262,7 @@ and could be written in other shells as
   rxvt-unicode
   EOF
   
-So heredocs really are just minor syntactical sugar that introduces a lot of special rules, which is why fish doesn't have them. Pipes are a core concept, and are simpler and compose nicer.
+So heredocs really are just minor syntactical sugar that introduces a lot of special rules, which is why ghoti doesn't have them. Pipes are a core concept, and are simpler and compose nicer.
 
 .. [#] For example, the "EOF" is just a convention, the terminator can be an arbitrary string, something like "THISISTHEEND" also works. And using ``<<-`` trims leading *tab* characters (but not other whitespace), so you can indent the lines, but only with tabs. Substitutions (variables, commands) are done on the heredoc by default, but not if the terminator is quoted: ``cat << "EOF"``.
 
@@ -290,7 +290,7 @@ And also has some functions, like for trigonometry::
   > math cos 2 x pi
   1
 
-You can pass arguments to ``math`` separately like above or in quotes. Because fish uses ``()`` parentheses for :ref:`command substitutions <bash-command-substitutions>`, quoting is needed if you want to use them in your expression::
+You can pass arguments to ``math`` separately like above or in quotes. Because ghoti uses ``()`` parentheses for :ref:`command substitutions <bash-command-substitutions>`, quoting is needed if you want to use them in your expression::
 
   > math '(5 + 2) * 4'
 
@@ -299,7 +299,7 @@ Both ``*`` and ``x`` are valid ways to spell multiplication, but ``*`` needs to 
 Prompts
 -------
 
-Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the :doc:`fish_prompt <cmds/fish_prompt>` function, plus the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function if vi-mode is enabled and the :doc:`fish_right_prompt <cmds/fish_right_prompt>` function for the right prompt.
+Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the :doc:`ghoti_prompt <cmds/ghoti_prompt>` function, plus the :doc:`ghoti_mode_prompt <cmds/ghoti_mode_prompt>` function if vi-mode is enabled and the :doc:`ghoti_right_prompt <cmds/ghoti_right_prompt>` function for the right prompt.
 
 As an example, here's a relatively simple bash prompt:
 
@@ -308,11 +308,11 @@ As an example, here's a relatively simple bash prompt:
     # <$HOSTNAME> <$PWD in blue> <Prompt Sign in Yellow> <Rest in default light white>
     PS1='\h\[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] '
 
-and a rough fish equivalent::
+and a rough ghoti equivalent::
 
-  function fish_prompt
+  function ghoti_prompt
       set -l prompt_symbol '$'
-      fish_is_root_user; and set prompt_symbol '#'
+      ghoti_is_root_user; and set prompt_symbol '#'
 
       echo -s (prompt_hostname) \
       (set_color blue) (prompt_pwd) \
@@ -322,10 +322,10 @@ and a rough fish equivalent::
 This shows a few differences:
 
 - Fish provides :doc:`set_color <cmds/set_color>` to color text. It can use the 16 named colors and also RGB sequences (so you could also use ``set_color 5555FF``)
-- Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is simply a function. To achieve the effect of ``\h``, fish provides helper functions like :doc:`prompt_hostname <cmds/prompt_hostname>`, which prints a shortened version of the hostname.
-- Fish offers other helper functions for adding things to the prompt, like :doc:`fish_vcs_prompt <cmds/fish_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn), and :doc:`prompt_pwd <cmds/prompt_pwd>` for showing a shortened ``$PWD`` (the user's home directory becomes ``~`` and any path component is shortened).
+- Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is simply a function. To achieve the effect of ``\h``, ghoti provides helper functions like :doc:`prompt_hostname <cmds/prompt_hostname>`, which prints a shortened version of the hostname.
+- Fish offers other helper functions for adding things to the prompt, like :doc:`ghoti_vcs_prompt <cmds/ghoti_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn), and :doc:`prompt_pwd <cmds/prompt_pwd>` for showing a shortened ``$PWD`` (the user's home directory becomes ``~`` and any path component is shortened).
 
-The default prompt is reasonably full-featured and its code can be read via ``type fish_prompt``.
+The default prompt is reasonably full-featured and its code can be read via ``type ghoti_prompt``.
 
 Fish does not have ``$PS2`` for continuation lines, instead it leaves the lines indented to show that the commandline isn't complete yet.
 
@@ -413,7 +413,7 @@ This includes things like:
         baz &
     done
 
-``()`` subshells are often confused with ``{}`` grouping, which does *not* use a subshell. When you just need to group, you can use ``begin; end`` in fish::
+``()`` subshells are often confused with ``{}`` grouping, which does *not* use a subshell. When you just need to group, you can use ``begin; end`` in ghoti::
 
     (foo; bar) | baz
     # when it should really have been:
@@ -431,14 +431,14 @@ The pipe will simply be run in the same process, so ``while read`` loops can set
     echo $VAR # will print VAL
     jobs # will show "baz"
 
-Subshells are also frequently confused with :ref:`command substitutions <bash-command-substitutions>`, which bash writes as ```command``` or ``$(command)`` and fish writes as ``$(command)`` or ``(command)``. Bash also *uses* subshells to implement them.
+Subshells are also frequently confused with :ref:`command substitutions <bash-command-substitutions>`, which bash writes as ```command``` or ``$(command)`` and ghoti writes as ``$(command)`` or ``(command)``. Bash also *uses* subshells to implement them.
 
-The isolation can usually be achieved by just scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can always use ``fish -c 'your code here'`` to do so explicitly.
+The isolation can usually be achieved by just scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can always use ``ghoti -c 'your code here'`` to do so explicitly.
 
 Builtins and other commands
 ---------------------------
 
-By now it has become apparent that fish puts much more of a focus on its builtins and external commands rather than its syntax. So here are some helpful builtins and their rough equivalent in bash:
+By now it has become apparent that ghoti puts much more of a focus on its builtins and external commands rather than its syntax. So here are some helpful builtins and their rough equivalent in bash:
 
 - :doc:`string <cmds/string>` - this replaces most of the string transformation (``${i%foo}`` et al) and can also be used instead of ``grep`` and ``sed`` and such.
 - :doc:`math <cmds/math>` - this replaces ``$((i + 1))`` arithmetic and can also do floats and some simple functions (sine and friends).
@@ -446,12 +446,12 @@ By now it has become apparent that fish puts much more of a focus on its builtin
 - :doc:`count <cmds/count>` can be used to count things and therefore replaces ``$#`` and can be used instead of ``wc``.
 - :doc:`status <cmds/status>` provides information about the shell status, e.g. if it's interactive or what the current linenumber is. This replaces ``$-`` and ``$BASH_LINENO`` and other variables.
 
-- ``seq(1)`` can be used as a replacement for ``{1..10}`` range expansion. If your OS doesn't ship a ``seq`` fish includes a replacement function.
+- ``seq(1)`` can be used as a replacement for ``{1..10}`` range expansion. If your OS doesn't ship a ``seq`` ghoti includes a replacement function.
 
 Other facilities
 ----------------
 
-Bash has ``set -x`` or ``set -o xtrace`` to print all commands that are being executed. In fish, this would be enabled by setting :envvar:`fish_trace`.
+Bash has ``set -x`` or ``set -o xtrace`` to print all commands that are being executed. In ghoti, this would be enabled by setting :envvar:`ghoti_trace`.
 
-Or, if your intention is to *profile* how long each line of a script takes, you can use ``fish --profile`` - see the :doc:`page for the fish command <cmds/fish>`.
+Or, if your intention is to *profile* how long each line of a script takes, you can use ``ghoti --profile`` - see the :doc:`page for the ghoti command <cmds/ghoti>`.
 

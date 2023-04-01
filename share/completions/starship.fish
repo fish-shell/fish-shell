@@ -1,1 +1,1 @@
-starship completions fish | source
+starship completions ghoti | source

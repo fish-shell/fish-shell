@@ -9,17 +9,17 @@
 #include "common.h"
 #include "maybe.h"
 
-/// Returns the user configuration directory for fish. If the directory or one of its parents
+/// Returns the user configuration directory for ghoti. If the directory or one of its parents
 /// doesn't exist, they are first created.
 ///
 /// \param path The directory as an out param
 /// \return whether the directory was returned successfully
 bool path_get_config(wcstring &path);
 
-/// Returns the user data directory for fish. If the directory or one of its parents doesn't exist,
+/// Returns the user data directory for ghoti. If the directory or one of its parents doesn't exist,
 /// they are first created.
 ///
-/// Volatile files presumed to be local to the machine, such as the fish_history and all the
+/// Volatile files presumed to be local to the machine, such as the ghoti_history and all the
 /// generated_completions, will be stored in this directory.
 ///
 /// \param path The directory as an out param
@@ -32,7 +32,7 @@ enum class dir_remoteness_t {
     remote,   // directory is known remote
 };
 
-/// \return the remoteness of the fish data directory.
+/// \return the remoteness of the ghoti data directory.
 /// This will be remote for filesystems like NFS, SMB, etc.
 dir_remoteness_t path_get_data_remoteness();
 

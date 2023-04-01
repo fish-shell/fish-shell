@@ -1,9 +1,9 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 
 # Universal abbreviations are imported.
-set -U _fish_abbr_cuckoo somevalue
-set fish (status fish-path)
-$fish -c abbr
+set -U _ghoti_abbr_cuckoo somevalue
+set ghoti (status ghoti-path)
+$ghoti -c abbr
 # CHECK: abbr -a -- cuckoo somevalue # imported from a universal variable, see `help abbr`
 
 # Test basic add and list of __abbr1
@@ -141,7 +141,7 @@ echo $status
 abbr --query banana --function
 echo $status
 # CHECKERR: abbr: --function: option requires an argument
-# CHECKERR: checks/abbr.fish (line 141):
+# CHECKERR: checks/abbr.ghoti (line 141):
 # CHECKERR: abbr --query banana --function
 # CHECKERR: ^
 # CHECKERR: (Type 'help abbr' for related documentation)
@@ -152,7 +152,7 @@ echo $status
 # CHECKERR: abbr: Invalid function name: invalid/function/name
 # CHECK: 2
 
-# Function names cannot contain spaces, to prevent confusion with fish script.
+# Function names cannot contain spaces, to prevent confusion with ghoti script.
 abbr --add peach --function 'no space allowed'
 echo $status
 # CHECKERR: abbr: Invalid function name: no space allowed
@@ -177,7 +177,7 @@ abbr --show
 abbr --erase cuckoo
 echo erase $status
 # CHECK: erase 0
-set --show _fish_abbr_cuckoo
+set --show _ghoti_abbr_cuckoo
 # Nothing
 
 abbr --add '$PAGER' less

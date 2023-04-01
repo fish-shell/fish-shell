@@ -7,14 +7,14 @@ set -l services "(userdbctl services | string match -r -- '\S+' | string match -
 
 # Commands
 complete -c userdbctl -f
-complete -c userdbctl -n "not __fish_seen_subcommand_from $commands" -a user -d 'Inspect user'
-complete -c userdbctl -n "not __fish_seen_subcommand_from $commands" -a group -d 'Inspect group'
-complete -c userdbctl -n "not __fish_seen_subcommand_from $commands" -a users-in-group -d 'Show users that are members of specified group(s)'
-complete -c userdbctl -n "not __fish_seen_subcommand_from $commands" -a groups-of-user -d 'Show groups the specified user(s) is a member of'
-complete -c userdbctl -n "not __fish_seen_subcommand_from $commands" -a services -d 'Show enabled database services'
+complete -c userdbctl -n "not __ghoti_seen_subcommand_from $commands" -a user -d 'Inspect user'
+complete -c userdbctl -n "not __ghoti_seen_subcommand_from $commands" -a group -d 'Inspect group'
+complete -c userdbctl -n "not __ghoti_seen_subcommand_from $commands" -a users-in-group -d 'Show users that are members of specified group(s)'
+complete -c userdbctl -n "not __ghoti_seen_subcommand_from $commands" -a groups-of-user -d 'Show groups the specified user(s) is a member of'
+complete -c userdbctl -n "not __ghoti_seen_subcommand_from $commands" -a services -d 'Show enabled database services'
 
-complete -c userdbctl -n "__fish_seen_subcommand_from $commands_users" -a '(__fish_complete_users)'
-complete -c userdbctl -n "__fish_seen_subcommand_from $commands_groups" -a '(__fish_complete_groups)'
+complete -c userdbctl -n "__ghoti_seen_subcommand_from $commands_users" -a '(__ghoti_complete_users)'
+complete -c userdbctl -n "__ghoti_seen_subcommand_from $commands_groups" -a '(__ghoti_complete_groups)'
 
 # Options
 complete -c userdbctl -s h -l help -d 'Show help'

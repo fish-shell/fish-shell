@@ -92,7 +92,7 @@ pub mod categories {
         (exec_fork, "exec-fork"L, "Calls to fork()"L);
 
         (output_invalid, "output-invalid"L, "Trying to print invalid output"L);
-        (ast_construction, "ast-construction"L, "Parsing fish AST"L);
+        (ast_construction, "ast-construction"L, "Parsing ghoti AST"L);
 
         (proc_job_run, "proc-job-run"L, "Jobs getting started or continued"L);
 

@@ -16,7 +16,7 @@ Description
 
 .. only:: builder_man
 
-          NOTE: This page documents the fish builtin ``test``.
+          NOTE: This page documents the ghoti builtin ``test``.
           To see the documentation on the ``test`` command you might have,
           use ``command man test``.
 
@@ -190,7 +190,7 @@ Numerical comparisons will simply fail if one of the operands is not a number:
 ::
 
     if test 42 -eq "The answer to life, the universe and everything"
-        echo So long and thanks for all the fish # will not be executed
+        echo So long and thanks for all the ghoti # will not be executed
     end
 
 A common comparison is with :envvar:`status`:
@@ -222,7 +222,7 @@ which is logically equivalent to the following:
 Standards
 ---------
 
-Unlike many things in fish, ``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <https://www.unix.com/man-page/posix/1p/test/>`__. The following exceptions apply:
+Unlike many things in ghoti, ``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <https://www.unix.com/man-page/posix/1p/test/>`__. The following exceptions apply:
 
 - The ``<`` and ``>`` operators for comparing strings are not implemented.
 

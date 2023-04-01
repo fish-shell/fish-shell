@@ -1,6 +1,6 @@
 # completion for dig
 
-function __fish_complete_dig
+function __ghoti_complete_dig
     set -l token (commandline -ct)
     switch $token
         case '+tries=*' '+retry=*' '+time=*' '+bufsize=*' '+ndots=*' '+edns=*'
@@ -61,4 +61,4 @@ complete -f -c dig -a '+time=' -d 'Set query timeout'
 complete -f -c dig -a '+bufsize=' -d 'Set EDNS0 Max UDP packet size'
 complete -f -c dig -a '+ndots=' -d 'Set NDOTS value'
 complete -f -c dig -a '+edns=' -d 'Set EDNS version'
-complete -c dig -a '(__fish_complete_dig)'
+complete -c dig -a '(__ghoti_complete_dig)'

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "$#" -gt 2 -o "$#" -eq 0 ]; then
-    echo "Usage: driver.sh /path/to/fish [/path/to/other/fish]"
+    echo "Usage: driver.sh /path/to/ghoti [/path/to/other/ghoti]"
     exit 1
 fi
 

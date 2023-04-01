@@ -254,70 +254,70 @@ wcstring get_overlong_path() {
         }                                                          \
     } while (0)
 
-/// Test that the fish functions for converting strings to numbers work.
+/// Test that the ghoti functions for converting strings to numbers work.
 static void test_str_to_num() {
     say(L"Testing str_to_num");
     const wchar_t *end;
     int i;
     long l;
 
-    i = fish_wcstoi(L"");
+    i = ghoti_wcstoi(L"");
     do_test1(errno == EINVAL && i == 0, L"converting empty string to int did not fail");
-    i = fish_wcstoi(L" \n ");
+    i = ghoti_wcstoi(L" \n ");
     do_test1(errno == EINVAL && i == 0, L"converting whitespace string to int did not fail");
-    i = fish_wcstoi(L"123");
+    i = ghoti_wcstoi(L"123");
     do_test1(errno == 0 && i == 123, L"converting valid num to int did not succeed");
-    i = fish_wcstoi(L"-123");
+    i = ghoti_wcstoi(L"-123");
     do_test1(errno == 0 && i == -123, L"converting valid num to int did not succeed");
-    i = fish_wcstoi(L" 345  ");
+    i = ghoti_wcstoi(L" 345  ");
     do_test1(errno == 0 && i == 345, L"converting valid num to int did not succeed");
-    i = fish_wcstoi(L" -345  ");
+    i = ghoti_wcstoi(L" -345  ");
     do_test1(errno == 0 && i == -345, L"converting valid num to int did not succeed");
-    i = fish_wcstoi(L"x345");
+    i = ghoti_wcstoi(L"x345");
     do_test1(errno == EINVAL && i == 0, L"converting invalid num to int did not fail");
-    i = fish_wcstoi(L" x345");
+    i = ghoti_wcstoi(L" x345");
     do_test1(errno == EINVAL && i == 0, L"converting invalid num to int did not fail");
-    i = fish_wcstoi(L"456 x");
+    i = ghoti_wcstoi(L"456 x");
     do_test1(errno == -1 && i == 456, L"converting invalid num to int did not fail");
-    i = fish_wcstoi(L"99999999999999999999999");
+    i = ghoti_wcstoi(L"99999999999999999999999");
     do_test1(errno == ERANGE && i == INT_MAX, L"converting invalid num to int did not fail");
-    i = fish_wcstoi(L"-99999999999999999999999");
+    i = ghoti_wcstoi(L"-99999999999999999999999");
     do_test1(errno == ERANGE && i == INT_MIN, L"converting invalid num to int did not fail");
-    i = fish_wcstoi(L"567]", &end);
+    i = ghoti_wcstoi(L"567]", &end);
     do_test1(errno == -1 && i == 567 && *end == L']',
              L"converting valid num to int did not succeed");
     // This is subtle. "567" in base 8 is "375" in base 10. The final "8" is not converted.
-    i = fish_wcstoi(L"5678", &end, 8);
+    i = ghoti_wcstoi(L"5678", &end, 8);
     do_test1(errno == -1 && i == 375 && *end == L'8',
              L"converting invalid num to int did not fail");
 
-    l = fish_wcstol(L"");
+    l = ghoti_wcstol(L"");
     do_test1(errno == EINVAL && l == 0, L"converting empty string to long did not fail");
-    l = fish_wcstol(L" \t ");
+    l = ghoti_wcstol(L" \t ");
     do_test1(errno == EINVAL && l == 0, L"converting whitespace string to long did not fail");
-    l = fish_wcstol(L"123");
+    l = ghoti_wcstol(L"123");
     do_test1(errno == 0 && l == 123, L"converting valid num to long did not succeed");
-    l = fish_wcstol(L"-123");
+    l = ghoti_wcstol(L"-123");
     do_test1(errno == 0 && l == -123, L"converting valid num to long did not succeed");
-    l = fish_wcstol(L" 345  ");
+    l = ghoti_wcstol(L" 345  ");
     do_test1(errno == 0 && l == 345, L"converting valid num to long did not succeed");
-    l = fish_wcstol(L" -345  ");
+    l = ghoti_wcstol(L" -345  ");
     do_test1(errno == 0 && l == -345, L"converting valid num to long did not succeed");
-    l = fish_wcstol(L"x345");
+    l = ghoti_wcstol(L"x345");
     do_test1(errno == EINVAL && l == 0, L"converting invalid num to long did not fail");
-    l = fish_wcstol(L" x345");
+    l = ghoti_wcstol(L" x345");
     do_test1(errno == EINVAL && l == 0, L"converting invalid num to long did not fail");
-    l = fish_wcstol(L"456 x");
+    l = ghoti_wcstol(L"456 x");
     do_test1(errno == -1 && l == 456, L"converting invalid num to long did not fail");
-    l = fish_wcstol(L"99999999999999999999999");
+    l = ghoti_wcstol(L"99999999999999999999999");
     do_test1(errno == ERANGE && l == LONG_MAX, L"converting invalid num to long did not fail");
-    l = fish_wcstol(L"-99999999999999999999999");
+    l = ghoti_wcstol(L"-99999999999999999999999");
     do_test1(errno == ERANGE && l == LONG_MIN, L"converting invalid num to long did not fail");
-    l = fish_wcstol(L"567]", &end);
+    l = ghoti_wcstol(L"567]", &end);
     do_test1(errno == -1 && l == 567 && *end == L']',
              L"converting valid num to long did not succeed");
     // This is subtle. "567" in base 8 is "375" in base 10. The final "8" is not converted.
-    l = fish_wcstol(L"5678", &end, 8);
+    l = ghoti_wcstol(L"5678", &end, 8);
     do_test1(errno == -1 && l == 375 && *end == L'8',
              L"converting invalid num to long did not fail");
 }
@@ -564,13 +564,13 @@ static void test_convert_ascii() {
     }
 }
 
-/// fish uses the private-use range to encode bytes that could not be decoded using the user's
-/// locale. If the input could be decoded, but decoded to private-use codepoints, then fish should
+/// ghoti uses the private-use range to encode bytes that could not be decoded using the user's
+/// locale. If the input could be decoded, but decoded to private-use codepoints, then ghoti should
 /// also use the direct encoding for those bytes. Verify that characters in the private use area are
 /// correctly round-tripped. See #7723.
 static void test_convert_private_use() {
     for (wchar_t wc = ENCODE_DIRECT_BASE; wc < ENCODE_DIRECT_END; wc++) {
-        // Encode the char via the locale. Do not use fish functions which interpret these
+        // Encode the char via the locale. Do not use ghoti functions which interpret these
         // specially.
         char converted[MB_LEN_MAX];
         mbstate_t state{};
@@ -581,7 +581,7 @@ static void test_convert_private_use() {
         }
         std::string s(converted, len);
 
-        // Ask fish to decode this via str2wcstring.
+        // Ask ghoti to decode this via str2wcstring.
         // str2wcstring should notice that the decoded form collides with its private use and encode
         // it directly.
         wcstring ws = str2wcstring(s);
@@ -1201,7 +1201,7 @@ static void test_1_cancellation(const wchar_t *src) {
 static void test_cancellation() {
     say(L"Testing Ctrl-C cancellation. If this hangs, that's a bug!");
 
-    // Enable fish's signal handling here.
+    // Enable ghoti's signal handling here.
     signal_set_handlers(true);
 
     // This tests that we can correctly ctrl-C out of certain loop constructs, and that nothing gets
@@ -1518,7 +1518,7 @@ void test_dir_iter() {
     do_test(baditer.error() == ENOENT || baditer.error() == EACCES);
     do_test(baditer.next() == nullptr);
 
-    char t1[] = "/tmp/fish_test_dir_iter.XXXXXX";
+    char t1[] = "/tmp/ghoti_test_dir_iter.XXXXXX";
     const std::string basepathn = mkdtemp(t1);
     const wcstring basepath = str2wcstring(basepathn);
     auto makepath = [&](const wcstring &s) { return wcs2string(basepath + L"/" + s); };
@@ -2069,73 +2069,73 @@ static void test_expand() {
     // aaa
     // aaa2
     //    x
-    if (system("mkdir -p test/fish_expand_test/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/bb/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/baz/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/bax/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/lol/nub/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/aaa/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/aaa2/")) err(L"mkdir failed");
-    if (system("touch test/fish_expand_test/.foo")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/bb/x")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/bar")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/bax/xxx")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/baz/xxx")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/baz/yyy")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/lol/nub/q")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/aaa2/x")) err(L"touch failed");
+    if (system("mkdir -p test/ghoti_expand_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_expand_test/bb/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_expand_test/baz/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_expand_test/bax/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_expand_test/lol/nub/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_expand_test/aaa/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_expand_test/aaa2/")) err(L"mkdir failed");
+    if (system("touch test/ghoti_expand_test/.foo")) err(L"touch failed");
+    if (system("touch test/ghoti_expand_test/bb/x")) err(L"touch failed");
+    if (system("touch test/ghoti_expand_test/bar")) err(L"touch failed");
+    if (system("touch test/ghoti_expand_test/bax/xxx")) err(L"touch failed");
+    if (system("touch test/ghoti_expand_test/baz/xxx")) err(L"touch failed");
+    if (system("touch test/ghoti_expand_test/baz/yyy")) err(L"touch failed");
+    if (system("touch test/ghoti_expand_test/lol/nub/q")) err(L"touch failed");
+    if (system("touch test/ghoti_expand_test/aaa2/x")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and ..
-    // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
+    // (https://github.com/ghoti-shell/ghoti-shell/issues/270). But it does have to match literal
     // components (e.g. "./*" has to match the same as "*".
-    expand_test(L"test/fish_expand_test/.*", noflags, L"test/fish_expand_test/.foo", wnull,
+    expand_test(L"test/ghoti_expand_test/.*", noflags, L"test/ghoti_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
 
-    expand_test(L"test/fish_expand_test/./.*", noflags, L"test/fish_expand_test/./.foo", wnull,
+    expand_test(L"test/ghoti_expand_test/./.*", noflags, L"test/ghoti_expand_test/./.foo", wnull,
                 L"Expansion not correctly handling literal path components in dotfiles");
 
-    expand_test(L"test/fish_expand_test/*/xxx", noflags, L"test/fish_expand_test/bax/xxx",
-                L"test/fish_expand_test/baz/xxx", wnull, L"Glob did the wrong thing 1");
+    expand_test(L"test/ghoti_expand_test/*/xxx", noflags, L"test/ghoti_expand_test/bax/xxx",
+                L"test/ghoti_expand_test/baz/xxx", wnull, L"Glob did the wrong thing 1");
 
-    expand_test(L"test/fish_expand_test/*z/xxx", noflags, L"test/fish_expand_test/baz/xxx", wnull,
+    expand_test(L"test/ghoti_expand_test/*z/xxx", noflags, L"test/ghoti_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 2");
 
-    expand_test(L"test/fish_expand_test/**z/xxx", noflags, L"test/fish_expand_test/baz/xxx", wnull,
+    expand_test(L"test/ghoti_expand_test/**z/xxx", noflags, L"test/ghoti_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 3");
 
-    expand_test(L"test/fish_expand_test////baz/xxx", noflags, L"test/fish_expand_test////baz/xxx",
+    expand_test(L"test/ghoti_expand_test////baz/xxx", noflags, L"test/ghoti_expand_test////baz/xxx",
                 wnull, L"Glob did the wrong thing 3");
 
-    expand_test(L"test/fish_expand_test/b**", noflags, L"test/fish_expand_test/bb",
-                L"test/fish_expand_test/bb/x", L"test/fish_expand_test/bar",
-                L"test/fish_expand_test/bax", L"test/fish_expand_test/bax/xxx",
-                L"test/fish_expand_test/baz", L"test/fish_expand_test/baz/xxx",
-                L"test/fish_expand_test/baz/yyy", wnull, L"Glob did the wrong thing 4");
+    expand_test(L"test/ghoti_expand_test/b**", noflags, L"test/ghoti_expand_test/bb",
+                L"test/ghoti_expand_test/bb/x", L"test/ghoti_expand_test/bar",
+                L"test/ghoti_expand_test/bax", L"test/ghoti_expand_test/bax/xxx",
+                L"test/ghoti_expand_test/baz", L"test/ghoti_expand_test/baz/xxx",
+                L"test/ghoti_expand_test/baz/yyy", wnull, L"Glob did the wrong thing 4");
 
     // A trailing slash should only produce directories.
-    expand_test(L"test/fish_expand_test/b*/", noflags, L"test/fish_expand_test/bb/",
-                L"test/fish_expand_test/baz/", L"test/fish_expand_test/bax/", wnull,
+    expand_test(L"test/ghoti_expand_test/b*/", noflags, L"test/ghoti_expand_test/bb/",
+                L"test/ghoti_expand_test/baz/", L"test/ghoti_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 5");
 
-    expand_test(L"test/fish_expand_test/b**/", noflags, L"test/fish_expand_test/bb/",
-                L"test/fish_expand_test/baz/", L"test/fish_expand_test/bax/", wnull,
+    expand_test(L"test/ghoti_expand_test/b**/", noflags, L"test/ghoti_expand_test/bb/",
+                L"test/ghoti_expand_test/baz/", L"test/ghoti_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 6");
 
-    expand_test(L"test/fish_expand_test/**/q", noflags, L"test/fish_expand_test/lol/nub/q", wnull,
+    expand_test(L"test/ghoti_expand_test/**/q", noflags, L"test/ghoti_expand_test/lol/nub/q", wnull,
                 L"Glob did the wrong thing 7");
 
-    expand_test(L"test/fish_expand_test/BA", expand_flag::for_completions,
-                L"test/fish_expand_test/bar", L"test/fish_expand_test/bax/",
-                L"test/fish_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
+    expand_test(L"test/ghoti_expand_test/BA", expand_flag::for_completions,
+                L"test/ghoti_expand_test/bar", L"test/ghoti_expand_test/bax/",
+                L"test/ghoti_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
 
-    expand_test(L"test/fish_expand_test/BA", expand_flag::for_completions,
-                L"test/fish_expand_test/bar", L"test/fish_expand_test/bax/",
-                L"test/fish_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
+    expand_test(L"test/ghoti_expand_test/BA", expand_flag::for_completions,
+                L"test/ghoti_expand_test/bar", L"test/ghoti_expand_test/bax/",
+                L"test/ghoti_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
 
-    expand_test(L"test/fish_expand_test/bb/yyy", expand_flag::for_completions,
+    expand_test(L"test/ghoti_expand_test/bb/yyy", expand_flag::for_completions,
                 /* nothing! */ wnull, L"Wrong fuzzy matching 1");
 
-    expand_test(L"test/fish_expand_test/bb/x",
+    expand_test(L"test/ghoti_expand_test/bb/x",
                 expand_flags_t{expand_flag::for_completions, expand_flag::fuzzy_match}, L"",
                 wnull,  // we just expect the empty string since this is an exact match
                 L"Wrong fuzzy matching 2");
@@ -2144,28 +2144,28 @@ static void test_expand() {
     // format_string here.
     const expand_flags_t fuzzy_comp{expand_flag::for_completions, expand_flag::fuzzy_match};
     const wcstring any_str_str(1, ANY_STRING);
-    expand_test(L"test/fish_expand_test/b/xx*", fuzzy_comp,
-                (L"test/fish_expand_test/bax/xx" + any_str_str).c_str(),
-                (L"test/fish_expand_test/baz/xx" + any_str_str).c_str(), wnull,
+    expand_test(L"test/ghoti_expand_test/b/xx*", fuzzy_comp,
+                (L"test/ghoti_expand_test/bax/xx" + any_str_str).c_str(),
+                (L"test/ghoti_expand_test/baz/xx" + any_str_str).c_str(), wnull,
                 L"Wrong fuzzy matching 3");
 
-    expand_test(L"test/fish_expand_test/b/yyy", fuzzy_comp, L"test/fish_expand_test/baz/yyy", wnull,
+    expand_test(L"test/ghoti_expand_test/b/yyy", fuzzy_comp, L"test/ghoti_expand_test/baz/yyy", wnull,
                 L"Wrong fuzzy matching 4");
 
-    expand_test(L"test/fish_expand_test/aa/x", fuzzy_comp, L"test/fish_expand_test/aaa2/x", wnull,
+    expand_test(L"test/ghoti_expand_test/aa/x", fuzzy_comp, L"test/ghoti_expand_test/aaa2/x", wnull,
                 L"Wrong fuzzy matching 5");
 
-    expand_test(L"test/fish_expand_test/aaa/x", fuzzy_comp, wnull,
+    expand_test(L"test/ghoti_expand_test/aaa/x", fuzzy_comp, wnull,
                 L"Wrong fuzzy matching 6 - shouldn't remove valid directory names (#3211)");
 
-    if (!expand_test(L"test/fish_expand_test/.*", noflags, L"test/fish_expand_test/.foo", 0)) {
+    if (!expand_test(L"test/ghoti_expand_test/.*", noflags, L"test/ghoti_expand_test/.foo", 0)) {
         err(L"Expansion not correctly handling dotfiles");
     }
-    if (!expand_test(L"test/fish_expand_test/./.*", noflags, L"test/fish_expand_test/./.foo", 0)) {
+    if (!expand_test(L"test/ghoti_expand_test/./.*", noflags, L"test/ghoti_expand_test/./.foo", 0)) {
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
 
-    if (!pushd("test/fish_expand_test")) return;
+    if (!pushd("test/ghoti_expand_test")) return;
 
     expand_test(L"b/xx", fuzzy_comp, L"bax/xxx", L"baz/xxx", wnull, L"Wrong fuzzy matching 5");
 
@@ -2849,7 +2849,7 @@ static void test_test() {
     do_test(run_test_test(1, L"1 = 1 -a = 1"));
 
     // Make sure we can treat -S as a parameter instead of an operator.
-    // https://github.com/fish-shell/fish-shell/issues/601
+    // https://github.com/ghoti-shell/ghoti-shell/issues/601
     do_test(run_test_test(0, L"-S = -S"));
     do_test(run_test_test(1, L"! ! ! A"));
 
@@ -2871,11 +2871,11 @@ static void test_test() {
 }
 
 static void test_wcstod() {
-    say(L"Testing fish_wcstod");
+    say(L"Testing ghoti_wcstod");
     auto tod_test = [](const wchar_t *a, const char *b) {
         char *narrow_end = nullptr;
         wchar_t *wide_end = nullptr;
-        double val1 = fish_wcstod(a, &wide_end);
+        double val1 = ghoti_wcstod(a, &wide_end);
         double val2 = strtod(b, &narrow_end);
         do_test((std::isnan(val1) && std::isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
         do_test(wide_end - a == narrow_end - b);
@@ -2888,12 +2888,12 @@ static void test_wcstod() {
     tod_test(L"nope", "nope");
 }
 
-static void test_fish_wcstod_underscores() {
-    say(L"Testing fish_wcstod_underscores");
+static void test_ghoti_wcstod_underscores() {
+    say(L"Testing ghoti_wcstod_underscores");
 
     auto test_case = [](const wchar_t *s, size_t expected_num_consumed) {
         wchar_t *endptr = nullptr;
-        fish_wcstod_underscores(s, &endptr);
+        ghoti_wcstod_underscores(s, &endptr);
         size_t num_consumed = (size_t)(endptr - (wchar_t *)s);
         do_test(expected_num_consumed == num_consumed);
     };
@@ -3007,9 +3007,9 @@ struct autoload_tester_t {
     }
 
     static void run_test() {
-        char t1[] = "/tmp/fish_test_autoload.XXXXXX";
+        char t1[] = "/tmp/ghoti_test_autoload.XXXXXX";
         wcstring p1 = str2wcstring(mkdtemp(t1));
-        char t2[] = "/tmp/fish_test_autoload.XXXXXX";
+        char t2[] = "/tmp/ghoti_test_autoload.XXXXXX";
         wcstring p2 = str2wcstring(mkdtemp(t2));
 
         const wcstring_list_t paths = {p1, p2};
@@ -3019,8 +3019,8 @@ struct autoload_tester_t {
         do_test(!autoload.resolve_command(L"nothing", paths));
         do_test(autoload.get_autoloaded_commands().empty());
 
-        run(L"touch %ls/file1.fish", p1.c_str());
-        run(L"touch %ls/file2.fish", p2.c_str());
+        run(L"touch %ls/file1.ghoti", p1.c_str());
+        run(L"touch %ls/file2.ghoti", p2.c_str());
         autoload.invalidate_cache();
 
         do_test(!autoload.autoload_in_progress(L"file1"));
@@ -3050,7 +3050,7 @@ struct autoload_tester_t {
         autoload.mark_autoload_finished(L"file2");
 
         do_test(!autoload.resolve_command(L"file1", paths));
-        touch_file(format_string(L"%ls/file1.fish", p1.c_str()));
+        touch_file(format_string(L"%ls/file1.ghoti", p1.c_str()));
         autoload.invalidate_cache();
         do_test(autoload.resolve_command(L"file1", paths));
         autoload.mark_autoload_finished(L"file1");
@@ -3092,7 +3092,7 @@ static void test_wildcards() {
     unescape_string_in_place(&wc, UNESCAPE_SPECIAL);
     do_test(!wildcard_has(wc) && wildcard_has_internal(wc));
 
-    auto feat = mutable_fish_features();
+    auto feat = mutable_ghoti_features();
     auto saved = feat->test(feature_flag_t::qmark_noglob);
     feat->set(feature_flag_t::qmark_noglob, false);
     do_test(wildcard_has(L"?"));
@@ -3813,7 +3813,7 @@ static void test_undo() {
 }
 
 #define UVARS_PER_THREAD 8
-#define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
+#define UVARS_TEST_PATH L"test/ghoti_uvars_test/varsfile.txt"
 
 static int test_universal_helper(int x) {
     callback_data_list_t callbacks;
@@ -3840,7 +3840,7 @@ static int test_universal_helper(int x) {
 
 static void test_universal() {
     say(L"Testing universal variables");
-    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_uvars_test/")) err(L"mkdir failed");
 
     const int threads = 1;
     for (int i = 0; i < threads; i++) {
@@ -3870,7 +3870,7 @@ static void test_universal() {
             }
         }
     }
-    system_assert("rm -Rf test/fish_uvars_test/");
+    system_assert("rm -Rf test/ghoti_uvars_test/");
 }
 
 static void test_universal_output() {
@@ -3888,7 +3888,7 @@ static void test_universal_output() {
 
     std::string text = env_universal_t::serialize_with_vars(vars);
     const char *expected =
-        "# This file contains fish universal variable definitions.\n"
+        "# This file contains ghoti universal variable definitions.\n"
         "# VERSION: 3.0\n"
         "SETUVAR varA:ValA1\\x1eValA2\n"
         "SETUVAR --export varB:ValB1\n"
@@ -3901,7 +3901,7 @@ static void test_universal_output() {
 static void test_universal_parsing() {
     say(L"Testing universal variable parsing");
     const char *input =
-        "# This file contains fish universal variable definitions.\n"
+        "# This file contains ghoti universal variable definitions.\n"
         "# VERSION: 3.0\n"
         "SETUVAR varA:ValA1\\x1eValA2\n"
         "SETUVAR --export varB:ValB1\n"
@@ -3927,7 +3927,7 @@ static void test_universal_parsing() {
 static void test_universal_parsing_legacy() {
     say(L"Testing universal variable legacy parsing");
     const char *input =
-        "# This file contains fish universal variable definitions.\n"
+        "# This file contains ghoti universal variable definitions.\n"
         "SET varA:ValA1\\x1eValA2\n"
         "SET_EXPORT varB:ValB1\n";
 
@@ -3946,7 +3946,7 @@ static bool callback_data_less_than(const callback_data_t &a, const callback_dat
 
 static void test_universal_callbacks() {
     say(L"Testing universal callbacks");
-    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_uvars_test/")) err(L"mkdir failed");
     callback_data_list_t callbacks;
     env_universal_t uvars1;
     env_universal_t uvars2;
@@ -3993,7 +3993,7 @@ static void test_universal_callbacks() {
     do_test(callbacks.at(1).val->as_string() == L"1");
     do_test(callbacks.at(2).key == L"delta");
     do_test(callbacks.at(2).val == none());
-    system_assert("rm -Rf test/fish_uvars_test/");
+    system_assert("rm -Rf test/ghoti_uvars_test/");
 }
 
 static void test_universal_formats() {
@@ -4002,13 +4002,13 @@ static void test_universal_formats() {
         const char *str;
         uvar_format_t format;
     } tests[] = {
-        {"# VERSION: 3.0", uvar_format_t::fish_3_0},
-        {"# version: 3.0", uvar_format_t::fish_2_x},
-        {"# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
-        {"stuff\n# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
-        {"# blah\n# VERSION: 3.0", uvar_format_t::fish_3_0},
-        {"# blah\n#VERSION: 3.0", uvar_format_t::fish_3_0},
-        {"# blah\n#VERSION:3.0", uvar_format_t::fish_3_0},
+        {"# VERSION: 3.0", uvar_format_t::ghoti_3_0},
+        {"# version: 3.0", uvar_format_t::ghoti_2_x},
+        {"# blah blahVERSION: 3.0", uvar_format_t::ghoti_2_x},
+        {"stuff\n# blah blahVERSION: 3.0", uvar_format_t::ghoti_2_x},
+        {"# blah\n# VERSION: 3.0", uvar_format_t::ghoti_3_0},
+        {"# blah\n#VERSION: 3.0", uvar_format_t::ghoti_3_0},
+        {"# blah\n#VERSION:3.0", uvar_format_t::ghoti_3_0},
         {"# blah\n#VERSION:3.1", uvar_format_t::future},
     };
     for (const auto &test : tests) {
@@ -4018,9 +4018,9 @@ static void test_universal_formats() {
 }
 
 static void test_universal_ok_to_save() {
-    // Ensure we don't try to save after reading from a newer fish.
+    // Ensure we don't try to save after reading from a newer ghoti.
     say(L"Testing universal Ok to save");
-    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/ghoti_uvars_test/")) err(L"mkdir failed");
     constexpr const char contents[] = "# VERSION: 99999.99\n";
     FILE *fp = fopen(wcs2string(UVARS_TEST_PATH).c_str(), "w");
     assert(fp && "Failed to open UVARS_TEST_PATH for writing");
@@ -4043,7 +4043,7 @@ static void test_universal_ok_to_save() {
     // Ensure file is same.
     file_id_t after_id = file_id_for_path(UVARS_TEST_PATH);
     do_test(before_id == after_id && "UVARS_TEST_PATH should not have changed");
-    system_assert("rm -Rf test/fish_uvars_test/");
+    system_assert("rm -Rf test/ghoti_uvars_test/");
 }
 
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
@@ -4129,7 +4129,7 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 }
 
 static void test_universal_notifiers() {
-    if (system("mkdir -p test/fish_uvars_test/ && touch test/fish_uvars_test/varsfile.txt")) {
+    if (system("mkdir -p test/ghoti_uvars_test/ && touch test/ghoti_uvars_test/varsfile.txt")) {
         err(L"mkdir failed");
     }
 
@@ -4401,7 +4401,7 @@ void history_tests_t::test_history_races() {
 }
 
 void history_tests_t::test_history_merge() {
-    // In a single fish process, only one history is allowed to exist with the given name But it's
+    // In a single ghoti process, only one history is allowed to exist with the given name But it's
     // common to have multiple history instances with the same name active in different processes,
     // e.g. when you have multiple shells open. We try to get that right and merge all their history
     // together. Test that case.
@@ -4501,7 +4501,7 @@ void history_tests_t::test_history_merge() {
 void history_tests_t::test_history_path_detection() {
     // Regression test for #7582.
     say(L"Testing history path detection");
-    char tmpdirbuff[] = "/tmp/fish_test_history.XXXXXX";
+    char tmpdirbuff[] = "/tmp/ghoti_test_history.XXXXXX";
     wcstring tmpdir = str2wcstring(mkdtemp(tmpdirbuff));
     if (!string_suffixes_string(L"/", tmpdir)) {
         tmpdir.push_back(L'/');
@@ -4630,7 +4630,7 @@ void history_tests_t::test_history_formats() {
     const wchar_t *name;
 
     // Test inferring and reading legacy and bash history formats.
-    name = L"history_sample_fish_1_x";
+    name = L"history_sample_ghoti_1_x";
     say(L"Testing %ls", name);
     if (!install_sample_history(name)) {
         err(L"Couldn't open file tests/%ls", name);
@@ -4646,7 +4646,7 @@ void history_tests_t::test_history_formats() {
         test_history->clear();
     }
 
-    name = L"history_sample_fish_2_0";
+    name = L"history_sample_ghoti_2_0";
     say(L"Testing %ls", name);
     if (!install_sample_history(name)) {
         err(L"Couldn't open file tests/%ls", name);
@@ -5139,7 +5139,7 @@ static void test_error_messages() {
 
 static void test_highlighting() {
     say(L"Testing syntax highlighting");
-    if (!pushd("test/fish_highlight_test/")) return;
+    if (!pushd("test/ghoti_highlight_test/")) return;
     cleanup_t pop{[] { popd(); }};
     if (system("mkdir -p dir")) err(L"mkdir failed");
     if (system("mkdir -p cdpath-entry/dir-in-cdpath")) err(L"mkdir failed");
@@ -5532,7 +5532,7 @@ static void test_highlighting() {
 #endif
 
     bool saved_flag = feature_test(feature_flag_t::ampersand_nobg_in_token);
-    mutable_fish_features()->set(feature_flag_t::ampersand_nobg_in_token, true);
+    mutable_ghoti_features()->set(feature_flag_t::ampersand_nobg_in_token, true);
     for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
         wcstring text;
@@ -5577,7 +5577,7 @@ static void test_highlighting() {
             }
         }
     }
-    mutable_fish_features()->set(feature_flag_t::ampersand_nobg_in_token, saved_flag);
+    mutable_ghoti_features()->set(feature_flag_t::ampersand_nobg_in_token, saved_flag);
     vars.remove(L"VARIABLE_IN_COMMAND", ENV_DEFAULT);
     vars.remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
 }
@@ -5606,7 +5606,7 @@ static void test_split_string_tok() {
 
 static void test_wwrite_to_fd() {
     say(L"Testing wwrite_to_fd");
-    char t[] = "/tmp/fish_test_wwrite.XXXXXX";
+    char t[] = "/tmp/ghoti_test_wwrite.XXXXXX";
     autoclose_fd_t tmpfd{mkstemp(t)};
     if (!tmpfd.valid()) {
         err(L"Unable to create temporary file");
@@ -5704,9 +5704,9 @@ static void test_string() {
         {{L"string", L"join", L"", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"join", L"", L"", L"", L"", nullptr}, STATUS_CMD_OK, L"\n"},
         {{L"string", L"join", L"", L"a", L"b", L"c", nullptr}, STATUS_CMD_OK, L"abc\n"},
-        {{L"string", L"join", L".", L"fishshell", L"com", nullptr},
+        {{L"string", L"join", L".", L"ghotishell", L"com", nullptr},
          STATUS_CMD_OK,
-         L"fishshell.com\n"},
+         L"ghotishell.com\n"},
         {{L"string", L"join", L"/", L"usr", nullptr}, STATUS_CMD_ERROR, L"usr\n"},
         {{L"string", L"join", L"/", L"usr", L"local", L"bin", nullptr},
          STATUS_CMD_OK,
@@ -5913,15 +5913,15 @@ static void test_string() {
         {{L"string", L"split", L"..", L"....", nullptr}, STATUS_CMD_OK, L"\n\n\n"},
         {{L"string", L"split", L"-m", L"x", L"..", L"....", nullptr}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"split", L"-m1", L"..", L"....", nullptr}, STATUS_CMD_OK, L"\n..\n"},
-        {{L"string", L"split", L"-m0", L"/", L"/usr/local/bin/fish", nullptr},
+        {{L"string", L"split", L"-m0", L"/", L"/usr/local/bin/ghoti", nullptr},
          STATUS_CMD_ERROR,
-         L"/usr/local/bin/fish\n"},
+         L"/usr/local/bin/ghoti\n"},
         {{L"string", L"split", L"-m2", L":", L"a:b:c:d", L"e:f:g:h", nullptr},
          STATUS_CMD_OK,
          L"a\nb\nc:d\ne\nf\ng:h\n"},
-        {{L"string", L"split", L"-m1", L"-r", L"/", L"/usr/local/bin/fish", nullptr},
+        {{L"string", L"split", L"-m1", L"-r", L"/", L"/usr/local/bin/ghoti", nullptr},
          STATUS_CMD_OK,
-         L"/usr/local/bin\nfish\n"},
+         L"/usr/local/bin\nghoti\n"},
         {{L"string", L"split", L"-r", L".", L"www.ch.ic.ac.uk", nullptr},
          STATUS_CMD_OK,
          L"www\nch\nic\nac\nuk\n"},
@@ -6009,7 +6009,7 @@ static void test_string() {
         {{L"string", L"match", L"?*", L"a", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"?*", L"ab", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"a*\\?", L"abc?", nullptr}, STATUS_CMD_ERROR, L""}};
-    mutable_fish_features()->set(feature_flag_t::qmark_noglob, true);
+    mutable_ghoti_features()->set(feature_flag_t::qmark_noglob, true);
     for (const auto &t : qmark_noglob_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }
@@ -6021,11 +6021,11 @@ static void test_string() {
         {{L"string", L"match", L"?*", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"match", L"?*", L"ab", nullptr}, STATUS_CMD_OK, L"ab\n"},
         {{L"string", L"match", L"a*\\?", L"abc?", nullptr}, STATUS_CMD_OK, L"abc?\n"}};
-    mutable_fish_features()->set(feature_flag_t::qmark_noglob, false);
+    mutable_ghoti_features()->set(feature_flag_t::qmark_noglob, false);
     for (const auto &t : qmark_glob_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }
-    mutable_fish_features()->set(feature_flag_t::qmark_noglob, saved_flag);
+    mutable_ghoti_features()->set(feature_flag_t::qmark_noglob, saved_flag);
 }
 
 /// Helper for test_timezone_env_vars().
@@ -6052,7 +6052,7 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
 
 /// Verify that setting special env vars have the expected effect on the current shell process.
 static void test_timezone_env_vars() {
-    // Confirm changing the timezone affects fish's idea of the local time.
+    // Confirm changing the timezone affects ghoti's idea of the local time.
     time_t tstamp = time(nullptr);
 
     long first_tstamp = return_timezone_hour(tstamp, L"UTC-1");
@@ -6078,8 +6078,8 @@ static void test_env_vars() {
 }
 
 static void test_env_snapshot() {
-    if (system("mkdir -p test/fish_env_snapshot_test/")) err(L"mkdir failed");
-    bool pushed = pushd("test/fish_env_snapshot_test");
+    if (system("mkdir -p test/ghoti_env_snapshot_test/")) err(L"mkdir failed");
+    bool pushed = pushd("test/ghoti_env_snapshot_test");
     do_test(pushed);
     auto &vars = parser_t::principal_parser().vars();
     vars.push(true);
@@ -6113,7 +6113,7 @@ static void test_illegal_command_exit_code() {
     say(L"Testing illegal command exit code");
 
     // We need to be in an empty directory so that none of the wildcards match a file that might be
-    // in the fish source tree. In particular we need to ensure that "?" doesn't match a file
+    // in the ghoti source tree. In particular we need to ensure that "?" doesn't match a file
     // named by a single character. See issue #3852.
     if (!pushd("test/temp")) return;
 
@@ -6829,7 +6829,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("abbreviations"), test_abbreviations},
     {TEST_GROUP("builtins/test"), test_test},
     {TEST_GROUP("wcstod"), test_wcstod},
-    {TEST_GROUP("fish_wcstod_underscores"), test_fish_wcstod_underscores},
+    {TEST_GROUP("ghoti_wcstod_underscores"), test_ghoti_wcstod_underscores},
     {TEST_GROUP("dup2s"), test_dup2s},
     {TEST_GROUP("dup2s"), test_dup2s_fd_for_target_fd},
     {TEST_GROUP("path"), test_path},
@@ -6904,9 +6904,9 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // Look for the file tests/test.fish. We expect to run in a directory containing that file.
+    // Look for the file tests/test.ghoti. We expect to run in a directory containing that file.
     // If we don't find it, walk up the directory hierarchy until we do, or error.
-    while (access("./tests/test.fish", F_OK) != 0) {
+    while (access("./tests/test.ghoti", F_OK) != 0) {
         char wd[PATH_MAX + 1] = {};
         if (!getcwd(wd, sizeof wd)) {
             perror("getcwd");
@@ -6914,7 +6914,7 @@ int main(int argc, char **argv) {
         }
         if (!std::strcmp(wd, "/")) {
             std::fwprintf(
-                stderr, L"Unable to find 'tests' directory, which should contain file test.fish\n");
+                stderr, L"Unable to find 'tests' directory, which should contain file test.ghoti\n");
             exit(EXIT_FAILURE);
         }
         if (chdir(dirname(wd)) < 0) {

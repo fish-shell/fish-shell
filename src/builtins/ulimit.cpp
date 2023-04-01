@@ -119,7 +119,7 @@ static void print_all(int hard, io_streams_t &streams) {
     int w = 0;
 
     for (i = 0; resource_arr[i].desc; i++) {
-        w = std::max(w, fish_wcswidth(resource_arr[i].desc));
+        w = std::max(w, ghoti_wcswidth(resource_arr[i].desc));
     }
 
     for (i = 0; resource_arr[i].desc; i++) {
@@ -433,7 +433,7 @@ maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar
     } else if (wcscasecmp(argv[w.woptind], L"soft") == 0) {
         new_limit = get(what, soft);
     } else {
-        new_limit = fish_wcstol(argv[w.woptind]);
+        new_limit = ghoti_wcstol(argv[w.woptind]);
         if (errno) {
             streams.err.append_format(_(L"%ls: Invalid limit '%ls'\n"), cmd, argv[w.woptind]);
             builtin_print_error_trailer(parser, streams.err, cmd);

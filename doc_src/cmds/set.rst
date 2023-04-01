@@ -22,7 +22,7 @@ Description
 ``set`` manipulates :ref:`shell variables <variables>`.
 
 If both *NAME* and *VALUE* are provided, ``set`` assigns any values to variable *NAME*.
-Variables in fish are :ref:`lists <variables-lists>`, multiple values are allowed.
+Variables in ghoti are :ref:`lists <variables-lists>`, multiple values are allowed.
 One or more variable *INDEX* can be specified including ranges (not for all options.)
 
 If no *VALUE* is given, the variable will be set to the empty list i.e. ``''``.
@@ -38,7 +38,7 @@ The following scope control variable scope:
 
 **-U** or **--universal**
     Sets a universal variable.
-    The variable will be immediately available to all the user's ``fish`` instances on the machine, and will be persist across restarts of the shell.
+    The variable will be immediately available to all the user's ``ghoti`` instances on the machine, and will be persist across restarts of the shell.
 
 **-f** or **--function**
     Sets a variable scoped to the executing function.
@@ -203,13 +203,13 @@ Setting a variable doesn't modify $status; a command substitution still will, th
     1
 
 ``VAR=VALUE command`` sets a variable for just one command, like other shells.
-This runs fish with a temporary home directory::
+This runs ghoti with a temporary home directory::
 
-    > HOME=(mktemp -d) fish
+    > HOME=(mktemp -d) ghoti
 
 (which is essentially the same as)::
 
-    > begin; set -lx HOME (mktemp -d); fish; end
+    > begin; set -lx HOME (mktemp -d); ghoti; end
 
 Notes
 -----

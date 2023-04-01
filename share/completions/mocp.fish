@@ -32,4 +32,4 @@ complete -c mocp -s k -l seek -rf -d "Seek by N seconds (can be negative)"
 complete -c mocp -s j -l jump -rf -d "N{%,s} Jump to some position of the current track"
 complete -c mocp -s o -l on -d "Turn on a control" -xa 'shuffle autonext repeat'
 complete -c mocp -s u -l off -d "Turn off a control" -xa 'shuffle autonext repeat'
-complete -c mocp -s t -l toggle -d "Toggle a control" -xa '(__fish_complete_list , "echo shuffle\nautonext\nrepeat\ns\tshuffle\nr\trepeat\nn\tautonext")'
+complete -c mocp -s t -l toggle -d "Toggle a control" -xa '(__ghoti_complete_list , "echo shuffle\nautonext\nrepeat\ns\tshuffle\nr\trepeat\nn\tautonext")'

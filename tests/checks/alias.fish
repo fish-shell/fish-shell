@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Avoid regressions of issue \#3860 wherein the first word of the alias ends with a semicolon
 function foo
     echo ran foo
@@ -15,7 +15,7 @@ alias foo '"a b" c d e'
 # Bare `alias` should list the aliases we have created and nothing else
 # We have to exclude two aliases because they're an artifact of the unit test
 # framework and we can't predict the definition.
-alias | grep -Ev '^alias (fish_indent|fish_key_reader) '
+alias | grep -Ev '^alias (ghoti_indent|ghoti_key_reader) '
 # CHECK: alias a-2 'echo "hello there"'
 # CHECK: alias a-3 echo\\\ hello\\\\\\\ there
 # CHECK: alias foo '"a b" c d e'

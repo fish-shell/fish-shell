@@ -1,6 +1,6 @@
 # Apache Ant (1.9.5) completion for Fish Shell.
 
-function __fish_complete_ant_targets -d "Print list of targets from build.xml and imported files"
+function __ghoti_complete_ant_targets -d "Print list of targets from build.xml and imported files"
     function __get_buildfile -d "Get a buildfile that will be used by ant"
         set -l tokens $argv # tokens from 'commandline -co'
         set -l prev $tokens[1]
@@ -36,10 +36,10 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
             set xdg_cache_home $HOME/.cache
         end
 
-        set -l cache_dir $xdg_cache_home/fish/ant_completions
+        set -l cache_dir $xdg_cache_home/ghoti/ant_completions
         mkdir -p $cache_dir
 
-        set -l cache_file $cache_dir/(__fish_md5 -s $buildfile)
+        set -l cache_file $cache_dir/(__ghoti_md5 -s $buildfile)
         if test ! -s "$cache_file"
             # generate cache file if empty
             __parse_ant_targets_from_projecthelp $buildfile >$cache_file
@@ -56,7 +56,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
 end
 
 # completion for ant targets
-complete -x -c ant -a "(__fish_complete_ant_targets (commandline -co))"
+complete -x -c ant -a "(__ghoti_complete_ant_targets (commandline -co))"
 
 # Script Options:
 complete -f -c ant -l help -l h -d 'print help message and ant help'

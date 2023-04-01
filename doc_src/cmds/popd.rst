@@ -26,9 +26,9 @@ Example
     # Working directory is now /usr/src
     # Directory stack contains /usr/src
 
-    pushd /usr/src/fish-shell
-    # Working directory is now /usr/src/fish-shell
-    # Directory stack contains /usr/src /usr/src/fish-shell
+    pushd /usr/src/ghoti-shell
+    # Working directory is now /usr/src/ghoti-shell
+    # Directory stack contains /usr/src /usr/src/ghoti-shell
 
     popd
     # Working directory is now /usr/src

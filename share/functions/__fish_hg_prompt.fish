@@ -1,3 +1,3 @@
-function __fish_hg_prompt
-    fish_hg_prompt
+function __ghoti_hg_prompt
+    ghoti_hg_prompt
 end

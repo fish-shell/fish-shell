@@ -1,4 +1,4 @@
-function __fish_journalctl_fields
+function __ghoti_journalctl_fields
     # This would be nicer to get programatically, but this is how the official
     # bash completion does it
     set -l __journal_fields MESSAGE{,_ID} PRIORITY CODE_{FILE,LINE,FUNC} ERRNO SYSLOG_{FACILITY,IDENTIFIER,PID} COREDUMP_EXE _{P,U,G}ID _COMM _EXE _CMDLINE _AUDIT_{SESSION,LOGINUID} _SYSTEMD_{CGROUP,SESSION,UNIT,OWNER_UID} _SELINUX_CONTEXT _SOURCE_REALTIME_TIMESTAMP _{BOOT,MACHINE}_ID _HOSTNAME _TRANSPORT _KERNEL_{DEVICE,SUBSYSTEM} _UDEV_{SYSNAME,DEVNODE,DEVLINK} __CURSOR __{REALTIME,MONOTONIC}_TIMESTAMP
@@ -7,23 +7,23 @@ function __fish_journalctl_fields
     end
 end
 
-function __fish_journalctl_is_field
+function __ghoti_journalctl_is_field
     set -l token (commandline -t)
-    if contains -- $token (__fish_journalctl_fields)
+    if contains -- $token (__ghoti_journalctl_fields)
         return 0
     end
     return 1
 end
 
-function __fish_journalctl_field_values
+function __ghoti_journalctl_field_values
     set -l token (commandline -t | string split -f1 =)
     echo $token=(command journalctl -F $token 2>/dev/null)
 end
 
-complete -c journalctl -n "not __fish_journalctl_is_field" -a '(__fish_journalctl_fields)' -d "Journal field" -f
-complete -c journalctl -n "not __fish_journalctl_is_field" -a '(command journalctl -F _EXE 2>/dev/null)' -d Executable
-complete -c journalctl -n "not __fish_journalctl_is_field" -a '+' -d OR
-complete -c journalctl -n __fish_journalctl_is_field -a '(__fish_journalctl_field_values)' -f -r
+complete -c journalctl -n "not __ghoti_journalctl_is_field" -a '(__ghoti_journalctl_fields)' -d "Journal field" -f
+complete -c journalctl -n "not __ghoti_journalctl_is_field" -a '(command journalctl -F _EXE 2>/dev/null)' -d Executable
+complete -c journalctl -n "not __ghoti_journalctl_is_field" -a '+' -d OR
+complete -c journalctl -n __ghoti_journalctl_is_field -a '(__ghoti_journalctl_field_values)' -f -r
 
 complete -c journalctl -f -s h -l help -d 'Prints a short help text and exits'
 complete -c journalctl -f -l version -d 'Prints a short version string and exits'
@@ -39,13 +39,13 @@ complete -c journalctl -f -s m -l merge -d 'Show entries interleaved from all jo
 # Boot number (0 for current, -X for the Xst to last boot) with time as description
 complete -c journalctl -f -l this-boot -d 'Show data only from the current boot'
 complete -c journalctl -f -s b -l boot -d 'Show data only from a certain boot' -xa '(command journalctl 2>/dev/null --list-boots --no-pager | while read -l a b c; echo -e "$a\\t$c"; end)'
-complete -c journalctl -f -s u -l unit -d 'Show data only of the specified unit' -xa "(__fish_systemctl_services)"
+complete -c journalctl -f -s u -l unit -d 'Show data only of the specified unit' -xa "(__ghoti_systemctl_services)"
 complete -c journalctl -f -s p -l priority -d 'Filter by priority' -xa 'emerg 0 alert 1 crit 2 err 3 warning 4 notice 5 info 6 debug 7'
 complete -c journalctl -f -s c -l cursor -d 'Start from the passing cursor'
 complete -c journalctl -f -l since -d 'Entries on or newer than DATE' -xa 'yesterday today tomorrow now'
 complete -c journalctl -f -l until -d 'Entries on or older than DATE' -xa 'yesterday today tomorrow now'
 complete -c journalctl -f -s F -l field -d 'Print all possible data values of FIELD' -xa '(printf %s\t\n (command journalctl --fields))'
-complete -c journalctl -f -s D -l directory -d 'Specify journal directory' -xa "(__fish_complete_directories)"
+complete -c journalctl -f -s D -l directory -d 'Specify journal directory' -xa "(__ghoti_complete_directories)"
 complete -c journalctl -f -l new-id128 -d 'Generate a new 128 bit ID'
 complete -c journalctl -f -l header -d 'Show internal header information'
 complete -c journalctl -f -l disk-usage -d 'Shows the current disk usage'
@@ -79,7 +79,7 @@ complete -c journalctl -f -l user -d "Show messages from service of current user
 complete -c journalctl -f -l system -d "Show messages from system services and the kernel"
 complete -c journalctl -f -s M -l machine -d "Show messages from a running, local container"
 complete -c journalctl -f -l file -d "Operate only on journal files matching glob"
-complete -c journalctl -f -l root -d "Use specified directory instead of the root directory" -xa "(__fish_complete_directories)"
+complete -c journalctl -f -l root -d "Use specified directory instead of the root directory" -xa "(__ghoti_complete_directories)"
 complete -c journalctl -f -l namespace -d "Show log data of specified namespace"
 complete -c journalctl -f -l vacuum-size -d "Reduce disk usage below specified SIZE"
 complete -c journalctl -f -l vacuum-time -d "Remove journal files older than TIME"

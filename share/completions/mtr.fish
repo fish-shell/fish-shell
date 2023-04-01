@@ -1,4 +1,4 @@
-complete -c mtr -x -a '(__fish_print_hostnames)'
+complete -c mtr -x -a '(__ghoti_print_hostnames)'
 
 complete -c mtr -s h -l help -d 'Display help and exit'
 complete -c mtr -s v -l version -d 'Output version information and exit'

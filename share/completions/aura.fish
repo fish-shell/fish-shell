@@ -1,25 +1,25 @@
 # This can't currently be wrapped as the pacman completions rely on variables whose value this needs to change
 # complete -c aura -w pacman
 set -l listinstalled "(pacman -Q | tr ' ' \t)"
-set -l listall "(__fish_print_pacman_packages)"
-set -l listrepos "(__fish_print_pacman_repos)"
+set -l listall "(__ghoti_print_pacman_packages)"
+set -l listrepos "(__ghoti_print_pacman_repos)"
 set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
-set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s A -s B -s C -s L -s O -s P database query sync remove upgrade deptest aursync save downgrade viewlog orphans analysis'
-set -l database '__fish_contains_opt -s D database'
-set -l query '__fish_contains_opt -s Q query'
-set -l remove '__fish_contains_opt -s R remove'
-set -l sync '__fish_contains_opt -s S sync'
-set -l upgrade '__fish_contains_opt -s U upgrade'
-set -l aur '__fish_contains_opt -s A aursync'
-set -l save '__fish_contains_opt -s B save'
-set -l downgrade '__fish_contains_opt -s C downgrade'
-set -l orphans '__fish_contains_opt -s O orphans'
-set -l logfile '__fish_contains_opt -s L viewlog'
-set -l analysis '__fish_contains_opt -s P analysis'
-set -l search '__fish_contains_opt -s s search'
+set -l noopt 'not __ghoti_contains_opt -s S -s D -s Q -s R -s U -s T -s A -s B -s C -s L -s O -s P database query sync remove upgrade deptest aursync save downgrade viewlog orphans analysis'
+set -l database '__ghoti_contains_opt -s D database'
+set -l query '__ghoti_contains_opt -s Q query'
+set -l remove '__ghoti_contains_opt -s R remove'
+set -l sync '__ghoti_contains_opt -s S sync'
+set -l upgrade '__ghoti_contains_opt -s U upgrade'
+set -l aur '__ghoti_contains_opt -s A aursync'
+set -l save '__ghoti_contains_opt -s B save'
+set -l downgrade '__ghoti_contains_opt -s C downgrade'
+set -l orphans '__ghoti_contains_opt -s O orphans'
+set -l logfile '__ghoti_contains_opt -s L viewlog'
+set -l analysis '__ghoti_contains_opt -s P analysis'
+set -l search '__ghoti_contains_opt -s s search'
 
-# By default fish expands the arguments with the option which is not desired
+# By default ghoti expands the arguments with the option which is not desired
 # due to performance reasons.
 # This will make sure we are expanding an argument and not an option:
 set -l argument 'not expr -- (commandline --current-token) : "^-.*" > /dev/null'
@@ -43,7 +43,7 @@ complete -c aura -s V -f -l version -d 'Display version and exit'
 complete -c aura -s h -f -l help -d 'Display help'
 
 # General options
-complete -c aura -s b -l dbpath -d 'Alternative database location' -xa '(__fish_complete_directories)'
+complete -c aura -s b -l dbpath -d 'Alternative database location' -xa '(__ghoti_complete_directories)'
 complete -c aura -s r -l root -d 'Alternative installation root'
 complete -c aura -s v -l verbose -d 'Output more status messages'
 complete -c aura -l arch -d 'Alternate architecture'
@@ -163,4 +163,4 @@ complete -c aura -n $sync -s y -l refresh -d 'Download fresh copy of the package
 complete -c aura -n "$sync; and $argument" -xa "$listall $listgroups"
 
 # Upgrade options
-complete -c aura -n "$upgrade; and $argument" -k -xa '(__fish_complete_suffix pkg.tar.xz pkg.tar.gz pkg.tar.zst)' -d 'Package file'
+complete -c aura -n "$upgrade; and $argument" -k -xa '(__ghoti_complete_suffix pkg.tar.xz pkg.tar.gz pkg.tar.zst)' -d 'Package file'

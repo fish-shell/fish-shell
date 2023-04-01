@@ -1,7 +1,7 @@
-complete -c psql --no-files -a '(__fish_complete_pg_database)'
+complete -c psql --no-files -a '(__ghoti_complete_pg_database)'
 
 # General options:
-complete -c psql -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Database name to connect to"
+complete -c psql -s d -l dbname -x -a '(__ghoti_complete_pg_database)' -d "Database name to connect to"
 complete -c psql -s c -l command -d "Run only single command (SQL or internal) and exit"
 complete -c psql -s f -l file -r -d "Execute commands from file, then exit"
 complete -c psql -s l -l list -d "List available databases, then exit"
@@ -35,8 +35,8 @@ complete -c psql -s R -l record-separator -x -d "Set record separator (default: 
 complete -c psql -s 0 -l record-separator-zero -d "Set record separator for unaligned output to zero byte"
 
 # Connection options:
-complete -c psql -s h -l host -x -a '(__fish_print_hostnames)' -d "Database server host or socket directory"
+complete -c psql -s h -l host -x -a '(__ghoti_print_hostnames)' -d "Database server host or socket directory"
 complete -c psql -s p -l port -x -d "Database server port"
-complete -c psql -s U -l username -x -a '(__fish_complete_pg_user)' -d "Database user name"
+complete -c psql -s U -l username -x -a '(__ghoti_complete_pg_user)' -d "Database user name"
 complete -c psql -s w -l no-password -d "Never prompt for password"
 complete -c psql -s W -l password -d "Force password prompt (should happen automatically)"

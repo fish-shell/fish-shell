@@ -675,13 +675,13 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         "is_event should not be negative"
     );
 
-    // Suppress fish_trace during events.
+    // Suppress ghoti_trace during events.
     let saved_is_event = replace_with(&mut parser.libdata_pod().is_event, |old| old + 1);
-    let saved_suppress_fish_trace =
-        std::mem::replace(&mut parser.libdata_pod().suppress_fish_trace, true);
+    let saved_suppress_ghoti_trace =
+        std::mem::replace(&mut parser.libdata_pod().suppress_ghoti_trace, true);
     let mut parser = ScopeGuard::new(parser, |parser| {
         parser.libdata_pod().is_event = saved_is_event;
-        parser.libdata_pod().suppress_fish_trace = saved_suppress_fish_trace;
+        parser.libdata_pod().suppress_ghoti_trace = saved_suppress_ghoti_trace;
     });
 
     // Capture the event handlers that match this event.

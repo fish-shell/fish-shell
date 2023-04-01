@@ -1,4 +1,4 @@
-function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name signal_desc proc_pid proc_name
+function ghoti_job_summary -a job_id is_foreground cmd_line signal_or_end_name signal_desc proc_pid proc_name
     # job_id: ID of the job that stopped/terminated/ended.
     # is_foreground: 1 if the job was running in the foreground, 0 otherwise.
     # cmd_line: The command line of the job.
@@ -34,15 +34,15 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
 
     switch $signal_or_end_name
         case STOPPED
-            printf ( _ "fish: Job %s, '%s' has stopped\n" ) $job_id $cmd_line
+            printf ( _ "ghoti: Job %s, '%s' has stopped\n" ) $job_id $cmd_line
         case ENDED
-            printf ( _ "fish: Job %s, '%s' has ended\n" ) $job_id $cmd_line
+            printf ( _ "ghoti: Job %s, '%s' has ended\n" ) $job_id $cmd_line
         case 'SIG*'
             if test -n "$proc_pid"
-                printf ( _ "fish: Process %s, '%s' from job %s, '%s' terminated by signal %s (%s)\n" ) \
+                printf ( _ "ghoti: Process %s, '%s' from job %s, '%s' terminated by signal %s (%s)\n" ) \
                     $proc_pid $proc_name $job_id $cmd_line $signal_or_end_name $signal_desc
             else
-                printf ( _ "fish: Job %s, '%s' terminated by signal %s (%s)\n" ) \
+                printf ( _ "ghoti: Job %s, '%s' terminated by signal %s (%s)\n" ) \
                     $job_id $cmd_line $signal_or_end_name $signal_desc
             end
     end >&2
@@ -50,7 +50,7 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
     if test $is_foreground -eq 0; and test $signal_or_end_name != STOPPED
         # We want one newline per line in the prompt after the first.
         # To ensure that, don't let `string repeat` add a newline. See #9044.
-        string repeat -N \n --count=(math (count (fish_prompt)) - 1) >&2
+        string repeat -N \n --count=(math (count (ghoti_prompt)) - 1) >&2
         commandline -f repaint
     end
 end

@@ -1,6 +1,6 @@
-.. _cmd-fish_title:
+.. _cmd-ghoti_title:
 
-fish_title - define the terminal's title
+ghoti_title - define the terminal's title
 ========================================
 
 Synopsis
@@ -8,11 +8,11 @@ Synopsis
 
 .. synopsis::
 
-    fish_title
+    ghoti_title
 
 ::
 
-  function fish_title
+  function ghoti_title
       ...
   end
 
@@ -20,9 +20,9 @@ Synopsis
 Description
 -----------
 
-The ``fish_title`` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message.
+The ``ghoti_title`` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message.
 
-The first argument to fish_title contains the most recently executed foreground command as a string, if any.
+The first argument to ghoti_title contains the most recently executed foreground command as a string, if any.
 
 This requires that your terminal supports programmable titles and the feature is turned on.
 
@@ -36,10 +36,10 @@ A simple title:
 
 ::
 
-   function fish_title
-       set -q argv[1]; or set argv fish
-       # Looks like ~/d/fish: git log
-       # or /e/apt: fish
-       echo (fish_prompt_pwd_dir_length=1 prompt_pwd): $argv; 
+   function ghoti_title
+       set -q argv[1]; or set argv ghoti
+       # Looks like ~/d/ghoti: git log
+       # or /e/apt: ghoti
+       echo (ghoti_prompt_pwd_dir_length=1 prompt_pwd): $argv; 
    end
 

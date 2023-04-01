@@ -1,4 +1,4 @@
-deno completions fish | source
+deno completions ghoti | source
 
 # complete deno task
 set searchForDenoFilesCode '
@@ -16,4 +16,4 @@ for (const file of denoFile) {
   } catch {}
 }
 '
-complete -f -c deno -n "__fish_seen_subcommand_from task" -n "__fish_is_nth_token 2" -a "(deno eval '$searchForDenoFilesCode')"
+complete -f -c deno -n "__ghoti_seen_subcommand_from task" -n "__ghoti_is_nth_token 2" -a "(deno eval '$searchForDenoFilesCode')"

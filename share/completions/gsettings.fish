@@ -1,6 +1,6 @@
 # Fish completions for glibs's "gsettings" configuration tool
 
-function __fish_complete_gsettings_args
+function __ghoti_complete_gsettings_args
     set -l schema_commands get monitor writable range describe set reset reset-recursively list-keys list-children list-recursively
     set -l key_commands get monitor writable range describe set reset
 
@@ -76,21 +76,21 @@ set -l valid_commands get monitor writable range describe set reset reset-recurs
 
 complete -f -c gsettings
 
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l version -d 'Print the version information'
-complete -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l schemadir -d 'Specify a custom schemas directory' -xa "(__fish_complete_directories (commandline -ct))"
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -l version -d 'Print the version information'
+complete -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -l schemadir -d 'Specify a custom schemas directory' -xa "(__ghoti_complete_directories (commandline -ct))"
 
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a get -d 'Get the value of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a writable -d 'Determine if a key is writable'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a range -d 'Determine the valid value range of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a describe -d 'Print the description of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a set -d 'Set the value of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a reset -d 'Reset a key to its default value'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a reset-recursively -d 'Reset all keys under the given schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-schemas -d 'List all installed, non-relocatable schemas'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-relocatable-schemas -d 'List all installed, relocatable schemas'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-keys -d 'List all keys in a schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-children -d 'List all children of a schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-recursively -d 'List keys and values, recursively'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a help -d 'Print help'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a get -d 'Get the value of a key'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a writable -d 'Determine if a key is writable'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a range -d 'Determine the valid value range of a key'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a describe -d 'Print the description of a key'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a set -d 'Set the value of a key'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a reset -d 'Reset a key to its default value'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a reset-recursively -d 'Reset all keys under the given schema'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a list-schemas -d 'List all installed, non-relocatable schemas'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a list-relocatable-schemas -d 'List all installed, relocatable schemas'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a list-keys -d 'List all keys in a schema'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a list-children -d 'List all children of a schema'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a list-recursively -d 'List keys and values, recursively'
+complete -f -c gsettings -n "not __ghoti_seen_subcommand_from $valid_commands" -a help -d 'Print help'
 
-complete -f -c gsettings -n "__fish_seen_subcommand_from $valid_commands" -xa "(__fish_complete_gsettings_args)"
+complete -f -c gsettings -n "__ghoti_seen_subcommand_from $valid_commands" -xa "(__ghoti_complete_gsettings_args)"

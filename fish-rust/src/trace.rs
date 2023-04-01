@@ -32,7 +32,7 @@ pub fn trace_set_enabled(do_enable: bool) {
 /// return whether tracing is enabled.
 pub fn trace_enabled(parser: &parser_t) -> bool {
     let ld = parser.ffi_libdata_pod_const();
-    if ld.suppress_fish_trace {
+    if ld.suppress_ghoti_trace {
         return false;
     }
     DO_TRACE.load()

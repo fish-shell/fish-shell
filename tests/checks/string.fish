@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # Tests for string builtin. Mostly taken from man page examples.
 
 string match -r -v "c.*" dog can cat diz; and echo "exit 0"
@@ -55,7 +55,7 @@ echo \|(string pad --width 10 --right foo)\|
 # CHECK: |foo       |
 
 begin
-    set -l fish_emoji_width 2
+    set -l ghoti_emoji_width 2
     # Pad string with multi-width emoji.
     string pad -w 4 -c . 🐟
     # CHECK: ..🐟
@@ -91,12 +91,12 @@ string pad -c ab -w4 .
 string length --visible (set_color red)abc
 # CHECK: 3
 begin
-    set -l fish_emoji_width 2
+    set -l ghoti_emoji_width 2
     # This should print the emoji width
     string length --visible . \U2693
     # CHECK: 1
     # CHECK: 2
-    set -l fish_emoji_width 1
+    set -l ghoti_emoji_width 1
     string length --visible . \U2693
     # CHECK: 1
     # CHECK: 1
@@ -166,9 +166,9 @@ string split . example.com
 # CHECK: example
 # CHECK: com
 
-string split -r -m1 / /usr/local/bin/fish
+string split -r -m1 / /usr/local/bin/ghoti
 # CHECK: /usr/local/bin
-# CHECK: fish
+# CHECK: ghoti
 
 string split "" abc
 # CHECK: a
@@ -312,7 +312,7 @@ string match -i "a**B" Axxb
 echo "ok?" | string match "*?"
 # CHECK: ok?
 
-string match -r "cat|dog|fish" "nice dog"
+string match -r "cat|dog|ghoti" "nice dog"
 # CHECK: dog
 
 string match -r "(\d\d?):(\d\d):(\d\d)" 2:34:56
@@ -378,7 +378,7 @@ or echo Unexpected exit status at line (status --current-line-number)
 string replace --regex -f Z X 1bc axc 2 d3f jk4 xyz
 and echo Unexpected exit status at line (status --current-line-number)
 
-# From https://github.com/fish-shell/fish-shell/issues/5201
+# From https://github.com/ghoti-shell/ghoti-shell/issues/5201
 # 'string match -r with empty capture groups'
 string match -r '^([ugoa]*)([=+-]?)([rwx]*)$' '=r'
 #CHECK: =r
@@ -787,7 +787,7 @@ echo $status
 function string
     builtin string $argv
 end
-# CHECKERR: checks/string.fish (line {{\d+}}): function: string: cannot use reserved keyword as function name
+# CHECKERR: checks/string.ghoti (line {{\d+}}): function: string: cannot use reserved keyword as function name
 # CHECKERR: function string
 # CHECKERR: ^
 
@@ -799,20 +799,20 @@ string pad -w 8 he \eh
 # CHECK: he
 # CHECK: {{\x1bh}}
 
-string match -rg '(.*)fish' catfish
+string match -rg '(.*)ghoti' catghoti
 # CHECK: cat
-string match -rg '(.*)fish' shellfish
+string match -rg '(.*)ghoti' shellghoti
 # CHECK: shell
 # An empty match
-string match -rg '(.*)fish' fish
+string match -rg '(.*)ghoti' ghoti
 # No match at all
-string match -rg '(.*)fish' banana
+string match -rg '(.*)ghoti' banana
 # Make sure it doesn't start matching something
-string match -r --groups-only '(.+)fish' fish
+string match -r --groups-only '(.+)ghoti' ghoti
 echo $status
 # CHECK: 1
 # Multiple groups
-string match -r --groups-only '(.+)fish(.*)' catfishcolor
+string match -r --groups-only '(.+)ghoti(.*)' catghoticolor
 # CHECK: cat
 # CHECK: color
 
@@ -880,25 +880,25 @@ string shorten -N -cx bar\nfooo
 # Shorten and emoji width.
 begin
     # \U1F4A9 was widened in unicode 9, so it's affected
-    # by $fish_emoji_width
+    # by $ghoti_emoji_width
     # "…" isn't and always has width 1.
     #
     # "abcde" has width 5, we have a total width of 6,
     # so we need to overwrite the "e" with our ellipsis.
-    fish_emoji_width=1 string shorten --max=5 -- abcde💩
+    ghoti_emoji_width=1 string shorten --max=5 -- abcde💩
     # CHECK: abcd…
     # This fits assuming the poo fits in one column
-    fish_emoji_width=1 string shorten --max=6 -- abcde💩
+    ghoti_emoji_width=1 string shorten --max=6 -- abcde💩
     # CHECK: abcde💩
 
     # This has a total width of 7 (assuming double-wide poo),
     # so we need to add the ellipsis on the "e"
-    fish_emoji_width=2 string shorten --max=5 -- abcde💩
+    ghoti_emoji_width=2 string shorten --max=5 -- abcde💩
     # CHECK: abcd…
     # This still doesn't fit!
-    fish_emoji_width=2 string shorten --max=6 -- abcde💩
+    ghoti_emoji_width=2 string shorten --max=6 -- abcde💩
     # CHECK: abcde…
-    fish_emoji_width=2 string shorten --max=7 -- abcde💩
+    ghoti_emoji_width=2 string shorten --max=7 -- abcde💩
     # CHECK: abcde💩
 end
 

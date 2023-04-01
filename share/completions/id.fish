@@ -1,4 +1,4 @@
-complete id -xa "(__fish_complete_users)"
+complete id -xa "(__ghoti_complete_users)"
 
 if string match -eq 'GNU coreutils' (id --version 2>&1)
     complete id -s Z -l context -d "Print security context"

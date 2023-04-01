@@ -1,4 +1,4 @@
-function __fish_argparse_exclusive_args --description 'Helper function to list unused options'
+function __ghoti_argparse_exclusive_args --description 'Helper function to list unused options'
     set --local all_tokens (commandline --tokenize)
     set --erase all_tokens[1]
     set --local current_token (commandline --current-token)
@@ -60,7 +60,7 @@ complete --command argparse --short-option h --long-option help --description 'S
 complete --command argparse --short-option n --long-option name --require-parameter --no-files \
     --arguments '(functions --all | string replace ", " "\n")' --description 'Use function name'
 complete --command argparse --short-option x --long-option exclusive --no-files --require-parameter \
-    --arguments '(__fish_append "," (__fish_argparse_exclusive_args))' \
+    --arguments '(__ghoti_append "," (__ghoti_argparse_exclusive_args))' \
     --description 'Specify mutually exclusive options'
 complete --command argparse --short-option N --long-option min-args --no-files --require-parameter \
     --description 'Specify minimum non-option argument count'

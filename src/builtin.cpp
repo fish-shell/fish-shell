@@ -144,11 +144,11 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
     // This won't ever work if no_exec is set.
     if (no_exec()) return;
     const wcstring name_esc = escape_string(name);
-    wcstring cmd = format_string(L"__fish_print_help %ls ", name_esc.c_str());
+    wcstring cmd = format_string(L"__ghoti_print_help %ls ", name_esc.c_str());
     io_chain_t ios;
     if (!error_message.empty()) {
         cmd.append(escape_string(error_message));
-        // If it's an error, redirect the output of __fish_print_help to stderr
+        // If it's an error, redirect the output of __ghoti_print_help to stderr
         ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO));
     }
     auto res = parser.eval(cmd, ios);
@@ -347,7 +347,7 @@ static maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, con
 // Below are functions for handling the builtin commands.
 // THESE MUST BE SORTED BY NAME! Completion lookup uses binary search.
 
-// Data about all the builtin commands in fish.
+// Data about all the builtin commands in ghoti.
 // Functions that are bound to builtin_generic are handled directly by the parser.
 // NOTE: These must be kept in sorted order!
 static constexpr builtin_data_t builtin_datas[] = {
@@ -357,10 +357,10 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"_", &builtin_gettext, N_(L"Translate a string")},
     {L"abbr", &implemented_in_rust, N_(L"Manage abbreviations")},
     {L"and", &builtin_generic, N_(L"Run command if last command succeeded")},
-    {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
+    {L"argparse", &builtin_argparse, N_(L"Parse options in ghoti script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
     {L"bg", &implemented_in_rust, N_(L"Send job to background")},
-    {L"bind", &builtin_bind, N_(L"Handle fish key bindings")},
+    {L"bind", &builtin_bind, N_(L"Handle ghoti key bindings")},
     {L"block", &implemented_in_rust, N_(L"Temporarily block delivery of events")},
     {L"break", &builtin_break_continue, N_(L"Stop the innermost loop")},
     {L"breakpoint", &builtin_breakpoint, N_(L"Halt execution and start debug prompt")},
@@ -402,7 +402,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"set", &builtin_set, N_(L"Handle environment variables")},
     {L"set_color", &builtin_set_color, N_(L"Set the terminal color")},
     {L"source", &builtin_source, N_(L"Evaluate contents of file")},
-    {L"status", &builtin_status, N_(L"Return status information about fish")},
+    {L"status", &builtin_status, N_(L"Return status information about ghoti")},
     {L"string", &builtin_string, N_(L"Manipulate strings")},
     {L"switch", &builtin_generic, N_(L"Conditionally run blocks of code")},
     {L"test", &builtin_test, N_(L"Test a condition")},

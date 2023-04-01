@@ -1,13 +1,13 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 
 # This tests various corner cases involving command substitution.
 
 # Test cmdsubs which spawn background processes - see #7559.
-# If this hangs, it means that fish keeps trying to read from the write
+# If this hangs, it means that ghoti keeps trying to read from the write
 # end of the cmdsub pipe (which has escaped).
 
 # FIXME: we need to mark full job control for sleep to get its own pgid;
-# otherwise $last_pid will return fish's pgid! It's always been so!
+# otherwise $last_pid will return ghoti's pgid! It's always been so!
 status job-control full
 
 echo (command sleep 1000000 & ; set -g sleep_pid $last_pid ; echo local)
@@ -20,7 +20,7 @@ kill $sleep_pid ; echo $status
 status job-control interactive
 
 # Test limiting the amount of data we'll substitute.
-set fish_read_limit 512
+set ghoti_read_limit 512
 
 function subme
     set -l x (string repeat -n $argv x)
@@ -76,9 +76,9 @@ or echo expected status 122, saw $saved_status >&2
 
 # Check that it's reset to the default when unset
 begin
-    set -l fish_read_limit 5
+    set -l ghoti_read_limit 5
     echo (string repeat -n 10 a)
-    # CHECKERR: {{.*}}cmdsub-limit.fish (line {{\d+}}): Too much data emitted by command substitution so it was discarded
+    # CHECKERR: {{.*}}cmdsub-limit.ghoti (line {{\d+}}): Too much data emitted by command substitution so it was discarded
     # CHECKERR: echo (string repeat -n 10 a)
     # CHECKERR:      ^~~~~~~~~~~~~~~~~~~~~~^
 end

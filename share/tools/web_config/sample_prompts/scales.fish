@@ -5,7 +5,7 @@
 # - General theme setup: https://github.com/sorin-ionescu/prezto/blob/d275f316ffdd0bbd075afbff677c3e00791fba16/modules/prompt/functions/prompt_sorin_setup
 # - Extraction of git info: https://github.com/sorin-ionescu/prezto/blob/d275f316ffdd0bbd075afbff677c3e00791fba16/modules/git/functions/git-info#L180-L441
 
-function fish_prompt
+function ghoti_prompt
     if test -n "$SSH_TTY"
         echo -n (set_color brred)"$USER"(set_color white)'@'(set_color yellow)(prompt_hostname)' '
     end
@@ -13,7 +13,7 @@ function fish_prompt
     echo -n (set_color blue)(prompt_pwd)' '
 
     set_color -o
-    if fish_is_root_user
+    if ghoti_is_root_user
         echo -n (set_color red)'# '
     end
     echo -n (set_color red)'❯'(set_color yellow)'❯'(set_color green)'❯ '
@@ -21,7 +21,7 @@ function fish_prompt
 end
 
 # And now define the right prompt so that it's brought along
-function fish_right_prompt
+function ghoti_right_prompt
     set -l cmd_status $status
     if test $cmd_status -ne 0
         echo -n (set_color red)"✘ $cmd_status"
@@ -42,7 +42,7 @@ function fish_right_prompt
     # Get the current action ("merge", "rebase", etc.)
     # and if there's one get the current commit hash too.
     set -l commit ''
-    if set -l action (fish_print_git_action "$git_dir")
+    if set -l action (ghoti_print_git_action "$git_dir")
         set commit (command git rev-parse HEAD 2> /dev/null | string sub -l 7)
     end
 

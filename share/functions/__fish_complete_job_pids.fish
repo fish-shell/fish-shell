@@ -1,4 +1,4 @@
-function __fish_complete_job_pids --description "Print a list of job PIDs and their commands"
+function __ghoti_complete_job_pids --description "Print a list of job PIDs and their commands"
     if set -l jobpids (jobs -p)
         # when run at the commandline, the first line of output is a header, but
         # that doesn't seem to be printed when you run jobs in a subshell

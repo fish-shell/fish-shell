@@ -10,7 +10,7 @@ set -l commands \
     shutdown force-stop force-reload force-restart force-shutdown \
     try-restart check
 
-function __fish_complete_sv_list_services
+function __ghoti_complete_sv_list_services
     set -l svdir
     for candidate_svdir in \
         "$SVDIR" \
@@ -31,14 +31,14 @@ function __fish_complete_sv_list_services
     or printf "%s\n" $services
 end
 
-complete -f -c sv -a "(__fish_complete_sv_list_services)" -n "__fish_seen_subcommand_from $commands"
+complete -f -c sv -a "(__ghoti_complete_sv_list_services)" -n "__ghoti_seen_subcommand_from $commands"
 
 
 complete -fc sv -s v -d "Report status for up, down, term, once, cont, and exit"
 complete -fc sv -s w -d "Override the default timeout to report status"
 
 
-set -l no_comm "not __fish_seen_subcommand_from $commands"
+set -l no_comm "not __ghoti_seen_subcommand_from $commands"
 
 complete -kfc sv -n $no_comm -a check -d "Check if the service is in it's requested state"
 complete -kfc sv -n $no_comm -a try-restart -d "Run term, cont, and  up, report status"

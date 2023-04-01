@@ -1,33 +1,33 @@
 # name: 'Mono Lace'
 # preferred_background: 'white'
 
-fish_color_normal normal
-fish_color_command 000000
-fish_color_quote 626262
-fish_color_redirection 8a8a8a
-fish_color_end 767676
-fish_color_error b2b2b2
-fish_color_param 303030
-fish_color_comment 4e4e4e
-fish_color_match --background=brblue
-fish_color_search_match bryellow --background=brblack
-fish_color_selection white --bold --background=brblack
-fish_color_history_current --bold
-fish_color_operator 00a6b2
-fish_color_escape 00a6b2
-fish_color_cwd green
-fish_color_valid_path --underline
-fish_color_cwd_root red
-fish_color_autosuggestion 777777
-fish_color_user brgreen
-fish_color_host normal
-fish_pager_color_prefix normal --bold --underline
-fish_color_cancel -r
-fish_pager_color_completion normal
-fish_pager_color_progress brwhite --background=cyan
-fish_pager_color_description B3A06D yellow
-fish_pager_color_selected_background --background=brblack
-fish_color_option 303030
-fish_color_keyword 000000
-fish_color_host_remote yellow
-fish_color_status red
+ghoti_color_normal normal
+ghoti_color_command 000000
+ghoti_color_quote 626262
+ghoti_color_redirection 8a8a8a
+ghoti_color_end 767676
+ghoti_color_error b2b2b2
+ghoti_color_param 303030
+ghoti_color_comment 4e4e4e
+ghoti_color_match --background=brblue
+ghoti_color_search_match bryellow --background=brblack
+ghoti_color_selection white --bold --background=brblack
+ghoti_color_history_current --bold
+ghoti_color_operator 00a6b2
+ghoti_color_escape 00a6b2
+ghoti_color_cwd green
+ghoti_color_valid_path --underline
+ghoti_color_cwd_root red
+ghoti_color_autosuggestion 777777
+ghoti_color_user brgreen
+ghoti_color_host normal
+ghoti_pager_color_prefix normal --bold --underline
+ghoti_color_cancel -r
+ghoti_pager_color_completion normal
+ghoti_pager_color_progress brwhite --background=cyan
+ghoti_pager_color_description B3A06D yellow
+ghoti_pager_color_selected_background --background=brblack
+ghoti_color_option 303030
+ghoti_color_keyword 000000
+ghoti_color_host_remote yellow
+ghoti_color_status red

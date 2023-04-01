@@ -6,7 +6,7 @@ function pushd --description 'Push directory to stack'
         # check for --help
         switch $argv[1]
             case -h --h --he --hel --help
-                __fish_print_help pushd
+                __ghoti_print_help pushd
                 return 0
         end
 

@@ -15,7 +15,7 @@
 class history_item_t;
 
 // History file types.
-enum history_file_type_t { history_type_fish_2_0, history_type_fish_1_x };
+enum history_file_type_t { history_type_ghoti_2_0, history_type_ghoti_1_x };
 
 /// history_file_contents_t holds the read-only contents of a file.
 class history_file_contents_t : noncopyable_t, nonmovable_t {

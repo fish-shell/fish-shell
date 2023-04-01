@@ -1,14 +1,14 @@
-function __fish_complete_apropos
+function __ghoti_complete_apropos
     set -f str (commandline -ct | string escape --style=regex)
     switch "$str"
         case '-**'
 
         case '*'
-            __fish_apropos "^$str" 2>/dev/null | string replace -rf -- '^([^(\s]+) ?\([,\w]+\)\s+-?\s?(.*)$' '$1\t$2'
+            __ghoti_apropos "^$str" 2>/dev/null | string replace -rf -- '^([^(\s]+) ?\([,\w]+\)\s+-?\s?(.*)$' '$1\t$2'
     end
 end
 
-complete -xc apropos -a '(__fish_complete_apropos)' -d "whatis entry"
+complete -xc apropos -a '(__ghoti_complete_apropos)' -d "whatis entry"
 
 if apropos --version &>/dev/null
     complete -f -c apropos -s '?' -l help -d "Display help and exit"
@@ -19,7 +19,7 @@ if apropos --version &>/dev/null
     complete -f -c apropos -s w -l wildcard -d "Keyword as wildcards"
     complete -f -c apropos -s e -l exact -d "Keyword as exactly match"
     complete -x -c apropos -s m -l system -d "Search for other system"
-    complete -x -c apropos -s M -l manpath -a "(__fish_complete_directories (commandline -ct))" -d Manpath
+    complete -x -c apropos -s M -l manpath -a "(__ghoti_complete_directories (commandline -ct))" -d Manpath
     complete -r -c apropos -s C -l config-file -d "Specify a configuration file"
     complete -f -c apropos -s V -l version -d "Display version and exit"
     complete -f -c apropos -s a -l and -d "Match all keywords"

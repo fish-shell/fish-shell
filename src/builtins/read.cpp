@@ -121,7 +121,7 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case L'n': {
-                opts.nchars = fish_wcstoi(w.woptarg);
+                opts.nchars = ghoti_wcstoi(w.woptarg);
                 if (errno) {
                     if (errno == ERANGE) {
                         streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"), cmd,
@@ -216,7 +216,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
 
     conf.left_prompt_cmd = prompt;
     conf.right_prompt_cmd = right_prompt;
-    conf.event = L"fish_read";
+    conf.event = L"ghoti_read";
 
     conf.in = in;
 
@@ -606,7 +606,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             // specified the delimiter string or we're using IFS.
             if (!opts.have_delimiter) {
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
-                // compatibility with old versions of fish.
+                // compatibility with old versions of ghoti.
                 wcstring_list_t tokens = split_string_tok(buff, opts.delimiter);
                 parser.set_var_and_fire(*var_ptr++, opts.place, std::move(tokens));
             } else {
@@ -621,7 +621,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             // Not array mode. Split the input into tokens and assign each to the vars in sequence.
             if (!opts.have_delimiter) {
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
-                // compatibility with old versions of fish.
+                // compatibility with old versions of ghoti.
                 // Note the final variable gets any remaining text.
                 wcstring_list_t var_vals = split_string_tok(buff, opts.delimiter, vars_left());
                 size_t val_idx = 0;

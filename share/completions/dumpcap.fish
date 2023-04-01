@@ -1,6 +1,6 @@
 # dumpcap - Dump network traffic
 
-__fish_complete_wireshark dumpcap
+__ghoti_complete_wireshark dumpcap
 
 complete -c dumpcap -s C -d 'Limit the amount of memory in bytes for storing captured packets in memory' -x
 complete -c dumpcap -s d -d 'Dump the code generated for the capture filter in a human-readable form, and exit'

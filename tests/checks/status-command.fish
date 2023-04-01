@@ -1,18 +1,18 @@
-#RUN: env FISH_PATH=%fish FILE_PATH=%s %fish %s
+#RUN: env FISH_PATH=%ghoti FILE_PATH=%s %ghoti %s
 
 status line-number
 # CHECK: 3
 
-# Check status fish-path
+# Check status ghoti-path
 # No output expected on success
 #
 # argv[0] on OpenBSD is just the filename, not the path
-# That means fish-path is unsupportable there.
+# That means ghoti-path is unsupportable there.
 if not contains (uname) OpenBSD
-    set status_fish_path (realpath (status fish-path))
-    set env_fish_path (realpath $FISH_PATH)
-    test "$status_fish_path" = "$env_fish_path"
-    or echo "Fish path disagreement: $status_fish_path vs $env_fish_path"
+    set status_ghoti_path (realpath (status ghoti-path))
+    set env_ghoti_path (realpath $FISH_PATH)
+    test "$status_ghoti_path" = "$env_ghoti_path"
+    or echo "Fish path disagreement: $status_ghoti_path vs $env_ghoti_path"
 end
 
 # Check is-block
@@ -45,7 +45,7 @@ echo (status is-command-substitution; echo $status)
 test (status filename) = (status dirname)/(status basename)
 
 status basename
-#CHECK: status-command.fish
+#CHECK: status-command.ghoti
 
 status dirname | string match -q '*checks'
 echo $status

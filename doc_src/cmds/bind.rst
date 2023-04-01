@@ -1,6 +1,6 @@
 .. _cmd-bind:
 
-bind - handle fish key bindings
+bind - handle ghoti key bindings
 ===============================
 Synopsis
 --------
@@ -19,29 +19,29 @@ Description
 
 ``bind`` manages bindings.
 
-It can add bindings if given a SEQUENCE of characters to bind to. These should be written as :ref:`fish escape sequences <escapes>`. The most important of these are ``\c`` for the control key, and ``\e`` for escape, and because of historical reasons also the Alt key (sometimes also called "Meta").
+It can add bindings if given a SEQUENCE of characters to bind to. These should be written as :ref:`ghoti escape sequences <escapes>`. The most important of these are ``\c`` for the control key, and ``\e`` for escape, and because of historical reasons also the Alt key (sometimes also called "Meta").
 
-For example, :kbd:`Alt`\ +\ :kbd:`W` can be written as ``\ew``, and :kbd:`Control`\ +\ :kbd:`X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
+For example, :kbd:`Alt`\ +\ :kbd:`W` can be written as ``\ew``, and :kbd:`Control`\ +\ :kbd:`X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``ghoti``.
 
 The generic key binding that matches if no other binding does can be set by specifying a ``SEQUENCE`` of the empty string (that is, ``''`` ). For most key bindings, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes not specifically bound to into the editor. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
 
 If the ``-k`` switch is used, the name of a key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key\_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys). Normally this will print an error if the current ``$TERM`` entry doesn't have a given key, unless the ``-s`` switch is given.
 
-To find out what sequence a key combination sends, you can use :doc:`fish_key_reader <fish_key_reader>`.
+To find out what sequence a key combination sends, you can use :doc:`ghoti_key_reader <ghoti_key_reader>`.
 
-``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` for a complete list of these input functions.
+``COMMAND`` can be any ghoti command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` for a complete list of these input functions.
 
 When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a :ref:`function <syntax-function>` and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
 
 
 .. note::
-   Special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script). To run special input functions from regular fish script, use ``commandline -f`` (see also :doc:`commandline <commandline>`). If a script produces output, it should finish by calling ``commandline -f repaint`` to tell fish that a repaint is in order.
+   Special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid ghoti script). To run special input functions from regular ghoti script, use ``commandline -f`` (see also :doc:`commandline <commandline>`). If a script produces output, it should finish by calling ``commandline -f repaint`` to tell ghoti that a repaint is in order.
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given ``MODE``) are printed. If ``SEQUENCE`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 
-To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
+To save custom key bindings, put the ``bind`` statements into :ref:`config.ghoti <configuration>`. Alternatively, ghoti also automatically executes a function called ``ghoti_user_key_bindings`` if it exists.
 
-Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
+Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$ghoti_bind_mode`` variable. If you want to change the mode from inside a ghoti function, use ``set ghoti_bind_mode MODE``.
 
 Options
 -------
@@ -76,10 +76,10 @@ The following options are available:
 
 **--preset** and **--user**
     Specify if bind should operate on user or preset bindings.
-    User bindings take precedence over preset bindings when fish looks up mappings.
+    User bindings take precedence over preset bindings when ghoti looks up mappings.
     By default, all ``bind`` invocations work on the "user" level except for listing, which will show both levels.
     All invocations except for inserting new bindings can operate on both levels at the same time (if both **--preset** and **--user** are given).
-    **--preset** should only be used in full binding sets (like when working on ``fish_vi_key_bindings``).
+    **--preset** should only be used in full binding sets (like when working on ``ghoti_vi_key_bindings``).
 
 **-s** or **--silent**
     Silences some of the error messages, including for unknown key names and unbound sequences.
@@ -261,7 +261,7 @@ The following special input functions are available:
     reexecutes the prompt functions and redraws the prompt (also ``force-repaint`` for backwards-compatibility)
 
 ``repaint-mode``
-    reexecutes the :doc:`fish_mode_prompt <fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
+    reexecutes the :doc:`ghoti_mode_prompt <ghoti_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``ghoti_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
 
 ``self-insert``
     inserts the matching sequence into the command line
@@ -318,16 +318,16 @@ The following functions are included as normal functions, but are particularly u
 ``edit_command_buffer``
     open the visual editor (controlled by the :envvar:`VISUAL` or :envvar:`EDITOR` environment variables) with the current command-line contents
 
-``fish_clipboard_copy``
+``ghoti_clipboard_copy``
     copy the current selection to the system clipboard
 
-``fish_clipboard_paste``
+``ghoti_clipboard_paste``
     paste the current selection from the system clipboard before the cursor
 
-``fish_commandline_append``
+``ghoti_commandline_append``
     append the argument to the command-line. If the command-line already ends with the argument, this removes the suffix instead. Starts with the last command from history if the command-line is empty.
 
-``fish_commandline_prepend``
+``ghoti_commandline_prepend``
     prepend the argument to the command-line. If the command-line already starts with the argument, this removes the prefix instead. Starts with the last command from history if the command-line is empty.
 
 Examples
@@ -343,7 +343,7 @@ Perform a history search when :kbd:`Page Up` is pressed::
 
 Turn on :ref:`Vi key bindings <vi-mode>` and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
 
-    set -g fish_key_bindings fish_vi_key_bindings
+    set -g ghoti_key_bindings ghoti_vi_key_bindings
     bind -M insert \cc kill-whole-line repaint
 
 Launch ``git diff`` and repaint the commandline afterwards when :kbd:`Control`\ +\ :kbd:`G` is pressed::
@@ -355,7 +355,7 @@ Launch ``git diff`` and repaint the commandline afterwards when :kbd:`Control`\ 
 Terminal Limitations
 --------------------
 
-Unix terminals, like the ones fish operates in, are at heart 70s technology. They have some limitations that applications running inside them can't workaround.
+Unix terminals, like the ones ghoti operates in, are at heart 70s technology. They have some limitations that applications running inside them can't workaround.
 
 For instance, the control key modifies a character by setting the top three bits to 0. This means:
 
@@ -373,4 +373,4 @@ The escape key can be used standalone, for example, to switch from insertion mod
 
 Holding alt and something else also typically sends escape, for example holding alt+a will send an escape character and then an "a".
 
-fish waits for a period after receiving the escape character, to determine whether it is standalone or part of an escape sequence. While waiting, additional key presses make the escape key behave as a meta key. If no other key presses come in, it is handled as a standalone escape. The waiting period is set to 30 milliseconds (0.03 seconds). It can be configured by setting the ``fish_escape_delay_ms`` variable to a value between 10 and 5000 ms. This can be a universal variable that you set once from an interactive session.
+ghoti waits for a period after receiving the escape character, to determine whether it is standalone or part of an escape sequence. While waiting, additional key presses make the escape key behave as a meta key. If no other key presses come in, it is handled as a standalone escape. The waiting period is set to 30 milliseconds (0.03 seconds). It can be configured by setting the ``ghoti_escape_delay_ms`` variable to a value between 10 and 5000 ms. This can be a universal variable that you set once from an interactive session.

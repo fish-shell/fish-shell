@@ -1,9 +1,9 @@
-#RUN: %fish -C "set helper %fish_test_helper" %s
+#RUN: %ghoti -C "set helper %ghoti_test_helper" %s
 # This hangs on OpenBSD
 #REQUIRES: test "$(uname)" != OpenBSD
 
-# Command subs run in same pgroup as fish, even if job control is 'all'.
-# Verify that they get the same pgroup across runs (presumably fish's).
+# Command subs run in same pgroup as ghoti, even if job control is 'all'.
+# Verify that they get the same pgroup across runs (presumably ghoti's).
 status job-control full
 set g1 ($helper print_pgrp)
 for i in (seq 10)

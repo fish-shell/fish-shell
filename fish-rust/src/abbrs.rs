@@ -128,7 +128,7 @@ pub struct Abbreviation {
 
     /// If set, use this regex to recognize tokens.
     /// If unset, the key is to be interpreted literally.
-    /// Note that the fish interface enforces that regexes match the entire token;
+    /// Note that the ghoti interface enforces that regexes match the entire token;
     /// we accomplish this by surrounding the regex in ^ and $.
     pub regex: Option<Regex>,
 

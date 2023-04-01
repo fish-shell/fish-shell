@@ -1,9 +1,9 @@
-function fish_config --description "Launch fish's web based configuration"
+function ghoti_config --description "Launch ghoti's web based configuration"
     argparse h/help -- $argv
     or return
 
     if set -q _flag_help
-        __fish_print_help fish_config
+        __ghoti_print_help ghoti_config
         return 0
     end
 
@@ -14,20 +14,20 @@ function fish_config --description "Launch fish's web based configuration"
     or set cmd browse
 
     # The web-based configuration UI
-    # Also opened with just `fish_config` or `fish_config browse`.
+    # Also opened with just `ghoti_config` or `ghoti_config browse`.
     if contains -- $cmd browse
-        set -lx __fish_bin_dir $__fish_bin_dir
-        if set -l python (__fish_anypython)
-            $python "$__fish_data_dir/tools/web_config/webconfig.py" $argv
+        set -lx __ghoti_bin_dir $__ghoti_bin_dir
+        if set -l python (__ghoti_anypython)
+            $python "$__ghoti_data_dir/tools/web_config/webconfig.py" $argv
         else
-            echo (set_color $fish_color_error)Cannot launch the web configuration tool:(set_color normal)
-            echo (set_color -o)"fish_config browse"(set_color normal) requires Python.
+            echo (set_color $ghoti_color_error)Cannot launch the web configuration tool:(set_color normal)
+            echo (set_color -o)"ghoti_config browse"(set_color normal) requires Python.
             echo Installing python will fix this, and also enable completions to be
             echo automatically generated from man pages.\n
-            echo To change your prompt, use (set_color -o)"fish_config prompt"(set_color normal) or create a (set_color -o)"fish_prompt"(set_color normal) function.
-            echo To list the samples use (set_color -o)"fish_config prompt show"(set_color normal).\n
+            echo To change your prompt, use (set_color -o)"ghoti_config prompt"(set_color normal) or create a (set_color -o)"ghoti_prompt"(set_color normal) function.
+            echo To list the samples use (set_color -o)"ghoti_config prompt show"(set_color normal).\n
 
-            echo You can tweak your colors by setting the (set_color $fish_color_search_match)\$fish_color_\*(set_color normal) variables.
+            echo You can tweak your colors by setting the (set_color $ghoti_color_search_match)\$ghoti_color_\*(set_color normal) variables.
         end
         return 0
     end
@@ -38,7 +38,7 @@ function fish_config --description "Launch fish's web based configuration"
     end
 
     # Variables a theme is allowed to set
-    set -l theme_var_filter '^fish_(?:pager_)?color.*$';
+    set -l theme_var_filter '^ghoti_(?:pager_)?color.*$';
 
     switch $cmd
         case prompt
@@ -51,29 +51,29 @@ function fish_config --description "Launch fish's web based configuration"
                 return 1
             end
 
-            set -l prompt_dir $__fish_data_dir/sample_prompts $__fish_data_dir/tools/web_config/sample_prompts
+            set -l prompt_dir $__ghoti_data_dir/sample_prompts $__ghoti_data_dir/tools/web_config/sample_prompts
             switch $cmd
                 case show
-                    set -l fish (status fish-path)
-                    set -l prompts $prompt_dir/$argv.fish
-                    set -q prompts[1]; or set prompts $prompt_dir/*.fish
+                    set -l ghoti (status ghoti-path)
+                    set -l prompts $prompt_dir/$argv.ghoti
+                    set -q prompts[1]; or set prompts $prompt_dir/*.ghoti
                     for p in $prompts
                         if not test -e "$p"
                             continue
                         end
-                        set -l promptname (string replace -r '.*/([^/]*).fish$' '$1' $p)
+                        set -l promptname (string replace -r '.*/([^/]*).ghoti$' '$1' $p)
                         echo -s (set_color --underline) $promptname (set_color normal)
-                        $fish -c 'functions -e fish_right_prompt; source $argv[1];
+                        $ghoti -c 'functions -e ghoti_right_prompt; source $argv[1];
                         false
-                        fish_prompt
+                        ghoti_prompt
                         echo (set_color normal)
-                        if functions -q fish_right_prompt;
-                        echo right prompt: (false; fish_right_prompt)
+                        if functions -q ghoti_right_prompt;
+                        echo right prompt: (false; ghoti_right_prompt)
                     end' $p
                         echo
                     end
                 case list ''
-                    string replace -r '.*/([^/]*).fish$' '$1' $prompt_dir/*.fish
+                    string replace -r '.*/([^/]*).ghoti$' '$1' $prompt_dir/*.ghoti
                     return
                 case choose
                     if set -q argv[2]
@@ -86,7 +86,7 @@ function fish_config --description "Launch fish's web based configuration"
                     end
 
                     set -l have
-                    for f in $prompt_dir/$argv[1].fish
+                    for f in $prompt_dir/$argv[1].ghoti
                         if test -f $f
                             source $f
                             set have $f
@@ -99,21 +99,21 @@ function fish_config --description "Launch fish's web based configuration"
                     end
 
                     # Erase the right prompt if it didn't have any.
-                    if functions -q fish_right_prompt; and test (functions --details fish_right_prompt) != $have[1]
-                        functions --erase fish_right_prompt
+                    if functions -q ghoti_right_prompt; and test (functions --details ghoti_right_prompt) != $have[1]
+                        functions --erase ghoti_right_prompt
                     end
                 case save
                     read -P"Overwrite prompt? [y/N]" -l yesno
                     if string match -riq 'y(es)?' -- $yesno
                         echo Overwriting
                         # Skip the cp if unnecessary,
-                        # or we'd throw an error on a stock fish.
-                        path is $__fish_config_dir/functions/fish_prompt.fish
-                        and cp $__fish_config_dir/functions/fish_prompt.fish{,.bak}
+                        # or we'd throw an error on a stock ghoti.
+                        path is $__ghoti_config_dir/functions/ghoti_prompt.ghoti
+                        and cp $__ghoti_config_dir/functions/ghoti_prompt.ghoti{,.bak}
 
                         set -l have
                         if set -q argv[1]
-                            for f in $prompt_dir/$argv[1].fish
+                            for f in $prompt_dir/$argv[1].ghoti
                                 if test -f $f
                                     set have $f
                                     source $f
@@ -126,10 +126,10 @@ function fish_config --description "Launch fish's web based configuration"
                             end
                         end
 
-                        funcsave fish_prompt
+                        funcsave ghoti_prompt
                         or return
 
-                        funcsave fish_right_prompt 2>/dev/null
+                        funcsave ghoti_right_prompt 2>/dev/null
                         return
                     else
                         echo Not overwriting
@@ -148,44 +148,44 @@ function fish_config --description "Launch fish's web based configuration"
                 return 1
             end
 
-            set -l dirs $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
+            set -l dirs $__ghoti_config_dir/themes $__ghoti_data_dir/tools/web_config/themes
 
             switch $cmd
                 case list ''
                     string replace -r '.*/([^/]*).theme$' '$1' $dirs/*.theme
                     return
                 case demo
-                    echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
+                    echo -ns (set_color $ghoti_color_command || set_color $ghoti_color_normal) /bright/vixens
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_param || set_color $fish_color_normal) jump
+                    echo -ns (set_color $ghoti_color_param || set_color $ghoti_color_normal) jump
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_redirection || set_color $fish_color_normal) '|'
+                    echo -ns (set_color $ghoti_color_redirection || set_color $ghoti_color_normal) '|'
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_quote || set_color $fish_color_normal) '"fowl"'
+                    echo -ns (set_color $ghoti_color_quote || set_color $ghoti_color_normal) '"fowl"'
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_redirection || set_color $fish_color_normal) '> quack'
+                    echo -ns (set_color $ghoti_color_redirection || set_color $ghoti_color_normal) '> quack'
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_end || set_color $fish_color_normal) '&'
+                    echo -ns (set_color $ghoti_color_end || set_color $ghoti_color_normal) '&'
                     set_color normal
-                    echo -s (set_color $fish_color_comment || set_color $fish_color_normal) ' # This is a comment'
+                    echo -s (set_color $ghoti_color_comment || set_color $ghoti_color_normal) ' # This is a comment'
                     set_color normal
-                    echo -ns (set_color $fish_color_command || set_color $fish_color_normal) echo
+                    echo -ns (set_color $ghoti_color_command || set_color $ghoti_color_normal) echo
                     echo -ns (set_color normal) ' '
-                    echo -s (set_color $fish_color_error || set_color $fish_color_normal) "'" (set_color $fish_color_quote || set_color $fish_color_normal) "Errors are the portal to discovery"
+                    echo -s (set_color $ghoti_color_error || set_color $ghoti_color_normal) "'" (set_color $ghoti_color_quote || set_color $ghoti_color_normal) "Errors are the portal to discovery"
                     set_color normal
-                    echo -ns (set_color $fish_color_command || set_color $fish_color_normal) Th
+                    echo -ns (set_color $ghoti_color_command || set_color $ghoti_color_normal) Th
                     set_color normal
-                    set_color $fish_color_autosuggestion || set_color $fish_color_normal
+                    set_color $ghoti_color_autosuggestion || set_color $ghoti_color_normal
                     echo is is an autosuggestion
                     echo
                 case show
-                    set -l fish (status fish-path)
+                    set -l ghoti (status ghoti-path)
                     set -l themes $dirs/$argv.theme
                     set -q themes[1]; or set themes $dirs/*.theme
                     set -l used_themes
 
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
-                    fish_config theme demo
+                    ghoti_config theme demo
 
                     for t in $themes
                         not test -e "$t"
@@ -198,11 +198,11 @@ function fish_config --description "Launch fish's web based configuration"
 
                         echo -s (set_color normal; set_color --underline) $themename (set_color normal)
 
-                        # Use a new, --no-config, fish to display the theme.
+                        # Use a new, --no-config, ghoti to display the theme.
                         # So we can use this function, explicitly source it before anything else!
-                        functions fish_config | $fish -C "source -" --no-config -c '
-                        fish_config theme choose $argv
-                        fish_config theme demo $argv
+                        functions ghoti_config | $ghoti -C "source -" --no-config -c '
+                        ghoti_config theme choose $argv
+                        ghoti_config theme demo $argv
                         ' $themename
                     end
 
@@ -211,7 +211,7 @@ function fish_config --description "Launch fish's web based configuration"
                         echo "Too many arguments" >&2
                         return 1
                     end
-                    # The name of the theme to save *from* is optional for `fish_config theme save`
+                    # The name of the theme to save *from* is optional for `ghoti_config theme save`
                     if not set -q argv[1] && contains -- $cmd choose
                         echo "Too few arguments" >&2
                         return 1
@@ -229,10 +229,10 @@ function fish_config --description "Launch fish's web based configuration"
                         set scope -U
                     end
 
-                    set -l known_colors fish_color_{normal,command,keyword,quote,redirection,\
+                    set -l known_colors ghoti_color_{normal,command,keyword,quote,redirection,\
                         end,error,param,option,comment,selection,operator,escape,autosuggestion,\
                         cwd,user,host,host_remote,cancel,search_match} \
-                        fish_pager_color_{progress,background,prefix,completion,description,\
+                        ghoti_pager_color_{progress,background,prefix,completion,description,\
                         selected_background,selected_prefix,selected_completion,selected_description,\
                         secondary_background,secondary_prefix,secondary_completion,secondary_description}
 

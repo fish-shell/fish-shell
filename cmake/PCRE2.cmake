@@ -16,7 +16,7 @@ find_path(SYS_PCRE2_INCLUDE_DIR pcre2.h)
 # This is controlled by the cache variable FISH_USE_SYSTEM_PCRE2.
 # Here we compute the default value for that variable.
 if ((APPLE) AND (MAC_CODESIGN_ID))
-  # On Mac, a codesigned fish will refuse to load a non-codesigned PCRE2
+  # On Mac, a codesigned ghoti will refuse to load a non-codesigned PCRE2
   # (e.g. from Homebrew) so default to bundled PCRE2.
   set(USE_SYS_PCRE2_DEFAULT OFF)
 elseif((NOT SYS_PCRE2_LIB) OR (NOT SYS_PCRE2_INCLUDE_DIR))

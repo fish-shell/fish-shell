@@ -1,4 +1,4 @@
-# RUN: env fth=%fish_test_helper %fish %s
+# RUN: env fth=%ghoti_test_helper %ghoti %s
 
 set -g SIGUSR1_COUNT 0
 
@@ -15,38 +15,38 @@ end
 function handle_us42 --on-signal SIGUSR2
 end
 
-kill -USR1 $fish_pid
+kill -USR1 $ghoti_pid
 sleep .1
 #CHECK: Got USR1: 1
 
-kill -USR1 $fish_pid
+kill -USR1 $ghoti_pid
 sleep .1
 #CHECK: Got USR1: 2
 
-kill -USR2 $fish_pid
+kill -USR2 $ghoti_pid
 sleep .1
-kill -USR2 $fish_pid
+kill -USR2 $ghoti_pid
 sleep .1
 
 # Previous signals do not re-trigger handlers.
 functions --erase handle1
-kill -USR1 $fish_pid
+kill -USR1 $ghoti_pid
 sleep .1
-kill -USR1 $fish_pid
+kill -USR1 $ghoti_pid
 sleep .1
 
-kill -USR2 $fish_pid
+kill -USR2 $ghoti_pid
 sleep .1
 
 # Send the signal and immediately define the function; it should not excute.
-kill -USR1 $fish_pid
+kill -USR1 $ghoti_pid
 function handle1 --on-signal SIGUSR1
     gotsigusr1
 end
 echo "Hope it did not run"
 #CHECK: Hope it did not run
 
-kill -USR1 $fish_pid
+kill -USR1 $ghoti_pid
 sleep .1
 #CHECK: Got USR1: 3
 
@@ -55,7 +55,7 @@ sleep .1
 function handle_int --on-signal SIGINT
     echo Got SIGINT
 end
-kill -INT $fish_pid
+kill -INT $ghoti_pid
 #CHECK: Got SIGINT
 
 # In non-interactive mode, we have historically treated
@@ -72,10 +72,10 @@ function handle_int --on-signal SIGINT
     set -g INTCOUNT (math $INTCOUNT + 1)
     echo "start handle_int $INTCOUNT"
     sleep .1
-    kill -INT $fish_pid
+    kill -INT $ghoti_pid
     echo "end handle_int $INTCOUNT"
 end
-kill -INT $fish_pid
+kill -INT $ghoti_pid
 # CHECK: start handle_int 1
 # CHECK: end handle_int 1
 # CHECK: start handle_int 2
@@ -85,5 +85,5 @@ kill -INT $fish_pid
 
 # Remove our handler and SIGINT ourselves. Now we should exit.
 functions --erase handle_int
-kill -INT $fish_pid
+kill -INT $ghoti_pid
 echo "I should not run"

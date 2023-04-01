@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 set -l filename (echo foo | psub --testing)
 test -f $filename
 or echo 'psub is not a regular file' >&2
@@ -49,7 +49,7 @@ else
 end
 #CHECK: psub filename ends with .cc
 
-set -l filename (echo foo | psub -s .fish)
+set -l filename (echo foo | psub -s .ghoti)
 if test -e (dirname $filename)
     echo 'psub directory was not deleted'
 else
@@ -57,5 +57,5 @@ else
 end
 #CHECK: psub directory was deleted
 
-set -l diffs (comm -3 (__fish_print_help psub | psub) (psub -hs banana | psub))
+set -l diffs (comm -3 (__ghoti_print_help psub | psub) (psub -hs banana | psub))
 test -z "$diffs"

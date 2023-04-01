@@ -6,7 +6,7 @@
 # This is meant to verify just a few of the most basic behaviors of the
 # interactive history to hopefully keep regressions from happening. It is not
 # meant to be a comprehensive test of the history subsystem. Those types of
-# tests belong in the src/fish_tests.cpp module.
+# tests belong in the src/ghoti_tests.cpp module.
 #
 
 # The history function might pipe output through the user's pager. We don't

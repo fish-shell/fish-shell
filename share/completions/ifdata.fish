@@ -1,4 +1,4 @@
-complete -c ifdata -xa '(__fish_print_interfaces)'
+complete -c ifdata -xa '(__ghoti_print_interfaces)'
 complete -c ifdata -o e -d 'Reports interface existence via return code'
 complete -c ifdata -o p -d 'Print out the whole config of iface'
 complete -c ifdata -o pe -d 'Print out yes or no according to existence'

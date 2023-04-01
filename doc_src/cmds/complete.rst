@@ -17,7 +17,7 @@ Description
 ``complete`` defines, removes or lists completions for a command.
 
 For an introduction to writing your own completions, see :ref:`Writing your own completions <completion-own>` in
-the fish manual.
+the ghoti manual.
 
 The following options are available:
 
@@ -61,7 +61,7 @@ The following options are available:
     Causes the specified command to inherit completions from *WRAPPED_COMMAND* (see below for details).
 
 **-n** or **--condition** *CONDITION*
-    This completion should only be used if the *CONDITION* (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases. If multiple conditions are specified, fish will try them in the order they are specified until one fails or all succeeded.
+    This completion should only be used if the *CONDITION* (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases. If multiple conditions are specified, ghoti will try them in the order they are specified until one fails or all succeeded.
 
 **-C** or **--do-complete** *STRING*
     Makes ``complete`` try to find all possible completions for the specified string. If there is no *STRING*, the current commandline is used instead.
@@ -72,7 +72,7 @@ The following options are available:
 **-h** or **--help**
     Displays help about using this command.
 
-Command specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU getopt library. These styles are:
+Command specific tab-completions in ``ghoti`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU getopt library. These styles are:
 
 - Short options, like ``-a``. Short options are a single character long, are preceded by a single hyphen and can be grouped together (like ``-la``, which is equivalent to ``-l -a``). Option arguments may be specified by appending the option with the value (``-w32``), or, if ``--require-parameter`` is given, in the following parameter (``-w 32``).
 
@@ -128,10 +128,10 @@ This can be written as:
 
 ::
 
-    complete -c rpm -n "__fish_contains_opt -s e erase" -l nodeps -d "Don't check dependencies"
+    complete -c rpm -n "__ghoti_contains_opt -s e erase" -l nodeps -d "Don't check dependencies"
 
 
-where ``__fish_contains_opt`` is a function that checks the command line buffer for the presence of a specified set of options.
+where ``__ghoti_contains_opt`` is a function that checks the command line buffer for the presence of a specified set of options.
 
 To implement an alias, use the ``-w`` or ``--wraps`` option:
 

@@ -20,7 +20,7 @@ Examples
 
 ::
 
-    function fish_prompt
+    function ghoti_prompt
         echo -n (whoami)@(prompt_hostname) (prompt_pwd) '$ '
     end
 

@@ -1,6 +1,6 @@
-//! Constants used in the programmatic representation of fish code.
+//! Constants used in the programmatic representation of ghoti code.
 
-use crate::ffi::{fish_wcswidth, fish_wcwidth, wcharz_t};
+use crate::ffi::{ghoti_wcswidth, ghoti_wcwidth, wcharz_t};
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcharz, WCharFromFFI, WCharToFFI};
@@ -493,7 +493,7 @@ impl ParseError {
                 // pretend it's a space. We only expect this to be at the end of the string.
                 caret_space_line += " ";
             } else {
-                let width = fish_wcwidth(wc.into()).0;
+                let width = ghoti_wcwidth(wc.into()).0;
                 if width > 0 {
                     caret_space_line += " ".repeat(width as usize).as_str();
                 }
@@ -507,7 +507,7 @@ impl ParseError {
             // We do it like this
             //               ^~~^
             // With a "^" under the start and end, and squiggles in-between.
-            let width = fish_wcswidth(unsafe { src.as_ptr().add(start) }, len).0;
+            let width = ghoti_wcswidth(unsafe { src.as_ptr().add(start) }, len).0;
             if width >= 2 {
                 // Subtract one for each of the carets - this is important in case
                 // the starting char has a width of > 1.
@@ -705,37 +705,37 @@ pub const INVALID_PIPELINE_CMD_ERR_MSG: &str = "The '%ls' command can not be use
 // Error messages. The number is a reminder of how many format specifiers are contained.
 
 /// Error for $^.
-pub const ERROR_BAD_VAR_CHAR1: &str = "$%lc is not a valid variable in fish.";
+pub const ERROR_BAD_VAR_CHAR1: &str = "$%lc is not a valid variable in ghoti.";
 
 /// Error for ${a}.
 pub const ERROR_BRACKETED_VARIABLE1: &str =
-    "Variables cannot be bracketed. In fish, please use {$%ls}.";
+    "Variables cannot be bracketed. In ghoti, please use {$%ls}.";
 
 /// Error for "${a}".
 pub const ERROR_BRACKETED_VARIABLE_QUOTED1: &str =
-    "Variables cannot be bracketed. In fish, please use \"$%ls\".";
+    "Variables cannot be bracketed. In ghoti, please use \"$%ls\".";
 
 /// Error issued on $?.
-pub const ERROR_NOT_STATUS: &str = "$? is not the exit status. In fish, please use $status.";
+pub const ERROR_NOT_STATUS: &str = "$? is not the exit status. In ghoti, please use $status.";
 
 /// Error issued on $$.
-pub const ERROR_NOT_PID: &str = "$$ is not the pid. In fish, please use $fish_pid.";
+pub const ERROR_NOT_PID: &str = "$$ is not the pid. In ghoti, please use $ghoti_pid.";
 
 /// Error issued on $#.
-pub const ERROR_NOT_ARGV_COUNT: &str = "$# is not supported. In fish, please use 'count $argv'.";
+pub const ERROR_NOT_ARGV_COUNT: &str = "$# is not supported. In ghoti, please use 'count $argv'.";
 
 /// Error issued on $@.
-pub const ERROR_NOT_ARGV_AT: &str = "$@ is not supported. In fish, please use $argv.";
+pub const ERROR_NOT_ARGV_AT: &str = "$@ is not supported. In ghoti, please use $argv.";
 
 /// Error issued on $*.
-pub const ERROR_NOT_ARGV_STAR: &str = "$* is not supported. In fish, please use $argv.";
+pub const ERROR_NOT_ARGV_STAR: &str = "$* is not supported. In ghoti, please use $argv.";
 
 /// Error issued on $.
 pub const ERROR_NO_VAR_NAME: &str = "Expected a variable name after this $.";
 
 /// Error message for Posix-style assignment: foo=bar.
 pub const ERROR_BAD_COMMAND_ASSIGN_ERR_MSG: &str =
-    "Unsupported use of '='. In fish, please use 'set %ls %ls'.";
+    "Unsupported use of '='. In ghoti, please use 'set %ls %ls'.";
 
 /// Error message for a command like `time foo &`.
 pub const ERROR_TIME_BACKGROUND: &str =

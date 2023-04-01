@@ -211,7 +211,7 @@ static size_t width_without_escapes(const wcstring &ins, size_t start_pos = 0) {
     ssize_t width = 0;
     for (size_t i = start_pos; i < ins.size(); i++) {
         wchar_t c = ins[i];
-        auto w = fish_wcwidth_visible(c);
+        auto w = ghoti_wcwidth_visible(c);
         // We assume that this string is on its own line,
         // in which case a backslash can't bring us below 0.
         if (w > 0 || width > 0) {
@@ -227,7 +227,7 @@ static size_t width_without_escapes(const wcstring &ins, size_t start_pos = 0) {
         if (len.has_value()) {
             auto sub = ins.substr(pos, *len);
             for (auto c : sub) {
-                auto w = fish_wcwidth_visible(c);
+                auto w = ghoti_wcwidth_visible(c);
                 width -= w;
             }
             // Move us forward behind the escape code,
@@ -316,7 +316,7 @@ static int handle_flag_c(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static int handle_flag_e(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->end_valid) {
-        opts->end = fish_wcstol(w.woptarg);
+        opts->end = ghoti_wcstol(w.woptarg);
         if (opts->end == 0 || opts->end == LONG_MIN || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid end value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
@@ -342,7 +342,7 @@ static int handle_flag_f(const wchar_t **argv, parser_t &parser, io_streams_t &s
         for (const wcstring &s : split_string(w.woptarg, L',')) {
             wcstring_list_t range = split_string(s, L'-');
             if (range.size() == 2) {
-                int begin = fish_wcstoi(range.at(0).c_str());
+                int begin = ghoti_wcstoi(range.at(0).c_str());
                 if (begin <= 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid range value for field '%ls'\n"), argv[0],
                                  w.woptarg);
@@ -351,7 +351,7 @@ static int handle_flag_f(const wchar_t **argv, parser_t &parser, io_streams_t &s
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                int end = fish_wcstoi(range.at(1).c_str());
+                int end = ghoti_wcstoi(range.at(1).c_str());
                 if (end <= 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid range value for field '%ls'\n"), argv[0],
                                  w.woptarg);
@@ -370,7 +370,7 @@ static int handle_flag_f(const wchar_t **argv, parser_t &parser, io_streams_t &s
                     }
                 }
             } else {
-                int field = fish_wcstoi(s.c_str());
+                int field = ghoti_wcstoi(s.c_str());
                 if (field <= 0 || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid fields value '%ls'\n"), argv[0],
                                  w.woptarg);
@@ -414,7 +414,7 @@ static int handle_flag_i(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static int handle_flag_l(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->length_valid) {
-        opts->length = fish_wcstol(w.woptarg);
+        opts->length = ghoti_wcstol(w.woptarg);
         if (opts->length < 0 || opts->length == LONG_MIN || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid length value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
@@ -434,7 +434,7 @@ static int handle_flag_l(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static int handle_flag_m(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->max_valid) {
-        opts->max = fish_wcstol(w.woptarg);
+        opts->max = ghoti_wcstol(w.woptarg);
         if (opts->max < 0 || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid max value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
@@ -451,7 +451,7 @@ static int handle_flag_m(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static int handle_flag_n(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->count_valid) {
-        opts->count = fish_wcstol(w.woptarg);
+        opts->count = ghoti_wcstol(w.woptarg);
         if (opts->count < 0 || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
@@ -500,7 +500,7 @@ static int handle_flag_r(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static int handle_flag_s(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->start_valid) {
-        opts->start = fish_wcstol(w.woptarg);
+        opts->start = ghoti_wcstol(w.woptarg);
         if (opts->start == 0 || opts->start == LONG_MIN || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid start value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
@@ -537,7 +537,7 @@ static int handle_flag_V(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static int handle_flag_w(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->width_valid) {
-        long width = fish_wcstol(w.woptarg);
+        long width = ghoti_wcstol(w.woptarg);
         if (width < 0) {
             string_error(streams, _(L"%ls: Invalid width value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
@@ -589,7 +589,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
-// Remember: adjust share/completions/string.fish when `string` options change
+// Remember: adjust share/completions/string.ghoti when `string` options change
 static const struct woption long_options[] = {{L"all", no_argument, 'a'},
                                               {L"chars", required_argument, 'c'},
                                               {L"count", required_argument, 'n'},
@@ -954,7 +954,7 @@ class regex_matcher_t final : public string_matcher_t {
             // If there are multiple named groups and --all was used, we need to ensure that
             // the indexes are always in sync between the variables. If an optional named
             // group didn't match but its brethren did, we need to make sure to put
-            // *something* in the resulting array, and unfortunately fish doesn't support
+            // *something* in the resulting array, and unfortunately ghoti doesn't support
             // empty/null members so we're going to have to use an empty string as the
             // sentinel value.
             if (maybe_t<wcstring> capture =
@@ -1127,7 +1127,7 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, const w
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    size_t pad_char_width = fish_wcwidth(opts.char_to_pad);
+    size_t pad_char_width = ghoti_wcwidth(opts.char_to_pad);
     if (pad_char_width == 0) {
         string_error(streams, _(L"%ls: Invalid padding character of width zero\n"), argv[0]);
         return STATUS_INVALID_ARGS;
@@ -1662,7 +1662,7 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
     std::vector<wcstring> inputs;
     wcstring ell = opts.chars_to_trim;
 
-    auto ell_width = fish_wcswidth(ell);
+    auto ell_width = ghoti_wcswidth(ell);
 
     arg_iterator_t aiter_width(argv, optind, streams);
 
@@ -1774,7 +1774,7 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
             // This is somewhat easier.
             while (max <= ourmax && pos < line.size()) {
                 pos += skip_escapes(line, pos);
-                auto w = fish_wcwidth(line[pos]);
+                auto w = ghoti_wcwidth(line[pos]);
                 if (w <= 0 || max + w + ell_width <= ourmax) {
                     // If it still fits, even if it is the last, we add it.
                     max += w;
@@ -1785,7 +1785,7 @@ static int string_shorten(parser_t &parser, io_streams_t &streams, int argc, con
                     auto pos2 = pos + 1;
                     while (pos2 < line.size()) {
                         pos2 += skip_escapes(line, pos2);
-                        max2 += fish_wcwidth(line[pos2]);
+                        max2 += ghoti_wcwidth(line[pos2]);
                         pos2++;
                     }
 

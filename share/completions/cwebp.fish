@@ -69,7 +69,7 @@ set -l metadata_opts '
     xmp\t
 '
 
-function __fish_cwebp_is_first_arg_or_its_value -a arg -d 'Like __fish_is_first_arg, but also returns true for the second token after a given parameter'
+function __ghoti_cwebp_is_first_arg_or_its_value -a arg -d 'Like __ghoti_is_first_arg, but also returns true for the second token after a given parameter'
     set -l tokens (commandline -co)
 
     switch (count $tokens)
@@ -91,7 +91,7 @@ complete -c cwebp -f -o H -o longhelp -l help -d 'Help (long)'
 complete -c cwebp -x -o q -d 'Quality (float; 0…100; default: 75)'
 complete -c cwebp -x -o alpha_q -d 'Transparency-compression quality (integer 0…100; default: 100)'
 
-complete -c cwebp -x -n '__fish_cwebp_is_first_arg_or_its_value -preset' -o preset -a $preset_opts -d 'Preset setting'
+complete -c cwebp -x -n '__ghoti_cwebp_is_first_arg_or_its_value -preset' -o preset -a $preset_opts -d 'Preset setting'
 
 complete -c cwebp -x -o z -a "$z_opts" -d 'Lossless preset of level'
 complete -c cwebp -x -o m -a "$m_opts" -d 'Compression method'
@@ -116,7 +116,7 @@ complete -c cwebp -x -o map -d 'Print map of extra info'
 complete -c cwebp -o print_psnr -d 'Print averaged PSNR distortion'
 complete -c cwebp -o print_ssim -d 'Print averaged SSIM distortion'
 complete -c cwebp -o print_lsim -d 'Print local-similarity distortion'
-complete -c cwebp -r -o d -k -a '(__fish_complete_suffix .pgm)' -d 'Dump compressed output to given PGM file'
+complete -c cwebp -r -o d -k -a '(__ghoti_complete_suffix .pgm)' -d 'Dump compressed output to given PGM file'
 complete -c cwebp -x -o alpha_method -a "$alpha_method_opts" -d 'Transparency-compression method'
 complete -c cwebp -x -o alpha_filter -a "$alpha_filter_opts" -k -d 'Predictive filtering for alpha plane'
 complete -c cwebp -x -o exact -d 'Preserve RGB values in transparent area'
@@ -139,4 +139,4 @@ complete -c cwebp -o jpeg_like -d 'Roughly match expected JPEG size'
 complete -c cwebp -o af -d 'Auto-adjust filter strength'
 complete -c cwebp -x -o pre -d 'Pre-processing filter (integer)'
 
-complete -c cwebp -r -o o -k -a '(__fish_complete_suffix .webp)' -d 'Output to file'
+complete -c cwebp -r -o o -k -a '(__ghoti_complete_suffix .webp)' -d 'Output to file'

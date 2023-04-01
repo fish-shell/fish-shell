@@ -1,2 +1,2 @@
-__fish_complete_lpr accept
+__ghoti_complete_lpr accept
 complete -c accept -s r -d 'Accept reason' -x

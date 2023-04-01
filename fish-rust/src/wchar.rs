@@ -55,8 +55,8 @@ pub const WILDCARD_RESERVED_END: char = match char::from_u32(WILDCARD_RESERVED_B
 // them and we need at least 256 + 64.
 //
 // If sizeof(wchar_t)==4 we could avoid using private-use chars; however, that
-// would result in fish having different behavior on machines with 16 versus 32
-// bit wchar_t. It's better that fish behave the same on both types of systems.
+// would result in ghoti having different behavior on machines with 16 versus 32
+// bit wchar_t. It's better that ghoti behave the same on both types of systems.
 //
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
@@ -73,7 +73,7 @@ pub const ENCODE_DIRECT_END: char = match char::from_u32(ENCODE_DIRECT_BASE as u
 /// as a UTF-32 character, printing them would result in several characters instead of one UTF-8
 /// character.
 ///
-/// See https://github.com/fish-shell/fish-shell/issues/1894.
+/// See https://github.com/ghoti-shell/ghoti-shell/issues/1894.
 pub fn wchar_literal_byte(byte: u8) -> char {
     char::from_u32(u32::from(ENCODE_DIRECT_BASE) + u32::from(byte))
         .expect("private-use codepoint should be valid char")

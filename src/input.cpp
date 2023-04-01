@@ -384,7 +384,7 @@ void inputter_t::function_push_args(readline_cmd_t code) {
     event_storage_.clear();
 }
 
-/// Perform the action of the specified binding. allow_commands controls whether fish commands
+/// Perform the action of the specified binding. allow_commands controls whether ghoti commands
 /// should be executed, or should be deferred until later.
 void inputter_t::mapping_execute(const input_mapping_t &m,
                                  const command_handler_t &command_handler) {
@@ -658,7 +658,7 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
     // Check for mouse-tracking CSI before mappings to prevent the generic mapping handler from
     // taking over.
     if (have_mouse_tracking_csi(&peeker)) {
-        // fish recognizes but does not actually support mouse reporting. We never turn it on, and
+        // ghoti recognizes but does not actually support mouse reporting. We never turn it on, and
         // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
         // it off before exiting. We swallow the events to prevent garbage from piling up at the
         // prompt, but don't do anything further with the received codes. To prevent this from
@@ -780,7 +780,7 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
             assert(evt.is_char() && "Should be char event");
             this->push_front(evt);
             mapping_execute_matching_or_generic(command_handler);
-            // Regarding allow_commands, we're in a loop, but if a fish command is executed,
+            // Regarding allow_commands, we're in a loop, but if a ghoti command is executed,
             // check_exit is unread, so the next pass through the loop we'll break out and return
             // it.
         }

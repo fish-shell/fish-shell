@@ -1,13 +1,13 @@
 # Find files ending in any of the non-switch arguments and output them as completions.
 # * --description provides the description that should be part of each generated completion,
-# * --prefix=DIR makes __fish_complete_suffix behave as if it were called in DIR rather than $PWD
+# * --prefix=DIR makes __ghoti_complete_suffix behave as if it were called in DIR rather than $PWD
 # * --complete=PREFIX only lists files that begin with PREFIX
 #
 # Files matching the above preconditions are printed first then other, non-matching files
 # are printed for fallback purposes. As such, it is imperative that `complete` calls that
-# shell out to `__fish_complete_suffix` are made with a `-k` switch to ensure sort order
+# shell out to `__ghoti_complete_suffix` are made with a `-k` switch to ensure sort order
 # is preserved.
-function __fish_complete_suffix -d "Complete using files"
+function __ghoti_complete_suffix -d "Complete using files"
     set -l _flag_prefix ""
     set -l _flag_complete (commandline -ct)
 
@@ -18,7 +18,7 @@ function __fish_complete_suffix -d "Complete using files"
     # Simple and common case: no prefix, just complete normally and sort matching files first.
     if test -z $_flag_prefix
         # Use normal file completions.
-        set files (complete -C "__fish_command_without_completions $_flag_complete")
+        set files (complete -C "__ghoti_command_without_completions $_flag_complete")
         set -l files_with_suffix (string match -r -- (string join "|" "^.*"$suff\$) $files)
         set -l directories (string match -r -- '^.*/$' $files)
         set files $files_with_suffix $directories $files

@@ -47,9 +47,9 @@ mod future_feature_flags_ffi {
         fn test(self: &Features, flag: FeatureFlag) -> bool;
         fn set(self: &mut Features, flag: FeatureFlag, value: bool);
         fn set_from_string(self: &mut Features, str: wcharz_t);
-        fn fish_features() -> *const Features;
+        fn ghoti_features() -> *const Features;
         fn feature_test(flag: FeatureFlag) -> bool;
-        fn mutable_fish_features() -> *mut Features;
+        fn mutable_ghoti_features() -> *mut Features;
         fn feature_metadata() -> [feature_metadata_t; 4];
     }
 }
@@ -186,7 +186,7 @@ impl Features {
             };
             // Look for a feature with this name. If we don't find it, assume it's a group name and set
             // all features whose group contain it. Do nothing even if the string is unrecognized; this
-            // is to allow uniform invocations of fish (e.g. disable a feature that is only present in
+            // is to allow uniform invocations of ghoti (e.g. disable a feature that is only present in
             // future versions).
             // The special name 'all' may be used for those who like to live on the edge.
             if let Some(md) = metadata.iter().find(|md| md.name == name) {
@@ -208,8 +208,8 @@ impl Features {
     }
 }
 
-/// Return the global set of features for fish. This is const to prevent accidental mutation.
-pub fn fish_features() -> *const Features {
+/// Return the global set of features for ghoti. This is const to prevent accidental mutation.
+pub fn ghoti_features() -> *const Features {
     unsafe { (*global_features).get() }
 }
 
@@ -218,9 +218,9 @@ pub fn feature_test(flag: FeatureFlag) -> bool {
     unsafe { &*(*global_features).get() }.test(flag)
 }
 
-/// Return the global set of features for fish, but mutable. In general fish features should be set
+/// Return the global set of features for ghoti, but mutable. In general ghoti features should be set
 /// at startup only.
-pub fn mutable_fish_features() -> *mut Features {
+pub fn mutable_ghoti_features() -> *mut Features {
     unsafe { (*global_features).get() }
 }
 

@@ -1,5 +1,5 @@
 if not type -q apropos
-    function __fish_apropos
+    function __ghoti_apropos
     end
     exit
 end
@@ -14,12 +14,12 @@ if test $status -eq 0 -a (count $sysver) -eq 3
 
     set -l dir
     if test -n "$XDG_CACHE_HOME"
-        set dir $XDG_CACHE_HOME/fish
+        set dir $XDG_CACHE_HOME/ghoti
     else
-        set dir (getconf DARWIN_USER_CACHE_DIR)"fish"
+        set dir (getconf DARWIN_USER_CACHE_DIR)"ghoti"
     end
 
-    function __fish_apropos -V dir
+    function __ghoti_apropos -V dir
         # macOS 10.15 "Catalina" has a read only filesystem where the whatis database should be.
         # The whatis database is non-existent, so apropos tries (and fails) to create it every time,
         # which can take seconds.
@@ -45,7 +45,7 @@ if test $status -eq 0 -a (count $sysver) -eq 3
         end
     end
 else
-    function __fish_apropos
+    function __ghoti_apropos
         # we only ever prefix match for completions. This also ensures results for bare apropos <TAB>
         # (apropos '' gives no results, but apropos '^' lists all manpages)
         apropos "$argv"

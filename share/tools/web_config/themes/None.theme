@@ -1,33 +1,33 @@
 # name: '(Almost) No Colors'
 # preferred_background: 'black'
 
-fish_color_autosuggestion brblack
-fish_color_cancel
-fish_color_command
-fish_color_comment
-fish_color_cwd normal
-fish_color_cwd_root normal
-fish_color_end
-fish_color_error
-fish_color_escape
-fish_color_history_current
-fish_color_host normal
-fish_color_keyword
-fish_color_match
-fish_color_normal normal
-fish_color_operator
-fish_color_option
-fish_color_param
-fish_color_quote
-fish_color_redirection
-fish_color_search_match -r
-fish_color_selection -r
-fish_color_status normal
-fish_color_user normal
-fish_color_valid_path
-fish_pager_color_completion normal
-fish_pager_color_description brblack
-fish_pager_color_prefix '--underline'
-fish_pager_color_progress brblack
-fish_pager_color_selected_background -r
-fish_color_host_remote yellow
+ghoti_color_autosuggestion brblack
+ghoti_color_cancel
+ghoti_color_command
+ghoti_color_comment
+ghoti_color_cwd normal
+ghoti_color_cwd_root normal
+ghoti_color_end
+ghoti_color_error
+ghoti_color_escape
+ghoti_color_history_current
+ghoti_color_host normal
+ghoti_color_keyword
+ghoti_color_match
+ghoti_color_normal normal
+ghoti_color_operator
+ghoti_color_option
+ghoti_color_param
+ghoti_color_quote
+ghoti_color_redirection
+ghoti_color_search_match -r
+ghoti_color_selection -r
+ghoti_color_status normal
+ghoti_color_user normal
+ghoti_color_valid_path
+ghoti_pager_color_completion normal
+ghoti_pager_color_description brblack
+ghoti_pager_color_prefix '--underline'
+ghoti_pager_color_progress brblack
+ghoti_pager_color_selected_background -r
+ghoti_color_host_remote yellow

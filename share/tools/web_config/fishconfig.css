@@ -126,39 +126,39 @@ body {
     font-size: 11pt;
 }
 
-/* The colours used for function highlighting are taken from the fish
+/* The colours used for function highlighting are taken from the ghoti
  * default colour scheme, defined in js/colorutils.js.
  * These could be pulled from the current terminal (but the background colour
  * might be different), or dynamically from colorutils.js.
  */
-.detail_function .fish_color_autosuggestion {
+.detail_function .ghoti_color_autosuggestion {
     color: #555;
 }
-.detail_function .fish_color_command {
+.detail_function .ghoti_color_command {
     color: #005fd7;
 }
-.detail_function .fish_color_param {
+.detail_function .ghoti_color_param {
     color: #00afff;
 }
-.detail_function .fish_color_redirection {
+.detail_function .ghoti_color_redirection {
     color: #00afff;
 }
-.detail_function .fish_color_comment {
+.detail_function .ghoti_color_comment {
     color: #990000;
 }
-.detail_function .fish_color_error {
+.detail_function .ghoti_color_error {
     color: #ff0000;
 }
-.detail_function .fish_color_escape {
+.detail_function .ghoti_color_escape {
     color: #00a6b2;
 }
-.detail_function .fish_color_operator {
+.detail_function .ghoti_color_operator {
     color: #00a6b2;
 }
-.detail_function .fish_color_quote {
+.detail_function .ghoti_color_quote {
     color: #999900;
 }
-.detail_function .fish_color_statement_terminator {
+.detail_function .ghoti_color_statement_terminator {
     color: #009900;
 }
 

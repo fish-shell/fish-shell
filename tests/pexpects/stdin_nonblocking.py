@@ -15,9 +15,9 @@ send, sendline, expect_prompt, expect_str, sleep = (
     sp.sleep,
 )
 
-# Launch fish_test_helper.
+# Launch ghoti_test_helper.
 expect_prompt()
-exe_path = os.environ.get("fish_test_helper")
+exe_path = os.environ.get("ghoti_test_helper")
 sendline(exe_path + " stdin_make_nonblocking")
 
 expect_str("stdin was blocking")

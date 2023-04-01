@@ -1,7 +1,7 @@
-function __fish_complete_list --argument-names div cmd prefix iprefix
+function __ghoti_complete_list --argument-names div cmd prefix iprefix
     if not set -q cmd[1]
         echo "Usage:
-    __fish_complete_list <separator> <function> <prefix> <itemprefix>
+    __ghoti_complete_list <separator> <function> <prefix> <itemprefix>
 where:
   separator - a symbol, separating individual entries
   function - a function which prints a completion list to complete each entry

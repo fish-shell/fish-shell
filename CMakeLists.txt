@@ -9,7 +9,7 @@ endif()
 
 include(cmake/Mac.cmake)
 
-project(fish)
+project(ghoti)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # We are C++11.
@@ -46,7 +46,7 @@ endif()
 add_compile_options(-Wall -Wextra -Wno-comment -Wno-address)
 
 # Get extra C++ files from Rust.
-get_property(FISH_EXTRA_SOURCES TARGET fish-rust PROPERTY fish_extra_cpp_files)
+get_property(FISH_EXTRA_SOURCES TARGET ghoti-rust PROPERTY ghoti_extra_cpp_files)
 
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
   add_compile_options(-Wunused-template -Wunused-local-typedef -Wunused-macros)
@@ -115,7 +115,7 @@ set(FISH_BUILTIN_SRCS
 set(FISH_SRCS
     src/ast.cpp src/autoload.cpp src/color.cpp src/common.cpp src/complete.cpp
     src/env.cpp src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp
-    src/exec.cpp src/expand.cpp src/fallback.cpp src/fish_version.cpp
+    src/exec.cpp src/expand.cpp src/fallback.cpp src/ghoti_version.cpp
     src/flog.cpp src/function.cpp src/highlight.cpp
     src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp
     src/io.cpp src/iothread.cpp src/kill.cpp
@@ -157,15 +157,15 @@ add_definitions(-D_UNICODE=1
 # This defines the FBVF variable.
 include(Version)
 
-# Let fish pick up when we're running out of the build directory without installing
+# Let ghoti pick up when we're running out of the build directory without installing
 get_filename_component(REAL_CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
 get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
 add_definitions(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
 add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
-# Teach fish_version.o to rebuild when FBVF changes.
+# Teach ghoti_version.o to rebuild when FBVF changes.
 # The standard C++ include detection machinery misses this.
-set_source_files_properties(src/fish_version.cpp
+set_source_files_properties(src/ghoti_version.cpp
                             PROPERTIES OBJECT_DEPENDS
                             ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
 
@@ -177,40 +177,40 @@ include(cmake/PCRE2.cmake)
 
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
-  target_link_libraries(${target} fishlib)
+  target_link_libraries(${target} ghotilib)
   codesign_on_mac(${target})
 endfunction(FISH_LINK_DEPS_AND_SIGN)
 
-# Define libfish.a.
-add_library(fishlib STATIC ${FISH_SRCS} ${FISH_BUILTIN_SRCS})
-target_sources(fishlib PRIVATE ${FISH_HEADERS})
-target_link_libraries(fishlib
-  fish-rust
+# Define libghoti.a.
+add_library(ghotilib STATIC ${FISH_SRCS} ${FISH_BUILTIN_SRCS})
+target_sources(ghotilib PRIVATE ${FISH_HEADERS})
+target_link_libraries(ghotilib
+  ghoti-rust
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
   ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY}
-  "fish-rust")
-target_include_directories(fishlib PRIVATE
+  "ghoti-rust")
+target_include_directories(ghotilib PRIVATE
   ${CURSES_INCLUDE_DIRS})
 
-# Define fish.
-add_executable(fish src/fish.cpp)
-fish_link_deps_and_sign(fish)
+# Define ghoti.
+add_executable(ghoti src/ghoti.cpp)
+ghoti_link_deps_and_sign(ghoti)
 
-# Define fish_indent.
-add_executable(fish_indent
-               src/fish_indent.cpp src/print_help.cpp)
-fish_link_deps_and_sign(fish_indent)
+# Define ghoti_indent.
+add_executable(ghoti_indent
+               src/ghoti_indent.cpp src/print_help.cpp)
+ghoti_link_deps_and_sign(ghoti_indent)
 
-# Define fish_key_reader.
-add_executable(fish_key_reader
-               src/fish_key_reader.cpp src/print_help.cpp)
-fish_link_deps_and_sign(fish_key_reader)
+# Define ghoti_key_reader.
+add_executable(ghoti_key_reader
+               src/ghoti_key_reader.cpp src/print_help.cpp)
+ghoti_link_deps_and_sign(ghoti_key_reader)
 
 # Set up the docs.
 include(cmake/Docs.cmake)
 
 # A helper for running tests.
-add_executable(fish_test_helper src/fish_test_helper.cpp)
+add_executable(ghoti_test_helper src/ghoti_test_helper.cpp)
 
 # Set up tests.
 include(cmake/Tests.cmake)
@@ -225,26 +225,26 @@ include(cmake/Install.cmake)
 include(cmake/MacApp.cmake)
 
 # ThreadSanitizer likes to muck with signal handlers, which interferes
-# with fish_test_helper printing the ignored signal mask.
-# Ensure fish_test_helper does not use TSan.
+# with ghoti_test_helper printing the ignored signal mask.
+# Ensure ghoti_test_helper does not use TSan.
 # Note the environment var is CXXFLAGS, but the CMake var is CMAKE_CXX_FLAGS.
 if (CMAKE_CXX_FLAGS MATCHES ".*-fsanitize=thread.*")
-  target_compile_options(fish_test_helper PRIVATE "-fno-sanitize=all")
-  target_link_libraries(fish_test_helper "-fno-sanitize=all")
+  target_compile_options(ghoti_test_helper PRIVATE "-fno-sanitize=all")
+  target_link_libraries(ghoti_test_helper "-fno-sanitize=all")
 endif()
 
 # Lint targets
 # This could be implemented as target properties, but the script has the useful feature of only
 # checking the currently-staged commands
-# The generator expressions below rebuild the command line for the fishlib targets
+# The generator expressions below rebuild the command line for the ghotilib targets
 # CMake does not support the "iquote" flag - https://gitlab.kitware.com/cmake/cmake/issues/15491
-set(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:fishlib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:fishlib,INCLUDE_DIRECTORIES>, -I>")
+set(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:ghotilib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:ghotilib,INCLUDE_DIRECTORIES>, -I>")
 add_custom_target(lint
-    COMMAND build_tools/lint.fish -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
+    COMMAND build_tools/lint.ghoti -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 add_custom_target(lint-all
-    COMMAND build_tools/lint.fish --all -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
+    COMMAND build_tools/lint.ghoti --all -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 

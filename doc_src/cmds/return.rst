@@ -28,7 +28,7 @@ The **-h** or **--help** option displays help about using this command.
 Example
 -------
 
-An implementation of the false command as a fish function:
+An implementation of the false command as a ghoti function:
 ::
 
     function false

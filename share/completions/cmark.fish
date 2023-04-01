@@ -1,4 +1,4 @@
-complete -k -x -c cmark -a "(__fish_complete_suffix .md .markdown)"
+complete -k -x -c cmark -a "(__ghoti_complete_suffix .md .markdown)"
 
 complete -x -c cmark -s t -l to -a "html man xml latex commonmark" -d "Output format"
 complete -c cmark -l width -d "Wrap width"

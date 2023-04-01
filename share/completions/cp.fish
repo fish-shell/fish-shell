@@ -10,7 +10,7 @@ if cp --version 2>/dev/null >/dev/null # GNU cp
     complete -c cp -s l -l link -d "Link files instead of copying"
     complete -c cp -l strip-trailing-slashes -d "Remove trailing slashes from source"
     complete -c cp -s S -l suffix -r -d "Backup suffix"
-    complete -c cp -s t -l target-directory -d "Target directory" -x -a "(__fish_complete_directories (commandline -ct) 'Target directory')"
+    complete -c cp -s t -l target-directory -d "Target directory" -x -a "(__ghoti_complete_directories (commandline -ct) 'Target directory')"
     complete -c cp -s u -l update -d "Do not overwrite newer files"
     complete -c cp -s v -l verbose -d "Verbose mode"
     complete -c cp -l help -d "Display help and exit"

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 begin
 end >.
 status -b; and echo "status -b returned true after bad redirect on a begin block"

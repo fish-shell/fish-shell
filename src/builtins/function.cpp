@@ -142,7 +142,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     e.typ = event_type_t::process_exit;
                     e.pid = getpid();
                 } else {
-                    pid_t pid = fish_wcstoi(w.woptarg);
+                    pid_t pid = ghoti_wcstoi(w.woptarg);
                     if (errno || pid < 0) {
                         streams.err.append_format(_(L"%ls: %ls: invalid process id"), cmd,
                                                   w.woptarg);

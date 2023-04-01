@@ -1,7 +1,7 @@
 #loginctl (systemd 248)
 
 #variables
-set -l seen __fish_seen_subcommand_from
+set -l seen __ghoti_seen_subcommand_from
 set -l commands activate attach disable-linger enable-linger flush-devices kill-session kill-user list-seats list-sessions list-users lock-session lock-sessions seat-status session-status show-seat show-session show-user terminate-seat terminate-session terminate-user unlock-session unlock-sessions user-status
 set -l output cat export json json-pretty json-seq json-sse short short-full short-iso short-iso-precise short-monotonic short-precise short-unix verbose with-unit
 

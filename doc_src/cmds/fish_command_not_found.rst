@@ -1,6 +1,6 @@
-.. _cmd-fish_command_not_found:
+.. _cmd-ghoti_command_not_found:
 
-fish_command_not_found - what to do when a command wasn't found
+ghoti_command_not_found - what to do when a command wasn't found
 ===============================================================
 
 Synopsis
@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    function fish_command_not_found
+    function ghoti_command_not_found
        ...
     end
 
@@ -16,7 +16,7 @@ Synopsis
 Description
 -----------
 
-When fish tries to execute a command and can't find it, it invokes this function.
+When ghoti tries to execute a command and can't find it, it invokes this function.
 
 It can print a message to tell you about it, and it often also checks for a missing package that would include the command.
 
@@ -25,7 +25,7 @@ or you can define your own.
 
 It receives the full commandline as one argument per token, so $argv[1] contains the missing command.
 
-When you leave ``fish_command_not_found`` undefined (e.g. by adding an empty function file) or explicitly call ``__fish_default_command_not_found_handler``, fish will just print a simple error.
+When you leave ``ghoti_command_not_found`` undefined (e.g. by adding an empty function file) or explicitly call ``__ghoti_default_command_not_found_handler``, ghoti will just print a simple error.
 
 Example
 -------
@@ -34,7 +34,7 @@ A simple handler:
 
 ::
 
-    function fish_command_not_found
+    function ghoti_command_not_found
         echo Did not find command $argv[1]
     end
 
@@ -43,34 +43,34 @@ A simple handler:
 
 Or the handler for OpenSUSE's command-not-found::
 
-    function fish_command_not_found
+    function ghoti_command_not_found
         /usr/bin/command-not-found $argv[1]
     end
 
 Or the simple default handler::
 
-    function fish_command_not_found
-        __fish_default_command_not_found_handler $argv
+    function ghoti_command_not_found
+        __ghoti_default_command_not_found_handler $argv
     end
 
 Backwards compatibility
 -----------------------
 
-This command was introduced in fish 3.2.0. Previous versions of fish used the "fish_command_not_found" :ref:`event <event>` instead.
+This command was introduced in ghoti 3.2.0. Previous versions of ghoti used the "ghoti_command_not_found" :ref:`event <event>` instead.
 
-To define a handler that works in older versions of fish as well, define it the old way::
+To define a handler that works in older versions of ghoti as well, define it the old way::
 
-  function __fish_command_not_found_handler --on-event fish_command_not_found
+  function __ghoti_command_not_found_handler --on-event ghoti_command_not_found
        echo COMMAND WAS NOT FOUND MY FRIEND $argv[1]
   end
 
-in which case fish will define a ``fish_command_not_found`` that calls it,
+in which case ghoti will define a ``ghoti_command_not_found`` that calls it,
 or define a wrapper::
 
-  function fish_command_not_found
+  function ghoti_command_not_found
        echo "G'day mate, could not find your command: $argv"
   end
 
-  function __fish_command_not_found_handler --on-event fish_command_not_found
-       fish_command_not_found $argv
+  function __ghoti_command_not_found_handler --on-event ghoti_command_not_found
+       ghoti_command_not_found $argv
   end

@@ -1,1 +1,1 @@
-complete -c qmk -f -a '(__fish_argcomplete_complete qmk)'
+complete -c qmk -f -a '(__ghoti_argcomplete_complete qmk)'

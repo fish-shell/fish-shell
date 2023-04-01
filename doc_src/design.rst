@@ -3,15 +3,15 @@
 Design
 ======
 
-This is a description of the design principles that have been used to design fish. The fish design has three high level goals. These are:
+This is a description of the design principles that have been used to design ghoti. The ghoti design has three high level goals. These are:
 
-1. Everything that can be done in other shell languages should be possible to do in fish, though fish may rely on external commands in doing so.
+1. Everything that can be done in other shell languages should be possible to do in ghoti, though ghoti may rely on external commands in doing so.
 
 2. Fish should be user-friendly, but not at the expense of expressiveness. Most tradeoffs between power and ease of use can be avoided with careful design.
 
-3. Whenever possible without breaking the above goals, fish should follow POSIX.
+3. Whenever possible without breaking the above goals, ghoti should follow POSIX.
 
-To achieve these high-level goals, the fish design relies on a number of more specific design principles. These are presented below, together with a rationale and a few examples for each.
+To achieve these high-level goals, the ghoti design relies on a number of more specific design principles. These are presented below, together with a rationale and a few examples for each.
 
 
 The law of orthogonality
@@ -26,9 +26,9 @@ Examples:
 
 - Here documents are too similar to using echo inside of a pipeline.
 
-- Subshells, command substitution and process substitution are strongly related. ``fish`` only supports command substitution, the others can be achieved either using a block or the psub shellscript function.
+- Subshells, command substitution and process substitution are strongly related. ``ghoti`` only supports command substitution, the others can be achieved either using a block or the psub shellscript function.
 
-- Having both aliases and functions is confusing, especially since both of them have limitations and problems. ``fish`` functions have none of the drawbacks of either syntax.
+- Having both aliases and functions is confusing, especially since both of them have limitations and problems. ``ghoti`` functions have none of the drawbacks of either syntax.
 
 - The many Posix quoting styles are silly, especially ``$``.
 
@@ -45,7 +45,7 @@ Examples:
 
 - Features like syntax highlighting and autosuggestions must perform all of their disk I/O asynchronously.
 
-- Startup should minimize forks and disk I/O, so that fish can be started even if the system is under load.
+- Startup should minimize forks and disk I/O, so that ghoti can be started even if the system is under load.
 
 Configurability is the root of all evil
 ---------------------------------------
@@ -57,7 +57,7 @@ Different configuration options are a nightmare to maintain, since the number of
 
 Examples:
 
-- Fish allows the user to set various syntax highlighting colors. This is needed because fish does not know what colors the terminal uses by default, which might make some things unreadable. The proper solution would be for text color preferences to be defined centrally by the user for all programs, and for the terminal emulator to send these color properties to fish.
+- Fish allows the user to set various syntax highlighting colors. This is needed because ghoti does not know what colors the terminal uses by default, which might make some things unreadable. The proper solution would be for text color preferences to be defined centrally by the user for all programs, and for the terminal emulator to send these color properties to ghoti.
 
 - Fish does not allow you to set the number of history entries, different language substyles or any number of other common shell configuration options.
 
@@ -77,7 +77,7 @@ Examples:
 
 - The differences between built-in commands and shellscript functions should be made as small as possible. Built-ins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any I/O redirection.
 
-- Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping.
+- Instead of forking when performing command substitution to provide a fake variable scope, all ghoti commands are performed from the same process, and ghoti instead supports true scoping.
 
 - All blocks end with the ``end`` built-in.
 

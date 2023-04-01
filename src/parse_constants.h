@@ -1,4 +1,4 @@
-// Constants used in the programmatic representation of fish code.
+// Constants used in the programmatic representation of ghoti code.
 #ifndef FISH_PARSE_CONSTANTS_H
 #define FISH_PARSE_CONSTANTS_H
 
@@ -163,36 +163,36 @@ using parser_test_error_bits_t = uint8_t;
 // Error messages. The number is a reminder of how many format specifiers are contained.
 
 /// Error for $^.
-#define ERROR_BAD_VAR_CHAR1 _(L"$%lc is not a valid variable in fish.")
+#define ERROR_BAD_VAR_CHAR1 _(L"$%lc is not a valid variable in ghoti.")
 
 /// Error for ${a}.
-#define ERROR_BRACKETED_VARIABLE1 _(L"Variables cannot be bracketed. In fish, please use {$%ls}.")
+#define ERROR_BRACKETED_VARIABLE1 _(L"Variables cannot be bracketed. In ghoti, please use {$%ls}.")
 
 /// Error for "${a}".
 #define ERROR_BRACKETED_VARIABLE_QUOTED1 \
-    _(L"Variables cannot be bracketed. In fish, please use \"$%ls\".")
+    _(L"Variables cannot be bracketed. In ghoti, please use \"$%ls\".")
 
 /// Error issued on $?.
-#define ERROR_NOT_STATUS _(L"$? is not the exit status. In fish, please use $status.")
+#define ERROR_NOT_STATUS _(L"$? is not the exit status. In ghoti, please use $status.")
 
 /// Error issued on $$.
-#define ERROR_NOT_PID _(L"$$ is not the pid. In fish, please use $fish_pid.")
+#define ERROR_NOT_PID _(L"$$ is not the pid. In ghoti, please use $ghoti_pid.")
 
 /// Error issued on $#.
-#define ERROR_NOT_ARGV_COUNT _(L"$# is not supported. In fish, please use 'count $argv'.")
+#define ERROR_NOT_ARGV_COUNT _(L"$# is not supported. In ghoti, please use 'count $argv'.")
 
 /// Error issued on $@.
-#define ERROR_NOT_ARGV_AT _(L"$@ is not supported. In fish, please use $argv.")
+#define ERROR_NOT_ARGV_AT _(L"$@ is not supported. In ghoti, please use $argv.")
 
 /// Error issued on $*.
-#define ERROR_NOT_ARGV_STAR _(L"$* is not supported. In fish, please use $argv.")
+#define ERROR_NOT_ARGV_STAR _(L"$* is not supported. In ghoti, please use $argv.")
 
 /// Error issued on $.
 #define ERROR_NO_VAR_NAME _(L"Expected a variable name after this $.")
 
 /// Error message for Posix-style assignment: foo=bar.
 #define ERROR_BAD_COMMAND_ASSIGN_ERR_MSG \
-    _(L"Unsupported use of '='. In fish, please use 'set %ls %ls'.")
+    _(L"Unsupported use of '='. In ghoti, please use 'set %ls %ls'.")
 
 /// Error message for a command like `time foo &`.
 #define ERROR_TIME_BACKGROUND \

@@ -1,6 +1,6 @@
-__fish_complete_lpr lpr
-complete -c lpr -k -xa "(__fish_complete_suffix .pdf .ps)"
-complete -c lpr -s H -x -d 'Specifies an alternate server' -xa '(__fish_print_hostnames)'
+__ghoti_complete_lpr lpr
+complete -c lpr -k -xa "(__ghoti_complete_suffix .pdf .ps)"
+complete -c lpr -s H -x -d 'Specifies an alternate server' -xa '(__ghoti_print_hostnames)'
 complete -c lpr -s C -s J -s T -x -d 'Sets the job name'
 #complete -c lpr -o '\\#' -d 'Sets the number of copies to print from 1 to 100' -xa
 complete -c lpr -s h -d 'Disables banner printing'

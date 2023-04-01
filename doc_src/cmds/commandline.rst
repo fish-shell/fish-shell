@@ -109,14 +109,14 @@ If the commandline contains
 
 ::
 
-    >_ echo $flounder >&2 | less; and echo $catfish
+    >_ echo $flounder >&2 | less; and echo $catghoti
 
 
 (with the cursor on the "o" of "flounder")
 
-The ``echo $flounder >&`` is the first process, ``less`` the second and ``and echo $catfish`` the third.
+The ``echo $flounder >&`` is the first process, ``less`` the second and ``and echo $catghoti`` the third.
 
-``echo $flounder >&2 | less`` is the first job, ``and echo $catfish`` the second.
+``echo $flounder >&2 | less`` is the first job, ``and echo $catghoti`` the second.
 
 **$flounder** is the current token.
 
@@ -130,7 +130,7 @@ More examples:
     >_ commandline -ct
     $fl
     >_ commandline -b # or just commandline
-    echo $flounder >&2 | less; and echo $catfish
+    echo $flounder >&2 | less; and echo $catghoti
     >_ commandline -p
     echo $flounder >&2
     >_ commandline -j

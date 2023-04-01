@@ -10,4 +10,4 @@ complete -c type -s q -l query -l quiet -d "Check if something exists without ou
 complete -c type -a "(builtin -n)" -d Builtin
 complete -c type -a "(functions -n)" -d Function
 
-complete -c type -a "(__fish_complete_command)" -x
+complete -c type -a "(__ghoti_complete_command)" -x

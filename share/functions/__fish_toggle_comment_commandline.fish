@@ -7,7 +7,7 @@
 # opportunity to modify the command. Also if the commandline is empty, the most recently commented
 # out history item is uncommented and presented.
 
-function __fish_toggle_comment_commandline --description 'Comment/uncomment the current command'
+function __ghoti_toggle_comment_commandline --description 'Comment/uncomment the current command'
     set -l cmdlines (commandline -b)
     if test -z "$cmdlines"
         set cmdlines (history search -p "#" --max=1)

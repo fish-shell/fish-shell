@@ -1,8 +1,8 @@
 # tshark - Dump and analyze network traffic
 
-__fish_complete_wireshark tshark
+__ghoti_complete_wireshark tshark
 
-function __fish_tshark_protocols
+function __ghoti_tshark_protocols
     set -l tok (commandline -ct | string collect)
     set -l tok_param (string replace -r -- '^-O' '' $tok)
     command tshark -G protocols 2>/dev/null | while read -l -d \t name shortname identifier
@@ -30,7 +30,7 @@ complete -c tshark -s H -d 'Read a list of entries from a "hosts" file' -r
 complete -c tshark -s j -d 'Protocol match filter used for ek|json|jsonraw|pdml output file types' -x
 complete -c tshark -s J -d 'Protocol match filter used, includes all child protocols' -x
 complete -c tshark -s l -d 'Flush the standard output after the information for each packet is printed'
-complete -c tshark -s O -d 'Show a detailed view of the comma-separated list of protocols' -xa '(__fish_tshark_protocols)'
+complete -c tshark -s O -d 'Show a detailed view of the comma-separated list of protocols' -xa '(__ghoti_tshark_protocols)'
 complete -c tshark -s P -l print -d 'Decode and display packet summary or details'
 complete -c tshark -s Q -d "When capturing packets, don't display, on the standard error, the initial message"
 complete -c tshark -s S -d 'Set the line separator to be printed between packets' -x

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 # The "path" builtin for dealing with paths
 
 # Extension - for figuring out the file extension of a given path.
@@ -86,7 +86,7 @@ path basename /usr/bin/
 
 cd $TMPDIR
 mkdir -p bin
-touch bin/{bash,bssh,chsh,dash,fish,slsh,ssh,zsh}
+touch bin/{bash,bssh,chsh,dash,ghoti,slsh,ssh,zsh}
 ln -s $TMPDIR/bin/bash bin/sh
 
 chmod +x bin/*
@@ -105,21 +105,21 @@ path filter -vf bin argagagji
 # CHECK: bin
 # CHECK: argagagji
 
-path filter --type file bin bin/fish
-# Only fish is a file
-# CHECK: bin/fish
-chmod 500 bin/fish
-path filter --type file,dir --perm exec,write bin/fish .
-# fish is a file, which passes, and executable, which passes,
+path filter --type file bin bin/ghoti
+# Only ghoti is a file
+# CHECK: bin/ghoti
+chmod 500 bin/ghoti
+path filter --type file,dir --perm exec,write bin/ghoti .
+# ghoti is a file, which passes, and executable, which passes,
 # but not writable, which fails.
 #
 # . is a directory and both writable and executable, typically.
 # So it passes.
 # CHECK: .
 
-path normalize /usr/bin//../../etc/fish
+path normalize /usr/bin//../../etc/ghoti
 # The "//" is squashed and the ".." components neutralize the components before
-# CHECK:  /etc/fish
+# CHECK:  /etc/ghoti
 path normalize /bin//bash
 # The "//" is squashed, but /bin isn't resolved even if your system links it to /usr/bin.
 # CHECK:  /bin/bash

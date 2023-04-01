@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %ghoti -C 'set -l ghoti %ghoti' %s
 
 function fooc; true; end;
 

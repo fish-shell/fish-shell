@@ -1,22 +1,22 @@
-function __fish_print_xdg_desktop_file_ids --description 'Print all available xdg desktop file IDs'
-    find (__fish_print_xdg_applications_directories) -name \*.desktop \( -type f -or -type l \) -printf '%P\n' | string replace -a -- / - | path sort -u
+function __ghoti_print_xdg_desktop_file_ids --description 'Print all available xdg desktop file IDs'
+    find (__ghoti_print_xdg_applications_directories) -name \*.desktop \( -type f -or -type l \) -printf '%P\n' | string replace -a -- / - | path sort -u
 end
 
 # main completion
-complete -c xdg-mime -n 'not __fish_seen_subcommand_from query default install uninstall' -xa 'query default install uninstall'
+complete -c xdg-mime -n 'not __ghoti_seen_subcommand_from query default install uninstall' -xa 'query default install uninstall'
 
 # complete xdg-mime query
-complete -c xdg-mime -n '__fish_seen_subcommand_from query; and not __fish_seen_subcommand_from filetype default' -xa 'filetype default' -d 'Query information'
+complete -c xdg-mime -n '__ghoti_seen_subcommand_from query; and not __ghoti_seen_subcommand_from filetype default' -xa 'filetype default' -d 'Query information'
 
 # complete xdg-mime query default
-complete -c xdg-mime -d 'Query default application for type' -n 'contains_seq query default -- (commandline -cop)' -xa '(__fish_print_xdg_mimetypes)'
+complete -c xdg-mime -d 'Query default application for type' -n 'contains_seq query default -- (commandline -cop)' -xa '(__ghoti_print_xdg_mimetypes)'
 
 # complete xdg-mime query filetype
 complete -c xdg-mime -d 'Query file\'s filetype' -n 'contains_seq query filetype -- (commandline -cop)' -r
 
 # complete xdg-mime default
-complete -c xdg-mime -d 'Choose application' -n '__fish_seen_subcommand_from default; and __fish_is_nth_token 3' -xa '(__fish_print_xdg_desktop_file_ids)'
-complete -c xdg-mime -d Mimetype -n '__fish_seen_subcommand_from default; and __fish_is_nth_token 4' -xa '(__fish_print_xdg_mimetypes)'
+complete -c xdg-mime -d 'Choose application' -n '__ghoti_seen_subcommand_from default; and __ghoti_is_nth_token 3' -xa '(__ghoti_print_xdg_desktop_file_ids)'
+complete -c xdg-mime -d Mimetype -n '__ghoti_seen_subcommand_from default; and __ghoti_is_nth_token 4' -xa '(__ghoti_print_xdg_mimetypes)'
 
 # complete xdg-mime install
 complete -c xdg-mime -d 'Add filetype description' -n 'contains_seq xdg-mime install -- (commandline -cop)' -r

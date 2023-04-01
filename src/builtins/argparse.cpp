@@ -385,7 +385,7 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 break;
             }
             case 'N': {
-                long x = fish_wcstol(w.woptarg);
+                long x = ghoti_wcstol(w.woptarg);
                 if (errno || x < 0) {
                     streams.err.append_format(_(L"%ls: Invalid --min-args value '%ls'\n"), cmd,
                                               w.woptarg);
@@ -395,7 +395,7 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 break;
             }
             case 'X': {
-                long x = fish_wcstol(w.woptarg);
+                long x = ghoti_wcstol(w.woptarg);
                 if (errno || x < 0) {
                     streams.err.append_format(_(L"%ls: Invalid --max-args value '%ls'\n"), cmd,
                                               w.woptarg);
@@ -505,7 +505,7 @@ static bool is_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val)
 
     // We succeed if this argument can be parsed as an integer.
     errno = 0;
-    (void)fish_wcstol(val);
+    (void)ghoti_wcstol(val);
     return errno == 0;
 }
 
@@ -697,7 +697,7 @@ static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_
 }
 
 /// The argparse builtin. This is explicitly not compatible with the BSD or GNU version of this
-/// command. That's because fish doesn't have the weird quoting problems of POSIX shells. So we
+/// command. That's because ghoti doesn't have the weird quoting problems of POSIX shells. So we
 /// don't need to support flags like `--unquoted`. Similarly we don't want to support introducing
 /// long options with a single dash so we don't support the `--alternative` flag. That `getopt` is
 /// an external command also means its output has to be in a form that can be eval'd. Because our

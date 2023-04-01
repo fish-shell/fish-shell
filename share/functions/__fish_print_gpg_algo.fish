@@ -1,6 +1,6 @@
 # Helper function for contextual autocompletion of GPG crypto algorithm options
 
-function __fish_print_gpg_algo -d "Complete using all algorithms of the type specified in argv[2] supported by gpg. argv[2] is a regexp" -a __fish_complete_gpg_command
+function __ghoti_print_gpg_algo -d "Complete using all algorithms of the type specified in argv[2] supported by gpg. argv[2] is a regexp" -a __ghoti_complete_gpg_command
     # Set a known locale, so that the output format of 'gpg --version'
     # is at least somewhat predictable. The locale will automatically
     # expire when the function goes out of scope, and the original locale
@@ -18,7 +18,7 @@ function __fish_print_gpg_algo -d "Complete using all algorithms of the type spe
     # 	remove all blanks
     # 	transliterate ',' with '\n' (OSX apparently doesn't like '\n' on RHS of the s-command)
     # 	print result
-    $__fish_complete_gpg_command --version | sed -ne "/$argv[2]:/"'{:loop
+    $__ghoti_complete_gpg_command --version | sed -ne "/$argv[2]:/"'{:loop
     /,$/{N; y!\n! !
     b loop
     }

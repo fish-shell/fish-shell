@@ -1,9 +1,9 @@
-#! /bin/echo "interactive.fish must be run via the test driver!"
+#! /bin/echo "interactive.ghoti must be run via the test driver!"
 #
 # Interactive tests using `pexpect`
 
 # Set this var to modify behavior of the code being tests. Such as avoiding running
-# `fish_update_completions` when running tests.
+# `ghoti_update_completions` when running tests.
 set -gx FISH_UNIT_TESTS_RUNNING 1
 
 # Change to directory containing this script
@@ -19,8 +19,8 @@ else
     set pexpect_files_to_test pexpects/*.py
 end
 
-source test_util.fish || exit
-cat interactive.config >>$XDG_CONFIG_HOME/fish/config.fish
+source test_util.ghoti || exit
+cat interactive.config >>$XDG_CONFIG_HOME/ghoti/config.ghoti
 
 function test_pexpect_file
     set -l file $argv[1]
@@ -32,9 +32,9 @@ function test_pexpect_file
 
         # Help the script find the pexpect_helper module in our parent directory.
         set -lx --prepend PYTHONPATH (realpath $PWD/..)
-        set -lx fish ../test/root/bin/fish
-        set -lx fish_key_reader ../test/root/bin/fish_key_reader
-        set -lx fish_test_helper ../test/root/bin/fish_test_helper
+        set -lx ghoti ../test/root/bin/ghoti
+        set -lx ghoti_key_reader ../test/root/bin/ghoti_key_reader
+        set -lx ghoti_test_helper ../test/root/bin/ghoti_test_helper
 
         # Note we require Python3.
         python3 $file

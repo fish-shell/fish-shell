@@ -3,7 +3,7 @@
 complete -c irb -s f -d "Suppresses read of ~/.irbrc"
 complete -c irb -s d -d "Set \$DEBUG to true"
 complete -c irb -s r -f -d "Load LIB using require"
-complete -c irb -s I -xa "(__fish_complete_directories)" -d "Specify \$LOAD_PATH directory"
+complete -c irb -s I -xa "(__ghoti_complete_directories)" -d "Specify \$LOAD_PATH directory"
 complete -c irb -s U -d "Same as 'ruby -U'"
 complete -c irb -s E -l encoding -d "Specify default text encoding"
 complete -c irb -s w -d "Turn on warnings'"

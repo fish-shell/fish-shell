@@ -91,27 +91,27 @@
 /// ellipsized.
 #define PREFIX_MAX_LEN 9
 
-/// A simple prompt for reading shell commands that does not rely on fish specific commands, meaning
-/// it will work even if fish is not installed. This is used by read_i.
+/// A simple prompt for reading shell commands that does not rely on ghoti specific commands, meaning
+/// it will work even if ghoti is not installed. This is used by read_i.
 #define DEFAULT_PROMPT L"echo -n \"$USER@$hostname $PWD \"'> '"
 
-/// The name of the function that prints the fish prompt.
-#define LEFT_PROMPT_FUNCTION_NAME L"fish_prompt"
+/// The name of the function that prints the ghoti prompt.
+#define LEFT_PROMPT_FUNCTION_NAME L"ghoti_prompt"
 
-/// The name of the function that prints the fish right prompt (RPROMPT).
-#define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
+/// The name of the function that prints the ghoti right prompt (RPROMPT).
+#define RIGHT_PROMPT_FUNCTION_NAME L"ghoti_right_prompt"
 
 /// The name of the function to use in place of the left prompt if we're in the debugger context.
-#define DEBUG_PROMPT_FUNCTION_NAME L"fish_breakpoint_prompt"
+#define DEBUG_PROMPT_FUNCTION_NAME L"ghoti_breakpoint_prompt"
 
 /// The name of the function for getting the input mode indicator.
-#define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
+#define MODE_PROMPT_FUNCTION_NAME L"ghoti_mode_prompt"
 
 /// The default title for the reader. This is used by reader_readline.
 #define DEFAULT_TITLE L"echo (status current-command) \" \" $PWD"
 
 /// The maximum number of characters to read from the keyboard without repainting. Note that this
-/// readahead will only occur if new characters are available for reading, fish will never block for
+/// readahead will only occur if new characters are available for reading, ghoti will never block for
 /// more input without repainting.
 static constexpr size_t READAHEAD_MAX = 256;
 
@@ -756,7 +756,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     wcstring kill_item;
 
     /// A flag which may be set to force re-execing all prompts and re-rendering.
-    /// This may come about when a color like $fish_color... has changed.
+    /// This may come about when a color like $ghoti_color... has changed.
     bool force_exec_prompt_and_repaint{false};
 
     /// The target character of the last jump command.
@@ -857,11 +857,11 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     maybe_t<wcstring> readline(int nchars);
 
     /// Reflect our current data in the command line state snapshot.
-    /// This is called before we run any fish script, so that the commandline builtin can see our
+    /// This is called before we run any ghoti script, so that the commandline builtin can see our
     /// state.
     void update_commandline_state() const;
 
-    /// Apply any changes from the reader snapshot. This is called after running fish script,
+    /// Apply any changes from the reader snapshot. This is called after running ghoti script,
     /// incorporating changes from the commandline builtin.
     void apply_commandline_state_changes();
 
@@ -990,11 +990,11 @@ static void term_fix_external_modes(struct termios *modes) {
     modes->c_iflag |= ICRNL;
     modes->c_iflag &= ~INLCR;
 }
-/// A description of where fish is in the process of exiting.
+/// A description of where ghoti is in the process of exiting.
 enum class exit_state_t {
-    none,               /// fish is not exiting.
-    running_handlers,   /// fish intends to exit, and is running handlers like 'fish_exit'.
-    finished_handlers,  /// fish is finished running handlers and no more fish script may be run.
+    none,               /// ghoti is not exiting.
+    running_handlers,   /// ghoti intends to exit, and is running handlers like 'ghoti_exit'.
+    finished_handlers,  /// ghoti is finished running handlers and no more ghoti script may be run.
 };
 static relaxed_atomic_t<exit_state_t> s_exit_state{exit_state_t::none};
 
@@ -1067,7 +1067,7 @@ static void term_steal() {
     termsize_invalidate_tty();
 }
 
-bool fish_is_unwinding_for_exit() {
+bool ghoti_is_unwinding_for_exit() {
     switch (s_exit_state) {
         case exit_state_t::none:
             // Cancel if we got SIGHUP.
@@ -1289,7 +1289,7 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     // Limit the number of elements to half the screen like we do for completions
     // Note that this is imperfect because we could have a multi-column layout.
     //
-    // We can still push fish further upward in case the first entry is multiline,
+    // We can still push ghoti further upward in case the first entry is multiline,
     // but that can't really be helped.
     // (subtract 2 for the search line and the prompt)
     size_t page_size = std::max(termsize_last().height / 2 - 2, (rust::isize)12);
@@ -1382,7 +1382,7 @@ void reader_data_t::pager_selection_changed() {
 }
 
 /// Expand an abbreviation replacer, which may mean running its function.
-/// \return the replacement, or none to skip it. This may run fish script!
+/// \return the replacement, or none to skip it. This may run ghoti script!
 maybe_t<abbrs_replacement_t> expand_replacer(SourceRange range, const wcstring &token,
                                              const abbrs_replacer_t &repl, parser_t &parser) {
     if (!repl.is_function) {
@@ -1535,19 +1535,19 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     if (!term_supports_setting_title()) return;
 
     scoped_push<bool> noninteractive{&parser.libdata().is_interactive, false};
-    scoped_push<bool> in_title(&parser.libdata().suppress_fish_trace, true);
+    scoped_push<bool> in_title(&parser.libdata().suppress_ghoti_trace, true);
 
-    wcstring fish_title_command = DEFAULT_TITLE;
-    if (function_exists(L"fish_title", parser)) {
-        fish_title_command = L"fish_title";
+    wcstring ghoti_title_command = DEFAULT_TITLE;
+    if (function_exists(L"ghoti_title", parser)) {
+        ghoti_title_command = L"ghoti_title";
         if (!cmd.empty()) {
-            fish_title_command.append(L" ");
-            fish_title_command.append(escape_string(cmd, ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
+            ghoti_title_command.append(L" ");
+            ghoti_title_command.append(escape_string(cmd, ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
         }
     }
 
     wcstring_list_t lst;
-    (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
+    (void)exec_subshell(ghoti_title_command, parser, lst, false /* ignore exit status */);
     if (!lst.empty()) {
         wcstring title_line = L"\x1B]0;";
         for (const auto &i : lst) {
@@ -1584,8 +1584,8 @@ void reader_data_t::exec_prompt() {
     left_prompt_buff.clear();
     right_prompt_buff.clear();
 
-    // Suppress fish_trace while in the prompt.
-    scoped_push<bool> in_prompt(&parser().libdata().suppress_fish_trace, true);
+    // Suppress ghoti_trace while in the prompt.
+    scoped_push<bool> in_prompt(&parser().libdata().suppress_ghoti_trace, true);
 
     // Update the termsize now.
     // This allows prompts to react to $COLUMNS.
@@ -1784,7 +1784,7 @@ void reader_data_t::delete_char(bool backward) {
     int width;
     do {
         pos--;
-        width = fish_wcwidth(el->text().at(pos));
+        width = ghoti_wcwidth(el->text().at(pos));
     } while (width == 0 && pos > 0);
     erase_substring(el, pos, pos_end - pos);
     update_buff_pos(el);
@@ -2449,7 +2449,7 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
     return we_think_we_are_orphaned;
 }
 
-// Ensure that fish owns the terminal, possibly waiting. If we cannot acquire the terminal, then
+// Ensure that ghoti owns the terminal, possibly waiting. If we cannot acquire the terminal, then
 // report an error and exit.
 static void acquire_tty_or_exit(pid_t shell_pgid) {
     ASSERT_IS_MAIN_THREAD();
@@ -2462,7 +2462,7 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
         return;
     }
 
-    // In some strange cases the tty may be come preassigned to fish's pid, but not its pgroup.
+    // In some strange cases the tty may be come preassigned to ghoti's pid, but not its pgroup.
     // In that case we simply attempt to claim our own pgroup.
     // See #7388.
     if (owner == getpid()) {
@@ -2551,7 +2551,7 @@ static void reader_interactive_init(parser_t &parser) {
     // Wait until we own the terminal.
     acquire_tty_or_exit(shell_pgid);
 
-    // If fish has no valid pgroup (possible with firejail, see #5295) or is interactive,
+    // If ghoti has no valid pgroup (possible with firejail, see #5295) or is interactive,
     // ensure it owns the terminal. Also see #5909, #7060.
     if (shell_pgid == 0 || (is_interactive_session() && shell_pgid != shell_pid)) {
         shell_pgid = shell_pid;
@@ -2590,9 +2590,9 @@ static void reader_interactive_init(parser_t &parser) {
     termsize_invalidate_tty();
 
     // Provide value for `status current-command`
-    parser.libdata().status_vars.command = L"fish";
-    // Also provide a value for the deprecated fish 2.0 $_ variable
-    parser.vars().set_one(L"_", ENV_GLOBAL, L"fish");
+    parser.libdata().status_vars.command = L"ghoti";
+    // Also provide a value for the deprecated ghoti 2.0 $_ variable
+    parser.vars().set_one(L"_", ENV_GLOBAL, L"ghoti");
 }
 
 /// Destroy data for interactive use.
@@ -2729,7 +2729,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     if (!ft.empty()) {
         parser.libdata().status_vars.command = ft;
         parser.libdata().status_vars.commandline = cmd;
-        // Also provide a value for the deprecated fish 2.0 $_ variable
+        // Also provide a value for the deprecated ghoti 2.0 $_ variable
         parser.vars().set_one(L"_", ENV_GLOBAL, ft);
     }
 
@@ -2755,7 +2755,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     // Provide value for `status current-command`
     parser.libdata().status_vars.command = program_name;
-    // Also provide a value for the deprecated fish 2.0 $_ variable
+    // Also provide a value for the deprecated ghoti 2.0 $_ variable
     parser.vars().set_one(L"_", ENV_GLOBAL, program_name);
     // Provide value for `status current-commandline`
     parser.libdata().status_vars.commandline = L"";
@@ -2907,7 +2907,7 @@ void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode)
 }
 
 static bool check_autosuggestion_enabled(const env_stack_t &vars) {
-    if (auto val = vars.get(L"fish_autosuggestion_enabled")) {
+    if (auto val = vars.get(L"ghoti_autosuggestion_enabled")) {
         return val->as_string() != L"0";
     }
     return true;
@@ -3210,7 +3210,7 @@ static int read_i(parser_t &parser) {
     conf.syntax_check_ok = true;
     conf.autosuggest_ok = check_autosuggestion_enabled(parser.vars());
     conf.expand_abbrev_ok = true;
-    conf.event = L"fish_prompt";
+    conf.event = L"ghoti_prompt";
 
     if (parser.is_breakpoint() && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
         conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME;
@@ -3236,7 +3236,7 @@ static int read_i(parser_t &parser) {
             data->update_buff_pos(&data->command_line, 0);
             data->command_line.clear();
             data->command_line_changed(&data->command_line);
-            event_fire_generic(parser, L"fish_preexec", {command});
+            event_fire_generic(parser, L"ghoti_preexec", {command});
             auto eval_res = reader_run_command(parser, command);
             signal_clear_cancel();
             if (!eval_res.no_status) {
@@ -3247,7 +3247,7 @@ static int read_i(parser_t &parser) {
             data->exit_loop_requested |= parser.libdata().exit_current_script;
             parser.libdata().exit_current_script = false;
 
-            event_fire_generic(parser, L"fish_postexec", {command});
+            event_fire_generic(parser, L"ghoti_postexec", {command});
             // Allow any pending history items to be returned in the history array.
             if (data->history) {
                 data->history->resolve_pending();
@@ -3263,7 +3263,7 @@ static int read_i(parser_t &parser) {
                 data->did_warn_for_bg_jobs = false;
             }
 
-            // Apply any command line update from this command or fish_postexec, etc.
+            // Apply any command line update from this command or ghoti_postexec, etc.
             // See #8807.
             data->apply_commandline_state_changes();
         }
@@ -3278,9 +3278,9 @@ static int read_i(parser_t &parser) {
 
     // If we are the last reader, then kill remaining jobs before exiting.
     if (reader_data_stack.empty()) {
-        // Send the exit event and then commit to not executing any more fish script.
+        // Send the exit event and then commit to not executing any more ghoti script.
         s_exit_state = exit_state_t::running_handlers;
-        event_fire_generic(parser, L"fish_exit");
+        event_fire_generic(parser, L"ghoti_exit");
         s_exit_state = exit_state_t::finished_handlers;
         hup_jobs(parser.jobs());
     }
@@ -3328,7 +3328,7 @@ static bool text_ends_in_comment(const wcstring &text) {
 static bool event_is_normal_char(const char_event_t &evt) {
     if (!evt.is_char()) return false;
     auto c = evt.get_char();
-    return !fish_reserved_codepoint(c) && c > 31 && c != 127;
+    return !ghoti_reserved_codepoint(c) && c > 31 && c != 127;
 }
 
 /// Run a sequence of commands from an input binding.
@@ -3371,7 +3371,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 
     // We repaint our prompt if fstat reports the tty as having changed.
     // But don't react to tty changes that we initiated, because of commands or
-    // on-variable events (e.g. for fish_bind_mode). See #3481.
+    // on-variable events (e.g. for ghoti_bind_mode). See #3481.
     uint64_t last_exec_count = exec_count();
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
@@ -3456,10 +3456,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Repaint also changes the actual cursor position
                 if (this->is_repaint_needed()) this->layout_and_repaint(L"cancel");
 
-                auto fish_color_cancel = vars.get(L"fish_color_cancel");
-                if (fish_color_cancel) {
-                    outp.set_color(parse_color(*fish_color_cancel, false),
-                                   parse_color(*fish_color_cancel, true));
+                auto ghoti_color_cancel = vars.get(L"ghoti_color_cancel");
+                if (ghoti_color_cancel) {
+                    outp.set_color(parse_color(*ghoti_color_cancel, false),
+                                   parse_color(*ghoti_color_cancel, true));
                 }
                 outp.writestr(L"^C");
                 outp.set_color(rgb_color_t::reset(), rgb_color_t::reset());
@@ -3470,8 +3470,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 set_command_line_and_position(&command_line, L"", 0);
                 screen.reset_abandoning_line(termsize_last().width - command_line.size());
 
-                // Post fish_cancel.
-                event_fire_generic(parser(), L"fish_cancel");
+                // Post ghoti_cancel.
+                event_fire_generic(parser(), L"ghoti_cancel");
             }
             break;
         }
@@ -3496,7 +3496,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // may sometimes take a while but when switching the mode all we care about is the
             // mode-prompt.
             //
-            // Because some users set `fish_mode_prompt` to an empty function and display the mode
+            // Because some users set `ghoti_mode_prompt` to an empty function and display the mode
             // elsewhere, we detect if the mode output is empty.
 
             // Don't go into an infinite loop of repainting.
@@ -3686,7 +3686,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::execute: {
             if (!this->handle_execute(rls)) {
-                event_fire_generic(parser(), L"fish_posterror", {command_line.text()});
+                event_fire_generic(parser(), L"ghoti_posterror", {command_line.text()});
                 screen.reset_abandoning_line(termsize_last().width);
             }
             break;
@@ -4385,9 +4385,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     using rl = readline_cmd_t;
     readline_loop_state_t rls{};
 
-    // Suppress fish_trace during executing key bindings.
+    // Suppress ghoti_trace during executing key bindings.
     // This is simply to reduce noise.
-    scoped_push<bool> in_title(&parser().libdata().suppress_fish_trace, true);
+    scoped_push<bool> in_title(&parser().libdata().suppress_ghoti_trace, true);
 
     // If nchars_or_0 is positive, then that's the maximum number of chars. Otherwise keep it at
     // SIZE_MAX.
@@ -4415,7 +4415,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         int err = errno;
         if (err == EIO) redirect_tty_output();
 
-        // This check is required to work around certain issues with fish's approach to
+        // This check is required to work around certain issues with ghoti's approach to
         // terminal control when launching interactive processes while in non-interactive
         // mode. See #4178 for one such example.
         if (err != ENOTTY || is_interactive_session()) {
@@ -4427,7 +4427,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     // if we're started with the terminal it might not have settled,
     // so the width is quite likely to be in flight.
     //
-    // This means that `printf %s foo; fish` will overwrite the `foo`,
+    // This means that `printf %s foo; ghoti` will overwrite the `foo`,
     // but that's a smaller problem than having the omitted newline char
     // appear constantly.
     //
@@ -4535,7 +4535,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             if (event_needing_handling->input_style == char_input_style_t::notfirst &&
                 active_edit_line()->position() == 0) {
                 // This character is skipped.
-            } else if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
+            } else if (!ghoti_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
                        c != 0x7F) {
                 // Regular character.
                 editable_line_t *el = active_edit_line();

@@ -10,7 +10,7 @@
 
 # macOS has really weird default IFS behavior that splits output in random places, and the trailing
 # backspace is to prevent \n from being gobbled up by the subshell output substitution.
-# Folks, this is why you should use fish!
+# Folks, this is why you should use ghoti!
 IFS="$(printf "\n\b")"
 # set -ex
 
@@ -39,15 +39,15 @@ export HOME="$homedir"
 
 XDG_DATA_HOME="$homedir/xdg_data_home"
 export XDG_DATA_HOME
-mkdir -p $XDG_DATA_HOME/fish || die
+mkdir -p $XDG_DATA_HOME/ghoti || die
 
 XDG_CONFIG_HOME="$homedir/xdg_config_home"
 export XDG_CONFIG_HOME
-mkdir -p $XDG_CONFIG_HOME/fish || die
+mkdir -p $XDG_CONFIG_HOME/ghoti || die
 
 XDG_RUNTIME_DIR="$homedir/xdg_runtime_dir"
 export XDG_RUNTIME_DIR
-mkdir -p $XDG_RUNTIME_DIR/fish || die
+mkdir -p $XDG_RUNTIME_DIR/ghoti || die
 chmod 700 "$XDG_RUNTIME_DIR"
 
 # Create a temp/scratch directory for tests to use, if they want (tests shouldn't write to a
@@ -73,7 +73,7 @@ export LC_CTYPE="en_US.UTF-8"
 
 # These env vars should not be inherited from the user environment because they can affect the
 # behavior of the tests. So either remove them or set them to a known value.
-# See also tests/interactive.fish.
+# See also tests/interactive.ghoti.
 export TERM=xterm
 unset COLORTERM
 unset INSIDE_EMACS

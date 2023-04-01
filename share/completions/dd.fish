@@ -1,8 +1,8 @@
-complete -c dd -xa '(__fish_complete_dd)'
+complete -c dd -xa '(__ghoti_complete_dd)'
 complete -c dd -d 'display help and exit' -xa --help
 complete -c dd -d 'output version information and exit' -xa --version
 
-function __fish_complete_dd -d 'Complete dd operands'
+function __ghoti_complete_dd -d 'Complete dd operands'
     # set operand_string as a local variable containing the current command-line token.
     set -l operand_string (commandline -t)
 
@@ -11,7 +11,7 @@ function __fish_complete_dd -d 'Complete dd operands'
             string replace = ' ' -- $operand_string | read -l operand value
 
             # Use normal file completions.
-            printf "$operand=%s\n" (complete -C "__fish_command_without_completions $value")
+            printf "$operand=%s\n" (complete -C "__ghoti_command_without_completions $value")
 
         case 'iflag=*' 'oflag=*'
             string replace = ' ' -- $operand_string | read -l operand complete

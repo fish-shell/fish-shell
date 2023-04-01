@@ -1,6 +1,6 @@
-// The fish_indent program.
+// The ghoti_indent program.
 /*
-Copyright (C) 2014 ridiculous_fish
+Copyright (C) 2014 ridiculous_ghoti
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License version 2 as
@@ -41,7 +41,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "expand.h"
 #include "fds.h"
 #include "ffi_init.rs.h"
-#include "fish_version.h"
+#include "ghoti_version.h"
 #include "flog.h"
 #include "future_feature_flags.h"
 #include "global_safety.h"
@@ -56,7 +56,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "wutil.h"  // IWYU pragma: keep
 
 // The number of spaces per indent isn't supposed to be configurable.
-// See discussion at https://github.com/fish-shell/fish-shell/pull/6790
+// See discussion at https://github.com/ghoti-shell/ghoti-shell/pull/6790
 #define SPACES_PER_INDENT 4
 
 static bool dump_parse_tree = false;
@@ -530,7 +530,7 @@ struct pretty_printer_t {
         // can change over time (see "^", "%" and "?", in some cases "{}") and it just makes
         // people feel more at ease.
         auto goodchars = [](wchar_t ch) {
-            return fish_iswalnum(ch) || ch == L'_' || ch == L'-' || ch == L'/';
+            return ghoti_iswalnum(ch) || ch == L'_' || ch == L'-' || ch == L'/';
         };
         if (std::find_if_not(unescaped.begin(), unescaped.end(), goodchars) == unescaped.end() &&
             !unescaped.empty()) {
@@ -765,7 +765,7 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
 /// Given a string and list of colors of the same size, return the string with HTML span elements
 /// for the various colors.
 static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
-#define P(x) L"fish_color_" #x
+#define P(x) L"ghoti_color_" #x
     switch (spec.foreground) {
         case highlight_role_t::normal: {
             return P(normal);
@@ -871,12 +871,12 @@ static std::string html_colorize(const wcstring &text,
 static std::string no_colorize(const wcstring &text) { return wcs2string(text); }
 
 int main(int argc, char *argv[]) {
-    program_name = L"fish_indent";
+    program_name = L"ghoti_indent";
     set_main_thread();
     setup_fork_guards();
     rust_init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
-    // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
+    // because the ghoti project assumes Unicode UTF-8 encoding in all of its scripts.
     //
     // TODO: Auto-detect the encoding of the script. We should look for a vim style comment
     // (e.g., "# vim: set fileencoding=<encoding-name>:") or an emacs style comment
@@ -884,9 +884,9 @@ int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "");
     env_init();
 
-    if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
+    if (auto features_var = env_stack_t::globals().get(L"ghoti_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features()->set_from_string(s.c_str());
+            mutable_ghoti_features()->set_from_string(s.c_str());
         }
     }
 
@@ -927,11 +927,11 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'h': {
-                print_help("fish_indent", 1);
+                print_help("ghoti_indent", 1);
                 exit(0);
             }
             case 'v': {
-                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_fish_version());
+                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_ghoti_version());
                 exit(0);
             }
             case 'w': {
@@ -1007,7 +1007,7 @@ int main(int argc, char *argv[]) {
         if (argc == 0 && i == 0) {
             if (output_type == output_type_file) {
                 std::fwprintf(
-                    stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
+                    stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.ghoti\n"),
                     program_name);
                 exit(1);
             }

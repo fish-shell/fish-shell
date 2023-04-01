@@ -9,11 +9,11 @@ set -l runtime config_cache_reload \
     log_level_decrease=
 
 
-function __fish_string_in_command -a ch
+function __ghoti_string_in_command -a ch
     string match -rq $ch (commandline)
 end
 
-function __fish_prepend -a prefix
+function __ghoti_prepend -a prefix
     set -l log_target "configuration syncer" \
     "data sender" \
     discoverer \
@@ -52,9 +52,9 @@ complete -c zabbix_proxy -f -s h -l help -d "Display this help and exit."
 complete -c zabbix_proxy -f -s V -l version -d "Output version information and exit."
 
 # Logs
-complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_increase" -a "(__fish_prepend log_level_increase)"
-complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_decrease" -a "(__fish_prepend log_level_decrease)"
+complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__ghoti_string_in_command log_level_increase" -a "(__ghoti_prepend log_level_increase)"
+complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__ghoti_string_in_command log_level_decrease" -a "(__ghoti_prepend log_level_decrease)"
 
 # Diag info
-complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
+complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__ghoti_string_in_command diaginfo" -a "(__ghoti_prepend diaginfo)"
 

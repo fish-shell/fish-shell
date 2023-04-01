@@ -1,4 +1,4 @@
-fish 3.7.0 (released ???)
+ghoti 3.7.0 (released ???)
 ===================================
 
 .. ignore: 9439 9440 9442 9452 9469 9480 9482
@@ -19,7 +19,7 @@ Interactive improvements
 ------------------------
 - The history pager now shows fuzzy (subsequence) matches in the absence of exact substring matches (:issue:`9476`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
-- A new variable, :envvar:`fish_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`fish_cursor_default` (:issue:`4656`).
+- A new variable, :envvar:`ghoti_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`ghoti_cursor_default` (:issue:`4656`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -43,10 +43,10 @@ For distributors
 
 --------------
 
-fish 3.6.1 (released March 25, 2023)
+ghoti 3.6.1 (released March 25, 2023)
 ====================================
 
-This release of fish contains a number of fixes for problems identified in fish 3.6.0, as well as some enhancements.
+This release of ghoti contains a number of fixes for problems identified in ghoti 3.6.0, as well as some enhancements.
 
 Notable improvements and fixes
 ------------------------------
@@ -64,24 +64,24 @@ Scripting improvements
 ----------------------
 - ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
 - ``read`` will now print an error if told to set a read-only variable, instead of silently doing nothing (:issue:`9346`).
-- ``set_color -v`` no longer crashes fish (:issue:`9640`).
+- ``set_color -v`` no longer crashes ghoti (:issue:`9640`).
 
 Interactive improvements
 ------------------------
-- Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
+- Using ``ghoti_vi_key_bindings`` in combination with ghoti's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
 - The history pager now uses more screen space, usually half the screen (:issue:`9458`)
 - Variables that were set while the locale was C (the default ASCII-only locale) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
 - Escape during history search restores the original command line again (fixing a regression in 3.6.0).
 - Using ``--help`` on builtins now respects the ``$MANPAGER`` variable, in preference to ``$PAGER`` (:issue:`9488`).
 - :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
 - The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
-- fish no longer crashes when searching history for non-ASCII codepoints case-insensitively (:issue:`9628`).
+- ghoti no longer crashes when searching history for non-ASCII codepoints case-insensitively (:issue:`9628`).
 - The :kbd:`Alt-S` binding will now also use ``please`` if available (:issue:`9635`).
 - Themes that don't specify every color option can be installed correctly in the Web-based configuration (:issue:`9590`).
 - Compatibility with Midnight Commander's prompt integration has been improved (:issue:`9540`).
-- A spurious error, noted when using fish in Google Drive directories under WSL 2, has been silenced (:issue:`9550`).
-- Using ``read`` in ``fish_greeting`` or similar functions will not trigger an infinite loop (:issue:`9564`).
-- Compatibility when upgrading from old versions of fish (before 3.4.0) has been improved (:issue:`9569`).
+- A spurious error, noted when using ghoti in Google Drive directories under WSL 2, has been silenced (:issue:`9550`).
+- Using ``read`` in ``ghoti_greeting`` or similar functions will not trigger an infinite loop (:issue:`9564`).
+- Compatibility when upgrading from old versions of ghoti (before 3.4.0) has been improved (:issue:`9569`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -100,10 +100,10 @@ Completions
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
   - ``ssh-copy-id`` (:issue:`9675`)
 - Improvements to many completions, including the speed of completing directories in WSL 2 (:issue:`9574`).
-- Completions using ``__fish_complete_suffix`` are now offered in the correct order, fixing a regression in 3.6.0 (:issue:`8924`).
+- Completions using ``__ghoti_complete_suffix`` are now offered in the correct order, fixing a regression in 3.6.0 (:issue:`8924`).
 - ``git`` completions for ``git-foo``-style commands was restored, fixing a regression in 3.6.0 (:issue:`9457`).
 - File completion now offers ``../`` and ``./`` again, fixing a regression in 3.6.0 (:issue:`9477`).
-- The behaviour of completions using ``__fish_complete_path`` matches standard path completions (:issue:`9285`).
+- The behaviour of completions using ``__ghoti_complete_path`` matches standard path completions (:issue:`9285`).
 
 Other improvements
 ------------------
@@ -111,11 +111,11 @@ Other improvements
 
 For distributors
 ----------------
-- fish 3.6.1 builds correctly on Cygwin (:issue:`9502`).
+- ghoti 3.6.1 builds correctly on Cygwin (:issue:`9502`).
 
 --------------
 
-fish 3.6.0 (released January 7, 2023)
+ghoti 3.6.0 (released January 7, 2023)
 =====================================
 
 Notable improvements and fixes
@@ -125,7 +125,7 @@ Notable improvements and fixes
 
   - They may optionally replace tokens anywhere on the command line, instead of only commands
   - Matching tokens may be described using a regular expression instead of a literal word
-  - The replacement text may be produced by a fish function, instead of a literal word
+  - The replacement text may be produced by a ghoti function, instead of a literal word
   - They may position the cursor anywhere in the expansion, instead of at the end
 
   For example::
@@ -159,21 +159,21 @@ Notable improvements and fixes
     Hello thi…
 
 - ``test`` (aka ``[``) gained ``-ot`` (older than) and ``-nt`` (newer than) operators to compare file modification times, and ``-ef`` to compare whether the arguments are the same file (:issue:`3589`).
-- fish will now mark the extent of many errors with a squiggly line, instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
+- ghoti will now mark the extent of many errors with a squiggly line, instead of just a caret (``^``) at the beginning (:issue:`9130`). For example::
 
-    checks/set.fish (line 471): for: a,b: invalid variable name. See `help identifiers`
+    checks/set.ghoti (line 471): for: a,b: invalid variable name. See `help identifiers`
     for a,b in y 1 z 3
         ^~^
-- A new function, ``fish_delta``, shows changes that have been made in fish's configuration from the defaults (:issue:`9255`).
+- A new function, ``ghoti_delta``, shows changes that have been made in ghoti's configuration from the defaults (:issue:`9255`).
 - ``set --erase`` can now be used with multiple scopes at once, like ``set -efglU foo`` (:issue:`7711`, :issue:`9280`).
 - ``status`` gained a new subcommand, ``current-commandline``, which retrieves the entirety of the currently-executing command line when called from a function during execution. This allows easier job introspection (:issue:`8905`, :issue:`9296`).
 
 Deprecations and removed features
 ---------------------------------
 - The ``\x`` and ``\X`` escape syntax is now equivalent. ``\xAB`` previously behaved the same as ``\XAB``, except that it would error if the value "AB" was larger than "7f" (127 in decimal, the highest ASCII value) (:issue:`9247`, :issue:`9245`, :issue:`1352`).
-- The ``fish_git_prompt`` will now only turn on features if the appropriate variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, such as via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
-  For example, ``set -g __fish_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), but now it turns it off.
-- Abbreviations are no longer stored in universal variables. Existing universal abbreviations are still imported, but new abbreviations should be added to ``config.fish``.
+- The ``ghoti_git_prompt`` will now only turn on features if the appropriate variable has been set to a true value (of "1", "yes" or "true") instead of just checking if it is defined. This allows specifically turning features *off* without having to erase variables, such as via universal variables. If you have defined a variable to a different value and expect it to count as true, you need to change it (:issue:`9274`).
+  For example, ``set -g __ghoti_git_prompt_show_informative_status 0`` previously would have enabled informative status (because any value would have done so), but now it turns it off.
+- Abbreviations are no longer stored in universal variables. Existing universal abbreviations are still imported, but new abbreviations should be added to ``config.ghoti``.
 - The short option ``-r`` for abbreviations has changed from ``rename`` to ``regex``, for consistency with ``string``.
 
 Scripting improvements
@@ -187,7 +187,7 @@ Scripting improvements
         cp $argv
     end
 
-- ``set --show`` now shows when a variable was inherited from fish's parent process, which should help with debugging (:issue:`9029`)::
+- ``set --show`` now shows when a variable was inherited from ghoti's parent process, which should help with debugging (:issue:`9029`)::
 
     > set --show XDG_DATA_DIRS
     $XDG_DATA_DIRS: set in global scope, exported, a path variable with 4 elements
@@ -197,34 +197,34 @@ Scripting improvements
     $XDG_DATA_DIRS[4]: |/usr/share|
     $XDG_DATA_DIRS: originally inherited as |/home/alfa/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/|
 
-- The read limit is now restored to the default when :envvar:`fish_read_limit` is unset (:issue:`9129`).
+- The read limit is now restored to the default when :envvar:`ghoti_read_limit` is unset (:issue:`9129`).
 - ``math`` produces an error for division-by-zero, as well as augmenting some errors with their extent (:issue:`9190`). This changes behavior in some limited cases, such as::
 
     math min 1 / 0, 5
 
   which would previously print "5" (because in floating point division "1 / 0" yields infinite, and 5 is smaller than infinite) but will now return an error.
-- ``fish_clipboard_copy`` and ``fish_clipboard_paste`` can now be used in pipes (:issue:`9271`)::
+- ``ghoti_clipboard_copy`` and ``ghoti_clipboard_paste`` can now be used in pipes (:issue:`9271`)::
 
-    git rev-list 3.5.1 | fish_clipboard_copy
+    git rev-list 3.5.1 | ghoti_clipboard_copy
 
-    fish_clipboard_paste | string join + | math
+    ghoti_clipboard_paste | string join + | math
 
-- ``status fish-path`` returns a fully-normalised path, particularly noticeable on NetBSD (:issue:`9085`).
+- ``status ghoti-path`` returns a fully-normalised path, particularly noticeable on NetBSD (:issue:`9085`).
 
 Interactive improvements
 ------------------------
-- If the terminal definition for :envvar:`TERM` can't be found, fish now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
-- A new variable, :envvar:`fish_cursor_selection_mode`, can be used to configure whether the command line selection includes the character under the cursor (``inclusive``) or not (``exclusive``). The new default is ``exclusive``; use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
-- fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
+- If the terminal definition for :envvar:`TERM` can't be found, ghoti now tries using the "xterm-256color" and "xterm" definitions before "ansi" and "dumb". As the majority of terminal emulators in common use are now more or less xterm-compatible (often even explicitly claiming the xterm-256color entry), this should often result in a fully or almost fully usable terminal (:issue:`9026`).
+- A new variable, :envvar:`ghoti_cursor_selection_mode`, can be used to configure whether the command line selection includes the character under the cursor (``inclusive``) or not (``exclusive``). The new default is ``exclusive``; use ``set ghoti_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
+- ghoti's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping ghoti to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - The ``complete-and-search`` binding, used with :kbd:`Shift-Tab` by default, selects the first item in the results immediately (:issue:`9080`).
 - ``bind`` output is now syntax-highlighted when used interacively.
-- :kbd:`Alt-H` (the default ``__fish_man_page`` binding) does a better job of showing the manual page of the command under cursor (:issue:`9020`).
-- If :envvar:`fish_color_valid_path` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
+- :kbd:`Alt-H` (the default ``__ghoti_man_page`` binding) does a better job of showing the manual page of the command under cursor (:issue:`9020`).
+- If :envvar:`ghoti_color_valid_path` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
 - The key combination for the QUIT terminal sequence, often :kbd:`Control-Backslash` (``\x1c``), can now be sused as a binding (:issue:`9234`).
-- fish's vi mode uses normal xterm-style sequences to signal cursor change, instead of using the iTerm's proprietary escape sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
-- When running fish on a remote system (such as inside SSH or a container), :kbd:`Control-X` now copies to the local client system's clipboard if the terminal supports OSC 52.
+- ghoti's vi mode uses normal xterm-style sequences to signal cursor change, instead of using the iTerm's proprietary escape sequences. This allows for a blinking cursor and makes it work in complicated scenarios with nested terminals. (:issue:`3741`, :issue:`9172`)
+- When running ghoti on a remote system (such as inside SSH or a container), :kbd:`Control-X` now copies to the local client system's clipboard if the terminal supports OSC 52.
 - ``commandline`` gained two new options, ``--selection-start`` and ``--selection-end``, to set the start/end of the current selection (:issue:`9197`, :issue:`9215`).
-- fish's builtins now handle keyboard interrupts (:kbd:`Control-C`) correctly (:issue:`9266`).
+- ghoti's builtins now handle keyboard interrupts (:kbd:`Control-C`) correctly (:issue:`9266`).
 
 Completions
 ^^^^^^^^^^^
@@ -270,8 +270,8 @@ Completions
 
 - Improvements to many completions, including making ``cd`` completion much faster (:issue:`9220`).
 - Completion of tilde (``~``) works properly even when the file name contains an escaped character (:issue:`9073`).
-- fish no longer loads completions if the command is used via a relative path and is not in :envvar:`PATH` (:issue:`9133`).
-- fish no longer completes inside of comments (:issue:`9320`).
+- ghoti no longer loads completions if the command is used via a relative path and is not in :envvar:`PATH` (:issue:`9133`).
+- ghoti no longer completes inside of comments (:issue:`9320`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -284,7 +284,7 @@ Other improvements
 -  ``string`` is now faster when reading large strings from stdin (:issue:`9139`).
 - ``string repeat`` uses less memory and is faster. (:issue:`9124`)
 - Builtins are much faster when writing to a pipe or file. (:issue:`9229`).
-- Performance improvements to highlighting (:issue:`9180`) should make using fish more pleasant on slow systems.
+- Performance improvements to highlighting (:issue:`9180`) should make using ghoti more pleasant on slow systems.
 - On 32-bit systems, globs like ``*`` will no longer fail to return some files, as large file support has been enabled.
 
 Fixed bugs
@@ -292,30 +292,30 @@ Fixed bugs
 - The history search text for a token search is now highlighted correctly if the line contains multiple instances of that text (:issue:`9066`).
 - ``process-exit`` and ``job-exit`` events are now generated for all background jobs, including those launched from event handlers (:issue:`9096`).
 - A crash when completing a token that contained both a potential glob and a quoted variable expansion was fixed (:issue:`9137`).
-- ``prompt_pwd`` no longer accidentally overwrites a global or universal ``$fish_prompt_pwd_full_dirs`` when called with the ``-d`` or ``--full-length-dirs`` option (:issue:`9123`).
-- A bug which caused fish to freeze or exit after running a command which does not preserve the foreground process group was fixed (:issue:`9181`).
-- The "Disco" sample prompt no longer prints an error in some working directories (:issue:`9164`). If you saved this prompt, you should run ``fish_config prompt save disco`` again.
-- fish launches external commands via the given path again, rather than always using an absolute path. This behaviour was inadvertently changed in 3.5.0 and is visible, for example, when launching a bash script which checks ``$0`` (:issue:`9143`).
+- ``prompt_pwd`` no longer accidentally overwrites a global or universal ``$ghoti_prompt_pwd_full_dirs`` when called with the ``-d`` or ``--full-length-dirs`` option (:issue:`9123`).
+- A bug which caused ghoti to freeze or exit after running a command which does not preserve the foreground process group was fixed (:issue:`9181`).
+- The "Disco" sample prompt no longer prints an error in some working directories (:issue:`9164`). If you saved this prompt, you should run ``ghoti_config prompt save disco`` again.
+- ghoti launches external commands via the given path again, rather than always using an absolute path. This behaviour was inadvertently changed in 3.5.0 and is visible, for example, when launching a bash script which checks ``$0`` (:issue:`9143`).
 - ``printf`` no longer tries to interpret the first argument as an option (:issue:`9132`).
 - Interactive ``read`` in scripts will now have the correct keybindings again (:issue:`9227`).
 - A possible stack overflow when recursively evaluating substitutions has been fixed (:issue:`9302`).
 - A crash with relative $CDPATH has been fixed (:issue:`9407`).
 - ``printf`` now properly fills extra ``%d`` specifiers with 0 even on macOS and BSD (:issue:`9321`).
-- ``fish_key_reader`` now correctly exits when receiving a SIGHUP (like after closing the terminal) (:issue:`9309`).
-- ``fish_config theme save`` now works as documented instead of erroring out (:issue:`9088`, :issue:`9273`).
-- fish no longer triggers prompts to install command line tools when first run on macOS (:issue:`9343`).
-- ``fish_git_prompt`` now quietly fails on macOS if the xcrun cache is not yet populated (:issue:`6625`), working around a potential hang.
+- ``ghoti_key_reader`` now correctly exits when receiving a SIGHUP (like after closing the terminal) (:issue:`9309`).
+- ``ghoti_config theme save`` now works as documented instead of erroring out (:issue:`9088`, :issue:`9273`).
+- ghoti no longer triggers prompts to install command line tools when first run on macOS (:issue:`9343`).
+- ``ghoti_git_prompt`` now quietly fails on macOS if the xcrun cache is not yet populated (:issue:`6625`), working around a potential hang.
 
 For distributors
 ----------------
-- The vendored PCRE2 sources have been removed. It is recommended to declare PCRE2 as a dependency when packaging fish. If the CMake variable FISH_USE_SYSTEM_PCRE2 is false, fish will now download and build PCRE2 from the official repo (:issue:`8355`, :issue:`8363`). Note this variable defaults to true if PCRE2 is found installed on the system.
+- The vendored PCRE2 sources have been removed. It is recommended to declare PCRE2 as a dependency when packaging ghoti. If the CMake variable FISH_USE_SYSTEM_PCRE2 is false, ghoti will now download and build PCRE2 from the official repo (:issue:`8355`, :issue:`8363`). Note this variable defaults to true if PCRE2 is found installed on the system.
 
 --------------
 
-fish 3.5.1 (released July 20, 2022)
+ghoti 3.5.1 (released July 20, 2022)
 ===================================
 
-This release of fish introduces the following small enhancements:
+This release of ghoti introduces the following small enhancements:
 
 - Cursor shaping for Vi mode is enabled by default in tmux, and will be used if the outer terminal is capable (:issue:`8981`).
 - ``printf`` returns a better error when used with arguments interpreted as octal numbers (:issue:`9035`).
@@ -331,18 +331,18 @@ This release of fish introduces the following small enhancements:
 
 - Improvements to some completions.
 
-This release also fixes a number of problems identified in fish 3.5.0.
+This release also fixes a number of problems identified in ghoti 3.5.0.
 
 - Completing ``git blame`` or ``git -C`` works correctly (:issue:`9053`).
-- On terminals that emit a ``CSI u`` sequence for :kbd:`Shift-Space`, fish inserts a space instead of printing an error. (:issue:`9054`).
-- ``status fish-path`` on Linux-based platforms could print the path with a " (deleted)" suffix (such as ``/usr/bin/fish (deleted)``), which is now removed (:issue:`9019`).
-- Cancelling an initial command (from fish's ``--init-command`` option) with :kbd:`Control-C` no longer prevents configuration scripts from running (:issue:`9024`).
+- On terminals that emit a ``CSI u`` sequence for :kbd:`Shift-Space`, ghoti inserts a space instead of printing an error. (:issue:`9054`).
+- ``status ghoti-path`` on Linux-based platforms could print the path with a " (deleted)" suffix (such as ``/usr/bin/ghoti (deleted)``), which is now removed (:issue:`9019`).
+- Cancelling an initial command (from ghoti's ``--init-command`` option) with :kbd:`Control-C` no longer prevents configuration scripts from running (:issue:`9024`).
 - The job summary contained extra blank lines if the prompt used multiple lines, which is now fixed (:issue:`9044`).
 - Using special input functions in bindings, in combination with ``and``/``or`` conditionals, no longer crashes (:issue:`9051`).
 
 --------------
 
-fish 3.5.0 (released June 16, 2022)
+ghoti 3.5.0 (released June 16, 2022)
 ===================================
 
 Notable improvements and fixes
@@ -355,10 +355,10 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
-- The ``stderr-nocaret`` feature flag, introduced in fish 3.0 and enabled by default in fish 3.1, has been made read-only.
+- The ``stderr-nocaret`` feature flag, introduced in ghoti 3.0 and enabled by default in ghoti 3.1, has been made read-only.
   That means it is no longer possible to disable it, and code supporting the ``^`` redirection has been removed (:issue:`8857`, :issue:`8865`).
 
-  To recap: fish used to support ``^`` to redirect stderr, so you could use commands like::
+  To recap: ghoti used to support ``^`` to redirect stderr, so you could use commands like::
 
     test "$foo" -gt 8 ^/dev/null
 
@@ -376,33 +376,33 @@ Deprecations and removed features
     This only affects the *replacement* expression, not the *match* expression (the ``'([ab])'`` part in the example).
     A survey of plugins on GitHub did not turn up any affected code, so we do not expect this to affect many users.
 
-    This flag was introduced in fish 3.1.
+    This flag was introduced in ghoti 3.1.
   - ``ampersand-nobg-in-token``, which means that ``&`` will not create a background job if it occurs in the middle of a word. For example, ``echo foo&bar`` will print "foo&bar" instead of running ``echo foo`` in the background and then starting ``bar`` as a second job.
 
-    Reformatting with ``fish_indent`` would already introduce spaces, turning ``echo foo&bar`` into ``echo foo & bar``.
+    Reformatting with ``ghoti_indent`` would already introduce spaces, turning ``echo foo&bar`` into ``echo foo & bar``.
 
-    This flag was introduced in fish 3.4.
+    This flag was introduced in ghoti 3.4.
 
-  To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to :envvar:`fish_features` and restart fish::
+  To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to :envvar:`ghoti_features` and restart ghoti::
 
-    set -Ua fish_features no-regex-easyesc
+    set -Ua ghoti_features no-regex-easyesc
 
   Like ``stderr-nocaret``, they will eventually be made read-only.
 - Most ``string`` subcommands no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
-- Fish's escape sequence removal (like for ``string length --visible`` or to figure out how wide the prompt is) no longer has special support for non-standard color sequences like from Data General terminals, e.g. the Data General Dasher D220 from 1984. This removes a bunch of work in the common case, allowing ``string length --visible`` to be much faster with unknown escape sequences. We don't expect anyone to have ever used fish with such a terminal (:issue:`8769`).
-- Code to upgrade universal variables from fish before 3.0 has been removed. Users who upgrade directly from fish versions 2.7.1 or before will have to set their universal variables & abbreviations again. (:issue:`8781`)
+- Fish's escape sequence removal (like for ``string length --visible`` or to figure out how wide the prompt is) no longer has special support for non-standard color sequences like from Data General terminals, e.g. the Data General Dasher D220 from 1984. This removes a bunch of work in the common case, allowing ``string length --visible`` to be much faster with unknown escape sequences. We don't expect anyone to have ever used ghoti with such a terminal (:issue:`8769`).
+- Code to upgrade universal variables from ghoti before 3.0 has been removed. Users who upgrade directly from ghoti versions 2.7.1 or before will have to set their universal variables & abbreviations again. (:issue:`8781`)
 - The meaning of an empty color variable has changed (:issue:`8793`). Previously, when a variable was set but empty, it would be interpreted as the "normal" color. Now, empty color variables cause the same effect as unset variables - the general highlighting variable for that type is used instead. For example::
 
-    set -g fish_color_command blue
-    set -g fish_color_keyword
+    set -g ghoti_color_command blue
+    set -g ghoti_color_keyword
 
-  would previously make keywords "normal" (usually white in a dark terminal). Now it'll make them blue. To achieve the previous behavior, use the normal color explicitly: ``set -g fish_color_keyword normal``.
+  would previously make keywords "normal" (usually white in a dark terminal). Now it'll make them blue. To achieve the previous behavior, use the normal color explicitly: ``set -g ghoti_color_keyword normal``.
 
   This makes it easier to make self-contained color schemes that don't accidentally use color that was set before.
-  ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty.
-- ``eval`` is now a reserved keyword, so it can't be used as a function name. This follows ``set`` and ``read``, and is necessary because it can't be cleanly shadowed by a function - at the very least ``eval set -l argv foo`` breaks. Fish will ignore autoload files for it, so left over ``eval.fish`` from previous fish versions won't be loaded.
-- The git prompt in informative mode now defaults to skipping counting untracked files, as this was extremely slow. To turn it on, set :envvar:`__fish_git_prompt_showuntrackedfiles` or set the git config value "bash.showuntrackedfiles" to ``true`` explicitly (which can be done for individual repositories). The "informative+vcs" sample prompt already skipped display of untracked files, but didn't do so in a way that skipped the computation, so it should be quite a bit faster in many cases (:issue:`8980`).
-- The ``__terlar_git_prompt`` function, used by the "Terlar" sample prompt, has been rebuilt as a configuration of the normal ``fish_git_prompt`` to ease maintenance, improve performance and add features (like reading per-repo git configuration). Some slight changes remain; users who absolutely must have the same behavior are encouraged to copy the old function (:issue:`9011`, :issue:`7918`, :issue:`8979`).
+  ``ghoti_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty.
+- ``eval`` is now a reserved keyword, so it can't be used as a function name. This follows ``set`` and ``read``, and is necessary because it can't be cleanly shadowed by a function - at the very least ``eval set -l argv foo`` breaks. Fish will ignore autoload files for it, so left over ``eval.ghoti`` from previous ghoti versions won't be loaded.
+- The git prompt in informative mode now defaults to skipping counting untracked files, as this was extremely slow. To turn it on, set :envvar:`__ghoti_git_prompt_showuntrackedfiles` or set the git config value "bash.showuntrackedfiles" to ``true`` explicitly (which can be done for individual repositories). The "informative+vcs" sample prompt already skipped display of untracked files, but didn't do so in a way that skipped the computation, so it should be quite a bit faster in many cases (:issue:`8980`).
+- The ``__terlar_git_prompt`` function, used by the "Terlar" sample prompt, has been rebuilt as a configuration of the normal ``ghoti_git_prompt`` to ease maintenance, improve performance and add features (like reading per-repo git configuration). Some slight changes remain; users who absolutely must have the same behavior are encouraged to copy the old function (:issue:`9011`, :issue:`7918`, :issue:`8979`).
 
 Scripting improvements
 ----------------------
@@ -419,26 +419,26 @@ Scripting improvements
 
 - ``read`` is now faster as the last process in a pipeline (:issue:`8552`).
 - ``string join`` gained a new ``--no-empty`` flag to skip empty arguments (:issue:`8774`, :issue:`8351`).
-- ``read`` now only triggers the ``fish_read`` event, not the ``fish_prompt`` event (:issue:`8797`). It was supposed to work this way in fish 3.2.0 and later, but both events were emitted.
+- ``read`` now only triggers the ``ghoti_read`` event, not the ``ghoti_prompt`` event (:issue:`8797`). It was supposed to work this way in ghoti 3.2.0 and later, but both events were emitted.
 - The TTY modes are no longer restored when non-interactive shells exit. This fixes wrong tty modes in pipelines with interactive commands. (:issue:`8705`).
-- Some functions shipped with fish printed error messages to standard output, but they now they rightly go to standard error (:issue:`8855`).
+- Some functions shipped with ghoti printed error messages to standard output, but they now they rightly go to standard error (:issue:`8855`).
 - ``jobs`` now correctly reports CPU usage as a percentage, instead of as a number of clock ticks (:issue:`8919`).
 - ``process-exit`` events now fire when the process exits even if the job has not yet exited, fixing a regression in 3.4.1 (:issue:`8914`).
 
 Interactive improvements
 ------------------------
 - Fish now reports a special error if a command wasn't found and there is a non-executable file by that name in :envvar:`PATH` (:issue:`8804`).
-- ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
+- ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with ghoti functions; this has been fixed (:issue:`8699`).
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).
 - ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD ande NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`, :issue:`8786`).
 - The ``vared`` command can now successfully edit variables named "tmp" or "prompt" (:issue:`8836`, :issue:`8837`).
 - ``time`` now emits an error if used after the first command in a pipeline (:issue:`8841`).
-- ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag (:issue:`8884`).
-- Since fish 3.2.0, pressing :kbd:`Control-D` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
+- ``ghoti_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag (:issue:`8884`).
+- Since ghoti 3.2.0, pressing :kbd:`Control-D` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
 - A bug that caused multi-line prompts to be moved down a line when pasting or switching modes has been fixed (:issue:`3481`).
 - The Web-based configuration system no longer strips too many quotes in the abbreviation display (:issue:`8917`, :issue:`8918`).
 - Fish started with ``--no-config`` will now use the default keybindings (:issue:`8493`)
-- When fish inherits a :envvar:`USER` environment variable value that doesn't correspond to the current effective user ID, it will now correct it in all cases (:issue:`8879`, :issue:`8583`).
+- When ghoti inherits a :envvar:`USER` environment variable value that doesn't correspond to the current effective user ID, it will now correct it in all cases (:issue:`8879`, :issue:`8583`).
 - Fish sets a new :envvar:`EUID` variable containing the current effective user id (:issue:`8866`).
 - ``history search`` no longer interprets the search term as an option (:issue:`8853`)
 - The status message when a job terminates should no longer be erased by a multiline prompt (:issue:`8817`)
@@ -469,7 +469,7 @@ Completions
   - ``tuned-adm`` (:issue:`8760`)
   - ``wg-quick`` (:issue:`8687`)
 
-- ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`).
+- ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - ghoti's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -481,19 +481,19 @@ For distributors
 - libatomic is now correctly detected as necessary when building on RISC-V (:issue:`8850`, :issue:`8851`).
 - In some cases, the build process found the wrong libintl on macOS. This has been corrected (:issue:`5244`).
 - The paths for completions, functions, and configuration snippets now include
-  subdirectories ``fish/vendor_completions.d``, ``fish/vendor_functions.d``, and
-  ``fish/vendor_conf.d`` (respectively) within ``XDG_DATA_HOME`` (or ``~/.local/share``
+  subdirectories ``ghoti/vendor_completions.d``, ``ghoti/vendor_functions.d``, and
+  ``ghoti/vendor_conf.d`` (respectively) within ``XDG_DATA_HOME`` (or ``~/.local/share``
   if not defined) (:issue:`8887`, :issue:`7816`).
 
 --------------
 
-fish 3.4.1 (released March 25, 2022)
+ghoti 3.4.1 (released March 25, 2022)
 ====================================
 
-This release of fish fixes the following problems identified in fish 3.4.0:
+This release of ghoti fixes the following problems identified in ghoti 3.4.0:
 
-- An error printed after upgrading, where old instances could pick up a newer version of the ``fish_title`` function, has been fixed (:issue:`8778`)
-- fish builds correctly on NetBSD (:issue:`8788`) and OpenIndiana (:issue:`8780`).
+- An error printed after upgrading, where old instances could pick up a newer version of the ``ghoti_title`` function, has been fixed (:issue:`8778`)
+- ghoti builds correctly on NetBSD (:issue:`8788`) and OpenIndiana (:issue:`8780`).
 - ``nextd-or-forward-word``, bound to :kbd:`Alt-Right Arrow` by default, was inadvertently changed to move like ``forward-bigword``. This has been corrected (:issue:`8790`).
 - ``funcsave -q`` and ``funcsave --quiet`` now work correctly (:issue:`8830`).
 - Issues with the ``csharp`` and ``nmcli`` completions were corrected.
@@ -502,12 +502,12 @@ If you are upgrading from version 3.3.1 or before, please also review the releas
 
 --------------
 
-fish 3.4.0 (released March 12, 2022)
+ghoti 3.4.0 (released March 12, 2022)
 ====================================
 
 Notable improvements and fixes
 ------------------------------
-- fish's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results (:issue:`159`)::
+- ghoti's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results (:issue:`159`)::
 
     foo (bar | string collect)
     # can now be written as
@@ -520,7 +520,7 @@ Notable improvements and fixes
     foo $(bar)
     # this will still split on newlines only.
 
-- Complementing the ``prompt`` command in 3.3.0, ``fish_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a Web browser. For example ``fish_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`). The current theme can be saved with ``fish_config theme dump``, and custom themes can be added by saving them in ``~/.config/fish/themes/``.
+- Complementing the ``prompt`` command in 3.3.0, ``ghoti_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a Web browser. For example ``ghoti_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`). The current theme can be saved with ``ghoti_config theme dump``, and custom themes can be added by saving them in ``~/.config/ghoti/themes/``.
 - ``set`` and ``read`` learned a new option, ``--function``, to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped (:issue:`565`, :issue:`8145`)::
 
     function demonstration
@@ -532,14 +532,14 @@ Notable improvements and fixes
         echo $baz # prints nothing because $baz went out of scope
     end
 
-- ``string pad`` now excludes escape sequences like colors that fish knows about, and a new ``--visible`` flag to ``string length`` makes it use that kind of visible width. This is useful to get the number of terminal cells an already colored string would occupy, like in a prompt. (:issue:`8182`, :issue:`7784`, :issue:`4012`)::
+- ``string pad`` now excludes escape sequences like colors that ghoti knows about, and a new ``--visible`` flag to ``string length`` makes it use that kind of visible width. This is useful to get the number of terminal cells an already colored string would occupy, like in a prompt. (:issue:`8182`, :issue:`7784`, :issue:`4012`)::
 
     > string length --visible (set_color red)foo
     3
 
 - Performance improvements to globbing, especially on systems using glibc. In some cases (large directories with files with many numbers in the names) this almost halves the time taken to expand the glob.
-- Autosuggestions can now be turned off by setting ``$fish_autosuggestion_enabled`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, like those which distinguish autosuggestions from the actual command line. (:issue:`8376`)
-- The ``fish_git_prompt`` function, which is included in the default prompts, now overrides ``git`` to avoid running  commands set by per-repository configuration. This avoids a potential security issue in some circumstances, and has been assigned CVE-2022-20001 (:issue:`8589`).
+- Autosuggestions can now be turned off by setting ``$ghoti_autosuggestion_enabled`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, like those which distinguish autosuggestions from the actual command line. (:issue:`8376`)
+- The ``ghoti_git_prompt`` function, which is included in the default prompts, now overrides ``git`` to avoid running  commands set by per-repository configuration. This avoids a potential security issue in some circumstances, and has been assigned CVE-2022-20001 (:issue:`8589`).
 
 Deprecations and removed features
 ---------------------------------
@@ -550,14 +550,14 @@ Deprecations and removed features
     # with both ampersand-nobg-in-token and qmark-noglob, this argument has no special characters anymore
     > open https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=youtu.be
 
-  As a reminder, feature flags can be set on startup with ``fish --features ampersand-nobg-in-token,qmark-noglob`` or with a universal variable called ``fish_features``::
+  As a reminder, feature flags can be set on startup with ``ghoti --features ampersand-nobg-in-token,qmark-noglob`` or with a universal variable called ``ghoti_features``::
 
-    > set -Ua fish_features ampersand-nobg-in-token
+    > set -Ua ghoti_features ampersand-nobg-in-token
 
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
 - ``set --query`` now returns an exit status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior, use ``if not set -q foo; or set -q $foo`` - but this is unlikely to be desireable (:issue:`8214`).
 - ``_`` is now a reserved keyword (:issue:`8342`).
-- The special input functions ``delete-or-exit``, ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace fish functions of the same names (:issue:`8538`).
+- The special input functions ``delete-or-exit``, ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace ghoti functions of the same names (:issue:`8538`).
 - Mac OS X 10.9 is no longer supported. The minimum Mac version is now 10.10 "Yosemite."
 
 Scripting improvements
@@ -565,31 +565,31 @@ Scripting improvements
 - ``string collect`` supports a new ``--allow-empty`` option, which will output one empty argument in a command substitution that has no output (:issue:`8054`). This allows commands like ``test -n (echo -n | string collect --allow-empty)`` to work more reliably. Note this can also be written as ``test -n "$(echo -n)"`` (see above).
 - ``string match`` gained a ``--groups-only`` option, which makes it only output capturing groups, excluding the full match. This allows ``string match`` to do simple transformations (:issue:`6056`)::
 
-    > string match -r --groups-only '(.*)fish' 'catfish' 'twofish' 'blue fish' | string escape
+    > string match -r --groups-only '(.*)ghoti' 'catghoti' 'twoghoti' 'blue ghoti' | string escape
     cat
     two
     'blue '
 
-- ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
+- ``$ghoti_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.ghoti when it is universal (:issue:`8117`). :ref:`ghoti_add_path <cmd-ghoti_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside functions. In scripts, it does the same thing as ``exit``. In interactive mode,it sets ``$status`` without exiting (:issue:`8148`).
-- An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks such as ``exec`` not being allowed in a pipeline, and ``$$`` not being a valid variable. Generally, another error was generated anyway.
-- ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
+- An oversight prevented all syntax checks from running on commands given to ``ghoti -c`` (:issue:`8171`). This includes checks such as ``exec`` not being allowed in a pipeline, and ``$$`` not being a valid variable. Generally, another error was generated anyway.
+- ``ghoti_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``commandline`` gained an ``--is-valid`` option to check if the command line is syntactically valid and complete. This allows basic implementation of transient prompts (:issue:`8142`).
 - ``commandline`` gained a ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "7 more rows" message) (:issue:`8485`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
-- Running ``fish`` with a directory instead of a script as argument (eg ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
-- Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
+- Running ``ghoti`` with a directory instead of a script as argument (eg ``ghoti .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
+- Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for ghoti (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
 - The ``realpath`` builtin now also squashes leading slashes with the ``--no-symlinks`` option (:issue:`8281`).
-- When trying to ``cd`` to a dangling (broken) symbolic link, fish will print an error noting that the target is a broken link (:issue:`8264`).
+- When trying to ``cd`` to a dangling (broken) symbolic link, ghoti will print an error noting that the target is a broken link (:issue:`8264`).
 - On MacOS terminals that are not granted permissions to access a folder, ``cd`` would print a spurious "rotten symlink" error, which has been corrected to "permission denied" (:issue:`8264`).
-- Since fish 3.0, ``for`` loops would trigger a variable handler function before the loop was entered. As the variable had not actually changed or been set, this was a spurious event and has been removed (:issue:`8384`).
+- Since ghoti 3.0, ``for`` loops would trigger a variable handler function before the loop was entered. As the variable had not actually changed or been set, this was a spurious event and has been removed (:issue:`8384`).
 - ``math`` now correctly prints negative values and values larger than ``2**31`` when in hex or octal bases (:issue:`8417`).
 - ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
-- ``cd ""`` no longer crashes fish (:issue:`8147`).
+- ``cd ""`` no longer crashes ghoti (:issue:`8147`).
 - ``set --query`` can now query whether a variable is a path variable via ``--path`` or ``--unpath`` (:issue:`8494`).
 - Tilde characters (``~``) produced by custom completions are no longer escaped when applied to the command line, making it easier to use the output of a recursive ``complete -C`` in completion scripts (:issue:`4570`).
 - ``set --show`` reports when a variable is read-only (:issue:`8179`).
-- Erasing ``$fish_emoji_width`` will reset fish to the default guessed emoji width (:issue:`8274`).
+- Erasing ``$ghoti_emoji_width`` will reset ghoti to the default guessed emoji width (:issue:`8274`).
 - The ``la`` function no longer lists entries for "." and "..", matching other systems defaults (:issue:`8519`).
 - ``abbr -q`` returns the correct exit status when given multiple abbreviation names as arguments (:issue:`8431`).
 - ``command -v`` returns an exit status of 127 instead of 1 if no command was found (:issue:`8547`).
@@ -603,27 +603,27 @@ Interactive improvements
 - Vi mode cursors are now set properly after :kbd:`Control-C` (:issue:`8125`).
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
 - Running a command line consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
-- Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
-- ``history`` and ``__fish_print_help`` now properly support ``less`` before version 530, including the version that ships with macOS. (:issue:`8157`).
+- Command substitutions no longer respect job control, instead running inside ghoti's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
+- ``history`` and ``__ghoti_print_help`` now properly support ``less`` before version 530, including the version that ships with macOS. (:issue:`8157`).
 - ``help`` now knows which section is in which document again (:issue:`8245`).
-- fish's highlighter will now color options (starting with ``-`` or ``--``) with the color given in the new $fish_color_option, up to the first ``--``. It falls back on $fish_color_param, so nothing changes for existing setups (:issue:`8292`).
+- ghoti's highlighter will now color options (starting with ``-`` or ``--``) with the color given in the new $ghoti_color_option, up to the first ``--``. It falls back on $ghoti_color_param, so nothing changes for existing setups (:issue:`8292`).
 - When executing a command, abbreviations are no longer expanded when the cursor is separated from the command by spaces, making it easier to suppress abbreviation expansion of commands without arguments. (:issue:`8423`).
-- ``fish_key_reader``'s output was simplified. By default, it now only prints a bind statement. The previous per-character timing information can be seen with a new ``--verbose`` switch (:issue:`8467`).
-- Custom completions are now also loaded for commands that contain tildes or variables like ``~/bin/fish`` or ``$PWD/fish`` (:issue:`8442`).
+- ``ghoti_key_reader``'s output was simplified. By default, it now only prints a bind statement. The previous per-character timing information can be seen with a new ``--verbose`` switch (:issue:`8467`).
+- Custom completions are now also loaded for commands that contain tildes or variables like ``~/bin/ghoti`` or ``$PWD/ghoti`` (:issue:`8442`).
 - Command lines spanning multiple lines will not be overwritten by the completion pager when it fills the entire terminal (:issue:`8509`, :issue:`8405`).
 - When redrawing a multiline prompt, the old prompt is now properly cleared (:issue:`8163`).
 - Interactive completion would occasionally ignore the last word on the command line due to a race condition. This has been fixed (:issue:`8175`).
-- Propagation of universal variables from a fish process that is closing is faster (:issue:`8209`).
+- Propagation of universal variables from a ghoti process that is closing is faster (:issue:`8209`).
 - The command line is drawn in the correct place if the prompt ends with a newline (:issue:`8298`).
 - ``history`` learned a new subcommand ``clear-session`` to erase all history from the current session (:issue:`5791`).
-- Pressing :kbd:`Control-C` in ``fish_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
+- Pressing :kbd:`Control-C` in ``ghoti_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
 - The default command-not-found handler for Fedora/PackageKit now passes the whole command line, allowing for functionality such as running the suggested command directly (:issue:`8579`).
 - When looking for locale information, the Debian configuration is now used when available (:issue:`8557`).
 - Pasting text containing quotes from the clipboard trims spaces more appropriately (:issue:`8550`).
 - The clipboard bindings ignore X-based clipboard programs if the ``DISPLAY`` environment variable is not set, which helps prefer the Windows clipboard when it is available (such as on WSL).
 - ``funcsave`` will remove a saved copy of a function that has been erased with ``functions --erase``.
 - The Web-based configuration tool gained a number of improvements, including the ability to set pager colors.
-- The default ``fish_title`` prints a shorter title with shortened $PWD and no more redundant "fish" (:issue:`8641`).
+- The default ``ghoti_title`` prints a shorter title with shortened $PWD and no more redundant "ghoti" (:issue:`8641`).
 - Holding down an arrow key won't freeze the terminal with long periods of flashing (:issue:`8610`).
 - Multi-char bindings are no longer interrupted if a signal handler enqueues an event. (:issue:`8628`).
 
@@ -634,10 +634,10 @@ New or improved bindings
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
-- The ``fish_status_to_signal`` helper function returns the correct signal names for the current platform, rather than Linux (:issue:`8530`).
+- The ``ghoti_status_to_signal`` helper function returns the correct signal names for the current platform, rather than Linux (:issue:`8530`).
 - The ``prompt_pwd`` helper function learned a ``--full-length-dirs N`` option to keep the last N directory components unshortened. In addition the number of characters to shorten each component should be shortened to can now be given as ``-d N`` or ``--dir-length N``. (:issue:`8208`)::
 
-    > prompt_pwd --full-length-dirs 2 -d 1 ~/dev/fish-shell/share/tools/web_config
+    > prompt_pwd --full-length-dirs 2 -d 1 ~/dev/ghoti-shell/share/tools/web_config
     ~/d/f/s/tools/web_config
 
 Completions
@@ -690,9 +690,9 @@ Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
 - Directory history navigation works out of the box with Apple Terminal's default key settings (:issue:`2330`).
-- fish now assumes Unicode 9+ widths for emoji under iTerm 2 (:issue:`8200`).
+- ghoti now assumes Unicode 9+ widths for emoji under iTerm 2 (:issue:`8200`).
 - Skin-tone emoji modifiers (U+1F3FB through U+1F3FF) are now measured as width 0 (:issue:`8275`).
-- fish's escape sequence removal now also knows Tmux's wrapped escapes.
+- ghoti's escape sequence removal now also knows Tmux's wrapped escapes.
 - Vi mode cursors are enabled in Apple Terminal.app (:issue:`8167`).
 - Vi cursor shaping and $PWD reporting is now also enabled on foot (:issue:`8422`).
 - ``ls`` will use colors also on newer versions of Apple Terminal.app (:issue:`8309`).
@@ -700,31 +700,31 @@ Improved terminal support
 
 Other improvements
 ------------------
-- Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests with targets named ``test_$filename`` - ``make test_set.fish`` only runs the set.fish test. (:issue:`7851`)
+- Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests with targets named ``test_$filename`` - ``make test_set.ghoti`` only runs the set.ghoti test. (:issue:`7851`)
 - The HTML version of the documentation now includes copy buttons for code examples (:issue:`8218`).
 - The HTML version of the documentation and the web-based configuration tool now pick more modern system fonts instead of falling back to Arial and something like Courier New most of the time (:issue:`8632`).
-- The Debian & Ubuntu package linked from fishshell.com is now a single package, rather than split into ``fish`` and ``fish-common`` (:issue:`7845`).
-- The macOS installer does not assert that Rosetta is required to install fish on machines with Apple Silicon (:issue:`8566`).
+- The Debian & Ubuntu package linked from ghotishell.com is now a single package, rather than split into ``ghoti`` and ``ghoti-common`` (:issue:`7845`).
+- The macOS installer does not assert that Rosetta is required to install ghoti on machines with Apple Silicon (:issue:`8566`).
 - The macOS installer now cleans up previous .pkg installations when upgrading. (:issue:`2963`).
 
 For distributors
 ----------------
-- The minimum version of CMake required to build fish is now 3.5.0.
+- The minimum version of CMake required to build ghoti is now 3.5.0.
 - The CMake installation supports absolute paths for ``CMAKE_INSTALL_DATADIR`` (:issue:`8150`).
 - Building using NetBSD curses works on any platform (:issue:`8087`).
 - The build system now uses the default linker instead of forcing use of the gold or lld linker (:issue:`8152`).
 
 --------------
 
-fish 3.3.1 (released July 6, 2021)
+ghoti 3.3.1 (released July 6, 2021)
 ==================================
 
-This release of fish fixes the following problems identified in fish 3.3.0:
+This release of ghoti fixes the following problems identified in ghoti 3.3.0:
 
 - The prompt and command line are redrawn correctly in response to universal variable changes (:issue:`8088`).
 - A superfluous error that was produced when setting the ``PATH`` or ``CDPATH`` environment variables to include colon-delimited components that do not exist was removed (:issue:`8095`).
 - The Vi mode indicator in the prompt is repainted correctly after :kbd:`Ctrl-C` cancels the current command (:issue:`8103`).
-- fish builds correctly on platforms that do not have a ``spawn.h`` header, such as old versions of OS X (:issue:`8097`).
+- ghoti builds correctly on platforms that do not have a ``spawn.h`` header, such as old versions of OS X (:issue:`8097`).
 
 A number of improvements to the documentation, and fixes for completions, are included as well.
 
@@ -732,75 +732,75 @@ If you are upgrading from version 3.2.2 or before, please also review the releas
 
 --------------
 
-fish 3.3.0 (released June 28, 2021)
+ghoti 3.3.0 (released June 28, 2021)
 ===================================
 
 
 Notable improvements and fixes
 ------------------------------
-- ``fish_config`` gained a ``prompt`` subcommand to show and pick from the sample prompts directly in the terminal, instead of having to open a webbrowser. For example ``fish_config prompt choose default`` loads the default prompt in the current session (:issue:`7958`).
+- ``ghoti_config`` gained a ``prompt`` subcommand to show and pick from the sample prompts directly in the terminal, instead of having to open a webbrowser. For example ``ghoti_config prompt choose default`` loads the default prompt in the current session (:issue:`7958`).
 - The documentation has been reorganized to be easier to understand (:issue:`7773`).
 
 Deprecations and removed features
 ---------------------------------
-- The ``$fish_history`` value "default" is no longer special. It used to be treated the same as "fish" (:issue:`7650`).
+- The ``$ghoti_history`` value "default" is no longer special. It used to be treated the same as "ghoti" (:issue:`7650`).
 - Redirection to standard error with the ``^`` character has been disabled by default. It can be turned back on using the ``stderr-nocaret`` feature flag, but will eventually be disabled completely (:issue:`7105`).
-- Specifying an initial tab to ``fish_config`` now only works with ``fish_config browse`` (eg ``fish_config browse variables``), otherwise it would interfere with the new ``prompt`` subcommand (see below) (:issue:`7958`).
+- Specifying an initial tab to ``ghoti_config`` now only works with ``ghoti_config browse`` (eg ``ghoti_config browse variables``), otherwise it would interfere with the new ``prompt`` subcommand (see below) (:issue:`7958`).
 
 Scripting improvements
 ----------------------
 - ``math`` gained new functions ``log2`` (like the documentation claimed), ``max`` and ``min`` (:issue:`7856`). ``math`` functions can be used without the parentheses (eg ``math sin 2 + 6``), and functions have the lowest precedence in the order of operations (:issue:`7877`).
-- Shebang (``#!``) lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a (rudimentary) binary safety check, fish will re-invoke it using ``/bin/sh`` (:issue:`7802`).
+- Shebang (``#!``) lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a (rudimentary) binary safety check, ghoti will re-invoke it using ``/bin/sh`` (:issue:`7802`).
 - Exit codes are better aligned with bash. A failed execution now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
 - ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with Linux's special API files (``/proc``, ``/sys`` and such) (:issue:`7836`).
-- fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`).
+- ghoti should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`).
 - Builtins now properly report a ``$status`` of 1 upon unsuccessful writes (:issue:`7857`).
 - ``string match`` with unmatched capture groups and without the ``--all`` flag now sets an empty variable instead of a variable containing the empty string. It also correctly imports the first match if multiple arguments are provided, matching the documentation. (:issue:`7938`).
-- fish produces more specific errors when a command in a command substitution wasn't found or is not allowed. This now prints something like "Unknown command" instead of "Unknown error while evaluating command substitution".
-- ``fish_indent`` allows inline variable assignments (``FOO=BAR command``) to use line continuation, instead of joining them into one line (:issue:`7955`).
-- fish gained a ``--no-config`` option to disable configuration files. This applies to user-specific and the systemwide ``config.fish`` (typically in ``/etc/fish/config.fish``), and configuration snippets (typically in ``conf.d`` directories). It also disables universal variables, history, and loading of functions from system or user configuration directories (:issue:`7921`, :issue:`1256`).
+- ghoti produces more specific errors when a command in a command substitution wasn't found or is not allowed. This now prints something like "Unknown command" instead of "Unknown error while evaluating command substitution".
+- ``ghoti_indent`` allows inline variable assignments (``FOO=BAR command``) to use line continuation, instead of joining them into one line (:issue:`7955`).
+- ghoti gained a ``--no-config`` option to disable configuration files. This applies to user-specific and the systemwide ``config.ghoti`` (typically in ``/etc/ghoti/config.ghoti``), and configuration snippets (typically in ``conf.d`` directories). It also disables universal variables, history, and loading of functions from system or user configuration directories (:issue:`7921`, :issue:`1256`).
 - When universal variables are unavailable for some reason, setting a universal variable now sets a global variable instead (:issue:`7921`).
-- ``$last_pid`` now contains the process ID of the last process in the pipeline, allowing it to be used in scripts (:issue:`5036`, :issue:`5832`, :issue:`7721`). Previously, this value contained the process group ID, but in scripts this was the same as the running fish's process ID.
+- ``$last_pid`` now contains the process ID of the last process in the pipeline, allowing it to be used in scripts (:issue:`5036`, :issue:`5832`, :issue:`7721`). Previously, this value contained the process group ID, but in scripts this was the same as the running ghoti's process ID.
 - ``process-exit`` event handlers now receive the same value as ``$status`` in all cases, instead of receiving -1 when the exit was due to a signal.
 - ``process-exit`` event handlers for PID 0 also received ``JOB_EXIT`` events; this has been fixed.
 - ``job-exit`` event handlers may now be created with any of the PIDs from the job. The handler is passed the last PID in the job as its second argument, instead of the process group.
 - Trying to set an empty variable name with ``set`` no longer works (these variables could not be used in expansions anyway).
-- ``fish_add_path`` handles an undefined ``PATH`` environment variable correctly (:issue:`8082`).
+- ``ghoti_add_path`` handles an undefined ``PATH`` environment variable correctly (:issue:`8082`).
 
 Interactive improvements
 -------------------------
 - Commands entered before the previous command finishes will now be properly syntax highlighted.
-- fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist (:issue:`7402`).
+- ghoti now automatically creates ``config.ghoti`` and the configuration directories in ``$XDG_CONFIG_HOME/ghoti`` (by default ``~/.config/ghoti``) if they do not already exist (:issue:`7402`).
 - ``$SHLVL`` is no longer incremented in non-interactive shells. This means it won't be set to values larger than 1 just because your environment happens to run some scripts in $SHELL in its startup path (:issue:`7864`).
-- fish no longer rings the bell when flashing the command line. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).
-- ``fish --help`` is more helpful if the documentation isn't installed (:issue:`7824`).
+- ghoti no longer rings the bell when flashing the command line. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).
+- ``ghoti --help`` is more helpful if the documentation isn't installed (:issue:`7824`).
 - ``funced`` won't include an entry on where a function is defined, thanks to the new ``functions --no-details`` option (:issue:`7879`).
-- A new variable, ``fish_killring``, containing entries from the killring, is now available (:issue:`7445`).
-- ``fish --private`` prints a note on private mode on startup even if ``$fish_greeting`` is an empty list (:issue:`7974`).
-- fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and Samba mounts. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
+- A new variable, ``ghoti_killring``, containing entries from the killring, is now available (:issue:`7445`).
+- ``ghoti --private`` prints a note on private mode on startup even if ``$ghoti_greeting`` is an empty list (:issue:`7974`).
+- ghoti no longer attempts to lock history or universal variable files on remote filesystems, including NFS and Samba mounts. In rare cases, updates to these files may be dropped if separate ghoti instances modify them simultaneously. (:issue:`7968`).
 - ``wait`` and ``on-process-exit`` work correctly with jobs that have already exited (:issue:`7210`).
-- ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects the ``LESS`` environment variable, and if not set, uses better default pager settings (:issue:`7997`).
+- ``__ghoti_print_help`` (used for ``--help`` output for ghoti's builtins) now respects the ``LESS`` environment variable, and if not set, uses better default pager settings (:issue:`7997`).
 - Errors from ``alias`` are now printed to standard error, matching other builtins and functions (:issue:`7925`).
 - ``ls`` output is colorized on OpenBSD if colorls utility is installed (:issue:`8035`)
 - The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
 - Further robustness improvements to the bash history import (:issue:`7874`).
-- fish now tries to find a Unicode-aware locale for encoding (``LC_CTYPE``) if started without any locale information, improving the display of emoji and other non-ASCII text on misconfigured systems (:issue:`8031`). To allow a C locale, set the variable ``fish_allow_singlebyte_locale`` to 1.
+- ghoti now tries to find a Unicode-aware locale for encoding (``LC_CTYPE``) if started without any locale information, improving the display of emoji and other non-ASCII text on misconfigured systems (:issue:`8031`). To allow a C locale, set the variable ``ghoti_allow_singlebyte_locale`` to 1.
 - The Web-based configuration and documentation now feature a dark mode if the browser requests it (:issue:`8043`).
 - Color variables can now also be given like ``--background red`` and ``-b red``, not just ``--background=red`` (:issue:`8053`).
-- ``exit`` run within ``fish_prompt`` now exits properly (:issue:`8033`).
-- When attempting to execute the unsupported POSIX-style brace command group (``{ ... }``) fish will suggest its equivalent ``begin; ...; end`` commands (:issue:`6415`).
+- ``exit`` run within ``ghoti_prompt`` now exits properly (:issue:`8033`).
+- When attempting to execute the unsupported POSIX-style brace command group (``{ ... }``) ghoti will suggest its equivalent ``begin; ...; end`` commands (:issue:`6415`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Pasting in Vi mode puts text in the right place in normal mode (:issue:`7847`).
 - Vi mode's :kbd:`u` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, :kbd:`Control-R` is bound to ``redo`` instead of ``history-search-backward``, following Vim (:issue:`7908`).
 - :kbd:`s` in Vi visual mode now does the same thing as :kbd:`c` (:issue:`8039`).
-- The binding for :kbd:`"*y` now uses ``fish_clipboard_copy``, allowing it to support more than just ``xsel``.
+- The binding for :kbd:`"*y` now uses ``ghoti_clipboard_copy``, allowing it to support more than just ``xsel``.
 - The :kbd:`Control-Space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
 - The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
 - The binding for :kbd:`Alt-S` now toggles whether ``sudo`` is prepended, even when it took the commandline from history instead of only adding it.
-- The new functions ``fish_commandline_prepend`` and ``fish_commandline_append`` allow toggling the presence of a prefix/suffix on the current commandline. (:issue:`7905`).
+- The new functions ``ghoti_commandline_prepend`` and ``ghoti_commandline_append`` allow toggling the presence of a prefix/suffix on the current commandline. (:issue:`7905`).
 - ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 
 Improved prompts
@@ -810,7 +810,7 @@ Improved prompts
 - The sample prompts were updated. Some duplicated prompts, like the various classic variants, or less useful ones, like the "justadollar" prompt were removed, some prompts were cleaned up, and in some cases renamed. A new "simple" and "disco" prompt were added (:issue:`7884`, :issue:`7897`, :issue:`7930`). The new prompts will only take effect when selected and existing installed prompts will remain unchanged.
 - A new ``prompt_login`` helper function to describe the kind of "login" (user, host and chroot status) for use in prompts. This replaces the old "debian chroot" prompt and has been added to the default and terlar prompts (:issue:`7932`).
 - The Web-based configuration's prompt picker now shows and installs right prompts (:issue:`7930`).
-- The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__fish_git_prompt_status_order`` (:issue:`7926`).
+- The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__ghoti_git_prompt_status_order`` (:issue:`7926`).
 
 Completions
 ^^^^^^^^^^^
@@ -825,14 +825,14 @@ Completions
 - Completion descriptions for functions don't include the function definition, making them more concise (:issue:`7911`).
 - The ``kill`` completions no longer error on MSYS2 (:issue:`8046`).
 - Completion scripts are now loaded when calling a command via a relative path (like ``./git``) (:issue:`6001`, :issue:`7992`).
-- When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
+- When there are multiple completion candidates, ghoti inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- fish no longer tries to detect a missing new line during startup, preventing an erroneous ``⏎`` from appearing if the terminal is resized at the wrong time, which can happen in tiling window managers (:issue:`7893`).
-- fish behaves better when it disagrees with the terminal on the width of characters. In particular, staircase effects with right prompts should be gone in most cases (:issue:`8011`).
+- ghoti no longer tries to detect a missing new line during startup, preventing an erroneous ``⏎`` from appearing if the terminal is resized at the wrong time, which can happen in tiling window managers (:issue:`7893`).
+- ghoti behaves better when it disagrees with the terminal on the width of characters. In particular, staircase effects with right prompts should be gone in most cases (:issue:`8011`).
 - If the prompt takes up the entire line, the last character should no longer be chopped off in certain terminals (:issue:`8002`).
-- fish's reflow handling has been disabled by default for kitty (:issue:`7961`).
+- ghoti's reflow handling has been disabled by default for kitty (:issue:`7961`).
 - The default prompt no longer produces errors when used with a dumb terminal (:issue:`7904`).
 - Terminal size variables are updated for window size change signal handlers (``SIGWINCH``).
 - Pasting within a multi-line command using a terminal that supports bracketed paste works correctly, instead of producing an error (:issue:`7782`).
@@ -840,61 +840,61 @@ Improved terminal support
 
 For distributors
 ----------------
-- fish runs correctly on platforms without the ``O_CLOEXEC`` flag for ``open(2)`` (:issue:`8023`).
+- ghoti runs correctly on platforms without the ``O_CLOEXEC`` flag for ``open(2)`` (:issue:`8023`).
 
 --------------
 
-fish 3.2.2 (released April 7, 2021)
+ghoti 3.2.2 (released April 7, 2021)
 ====================================
 
-This release of fish fixes a number of additional issues identified in the fish 3.2 series:
+This release of ghoti fixes a number of additional issues identified in the ghoti 3.2 series:
 
 - The command-not-found handler used suggestions from ``pacman`` on Arch Linux, but this caused major slowdowns on some systems and has been disabled (:issue:`7841`).
-- fish will no longer hang on exit if another process is in the foreground on macOS (:issue:`7901`).
-- Certain programs (such as ``lazygit``) could create situations where fish would not receive keystrokes correctly, but it is now more robust in these situations (:issue:`7853`).
+- ghoti will no longer hang on exit if another process is in the foreground on macOS (:issue:`7901`).
+- Certain programs (such as ``lazygit``) could create situations where ghoti would not receive keystrokes correctly, but it is now more robust in these situations (:issue:`7853`).
 - Arguments longer than 1024 characters no longer trigger excessive CPU usage on macOS (:issue:`7837`).
-- fish builds correctly on macOS when using new versions of Xcode (:issue:`7838`).
+- ghoti builds correctly on macOS when using new versions of Xcode (:issue:`7838`).
 - Completions for ``aura`` (:issue:`7865`) and ``tshark`` (:issue:`7858`) should no longer produce errors.
-- Background jobs no longer interfere with syntax highlighting (a regression introduced in fish 3.2.1, :issue:`7842`).
+- Background jobs no longer interfere with syntax highlighting (a regression introduced in ghoti 3.2.1, :issue:`7842`).
 
 If you are upgrading from version 3.1.2 or before, please also review the release notes for 3.2.1 and 3.2.0 (included below).
 
 --------------
 
-fish 3.2.1 (released March 18, 2021)
+ghoti 3.2.1 (released March 18, 2021)
 ====================================
 
-This release of fish fixes the following problems identified in fish 3.2.0:
+This release of ghoti fixes the following problems identified in ghoti 3.2.0:
 
--  Commands in key bindings are run with fish's internal terminal modes, instead of the terminal modes typically used for commands. This fixes a bug introduced in 3.2.0, where text would unexpectedly appear on the terminal, especially when pasting (:issue:`7770`).
--  Prompts which use the internal ``__fish_print_pipestatus`` function will display correctly rather than carrying certain modifiers (such as bold) further than intended (:issue:`7771`).
+-  Commands in key bindings are run with ghoti's internal terminal modes, instead of the terminal modes typically used for commands. This fixes a bug introduced in 3.2.0, where text would unexpectedly appear on the terminal, especially when pasting (:issue:`7770`).
+-  Prompts which use the internal ``__ghoti_print_pipestatus`` function will display correctly rather than carrying certain modifiers (such as bold) further than intended (:issue:`7771`).
 -  Redirections to internal file descriptors is allowed again, reversing the changes in 3.2.0. This fixes a problem with Midnight Commander (:issue:`7769`).
 -  Universal variables should be fully reliable regardless of operating system again (:issue:`7774`).
--  ``fish_git_prompt`` no longer causes screen flickering in certain terminals (:issue:`7775`).
--  ``fish_add_path`` manipulates the ``fish_user_paths`` variable correctly when moving multiple paths (:issue:`7776`).
--  Pasting with a multi-line command no longer causes a ``__fish_tokenizer_state`` error (:issue:`7782`).
+-  ``ghoti_git_prompt`` no longer causes screen flickering in certain terminals (:issue:`7775`).
+-  ``ghoti_add_path`` manipulates the ``ghoti_user_paths`` variable correctly when moving multiple paths (:issue:`7776`).
+-  Pasting with a multi-line command no longer causes a ``__ghoti_tokenizer_state`` error (:issue:`7782`).
 -  ``psub`` inside event handlers cleans up temporary files properly (:issue:`7792`).
--  Event handlers declared with ``--on-job-exit $fish_pid`` no longer run constantly (:issue:`7721`), although these functions should use ``--on-event fish_exit`` instead.
--  Changing terminal modes inside ``config.fish`` works (:issue:`7783`).
+-  Event handlers declared with ``--on-job-exit $ghoti_pid`` no longer run constantly (:issue:`7721`), although these functions should use ``--on-event ghoti_exit`` instead.
+-  Changing terminal modes inside ``config.ghoti`` works (:issue:`7783`).
 -  ``set_color --print-colors`` no longer prints all colors in bold (:issue:`7805`)
 -  Completing commands starting with a ``-`` no longer prints an error (:issue:`7809`).
--  Running ``fish_command_not_found`` directly no longer produces an error on macOS or other OSes which do not have a handler available (:issue:`7777`).
+-  Running ``ghoti_command_not_found`` directly no longer produces an error on macOS or other OSes which do not have a handler available (:issue:`7777`).
 -  The new ``type`` builtin now has the (deprecated) ``--quiet`` long form of ``-q`` (:issue:`7766`).
 
 It also includes some small enhancements:
 
--  ``help`` and ``fish_config`` work correctly when fish is running in a Chrome OS Crostini Linux VM (:issue:`7789`).
+-  ``help`` and ``ghoti_config`` work correctly when ghoti is running in a Chrome OS Crostini Linux VM (:issue:`7789`).
 -  The history file can be made a symbolic link without it being overwritten (:issue:`7754`), matching a similar improvement for the universal variable file in 3.2.0.
 -  An unhelpful error ("access: No error"), seen on Cygwin, is no longer produced (:issue:`7785`).
 -  Improvements to the ``rsync`` completions (:issue:`7763`), some completion descriptions (:issue:`7788`), and completions that use IP address (:issue:`7787`).
--  Improvements to the appearance of ``fish_config`` (:issue:`7811`).
+-  Improvements to the appearance of ``ghoti_config`` (:issue:`7811`).
 
 If you are upgrading from version 3.1.2 or before, please also review
 the release notes for 3.2.0 (included below).
 
 --------------
 
-fish 3.2.0 (released March 1, 2021)
+ghoti 3.2.0 (released March 1, 2021)
 ===================================
 
 Notable improvements and fixes
@@ -910,27 +910,27 @@ Notable improvements and fixes
 -  **Prompts will now be truncated** instead of replaced with ``"> "`` if they are wider than the terminal (:issue:`904`).
    For example::
 
-     ~/dev/build/fish-shell-git/src/fish-shell/build (makepkg)>
+     ~/dev/build/ghoti-shell-git/src/ghoti-shell/build (makepkg)>
 
    will turn into::
 
      …h-shell/build (makepkg)>
 
    It is still possible to react to the ``COLUMNS`` variable inside the prompt to implement smarter behavior.
--  **fish completes ambiguous completions** after pressing :kbd:`Tab` even when they
+-  **ghoti completes ambiguous completions** after pressing :kbd:`Tab` even when they
    have a common prefix, without the user having to press :kbd:`Tab` again
    (:issue:`6924`).
--  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
+-  ghoti is less aggressive about resetting terminal modes, such as flow control, after every command.
    Although flow control remains off by default, enterprising users can now enable it with
    ``stty`` (:issue:`2315`, :issue:`7704`).
--  A new **"fish_add_path" helper function to add paths to $PATH** without producing duplicates,
-   to be used interactively or in ``config.fish`` (:issue:`6960`, :issue:`7028`).
+-  A new **"ghoti_add_path" helper function to add paths to $PATH** without producing duplicates,
+   to be used interactively or in ``config.ghoti`` (:issue:`6960`, :issue:`7028`).
    For example::
 
-     fish_add_path /opt/mycoolthing/bin
+     ghoti_add_path /opt/mycoolthing/bin
 
-   will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
-   so it can be called safely from config.fish or interactively, and the path will just be there, once.
+   will add /opt/mycoolthing/bin to the beginning of $ghoti_user_path without creating duplicates,
+   so it can be called safely from config.ghoti or interactively, and the path will just be there, once.
 -  **Better errors with "test"** (:issue:`6030`)::
 
     > test 1 = 2 and echo true or false
@@ -938,14 +938,14 @@ Notable improvements and fixes
     1 = 2 and echo true or echo false
           ^
 
-   This includes numbering the index from 1 instead of 0, like fish lists.
--  **A new theme for the documentation and Web-based configuration** (:issue:`6500`, :issue:`7371`, :issue:`7523`), matching the design on fishshell.com.
--  ``fish --no-execute`` **will no longer complain about unknown commands**
+   This includes numbering the index from 1 instead of 0, like ghoti lists.
+-  **A new theme for the documentation and Web-based configuration** (:issue:`6500`, :issue:`7371`, :issue:`7523`), matching the design on ghotishell.com.
+-  ``ghoti --no-execute`` **will no longer complain about unknown commands**
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
--  ``string match --regex`` now integrates **named PCRE2 capture groups as fish variables**, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
+-  ``string match --regex`` now integrates **named PCRE2 capture groups as ghoti variables**, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
 -  Globs and other **expansions are limited to 512,288 results** (:issue:`7226`). Because operating systems limit the number of arguments to commands, larger values are unlikely to work anyway, and this helps to avoid hangs.
--  A new **"fish for bash users" documentation page** gives a quick overview of the scripting differences between bash and fish (:issue:`2382`), and the completion tutorial has also been moved out into its own document (:issue:`6709`).
+-  A new **"ghoti for bash users" documentation page** gives a quick overview of the scripting differences between bash and ghoti (:issue:`2382`), and the completion tutorial has also been moved out into its own document (:issue:`6709`).
 
 Syntax changes and new commands
 -------------------------------
@@ -968,7 +968,7 @@ Scripting improvements
 -  Computed ("electric") variables such as ``status`` are now only global in scope, so ``set -Uq status`` returns false (:issue:`7032`).
 -  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (:issue:`6944`).
    In addition, it now shows if a variable is a path variable.
--  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (:issue:`6824`, :issue:`6822`).
+-  A new variable, ``ghoti_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (:issue:`6824`, :issue:`6822`).
 -  A new subcommand, ``string pad``, allows extending strings to a given width (:issue:`7340`, :issue:`7102`).
 -  ``string sub`` has a new ``--end`` option to specify the end index of
    a substring (:issue:`6765`, :issue:`5974`).
@@ -981,11 +981,11 @@ Scripting improvements
 -  ``printf`` no longer prints an error if not given an argument (not
    even a format string).
 -  The ``true`` and ``false`` builtins ignore any arguments, like other shells (:issue:`7030`).
--  ``fish_indent`` now removes unnecessary quotes in simple cases (:issue:`6722`)
+-  ``ghoti_indent`` now removes unnecessary quotes in simple cases (:issue:`6722`)
    and gained a ``--check`` option to just check if a file is indented correctly (:issue:`7251`).
--  ``fish_indent`` indents continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||``.
+-  ``ghoti_indent`` indents continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||``.
 -  ``pushd`` only adds a directory to the stack if changing to it was successful (:issue:`6947`).
--  A new ``fish_job_summary`` function is called whenever a
+-  A new ``ghoti_job_summary`` function is called whenever a
    background job stops or ends, or any job terminates from a signal (:issue:`6959`, :issue:`2727`, :issue:`4319`).
    The default behaviour can now be customized by redefining it.
 -  ``status`` gained new ``dirname`` and ``basename`` convenience subcommands
@@ -997,7 +997,7 @@ Scripting improvements
    behaviour (:issue:`7038`).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (:issue:`6809`, :issue:`6812`).
 -  ``jobs`` now shows continued child processes correctly (:issue:`6818`)
--  ``disown`` should no longer create zombie processes when job control is off, such as in ``config.fish`` (:issue:`7183`).
+-  ``disown`` should no longer create zombie processes when job control is off, such as in ``config.ghoti`` (:issue:`7183`).
 -  ``command``, ``jobs`` and ``type`` builtins support ``--query`` as the long form of ``-q``, matching other builtins.
    The long form ``--quiet`` is deprecated (:issue:`7276`).
 -  ``argparse`` no longer requires a short flag letter for long-only options (:issue:`7585`)
@@ -1020,19 +1020,19 @@ Scripting improvements
 -  ``math`` learned bitwise functions ``bitand``, ``bitor`` and ``bitxor``, used like ``math "bitand(0xFE, 5)"`` (:issue:`7281`).
 -  ``math`` learned tau for those who don't like typing "2 * pi".
 -  Failed redirections will now set ``$status`` (:issue:`7540`).
--  fish sets exit status in a more consistent manner after errors, including invalid expansions like ``$foo[``.
--  Using ``read --silent`` while fish is in private mode was adding these potentially-sensitive entries to the history; this has been fixed (:issue:`7230`).
+-  ghoti sets exit status in a more consistent manner after errors, including invalid expansions like ``$foo[``.
+-  Using ``read --silent`` while ghoti is in private mode was adding these potentially-sensitive entries to the history; this has been fixed (:issue:`7230`).
 -  ``read`` can now read interactively from other files, and can be used to read from the terminal via ``read </dev/tty`` (if the operating system provides ``/dev/tty``) (:issue:`7358`).
--  A new ``fish_status_to_signal`` function for transforming exit statuses to signal names has been added (:issue:`7597`, :issue:`7595`).
+-  A new ``ghoti_status_to_signal`` function for transforming exit statuses to signal names has been added (:issue:`7597`, :issue:`7595`).
 -  The fallback ``realpath`` builtin supports the ``-s``/``--no-symlinks`` option, like GNU realpath (:issue:`7574`).
 -  ``functions`` and ``type`` now explain when a function was defined via ``source`` instead of just saying ``Defined in -``.
 -  Significant performance improvements when globbing, appending to variables or in ``math``.
 -  ``echo`` no longer interprets options at the beginning of an argument (eg ``echo "-n foo"``) (:issue:`7614`).
--  fish now finds user configuration even if the ``HOME`` environment variable is not set (:issue:`7620`).
--  fish no longer crashes when started from a Windows-style working directory (eg ``F:\path``) (:issue:`7636`).
--  ``fish -c`` now reads the remaining arguments into ``$argv`` (:issue:`2314`).
+-  ghoti now finds user configuration even if the ``HOME`` environment variable is not set (:issue:`7620`).
+-  ghoti no longer crashes when started from a Windows-style working directory (eg ``F:\path``) (:issue:`7636`).
+-  ``ghoti -c`` now reads the remaining arguments into ``$argv`` (:issue:`2314`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
--  ``fish --profile`` now only starts profiling after fish is ready to execute commands (all configuration is completed). There is a new ``--profile-startup`` option that only profiles the startup and configuration process (:issue:`7648`).
+-  ``ghoti --profile`` now only starts profiling after ghoti is ready to execute commands (all configuration is completed). There is a new ``--profile-startup`` option that only profiles the startup and configuration process (:issue:`7648`).
 -  Builtins return a maximum exit status of 255, rather than potentially overflowing. In particular, this affects ``exit``, ``return``, ``functions --query``, and ``set --query`` (:issue:`7698`, :issue:`7702`).
 - It is no longer an error to run builtin with closed stdin. For example ``count <&-`` now prints 0, instead of failing.
 - Blocks, functions, and builtins no longer permit redirecting to file descriptors other than 0 (standard input), 1 (standard output) and 2 (standard error). For example, ``echo hello >&5`` is now an error. This prevents corruption of internal state (:issue:`3303`).
@@ -1040,61 +1040,61 @@ Scripting improvements
 Interactive improvements
 ------------------------
 
--  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux's current directory introspection to work (:issue:`5699`).
+-  ghoti will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux's current directory introspection to work (:issue:`5699`).
 -  The interactive reader now allows ending a line in a logical operators (``&&`` and ``||``) instead of complaining about a missing command. (This was already syntactically valid, but interactive sessions didn't know about it yet).
 -  The prompt is reprinted after a background job exits (:issue:`1018`).
--  fish no longer inserts a space after a completion ending in ``.``, ``,`` or ``-`` is accepted, improving completions for tools that provide dynamic completions (:issue:`6928`).
+-  ghoti no longer inserts a space after a completion ending in ``.``, ``,`` or ``-`` is accepted, improving completions for tools that provide dynamic completions (:issue:`6928`).
 -  If a filename is invalid when first pressing :kbd:`Tab`, but becomes valid, it will be completed properly on the next attempt (:issue:`6863`).
 - ``help string match/replace/<subcommand>`` will show the help for string subcommands (:issue:`6786`).
--  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (:issue:`6964`).
--  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (:issue:`6964`).
+-  ``ghoti_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (:issue:`6964`).
+-  ``ghoti_key_reader`` and ``ghoti_indent`` send output from ``--version`` to standard output, matching other ghoti binaries (:issue:`6964`).
 -  A new variable ``$status_generation`` is incremented only when the previous command produces an exit status (:issue:`6815`). This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
--  ``fish_greeting`` is now a function that reads a variable of the same name, and defaults to setting it globally.
+-  ``ghoti_greeting`` is now a function that reads a variable of the same name, and defaults to setting it globally.
    This removes a universal variable by default and helps with updating the greeting.
-   However, to disable the greeting it is now necessary to explicitly specify universal scope (``set -U fish_greeting``) or to disable it in config.fish (:issue:`7265`).
+   However, to disable the greeting it is now necessary to explicitly specify universal scope (``set -U ghoti_greeting``) or to disable it in config.ghoti (:issue:`7265`).
 -  Events are properly emitted after a job is cancelled (:issue:`2356`).
--  ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (:issue:`4829`, :issue:`7085`).
--  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (:issue:`7014`).
--  The ``fish_prompt`` event no longer fires when ``read`` is used. If
+-  ``ghoti_preexec`` and ``ghoti_postexec`` events are no longer triggered for empty commands (:issue:`4829`, :issue:`7085`).
+-  Functions triggered by the ``ghoti_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (:issue:`7014`).
+-  The ``ghoti_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
-   use the new ``fish_read`` event instead (:issue:`7039`).
--  A new ``fish_posterror`` event is emitted when attempting to execute a command with syntax errors (:issue:`6880`, :issue:`6816`).
--  The debugging system has now fully switched from the old numbered level to the new named category system introduced in 3.1. A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (:issue:`6511`). See the output of ``fish --print-debug-categories`` for the full list.
+   use the new ``ghoti_read`` event instead (:issue:`7039`).
+-  A new ``ghoti_posterror`` event is emitted when attempting to execute a command with syntax errors (:issue:`6880`, :issue:`6816`).
+-  The debugging system has now fully switched from the old numbered level to the new named category system introduced in 3.1. A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (:issue:`6511`). See the output of ``ghoti --print-debug-categories`` for the full list.
 -  The warning about read-only filesystems has been moved to a new "warning-path" debug category
    and can be disabled by setting a debug category of ``-warning-path`` (:issue:`6630`)::
 
-     fish --debug=-warning-path
+     ghoti --debug=-warning-path
 
 -  The enabled debug categories are now printed on shell startup (:issue:`7007`).
--  The ``-o`` short option to fish, for ``--debug-output``, works correctly instead of producing an
+-  The ``-o`` short option to ghoti, for ``--debug-output``, works correctly instead of producing an
    invalid option error (:issue:`7254`).
--  fish's debugging can now also be enabled via ``FISH_DEBUG`` and ``FISH_DEBUG_OUTPUT`` environment variables.
-   This helps with debugging when no commandline options can be passed, like when fish is called in a shebang (:issue:`7359`).
+-  ghoti's debugging can now also be enabled via ``FISH_DEBUG`` and ``FISH_DEBUG_OUTPUT`` environment variables.
+   This helps with debugging when no commandline options can be passed, like when ghoti is called in a shebang (:issue:`7359`).
 -  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space,
-   as in fish 2.7.1 and before (:issue:`6970`), and after closing a command substitution (:issue:`6658`).
+   as in ghoti 2.7.1 and before (:issue:`6970`), and after closing a command substitution (:issue:`6658`).
 -  The history file is now created with user-private permissions,
    matching other shells (:issue:`6926`). The directory containing the history
    file was already private, so there should not have been any private data
    revealed.
 -  The output of ``time`` is now properly aligned in all cases (:issue:`6726`, :issue:`6714`) and no longer depends on locale (:issue:`6757`).
 -  The command-not-found handling has been simplified.
-   When it can't find a command, fish now just executes a function called ``fish_command_not_found``
+   When it can't find a command, ghoti now just executes a function called ``ghoti_command_not_found``
    instead of firing an event, making it easier to replace and reason about.
-   Previously-defined ``__fish_command_not_found_handler`` functions with an appropriate event listener will still work (:issue:`7293`).
+   Previously-defined ``__ghoti_command_not_found_handler`` functions with an appropriate event listener will still work (:issue:`7293`).
 -  :kbd:`Control-C` handling has been reimplemented in C++ and is therefore quicker (:issue:`5259`), no longer occasionally prints an "unknown command" error (:issue:`7145`) or overwrites multiline prompts (:issue:`3537`).
 -  :kbd:`Control-C` no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (:issue:`6828`, :issue:`6861`).
 -  Autosuggestions work properly after :kbd:`Control-C` cancels the current commmand line (:issue:`6937`).
 -  History search is now case-insensitive unless the search string contains an uppercase character (:issue:`7273`).
--  ``fish_update_completions`` gained a new ``--keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`, :issue:`6796`).
+-  ``ghoti_update_completions`` gained a new ``--keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`, :issue:`6796`).
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (:issue:`6910`).
 -  ``open`` no longer hangs indefinitely on certain systems, as a bug in ``xdg-open`` has been worked around (:issue:`7215`).
 -  Long command lines no longer add a blank line after execution (:issue:`6826`) and behave better with :kbd:`Backspace` (:issue:`6951`).
 -  ``functions -t`` works like the long option ``--handlers-type``, as documented, instead of producing an error (:issue:`6985`).
 -  History search now flashes when it found no more results (:issue:`7362`)
--  fish now creates the path in the environment variable ``XDG_RUNTIME_DIR`` if it does not exist, before using it for runtime data storage (:issue:`7335`).
+-  ghoti now creates the path in the environment variable ``XDG_RUNTIME_DIR`` if it does not exist, before using it for runtime data storage (:issue:`7335`).
 -  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (:issue:`7314`).
--  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`). It no longer shows the ``history`` variable as it may be too large (one can use the History tab instead). It also starts the browser in another thread, avoiding hangs in some circumstances, especially with Firefox's Developer Edition (:issue:`7158`). Finally, a bug in the Source Code Pro font may cause browsers to hang, so this font is no longer chosen by default (:issue:`7714`).
+-  The ghoti Web configuration tool (``ghoti_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`). It no longer shows the ``history`` variable as it may be too large (one can use the History tab instead). It also starts the browser in another thread, avoiding hangs in some circumstances, especially with Firefox's Developer Edition (:issue:`7158`). Finally, a bug in the Source Code Pro font may cause browsers to hang, so this font is no longer chosen by default (:issue:`7714`).
 -  ``funcsave`` gained a new ``--directory`` option to specify the location of the saved function (:issue:`7041`).
 -  ``help`` works properly on MSYS2 (:issue:`7113`) and only uses ``cmd.exe`` if running on WSL (:issue:`6797`).
 -  Resuming a piped job by its number, like ``fg %1``, works correctly (:issue:`7406`). Resumed jobs show the correct title in the terminal emulator (:issue:`7444`).
@@ -1102,25 +1102,25 @@ Interactive improvements
 -  Autosuggestions from history are now case-sensitive (:issue:`3978`).
 -  ``$status`` from completion scripts is no longer passed outside the completion, which keeps the status display in the prompt as the last command's status (:issue:`7555`).
 -  Updated localisations for pt_BR (:issue:`7480`).
--  ``fish_trace`` output now starts with ``->`` (like ``fish --profile``), making the depth more visible (:issue:`7538`).
+-  ``ghoti_trace`` output now starts with ``->`` (like ``ghoti --profile``), making the depth more visible (:issue:`7538`).
 -  Resizing the terminal window no longer produces a corrupted prompt (:issue:`6532`, :issue:`7404`).
 -  ``functions`` produces an error rather than crashing on certain invalid arguments (:issue:`7515`).
 -  A crash in completions with inline variable assignment (eg ``A= b``) has been fixed (:issue:`7344`).
--  ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`), and history is kept in memory in private mode (but not stored permanently) (:issue:`7590`).
+-  ``ghoti_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`), and history is kept in memory in private mode (but not stored permanently) (:issue:`7590`).
 -  Commands with leading spaces may be retrieved from history with up-arrow until a new command is run, matching zsh's ``HIST_IGNORE_SPACE`` (:issue:`1383`).
 -  Importing bash history or reporting errors with recursive globs (``**``) no longer hangs (:issue:`7407`, :issue:`7497`).
 -  ``bind`` now shows ``\x7f`` for the del key instead of a literal DEL character (:issue:`7631`)
 -  Paths containing variables or tilde expansion are only suggested when they are still valid (:issue:`7582`).
 -  Syntax highlighting can now color a command as invalid even if executed quickly (:issue:`5912`).
 -  Redirection targets are no longer highlighted as error if they contain variables which will likely be defined by the current commandline (:issue:`6654`).
--  fish is now more resilient against broken terminal modes (:issue:`7133`, :issue:`4873`).
--  fish handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
--  Keywords can now be colored differently by setting the ``fish_color_keyword`` variable (``fish_color_command`` is used as a fallback) (:issue:`7678`).
--  Just like ``fish_indent``, the interactive reader will indent continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||`` (:issue:`7694`).
+-  ghoti is now more resilient against broken terminal modes (:issue:`7133`, :issue:`4873`).
+-  ghoti handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
+-  Keywords can now be colored differently by setting the ``ghoti_color_keyword`` variable (``ghoti_color_command`` is used as a fallback) (:issue:`7678`).
+-  Just like ``ghoti_indent``, the interactive reader will indent continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||`` (:issue:`7694`).
 -  Commands with a trailing escaped space are saved in history correctly (:issue:`7661`).
--  ``fish_prompt`` no longer mangles Unicode characters in the private-use range U+F600-U+F700. (:issue:`7723`).
--  The universal variable file, ``fish_variables``, can be made a symbolic link without it being overwritten (:issue:`7466`).
--  fish is now more resilient against ``mktemp`` failing (:issue:`7482`).
+-  ``ghoti_prompt`` no longer mangles Unicode characters in the private-use range U+F600-U+F700. (:issue:`7723`).
+-  The universal variable file, ``ghoti_variables``, can be made a symbolic link without it being overwritten (:issue:`7466`).
+-  ghoti is now more resilient against ``mktemp`` failing (:issue:`7482`).
 
 
 New or improved bindings
@@ -1128,8 +1128,8 @@ New or improved bindings
 
 -  As mentioned above, new special input functions ``undo`` (:kbd:`Control+\_` or :kbd:`Control+Z`) and ``redo`` (:kbd:`Alt-/`) can be used to revert changes to the command line or the pager search field (:issue:`6570`).
 -  :kbd:`Control-Z` is now available for binding (:issue:`7152`).
--  Additionally, using the ``cancel`` special input function (bound to :kbd:`Escape` by default) right after fish picked an unambiguous completion will undo that (:issue:`7433`).
-- ``fish_clipboard_paste`` (:kbd:`Control+V`) trims indentation from multiline commands, because fish already indents (:issue:`7662`).
+-  Additionally, using the ``cancel`` special input function (bound to :kbd:`Escape` by default) right after ghoti picked an unambiguous completion will undo that (:issue:`7433`).
+- ``ghoti_clipboard_paste`` (:kbd:`Control+V`) trims indentation from multiline commands, because ghoti already indents (:issue:`7662`).
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, ``d;``, ``d,``, ``o``, ``O`` and Control+left/right keys to navigate by word (:issue:`6648`, :issue:`6755`, :issue:`6769`, :issue:`7442`, :issue:`7516`).
 -  Vi mode bindings support :kbd:`~` (tilde) to toggle the case of the selected character (:issue:`6908`).
 -  Functions ``up-or-search`` and ``down-or-search`` (:kbd:`Up` and :kbd:`Down`) can cross empty lines, and don't activate search mode if the search fails, which makes them easier to use to move between lines in some situations.
@@ -1137,19 +1137,19 @@ New or improved bindings
 -  The special input function ``beginning-of-history`` (:kbd:`Page Up`) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (:kbd:`Page Down`).
 -  A new special input function ``forward-single-char`` moves one character to the right, and if an autosuggestion is available, only take a single character from it (:issue:`7217`, :issue:`4984`).
 -  Special input functions can now be joined with ``or`` as a modifier (adding to ``and``), though only some commands set an exit status (:issue:`7217`). This includes ``suppress-autosuggestion`` to reflect whether an autosuggestion was suppressed (:issue:`1419`)
--  A new function ``__fish_preview_current_file``, bound to :kbd:`Alt+O`, opens the
+-  A new function ``__ghoti_preview_current_file``, bound to :kbd:`Alt+O`, opens the
    current file at the cursor in a pager (:issue:`6838`, :issue:`6855`).
 -  ``edit_command_buffer`` (:kbd:`Alt-E` and :kbd:`Alt-V`) passes the cursor position
    to the external editor if the editor is recognized (:issue:`6138`, :issue:`6954`).
--  ``__fish_prepend_sudo`` (:kbd:`Alt-S`) now toggles a ``sudo`` prefix (:issue:`7012`) and avoids shifting the cursor (:issue:`6542`).
--  ``__fish_prepend_sudo`` (:kbd:`Alt-S`) now uses the previous commandline if the current one is empty,
+-  ``__ghoti_prepend_sudo`` (:kbd:`Alt-S`) now toggles a ``sudo`` prefix (:issue:`7012`) and avoids shifting the cursor (:issue:`6542`).
+-  ``__ghoti_prepend_sudo`` (:kbd:`Alt-S`) now uses the previous commandline if the current one is empty,
    to simplify rerunning the previous command with ``sudo`` (:issue:`7079`).
--  ``__fish_toggle_comment_commandline`` (:kbd:`Alt-#`) now uncomments and presents the last comment
+-  ``__ghoti_toggle_comment_commandline`` (:kbd:`Alt-#`) now uncomments and presents the last comment
    from history if the commandline is empty (:issue:`7137`).
--  ``__fish_whatis_current_token`` (:kbd:`Alt-W`) prints descriptions for functions and builtins (:issue:`7191`, :issue:`2083`).
+-  ``__ghoti_whatis_current_token`` (:kbd:`Alt-W`) prints descriptions for functions and builtins (:issue:`7191`, :issue:`2083`).
 -  The definition of "word" and "bigword" for movements was refined, fixing (eg) vi mode's behavior with :kbd:`e` on the second-to-last char, and bigword's behavior with single-character words and non-blank non-graphical characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
--  fish's clipboard bindings now also support Windows Subsystem for Linux via PowerShell and clip.exe (:issue:`7455`, :issue:`7458`) and will properly copy newlines in multi-line commands.
--  Using the ``*-jump`` special input functions before typing anything else no longer crashes fish.
+-  ghoti's clipboard bindings now also support Windows Subsystem for Linux via PowerShell and clip.exe (:issue:`7455`, :issue:`7458`) and will properly copy newlines in multi-line commands.
+-  Using the ``*-jump`` special input functions before typing anything else no longer crashes ghoti.
 -  Completing variable overrides (``foo=bar``) could replace the entire thing with just the completion in some circumstances. This has been fixed (:issue:`7398`).
 
 Improved prompts
@@ -1161,10 +1161,10 @@ Improved prompts
    directory (:issue:`6086`).
 -  The git prompts correctly show stash states (:issue:`6876`, :issue:`7136`) and clean states (:issue:`7471`).
 -  The Mercurial prompt correctly shows untracked status (:issue:`6906`), and by default only shows the branch for performance reasons.
-   A new variable ``$fish_prompt_hg_show_informative_status`` can be set to enable more information.
--  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
+   A new variable ``$ghoti_prompt_hg_show_informative_status`` can be set to enable more information.
+-  The ``ghoti_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`6715`, :issue:`7278`).
--  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`, :issue:`7123`).
+-  A new helper function ``ghoti_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`, :issue:`7123`).
 -  New colorschemes - ``ayu Light``, ``ayu Dark`` and ``ayu Mirage`` (:issue:`7596`).
 -  Bugs related to multiline prompts, including repainting (:issue:`5860`) or navigating directory history (:issue:`3550`) leading to graphical glitches have been fixed.
 -  The ``nim`` prompt now handles vi mode better (:issue:`6802`)
@@ -1172,8 +1172,8 @@ Improved prompts
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
--  A new variable, ``fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
-   shape in vi mode, regardless of terminal (:issue:`6968`). The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
+-  A new variable, ``ghoti_vi_force_cursor``, can be set to force ``ghoti_vi_cursor`` to attempt changing the cursor
+   shape in vi mode, regardless of terminal (:issue:`6968`). The ``ghoti_vi_cursor`` option ``--force-iterm`` has been deprecated.
 -  ``diff`` will now colourize output, if supported (:issue:`7308`).
 -  Autosuggestions appear when the cursor passes the right prompt (:issue:`6948`) or wraps to the next line (:issue:`7213`).
 -  The cursor shape in Vi mode changes properly in Windows Terminal (:issue:`6999`, :issue:`6478`).
@@ -1183,10 +1183,10 @@ Improved terminal support
 -  The width computation for certain emoji agrees better with terminals (especially flags). (:issue:`7237`).
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
--  Sessions with right prompts can be resized correctly in terminals that handle reflow, like GNOME Terminal (and other VTE-based terminals), upcoming Konsole releases and Alacritty. This detection can be overridden with the new ``fish_handle_reflow`` variable (:issue:`7491`).
--  fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
+-  Sessions with right prompts can be resized correctly in terminals that handle reflow, like GNOME Terminal (and other VTE-based terminals), upcoming Konsole releases and Alacritty. This detection can be overridden with the new ``ghoti_handle_reflow`` variable (:issue:`7491`).
+-  ghoti now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 -  Better detection of new Konsole versions for true color support and cursor shape changing.
--  fish no longer attempts to modify the terminal size via ``TIOCSWINSZ``, improving compatibility with Kitty (:issue:`6994`).
+-  ghoti no longer attempts to modify the terminal size via ``TIOCSWINSZ``, improving compatibility with Kitty (:issue:`6994`).
 
 Completions
 ^^^^^^^^^^^
@@ -1261,62 +1261,62 @@ Completions
 
 -  Improvements to the manual page completion generator (:issue:`7086`, :issue:`6879`, :issue:`7187`).
 -  Significant performance improvements to completion of the available commands (:issue:`7153`), especially on macOS Big Sur where there was a significant regression (:issue:`7365`, :issue:`7511`).
--  Suffix completion using ``__fish_complete_suffix`` uses the same fuzzy matching logic as normal file completion, and completes any file but sorts files with matching suffix first (:issue:`7040`, :issue:`7547`). Previously, it only completed files with matching suffix.
+-  Suffix completion using ``__ghoti_complete_suffix`` uses the same fuzzy matching logic as normal file completion, and completes any file but sorts files with matching suffix first (:issue:`7040`, :issue:`7547`). Previously, it only completed files with matching suffix.
 
 For distributors
 ----------------
 
--  fish has a new interactive test driver based on pexpect, removing the optional dependency on expect (and adding an optional dependency on pexpect) (:issue:`5451`, :issue:`6825`).
+-  ghoti has a new interactive test driver based on pexpect, removing the optional dependency on expect (and adding an optional dependency on pexpect) (:issue:`5451`, :issue:`6825`).
 -  The CHANGELOG was moved to restructured text, allowing it to be included in the documentation (:issue:`7057`).
--  fish handles ncurses installed in a non-standard prefix better (:issue:`6600`, :issue:`7219`), and uses variadic tparm on NetBSD curses (:issue:`6626`).
+-  ghoti handles ncurses installed in a non-standard prefix better (:issue:`6600`, :issue:`7219`), and uses variadic tparm on NetBSD curses (:issue:`6626`).
 -  The Web-based configuration tool no longer uses an obsolete Angular version (:issue:`7147`).
--  The fish project has adopted the Contributor Covenant code of conduct (:issue:`7151`).
+-  The ghoti project has adopted the Contributor Covenant code of conduct (:issue:`7151`).
 
 Deprecations and removed features
 ---------------------------------
 
--  The ``fish_color_match`` variable is no longer used. (Previously this controlled the color of matching quotes and parens when using ``read``).
--  fish 3.2.0 will be the last release in which the redirection to standard error with the ``^`` character is enabled.
+-  The ``ghoti_color_match`` variable is no longer used. (Previously this controlled the color of matching quotes and parens when using ``read``).
+-  ghoti 3.2.0 will be the last release in which the redirection to standard error with the ``^`` character is enabled.
    The ``stderr-nocaret`` feature flag will be changed to "on" in future releases.
 -  ``string`` is now a reserved word and cannot be used for function names (see above).
--  ``fish_vi_cursor``'s option ``--force-iterm`` has been deprecated (see above).
+-  ``ghoti_vi_cursor``'s option ``--force-iterm`` has been deprecated (see above).
 -  ``command``, ``jobs`` and ``type`` long-form option ``--quiet`` is deprecated in favor of ``--query`` (see above).
--  The ``fish_command_not_found`` event is no longer emitted, instead there is a function of that name.
-   By default it will call a previously-defined ``__fish_command_not_found_handler``. To emit the event manually use ``emit fish_command_not_found``.
--  The ``fish_prompt`` event no longer fires when ``read`` is used. If
+-  The ``ghoti_command_not_found`` event is no longer emitted, instead there is a function of that name.
+   By default it will call a previously-defined ``__ghoti_command_not_found_handler``. To emit the event manually use ``emit ghoti_command_not_found``.
+-  The ``ghoti_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
-   use the new ``fish_read`` event instead (:issue:`7039`).
--  To disable the greeting message permanently it is no longer enough to just run ``set fish_greeting`` interactively as it is
-   no longer implicitly a universal variable. Use ``set -U fish_greeting`` or disable it in config.fish with ``set -g fish_greeting``.
--  The long-deprecated and non-functional ``-m``/``--read-mode`` options to ``read`` were removed in 3.1b1. Using the short form, or a never-implemented ``-B`` option, no longer crashes fish (:issue:`7659`).
+   use the new ``ghoti_read`` event instead (:issue:`7039`).
+-  To disable the greeting message permanently it is no longer enough to just run ``set ghoti_greeting`` interactively as it is
+   no longer implicitly a universal variable. Use ``set -U ghoti_greeting`` or disable it in config.ghoti with ``set -g ghoti_greeting``.
+-  The long-deprecated and non-functional ``-m``/``--read-mode`` options to ``read`` were removed in 3.1b1. Using the short form, or a never-implemented ``-B`` option, no longer crashes ghoti (:issue:`7659`).
 -  With the addition of new categories for debug options, the old numbered debugging levels have been removed.
 
 For distributors and developers
 -------------------------------
 
--  fish source tarballs are now distributed using the XZ compression
+-  ghoti source tarballs are now distributed using the XZ compression
    method (:issue:`5460`).
--  The fish source tarball contains an example FreeDesktop entry and icon.
+-  The ghoti source tarball contains an example FreeDesktop entry and icon.
 -  The CMake variable ``MAC_CODESIGN_ID`` can now be set to "off" to disable code-signing (:issue:`6952`, :issue:`6792`).
 -  Building on on macOS earlier than 10.13.6 succeeds, instead of failing on code-signing (:issue:`6791`).
 -  The pkg-config file now uses variables to ensure paths used are portable across prefixes.
 -  The default values for the ``extra_completionsdir``, ``extra_functionsdir``
    and ``extra_confdir`` options now use the installation prefix rather than ``/usr/local`` (:issue:`6778`).
--  A new CMake variable ``FISH_USE_SYSTEM_PCRE2`` controls whether fish
+-  A new CMake variable ``FISH_USE_SYSTEM_PCRE2`` controls whether ghoti
    builds with the system-installed PCRE2, or the version it bundles. By
    default it prefers the system library if available, unless Mac
    codesigning is enabled (:issue:`6952`).
 -  Running the full interactive test suite now requires Python 3.5+ and the pexpect package (:issue:`6825`); the expect package is no longer required.
--  Support for Python 2 in fish's tools (``fish_config`` and the manual page completion generator) is no longer guaranteed. Please use Python 3.5 or later (:issue:`6537`).
+-  Support for Python 2 in ghoti's tools (``ghoti_config`` and the manual page completion generator) is no longer guaranteed. Please use Python 3.5 or later (:issue:`6537`).
 -  The Web-based configuration tool is compatible with Python 3.10  (:issue:`7600`) and no longer requires Python's distutils package (:issue:`7514`).
--  fish 3.2 is the last release to support Red Hat Enterprise Linux & CentOS version 6.
+-  ghoti 3.2 is the last release to support Red Hat Enterprise Linux & CentOS version 6.
 
 --------------
 
-fish 3.1.2 (released April 29, 2020)
+ghoti 3.1.2 (released April 29, 2020)
 ====================================
 
-This release of fish fixes a major issue discovered in fish 3.1.1:
+This release of ghoti fixes a major issue discovered in ghoti 3.1.1:
 
 -  Commands such as ``fzf`` and ``enhancd``, when used with ``eval``,
    would hang. ``eval`` buffered output too aggressively, which has been
@@ -1327,17 +1327,17 @@ the release notes for 3.1.1, 3.1.0 and 3.1b1 (included below).
 
 --------------
 
-fish 3.1.1 (released April 27, 2020)
+ghoti 3.1.1 (released April 27, 2020)
 ====================================
 
-This release of fish fixes a number of major issues discovered in fish
+This release of ghoti fixes a number of major issues discovered in ghoti
 3.1.0.
 
 -  Commands which involve ``. ( ... | psub)`` now work correctly, as a
    bug in the ``function --on-job-exit`` option has been fixed (:issue:`6613`).
--  Conflicts between upstream packages for ripgrep and bat, and the fish
+-  Conflicts between upstream packages for ripgrep and bat, and the ghoti
    packages, have been resolved (:issue:`5822`).
--  Starting fish in a directory without read access, such as via ``su``,
+-  Starting ghoti in a directory without read access, such as via ``su``,
    no longer crashes (:issue:`6597`).
 -  Glob ordering changes which were introduced in 3.1.0 have been
    reverted, returning the order of globs to the previous state (:issue:`6593`).
@@ -1345,7 +1345,7 @@ This release of fish fixes a number of major issues discovered in fish
    (eg ``^&2``) work correctly (:issue:`6591`).
 -  Redirections that append to a file descriptor (eg ``2>>&1``) work
    correctly (:issue:`6614`).
--  Building fish on macOS (:issue:`6602`) or with new versions of GCC (:issue:`6604`,
+-  Building ghoti on macOS (:issue:`6602`) or with new versions of GCC (:issue:`6604`,
    :issue:`6609`) is now successful.
 -  ``time`` is now correctly listed in the output of ``builtin -n``, and
    ``time --help`` works correctly (:issue:`6598`).
@@ -1355,29 +1355,29 @@ This release of fish fixes a number of major issues discovered in fish
    returns ``status`` instead of ``F=B`` (:issue:`6635`).
 -  ``test`` no longer crashes when used with “``nan``” or “``inf``”
    arguments, erroring out instead (:issue:`6655`).
--  Copying from the end of the command line no longer crashes fish
+-  Copying from the end of the command line no longer crashes ghoti
    (:issue:`6680`).
 -  ``read`` no longer removes multiple separators when splitting a
-   variable into a list, restoring the previous behaviour from fish 3.0
+   variable into a list, restoring the previous behaviour from ghoti 3.0
    and before (:issue:`6650`).
 -  Functions using ``--on-job-exit`` and ``--on-process-exit`` work
    reliably again (:issue:`6679`).
 -  Functions using ``--on-signal INT`` work reliably in interactive
-   sessions, as they did in fish 2.7 and before (:issue:`6649`). These handlers
+   sessions, as they did in ghoti 2.7 and before (:issue:`6649`). These handlers
    have never worked in non-interactive sessions, and making them work
    is an ongoing process.
 -  Functions using ``--on-variable`` work reliably with variables which
    are set implicitly (rather than with ``set``), such as
-   “``fish_bind_mode``” and “``PWD``” (:issue:`6653`).
+   “``ghoti_bind_mode``” and “``PWD``” (:issue:`6653`).
 -  256 colors are properly enabled under certain conditions that were
-   incorrectly detected in fish 3.1.0 (``$TERM`` begins with xterm, does
+   incorrectly detected in ghoti 3.1.0 (``$TERM`` begins with xterm, does
    not include “``256color``”, and ``$TERM_PROGRAM`` is not set)
    (:issue:`6701`).
 -  The Mercurial (``hg``) prompt no longer produces an error when the
    current working directory is removed (:issue:`6699`). Also, for performance
    reasons it shows only basic information by default; to restore the
-   detailed status, set ``$fish_prompt_hg_show_informative_status``.
--  The VCS prompt, ``fish_vcs_prompt``, no longer displays Subversion
+   detailed status, set ``$ghoti_prompt_hg_show_informative_status``.
+-  The VCS prompt, ``ghoti_vcs_prompt``, no longer displays Subversion
    (``svn``) status by default, due to the potential slowness of this
    operation (:issue:`6681`).
 -  Pasting of commands has been sped up (:issue:`6713`).
@@ -1391,7 +1391,7 @@ This release of fish fixes a number of major issues discovered in fish
    Commander integration (:issue:`6763`), but may be changed in a future
    version.
 -  Copying to the clipboard no longer inserts a newline at the end of
-   the content, matching fish 2.7 and earlier (:issue:`6927`).
+   the content, matching ghoti 2.7 and earlier (:issue:`6927`).
 -  ``fzf`` in complex pipes no longer hangs. More generally, code run as
    part of command substitutions or ``eval`` will no longer have
    separate process groups. (:issue:`6624`, :issue:`6806`).
@@ -1406,20 +1406,20 @@ This release also includes:
 If you are upgrading from version 3.0.0 or before, please also review
 the release notes for 3.1.0 and 3.1b1 (included below).
 
-Errata for fish 3.1
+Errata for ghoti 3.1
 -------------------
 
-A new builtin, ``time``, was introduced in the fish 3.1 releases. This
+A new builtin, ``time``, was introduced in the ghoti 3.1 releases. This
 builtin is a reserved word (like ``test``, ``function``, and others)
 because of the way it is implemented, and functions can no longer be
-named ``time``. This was not clear in the fish 3.1b1 changelog.
+named ``time``. This was not clear in the ghoti 3.1b1 changelog.
 
 --------------
 
-fish 3.1.0 (released February 12, 2020)
+ghoti 3.1.0 (released February 12, 2020)
 =======================================
 
-Compared to the beta release of fish 3.1b1, fish version 3.1.0:
+Compared to the beta release of ghoti 3.1b1, ghoti version 3.1.0:
 
 -  Fixes a regression where spaces after a brace were removed despite
    brace expansion not occurring (:issue:`6564`).
@@ -1438,7 +1438,7 @@ the release notes for 3.1b1 (included below).
 
 --------------
 
-fish 3.1b1 (released January 26, 2020)
+ghoti 3.1b1 (released January 26, 2020)
 ======================================
 
 .. _notable-improvements-and-fixes-1:
@@ -1449,32 +1449,32 @@ Notable improvements and fixes
 -  A new ``$pipestatus`` variable contains a list of exit statuses of
    the previous job, for each of the separate commands in a pipeline
    (:issue:`5632`).
--  fish no longer buffers pipes to the last function in a pipeline,
+-  ghoti no longer buffers pipes to the last function in a pipeline,
    improving many cases where pipes appeared to block or hang (:issue:`1396`).
 -  An overhaul of error messages for builtin commands, including a
    removal of the overwhelming usage summary, more readable stack traces
    (:issue:`3404`, :issue:`5434`), and stack traces for ``test`` (aka ``[``) (:issue:`5771`).
--  fish’s debugging arguments have been significantly improved. The
+-  ghoti’s debugging arguments have been significantly improved. The
    ``--debug-level`` option has been removed, and a new ``--debug``
    option replaces it. This option accepts various categories, which may
-   be listed via ``fish --print-debug-categories`` (:issue:`5879`). A new
+   be listed via ``ghoti --print-debug-categories`` (:issue:`5879`). A new
    ``--debug-output`` option allows for redirection of debug output.
 -  ``string`` has a new ``collect`` subcommand for use in command
    substitutions, producing a single output instead of splitting on new
    lines (similar to ``"$(cmd)"`` in other shells) (:issue:`159`).
--  The fish manual, tutorial and FAQ are now available in ``man`` format
-   as ``fish-doc``, ``fish-tutorial`` and ``fish-faq`` respectively
+-  The ghoti manual, tutorial and FAQ are now available in ``man`` format
+   as ``ghoti-doc``, ``ghoti-tutorial`` and ``ghoti-faq`` respectively
    (:issue:`5521`).
 -  Like other shells, ``cd`` now always looks for its argument in the
    current directory as a last resort, even if the ``CDPATH`` variable
    does not include it or “.” (:issue:`4484`).
--  fish now correctly handles ``CDPATH`` entries that start with ``..``
+-  ghoti now correctly handles ``CDPATH`` entries that start with ``..``
    (:issue:`6220`) or contain ``./`` (:issue:`5887`).
--  The ``fish_trace`` variable may be set to trace execution (:issue:`3427`).
+-  The ``ghoti_trace`` variable may be set to trace execution (:issue:`3427`).
    This performs a similar role as ``set -x`` in other shells.
--  fish uses the temporary directory determined by the system, rather
+-  ghoti uses the temporary directory determined by the system, rather
    than relying on ``/tmp`` (:issue:`3845`).
--  The fish Web configuration tool (``fish_config``) prints a list of
+-  The ghoti Web configuration tool (``ghoti_config``) prints a list of
    commands it is executing, to help understanding and debugging
    (:issue:`5584`).
 -  Major performance improvements when pasting (:issue:`5866`), executing lots
@@ -1486,7 +1486,7 @@ Notable improvements and fixes
 Syntax changes and new commands
 -------------------------------
 
--  A new builtin command, ``time``, which allows timing of fish
+-  A new builtin command, ``time``, which allows timing of ghoti
    functions and builtins as well as external commands (:issue:`117`).
 -  Brace expansion now only takes place if the braces include a “,” or a
    variable expansion, meaning common commands such as
@@ -1504,7 +1504,7 @@ Syntax changes and new commands
    right-associative behaviour (:issue:`6280`). This means that
    ``math '3^0.5^2'`` was previously calculated as’(3\ :sup:`0.5)`\ 2’,
    but is now calculated as ‘3\ :sup:`(0.5`\ 2)’.
--  In fish 3.0, the variable used with ``for`` loops inside command
+-  In ghoti 3.0, the variable used with ``for`` loops inside command
    substitutions could leak into enclosing scopes; this was an
    inadvertent behaviour change and has been reverted (:issue:`6480`).
 
@@ -1553,10 +1553,10 @@ Scripting improvements
 -  ``read`` interacts more correctly with the deprecated ``$IFS``
    variable, in particular removing multiple separators when splitting a
    variable into a list (:issue:`6406`), matching other shells.
--  ``fish_indent`` now handles semicolons better, including leaving them
+-  ``ghoti_indent`` now handles semicolons better, including leaving them
    in place for ``; and`` and ``; or`` instead of breaking the line
    (:issue:`5859`).
--  ``fish_indent --write`` now supports multiple file arguments,
+-  ``ghoti_indent --write`` now supports multiple file arguments,
    indenting them in turn.
 -  The default read limit has been increased to 100MiB (:issue:`5267`).
 -  ``math`` now also understands ``x`` for multiplication, provided it
@@ -1564,7 +1564,7 @@ Scripting improvements
 -  ``math`` reports the right error when incorrect syntax is used inside
    parentheses (:issue:`6063`), and warns when unsupported logical operations
    are used (:issue:`6096`).
--  ``functions --erase`` now also prevents fish from autoloading a
+-  ``functions --erase`` now also prevents ghoti from autoloading a
    function for the first time (:issue:`5951`).
 -  ``jobs --last`` returns 0 to indicate success when a job is found
    (:issue:`6104`).
@@ -1577,14 +1577,14 @@ Scripting improvements
    creates a new local scope.
 -  ``abbr`` has a new ``--query`` option to check for the existence of
    an abbreviation.
--  Local values for ``fish_complete_path`` and ``fish_function_path``
+-  Local values for ``ghoti_complete_path`` and ``ghoti_function_path``
    are now ignored; only their global values are respected.
 -  Syntax error reports now display a marker in the correct position
    (:issue:`5812`).
 -  Empty universal variables may now be exported (:issue:`5992`).
 -  Exported universal variables are no longer imported into the global
    scope, preventing shadowing. This makes it easier to change such
-   variables for all fish sessions and avoids breakage when the value is
+   variables for all ghoti sessions and avoids breakage when the value is
    a list of multiple elements (:issue:`5258`).
 -  A bug where ``for`` could use invalid variable names has been fixed
    (:issue:`5800`).
@@ -1604,7 +1604,7 @@ Scripting improvements
 -  The ``$hostname`` variable is no longer truncated to 32 characters
    (:issue:`5758`).
 -  Line numbers in function backtraces are calculated correctly (:issue:`6350`).
--  A new ``fish_cancel`` event is emitted when the command line is
+-  A new ``ghoti_cancel`` event is emitted when the command line is
    cancelled, which is useful for terminal integration (:issue:`5973`).
 
 .. _interactive-improvements-1:
@@ -1614,7 +1614,7 @@ Interactive improvements
 
 -  New Base16 color options are available through the Web-based
    configuration (:issue:`6504`).
--  fish only parses ``/etc/paths`` on macOS in login shells, matching
+-  ghoti only parses ``/etc/paths`` on macOS in login shells, matching
    the bash implementation (:issue:`5637`) and avoiding changes to path ordering
    in child shells (:issue:`5456`). It now ignores blank lines like the bash
    implementation (:issue:`5809`).
@@ -1626,12 +1626,12 @@ Interactive improvements
    as documented when universal variables are used for its stack
    (:issue:`5797`).
 -  ``funced`` and the edit-commandline-in-buffer bindings did not work
-   in fish 3.0 when the ``$EDITOR`` variable contained spaces; this has
+   in ghoti 3.0 when the ``$EDITOR`` variable contained spaces; this has
    been corrected (:issue:`5625`).
 -  Builtins now pipe their help output to a pager automatically (:issue:`6227`).
 -  ``set_color`` now colors the ``--print-colors`` output in the
    matching colors if it is going to a terminal.
--  fish now underlines every valid entered path instead of just the last
+-  ghoti now underlines every valid entered path instead of just the last
    one (:issue:`5872`).
 -  When syntax highlighting a string with an unclosed quote, only the
    quote itself will be shown as an error, instead of the whole
@@ -1640,7 +1640,7 @@ Interactive improvements
    (:issue:`5658`) and redirections to close file descriptors (:issue:`6092`).
 -  ``help`` works properly on Windows Subsytem for Linux (:issue:`5759`, :issue:`6338`).
 -  A bug where ``disown`` could crash the shell has been fixed (:issue:`5720`).
--  fish will not autosuggest files ending with ``~`` unless there are no
+-  ghoti will not autosuggest files ending with ``~`` unless there are no
    other candidates, as these are generally backup files (:issue:`985`).
 -  Escape in the pager works correctly (:issue:`5818`).
 -  Key bindings that call ``fg`` no longer leave the terminal in a
@@ -1660,15 +1660,15 @@ Interactive improvements
    or ``||``.
 -  The automatic generation of completions from manual pages is better
    described in job and process listings, and no longer produces a
-   warning when exiting fish (:issue:`6269`).
--  In private mode, setting ``$fish_greeting`` to an empty string before
+   warning when exiting ghoti (:issue:`6269`).
+-  In private mode, setting ``$ghoti_greeting`` to an empty string before
    starting the private session will prevent the warning about history
    not being saved from being printed (:issue:`6299`).
 -  In the interactive editor, a line break (Enter) inside unclosed
    brackets will insert a new line, rather than executing the command
    and producing an error (:issue:`6316`).
 -  Ctrl-C always repaints the prompt (:issue:`6394`).
--  When run interactively from another program (such as Python), fish
+-  When run interactively from another program (such as Python), ghoti
    will correctly start a new process group, like other shells (:issue:`5909`).
 -  Job identifiers (for example, for background jobs) are assigned more
    logically (:issue:`6053`).
@@ -1689,13 +1689,13 @@ New or improved bindings
    default mode and 100ms for Vi mode (:issue:`3904`).
 -  The ``forward-bigword`` binding now interacts correctly with
    autosuggestions (:issue:`5336`).
--  The ``fish_clipboard_*`` functions support Wayland by using
+-  The ``ghoti_clipboard_*`` functions support Wayland by using
    `wl-clipboard <https://github.com/bugaevc/wl-clipboard>`_
    (:issue:`5450`).
 -  The ``nextd`` and ``prevd`` functions no longer print “Hit end of
    history”, instead using a bell. They correctly store working
    directories containing symbolic links (:issue:`6395`).
--  If a ``fish_mode_prompt`` function exists, Vi mode will only execute
+-  If a ``ghoti_mode_prompt`` function exists, Vi mode will only execute
    it on mode-switch instead of the entire prompt. This should make it
    much more responsive with slow prompts (:issue:`5783`).
 -  The path-component bindings (like Ctrl-w) now also stop at “:” and
@@ -1733,7 +1733,7 @@ Improved prompts
 -  The Git prompt in informative mode now shows the number of stashes if
    enabled.
 -  The Git prompt now has an option
-   (``$__fish_git_prompt_use_informative_chars``) to use the (more
+   (``$__ghoti_git_prompt_use_informative_chars``) to use the (more
    modern) informative characters without enabling informative mode.
 -  The default prompt now also features VCS integration and will color
    the host if running via SSH (:issue:`6375`).
@@ -1747,20 +1747,20 @@ Improved prompts
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
--  New ``fish_pager_color_`` options have been added to control more
+-  New ``ghoti_pager_color_`` options have been added to control more
    elements of the pager’s colors (:issue:`5524`).
--  Better detection and support for using fish from various system
+-  Better detection and support for using ghoti from various system
    consoles, where limited colors and special characters are supported
    (:issue:`5552`).
--  fish now tries to guess if the system supports Unicode 9 (and
+-  ghoti now tries to guess if the system supports Unicode 9 (and
    displays emoji as wide), eliminating the need to set
-   ``$fish_emoji_width`` in most cases (:issue:`5722`).
+   ``$ghoti_emoji_width`` in most cases (:issue:`5722`).
 -  Improvements to the display of wide characters, particularly Korean
    characters and emoji (:issue:`5583`, :issue:`5729`).
 -  The Vi mode cursor is correctly redrawn when regaining focus under
    terminals that report focus (eg tmux) (:issue:`4788`).
 -  Variables that control background colors (such as
-   ``fish_pager_color_search_match``) can now use ``--reverse``.
+   ``ghoti_pager_color_search_match``) can now use ``--reverse``.
 
 .. _completions-1:
 
@@ -1841,9 +1841,9 @@ Deprecations and removed features
 ---------------------------------
 
 -  The vcs-prompt functions have been promoted to names without
-   double-underscore, so \__fish_git_prompt is now fish_git_prompt,
-   \__fish_vcs_prompt is now fish_vcs_prompt, \__fish_hg_prompt is now
-   fish_hg_prompt and \__fish_svn_prompt is now fish_svn_prompt. Shims
+   double-underscore, so \__ghoti_git_prompt is now ghoti_git_prompt,
+   \__ghoti_vcs_prompt is now ghoti_vcs_prompt, \__ghoti_hg_prompt is now
+   ghoti_hg_prompt and \__ghoti_svn_prompt is now ghoti_svn_prompt. Shims
    at the old names have been added, and the variables have kept their
    old names (:issue:`5586`).
 -  ``string replace`` has an additional round of escaping in the
@@ -1855,24 +1855,24 @@ Deprecations and removed features
    the intention behind feature flags is that this will eventually
    become the default and then only option, so scripts should be
    updated.
--  The ``fish_vi_mode`` function, deprecated in fish 2.3, has been
-   removed. Use ``fish_vi_key_bindings`` instead (:issue:`6372`).
+-  The ``ghoti_vi_mode`` function, deprecated in ghoti 2.3, has been
+   removed. Use ``ghoti_vi_key_bindings`` instead (:issue:`6372`).
 
 .. _for-distributors-and-developers-1:
 
 For distributors and developers
 -------------------------------
 
--  fish 3.0 introduced a CMake-based build system. In fish 3.1, both the
+-  ghoti 3.0 introduced a CMake-based build system. In ghoti 3.1, both the
    Autotools-based build and legacy Xcode build system have been
    removed, leaving only the CMake build system. All distributors and
    developers must install CMake.
--  fish now depends on the common ``tee`` external command, for the
+-  ghoti now depends on the common ``tee`` external command, for the
    ``psub`` process substitution function.
 -  The documentation is now built with Sphinx. The old Doxygen-based
    documentation system has been removed. Developers, and distributors
    who wish to rebuild the documentation, must install Sphinx.
--  The ``INTERNAL_WCWIDTH`` build option has been removed, as fish now
+-  The ``INTERNAL_WCWIDTH`` build option has been removed, as ghoti now
    always uses an internal ``wcwidth`` function. It has a number of
    configuration options that make it more suitable for general use
    (:issue:`5777`).
@@ -1887,18 +1887,18 @@ For distributors and developers
 -  The paths for completions, functions and configuration snippets have
    been extended. On systems that define ``XDG_DATA_DIRS``, each of the
    directories in this variable are searched in the subdirectories
-   ``fish/vendor_completions.d``, ``fish/vendor_functions.d``, and
-   ``fish/vendor_conf.d`` respectively. On systems that do not define
+   ``ghoti/vendor_completions.d``, ``ghoti/vendor_functions.d``, and
+   ``ghoti/vendor_conf.d`` respectively. On systems that do not define
    this variable in the environment, the vendor directories are searched
    for in both the installation prefix and the default “extra”
    directory, which now defaults to ``/usr/local`` (:issue:`5029`).
 
 --------------
 
-fish 3.0.2 (released February 19, 2019)
+ghoti 3.0.2 (released February 19, 2019)
 =======================================
 
-This release of fish fixes an issue discovered in fish 3.0.1.
+This release of ghoti fixes an issue discovered in ghoti 3.0.1.
 
 Fixes and improvements
 ----------------------
@@ -1911,10 +1911,10 @@ If you are upgrading from version 2.7.1 or before, please also review
 the release notes for 3.0.1, 3.0.0 and 3.0b1 (included below).
 
 
-fish 3.0.1 (released February 11, 2019)
+ghoti 3.0.1 (released February 11, 2019)
 =======================================
 
-This release of fish fixes a number of major issues discovered in fish
+This release of ghoti fixes a number of major issues discovered in ghoti
 3.0.0.
 
 .. _fixes-and-improvements-1:
@@ -1933,7 +1933,7 @@ Fixes and improvements
    ``/etc/paths.d`` now correctly set path entries with spaces.
    Likewise, ``MANPATH`` is correctly set from ``/etc/manpaths`` and
    ``/etc/manpaths.d`` (:issue:`5481`).
--  fish starts correctly under Cygwin/MSYS2 (:issue:`5426`).
+-  ghoti starts correctly under Cygwin/MSYS2 (:issue:`5426`).
 -  The ``pager-toggle-search`` binding (Ctrl-S by default) will now
    activate the search field, even when the pager is not focused.
 -  The error when a command is not found is now printed a single time,
@@ -1943,17 +1943,17 @@ Fixes and improvements
    unnecessary offers of root paths (starting with ``:/``) (:issue:`5578`,
    :issue:`5574`, :issue:`5476`), and ignoring shell aliases, so enterprising users can
    set up the wrapping command (via
-   ``set -g __fish_git_alias_$command $whatitwraps``) (:issue:`5412`).
+   ``set -g __ghoti_git_alias_$command $whatitwraps``) (:issue:`5412`).
 -  Significant performance improvements to core shell functions (:issue:`5447`)
    and to the ``kill`` completions (:issue:`5541`).
 -  Starting in symbolically-linked working directories works correctly
    (:issue:`5525`).
--  The default ``fish_title`` function no longer contains extra spaces
+-  The default ``ghoti_title`` function no longer contains extra spaces
    (:issue:`5517`).
 -  The ``nim`` prompt now works correctly when chosen in the Web-based
    configuration (:issue:`5490`).
 -  ``string`` now prints help to stdout, like other builtins (:issue:`5495`).
--  Killing the terminal while fish is in vi normal mode will no longer
+-  Killing the terminal while ghoti is in vi normal mode will no longer
    send it spinning and eating CPU. (:issue:`5528`)
 -  A number of crashes have been fixed (:issue:`5550`, :issue:`5548`, :issue:`5479`, :issue:`5453`).
 -  Improvements to the documentation and certain completions.
@@ -1964,7 +1964,7 @@ Known issues
 There is one significant known issue that was not corrected before the
 release:
 
--  fish does not run correctly under Windows Services for Linux before
+-  ghoti does not run correctly under Windows Services for Linux before
    Windows 10 version 1809/17763, and the message warning of this may
    not be displayed (:issue:`5619`).
 
@@ -1973,15 +1973,15 @@ the release notes for 3.0.0 and 3.0b1 (included below).
 
 --------------
 
-fish 3.0.0 (released December 28, 2018)
+ghoti 3.0.0 (released December 28, 2018)
 =======================================
 
-fish 3 is a major release, which introduces some breaking changes
+ghoti 3 is a major release, which introduces some breaking changes
 alongside improved functionality. Although most existing scripts will
 continue to work, they should be reviewed against the list contained in
 the 3.0b1 release notes below.
 
-Compared to the beta release of fish 3.0b1, fish version 3.0.0:
+Compared to the beta release of ghoti 3.0b1, ghoti version 3.0.0:
 
 -  builds correctly against musl libc (:issue:`5407`)
 -  handles huge numeric arguments to ``test`` correctly (:issue:`5414`)
@@ -1991,7 +1991,7 @@ Compared to the beta release of fish 3.0b1, fish version 3.0.0:
 There is one significant known issue which was not able to be corrected
 before the release:
 
--  fish 3.0.0 builds on Cygwin (:issue:`5423`), but does not run correctly
+-  ghoti 3.0.0 builds on Cygwin (:issue:`5423`), but does not run correctly
    (:issue:`5426`) and will result in a hanging terminal when started. Cygwin
    users are encouraged to continue using 2.7.1 until a release which
    corrects this is available.
@@ -2001,10 +2001,10 @@ the release notes for 3.0b1 (included below).
 
 --------------
 
-fish 3.0b1 (released December 11, 2018)
+ghoti 3.0b1 (released December 11, 2018)
 =======================================
 
-fish 3 is a major release, which introduces some breaking changes
+ghoti 3 is a major release, which introduces some breaking changes
 alongside improved functionality. Although most existing scripts will
 continue to work, they should be reviewed against the list below.
 
@@ -2021,7 +2021,7 @@ Notable non-backward compatible changes
 -  A literal ``{}`` now expands to itself, rather than nothing. This
    makes working with ``find -exec`` easier (:issue:`1109`, :issue:`4632`).
 -  Literally accessing a zero-index is now illegal syntax and is caught
-   by the parser (:issue:`4862`). (fish indices start at 1)
+   by the parser (:issue:`4862`). (ghoti indices start at 1)
 -  Successive commas in brace expansions are handled in less surprising
    manner. For example, ``{,,,}`` expands to four empty strings rather
    than an empty string, a comma and an empty string again (:issue:`3002`,
@@ -2041,7 +2041,7 @@ Notable non-backward compatible changes
 -  ``read`` now uses ``-s`` as short for ``--silent`` (à la ``bash``);
    ``--shell``\ ’s abbreviation (formerly ``-s``) is now ``-S`` instead
    (:issue:`4490`).
--  ``cd`` no longer resolves symlinks. fish now maintains a virtual
+-  ``cd`` no longer resolves symlinks. ghoti now maintains a virtual
    path, matching other shells (:issue:`3350`).
 -  ``source`` now requires an explicit ``-`` as the filename to read
    from the terminal (:issue:`2633`).
@@ -2050,11 +2050,11 @@ Notable non-backward compatible changes
 -  The names ``argparse``, ``read``, ``set``, ``status``, ``test`` and
    ``[`` are now reserved and not allowed as function names. This
    prevents users unintentionally breaking stuff (:issue:`3000`).
--  The ``fish_user_abbreviations`` variable is no longer used;
+-  The ``ghoti_user_abbreviations`` variable is no longer used;
    abbreviations will be migrated to the new storage format
    automatically.
 -  The ``FISH_READ_BYTE_LIMIT`` variable is now called
-   ``fish_byte_limit`` (:issue:`4414`).
+   ``ghoti_byte_limit`` (:issue:`4414`).
 -  Environment variables are no longer split into arrays based on the
    record separator character on startup. Instead, variables are not
    split, unless their name ends in PATH, in which case they are split
@@ -2062,14 +2062,14 @@ Notable non-backward compatible changes
 -  The ``history`` builtin’s ``--with-time`` option has been removed;
    this has been deprecated in favor of ``--show-time`` since 2.7.0
    (:issue:`4403`).
--  The internal variables ``__fish_datadir`` and ``__fish_sysconfdir``
-   are now known as ``__fish_data_dir`` and ``__fish_sysconf_dir``
+-  The internal variables ``__ghoti_datadir`` and ``__ghoti_sysconfdir``
+   are now known as ``__ghoti_data_dir`` and ``__ghoti_sysconf_dir``
    respectively.
 
 Deprecations
 ------------
 
-With the release of fish 3, a number of features have been marked for
+With the release of ghoti 3, a number of features have been marked for
 removal in the future. All users are encouraged to explore alternatives.
 A small number of these features are currently behind feature flags,
 which are turned on at present but may be turned off by default in the
@@ -2077,15 +2077,15 @@ future.
 
 A new feature flags mechanism is added for staging deprecations and
 breaking changes. Feature flags may be specified at launch with
-``fish --features ...`` or by setting the universal ``fish_features``
+``ghoti --features ...`` or by setting the universal ``ghoti_features``
 variable. (:issue:`4940`)
 
 -  The use of the ``IFS`` variable for ``read`` is deprecated; ``IFS``
    will be ignored in the future (:issue:`4156`). Use the ``read --delimiter``
    option instead.
 -  The ``function --on-process-exit`` switch will be removed in future
-   (:issue:`4700`). Use the ``fish_exit`` event instead:
-   ``function --on-event fish_exit``.
+   (:issue:`4700`). Use the ``ghoti_exit`` event instead:
+   ``function --on-event ghoti_exit``.
 -  ``$_`` is deprecated and will removed in the future (:issue:`813`). Use
    ``status current-command`` in a command substitution instead.
 -  ``^`` as a redirection deprecated and will be removed in the future.
@@ -2103,14 +2103,14 @@ Notable fixes and improvements
 Syntax changes and new commands
 -------------------------------
 
--  fish now supports ``&&`` (like ``and``), ``||`` (like ``or``), and
+-  ghoti now supports ``&&`` (like ``and``), ``||`` (like ``or``), and
    ``!`` (like ``not``), for better migration from POSIX-compliant
    shells (:issue:`4620`).
 -  Variables may be used as commands (:issue:`154`).
--  fish may be started in private mode via ``fish --private``. Private
-   mode fish sessions do not have access to the history file and any
+-  ghoti may be started in private mode via ``ghoti --private``. Private
+   mode ghoti sessions do not have access to the history file and any
    commands evaluated in private mode are not persisted for future
-   sessions. A session variable ``$fish_private_mode`` can be queried to
+   sessions. A session variable ``$ghoti_private_mode`` can be queried to
    detect private mode and adjust the behavior of scripts accordingly to
    respect the user’s wish for privacy.
 -  A new ``wait`` command for waiting on backgrounded processes (:issue:`4498`).
@@ -2123,17 +2123,17 @@ Syntax changes and new commands
 -  ``while`` sets ``$status`` to a non-zero value if the loop is not
    executed (:issue:`4982`).
 -  Command substitution output is now limited to 10 MB by default,
-   controlled by the ``fish_read_limit`` variable (:issue:`3822`). Notably, this
+   controlled by the ``ghoti_read_limit`` variable (:issue:`3822`). Notably, this
    is larger than most operating systems’ argument size limit, so trying
    to pass argument lists this size to external commands has never
    worked.
 -  The machine hostname, where available, is now exposed as the
    ``$hostname`` reserved variable. This removes the dependency on the
    ``hostname`` executable (:issue:`4422`).
--  Bare ``bind`` invocations in config.fish now work. The
-   ``fish_user_key_bindings`` function is no longer necessary, but will
+-  Bare ``bind`` invocations in config.ghoti now work. The
+   ``ghoti_user_key_bindings`` function is no longer necessary, but will
    still be executed if it exists (:issue:`5191`).
--  ``$fish_pid`` and ``$last_pid`` are available as replacements for
+-  ``$ghoti_pid`` and ``$last_pid`` are available as replacements for
    ``%self`` and ``%last``.
 
 New features in commands
@@ -2221,7 +2221,7 @@ Interactive improvements
 -  The ``*y`` vi-mode binding now works (:issue:`5100`).
 -  True color is now enabled in neovim by default (:issue:`2792`).
 -  Terminal size variables (``$COLUMNS``/``$LINES``) are now updated
-   before ``fish_prompt`` is called, allowing the prompt to react
+   before ``ghoti_prompt`` is called, allowing the prompt to react
    (:issue:`904`).
 -  Multi-line prompts no longer repeat when the terminal is resized
    (:issue:`2320`).
@@ -2234,7 +2234,7 @@ Interactive improvements
 -  Deleting a one-character word no longer erases the next word as well
    (:issue:`4747`).
 -  Token history search (Alt-Up) omits duplicate entries (:issue:`4795`).
--  The ``fish_escape_delay_ms`` timeout, allowing the use of the escape
+-  The ``ghoti_escape_delay_ms`` timeout, allowing the use of the escape
    key both on its own and as part of a control sequence, was applied to
    all control characters; this has been reduced to just the escape key.
 -  Completing a function shows the description properly (:issue:`5206`).
@@ -2301,7 +2301,7 @@ Other fixes and improvements
    (in particular, ``$history[1]`` for the last executed command).
 -  Fish’s internal wcwidth function has been updated to deal with newer
    Unicode, and the width of some characters can be configured via the
-   ``fish_ambiguous_width`` (:issue:`5149`) and ``fish_emoji_width`` (:issue:`2652`)
+   ``ghoti_ambiguous_width`` (:issue:`5149`) and ``ghoti_emoji_width`` (:issue:`2652`)
    variables. Alternatively, a new build-time option INTERNAL_WCWIDTH
    can be used to use the system’s wcwidth instead (:issue:`4816`).
 -  ``functions`` correctly supports ``-d`` as the short form of
@@ -2312,14 +2312,14 @@ Other fixes and improvements
    rather than silently producing incorrect results (:issue:`4342`).
 -  The universal variables filename no longer contains the hostname or
    MAC address. It is now at the fixed location
-   ``.config/fish/fish_variables`` (:issue:`1912`).
+   ``.config/ghoti/ghoti_variables`` (:issue:`1912`).
 -  Exported variables in the global or universal scope no longer have
    their exported status affected by local variables (:issue:`2611`).
 -  Major rework of terminal and job handling to eliminate bugs (:issue:`3805`,
    :issue:`3952`, :issue:`4178`, :issue:`4235`, :issue:`4238`, :issue:`4540`, :issue:`4929`, :issue:`5210`).
 -  Improvements to the manual page completion generator (:issue:`2937`, :issue:`4313`).
 -  ``suspend --force`` now works correctly (:issue:`4672`).
--  Pressing Ctrl-C while running a script now reliably terminates fish
+-  Pressing Ctrl-C while running a script now reliably terminates ghoti
    (:issue:`5253`).
 
 .. _for-distributors-and-developers-2:
@@ -2327,22 +2327,22 @@ Other fixes and improvements
 For distributors and developers
 -------------------------------
 
--  fish ships with a new build system based on CMake. CMake 3.2 is the
+-  ghoti ships with a new build system based on CMake. CMake 3.2 is the
    minimum required version. Although the autotools-based Makefile and
    the Xcode project are still shipped with this release, they will be
    removed in the near future. All distributors and developers are
    encouraged to migrate to the CMake build.
 -  Build scripts for most platforms no longer require bash, using the
    standard sh instead.
--  The ``hostname`` command is no longer required for fish to operate.
+-  The ``hostname`` command is no longer required for ghoti to operate.
 
 –
 
-fish 2.7.1 (released December 23, 2017)
+ghoti 2.7.1 (released December 23, 2017)
 =======================================
 
-This release of fish fixes an issue where iTerm 2 on macOS would display
-a warning about paste bracketing being left on when starting a new fish
+This release of ghoti fixes an issue where iTerm 2 on macOS would display
+a warning about paste bracketing being left on when starting a new ghoti
 session (:issue:`4521`).
 
 If you are upgrading from version 2.6.0 or before, please also review
@@ -2350,7 +2350,7 @@ the release notes for 2.7.0 and 2.7b1 (included below).
 
 –
 
-fish 2.7.0 (released November 23, 2017)
+ghoti 2.7.0 (released November 23, 2017)
 =======================================
 
 There are no major changes between 2.7b1 and 2.7.0. If you are upgrading
@@ -2362,7 +2362,7 @@ this is fixed in 2.7.0.
 
 –
 
-fish 2.7b1 (released October 31, 2017)
+ghoti 2.7b1 (released October 31, 2017)
 ======================================
 
 Notable improvements
@@ -2371,26 +2371,26 @@ Notable improvements
 -  A new ``cdh`` (change directory using recent history) command
    provides a more friendly alternative to prevd/nextd and pushd/popd
    (:issue:`2847`).
--  A new ``argparse`` command is available to allow fish script to parse
+-  A new ``argparse`` command is available to allow ghoti script to parse
    arguments with the same behavior as builtin commands. This also
-   includes the ``fish_opt`` helper command. (:issue:`4190`).
+   includes the ``ghoti_opt`` helper command. (:issue:`4190`).
 -  Invalid array indexes are now silently ignored (:issue:`826`, :issue:`4127`).
 -  Improvements to the debugging facility, including a prompt specific
-   to the debugger (``fish_breakpoint_prompt``) and a
+   to the debugger (``ghoti_breakpoint_prompt``) and a
    ``status is-breakpoint`` subcommand (:issue:`1310`).
 -  ``string`` supports new ``lower`` and ``upper`` subcommands, for
    altering the case of strings (:issue:`4080`). The case changing is not
    locale-aware yet.- ``string escape`` has a new ``--style=xxx`` flag
    where ``xxx`` can be ``script``, ``var``, or ``url`` (:issue:`4150`), and can
    be reversed with ``string unescape`` (:issue:`3543`).
--  History can now be split into sessions with the ``fish_history``
+-  History can now be split into sessions with the ``ghoti_history``
    variable, or not saved to disk at all (:issue:`102`).
--  Read history is now controlled by the ``fish_history`` variable
+-  Read history is now controlled by the ``ghoti_history`` variable
    rather than the ``--mode-name`` flag (:issue:`1504`).
 -  ``command`` now supports an ``--all`` flag to report all directories
    with the command. ``which`` is no longer a runtime dependency
    (:issue:`2778`).
--  fish can run commands before starting an interactive session using
+-  ghoti can run commands before starting an interactive session using
    the new ``--init-command``/``-C`` options (:issue:`4164`).
 -  ``set`` has a new ``--show`` option to show lots of information about
    variables (:issue:`4265`).
@@ -2399,7 +2399,7 @@ Other significant changes
 -------------------------
 
 -  The ``COLUMNS`` and ``LINES`` environment variables are now correctly
-   set the first time ``fish_prompt`` is run (:issue:`4141`).
+   set the first time ``ghoti_prompt`` is run (:issue:`4141`).
 
 -  ``complete``\ ’s ``--no-files`` option works as intended (:issue:`112`).
 
@@ -2410,7 +2410,7 @@ Other significant changes
    rather than always returning 1 (:issue:`4435`).
 
 -  Stop converting empty elements in MANPATH to “.” (:issue:`4158`). The
-   behavior being changed was introduced in fish 2.6.0.
+   behavior being changed was introduced in ghoti 2.6.0.
 
 -  ``count -h`` and ``count --help`` now return 1 rather than produce
    command help output (:issue:`4189`).
@@ -2418,14 +2418,14 @@ Other significant changes
 -  An attempt to ``read`` which stops because too much data is available
    still defines the variables given as parameters (:issue:`4180`).
 
--  A regression in fish 2.4.0 which prevented ``pushd +1`` from working
+-  A regression in ghoti 2.4.0 which prevented ``pushd +1`` from working
    has been fixed (:issue:`4091`).
 
--  A regression in fish 2.6.0 where multiple ``read`` commands in
+-  A regression in ghoti 2.6.0 where multiple ``read`` commands in
    non-interactive scripts were broken has been fixed (:issue:`4206`).
 
--  A regression in fish 2.6.0 involving universal variables with
-   side-effects at startup such as ``set -U fish_escape_delay_ms 10``
+-  A regression in ghoti 2.6.0 involving universal variables with
+   side-effects at startup such as ``set -U ghoti_escape_delay_ms 10``
    has been fixed (:issue:`4196`).
 
 -  Added completions for:
@@ -2482,10 +2482,10 @@ Other significant changes
 
    -  ``zypper`` (:issue:`4325`)
 
-fish 2.6.0 (released June 3, 2017)
+ghoti 2.6.0 (released June 3, 2017)
 ==================================
 
-Since the beta release of fish 2.6b1, fish version 2.6.0 contains a
+Since the beta release of ghoti 2.6b1, ghoti version 2.6.0 contains a
 number of minor fixes, new completions for ``magneto`` (:issue:`4043`), and
 improvements to the documentation.
 
@@ -2495,8 +2495,8 @@ Known issues
 ------------
 
 -  Apple macOS Sierra 10.12.5 introduced a problem with launching web
-   browsers from other programs using AppleScript. This affects the fish
-   Web configuration (``fish_config``); users on these platforms will
+   browsers from other programs using AppleScript. This affects the ghoti
+   Web configuration (``ghoti_config``); users on these platforms will
    need to manually open the address displayed in the terminal, such as
    by copying and pasting it into a browser. This problem will be fixed
    with macOS 10.12.6.
@@ -2506,7 +2506,7 @@ the release notes for 2.6b1 (included below).
 
 --------------
 
-fish 2.6b1 (released May 14, 2017)
+ghoti 2.6b1 (released May 14, 2017)
 ==================================
 
 .. _notable-fixes-and-improvements-1:
@@ -2524,7 +2524,7 @@ Notable fixes and improvements
    terminal, the ``COLUMNS`` and ``LINES`` environment variables are
    used; if they are unset, a default of 80x24 is assumed.
 -  New French (:issue:`3772` & :issue:`3788`) and improved German (:issue:`3834`) translations.
--  fish no longer depends on the ``which`` external command.
+-  ghoti no longer depends on the ``which`` external command.
 
 .. _other-significant-changes-1:
 
@@ -2534,7 +2534,7 @@ Other significant changes
 -  Performance improvements in launching processes, including major
    reductions in signal blocking. Although this has been heavily tested,
    it may cause problems in some circumstances; set the
-   ``FISH_NO_SIGNAL_BLOCK`` variable to 0 in your fish configuration
+   ``FISH_NO_SIGNAL_BLOCK`` variable to 0 in your ghoti configuration
    file to return to the old behaviour (:issue:`2007`).
 -  Performance improvements in prompts and functions that set lots of
    colours (:issue:`3793`).
@@ -2582,7 +2582,7 @@ Other significant changes
 -  Under terminals which support it, bracketed paste is enabled,
    escaping problematic characters for security and convience (:issue:`3871`).
    Inside single quotes (``'``), single quotes and backslashes in pasted
-   text are escaped (:issue:`967`). The ``fish_clipboard_paste`` function (bound
+   text are escaped (:issue:`967`). The ``ghoti_clipboard_paste`` function (bound
    to ``C-v`` by default) is still the recommended pasting method where
    possible as it includes this functionality and more.
 -  Processes in pipelines are no longer signalled as soon as one command
@@ -2592,7 +2592,7 @@ Other significant changes
    is installed (:issue:`3970`). Python 3 is preferred, but Python 2.6 remains
    the minimum version required.
 -  The color of the cancellation character can be controlled by the
-   ``fish_color_cancel`` variable (:issue:`3963`).
+   ``ghoti_color_cancel`` variable (:issue:`3963`).
 -  Added completions for:
 -  ``caddy`` (:issue:`4008`)
 -  ``castnow`` (:issue:`3744`)
@@ -2624,7 +2624,7 @@ Other significant changes
 
 --------------
 
-fish 2.5.0 (released February 3, 2017)
+ghoti 2.5.0 (released February 3, 2017)
 ======================================
 
 There are no major changes between 2.5b1 and 2.5.0. If you are upgrading
@@ -2641,13 +2641,13 @@ Notable fixes and improvements
 
 --------------
 
-fish 2.5b1 (released January 14, 2017)
+ghoti 2.5b1 (released January 14, 2017)
 ======================================
 
 Platform Changes
 ----------------
 
-Starting with version 2.5, fish requires a more up-to-date version of
+Starting with version 2.5, ghoti requires a more up-to-date version of
 C++, specifically C++11 (from 2011). This affects some older platforms:
 
 Linux
@@ -2658,20 +2658,20 @@ For users building from source, GCC’s g++ 4.8 or later, or LLVM’s clang
 compiler installed.
 
 Unfortunately, because of the complexity of the toolchain, binary
-packages are no longer published by the fish-shell developers for the
+packages are no longer published by the ghoti-shell developers for the
 following platforms:
 
 -  Red Hat Enterprise Linux and CentOS 5 & 6 for 64-bit builds
 -  Ubuntu 12.04 (EoLTS April 2017)
 -  Debian 7 (EoLTS May 2018)
 
-Installing newer version of fish on these systems will require building
+Installing newer version of ghoti on these systems will require building
 from source.
 
 OS X SnowLeopard
 ^^^^^^^^^^^^^^^^
 
-Starting with version 2.5, fish requires a C++11 standard library on OS
+Starting with version 2.5, ghoti requires a C++11 standard library on OS
 X 10.6 (“SnowLeopard”). If this library is not installed, you will see
 this error: ``dyld: Library not loaded: /usr/lib/libc++.1.dylib``
 
@@ -2682,7 +2682,7 @@ SnowLeopard MacPorts release from the install page, run:
 
    sudo port -v install libcxx
 
-Now fish should launch successfully. (Please open an issue if it does
+Now ghoti should launch successfully. (Please open an issue if it does
 not.)
 
 This is only necessary on 10.6. OS X 10.7 and later include the required
@@ -2700,13 +2700,13 @@ Other significant changes
 -  ``random`` can now have start, stop and step values specified, or the
    new ``choice`` subcommand can be used to pick an argument from a list
    (:issue:`3619`).
--  A new key bindings preset, ``fish_hybrid_key_bindings``, including
+-  A new key bindings preset, ``ghoti_hybrid_key_bindings``, including
    all the Emacs-style and Vi-style bindings, which behaves like
-   ``fish_vi_key_bindings`` in fish 2.3.0 (:issue:`3556`).
+   ``ghoti_vi_key_bindings`` in ghoti 2.3.0 (:issue:`3556`).
 -  ``function`` now returns an error when called with invalid options,
    rather than defining the function anyway (:issue:`3574`). This was a
-   regression present in fish 2.3 and 2.4.0.
--  fish no longer prints a warning when it identifies a running instance
+   regression present in ghoti 2.3 and 2.4.0.
+-  ghoti no longer prints a warning when it identifies a running instance
    of an old version (2.1.0 and earlier). Changes to universal variables
    may not propagate between these old versions and 2.5b1.
 -  Improved compatiblity with Android (:issue:`3585`), MSYS/mingw (:issue:`2360`), and
@@ -2723,8 +2723,8 @@ Other significant changes
    character the cursor does not move over (:issue:`3684`).
 -  List indexes are handled better, and a bit more liberally in some
    cases (``echo $PATH[1 .. 3]`` is now valid) (:issue:`3579`).
--  The ``fish_mode_prompt`` function is now simply a stub around
-   ``fish_default_mode_prompt``, which allows the mode prompt to be
+-  The ``ghoti_mode_prompt`` function is now simply a stub around
+   ``ghoti_default_mode_prompt``, which allows the mode prompt to be
    included more easily in customised prompt functions (:issue:`3641`).
 
 .. _notable-fixes-and-improvements-3:
@@ -2744,16 +2744,16 @@ Notable fixes and improvements
 -  The command synopses printed by ``--help`` options work better with
    copying and pasting (:issue:`2673`).
 -  ``help`` launches the browser specified by the
-   ``$fish_help_browser variable`` if it is set (:issue:`3131`).
+   ``$ghoti_help_browser variable`` if it is set (:issue:`3131`).
 -  History merging could lose items under certain circumstances and is
    now fixed (:issue:`3496`).
 -  The ``$status`` variable is now set to 123 when a syntactically
    invalid command is entered (:issue:`3616`).
--  Exiting fish now signals all background processes to terminate, not
+-  Exiting ghoti now signals all background processes to terminate, not
    just stopped jobs (:issue:`3497`).
 -  A new ``prompt_hostname`` function which prints a hostname suitable
    for use in prompts (:issue:`3482`).
--  The ``__fish_man_page`` function (bound to Alt-h by default) now
+-  The ``__ghoti_man_page`` function (bound to Alt-h by default) now
    tries to recognize subcommands (e.g. ``git add`` will now open the
    “git-add” man page) (:issue:`3678`).
 -  A new function ``edit_command_buffer`` (bound to Alt-e & Alt-v by
@@ -2762,7 +2762,7 @@ Notable fixes and improvements
 -  ``set_color`` now supports italics (``--italics``), dim (``--dim``)
    and reverse (``--reverse``) modes (:issue:`3650`).
 -  Filesystems with very slow locking (eg incorrectly-configured NFS)
-   will no longer slow fish down (:issue:`685`).
+   will no longer slow ghoti down (:issue:`685`).
 -  Improved completions for ``apt`` (:issue:`3695`), ``fusermount`` (:issue:`3642`),
    ``make`` (:issue:`3628`), ``netctl-auto`` (:issue:`3378`), ``nmcli`` (:issue:`3648`),
    ``pygmentize`` (:issue:`3378`), and ``tar`` (:issue:`3719`).
@@ -2790,7 +2790,7 @@ Notable fixes and improvements
 
 --------------
 
-fish 2.4.0 (released November 8, 2016)
+ghoti 2.4.0 (released November 8, 2016)
 ======================================
 
 There are no major changes between 2.4b1 and 2.4.0.
@@ -2812,7 +2812,7 @@ Notable fixes and improvements
 
 --------------
 
-fish 2.4b1 (released October 18, 2016)
+ghoti 2.4b1 (released October 18, 2016)
 ======================================
 
 Significant changes
@@ -2849,13 +2849,13 @@ Significant changes
 Notable fixes and improvements
 ------------------------------
 
--  The ``fish_realpath`` builtin has been renamed to ``realpath`` and
+-  The ``ghoti_realpath`` builtin has been renamed to ``realpath`` and
    made compatible with GNU ``realpath`` when run without arguments
    (:issue:`3400`). It is used only for systems without a ``realpath`` or
    ``grealpath`` utility (:issue:`3374`).
 -  Improved color handling on terminals/consoles with 8-16 colors,
    particularly the use of bright named color (:issue:`3176`, :issue:`3260`).
--  ``fish_indent`` can now read from files given as arguments, rather
+-  ``ghoti_indent`` can now read from files given as arguments, rather
    than just standard input (:issue:`3037`).
 -  Fuzzy tab completions behave in a less surprising manner (:issue:`3090`,
    :issue:`3211`).
@@ -2865,19 +2865,19 @@ Notable fixes and improvements
    characters (:issue:`3069`).
 -  ``history --merge`` now correctly interleaves items in chronological
    order (:issue:`2312`).
--  Options for ``fish_indent`` have been aligned with the other binaries
+-  Options for ``ghoti_indent`` have been aligned with the other binaries
    - in particular, ``-d`` now means ``--debug``. The ``--dump`` option
    has been renamed to ``--dump-parse-tree`` (:issue:`3191`).
 -  The display of bindings in the Web-based configuration has been
    greatly improved (:issue:`3325`), as has the rendering of prompts (:issue:`2924`).
--  fish should no longer hang using 100% CPU in the C locale (:issue:`3214`).
--  A bug in FreeBSD 11 & 12, Dragonfly BSD & illumos prevented fish from
-   working correctly on these platforms under UTF-8 locales; fish now
+-  ghoti should no longer hang using 100% CPU in the C locale (:issue:`3214`).
+-  A bug in FreeBSD 11 & 12, Dragonfly BSD & illumos prevented ghoti from
+   working correctly on these platforms under UTF-8 locales; ghoti now
    avoids the buggy behaviour (:issue:`3050`).
 -  Prompts which show git repository information (via
-   ``__fish_git_prompt``) are faster in large repositories (:issue:`3294`) and
+   ``__ghoti_git_prompt``) are faster in large repositories (:issue:`3294`) and
    slow filesystems (:issue:`3083`).
--  fish 2.3.0 reintroduced a problem where the greeting was printed even
+-  ghoti 2.3.0 reintroduced a problem where the greeting was printed even
    when using ``read``; this has been corrected again (:issue:`3261`).
 -  Vi mode changes the cursor depending on the current mode (:issue:`3215`).
 -  Command lines with escaped space characters at the end tab-complete
@@ -2906,11 +2906,11 @@ Notable fixes and improvements
 
 --------------
 
-fish 2.3.1 (released July 3, 2016)
+ghoti 2.3.1 (released July 3, 2016)
 ==================================
 
 This is a functionality and bugfix release. This release does not
-contain all the changes to fish since the last release, but fixes a
+contain all the changes to ghoti since the last release, but fixes a
 number of issues directly affecting users at present and includes a
 small number of new features.
 
@@ -2919,11 +2919,11 @@ small number of new features.
 Significant changes
 -------------------
 
--  A new ``fish_key_reader`` binary for decoding interactive keypresses
+-  A new ``ghoti_key_reader`` binary for decoding interactive keypresses
    (:issue:`2991`).
--  ``fish_mode_prompt`` has been updated to reflect the changes in the
+-  ``ghoti_mode_prompt`` has been updated to reflect the changes in the
    way the Vi input mode is set up (:issue:`3067`), making this more reliable.
--  ``fish_config`` can now properly be launched from the OS X app bundle
+-  ``ghoti_config`` can now properly be launched from the OS X app bundle
    (:issue:`3140`).
 
 .. _notable-fixes-and-improvements-6:
@@ -2940,8 +2940,8 @@ Notable fixes and improvements
    handling (:issue:`3124`) and terminal environment variable handling (:issue:`3060`).
 -  Work towards handling the terminal modes for external commands
    launched from initialisation files (:issue:`2980`).
--  Ease the upgrade path from fish 2.2.0 and before by warning users to
-   restart fish if the ``string`` builtin is not available (:issue:`3057`).
+-  Ease the upgrade path from ghoti 2.2.0 and before by warning users to
+   restart ghoti if the ``string`` builtin is not available (:issue:`3057`).
 -  ``type -a`` now syntax-colorizes function source output.
 -  Added completions for ``alsamixer``, ``godoc``, ``gofmt``,
    ``goimports``, ``gorename``, ``lscpu``, ``mkdir``, ``modinfo``,
@@ -2952,7 +2952,7 @@ Notable fixes and improvements
 
 --------------
 
-fish 2.3.0 (released May 20, 2016)
+ghoti 2.3.0 (released May 20, 2016)
 ==================================
 
 There are no significant changes between 2.3.0 and 2.3b2.
@@ -2971,14 +2971,14 @@ Other notable fixes and improvements
 Known issues
 ------------
 
--  Interactive commands started from fish configuration files or from
+-  Interactive commands started from ghoti configuration files or from
    the ``-c`` option may, under certain circumstances, be started with
    incorrect terminal modes and fail to behave as expected. A fix is
    planned but requires further testing (:issue:`2619`).
 
 --------------
 
-fish 2.3b2 (released May 5, 2016)
+ghoti 2.3b2 (released May 5, 2016)
 =================================
 
 .. _significant-changes-2:
@@ -2986,14 +2986,14 @@ fish 2.3b2 (released May 5, 2016)
 Significant changes
 -------------------
 
--  A new ``fish_realpath`` builtin and associated function to allow the
+-  A new ``ghoti_realpath`` builtin and associated function to allow the
    use of ``realpath`` even on those platforms that don’t ship an
    appropriate command (:issue:`2932`).
 -  Alt-# toggles the current command line between commented and
    uncommented states, making it easy to save a command in history
    without executing it.
--  The ``fish_vi_mode`` function is now deprecated in favour of
-   ``fish_vi_key_bindings``.
+-  The ``ghoti_vi_mode`` function is now deprecated in favour of
+   ``ghoti_vi_key_bindings``.
 
 .. _other-notable-fixes-and-improvements-1:
 
@@ -3003,13 +3003,13 @@ Other notable fixes and improvements
 -  Fix the build on Cygwin (:issue:`2952`) and RedHat Enterprise Linux/CentOS 5
    (:issue:`2955`).
 -  Avoid confusing the terminal line driver with non-printing characters
-   in ``fish_title`` (:issue:`2453`).
+   in ``ghoti_title`` (:issue:`2453`).
 -  Improved completions for busctl, git (:issue:`2585`, :issue:`2879`, :issue:`2984`), and
    netctl.
 
 --------------
 
-fish 2.3b1 (released April 19, 2016)
+ghoti 2.3b1 (released April 19, 2016)
 ====================================
 
 .. _significant-changes-3:
@@ -3025,11 +3025,11 @@ Significant Changes
 -  Allow using escape as the Meta modifier key, by waiting after seeing
    an escape character wait up to 300ms for an additional character.
    This is consistent with readline (e.g. bash) and can be configured
-   via the ``fish_escape_delay_ms variable``. This allows using escape
+   via the ``ghoti_escape_delay_ms variable``. This allows using escape
    as the Meta modifier. (:issue:`1356`)
 -  Add new directories for vendor functions and configuration snippets
    (:issue:`2500`)
--  A new ``fish_realpath`` builtin and associated ``realpath`` function
+-  A new ``ghoti_realpath`` builtin and associated ``realpath`` function
    should allow scripts to resolve path names via ``realpath``
    regardless of whether there is an external command of that name;
    albeit with some limitations. See the associated documentation.
@@ -3055,7 +3055,7 @@ Backward-incompatible changes
 Other notable fixes and improvements
 ------------------------------------
 
--  Fish no longer silences errors in config.fish (:issue:`2702`)
+-  Fish no longer silences errors in config.ghoti (:issue:`2702`)
 -  Directory autosuggestions will now descend as far as possible if
    there is only one child directory (:issue:`2531`)
 -  Add support for bright colors (:issue:`1464`)
@@ -3066,7 +3066,7 @@ Other notable fixes and improvements
 -  Enable 24-bit colors on select terminals (:issue:`2495`)
 -  Support for SVN status in the prompt (:issue:`2582`)
 -  Mercurial and SVN support have been added to the Classic + Git (now
-   Classic + VCS) prompt (via the new \__fish_vcs_prompt function)
+   Classic + VCS) prompt (via the new \__ghoti_vcs_prompt function)
    (:issue:`2592`)
 -  export now handles variables with a “=” in the value (:issue:`2403`)
 -  New completions for:
@@ -3091,24 +3091,24 @@ Other notable fixes and improvements
    :issue:`562`)
 -  Linux VTs now run in a simplified mode to avoid issues (:issue:`2311`)
 -  The vi-bindings now inherit from the emacs bindings
--  Fish will also execute ``fish_user_key_bindings`` when in vi-mode
+-  Fish will also execute ``ghoti_user_key_bindings`` when in vi-mode
 -  ``funced`` will now also check $VISUAL (:issue:`2268`)
 -  A new ``suspend`` function (:issue:`2269`)
 -  Subcommand completion now works better with split /usr (:issue:`2141`)
 -  The command-not-found-handler can now be overridden by defining a
-   function called ``__fish_command_not_found_handler`` in config.fish
+   function called ``__ghoti_command_not_found_handler`` in config.ghoti
    (:issue:`2332`)
 -  A few fixes to the Sorin theme
 -  PWD shortening in the prompt can now be configured via the
-   ``fish_prompt_pwd_dir_length`` variable, set to the length per path
+   ``ghoti_prompt_pwd_dir_length`` variable, set to the length per path
    component (:issue:`2473`)
--  fish no longer requires ``/etc/fish/config.fish`` to correctly start,
+-  ghoti no longer requires ``/etc/ghoti/config.ghoti`` to correctly start,
    and now ships a skeleton file that only contains some documentation
    (:issue:`2799`)
 
 --------------
 
-fish 2.2.0 (released July 12, 2015)
+ghoti 2.2.0 (released July 12, 2015)
 ===================================
 
 .. _significant-changes-4:
@@ -3119,15 +3119,15 @@ Significant changes
 -  Abbreviations: the new ``abbr`` command allows for
    interactively-expanded abbreviations, allowing quick access to
    frequently-used commands (:issue:`731`).
--  Vi mode: run ``fish_vi_mode`` to switch fish into the key bindings
+-  Vi mode: run ``ghoti_vi_mode`` to switch ghoti into the key bindings
    and prompt familiar to users of the Vi editor (:issue:`65`).
 -  New inline and interactive pager, which will be familiar to users of
    zsh (:issue:`291`).
--  Underlying architectural changes: the ``fishd`` universal variable
+-  Underlying architectural changes: the ``ghotid`` universal variable
    server has been removed as it was a source of many bugs and security
-   problems. Notably, old fish sessions will not be able to communicate
-   universal variable changes with new fish sessions. For best results,
-   restart all running instances of ``fish``.
+   problems. Notably, old ghoti sessions will not be able to communicate
+   universal variable changes with new ghoti sessions. For best results,
+   restart all running instances of ``ghoti``.
 -  The web-based configuration tool has been redesigned, featuring a
    prompt theme chooser and other improvements.
 -  New German, Brazilian Portuguese, and Chinese translations.
@@ -3162,12 +3162,12 @@ Other notable fixes and improvements
    1.8.7 or newer to build.
 -  Fish now defines a default directory for other packages to provide
    completions. By default this is
-   ``/usr/share/fish/vendor-completions.d``; on systems with
+   ``/usr/share/ghoti/vendor-completions.d``; on systems with
    ``pkgconfig`` installed this path is discoverable with
-   ``pkg-config --variable completionsdir fish``.
+   ``pkg-config --variable completionsdir ghoti``.
 -  A new parser removes many bugs; all existing syntax should keep
    working.
--  New ``fish_preexec`` and ``fish_postexec`` events are fired before
+-  New ``ghoti_preexec`` and ``ghoti_postexec`` events are fired before
    and after job execution respectively (:issue:`1549`).
 -  Unmatched wildcards no longer prevent a job from running. Wildcards
    used interactively will still print an error, but the job will
@@ -3186,8 +3186,8 @@ Other notable fixes and improvements
    (recursively) inherit the completions of a wrapped command (:issue:`393`),
    and ``complete -e`` now correctly erases completions (:issue:`380`).
 -  Completions are now generated from manual pages by default on the
-   first run of fish (:issue:`997`).
--  ``fish_indent`` can now produce colorized (``--ansi``) and HTML
+   first run of ghoti (:issue:`997`).
+-  ``ghoti_indent`` can now produce colorized (``--ansi``) and HTML
    (``--html``) output (:issue:`1827`).
 -  ``functions --erase`` now prevents autoloaded functions from being
    reloaded in the current session.
@@ -3206,7 +3206,7 @@ Other notable fixes and improvements
    (:issue:`261`).
 -  Pressing F1 now shows the manual page for the current command
    (:issue:`1063`).
--  ``fish_title`` functions have access to the arguments of the
+-  ``ghoti_title`` functions have access to the arguments of the
    currently running argument as ``$argv[1]`` (:issue:`1542`).
 -  The OS command-not-found handler is used on Arch Linux (:issue:`1925`), nixOS
    (:issue:`1852`), openSUSE and Fedora (:issue:`1280`).
@@ -3231,15 +3231,15 @@ Other notable fixes and improvements
 
 --------------
 
-fish 2.1.2 (released Feb 24, 2015)
+ghoti 2.1.2 (released Feb 24, 2015)
 ==================================
 
-fish 2.1.2 contains a workaround for a filesystem bug in Mac OS X
+ghoti 2.1.2 contains a workaround for a filesystem bug in Mac OS X
 Yosemite. :issue:`1859`
 
-Specifically, after installing fish 2.1.1 and then rebooting, “Verify
+Specifically, after installing ghoti 2.1.1 and then rebooting, “Verify
 Disk” in Disk Utility will report “Invalid number of hard links.” We
-don’t have any reports of data loss or other adverse consequences. fish
+don’t have any reports of data loss or other adverse consequences. ghoti
 2.1.2 avoids triggering the bug, but does not repair an already affected
 filesystem. To repair the filesystem, you can boot into Recovery Mode
 and use Repair Disk from Disk Utility. Linux and versions of OS X prior
@@ -3249,46 +3249,46 @@ There are no other changes in this release.
 
 --------------
 
-fish 2.1.1 (released September 26, 2014)
+ghoti 2.1.1 (released September 26, 2014)
 ========================================
 
 **Important:** if you are upgrading, stop all running instances of
-``fishd`` as soon as possible after installing this release; it will be
+``ghotid`` as soon as possible after installing this release; it will be
 restarted automatically. On most systems, there will be no further
 action required. Note that some environments (where ``XDG_RUNTIME_DIR``
-is set), such as Fedora 20, will require a restart of all running fish
+is set), such as Fedora 20, will require a restart of all running ghoti
 processes before universal variables work as intended.
 
-Distributors are highly encouraged to call ``killall fishd``,
-``pkill fishd`` or similar in installation scripts, or to warn their
+Distributors are highly encouraged to call ``killall ghotid``,
+``pkill ghotid`` or similar in installation scripts, or to warn their
 users to do so.
 
 Security fixes
 --------------
 
--  The fish_config web interface now uses an authentication token to
+-  The ghoti_config web interface now uses an authentication token to
    protect requests and only responds to requests from the local machine
    with this token, preventing a remote code execution attack. (closing
    CVE-2014-2914). :issue:`1438`
 -  ``psub`` and ``funced`` are no longer vulnerable to attacks which
    allow local privilege escalation and data tampering (closing
    CVE-2014-2906 and CVE-2014-3856). :issue:`1437`
--  ``fishd`` uses a secure path for its socket, preventing a local
+-  ``ghotid`` uses a secure path for its socket, preventing a local
    privilege escalation attack (closing CVE-2014-2905). :issue:`1436`
--  ``__fish_print_packages`` is no longer vulnerable to attacks which
+-  ``__ghoti_print_packages`` is no longer vulnerable to attacks which
    would allow local privilege escalation and data tampering (closing
    CVE-2014-3219). :issue:`1440`
 
 Other fixes
 -----------
 
--  ``fishd`` now ignores SIGPIPE, fixing crashes using tools like GNU
+-  ``ghotid`` now ignores SIGPIPE, fixing crashes using tools like GNU
    Parallel and which occurred more often as a result of the other
-   ``fishd`` changes. :issue:`1084` & :issue:`1690`
+   ``ghotid`` changes. :issue:`1084` & :issue:`1690`
 
 --------------
 
-fish 2.1.0
+ghoti 2.1.0
 ==========
 
 .. _significant-changes-5:
@@ -3298,7 +3298,7 @@ Significant Changes
 
 -  **Tab completions will fuzzy-match files.** :issue:`568`
 
-   When tab-completing a file, fish will first attempt prefix matches
+   When tab-completing a file, ghoti will first attempt prefix matches
    (``foo`` matches ``foobar``), then substring matches (``ooba``
    matches ``foobar``), and lastly subsequence matches (``fbr`` matches
    ``foobar``). For example, in a directory with files foo1.txt,
@@ -3345,21 +3345,21 @@ Other Notable Fixes
 
 -  ``printf`` supports ``\e``, the escape character. :issue:`910`
 
--  ``fish_config history`` no longer shows duplicate items. :issue:`900`
+-  ``ghoti_config history`` no longer shows duplicate items. :issue:`900`
 
--  ``$fish_user_paths`` is now prepended to $PATH instead of appended.
+-  ``$ghoti_user_paths`` is now prepended to $PATH instead of appended.
    :issue:`888`
 
 -  Jobs complete when all processes complete. :issue:`876`
 
-   For example, in previous versions of fish, ``sleep 10 | echo Done``
+   For example, in previous versions of ghoti, ``sleep 10 | echo Done``
    returns control immediately, because echo does not read from stdin.
    Now it does not complete until sleep exits (presumably after 10
    seconds).
 
 -  Better error reporting for square brackets. :issue:`875`
 
--  fish no longer tries to add ``/bin`` to ``$PATH`` unless PATH is
+-  ghoti no longer tries to add ``/bin`` to ``$PATH`` unless PATH is
    totally empty. :issue:`852`
 
 -  History token substitution (alt-up) now works correctly inside
@@ -3375,7 +3375,7 @@ Other Notable Fixes
 
 -  funced no longer freaks out when supplied with no arguments. :issue:`780`
 
--  fish.app now works correctly in a directory containing spaces. :issue:`774`
+-  ghoti.app now works correctly in a directory containing spaces. :issue:`774`
 
 -  Tab completion cycling no longer occasionally fails to repaint. :issue:`765`
 
@@ -3388,7 +3388,7 @@ Other Notable Fixes
 
 --------------
 
-fish 2.0.0
+ghoti 2.0.0
 ==========
 
 .. _significant-changes-6:
@@ -3412,12 +3412,12 @@ Significant Changes
    effectively tests whether ``which`` succeeded, and if so, whether the
    ``set`` also succeeded.
 
--  Improvements to PATH handling. There is a new variable, fish_user_paths,
+-  Improvements to PATH handling. There is a new variable, ghoti_user_paths,
    which can be set universally, and whose contents are appended to
    $PATH :issue:`527`
 
    -  /etc/paths and /etc/paths.d are now respected on OS X
-   -  fish no longer modifies $PATH to find its own binaries
+   -  ghoti no longer modifies $PATH to find its own binaries
 
 -  **Long lines no longer use ellipsis for line breaks**, and copy and
    paste should no longer include a newline even if the line was broken
@@ -3425,17 +3425,17 @@ Significant Changes
 
 -  **New syntax for index ranges** (sometimes known as “slices”) :issue:`212`
 
--  **fish now supports an ``else if`` statement** :issue:`134`
+-  **ghoti now supports an ``else if`` statement** :issue:`134`
 
 -  **Process and pid completion now works on OS X** :issue:`129`
 
--  **fish is now relocatable**, and no longer depends on compiled-in
+-  **ghoti is now relocatable**, and no longer depends on compiled-in
    paths :issue:`125`
 
--  **fish now supports a right prompt (RPROMPT)** through the
-   fish_right_prompt function :issue:`80`
+-  **ghoti now supports a right prompt (RPROMPT)** through the
+   ghoti_right_prompt function :issue:`80`
 
--  **fish now uses posix_spawn instead of fork when possible**, which is
+-  **ghoti now uses posix_spawn instead of fork when possible**, which is
    much faster on BSD and OS X :issue:`11`
 
 .. _other-notable-fixes-1:
@@ -3447,13 +3447,13 @@ Other Notable Fixes
 -  Avoid calling getcwd on the main thread, as it can hang :issue:`696`
 -  Control-D (forward delete) no longer stops at a period :issue:`667`
 -  Completions for many new commands
--  fish now respects rxvt’s unique keybindings :issue:`657`
--  xsel is no longer built as part of fish. It will still be invoked if
+-  ghoti now respects rxvt’s unique keybindings :issue:`657`
+-  xsel is no longer built as part of ghoti. It will still be invoked if
    installed separately :issue:`633`
--  \__fish_filter_mime no longer spews :issue:`628`
--  The –no-execute option to fish no longer falls over when reaching the
+-  \__ghoti_filter_mime no longer spews :issue:`628`
+-  The –no-execute option to ghoti no longer falls over when reaching the
    end of a block :issue:`624`
--  fish_config knows how to find fish even if it’s not in the $PATH :issue:`621`
+-  ghoti_config knows how to find ghoti even if it’s not in the $PATH :issue:`621`
 -  A leading space now prevents writing to history, as is done in bash
    and zsh :issue:`615`
 -  Hitting enter after a backslash only goes to a new line if it is
@@ -3474,7 +3474,7 @@ Other Notable Fixes
 -  Avoid calling getpwnam on the main thread, as it can hang :issue:`512`
 -  Alt-F or Alt-right-arrow (Option-F or option-right-arrow) now accepts
    one word of an autosuggestion :issue:`435`
--  Setting fish as your login shell no longer kills OpenSUSE :issue:`367`
+-  Setting ghoti as your login shell no longer kills OpenSUSE :issue:`367`
 -  Backslashes now join lines, instead of creating multiple commands
    :issue:`347`
 -  echo now implements the -e flag to interpret escapes :issue:`337`
@@ -3484,32 +3484,32 @@ Other Notable Fixes
 -  Wildcards beginning with a . (for example, ``ls .*``) no longer match
    . and .. :issue:`270`
 -  Recursive wildcards now handle symlink loops :issue:`268`
--  You can now delete history items from the fish_config web interface
+-  You can now delete history items from the ghoti_config web interface
    :issue:`250`
 -  The OS X build now weak links ``wcsdup`` and ``wcscasecmp`` :issue:`240`
--  fish now saves and restores the process group, which prevents certain
+-  ghoti now saves and restores the process group, which prevents certain
    processes from being erroneously reported as stopped :issue:`197`
 -  funced now takes an editor option :issue:`187`
--  Alternating row colors are available in fish pager through
-   ``fish_pager_color_secondary`` :issue:`186`
+-  Alternating row colors are available in ghoti pager through
+   ``ghoti_pager_color_secondary`` :issue:`186`
 -  Universal variable values are now stored based on your MAC address,
    not your hostname :issue:`183`
 -  The caret ^ now only does a stderr redirection if it is the first
    character of a token, making git users happy :issue:`168`
 -  Autosuggestions will no longer cause line wrapping :issue:`167`
 -  Better handling of Unicode combining characters :issue:`155`
--  fish SIGHUPs processes more often :issue:`138`
--  fish no longer causes ``sudo`` to ask for a password every time
--  fish behaves better under Midnight Commander :issue:`121`
+-  ghoti SIGHUPs processes more often :issue:`138`
+-  ghoti no longer causes ``sudo`` to ask for a password every time
+-  ghoti behaves better under Midnight Commander :issue:`121`
 -  ``set -e`` no longer crashes :issue:`100`
--  fish now will automatically import history from bash, if there is no
-   fish history :issue:`66`
+-  ghoti now will automatically import history from bash, if there is no
+   ghoti history :issue:`66`
 -  Backslashed-newlines inside quoted strings now behave more
    intuitively :issue:`52`
 -  Tab titles should be shown correctly in iTerm2 :issue:`47`
 -  scp remote path completion now sometimes works :issue:`42`
 -  The ``read`` builtin no longer shows autosuggestions :issue:`29`
--  Custom key bindings can now be set via the ``fish_user_key_bindings``
+-  Custom key bindings can now be set via the ``ghoti_user_key_bindings``
    function :issue:`21`
 -  All Python scripts now run correctly under both Python 2 and Python 3
    :issue:`14`
@@ -3518,7 +3518,7 @@ Other Notable Fixes
 
 --------------
 
-fishfish Beta r2
+ghotighoti Beta r2
 ================
 
 Bug Fixes
@@ -3531,12 +3531,12 @@ Bug Fixes
 -  **Disabled delayed suspend.** This is a strange job-control feature
    of BSD systems, including OS X. Disabling it frees up Control Y for
    other purposes; in particular, for yank, which now works on OS X.
--  **fish_indent is fixed.** In particular, the ``funced`` and
+-  **ghoti_indent is fixed.** In particular, the ``funced`` and
    ``funcsave`` functions work again.
 -  A SIGTERM now ends the whole execution stack again (resolving :issue:`13`).
--  Bumped the \__fish_config_interactive version number so the default
-   fish_color_autosuggestion kicks in.
--  fish_config better handles combined term256 and classic colors like
+-  Bumped the \__ghoti_config_interactive version number so the default
+   ghoti_color_autosuggestion kicks in.
+-  ghoti_config better handles combined term256 and classic colors like
    “555 yellow”.
 
 New Features
@@ -3553,13 +3553,13 @@ Credit to @siteshwar for implementation. Thanks @siteshwar!
 
 --------------
 
-fishfish Beta r1
+ghotighoti Beta r1
 ================
 
 Scripting
 ---------
 
--  No changes! All existing fish scripts, config files, completions,
+-  No changes! All existing ghoti scripts, config files, completions,
    etc. from trunk should continue to work.
 
 .. _new-features-1:
@@ -3568,7 +3568,7 @@ New Features
 ------------
 
 -  **Autosuggestions**. Think URL fields in browsers. When you type a
-   command, fish will suggest the rest of the command after the cursor,
+   command, ghoti will suggest the rest of the command after the cursor,
    in a muted gray when possible. You can accept the suggestion with the
    right arrow key or Ctrl-F. Suggestions come from command history,
    completions, and some custom code for cd; there’s a lot of potential
@@ -3579,14 +3579,14 @@ New Features
 
 -  **term256 support** where available, specifically modern xterms and
    OS X Lion. You can specify colors the old way (‘set_color cyan’) or
-   by specifying RGB hex values (‘set_color FF3333’); fish will pick the
+   by specifying RGB hex values (‘set_color FF3333’); ghoti will pick the
    closest supported color. Some xterms do not advertise term256 support
    either in the $TERM or terminfo max_colors field, but nevertheless
-   support it. For that reason, fish will default into using it on any
+   support it. For that reason, ghoti will default into using it on any
    xterm (but it can be disabled with an environment variable).
 
 -  **Web-based configuration** page. There is a new function
-   ‘fish_config’. This spins up a simple Python web server and opens a
+   ‘ghoti_config’. This spins up a simple Python web server and opens a
    browser window to it. From this web page, you can set your shell
    colors and view your functions, variables, and history; all changes
    apply immediately to all running shells. Eventually all configuration
@@ -3594,16 +3594,16 @@ New Features
    instead of, command line mechanisms).
 
 -  **Man page completions**. There is a new function
-   ‘fish_update_completions’. This function reads all the man1 files
+   ‘ghoti_update_completions’. This function reads all the man1 files
    from your manpath, removes the roff formatting, parses them to find
-   the commands and options, and outputs fish completions into
-   ~/.config/fish/completions. It won’t overwrite existing completion
+   the commands and options, and outputs ghoti completions into
+   ~/.config/ghoti/completions. It won’t overwrite existing completion
    files (except ones that it generated itself).
 
 Programmatic Changes
 --------------------
 
--  fish is now entirely in C++. I have no particular love for C++, but
+-  ghoti is now entirely in C++. I have no particular love for C++, but
    it provides a ready memory-model to replace halloc. We’ve made an
    effort to keep it to a sane and portable subset (no C++11, no boost,
    no going crazy with templates or smart pointers), but we do use the
@@ -3616,7 +3616,7 @@ Programmatic Changes
    replaced by STL equivalents like std::vector, std::map, and
    std::wstring. A lot of the string handling now uses std::wstring
    instead of wchar_t \*
--  fish now spawns pthreads for tasks like syntax highlighting that
+-  ghoti now spawns pthreads for tasks like syntax highlighting that
    require blocking I/O.
 -  History has been completely rewritten. History files now use an
    extensible YAML-style syntax. History “merging” (multiple shells
@@ -3628,18 +3628,18 @@ Programmatic Changes
 Performance
 -----------
 
--  fish now runs syntax highlighting in a background thread, so typing
+-  ghoti now runs syntax highlighting in a background thread, so typing
    commands is always responsive even on slow filesystems.
 -  echo, test, and pwd are now builtins, which eliminates many forks.
 -  The files in share/functions and share/completions now get
-   ‘internalized’ into C strings that get compiled in with fish. This
+   ‘internalized’ into C strings that get compiled in with ghoti. This
    substantially reduces the number of files touched at startup. A
    consequence is that you cannot change these functions without
    recompiling, but often other functions depend on these “standard”
    functions, so changing them is perhaps not a good idea anyways.
 
-Here are some system call counts for launching and then exiting fish
-with the default configuration, on OS X. The first column is fish trunk,
+Here are some system call counts for launching and then exiting ghoti
+with the default configuration, on OS X. The first column is ghoti trunk,
 the next column is with our changes, and the last column is bash for
 comparison. This data was collected via dtrace.
 
@@ -3845,12 +3845,12 @@ write
 
    </table>
 
-The large number of forks relative to bash are due to fish’s insanely
+The large number of forks relative to bash are due to ghoti’s insanely
 expensive default prompt, which is unchanged in my version. If we switch
 to a prompt comparable to bash’s (lame) default, the forks drop to 16
 with trunk, 4 after our changes.
 
-The large reduction in lstat() numbers is due to fish no longer needing
+The large reduction in lstat() numbers is due to ghoti no longer needing
 to call ttyname() on OS X.
 
 We’ve got some work to do to be as lean as bash, but we’re on the right

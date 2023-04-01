@@ -9,24 +9,24 @@ function __schtasks_change_complete_args -a previous_token
     end
 
     if string match -r -q -- "$previous_token" '^/r?u$'
-        __fish_print_windows_users
+        __ghoti_print_windows_users
         return
     end
 
-    if __fish_seen_argument -w s
+    if __ghoti_seen_argument -w s
         echo -e '/u\tRun this command with the permissions of the specified user account'
     end
 
-    if __fish_seen_argument -w u
+    if __ghoti_seen_argument -w u
         echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
     end
 
-    if not __fish_seen_argument -w et -w du
+    if not __ghoti_seen_argument -w et -w du
         echo -e '/et\tSpecify the end time for the task
 /du\tA value that specifies the duration'
     end
 
-    if not __fish_seen_argument -w ENABLE -w DISABLE
+    if not __ghoti_seen_argument -w ENABLE -w DISABLE
         echo -e '/ENABLE\tSpecify to enable the scheduled task
 /DISABLE\tSpecify to disable the scheduled task'
     end
@@ -61,7 +61,7 @@ ONIDLE\tSpecify that the task runs whenever the system is idle for a specified p
     end
 
     if string match -r -q -- "$previous_token" '^/r?u$'
-        __fish_print_windows_users
+        __ghoti_print_windows_users
         return
     end
 
@@ -78,15 +78,15 @@ ONIDLE\tSpecify that the task runs after the system is idle for the number of mi
         return
     end
 
-    if __fish_seen_argument -w s
+    if __ghoti_seen_argument -w s
         echo -e '/u\tRun this command with the permissions of the specified user account'
     end
 
-    if __fish_seen_argument -w u
+    if __ghoti_seen_argument -w u
         echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
     end
 
-    if not __fish_seen_argument -w et -w du
+    if not __ghoti_seen_argument -w et -w du
         echo -e '/et\tSpecify the time of day that a minute or hourly task schedule ends
 /du\tSpecify a maximum length of time for a minute or hourly schedule'
     end
@@ -119,15 +119,15 @@ function __schtasks_delete_complete_args -a previous_token
     end
 
     if test "$previous_token" = /u
-        __fish_print_windows_users
+        __ghoti_print_windows_users
         return
     end
 
-    if __fish_seen_argument -w s
+    if __ghoti_seen_argument -w s
         echo -e '/u\tRun this command with the permissions of the specified user account'
     end
 
-    if __fish_seen_argument -w u
+    if __ghoti_seen_argument -w u
         echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
     end
 
@@ -144,15 +144,15 @@ function __schtasks_end_complete_args -a previous_token
     end
 
     if test "$previous_token" = /u
-        __fish_print_windows_users
+        __ghoti_print_windows_users
         return
     end
 
-    if __fish_seen_argument -w s
+    if __ghoti_seen_argument -w s
         echo -e '/u\tRun this command with the permissions of the specified user account'
     end
 
-    if __fish_seen_argument -w u
+    if __ghoti_seen_argument -w u
         echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
     end
 
@@ -170,15 +170,15 @@ CSV'
     end
 
     if test "$previous_token" = /u
-        __fish_print_windows_users
+        __ghoti_print_windows_users
         return
     end
 
-    if __fish_seen_argument -w s
+    if __ghoti_seen_argument -w s
         echo -e '/u\tRun this command with the permissions of the specified user account'
     end
 
-    if __fish_seen_argument -w u
+    if __ghoti_seen_argument -w u
         echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
     end
 
@@ -196,15 +196,15 @@ function __schtasks_run_complete_args -a previous_token
     end
 
     if test "$previous_token" = /u
-        __fish_print_windows_users
+        __ghoti_print_windows_users
         return
     end
 
-    if __fish_seen_argument -w s
+    if __ghoti_seen_argument -w s
         echo -e '/u\tRun this command with the permissions of the specified user account'
     end
 
-    if __fish_seen_argument -w u
+    if __ghoti_seen_argument -w u
         echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
     end
 
@@ -216,38 +216,38 @@ end
 function __schtasks_complete_args -d 'Function to generate args'
     set --local previous_token (commandline -oc)[-1]
 
-    if __fish_seen_argument -w change
+    if __ghoti_seen_argument -w change
         __schtasks_change_complete_args "$previous_token"
-    else if __fish_seen_argument -w create
+    else if __ghoti_seen_argument -w create
         __schtasks_create_complete_args "$previous_token"
-    else if __fish_seen_argument -w delete
+    else if __ghoti_seen_argument -w delete
         __schtasks_delete_complete_args "$previous_token"
-    else if __fish_seen_argument -w end
+    else if __ghoti_seen_argument -w end
         __schtasks_end_complete_args "$previous_token"
-    else if __fish_seen_argument -w query
+    else if __ghoti_seen_argument -w query
         __schtasks_query_complete_args "$previous_token"
-    else if __fish_seen_argument -w run
+    else if __ghoti_seen_argument -w run
         __schtasks_run_complete_args "$previous_token"
     end
 end
 
 complete -c schtasks -f -a '(__schtasks_complete_args)'
 
-complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+complete -c schtasks -f -n 'not __ghoti_seen_argument -w change -w create -w delete -w end \
     -w query -w run' -a /change \
     -d 'Change one or more properties of a task'
-complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+complete -c schtasks -f -n 'not __ghoti_seen_argument -w change -w create -w delete -w end \
     -w query -w run' -a /create \
     -d 'Schedule a new task'
-complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+complete -c schtasks -f -n 'not __ghoti_seen_argument -w change -w create -w delete -w end \
     -w query -w run' -a /delete \
     -d 'Delete a scheduled task'
-complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+complete -c schtasks -f -n 'not __ghoti_seen_argument -w change -w create -w delete -w end \
     -w query -w run' -a /end \
     -d 'Stop a program started by a task'
-complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+complete -c schtasks -f -n 'not __ghoti_seen_argument -w change -w create -w delete -w end \
     -w query -w run' -a /query \
     -d 'Display tasks scheduled to run on the computer'
-complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+complete -c schtasks -f -n 'not __ghoti_seen_argument -w change -w create -w delete -w end \
     -w query -w run' -a /run \
     -d 'Start a scheduled task immediately'

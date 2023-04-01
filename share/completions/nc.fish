@@ -9,4 +9,4 @@ else
     set flavor (command -s netcat | path resolve | path basename)
 end
 
-__fish_complete_netcat nc $flavor
+__ghoti_complete_netcat nc $flavor

@@ -1,8 +1,8 @@
 # colour of the revision number to display in the prompt
-set -g __fish_svn_prompt_color_revision yellow
+set -g __ghoti_svn_prompt_color_revision yellow
 
 # setting the prompt status separator character
-set -g __fish_svn_prompt_char_separator "|"
+set -g __ghoti_svn_prompt_char_separator "|"
 
 # ==============================
 
@@ -13,75 +13,75 @@ set -g __fish_svn_prompt_char_separator "|"
 #
 # these variables are user-configurable and can be set to customize the display output
 
-set -g __fish_svn_prompt_char_added_display A
-set -g __fish_svn_prompt_char_added_color green
+set -g __ghoti_svn_prompt_char_added_display A
+set -g __ghoti_svn_prompt_char_added_color green
 
-set -g __fish_svn_prompt_char_conflicted_display C
-set -g __fish_svn_prompt_char_conflicted_color --underline magenta
+set -g __ghoti_svn_prompt_char_conflicted_display C
+set -g __ghoti_svn_prompt_char_conflicted_color --underline magenta
 
-set -g __fish_svn_prompt_char_deleted_display D
-set -g __fish_svn_prompt_char_deleted_color red
+set -g __ghoti_svn_prompt_char_deleted_display D
+set -g __ghoti_svn_prompt_char_deleted_color red
 
-set -g __fish_svn_prompt_char_ignored_display I
-set -g __fish_svn_prompt_char_ignored_color --bold yellow
+set -g __ghoti_svn_prompt_char_ignored_display I
+set -g __ghoti_svn_prompt_char_ignored_color --bold yellow
 
-set -g __fish_svn_prompt_char_modified_display M
-set -g __fish_svn_prompt_char_modified_color blue
+set -g __ghoti_svn_prompt_char_modified_display M
+set -g __ghoti_svn_prompt_char_modified_color blue
 
-set -g __fish_svn_prompt_char_replaced_display R
-set -g __fish_svn_prompt_char_replaced_color cyan
+set -g __ghoti_svn_prompt_char_replaced_display R
+set -g __ghoti_svn_prompt_char_replaced_color cyan
 
-set -g __fish_svn_prompt_char_unversioned_external_display X
-set -g __fish_svn_prompt_char_unversioned_external_color --underline cyan
+set -g __ghoti_svn_prompt_char_unversioned_external_display X
+set -g __ghoti_svn_prompt_char_unversioned_external_color --underline cyan
 
-set -g __fish_svn_prompt_char_unversioned_display '?'
-set -g __fish_svn_prompt_char_unversioned_color purple
+set -g __ghoti_svn_prompt_char_unversioned_display '?'
+set -g __ghoti_svn_prompt_char_unversioned_color purple
 
-set -g __fish_svn_prompt_char_missing_display !
-set -g __fish_svn_prompt_char_missing_color yellow
+set -g __ghoti_svn_prompt_char_missing_display !
+set -g __ghoti_svn_prompt_char_missing_color yellow
 
-set -g __fish_svn_prompt_char_versioned_obstructed_display '~'
-set -g __fish_svn_prompt_char_versioned_obstructed_color magenta
+set -g __ghoti_svn_prompt_char_versioned_obstructed_display '~'
+set -g __ghoti_svn_prompt_char_versioned_obstructed_color magenta
 
-set -g __fish_svn_prompt_char_locked_display L
-set -g __fish_svn_prompt_char_locked_color --bold red
+set -g __ghoti_svn_prompt_char_locked_display L
+set -g __ghoti_svn_prompt_char_locked_color --bold red
 
-set -g __fish_svn_prompt_char_scheduled_display '+'
-set -g __fish_svn_prompt_char_scheduled_color --bold green
+set -g __ghoti_svn_prompt_char_scheduled_display '+'
+set -g __ghoti_svn_prompt_char_scheduled_color --bold green
 
-set -g __fish_svn_prompt_char_switched_display S
-set -g __fish_svn_prompt_char_switched_color --bold blue
+set -g __ghoti_svn_prompt_char_switched_display S
+set -g __ghoti_svn_prompt_char_switched_color --bold blue
 
-set -g __fish_svn_prompt_char_token_present_display K
-set -g __fish_svn_prompt_char_token_present_color --bold cyan
+set -g __ghoti_svn_prompt_char_token_present_display K
+set -g __ghoti_svn_prompt_char_token_present_color --bold cyan
 
-set -g __fish_svn_prompt_char_token_other_display O
-set -g __fish_svn_prompt_char_token_other_color --underline purple
+set -g __ghoti_svn_prompt_char_token_other_display O
+set -g __ghoti_svn_prompt_char_token_other_color --underline purple
 
-set -g __fish_svn_prompt_char_token_stolen_display T
-set -g __fish_svn_prompt_char_token_stolen_color --bold purple
+set -g __ghoti_svn_prompt_char_token_stolen_display T
+set -g __ghoti_svn_prompt_char_token_stolen_color --bold purple
 
-set -g __fish_svn_prompt_char_token_broken_display B
-set -g __fish_svn_prompt_char_token_broken_color --bold magenta
+set -g __ghoti_svn_prompt_char_token_broken_display B
+set -g __ghoti_svn_prompt_char_token_broken_color --bold magenta
 
 
 # ==============================
 
-function __fish_svn_prompt_parse_status --description "helper function that does pretty formatting on svn status"
+function __ghoti_svn_prompt_parse_status --description "helper function that does pretty formatting on svn status"
     # SVN status symbols
     # Do not change these! These are the expected characters that are output from `svn status`, they are taken from `svn help status`
-    set -l __fish_svn_prompt_chars A C D I M R X '?' ! '~' L + S K O T B
+    set -l __ghoti_svn_prompt_chars A C D I M R X '?' ! '~' L + S K O T B
     # this sets up an array of all the types of status codes that could be returned.
-    set -l __fish_svn_prompt_flag_names added conflicted deleted ignored modified replaced unversioned_external unversioned missing versioned_obstructed locked scheduled switched token_present token_other token_stolen token_broken
+    set -l __ghoti_svn_prompt_flag_names added conflicted deleted ignored modified replaced unversioned_external unversioned missing versioned_obstructed locked scheduled switched token_present token_other token_stolen token_broken
     # iterate over the different status types
-    for flag_type in $__fish_svn_prompt_flag_names
+    for flag_type in $__ghoti_svn_prompt_flag_names
         # resolve the name of the variable for the character representing the current status type
-        set -l flag_index (contains -i $flag_type $__fish_svn_prompt_flag_names)
+        set -l flag_index (contains -i $flag_type $__ghoti_svn_prompt_flag_names)
         # check to see if the status list for this column contains the character representing the current status type
-        if contains -- $__fish_svn_prompt_chars[$flag_index] $argv
+        if contains -- $__ghoti_svn_prompt_chars[$flag_index] $argv
             # if it does, then get the names of the variables for the display character and colour to format it with
-            set -l flag_var_display __fish_svn_prompt_char_{$flag_type}_display
-            set -l flag_var_color __fish_svn_prompt_char_{$flag_type}_color
+            set -l flag_var_display __ghoti_svn_prompt_char_{$flag_type}_display
+            set -l flag_var_color __ghoti_svn_prompt_char_{$flag_type}_color
             # set the colour and print display character, then restore to default display colour
             printf '%s%s%s' (set_color $$flag_var_color) $$flag_var_display (set_color normal)
         end
@@ -89,7 +89,7 @@ function __fish_svn_prompt_parse_status --description "helper function that does
 end
 
 
-function fish_svn_prompt --description "Prompt function for svn"
+function ghoti_svn_prompt --description "Prompt function for svn"
     # if svn isn't installed or doesn't offer svnversion then don't do anything
     if not command -sq svn svnversion
         return 1
@@ -100,7 +100,7 @@ function fish_svn_prompt --description "Prompt function for svn"
     or return
 
     # get the current revision number
-    printf '(%s%s%s' (set_color $__fish_svn_prompt_color_revision) (__fish_print_svn_rev) (set_color normal)
+    printf '(%s%s%s' (set_color $__ghoti_svn_prompt_color_revision) (__ghoti_print_svn_rev) (set_color normal)
 
     # resolve the status of the checkout
     # 1. perform `svn status`
@@ -124,13 +124,13 @@ function fish_svn_prompt --description "Prompt function for svn"
         if test (count $column_status) -gt 1 -o -n "$column_status[1]"
 
             # parse the status flags for this column and create the formatting by calling out to the helper function
-            set -l svn_status_flags (__fish_svn_prompt_parse_status $column_status)
+            set -l svn_status_flags (__ghoti_svn_prompt_parse_status $column_status)
 
             # the default separator is empty
             set -l prompt_separator ""
             for index in (seq (math "$col - $last_column"))
                 # the prompt separator variable has to be updated with the number of separators needed to represent empty status columns (eg: if a file has the status "A  +" then it should display as "A|||+" in the prompt)
-                set prompt_separator $prompt_separator$__fish_svn_prompt_char_separator
+                set prompt_separator $prompt_separator$__ghoti_svn_prompt_char_separator
             end
 
             # record that the current column was the last one printed to the prompt

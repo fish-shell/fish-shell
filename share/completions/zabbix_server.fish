@@ -21,11 +21,11 @@ set -l runtime config_cache_reload \
 set -l scope rwlock mutex processing 
 
 
-function __fish_string_in_command -a ch
+function __ghoti_string_in_command -a ch
     string match -rq $ch (commandline)
 end
 
-function __fish_prepend -a prefix
+function __ghoti_prepend -a prefix
     set -l log_target alerter \
         "alert manager" \
         "configuration syncer" \
@@ -68,7 +68,7 @@ function __fish_prepend -a prefix
 end
 
 
-function __fish_list_nodes
+function __ghoti_list_nodes
     zabbix_server -R ha_status | tail -n+4 | awk '{print "ha_remove_node="$3}'
 end
 
@@ -81,16 +81,16 @@ complete -c zabbix_server -f -s R -l runtime-control -a "$runtime" -d "Perform a
 
 
 # Log levels
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_increase" -a "(__fish_prepend log_level_increase)"
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_decrease" -a "(__fish_prepend log_level_decrease)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__ghoti_string_in_command log_level_increase" -a "(__ghoti_prepend log_level_increase)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__ghoti_string_in_command log_level_decrease" -a "(__ghoti_prepend log_level_decrease)"
 
 # Prof enable
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command prof_enable" -a "(__fish_prepend prof_enable)"
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command prof_disable" -a "(__fish_prepend prof_disable)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__ghoti_string_in_command prof_enable" -a "(__ghoti_prepend prof_enable)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__ghoti_string_in_command prof_disable" -a "(__ghoti_prepend prof_disable)"
 
 # HA nodes
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command ha_remove_node" -a "(__fish_list_nodes)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__ghoti_string_in_command ha_remove_node" -a "(__ghoti_list_nodes)"
 
 # diaginfo
-complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
+complete -c zabbix_server -r -f -s R -l runtime-control -n "__ghoti_string_in_command diaginfo" -a "(__ghoti_prepend diaginfo)"
 

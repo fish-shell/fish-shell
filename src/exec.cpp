@@ -120,9 +120,9 @@ static bool is_thompson_shell_payload(const char *p, size_t n) {
 /// such as Actually Portable Executable.
 /// N.B.: this is called after fork, it must not allocate heap memory.
 bool is_thompson_shell_script(const char *path) {
-    // Paths ending in ".fish" are never considered Thompson shell scripts.
+    // Paths ending in ".ghoti" are never considered Thompson shell scripts.
     if (const char *lastdot = strrchr(path, '.')) {
-        if (0 == strcmp(lastdot, ".fish")) {
+        if (0 == strcmp(lastdot, ".ghoti")) {
             return false;
         }
     }
@@ -142,7 +142,7 @@ bool is_thompson_shell_script(const char *path) {
 }
 
 /// This function is executed by the child process created by a call to fork(). It should be called
-/// after \c child_setup_process. It calls execve to replace the fish process image with the command
+/// after \c child_setup_process. It calls execve to replace the ghoti process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
 [[noreturn]] static void safe_launch_process(process_t *p, const char *actual_cmd,
                                              const char *const *cargv, const char *const *cenvv) {
@@ -249,7 +249,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
             auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
             wcstring shlvl_str = L"0";
             if (shlvl_var) {
-                long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
+                long shlvl = ghoti_wcstol(shlvl_var->as_string().c_str());
                 if (!errno && shlvl > 0) {
                     shlvl_str = to_string(shlvl - 1);
                 }
@@ -400,7 +400,7 @@ bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask) {
 static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job, process_t *p,
                                               const dup2_list_t &dup2s, const char *fork_type,
                                               const std::function<void()> &child_action) {
-    // Claim the tty from fish, if the job wants it and we are the pgroup leader.
+    // Claim the tty from ghoti, if the job wants it and we are the pgroup leader.
     pid_t claim_tty_from =
         (p->leads_pgrp && job->group->wants_terminal()) ? getpgrp() : INVALID_PID;
 
@@ -545,7 +545,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
         assert(pid.has_value() && *pid > 0 && "Should have either a valid pid, or an error");
 
         // This usleep can be used to test for various race conditions
-        // (https://github.com/fish-shell/fish-shell/issues/360).
+        // (https://github.com/ghoti-shell/ghoti-shell/issues/360).
         // usleep(10000);
 
         FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'",
@@ -621,7 +621,7 @@ static void function_restore_environment(parser_t &parser, const block_t *block)
 using proc_performer_t = std::function<proc_status_t(parser_t &parser)>;
 
 // \return a function which may be to run the given process \p.
-// May return an empty std::function in the rare case that the to-be called fish function no longer
+// May return an empty std::function in the rare case that the to-be called ghoti function no longer
 // exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
 // properties, when creating the job; thus a race could delete the function before we fetch its
 // properties.
@@ -743,7 +743,7 @@ static proc_performer_t get_performer_for_builtin(
         if (const auto in = io_chain.io_for_fd(STDIN_FILENO)) {
             // Ignore fd redirections from an fd other than the
             // standard ones. e.g. in source <&3 don't actually read from fd 3,
-            // which is internal to fish. We still respect this redirection in
+            // which is internal to ghoti. We still respect this redirection in
             // that we pass it on as a block IO to the code that source runs,
             // and therefore this is not an error.
             bool ignore_redirect = in->io_mode == io_mode_t::fd && in->source_fd >= 3;
@@ -878,12 +878,12 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
     }
 
     // Decide if outputting to a pipe may deadlock.
-    // This happens if fish pipes from an internal process into another internal process:
+    // This happens if ghoti pipes from an internal process into another internal process:
     //    echo $big | string match...
-    // Here fish will only run one process at a time, so the pipe buffer may overfill.
+    // Here ghoti will only run one process at a time, so the pipe buffer may overfill.
     // It may also happen when piping internal -> external:
     //    echo $big | external_proc
-    // fish wants to run `echo` before launching external_proc, so the pipe may deadlock.
+    // ghoti wants to run `echo` before launching external_proc, so the pipe may deadlock.
     // However if we are a deferred run, it means that we are piping into an external process
     // which got launched before us!
     bool piped_output_needs_buffering = !p->is_last_in_job && !is_deferred_run;
@@ -929,7 +929,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
     return launch_result_t::ok;
 }
 
-// Do we have a fish internal process that pipes into a real process? If so, we are going to
+// Do we have a ghoti internal process that pipes into a real process? If so, we are going to
 // launch it last (if there's more than one, just the last one). That is to prevent buffering
 // from blocking further processes. See #1396.
 // Example:
@@ -991,7 +991,7 @@ static bool allow_exec_with_background_jobs(parser_t &parser) {
 bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &block_io) {
     assert(j && "null job_t passed to exec_job!");
 
-    // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
+    // If ghoti was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if (no_exec()) {
         return true;
     }

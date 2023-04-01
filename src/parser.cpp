@@ -1,4 +1,4 @@
-// The fish parser. Contains functions for parsing and evaluating code.
+// The ghoti parser. Contains functions for parsing and evaluating code.
 #include "config.h"  // IWYU pragma: keep
 
 #include "parser.h"
@@ -167,7 +167,7 @@ static void print_profile(const std::deque<profile_item_t> &items, FILE *out) {
 void parser_t::clear_profiling() { profile_items.clear(); }
 
 void parser_t::emit_profiling(const char *path) const {
-    // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is
+    // Save profiling information. OK to not use CLO_EXEC here because this is called while ghoti is
     // exiting (and hence will not fork).
     FILE *f = fopen(path, "w");
     if (!f) {
@@ -283,7 +283,7 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
         if (file) {
             append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
                           user_presentable_path(*file, parser.vars()).c_str());
-        } else if (parser.libdata().within_fish_init) {
+        } else if (parser.libdata().within_ghoti_init) {
             append_format(trace, _(L"\tcalled during startup\n"));
         }
     }
@@ -435,7 +435,7 @@ wcstring parser_t::current_line() {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "),
                           user_presentable_path(*file, vars()).c_str(), lineno);
-        } else if (libdata().within_fish_init) {
+        } else if (libdata().within_ghoti_init) {
             append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
             append_format(prefix, L"%ls (line %d): ", _(L"Standard input"), lineno);
@@ -575,11 +575,11 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
     assert((block_type == block_type_t::top || block_type == block_type_t::subst) &&
            "Invalid block type");
 
-    // If fish itself got a cancel signal, then we want to unwind back to the principal parser.
+    // If ghoti itself got a cancel signal, then we want to unwind back to the principal parser.
     // If we are the principal parser and our block stack is empty, then we want to clear the
     // signal.
     // Note this only happens in interactive sessions. In non-interactive sessions, SIGINT will
-    // cause fish to exit.
+    // cause ghoti to exit.
     if (int sig = signal_check_cancel()) {
         if (is_principal_ && block_list.empty()) {
             signal_clear_cancel();
@@ -589,10 +589,10 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
     }
 
     // A helper to detect if we got a signal.
-    // This includes both signals sent to fish (user hit control-C while fish is foreground) and
+    // This includes both signals sent to ghoti (user hit control-C while ghoti is foreground) and
     // signals from the job group (e.g. some external job terminated with SIGQUIT).
     auto check_cancel_signal = [=] {
-        // Did fish itself get a signal?
+        // Did ghoti itself get a signal?
         int sig = signal_check_cancel();
         // Has this job group been cancelled?
         if (!sig && job_group) sig = job_group->get_cancel_signal();
@@ -681,7 +681,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
                     format_string(_(L"%ls: "), user_presentable_path(*filename, vars()).c_str());
             }
         } else {
-            prefix = L"fish: ";
+            prefix = L"ghoti: ";
         }
 
         const wcstring description =

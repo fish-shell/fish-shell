@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for fish
+# postinst script for ghoti
 #
 # see: dh_installdeb(1)
 
@@ -22,7 +22,7 @@ add_shell() {
         return
     fi
 
-    add-shell /usr/bin/fish
+    add-shell /usr/bin/ghoti
 }
 
 case "$1" in

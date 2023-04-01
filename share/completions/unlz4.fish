@@ -2,7 +2,7 @@
 
 complete -c unlz4 -k -x -a "
 (
-    __fish_complete_suffix .lz4
+    __ghoti_complete_suffix .lz4
 )
 "
 

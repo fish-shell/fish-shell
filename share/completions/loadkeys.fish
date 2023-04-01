@@ -1,4 +1,4 @@
-function __fish_print_console_keymaps
+function __ghoti_print_console_keymaps
     # The path(s) used may differ by linux distribution, and are compiled into
     # loadkeys, which doesn't provide a way to check which paths are searched
     # or which keymaps it can find. localectl can list keymaps, but is part of
@@ -9,7 +9,7 @@ function __fish_print_console_keymaps
     path filter -f $dirs/** | string replace -rf '.*/(.*)\.k?map(|\..*)$' '$1'
 end
 
-complete -fc loadkeys -a "(__fish_print_console_keymaps)"
+complete -fc loadkeys -a "(__ghoti_print_console_keymaps)"
 
 complete -c loadkeys -s C -l console -d "Console device to use" -x -a "(path filter --type=char /dev/tty*)"
 complete -c loadkeys -s a -l ascii -d "Force conversion to ASCII"

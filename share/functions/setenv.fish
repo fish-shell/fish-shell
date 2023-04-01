@@ -24,14 +24,14 @@ function setenv --description 'Set an env var for csh compatibility.'
 
     # Validate the variable name.
     if not string match -qr '^\w+$' -- $var
-        # This message is verbatim from csh. We don't really need to do this but if we don't fish
+        # This message is verbatim from csh. We don't really need to do this but if we don't ghoti
         # will display a different error message which might confuse someone expecting the csh
         # message.
         printf (_ '%s: Variable name must contain alphanumeric characters\n') setenv >&2
         return 1
     end
 
-    # We need to special case some vars to be compatible with fish. In particular how they are
+    # We need to special case some vars to be compatible with ghoti. In particular how they are
     # treated as arrays split on colon characters. All other var values are treated literally.
     if contains -- $var PATH CDPATH MANPATH
         set -gx $var (string split -- ':' $val)

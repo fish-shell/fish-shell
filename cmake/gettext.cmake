@@ -5,7 +5,7 @@ include(FeatureSummary)
 option(WITH_GETTEXT "translate messages if gettext is available" ON)
 if(WITH_GETTEXT)
   if(APPLE)
-    # Fix for https://github.com/fish-shell/fish-shell/issues/5244
+    # Fix for https://github.com/ghoti-shell/ghoti-shell/issues/5244
     # via https://gitlab.kitware.com/cmake/cmake/-/issues/18921
     set(CMAKE_FIND_FRAMEWORK_OLD ${CMAKE_FIND_FRAMEWORK})
     set(CMAKE_FIND_FRAMEWORK NEVER)

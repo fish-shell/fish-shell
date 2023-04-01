@@ -8,14 +8,14 @@
 function __yarn_helper_installed
     # This function takes the command to globally install a package as $argv[1]
     if not type -q all-the-package-names
-        if not set -qg __fish_yarn_pkg_info_shown
+        if not set -qg __ghoti_yarn_pkg_info_shown
             set -l old (commandline)
             commandline -r ""
-            echo \nfish: Run `$argv[1] all-the-package-names` to gain intelligent \
+            echo \nghoti: Run `$argv[1] all-the-package-names` to gain intelligent \
                 package completion >&2
             commandline -f repaint
             commandline -r $old
-            set -g __fish_yarn_pkg_info_shown 1
+            set -g __ghoti_yarn_pkg_info_shown 1
         end
         return 1
     end
@@ -38,7 +38,7 @@ function __yarn_filtered_list_packages
 end
 
 function __yarn_find_package_json
-    set -l parents (__fish_parent_directories (pwd -P))
+    set -l parents (__ghoti_parent_directories (pwd -P))
 
     for p in $parents
         if test -f "$p/package.json"
@@ -57,7 +57,7 @@ function __yarn_installed_packages
         return 1
     end
 
-    if set -l python (__fish_anypython)
+    if set -l python (__ghoti_anypython)
         $python -S -c 'import json, sys; data = json.load(sys.stdin);
 print("\n".join(data["dependencies"])); print("\n".join(data["devDependencies"]))' <$package_json 2>/dev/null
     else if type -q jq

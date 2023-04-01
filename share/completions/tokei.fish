@@ -1,6 +1,6 @@
 # Written against `tokei --help`, version 10.0.1 compiled with support for CBOR, JSON, and YAML
 
-function __fish_tokei_supported_serializations
+function __ghoti_tokei_supported_serializations
     # Expecting a line like:
     # tokei 10.0.1 compiled with serialization support: cbor, json, yaml
     command tokei --help | grep 'with serialization support' | string split --fields 2 : | string trim | string split ', '
@@ -20,6 +20,6 @@ complete -c tokei -s v -l verbose -d 'Increase log output level'
 complete -c tokei -x -s c -l columns -d 'Set column width for terminal output'
 complete -c tokei -x -s e -l exclude -d 'Ignore all files and directories containing this word'
 complete -c tokei -r -s i -l input -d 'Gives statistics from a previous Tokei run'
-complete -c tokei -x -s o -l output -a '(__fish_tokei_supported_serializations)' -d 'Choose output format'
+complete -c tokei -x -s o -l output -a '(__ghoti_tokei_supported_serializations)' -d 'Choose output format'
 complete -c tokei -x -s s -l sort -ka 'files lines code comments blanks' -d 'Sort languages based on column'
 complete -c tokei -x -s t -l type -a '(command tokei --languages)' -d 'Filters output by language type, comma-separated'

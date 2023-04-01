@@ -4,7 +4,7 @@ function nextd --description "Move forward in the directory history"
     or return
 
     if set -q _flag_help
-        __fish_print_help nextd
+        __ghoti_print_help nextd
         return 0
     end
 
@@ -22,7 +22,7 @@ function nextd --description "Move forward in the directory history"
     set -l code 1
     for i in (seq $times)
         # Try one step backward
-        if __fish_move_last dirnext dirprev
+        if __ghoti_move_last dirnext dirprev
             # We consider it a success if we were able to do at least 1 step
             # (low expectations are the key to happiness ;)
             set code 0
@@ -38,7 +38,7 @@ function nextd --description "Move forward in the directory history"
 
     # Set direction for 'cd -'
     test $code = 0
-    and set -g __fish_cd_direction prev
+    and set -g __ghoti_cd_direction prev
 
     return $code
 end

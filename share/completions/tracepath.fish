@@ -1,4 +1,4 @@
-complete -c tracepath -x -a "(__fish_print_hostnames)"
+complete -c tracepath -x -a "(__ghoti_print_hostnames)"
 
 complete -c tracepath -s 4 -d 'Use IPv4 only'
 complete -c tracepath -s 6 -d 'Use IPv6 only'

@@ -1,4 +1,4 @@
-// Programmatic representation of fish code.
+// Programmatic representation of ghoti code.
 #include "config.h"  // IWYU pragma: keep
 
 #include "parse_tree.h"

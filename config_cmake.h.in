@@ -119,10 +119,10 @@
 #define NOMACROS 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/fish-shell/fish-shell/issues"
+#define PACKAGE_BUGREPORT "https://github.com/ghoti-shell/ghoti-shell/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "fish"
+#define PACKAGE_NAME "ghoti"
 
 /* Use a variadic tparm on NetBSD curses. */
 #cmakedefine TPARM_VARARGS 1

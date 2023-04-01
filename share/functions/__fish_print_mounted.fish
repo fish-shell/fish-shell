@@ -1,4 +1,4 @@
-function __fish_print_mounted --description 'Print mounted devices'
+function __ghoti_print_mounted --description 'Print mounted devices'
     if test -r /etc/mtab
         # In mtab, spaces are replaced by a literal '\040'
         # So it's safe to get the second "field" and then replace it

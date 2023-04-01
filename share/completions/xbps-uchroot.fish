@@ -3,7 +3,7 @@
 
 set -l progname xbps-uchroot
 
-complete -c $progname -f -a "(__fish_complete_directories)"
+complete -c $progname -f -a "(__ghoti_complete_directories)"
 
 complete -c $progname -s b -d 'Bind mounts src into CHROOTDIR/dest.' -F
 complete -c $progname -s O -d 'Setups a temporary directory and then creates an overlay layer (via overlayfs).'

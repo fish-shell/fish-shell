@@ -1,6 +1,6 @@
 # uses `whatis` if available to describe a command
 
-function __fish_whatis
+function __ghoti_whatis
     set -l cmd $argv[1]
     set -l fallback
     if set -q argv[2]

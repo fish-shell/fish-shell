@@ -1,4 +1,4 @@
-/// The flogger: debug logging support for fish.
+/// The flogger: debug logging support for ghoti.
 #ifndef FISH_FLOG_H
 #define FISH_FLOG_H
 
@@ -67,7 +67,7 @@ class category_list_t {
     category_t exec_fork{L"exec-fork", L"Calls to fork()"};
 
     category_t output_invalid{L"output-invalid", L"Trying to print invalid output"};
-    category_t ast_construction{L"ast-construction", L"Parsing fish AST"};
+    category_t ast_construction{L"ast-construction", L"Parsing ghoti AST"};
 
     category_t proc_job_run{L"proc-job-run", L"Jobs getting started or continued"};
 
@@ -201,7 +201,7 @@ void log_extra_to_flog_file(const wcstring &s);
 /// This is exposed for the Rust bridge.
 int get_flog_file_fd();
 
-/// Output to the fish log a sequence of arguments, separated by spaces, and ending with a newline.
+/// Output to the ghoti log a sequence of arguments, separated by spaces, and ending with a newline.
 /// We save and restore errno because we don't want this to affect other code.
 #define FLOG(wht, ...)                                                        \
     do {                                                                      \
@@ -213,7 +213,7 @@ int get_flog_file_fd();
         }                                                                     \
     } while (0)
 
-/// Output to the fish log a printf-style formatted string.
+/// Output to the ghoti log a printf-style formatted string.
 #define FLOGF(wht, ...)                                                       \
     do {                                                                      \
         if (flog_details::category_list_t::g_instance->wht.enabled) {         \

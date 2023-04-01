@@ -4,23 +4,23 @@
 
 set -l progname pacman
 
-set -l listinstalled "(__fish_print_pacman_packages --installed)"
+set -l listinstalled "(__ghoti_print_pacman_packages --installed)"
 # This might be an issue if another package manager is also installed (e.g. for containers)
-set -l listall "(__fish_print_pacman_packages)"
-set -l listrepos "(__fish_print_pacman_repos)"
+set -l listall "(__ghoti_print_pacman_packages)"
+set -l listrepos "(__ghoti_print_pacman_repos)"
 set -l listgroups "(pacman -Sg)\t'Package Group'"
 
-set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s F database query sync remove upgrade deptest files'
-set -l database '__fish_contains_opt -s D database'
-set -l query '__fish_contains_opt -s Q query'
-set -l remove '__fish_contains_opt -s R remove'
-set -l sync '__fish_contains_opt -s S sync'
-set -l upgrade '__fish_contains_opt -s U upgrade'
-set -l files '__fish_contains_opt -s F files'
+set -l noopt 'not __ghoti_contains_opt -s S -s D -s Q -s R -s U -s T -s F database query sync remove upgrade deptest files'
+set -l database '__ghoti_contains_opt -s D database'
+set -l query '__ghoti_contains_opt -s Q query'
+set -l remove '__ghoti_contains_opt -s R remove'
+set -l sync '__ghoti_contains_opt -s S sync'
+set -l upgrade '__ghoti_contains_opt -s U upgrade'
+set -l files '__ghoti_contains_opt -s F files'
 
 complete -c $progname -e
 complete -c $progname -f
-# HACK: We only need these two to coerce fish to stop file completion and complete options
+# HACK: We only need these two to coerce ghoti to stop file completion and complete options
 complete -c $progname -n "$noopt" -a -D -d "Modify the package database"
 complete -c $progname -n "$noopt" -a -Q -d "Query the package database"
 
@@ -37,21 +37,21 @@ complete -c $progname -s h -f -l help -d 'Display help'
 
 # General options
 # Only offer these once a command has been given so they get prominent display
-complete -c $progname -n "not $noopt" -s b -l dbpath -d 'Alternate database location' -xa "(__fish_complete_directories)"
-complete -c $progname -n "not $noopt" -s r -l root -d 'Alternate installation root' -xa "(__fish_complete_directories)"
+complete -c $progname -n "not $noopt" -s b -l dbpath -d 'Alternate database location' -xa "(__ghoti_complete_directories)"
+complete -c $progname -n "not $noopt" -s r -l root -d 'Alternate installation root' -xa "(__ghoti_complete_directories)"
 complete -c $progname -n "not $noopt" -s v -l verbose -d 'Output more status messages' -f
 complete -c $progname -n "not $noopt" -l arch -d 'Alternate architecture' -f
-complete -c $progname -n "not $noopt" -l cachedir -d 'Alternate package cache location' -xa "(__fish_complete_directories)"
+complete -c $progname -n "not $noopt" -l cachedir -d 'Alternate package cache location' -xa "(__ghoti_complete_directories)"
 complete -c $progname -n "not $noopt" -l color -d 'Colorize the output' -fa '{auto,always,never}'
 complete -c $progname -n "not $noopt" -l config -d 'Alternate config file' -rF
 complete -c $progname -n "not $noopt" -l confirm -d 'Always ask for confirmation' -f
 complete -c $progname -n "not $noopt" -l debug -d 'Display debug messages' -f
 complete -c $progname -n "not $noopt" -l disable-download-timeout -d 'Use relaxed timeouts for download' -f
-complete -c $progname -n "not $noopt" -l gpgdir -d 'Alternate home directory for GnuPG' -xa "(__fish_complete_directories)"
-complete -c $progname -n "not $noopt" -l hookdir -d 'Alternate hook location' -xa "(__fish_complete_directories)"
+complete -c $progname -n "not $noopt" -l gpgdir -d 'Alternate home directory for GnuPG' -xa "(__ghoti_complete_directories)"
+complete -c $progname -n "not $noopt" -l hookdir -d 'Alternate hook location' -xa "(__ghoti_complete_directories)"
 complete -c $progname -n "not $noopt" -l logfile -d 'Alternate log file'
 complete -c $progname -n "not $noopt" -l noconfirm -d 'Bypass any confirmation' -f
-complete -c $progname -n "not $noopt" -l sysroot -d 'Operate on a mounted guest system (root-only)' -xa "(__fish_complete_directories)"
+complete -c $progname -n "not $noopt" -l sysroot -d 'Operate on a mounted guest system (root-only)' -xa "(__ghoti_complete_directories)"
 
 # File, query, sync options (files, query, sync)
 for condition in files query sync
@@ -95,7 +95,7 @@ for condition in sync upgrade
 end
 
 # Database options
-set -l has_db_opt '__fish_contains_opt asdeps asexplicit check -s k'
+set -l has_db_opt '__ghoti_contains_opt asdeps asexplicit check -s k'
 complete -c $progname -n "$database; and not $has_db_opt" -s k -l check -d 'Check database validity'
 complete -c $progname -n "$database" -s q -l quite -d 'Suppress output of success messages' -f
 complete -c $progname -n "$database; and not $has_db_opt" -l asdeps -d 'Mark PACKAGE as dependency' -x
@@ -141,4 +141,4 @@ complete -c $progname -n "$sync" -xa "$listall $listgroups"
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports
 # In practice, it's going to be tar.xz, tar.gz, tar.zst, or just pkg.tar (uncompressed pkg)
-complete -c $progname -n "$upgrade" -k -xa '(__fish_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz pkg.tar)' -d 'Package file'
+complete -c $progname -n "$upgrade" -k -xa '(__ghoti_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz pkg.tar)' -d 'Package file'

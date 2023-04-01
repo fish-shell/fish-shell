@@ -1,7 +1,7 @@
-# This is a plugin for pygments that shells out to fish_indent.
+# This is a plugin for pygments that shells out to ghoti_indent.
 
 # Example of how to use this:
-# env PATH="/dir/containing/fish/indent/:$PATH" pygmentize -f terminal256 -l /path/to/fish_indent_lexer.py:FishIndentLexer -x ~/test.fish
+# env PATH="/dir/containing/ghoti/indent/:$PATH" pygmentize -f terminal256 -l /path/to/ghoti_indent_lexer.py:FishIndentLexer -x ~/test.ghoti
 
 from pygments.lexer import Lexer
 from pygments.token import (
@@ -24,7 +24,7 @@ import subprocess
 # A fallback token type.
 DEFAULT = Text
 
-# Mapping from fish token types to Pygments types.
+# Mapping from ghoti token types to Pygments types.
 ROLE_TO_TOKEN = {
     "normal": Name.Variable,
     "error": Generic.Error,
@@ -59,12 +59,12 @@ ROLE_TO_TOKEN = {
 
 
 def token_for_text_and_role(text, role):
-    """Return the pygments token for some input text and a fish role
+    """Return the pygments token for some input text and a ghoti role
 
     This applies any special cases of ROLE_TO_TOKEN.
     """
     if text.isspace():
-        # Here fish will return 'normal' or 'statement_terminator' for newline.
+        # Here ghoti will return 'normal' or 'statement_terminator' for newline.
         return Text.Whitespace
     elif role == "quote":
         # Check for single or double.
@@ -73,17 +73,17 @@ def token_for_text_and_role(text, role):
         return ROLE_TO_TOKEN[role]
 
 
-def tokenize_fish_command(code, offset):
-    """Tokenize some fish code, offset in a parent string, by shelling
-    out to fish_indent.
+def tokenize_ghoti_command(code, offset):
+    """Tokenize some ghoti code, offset in a parent string, by shelling
+    out to ghoti_indent.
 
-    fish_indent will output a list of csv lines: start,end,type.
+    ghoti_indent will output a list of csv lines: start,end,type.
 
     This function returns a list of (start, tok, value) tuples, as
     Pygments expects.
     """
     proc = subprocess.Popen(
-        ["fish_indent", "--pygments"],
+        ["ghoti_indent", "--pygments"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         universal_newlines=False,
@@ -101,8 +101,8 @@ def tokenize_fish_command(code, offset):
 
 class FishIndentLexer(Lexer):
     name = "FishIndentLexer"
-    aliases = ["fish", "fish-docs-samples"]
-    filenames = ["*.fish"]
+    aliases = ["ghoti", "ghoti-docs-samples"]
+    filenames = ["*.ghoti"]
 
     def get_tokens_unprocessed(self, input_text):
         """Return a list of (start, tok, value) tuples.
@@ -114,16 +114,16 @@ class FishIndentLexer(Lexer):
         result = []
         if not any(s.startswith(">") for s in input_text.splitlines()):
             # No prompt, just tokenize everything.
-            result = tokenize_fish_command(input_text, 0)
+            result = tokenize_ghoti_command(input_text, 0)
         else:
             # We have a prompt line.
             # Use a regexp because it will maintain string indexes for us.
             regex = re.compile(r"^(>_?\s*)?(.*\n?)", re.MULTILINE)
             for m in regex.finditer(input_text):
                 if m.group(1):
-                    # Prompt line; highlight via fish syntax.
+                    # Prompt line; highlight via ghoti syntax.
                     result.append((m.start(1), Generic.Prompt, m.group(1)))
-                    result.extend(tokenize_fish_command(m.group(2), m.start(2)))
+                    result.extend(tokenize_ghoti_command(m.group(2), m.start(2)))
                 else:
                     # Non-prompt line representing output from a command.
                     result.append((m.start(2), Generic.Output, m.group(2)))

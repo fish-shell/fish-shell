@@ -1,4 +1,4 @@
-complete -c dhclient -f -a "(__fish_print_interfaces)"
+complete -c dhclient -f -a "(__ghoti_print_interfaces)"
 
 complete -c dhclient -s 4 -d 'Use the DHCPv4 protocol'
 complete -c dhclient -s 6 -d 'Use the DHCPv6 protocol'

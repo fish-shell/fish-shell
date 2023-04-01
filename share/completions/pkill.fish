@@ -1,6 +1,6 @@
 
-__fish_complete_pgrep pkill
-__fish_make_completion_signals
+__ghoti_complete_pgrep pkill
+__ghoti_make_completion_signals
 for i in $__kill_signals
     echo $i | read number name
     complete -c pkill -o $number -d $name

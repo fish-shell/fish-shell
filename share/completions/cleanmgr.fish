@@ -2,7 +2,7 @@ function __cleanmgr_complete_args -d 'Function to generate args'
     set -l previous_token (commandline -oc)[-1]
 
     if test "$previous_token" = /d
-        __fish_print_windows_drives
+        __ghoti_print_windows_drives
         return
     end
 end

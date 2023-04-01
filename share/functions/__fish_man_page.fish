@@ -1,4 +1,4 @@
-function __fish_man_page
+function __ghoti_man_page
     # Get all commandline tokens not starting with "-", up to and including the cursor's
     set -l args (string match -rv '^-|^$' -- (commandline -cpo && commandline -t))
 

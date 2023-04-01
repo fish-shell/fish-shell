@@ -1,7 +1,7 @@
-# Pygments lexer for a fish command synopsis.
+# Pygments lexer for a ghoti command synopsis.
 #
 # Example usage:
-# echo 'string match [OPTIONS] [STRING]' | pygmentize -f terminal256 -l doc_src/fish_synopsis.py:FishSynopsisLexer -x
+# echo 'string match [OPTIONS] [STRING]' | pygmentize -f terminal256 -l doc_src/ghoti_synopsis.py:FishSynopsisLexer -x
 
 from docutils import nodes
 from pygments.lexer import Lexer
@@ -24,7 +24,7 @@ class FishSynopsisDirective(CodeBlock):
 
     def run(self):
         if self.env.app.builder.name != "man":
-            self.arguments = ["fish-synopsis"]
+            self.arguments = ["ghoti-synopsis"]
             return CodeBlock.run(self)
         lexer = FishSynopsisLexer()
         result = nodes.line_block()
@@ -78,7 +78,7 @@ lexer_rules = [
 
 class FishSynopsisLexer(Lexer):
     name = "FishSynopsisLexer"
-    aliases = ["fish-synopsis"]
+    aliases = ["ghoti-synopsis"]
 
     is_before_command_token = None
 

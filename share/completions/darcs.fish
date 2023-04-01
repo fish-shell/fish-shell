@@ -2,45 +2,45 @@
 # Completions from commandline
 #
 
-complete -c darcs -n "not __fish_use_subcommand" -a "(test -f _darcs/prefs/repos; and cat _darcs/prefs/repos)" -d "Darcs repo"
+complete -c darcs -n "not __ghoti_use_subcommand" -a "(test -f _darcs/prefs/repos; and cat _darcs/prefs/repos)" -d "Darcs repo"
 complete -c darcs -a "test predist boringfile binariesfile" -n "contains setpref (commandline -poc)" -d "Set the specified option" -x
 
 #
 # subcommands
 #
 
-complete -c darcs -n __fish_use_subcommand -x -a help -d 'Display help about darcs and darcs commands'
-complete -c darcs -n __fish_use_subcommand -x -a add -d 'Add new files to version control'
-complete -c darcs -n __fish_use_subcommand -x -a remove -d 'Remove files from version control'
-complete -c darcs -n __fish_use_subcommand -x -a move -d 'Move or rename files'
-complete -c darcs -n __fish_use_subcommand -x -a replace -d 'Substitute one word for another'
-complete -c darcs -n __fish_use_subcommand -x -a revert -d 'Discard unrecorded changes'
-complete -c darcs -n __fish_use_subcommand -x -a unrevert -d 'Undo the last revert'
-complete -c darcs -n __fish_use_subcommand -x -a whatsnew -d 'List unrecorded changes in the working tree'
-complete -c darcs -n __fish_use_subcommand -x -a record -d 'Create a patch from unrecorded changes'
-complete -c darcs -n __fish_use_subcommand -x -a unrecord -d 'Remove recorded patches without changing the working tree'
-complete -c darcs -n __fish_use_subcommand -x -a amend -d 'Improve a patch before it leaves your repository'
-complete -c darcs -n __fish_use_subcommand -x -a mark-conflicts -d 'Mark unresolved conflicts in working tree, for manual resolution'
-complete -c darcs -n __fish_use_subcommand -x -a tag -d 'Name the current repository state for future reference'
-complete -c darcs -n __fish_use_subcommand -x -a setpref -d 'Set a preference (test, predist, boringfile or binariesfile)'
-complete -c darcs -n __fish_use_subcommand -x -a diff -d 'Create a diff between two versions of the repository'
-complete -c darcs -n __fish_use_subcommand -x -a log -d 'List patches in the repository'
-complete -c darcs -n __fish_use_subcommand -x -a annotate -d 'Annotate lines of a file with the last patch that modified it'
-complete -c darcs -n __fish_use_subcommand -x -a dist -d 'Create a distribution archive'
-complete -c darcs -n __fish_use_subcommand -x -a show -d 'Show information about the given repository'
-complete -c darcs -n __fish_use_subcommand -x -a pull -d 'Copy and apply patches from another repository to this one'
-complete -c darcs -n __fish_use_subcommand -x -a obliterate -d 'Delete selected patches from the repository'
-complete -c darcs -n __fish_use_subcommand -x -a rollback -d 'Apply the inverse of recorded changes to the working tree'
-complete -c darcs -n __fish_use_subcommand -x -a push -d 'Copy and apply patches from this repository to another one'
-complete -c darcs -n __fish_use_subcommand -x -a send -d 'Prepare a bundle of patches to be applied to some target repository'
-complete -c darcs -n __fish_use_subcommand -x -a apply -d 'Apply a patch bundle created by `darcs send\''
-complete -c darcs -n __fish_use_subcommand -x -a clone -d 'Make a copy of an existing repository'
-complete -c darcs -n __fish_use_subcommand -x -a initialize -d 'Create an empty repository'
-complete -c darcs -n __fish_use_subcommand -x -a optimize -d 'Optimize the repository'
-complete -c darcs -n __fish_use_subcommand -x -a repair -d 'Repair a corrupted repository'
-complete -c darcs -n __fish_use_subcommand -x -a convert -d 'Convert repositories between various formats'
+complete -c darcs -n __ghoti_use_subcommand -x -a help -d 'Display help about darcs and darcs commands'
+complete -c darcs -n __ghoti_use_subcommand -x -a add -d 'Add new files to version control'
+complete -c darcs -n __ghoti_use_subcommand -x -a remove -d 'Remove files from version control'
+complete -c darcs -n __ghoti_use_subcommand -x -a move -d 'Move or rename files'
+complete -c darcs -n __ghoti_use_subcommand -x -a replace -d 'Substitute one word for another'
+complete -c darcs -n __ghoti_use_subcommand -x -a revert -d 'Discard unrecorded changes'
+complete -c darcs -n __ghoti_use_subcommand -x -a unrevert -d 'Undo the last revert'
+complete -c darcs -n __ghoti_use_subcommand -x -a whatsnew -d 'List unrecorded changes in the working tree'
+complete -c darcs -n __ghoti_use_subcommand -x -a record -d 'Create a patch from unrecorded changes'
+complete -c darcs -n __ghoti_use_subcommand -x -a unrecord -d 'Remove recorded patches without changing the working tree'
+complete -c darcs -n __ghoti_use_subcommand -x -a amend -d 'Improve a patch before it leaves your repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a mark-conflicts -d 'Mark unresolved conflicts in working tree, for manual resolution'
+complete -c darcs -n __ghoti_use_subcommand -x -a tag -d 'Name the current repository state for future reference'
+complete -c darcs -n __ghoti_use_subcommand -x -a setpref -d 'Set a preference (test, predist, boringfile or binariesfile)'
+complete -c darcs -n __ghoti_use_subcommand -x -a diff -d 'Create a diff between two versions of the repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a log -d 'List patches in the repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a annotate -d 'Annotate lines of a file with the last patch that modified it'
+complete -c darcs -n __ghoti_use_subcommand -x -a dist -d 'Create a distribution archive'
+complete -c darcs -n __ghoti_use_subcommand -x -a show -d 'Show information about the given repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a pull -d 'Copy and apply patches from another repository to this one'
+complete -c darcs -n __ghoti_use_subcommand -x -a obliterate -d 'Delete selected patches from the repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a rollback -d 'Apply the inverse of recorded changes to the working tree'
+complete -c darcs -n __ghoti_use_subcommand -x -a push -d 'Copy and apply patches from this repository to another one'
+complete -c darcs -n __ghoti_use_subcommand -x -a send -d 'Prepare a bundle of patches to be applied to some target repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a apply -d 'Apply a patch bundle created by `darcs send\''
+complete -c darcs -n __ghoti_use_subcommand -x -a clone -d 'Make a copy of an existing repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a initialize -d 'Create an empty repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a optimize -d 'Optimize the repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a repair -d 'Repair a corrupted repository'
+complete -c darcs -n __ghoti_use_subcommand -x -a convert -d 'Convert repositories between various formats'
 
-function __fish_darcs_use_show_command
+function __ghoti_darcs_use_show_command
     set -l cmd (commandline -poc)
     set -e cmd[1]
 
@@ -72,17 +72,17 @@ function __fish_darcs_use_show_command
     return 1
 end
 
-complete -c darcs -n __fish_darcs_use_show_command -x -a contents -d 'Outputs a specific version of a file'
-complete -c darcs -n __fish_darcs_use_show_command -x -a dependencies -d 'Generate the graph of dependencies'
-complete -c darcs -n __fish_darcs_use_show_command -x -a files -d 'Show version-controlled files in the working tree'
-complete -c darcs -n __fish_darcs_use_show_command -x -a index -d 'Dump contents of working tree index'
-complete -c darcs -n __fish_darcs_use_show_command -x -a pristine -d 'Dump contents of pristine cache'
-complete -c darcs -n __fish_darcs_use_show_command -x -a repo -d 'Show repository summary information'
-complete -c darcs -n __fish_darcs_use_show_command -x -a authors -d 'List authors by patch count'
-complete -c darcs -n __fish_darcs_use_show_command -x -a tags -d 'Show all tags in the repository'
-complete -c darcs -n __fish_darcs_use_show_command -x -a patch-index -d 'Check integrity of patch index'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a contents -d 'Outputs a specific version of a file'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a dependencies -d 'Generate the graph of dependencies'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a files -d 'Show version-controlled files in the working tree'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a index -d 'Dump contents of working tree index'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a pristine -d 'Dump contents of pristine cache'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a repo -d 'Show repository summary information'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a authors -d 'List authors by patch count'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a tags -d 'Show all tags in the repository'
+complete -c darcs -n __ghoti_darcs_use_show_command -x -a patch-index -d 'Check integrity of patch index'
 
-function __fish_darcs_use_optimize_command
+function __ghoti_darcs_use_optimize_command
     set -l cmd (commandline -poc)
     set -e cmd[1]
 
@@ -118,17 +118,17 @@ function __fish_darcs_use_optimize_command
     return 1
 end
 
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a clean -d 'Garbage collect pristine, inventories and patches'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a http -d 'Optimize repository for getting over network'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a reorder -d 'Reorder the patches in the repository'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a enable-patch-index -d 'Enable patch index'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a disable-patch-index -d 'Disable patch index'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a compress -d 'Compress patches and inventories'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a uncompress -d 'Uncompress patches and inventories'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a relink -d 'Relink random internal data to a sibling'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a pristine -d 'Optimize hashed pristine layout'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a upgrade -d 'Upgrade repository to latest compatible format'
-complete -c darcs -n __fish_darcs_use_optimize_command -x -a cache -d 'Garbage collect global cache'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a clean -d 'Garbage collect pristine, inventories and patches'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a http -d 'Optimize repository for getting over network'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a reorder -d 'Reorder the patches in the repository'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a enable-patch-index -d 'Enable patch index'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a disable-patch-index -d 'Disable patch index'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a compress -d 'Compress patches and inventories'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a uncompress -d 'Uncompress patches and inventories'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a relink -d 'Relink random internal data to a sibling'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a pristine -d 'Optimize hashed pristine layout'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a upgrade -d 'Upgrade repository to latest compatible format'
+complete -c darcs -n __ghoti_darcs_use_optimize_command -x -a cache -d 'Garbage collect global cache'
 
 
 complete -c darcs -l help -d 'Show a brief description of the command and its options'
@@ -136,11 +136,11 @@ complete -c darcs -l list-options -d 'Show plain list of available options and c
 complete -c darcs -l run-posthook -d 'Run posthook command without prompting [DEFAULT]'
 complete -c darcs -l prompt-posthook -d 'Prompt before running posthook'
 complete -c darcs -l no-posthook -d 'Don\'t run posthook command [DEFAULT]'
-complete -c darcs -l posthook -x -a '(__fish_complete_command)' -d 'Specify command to run after this darcs command'
+complete -c darcs -l posthook -x -a '(__ghoti_complete_command)' -d 'Specify command to run after this darcs command'
 complete -c darcs -l run-prehook -d 'Run prehook command without prompting [DEFAULT]'
 complete -c darcs -l prompt-prehook -d 'Prompt before running prehook'
 complete -c darcs -l no-prehook -d 'Don\'t run prehook command [DEFAULT]'
-complete -c darcs -l prehook -x -a '(__fish_complete_command)' -d 'Specify command to run before this darcs command'
+complete -c darcs -l prehook -x -a '(__ghoti_complete_command)' -d 'Specify command to run before this darcs command'
 complete -c darcs -l disable -d 'Disable this command'
 complete -c darcs -l debug -d 'Give only debug output'
 complete -c darcs -l debug-http -d 'Debug output from libcurl'
@@ -163,7 +163,7 @@ complete -c darcs -n 'contains \'add\' (commandline -poc)' -l no-reserved-ok -d 
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l recursive -s r -d 'Recurse into subdirectories'
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l not-recursive -d 'Don\'t recurse into subdirectories [DEFAULT]'
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l no-recursive -d 'Don\'t recurse into subdirectories [DEFAULT]'
-complete -c darcs -n 'contains \'add\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'add\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l dry-run -d 'Don\'t actually take the action'
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l umask -d 'Specify umask to use when writing'
 
@@ -171,7 +171,7 @@ complete -c darcs -n 'contains \'add\' (commandline -poc)' -l umask -d 'Specify 
 # Completions for the 'remove' subcommand
 #
 
-complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l recursive -s r -d 'Recurse into subdirectories'
 complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l not-recursive -d 'Don\'t recurse into subdirectories [DEFAULT]'
 complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l no-recursive -d 'Don\'t recurse into subdirectories [DEFAULT]'
@@ -185,7 +185,7 @@ complete -c darcs -n 'contains \'move\' (commandline -poc)' -l case-ok -d 'Don\'
 complete -c darcs -n 'contains \'move\' (commandline -poc)' -l no-case-ok -d 'Refuse to add files whose name differ only in case [DEFAULT]'
 complete -c darcs -n 'contains \'move\' (commandline -poc)' -l reserved-ok -d 'Don\'t refuse to add files with Windows-reserved names'
 complete -c darcs -n 'contains \'move\' (commandline -poc)' -l no-reserved-ok -d 'Refuse to add files with Windows-reserved names [DEFAULT]'
-complete -c darcs -n 'contains \'move\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'move\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'move\' (commandline -poc)' -l umask -d 'Specify umask to use when writing'
 
 #
@@ -195,7 +195,7 @@ complete -c darcs -n 'contains \'move\' (commandline -poc)' -l umask -d 'Specify
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l token-chars -d 'Define token to contain these characters'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l force -s f -d 'Proceed with replace even if 'new' token already exists'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l no-force -d 'Don\'t force the replace if it looks scary [DEFAULT]'
-complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l ignore-times -d 'Don\'t trust the file modification times'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l no-ignore-times -d 'Trust modification times to find modified files [DEFAULT]'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l umask -d 'Specify umask to use when writing'
@@ -207,7 +207,7 @@ complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l umask -d 'Spec
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l all -s a -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l no-interactive -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l interactive -s i -d 'Prompt user interactively'
-complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l unified -s u -d 'Output changes in a darcs-specific format similar to diff -u'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l no-unified -d 'Output changes in darcs\' usual format [DEFAULT]'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
@@ -225,7 +225,7 @@ complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l no-ignore-tim
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l all -s a -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l no-interactive -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l interactive -s i -d 'Prompt user interactively'
-complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l unified -s u -d 'Output changes in a darcs-specific format similar to diff -u'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l no-unified -d 'Output changes in darcs\' usual format [DEFAULT]'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
@@ -253,7 +253,7 @@ complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l dont-look-for
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l no-look-for-moves -d 'Don\'t look for any files that could be moved/renamed [DEFAULT]'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l patience -d 'Use patience diff algorithm [DEFAULT]'
-complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l all -s a -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l no-interactive -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l interactive -s i -d 'Prompt user interactively'
@@ -290,7 +290,7 @@ complete -c darcs -n 'contains \'record\' (commandline -poc)' -l no-look-for-rep
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l look-for-moves -d 'Look for files that may be moved/renamed'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l dont-look-for-moves -d 'Don\'t look for any files that could be moved/renamed [DEFAULT]'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l no-look-for-moves -d 'Don\'t look for any files that could be moved/renamed [DEFAULT]'
-complete -c darcs -n 'contains \'record\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'record\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l unified -s u -d 'Output changes in a darcs-specific format similar to diff -u'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l no-unified -d 'Output changes in darcs\' usual format [DEFAULT]'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
@@ -332,7 +332,7 @@ complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l prompt-for-de
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l all -s a -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l no-interactive -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l interactive -s i -d 'Prompt user interactively'
-complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l compress -d 'Compress patch data [DEFAULT]'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l dont-compress -d 'Don\'t compress patch data'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l no-compress -d 'Don\'t compress patch data'
@@ -375,7 +375,7 @@ complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l no-look-for-repl
 complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l look-for-moves -d 'Look for files that may be moved/renamed'
 complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l dont-look-for-moves -d 'Don\'t look for any files that could be moved/renamed [DEFAULT]'
 complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l no-look-for-moves -d 'Don\'t look for any files that could be moved/renamed [DEFAULT]'
-complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l unified -s u -d 'Output changes in a darcs-specific format similar to diff -u'
 complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l no-unified -d 'Output changes in darcs\' usual format [DEFAULT]'
 complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
@@ -396,7 +396,7 @@ complete -c darcs -n 'contains \'amend\' (commandline -poc)' -l no-set-scripts-e
 
 complete -c darcs -n 'contains \'mark-conflicts\' (commandline -poc)' -l ignore-times -d 'Don\'t trust the file modification times'
 complete -c darcs -n 'contains \'mark-conflicts\' (commandline -poc)' -l no-ignore-times -d 'Trust modification times to find modified files [DEFAULT]'
-complete -c darcs -n 'contains \'mark-conflicts\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'mark-conflicts\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'mark-conflicts\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
 complete -c darcs -n 'contains \'mark-conflicts\' (commandline -poc)' -l patience -d 'Use patience diff algorithm [DEFAULT]'
 complete -c darcs -n 'contains \'mark-conflicts\' (commandline -poc)' -l dry-run -d 'Don\'t actually take the action'
@@ -415,7 +415,7 @@ complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l skip-long-comment 
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l prompt-long-comment -d 'Prompt for whether to edit the long comment'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l ask-deps -d 'Manually select dependencies'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l no-ask-deps -d 'Automatically select dependencies [DEFAULT]'
-complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l compress -d 'Compress patch data [DEFAULT]'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l dont-compress -d 'Don\'t compress patch data'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l no-compress -d 'Don\'t compress patch data'
@@ -425,7 +425,7 @@ complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l umask -d 'Specify 
 # Completions for the 'setpref' subcommand
 #
 
-complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l umask -d 'Specify umask to use when writing'
 
 #
@@ -449,7 +449,7 @@ complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l diff-command -d '
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l diff-opts -d 'Options to pass to diff'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l unified -s u -d 'Pass -u option to diff [DEFAULT]'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l no-unified -d 'Output patch in diff\'s dumb format'
-complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l store-in-memory -d 'Do patch application in memory rather than on disk'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l no-store-in-memory -d 'Do patch application on disk [DEFAULT]'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l pause-for-gui -d 'Pause for an external diff or merge command to finish [DEFAULT]'
@@ -487,7 +487,7 @@ complete -c darcs -n 'contains \'log\' (commandline -poc)' -l no-summary -d 'Don
 complete -c darcs -n 'contains \'log\' (commandline -poc)' -l reverse -d 'Show/consider changes in reverse order'
 complete -c darcs -n 'contains \'log\' (commandline -poc)' -l no-reverse -d 'Show/consider changes in the usual order [DEFAULT]'
 complete -c darcs -n 'contains \'log\' (commandline -poc)' -l repo -d 'Specify the repository URL'
-complete -c darcs -n 'contains \'log\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'log\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'log\' (commandline -poc)' -l all -s a -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'log\' (commandline -poc)' -l no-interactive -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'log\' (commandline -poc)' -l interactive -s i -d 'Prompt user interactively'
@@ -507,7 +507,7 @@ complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l patch -s p -d
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l hash -s h -d 'Select a single patch with HASH'
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l tag -s t -d 'Select tag matching REGEXP'
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l index -s n -d 'Select one patch'
-complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l with-patch-index -d 'Build patch index [DEFAULT]'
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l no-patch-index -d 'Don\'t build patch index'
 
@@ -517,7 +517,7 @@ complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l no-patch-inde
 
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l dist-name -s d -d 'Name of version'
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l zip -d 'Generate zip archive instead of gzip\'ed tar'
-complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l match -d 'Select a single patch matching PATTERN'
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l patch -s p -d 'Select a single patch matching REGEXP'
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l hash -s h -d 'Select a single patch with HASH'
@@ -538,7 +538,7 @@ complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'content
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'contents\' (commandline -poc)' -l hash -s h -d 'Select a single patch with HASH'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'contents\' (commandline -poc)' -l tag -s t -d 'Select tag matching REGEXP'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'contents\' (commandline -poc)' -l index -s n -d 'Select one patch'
-complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'contents\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'contents\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 
 #
 # Completions for the 'show dependencies' subcommand
@@ -570,27 +570,27 @@ complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'files\'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'files\' (commandline -poc)' -l hash -s h -d 'Select a single patch with HASH'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'files\' (commandline -poc)' -l tag -s t -d 'Select tag matching REGEXP'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'files\' (commandline -poc)' -l index -s n -d 'Select one patch'
-complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'files\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'files\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 
 #
 # Completions for the 'show index' subcommand
 #
 
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'index\' (commandline -poc)' -l null -s 0 -d 'Separate file names by NUL characters'
-complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'index\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'index\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 
 #
 # Completions for the 'show pristine' subcommand
 #
 
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'pristine\' (commandline -poc)' -l null -s 0 -d 'Separate file names by NUL characters'
-complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'pristine\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'pristine\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 
 #
 # Completions for the 'show repo' subcommand
 #
 
-complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'repo\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'repo\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'repo\' (commandline -poc)' -l xml-output -d 'Generate XML formatted output'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'repo\' (commandline -poc)' -l enum-patches -d 'Include statistics requiring enumeration of patches [DEFAULT]'
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'repo\' (commandline -poc)' -l no-enum-patches -d 'Don\'t include statistics requiring enumeration of patches'
@@ -599,7 +599,7 @@ complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'repo\' 
 # Completions for the 'show authors' subcommand
 #
 
-complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'authors\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'authors\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 
 #
 # Completions for the 'show tags' subcommand
@@ -612,7 +612,7 @@ complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'tags\' 
 #
 
 complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'patch-index\' (commandline -poc)' -l null -s 0 -d 'Separate file names by NUL characters'
-complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'patch-index\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'show\' (commandline -poc) && contains \'patch-index\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 
 #
 # Completions for the 'pull' subcommand
@@ -647,7 +647,7 @@ complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l prompt-deps -d 'P
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l prompt-for-dependencies -d 'Prompt about patches that are depended on by matched patches [DEFAULT]'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l set-default -d 'Set default repository'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l no-set-default -d 'Don\'t set default repository'
-complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l ignore-unrelated-repos -d 'Do not check if repositories are unrelated'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l patience -d 'Use patience diff algorithm [DEFAULT]'
@@ -696,7 +696,7 @@ complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l prompt-for-
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l all -s a -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l no-interactive -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l interactive -s i -d 'Prompt user interactively'
-complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l summary -s s -d 'Summarize changes'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l no-summary -d 'Don\'t summarize changes'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l output -s o -d 'Specify output filename'
@@ -732,7 +732,7 @@ complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l hash -s h -d 
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l all -s a -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l no-interactive -d 'Answer yes to all patches'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l interactive -s i -d 'Prompt user interactively'
-complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l patience -d 'Use patience diff algorithm [DEFAULT]'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l umask -d 'Specify umask to use when writing'
@@ -762,7 +762,7 @@ complete -c darcs -n 'contains \'push\' (commandline -poc)' -l dry-run -d 'Don\'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l xml-output -d 'Generate XML formatted output'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l summary -s s -d 'Summarize changes'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l no-summary -d 'Don\'t summarize changes'
-complete -c darcs -n 'contains \'push\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'push\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l set-default -d 'Set default repository'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l no-set-default -d 'Don\'t set default repository'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l ignore-unrelated-repos -d 'Do not check if repositories are unrelated'
@@ -818,7 +818,7 @@ complete -c darcs -n 'contains \'send\' (commandline -poc)' -l dont-edit-descrip
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l no-edit-description -d 'Don\'t edit the patch bundle description'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l set-default -d 'Set default repository'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l no-set-default -d 'Don\'t set default repository'
-complete -c darcs -n 'contains \'send\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'send\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l minimize -d 'Minimize context of patch bundle [DEFAULT]'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l no-minimize -d 'Don\'t minimize context of patch bundle'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l ignore-unrelated-repos -d 'Do not check if repositories are unrelated'
@@ -892,7 +892,7 @@ complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l no-pause-for-gui
 #
 
 complete -c darcs -n 'contains \'clone\' (commandline -poc)' -l repo-name -d 'Path of output directory'
-complete -c darcs -n 'contains \'clone\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Path of output directory'
+complete -c darcs -n 'contains \'clone\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Path of output directory'
 complete -c darcs -n 'contains \'clone\' (commandline -poc)' -l lazy -d 'Get patch files only as needed'
 complete -c darcs -n 'contains \'clone\' (commandline -poc)' -l complete -d 'Get a complete copy of the repository'
 complete -c darcs -n 'contains \'clone\' (commandline -poc)' -l to-match -d 'Select changes up to a patch matching PATTERN'
@@ -922,7 +922,7 @@ complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l darcs-2 -d 
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l darcs-1 -d 'Older patch format (for compatibility)'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l with-working-dir -d 'Create a working tree (normal repository) [DEFAULT]'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l no-working-dir -d 'Do not create a working tree (bare repository)'
-complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l with-patch-index -d 'Build patch index'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l no-patch-index -d 'Don\'t build patch index [DEFAULT]'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l hashed -d 'Deprecated, use --darcs-1 instead'
@@ -931,7 +931,7 @@ complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l hashed -d '
 # Completions for the 'optimize' subcommands
 #
 
-complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l umask -d 'Specify umask to use when writing'
 
 #
@@ -944,7 +944,7 @@ complete -c darcs -n 'contains \'optimize\' (commandline -poc) && contains \'rel
 # Completions for the 'repair' subcommand
 #
 
-complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
+complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l ignore-times -d 'Don\'t trust the file modification times'
 complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l no-ignore-times -d 'Trust modification times to find modified files [DEFAULT]'
 complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l myers -d 'Use myers diff algorithm'
@@ -957,7 +957,7 @@ complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l umask -d 'Speci
 #
 
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'darcs-2\' (commandline -poc)' -l repo-name -d 'Path of output directory'
-complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'darcs-2\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Path of output directory'
+complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'darcs-2\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Path of output directory'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'darcs-2\' (commandline -poc)' -l set-scripts-executable -d 'Make scripts executable'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'darcs-2\' (commandline -poc)' -l dont-set-scripts-executable -d 'Don\'t make scripts executable [DEFAULT]'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'darcs-2\' (commandline -poc)' -l no-set-scripts-executable -d 'Don\'t make scripts executable [DEFAULT]'
@@ -973,7 +973,7 @@ complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'darc
 #
 
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'export\' (commandline -poc)' -l repo-name -d 'Path of output directory'
-complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'export\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Path of output directory'
+complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'export\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Path of output directory'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'export\' (commandline -poc)' -l read-marks -d 'Continue conversion, previously checkpointed by --write-marks'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'export\' (commandline -poc)' -l write-marks -d 'Checkpoint conversion to continue it later'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'export\' (commandline -poc)' -l no-http-pipelining -d 'Disable HTTP pipelining'
@@ -984,7 +984,7 @@ complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'expo
 #
 
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'import\' (commandline -poc)' -l repo-name -d 'Path of output directory'
-complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'import\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' -d 'Path of output directory'
+complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'import\' (commandline -poc)' -l repodir -x -a '(__ghoti_complete_directories (commandline -ct))' -d 'Path of output directory'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'import\' (commandline -poc)' -l set-scripts-executable -d 'Make scripts executable'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'import\' (commandline -poc)' -l dont-set-scripts-executable -d 'Don\'t make scripts executable [DEFAULT]'
 complete -c darcs -n 'contains \'convert\' (commandline -poc) && contains \'import\' (commandline -poc)' -l no-set-scripts-executable -d 'Don\'t make scripts executable [DEFAULT]'

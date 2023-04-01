@@ -1,6 +1,6 @@
 #completion for apt-get
 
-function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
+function __ghoti_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean changelog
             return 1
@@ -9,7 +9,7 @@ function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcom
     return 0
 end
 
-function __fish_apt_use_package -d 'Test if apt command should have packages as potential completion'
+function __ghoti_apt_use_package -d 'Test if apt command should have packages as potential completion'
     for i in (commandline -opc)
         if contains -- $i contains install remove purge build-dep changelog
             return 0
@@ -18,23 +18,23 @@ function __fish_apt_use_package -d 'Test if apt command should have packages as 
     return 1
 end
 
-complete -c apt-get -n __fish_apt_use_package -a '(__fish_print_apt_packages)' -d Package
+complete -c apt-get -n __ghoti_apt_use_package -a '(__ghoti_print_apt_packages)' -d Package
 
 complete -c apt-get -s h -l help -d 'Display help and exit'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a update -d 'Update sources'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a upgrade -d 'Upgrade or install newest packages'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a dselect-upgrade -d 'Use with dselect front-end'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a dist-upgrade -d 'Distro upgrade'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a install -d 'Install one or more packages'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a changelog -d 'Display changelog of one or more packages'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a purge -d 'Remove and purge one or more packages'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a remove -d 'Remove one or more packages'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a source -d 'Fetch source packages'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a build-dep -d 'Install/remove packages for dependencies'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a check -d 'Update cache and check dependencies'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a clean -d 'Clean local caches and packages'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a autoclean -d 'Clean packages no longer be downloaded'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a autoremove -d 'Remove automatically installed packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a update -d 'Update sources'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a upgrade -d 'Upgrade or install newest packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a dselect-upgrade -d 'Use with dselect front-end'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a dist-upgrade -d 'Distro upgrade'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a install -d 'Install one or more packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a changelog -d 'Display changelog of one or more packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a purge -d 'Remove and purge one or more packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a remove -d 'Remove one or more packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a source -d 'Fetch source packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a build-dep -d 'Install/remove packages for dependencies'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a check -d 'Update cache and check dependencies'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a clean -d 'Clean local caches and packages'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a autoclean -d 'Clean packages no longer be downloaded'
+complete -f -n __ghoti_apt_no_subcommand -c apt-get -a autoremove -d 'Remove automatically installed packages'
 complete -c apt-get -l no-install-recommends -d 'Do not install recommended packages'
 complete -c apt-get -s d -l download-only -d 'Download Only'
 complete -c apt-get -s f -l fix-broken -d 'Correct broken dependencies'

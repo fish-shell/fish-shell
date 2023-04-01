@@ -1,4 +1,4 @@
-function __fish_ps
+function __ghoti_ps
     switch (builtin realpath (command -v ps) | string match -r '[^/]+$')
         case busybox
             command ps $argv

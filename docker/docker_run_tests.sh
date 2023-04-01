@@ -17,7 +17,7 @@ export DOCKER_BUILDKIT=1
 # Exit on failure.
 set -e
 
-# Get fish source directory.
+# Get ghoti source directory.
 FISH_SRC_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )"/.. >/dev/null && pwd)
 
 # Parse args.
@@ -40,7 +40,7 @@ DOCKERFILE=${@:$OPTIND:1}
 test -n "$DOCKERFILE" || usage
 
 # Construct a docker image.
-IMG_TAGNAME="ghcr.io/fish-shell/fish-ci/$(basename -s .Dockerfile "$DOCKERFILE"):latest"
+IMG_TAGNAME="ghcr.io/ghoti-shell/ghoti-ci/$(basename -s .Dockerfile "$DOCKERFILE"):latest"
 docker build \
     -t "$IMG_TAGNAME" \
     -f "$DOCKERFILE" \
@@ -48,6 +48,6 @@ docker build \
 
 # Run tests in it, allowing them to fail without failing this script.
 docker run -it \
-    --mount type=bind,source="$FISH_SRC_DIR",target=/fish-source,readonly \
+    --mount type=bind,source="$FISH_SRC_DIR",target=/ghoti-source,readonly \
     $DOCKER_EXTRA_ARGS \
     "$IMG_TAGNAME"

@@ -1,9 +1,9 @@
-#!/usr/bin/env fish
+#!/usr/bin/env ghoti
 #
-# Compares the output of two fish profile runs and emits the time difference between
+# Compares the output of two ghoti profile runs and emits the time difference between
 # the first and second set of results.
 #
-# Usage: ./diff_profiles.fish profile1.log profile2.log > profile_diff.log
+# Usage: ./diff_profiles.ghoti profile1.log profile2.log > profile_diff.log
 
 set -l profile1 (cat $argv[1])
 set -l profile2 (cat $argv[2])

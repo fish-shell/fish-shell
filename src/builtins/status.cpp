@@ -62,7 +62,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_DIRNAME, L"dirname"},
     {STATUS_FEATURES, L"features"},
     {STATUS_FILENAME, L"filename"},
-    {STATUS_FISH_PATH, L"fish-path"},
+    {STATUS_FISH_PATH, L"ghoti-path"},
     {STATUS_FUNCTION, L"function"},
     {STATUS_IS_BLOCK, L"is-block"},
     {STATUS_IS_BREAKPOINT, L"is-breakpoint"},
@@ -116,7 +116,7 @@ struct status_cmd_opts_t {
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
 /// the non-flag subcommand form. While these flags are deprecated they must be supported at
-/// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
+/// least until ghoti 3.0 and possibly longer to avoid breaking everyones config.ghoti and other
 /// scripts.
 static const wchar_t *const short_options = L":L:cbilfnhj:t";
 static const struct woption long_options[] = {
@@ -124,7 +124,7 @@ static const struct woption long_options[] = {
     {L"current-filename", no_argument, 'f'},
     {L"current-line-number", no_argument, 'n'},
     {L"filename", no_argument, 'f'},
-    {L"fish-path", no_argument, STATUS_FISH_PATH},
+    {L"ghoti-path", no_argument, STATUS_FISH_PATH},
     {L"is-block", no_argument, 'b'},
     {L"is-command-substitution", no_argument, 'c'},
     {L"is-full-job-control", no_argument, STATUS_IS_FULL_JOB_CTRL},
@@ -197,7 +197,7 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 break;
             }
             case 'L': {
-                opts.level = fish_wcstoi(w.woptarg);
+                opts.level = ghoti_wcstoi(w.woptarg);
                 if (opts.level < 0 || errno == ERANGE) {
                     streams.err.append_format(_(L"%ls: Invalid level value '%ls'\n"), argv[0],
                                               w.woptarg);
@@ -283,7 +283,7 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
     return STATUS_CMD_OK;
 }
 
-/// The status builtin. Gives various status information on fish.
+/// The status builtin. Gives various status information on ghoti.
 maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
@@ -470,7 +470,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
         }
         case STATUS_FISH_PATH: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd);
-            auto path = str2wcstring(get_executable_path("fish"));
+            auto path = str2wcstring(get_executable_path("ghoti"));
             if (path.empty()) {
                 streams.err.append_format(L"%ls: Could not get executable path: '%s'\n", cmd,
                                           std::strerror(errno));
@@ -490,7 +490,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
                     streams.out.push_back(L'\n');
                 }
             } else {
-                // This is a relative path, it depends on where fish's parent process
+                // This is a relative path, it depends on where ghoti's parent process
                 // was when it started it and its idea of $PATH.
                 // The best we can do is to print it directly and hope it works.
                 streams.out.append(path);

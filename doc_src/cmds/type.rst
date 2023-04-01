@@ -36,7 +36,7 @@ The following options are available:
     Returns the path to the executable file *NAME*, presuming *NAME* is found in the :envvar:`PATH` environment variable, or nothing otherwise. **--force-path** explicitly resolves only the path to executable files in  :envvar:`PATH`, regardless of whether *NAME* is shadowed by a function or builtin with the same name.
 
 **-q** or **--query**
-    Suppresses all output; this is useful when testing the exit status. For compatibility with old fish versions this is also **--quiet**.
+    Suppresses all output; this is useful when testing the exit status. For compatibility with old ghoti versions this is also **--quiet**.
 
 **-h** or **--help**
     Displays help about using this command.

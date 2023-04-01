@@ -1,4 +1,4 @@
-function fish_vi_key_bindings --description 'vi-like key bindings for fish'
+function ghoti_vi_key_bindings --description 'vi-like key bindings for ghoti'
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help" >&2
@@ -20,17 +20,17 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Allow just calling this function to correctly set the bindings.
     # Because it's a rather discoverable name, users will execute it
     # and without this would then have subtly broken bindings.
-    if test "$fish_key_bindings" != fish_vi_key_bindings
+    if test "$ghoti_key_bindings" != ghoti_vi_key_bindings
         and test "$rebind" = true
         # Allow the user to set the variable universally.
-        set -q fish_key_bindings
-        or set -g fish_key_bindings
+        set -q ghoti_key_bindings
+        or set -g ghoti_key_bindings
         # This triggers the handler, which calls us again and ensures the user_key_bindings
         # are executed.
-        set fish_key_bindings fish_vi_key_bindings
+        set ghoti_key_bindings ghoti_vi_key_bindings
         # unless the handler somehow doesn't exist, which would leave us without bindings.
         # this happens in no-config mode.
-        functions -q __fish_reload_key_bindings
+        functions -q __ghoti_reload_key_bindings
         and return
     end
 
@@ -50,13 +50,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Inherit shared key bindings.
     # Do this first so vi-bindings win over default.
     for mode in insert default visual
-        __fish_shared_key_bindings -s -M $mode
+        __ghoti_shared_key_bindings -s -M $mode
     end
 
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
     # See #2871
-    bind -s --preset -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char repaint-mode; end"
+    bind -s --preset -M insert \e "if commandline -P; commandline -f cancel; else; set ghoti_bind_mode default; commandline -f backward-char repaint-mode; end"
 
     # Default (command) mode
     bind -s --preset :q exit
@@ -292,7 +292,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual -m default x kill-selection end-selection repaint-mode
     bind -s --preset -M visual -m default X kill-whole-line end-selection repaint-mode
     bind -s --preset -M visual -m default y kill-selection yank end-selection repaint-mode
-    bind -s --preset -M visual -m default '"*y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
+    bind -s --preset -M visual -m default '"*y' "ghoti_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default '~' togglecase-selection end-selection repaint-mode
 
     bind -s --preset -M visual -m default \cc end-selection repaint-mode
@@ -300,16 +300,16 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also, remove
     # the commenting chars so the command can be further edited then executed.
-    bind -s --preset -M default \# __fish_toggle_comment_commandline
-    bind -s --preset -M visual \# __fish_toggle_comment_commandline
-    bind -s --preset -M replace \# __fish_toggle_comment_commandline
+    bind -s --preset -M default \# __ghoti_toggle_comment_commandline
+    bind -s --preset -M visual \# __ghoti_toggle_comment_commandline
+    bind -s --preset -M replace \# __ghoti_toggle_comment_commandline
 
     # Set the cursor shape
     # After executing once, this will have defined functions listening for the variable.
-    # Therefore it needs to be before setting fish_bind_mode.
-    fish_vi_cursor
-    set -g fish_cursor_selection_mode inclusive
+    # Therefore it needs to be before setting ghoti_bind_mode.
+    ghoti_vi_cursor
+    set -g ghoti_cursor_selection_mode inclusive
 
-    set fish_bind_mode $init_mode
+    set ghoti_bind_mode $init_mode
 
 end

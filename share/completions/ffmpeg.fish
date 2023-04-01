@@ -1,17 +1,17 @@
-function __fish_ffmpeg_last_arg
+function __ghoti_ffmpeg_last_arg
     echo (commandline -co)[-1]
 end
 
 # Allow completions to match against an argument that includes a stream specifier, e.g. -c:v:2
-function __fish_ffmpeg_complete_regex
+function __ghoti_ffmpeg_complete_regex
     set -l regex $argv[1]
     set -l completions $argv[2..-1]
 
-    complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -rq -- '^'\"$regex\"'(\$|:)'" \
+    complete -x -c ffmpeg -n "__ghoti_ffmpeg_last_arg | string match -rq -- '^'\"$regex\"'(\$|:)'" \
         -a "$completions"
 end
 
-function __fish_ffmpeg_help_type
+function __ghoti_ffmpeg_help_type
     printf '%s\t%s\n' long "Print more options"
     printf '%s\t%s\n' full "Print all options"
 
@@ -29,7 +29,7 @@ function __fish_ffmpeg_help_type
     end
 end
 
-function __fish_ffmpeg_codec_list
+function __ghoti_ffmpeg_codec_list
     printf '%s\t%s\n' copy "Stream copy"
 
     set -l identifier
@@ -51,7 +51,7 @@ function __fish_ffmpeg_codec_list
         | string match -r "$identifier" | string replace -rf '\S+\s+(\S+)\s+(\S+)' '$1\t$2')
 end
 
-function __fish_ffmpeg_pix_fmts
+function __ghoti_ffmpeg_pix_fmts
     # We can't know in advance if the intention is to specify an output pix_fmt because the intent
     # could be to instead provide a second input, but we can rule out an output if no input has
     # been specified
@@ -66,7 +66,7 @@ function __fish_ffmpeg_pix_fmts
         string replace -rf '^[IOHPB.]{5} (\S+) .*' '$1'
 end
 
-function __fish_ffmpeg_filters
+function __ghoti_ffmpeg_filters
     # TODO: Figure out how to distinguish {audio,video} source and destination, because some filters
     # can go cross those lines (e.g. showvolume, which generates a video representation of the input
     # audio).
@@ -88,14 +88,14 @@ function __fish_ffmpeg_filters
         string replace -rf '^ [TSC.]{3} +(\S+) +\S+->\S+ +(.*)' '$1\t$2'
 end
 
-function __fish_ffmpeg_presets
+function __ghoti_ffmpeg_presets
     set -l cmdline (commandline)
     if string match -ireq '[hx]26[45]'
         printf "%s\n" ultrafast superfast veryfast faster fast medium slow slower veryslow placebo
     end
 end
 
-function __fish_ffmpeg_tunes
+function __ghoti_ffmpeg_tunes
     set -l cmdline (commandline)
     if string match -req 264
         printf "%s\n" film animation grain stillimage fastdecode zerolatency psnr ssim
@@ -105,11 +105,11 @@ function __fish_ffmpeg_tunes
     end
 end
 
-function __fish_ffmpeg_crfs
+function __ghoti_ffmpeg_crfs
     seq 1 30
 end
 
-function __fish_ffmpeg_profile
+function __ghoti_ffmpeg_profile
     if string match -req 264
         printf "%s\n" baseline main high
     end
@@ -118,7 +118,7 @@ function __fish_ffmpeg_profile
     end
 end
 
-function __fish_ffmpeg_formats
+function __ghoti_ffmpeg_formats
     # TODO: Use heuristic to determine input vs output format and filter accordingly
     ffmpeg -hide_banner -loglevel quiet -formats | string replace -rf '^ [DE.]{2} ([a-z0-9_]+) +(\S.+)$' '$1\t$2'
 end
@@ -127,7 +127,7 @@ complete -c ffmpeg -s i -d "Specify input file"
 
 # Print help / information / capabilities
 complete -c ffmpeg -s L -d "Show license"
-complete -x -c ffmpeg -s h -s "?" -o help -l help -a "(__fish_ffmpeg_help_type)" -d "Show help"
+complete -x -c ffmpeg -s h -s "?" -o help -l help -a "(__ghoti_ffmpeg_help_type)" -d "Show help"
 complete -c ffmpeg -o version -d "Show version"
 complete -c ffmpeg -o buildconf -d "Show build configuration"
 complete -c ffmpeg -o formats -d "Show available formats"
@@ -164,8 +164,8 @@ complete -c ffmpeg -o bits_per_raw_sample -d "Set the number of bits per raw sam
 complete -c ffmpeg -o vol -d "Change audio volume"
 
 # Per-file main options
-complete -c ffmpeg -s f -d "Force format" -xa "(__fish_ffmpeg_formats)"
-complete -c ffmpeg -s c -o codec -d "Codec name" -xa "(__fish_ffmpeg_codec_list all)"
+complete -c ffmpeg -s f -d "Force format" -xa "(__ghoti_ffmpeg_formats)"
+complete -c ffmpeg -s c -o codec -d "Codec name" -xa "(__ghoti_ffmpeg_codec_list all)"
 complete -c ffmpeg -o map_metadata -d "Set metadata information of outfile from infile"
 complete -c ffmpeg -s t -d "Record or transcode \"duration\" seconds of audio/video"
 complete -c ffmpeg -o to -d "Record or transcode stop time"
@@ -195,7 +195,7 @@ complete -c ffmpeg -o bits_per_raw_sample -d "Set the number of bits per raw sam
 complete -c ffmpeg -o vn -d "Disable video"
 complete -c ffmpeg -o vcodec -o "codec:v" -o "c:v"
 # Also list codecs when a particular stream is selected, e.g. -c:v:0
-__fish_ffmpeg_complete_regex "-(vcodec|c(odec)?:v)" "(__fish_ffmpeg_codec_list video)"
+__ghoti_ffmpeg_complete_regex "-(vcodec|c(odec)?:v)" "(__ghoti_ffmpeg_codec_list video)"
 complete -c ffmpeg -o timecode -d "Set initial TimeCode value"
 complete -x -c ffmpeg -o pass -a "1 2 3" -d "Select the pass number"
 complete -c ffmpeg -o vf -d "Set video filters"
@@ -204,7 +204,7 @@ complete -c ffmpeg -s b -o "b:v" -d "Video bitrate"
 complete -c ffmpeg -o dn -d "Disable data"
 # Advanced video options
 complete -c ffmpeg -o pix_fmt
-__fish_ffmpeg_complete_regex -pix_fmt "(__fish_ffmpeg_pix_fmts)"
+__ghoti_ffmpeg_complete_regex -pix_fmt "(__ghoti_ffmpeg_pix_fmts)"
 
 # Audio options
 complete -c ffmpeg -o aframes -d "Set the number of audio frames to output"
@@ -213,7 +213,7 @@ complete -c ffmpeg -o ar -d "Set audio sampling rate"
 complete -c ffmpeg -o ac -d "Set number of audio channels"
 complete -c ffmpeg -o an -d "Disable audio"
 complete -c ffmpeg -o acodec -o "codec:a" -o "c:a"
-__fish_ffmpeg_complete_regex '-(acodec|c(odec)?:a)' "(__fish_ffmpeg_codec_list audio)"
+__ghoti_ffmpeg_complete_regex '-(acodec|c(odec)?:a)' "(__ghoti_ffmpeg_codec_list audio)"
 complete -c ffmpeg -o vol -d "Change audio volume"
 complete -c ffmpeg -o af -d "Set audio filters"
 
@@ -221,7 +221,7 @@ complete -c ffmpeg -o af -d "Set audio filters"
 complete -c ffmpeg -s s -d "Set frame size"
 complete -c ffmpeg -o sn -d "Disable subtitle"
 complete -c ffmpeg -o scodec -o "codec:s" -o "c:s"
-__fish_ffmpeg_complete_regex '-(scodec|c(odec)?:s)(:\d+)?' "(__fish_ffmpeg_codec_list subtitle)"
+__ghoti_ffmpeg_complete_regex '-(scodec|c(odec)?:s)(:\d+)?' "(__ghoti_ffmpeg_codec_list subtitle)"
 complete -c ffmpeg -o stag -d "Force subtitle tag/fourcc"
 complete -c ffmpeg -o fix_sub_duration -d "Fix subtitles duration"
 complete -c ffmpeg -o canvas_size -d "Set canvas size"
@@ -229,21 +229,21 @@ complete -c ffmpeg -o spre -d "Set the subtitle options to the indicated preset"
 
 # Codec-specific options
 complete -c ffmpeg -o pre -o preset -d "Preset name"
-__fish_ffmpeg_complete_regex 'pre(set)?' "(__fish_ffmpeg_presets)"
+__ghoti_ffmpeg_complete_regex 'pre(set)?' "(__ghoti_ffmpeg_presets)"
 complete -c ffmpeg -o tune
-__fish_ffmpeg_complete_regex tune "(__fish_ffmpeg_tunes)"
+__ghoti_ffmpeg_complete_regex tune "(__ghoti_ffmpeg_tunes)"
 complete -c ffmpeg -o crf -o q
-__fish_ffmpeg_complete_regex 'crf|q' "(__fish_ffmpeg_crfs)"
+__ghoti_ffmpeg_complete_regex 'crf|q' "(__ghoti_ffmpeg_crfs)"
 complete -c ffmpeg -o profile
-__fish_ffmpeg_complete_regex profile "(__fish_ffmpeg_profiles)"
+__ghoti_ffmpeg_complete_regex profile "(__ghoti_ffmpeg_profiles)"
 
 # Filters
 #
-# fish completions are not designed to take the current argument being completed as an input,
+# ghoti completions are not designed to take the current argument being completed as an input,
 # and if introspected it is normally used to filter/constrain the completions generated. ffmpeg's
 # command line syntax is extremely nasty and in addition to using stringification for all arguments,
 # relies on special characters to delimit separate subarguments (rather than, e.g., concatenating
-# repeated invocations of the same switch), meaning the typical way of generating fish completions
+# repeated invocations of the same switch), meaning the typical way of generating ghoti completions
 # would only allow us to generate the very first subargument in a complex argument payload.
 #
 # We hack around this in a ridiculously ugly fashion by always generating completions that are
@@ -258,33 +258,33 @@ __fish_ffmpeg_complete_regex profile "(__fish_ffmpeg_profiles)"
 #
 # ffmpeg .... -filter:v filter1,filter2=f2_arg1=f2_arg1_val:f2_arg2
 
-function __fish_ffmpeg_split_filter_graph
+function __ghoti_ffmpeg_split_filter_graph
     set -l filters (string split , $argv[1])
     printf "%s\n" $filters
 end
 
 # Given a single filter expression, emits the filter name on the first line and then each key=value
 # pair of arguments to the filter on each subsequent line.
-function __fish_ffmpeg_decompose_filter
+function __ghoti_ffmpeg_decompose_filter
     set -l parts (string split -m 1 = "$argv")
     echo $parts[1] # the filter name
     set -l arguments (string split : $parts[2])
     printf "%s\n" $arguments
 end
 
-function __fish_ffmpeg_concat_filters
+function __ghoti_ffmpeg_concat_filters
     string join -- , $argv
 end
 
-function __fish_ffmpeg_concat_filter_args
+function __ghoti_ffmpeg_concat_filter_args
     string join -- : $argv
 end
 
-function __fish_ffmpeg_complete_filter
+function __ghoti_ffmpeg_complete_filter
     set -l filter_type all
-    if string match -rq -- '^-(vf(ilter)?|f(ilter)?:v)' (__fish_ffmpeg_last_arg)
+    if string match -rq -- '^-(vf(ilter)?|f(ilter)?:v)' (__ghoti_ffmpeg_last_arg)
         set filter_type video
-    else if string match -rq -- '^-(af(ilter)?|f(ilter)?:a)' (__fish_ffmpeg_last_arg)
+    else if string match -rq -- '^-(af(ilter)?|f(ilter)?:a)' (__ghoti_ffmpeg_last_arg)
         set filter_type audio
     end
 
@@ -293,11 +293,11 @@ function __fish_ffmpeg_complete_filter
     set -l filters_arg (commandline -o)[-1]
     if string match -rq -- '^-' $filters_arg
         # No filter name started
-        __fish_ffmpeg_filters $filter_type
+        __ghoti_ffmpeg_filters $filter_type
         return
     end
 
-    set -l filters (__fish_ffmpeg_split_filter_graph $filters_arg)
+    set -l filters (__ghoti_ffmpeg_split_filter_graph $filters_arg)
     # We are completing only the last filter (in case there are multiple)
     set -l filter $filters[-1]
     # Remove it from the list of passed-through filters
@@ -305,17 +305,17 @@ function __fish_ffmpeg_complete_filter
     # `ffmpeg -h filter=FILTER` exposes information that can be used to dynamically complete not
     # only the name of the filter but also the name of its individual options. We currently only
     # support completing the name of the filter.
-    set -l decomposed (__fish_ffmpeg_decompose_filter $filter)
+    set -l decomposed (__ghoti_ffmpeg_decompose_filter $filter)
     set -l filter_name $decomposed[1]
-    set -l filter_args (__fish_ffmpeg_concat_filter_args $decomposed[2..-1])
+    set -l filter_args (__ghoti_ffmpeg_concat_filter_args $decomposed[2..-1])
 
     # Emit the mutated filter graph, with permutations of the final filter name offered as
     # completions.
-    for known_filter in (__fish_ffmpeg_filters $filter_type)
+    for known_filter in (__ghoti_ffmpeg_filters $filter_type)
         set -l modified_filter (string join = $known_filter $filter_args)
-        __fish_ffmpeg_concat_filters $filters $modified_filter
+        __ghoti_ffmpeg_concat_filters $filters $modified_filter
     end
 end
 
 complete -x -c ffmpeg -o filter -o filter:v -o filter:s -o filter:a -o vf -o af \
-    -a "(__fish_ffmpeg_complete_filter)"
+    -a "(__ghoti_ffmpeg_complete_filter)"

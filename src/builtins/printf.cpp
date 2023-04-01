@@ -220,7 +220,7 @@ long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
     // valid floating point value. It could also be due to the locale using different separator
     // characters than the normal english convention. So try again by forcing the use of a locale
     // that employs the english convention for writing floating point numbers.
-    return wcstod_l(s, end, fish_c_locale());
+    return wcstod_l(s, end, ghoti_c_locale());
 }
 
 template <typename T>
@@ -675,11 +675,11 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar
 
 #if defined(HAVE_USELOCALE) || defined(__GLIBC__)
     // We use a locale-dependent LC_NUMERIC here,
-    // unlike the rest of fish (which uses LC_NUMERIC=C).
+    // unlike the rest of ghoti (which uses LC_NUMERIC=C).
     // Because we do output as well as wcstod (which would have wcstod_l),
     // we need to set the locale here.
     // (glibc has uselocale since 2.3, but our configure checks fail us)
-    locale_t prev_locale = uselocale(fish_numeric_locale());
+    locale_t prev_locale = uselocale(ghoti_numeric_locale());
 #else
     // NetBSD does not have uselocale,
     // so the best we can do is setlocale.

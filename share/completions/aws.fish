@@ -1,7 +1,7 @@
 # These are very much incomplete completions for the aws-cli suite.
 # In addition to a complete list of services, the `aws s3` completions are mostly complete
 # (and are the primary reason this file exists). The automatically generated completions
-# for `aws` via `fish_update_completions` are pretty useless due to non-standard formatting.
+# for `aws` via `ghoti_update_completions` are pretty useless due to non-standard formatting.
 
 function __s3_is_maybe_bucket
     commandline -ct | string match -qr -- '^(|s|s3|s3:?/?/?[^/]*)$'
@@ -57,7 +57,7 @@ function __s3_cmd_in
 end
 
 # S3 completions
-complete -c aws -n "__fish_prev_arg_in s3" -xa "cp mv rm help sync ls mb mv presign rb website"
+complete -c aws -n "__ghoti_prev_arg_in s3" -xa "cp mv rm help sync ls mb mv presign rb website"
 
 # When completing a remote path, complete the bucket name first, then based off
 # the bucket name, we can complete the path itself.
@@ -253,4 +253,4 @@ set -l aws_services \
     workspaces \
     xray
 
-complete -c aws -n "__fish_is_nth_token 1" -xa "$aws_services"
+complete -c aws -n "__ghoti_is_nth_token 1" -xa "$aws_services"

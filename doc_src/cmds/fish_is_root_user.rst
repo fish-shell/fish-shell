@@ -1,6 +1,6 @@
-.. _cmd-fish_is_root_user:
+.. _cmd-ghoti_is_root_user:
 
-fish_is_root_user - check if the current user is root
+ghoti_is_root_user - check if the current user is root
 =====================================================
 
 Synopsis
@@ -8,12 +8,12 @@ Synopsis
 
 .. synopsis::
 
-    fish_is_root_user
+    ghoti_is_root_user
 
 Description
 -----------
 
-``fish_is_root_user`` will check if the current user is root. It can be useful
+``ghoti_is_root_user`` will check if the current user is root. It can be useful
 for the prompt to display something different if the user is root, for example.
 
 
@@ -25,7 +25,7 @@ A simple example:
 ::
 
     function example --description 'Just an example'
-        if fish_is_root_user
+        if ghoti_is_root_user
             do_something_different
         end
     end

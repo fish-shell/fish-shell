@@ -1,8 +1,8 @@
-#RUN: %fish %s
+#RUN: %ghoti %s
 #REQUIRES: command -v tmux
 
-set -g isolated_tmux_fish_extra_args -C '
-    set -g fish_autosuggestion_enabled 0
+set -g isolated_tmux_ghoti_extra_args -C '
+    set -g ghoti_autosuggestion_enabled 0
     function abbr-test
     end
     abbr -g abbr-test "abbr-test [expanded]"

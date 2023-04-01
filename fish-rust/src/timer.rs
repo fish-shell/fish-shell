@@ -1,6 +1,6 @@
 //! This module houses `TimerSnapshot` which can be used to calculate the elapsed time (system CPU
-//! time, user CPU time, and observed wall time, broken down by fish and child processes spawned by
-//! fish) between two `TimerSnapshot` instances.
+//! time, user CPU time, and observed wall time, broken down by ghoti and child processes spawned by
+//! ghoti) between two `TimerSnapshot` instances.
 //!
 //! Measuring time is always complicated with many caveats. Quite apart from the typical
 //! gotchas faced by developers attempting to choose between monotonic vs non-monotonic and system vs
@@ -35,7 +35,7 @@ enum Unit {
 
 struct TimerSnapshot {
     wall_time: Instant,
-    cpu_fish: libc::rusage,
+    cpu_ghoti: libc::rusage,
     cpu_children: libc::rusage,
 }
 
@@ -98,7 +98,7 @@ fn getrusage(resource: RUsage) -> libc::rusage {
 impl TimerSnapshot {
     pub fn take() -> TimerSnapshot {
         TimerSnapshot {
-            cpu_fish: getrusage(RUsage::RSelf),
+            cpu_ghoti: getrusage(RUsage::RSelf),
             cpu_children: getrusage(RUsage::RChildren),
             wall_time: Instant::now(),
         }
@@ -110,8 +110,8 @@ impl TimerSnapshot {
     pub fn get_delta(t1: &TimerSnapshot, t2: &TimerSnapshot, verbose: bool) -> String {
         use crate::nix::timeval_to_duration as from;
 
-        let mut fish_sys = from(&t2.cpu_fish.ru_stime) - from(&t1.cpu_fish.ru_stime);
-        let mut fish_usr = from(&t2.cpu_fish.ru_utime) - from(&t1.cpu_fish.ru_utime);
+        let mut ghoti_sys = from(&t2.cpu_ghoti.ru_stime) - from(&t1.cpu_ghoti.ru_stime);
+        let mut ghoti_usr = from(&t2.cpu_ghoti.ru_utime) - from(&t1.cpu_ghoti.ru_utime);
         let mut child_sys = from(&t2.cpu_children.ru_stime) - from(&t1.cpu_children.ru_stime);
         let mut child_usr = from(&t2.cpu_children.ru_utime) - from(&t1.cpu_children.ru_utime);
 
@@ -119,14 +119,14 @@ impl TimerSnapshot {
         // microseconds ago. In the event that execution completes extremely quickly or there is
         // no data (say, we are measuring external execution time but no external processes have
         // been launched), it can incorrectly appear to be negative.
-        fish_sys = fish_sys.max(Duration::ZERO);
-        fish_usr = fish_usr.max(Duration::ZERO);
+        ghoti_sys = ghoti_sys.max(Duration::ZERO);
+        ghoti_usr = ghoti_usr.max(Duration::ZERO);
         child_sys = child_sys.max(Duration::ZERO);
         child_usr = child_usr.max(Duration::ZERO);
         // As `Instant` is strictly monotonic, this can't be negative so we don't need to clamp.
         let net_wall_micros = (t2.wall_time - t1.wall_time).as_micros() as i64;
-        let net_sys_micros = (fish_sys + child_sys).as_micros() as i64;
-        let net_usr_micros = (fish_usr + child_usr).as_micros() as i64;
+        let net_sys_micros = (ghoti_sys + child_sys).as_micros() as i64;
+        let net_usr_micros = (ghoti_usr + child_usr).as_micros() as i64;
 
         let wall_unit = Unit::for_micros(net_wall_micros);
         // Make sure we share the same unit for the various CPU times
@@ -143,10 +143,10 @@ impl TimerSnapshot {
             output += &format!("\n   usr time  {:6.2} {}", usr_time, cpu_unit.long_name());
             output += &format!("\n   sys time  {:6.2} {}", sys_time, cpu_unit.long_name());
         } else {
-            let fish_unit = Unit::for_micros(fish_sys.max(fish_usr).as_micros() as i64);
+            let ghoti_unit = Unit::for_micros(ghoti_sys.max(ghoti_usr).as_micros() as i64);
             let child_unit = Unit::for_micros(child_sys.max(child_usr).as_micros() as i64);
-            let fish_usr_time = fish_unit.convert_micros(fish_usr.as_micros() as i64);
-            let fish_sys_time = fish_unit.convert_micros(fish_sys.as_micros() as i64);
+            let ghoti_usr_time = ghoti_unit.convert_micros(ghoti_usr.as_micros() as i64);
+            let ghoti_sys_time = ghoti_unit.convert_micros(ghoti_sys.as_micros() as i64);
             let child_usr_time = child_unit.convert_micros(child_usr.as_micros() as i64);
             let child_sys_time = child_unit.convert_micros(child_sys.as_micros() as i64);
 
@@ -156,18 +156,18 @@ impl TimerSnapshot {
                 .max(cpu_unit.short_name().len());
             let wall_unit = wall_unit.short_name();
             let cpu_unit = cpu_unit.short_name();
-            let fish_unit = fish_unit.short_name();
+            let ghoti_unit = ghoti_unit.short_name();
             let child_unit = child_unit.short_name();
 
             output += "\n________________________________________________________";
             output += &format!(
-                "\nExecuted in  {wall_time:6.2} {wall_unit:<width1$}    {fish:<width2$}  external",
+                "\nExecuted in  {wall_time:6.2} {wall_unit:<width1$}    {ghoti:<width2$}  external",
                 width1 = column2_unit_len,
-                fish = "fish",
-                width2 = fish_unit.len() + 7
+                ghoti = "ghoti",
+                width2 = ghoti_unit.len() + 7
             );
-            output += &format!("\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}");
-            output += &format!("\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}");
+            output += &format!("\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {ghoti_usr_time:6.2} {ghoti_unit}  {child_usr_time:6.2} {child_unit}");
+            output += &format!("\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {ghoti_sys_time:6.2} {ghoti_unit}  {child_sys_time:6.2} {child_unit}");
         }
         output += "\n";
 
@@ -238,21 +238,21 @@ impl Unit {
 #[test]
 fn timer_format_and_alignment() {
     let mut t1 = TimerSnapshot::take();
-    t1.cpu_fish.ru_utime.tv_usec = 0;
-    t1.cpu_fish.ru_stime.tv_usec = 0;
+    t1.cpu_ghoti.ru_utime.tv_usec = 0;
+    t1.cpu_ghoti.ru_stime.tv_usec = 0;
     t1.cpu_children.ru_utime.tv_usec = 0;
     t1.cpu_children.ru_stime.tv_usec = 0;
 
     let mut t2 = TimerSnapshot::take();
-    t2.cpu_fish.ru_utime.tv_usec = 999995;
-    t2.cpu_fish.ru_stime.tv_usec = 999994;
+    t2.cpu_ghoti.ru_utime.tv_usec = 999995;
+    t2.cpu_ghoti.ru_stime.tv_usec = 999994;
     t2.cpu_children.ru_utime.tv_usec = 1000;
     t2.cpu_children.ru_stime.tv_usec = 500;
     t2.wall_time = t1.wall_time + Duration::from_micros(500);
 
     let expected = r#"
 ________________________________________________________
-Executed in  500.00 micros    fish         external
+Executed in  500.00 micros    ghoti         external
    usr time    1.00 secs      1.00 secs    1.00 millis
    sys time    1.00 secs      1.00 secs    0.50 millis
 "#;

@@ -37,9 +37,9 @@ complete -c find -o ctime -d "File status last changed specified number of days 
 complete -c find -o empty -d "File is empty and is either a regular file or a directory"
 complete -c find -o executable -d "File is executable"
 complete -c find -o false -d "Always false"
-complete -c find -o fstype -d "File is on filesystem of specified type" -a "(__fish_print_filesystems)" -x
-complete -c find -o gid -d "Numeric group id of file" -x -a "(__fish_complete_group_ids)"
-complete -c find -o group -d "Group name of file" -x -a "(__fish_complete_groups)"
+complete -c find -o fstype -d "File is on filesystem of specified type" -a "(__ghoti_print_filesystems)" -x
+complete -c find -o gid -d "Numeric group id of file" -x -a "(__ghoti_complete_group_ids)"
+complete -c find -o group -d "Group name of file" -x -a "(__ghoti_complete_groups)"
 
 complete -c find -o ilname -d "File is symlink matching specified case insensitive pattern" -x
 complete -c find -o iname -d "File name matches case insensitive pattern" -x
@@ -73,9 +73,9 @@ set -l type_comp 'b\t"Block device" c\t"Character device" d\t"Directory" p\t"Nam
 
 complete -c find -o type -d "File is of specified type" -x -a $type_comp
 
-complete -c find -o uid -d "File's owner has specified numeric user ID" -x -a "(__fish_complete_user_ids)"
+complete -c find -o uid -d "File's owner has specified numeric user ID" -x -a "(__ghoti_complete_user_ids)"
 complete -c find -o used -d "File was last used X number of days after its status was last changed" -x
-complete -c find -o user -d "File's owner" -x -a "(__fish_complete_users)"
+complete -c find -o user -d "File's owner" -x -a "(__ghoti_complete_users)"
 complete -c find -o xtype -d "Check type of file - in case of symlink, check the file that is not checked by -type" -x -a $type_comp
 complete -c find -o context -d "File's security context matches specified pattern" -x
 

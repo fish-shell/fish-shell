@@ -1,4 +1,4 @@
-# If seq is not installed, then define a function that invokes __fish_fallback_seq
+# If seq is not installed, then define a function that invokes __ghoti_fallback_seq
 # We can't call type here because that also calls seq
 
 if not command -sq seq
@@ -11,11 +11,11 @@ if not command -sq seq
     else
         # No seq command
         function seq --description "Print sequences of numbers"
-            __fish_fallback_seq $argv
+            __ghoti_fallback_seq $argv
         end
     end
 
-    function __fish_fallback_seq --description "Fallback implementation of the seq command"
+    function __ghoti_fallback_seq --description "Fallback implementation of the seq command"
         set -l from 1
         set -l step 1
         set -l to 1

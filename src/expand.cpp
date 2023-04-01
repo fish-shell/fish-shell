@@ -191,7 +191,7 @@ static size_t parse_slice(const wchar_t *const in, wchar_t **const end_ptr, std:
             tmp = 1;  // first index
             end = &in[pos];
         } else {
-            tmp = fish_wcstol(&in[pos], &end);
+            tmp = ghoti_wcstol(&in[pos], &end);
             if (errno > 0) {
                 // We don't test `*end` as is typically done because we expect it to not be the null
                 // char. Ignore the case of errno==-1 because it means the end char wasn't the null
@@ -201,7 +201,7 @@ static size_t parse_slice(const wchar_t *const in, wchar_t **const end_ptr, std:
             } else if (tmp == 0) {
                 // Explicitly refuse $foo[0] as valid syntax, regardless of whether or not we're
                 // going to show an error if the index ultimately evaluates to zero. This will help
-                // newcomers to fish avoid a common off-by-one error. See #4862.
+                // newcomers to ghoti avoid a common off-by-one error. See #4862.
                 *error = parse_slice_error_t::zero_index;
                 return pos;
             }
@@ -222,7 +222,7 @@ static size_t parse_slice(const wchar_t *const in, wchar_t **const end_ptr, std:
                 tmp1 = -1;  // last index
                 end = &in[pos];
             } else {
-                tmp1 = fish_wcstol(&in[pos], &end);
+                tmp1 = ghoti_wcstol(&in[pos], &end);
                 // Ignore the case of errno==-1 because it means the end char wasn't the null char.
                 if (errno > 0) {
                     *error = parse_slice_error_t::invalid_index;
@@ -546,7 +546,7 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
                 mod.push_back(BRACE_END);
             }
 
-            // Note: this code looks very fishy, apparently it has never worked.
+            // Note: this code looks very ghotiy, apparently it has never worked.
             return expand_braces(std::move(mod), expand_flag::skip_cmdsubst, out, errors);
         }
     }
@@ -1281,7 +1281,7 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const operatio
     return expand_err;
 }
 
-// https://github.com/fish-shell/fish-shell/issues/367
+// https://github.com/ghoti-shell/ghoti-shell/issues/367
 //
 // With them the Seed of Wisdom did I sow,
 // And with my own hand labour'd it to grow:
@@ -1303,7 +1303,7 @@ static std::string escape_single_quoted_hack_hack_hack_hack(const char *str) {
     return result;
 }
 
-bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
+bool ghoti_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv) {
     if (!cmds || cmds->size() != 1) {
         return false;

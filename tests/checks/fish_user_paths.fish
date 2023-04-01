@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %ghoti %s
 #
 # This deals with $PATH manipulation. We need to be careful not to step on anything.
 
@@ -8,9 +8,9 @@ mkdir $tmpdir/sbin
 mkdir $tmpdir/etc
 ln -s $tmpdir/bin $tmpdir/link
 
-# We set fish_user_paths to an empty global to have a starting point
-set -g fish_user_paths
-set fish_user_paths $tmpdir/bin
+# We set ghoti_user_paths to an empty global to have a starting point
+set -g ghoti_user_paths
+set ghoti_user_paths $tmpdir/bin
 
 # Confirm that it actually ends up in $PATH
 contains -- (builtin realpath $tmpdir/bin) $PATH
@@ -20,7 +20,7 @@ and echo Have bin
 # Not adding duplicates
 set PATH $PATH
 set -l --path oldpath $PATH
-set -a fish_user_paths $tmpdir/bin
+set -a ghoti_user_paths $tmpdir/bin
 test "$oldpath" = "$PATH"
 or begin
     echo OH NO A DUPLICATE
@@ -30,7 +30,7 @@ end
 
 
 # Add a link to the same path.
-set -a fish_user_paths $tmpdir/link
+set -a ghoti_user_paths $tmpdir/link
 contains -- $tmpdir/link $PATH
 and echo Have bin
 # CHECK: Have bin

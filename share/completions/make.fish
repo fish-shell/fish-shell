@@ -1,5 +1,5 @@
 # Completions for make
-function __fish_print_make_targets --argument-names directory file
+function __ghoti_print_make_targets --argument-names directory file
     # Since we filter based on localized text, we need to ensure the
     # text will be using the correct locale.
     set -lx LC_ALL C
@@ -22,24 +22,24 @@ function __fish_print_make_targets --argument-names directory file
     end
 end
 
-function __fish_complete_make_targets
+function __ghoti_complete_make_targets
     set -l directory (string replace -rf '^make .*(-C ?|--directory(=| +))([^ ]*) .*$' '$3' -- $argv)
     or set directory .
     set -l file (string replace -rf '^make .*(-f ?|--file(=| +))([^ ]*) .*$' '$3' -- $argv)
-    __fish_print_make_targets $directory $file
+    __ghoti_print_make_targets $directory $file
 end
 
 # This completion reenables file completion on
 # assignments, so e.g. 'make foo FILES=<tab>' will receive standard
 # filename completion.
-complete -c make -n 'commandline -ct | string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -p))" -d Target
-complete -f -c make -n 'commandline -ct | not string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -p))" -d Target
+complete -c make -n 'commandline -ct | string match -q "*=*"' -a "(__ghoti_complete_make_targets (commandline -p))" -d Target
+complete -f -c make -n 'commandline -ct | not string match -q "*=*"' -a "(__ghoti_complete_make_targets (commandline -p))" -d Target
 complete -c make -s f -d "Use file as makefile" -r
-complete -x -c make -s C -l directory -x -a "(__fish_complete_directories (commandline -ct))" -d "Change directory"
+complete -x -c make -s C -l directory -x -a "(__ghoti_complete_directories (commandline -ct))" -d "Change directory"
 complete -c make -s d -d "Debug mode"
 complete -c make -s e -d "Environment before makefile"
 complete -c make -s i -d "Ignore errors"
-complete -x -c make -s I -d "Search directory for makefile" -a "(__fish_complete_directories (commandline -ct))"
+complete -x -c make -s I -d "Search directory for makefile" -a "(__ghoti_complete_directories (commandline -ct))"
 complete -f -c make -s j -d "Number of concurrent jobs (no argument means no limit)"
 complete -c make -s k -d "Continue after an error"
 complete -c make -s l -d "Start when load drops"

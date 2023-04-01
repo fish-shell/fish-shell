@@ -64,7 +64,7 @@ fn parse_radix<Iter: Iterator<Item = char>>(
     error_if_negative: bool,
 ) -> Result<ParseResult, Error> {
     if let Some(r) = mradix {
-        assert!((2..=36).contains(&r), "fish_parse_radix: invalid radix {r}");
+        assert!((2..=36).contains(&r), "ghoti_parse_radix: invalid radix {r}");
     }
 
     // Construct a CharsIterator to keep track of how many we consume.
@@ -161,7 +161,7 @@ fn parse_radix<Iter: Iterator<Item = char>>(
 }
 
 /// Parse some iterator over Chars into some Integer type, optionally with a radix.
-fn fish_wcstoi_impl<Int, Chars>(
+fn ghoti_wcstoi_impl<Int, Chars>(
     src: Chars,
     options: Options,
     out_consumed: &mut usize,
@@ -171,7 +171,7 @@ where
     Int: PrimInt,
 {
     let bits = Int::zero().count_zeros();
-    assert!(bits <= 64, "fish_wcstoi: Int must be <= 64 bits");
+    assert!(bits <= 64, "ghoti_wcstoi: Int must be <= 64 bits");
     let signed = Int::min_value() < Int::zero();
 
     let Options {
@@ -228,22 +228,22 @@ where
 ///  - Leading whitespace is skipped.
 ///  - 0 means octal, 0x means hex
 ///  - Leading + is supported.
-pub fn fish_wcstoi<Int, Chars>(src: Chars) -> Result<Int, Error>
+pub fn ghoti_wcstoi<Int, Chars>(src: Chars) -> Result<Int, Error>
 where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), Default::default(), &mut 0)
+    ghoti_wcstoi_impl(src.chars(), Default::default(), &mut 0)
 }
 
 /// Convert the given wide string to an integer using the given radix.
 /// Leading whitespace is skipped.
-pub fn fish_wcstoi_opts<Int, Chars>(src: Chars, options: Options) -> Result<Int, Error>
+pub fn ghoti_wcstoi_opts<Int, Chars>(src: Chars, options: Options) -> Result<Int, Error>
 where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), options, &mut 0)
+    ghoti_wcstoi_impl(src.chars(), options, &mut 0)
 }
 
 /// Convert the given wide string to an integer.
@@ -252,7 +252,7 @@ where
 ///  - 0 means octal, 0x means hex
 ///  - Leading + is supported.
 /// The number of consumed characters is returned in out_consumed.
-pub fn fish_wcstoi_partial<Int, Chars>(
+pub fn ghoti_wcstoi_partial<Int, Chars>(
     src: Chars,
     options: Options,
     out_consumed: &mut usize,
@@ -261,7 +261,7 @@ where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), options, out_consumed)
+    ghoti_wcstoi_impl(src.chars(), options, out_consumed)
 }
 
 #[cfg(test)]
@@ -269,15 +269,15 @@ mod tests {
     use super::*;
 
     fn test_min_max<Int: PrimInt + std::fmt::Display + std::fmt::Debug>(min: Int, max: Int) {
-        assert_eq!(fish_wcstoi(min.to_string().chars()), Ok(min));
-        assert_eq!(fish_wcstoi(max.to_string().chars()), Ok(max));
+        assert_eq!(ghoti_wcstoi(min.to_string().chars()), Ok(min));
+        assert_eq!(ghoti_wcstoi(max.to_string().chars()), Ok(max));
     }
 
     #[test]
     fn test_signed() {
-        let run1 = |s: &str| -> Result<i32, Error> { fish_wcstoi(s.chars()) };
+        let run1 = |s: &str| -> Result<i32, Error> { ghoti_wcstoi(s.chars()) };
         let run1_rad = |s: &str, radix: u32| -> Result<i32, Error> {
-            fish_wcstoi_opts(
+            ghoti_wcstoi_opts(
                 s.chars(),
                 Options {
                     mradix: Some(radix),
@@ -335,7 +335,7 @@ mod tests {
         }
 
         let run1 = |s: &str| -> Result<u64, Error> {
-            fish_wcstoi_opts(
+            ghoti_wcstoi_opts(
                 s.chars(),
                 Options {
                     wrap_negatives: true,
@@ -344,7 +344,7 @@ mod tests {
             )
         };
         let run1_rad = |s: &str, radix: u32| -> Result<u64, Error> {
-            fish_wcstoi_opts(
+            ghoti_wcstoi_opts(
                 s.chars(),
                 Options {
                     wrap_negatives: true,
@@ -394,7 +394,7 @@ mod tests {
             std::u64::MAX - x + 1
         }
 
-        let run1 = |s: &str, opts: Options| -> Result<u64, Error> { fish_wcstoi_opts(s, opts) };
+        let run1 = |s: &str, opts: Options| -> Result<u64, Error> { ghoti_wcstoi_opts(s, opts) };
         let mut opts = Options::default();
         assert_eq!(run1("-123", opts), Err(Error::InvalidChar));
         assert_eq!(run1("-0x123", opts), Err(Error::InvalidChar));
@@ -410,7 +410,7 @@ mod tests {
     fn test_partial() {
         let run1 = |s: &str| -> (i32, usize) {
             let mut consumed = 0;
-            let res = fish_wcstoi_partial(s, Default::default(), &mut consumed)
+            let res = ghoti_wcstoi_partial(s, Default::default(), &mut consumed)
                 .expect("Should have parsed an int");
             (res, consumed)
         };

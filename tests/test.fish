@@ -5,7 +5,7 @@
 # setup.
 
 # Set this var to modify behavior of the code being tests. Such as avoiding running
-# `fish_update_completions` when running tests.
+# `ghoti_update_completions` when running tests.
 set -x FISH_UNIT_TESTS_RUNNING 1
 
 # Change to directory containing this script
@@ -14,9 +14,9 @@ cd (status dirname)
 # Test files specified on commandline, or all checks.
 set -l files_to_test
 if set -q argv[1]
-    set files_to_test checks/$argv.fish
+    set files_to_test checks/$argv.ghoti
 else
-    set files_to_test checks/*.fish
+    set files_to_test checks/*.ghoti
 end
 
 # Be less verbose when running tests one-by-one
@@ -24,7 +24,7 @@ if test (count $files_to_test) -gt 1
     say -o cyan "Testing high level script functionality"
 end
 
-set -g python (__fish_anypython)
+set -g python (__ghoti_anypython)
 
 # Test littlecheck files.
 set -l skipped 0
@@ -36,8 +36,8 @@ if set -q files_to_test[1]
 
     $python -S ../littlecheck.py \
         --progress $force_color \
-        -s fish=../test/root/bin/fish \
-        -s fish_test_helper=../test/root/bin/fish_test_helper \
+        -s ghoti=../test/root/bin/ghoti \
+        -s ghoti_test_helper=../test/root/bin/ghoti_test_helper \
         $files_to_test
 
     set -l littlecheck_status $status

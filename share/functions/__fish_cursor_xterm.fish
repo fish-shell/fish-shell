@@ -1,4 +1,4 @@
-function __fish_cursor_xterm -d 'Set cursor (xterm)'
+function __ghoti_cursor_xterm -d 'Set cursor (xterm)'
     set -l shape $argv[1]
 
     switch "$shape"

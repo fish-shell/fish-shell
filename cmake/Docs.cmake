@@ -12,11 +12,11 @@ set(SPHINX_BUILD_DIR "${SPHINX_ROOT_DIR}/build")
 set(SPHINX_HTML_DIR "${SPHINX_ROOT_DIR}/html")
 set(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 
-# sphinx-docs uses fish_indent for highlighting.
-# Prepend the output dir of fish_indent to PATH.
+# sphinx-docs uses ghoti_indent for highlighting.
+# Prepend the output dir of ghoti_indent to PATH.
 add_custom_target(sphinx-docs
     mkdir -p ${SPHINX_HTML_DIR}/_static/
-    COMMAND env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
+    COMMAND env PATH="$<TARGET_FILE_DIR:ghoti_indent>:$$PATH"
         ${SPHINX_EXECUTABLE}
         -j auto
         -q -b html
@@ -24,12 +24,12 @@ add_custom_target(sphinx-docs
         -d "${SPHINX_ROOT_DIR}/.doctrees-html"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
-    DEPENDS ${SPHINX_SRC_DIR}/fish_indent_lexer.py fish_indent
+    DEPENDS ${SPHINX_SRC_DIR}/ghoti_indent_lexer.py ghoti_indent
     COMMENT "Building HTML documentation with Sphinx")
 
-# sphinx-manpages needs the fish_indent binary for the version number
+# sphinx-manpages needs the ghoti_indent binary for the version number
 add_custom_target(sphinx-manpages
-    env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
+    env PATH="$<TARGET_FILE_DIR:ghoti_indent>:$$PATH"
         ${SPHINX_EXECUTABLE}
         -j auto
         -q -b man
@@ -38,7 +38,7 @@ add_custom_target(sphinx-manpages
         "${SPHINX_SRC_DIR}"
         # TODO: This only works if we only have section 1 manpages.
         "${SPHINX_MANPAGE_DIR}/man1"
-    DEPENDS fish_indent
+    DEPENDS ghoti_indent
     COMMENT "Building man pages with Sphinx")
 
 if(SPHINX_EXECUTABLE)

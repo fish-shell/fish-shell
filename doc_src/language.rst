@@ -1,10 +1,10 @@
 
 .. _language:
 
-The fish language
+The ghoti language
 =================
 
-This document is a comprehensive overview of fish's scripting language.
+This document is a comprehensive overview of ghoti's scripting language.
 
 For interactive features see :ref:`Interactive use <interactive>`.
 
@@ -13,15 +13,15 @@ For interactive features see :ref:`Interactive use <interactive>`.
 Syntax overview
 ---------------
 
-Shells like fish are used by giving them commands. A command is executed by writing the name of the command followed by any arguments. For example::
+Shells like ghoti are used by giving them commands. A command is executed by writing the name of the command followed by any arguments. For example::
 
     echo hello world
 
 :doc:`echo <cmds/echo>` command writes its arguments to the screen. In this example the output is ``hello world``.
 
-Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
+Everything in ghoti is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
 
-Every program on your computer can be used as a command in fish. If the program file is located in one of the :envvar:`PATH` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
+Every program on your computer can be used as a command in ghoti. If the program file is located in one of the :envvar:`PATH` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
 
 Here is a list of some useful commands:
 
@@ -39,14 +39,14 @@ A switch is a very common special type of argument. Switches almost always start
 
 Switches differ between commands and are usually documented on a command's manual page. There are some switches, however, that are common to most commands. For example, ``--help`` will usually display a help text, ``--version`` will usually display the command version, and ``-i`` will often turn on interactive prompting before taking action. Try ``man your-command-here`` to get information on your command's switches.
 
-So the basic idea of fish is the same as with other unix shells: It gets a commandline, runs :ref:`expansions <expand>`, and the result is then run as a command.
+So the basic idea of ghoti is the same as with other unix shells: It gets a commandline, runs :ref:`expansions <expand>`, and the result is then run as a command.
 
 .. _terminology:
 
 Terminology
 -----------
 
-Here we define some of the terms used on this page and throughout the rest of the fish documentation:
+Here we define some of the terms used on this page and throughout the rest of the ghoti documentation:
 
 - **Argument**: A parameter given to a command. In ``echo foo``, the "foo" is an argument.
 
@@ -69,7 +69,7 @@ Here we define some of the terms used on this page and throughout the rest of th
 Quotes
 ------
 
-Sometimes you want to give a command an argument that contains characters special to fish, like spaces or ``$`` or ``*``. To do that, you can use quotes::
+Sometimes you want to give a command an argument that contains characters special to ghoti, like spaces or ``$`` or ``*``. To do that, you can use quotes::
 
     rm "my file.txt"
 
@@ -77,7 +77,7 @@ to remove a file called ``my file.txt`` instead of trying to remove two files, `
 
 Fish understands two kinds of quotes: Single (``'``) and double (``"``), and both work slightly differently.
 
-Between single quotes, fish performs no expansions. Between double quotes, fish only performs :ref:`variable expansion <expand-variable>` and :ref:`command substitution <expand-command-substitution>` in the ``$(command)``. No other kind of expansion (including :ref:`brace expansion <expand-brace>` or parameter expansion) is performed, and escape sequences (for example, ``\n``) are ignored. Within quotes, whitespace is not used to separate arguments, allowing quoted arguments to contain spaces.
+Between single quotes, ghoti performs no expansions. Between double quotes, ghoti only performs :ref:`variable expansion <expand-variable>` and :ref:`command substitution <expand-command-substitution>` in the ``$(command)``. No other kind of expansion (including :ref:`brace expansion <expand-brace>` or parameter expansion) is performed, and escape sequences (for example, ``\n``) are ignored. Within quotes, whitespace is not used to separate arguments, allowing quoted arguments to contain spaces.
 
 The only meaningful escape sequences in single quotes are ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only meaningful escapes in double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and ``\\``, which escapes the backslash symbol.
 
@@ -109,7 +109,7 @@ Some characters cannot be written directly on the command line. For these charac
 - ``\r`` represents the carriage return character.
 - ``\t`` represents the tab character.
 - ``\v`` represents the vertical tab character.
-- ``\xHH`` or ``\XHH``, where ``HH`` is a hexadecimal number, represents a byte of data with the specified value. For example, ``\x9`` is the tab character. If you are using a multibyte encoding, this can be used to enter invalid strings. Typically fish is run with the ASCII or UTF-8 encoding, so anything up to ``\X7f`` is an ASCII character.
+- ``\xHH`` or ``\XHH``, where ``HH`` is a hexadecimal number, represents a byte of data with the specified value. For example, ``\x9`` is the tab character. If you are using a multibyte encoding, this can be used to enter invalid strings. Typically ghoti is run with the ASCII or UTF-8 encoding, so anything up to ``\X7f`` is an ASCII character.
 - ``\ooo``, where ``ooo`` is an octal number, represents the ASCII character with the specified value. For example, ``\011`` is the tab character. The highest allowed value is ``\177``.
 - ``\uXXXX``, where ``XXXX`` is a hexadecimal number, represents the 16-bit Unicode character with the specified value. For example, ``\u9`` is the tab character.
 - ``\UXXXXXXXX``, where ``XXXXXXXX`` is a hexadecimal number, represents the 32-bit Unicode character with the specified value. For example, ``\U9`` is the tab character. The highest allowed value is \U10FFFF.
@@ -150,7 +150,7 @@ The special characters and their escape sequences are:
 - ``\"`` escapes the quote character.
 - ``\'`` escapes the apostrophe character.
 
-As a special case, ``\`` immediately followed by a literal new line is a "continuation" and tells fish to ignore the line break and resume input at the start of the next line (without introducing any whitespace or terminating a token).
+As a special case, ``\`` immediately followed by a literal new line is a "continuation" and tells ghoti to ignore the line break and resume input at the start of the next line (without introducing any whitespace or terminating a token).
 
 .. _redirects:
 
@@ -215,7 +215,7 @@ For example::
 
 It is an error to redirect a builtin, function, or block to a file descriptor above 2. However this is supported for external commands.
 
-.. [#] Previous versions of fish also allowed specifying this as ``^DESTINATION``, but that made another character special so it was deprecated and removed. See :ref:`feature flags<featureflags>`.
+.. [#] Previous versions of ghoti also allowed specifying this as ``^DESTINATION``, but that made another character special so it was deprecated and removed. See :ref:`feature flags<featureflags>`.
 
 .. _pipes:
 
@@ -230,9 +230,9 @@ The command ``cat foo.txt`` sends the contents of ``foo.txt`` to stdout. This ou
 
 It is possible to pipe a different output file descriptor by prepending its FD number and the output redirect symbol to the pipe. For example::
 
-    make fish 2>| less
+    make ghoti 2>| less
 
-will attempt to build ``fish``, and any errors will be shown using the ``less`` pager. [#]_
+will attempt to build ``ghoti``, and any errors will be shown using the ``less`` pager. [#]_
 
 As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. This is different from bash, which uses ``|&``.
 
@@ -274,7 +274,7 @@ Now let's see a few cases::
 Job control
 -----------
 
-When you start a job in fish, fish itself will pause, and give control of the terminal to the program just started. Sometimes, you want to continue using the commandline, and have the job run in the background. To create a background job, append an ``&`` (ampersand) to your command. This will tell fish to run the job in the background. Background jobs are very useful when running programs that have a graphical user interface.
+When you start a job in ghoti, ghoti itself will pause, and give control of the terminal to the program just started. Sometimes, you want to continue using the commandline, and have the job run in the background. To create a background job, append an ``&`` (ampersand) to your command. This will tell ghoti to run the job in the background. Background jobs are very useful when running programs that have a graphical user interface.
 
 Example::
 
@@ -283,7 +283,7 @@ Example::
 
 will start the emacs text editor in the background. :doc:`fg <cmds/fg>` can be used to bring it into the foreground again when needed.
 
-Most programs allow you to suspend the program's execution and return control to fish by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the fish commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :doc:`fg <cmds/fg>` (foreground) command.
+Most programs allow you to suspend the program's execution and return control to ghoti by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the ghoti commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :doc:`fg <cmds/fg>` (foreground) command.
 
 If you instead want to put a suspended job into the background, use the :doc:`bg <cmds/bg>` command.
 
@@ -299,7 +299,7 @@ If the ``&`` character is followed by a non-separating character, it is not inte
 Functions
 ---------
 
-Functions are programs written in the fish syntax. They group together various commands and their arguments using a single name.
+Functions are programs written in the ghoti syntax. They group together various commands and their arguments using a single name.
 
 For example, here's a simple function to list directories::
 
@@ -307,27 +307,27 @@ For example, here's a simple function to list directories::
       ls -l $argv
   end
 
-The first line tells fish to define a function by the name of ``ll``, so it can be used by simply writing ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. :ref:`$argv <variables-argv>` is a :ref:`list variable <variables-lists>`, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. The ``end`` on the third line ends the definition.
+The first line tells ghoti to define a function by the name of ``ll``, so it can be used by simply writing ``ll`` on the commandline. The second line tells ghoti that the command ``ls -l $argv`` should be called when ``ll`` is invoked. :ref:`$argv <variables-argv>` is a :ref:`list variable <variables-lists>`, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. The ``end`` on the third line ends the definition.
 
 Calling this as ``ll /tmp/`` will end up running ``ls -l /tmp/``, which will list the contents of /tmp.
 
 This is a kind of function known as an :ref:`alias <syntax-aliases>`.
 
-Fish's prompt is also defined in a function, called :doc:`fish_prompt <cmds/fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
+Fish's prompt is also defined in a function, called :doc:`ghoti_prompt <cmds/ghoti_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
 
-  function fish_prompt
+  function ghoti_prompt
       # A simple prompt. Displays the current directory
-      # (which fish stores in the $PWD variable)
+      # (which ghoti stores in the $PWD variable)
       # and then a user symbol - a '►' for a normal user and a '#' for root.
       set -l user_char '►'
-      if fish_is_root_user
+      if ghoti_is_root_user
           set user_char '#'
       end
 
       echo (set_color yellow)$PWD (set_color purple)$user_char
   end
 
-To edit a function, you can use :doc:`funced <cmds/funced>`, and to save a function :doc:`funcsave <cmds/funcsave>`. This will store it in a function file that fish will :ref:`autoload <syntax-function-autoloading>` when needed.
+To edit a function, you can use :doc:`funced <cmds/funced>`, and to save a function :doc:`funcsave <cmds/funcsave>`. This will store it in a function file that ghoti will :ref:`autoload <syntax-function-autoloading>` when needed.
 
 The :doc:`functions <cmds/functions>` builtin can show a function's current definition (and :doc:`type <cmds/type>` will also do if given a function).
 
@@ -348,9 +348,9 @@ There are a few important things that need to be noted about aliases:
 
 - Always take care to add the :ref:`$argv <variables-argv>` variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
 
-- If the alias has the same name as the aliased command, you need to prefix the call to the program with ``command`` to tell fish that the function should not call itself, but rather a command with the same name. If you forget to do so, the function would call itself until the end of time. Usually fish is smart enough to figure this out and will refrain from doing so (which is hopefully in your interest).
+- If the alias has the same name as the aliased command, you need to prefix the call to the program with ``command`` to tell ghoti that the function should not call itself, but rather a command with the same name. If you forget to do so, the function would call itself until the end of time. Usually ghoti is smart enough to figure this out and will refrain from doing so (which is hopefully in your interest).
 
-To easily create a function of this form, you can use the :doc:`alias <cmds/alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a simple wrapping function like this. :doc:`alias <cmds/alias>` immediately creates a function. Consider using ``alias --save`` or :doc:`funcsave <cmds/funcsave>` to save the created function into an autoload file instead of recreating the alias each time.
+To easily create a function of this form, you can use the :doc:`alias <cmds/alias>` command. Unlike other shells, this just makes functions - ghoti has no separate concept of an "alias", we just use the word for a simple wrapping function like this. :doc:`alias <cmds/alias>` immediately creates a function. Consider using ``alias --save`` or :doc:`funcsave <cmds/funcsave>` to save the created function into an autoload file instead of recreating the alias each time.
 
 For an alternative, try :ref:`abbreviations <abbreviations>`. These are words that are expanded while you type, instead of being actual functions inside the shell.
 
@@ -365,31 +365,31 @@ Functions can be defined on the commandline or in a configuration file, but they
 - If the function definition is changed, all running shells will automatically reload the altered version, after a while.
 - Startup time and memory usage is improved, etc.
 
-When fish needs to load a function, it searches through any directories in the :ref:`list variable <variables-lists>` ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix ``.fish`` and loads the first it finds.
+When ghoti needs to load a function, it searches through any directories in the :ref:`list variable <variables-lists>` ``$ghoti_function_path`` for a file with a name consisting of the name of the function plus the suffix ``.ghoti`` and loads the first it finds.
 
-For example if you try to execute something called ``banana``, fish will go through all directories in $fish_function_path looking for a file called ``banana.fish`` and load the first one it finds.
+For example if you try to execute something called ``banana``, ghoti will go through all directories in $ghoti_function_path looking for a file called ``banana.ghoti`` and load the first one it finds.
 
-By default ``$fish_function_path`` contains the following:
+By default ``$ghoti_function_path`` contains the following:
 
-- A directory for users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
-- A directory for functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
-- Directories for other software to put their own functions. These are in the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``fish/vendor_functions.d``. The default value for ``XDG_DATA_DIRS`` is usually ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
-- The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
+- A directory for users to keep their own functions, usually ``~/.config/ghoti/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
+- A directory for functions for all users on the system, usually ``/etc/ghoti/functions`` (really ``$__ghoti_sysconfdir/functions``).
+- Directories for other software to put their own functions. These are in the directories under ``$__ghoti_user_data_dir`` (usually ``~/.local/share/ghoti``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``ghoti/vendor_functions.d``. The default value for ``XDG_DATA_DIRS`` is usually ``/usr/share/ghoti/vendor_functions.d`` and ``/usr/local/share/ghoti/vendor_functions.d``.
+- The functions shipped with ghoti, usually installed in ``/usr/share/ghoti/functions`` (really ``$__ghoti_data_dir/functions``).
 
-If you are unsure, your functions probably belong in ``~/.config/fish/functions``.
+If you are unsure, your functions probably belong in ``~/.config/ghoti/functions``.
 
 As we've explained, autoload files are loaded *by name*, so, while you can put multiple functions into one file, the file will only be loaded automatically once you try to execute the one that shares the name.
 
-Autoloading also won't work for :ref:`event handlers <event>`, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the :ref:`event handlers <event>` section for more information.
+Autoloading also won't work for :ref:`event handlers <event>`, since ghoti cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the :ref:`event handlers <event>` section for more information.
 
-If a file of the right name doesn't define the function, fish will not read other autoload files, instead it will go on to try builtins and finally commands. This allows masking a function defined later in $fish_function_path, e.g. if your administrator has put something into /etc/fish/functions that you want to skip.
+If a file of the right name doesn't define the function, ghoti will not read other autoload files, instead it will go on to try builtins and finally commands. This allows masking a function defined later in $ghoti_function_path, e.g. if your administrator has put something into /etc/ghoti/functions that you want to skip.
 
-If you are developing another program and want to install fish functions for it, install them to the "vendor" functions directory. As this path varies from system to system, you can use ``pkgconfig`` to discover it with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
+If you are developing another program and want to install ghoti functions for it, install them to the "vendor" functions directory. As this path varies from system to system, you can use ``pkgconfig`` to discover it with the output of ``pkg-config --variable functionsdir ghoti``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
 Comments
 --------
 
-Anything after a ``#`` until the end of the line is a comment. That means it's purely for the reader's benefit, fish ignores it.
+Anything after a ``#`` until the end of the line is a comment. That means it's purely for the reader's benefit, ghoti ignores it.
 
 This is useful to explain what and why you are doing something::
 
@@ -449,15 +449,15 @@ Unlike other shells, the condition command just ends after the first job, there 
 
 The :doc:`not <cmds/not>` keyword can be used to invert the status::
 
-  # Just see if the file contains the string "fish" anywhere.
+  # Just see if the file contains the string "ghoti" anywhere.
   # This executes the `grep` command, which searches for a string,
   # and if it finds it returns a status of 0.
   # The `not` then turns 0 into 1 or anything else into 0.
   # The `-q` switch stops it from printing any matches.
-  if not grep -q fish myanimals
-      echo "You don't have fish!"
+  if not grep -q ghoti myanimals
+      echo "You don't have ghoti!"
   else
-      echo "You have fish!"
+      echo "You have ghoti!"
   end
 
 The ``switch`` statement
@@ -518,7 +518,7 @@ Combiners really just execute step-by-step, so it isn't recommended to build lon
   or echo "OH NO WE NEED A CONFIG FILE"
   and return 1
 
-This will execute ``return 1`` also if the ``test`` succeeded. This is because fish runs ``test -e /etc/my.config``, sets $status to 0, then skips the ``echo``, keeps $status at 0, and then executes the ``return 1`` because $status is still 0.
+This will execute ``return 1`` also if the ``test`` succeeded. This is because ghoti runs ``test -e /etc/my.config``, sets $status to 0, then skips the ``echo``, keeps $status at 0, and then executes the ``return 1`` because $status is still 0.
 
 So if you have more complex conditions or want to run multiple things after something failed, consider using an :ref:`if <syntax-if>`. Here that would be::
 
@@ -532,7 +532,7 @@ So if you have more complex conditions or want to run multiple things after some
 Loops and blocks
 ----------------
 
-Like most programming language, fish also has the familiar :doc:`while <cmds/while>` and :doc:`for <cmds/for>` loops.
+Like most programming language, ghoti also has the familiar :doc:`while <cmds/while>` and :doc:`for <cmds/for>` loops.
 
 ``while`` works like a repeated :doc:`if <cmds/if>`::
 
@@ -552,7 +552,7 @@ will print "Still running" once a second. You can abort it with ctrl-c.
 will print each file in the current directory. The part after the ``in`` is just a list of arguments, so you can use any :ref:`expansions <expand>` there::
 
   set moreanimals bird fox
-  for animal in {cat,}fish dog $moreanimals
+  for animal in {cat,}ghoti dog $moreanimals
      echo I like the $animal
   end
 
@@ -581,7 +581,7 @@ In addition there's a :doc:`begin <cmds/begin>` block that just groups commands 
 Parameter expansion
 -------------------
 
-When fish is given a commandline, it expands the parameters before sending them to the command. There are multiple different kinds of expansions:
+When ghoti is given a commandline, it expands the parameters before sending them to the command. There are multiple different kinds of expansions:
 
 - :ref:`Wildcards <expand-wildcard>`, to create filenames from patterns - ``*.jpg``
 - :ref:`Variable expansion <expand-variable>`, to use the value of a variable - ``$HOME``
@@ -596,7 +596,7 @@ Parameter expansion is limited to 524288 items. There is a limit to how many arg
 Wildcards ("Globbing")
 ^^^^^^^^^^^^^^^^^^^^^^
 
-When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk") or a ``?`` question mark, fish uses it as a wildcard to match files.
+When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk") or a ``?`` question mark, ghoti uses it as a wildcard to match files.
 
 - ``*`` matches any number of characters (including zero) in a file name, not including ``/``.
 
@@ -629,7 +629,7 @@ Examples::
         ls $foos
     end
 
-Unlike bash (by default), fish will not pass on the literal glob character if no match was found, so for a command like ``apt install`` that does the matching itself, you need to add quotes::
+Unlike bash (by default), ghoti will not pass on the literal glob character if no match was found, so for a command like ``apt install`` that does the matching itself, you need to add quotes::
 
     apt install "ncurses-*"
 
@@ -638,7 +638,7 @@ Unlike bash (by default), fish will not pass on the literal glob character if no
 Variable expansion
 ^^^^^^^^^^^^^^^^^^
 
-One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable.
+One of the most important expansions in ghoti is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable.
 
 In the simplest case, this is just something like::
 
@@ -646,7 +646,7 @@ In the simplest case, this is just something like::
 
 which will replace ``$HOME`` with the home directory of the current user, and pass it to :doc:`echo <cmds/echo>`, which will then print it.
 
-Some variables like ``$HOME`` are already set because fish sets them by default or because fish's parent process passed them to fish when it started it. You can define your own variables by setting them with :doc:`set <cmds/set>`::
+Some variables like ``$HOME`` are already set because ghoti sets them by default or because ghoti's parent process passed them to ghoti when it started it. You can define your own variables by setting them with :doc:`set <cmds/set>`::
 
     set my_directory /home/cooluser/mystuff
     ls $my_directory
@@ -667,7 +667,7 @@ To separate a variable name from text you can encase the variable within double-
     echo The plural of $WORD is {$WORD}s
     # ditto
 
-Without the quotes or braces, fish will try to expand a variable called ``$WORDs``, which may not exist.
+Without the quotes or braces, ghoti will try to expand a variable called ``$WORDs``, which may not exist.
 
 The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand-brace>`.
 
@@ -685,7 +685,7 @@ Outside of double quotes, variables will expand to as many arguments as they hav
 
 If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`cartesian product <cartesian-product>` section for more information.
 
-Unlike other shells, fish doesn't do what is known as "Word Splitting". Once a variable is set to a particular set of elements, those elements expand as themselves. They aren't split on spaces or newlines or anything::
+Unlike other shells, ghoti doesn't do what is known as "Word Splitting". Once a variable is set to a particular set of elements, those elements expand as themselves. They aren't split on spaces or newlines or anything::
 
   > set foo one\nthing
   > echo $foo
@@ -758,7 +758,7 @@ A ``command substitution`` is an expansion that uses the *output* of a command a
 
 This executes the :doc:`pwd <cmds/pwd>` command, takes its output (more specifically what it wrote to the standard output "stdout" stream) and uses it as arguments to :doc:`echo <cmds/echo>`. So the inner command (the ``pwd``) is run first and has to complete before the outer command can even be started.
 
-If the inner command prints multiple lines, fish will use each separate line as a separate argument to the outer command. Unlike other shells, the value of ``$IFS`` is not used [#]_, fish splits on newlines.
+If the inner command prints multiple lines, ghoti will use each separate line as a separate argument to the outer command. Unlike other shells, the value of ``$IFS`` is not used [#]_, ghoti splits on newlines.
 
 A command substitution can also be spelled with a dollar sign like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines, but trailing empty lines are still removed.
 
@@ -786,16 +786,16 @@ Examples::
 
 Sometimes you want to pass the output of a command to another command that only accepts files. If it's just one file, you can usually just pass it via a pipe, like::
 
-    grep fish myanimallist1 | wc -l
+    grep ghoti myanimallist1 | wc -l
 
-but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells allow this via ``foo <(bar) <(baz)``, and fish uses the :doc:`psub <cmds/psub>` command::
+but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells allow this via ``foo <(bar) <(baz)``, and ghoti uses the :doc:`psub <cmds/psub>` command::
 
-    # Compare just the lines containing "fish" in two files:
-    diff -u (grep fish myanimallist1 | psub) (grep fish myanimallist2 | psub)
+    # Compare just the lines containing "ghoti" in two files:
+    diff -u (grep ghoti myanimallist1 | psub) (grep ghoti myanimallist2 | psub)
 
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
 
-Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
+Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``ghoti_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
 
 .. [#] One exception: Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :doc:`string split <cmds/string-split>` instead.
 
@@ -913,7 +913,7 @@ Because :envvar:`PATH` is a list, this expands to all the files in all the direc
 Slices
 ^^^^^^
 
-Sometimes it's necessary to access only some of the elements of a :ref:`list <variables-lists>` (all fish variables are lists), or some of the lines a :ref:`command substitution <expand-command-substitution>` outputs. Both are possible in fish by writing a set of indices in brackets, like::
+Sometimes it's necessary to access only some of the elements of a :ref:`list <variables-lists>` (all ghoti variables are lists), or some of the lines a :ref:`command substitution <expand-command-substitution>` outputs. Both are possible in ghoti by writing a set of indices in brackets, like::
 
   # Make $var a list of four elements
   set var one two three four
@@ -924,7 +924,7 @@ Sometimes it's necessary to access only some of the elements of a :ref:`list <va
   echo $var[1..3]
   # prints "one two three"
 
-In index brackets, fish understands ranges written like ``a..b`` ('a' and 'b' being indices). They are expanded into a sequence of indices from a to b (so ``a a+1 a+2 ... b``), going up if b is larger and going down if a is larger. Negative indices can also be used - they are taken from the end of the list, so ``-1`` is the last element, and ``-2`` the one before it. If an index doesn't exist the range is clamped to the next possible index.
+In index brackets, ghoti understands ranges written like ``a..b`` ('a' and 'b' being indices). They are expanded into a sequence of indices from a to b (so ``a a+1 a+2 ... b``), going up if b is larger and going down if a is larger. Negative indices can also be used - they are taken from the end of the list, so ``-1`` is the last element, and ``-2`` the one before it. If an index doesn't exist the range is clamped to the next possible index.
 
 If a list has 5 elements the indices go from 1 to 5, so a range of ``2..16`` will only go from element 2 to element 5.
 
@@ -1059,10 +1059,10 @@ So you set a variable with ``set``, and use it with a ``$`` and the name.
 Variable Scope
 ^^^^^^^^^^^^^^
 
-There are four kinds of variables in fish: universal, global, function and local variables.
+There are four kinds of variables in ghoti: universal, global, function and local variables.
 
-- Universal variables are shared between all fish sessions a user is running on one computer. They are stored on disk and persist even after reboot.
-- Global variables are specific to the current fish session. They can be erased by explicitly requesting ``set -e``.
+- Universal variables are shared between all ghoti sessions a user is running on one computer. They are stored on disk and persist even after reboot.
+- Global variables are specific to the current ghoti session. They can be erased by explicitly requesting ``set -e``.
 - Function variables are specific to the currently executing function. They are erased ("go out of scope") when the current function ends. Outside of a function, they don't go out of scope.
 - Local variables are specific to the current block of commands, and automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``. Outside of a block, this is the same as the function scope.
 
@@ -1099,16 +1099,16 @@ Typically inside functions you should use local scope::
         end
     end
 
-If you want to set something in config.fish, or set something in a function and have it available for the rest of the session, global scope is a good choice::
+If you want to set something in config.ghoti, or set something in a function and have it available for the rest of the session, global scope is a good choice::
 
     # Don't shorten the working directory in the prompt
-    set -g fish_prompt_pwd_dir_length 0
+    set -g ghoti_prompt_pwd_dir_length 0
 
     # Set my preferred cursor style:
     function setcursors
-       set -g fish_cursor_default block
-       set -g fish_cursor_insert line
-       set -g fish_cursor_visual underscore
+       set -g ghoti_cursor_default block
+       set -g ghoti_cursor_insert line
+       set -g ghoti_cursor_visual underscore
     end
 
     # Set my language
@@ -1116,8 +1116,8 @@ If you want to set something in config.fish, or set something in a function and 
 
 If you want to set some personal customization, universal variables are nice::
 
-     # Typically you'd run this interactively, fish takes care of keeping it.
-     set -U fish_color_autosuggestion 555
+     # Typically you'd run this interactively, ghoti takes care of keeping it.
+     set -U ghoti_color_autosuggestion 555
 
 Here is an example of local vs function-scoped variables::
 
@@ -1170,7 +1170,7 @@ If you want to override a variable for a single command, you can use "var=val" s
   # (can also be done via `git -C somerepo status`)
   GIT_DIR=somerepo git status
 
-Unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
+Unlike other shells, ghoti will first set the variable and then perform other expansions on the line, so::
 
   set foo banana
   foo=gagaga echo $foo
@@ -1189,29 +1189,29 @@ Or with a :ref:`glob <expand-wildcard>`::
 
 Unlike other shells, this does *not* inhibit any lookup (aliases or similar). Calling a command after setting a variable override will result in the exact same command being run.
 
-This syntax is supported since fish 3.1.
+This syntax is supported since ghoti 3.1.
 
 .. _variables-universal:
 
 Universal Variables
 ^^^^^^^^^^^^^^^^^^^
 
-Universal variables are variables that are shared between all the user's fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
+Universal variables are variables that are shared between all the user's ghoti sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change ghoti settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
 
-To see universal variables in action, start two fish sessions side by side, and issue the following command in one of them ``set fish_color_cwd blue``. Since ``fish_color_cwd`` is a universal variable, the color of the current working directory listing in the prompt will instantly change to blue on both terminals.
+To see universal variables in action, start two ghoti sessions side by side, and issue the following command in one of them ``set ghoti_color_cwd blue``. Since ``ghoti_color_cwd`` is a universal variable, the color of the current working directory listing in the prompt will instantly change to blue on both terminals.
 
-:ref:`Universal variables <variables-universal>` are stored in the file ``.config/fish/fish_variables``. Do not edit this file directly, as your edits may be overwritten. Edit the variables through fish scripts or by using fish interactively instead.
+:ref:`Universal variables <variables-universal>` are stored in the file ``.config/ghoti/ghoti_variables``. Do not edit this file directly, as your edits may be overwritten. Edit the variables through ghoti scripts or by using ghoti interactively instead.
 
-Do not append to universal variables in :ref:`config.fish <configuration>`, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
+Do not append to universal variables in :ref:`config.ghoti <configuration>`, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
 
 .. _variables-export:
 
 Exporting variables
 ^^^^^^^^^^^^^^^^^^^
 
-Variables in fish can be exported, so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like ``PAGER`` or ``GOPATH``, but also for variables that contain general system settings like ``PATH`` or ``LANGUAGE``. If an external command needs to know a variable, it needs to be exported. Exported variables are also often called "environment variables".
+Variables in ghoti can be exported, so they will be inherited by any commands started by ghoti. In particular, this is necessary for variables used to configure external commands like ``PAGER`` or ``GOPATH``, but also for variables that contain general system settings like ``PATH`` or ``LANGUAGE``. If an external command needs to know a variable, it needs to be exported. Exported variables are also often called "environment variables".
 
-This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :envvar:`PATH` and :ref:`locale variables <variables-locale>`.
+This also applies to ghoti - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :envvar:`PATH` and :ref:`locale variables <variables-locale>`.
 
 Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are similar to the scoping rules for variables - when an option is passed it is respected, otherwise the variable's existing state is used. If no option is passed and the variable didn't exist yet it is not exported.
 
@@ -1245,7 +1245,7 @@ To access one element of a list, use the index of the element inside of square b
 
    echo $PATH[3]
 
-List indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
+List indices start at 1 in ghoti, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
 
 If you don't use any brackets, all the elements of the list will be passed to the command as separate items. This means you can iterate over a list with ``for``::
 
@@ -1322,7 +1322,7 @@ A nice thing about lists is that they are passed to commands one element as one 
   set -l grep_args -r "my string"
   grep $grep_args . # will run the same as `grep -r "my string"` .
 
-Unlike other shells, fish does not do "word splitting" - elements in a list stay as they are, even if they contain spaces or tabs.
+Unlike other shells, ghoti does not do "word splitting" - elements in a list stay as they are, even if they contain spaces or tabs.
 
 .. _variables-argv:
 
@@ -1422,7 +1422,7 @@ Variables can be marked or unmarked as PATH variables via the ``--path`` and ``-
 Special variables
 ^^^^^^^^^^^^^^^^^
 
-You can change the settings of fish by changing the values of certain variables.
+You can change the settings of ghoti by changing the values of certain variables.
 
 .. envvar:: PATH
 
@@ -1438,80 +1438,80 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. describe:: Color variables
 
-   A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See :ref:`Variables for changing highlighting colors <variables-color>` for more information.
+   A number of variable starting with the prefixes ``ghoti_color`` and ``ghoti_pager_color``. See :ref:`Variables for changing highlighting colors <variables-color>` for more information.
 
-.. envvar:: fish_term24bit
+.. envvar:: ghoti_term24bit
 
-   If this is set to 1, fish will assume the terminal understands 24-bit RGB color sequences, and won't translate them to the 256 or 16 color palette.
+   If this is set to 1, ghoti will assume the terminal understands 24-bit RGB color sequences, and won't translate them to the 256 or 16 color palette.
    This is often detected automatically.
 
-.. envvar:: fish_term256
+.. envvar:: ghoti_term256
 
-   If this is set to 1, fish will assume the terminal understands 256 colors, and won't translate matching colors down to the 16 color palette.
+   If this is set to 1, ghoti will assume the terminal understands 256 colors, and won't translate matching colors down to the 16 color palette.
    This is usually autodetected.
 
-.. envvar:: fish_ambiguous_width
+.. envvar:: ghoti_ambiguous_width
 
    controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal renders these characters as single-width (typical), or 2 if double-width.
 
-.. envvar:: fish_emoji_width
+.. envvar:: ghoti_emoji_width
 
-   controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
+   controls whether ghoti assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
 
-.. envvar:: fish_autosuggestion_enabled
+.. envvar:: ghoti_autosuggestion_enabled
 
    controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.
 
-.. envvar:: fish_handle_reflow
+.. envvar:: ghoti_handle_reflow
 
-   determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
+   determines whether ghoti should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
 
-.. envvar:: fish_key_bindings
+.. envvar:: ghoti_key_bindings
 
    the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.
 
-.. envvar:: fish_escape_delay_ms
+.. envvar:: ghoti_escape_delay_ms
 
-   sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
+   sets how long ghoti waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
 
-.. envvar:: fish_complete_path
+.. envvar:: ghoti_complete_path
 
-   determines where fish looks for completion. When trying to complete for a command, fish looks for files in the directories in this variable.
+   determines where ghoti looks for completion. When trying to complete for a command, ghoti looks for files in the directories in this variable.
 
-.. envvar:: fish_cursor_selection_mode
+.. envvar:: ghoti_cursor_selection_mode
 
     controls whether the selection is inclusive or exclusive of the character under the cursor (see :ref:`Copy and Paste <killring>`).
 
-.. envvar:: fish_function_path
+.. envvar:: ghoti_function_path
 
-   determines where fish looks for functions. When fish :ref:`autoloads <syntax-function-autoloading>` a function, it will look for files in these directories.
+   determines where ghoti looks for functions. When ghoti :ref:`autoloads <syntax-function-autoloading>` a function, it will look for files in these directories.
 
-.. envvar:: fish_greeting
+.. envvar:: ghoti_greeting
 
    the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :doc:`funced <cmds/funced>`)
 
-.. envvar:: fish_history
+.. envvar:: ghoti_history
 
    the current history session name. If set, all subsequent commands within an
-   interactive fish session will be logged to a separate file identified by the value of the
-   variable. If unset, the default session name "fish" is used. If set to an
+   interactive ghoti session will be logged to a separate file identified by the value of the
+   variable. If unset, the default session name "ghoti" is used. If set to an
    empty string, history is not saved to disk (but is still available within the interactive
    session).
 
-.. envvar:: fish_trace
+.. envvar:: ghoti_trace
 
-   if set and not empty, will cause fish to print commands before they execute, similar to ``set -x``
-   in bash. The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
+   if set and not empty, will cause ghoti to print commands before they execute, similar to ``set -x``
+   in bash. The trace is printed to the path given by the `--debug-output` option to ghoti or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
 
 .. envvar:: FISH_DEBUG
 
-   Controls which debug categories :command:`fish` enables for output, analogous to the ``--debug`` option.
+   Controls which debug categories :command:`ghoti` enables for output, analogous to the ``--debug`` option.
 
 .. envvar:: FISH_DEBUG_OUTPUT
 
    Specifies a file to direct debug output to.
 
-.. envvar:: fish_user_paths
+.. envvar:: ghoti_user_paths
 
    a list of directories that are prepended to :envvar:`PATH`. This can be a universal variable.
 
@@ -1521,7 +1521,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: BROWSER
 
-   your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
+   your preferred web browser. If this variable is set, ghoti will use the specified browser instead of the system default browser to display the ghoti documentation.
 
 Fish also provides additional information through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
 
@@ -1531,7 +1531,7 @@ Fish also provides additional information through the values of certain environm
 
 .. envvar:: argv
 
-   a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed.
+   a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if ghoti was invoked with a list of arguments, like ``ghoti myscript.ghoti foo bar``. This variable can be changed.
 
 .. envvar:: CMD_DURATION
 
@@ -1539,21 +1539,21 @@ Fish also provides additional information through the values of certain environm
 
 .. describe:: COLUMNS and LINES
 
-   the current size of the terminal in height and width. These values are only used by fish if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
+   the current size of the terminal in height and width. These values are only used by ghoti if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
 
-.. envvar:: fish_kill_signal
+.. envvar:: ghoti_kill_signal
 
    the signal that terminated the last foreground job, or 0 if the job exited normally.
 
-.. envvar:: fish_killring
+.. envvar:: ghoti_killring
 
-   a list of entries in fish's :ref:`kill ring <killring>` of cut text.
+   a list of entries in ghoti's :ref:`kill ring <killring>` of cut text.
 
-.. envvar:: fish_read_limit
+.. envvar:: ghoti_read_limit
 
-   how many bytes fish will process with :doc:`read <cmds/read>` or in a :ref:`command substitution <expand-command-substitution>`.
+   how many bytes ghoti will process with :doc:`read <cmds/read>` or in a :ref:`command substitution <expand-command-substitution>`.
 
-.. envvar:: fish_pid
+.. envvar:: ghoti_pid
 
    the process ID (PID) of the shell.
 
@@ -1599,7 +1599,7 @@ Fish also provides additional information through the values of certain environm
 
 .. ENVVAR:: TERM
 
-   the type of the current terminal. When fish tries to determine how the terminal works - how many colors it supports, what sequences it sends for keys and other things - it looks at this variable and the corresponding information in the terminfo database (see ``man terminfo``).
+   the type of the current terminal. When ghoti tries to determine how the terminal works - how many colors it supports, what sequences it sends for keys and other things - it looks at this variable and the corresponding information in the terminfo database (see ``man terminfo``).
 
    Note: Typically this should not be changed as the terminal sets it to the correct value.
 
@@ -1609,15 +1609,15 @@ Fish also provides additional information through the values of certain environm
 
 .. ENVVAR:: EUID
 
-   the current effective user id, set by fish at startup. This variable can be changed.
+   the current effective user id, set by ghoti at startup. This variable can be changed.
 
 .. envvar:: version
 
-   the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
+   the version of the currently running ghoti (also available as ``FISH_VERSION`` for backward compatibility).
 
-As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables.
+As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by ghoti, but it is good coding practice to use casing to distinguish between exported and unexported variables.
 
-Fish also uses some variables internally, their name usually starting with ``__fish``. These are internal and should not typically be modified directly.
+Fish also uses some variables internally, their name usually starting with ``__ghoti``. These are internal and should not typically be modified directly.
 
 .. _variables-status:
 
@@ -1628,7 +1628,7 @@ Whenever a process exits, an exit status is returned to the program that started
 
 Fish stores the exit status of the last process in the last job to exit in the ``status`` variable.
 
-If fish encounters a problem while executing a command, the status variable may also be set to a specific value:
+If ghoti encounters a problem while executing a command, the status variable may also be set to a specific value:
 
 - 0 is generally the exit status of commands if they successfully performed the requested operation.
 
@@ -1654,7 +1654,7 @@ There is also ``$pipestatus``, which is a list of all ``status`` values of proce
 
 For example::
 
-  not cat file | grep -q fish
+  not cat file | grep -q ghoti
   echo status is: $status pipestatus is $pipestatus
 
 Here ``$status`` reflects the status of ``grep``, which returns 0 if it found something, negated with ``not`` (so 1 if it found something, 0 otherwise). ``$pipestatus`` reflects the status of ``cat`` (which returns non-zero for example when it couldn't find the file) and ``grep``, without the negation.
@@ -1674,9 +1674,9 @@ This will tell ``cat`` to print two files, "file1" and "file2", one after the ot
   > echo $pipestatus
   141 0
 
-Here, the "141" signifies that ``cat`` was killed by signal number 13 (128 + 13 == 141) - a ``SIGPIPE``. You can also use :envvar:`fish_kill_signal` to see the signal number. This happens because it was still working, and then ``head`` closed the pipe, so ``cat`` received a signal that it didn't ignore and so it died.
+Here, the "141" signifies that ``cat`` was killed by signal number 13 (128 + 13 == 141) - a ``SIGPIPE``. You can also use :envvar:`ghoti_kill_signal` to see the signal number. This happens because it was still working, and then ``head`` closed the pipe, so ``cat`` received a signal that it didn't ignore and so it died.
 
-Whether ``cat`` here will see a SIGPIPE depends on how long the file is and how much it writes at once, so you might see a pipestatus of "0 0", depending on the implementation. This is a general unix issue and not specific to fish. Some shells feature a "pipefail" feature that will call a pipeline failed if one of the processes in it failed, and this is a big problem with it.
+Whether ``cat`` here will see a SIGPIPE depends on how long the file is and how much it writes at once, so you might see a pipestatus of "0 0", depending on the implementation. This is a general unix issue and not specific to ghoti. Some shells feature a "pipefail" feature that will call a pipeline failed if one of the processes in it failed, and this is a big problem with it.
 
 .. _variables-locale:
 
@@ -1746,25 +1746,25 @@ Fish includes a number of commands in the shell directly. We call these "builtin
 
 For a list of all builtins, use ``builtin -n``.
 
-For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
+For a list of all builtins, functions and commands shipped with ghoti, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
 
 .. _command-lookup:
 
 Command lookup
 --------------
 
-When fish is told to run something, it goes through multiple steps to find it.
+When ghoti is told to run something, it goes through multiple steps to find it.
 
-If it contains a ``/``, fish tries to execute the given file, from the current directory on.
+If it contains a ``/``, ghoti tries to execute the given file, from the current directory on.
 
-If it doesn't contain a ``/``, it could be a function, builtin, or external command, and so fish goes through the full lookup.
+If it doesn't contain a ``/``, it could be a function, builtin, or external command, and so ghoti goes through the full lookup.
 
 In order:
 
 1. It tries to resolve it as a :ref:`function <syntax-function>`.
 
    - If the function is already known, it uses that
-   - If there is a file of the name with a ".fish" suffix in :envvar:`fish_function_path`, it :ref:`loads that <syntax-function-autoloading>`. (If there is more than one file only the first is used)
+   - If there is a file of the name with a ".ghoti" suffix in :envvar:`ghoti_function_path`, it :ref:`loads that <syntax-function-autoloading>`. (If there is more than one file only the first is used)
    - If the function is now defined it uses that
 
 2. It tries to resolve it as a :ref:`builtin <builtin-overview>`.
@@ -1772,11 +1772,11 @@ In order:
 
    - If it finds a file, it tells the kernel to run it.
    - If the kernel knows how to run the file (e.g. via a ``#!`` line - ``#!/bin/sh`` or ``#!/usr/bin/python``), it does it.
-   - If the kernel reports that it couldn't run it because of a missing interpreter, and the file passes a rudimentary check, fish tells ``/bin/sh`` to run it.
+   - If the kernel reports that it couldn't run it because of a missing interpreter, and the file passes a rudimentary check, ghoti tells ``/bin/sh`` to run it.
 
-If none of these work, fish runs the function :doc:`fish_command_not_found <cmds/fish_command_not_found>` and sets :envvar:`status` to 127.
+If none of these work, ghoti runs the function :doc:`ghoti_command_not_found <cmds/ghoti_command_not_found>` and sets :envvar:`status` to 127.
 
-You can use :doc:`type <cmds/type>` to see how fish resolved something::
+You can use :doc:`type <cmds/type>` to see how ghoti resolved something::
 
   > type --short --all echo
   echo is a builtin
@@ -1848,36 +1848,36 @@ Other things have other restrictions. For instance what is allowed for file name
 Configuration files
 -------------------
 
-When fish is started, it reads and runs its configuration files. Where these are depends on build configuration and environment variables.
+When ghoti is started, it reads and runs its configuration files. Where these are depends on build configuration and environment variables.
 
-The main file is ``~/.config/fish/config.fish`` (or more precisely ``$XDG_CONFIG_HOME/fish/config.fish``).
+The main file is ``~/.config/ghoti/config.ghoti`` (or more precisely ``$XDG_CONFIG_HOME/ghoti/config.ghoti``).
 
 Configuration files are run in the following order:
 
-- Configuration snippets (named ``*.fish``) in the directories:
+- Configuration snippets (named ``*.ghoti``) in the directories:
 
-  - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
-  - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d/``)
-  - Directories for others to ship configuration snippets for their software. Fish searches the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_conf.d`` directory; if not defined, the default value of ``XDG_DATA_DIRS`` is ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``, unless your distribution customized this.
+  - ``$__ghoti_config_dir/conf.d`` (by default, ``~/.config/ghoti/conf.d/``)
+  - ``$__ghoti_sysconf_dir/conf.d`` (by default, ``/etc/ghoti/conf.d/``)
+  - Directories for others to ship configuration snippets for their software. Fish searches the directories under ``$__ghoti_user_data_dir`` (usually ``~/.local/share/ghoti``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable for a ``ghoti/vendor_conf.d`` directory; if not defined, the default value of ``XDG_DATA_DIRS`` is ``/usr/share/ghoti/vendor_conf.d`` and ``/usr/local/share/ghoti/vendor_conf.d``, unless your distribution customized this.
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
 
-- System-wide configuration files, where administrators can include initialization for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__fish_sysconf_dir`` (usually ``/etc/fish/config.fish``).
-- User configuration, usually in ``~/.config/fish/config.fish`` (controlled by the ``XDG_CONFIG_HOME`` environment variable, and accessible as ``$__fish_config_dir``).
+- System-wide configuration files, where administrators can include initialization for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__ghoti_sysconf_dir`` (usually ``/etc/ghoti/config.ghoti``).
+- User configuration, usually in ``~/.config/ghoti/config.ghoti`` (controlled by the ``XDG_CONFIG_HOME`` environment variable, and accessible as ``$__ghoti_config_dir``).
 
-``~/.config/fish/config.fish`` is sourced *after* the snippets. This is so you can copy snippets and override some of their behavior.
+``~/.config/ghoti/config.ghoti`` is sourced *after* the snippets. This is so you can copy snippets and override some of their behavior.
 
 These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command ``status --is-interactive`` to determine if the shell is interactive. If you want to run a command only when using a login shell, use ``status --is-login`` instead. This will speed up the starting of non-interactive or non-login shells.
 
-If you are developing another program, you may want to add configuration for all users of fish on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells won't benefit from the fish-specific configuration. However, if they are required, you can install them to the "vendor" configuration directory. As this path may vary from system to system, ``pkg-config`` should be used to discover it: ``pkg-config --variable confdir fish``.
+If you are developing another program, you may want to add configuration for all users of ghoti on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells won't benefit from the ghoti-specific configuration. However, if they are required, you can install them to the "vendor" configuration directory. As this path may vary from system to system, ``pkg-config`` should be used to discover it: ``pkg-config --variable confdir ghoti``.
 
 .. _featureflags:
 
 Future feature flags
 --------------------
 
-Feature flags are how fish stages changes that might break scripts. Breaking changes are introduced as opt-in, in a few releases they become opt-out, and eventually the old behavior is removed.
+Feature flags are how ghoti stages changes that might break scripts. Breaking changes are introduced as opt-in, in a few releases they become opt-out, and eventually the old behavior is removed.
 
 You can see the current list of features via ``status features``::
 
@@ -1889,21 +1889,21 @@ You can see the current list of features via ``status features``::
 
 Here is what they mean:
 
-- ``stderr-nocaret`` was introduced in fish 3.0 (and made the default in 3.3). It makes ``^`` an ordinary character instead of denoting an stderr redirection, to make dealing with quoting and such easier. Use ``2>`` instead. This can no longer be turned off since fish 3.5. The flag can still be tested for compatibility, but a ``no-stderr-nocaret`` value will simply be ignored.
-- ``qmark-noglob`` was also introduced in fish 3.0. It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
+- ``stderr-nocaret`` was introduced in ghoti 3.0 (and made the default in 3.3). It makes ``^`` an ordinary character instead of denoting an stderr redirection, to make dealing with quoting and such easier. Use ``2>`` instead. This can no longer be turned off since ghoti 3.5. The flag can still be tested for compatibility, but a ``no-stderr-nocaret`` value will simply be ignored.
+- ``qmark-noglob`` was also introduced in ghoti 3.0. It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
 - ``regex-easyesc`` was introduced in 3.1. It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` calls if you use this anywhere.
-- ``ampersand-nobg-in-token`` was introduced in fish 3.4. It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
+- ``ampersand-nobg-in-token`` was introduced in ghoti 3.4. It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``ghoti_indent`` will have done it for you already.
 
 
 These changes are introduced off by default. They can be enabled on a per session basis::
 
-    > fish --features qmark-noglob,regex-easyesc
+    > ghoti --features qmark-noglob,regex-easyesc
 
 
 or opted into globally for a user::
 
 
-    > set -U fish_features regex-easyesc qmark-noglob
+    > set -U ghoti_features regex-easyesc qmark-noglob
 
 Features will only be set on startup, so this variable will only take effect if it is universal or exported.
 
@@ -1911,20 +1911,20 @@ You can also use the version as a group, so ``3.0`` is equivalent to "stderr-noc
 
 Prefixing a feature with ``no-`` turns it off instead. E.g. to reenable the ``?`` single-character glob::
 
-  set -Ua fish_features no-qmark-noglob
+  set -Ua ghoti_features no-qmark-noglob
 
 Currently, the following features are enabled by default:
 
-- stderr-nocaret - ``^`` no longer redirects stderr, use ``2>``. Enabled by default in fish 3.3.0. No longer changeable since fish 3.5.0.
-- regex-easyesc - ``string replace -r`` requires fewer backslashes in the replacement part. Enabled by default in fish 3.5.0.
-- ampersand-nobg-in-token - ``&`` in the middle of a word is a normal character instead of backgrounding. Enabled by default in fish 3.5.0.
+- stderr-nocaret - ``^`` no longer redirects stderr, use ``2>``. Enabled by default in ghoti 3.3.0. No longer changeable since ghoti 3.5.0.
+- regex-easyesc - ``string replace -r`` requires fewer backslashes in the replacement part. Enabled by default in ghoti 3.5.0.
+- ampersand-nobg-in-token - ``&`` in the middle of a word is a normal character instead of backgrounding. Enabled by default in ghoti 3.5.0.
 
 .. _event:
 
 Event handlers
 --------------
 
-When defining a new function in fish, it is possible to make it into an event handler, i.e. a function that is automatically run when a specific event takes place. Events that can trigger a handler currently are:
+When defining a new function in ghoti, it is possible to make it into an event handler, i.e. a function that is automatically run when a specific event takes place. Events that can trigger a handler currently are:
 
 - When a signal is delivered
 - When a job exits
@@ -1941,17 +1941,17 @@ To specify a signal handler for the WINCH signal, write::
 
 Fish already the following named events for the ``--on-event`` switch:
 
-- ``fish_prompt`` is emitted whenever a new fish prompt is about to be displayed.
+- ``ghoti_prompt`` is emitted whenever a new ghoti prompt is about to be displayed.
 
-- ``fish_preexec`` is emitted right before executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
+- ``ghoti_preexec`` is emitted right before executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
 
-- ``fish_posterror`` is emitted right after executing a command with syntax errors. The commandline is passed as the first parameter.
+- ``ghoti_posterror`` is emitted right after executing a command with syntax errors. The commandline is passed as the first parameter.
 
-- ``fish_postexec`` is emitted right after executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
+- ``ghoti_postexec`` is emitted right after executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
 
-- ``fish_exit`` is emitted right before fish exits.
+- ``ghoti_exit`` is emitted right before ghoti exits.
 
-- ``fish_cancel`` is emitted when a commandline is cleared.
+- ``ghoti_cancel`` is emitted when a commandline is cleared.
 
 Events can be fired with the :doc:`emit <cmds/emit>` command, and do not have to be defined before. The names just need to match. For example::
 
@@ -1966,7 +1966,7 @@ Events can be fired with the :doc:`emit <cmds/emit>` command, and do not have to
       emit imdone with $argv
   end
 
-If there are multiple handlers for an event, they will all be run, but the order might change between fish releases, so you should not rely on it.
+If there are multiple handlers for an event, they will all be run, but the order might change between ghoti releases, so you should not rely on it.
 
 Please note that event handlers only become active when a function is loaded, which means you need to otherwise :doc:`source <cmds/source>` or execute a function instead of relying on :ref:`autoloading <syntax-function-autoloading>`. One approach is to put it into your :ref:`configuration file <configuration>`.
 
@@ -1975,13 +1975,13 @@ For more information on how to define new event handlers, see the documentation 
 
 .. _debugging:
 
-Debugging fish scripts
+Debugging ghoti scripts
 ----------------------
 
-Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, simply type :doc:`exit <cmds/exit>` or :kbd:`Control`\ +\ :kbd:`D`.
+Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any ghoti command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, simply type :doc:`exit <cmds/exit>` or :kbd:`Control`\ +\ :kbd:`D`.
 
 To start a debug session simply insert the :doc:`builtin command <cmds/breakpoint>` ``breakpoint`` at the point in a function or script where you wish to gain control, then run the function or script. Also, the default action of the ``TRAP`` signal is to call this builtin, meaning a running script can be actively debugged by sending it the ``TRAP`` signal (``kill -s TRAP <PID>``). There is limited support for interactively setting or modifying breakpoints from this debug prompt: it is possible to insert new breakpoints in (or remove old ones from) other functions by using the ``funced`` function to edit the definition of a function, but it is not possible to add or remove a breakpoint from the function/script currently loaded and being executed.
 
-Another way to debug script issues is to set the :envvar:`fish_trace` variable, e.g. ``fish_trace=1 fish_prompt`` to see which commands fish executes when running the :doc:`fish_prompt <cmds/fish_prompt>` function.
+Another way to debug script issues is to set the :envvar:`ghoti_trace` variable, e.g. ``ghoti_trace=1 ghoti_prompt`` to see which commands ghoti executes when running the :doc:`ghoti_prompt <cmds/ghoti_prompt>` function.
 
-If you specifically want to debug performance issues, :program:`fish` can be run with the ``--profile /path/to/profile.log`` option to save a profile to the specified path. This profile log includes a breakdown of how long each step in the execution took. See :doc:`fish <cmds/fish>` for more information.
+If you specifically want to debug performance issues, :program:`ghoti` can be run with the ``--profile /path/to/profile.log`` option to save a profile to the specified path. This profile log includes a breakdown of how long each step in the execution took. See :doc:`ghoti <cmds/ghoti>` for more information.

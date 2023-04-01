@@ -1,19 +1,19 @@
 # name: Disco
 # author: Fabian Homborg
 
-function fish_prompt
+function ghoti_prompt
     set -l last_status $status
 
     set -l normal (set_color normal)
-    set -l usercolor (set_color $fish_color_user)
+    set -l usercolor (set_color $ghoti_color_user)
 
     set -l delim \U25BA
     # If we don't have unicode use a simpler delimiter
     string match -qi "*.utf-8" -- $LANG $LC_CTYPE $LC_ALL; or set delim ">"
 
-    fish_is_root_user; and set delim "#"
+    ghoti_is_root_user; and set delim "#"
 
-    set -l cwd (set_color $fish_color_cwd)
+    set -l cwd (set_color $ghoti_color_cwd)
     if command -sq cksum
         # randomized cwd color
         # We hash the physical PWD and turn that into a color. That means directories (usually) get different colors,
@@ -36,7 +36,7 @@ function fish_prompt
 
     # Prompt status only if it's not 0
     set -l prompt_status
-    test $last_status -ne 0; and set prompt_status (set_color $fish_color_status)"[$last_status]$normal"
+    test $last_status -ne 0; and set prompt_status (set_color $ghoti_color_status)"[$last_status]$normal"
 
     # Only show host if in SSH or container
     # Store this in a global variable because it's slow and unchanging
@@ -47,7 +47,7 @@ function fish_prompt
                 command -sq systemd-detect-virt
                 and systemd-detect-virt -q
             end
-            set prompt_host $usercolor$USER$normal@(set_color $fish_color_host)$hostname$normal":"
+            set prompt_host $usercolor$USER$normal@(set_color $ghoti_color_host)$hostname$normal":"
         end
     end
 
@@ -57,20 +57,20 @@ function fish_prompt
     echo -n -s $prompt_host $cwd $pwd $normal $prompt_status $delim
 end
 
-function fish_right_prompt
-    set -g __fish_git_prompt_showdirtystate 1
-    set -g __fish_git_prompt_showuntrackedfiles 1
-    set -g __fish_git_prompt_showupstream informative
-    set -g __fish_git_prompt_showcolorhints 1
-    set -g __fish_git_prompt_use_informative_chars 1
+function ghoti_right_prompt
+    set -g __ghoti_git_prompt_showdirtystate 1
+    set -g __ghoti_git_prompt_showuntrackedfiles 1
+    set -g __ghoti_git_prompt_showupstream informative
+    set -g __ghoti_git_prompt_showcolorhints 1
+    set -g __ghoti_git_prompt_use_informative_chars 1
     # Unfortunately this only works if we have a sensible locale
     string match -qi "*.utf-8" -- $LANG $LC_CTYPE $LC_ALL
-    and set -g __fish_git_prompt_char_dirtystate \U1F4a9
-    set -g __fish_git_prompt_char_untrackedfiles "?"
+    and set -g __ghoti_git_prompt_char_dirtystate \U1F4a9
+    set -g __ghoti_git_prompt_char_untrackedfiles "?"
 
     # The git prompt's default format is ' (%s)'.
     # We don't want the leading space.
-    set -l vcs (fish_vcs_prompt '(%s)' 2>/dev/null)
+    set -l vcs (ghoti_vcs_prompt '(%s)' 2>/dev/null)
 
     set -l d (set_color brgrey)(date "+%R")(set_color normal)
 

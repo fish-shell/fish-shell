@@ -19,7 +19,7 @@ function isolated-tmux-start
         tmux -S .tmux-socket -f .tmux.conf $argv
     end
 
-    function isolated-tmux-cleanup --on-event fish_exit --inherit-variable tmpdir
+    function isolated-tmux-cleanup --on-event ghoti_exit --inherit-variable tmpdir
         isolated-tmux kill-server
         rm -r $tmpdir
     end
@@ -29,14 +29,14 @@ function isolated-tmux-start
         or sleep 0.3
     end
 
-    set -l fish (status fish-path)
-    isolated-tmux new-session -x 80 -y 10 -d $fish -C '
+    set -l ghoti (status ghoti-path)
+    isolated-tmux new-session -x 80 -y 10 -d $ghoti -C '
         # This is similar to "tests/interactive.config".
-        function fish_greeting; end
-        function fish_prompt; printf "prompt $status_generation> "; end
+        function ghoti_greeting; end
+        function ghoti_prompt; printf "prompt $status_generation> "; end
         # No autosuggestion from older history.
-        set fish_history ""
-    ' $isolated_tmux_fish_extra_args
+        set ghoti_history ""
+    ' $isolated_tmux_ghoti_extra_args
     # Set the correct permissions for the newly created socket to allow future connections.
     # This is required at least under WSL or else each invocation will return a permissions error.
     chmod 777 .tmux-socket

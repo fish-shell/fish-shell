@@ -27,8 +27,8 @@ BUILDFILE=Makefile
 
 PREFIX?=/usr/local
 
-.PHONY: build/fish
-build/fish: build/$(BUILDFILE)
+.PHONY: build/ghoti
+build/ghoti: build/$(BUILDFILE)
 	$(CMAKE) --build build
 
 # Don't split the mkdir into its own rule because that would cause CMake to regenerate the build 
@@ -39,7 +39,7 @@ build/$(BUILDFILE):
 	cd build; $(CMAKE) .. -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
 .PHONY: install
-install: build/fish
+install: build/ghoti
 	$(CMAKE) --build build --target install
 
 .PHONY: clean
@@ -47,9 +47,9 @@ clean:
 	rm -rf build
 
 .PHONY: test
-test: build/fish
+test: build/ghoti
 	$(CMAKE) --build build --target test
 
 .PHONY: run
-run: build/fish
-	build/fish
+run: build/ghoti
+	build/ghoti

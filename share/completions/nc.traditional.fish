@@ -1,1 +1,1 @@
-__fish_complete_netcat nc.traditional
+__ghoti_complete_netcat nc.traditional

@@ -1,5 +1,5 @@
 //
-// The main loop of the fish program.
+// The main loop of the ghoti program.
 /*
 Copyright (C) 2005-2008 Axel Liljencrantz
 
@@ -46,7 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
 #include "ffi_init.rs.h"
-#include "fish_version.h"
+#include "ghoti_version.h"
 #include "flog.h"
 #include "function.h"
 #include "future_feature_flags.h"
@@ -66,7 +66,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "wutil.h"  // IWYU pragma: keep
 
 // container to hold the options specified within the command line
-class fish_cmd_opts_t {
+class ghoti_cmd_opts_t {
    public:
     // Future feature flags values string
     wcstring features;
@@ -167,15 +167,15 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
 
         if (!done) {
             // The next check is that we are in a reloctable directory tree
-            const char *installed_suffix = "/bin/fish";
-            const char *just_a_fish = "/fish";
+            const char *installed_suffix = "/bin/ghoti";
+            const char *just_a_ghoti = "/ghoti";
             const char *suffix = nullptr;
 
             if (has_suffix(exec_path, installed_suffix, false)) {
                 suffix = installed_suffix;
-            } else if (has_suffix(exec_path, just_a_fish, false)) {
-                FLOGF(config, L"'fish' not in a 'bin/', trying paths relative to source tree");
-                suffix = just_a_fish;
+            } else if (has_suffix(exec_path, just_a_ghoti, false)) {
+                FLOGF(config, L"'ghoti' not in a 'bin/', trying paths relative to source tree");
+                suffix = just_a_ghoti;
             }
 
             if (suffix) {
@@ -184,9 +184,9 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 wcstring base_path = str2wcstring(exec_path);
                 base_path.resize(base_path.size() - std::strlen(suffix));
 
-                paths.data = base_path + (seems_installed ? L"/share/fish" : L"/share");
-                paths.sysconf = base_path + (seems_installed ? L"/etc/fish" : L"/etc");
-                paths.doc = base_path + (seems_installed ? L"/share/doc/fish" : L"/user_doc/html");
+                paths.data = base_path + (seems_installed ? L"/share/ghoti" : L"/share");
+                paths.sysconf = base_path + (seems_installed ? L"/etc/ghoti" : L"/etc");
+                paths.doc = base_path + (seems_installed ? L"/share/doc/ghoti" : L"/user_doc/html");
                 paths.bin = base_path + (seems_installed ? L"/bin" : L"");
 
                 // Check only that the data and sysconf directories exist. Handle the doc
@@ -206,8 +206,8 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     if (!done) {
         // Fall back to what got compiled in.
         FLOGF(config, L"Using compiled in paths:");
-        paths.data = L"" DATADIR "/fish";
-        paths.sysconf = L"" SYSCONFDIR "/fish";
+        paths.data = L"" DATADIR "/ghoti";
+        paths.sysconf = L"" SYSCONFDIR "/ghoti";
         paths.doc = L"" DOCDIR;
         paths.bin = L"" BINDIR;
     }
@@ -219,17 +219,17 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     return paths;
 }
 
-// Source the file config.fish in the given directory.
+// Source the file config.ghoti in the given directory.
 static void source_config_in_directory(parser_t &parser, const wcstring &dir) {
-    // If the config.fish file doesn't exist or isn't readable silently return. Fish versions up
+    // If the config.ghoti file doesn't exist or isn't readable silently return. Fish versions up
     // thru 2.2.0 would instead try to source the file with stderr redirected to /dev/null to deal
     // with that possibility.
     //
     // This introduces a race condition since the readability of the file can change between this
     // test and the execution of the 'source' command. However, that is not a security problem in
     // this context so we ignore it.
-    const wcstring config_pathname = dir + L"/config.fish";
-    const wcstring escaped_pathname = escape_string(dir) + L"/config.fish";
+    const wcstring config_pathname = dir + L"/config.ghoti";
+    const wcstring escaped_pathname = escape_string(dir) + L"/config.ghoti";
     if (waccess(config_pathname, R_OK) != 0) {
         FLOGF(config, L"not sourcing %ls (not readable or does not exist)",
               escaped_pathname.c_str());
@@ -239,12 +239,12 @@ static void source_config_in_directory(parser_t &parser, const wcstring &dir) {
 
     const wcstring cmd = L"builtin source " + escaped_pathname;
 
-    parser.libdata().within_fish_init = true;
+    parser.libdata().within_ghoti_init = true;
     parser.eval(cmd, io_chain_t());
-    parser.libdata().within_fish_init = false;
+    parser.libdata().within_ghoti_init = false;
 }
 
-/// Parse init files. exec_path is the path of fish executable as determined by argv[0].
+/// Parse init files. exec_path is the path of ghoti executable as determined by argv[0].
 static void read_init(parser_t &parser, const struct config_paths_t &paths) {
     source_config_in_directory(parser, paths.data);
     source_config_in_directory(parser, paths.sysconf);
@@ -286,7 +286,7 @@ static int run_command_list(parser_t &parser, const std::vector<std::string> &cm
 }
 
 /// Parse the argument list, return the index of the first non-flag arguments.
-static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
+static int ghoti_parse_opt(int argc, char **argv, ghoti_cmd_opts_t *opts) {
     static const char *const short_opts = "+hPilNnvc:C:p:d:f:D:o:";
     static const struct option long_opts[] = {
         {"command", required_argument, nullptr, 'c'},
@@ -338,7 +338,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'h': {
-                opts->batch_cmds.emplace_back("__fish_print_help fish");
+                opts->batch_cmds.emplace_back("__ghoti_print_help ghoti");
                 break;
             }
             case 'i': {
@@ -395,7 +395,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'v': {
-                std::fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
+                std::fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_ghoti_version());
                 exit(0);
             }
             case 'D': {
@@ -427,7 +427,7 @@ int main(int argc, char **argv) {
     int res = 1;
     int my_optind = 0;
 
-    program_name = L"fish";
+    program_name = L"ghoti";
     set_main_thread();
     setup_fork_guards();
     rust_init();
@@ -435,7 +435,7 @@ int main(int argc, char **argv) {
 
     setlocale(LC_ALL, "");
 
-    const char *dummy_argv[2] = {"fish", nullptr};
+    const char *dummy_argv[2] = {"ghoti", nullptr};
     if (!argv[0]) {
         argv = const_cast<char **>(dummy_argv);  //!OCLINT(parameter reassignment)
         argc = 1;                                //!OCLINT(parameter reassignment)
@@ -447,8 +447,8 @@ int main(int argc, char **argv) {
         activate_flog_categories_by_pattern(str2wcstring(debug_categories));
     }
 
-    fish_cmd_opts_t opts{};
-    my_optind = fish_parse_opt(argc, argv, &opts);
+    ghoti_cmd_opts_t opts{};
+    my_optind = ghoti_parse_opt(argc, argv, &opts);
 
     // Direct any debug output right away.
     // --debug-output takes precedence, otherwise $FISH_DEBUG_OUTPUT is used.
@@ -498,12 +498,12 @@ int main(int argc, char **argv) {
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
     // command line takes precedence).
-    if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
+    if (auto features_var = env_stack_t::globals().get(L"ghoti_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features()->set_from_string(s.c_str());
+            mutable_ghoti_features()->set_from_string(s.c_str());
         }
     }
-    mutable_fish_features()->set_from_string(opts.features.c_str());
+    mutable_ghoti_features()->set_from_string(opts.features.c_str());
     proc_init();
     misc_init();
     reader_init();
@@ -517,9 +517,9 @@ int main(int argc, char **argv) {
 
     if (is_interactive_session() && opts.no_config && !opts.no_exec) {
         // If we have no config, we default to the default key bindings.
-        parser.vars().set_one(L"fish_key_bindings", ENV_UNEXPORT, L"fish_default_key_bindings");
-        if (function_exists(L"fish_default_key_bindings", parser)) {
-            run_command_list(parser, {"fish_default_key_bindings"}, {});
+        parser.vars().set_one(L"ghoti_key_bindings", ENV_UNEXPORT, L"ghoti_default_key_bindings");
+        if (function_exists(L"ghoti_default_key_bindings", parser)) {
+            run_command_list(parser, {"ghoti_default_key_bindings"}, {});
         }
     }
 
@@ -553,7 +553,7 @@ int main(int argc, char **argv) {
         // Run the commands specified as arguments, if any.
         if (get_login()) {
             // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
-            fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
+            ghoti_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
                                                argv + my_optind);
         }
 
@@ -600,7 +600,7 @@ int main(int argc, char **argv) {
     event_fire(parser, *new_event_process_exit(getpid(), exit_status));
 
     // Trigger any exit handlers.
-    event_fire_generic(parser, L"fish_exit", {to_string(exit_status)});
+    event_fire_generic(parser, L"ghoti_exit", {to_string(exit_status)});
 
     restore_term_mode();
     restore_term_foreground_process_group_for_exit();

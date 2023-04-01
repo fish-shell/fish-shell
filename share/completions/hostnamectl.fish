@@ -2,14 +2,14 @@ complete -c hostnamectl -f
 
 set -l __hostnamectl_version $(hostnamectl --version &| string match -rg 'systemd (\d+).*')
 if test "$__hostnamectl_version" -lt 249
-    complete -c hostnamectl -n __fish_use_subcommand -xa "status\t'Show hostname and related info'
+    complete -c hostnamectl -n __ghoti_use_subcommand -xa "status\t'Show hostname and related info'
                                                             set-hostname\t'Set hostname'
                                                             set-icon-name\t'Set icon name'
                                                             set-chassis\t'Set chassis type'
                                                             set-deployment\t'Set deployment environment'
                                                             set-location\t'Set location'"
 else
-    complete -c hostnamectl -n __fish_use_subcommand -xa "status\t'Show hostname and related info'
+    complete -c hostnamectl -n __ghoti_use_subcommand -xa "status\t'Show hostname and related info'
                                                             hostname\t'Get or set hostname'
                                                             icon-name\t'Get or set icon name'
                                                             chassis\t'Get or set chassis type'
@@ -17,8 +17,8 @@ else
                                                             location\t'Get or set location'"
 end
 
-complete -c hostnamectl -n "__fish_seen_subcommand_from set-chassis chassis" -xa "desktop laptop convertible server tablet handset watch embedded vm container"
-complete -c hostnamectl -n "__fish_seen_subcommand_from set-deployment deployment" -xa "development integration staging production"
+complete -c hostnamectl -n "__ghoti_seen_subcommand_from set-chassis chassis" -xa "desktop laptop convertible server tablet handset watch embedded vm container"
+complete -c hostnamectl -n "__ghoti_seen_subcommand_from set-deployment deployment" -xa "development integration staging production"
 
 complete -c hostnamectl -l no-ask-password -d "Don't query for authentication for privileged operations"
 complete -c hostnamectl -l static -d "Get or set static hostname"

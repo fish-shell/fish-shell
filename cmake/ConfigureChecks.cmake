@@ -18,7 +18,7 @@ endif()
 # not pick up on. Combine it with -Werror to determine if it's actually supported.
 # This is not bulletproof; old versions of GCC only emit a warning about unrecognized warning
 # options when there are other warnings to emit :rolleyes:
-# See https://github.com/fish-shell/fish-shell/commit/fe2da0a9#commitcomment-47431659
+# See https://github.com/ghoti-shell/ghoti-shell/commit/fe2da0a9#commitcomment-47431659
 
 # GCC supports -Wno-redundant-move from GCC9 onwards
 check_cxx_compiler_flag("-Werror=no-redundant-move" HAS_NO_REDUNDANT_MOVE)
@@ -91,8 +91,8 @@ if (CMAKE_HOST_SYSTEM_VERSION MATCHES ".*-Microsoft")
 endif()
 
 # Set up the config.h file.
-set(PACKAGE_NAME "fish")
-set(PACKAGE_TARNAME "fish")
+set(PACKAGE_NAME "ghoti")
+set(PACKAGE_TARNAME "ghoti")
 include(CheckCXXSymbolExists)
 include(CheckIncludeFileCXX)
 include(CheckIncludeFiles)
@@ -239,7 +239,7 @@ cmake_pop_check_state()
 # the CHECK_CXX_SOURCE_COMPILES function. See CMake issue #16456.
 # Ensure we do this after the FIND_PACKAGE calls which use C, and will error on a C++
 # standards flag.
-# Also see https://github.com/fish-shell/fish-shell/issues/5865
+# Also see https://github.com/ghoti-shell/ghoti-shell/issues/5865
 if(NOT POLICY CMP0067)
   list(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_EXTENSION_COMPILE_OPTION}")
 endif()

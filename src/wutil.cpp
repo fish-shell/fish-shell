@@ -490,8 +490,8 @@ wcstring wbasename(wcstring path) {
 
 // Really init wgettext.
 static void wgettext_really_init() {
-    fish_bindtextdomain(PACKAGE_NAME, LOCALEDIR);
-    fish_textdomain(PACKAGE_NAME);
+    ghoti_bindtextdomain(PACKAGE_NAME, LOCALEDIR);
+    ghoti_textdomain(PACKAGE_NAME);
 }
 
 /// For wgettext: Internal init function. Automatically called when a translation is first
@@ -511,7 +511,7 @@ const wcstring &wgettext(const wchar_t *in) {
     wcstring &val = (*wmap)[key];
     if (val.empty()) {
         cstring mbs_in = wcs2string(key);
-        char *out = fish_gettext(mbs_in.c_str());
+        char *out = ghoti_gettext(mbs_in.c_str());
         val = format_string(L"%s", out);
     }
     errno = err;
@@ -594,7 +594,7 @@ enum : wint_t {
 };
 
 /// Return one if the code point is in a Unicode private use area.
-static int fish_is_pua(wint_t wc) {
+static int ghoti_is_pua(wint_t wc) {
     if (PUA1_START <= wc && wc < PUA1_END) return 1;
     if (PUA2_START <= wc && wc < PUA2_END) return 1;
     if (PUA3_START <= wc && wc < PUA3_END) return 1;
@@ -603,54 +603,54 @@ static int fish_is_pua(wint_t wc) {
 
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
-int fish_iswalnum(wint_t wc) {
-    if (fish_reserved_codepoint(wc)) return 0;
-    if (fish_is_pua(wc)) return 0;
+int ghoti_iswalnum(wint_t wc) {
+    if (ghoti_reserved_codepoint(wc)) return 0;
+    if (ghoti_is_pua(wc)) return 0;
     return iswalnum(wc);
 }
 
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
-int fish_iswgraph(wint_t wc) {
-    if (fish_reserved_codepoint(wc)) return 0;
-    if (fish_is_pua(wc)) return 1;
+int ghoti_iswgraph(wint_t wc) {
+    if (ghoti_reserved_codepoint(wc)) return 0;
+    if (ghoti_is_pua(wc)) return 1;
     return iswgraph(wc);
 }
 
-/// Convenience variants on fish_wcwswidth().
+/// Convenience variants on ghoti_wcwswidth().
 ///
 /// See fallback.h for the normal definitions.
-int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, std::wcslen(str)); }
+int ghoti_wcswidth(const wchar_t *str) { return ghoti_wcswidth(str, std::wcslen(str)); }
 
-/// Convenience variants on fish_wcwswidth().
+/// Convenience variants on ghoti_wcwswidth().
 ///
 /// See fallback.h for the normal definitions.
-int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
+int ghoti_wcswidth(const wcstring &str) { return ghoti_wcswidth(str.c_str(), str.size()); }
 
-locale_t fish_c_locale() {
+locale_t ghoti_c_locale() {
     static const locale_t loc = newlocale(LC_ALL_MASK, "C", nullptr);
     return loc;
 }
 
-static bool fish_numeric_locale_is_valid = false;
+static bool ghoti_numeric_locale_is_valid = false;
 
-void fish_invalidate_numeric_locale() {
-    fish_numeric_locale_is_valid = false;
+void ghoti_invalidate_numeric_locale() {
+    ghoti_numeric_locale_is_valid = false;
     rust_invalidate_numeric_locale();
 }
 
-locale_t fish_numeric_locale() {
+locale_t ghoti_numeric_locale() {
     // The current locale, except LC_NUMERIC isn't forced to C.
     static locale_t loc = nullptr;
-    if (!fish_numeric_locale_is_valid) {
+    if (!ghoti_numeric_locale_is_valid) {
         if (loc != nullptr) freelocale(loc);
         auto cur = duplocale(LC_GLOBAL_LOCALE);
         loc = newlocale(LC_NUMERIC_MASK, "", cur);
-        fish_numeric_locale_is_valid = true;
+        ghoti_numeric_locale_is_valid = true;
     }
     return loc;
 }
-/// Like fish_wcstol(), but fails on a value outside the range of an int.
+/// Like ghoti_wcstol(), but fails on a value outside the range of an int.
 ///
 /// This is needed because BSD and GNU implementations differ in several ways that make it really
 /// annoying to use them in a portable fashion.
@@ -659,7 +659,7 @@ locale_t fish_numeric_locale() {
 /// than a digit. Leading whitespace is ignored (per the base wcstol implementation). Trailing
 /// whitespace is also ignored. We also treat empty strings and strings containing only whitespace
 /// as invalid.
-int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
+int ghoti_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
     if (!*str) {  // this is because some implementations don't handle this sensibly
         errno = EINVAL;
@@ -697,7 +697,7 @@ int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
 /// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
 /// than a digit. Leading whitespace is ignored (per the base wcstol implementation). Trailing
 /// whitespace is also ignored.
-long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
+long ghoti_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
     if (!*str) {  // this is because some implementations don't handle this sensibly
         errno = EINVAL;
@@ -728,7 +728,7 @@ long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
 /// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
 /// than a digit. Leading whitespace is ignored (per the base wcstoll implementation). Trailing
 /// whitespace is also ignored.
-long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
+long long ghoti_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
     if (!*str) {  // this is because some implementations don't handle this sensibly
         errno = EINVAL;
@@ -759,7 +759,7 @@ long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
 /// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
 /// than a digit. Leading minus is considered invalid. Leading whitespace is ignored (per the base
 /// wcstoull implementation). Trailing whitespace is also ignored.
-unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int base) {
+unsigned long long ghoti_wcstoull(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
     if (!*str ||      // this is because some implementations don't handle this sensibly
         *str == '-')  // disallow minus as the first character to avoid questionable wrap-around
@@ -786,7 +786,7 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
 
 /// Like wcstod(), but wcstod() is enormously expensive on some platforms so this tries to have a
 /// fast path.
-double fish_wcstod(const wchar_t *str, wchar_t **endptr, size_t len) {
+double ghoti_wcstod(const wchar_t *str, wchar_t **endptr, size_t len) {
     // We can ignore the locale because we use LC_NUMERIC=C!
     // The "fast path." If we're all ASCII and we fit inline, use strtod().
     char narrow[128];
@@ -806,11 +806,11 @@ double fish_wcstod(const wchar_t *str, wchar_t **endptr, size_t len) {
     return std::wcstod(str, endptr);
 }
 
-double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
-    return fish_wcstod(str, endptr, std::wcslen(str));
+double ghoti_wcstod(const wchar_t *str, wchar_t **endptr) {
+    return ghoti_wcstod(str, endptr, std::wcslen(str));
 }
-double fish_wcstod(const wcstring &str, wchar_t **endptr) {
-    return fish_wcstod(str.c_str(), endptr, str.size());
+double ghoti_wcstod(const wcstring &str, wchar_t **endptr) {
+    return ghoti_wcstod(str.c_str(), endptr, str.size());
 }
 
 /// Like wcstod(), but allows underscore separators. Leading, trailing, and multiple underscores are
@@ -820,7 +820,7 @@ double fish_wcstod(const wcstring &str, wchar_t **endptr) {
 /// underscores ("_ 3") are not allowed and will result in a no-parse. Underscores are not allowed
 /// before or inside of "infinity" or "nan" input. Trailing underscores after "infinity" or "nan"
 /// are not consumed.
-double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
+double ghoti_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
     const wchar_t *orig = str;
     while (iswspace(*str)) str++;  // Skip leading whitespace.
     size_t leading_whitespace = size_t(str - orig);
@@ -830,7 +830,7 @@ double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
     };
     // We don't do any underscore-stripping for infinity/NaN.
     if (is_inf_or_nan_char(*str) || (is_sign(*str) && is_inf_or_nan_char(*(str + 1)))) {
-        return fish_wcstod(orig, endptr);
+        return ghoti_wcstod(orig, endptr);
     }
     // We build a string to pass to the system wcstod, pruned of underscores. We will take all
     // leading alphanumeric characters that can appear in a strtod numeric literal, dots (.), and
@@ -860,7 +860,7 @@ double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
     }
     const wchar_t *pruned_begin = pruned.c_str();
     const wchar_t *pruned_end = nullptr;
-    double result = fish_wcstod(pruned_begin, (wchar_t **)(&pruned_end));
+    double result = ghoti_wcstod(pruned_begin, (wchar_t **)(&pruned_end));
     if (pruned_end == pruned_begin) {
         if (endptr) *endptr = (wchar_t *)orig;
         return result;

@@ -641,7 +641,7 @@ static int path_normalize(parser_t &parser, io_streams_t &streams, int argc, con
 static maybe_t<size_t> find_extension(const wcstring &path) {
     // The extension belongs to the basename,
     // if there is a "." before the last component it doesn't matter.
-    // e.g. ~/.config/fish/conf.d/foo
+    // e.g. ~/.config/ghoti/conf.d/foo
     // does not have an extension! The ".d" here is not a file extension for "foo".
     // And "~/.config" doesn't have an extension either - the ".config" is the filename.
     wcstring filename = wbasename(path);

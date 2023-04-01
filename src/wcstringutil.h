@@ -311,7 +311,7 @@ class line_iterator_t {
     }
 };
 
-/// Like fish_wcwidth, but returns 0 for characters with no real width instead of -1.
-int fish_wcwidth_visible(wchar_t widechar);
+/// Like ghoti_wcwidth, but returns 0 for characters with no real width instead of -1.
+int ghoti_wcwidth_visible(wchar_t widechar);
 
 #endif

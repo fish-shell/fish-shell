@@ -1,7 +1,7 @@
 # name: Acidhub
 # author: Acidhub - https://acidhub.click/
 
-function fish_prompt -d "Write out the prompt"
+function ghoti_prompt -d "Write out the prompt"
     set -l laststatus $status
 
     set -l git_info
@@ -41,8 +41,8 @@ function fish_prompt -d "Write out the prompt"
     end
 
     # Disable PWD shortening by default.
-    set -q fish_prompt_pwd_dir_length
-    or set -lx fish_prompt_pwd_dir_length 0
+    set -q ghoti_prompt_pwd_dir_length
+    or set -lx ghoti_prompt_pwd_dir_length 0
 
     set_color -b black
     printf '%s%s%s%s%s%s%s%s%s%s%s%s%s' (set_color -o white) '❰' (set_color green) $USER (set_color white) '❙' (set_color yellow) (prompt_pwd) (set_color white) $git_info (set_color white) '❱' (set_color white)

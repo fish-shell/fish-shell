@@ -1,6 +1,6 @@
 #completion for opkg
 
-function __fish_opkg_no_subcommand -d 'Test if opkg has yet to be given the subcommand'
+function __ghoti_opkg_no_subcommand -d 'Test if opkg has yet to be given the subcommand'
     for i in (commandline -opc)
         if contains -- $i update upgrade install configure remove flag list list-installed list-upgradable list-changed-conffiles files search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts whatreplaces
             return 1
@@ -9,7 +9,7 @@ function __fish_opkg_no_subcommand -d 'Test if opkg has yet to be given the subc
     return 0
 end
 
-function __fish_opkg_use_package -d 'Test if opkg command should have packages as potential completion'
+function __ghoti_opkg_use_package -d 'Test if opkg command should have packages as potential completion'
     for i in (commandline -opc)
         if contains -- $i contains install search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts whatreplaces
             return 0
@@ -18,7 +18,7 @@ function __fish_opkg_use_package -d 'Test if opkg command should have packages a
     return 1
 end
 
-function __fish_opkg_use_package_installed -d 'Test if opkg command should have installed packages as potential completion'
+function __ghoti_opkg_use_package_installed -d 'Test if opkg command should have installed packages as potential completion'
     for i in (commandline -opc)
         if contains -- $i contains upgrade configure remove flag files
             return 0
@@ -27,36 +27,36 @@ function __fish_opkg_use_package_installed -d 'Test if opkg command should have 
     return 1
 end
 
-complete -c opkg -n __fish_opkg_use_package -a '(__fish_print_opkg_packages)' -d Package
+complete -c opkg -n __ghoti_opkg_use_package -a '(__ghoti_print_opkg_packages)' -d Package
 
-complete -c opkg -n __fish_opkg_use_package_installed -a '(__fish_print_opkg_packages --installed)' -d Package
+complete -c opkg -n __ghoti_opkg_use_package_installed -a '(__ghoti_print_opkg_packages --installed)' -d Package
 
-complete -f -n __fish_opkg_no_subcommand -c opkg -a update -d 'Update list of available packages'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a upgrade -d 'Upgrade packages'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a install -d 'Install package(s)'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a configure -d 'Configure unpacked package(s)'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a remove -d 'Remove package(s)'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a flag -d 'Flag package(s)'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a list -d 'List available packages'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a list-installed -d 'List installed packages'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a list-upgradable -d 'List installed and upgradable packages'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a list-changed-conffiles -d 'List user modified configuration files'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a files -d 'List files belonging to <pkg>'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a search -d 'List package providing <file>'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a find -d 'List packages whose name or description matches <regexp>'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a info -d 'Display all info for <pkg>'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a status -d 'Display all status for <pkg>'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a download -d 'Download <pkg> to current directory'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a compare-versions -d 'compare versions using <= < > >= = << >>'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a print-architecture -d 'List installable package architectures'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a depends -d 'list depends'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a whatdepends -d 'list whatdepends'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a whatdependsrec -d 'list whatdepends recursively'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a whatrecommends -d 'list whatrecommends'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a whatsuggests -d 'list whatsuggests'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a whatprovides -d 'list whatprovides'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a whatconflicts -d 'list whatconflicts'
-complete -f -n __fish_opkg_no_subcommand -c opkg -a whatreplaces -d 'list whatreplaces'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a update -d 'Update list of available packages'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a upgrade -d 'Upgrade packages'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a install -d 'Install package(s)'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a configure -d 'Configure unpacked package(s)'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a remove -d 'Remove package(s)'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a flag -d 'Flag package(s)'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a list -d 'List available packages'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a list-installed -d 'List installed packages'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a list-upgradable -d 'List installed and upgradable packages'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a list-changed-conffiles -d 'List user modified configuration files'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a files -d 'List files belonging to <pkg>'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a search -d 'List package providing <file>'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a find -d 'List packages whose name or description matches <regexp>'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a info -d 'Display all info for <pkg>'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a status -d 'Display all status for <pkg>'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a download -d 'Download <pkg> to current directory'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a compare-versions -d 'compare versions using <= < > >= = << >>'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a print-architecture -d 'List installable package architectures'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a depends -d 'list depends'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a whatdepends -d 'list whatdepends'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a whatdependsrec -d 'list whatdepends recursively'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a whatrecommends -d 'list whatrecommends'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a whatsuggests -d 'list whatsuggests'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a whatprovides -d 'list whatprovides'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a whatconflicts -d 'list whatconflicts'
+complete -f -n __ghoti_opkg_no_subcommand -c opkg -a whatreplaces -d 'list whatreplaces'
 
 complete -c opkg -s A -d 'Query all packages not just those installed'
 complete -c opkg -s V -l verbosity -d 'Set verbosity level to <level>'

@@ -32,7 +32,7 @@ struct builtin_data_t {
 
 /// Error message on missing man page.
 #define BUILTIN_ERR_MISSING_HELP                                                            \
-    _(L"fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will " \
+    _(L"ghoti: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will " \
       L"show an online version\n")
 
 /// Error message on invalid combination of options.

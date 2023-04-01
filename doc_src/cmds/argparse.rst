@@ -1,6 +1,6 @@
 .. _cmd-argparse:
 
-argparse - parse options passed to a fish script or function
+argparse - parse options passed to a ghoti script or function
 ============================================================
 
 Synopsis
@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
+This command makes it easy for ghoti scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
 
 Each option specification (``OPTION_SPEC``) is written in the :ref:`domain specific language <cmd-argparse-option-specification>` described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
@@ -96,9 +96,9 @@ Each option specification consists of:
 
     - **=+** if it requires a value and each instance of the flag is saved.
 
-- Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
+- Optionally a ``!`` followed by ghoti script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
 
-See the :doc:`fish_opt <fish_opt>` command for a friendlier but more verbose way to create option specifications.
+See the :doc:`ghoti_opt <ghoti_opt>` command for a friendlier but more verbose way to create option specifications.
 
 If a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
 
@@ -149,7 +149,7 @@ This isn't specific to argparse but common to all things using ``getopt(3)`` (if
 Flag Value Validation
 ---------------------
 
-Sometimes you need to validate the option values. For example, that it is a valid integer within a specific range, or an ip address, or something entirely different. You can always do this after ``argparse`` returns but you can also request that ``argparse`` perform the validation by executing arbitrary fish script. To do so simply append an ``!`` (exclamation-mark) then the fish script to be run. When that code is executed three vars will be defined:
+Sometimes you need to validate the option values. For example, that it is a valid integer within a specific range, or an ip address, or something entirely different. You can always do this after ``argparse`` returns but you can also request that ``argparse`` perform the validation by executing arbitrary ghoti script. To do so simply append an ``!`` (exclamation-mark) then the ghoti script to be run. When that code is executed three vars will be defined:
 
 - ``_argparse_cmd`` will be set to the value of the value of the ``argparse --name`` value.
 
@@ -166,7 +166,7 @@ Fish ships with a ``_validate_int`` function that accepts a ``--min`` and ``--ma
 Here are some examples of flag validations::
 
   # validate that a path is a directory
-  argparse 'p/path=!test -d "$_flag_value"' -- --path $__fish_config_dir
+  argparse 'p/path=!test -d "$_flag_value"' -- --path $__ghoti_config_dir
   # validate that a function does not exist
   argparse 'f/func=!not functions -q "$_flag_value"' -- -f alias
   # validate that a string matches a regex

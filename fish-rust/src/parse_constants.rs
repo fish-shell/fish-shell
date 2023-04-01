@@ -322,6 +322,12 @@ impl From<ParseKeyword> for &'static wstr {
     }
 }
 
+impl printf_compat::args::ToArg<'static> for ParseKeyword {
+    fn to_arg(self) -> printf_compat::args::Arg<'static> {
+        printf_compat::args::Arg::Str(self.into())
+    }
+}
+
 fn keyword_description(keyword: ParseKeyword) -> wcharz_t {
     let s: &'static wstr = keyword.into();
     wcharz!(s)

@@ -24,6 +24,7 @@ include_cpp! {
     #include "event.h"
     #include "fallback.h"
     #include "fds.h"
+    #include "fish_indent_common.h"
     #include "flog.h"
     #include "function.h"
     #include "highlight.h"
@@ -57,6 +58,7 @@ include_cpp! {
     generate!("get_flog_file_fd")
     generate!("log_extra_to_flog_file")
 
+    generate!("indent_visitor_t")
     generate!("parse_util_unescape_wildcards")
 
     generate!("fish_wcwidth")
@@ -73,6 +75,8 @@ include_cpp! {
     generate!("library_data_t")
     generate_pod!("library_data_pod_t")
 
+    generate!("highlighter_t")
+
     generate!("proc_wait_any")
 
     generate!("output_stream_t")
@@ -88,6 +92,8 @@ include_cpp! {
     generate!("builtin_print_help")
     generate!("builtin_print_error_trailer")
     generate!("builtin_get_names_ffi")
+
+    generate!("pretty_printer_t")
 
     generate!("escape_string")
     generate!("sig2wcs")

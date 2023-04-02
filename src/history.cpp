@@ -1202,7 +1202,7 @@ static bool should_import_bash_history_line(const wcstring &line) {
     // "<<" here is a proxy for heredocs (and herestrings).
     if (line.find(L"<<") != std::string::npos) return false;
 
-    if (ast::ast_t::parse(line).errored()) return false;
+    if (ast_parse(line)->errored()) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     auto errors = new_parse_error_list();
@@ -1396,16 +1396,18 @@ void history_t::add_pending_with_file_detection(const std::shared_ptr<history_t>
     // Find all arguments that look like they could be file paths.
     bool needs_sync_write = false;
     using namespace ast;
-    auto ast = ast_t::parse(str);
+    auto ast = ast_parse(str);
 
     path_list_t potential_paths;
-    for (const node_t &node : ast) {
-        if (const argument_t *arg = node.try_as<argument_t>()) {
-            wcstring potential_path = arg->source(str);
+    for (auto ast_traversal = new_ast_traversal(*ast->top());;) {
+        auto node = ast_traversal->next();
+        if (!node->has_value()) break;
+        if (const argument_t *arg = node->try_as_argument()) {
+            wcstring potential_path = *arg->source(str);
             if (string_could_be_path(potential_path)) {
                 potential_paths.push_back(std::move(potential_path));
             }
-        } else if (const decorated_statement_t *stmt = node.try_as<decorated_statement_t>()) {
+        } else if (const decorated_statement_t *stmt = node->try_as_decorated_statement()) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.
@@ -1416,7 +1418,7 @@ void history_t::add_pending_with_file_detection(const std::shared_ptr<history_t>
                 needs_sync_write = true;
             }
 
-            wcstring command = stmt->command.source(str);
+            wcstring command = *stmt->command().source(str);
             unescape_string_in_place(&command, UNESCAPE_DEFAULT);
             if (command == L"exit" || command == L"reboot" || command == L"restart" ||
                 command == L"echo") {

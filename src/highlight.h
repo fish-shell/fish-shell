@@ -11,9 +11,13 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ast.h"
 #include "color.h"
+#include "cxx.h"
 #include "flog.h"
 #include "maybe.h"
+
+struct Highlighter;
 
 class environment_t;
 
@@ -155,5 +159,77 @@ typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
                        const wcstring_list_t &directories, const operation_context_t &ctx,
                        path_flags_t flags);
+
+/// Syntax highlighter helper.
+class highlighter_t {
+    // The string we're highlighting. Note this is a reference member variable (to avoid copying)!
+    // We must not outlive this!
+    const wcstring &buff;
+    // The position of the cursor within the string.
+    const maybe_t<size_t> cursor;
+    // The operation context. Again, a reference member variable!
+    const operation_context_t &ctx;
+    // Whether it's OK to do I/O.
+    const bool io_ok;
+    // Working directory.
+    const wcstring working_directory;
+    // The ast we produced.
+    rust::Box<Ast> ast;
+    rust::Box<Highlighter> highlighter;
+    // The resulting colors.
+    using color_array_t = std::vector<highlight_spec_t>;
+    color_array_t color_array;
+    // A stack of variables that the current commandline probably defines.  We mark redirections
+    // as valid if they use one of these variables, to avoid marking valid targets as error.
+    std::vector<wcstring> pending_variables;
+
+    // Flags we use for AST parsing.
+    static constexpr parse_tree_flags_t ast_flags =
+        parse_flag_continue_after_error | parse_flag_include_comments |
+        parse_flag_accept_incomplete_tokens | parse_flag_leave_unterminated |
+        parse_flag_show_extra_semis;
+
+    bool io_still_ok() const;
+
+#if INCLUDE_RUST_HEADERS
+    // Declaring methods with forward-declared opaque Rust types like "ast::node_t" will cause
+    // undefined reference errors.
+    // Color a command.
+    void color_command(const ast::string_t &node);
+    // Color a node as if it were an argument.
+    void color_as_argument(const ast::node_t &node, bool options_allowed = true);
+    // Colors the source range of a node with a given color.
+    void color_node(const ast::node_t &node, highlight_spec_t color);
+    // Colors a range with a given color.
+    void color_range(source_range_t range, highlight_spec_t color);
+#endif
+
+   public:
+    /// \return a substring of our buffer.
+    wcstring get_source(source_range_t r) const;
+
+    // AST visitor implementations.
+    void visit_keyword(const ast::node_t *kw);
+    void visit_token(const ast::node_t *tok);
+    void visit_argument(const void *arg, bool cmd_is_cd, bool options_allowed);
+    void visit_redirection(const void *redir);
+    void visit_variable_assignment(const void *varas);
+    void visit_semi_nl(const ast::node_t *semi_nl);
+    void visit_decorated_statement(const void *stmt);
+    size_t visit_block_statement1(const void *block);
+    void visit_block_statement2(size_t pending_variables_count);
+
+#if INCLUDE_RUST_HEADERS
+    // Visit an argument, perhaps knowing that our command is cd.
+    void visit(const ast::argument_t &arg, bool cmd_is_cd = false, bool options_allowed = true);
+#endif
+
+    // Constructor
+    highlighter_t(const wcstring &str, maybe_t<size_t> cursor, const operation_context_t &ctx,
+                  wcstring wd, bool can_do_io);
+
+    // Perform highlighting, returning an array of colors.
+    color_array_t highlight();
+};
 
 #endif

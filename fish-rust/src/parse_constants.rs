@@ -5,6 +5,7 @@ use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcharz, WCharFromFFI, WCharToFFI};
 use crate::wutil::{sprintf, wgettext_fmt};
+use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
 use std::ops::{BitAnd, BitOr, BitOrAssign};
 use widestring_suffix::widestrs;
@@ -616,7 +617,13 @@ fn token_type_user_presentable_description_ffi(
 }
 
 /// TODO This should be type alias once we drop the FFI.
+#[derive(Clone)]
 pub struct ParseErrorList(pub Vec<ParseError>);
+
+unsafe impl ExternType for ParseErrorList {
+    type Id = type_id!("ParseErrorList");
+    type Kind = cxx::kind::Opaque;
+}
 
 /// Helper function to offset error positions by the given amount. This is used when determining
 /// errors in a substring of a larger source buffer.

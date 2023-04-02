@@ -11,6 +11,7 @@
 mod common;
 
 mod abbrs;
+mod ast;
 mod builtins;
 mod color;
 mod compat;
@@ -29,14 +30,18 @@ mod fds;
 mod ffi;
 mod ffi_init;
 mod ffi_tests;
+mod fish_indent;
 mod flog;
 mod future_feature_flags;
 mod global_safety;
+mod highlight;
 mod io;
 mod job_group;
 mod locale;
 mod nix;
 mod parse_constants;
+mod parse_tree;
+mod parse_util;
 mod path;
 mod re;
 mod redirection;

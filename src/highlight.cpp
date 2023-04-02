@@ -26,6 +26,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
 #include "future_feature_flags.h"
+#include "highlight.rs.h"
 #include "history.h"
 #include "maybe.h"
 #include "operation_context.h"
@@ -331,7 +332,7 @@ static bool statement_get_expanded_command(const wcstring &src,
                                            const ast::decorated_statement_t &stmt,
                                            const operation_context_t &ctx, wcstring *out_cmd) {
     // Get the command. Try expanding it. If we cannot, it's an error.
-    maybe_t<wcstring> cmd = stmt.command.source(src);
+    maybe_t<wcstring> cmd = stmt.command().source(src);
     if (!cmd) return false;
     expand_result_t err = expand_to_command_and_args(*cmd, ctx, out_cmd, nullptr);
     return err == expand_result_t::ok;
@@ -413,21 +414,21 @@ static bool has_expand_reserved(const wcstring &str) {
 // command (as a string), if any. This is used to validate autosuggestions.
 static void autosuggest_parse_command(const wcstring &buff, const operation_context_t &ctx,
                                       wcstring *out_expanded_command, wcstring *out_arg) {
-    auto ast = ast::ast_t::parse(
-        buff, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens);
+    auto ast =
+        ast_parse(buff, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens);
 
     // Find the first statement.
     const ast::decorated_statement_t *first_statement = nullptr;
-    if (const ast::job_conjunction_t *jc = ast.top()->as<ast::job_list_t>()->at(0)) {
-        first_statement = jc->job.statement.contents->try_as<ast::decorated_statement_t>();
+    if (const ast::job_conjunction_t *jc = ast->top()->as_job_list().at(0)) {
+        first_statement = jc->job().statement().contents().ptr()->try_as_decorated_statement();
     }
 
     if (first_statement &&
         statement_get_expanded_command(buff, *first_statement, ctx, out_expanded_command)) {
         // Check if the first argument or redirection is, in fact, an argument.
-        if (const auto *arg_or_redir = first_statement->args_or_redirs.at(0)) {
+        if (const auto *arg_or_redir = first_statement->args_or_redirs().at(0)) {
             if (arg_or_redir && arg_or_redir->is_argument()) {
-                *out_arg = arg_or_redir->argument().source(buff);
+                *out_arg = *arg_or_redir->argument().source(buff);
             }
         }
     }
@@ -776,83 +777,17 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 }
 
-namespace {
-/// Syntax highlighter helper.
-class highlighter_t {
-    // The string we're highlighting. Note this is a reference member variable (to avoid copying)!
-    // We must not outlive this!
-    const wcstring &buff;
-    // The position of the cursor within the string.
-    const maybe_t<size_t> cursor;
-    // The operation context. Again, a reference member variable!
-    const operation_context_t &ctx;
-    // Whether it's OK to do I/O.
-    const bool io_ok;
-    // Working directory.
-    const wcstring working_directory;
-    // The ast we produced.
-    ast::ast_t ast;
-    // The resulting colors.
-    using color_array_t = std::vector<highlight_spec_t>;
-    color_array_t color_array;
-    // A stack of variables that the current commandline probably defines.  We mark redirections
-    // as valid if they use one of these variables, to avoid marking valid targets as error.
-    std::vector<wcstring> pending_variables;
+highlighter_t::highlighter_t(const wcstring &str, maybe_t<size_t> cursor,
+                             const operation_context_t &ctx, wcstring wd, bool can_do_io)
+    : buff(str),
+      cursor(cursor),
+      ctx(ctx),
+      io_ok(can_do_io),
+      working_directory(std::move(wd)),
+      ast(ast_parse(buff, ast_flags)),
+      highlighter(new_highlighter(*this, *ast)) {}
 
-    // Flags we use for AST parsing.
-    static constexpr parse_tree_flags_t ast_flags =
-        parse_flag_continue_after_error | parse_flag_include_comments |
-        parse_flag_accept_incomplete_tokens | parse_flag_leave_unterminated |
-        parse_flag_show_extra_semis;
-
-    bool io_still_ok() const { return io_ok && !ctx.check_cancel(); }
-
-    // Color a command.
-    void color_command(const ast::string_t &node);
-    // Color a node as if it were an argument.
-    void color_as_argument(const ast::node_t &node, bool options_allowed = true);
-    // Colors the source range of a node with a given color.
-    void color_node(const ast::node_t &node, highlight_spec_t color);
-    // Colors a range with a given color.
-    void color_range(source_range_t range, highlight_spec_t color);
-
-    /// \return a substring of our buffer.
-    wcstring get_source(source_range_t r) const;
-
-   public:
-    // Visit the children of a node.
-    void visit_children(const ast::node_t &node) {
-        ast::node_visitor(*this).accept_children_of(&node);
-    }
-
-    // AST visitor implementations.
-    void visit(const ast::keyword_base_t &kw);
-    void visit(const ast::token_base_t &tok);
-    void visit(const ast::redirection_t &redir);
-    void visit(const ast::variable_assignment_t &varas);
-    void visit(const ast::semi_nl_t &semi_nl);
-    void visit(const ast::decorated_statement_t &stmt);
-    void visit(const ast::block_statement_t &block);
-
-    // Visit an argument, perhaps knowing that our command is cd.
-    void visit(const ast::argument_t &arg, bool cmd_is_cd = false, bool options_allowed = true);
-
-    // Default implementation is to just visit children.
-    void visit(const ast::node_t &node) { visit_children(node); }
-
-    // Constructor
-    highlighter_t(const wcstring &str, maybe_t<size_t> cursor, const operation_context_t &ctx,
-                  wcstring wd, bool can_do_io)
-        : buff(str),
-          cursor(cursor),
-          ctx(ctx),
-          io_ok(can_do_io),
-          working_directory(std::move(wd)),
-          ast(ast::ast_t::parse(buff, ast_flags)) {}
-
-    // Perform highlighting, returning an array of colors.
-    color_array_t highlight();
-};
+bool highlighter_t::io_still_ok() const { return io_ok && !ctx.check_cancel(); }
 
 wcstring highlighter_t::get_source(source_range_t r) const {
     assert(r.start + r.length >= r.start && "Overflow");
@@ -961,9 +896,9 @@ static bool range_is_potential_path(const wcstring &src, const source_range_t &r
     return result;
 }
 
-void highlighter_t::visit(const ast::keyword_base_t &kw) {
+void highlighter_t::visit_keyword(const ast::node_t *kw) {
     highlight_role_t role = highlight_role_t::normal;
-    switch (kw.kw) {
+    switch (kw->kw()) {
         case parse_keyword_t::kw_begin:
         case parse_keyword_t::kw_builtin:
         case parse_keyword_t::kw_case:
@@ -991,12 +926,12 @@ void highlighter_t::visit(const ast::keyword_base_t &kw) {
         case parse_keyword_t::none:
             break;
     }
-    color_node(kw, role);
+    color_node(*kw, role);
 }
 
-void highlighter_t::visit(const ast::token_base_t &tok) {
+void highlighter_t::visit_token(const ast::node_t *tok) {
     maybe_t<highlight_role_t> role = highlight_role_t::normal;
-    switch (tok.type) {
+    switch (tok->token_type()) {
         case parse_token_type_t::end:
         case parse_token_type_t::pipe:
         case parse_token_type_t::background:
@@ -1017,15 +952,16 @@ void highlighter_t::visit(const ast::token_base_t &tok) {
         default:
             break;
     }
-    if (role) color_node(tok, *role);
+    if (role) color_node(*tok, *role);
 }
 
-void highlighter_t::visit(const ast::semi_nl_t &semi_nl) {
-    color_node(semi_nl, highlight_role_t::statement_terminator);
+void highlighter_t::visit_semi_nl(const ast::node_t *semi_nl) {
+    color_node(*semi_nl, highlight_role_t::statement_terminator);
 }
 
-void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool options_allowed) {
-    color_as_argument(arg, options_allowed);
+void highlighter_t::visit_argument(const void *arg_, bool cmd_is_cd, bool options_allowed) {
+    const auto &arg = *static_cast<const ast::argument_t *>(arg_);
+    color_as_argument(*arg.ptr(), options_allowed);
     if (!io_still_ok()) {
         return;
     }
@@ -1034,7 +970,7 @@ void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool optio
     bool at_cursor = cursor.has_value() && arg.source_range().contains_inclusive(*cursor);
     if (cmd_is_cd) {
         // Mark this as an error if it's not 'help' and not a valid cd path.
-        wcstring param = arg.source(this->buff);
+        wcstring param = *arg.source(this->buff);
         if (expand_one(param, expand_flag::skip_cmdsubst, ctx)) {
             bool is_help =
                 string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
@@ -1042,45 +978,51 @@ void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool optio
                 is_valid_path = is_potential_cd_path(param, at_cursor, working_directory, ctx,
                                                      PATH_EXPAND_TILDE);
                 if (!is_valid_path) {
-                    this->color_node(arg, highlight_role_t::error);
+                    this->color_node(*arg.ptr(), highlight_role_t::error);
                 }
             }
         }
-    } else if (range_is_potential_path(buff, arg.range, at_cursor, ctx, working_directory)) {
+    } else if (range_is_potential_path(buff, arg.range(), at_cursor, ctx, working_directory)) {
         is_valid_path = true;
     }
     if (is_valid_path)
-        for (size_t i = arg.range.start, end = arg.range.start + arg.range.length; i < end; i++)
+        for (size_t i = arg.range().start, end = arg.range().start + arg.range().length; i < end;
+             i++)
             this->color_array.at(i).valid_path = true;
 }
 
-void highlighter_t::visit(const ast::variable_assignment_t &varas) {
-    color_as_argument(varas);
+void highlighter_t::visit_variable_assignment(const void *varas_) {
+    const auto &varas = *static_cast<const ast::variable_assignment_t *>(varas_);
+    color_as_argument(*varas.ptr());
     // Highlight the '=' in variable assignments as an operator.
-    auto where = variable_assignment_equals_pos(varas.source(this->buff));
+    auto where = variable_assignment_equals_pos(*varas.source(this->buff));
     if (where) {
         size_t equals_loc = varas.source_range().start + *where;
         this->color_array.at(equals_loc) = highlight_role_t::operat;
-        auto var_name = varas.source(this->buff).substr(0, *where);
+        auto var_name = varas.source(this->buff)->substr(0, *where);
         this->pending_variables.push_back(std::move(var_name));
     }
 }
 
-void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
+void highlighter_t::visit_decorated_statement(const void *stmt_) {
+    const auto &stmt = *static_cast<const ast::decorated_statement_t *>(stmt_);
     // Color any decoration.
-    if (stmt.opt_decoration) this->visit(*stmt.opt_decoration);
+    if (stmt.has_opt_decoration()) {
+        auto decoration = stmt.opt_decoration().ptr();
+        this->visit_keyword(&*decoration);
+    }
 
     // Color the command's source code.
     // If we get no source back, there's nothing to color.
-    maybe_t<wcstring> cmd = stmt.command.try_source(this->buff);
-    if (!cmd.has_value()) return;
+    if (!stmt.command().try_source_range()) return;
+    wcstring cmd = *stmt.command().source(this->buff);
 
     wcstring expanded_cmd;
     bool is_valid_cmd = false;
     if (!this->io_still_ok()) {
         // We cannot check if the command is invalid, so just assume it's valid.
         is_valid_cmd = true;
-    } else if (variable_assignment_equals_pos(*cmd)) {
+    } else if (variable_assignment_equals_pos(cmd)) {
         is_valid_cmd = true;
     } else {
         // Check to see if the command is valid.
@@ -1094,9 +1036,9 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
 
     // Color our statement.
     if (is_valid_cmd) {
-        this->color_command(stmt.command);
+        this->color_command(stmt.command());
     } else {
-        this->color_node(stmt.command, highlight_role_t::error);
+        this->color_node(*stmt.command().ptr(), highlight_role_t::error);
     }
 
     // Color arguments and redirections.
@@ -1105,34 +1047,36 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     bool is_set = (expanded_cmd == L"set");
     // If we have seen a "--" argument, color all options from then on as normal arguments.
     bool have_dashdash = false;
-    for (const ast::argument_or_redirection_t &v : stmt.args_or_redirs) {
+    for (size_t i = 0; i < stmt.args_or_redirs().count(); i++) {
+        const auto &v = *stmt.args_or_redirs().at(i);
         if (v.is_argument()) {
             if (is_set) {
-                auto arg = v.argument().source(this->buff);
+                auto arg = *v.argument().source(this->buff);
                 if (valid_var_name(arg)) {
                     this->pending_variables.push_back(std::move(arg));
                     is_set = false;
                 }
             }
-            this->visit(v.argument(), is_cd, !have_dashdash);
-            if (v.argument().source(this->buff) == L"--") have_dashdash = true;
+            this->visit_argument(&v.argument(), is_cd, !have_dashdash);
+            if (*v.argument().source(this->buff) == L"--") have_dashdash = true;
         } else {
-            this->visit(v.redirection());
+            this->visit_redirection(&v.redirection());
         }
     }
 }
 
-void highlighter_t::visit(const ast::block_statement_t &block) {
-    this->visit(*block.header.contents.get());
-    this->visit(block.args_or_redirs);
-    const ast::node_t &bh = *block.header.contents;
+size_t highlighter_t::visit_block_statement1(const void *block_) {
+    const auto &block = *static_cast<const ast::block_statement_t *>(block_);
+    auto bh = block.header().ptr();
     size_t pending_variables_count = this->pending_variables.size();
-    if (const auto *fh = bh.try_as<ast::for_header_t>()) {
-        auto var_name = fh->var_name.source(this->buff);
+    if (const auto *fh = bh->try_as_for_header()) {
+        auto var_name = *fh->var_name().source(this->buff);
         pending_variables.push_back(std::move(var_name));
     }
-    this->visit(block.jobs);
-    this->visit(block.end);
+    return pending_variables_count;
+}
+
+void highlighter_t::visit_block_statement2(size_t pending_variables_count) {
     pending_variables.resize(pending_variables_count);
 }
 
@@ -1158,9 +1102,10 @@ static bool contains_pending_variable(const std::vector<wcstring> &pending_varia
     return false;
 }
 
-void highlighter_t::visit(const ast::redirection_t &redir) {
-    auto oper = pipe_or_redir_from_string(redir.oper.source(this->buff).c_str());  // like 2>
-    wcstring target = redir.target.source(this->buff);  // like &1 or file path
+void highlighter_t::visit_redirection(const void *redir_) {
+    const auto &redir = *static_cast<const ast::redirection_t *>(redir_);
+    auto oper = pipe_or_redir_from_string(redir.oper().source(this->buff)->c_str());  // like 2>
+    wcstring target = *redir.target().source(this->buff);  // like &1 or file path
 
     assert(oper && "Should have successfully parsed a pipe_or_redir_t since it was in our ast");
 
@@ -1168,18 +1113,18 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
     // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)
     // If so, color the whole thing invalid and stop.
     if (!oper->is_valid()) {
-        this->color_node(redir, highlight_role_t::error);
+        this->color_node(*redir.ptr(), highlight_role_t::error);
         return;
     }
 
     // Color the operator part like 2>.
-    this->color_node(redir.oper, highlight_role_t::redirection);
+    this->color_node(*redir.oper().ptr(), highlight_role_t::redirection);
 
     // Color the target part.
     // Check if the argument contains a command substitution. If so, highlight it as a param
     // even though it's a command redirection, and don't try to do any other validation.
     if (has_cmdsub(target)) {
-        this->color_as_argument(redir.target);
+        this->color_as_argument(*redir.target().ptr());
     } else {
         // No command substitution, so we can highlight the target file or fd. For example,
         // disallow redirections into a non-existent directory.
@@ -1266,7 +1211,7 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
                 }
             }
         }
-        this->color_node(redir.target,
+        this->color_node(*redir.target().ptr(),
                          target_is_valid ? highlight_role_t::redirection : highlight_role_t::error);
     }
 }
@@ -1280,28 +1225,27 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     this->color_array.resize(this->buff.size());
     std::fill(this->color_array.begin(), this->color_array.end(), highlight_spec_t{});
 
-    this->visit_children(*ast.top());
+    this->highlighter->visit_children(*ast->top());
     if (ctx.check_cancel()) return std::move(color_array);
 
     // Color every comment.
-    const auto &extras = ast.extras();
-    for (const source_range_t &r : extras.comments) {
+    auto extras = ast->extras();
+    for (const source_range_t &r : extras->comments()) {
         this->color_range(r, highlight_role_t::comment);
     }
 
     // Color every extra semi.
-    for (const source_range_t &r : extras.semis) {
+    for (const source_range_t &r : extras->semis()) {
         this->color_range(r, highlight_role_t::statement_terminator);
     }
 
     // Color every error range.
-    for (const source_range_t &r : extras.errors) {
+    for (const source_range_t &r : extras->errors()) {
         this->color_range(r, highlight_role_t::error);
     }
 
     return std::move(color_array);
 }
-}  // namespace
 
 /// Determine if a command is valid.
 static bool command_is_valid(const wcstring &cmd, statement_decoration_t decoration,

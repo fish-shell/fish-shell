@@ -26,6 +26,7 @@ fn main() -> miette::Result<()> {
     // This must come before autocxx so that cxx can emit its cxx.h header.
     let source_files = vec![
         "src/abbrs.rs",
+        "src/ast.rs",
         "src/event.rs",
         "src/common.rs",
         "src/fd_monitor.rs",
@@ -33,9 +34,13 @@ fn main() -> miette::Result<()> {
         "src/fds.rs",
         "src/ffi_init.rs",
         "src/ffi_tests.rs",
+        "src/fish_indent.rs",
         "src/future_feature_flags.rs",
+        "src/highlight.rs",
         "src/job_group.rs",
         "src/parse_constants.rs",
+        "src/parse_tree.rs",
+        "src/parse_util.rs",
         "src/redirection.rs",
         "src/smoke.rs",
         "src/termsize.rs",

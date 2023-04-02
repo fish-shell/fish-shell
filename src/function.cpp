@@ -227,13 +227,14 @@ void function_remove(const wcstring &name) {
 static wcstring get_function_body_source(const function_properties_t &props) {
     // We want to preserve comments that the AST attaches to the header (#5285).
     // Take everything from the end of the header to the 'end' keyword.
-    auto header_src = props.func_node->header->try_source_range();
-    auto end_kw_src = props.func_node->end.try_source_range();
-    if (header_src && end_kw_src) {
-        uint32_t body_start = header_src->start + header_src->length;
-        uint32_t body_end = end_kw_src->start;
+    if (props.func_node->header().ptr()->try_source_range() &&
+        props.func_node->end().try_source_range()) {
+        auto header_src = props.func_node->header().ptr()->source_range();
+        auto end_kw_src = props.func_node->end().range();
+        uint32_t body_start = header_src.start + header_src.length;
+        uint32_t body_end = end_kw_src.start;
         assert(body_start <= body_end && "end keyword should come after header");
-        return wcstring(props.parsed_source->src, body_start, body_end - body_start);
+        return wcstring(props.parsed_source->src(), body_start, body_end - body_start);
     }
     return wcstring{};
 }
@@ -306,6 +307,25 @@ void function_invalidate_path() {
         funcset->remove(name);
     }
     funcset->autoloader.clear();
+}
+
+function_properties_t::function_properties_t() : parsed_source(empty_parsed_source_ref()) {}
+
+function_properties_t::function_properties_t(const function_properties_t &other)
+    : parsed_source(empty_parsed_source_ref()) {
+    *this = other;
+}
+
+function_properties_t &function_properties_t::operator=(const function_properties_t &other) {
+    parsed_source = other.parsed_source->clone();
+    func_node = other.func_node;
+    named_arguments = other.named_arguments;
+    description = other.description;
+    inherit_vars = other.inherit_vars;
+    shadow_scope = other.shadow_scope;
+    is_autoload = other.is_autoload;
+    definition_file = other.definition_file;
+    return *this;
 }
 
 wcstring function_properties_t::annotated_definition(const wcstring &name) const {
@@ -415,10 +435,10 @@ int function_properties_t::definition_lineno() const {
     // return one plus the number of newlines at offsets less than the start of our function's
     // statement (which includes the header).
     // TODO: merge with line_offset_of_character_at_offset?
-    auto source_range = func_node->try_source_range();
-    assert(source_range && "Function has no source range");
-    uint32_t func_start = source_range->start;
-    const wcstring &source = parsed_source->src;
+    assert(func_node->try_source_range() && "Function has no source range");
+    auto source_range = func_node->source_range();
+    uint32_t func_start = source_range.start;
+    const wcstring &source = parsed_source->src();
     assert(func_start <= source.size() && "function start out of bounds");
     return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
 }

@@ -115,12 +115,12 @@ set(FISH_BUILTIN_SRCS
 set(FISH_SRCS
     src/ast.cpp src/autoload.cpp src/color.cpp src/common.cpp src/complete.cpp
     src/env.cpp src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp
-    src/exec.cpp src/expand.cpp src/fallback.cpp src/fish_version.cpp
+    src/exec.cpp src/expand.cpp src/fallback.cpp src/fish_indent_common.cpp src/fish_version.cpp
     src/flog.cpp src/function.cpp src/highlight.cpp
     src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp
     src/io.cpp src/iothread.cpp src/kill.cpp
     src/null_terminated_array.cpp src/operation_context.cpp src/output.cpp
-    src/pager.cpp src/parse_execution.cpp src/parse_tree.cpp src/parse_util.cpp
+    src/pager.cpp src/parse_execution.cpp src/parse_util.cpp
     src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
     src/proc.cpp src/re.cpp src/reader.cpp src/screen.cpp
     src/signals.cpp src/tinyexpr.cpp src/utf8.cpp

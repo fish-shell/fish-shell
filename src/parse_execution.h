@@ -38,7 +38,7 @@ enum class end_execution_reason_t {
 
 class parse_execution_context_t : noncopyable_t {
    private:
-    parsed_source_ref_t pstree;
+    rust::Box<parsed_source_ref_t> pstree;
     parser_t *const parser;
     const operation_context_t &ctx;
 
@@ -161,7 +161,7 @@ class parse_execution_context_t : noncopyable_t {
    public:
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
     /// The execution context may access the parser and parent job group (if any) through ctx.
-    parse_execution_context_t(parsed_source_ref_t pstree, const operation_context_t &ctx,
+    parse_execution_context_t(rust::Box<parsed_source_ref_t> pstree, const operation_context_t &ctx,
                               io_chain_t block_io);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
@@ -172,10 +172,10 @@ class parse_execution_context_t : noncopyable_t {
     int get_current_source_offset() const;
 
     /// Returns the source string.
-    const wcstring &get_source() const { return pstree->src; }
+    const wcstring &get_source() const { return pstree->src(); }
 
     /// Return the parsed ast.
-    const ast::ast_t &ast() const { return pstree->ast; }
+    const ast::ast_t &ast() const { return pstree->ast(); }
 
     /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.

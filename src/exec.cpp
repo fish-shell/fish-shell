@@ -634,11 +634,14 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
     job_group_ref_t job_group = job->group;
 
     if (p->type == process_type_t::block_node) {
-        const parsed_source_ref_t &source = p->block_node_source;
+        const parsed_source_ref_t &source = *p->block_node_source;
         const ast::statement_t *node = p->internal_block_node;
-        assert(source && node && "Process is missing node info");
+        assert(source.has_value() && node && "Process is missing node info");
+        // The lambda will convert into a std::function which requires copyability. A Box can't
+        // be copied, so add another indirection.
+        auto source_box = std::make_shared<rust::Box<ParsedSourceRefFFI>>(source.clone());
         return [=](parser_t &parser) {
-            return parser.eval_node(source, *node, io_chain, job_group).status;
+            return parser.eval_node(**source_box, *node, io_chain, job_group).status;
         };
     } else {
         assert(p->type == process_type_t::function);
@@ -650,9 +653,9 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         const wcstring_list_t &argv = p->argv();
         return [=](parser_t &parser) {
             // Pull out the job list from the function.
-            const ast::job_list_t &body = props->func_node->jobs;
+            const ast::job_list_t &body = props->func_node->jobs();
             const block_t *fb = function_prepare_environment(parser, argv, *props);
-            auto res = parser.eval_node(props->parsed_source, body, io_chain, job_group);
+            auto res = parser.eval_node(*props->parsed_source, body, io_chain, job_group);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.

@@ -17,7 +17,9 @@
 #include <utility>
 #include <vector>
 
+#include "ast.h"
 #include "common.h"
+#include "cxx.h"
 #include "maybe.h"
 #include "parse_tree.h"
 #include "redirection.h"
@@ -52,10 +54,6 @@ using clock_ticks_t = uint64_t;
 /// \return clock ticks in seconds, or 0 on failure.
 /// This uses sysconf(_SC_CLK_TCK) to convert to seconds.
 double clock_ticks_to_seconds(clock_ticks_t ticks);
-
-namespace ast {
-struct statement_t;
-}
 
 struct job_group_t;
 using job_group_ref_t = std::shared_ptr<job_group_t>;
@@ -255,7 +253,7 @@ class process_t {
 
     /// For internal block processes only, the node of the statement.
     /// This is always either block, ifs, or switchs, never boolean or decorated.
-    parsed_source_ref_t block_node_source{};
+    rust::Box<ParsedSourceRefFFI> block_node_source;
     const ast::statement_t *internal_block_node{};
 
     struct concrete_assignment {

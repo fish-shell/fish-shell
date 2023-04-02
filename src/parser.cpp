@@ -189,18 +189,18 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
                                                  expand_flags_t eflags,
                                                  const operation_context_t &ctx) {
     // Parse the string as an argument list.
-    auto ast = ast::ast_t::parse_argument_list(arg_list_src);
-    if (ast.errored()) {
+    auto ast = ast_parse_argument_list(arg_list_src);
+    if (ast->errored()) {
         // Failed to parse. Here we expect to have reported any errors in test_args.
         return {};
     }
 
     // Get the root argument list and extract arguments from it.
     completion_list_t result;
-    const ast::freestanding_argument_list_t *list =
-        ast.top()->as<ast::freestanding_argument_list_t>();
-    for (const ast::argument_t &arg : list->arguments) {
-        wcstring arg_src = arg.source(arg_list_src);
+    const ast::freestanding_argument_list_t &list = ast->top()->as_freestanding_argument_list();
+    for (size_t i = 0; i < list.arguments().count(); i++) {
+        const ast::argument_t &arg = *list.arguments().at(i);
+        wcstring arg_src = *arg.source(arg_list_src);
         if (expand_string(arg_src, &result, eflags, ctx) == expand_result_t::error) {
             break;  // failed to expand a string
         }
@@ -528,8 +528,9 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
                           const job_group_ref_t &job_group, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     auto error_list = new_parse_error_list();
-    if (parsed_source_ref_t ps = parse_source(wcstring{cmd}, parse_flag_none, &*error_list)) {
-        return this->eval(ps, io, job_group, block_type);
+    auto ps = parse_source(wcstring{cmd}, parse_flag_none, &*error_list);
+    if (ps->has_value()) {
+        return this->eval(*ps, io, job_group, block_type);
     } else {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
@@ -550,10 +551,10 @@ eval_res_t parser_t::eval_string_ffi1(const wcstring &cmd) { return eval(cmd, io
 eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
                           const job_group_ref_t &job_group, enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
-    const auto *job_list = ps->ast.top()->as<ast::job_list_t>();
-    if (!job_list->empty()) {
+    const auto &job_list = ps.ast().top()->as_job_list();
+    if (!job_list.empty()) {
         // Execute the top job list.
-        return this->eval_node(ps, *job_list, io, job_group, block_type);
+        return this->eval_node(ps, job_list, io, job_group, block_type);
     } else {
         auto status = proc_status_t::from_exit_code(get_last_status());
         bool break_expand = false;
@@ -618,8 +619,8 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
-    scoped_push<exc_ctx_ref_t> exc(&execution_context,
-                                   make_unique<parse_execution_context_t>(ps, op_ctx, block_io));
+    scoped_push<exc_ctx_ref_t> exc(
+        &execution_context, make_unique<parse_execution_context_t>(ps.clone(), op_ctx, block_io));
 
     // Check the exec count so we know if anything got executed.
     const size_t prev_exec_count = libdata().exec_count;

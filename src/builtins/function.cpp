@@ -231,7 +231,7 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 /// function.
 int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
                      const parsed_source_ref_t &source, const ast::block_statement_t &func_node) {
-    assert(source && "Missing source in builtin_function");
+    assert(source.has_value() && "Missing source in builtin_function");
     // The wgetopt function expects 'function' as the first argument. Make a new wcstring_list with
     // that property. This is needed because this builtin has a different signature than the other
     // builtins.
@@ -280,7 +280,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     auto props = std::make_shared<function_properties_t>();
     props->shadow_scope = opts.shadow_scope;
     props->named_arguments = std::move(opts.named_arguments);
-    props->parsed_source = source;
+    props->parsed_source = source.clone();
     props->func_node = &func_node;
     props->description = opts.description;
     props->definition_file = parser.libdata().current_filename;

@@ -8,19 +8,20 @@
 #include <memory>
 #include <string>
 
+#include "ast.h"
 #include "common.h"
 #include "parse_tree.h"
 
 class parser_t;
 
-namespace ast {
-struct block_statement_t;
-}
-
 /// A function's constant properties. These do not change once initialized.
 struct function_properties_t {
+    function_properties_t();
+    function_properties_t(const function_properties_t &other);
+    function_properties_t &operator=(const function_properties_t &other);
+
     /// Parsed source containing the function.
-    parsed_source_ref_t parsed_source;
+    rust::Box<parsed_source_ref_t> parsed_source;
 
     /// Node containing the function statement, pointing into parsed_source.
     /// We store block_statement, not job_list, so that comments attached to the header are

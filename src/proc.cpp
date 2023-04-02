@@ -255,7 +255,9 @@ static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
     }
 }
 
-process_t::process_t() : proc_redirection_specs_(new_redirection_spec_list()) {}
+process_t::process_t()
+    : block_node_source(empty_parsed_source_ref()),
+      proc_redirection_specs_(new_redirection_spec_list()) {}
 
 void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_principal().current_generations();

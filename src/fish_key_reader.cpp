@@ -23,6 +23,7 @@
 #include "cxxgen.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "ffi_baggage.h"
 #include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "input.h"

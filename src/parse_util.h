@@ -6,14 +6,12 @@
 
 #include <vector>
 
+#include "ast.h"
 #include "common.h"
+#include "cxx.h"
 #include "maybe.h"
 #include "parse_constants.h"
 
-namespace ast {
-struct argument_t;
-class ast_t;
-}  // namespace ast
 struct Tok;
 using tok_t = Tok;
 
@@ -115,6 +113,47 @@ wchar_t parse_util_get_quote_type(const wcstring &cmd, size_t pos);
 /// thus escaping should be with backslashes). Optionally do not escape tildes.
 wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
                                              bool no_tilde = false);
+
+// Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
+// visiting its children.
+struct IndentVisitor;
+struct indent_visitor_t {
+    indent_visitor_t(const wcstring &src, std::vector<int> &indents);
+    indent_visitor_t(const indent_visitor_t &) = delete;
+    indent_visitor_t &operator=(const indent_visitor_t &) = delete;
+
+    int visit(const void *node);
+    void did_visit(int dec);
+
+#if INCLUDE_RUST_HEADERS
+    /// \return whether a maybe_newlines node contains at least one newline.
+    bool has_newline(const ast::maybe_newlines_t &nls) const;
+
+    void record_line_continuations_until(size_t offset);
+
+    // The one-past-the-last index of the most recently encountered leaf node.
+    // We use this to populate the indents even if there's no tokens in the range.
+    size_t last_leaf_end{0};
+
+    // The last indent which we assigned.
+    int last_indent{-1};
+
+    // The source we are indenting.
+    const wcstring &src;
+
+    // List of indents, which we populate.
+    std::vector<int> &indents;
+
+    // Initialize our starting indent to -1, as our top-level node is a job list which
+    // will immediately increment it.
+    int indent{-1};
+
+    // List of locations of escaped newline characters.
+    std::vector<size_t> line_continuations;
+
+    rust::Box<IndentVisitor> visitor;
+#endif
+};
 
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.

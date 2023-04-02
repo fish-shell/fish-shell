@@ -9,6 +9,7 @@
 
 #[macro_use]
 mod common;
+
 mod abbrs;
 mod builtins;
 mod color;

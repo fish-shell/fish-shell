@@ -39,6 +39,16 @@ where
         }
     }
 
+    // If it's a hex float, use hexponent.
+    if is_hex_float(chars.clone()) {
+        let mut n = 0;
+        let res = hexponent::parse_hex_float(chars, decimal_sep, &mut n);
+        if res.is_ok() {
+            *consumed = whitespace_skipped + n;
+        }
+        return res.map_err(hexponent_error);
+    }
+
     let ret = parse_partial_iter(chars.clone().fuse(), decimal_sep);
     if ret.is_err() {
         *consumed = 0;
@@ -61,6 +71,39 @@ where
     }
     *consumed = n + whitespace_skipped;
     Ok(val)
+}
+
+/// Check if a character iterator appears to be a hex float.
+/// That is, an optional + or -, followed by 0x or 0X, and a hex digit.
+pub fn is_hex_float<Chars: Iterator<Item = char>>(mut chars: Chars) -> bool {
+    match chars.next() {
+        Some('+' | '-') => {
+            if chars.next() != Some('0') {
+                return false;
+            }
+        }
+        Some('0') => (),
+        _ => return false,
+    };
+    match chars.next() {
+        Some('x') | Some('X') => (),
+        _ => return false,
+    };
+    match chars.next() {
+        Some(c) => c.is_ascii_hexdigit(),
+        None => false,
+    }
+}
+
+// Convert a a hexponent error to our error type.
+fn hexponent_error(e: hexponent::ParseError) -> Error {
+    use hexponent::ParseErrorKind;
+    match e.kind {
+        ParseErrorKind::MissingPrefix
+        | ParseErrorKind::MissingDigits
+        | ParseErrorKind::MissingExponent => Error::InvalidChar,
+        ParseErrorKind::ExponentOverflow => Error::Overflow,
+    }
 }
 
 #[cfg(test)]
@@ -101,6 +144,9 @@ mod test {
         test_consumed("0.y", Ok(0.0), 2);
         test_consumed(".0y", Ok(0.0), 2);
         test_consumed("000,,,e1", Ok(0.0), 3);
+        test_consumed("0x1", Ok(1.0), 3);
+        test_consumed("0X1p2", Ok(4.0), 5);
+        test_consumed("0X1P3", Ok(8.0), 5);
         test("000e1", Ok(0.0));
         test_consumed("000,1e1", Ok(0.0), 3);
         test("0", Ok(0.0));

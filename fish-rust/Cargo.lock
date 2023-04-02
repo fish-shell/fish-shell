@@ -374,6 +374,7 @@ dependencies = [
  "cxx-gen",
  "errno",
  "fast-float",
+ "hexponent",
  "inventory",
  "libc",
  "lru",
@@ -461,6 +462,11 @@ name = "hermit-abi"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fed44880c466736ef9a5c5b5facefb5ed0785676d0c02d612db14e54f0d84286"
+
+[[package]]
+name = "hexponent"
+version = "0.3.1"
+source = "git+https://github.com/fish-shell/hexponent?branch=fish#d2b97417d34adc9ea3ec954c69accc59828cbdb4"
 
 [[package]]
 name = "humantime"

@@ -22,7 +22,9 @@ It is (by default) safe to use :program:`fish_add_path` in config.fish, or it ca
 
 Components are normalized by :doc:`realpath <realpath>`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a component already exists, it is not added again and stays in the same place unless the ``--move`` switch is given.
 
-Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given (if $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to :envvar:`PATH`, so they still stay ahead of the system paths).
+Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given. If $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to :envvar:`PATH`, so they still stay ahead of the system paths. If the ``--path`` option is used, the paths are appended/prepended to :envvar:`PATH` directly, so this doesn't happen.
+
+With ``--path``, because :envvar:`PATH` must be a global variable instead of a universal one, the changes won't persist, so those calls need to be stored in :ref:`config.fish <configuration>`.
 
 If no component is new, the variable (:envvar:`fish_user_paths` or :envvar:`PATH`) is not set again or otherwise modified, so variable handlers are not triggered.
 

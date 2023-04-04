@@ -5,14 +5,57 @@ Writing your own completions
 
 To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog``, one would start the completion command with ``complete -c myprog ...``
 
-To provide a list of possible completions for myprog, use the ``-a`` switch. If ``myprog`` accepts the arguments start and stop, this can be specified as ``complete -c myprog -a 'start stop'``. The argument to the ``-a`` switch is always a single string. At completion time, it will be tokenized on spaces and tabs, and variable expansion, command substitution and other forms of parameter expansion will take place.
+To provide a list of possible completions for myprog, use the ``-a`` switch. If ``myprog`` accepts the arguments start and stop, this can be specified as ``complete -c myprog -a 'start stop'``. The argument to the ``-a`` switch is always a single string. At completion time, it will be tokenized on spaces and tabs, and variable expansion, command substitution and other forms of parameter expansion will take place::
+
+  # If myprog can list the valid outputs with the list-outputs subcommand:
+  complete -c myprog -l output -a '(myprog list-outputs)'
 
 ``fish`` has a special syntax to support specifying switches accepted by a command. The switches ``-s``, ``-l`` and ``-o`` are used to specify a short switch (single character, such as ``-l``), a gnu style long switch (such as ``--color``) and an old-style long switch (like ``-shuffle``), respectively. If the command 'myprog' has an option '-o' which can also be written as ``--output``, and which can take an additional value of either 'yes' or 'no', this can be specified by writing::
 
   complete -c myprog -s o -l output -a "yes no"
 
+For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :doc:`complete <cmds/complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
 
-There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :doc:`complete <cmds/complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
+In the complete call above, the ``-a`` arguments apply when the option -o/--output has been given, so this offers them for::
+
+  > myprog -o<TAB>
+  > myprog --output=<TAB>
+
+By default, option arguments are *optional*, so the candidates are only offered directly attached like that, so they aren't given in this case::
+
+  > myprog -o <TAB>
+
+Usually options *require* a parameter, so you would give ``--require-parameter`` / ``-r``::
+  
+  complete -c myprog -s o -l output -ra "yes no"
+
+which offers yes/no in these cases::
+
+  > myprog -o<TAB>
+  > myprog --output=<TAB>
+  > myprog -o <TAB>
+  > myprog --output <TAB>
+
+In the latter two cases, files will also be offered because file completion is enabled by default.
+
+You would either inhibit file completion for a single option::
+
+  complete -c myprog -s o -l output --no-files -ra "yes no"
+
+or with a specific condition::
+
+  complete -c myprog -f --condition '__fish_seen_subcommand_from somesubcommand'
+
+or you can disable file completions globally for the command::
+
+  complete -c myprog -f
+
+If you have disabled them globally, you can enable them just for a specific condition or option with the ``--force-files`` / ``-F`` option::
+
+  # Disable files by default
+  complete -c myprog -f
+  # but reenable them for --config-file
+  complete -c myprog -l config-file --force-files -r
 
 As a more comprehensive example, here's a commented excerpt of the completions for systemd's ``timedatectl``::
 
@@ -97,8 +140,6 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 - ``__fish_print_hostnames`` prints a list of all known hostnames. This function searches the fstab for nfs servers, ssh for known hosts and checks the ``/etc/hosts`` file.
 
 - ``__fish_print_interfaces`` prints a list of all known network interfaces.
-
-- ``__fish_print_packages`` prints a list of all installed packages. This function currently handles Debian, rpm and Gentoo packages.
 
 .. _completion-path:
 

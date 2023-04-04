@@ -11,8 +11,7 @@
 
 #include "common.h"
 #include "maybe.h"
-
-class history_item_t;
+#include "history.h"
 
 // History file types.
 enum history_file_type_t { history_type_fish_2_0, history_type_fish_1_x };
@@ -24,7 +23,7 @@ class history_file_contents_t : noncopyable_t, nonmovable_t {
     static std::unique_ptr<history_file_contents_t> create(int fd);
 
     /// Decode an item at a given offset.
-    history_item_t decode_item(size_t offset) const;
+    rust::Box<history_item_t> decode_item(size_t offset) const;
 
     /// Support for iterating item offsets.
     /// The cursor should initially be 0.

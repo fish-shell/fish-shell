@@ -16,6 +16,7 @@
 #include "cxx.h"
 #include "flog.h"
 #include "maybe.h"
+#include "history.h"
 
 struct Highlighter;
 
@@ -93,7 +94,6 @@ struct hash<highlight_spec_t> {
 };
 }  // namespace std
 
-class history_item_t;
 class operation_context_t;
 
 /// Given a string and list of colors of the same size, return the string with ANSI escape sequences

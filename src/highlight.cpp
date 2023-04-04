@@ -442,7 +442,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     // Parse the string.
     wcstring parsed_command;
     wcstring cd_dir;
-    autosuggest_parse_command(item.str(), ctx, &parsed_command, &cd_dir);
+    autosuggest_parse_command(*item.str(), ctx, &parsed_command, &cd_dir);
 
     // This is for autosuggestions which are not decorated commands, e.g. function declarations.
     if (parsed_command.empty()) {
@@ -473,7 +473,8 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     }
 
     // Did the historical command have arguments that look like paths, which aren't paths now?
-    if (!all_paths_are_valid(item.get_required_paths(), ctx)) {
+    path_list_t paths = item.get_required_paths()->vals;
+    if (!all_paths_are_valid(paths, ctx)) {
         return false;
     }
 

@@ -20,7 +20,6 @@
 
 class env_stack_t;
 class environment_t;
-class history_t;
 class io_chain_t;
 class parser_t;
 
@@ -284,14 +283,15 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
 
 /// Snapshotted state from the reader.
 struct commandline_state_t {
-    wcstring text;                         // command line text, or empty if not interactive
-    size_t cursor_pos{0};                  // position of the cursor, may be as large as text.size()
-    maybe_t<source_range_t> selection{};   // visual selection, or none if none
-    std::shared_ptr<history_t> history{};  // current reader history, or null if not interactive
-    bool pager_mode{false};                // pager is visible
-    bool pager_fully_disclosed{false};     // pager already shows everything if possible
-    bool search_mode{false};               // pager is visible and search is active
-    bool initialized{false};               // if false, the reader has not yet been entered
+    wcstring text;                        // command line text, or empty if not interactive
+    size_t cursor_pos{0};                 // position of the cursor, may be as large as text.size()
+    maybe_t<source_range_t> selection{};  // visual selection, or none if none
+    maybe_t<rust::Box<HistorySharedPtr>>
+        history{};                      // current reader history, or null if not interactive
+    bool pager_mode{false};             // pager is visible
+    bool pager_fully_disclosed{false};  // pager already shows everything if possible
+    bool search_mode{false};            // pager is visible and search is active
+    bool initialized{false};            // if false, the reader has not yet been entered
 };
 
 /// Get the command line state. This may be fetched on a background thread.

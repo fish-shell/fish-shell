@@ -20,6 +20,13 @@
 #include "maybe.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+using path_list_t = std::vector<wcstring>;
+using history_identifier_t = uint64_t;
+
+#if INCLUDE_RUST_HEADERS
+
+#include "history.rs.h"
+
 struct io_streams_t;
 class env_stack_t;
 class environment_t;
@@ -44,41 +51,19 @@ written to the file.
 5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can
 trigger race conditions. This is useful for testing.
 */
-using path_list_t = std::vector<wcstring>;
+using history_search_type_t = SearchType;
+using history_persistence_mode_t = PersistenceMode;
 
-enum class history_search_type_t {
-    /// Search for commands exactly matching the given string.
-    exact,
-    /// Search for commands containing the given string.
-    contains,
-    /// Search for commands starting with the given string.
-    prefix,
-    /// Search for commands containing the given glob pattern.
-    contains_glob,
-    /// Search for commands starting with the given glob pattern.
-    prefix_glob,
-    /// Search for commands containing the given string as a subsequence
-    contains_subsequence,
-    /// Matches everything.
-    match_everything,
-};
+using history_item_t = HistoryItem;
 
-using history_identifier_t = uint64_t;
-
-/// Ways that a history item may be written to disk (or omitted).
-enum class history_persistence_mode_t : uint8_t {
-    disk,       // the history item is written to disk normally
-    memory,     // the history item is stored in-memory only, not written to disk
-    ephemeral,  // the history item is stored in-memory and deleted when a new item is added
-};
-
+/*
 class history_item_t {
    public:
     /// Construct from a text, timestamp, and optional identifier.
     /// If \p persist_mode is ::ephemeral, then do not write this item to disk.
     explicit history_item_t(
         wcstring str = {}, time_t when = 0, history_identifier_t ident = 0,
-        history_persistence_mode_t persist_mode = history_persistence_mode_t::disk);
+        history_persistence_mode_t persist_mode = history_persistence_mode_t::Disk);
 
     /// \return the text as a string.
     const wcstring &str() const { return contents; }
@@ -87,14 +72,14 @@ class history_item_t {
     bool empty() const { return contents.empty(); }
 
     /// \return whether our contents matches a search term.
-    bool matches_search(const wcstring &term, enum history_search_type_t type,
+    bool matches_search(const wcstring &term, history_search_type_t type,
                         bool case_sensitive) const;
 
     /// \return the timestamp for creating this history item.
     time_t timestamp() const { return creation_timestamp; }
 
     /// \return whether this item should be persisted (written to disk).
-    bool should_write_to_disk() const { return persist_mode == history_persistence_mode_t::disk; }
+    bool should_write_to_disk() const { return persist_mode == history_persistence_mode_t::Disk; }
 
     /// Get and set the list of arguments which referred to files.
     /// This is used for autosuggestion hinting.
@@ -125,13 +110,14 @@ class history_item_t {
     friend class history_lru_cache_t;
     friend class history_tests_t;
 };
+*/
 
 using history_item_list_t = std::deque<history_item_t>;
+using history_search_direction_t = SearchDirection;
 
-struct history_impl_t;
+using history_t = HistorySharedPtr;
 
-enum class history_search_direction_t { forward, backward };
-
+/*
 class history_t : noncopyable_t, nonmovable_t {
     friend class history_tests_t;
     struct impl_wrapper_t;
@@ -225,6 +211,7 @@ class history_t : noncopyable_t, nonmovable_t {
     /// Return the number of history entries.
     size_t size();
 };
+*/
 
 /// Flags for history searching.
 enum {
@@ -236,6 +223,9 @@ enum {
 };
 using history_search_flags_t = uint32_t;
 
+using history_search_t = HistorySearch;
+
+/*
 /// Support for searching a history backwards.
 /// Note this does NOT de-duplicate; it is the caller's responsibility to do so.
 class history_search_t {
@@ -309,15 +299,13 @@ class history_search_t {
                      history_search_flags_t flags = 0, size_t starting_index = 0)
         : history_search_t(hist.get(), str, type, flags, starting_index) {}
 
-    /** Default constructor. */
+    /// Default constructor.
     history_search_t() = default;
 };
-
-/** Saves the new history to disk. */
-void history_save_all();
+*/
 
 /** Return the prefix for the files to be used for command and read history. */
-wcstring history_session_id(const environment_t &vars);
+inline wcstring history_session_id(const environment_t &vars) { return *rust_session_id(vars); }
 
 /**
     Given a list of proposed paths and a context, perform variable and home directory expansion,
@@ -334,12 +322,19 @@ path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_
     Wildcard expansions are suppressed.
     \return true if \p paths is empty or every path is valid.
 */
-bool all_paths_are_valid(const path_list_t &paths, const operation_context_t &ctx);
+inline bool all_paths_are_valid(const path_list_t &paths, const operation_context_t &ctx) {
+    return rust_all_paths_are_valid(paths, ctx);
+}
 
-/** Sets private mode on. Once in private mode, it cannot be turned off. */
-void start_private_mode(env_stack_t &vars);
+#else
 
-/** Queries private mode status. */
-bool in_private_mode(const environment_t &vars);
+class history_search_type_t;
+class history_persistence_mode_t;
 
-#endif
+class history_item_t;
+
+class HistorySharedPtr;
+
+#endif  // INCLUDE_RUST_HEADERS
+
+#endif  // FISH_HISTORY_H

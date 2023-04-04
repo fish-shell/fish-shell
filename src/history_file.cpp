@@ -16,12 +16,13 @@
 
 #include "common.h"
 #include "history.h"
+#include "history.rs.h"
 #include "path.h"
 #include "wutil.h"
 
 // Some forward declarations.
-static history_item_t decode_item_fish_2_0(const char *base, size_t len);
-static history_item_t decode_item_fish_1_x(const char *begin, size_t length);
+static rust::Box<history_item_t> decode_item_fish_2_0(const char *base, size_t len);
+static rust::Box<history_item_t> decode_item_fish_1_x(const char *begin, size_t length);
 
 static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
                                                     size_t *inout_cursor, time_t cutoff_timestamp);
@@ -31,7 +32,7 @@ static maybe_t<size_t> offset_of_next_item_fish_1_x(const char *begin, size_t mm
 // Check if we should mmap the fd.
 // Don't try mmap() on non-local filesystems.
 static bool should_mmap() {
-    if (history_t::never_mmap) return false;
+    if (history_never_mmap()) return false;
 
     // mmap only if we are known not-remote.
     return path_get_config_remoteness() == dir_remoteness_t::local;
@@ -187,7 +188,7 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
     return result;
 }
 
-history_item_t history_file_contents_t::decode_item(size_t offset) const {
+rust::Box<history_item_t> history_file_contents_t::decode_item(size_t offset) const {
     const char *base = address_at(offset);
     size_t len = this->length() - offset;
     switch (this->type()) {
@@ -196,7 +197,7 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
         case history_type_fish_1_x:
             return decode_item_fish_1_x(base, len);
     }
-    return history_item_t{};
+    return rust_history_item_new(L"", 0, 0, history_persistence_mode_t::Disk);
 }
 
 maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) const {
@@ -253,7 +254,7 @@ static bool extract_prefix_and_unescape_yaml(std::string *key, std::string *valu
 }
 
 /// Decode an item via the fish 2.0 format.
-static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
+static rust::Box<history_item_t> decode_item_fish_2_0(const char *base, size_t len) {
     wcstring cmd;
     time_t when = 0;
     path_list_t paths;
@@ -311,8 +312,8 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
     }
 
 done:
-    history_item_t result(cmd, when);
-    result.set_required_paths(std::move(paths));
+    auto result = rust_history_item_new(cmd.c_str(), when, 0, history_persistence_mode_t::Disk);
+    result->set_required_paths(paths);
     return result;
 }
 
@@ -467,11 +468,11 @@ void append_history_item_to_buffer(const history_item_t &item, std::string *buff
         if (c) buffer->append(c);
     };
 
-    std::string cmd = wcs2string(item.str());
+    std::string cmd = wcs2string(*item.str());
     escape_yaml_fish_2_0(&cmd);
     append("- cmd: ", cmd.c_str(), "\n");
     append("  when: ", std::to_string(item.timestamp()).c_str(), "\n");
-    const path_list_t &paths = item.get_required_paths();
+    path_list_t paths = item.get_required_paths()->vals;
     if (!paths.empty()) {
         append("  paths:\n");
 
@@ -500,7 +501,7 @@ static wcstring history_unescape_newlines_fish_1_x(const wcstring &in_str) {
 }
 
 /// Decode an item via the fish 1.x format. Adapted from fish 1.x's item_get().
-static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
+static rust::Box<history_item_t> decode_item_fish_1_x(const char *begin, size_t length) {
     const char *end = begin + length;
     const char *pos = begin;
     wcstring out;
@@ -561,7 +562,7 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
     }
 
     out = history_unescape_newlines_fish_1_x(out);
-    return history_item_t(out, timestamp);
+    return rust_history_item_new(out.c_str(), timestamp, 0, history_persistence_mode_t::Disk);
 }
 
 /// Same as offset_of_next_item_fish_2_0, but for fish 1.x (pre fishfish).

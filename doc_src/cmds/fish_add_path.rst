@@ -70,18 +70,26 @@ Example
 ::
 
    # I just installed mycoolthing and need to add it to the path to use it.
+   # It is at /opt/mycoolthing/bin/mycoolthing,
+   # so let's add the directory: /opt/mycoolthing/bin.
    > fish_add_path /opt/mycoolthing/bin
 
-   # I want my ~/.local/bin to be checked first.
+   # I want my ~/.local/bin to be checked first,
+   # even if it was already added.
    > fish_add_path -m ~/.local/bin
 
    # I prefer using a global fish_user_paths
+   # This isn't saved automatically, I need to add this to config.fish
+   # if I want it to stay.
    > fish_add_path -g ~/.local/bin ~/.otherbin /usr/local/sbin
 
    # I want to append to the entire $PATH because this directory contains fallbacks
-   > fish_add_path -aP /opt/fallback/bin
+   # This needs --path/-P because otherwise it appends to $fish_user_paths,
+   # which is added to the front of $PATH.
+   > fish_add_path --append --path /opt/fallback/bin
 
    # I want to add the bin/ directory of my current $PWD (say /home/nemo/)
+   # -v/--verbose shows what fish_add_path did.
    > fish_add_path -v bin/
    set fish_user_paths /home/nemo/bin /usr/bin /home/nemo/.local/bin
 

@@ -54,6 +54,7 @@ fn main() -> miette::Result<()> {
         "src/fish_indent.rs",
         "src/future_feature_flags.rs",
         "src/highlight.rs",
+        "src/history.rs",
         "src/job_group.rs",
         "src/null_terminated_array.rs",
         "src/parse_constants.rs",

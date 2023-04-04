@@ -342,11 +342,11 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
     // Do a dirty hack to make sliced history fast (#4650). We expand from either a variable, or a
     // history_t. Note that "history" is read only in env.cpp so it's safe to special-case it in
     // this way (it cannot be shadowed, etc).
-    std::shared_ptr<history_t> history{};
+    maybe_t<rust::Box<HistorySharedPtr>> history;
     maybe_t<env_var_t> var{};
     if (var_name == L"history") {
         if (is_main_thread()) {
-            history = history_t::with_name(history_session_id(vars));
+            history = history_with_name(history_session_id(vars));
         }
     } else if (var_name != wcstring{VARIABLE_EXPAND_EMPTY}) {
         var = vars.get(var_name);
@@ -368,7 +368,7 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
         if (var) {
             effective_val_count = var->as_list().size();
         } else if (history) {
-            effective_val_count = history->size();
+            effective_val_count = (**history).size();
         }
         parse_slice_error_t parse_error;
         size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list,
@@ -414,7 +414,9 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
     std::vector<wcstring> var_item_list;
     if (all_values) {
         if (history) {
-            history->get_history(var_item_list);
+            for (const auto &item : (*history)->get_history()->vals) {
+                var_item_list.push_back(item);
+            }
         } else {
             var->to_list(var_item_list);
         }
@@ -423,11 +425,12 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
         if (history) {
             // Ask history to map indexes to item strings.
             // Note this may have missing entries for out-of-bounds.
-            auto item_map = history->items_at_indexes(var_idx_list);
+            auto item_map = (**history).items_at_indexes(
+                rust::Slice<const long>(var_idx_list.data(), var_idx_list.size()));
             for (long item_index : var_idx_list) {
-                auto iter = item_map.find(item_index);
-                if (iter != item_map.end()) {
-                    var_item_list.push_back(iter->second);
+                auto item = item_map->get(item_index);
+                if (item) {
+                    var_item_list.push_back(*item);
                 }
             }
         } else {

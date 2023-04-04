@@ -117,7 +117,7 @@ set(FISH_SRCS
     src/env.cpp src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp
     src/exec.cpp src/expand.cpp src/fallback.cpp src/fish_indent_common.cpp src/fish_version.cpp
     src/flog.cpp src/function.cpp src/highlight.cpp
-    src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp
+    src/history_file.cpp src/input.cpp src/input_common.cpp
     src/io.cpp src/kill.cpp
     src/null_terminated_array.cpp src/operation_context.cpp src/output.cpp
     src/pager.cpp src/parse_execution.cpp src/parse_util.cpp

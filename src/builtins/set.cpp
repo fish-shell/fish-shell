@@ -448,11 +448,11 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         if (!names_only) {
             wcstring val;
             if (opts.shorten_ok && key == L"history") {
-                std::shared_ptr<history_t> history =
-                    history_t::with_name(history_session_id(parser.vars()));
+                rust::Box<HistorySharedPtr> history =
+                    history_with_name(history_session_id(parser.vars()).c_str());
                 for (size_t i = 1; i < history->size() && val.size() < 64; i++) {
                     if (i > 1) val += L' ';
-                    val += expand_escape_string(history->item_at_index(i).str());
+                    val += expand_escape_string(*history->item_at_index(i)->str());
                 }
             } else {
                 auto var = parser.vars().get_unless_empty(key, compute_scope(opts));

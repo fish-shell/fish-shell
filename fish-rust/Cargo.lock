@@ -258,7 +258,7 @@ dependencies = [
 [[package]]
 name = "cxx"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#113eabd04a7c7fdfaa4685b5aaf0279586021e87"
 dependencies = [
  "cc",
  "cxxbridge-flags",
@@ -270,7 +270,7 @@ dependencies = [
 [[package]]
 name = "cxx-build"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#113eabd04a7c7fdfaa4685b5aaf0279586021e87"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -284,7 +284,7 @@ dependencies = [
 [[package]]
 name = "cxx-gen"
 version = "0.7.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#113eabd04a7c7fdfaa4685b5aaf0279586021e87"
 dependencies = [
  "codespan-reporting",
  "proc-macro2",
@@ -295,12 +295,12 @@ dependencies = [
 [[package]]
 name = "cxxbridge-flags"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#113eabd04a7c7fdfaa4685b5aaf0279586021e87"
 
 [[package]]
 name = "cxxbridge-macro"
 version = "1.0.81"
-source = "git+https://github.com/fish-shell/cxx?branch=fish#2b1b38264b7d10ffd946ece72b6a0f00830b3769"
+source = "git+https://github.com/fish-shell/cxx?branch=fish#113eabd04a7c7fdfaa4685b5aaf0279586021e87"
 dependencies = [
  "proc-macro2",
  "quote",

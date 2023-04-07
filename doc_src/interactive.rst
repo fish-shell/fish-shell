@@ -125,6 +125,7 @@ Variable                                          Meaning
 .. envvar:: fish_color_status                     the last command's nonzero exit code in the default prompt
 .. envvar:: fish_color_cancel                     the '^C' indicator on a canceled command
 .. envvar:: fish_color_search_match               history search matches and selected pager items (background only)
+.. envvar:: fish_color_history_current            the current position in the history for commands like ``dirh`` and ``cdh``
 
 ==========================================        =====================================================================
 

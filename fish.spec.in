@@ -10,7 +10,7 @@ URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
 BuildRequires:          ncurses-devel gettext gcc-c++ xz pcre2-devel
-BuildRequires:			rust >= 1.67
+BuildRequires:          rust >= 1.67
 
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3
@@ -30,11 +30,11 @@ BuildRequires: glibc-langpack-en
 BuildRequires: python3 procps
 
 %if 0%{?rhel} && 0%{?rhel} < 8
-Requires:		python
+Requires:      python
 %else
-Requires:		python3
+Requires:      python3
 %endif
-Requires:		man
+Requires:      man
 
 # Although the build scripts mangle the version number to be RPM compatible
 # for continuous builds (transforming the output of `git describe`), Fedora 32+
@@ -96,14 +96,14 @@ rm -rf $RPM_BUILD_ROOT
 %post
 # Add fish to the list of allowed shells in /etc/shells
 if ! grep %{_bindir}/fish %{_sysconfdir}/shells >/dev/null; then
-	echo %{_bindir}/fish >>%{_sysconfdir}/shells
+    echo %{_bindir}/fish >>%{_sysconfdir}/shells
 fi
 
 %postun
 # Remove fish from the list of allowed shells in /etc/shells
 if [ "$1" = 0 ]; then
-	grep -v %{_bindir}/fish %{_sysconfdir}/shells >%{_sysconfdir}/fish.tmp
-	mv %{_sysconfdir}/fish.tmp %{_sysconfdir}/shells
+    grep -v %{_bindir}/fish %{_sysconfdir}/shells >%{_sysconfdir}/fish.tmp
+    mv %{_sysconfdir}/fish.tmp %{_sysconfdir}/shells
 fi
 
 %files -f %{name}.lang

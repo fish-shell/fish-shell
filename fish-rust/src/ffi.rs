@@ -50,6 +50,7 @@ include_cpp! {
 
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
+    generate!("make_wcharz_vec")
     generate!("make_fd_nonblocking")
     generate!("wperror")
 
@@ -283,6 +284,17 @@ impl From<wcharz_t> for wchar::WString {
         let len = w.length();
         let v = unsafe { slice::from_raw_parts(w.str_ as *const u32, len).to_vec() };
         Self::from_vec(v).expect("Invalid UTF-32")
+    }
+}
+
+/// Allow wcstring_list_ffi_t to be "into" Vec<WString>.
+impl From<&wcstring_list_ffi_t> for Vec<wchar::WString> {
+    fn from(w: &wcstring_list_ffi_t) -> Self {
+        let mut result = Vec::with_capacity(w.size());
+        for i in 0..w.size() {
+            result.push(w.at(i).from_ffi());
+        }
+        result
     }
 }
 

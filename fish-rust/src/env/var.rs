@@ -117,6 +117,7 @@ impl Default for Statuses {
 }
 
 bitflags! {
+    #[derive(Default)]
     pub struct EnvVarFlags: u8 {
         const EXPORT = 1 << 0;    // whether the variable is exported
         const READ_ONLY = 1 << 1; // whether the variable is read only

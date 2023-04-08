@@ -44,6 +44,7 @@ struct wcstring_list_ffi_t {
 
     wcstring_list_ffi_t() = default;
     /* implicit */ wcstring_list_ffi_t(std::vector<wcstring> vals) : vals(std::move(vals)) {}
+    ~wcstring_list_ffi_t();
 
     size_t size() const { return vals.size(); }
     const wcstring &at(size_t idx) const { return vals.at(idx); }
@@ -61,6 +62,19 @@ struct wcstring_list_ffi_t {
     static wcstring_list_ffi_t get_test_data();
     static void check_test_data(wcstring_list_ffi_t data);
 };
+
+/// Convert an iterable of strings to a list of wcharz_t.
+template <typename T>
+std::vector<wcharz_t> wcstring_list_to_ffi(const T &list) {
+    std::vector<wcharz_t> result;
+    for (const wcstring &str : list) {
+        result.push_back(str.c_str());
+    }
+    return result;
+}
+
+// FFI helper to create a wcharz_t vector, since Rust can't create a CxxVector.
+inline std::vector<wcharz_t> make_wcharz_vec() { return std::vector<wcharz_t>(); }
 
 class autoclose_fd_t;
 

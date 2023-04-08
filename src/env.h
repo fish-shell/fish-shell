@@ -15,6 +15,7 @@
 #include "common.h"
 #include "cxx.h"
 #include "maybe.h"
+#include "wutil.h"
 
 class owning_null_terminated_array_t;
 
@@ -133,14 +134,19 @@ class env_var_t {
 
     env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
 
+    // Construct from FFI.
+    static std::unique_ptr<env_var_t> new_ffi(wcstring_list_ffi_t vals, uint8_t flags);
+
     bool empty() const { return vals_->empty() || (vals_->size() == 1 && vals_->front().empty()); }
     bool exports() const { return flags_ & flag_export; }
+    bool is_read_only() const { return flags_ & flag_read_only; }
     bool is_pathvar() const { return flags_ & flag_pathvar; }
     env_var_flags_t get_flags() const { return flags_; }
 
     wcstring as_string() const;
     void to_list(std::vector<wcstring> &out) const;
     const std::vector<wcstring> &as_list() const;
+    wcstring_list_ffi_t as_list_ffi() const { return as_list(); }
 
     /// \return the character used when delimiting quoted expansion.
     wchar_t get_delimiter() const;
@@ -334,4 +340,10 @@ void unsetenv_lock(const char *name);
 /// Returns the originally inherited variables and their values.
 /// This is a simple key->value map and not e.g. cut into paths.
 const std::map<wcstring, wcstring> &env_get_inherited();
+
+/// Populate the values in the "$history" variable.
+/// fish_history_val is the value of the "$fish_history" variable, or "fish" if not set.
+std::unique_ptr<wcstring_list_ffi_t> get_history_variable_text_ffi(
+    const wcstring &fish_history_val);
+
 #endif

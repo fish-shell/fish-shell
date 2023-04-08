@@ -11,7 +11,6 @@ use std::sync::Arc;
 pub const PATH_ARRAY_SEP: char = ':';
 pub const NONPATH_ARRAY_SEP: char = ' ';
 
-// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 bitflags! {
     /// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
     #[repr(C)]
@@ -126,7 +125,7 @@ lazy_static! {
 
 /// EnvVar is an immutable value-type data structure representing the value of an environment
 /// variable.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct EnvVar {
     /// The list of values in this variable.
     /// Arc allows for cheap copying

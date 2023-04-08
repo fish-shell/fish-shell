@@ -1,3 +1,4 @@
+//! Functions for manipulating fish script variables.
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
 use crate::common::{unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::env::{
@@ -126,7 +127,7 @@ pub trait Environment {
     fn get_pwd_slash(&self) -> WString {
         // Return "/" if PWD is missing.
         // See https://github.com/fish-shell/fish-shell/issues/5080
-        let Some(var) = self.get(L!("PWD")) else { 
+        let Some(var) = self.get(L!("PWD")) else {
             return WString::from("/");
         };
         let mut pwd = WString::new();
@@ -142,6 +143,8 @@ pub trait Environment {
     fn get_unless_empty(&self, name: &wstr) -> Option<EnvVar> {
         self.getf_unless_empty(name, EnvMode::DEFAULT)
     }
+
+    /// Get a variable by name using the specified flags. Return None if the variable is empty.
     fn getf_unless_empty(&self, name: &wstr, mode: EnvMode) -> Option<EnvVar> {
         let var = self.getf(name, mode)?;
         if !var.is_empty() {

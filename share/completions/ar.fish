@@ -11,6 +11,8 @@ __single s "Add an index to the archive, or update it if it already exists."
 __single t "Display a table listing the contents of archive, or those of the files listed in member."
 __single x "Extract members (named member) from the archive."
 
+functions -e __single
+
 # TODO add mod
 # A number of modifiers (mod) may immediately follow the p keyletter, to specify variations on an operation's behavior:
 # add dash

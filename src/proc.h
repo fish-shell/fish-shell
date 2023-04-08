@@ -611,10 +611,6 @@ clock_ticks_t proc_get_jiffies(pid_t inpid);
 /// process of every job.
 void proc_update_jiffies(parser_t &parser);
 
-/// Perform a set of simple sanity checks on the job list. This includes making sure that only one
-/// job is in the foreground, that every process is in a valid state, etc.
-void proc_sanity_check(const parser_t &parser);
-
 /// Initializations.
 void proc_init();
 

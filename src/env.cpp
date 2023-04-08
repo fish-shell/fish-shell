@@ -76,17 +76,54 @@ wcstring env_var_t::as_string() const {
     return res;
 }
 
+<<<<<<< HEAD
 void env_var_t::to_list(std::vector<wcstring> &out) const {
     wcstring_list_ffi_t list{};
     impl_->to_list(list);
     out = std::move(list.vals);
+||||||| parent of 9785b8bcb ([proc] wip env)
+const std::vector<wcstring> &env_var_t::as_list() const { return *vals_; }
+
+wchar_t env_var_t::get_delimiter() const {
+    return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
+=======
+const std::vector<wcstring> &env_var_t::as_list() const { return *vals_; }
+
+std::vector<wcharz_t> env_var_t::as_list_ffi() const { return wcstring_list_to_ffi(as_list()); }
+
+wchar_t env_var_t::get_delimiter() const {
+    return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
+>>>>>>> 9785b8bcb ([proc] wip env)
 }
 
+<<<<<<< HEAD
 std::vector<wcstring> env_var_t::as_list() const {
     std::vector<wcstring> res = std::move(impl_->as_list()->vals);
     return res;
+||||||| parent of 9785b8bcb ([proc] wip env)
+/// Return a string representation of the var.
+wcstring env_var_t::as_string() const { return join_strings(*vals_, get_delimiter()); }
+
+void env_var_t::to_list(std::vector<wcstring> &out) const { out = *vals_; }
+
+env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
+    env_var_flags_t result = 0;
+    if (is_read_only(name)) result |= flag_read_only;
+    return result;
+=======
+/// Return a string representation of the var.
+wcstring env_var_t::as_string() const { return join_strings(*vals_, get_delimiter()); }
+
+void env_var_t::to_list(std::vector<wcstring> &out) const { out = *vals_; }
+
+env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
+    env_var_flags_t result = 0;
+    if (::is_read_only(name)) result |= flag_read_only;
+    return result;
+>>>>>>> 9785b8bcb ([proc] wip env)
 }
 
+<<<<<<< HEAD
 env_var_t &env_var_t::operator=(const env_var_t &rhs) {
     this->impl_ = rhs.impl_->clone_box();
     return *this;
@@ -102,6 +139,27 @@ bool env_var_t::operator==(const env_var_t &rhs) const { return impl_->equals(*r
 // static
 std::unique_ptr<env_var_t> env_var_t::new_ffi(wcstring_list_ffi_t ffi_vals, uint8_t flags) {
     return std::make_unique<env_var_t>(std::move(ffi_vals.vals), flags);
+||||||| parent of 9785b8bcb ([proc] wip env)
+/// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
+std::shared_ptr<const std::vector<wcstring>> env_var_t::empty_list() {
+    static const auto s_empty_result = std::make_shared<const std::vector<wcstring>>();
+    return s_empty_result;
+=======
+// static
+std::unique_ptr<env_var_t> env_var_t::new_ffi(const std::vector<wcharz_t> &ffi_vals,
+                                              uint8_t flags) {
+    std::vector<wcstring> vals;
+    for (wcharz_t val : ffi_vals) {
+        vals.push_back(val);
+    }
+    return std::make_unique<env_var_t>(std::move(vals), flags);
+}
+
+/// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
+std::shared_ptr<const std::vector<wcstring>> env_var_t::empty_list() {
+    static const auto s_empty_result = std::make_shared<const std::vector<wcstring>>();
+    return s_empty_result;
+>>>>>>> 9785b8bcb ([proc] wip env)
 }
 
 environment_t::~environment_t() = default;

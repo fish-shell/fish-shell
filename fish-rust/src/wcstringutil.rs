@@ -348,6 +348,7 @@ pub fn split_string_tok<'val>(
 }
 
 /// Joins strings with a separator.
+/// This supports both &[&wstr] and &[&WString].
 pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
     if strs.is_empty() {
         return WString::new();
@@ -600,8 +601,6 @@ fn test_split_string_tok() {
 #[test]
 fn test_join_strings() {
     use crate::wchar::L;
-    let empty: &[&wstr] = &[];
-    assert_eq!(join_strings(empty, '/'), "");
     assert_eq!(join_strings(&[] as &[&wstr], '/'), "");
     assert_eq!(join_strings(&[L!("foo")], '/'), "foo");
     assert_eq!(

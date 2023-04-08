@@ -53,6 +53,7 @@ mod wchar_ext;
 mod wchar_ffi;
 mod wcstringutil;
 mod wgetopt;
+mod widecharwidth;
 mod wildcard;
 mod wutil;
 

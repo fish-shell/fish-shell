@@ -236,6 +236,14 @@ maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     return none();
 }
 
+std::unique_ptr<env_var_t> env_universal_t::get_ffi(const wcstring &name) const {
+    if (auto var = this->get(name)) {
+        return make_unique<env_var_t>(var.acquire());
+    } else {
+        return nullptr;
+    }
+}
+
 maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &name) const {
     auto where = vars.find(name);
     if (where != vars.end()) {

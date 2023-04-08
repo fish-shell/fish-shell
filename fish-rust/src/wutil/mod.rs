@@ -1,5 +1,6 @@
 pub mod encoding;
 pub mod errors;
+//pub mod fs;
 pub mod gettext;
 pub mod printf;
 pub mod wcstod;
@@ -14,6 +15,7 @@ use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
+pub use fs::*;
 pub(crate) use gettext::{wgettext, wgettext_fmt};
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,

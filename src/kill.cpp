@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "ffi.h"
 
 /** Kill ring */
 static owning_lock<std::list<wcstring>> s_kill_list;
@@ -57,3 +58,5 @@ std::vector<wcstring> kill_entries() {
     auto kill_list = s_kill_list.acquire();
     return std::vector<wcstring>{kill_list->begin(), kill_list->end()};
 }
+
+wcstring_list_ffi_t kill_entries_ffi() { return kill_entries(); }

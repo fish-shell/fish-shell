@@ -4,7 +4,7 @@ use crate::wchar_ffi::WCharToFFI;
 use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
-use crate::env::flags::EnvMode;
+use crate::env::EnvMode;
 pub use crate::wait_handle::{
     WaitHandleRef, WaitHandleRefFFI, WaitHandleStore, WaitHandleStoreFFI,
 };

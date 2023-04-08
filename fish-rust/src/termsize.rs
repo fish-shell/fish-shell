@@ -1,6 +1,6 @@
 // Support for exposing the terminal size.
 use crate::common::assert_sync;
-use crate::env::flags::EnvMode;
+use crate::env::EnvMode;
 use crate::ffi::{environment_t, parser_t, Repin};
 use crate::flog::FLOG;
 use crate::wchar::{WString, L};

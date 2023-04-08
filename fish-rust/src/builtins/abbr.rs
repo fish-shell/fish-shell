@@ -5,8 +5,8 @@ use crate::builtins::shared::{
     STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::common::{escape_string, valid_func_name, EscapeStringStyle};
-use crate::env::flags::EnvMode;
 use crate::env::status::{ENV_NOT_FOUND, ENV_OK};
+use crate::env::EnvMode;
 use crate::ffi::parser_t;
 use crate::re::{regex_make_anchored, to_boxed_chars};
 use crate::wchar::{wstr, L};

@@ -6,7 +6,7 @@
 //!   - wcharz_t: a "newtyped" pointer to a nul-terminated string, implemented in C++.
 //!               This is useful for FFI boundaries, to work around autocxx limitations on pointers.
 
-pub use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t, ToCppWString};
+pub use crate::ffi::{make_wcharz_vec, wchar_t, wcharz_t, wcstring_list_ffi_t, ToCppWString};
 use crate::wchar::{wstr, WString};
 use autocxx::WithinUniquePtr;
 use once_cell::sync::Lazy;
@@ -32,6 +32,15 @@ impl wcharz_t {
         let data = self.str_ as *const char;
         let len = self.size();
         unsafe { std::slice::from_raw_parts(data, len) }
+    }
+}
+
+/// W0String can be cheaply converted to a wcharz_t (but be mindful that W0String is kept alive).
+impl From<&W0String> for wcharz_t {
+    fn from(w0: &W0String) -> Self {
+        wcharz_t {
+            str_: w0.as_ptr() as *const wchar_t,
+        }
     }
 }
 
@@ -67,6 +76,30 @@ macro_rules! wcharz {
             str_: crate::wchar_ffi::c_str!($string),
         }
     };
+}
+
+/// Convert a CxxVector of wcharz_t to a Vec<WString>.
+pub fn wcharzs_to_vec(wcharz_vec: cxx::UniquePtr<cxx::CxxVector<wcharz_t>>) -> Vec<WString> {
+    wcharz_vec
+        .as_ref()
+        .expect("UniquePtr was null")
+        .iter()
+        .map(|s| s.into())
+        .collect()
+}
+
+/// Convert a slice of either wstr or WString to two values:
+///   - A unique_ptr of C++ of wcharz_t: pointers that can be sent across the FFI boundary.
+///   - A Rust vector of W0String, providing storage for the nul-terminated strings. This must be kept alive.
+pub fn vec_to_wcharzs<Str: AsRef<wstr>>(
+    strs: &[Str],
+) -> (cxx::UniquePtr<cxx::CxxVector<wcharz_t>>, Vec<W0String>) {
+    let w0str_vec = strs.iter().map(wstr_to_u32string).collect::<Vec<_>>();
+    let mut wcharz_vec = make_wcharz_vec();
+    for w0str in &w0str_vec {
+        wcharz_vec.as_mut().unwrap().push(w0str.into())
+    }
+    (wcharz_vec, w0str_vec)
 }
 
 pub(crate) use c_str;

@@ -152,6 +152,8 @@ static export_generation_t next_export_generation() {
 
 const std::vector<wcstring> &env_var_t::as_list() const { return *vals_; }
 
+std::vector<wcharz_t> env_var_t::as_list_ffi() const { return wcstring_list_to_ffi(as_list()); }
+
 wchar_t env_var_t::get_delimiter() const {
     return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
 }
@@ -163,8 +165,18 @@ void env_var_t::to_list(std::vector<wcstring> &out) const { out = *vals_; }
 
 env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
     env_var_flags_t result = 0;
-    if (is_read_only(name)) result |= flag_read_only;
+    if (::is_read_only(name)) result |= flag_read_only;
     return result;
+}
+
+// static
+std::unique_ptr<env_var_t> env_var_t::new_ffi(const std::vector<wcharz_t> &ffi_vals,
+                                              uint8_t flags) {
+    std::vector<wcstring> vals;
+    for (wcharz_t val : ffi_vals) {
+        vals.push_back(val);
+    }
+    return std::make_unique<env_var_t>(std::move(vals), flags);
 }
 
 /// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
@@ -1584,4 +1596,32 @@ void setenv_lock(const char *name, const char *value, int overwrite) {
 void unsetenv_lock(const char *name) {
     scoped_lock locker(s_setenv_lock);
     unsetenv(name);
+}
+
+std::unique_ptr<wcstring_list_ffi_t> get_history_variable_text_ffi(
+    const wcstring &fish_history_val) {
+    auto out = make_unique<wcstring_list_ffi_t>();
+    std::shared_ptr<history_t> history = commandline_get_state().history;
+    if (!history) {
+        // Effective duplication of history_session_id().
+        wcstring session_id{};
+        if (fish_history_val.empty()) {
+            // No session.
+            session_id.clear();
+        } else if (!valid_var_name(fish_history_val)) {
+            session_id = L"fish";
+            FLOGF(error,
+                  _(L"History session ID '%ls' is not a valid variable name. "
+                    L"Falling back to `%ls`."),
+                  fish_history_val.c_str(), session_id.c_str());
+        } else {
+            // Valid session.
+            session_id = fish_history_val;
+        }
+        history = history_t::with_name(session_id);
+    }
+    if (history) {
+        history->get_history(out->vals);
+    }
+    return out;
 }

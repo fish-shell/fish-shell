@@ -44,8 +44,16 @@ class env_universal_t {
     // Construct an empty universal variables.
     env_universal_t() = default;
 
+    // Construct inside a unique_ptr.
+    static std::unique_ptr<env_universal_t> new_unique() {
+        return std::unique_ptr<env_universal_t>(new env_universal_t());
+    }
+
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;
+
+    // Cover over get() for FFI purposes.
+    std::unique_ptr<env_var_t> get_ffi(const wcstring &name) const;
 
     // \return flags from the variable with the given name.
     maybe_t<env_var_t::env_var_flags_t> get_flags(const wcstring &name) const;
@@ -58,6 +66,9 @@ class env_universal_t {
 
     // Gets variable names.
     std::vector<wcstring> get_names(bool show_exported, bool show_unexported) const;
+
+    // Cover over get_names for FFI.
+    std::vector<wcharz_t> get_names_ffi(bool show_exported, bool show_unexported) const;
 
     /// Get a view on the universal variable table.
     const var_table_t &get_table() const { return vars; }

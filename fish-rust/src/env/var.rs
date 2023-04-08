@@ -112,6 +112,7 @@ impl Default for Statuses {
 }
 
 bitflags! {
+    #[derive(Default)]
     pub struct EnvVarFlags: u8 {
         const EXPORT = 1 << 0;    // whether the variable is exported
         const READ_ONLY = 1 << 1; // whether the variable is read only
@@ -213,7 +214,7 @@ impl EnvVar {
     }
 
     /// Returns the delimiter character used when converting from a list to a string.
-    fn get_delimiter(&self) -> char {
+    pub fn get_delimiter(&self) -> char {
         if self.is_pathvar() {
             PATH_ARRAY_SEP
         } else {

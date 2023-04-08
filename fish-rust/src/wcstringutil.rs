@@ -8,6 +8,7 @@ use crate::flog::FLOGF;
 use crate::wchar::{decode_byte_from_char, wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
+use std::convert::AsRef;
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &wstr) -> bool {
@@ -348,6 +349,7 @@ pub fn split_string_tok<'val>(
 }
 
 /// Joins strings with a separator.
+/// This supports both &[&wstr] and &[&WString].
 pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
     if strs.is_empty() {
         return WString::new();
@@ -600,8 +602,7 @@ fn test_split_string_tok() {
 #[test]
 fn test_join_strings() {
     use crate::wchar::L;
-    let empty: &[&wstr] = &[];
-    assert_eq!(join_strings(empty, '/'), "");
+    assert_eq!(join_strings(&[] as &[&wstr], '/'), "");
     assert_eq!(join_strings(&[L!("foo")], '/'), "foo");
     assert_eq!(
         join_strings(&[L!("foo"), L!("bar"), L!("baz")], '/'),

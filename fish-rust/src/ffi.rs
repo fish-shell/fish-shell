@@ -21,6 +21,7 @@ include_cpp! {
     #include "builtin.h"
     #include "common.h"
     #include "env.h"
+    #include "env_universal_common.h"
     #include "event.h"
     #include "fallback.h"
     #include "fds.h"
@@ -29,11 +30,13 @@ include_cpp! {
     #include "function.h"
     #include "highlight.h"
     #include "io.h"
+    #include "kill.h"
     #include "parse_constants.h"
     #include "parser.h"
     #include "parse_util.h"
     #include "path.h"
     #include "proc.h"
+    #include "reader.h"
     #include "tokenizer.h"
     #include "wildcard.h"
     #include "wutil.h"
@@ -46,6 +49,7 @@ include_cpp! {
 
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
+    generate!("make_wcharz_vec")
     generate!("make_fd_nonblocking")
     generate!("wperror")
 
@@ -53,6 +57,7 @@ include_cpp! {
     generate!("environment_t")
     generate!("env_stack_t")
     generate!("env_var_t")
+    generate!("env_universal_t")
     generate!("make_pipes_ffi")
 
     generate!("get_flog_file_fd")
@@ -122,6 +127,11 @@ include_cpp! {
     generate!("path_get_paths_ffi")
 
     generate!("colorize_shell")
+
+    generate!("reader_status_count")
+    generate!("kill_entries_ffi")
+
+    generate!("get_history_variable_text_ffi")
 }
 
 impl parser_t {
@@ -273,6 +283,17 @@ impl From<wcharz_t> for wchar::WString {
     }
 }
 
+/// Allow wcstring_list_ffi_t to be "into" Vec<WString>.
+impl From<&wcstring_list_ffi_t> for Vec<wchar::WString> {
+    fn from(w: &wcstring_list_ffi_t) -> Self {
+        let mut result = Vec::with_capacity(w.size());
+        for i in 0..w.size() {
+            result.push(w.at(i).from_ffi());
+        }
+        result
+    }
+}
+
 /// A bogus trait for turning &mut Foo into Pin<&mut Foo>.
 /// autocxx enforces that non-const methods must be called through Pin,
 /// but this means we can't pass around mutable references to types like parser_t.
@@ -293,6 +314,7 @@ pub trait Repin {
 // Implement Repin for our types.
 impl Repin for block_t {}
 impl Repin for env_stack_t {}
+impl Repin for env_universal_t {}
 impl Repin for io_streams_t {}
 impl Repin for job_t {}
 impl Repin for output_stream_t {}
@@ -338,3 +360,5 @@ impl core::convert::From<*const autocxx::c_void> for void_ptr {
         Self(value as *const _)
     }
 }
+
+unsafe impl Send for env_universal_t {}

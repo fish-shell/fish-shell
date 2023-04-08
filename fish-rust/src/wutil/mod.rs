@@ -1,18 +1,18 @@
 pub mod encoding;
 pub mod errors;
+pub mod fs;
 pub mod gettext;
 pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
-
 use crate::common::{
     cstr2wcstring, fish_reserved_codepoint, str2wcstring, wcs2osstring, wcs2string, wcs2zstring,
 };
 use crate::fallback;
 use crate::fds::AutoCloseFd;
-use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
+pub use fs::*;
 pub(crate) use gettext::{wgettext, wgettext_fmt};
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
@@ -21,7 +21,6 @@ use libc::{
 };
 pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
-use std::fs;
 use std::fs::canonicalize;
 use std::io::Write;
 use std::os::fd::RawFd;
@@ -38,15 +37,15 @@ pub fn wopendir(name: &wstr) -> *mut libc::DIR {
 }
 
 /// Wide character version of stat().
-pub fn wstat(file_name: &wstr) -> Option<fs::Metadata> {
+pub fn wstat(file_name: &wstr) -> Option<std::fs::Metadata> {
     let tmp = wcs2osstring(file_name);
-    fs::metadata(tmp).ok()
+    std::fs::metadata(tmp).ok()
 }
 
 /// Wide character version of lstat().
-pub fn lwstat(file_name: &wstr) -> Option<fs::Metadata> {
+pub fn lwstat(file_name: &wstr) -> Option<std::fs::Metadata> {
     let tmp = wcs2osstring(file_name);
-    fs::symlink_metadata(tmp).ok()
+    std::fs::symlink_metadata(tmp).ok()
 }
 
 /// Wide character version of access().
@@ -80,28 +79,6 @@ pub fn perror(s: &str) {
     };
     let _ = stderr.write_all(slice);
     let _ = stderr.write_all(b"\n");
-}
-
-/// Wide character version of getcwd().
-pub fn wgetcwd() -> WString {
-    let mut cwd = [b'\0'; libc::PATH_MAX as usize];
-    let res = unsafe {
-        libc::getcwd(
-            std::ptr::addr_of_mut!(cwd).cast(),
-            std::mem::size_of_val(&cwd),
-        )
-    };
-    if !res.is_null() {
-        return cstr2wcstring(&cwd);
-    }
-
-    FLOGF!(
-        error,
-        "getcwd() failed with errno %d/%s",
-        errno::errno().0,
-        "errno::errno"
-    );
-    WString::new()
 }
 
 /// Wide character version of readlink().

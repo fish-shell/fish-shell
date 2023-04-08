@@ -4,13 +4,11 @@ pub mod gettext;
 pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
-
 use crate::common::{
     cstr2wcstring, fish_reserved_codepoint, str2wcstring, wcs2osstring, wcs2string, wcs2zstring,
 };
 use crate::fallback;
 use crate::fds::AutoCloseFd;
-use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
@@ -22,7 +20,6 @@ use libc::{
 };
 pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
-use std::fs;
 use std::fs::canonicalize;
 use std::io::Write;
 use std::os::fd::RawFd;
@@ -39,15 +36,15 @@ pub fn wopendir(name: &wstr) -> *mut libc::DIR {
 }
 
 /// Wide character version of stat().
-pub fn wstat(file_name: &wstr) -> Option<fs::Metadata> {
+pub fn wstat(file_name: &wstr) -> Option<std::fs::Metadata> {
     let tmp = wcs2osstring(file_name);
-    fs::metadata(tmp).ok()
+    std::fs::metadata(tmp).ok()
 }
 
 /// Wide character version of lstat().
-pub fn lwstat(file_name: &wstr) -> Option<fs::Metadata> {
+pub fn lwstat(file_name: &wstr) -> Option<std::fs::Metadata> {
     let tmp = wcs2osstring(file_name);
-    fs::symlink_metadata(tmp).ok()
+    std::fs::symlink_metadata(tmp).ok()
 }
 
 /// Wide character version of access().

@@ -39,6 +39,7 @@ mod io;
 mod job_group;
 mod locale;
 mod nix;
+mod null_terminated_array;
 mod parse_constants;
 mod parse_tree;
 mod parse_util;

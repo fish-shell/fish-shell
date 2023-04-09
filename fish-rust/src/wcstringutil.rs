@@ -36,7 +36,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
                 wcrtomb(
                     std::ptr::addr_of_mut!(converted[0]).cast(),
                     c as libc::wchar_t,
-                    std::ptr::addr_of_mut!(state),
+                    &mut state,
                 )
             };
             if len == 0_usize.wrapping_sub(1) {

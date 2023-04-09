@@ -1739,7 +1739,7 @@ pub fn replace_with<T, F: FnOnce(&T) -> T>(old: &mut T, with: F) -> T {
     std::mem::replace(old, new)
 }
 
-pub type Cleanup<T, F> = ScopeGuard<T, F>;
+pub type Cleanup<T, F, C> = ScopeGuard<T, F, C>;
 
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a
 /// callback that modifies live objects willy-nilly because then there would be two &mut references
@@ -1766,21 +1766,44 @@ pub type Cleanup<T, F> = ScopeGuard<T, F>;
 ///
 /// // hello will be written first, then goodbye.
 /// ```
-pub struct ScopeGuard<T, F: FnOnce(&mut T)> {
+pub struct ScopeGuard<T, F: FnOnce(&mut T), C> {
     captured: ManuallyDrop<T>,
+    view: fn(&T) -> &C,
+    view_mut: fn(&mut T) -> &mut C,
     on_drop: Option<F>,
+    marker: std::marker::PhantomData<C>,
 }
 
-impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
+fn identity<T>(t: &T) -> &T {
+    t
+}
+fn identity_mut<T>(t: &mut T) -> &mut T {
+    t
+}
+
+impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F, T> {
     /// Creates a new `ScopeGuard` wrapping `value`. The `on_drop` callback is executed when the
     /// ScopeGuard's lifetime expires or when it is manually dropped.
     pub fn new(value: T, on_drop: F) -> Self {
+        Self::with_view(value, identity, identity_mut, on_drop)
+    }
+}
+
+impl<T, F: FnOnce(&mut T), C> ScopeGuard<T, F, C> {
+    pub fn with_view(
+        value: T,
+        view: fn(&T) -> &C,
+        view_mut: fn(&mut T) -> &mut C,
+        on_drop: F,
+    ) -> Self {
         Self {
             captured: ManuallyDrop::new(value),
+            view,
+            view_mut,
             on_drop: Some(on_drop),
+            marker: Default::default(),
         }
     }
-
     /// Cancel the unwind operation, e.g. do not call the previously passed-in `on_drop` callback
     /// when the current scope expires.
     pub fn cancel(guard: &mut Self) {
@@ -1808,21 +1831,21 @@ impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
     }
 }
 
-impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {
-    type Target = T;
+impl<T, F: FnOnce(&mut T), C> Deref for ScopeGuard<T, F, C> {
+    type Target = C;
 
     fn deref(&self) -> &Self::Target {
-        &self.captured
+        (self.view)(&self.captured)
     }
 }
 
-impl<T, F: FnOnce(&mut T)> DerefMut for ScopeGuard<T, F> {
+impl<T, F: FnOnce(&mut T), C> DerefMut for ScopeGuard<T, F, C> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.captured
+        (self.view_mut)(&mut self.captured)
     }
 }
 
-impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
+impl<T, F: FnOnce(&mut T), C> Drop for ScopeGuard<T, F, C> {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
             on_drop(&mut self.captured);

@@ -1110,6 +1110,19 @@ pub fn str2wcstring(inp: &[u8]) -> WString {
     result
 }
 
+pub fn cstr2wcstring(input: &[u8]) -> WString {
+    let strlen = input.iter().position(|c| *c == b'\0').unwrap();
+    str2wcstring(&input[0..strlen])
+}
+
+pub fn charptr2wcstring(input: *const libc::c_char) -> WString {
+    let input: &[u8] = unsafe {
+        let strlen = libc::strlen(input);
+        slice::from_raw_parts(input.cast(), strlen)
+    };
+    str2wcstring(input)
+}
+
 /// Returns a newly allocated multibyte character string equivalent of the specified wide character
 /// string.
 ///

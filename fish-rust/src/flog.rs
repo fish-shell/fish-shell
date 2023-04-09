@@ -196,7 +196,15 @@ macro_rules! FLOGF {
     }
 }
 
-pub(crate) use {FLOG, FLOGF};
+macro_rules! should_flog {
+    ($category:ident) => {
+        crate::flog::categories::$category
+            .enabled
+            .load(std::sync::atomic::Ordering::Relaxed)
+    };
+}
+
+pub(crate) use {should_flog, FLOG, FLOGF};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {

@@ -32,6 +32,7 @@ mod ffi_tests;
 mod flog;
 mod future_feature_flags;
 mod global_safety;
+mod io;
 mod job_group;
 mod locale;
 mod nix;

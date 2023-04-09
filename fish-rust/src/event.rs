@@ -91,9 +91,9 @@ mod event_ffi {
         fn event_print_ffi(streams: Pin<&mut io_streams_t>, type_filter: &CxxWString);
 
         #[cxx_name = "event_enqueue_signal"]
-        fn enqueue_signal(signal: usize);
+        fn enqueue_signal(signal: i32);
         #[cxx_name = "event_is_signal_observed"]
-        fn is_signal_observed(sig: usize) -> bool;
+        fn is_signal_observed(sig: i32) -> bool;
     }
 }
 
@@ -490,8 +490,8 @@ struct PendingSignals {
 impl PendingSignals {
     /// Mark a signal as pending. This may be called from a signal handler. We expect only one
     /// signal handler to execute at once. Also note that these may be coalesced.
-    pub fn mark(&self, sig: usize) {
-        if let Some(received) = self.received.get(sig) {
+    pub fn mark(&self, sig: libc::c_int) {
+        if let Some(received) = self.received.get(usize::try_from(sig).unwrap()) {
             received.store(true, Ordering::Relaxed);
             self.counter.fetch_add(1, Ordering::Relaxed);
         }
@@ -552,25 +552,23 @@ static OBSERVED_SIGNALS: [AtomicU32; SIGNAL_COUNT] = [ATOMIC_U32_0; SIGNAL_COUNT
 static BLOCKED_EVENTS: Mutex<Vec<Event>> = Mutex::new(Vec::new());
 
 fn inc_signal_observed(sig: Signal) {
-    let index: usize = sig.into();
-    if let Some(sig) = OBSERVED_SIGNALS.get(index) {
+    if let Some(sig) = OBSERVED_SIGNALS.get(usize::from(sig)) {
         sig.fetch_add(1, Ordering::Relaxed);
     }
 }
 
 fn dec_signal_observed(sig: Signal) {
-    let index: usize = sig.into();
-    if let Some(sig) = OBSERVED_SIGNALS.get(index) {
+    if let Some(sig) = OBSERVED_SIGNALS.get(usize::from(sig)) {
         sig.fetch_sub(1, Ordering::Relaxed);
     }
 }
 
 /// Returns whether an event listener is registered for the given signal. This is safe to call from
 /// a signal handler.
-pub fn is_signal_observed(sig: usize) -> bool {
+pub fn is_signal_observed(sig: libc::c_int) -> bool {
     // We are in a signal handler!
     OBSERVED_SIGNALS
-        .get(sig)
+        .get(usize::try_from(sig).unwrap())
         .map_or(false, |s| s.load(Ordering::Relaxed) > 0)
 }
 
@@ -814,7 +812,7 @@ fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>) {
 }
 
 /// Enqueue a signal event. Invoked from a signal handler.
-pub fn enqueue_signal(signal: usize) {
+pub fn enqueue_signal(signal: libc::c_int) {
     // Beware, we are in a signal handler
     PENDING_SIGNALS.mark(signal);
 }

@@ -171,7 +171,7 @@ pub fn flog_impl(s: &str) {
 }
 
 macro_rules! FLOG {
-    ($category:ident, $($elem:expr),+) => {
+    ($category:ident, $($elem:expr),+ $(,)*) => {
         if crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             #[allow(unused_imports)]
             use crate::flog::{FloggableDisplay, FloggableDebug};
@@ -191,7 +191,7 @@ macro_rules! FLOG {
 
 // TODO implement.
 macro_rules! FLOGF {
-    ($category:ident, $($elem:expr),+) => {
+    ($category:ident, $($elem:expr),+ $(,)*) => {
         crate::flog::FLOG!($category, $($elem),*);
     }
 }

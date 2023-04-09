@@ -14,7 +14,8 @@ mod wait_handle_ffi {
             internal_job_id: u64,
             base_name: &CxxWString,
         ) -> Box<WaitHandleRefFFI>;
-        fn set_status_and_complete(self: &mut WaitHandleRefFFI, status: i32);
+        #[cxx_name = "set_status_and_complete"]
+        fn set_status_and_complete_ffi(self: &mut WaitHandleRefFFI, status: i32);
 
         type WaitHandleStoreFFI;
         fn new_wait_handle_store_ffi() -> Box<WaitHandleStoreFFI>;
@@ -46,10 +47,8 @@ impl WaitHandleRefFFI {
         &mut self.0
     }
 
-    fn set_status_and_complete(self: &mut WaitHandleRefFFI, status: i32) {
-        let wh = self.from_ffi();
-        assert!(!wh.is_completed(), "wait handle already completed");
-        wh.status.set(Some(status));
+    fn set_status_and_complete_ffi(self: &mut WaitHandleRefFFI, status: i32) {
+        self.from_ffi().set_status_and_complete(status)
     }
 }
 
@@ -151,6 +150,10 @@ impl WaitHandle {
     /// \return true if this wait handle is completed.
     pub fn is_completed(&self) -> bool {
         self.status.get().is_some()
+    }
+    pub fn set_status_and_complete(&self, status: i32) {
+        assert!(!self.is_completed(), "wait handle already completed");
+        self.status.set(Some(status));
     }
 }
 

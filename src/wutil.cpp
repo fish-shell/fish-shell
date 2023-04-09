@@ -33,7 +33,6 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
-#include "ffi_init.rs.h"
 #include "flog.h"
 #include "wcstringutil.h"
 
@@ -627,24 +626,6 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, std::wcslen(st
 /// See fallback.h for the normal definitions.
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
-static bool fish_numeric_locale_is_valid = false;
-
-void fish_invalidate_numeric_locale() {
-    fish_numeric_locale_is_valid = false;
-    rust_invalidate_numeric_locale();
-}
-
-locale_t fish_numeric_locale() {
-    // The current locale, except LC_NUMERIC isn't forced to C.
-    static locale_t loc = nullptr;
-    if (!fish_numeric_locale_is_valid) {
-        if (loc != nullptr) freelocale(loc);
-        auto cur = duplocale(LC_GLOBAL_LOCALE);
-        loc = newlocale(LC_NUMERIC_MASK, "", cur);
-        fish_numeric_locale_is_valid = true;
-    }
-    return loc;
-}
 /// Like fish_wcstol(), but fails on a value outside the range of an int.
 ///
 /// This is needed because BSD and GNU implementations differ in several ways that make it really

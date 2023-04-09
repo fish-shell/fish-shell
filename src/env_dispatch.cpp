@@ -11,6 +11,8 @@
 #include <cstring>
 #include <cwchar>
 
+#include "ffi_init.rs.h"
+
 #if HAVE_CURSES_H
 #include <curses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_H
@@ -656,7 +658,7 @@ static void init_locale(const environment_t &vars) {
     setlocale(LC_NUMERIC, "C");
 
     // See that we regenerate our special locale for numbers.
-    fish_invalidate_numeric_locale();
+    rust_invalidate_numeric_locale();
 
     fish_setlocale();
     FLOGF(env_locale, L"init_locale() setlocale(): '%s'", locale);

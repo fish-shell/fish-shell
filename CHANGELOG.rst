@@ -30,6 +30,8 @@ Improved prompts
 
 Completions
 ^^^^^^^^^^^
+- Added completions for:
+  - ``ar`` (:issue:`9719`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

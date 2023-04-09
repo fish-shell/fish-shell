@@ -333,6 +333,15 @@ impl From<Signal> for NonZeroI32 {
     }
 }
 
+pub fn signal_set_handlers_once(interactive: bool) {
+    todo!()
+    // static std::once_flag s_noninter_once;
+    // std::call_once(s_noninter_once, signal_set_handlers, false);
+
+    // static std::once_flag s_inter_once;
+    // if (interactive) std::call_once(s_inter_once, set_interactive_handlers);
+}
+
 #[test]
 fn signal_name() {
     let sig = Signal::SIGINT;

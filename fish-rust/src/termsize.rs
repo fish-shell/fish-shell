@@ -1,6 +1,6 @@
 // Support for exposing the terminal size.
 use crate::common::assert_sync;
-use crate::env::EnvMode;
+use crate::env::{EnvMode, Environment};
 use crate::ffi::{environment_t, parser_t, Repin};
 use crate::flog::FLOG;
 use crate::wchar::{WString, L};
@@ -285,6 +285,11 @@ pub fn handle_columns_lines_var_change_ffi(vars_ptr: *const u8) {
     assert!(!vars_ptr.is_null());
     let vars: &environment_t = unsafe { &*(vars_ptr as *const environment_t) };
     SHARED_CONTAINER.handle_columns_lines_var_change(vars);
+}
+
+/// Called to initialize the termsize.
+pub fn termsize_initialize(vars: &dyn Environment) -> Termsize {
+    todo!()
 }
 
 /// Called to initialize the termsize.

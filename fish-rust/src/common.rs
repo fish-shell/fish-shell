@@ -24,10 +24,11 @@ use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::cell::RefCell;
 use std::env;
-use std::ffi::CString;
+use std::ffi::{CString, OsString};
 use std::mem::{self, ManuallyDrop};
 use std::ops::{Deref, DerefMut};
 use std::os::fd::AsRawFd;
+use std::os::unix::prelude::OsStringExt;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -1136,6 +1137,16 @@ pub fn wcs2string(input: &wstr) -> Vec<u8> {
     let mut result = vec![];
     wcs2string_appending(&mut result, input);
     result
+}
+
+pub fn wcs2osstring(input: &wstr) -> OsString {
+    if input.is_empty() {
+        return OsString::new();
+    }
+
+    let mut result = vec![];
+    wcs2string_appending(&mut result, input);
+    OsString::from_vec(result)
 }
 
 pub fn wcs2zstring(input: &wstr) -> CString {

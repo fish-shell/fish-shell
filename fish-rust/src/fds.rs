@@ -1,7 +1,22 @@
+use crate::common::wcs2zstring;
 use crate::ffi;
+use crate::wchar::{wstr, L};
+use crate::wutil::perror;
+use libc::EINTR;
+use libc::O_CLOEXEC;
 use nix::unistd;
+use std::ffi::CStr;
 use std::io::{Read, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+
+pub const PIPE_ERROR: &wstr = L!("An error occurred while setting up pipe");
+
+/// The first "high fd", which is considered outside the range of valid user-specified redirections
+/// (like >&5).
+pub const FIRST_HIGH_FD: RawFd = 10;
+
+/// A sentinel value indicating no timeout.
+pub const NO_TIMEOUT: u64 = u64::MAX;
 
 /// A helper type for managing and automatically closing a file descriptor
 ///
@@ -146,5 +161,27 @@ pub fn make_autoclose_pipes() -> Option<autoclose_pipes_t> {
             read: readp,
             write: writep,
         })
+    }
+}
+
+/// Wide character version of open() that also sets the close-on-exec flag (atomically when
+/// possible).
+pub fn wopen_cloexec(pathname: &wstr, flags: i32, mode: libc::c_int) -> RawFd {
+    open_cloexec(wcs2zstring(pathname).as_c_str(), flags, mode)
+}
+
+/// Narrow versions of wopen_cloexec.
+pub fn open_cloexec(path: &CStr, flags: i32, mode: libc::c_int) -> RawFd {
+    unsafe { libc::open(path.as_ptr(), flags | O_CLOEXEC, mode) }
+}
+
+/// Close a file descriptor \p fd, retrying on EINTR.
+pub fn exec_close(fd: RawFd) {
+    assert!(fd >= 0, "Invalid fd");
+    while unsafe { libc::close(fd) } == -1 {
+        if errno::errno().0 != EINTR {
+            perror("close");
+            break;
+        }
     }
 }

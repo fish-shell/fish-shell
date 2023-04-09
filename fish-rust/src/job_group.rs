@@ -2,6 +2,7 @@ use self::ffi::pgid_t;
 use crate::common::{assert_send, assert_sync};
 use crate::signal::Signal;
 use crate::wchar::WString;
+use crate::wchar_ext::ToWString;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use cxx::{CxxWString, UniquePtr};
 use std::num::NonZeroU32;
@@ -68,6 +69,44 @@ fn create_job_group_with_job_control_ffi(command: &CxxWString, wants_term: bool)
 #[repr(transparent)]
 pub struct JobId(NonZeroU32);
 
+#[derive(Clone, Copy, Debug)]
+pub struct MaybeJobId(pub Option<JobId>);
+
+impl std::ops::Deref for MaybeJobId {
+    type Target = Option<JobId>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::fmt::Display for MaybeJobId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0
+            .map(|j| i64::from(u32::from(j.0)))
+            .unwrap_or(-1)
+            .fmt(f)
+    }
+}
+
+impl ToWString for MaybeJobId {
+    fn to_wstring(&self) -> WString {
+        self.0
+            .map(|j| i64::from(u32::from(j.0)))
+            .unwrap_or(-1)
+            .to_wstring()
+    }
+}
+
+impl<'a> printf_compat::args::ToArg<'a> for MaybeJobId {
+    fn to_arg(self) -> printf_compat::args::Arg<'a> {
+        self.0
+            .map(|j| i64::from(u32::from(j.0)))
+            .unwrap_or(-1)
+            .to_arg()
+    }
+}
+
 /// `JobGroup` is conceptually similar to the idea of a process group. It represents data which
 /// is shared among all of the "subjobs" that may be spawned by a single job.
 /// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
@@ -99,7 +138,7 @@ pub struct JobGroup {
     pub command: WString,
     /// Our job id, if any. `None` here should evaluate to `-1` for ffi purposes.
     /// "Simple block" groups like function calls do not have a job id.
-    pub job_id: Option<JobId>,
+    pub job_id: MaybeJobId,
     /// The signal causing the group to cancel or `0` if none.
     /// Not using an `Option<Signal>` to be able to atomically load/store to this field.
     signal: AtomicI32,
@@ -255,11 +294,15 @@ impl JobGroup {
 static CONSUMED_JOB_IDS: Mutex<Vec<JobId>> = Mutex::new(Vec::new());
 
 impl JobId {
-    const NONE: Option<JobId> = None;
+    const NONE: MaybeJobId = MaybeJobId(None);
+
+    pub fn new(value: NonZeroU32) -> Self {
+        JobId(value)
+    }
 
     /// Return a `JobId` that is greater than all extant job ids stored in [`CONSUMED_JOB_IDS`].
     /// The `JobId` should be freed with [`JobId::release()`] when it is no longer in use.
-    fn acquire() -> Option<Self> {
+    fn acquire() -> MaybeJobId {
         let mut consumed_job_ids = CONSUMED_JOB_IDS.lock().expect("Poisoned mutex!");
 
         // The new job id should be greater than the largest currently used id (#6053). The job ids
@@ -269,7 +312,7 @@ impl JobId {
             .map(JobId::next)
             .unwrap_or(JobId(1.try_into().unwrap()));
         consumed_job_ids.push(job_id);
-        return Some(job_id);
+        return MaybeJobId(Some(job_id));
     }
 
     /// Remove the provided `JobId` from [`CONSUMED_JOB_IDS`].
@@ -289,7 +332,7 @@ impl JobId {
 }
 
 impl JobGroup {
-    pub fn new(command: WString, id: Option<JobId>, job_control: bool, wants_term: bool) -> Self {
+    pub fn new(command: WString, id: MaybeJobId, job_control: bool, wants_term: bool) -> Self {
         // We *can* have a job id without job control, but not the reverse.
         if job_control {
             assert!(id.is_some(), "Cannot have job control without a job id!");
@@ -341,7 +384,7 @@ impl JobGroup {
 
 impl Drop for JobGroup {
     fn drop(&mut self) {
-        if let Some(job_id) = self.job_id {
+        if let Some(job_id) = *self.job_id {
             JobId::release(job_id);
         }
     }

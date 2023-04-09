@@ -7,6 +7,7 @@
 use autocxx::WithinUniquePtr;
 use cxx::{CxxVector, CxxWString, UniquePtr};
 use libc::pid_t;
+use std::num::NonZeroU32;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
@@ -16,9 +17,11 @@ use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard};
 use crate::ffi::{self, block_t, parser_t, signal_check_cancel, signal_handle, Repin};
 use crate::flog::FLOG;
+use crate::job_group::{JobId, MaybeJobId};
 use crate::signal::Signal;
 use crate::termsize;
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::ToWString;
 use crate::wchar_ffi::{wcharz_t, AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wutil::sprintf;
 
@@ -409,7 +412,7 @@ impl Event {
         }
     }
 
-    pub fn caller_exit(internal_job_id: u64, job_id: i32) -> Self {
+    pub fn caller_exit(internal_job_id: u64, job_id: MaybeJobId) -> Self {
         Self {
             desc: EventDescription {
                 typ: EventType::CallerExit {
@@ -418,7 +421,7 @@ impl Event {
             },
             arguments: vec![
                 "JOB_EXIT".into(),
-                job_id.to_string().into(),
+                job_id.to_wstring(),
                 "0".into(), // historical
             ],
         }
@@ -459,7 +462,16 @@ fn new_event_job_exit(pgid: i32, jid: u64) -> Box<Event> {
 }
 
 fn new_event_caller_exit(internal_job_id: u64, job_id: i32) -> Box<Event> {
-    Box::new(Event::caller_exit(internal_job_id, job_id))
+    Box::new(Event::caller_exit(
+        internal_job_id,
+        MaybeJobId(if job_id == -1 {
+            None
+        } else {
+            Some(JobId::new(
+                NonZeroU32::new(u32::try_from(job_id).unwrap()).unwrap(),
+            ))
+        }),
+    ))
 }
 
 impl Event {

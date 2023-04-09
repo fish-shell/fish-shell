@@ -1,4 +1,5 @@
 use crate::common::{char_offset, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
+use crate::env::Environment;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::ParseErrorList;
 use crate::wchar::{wstr, WString};
@@ -139,4 +140,15 @@ pub fn expand_to_command_and_args(
     skip_wildcards: bool,
 ) -> ExpandResult {
     todo!()
+}
+
+/// Perform tilde expansion and nothing else on the specified string, which is modified in place.
+///
+/// \param input the string to tilde expand
+pub fn expand_tilde(input: &mut WString, _vars: &dyn Environment) {
+    if input.chars().next() == Some('~') {
+        input.replace_range(0..1, wstr::from_char_slice(&[HOME_DIRECTORY]));
+        todo!();
+        // expand_home_directory(input, vars);
+    }
 }

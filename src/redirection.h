@@ -19,13 +19,13 @@ enum class RedirectionMode {
 struct Dup2Action;
 class Dup2List;
 struct RedirectionSpec;
-struct RedirectionSpecList;
+struct RedirectionSpecListFfi;
 
 #endif
 
 using redirection_mode_t = RedirectionMode;
 using redirection_spec_t = RedirectionSpec;
-using redirection_spec_list_t = RedirectionSpecList;
+using redirection_spec_list_t = RedirectionSpecListFfi;
 using dup2_action_t = Dup2Action;
 using dup2_list_t = Dup2List;
 

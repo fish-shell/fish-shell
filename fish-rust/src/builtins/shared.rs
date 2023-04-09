@@ -39,16 +39,31 @@ pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 
 pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
 
-/// A handy return value for successful builtins.
-pub const STATUS_CMD_OK: Option<c_int> = Some(0);
+// Return values (`$status` values for fish scripts) for various situations.
 
+/// The status code used for normal exit in a command.
+pub const STATUS_CMD_OK: Option<c_int> = Some(0);
 /// The status code used for failure exit in a command (but not if the args were invalid).
 pub const STATUS_CMD_ERROR: Option<c_int> = Some(1);
-
 /// The status code used for invalid arguments given to a command. This is distinct from valid
 /// arguments that might result in a command failure. An invalid args condition is something
 /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc.
 pub const STATUS_INVALID_ARGS: Option<c_int> = Some(2);
+
+/// The status code used when a command was not found.
+pub const STATUS_CMD_UNKNOWN: Option<c_int> = Some(127);
+
+/// The status code used when an external command can not be run.
+pub const STATUS_NOT_EXECUTABLE: Option<c_int> = Some(126);
+
+/// The status code used when a wildcard had no matches.
+pub const STATUS_UNMATCHED_WILDCARD: Option<c_int> = Some(124);
+/// The status code used when illegal command name is encountered.
+pub const STATUS_ILLEGAL_CMD: Option<c_int> = Some(123);
+/// The status code used when `read` is asked to consume too much data.
+pub const STATUS_READ_TOO_MUCH: Option<c_int> = Some(122);
+/// The status code when an expansion fails, for example, "$foo["
+pub const STATUS_EXPAND_ERROR: Option<c_int> = Some(121);
 
 /// A wrapper around output_stream_t.
 pub struct output_stream_t(*mut ffi::output_stream_t);

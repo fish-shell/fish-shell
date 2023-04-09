@@ -1074,7 +1074,7 @@ pub fn str2wcstring(inp: &[u8]) -> WString {
                     std::ptr::addr_of_mut!(codepoint).cast(),
                     std::ptr::addr_of!(inp[pos]).cast(),
                     inp.len() - pos,
-                    std::ptr::addr_of_mut!(state),
+                    &mut state,
                 )
             };
             match char::from_u32(codepoint) {
@@ -1410,11 +1410,7 @@ fn can_be_encoded(wc: char) -> bool {
     let mut converted = [0_i8; AT_LEAST_MB_LEN_MAX];
     let mut state = zero_mbstate();
     unsafe {
-        wcrtomb(
-            std::ptr::addr_of_mut!(converted[0]),
-            wc as libc::wchar_t,
-            std::ptr::addr_of_mut!(state),
-        ) != 0_usize.wrapping_sub(1)
+        wcrtomb(&mut converted[0], wc as libc::wchar_t, &mut state) != 0_usize.wrapping_sub(1)
     }
 }
 
@@ -1638,7 +1634,7 @@ static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: Lazy<bool> = Lazy::new(|| false);
 static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: Lazy<bool> = Lazy::new(|| {
     let mut info: libc::utsname = unsafe { mem::zeroed() };
     unsafe {
-        libc::uname(std::ptr::addr_of_mut!(info));
+        libc::uname(&mut info);
     }
 
     // Sample utsname.release under WSL, testing for something like `4.4.0-17763-Microsoft`
@@ -1648,11 +1644,11 @@ static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: Lazy<bool> = Lazy::new(|| {
     let dash = info.release.iter().position('-');
 
     if dash
-        .map(|d| unsafe { libc::strtod(std::ptr::addr_of!(info.release[d + 1]), std::ptr::null()) } >= 17763)
+        .map(|d| unsafe { libc::strtod(&info.release[d + 1], std::ptr::null()) } >= 17763)
         .unwrap_or(false)
-        {
-            return false;
-        }
+    {
+        return false;
+    }
 
     // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
     // job control under early WSL releases that prevent fish from running correctly,
@@ -1695,7 +1691,7 @@ pub fn redirect_tty_output() {
         let fd = libc::open(s.as_ptr(), O_WRONLY);
         assert!(fd != -1, "Could not open /dev/null!");
         for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
-            if libc::tcgetattr(stdfd, std::ptr::addr_of_mut!(t)) == -1 && errno::errno().0 == EIO {
+            if libc::tcgetattr(stdfd, &mut t) == -1 && errno::errno().0 == EIO {
                 libc::dup2(fd, stdfd);
             }
         }
@@ -2071,7 +2067,7 @@ mod tests {
                 wcrtomb(
                     std::ptr::addr_of_mut!(converted[0]).cast(),
                     c as libc::wchar_t,
-                    std::ptr::addr_of_mut!(state),
+                    &mut state,
                 )
             };
             if len == 0_usize.wrapping_sub(1) {

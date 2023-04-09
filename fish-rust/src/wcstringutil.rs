@@ -59,17 +59,17 @@ fn wcs2string_bad_char(c: char) {
 }
 
 /// Joins strings with a separator.
-pub fn join_strings(strs: &[&wstr], sep: char) -> WString {
+pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
     if strs.is_empty() {
         return WString::new();
     }
-    let capacity = strs.iter().fold(0, |acc, s| acc + s.len()) + strs.len() - 1;
+    let capacity = strs.iter().fold(0, |acc, s| acc + s.as_ref().len()) + strs.len() - 1;
     let mut result = WString::with_capacity(capacity);
     for (i, s) in strs.iter().enumerate() {
         if i > 0 {
             result.push(sep);
         }
-        result.push_utfstr(s);
+        result.push_utfstr(&s);
     }
     result
 }
@@ -77,7 +77,8 @@ pub fn join_strings(strs: &[&wstr], sep: char) -> WString {
 #[test]
 fn test_join_strings() {
     use crate::wchar::L;
-    assert_eq!(join_strings(&[], '/'), "");
+    let empty: &[&wstr] = &[];
+    assert_eq!(join_strings(empty, '/'), "");
     assert_eq!(join_strings(&[L!("foo")], '/'), "foo");
     assert_eq!(
         join_strings(&[L!("foo"), L!("bar"), L!("baz")], '/'),

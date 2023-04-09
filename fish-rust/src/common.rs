@@ -1544,7 +1544,7 @@ pub type Timepoint = f64;
 
 /// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
 /// the gettimeofday function and will have the same precision as that function.
-fn timef() -> Timepoint {
+pub fn timef() -> Timepoint {
     match time::SystemTime::now().duration_since(time::UNIX_EPOCH) {
         Ok(difference) => difference.as_secs() as f64,
         Err(until_epoch) => -(until_epoch.duration().as_secs() as f64),
@@ -1852,7 +1852,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// most common operating systems do not use them. The value is cached for the duration of the fish
 /// session. We err on the side of assuming it's not a console session. This approach isn't
 /// bullet-proof and that's OK.
-fn is_console_session() -> bool {
+pub fn is_console_session() -> bool {
     *CONSOLE_SESSION
 }
 

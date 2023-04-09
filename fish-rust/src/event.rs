@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 use widestring_suffix::widestrs;
 
 use crate::builtins::shared::io_streams_t;
-use crate::common::{escape_string, replace_with, EscapeFlags, EscapeStringStyle, ScopeGuard};
+use crate::common::{escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard};
 use crate::ffi::{self, block_t, parser_t, signal_check_cancel, signal_handle, Repin};
 use crate::flog::FLOG;
 use crate::signal::Signal;
@@ -676,13 +676,17 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
     );
 
     // Suppress fish_trace during events.
-    let saved_is_event = replace_with(&mut parser.libdata_pod().is_event, |old| old + 1);
-    let saved_suppress_fish_trace =
-        std::mem::replace(&mut parser.libdata_pod().suppress_fish_trace, true);
-    let mut parser = ScopeGuard::new(parser, |parser| {
-        parser.libdata_pod().is_event = saved_is_event;
-        parser.libdata_pod().suppress_fish_trace = saved_suppress_fish_trace;
-    });
+    let is_event = parser.libdata_pod().is_event;
+    let mut parser = scoped_push(
+        parser,
+        |parser| &mut parser.libdata_pod().is_event,
+        is_event + 1,
+    );
+    let mut parser = scoped_push(
+        &mut *parser,
+        |parser| &mut parser.libdata_pod().suppress_fish_trace,
+        true,
+    );
 
     // Capture the event handlers that match this event.
     let fire: Vec<_> = EVENT_HANDLERS
@@ -717,7 +721,7 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         let saved_is_interactive =
             std::mem::replace(&mut parser.libdata_pod().is_interactive, false);
         let saved_statuses = parser.get_last_statuses().within_unique_ptr();
-        let mut parser = ScopeGuard::new(&mut parser, |parser| {
+        let mut parser = ScopeGuard::new(&mut *parser, |parser| {
             parser.pin().set_last_statuses(saved_statuses);
             parser.libdata_pod().is_interactive = saved_is_interactive;
         });
@@ -731,14 +735,14 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
             "'"
         );
 
-        let b = parser
+        let b = (*parser)
             .pin()
             .push_block(block_t::event_block((event as *const Event).cast()).within_unique_ptr());
-        parser
+        (*parser)
             .pin()
             .eval_string_ffi1(&buffer.to_ffi())
             .within_unique_ptr();
-        parser.pin().pop_block(b);
+        (*parser).pin().pop_block(b);
 
         handler.fired.store(true, Ordering::Relaxed);
         fired_one_shot |= handler.is_one_shot();

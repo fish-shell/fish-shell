@@ -1855,38 +1855,44 @@ impl<T, F: FnOnce(&mut T), C> Drop for ScopeGuard<T, F, C> {
     }
 }
 
-/// A scoped manager to save the current value of some variable, and optionally set it to a new
-/// value. When dropped, it restores the variable to its old value.
-///
-/// This can be handy when there are multiple code paths to exit a block. Note that this can only be
-/// used if the code does not access the captured variable again for the duration of the scope. If
-/// that's not the case (the code will refuse to compile), use a [`ScopeGuard`] instance instead.
-pub struct ScopedPush<'a, T> {
-    var: &'a mut T,
-    saved_value: Option<T>,
-}
-
-impl<'a, T> ScopedPush<'a, T> {
-    pub fn new(var: &'a mut T, new_value: T) -> Self {
-        let saved_value = mem::replace(var, new_value);
-
-        Self {
-            var,
-            saved_value: Some(saved_value),
-        }
+/// A scoped manager to save the current value of some variable, and set it to a new value. When
+/// dropped, it restores the variable to its old value.
+#[allow(clippy::type_complexity)] // Not sure how to extract the return type.
+pub fn scoped_push<Context, Accessor, T>(
+    mut ctx: Context,
+    accessor: Accessor,
+    new_value: T,
+) -> ScopeGuard<(Context, Accessor, T), fn(&mut (Context, Accessor, T)), Context>
+where
+    Accessor: Fn(&mut Context) -> &mut T,
+    T: Copy,
+{
+    fn restore_saved_value<Context, Accessor, T: Copy>(data: &mut (Context, Accessor, T))
+    where
+        Accessor: Fn(&mut Context) -> &mut T,
+    {
+        let (ref mut ctx, ref accessor, saved_value) = data;
+        *accessor(ctx) = *saved_value;
     }
-
-    pub fn restore(&mut self) {
-        if let Some(saved_value) = self.saved_value.take() {
-            *self.var = saved_value;
-        }
+    fn view_context<Context, Accessor, T>(data: &(Context, Accessor, T)) -> &Context
+    where
+        Accessor: Fn(&mut Context) -> &mut T,
+    {
+        &data.0
     }
-}
-
-impl<'a, T> Drop for ScopedPush<'a, T> {
-    fn drop(&mut self) {
-        self.restore()
+    fn view_context_mut<Context, Accessor, T>(data: &mut (Context, Accessor, T)) -> &mut Context
+    where
+        Accessor: Fn(&mut Context) -> &mut T,
+    {
+        &mut data.0
     }
+    let saved_value = mem::replace(accessor(&mut ctx), new_value);
+    ScopeGuard::with_view(
+        (ctx, accessor, saved_value),
+        view_context,
+        view_context_mut,
+        restore_saved_value,
+    )
 }
 
 pub const fn assert_send<T: Send>() {}

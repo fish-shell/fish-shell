@@ -41,7 +41,7 @@ mod topic_monitor_ffi {
     /// Simple value type containing the values for a topic.
     /// This should be kept in sync with topic_t.
     #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
-    struct generation_list_t {
+    pub struct generation_list_t {
         pub sighupint: u64,
         pub sigchld: u64,
         pub internal_exit: u64,
@@ -208,11 +208,11 @@ impl binary_semaphore_t {
             assert!(pipes.is_some(), "Failed to make pubsub pipes");
             pipes_ = pipes.unwrap();
 
-            // // Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point
-            // // where instrumented code makes certain blocking calls. But tsan cannot interrupt a signal
-            // // call, so if we're blocked in read() (like the topic monitor wants to be!), we'll never
-            // // receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as non-blocking
-            // // (so reads will never block) and use select() to poll it.
+            // Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point
+            // where instrumented code makes certain blocking calls. But tsan cannot interrupt a signal
+            // call, so if we're blocked in read() (like the topic monitor wants to be!), we'll never
+            // receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as non-blocking
+            // (so reads will never block) and use select() to poll it.
             if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
                 ffi::make_fd_nonblocking(c_int(pipes_.read.fd()));
             }

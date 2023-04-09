@@ -1971,6 +1971,19 @@ macro_rules! assert_sorted_by_name {
     };
 }
 
+pub trait Named {
+    fn name(&self) -> &'static wstr;
+}
+
+/// \return a pointer to the first entry with the given name, assuming the entries are sorted by
+/// name. \return nullptr if not found.
+pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&'static T> {
+    match vals.binary_search_by_key(&name, |val| val.name()) {
+        Ok(index) => Some(&vals[index]),
+        Err(_) => None,
+    }
+}
+
 #[allow(unused_macros)]
 macro_rules! fwprintf {
     ($fd:expr, $format:literal $(, $arg:expr)*) => {

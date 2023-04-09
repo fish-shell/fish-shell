@@ -158,6 +158,30 @@ where
     true
 }
 
+/// Iterator type for splitting a wide string on a char.
+pub struct WStrCharSplitIter<'a> {
+    split: char,
+    chars: &'a [char],
+}
+
+impl<'a> Iterator for WStrCharSplitIter<'a> {
+    type Item = &'a wstr;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.chars.is_empty() {
+            return None;
+        } else if let Some(idx) = self.chars.iter().position(|c| *c == self.split) {
+            let (prefix, rest) = self.chars.split_at(idx);
+            self.chars = &rest[1..];
+            return Some(wstr::from_char_slice(prefix));
+        } else {
+            let res = self.chars;
+            self.chars = &[];
+            return Some(wstr::from_char_slice(res));
+        }
+    }
+}
+
 /// Convenience functions for WString.
 pub trait WExt {
     /// Access the chars of a WString or wstr.
@@ -179,6 +203,17 @@ pub trait WExt {
             '\0'
         } else {
             chars[index]
+        }
+    }
+
+    /// \return an iterator over substrings, split by a given char.
+    /// The split char is not included in the substrings.
+    /// If the string is empty, the iterator will return no strings.
+    /// Note this differs from std::slice::split, which return a single empty item.
+    fn split(&self, c: char) -> WStrCharSplitIter {
+        WStrCharSplitIter {
+            split: c,
+            chars: self.as_char_slice(),
         }
     }
 
@@ -218,7 +253,7 @@ impl WExt for wstr {
 #[cfg(test)]
 mod tests {
     use super::WExt;
-    use crate::wchar::{WString, L};
+    use crate::wchar::{wstr, WString, L};
     /// Write some tests.
     #[cfg(test)]
     fn test_find_char() {
@@ -246,5 +281,23 @@ mod tests {
         assert!(L!("abc").ends_with("bc"));
         assert!(L!("abc").ends_with(L!("bc")));
         assert!(L!("abc").ends_with(&WString::from_str("abc")));
+    }
+
+    #[test]
+    fn test_split() {
+        fn do_split(s: &wstr, c: char) -> Vec<&wstr> {
+            s.split(c).collect()
+        }
+        assert_eq!(do_split(L!("abc"), 'b'), &["a", "c"]);
+        assert_eq!(do_split(L!("xxb"), 'x'), &["", "", "b"]);
+        assert_eq!(do_split(L!("bxxxb"), 'x'), &["b", "", "", "b"]);
+        assert_eq!(do_split(L!(""), 'x'), &[] as &[&str]);
+        assert_eq!(do_split(L!("foo,bar,baz"), ','), &["foo", "bar", "baz"]);
+        assert_eq!(do_split(L!("foobar"), ','), &["foobar"]);
+        assert_eq!(do_split(L!("1,2,3,4,5"), ','), &["1", "2", "3", "4", "5"]);
+        assert_eq!(
+            do_split(L!("Hello\nworld\nRust"), '\n'),
+            &["Hello", "world", "Rust"]
+        );
     }
 }

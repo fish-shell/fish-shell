@@ -50,6 +50,7 @@ mod parse_tree;
 mod parse_util;
 mod parser_keywords;
 mod path;
+mod proc;
 mod re;
 mod redirection;
 mod signal;

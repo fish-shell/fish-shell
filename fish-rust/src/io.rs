@@ -7,8 +7,8 @@ use crate::fds::{make_autoclose_pipes, wopen_cloexec, AutoCloseFd, PIPE_ERROR};
 use crate::ffi;
 use crate::flog::{should_flog, FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::job_group::JobGroup;
 use crate::path::path_apply_working_directory;
+use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
 use crate::topic_monitor::topic_t;
@@ -919,7 +919,7 @@ pub struct IoStreams<'a> {
     // The job group of the job, if any. This enables builtins which run more code like eval() to
     // share pgid.
     // FIXME: this is awkwardly placed.
-    job_group: Option<Rc<JobGroup>>,
+    job_group: Option<JobGroupRef>,
 }
 
 impl<'a> IoStreams<'a> {

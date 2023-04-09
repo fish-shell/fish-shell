@@ -18,6 +18,7 @@ mod fd_monitor_ffi {
     /// Reason for waking an item
     #[repr(u8)]
     #[cxx_name = "item_wake_reason_t"]
+    #[derive(PartialEq, Eq)]
     enum ItemWakeReason {
         /// The fd became readable (or was HUP'd)
         Readable,
@@ -107,7 +108,7 @@ impl From<u64> for FdMonitorItemId {
 }
 
 type FfiCallback = extern "C" fn(*mut AutoCloseFd, u8, void_ptr);
-type NativeCallback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>;
+pub type NativeCallback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>;
 
 /// The callback type used by [`FdMonitorItem`]. It is passed a mutable reference to the
 /// `FdMonitorItem`'s [`FdMonitorItem::fd`] and [the reason](ItemWakeupReason) for the wakeup. The

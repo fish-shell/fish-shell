@@ -1,12 +1,12 @@
 use self::ffi::pgid_t;
 use crate::common::{assert_send, assert_sync};
 use crate::signal::Signal;
+use crate::wchar::WString;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use cxx::{CxxWString, UniquePtr};
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Mutex;
-use widestring::WideUtfString;
 
 #[cxx::bridge]
 mod ffi {
@@ -96,7 +96,7 @@ pub struct JobGroup {
     /// true. We ensure the value (when set) is always non-negative.
     pgid: Option<libc::pid_t>,
     /// The original command which produced this job tree.
-    pub command: WideUtfString,
+    pub command: WString,
     /// Our job id, if any. `None` here should evaluate to `-1` for ffi purposes.
     /// "Simple block" groups like function calls do not have a job id.
     pub job_id: Option<JobId>,
@@ -289,12 +289,7 @@ impl JobId {
 }
 
 impl JobGroup {
-    pub fn new(
-        command: WideUtfString,
-        id: Option<JobId>,
-        job_control: bool,
-        wants_term: bool,
-    ) -> Self {
+    pub fn new(command: WString, id: Option<JobId>, job_control: bool, wants_term: bool) -> Self {
         // We *can* have a job id without job control, but not the reverse.
         if job_control {
             assert!(id.is_some(), "Cannot have job control without a job id!");
@@ -318,7 +313,7 @@ impl JobGroup {
     /// Return a new `JobGroup` with the provided `command`. The `JobGroup` is only assigned a
     /// `JobId` if `wants_job_id` is true and is created with job control disabled and
     /// [`JobGroup::wants_term`] set to false.
-    pub fn create(command: WideUtfString, wants_job_id: bool) -> JobGroup {
+    pub fn create(command: WString, wants_job_id: bool) -> JobGroup {
         JobGroup::new(
             command,
             if wants_job_id {
@@ -334,7 +329,7 @@ impl JobGroup {
     /// Return a new `JobGroup` with the provided `command` with job control enabled. A [`JobId`] is
     /// automatically acquired and assigned. If `wants_term` is true then [`JobGroup::wants_term`]
     /// is also set to `true` accordingly.
-    pub fn create_with_job_control(command: WideUtfString, wants_term: bool) -> JobGroup {
+    pub fn create_with_job_control(command: WString, wants_term: bool) -> JobGroup {
         JobGroup::new(
             command,
             JobId::acquire(),

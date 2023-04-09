@@ -3,6 +3,14 @@ use miette::miette;
 fn main() -> miette::Result<()> {
     cc::Build::new().file("src/compat.c").compile("libcompat.a");
 
+    if cc::Build::new()
+        .file("src/cfg/w_exitcode.cpp")
+        .try_compile("/dev/null")
+        .is_ok()
+    {
+        println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");
+    }
+
     let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
     let target_dir =
         std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));

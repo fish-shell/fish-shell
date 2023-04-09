@@ -627,11 +627,6 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, std::wcslen(st
 /// See fallback.h for the normal definitions.
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
-locale_t fish_c_locale() {
-    static const locale_t loc = newlocale(LC_ALL_MASK, "C", nullptr);
-    return loc;
-}
-
 static bool fish_numeric_locale_is_valid = false;
 
 void fish_invalidate_numeric_locale() {

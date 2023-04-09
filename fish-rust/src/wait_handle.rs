@@ -126,6 +126,8 @@ fn new_wait_handle_ffi(
     )))
 }
 
+/// The non user-visible, never-recycled job ID.
+/// Every job has a unique positive value for this.
 pub type InternalJobId = u64;
 
 /// The bits of a job necessary to support 'wait' and '--on-process-exit'.

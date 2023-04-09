@@ -960,13 +960,6 @@ pub const fn char_offset(base: char, offset: u32) -> char {
     }
 }
 
-/// A user-visible job ID.
-pub type JobId = i32;
-
-/// The non user-visible, never-recycled job ID.
-/// Every job has a unique positive value for this.
-pub type InternalJobId = u64;
-
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 fn exit_without_destructors(code: i32) -> ! {
     unsafe {

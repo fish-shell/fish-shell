@@ -66,7 +66,7 @@ These options modify how variables operate:
     Treat specified variable as a :ref:`path variable <variables-path>`; variable will be split on colons (``:``) and will be displayed joined by colons colons when quoted (``echo "$PATH"``) or exported.
 
 **--unpath**
-     Causes variable to no longer be tred as a :ref:`path variable <variables-path>`.
+     Causes variable to no longer be treated as a :ref:`path variable <variables-path>`.
      Note: variables ending in "PATH" are automatically path variables.
 
 Further options:

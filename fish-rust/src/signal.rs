@@ -323,7 +323,7 @@ impl From<Signal> for i32 {
 
 impl From<Signal> for usize {
     fn from(value: Signal) -> Self {
-        value.code() as usize
+        usize::try_from(value.code()).unwrap()
     }
 }
 

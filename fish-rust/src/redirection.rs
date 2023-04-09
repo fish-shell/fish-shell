@@ -93,15 +93,15 @@ pub struct RedirectionSpec {
     /// The redirected fd, or -1 on overflow.
     /// In the common case of a pipe, this is 1 (STDOUT_FILENO).
     /// For example, in the case of "3>&1" this will be 3.
-    fd: RawFd,
+    pub fd: RawFd,
 
     /// The redirection mode.
-    mode: RedirectionMode,
+    pub mode: RedirectionMode,
 
     /// The target of the redirection.
     /// For example in "3>&1", this will be "1".
     /// In "< file.txt" this will be "file.txt".
-    target: WString,
+    pub target: WString,
 }
 
 impl RedirectionSpec {

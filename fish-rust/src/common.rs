@@ -15,7 +15,7 @@ use crate::wchar_ffi::WCharToFFI;
 use crate::wcstringutil::wcs2string_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
-use crate::wutil::{fish_iswalnum, sprintf, wgettext};
+use crate::wutil::{fish_iswalnum, sprintf, wgettext, wwrite_to_fd};
 use bitflags::bitflags;
 use core::slice;
 use cxx::{CxxWString, UniquePtr};
@@ -27,7 +27,7 @@ use std::env;
 use std::ffi::{CString, OsString};
 use std::mem::{self, ManuallyDrop};
 use std::ops::{Deref, DerefMut};
-use std::os::fd::AsRawFd;
+use std::os::fd::{AsRawFd, RawFd};
 use std::os::unix::prelude::OsStringExt;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -1969,6 +1969,20 @@ macro_rules! assert_sorted_by_name {
     ($slice:expr) => {
         assert_sorted_by_name!($slice, name);
     };
+}
+
+#[allow(unused_macros)]
+macro_rules! fwprintf {
+    ($fd:expr, $format:literal $(, $arg:expr)*) => {
+        {
+            let wide = crate::wutil::sprintf!($format $(, $arg )*);
+            crate::wutil::wwrite_to_fd(&wide, $fd);
+        }
+    }
+}
+
+pub fn fputws(s: &wstr, fd: RawFd) {
+    wwrite_to_fd(s, fd);
 }
 
 mod tests {

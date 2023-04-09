@@ -1,3 +1,11 @@
+// TODO
+#![allow(unused_variables)]
+#![allow(unused_macros)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unreachable_code)]
+#![allow(clippy::diverging_sub_expression)]
+//
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
@@ -21,6 +29,8 @@ mod color;
 mod compat;
 mod complete;
 mod env;
+mod env_dispatch;
+mod env_universal_common;
 mod event;
 mod exec;
 mod expand;
@@ -42,6 +52,7 @@ mod future_feature_flags;
 mod global_safety;
 mod highlight;
 mod history;
+mod input;
 mod io;
 mod job_group;
 mod locale;
@@ -56,6 +67,7 @@ mod parser_keywords;
 mod path;
 mod proc;
 mod re;
+mod reader;
 mod redirection;
 mod signal;
 mod smoke;

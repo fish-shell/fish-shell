@@ -17,6 +17,7 @@ mod compat;
 mod env;
 mod event;
 mod expand;
+mod fallback;
 mod fd_monitor;
 mod fd_readable_set;
 mod fds;

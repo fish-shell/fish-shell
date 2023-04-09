@@ -6,6 +6,7 @@ use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_prin
 use crate::wchar::wstr;
 use crate::wchar_ffi::c_str;
 use widestring::U32CStr;
+use widestring_suffix::widestrs;
 
 /// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
 pub struct sigchecker_t {
@@ -72,7 +73,7 @@ pub fn signal_get_desc(sig: i32) -> &'static wstr {
     wstr::from_ucstr(s).expect("signal description should be valid utf-32")
 }
 
-#[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
 /// A wrapper around the system signal code.
 pub struct Signal(NonZeroI32);
 
@@ -139,7 +140,8 @@ impl Signal {
 }
 
 impl Signal {
-    const UNKNOWN_SIG_NAME: &'static str = "SIG???";
+    #[widestrs]
+    const UNKNOWN_SIG_NAME: &'static wstr = "SIG???"L;
 
     /// Creates a new `Signal` to represent the passed system signal code `sig`.
     /// Panics if `sig` is zero.
@@ -150,49 +152,50 @@ impl Signal {
         }
     }
 
-    pub const fn name(&self) -> &'static str {
+    #[widestrs]
+    pub const fn name(&self) -> &'static wstr {
         match *self {
-            Signal::SIGHUP => "SIGHUP",
-            Signal::SIGINT => "SIGINT",
-            Signal::SIGQUIT => "SIGQUIT",
-            Signal::SIGILL => "SIGILL",
-            Signal::SIGTRAP => "SIGTRAP",
-            Signal::SIGABRT => "SIGABRT",
+            Signal::SIGHUP => "SIGHUP"L,
+            Signal::SIGINT => "SIGINT"L,
+            Signal::SIGQUIT => "SIGQUIT"L,
+            Signal::SIGILL => "SIGILL"L,
+            Signal::SIGTRAP => "SIGTRAP"L,
+            Signal::SIGABRT => "SIGABRT"L,
             #[cfg(any(feature = "bsd", target_os = "macos"))]
-            Signal::SIGEMT => "SIGEMT",
-            Signal::SIGFPE => "SIGFPE",
-            Signal::SIGKILL => "SIGKILL",
-            Signal::SIGBUS => "SIGBUS",
-            Signal::SIGSEGV => "SIGSEGV",
-            Signal::SIGSYS => "SIGSYS",
-            Signal::SIGPIPE => "SIGPIPE",
-            Signal::SIGALRM => "SIGALRM",
-            Signal::SIGTERM => "SIGTERM",
-            Signal::SIGURG => "SIGURG",
-            Signal::SIGSTOP => "SIGSTOP",
-            Signal::SIGTSTP => "SIGTSTP",
-            Signal::SIGCONT => "SIGCONT",
-            Signal::SIGCHLD => "SIGCHLD",
-            Signal::SIGTTIN => "SIGTTIN",
-            Signal::SIGTTOU => "SIGTTOU",
-            Signal::SIGIO => "SIGIO",
-            Signal::SIGXCPU => "SIGXCPU",
-            Signal::SIGXFSZ => "SIGXFSZ",
-            Signal::SIGVTALRM => "SIGVTALRM",
-            Signal::SIGPROF => "SIGPROF",
-            Signal::SIGWINCH => "SIGWINCH",
+            Signal::SIGEMT => "SIGEMT"L,
+            Signal::SIGFPE => "SIGFPE"L,
+            Signal::SIGKILL => "SIGKILL"L,
+            Signal::SIGBUS => "SIGBUS"L,
+            Signal::SIGSEGV => "SIGSEGV"L,
+            Signal::SIGSYS => "SIGSYS"L,
+            Signal::SIGPIPE => "SIGPIPE"L,
+            Signal::SIGALRM => "SIGALRM"L,
+            Signal::SIGTERM => "SIGTERM"L,
+            Signal::SIGURG => "SIGURG"L,
+            Signal::SIGSTOP => "SIGSTOP"L,
+            Signal::SIGTSTP => "SIGTSTP"L,
+            Signal::SIGCONT => "SIGCONT"L,
+            Signal::SIGCHLD => "SIGCHLD"L,
+            Signal::SIGTTIN => "SIGTTIN"L,
+            Signal::SIGTTOU => "SIGTTOU"L,
+            Signal::SIGIO => "SIGIO"L,
+            Signal::SIGXCPU => "SIGXCPU"L,
+            Signal::SIGXFSZ => "SIGXFSZ"L,
+            Signal::SIGVTALRM => "SIGVTALRM"L,
+            Signal::SIGPROF => "SIGPROF"L,
+            Signal::SIGWINCH => "SIGWINCH"L,
             #[cfg(any(feature = "bsd", target_os = "macos"))]
-            Signal::SIGINFO => "SIGINFO",
-            Signal::SIGUSR1 => "SIGUSR1",
-            Signal::SIGUSR2 => "SIGUSR2",
+            Signal::SIGINFO => "SIGINFO"L,
+            Signal::SIGUSR1 => "SIGUSR1"L,
+            Signal::SIGUSR2 => "SIGUSR2"L,
             #[cfg(any(target_os = "freebsd"))]
-            Signal::SIGTHR => "SIGTHR",
+            Signal::SIGTHR => "SIGTHR"L,
             #[cfg(any(target_os = "freebsd"))]
-            Signal::SIGLIBRT => "SIGLIBRT",
+            Signal::SIGLIBRT => "SIGLIBRT"L,
             #[cfg(target_os = "linux")]
-            Signal::SIGSTKFLT => "SIGSTKFLT",
+            Signal::SIGSTKFLT => "SIGSTKFLT"L,
             #[cfg(target_os = "linux")]
-            Signal::SIGPWR => "SIGPWR",
+            Signal::SIGPWR => "SIGPWR"L,
             Signal(_) => Self::UNKNOWN_SIG_NAME,
         }
     }
@@ -201,50 +204,51 @@ impl Signal {
         self.0.into()
     }
 
-    pub const fn desc(&self) -> &'static str {
+    #[widestrs]
+    pub const fn desc(&self) -> &'static wstr {
         match *self {
-            Signal::SIGHUP => "Terminal hung up",
-            Signal::SIGINT => "Quit request from job control (^C)",
-            Signal::SIGQUIT => "Quit request from job control with core dump (^\\)",
-            Signal::SIGILL => "Illegal instruction",
-            Signal::SIGTRAP => "Trace or breakpoint trap",
-            Signal::SIGABRT => "Abort",
+            Signal::SIGHUP => "Terminal hung up"L,
+            Signal::SIGINT => "Quit request from job control (^C)"L,
+            Signal::SIGQUIT => "Quit request from job control with core dump (^\\)"L,
+            Signal::SIGILL => "Illegal instruction"L,
+            Signal::SIGTRAP => "Trace or breakpoint trap"L,
+            Signal::SIGABRT => "Abort"L,
             #[cfg(any(feature = "bsd", target_os = "macos"))]
-            Signal::SIGEMT => "Emulator trap",
-            Signal::SIGFPE => "Floating point exception",
-            Signal::SIGKILL => "Forced quit",
-            Signal::SIGBUS => "Misaligned address error",
-            Signal::SIGSEGV => "Address boundary error",
-            Signal::SIGSYS => "Bad system call",
-            Signal::SIGPIPE => "Broken pipe",
-            Signal::SIGALRM => "Timer expired",
-            Signal::SIGTERM => "Polite quit request",
-            Signal::SIGURG => "Urgent socket condition",
-            Signal::SIGSTOP => "Forced stop",
-            Signal::SIGTSTP => "Stop request from job control (^Z)",
-            Signal::SIGCONT => "Continue previously stopped process",
-            Signal::SIGCHLD => "Child process status changed",
-            Signal::SIGTTIN => "Stop from terminal input",
-            Signal::SIGTTOU => "Stop from terminal output",
-            Signal::SIGIO => "I/O on asynchronous file descriptior is possible",
-            Signal::SIGXCPU => "CPU time limit exceeded",
-            Signal::SIGXFSZ => "File size limit exceeded",
-            Signal::SIGVTALRM => "Virtual timer expired",
-            Signal::SIGPROF => "Profiling timer expired",
-            Signal::SIGWINCH => "Window size change",
+            Signal::SIGEMT => "Emulator trap"L,
+            Signal::SIGFPE => "Floating point exception"L,
+            Signal::SIGKILL => "Forced quit"L,
+            Signal::SIGBUS => "Misaligned address error"L,
+            Signal::SIGSEGV => "Address boundary error"L,
+            Signal::SIGSYS => "Bad system call"L,
+            Signal::SIGPIPE => "Broken pipe"L,
+            Signal::SIGALRM => "Timer expired"L,
+            Signal::SIGTERM => "Polite quit request"L,
+            Signal::SIGURG => "Urgent socket condition"L,
+            Signal::SIGSTOP => "Forced stop"L,
+            Signal::SIGTSTP => "Stop request from job control (^Z)"L,
+            Signal::SIGCONT => "Continue previously stopped process"L,
+            Signal::SIGCHLD => "Child process status changed"L,
+            Signal::SIGTTIN => "Stop from terminal input"L,
+            Signal::SIGTTOU => "Stop from terminal output"L,
+            Signal::SIGIO => "I/O on asynchronous file descriptior is possible"L,
+            Signal::SIGXCPU => "CPU time limit exceeded"L,
+            Signal::SIGXFSZ => "File size limit exceeded"L,
+            Signal::SIGVTALRM => "Virtual timer expired"L,
+            Signal::SIGPROF => "Profiling timer expired"L,
+            Signal::SIGWINCH => "Window size change"L,
             #[cfg(any(feature = "bsd", target_os = "macos"))]
-            Signal::SIGINFO => "Information request",
-            Signal::SIGUSR1 => "User-defined signal 1",
-            Signal::SIGUSR2 => "User-defined signal 2",
+            Signal::SIGINFO => "Information request"L,
+            Signal::SIGUSR1 => "User-defined signal 1"L,
+            Signal::SIGUSR2 => "User-defined signal 2"L,
             #[cfg(any(target_os = "freebsd"))]
-            Signal::SIGTHR => "Thread interrupt",
+            Signal::SIGTHR => "Thread interrupt"L,
             #[cfg(any(target_os = "freebsd"))]
-            Signal::SIGLIBRT => "Real-time library interrupt",
+            Signal::SIGLIBRT => "Real-time library interrupt"L,
             #[cfg(target_os = "linux")]
-            Signal::SIGSTKFLT => "Stack fault",
+            Signal::SIGSTKFLT => "Stack fault"L,
             #[cfg(target_os = "linux")]
-            Signal::SIGPWR => "Power failure",
-            Signal(_) => "Unknown",
+            Signal::SIGPWR => "Power failure"L,
+            Signal(_) => "Unknown"L,
         }
     }
 
@@ -307,23 +311,6 @@ impl Signal {
             #[cfg(target_os = "linux")]
             "PWR" => Some(Signal::SIGPWR),
             _ => None,
-        }
-    }
-}
-
-impl std::fmt::Debug for Signal {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}({})", self.name(), self.code()))
-    }
-}
-
-impl std::fmt::Display for Signal {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = self.name();
-        if name != Self::UNKNOWN_SIG_NAME {
-            f.write_str(name)
-        } else {
-            f.write_fmt(format_args!("Unrecognized Signal {}", self.code()))
         }
     }
 }

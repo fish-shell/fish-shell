@@ -165,6 +165,27 @@ function_properties_ref_t function_get_props(const wcstring &name) {
     return function_set.acquire()->get_props(name);
 }
 
+wcstring function_get_definition_file(const function_properties_t &props) {
+    return props.definition_file ? *props.definition_file : L"";
+}
+
+wcstring function_get_copy_definition_file(const function_properties_t &props) {
+    return props.copy_definition_file ? *props.copy_definition_file : L"";
+}
+bool function_is_copy(const function_properties_t &props) {
+    return props.is_copy;
+}
+int function_get_definition_lineno(const function_properties_t &props) {
+    return props.definition_lineno();
+}
+int function_get_copy_definition_lineno(const function_properties_t &props) {
+    return props.copy_definition_lineno;
+}
+
+wcstring function_get_annotated_definition(const function_properties_t &props, const wcstring &name) {
+    return props.annotated_definition(name);
+}
+
 function_properties_ref_t function_get_props_autoload(const wcstring &name, parser_t &parser) {
     parser.assert_can_execute();
     if (parser_keywords_is_reserved(name)) return nullptr;

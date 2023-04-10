@@ -20,6 +20,7 @@ Interactive improvements
 - The history pager now shows fuzzy (subsequence) matches in the absence of exact substring matches (:issue:`9476`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 - A new variable, :envvar:`fish_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`fish_cursor_default` (:issue:`4656`).
+- Selected text (for example, in vi visual mode) now respects the foreground color and other options such as bold (:issue:`9717`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -32,6 +33,7 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
   - ``ar`` (:issue:`9719`)
+- ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

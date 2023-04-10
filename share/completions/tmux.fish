@@ -200,7 +200,6 @@ set -l options \
     message-style \
     mouse \
     prefix \
-    prefix \
     renumber-windows \
     repeat-time \
     set-titles \

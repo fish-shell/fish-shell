@@ -20,33 +20,32 @@ pub fn to_boxed_chars(s: &wstr) -> Box<[char]> {
     chars.into()
 }
 
-use crate::ffi_tests::add_test;
-add_test!("test_regex_make_anchored", || {
-    use crate::ffi;
-    use crate::wchar::L;
-    use crate::wchar_ffi::WCharToFFI;
+#[test]
+fn test_regex_make_anchored() {
+    use pcre2::utf32::{Regex, RegexBuilder};
 
-    let flags = ffi::re::flags_t { icase: false };
-    let mut result = ffi::try_compile(&regex_make_anchored(L!("ab(.+?)")), &flags);
-    assert!(!result.has_error());
+    fn test_match(re: &Regex, subject: &wstr) -> bool {
+        re.is_match(&to_boxed_chars(subject)).unwrap()
+    }
 
-    let re = result.as_mut().get_regex();
+    let builder = RegexBuilder::new();
+    let result = builder.build(to_boxed_chars(&regex_make_anchored(L!("ab(.+?)"))));
+    assert!(result.is_ok());
+    let re = &result.unwrap();
 
-    assert!(!re.is_null());
-    assert!(!re.matches_ffi(&L!("").to_ffi()));
-    assert!(!re.matches_ffi(&L!("ab").to_ffi()));
-    assert!(re.matches_ffi(&L!("abcd").to_ffi()));
-    assert!(!re.matches_ffi(&L!("xabcd").to_ffi()));
-    assert!(re.matches_ffi(&L!("abcdefghij").to_ffi()));
+    assert!(!test_match(re, L!("")));
+    assert!(!test_match(re, L!("ab")));
+    assert!(test_match(re, L!("abcd")));
+    assert!(!test_match(re, L!("xabcd")));
+    assert!(test_match(re, L!("abcdefghij")));
 
-    let mut result = ffi::try_compile(&regex_make_anchored(L!("(a+)|(b+)")), &flags);
-    assert!(!result.has_error());
+    let result = builder.build(to_boxed_chars(&regex_make_anchored(L!("(a+)|(b+)"))));
+    assert!(result.is_ok());
 
-    let re = result.as_mut().get_regex();
-    assert!(!re.is_null());
-    assert!(!re.matches_ffi(&L!("").to_ffi()));
-    assert!(!re.matches_ffi(&L!("aabb").to_ffi()));
-    assert!(re.matches_ffi(&L!("aaaa").to_ffi()));
-    assert!(re.matches_ffi(&L!("bbbb").to_ffi()));
-    assert!(!re.matches_ffi(&L!("aaaax").to_ffi()));
-});
+    let re = &result.unwrap();
+    assert!(!test_match(re, L!("")));
+    assert!(!test_match(re, L!("aabb")));
+    assert!(test_match(re, L!("aaaa")));
+    assert!(test_match(re, L!("bbbb")));
+    assert!(!test_match(re, L!("aaaax")));
+}

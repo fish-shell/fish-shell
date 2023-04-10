@@ -1,8 +1,6 @@
 use crate::wchar;
 use crate::wchar_ffi::WCharToFFI;
 #[rustfmt::skip]
-use ::std::fmt::{self, Debug, Formatter};
-#[rustfmt::skip]
 use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
@@ -32,7 +30,6 @@ include_cpp! {
     #include "parser.h"
     #include "parse_util.h"
     #include "proc.h"
-    #include "re.h"
     #include "tokenizer.h"
     #include "wildcard.h"
     #include "wutil.h"
@@ -92,12 +89,6 @@ include_cpp! {
     generate!("signal_get_desc")
 
     generate!("fd_event_signaller_t")
-
-    generate_pod!("re::flags_t")
-    generate_pod!("re::re_error_t")
-    generate!("re::regex_t")
-    generate!("re::regex_result_ffi")
-    generate!("re::try_compile_ffi")
 
     generate!("signal_handle")
     generate!("signal_check_cancel")
@@ -209,10 +200,6 @@ impl env_stack_t {
     }
 }
 
-pub fn try_compile(anchored: &wstr, flags: &re::flags_t) -> Pin<Box<re::regex_result_ffi>> {
-    re::try_compile_ffi(&anchored.to_ffi(), flags).within_box()
-}
-
 impl job_t {
     #[allow(clippy::mut_from_ref)]
     pub fn get_procs(&self) -> &mut [UniquePtr<process_t>] {
@@ -263,12 +250,6 @@ impl From<wcharz_t> for wchar::WString {
     }
 }
 
-impl Debug for re::regex_t {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str("regex_t")
-    }
-}
-
 /// A bogus trait for turning &mut Foo into Pin<&mut Foo>.
 /// autocxx enforces that non-const methods must be called through Pin,
 /// but this means we can't pass around mutable references to types like parser_t.
@@ -294,9 +275,6 @@ impl Repin for job_t {}
 impl Repin for output_stream_t {}
 impl Repin for parser_t {}
 impl Repin for process_t {}
-impl Repin for re::regex_result_ffi {}
-
-unsafe impl Send for re::regex_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

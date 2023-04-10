@@ -32,6 +32,7 @@
 #include "output.h"
 #include "parse_constants.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "path.h"
 #include "redirection.h"
 #include "tokenizer.h"
@@ -1371,4 +1372,10 @@ void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
     const wcstring working_directory = ctx.vars.get_pwd_slash();
     highlighter_t highlighter(buff, cursor, ctx, working_directory, io_ok);
     color = highlighter.highlight();
+}
+
+wcstring colorize_shell(const wcstring &text, parser_t &parser) {
+    std::vector<highlight_spec_t> colors;
+    highlight_shell(text, colors, parser.context());
+    return str2wcstring(colorize(text, colors, parser.vars()));
 }

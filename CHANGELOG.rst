@@ -31,6 +31,8 @@ Improved prompts
 
 Completions
 ^^^^^^^^^^^
+- Added completions for:
+  - ``ar`` (:issue:`9719`)
 - ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
 
 Improved terminal support

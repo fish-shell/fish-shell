@@ -67,7 +67,8 @@ struct function_properties_t {
     wcstring annotated_definition(const wcstring &name) const;
 };
 
-using function_properties_ref_t = std::shared_ptr<const function_properties_t>;
+// FIXME: Morally, this is const, but cxx doesn't get it
+using function_properties_ref_t = std::shared_ptr<function_properties_t>;
 
 /// Add a function. This may mutate \p props to set is_autoload.
 void function_add(wcstring name, std::shared_ptr<function_properties_t> props);
@@ -77,6 +78,14 @@ void function_remove(const wcstring &name);
 
 /// \return the properties for a function, or nullptr if none. This does not trigger autoloading.
 function_properties_ref_t function_get_props(const wcstring &name);
+
+/// Guff to work around cxx not getting function_properties_t.
+wcstring function_get_definition_file(const function_properties_t &props);
+wcstring function_get_copy_definition_file(const function_properties_t &props);
+bool function_is_copy(const function_properties_t &props);
+int function_get_definition_lineno(const function_properties_t &props);
+int function_get_copy_definition_lineno(const function_properties_t &props);
+wcstring function_get_annotated_definition(const function_properties_t &props, const wcstring &name);
 
 /// \return the properties for a function, or nullptr if none, perhaps triggering autoloading.
 function_properties_ref_t function_get_props_autoload(const wcstring &name, parser_t &parser);

@@ -100,6 +100,14 @@ include_cpp! {
     generate!("io_chain_t")
 
     generate!("env_var_t")
+
+    generate!("function_get_definition_file")
+    generate!("function_get_copy_definition_file")
+    generate!("function_get_definition_lineno")
+    generate!("function_get_copy_definition_lineno")
+    generate!("function_get_annotated_definition")
+    generate!("function_is_copy")
+    generate!("function_exists")
 }
 
 impl parser_t {

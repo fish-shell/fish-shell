@@ -53,3 +53,44 @@ pub fn append_path_component(path: &mut WString, component: &wstr) {
         path.push_utfstr(component);
     }
 }
+
+/// Remove double slashes and trailing slashes from a path, e.g. transform foo//bar/ into foo/bar.
+/// The string is modified in-place.
+pub fn path_make_canonical(path: &mut WString) {
+    let chars: &mut [char] = path.as_char_slice_mut();
+
+    // Ignore trailing slashes, unless it's the first character.
+    let mut len = chars.len();
+    while len > 1 && chars[len - 1] == '/' {
+        len -= 1;
+    }
+
+    // Turn runs of slashes into a single slash.
+    let mut trailing = 0;
+    let mut prev_was_slash = false;
+    for leading in 0..len {
+        let c = chars[leading];
+        let is_slash = c == '/';
+        if !prev_was_slash || !is_slash {
+            // This is either the first slash in a run, or not a slash at all.
+            chars[trailing] = c;
+            trailing += 1;
+        }
+        prev_was_slash = is_slash;
+    }
+    assert!(trailing <= len);
+    if trailing < len {
+        path.truncate(trailing);
+    }
+}
+
+#[test]
+fn test_path_make_canonical() {
+    let mut path = L!("//foo//////bar/").to_owned();
+    path_make_canonical(&mut path);
+    assert_eq!(path, "/foo/bar");
+
+    path = L!("/").to_owned();
+    path_make_canonical(&mut path);
+    assert_eq!(path, "/");
+}

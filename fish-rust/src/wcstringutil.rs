@@ -58,6 +58,14 @@ fn wcs2string_bad_char(c: char) {
     );
 }
 
+/// Split a string by a separator character.
+pub fn split_string(val: &wstr, sep: char) -> Vec<WString> {
+    val.as_char_slice()
+        .split(|c| *c == sep)
+        .map(WString::from_chars)
+        .collect()
+}
+
 /// Joins strings with a separator.
 pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
     if strs.is_empty() {

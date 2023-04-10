@@ -512,6 +512,7 @@ struct io_streams_t : noncopyable_t {
     output_stream_t &get_out() { return out; };
     output_stream_t &get_err() { return err; };
     io_streams_t(const io_streams_t &) = delete;
+    bool get_out_redirected() { return out_is_redirected; };
 };
 
 #endif

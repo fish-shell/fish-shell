@@ -25,6 +25,8 @@ include_cpp! {
     #include "fallback.h"
     #include "fds.h"
     #include "flog.h"
+    #include "function.h"
+    #include "highlight.h"
     #include "io.h"
     #include "parse_constants.h"
     #include "parser.h"
@@ -108,6 +110,8 @@ include_cpp! {
     generate!("function_get_annotated_definition")
     generate!("function_is_copy")
     generate!("function_exists")
+
+    generate!("colorize_shell")
 }
 
 impl parser_t {

@@ -89,14 +89,21 @@ pub struct io_streams_t {
     streams: *mut builtins_ffi::io_streams_t,
     pub out: output_stream_t,
     pub err: output_stream_t,
+    pub out_is_redirected: bool,
 }
 
 impl io_streams_t {
     pub fn new(mut streams: Pin<&mut builtins_ffi::io_streams_t>) -> io_streams_t {
         let out = output_stream_t(streams.as_mut().get_out().unpin());
         let err = output_stream_t(streams.as_mut().get_err().unpin());
+        let out_is_redirected = streams.as_mut().get_out_redirected();
         let streams = streams.unpin();
-        io_streams_t { streams, out, err }
+        io_streams_t {
+            streams,
+            out,
+            err,
+            out_is_redirected,
+        }
     }
 
     pub fn ffi_pin(&mut self) -> Pin<&mut builtins_ffi::io_streams_t> {

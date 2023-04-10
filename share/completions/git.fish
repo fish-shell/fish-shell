@@ -1956,7 +1956,7 @@ complete -F -c git -n '__fish_git_using_command restore' -n '__fish_git_contains
 # switch options
 complete -f -c git -n __fish_git_needs_command -a switch -d 'Switch to a branch'
 complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
-complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_local_branches)'
+complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command switch' -s c -l create -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command switch' -s C -l force-create -d 'Force create a new branch'
 complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -d 'Switch to a commit for inspection and discardable experiment' -rka '(__fish_git_refs)'

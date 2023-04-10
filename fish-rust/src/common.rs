@@ -1001,7 +1001,7 @@ pub fn get_obfuscation_read_char() -> char {
 }
 
 /// Profiling flag. True if commands should be profiled.
-pub static G_PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
 pub static mut PROGRAM_NAME: Lazy<&'static wstr> = Lazy::new(|| L!(""));
@@ -1015,11 +1015,11 @@ pub const HAS_WORKING_TTY_TIMESTAMPS: bool = true;
 
 /// A global, empty string. This is useful for functions which wish to return a reference to an
 /// empty string.
-pub static G_EMPTY_STRING: WString = WString::new();
+pub static EMPTY_STRING: WString = WString::new();
 
 /// A global, empty wcstring_list_t. This is useful for functions which wish to return a reference
 /// to an empty string.
-pub static G_EMPTY_STRING_LIST: Vec<WString> = vec![];
+pub static EMPTY_STRING_LIST: Vec<WString> = vec![];
 
 /// A function type to check for cancellation.
 /// \return true if execution should cancel.
@@ -1419,7 +1419,7 @@ fn fish_setlocale() {
             Ordering::Relaxed,
         );
     }
-    G_PROFILING_ACTIVE.store(true);
+    PROFILING_ACTIVE.store(true);
 }
 
 /// Test if the character can be encoded using the current locale.

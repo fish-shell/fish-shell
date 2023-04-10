@@ -41,6 +41,7 @@ include_cpp! {
     safety!(unsafe_ffi)
 
     generate_pod!("wcharz_t")
+    generate!("wcstring_list_ffi_t")
     generate!("make_fd_nonblocking")
     generate!("wperror")
 

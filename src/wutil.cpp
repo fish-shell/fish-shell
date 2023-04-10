@@ -986,3 +986,8 @@ int file_id_t::compare_file_id(const file_id_t &rhs) const {
 }
 
 bool file_id_t::operator<(const file_id_t &rhs) const { return this->compare_file_id(rhs) < 0; }
+
+// static
+wcstring_list_ffi_t wcstring_list_ffi_t::get_test_data() {
+    return wcstring_list_t{L"foo", L"bar", L"baz"};
+}

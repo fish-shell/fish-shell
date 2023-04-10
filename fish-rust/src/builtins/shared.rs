@@ -1,7 +1,7 @@
 use crate::builtins::{printf, wait};
-use crate::ffi::{self, parser_t, wcharz_t, Repin, RustBuiltin};
-use crate::wchar::{self, wstr, L};
-use crate::wchar_ffi::{c_str, empty_wstring};
+use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
+use crate::wchar::{wstr, WString, L};
+use crate::wchar_ffi::{c_str, empty_wstring, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use libc::c_int;
 use std::pin::Pin;
@@ -14,6 +14,7 @@ mod builtins_ffi {
         include!("builtin.h");
 
         type wcharz_t = crate::ffi::wcharz_t;
+        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
         type parser_t = crate::ffi::parser_t;
         type io_streams_t = crate::ffi::io_streams_t;
         type RustBuiltin = crate::ffi::RustBuiltin;
@@ -22,7 +23,7 @@ mod builtins_ffi {
         fn rust_run_builtin(
             parser: Pin<&mut parser_t>,
             streams: Pin<&mut io_streams_t>,
-            cpp_args: &Vec<wcharz_t>,
+            cpp_args: &wcstring_list_ffi_t,
             builtin: RustBuiltin,
             status_code: &mut i32,
         ) -> bool;
@@ -112,18 +113,12 @@ impl io_streams_t {
 fn rust_run_builtin(
     parser: Pin<&mut parser_t>,
     streams: Pin<&mut builtins_ffi::io_streams_t>,
-    cpp_args: &Vec<wcharz_t>,
+    cpp_args: &wcstring_list_ffi_t,
     builtin: RustBuiltin,
     status_code: &mut i32,
 ) -> bool {
-    let mut storage = Vec::<wchar::WString>::new();
-    for arg in cpp_args {
-        storage.push(arg.into());
-    }
-    let mut args = Vec::new();
-    for arg in &storage {
-        args.push(arg.as_utfstr());
-    }
+    let storage: Vec<WString> = cpp_args.from_ffi();
+    let mut args: Vec<&wstr> = storage.iter().map(|s| s.as_utfstr()).collect();
     let streams = &mut io_streams_t::new(streams);
 
     match run_builtin(parser.unpin(), streams, args.as_mut_slice(), builtin) {

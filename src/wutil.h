@@ -37,6 +37,20 @@ struct wcharz_t {
     inline size_t length() const { return size(); }
 };
 
+// A helper type for passing vectors of strings back to Rust.
+// This hides the vector so that autocxx doesn't complain about templates.
+struct wcstring_list_ffi_t {
+    wcstring_list_t vals;
+
+    /* implicit */ wcstring_list_ffi_t(wcstring_list_t vals) : vals(std::move(vals)) {}
+
+    size_t size() const { return vals.size(); }
+    const wcstring &at(size_t idx) const { return vals.at(idx); }
+
+    /// Helper function used in tests only.
+    static wcstring_list_ffi_t get_test_data();
+};
+
 class autoclose_fd_t;
 
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by

@@ -379,6 +379,7 @@ dependencies = [
  "libc",
  "lru",
  "miette",
+ "moveit",
  "nix",
  "num-traits",
  "once_cell",

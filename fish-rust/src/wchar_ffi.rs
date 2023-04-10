@@ -6,8 +6,9 @@
 //!   - wcharz_t: a "newtyped" pointer to a nul-terminated string, implemented in C++.
 //!               This is useful for FFI boundaries, to work around autocxx limitations on pointers.
 
-pub use crate::ffi::{wchar_t, wcharz_t};
+pub use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t};
 use crate::wchar::{wstr, WString};
+use autocxx::WithinUniquePtr;
 use once_cell::sync::Lazy;
 pub use widestring::u32cstr;
 pub use widestring::U32CString as W0String;
@@ -93,11 +94,13 @@ impl std::fmt::Debug for wcharz_t {
 /// Convert self to a CxxWString, in preparation for using over FFI.
 /// We can't use "From" as WString is implemented in an external crate.
 pub trait WCharToFFI {
-    fn to_ffi(&self) -> cxx::UniquePtr<cxx::CxxWString>;
+    type Target;
+    fn to_ffi(&self) -> Self::Target;
 }
 
 /// WString may be converted to CxxWString.
 impl WCharToFFI for WString {
+    type Target = cxx::UniquePtr<cxx::CxxWString>;
     fn to_ffi(&self) -> cxx::UniquePtr<cxx::CxxWString> {
         cxx::CxxWString::create(self.as_char_slice())
     }
@@ -105,6 +108,7 @@ impl WCharToFFI for WString {
 
 /// wstr (wide string slices) may be converted to CxxWString.
 impl WCharToFFI for wstr {
+    type Target = cxx::UniquePtr<cxx::CxxWString>;
     fn to_ffi(&self) -> cxx::UniquePtr<cxx::CxxWString> {
         cxx::CxxWString::create(self.as_char_slice())
     }
@@ -112,6 +116,7 @@ impl WCharToFFI for wstr {
 
 /// wcharz_t (wide char) may be converted to CxxWString.
 impl WCharToFFI for wcharz_t {
+    type Target = cxx::UniquePtr<cxx::CxxWString>;
     fn to_ffi(&self) -> cxx::UniquePtr<cxx::CxxWString> {
         cxx::CxxWString::create(self.chars())
     }
@@ -121,36 +126,54 @@ impl WCharToFFI for wcharz_t {
 pub trait WCharFromFFI<Target> {
     /// Convert from a CxxWString for FFI purposes.
     #[allow(clippy::wrong_self_convention)]
-    fn from_ffi(&self) -> Target;
+    fn from_ffi(self) -> Target;
 }
 
-impl WCharFromFFI<WString> for cxx::CxxWString {
-    fn from_ffi(&self) -> WString {
+impl WCharFromFFI<WString> for &cxx::CxxWString {
+    fn from_ffi(self) -> WString {
         WString::from_chars(self.as_chars())
     }
 }
 
-impl WCharFromFFI<WString> for cxx::UniquePtr<cxx::CxxWString> {
-    fn from_ffi(&self) -> WString {
+impl WCharFromFFI<WString> for &cxx::UniquePtr<cxx::CxxWString> {
+    fn from_ffi(self) -> WString {
         WString::from_chars(self.as_chars())
     }
 }
 
-impl WCharFromFFI<WString> for cxx::SharedPtr<cxx::CxxWString> {
-    fn from_ffi(&self) -> WString {
+impl WCharFromFFI<WString> for &cxx::SharedPtr<cxx::CxxWString> {
+    fn from_ffi(self) -> WString {
         WString::from_chars(self.as_chars())
     }
 }
 
-impl WCharFromFFI<Vec<u8>> for cxx::UniquePtr<cxx::CxxString> {
-    fn from_ffi(&self) -> Vec<u8> {
+impl WCharFromFFI<Vec<u8>> for &cxx::UniquePtr<cxx::CxxString> {
+    fn from_ffi(self) -> Vec<u8> {
         self.as_bytes().to_vec()
     }
 }
 
-impl WCharFromFFI<Vec<u8>> for cxx::SharedPtr<cxx::CxxString> {
-    fn from_ffi(&self) -> Vec<u8> {
+impl WCharFromFFI<Vec<u8>> for &cxx::SharedPtr<cxx::CxxString> {
+    fn from_ffi(self) -> Vec<u8> {
         self.as_bytes().to_vec()
+    }
+}
+
+/// Convert wcstring_list_ffi_t to Vec<WString>.
+impl WCharFromFFI<Vec<WString>> for &wcstring_list_ffi_t {
+    fn from_ffi(self) -> Vec<WString> {
+        let count: usize = self.size();
+        (0..count).map(|i| self.at(i).from_ffi()).collect()
+    }
+}
+
+/// Convert from the type we get back for C++ functions which return wcstring_list_ffi_t.
+impl<T> WCharFromFFI<Vec<WString>> for T
+where
+    T: autocxx::moveit::new::New<Output = wcstring_list_ffi_t>,
+{
+    fn from_ffi(self) -> Vec<WString> {
+        self.within_unique_ptr().as_ref().unwrap().from_ffi()
     }
 }
 
@@ -170,3 +193,10 @@ impl<'a> AsWstr<'a> for cxx::CxxWString {
         wstr::from_char_slice(self.as_chars())
     }
 }
+
+use crate::ffi_tests::add_test;
+add_test!("test_wcstring_list_ffi_t", || {
+    use crate::ffi::wcstring_list_ffi_t;
+    let data: Vec<WString> = wcstring_list_ffi_t::get_test_data().from_ffi();
+    assert_eq!(data, vec!["foo", "bar", "baz"]);
+});

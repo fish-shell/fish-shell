@@ -7,12 +7,16 @@ use nix::{
 };
 
 use crate::{
-    builtins::shared::STATUS_CMD_ERROR,
+    builtins::shared::{
+        builtin_missing_argument, builtin_print_error_trailer, builtin_print_help,
+        builtin_unknown_option, BUILTIN_ERR_TOO_MANY_ARGUMENTS, STATUS_CMD_ERROR,
+        STATUS_INVALID_ARGS,
+    },
     ffi::{fish_wcswidth2, parser_t},
     wchar::{wstr, L},
     wchar_ffi::WCharToFFI,
     wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::no_argument},
-    wutil::wgettext_fmt,
+    wutil::{fish_wcstoi, wgettext_fmt},
 };
 
 use super::shared::{builtin_wperror, io_streams_t, STATUS_CMD_OK};
@@ -347,12 +351,93 @@ pub fn ulimit(
     let cmd = args[0];
     let argc = args.len();
     let report_all = false;
-    let hard = false;
-    let soft = false;
+    let mut hard = false;
+    let mut soft = false;
     let what = resource::Resource::RLIMIT_FSIZE;
 
-    let mut w = wgetopter_t::new(short_options, long_options, args);
+    let woptind;
 
-    while let Some(c) = w.wgetopt_long() {}
-    todo!()
+    {
+        let mut w = wgetopter_t::new(short_options, long_options, args);
+
+        while let Some(c) = w.wgetopt_long() {
+            match c {
+                'h' => {
+                    builtin_print_help(parser, streams, cmd);
+                    return STATUS_CMD_OK;
+                }
+                ':' => {
+                    builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                    return STATUS_INVALID_ARGS;
+                }
+                '?' => {
+                    builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                    return STATUS_INVALID_ARGS;
+                }
+                _ => panic!("unexpected value from wgetopt_long"),
+            }
+        }
+
+        woptind = w.woptind;
+    }
+
+    if report_all {
+        print_all(hard, streams);
+        return STATUS_CMD_OK;
+    }
+
+    if what as i32 == RLIMIT_UNKNOWN {
+        streams.err.append(wgettext_fmt!(
+            "%ls: Resource limit not available on this operating system",
+            cmd
+        ));
+        builtin_print_error_trailer(parser, streams, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    let arg_count = argc - woptind;
+    if arg_count == 0 {
+        print(what, hard, streams);
+        return STATUS_CMD_OK;
+    } else if arg_count != 1 {
+        streams
+            .err
+            .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+        builtin_print_error_trailer(parser, streams, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if !hard && !soft {
+        soft = true;
+        hard = true;
+    }
+
+    let new_limit: u64;
+    if args[woptind].is_empty() {
+        streams.err.append(wgettext_fmt!(
+            "%ls: New limit cannot be an empty string\n",
+            cmd
+        ));
+        builtin_print_error_trailer(parser, streams, cmd);
+        return STATUS_INVALID_ARGS;
+    } else if args[woptind] == L!("unlimited") {
+        new_limit = RLIM_INFINITY;
+    } else if args[woptind] == L!("hard") {
+        new_limit = get(what, true);
+    } else if args[woptind] == L!("soft") {
+        new_limit = get(what, soft);
+    } else {
+        match fish_wcstoi(args[woptind]) {
+            Ok(lim) => new_limit = lim,
+            Err(_) => {
+                streams
+                    .err
+                    .append(wgettext_fmt!("%ls: Invalid limit '%ls'\n", cmd, woptind));
+                builtin_print_error_trailer(parser, streams, cmd);
+                return STATUS_INVALID_ARGS;
+            }
+        }
+    }
+
+    return set_limit(what, hard, soft, new_limit, streams);
 }

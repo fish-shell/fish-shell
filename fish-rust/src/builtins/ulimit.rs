@@ -1,6 +1,6 @@
 use std::cmp::max;
 
-use libc::{c_int, RLIM_INFINITY};
+use libc::c_int;
 use nix::{
     errno::Errno::EPERM,
     sys::resource::{self, getrlimit, setrlimit},
@@ -178,6 +178,10 @@ const RESOURCE_ARR: &[Resource] = &[
         multiplier: 1,
     },
 ];
+
+/// This constant is more platform specific
+#[allow(clippy::unnecessary_cast)]
+const RLIM_INFINITY: u64 = libc::RLIM_INFINITY as u64;
 
 /// This is likely to be the same as RLIMIT_INFINITY, but it shouldn't get used
 /// in the same context (that is, compared to the result of a getrlimit call).

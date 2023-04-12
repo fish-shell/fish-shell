@@ -29,7 +29,7 @@ import json
 json_data = open('composer.json')
 data = json.load(json_data)
 json_data.close()
-packages = itertools.chain(data['require'].keys(), data['require-dev'].keys())
+packages = itertools.chain(data.get('require', {}).keys(), data.get('require-dev', {}).keys())
 print(\"\n\".join(packages))
       " | $python -S
 end

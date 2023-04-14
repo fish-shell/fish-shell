@@ -113,6 +113,7 @@ enum RustBuiltin : int32_t {
     Bg,
     Block,
     Contains,
+    Command,
     Echo,
     Emit,
     Exit,

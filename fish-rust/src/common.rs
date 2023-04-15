@@ -1138,7 +1138,6 @@ pub fn wcs2zstring(input: &wstr) -> CString {
     }
 
     let mut result = vec![];
-    // result.reserve(input.len());
     wcs2string_callback(input, |buff| {
         result.extend_from_slice(buff);
         true

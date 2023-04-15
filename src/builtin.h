@@ -120,6 +120,7 @@ enum class RustBuiltin : int32_t {
     Echo,
     Emit,
     Exit,
+    Math,
     Printf,
     Pwd,
     Random,

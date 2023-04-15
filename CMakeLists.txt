@@ -105,7 +105,7 @@ set(FISH_BUILTIN_SRCS
     src/builtins/disown.cpp
     src/builtins/eval.cpp src/builtins/fg.cpp
     src/builtins/function.cpp src/builtins/functions.cpp src/builtins/history.cpp
-    src/builtins/jobs.cpp src/builtins/math.cpp src/builtins/path.cpp
+    src/builtins/jobs.cpp src/builtins/path.cpp
     src/builtins/read.cpp src/builtins/set.cpp
     src/builtins/set_color.cpp src/builtins/source.cpp src/builtins/status.cpp
     src/builtins/string.cpp src/builtins/test.cpp src/builtins/ulimit.cpp
@@ -123,7 +123,7 @@ set(FISH_SRCS
     src/pager.cpp src/parse_execution.cpp src/parse_util.cpp
     src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
     src/proc.cpp src/re.cpp src/reader.cpp src/screen.cpp
-    src/signals.cpp src/tinyexpr.cpp src/utf8.cpp
+    src/signals.cpp src/utf8.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp
     src/wutil.cpp src/fds.cpp src/rustffi.cpp
 )

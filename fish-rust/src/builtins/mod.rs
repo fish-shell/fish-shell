@@ -9,6 +9,7 @@ pub mod contains;
 pub mod echo;
 pub mod emit;
 pub mod exit;
+pub mod math;
 pub mod printf;
 pub mod pwd;
 pub mod random;

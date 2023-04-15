@@ -40,7 +40,6 @@
 #include "builtins/functions.h"
 #include "builtins/history.h"
 #include "builtins/jobs.h"
-#include "builtins/math.h"
 #include "builtins/path.h"
 #include "builtins/read.h"
 #include "builtins/set.h"
@@ -385,7 +384,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"history", &builtin_history, N_(L"History of commands executed by user")},
     {L"if", &builtin_generic, N_(L"Evaluate block if condition is true")},
     {L"jobs", &builtin_jobs, N_(L"Print currently running jobs")},
-    {L"math", &builtin_math, N_(L"Evaluate math expressions")},
+    {L"math", &implemented_in_rust, N_(L"Evaluate math expressions")},
     {L"not", &builtin_generic, N_(L"Negate exit status of job")},
     {L"or", &builtin_generic, N_(L"Execute command if previous command failed")},
     {L"path", &builtin_path, N_(L"Handle paths")},
@@ -549,6 +548,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"exit") {
         return RustBuiltin::Exit;
+    }
+    if (cmd == L"math") {
+        return RustBuiltin::Math;
     }
     if (cmd == L"pwd") {
         return RustBuiltin::Pwd;

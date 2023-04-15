@@ -111,6 +111,90 @@ fn hexponent_error(e: hexponent::ParseError) -> Error {
     }
 }
 
+/// Like [`wcstod()`], but allows underscore separators. Leading, trailing, and multiple underscores
+/// are allowed, as are underscores next to decimal (`.`), exponent (`E`/`e`/`P`/`p`), and
+/// hexadecimal (`X`/`x`) delimiters. This consumes trailing underscores -- `consumed` will include
+/// the last underscore which is legal to include in a parse (according to the above rules).
+/// Free-floating leading underscores (`"_ 3"`) are not allowed and will result in a no-parse.
+/// Underscores are not allowed before or inside of `"infinity"` or `"nan"` input. Trailing
+/// underscores after `"infinity"` or `"nan"` are not consumed.
+pub fn wcstod_underscores<Chars>(s: Chars, consumed: &mut usize) -> Result<f64, Error>
+where
+    Chars: IntoCharIter,
+{
+    let mut chars = s.chars().peekable();
+
+    let mut leading_whitespace = 0;
+    // Skip leading whitespace.
+    while let Some(c) = chars.peek() {
+        if c.is_ascii_whitespace() {
+            leading_whitespace += 1;
+            chars.next();
+        } else {
+            break;
+        }
+    }
+
+    let is_sign = |c: char| "+-".contains(c);
+    let is_inf_or_nan_char = |c: char| "iInN".contains(c);
+
+    // We don't do any underscore-stripping for infinity/NaN.
+    let mut is_inf_nan = false;
+    if let Some(&c1) = chars.peek() {
+        if is_inf_or_nan_char(c1) {
+            is_inf_nan = true;
+        } else if is_sign(c1) {
+            // FIXME make this more efficient
+            let mut copy = chars.clone();
+            copy.next();
+            if let Some(&c2) = copy.peek() {
+                if is_inf_or_nan_char(c2) {
+                    is_inf_nan = true;
+                }
+            }
+        }
+    }
+    if is_inf_nan {
+        let f = wcstod_inner(chars, '.', consumed)?;
+        *consumed += leading_whitespace;
+        return Ok(f);
+    }
+    // We build a string to pass to the system wcstod, pruned of underscores. We will take all
+    // leading alphanumeric characters that can appear in a strtod numeric literal, dots (.), and
+    // signs (+/-). In order to be more clever, for example to stop earlier in the case of strings
+    // like "123xxxxx", we would need to do a full parse, because sometimes 'a' is a hex digit and
+    // sometimes it is the end of the parse, sometimes a dot '.' is a decimal delimiter and
+    // sometimes it is the end of the valid parse, as in "1_2.3_4.5_6", etc.
+    let mut pruned = vec![];
+    // We keep track of the positions *in the pruned string* where there used to be underscores. We
+    // will pass the pruned version of the input string to the system wcstod, which in turn will
+    // tell us how many characters it consumed. Then we will set our own endptr based on (1) the
+    // number of characters consumed from the pruned string, and (2) how many underscores came
+    // before the last consumed character. The alternative to doing it this way (for example, "only
+    // deleting the correct underscores") would require actually parsing the input string, so that
+    // we can know when to stop grabbing characters and dropping underscores, as in "1_2.3_4.5_6".
+    let mut underscores = vec![];
+    // If we wanted to future-proof against a strtod from the future that, say, allows octal
+    // literals using 0o, etc., we could just use iswalnum, instead of iswxdigit and P/p/X/x checks.
+    for c in chars.take_while(|&c| c.is_ascii_hexdigit() || "PpXx._".contains(c) || is_sign(c)) {
+        if c == '_' {
+            underscores.push(pruned.len());
+        } else {
+            pruned.push(c)
+        }
+    }
+
+    let mut pruned_consumed = 0;
+    let f = wcstod_inner(pruned.into_iter(), '.', &mut pruned_consumed)?;
+    let underscores_consumed = underscores
+        .into_iter()
+        .take_while(|&n| n <= pruned_consumed)
+        .count();
+
+    *consumed = leading_whitespace + pruned_consumed + underscores_consumed;
+    Ok(f)
+}
+
 #[cfg(test)]
 mod test {
     #![allow(overflowing_literals)]
@@ -506,5 +590,57 @@ mod test {
         let result = wcstod(input, '.', &mut consumed);
         assert_eq!(result, val);
         assert_eq!(consumed, exp_consumed);
+    }
+
+    #[test]
+    fn wcstod_underscores() {
+        let test = |s| {
+            let mut consumed = 0;
+            super::wcstod_underscores(s, &mut consumed).map(|f| (f, consumed))
+        };
+
+        assert_eq!(test("123"), Ok((123.0, 3)));
+
+        assert_eq!(test("123"), Ok((123.0, 3)));
+        assert_eq!(test("1_2.3_4.5_6"), Ok((12.34, 7)));
+        assert_eq!(test("1_2"), Ok((12.0, 3)));
+        assert_eq!(test("1_._2"), Ok((1.2, 5)));
+        assert_eq!(test("1__2"), Ok((12.0, 4)));
+        assert_eq!(test(" 1__2 3__4 "), Ok((12.0, 5)));
+        assert_eq!(test("1_2 3_4"), Ok((12.0, 3)));
+        assert_eq!(test(" 1"), Ok((1.0, 2)));
+        assert_eq!(test(" 1_"), Ok((1.0, 3)));
+        assert_eq!(test(" 1__"), Ok((1.0, 4)));
+        assert_eq!(test(" 1___"), Ok((1.0, 5)));
+        assert_eq!(test(" 1___ 2___"), Ok((1.0, 5)));
+        assert_eq!(test(" _1"), Ok((1.0, 3)));
+        assert_eq!(test("1 "), Ok((1.0, 1)));
+        assert_eq!(test("infinity_"), Ok((f64::INFINITY, 8)));
+        assert_eq!(test(" -INFINITY"), Ok((f64::NEG_INFINITY, 10)));
+        assert_eq!(test("_infinity"), Err(Error::Empty));
+        /*
+        {
+            let (f, n) = test("nan(0)").unwrap();
+            assert!(f.is_nan());
+            assert_eq!(n, 6);
+        }
+        {
+            let (f, n) = test("nan(0)_").unwrap();
+            assert!(f.is_nan());
+            assert_eq!(n, 6);
+        }
+        */
+        assert_eq!(test("_nan(0)"), Err(Error::Empty));
+        // We don't strip the underscores in this commented-out test case, and the behavior is
+        // implementation-defined, so we don't actually know how many characters will get consumed. On
+        // macOS the strtod man page only says what happens with an alphanumeric string passed to nan(),
+        // but the strtod consumes all of the characters even if there are underscores.
+        // assert_eq!(test("nan(0_1_2)"), Ok((nan(0_1_2), 3)));
+        assert_eq!(test(" _ 1"), Err(Error::Empty));
+        assert_eq!(test("0x_dead_beef"), Ok((0xdeadbeef_u32 as f64, 12)));
+        assert_eq!(test("None"), Err(Error::InvalidChar));
+        assert_eq!(test(" None"), Err(Error::InvalidChar));
+        assert_eq!(test("Also none"), Err(Error::InvalidChar));
+        assert_eq!(test(" Also none"), Err(Error::InvalidChar));
     }
 }

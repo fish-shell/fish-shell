@@ -50,6 +50,7 @@ mod smoke;
 mod termsize;
 mod threads;
 mod timer;
+mod tinyexpr;
 mod tokenizer;
 mod topic_monitor;
 mod trace;

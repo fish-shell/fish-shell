@@ -618,18 +618,16 @@ mod test {
         assert_eq!(test("infinity_"), Ok((f64::INFINITY, 8)));
         assert_eq!(test(" -INFINITY"), Ok((f64::NEG_INFINITY, 10)));
         assert_eq!(test("_infinity"), Err(Error::Empty));
-        /*
         {
             let (f, n) = test("nan(0)").unwrap();
             assert!(f.is_nan());
-            assert_eq!(n, 6);
+            assert_eq!(n, 3);
         }
         {
             let (f, n) = test("nan(0)_").unwrap();
             assert!(f.is_nan());
-            assert_eq!(n, 6);
+            assert_eq!(n, 3);
         }
-        */
         assert_eq!(test("_nan(0)"), Err(Error::Empty));
         // We don't strip the underscores in this commented-out test case, and the behavior is
         // implementation-defined, so we don't actually know how many characters will get consumed. On

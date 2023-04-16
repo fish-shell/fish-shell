@@ -6,7 +6,7 @@
 //!   - wcharz_t: a "newtyped" pointer to a nul-terminated string, implemented in C++.
 //!               This is useful for FFI boundaries, to work around autocxx limitations on pointers.
 
-pub use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t};
+pub use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t, ToCppWString};
 use crate::wchar::{wstr, WString};
 use autocxx::WithinUniquePtr;
 use once_cell::sync::Lazy;
@@ -98,6 +98,12 @@ pub trait WCharToFFI {
     fn to_ffi(&self) -> Self::Target;
 }
 
+impl ToCppWString for &wstr {
+    fn into_cpp(self) -> cxx::UniquePtr<cxx::CxxWString> {
+        self.to_ffi()
+    }
+}
+
 /// WString may be converted to CxxWString.
 impl WCharToFFI for WString {
     type Target = cxx::UniquePtr<cxx::CxxWString>;
@@ -119,6 +125,19 @@ impl WCharToFFI for wcharz_t {
     type Target = cxx::UniquePtr<cxx::CxxWString>;
     fn to_ffi(&self) -> cxx::UniquePtr<cxx::CxxWString> {
         cxx::CxxWString::create(self.chars())
+    }
+}
+
+/// Convert from a slice of something that can be referenced as a wstr,
+/// to unique_ptr<wcstring_list_ffi_t>.
+impl<T: AsRef<wstr>> WCharToFFI for [T] {
+    type Target = cxx::UniquePtr<wcstring_list_ffi_t>;
+    fn to_ffi(&self) -> cxx::UniquePtr<wcstring_list_ffi_t> {
+        let mut list_ptr = wcstring_list_ffi_t::create();
+        for s in self {
+            list_ptr.as_mut().unwrap().push(s.as_ref());
+        }
+        list_ptr
     }
 }
 
@@ -196,7 +215,7 @@ impl<'a> AsWstr<'a> for cxx::CxxWString {
 
 use crate::ffi_tests::add_test;
 add_test!("test_wcstring_list_ffi_t", || {
-    use crate::ffi::wcstring_list_ffi_t;
     let data: Vec<WString> = wcstring_list_ffi_t::get_test_data().from_ffi();
     assert_eq!(data, vec!["foo", "bar", "baz"]);
+    wcstring_list_ffi_t::check_test_data(data.to_ffi());
 });

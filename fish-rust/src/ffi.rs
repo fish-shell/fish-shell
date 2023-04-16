@@ -302,6 +302,7 @@ impl Repin for output_stream_t {}
 impl Repin for parser_t {}
 impl Repin for process_t {}
 impl Repin for function_properties_ref_t {}
+impl Repin for wcstring_list_ffi_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

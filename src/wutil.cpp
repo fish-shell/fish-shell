@@ -905,3 +905,11 @@ bool file_id_t::operator<(const file_id_t &rhs) const { return this->compare_fil
 wcstring_list_ffi_t wcstring_list_ffi_t::get_test_data() {
     return wcstring_list_t{L"foo", L"bar", L"baz"};
 }
+
+// static
+void wcstring_list_ffi_t::check_test_data(wcstring_list_ffi_t data) {
+    assert(data.size() == 3);
+    assert(data.at(0) == L"foo");
+    assert(data.at(1) == L"bar");
+    assert(data.at(2) == L"baz");
+}

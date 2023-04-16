@@ -392,8 +392,7 @@ class output_stream_t : noncopyable_t, nonmovable_t {
     bool append(const wchar_t *s) { return append(s, std::wcslen(s)); }
 
     /// Append a char.
-    bool append(wchar_t s) { return append(&s, 1); }
-    bool push_back(wchar_t c) { return append(c); }
+    bool push(wchar_t s) { return append(&s, 1); }
 
     // Append data from a narrow buffer, widening it.
     bool append_narrow_buffer(const separated_buffer_t &buffer);

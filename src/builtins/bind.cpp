@@ -164,7 +164,7 @@ void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
     const wcstring_list_t names = input_terminfo_get_names(!all);
     for (const wcstring &name : names) {
         streams.out.append(name);
-        streams.out.append(L'\n');
+        streams.out.push(L'\n');
     }
 }
 

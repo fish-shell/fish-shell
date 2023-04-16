@@ -7,6 +7,7 @@
 #include "common.h"
 #include "complete.h"
 #include "maybe.h"
+#include "wutil.h"
 
 class parser_t;
 class proc_status_t;
@@ -82,6 +83,7 @@ bool builtin_exists(const wcstring &cmd);
 proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_streams_t &streams);
 
 wcstring_list_t builtin_get_names();
+wcstring_list_ffi_t builtin_get_names_ffi();
 void builtin_get_names(completion_list_t *list);
 const wchar_t *builtin_get_desc(const wcstring &name);
 
@@ -112,6 +114,7 @@ enum RustBuiltin : int32_t {
     Abbr,
     Bg,
     Block,
+    Builtin,
     Contains,
     Command,
     Echo,

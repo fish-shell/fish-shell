@@ -39,6 +39,7 @@ pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
 
 pub const BUILTIN_ERR_COMBO: &str = "%ls: invalid option combination\n";
+pub const BUILTIN_ERR_COMBO2: &str = "%ls: invalid option combination, %ls\n";
 
 // Return values (`$status` values for fish scripts) for various situations.
 
@@ -147,6 +148,7 @@ pub fn run_builtin(
         RustBuiltin::Abbr => super::abbr::abbr(parser, streams, args),
         RustBuiltin::Bg => super::bg::bg(parser, streams, args),
         RustBuiltin::Block => super::block::block(parser, streams, args),
+        RustBuiltin::Builtin => super::builtin::builtin(parser, streams, args),
         RustBuiltin::Contains => super::contains::contains(parser, streams, args),
         RustBuiltin::Command => super::command::command(parser, streams, args),
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),

@@ -87,6 +87,7 @@ include_cpp! {
     generate!("builtin_unknown_option")
     generate!("builtin_print_help")
     generate!("builtin_print_error_trailer")
+    generate!("builtin_get_names_ffi")
 
     generate!("escape_string")
     generate!("sig2wcs")

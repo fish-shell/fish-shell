@@ -31,7 +31,6 @@
 
 #include "builtins/argparse.h"
 #include "builtins/bind.h"
-#include "builtins/builtin.h"
 #include "builtins/cd.h"
 #include "builtins/commandline.h"
 #include "builtins/complete.h"
@@ -361,7 +360,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"block", &implemented_in_rust, N_(L"Temporarily block delivery of events")},
     {L"break", &builtin_break_continue, N_(L"Stop the innermost loop")},
     {L"breakpoint", &builtin_breakpoint, N_(L"Halt execution and start debug prompt")},
-    {L"builtin", &builtin_builtin, N_(L"Run a builtin specifically")},
+    {L"builtin", &implemented_in_rust, N_(L"Run a builtin specifically")},
     {L"case", &builtin_generic, N_(L"Block of code to run conditionally")},
     {L"cd", &builtin_cd, N_(L"Change working directory")},
     {L"command", &implemented_in_rust, N_(L"Run a command specifically")},
@@ -502,6 +501,10 @@ wcstring_list_t builtin_get_names() {
     return result;
 }
 
+wcstring_list_ffi_t builtin_get_names_ffi() {
+    return builtin_get_names();
+}
+
 /// Insert all builtin names into list.
 void builtin_get_names(completion_list_t *list) {
     assert(list != nullptr);
@@ -530,6 +533,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"block") {
         return RustBuiltin::Block;
+    }
+    if (cmd == L"builtin") {
+        return RustBuiltin::Builtin;
     }
     if (cmd == L"contains") {
         return RustBuiltin::Contains;

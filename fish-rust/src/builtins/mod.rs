@@ -3,6 +3,7 @@ pub mod shared;
 pub mod abbr;
 pub mod bg;
 pub mod block;
+pub mod builtin;
 pub mod command;
 pub mod contains;
 pub mod echo;

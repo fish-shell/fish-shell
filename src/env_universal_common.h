@@ -32,6 +32,21 @@ struct callback_data_t {
 
 using callback_data_list_t = std::vector<callback_data_t>;
 
+/// Wrapper type for ffi purposes.
+struct env_universal_sync_result_t {
+    // List of callbacks.
+    callback_data_list_t list;
+
+    // Return value of sync().
+    bool changed;
+
+    bool get_changed() const { return changed; }
+
+    size_t count() const { return list.size(); }
+    const wcstring &get_key(size_t idx) const { return list.at(idx).key; }
+    bool get_is_erase(size_t idx) const { return list.at(idx).is_erase(); }
+};
+
 // List of fish universal variable formats.
 // This is exposed for testing.
 enum class uvar_format_t { fish_2_x, fish_3_0, future };
@@ -86,6 +101,13 @@ class env_universal_t {
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
     bool sync(callback_data_list_t &callbacks);
+
+    /// FFI helper.
+    env_universal_sync_result_t sync_ffi() {
+        callback_data_list_t callbacks;
+        bool changed = sync(callbacks);
+        return env_universal_sync_result_t{std::move(callbacks), changed};
+    }
 
     /// Populate a variable table \p out_vars from a \p s string.
     /// This is exposed for testing only.
@@ -211,6 +233,9 @@ class universal_notifier_t {
 
     // Default instance. Other instances are possible for testing.
     static universal_notifier_t &default_notifier();
+
+    // FFI helper so autocxx can "deduce" the lifetime.
+    static universal_notifier_t &default_notifier_ffi(int &) { return default_notifier(); }
 
     // Does a fast poll(). Returns true if changed.
     virtual bool poll();

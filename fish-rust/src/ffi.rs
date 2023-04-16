@@ -57,6 +57,10 @@ include_cpp! {
     generate!("env_stack_t")
     generate!("env_var_t")
     generate!("env_universal_t")
+    generate!("env_universal_sync_result_t")
+    generate!("callback_data_t")
+    generate!("universal_notifier_t")
+
     generate!("make_pipes_ffi")
 
     generate!("get_flog_file_fd")

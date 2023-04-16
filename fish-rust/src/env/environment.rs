@@ -3,7 +3,8 @@ use crate::env::{
     is_read_only, ElectricVar, EnvMode, EnvVar, EnvVarFlags, Statuses, VarTable,
     ELECTRIC_VARIABLES, PATH_ARRAY_SEP,
 };
-use crate::ffi::{self, env_universal_t};
+use crate::event::Event;
+use crate::ffi::{self, env_universal_t, universal_notifier_t};
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
@@ -13,6 +14,7 @@ use crate::wchar::{widestrs, wstr, WExt, WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wutil::{fish_wcstoi_opts, sprintf, wgetcwd, wgettext, Options};
+use autocxx::WithinUniquePtr;
 use cxx::UniquePtr;
 use lazy_static::lazy_static;
 use std::cell::{RefCell, UnsafeCell};
@@ -659,6 +661,15 @@ impl Environment for EnvScopedImpl {
         }
         names.into_iter().collect()
     }
+
+    /// Slightly optimized implementation.
+    fn get_pwd_slash(&self) -> WString {
+        let mut pwd = self.perproc_data.pwd.clone();
+        if !pwd.ends_with('/') {
+            pwd.push('/');
+        }
+        pwd
+    }
 }
 
 /// Export array implementations.
@@ -817,6 +828,10 @@ impl Environment for EnvDyn {
 
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
         self.acquire_impl().get_names(flags)
+    }
+
+    fn get_pwd_slash(&self) -> WString {
+        self.acquire_impl().get_pwd_slash()
     }
 }
 
@@ -1253,6 +1268,10 @@ impl Environment for EnvStackImpl {
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
         self.base.get_names(flags)
     }
+
+    fn get_pwd_slash(&self) -> WString {
+        self.base.get_pwd_slash()
+    }
 }
 
 /// A mutable environment which allows scopes to be pushed and popped.
@@ -1377,6 +1396,43 @@ impl EnvStack {
     fn export_arr(&self) -> Arc<OwningNullTerminatedArray> {
         self.acquire_impl().base.export_array()
     }
+
+    /// Synchronizes universal variable changes.
+    /// If \p always is set, perform synchronization even if there's no pending changes from this
+    /// instance (that is, look for changes from other fish instances).
+    /// \return a list of events for changed variables.
+    fn universal_sync(always: bool) -> Vec<Box<Event>> {
+        if UVAR_SCOPE_IS_GLOBAL.load() {
+            return Vec::new();
+        }
+        if !always && !UVARS_LOCALLY_MODIFIED.load() {
+            return Vec::new();
+        }
+        UVARS_LOCALLY_MODIFIED.store(false);
+
+        let mut unused = autocxx::c_int(0);
+        let sync_res_ptr = uvars().as_mut().unwrap().sync_ffi().within_unique_ptr();
+        let sync_res = sync_res_ptr.as_ref().unwrap();
+        if sync_res.get_changed() {
+            universal_notifier_t::default_notifier_ffi(std::pin::Pin::new(&mut unused))
+                .post_notification();
+        }
+        // React internally to changes to special variables like LANG, and populate on-variable events.
+        let mut result = Vec::new();
+        #[allow(unreachable_code)]
+        for idx in 0..sync_res.count() {
+            //env_dispatch_var_change(name, *this);
+            let name = sync_res.get_key(idx).from_ffi();
+            let evt = if sync_res.get_is_erase(idx) {
+                Event::variable_erase(name)
+            } else {
+                Event::variable_set(name)
+            };
+            result.push(Box::new(evt));
+            todo!("env_dispatch_var_change")
+        }
+        result
+    }
 }
 
 /// Safety: EnvStack and the rest are safe for sharing across threads, because of the global lock.
@@ -1397,6 +1453,10 @@ impl Environment for EnvStack {
 
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
         self.acquire_impl().get_names(flags)
+    }
+
+    fn get_pwd_slash(&self) -> WString {
+        self.acquire_impl().get_pwd_slash()
     }
 }
 

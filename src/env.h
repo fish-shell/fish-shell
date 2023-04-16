@@ -17,6 +17,15 @@
 #include "maybe.h"
 #include "wutil.h"
 
+#if INCLUDE_RUST_HEADERS
+#include "env/env_ffi.rs.h"
+#else
+struct EnvVar;
+struct EnvNull;
+struct EnvStack;
+struct EnvDyn;
+#endif
+
 struct owning_null_terminated_array_t;
 
 extern size_t read_byte_limit;
@@ -99,17 +108,6 @@ class env_var_t {
    public:
     using env_var_flags_t = uint8_t;
 
-   private:
-    env_var_t(std::shared_ptr<const std::vector<wcstring>> vals, env_var_flags_t flags)
-        : vals_(std::move(vals)), flags_(flags) {}
-
-    /// The list of values in this variable.
-    /// shared_ptr allows for cheap copying.
-    std::shared_ptr<const std::vector<wcstring>> vals_{empty_list()};
-
-    /// Flag in this variable.
-    env_var_flags_t flags_{};
-
    public:
     enum {
         flag_export = 1 << 0,     // whether the variable is exported
@@ -118,30 +116,27 @@ class env_var_t {
     };
 
     // Constructors.
-    env_var_t() = default;
-    env_var_t(const env_var_t &) = default;
+    env_var_t() : env_var_t{std::vector<wcstring>{}, 0} {}
+    env_var_t(const env_var_t &);
     env_var_t(env_var_t &&) = default;
 
-    env_var_t(std::vector<wcstring> vals, env_var_flags_t flags)
-        : env_var_t(std::make_shared<std::vector<wcstring>>(std::move(vals)), flags) {}
-
+    env_var_t(std::vector<wcstring> vals, env_var_flags_t flags);
     env_var_t(wcstring val, env_var_flags_t flags)
-        : env_var_t(std::vector<wcstring>{std::move(val)}, flags) {}
+        : env_var_t{std::vector<wcstring>{std::move(val)}, flags} {}
 
     // Constructors that infer the flags from a name.
-    env_var_t(const wchar_t *name, std::vector<wcstring> vals)
-        : env_var_t(std::move(vals), flags_for(name)) {}
-
-    env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
+    env_var_t(const wchar_t *name, std::vector<wcstring> vals);
+    env_var_t(const wchar_t *name, wcstring val)
+        : env_var_t{name, std::vector<wcstring>{std::move(val)}} {}
 
     // Construct from FFI.
     static std::unique_ptr<env_var_t> new_ffi(wcstring_list_ffi_t vals, uint8_t flags);
 
-    bool empty() const { return vals_->empty() || (vals_->size() == 1 && vals_->front().empty()); }
-    bool exports() const { return flags_ & flag_export; }
-    bool is_read_only() const { return flags_ & flag_read_only; }
-    bool is_pathvar() const { return flags_ & flag_pathvar; }
-    env_var_flags_t get_flags() const { return flags_; }
+    bool empty() const;
+    bool exports() const;
+    bool is_read_only() const;
+    bool is_pathvar() const;
+    env_var_flags_t get_flags() const;
 
     wcstring as_string() const;
     void to_list(std::vector<wcstring> &out) const;
@@ -153,39 +148,45 @@ class env_var_t {
 
     /// \return a copy of this variable with new values.
     env_var_t setting_vals(std::vector<wcstring> vals) const {
-        return env_var_t{std::move(vals), flags_};
+        return env_var_t{std::move(vals), get_flags()};
     }
 
     env_var_t setting_exports(bool exportv) const {
-        env_var_flags_t flags = flags_;
+        env_var_flags_t flags = get_flags();
         if (exportv) {
             flags |= flag_export;
         } else {
             flags &= ~flag_export;
         }
-        return env_var_t{vals_, flags};
+        return env_var_t{as_list(), flags};
     }
 
     env_var_t setting_pathvar(bool pathvar) const {
-        env_var_flags_t flags = flags_;
+        env_var_flags_t flags = get_flags();
         if (pathvar) {
             flags |= flag_pathvar;
         } else {
             flags &= ~flag_pathvar;
         }
-        return env_var_t{vals_, flags};
+        return env_var_t{as_list(), flags};
     }
 
     static env_var_flags_t flags_for(const wchar_t *name);
     static std::shared_ptr<const std::vector<wcstring>> empty_list();
 
-    env_var_t &operator=(const env_var_t &) = default;
+    env_var_t &operator=(const env_var_t &);
     env_var_t &operator=(env_var_t &&) = default;
 
-    bool operator==(const env_var_t &rhs) const {
-        return *vals_ == *rhs.vals_ && flags_ == rhs.flags_;
-    }
+    bool operator==(const env_var_t &rhs) const;
     bool operator!=(const env_var_t &rhs) const { return !(*this == rhs); }
+
+    /// Acquire ownership (via Rust Box) of an EnvVar, or none if null.
+    static maybe_t<env_var_t> from_ffi_acquiring(EnvVar *ptr);
+
+   private:
+    env_var_t(rust::Box<EnvVar> &&impl) : impl_(std::move(impl)) {}
+
+    rust::Box<EnvVar> impl_;
 };
 typedef std::unordered_map<wcstring, env_var_t> var_table_t;
 
@@ -213,11 +214,14 @@ class environment_t {
 /// The null environment contains nothing.
 class null_environment_t : public environment_t {
    public:
-    null_environment_t() = default;
-    ~null_environment_t() override;
+    null_environment_t();
+    ~null_environment_t();
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
     std::vector<wcstring> get_names(env_mode_flags_t flags) const override;
+
+   private:
+    rust::Box<EnvNull> impl_;
 };
 
 /// A mutable environment which allows scopes to be pushed and popped.

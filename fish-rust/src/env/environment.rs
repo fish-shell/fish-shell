@@ -1,10 +1,10 @@
 use crate::common::wcs2zstring;
 use crate::env::{
-    is_read_only, ElectricVar, EnvMode, EnvVar, EnvVarFlags, Statuses, VarTable,
+    is_read_only, ElectricVar, EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Statuses, VarTable,
     ELECTRIC_VARIABLES, PATH_ARRAY_SEP,
 };
 use crate::event::Event;
-use crate::ffi::{self, env_universal_t, universal_notifier_t};
+use crate::ffi::{self, env_universal_t, universal_notifier_t, wcstring_list_ffi_t};
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
@@ -12,9 +12,11 @@ use crate::path::path_make_canonical;
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::{widestrs, wstr, WExt, WString, L};
 use crate::wchar_ext::ToWString;
+use crate::wchar_ffi::AsWstr;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wutil::{fish_wcstoi_opts, sprintf, wgetcwd, wgettext, Options};
 use autocxx::WithinUniquePtr;
+use cxx::CxxWString;
 use cxx::UniquePtr;
 use lazy_static::lazy_static;
 use std::cell::{RefCell, UnsafeCell};
@@ -23,25 +25,11 @@ use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
+use std::pin::Pin;
 use std::sync::{atomic::AtomicU64, atomic::Ordering, Arc, Mutex, MutexGuard};
 
 /// TODO: migrate to history once ported.
 const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
-
-/// Return values for `EnvStack::set()`.
-#[cxx::bridge]
-mod environment_ffi {
-    #[repr(u8)]
-    #[cxx_name = "env_stack_set_result_t"]
-    enum EnvStackSetResult {
-        ENV_OK,
-        ENV_PERM,
-        ENV_SCOPE,
-        ENV_INVALID,
-        ENV_NOT_FOUND,
-    }
-}
-use environment_ffi::EnvStackSetResult;
 
 impl Default for EnvStackSetResult {
     fn default() -> Self {
@@ -158,12 +146,37 @@ pub trait Environment {
         }
         None
     }
+
+    /// FFI helper.
+    /// This returns either null, or the result of Box.into_raw().
+    /// This is a workaround for the difficulty of passing an Option through FFI.
+    fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
+        match self.getf(
+            name.as_wstr(),
+            EnvMode::from_bits(mode).expect("Invalid mode bits"),
+        ) {
+            None => std::ptr::null_mut(),
+            Some(var) => Box::into_raw(Box::new(var)),
+        }
+    }
+    fn get_names_ffi(&self, mode: u16, mut out: Pin<&mut wcstring_list_ffi_t>) {
+        let names = self.get_names(EnvMode::from_bits(mode).expect("Invalid mode bits"));
+        for name in names {
+            out.as_mut().push(name.to_ffi());
+        }
+    }
 }
 
 /// The null environment contains nothing.
-struct NullEnvironment;
+pub struct EnvNull;
 
-impl Environment for NullEnvironment {
+impl EnvNull {
+    pub fn new() -> EnvNull {
+        EnvNull
+    }
+}
+
+impl Environment for EnvNull {
     fn getf(&self, _name: &wstr, _mode: EnvMode) -> Option<EnvVar> {
         None
     }
@@ -487,7 +500,9 @@ impl EnvScopedImpl {
             if (!is_main_thread()) {
                 return None;
             }
-            let fish_history_var = self.get(L!("fish_history")).map(|v| v.as_string());
+            let fish_history_var = self
+                .getf(L!("fish_history"), EnvMode::DEFAULT)
+                .map(|v| v.as_string());
             let history_session_id = fish_history_var
                 .as_ref()
                 .map(WString::as_utfstr)
@@ -583,9 +598,7 @@ impl EnvScopedImpl {
             .as_ref()
             .map(env_var_from_ffi);
     }
-}
 
-impl Environment for EnvScopedImpl {
     fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
         let query = Query::new(mode);
         let mut result: Option<EnvVar> = None;
@@ -796,42 +809,26 @@ impl EnvScopedImpl {
 
 /// A public read-only interface to the environment stack.
 pub struct EnvDyn {
-    /// The implementation.
-    /// Do not access this directly; use the acquire_impl_*() functions which take the global lock.
-    _impl: UnsafeCell<Box<dyn Environment>>,
+    inner: Box<dyn Environment>,
 }
 
 impl EnvDyn {
     fn new(env: Box<dyn Environment>) -> Self {
-        Self {
-            _impl: UnsafeCell::new(env),
-        }
-    }
-
-    /// All environment stacks are guarded by a global lock.
-    fn acquire_impl(&self) -> EnvLockGuard<Box<dyn Environment>> {
-        let guard = ENV_LOCK.lock().unwrap();
-        // Safety: we have the global lock.
-        let value = unsafe { &mut *self._impl.get() };
-        EnvLockGuard {
-            guard,
-            value,
-            _phantom: PhantomData,
-        }
+        Self { inner: env }
     }
 }
 
 impl Environment for EnvDyn {
     fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
-        self.acquire_impl().getf(key, mode)
+        self.inner.getf(key, mode)
     }
 
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
-        self.acquire_impl().get_names(flags)
+        self.inner.get_names(flags)
     }
 
     fn get_pwd_slash(&self) -> WString {
-        self.acquire_impl().get_pwd_slash()
+        self.inner.get_pwd_slash()
     }
 }
 
@@ -1258,9 +1255,7 @@ impl EnvStackImpl {
         }
         None
     }
-}
 
-impl Environment for EnvStackImpl {
     fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
         self.base.getf(key, mode)
     }
@@ -1463,4 +1458,32 @@ impl Environment for EnvStack {
 // Our singleton "principal" stack.
 lazy_static! {
     static ref PRINCIPAL_STACK: Arc<EnvStack> = Arc::new(EnvStack::new());
+}
+
+// We have to implement these directly to make cxx happy.
+impl EnvNull {
+    pub fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
+        Environment::getf_ffi(self, name, mode)
+    }
+    pub fn get_names_ffi(&self, flags: u16, out: Pin<&mut wcstring_list_ffi_t>) {
+        Environment::get_names_ffi(self, flags, out)
+    }
+}
+
+impl EnvStack {
+    pub fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
+        Environment::getf_ffi(self, name, mode)
+    }
+    pub fn get_names_ffi(&self, flags: u16, out: Pin<&mut wcstring_list_ffi_t>) {
+        Environment::get_names_ffi(self, flags, out)
+    }
+}
+
+impl EnvDyn {
+    pub fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
+        Environment::getf_ffi(self, name, mode)
+    }
+    pub fn get_names_ffi(&self, flags: u16, out: Pin<&mut wcstring_list_ffi_t>) {
+        Environment::get_names_ffi(self, flags, out)
+    }
 }

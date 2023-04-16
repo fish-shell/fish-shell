@@ -302,7 +302,7 @@ impl JobId {
 
     /// Return a `JobId` that is greater than all extant job ids stored in [`CONSUMED_JOB_IDS`].
     /// The `JobId` should be freed with [`JobId::release()`] when it is no longer in use.
-    fn acquire() -> MaybeJobId {
+    fn acquire() -> JobId {
         let mut consumed_job_ids = CONSUMED_JOB_IDS.lock().expect("Poisoned mutex!");
 
         // The new job id should be greater than the largest currently used id (#6053). The job ids
@@ -312,7 +312,7 @@ impl JobId {
             .map(JobId::next)
             .unwrap_or(JobId(1.try_into().unwrap()));
         consumed_job_ids.push(job_id);
-        return MaybeJobId(Some(job_id));
+        job_id
     }
 
     /// Remove the provided `JobId` from [`CONSUMED_JOB_IDS`].
@@ -360,7 +360,7 @@ impl JobGroup {
         JobGroup::new(
             command,
             if wants_job_id {
-                JobId::acquire()
+                MaybeJobId(Some(JobId::acquire()))
             } else {
                 JobId::NONE
             },
@@ -375,7 +375,7 @@ impl JobGroup {
     pub fn create_with_job_control(command: WString, wants_term: bool) -> JobGroup {
         JobGroup::new(
             command,
-            JobId::acquire(),
+            MaybeJobId(Some(JobId::acquire())),
             true, /* job_control */
             wants_term,
         )

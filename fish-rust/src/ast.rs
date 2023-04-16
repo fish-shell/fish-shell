@@ -4398,7 +4398,7 @@ fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorList) -> Bo
         Some(unsafe { &*errors }.clone())
     };
     let ast = Box::new(Ast::parse(
-        &src.as_wstr(),
+        src.as_wstr(),
         ParseTreeFlags(flags),
         &mut out_errors,
     ));
@@ -4419,7 +4419,7 @@ fn ast_parse_argument_list_ffi(
         Some(unsafe { &*errors }.clone())
     };
     let ast = Box::new(Ast::parse_argument_list(
-        &src.as_wstr(),
+        src.as_wstr(),
         ParseTreeFlags(flags),
         &mut out_errors,
     ));

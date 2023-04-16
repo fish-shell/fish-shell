@@ -4,11 +4,8 @@ use std::{
     sync::{Arc, Mutex, MutexGuard},
 };
 
-use crate::wchar::{wstr, WString};
-use crate::{
-    wchar::L,
-    wchar_ffi::{WCharFromFFI, WCharToFFI},
-};
+use crate::wchar::{wstr, WString, L};
+use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use cxx::CxxWString;
 use once_cell::sync::Lazy;
 
@@ -353,14 +350,14 @@ impl AbbreviationSet {
 /// \return the list of replacers for an input token, in priority order, using the global set.
 /// The \p position is given to describe where the token was found.
 fn abbrs_match_ffi(token: &CxxWString, position: abbrs_position_t) -> Vec<abbrs_replacer_t> {
-    with_abbrs(|set| set.r#match(&token.from_ffi(), position.into()))
+    with_abbrs(|set| set.r#match(token.as_wstr(), position.into()))
         .into_iter()
         .map(|r| r.into())
         .collect()
 }
 
 fn abbrs_has_match_ffi(token: &CxxWString, position: abbrs_position_t) -> bool {
-    with_abbrs(|set| set.has_match(&token.from_ffi(), position.into()))
+    with_abbrs(|set| set.has_match(token.as_wstr(), position.into()))
 }
 
 fn abbrs_list_ffi() -> Vec<abbreviation_t> {
@@ -429,7 +426,7 @@ impl<'a> GlobalAbbrs<'a> {
     }
 
     fn erase(&mut self, name: &CxxWString) {
-        self.g.erase(&name.from_ffi());
+        self.g.erase(name.as_wstr());
     }
 }
 use crate::ffi_tests::add_test;

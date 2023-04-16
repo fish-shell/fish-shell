@@ -25,7 +25,7 @@ use crate::tokenizer::{
 };
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
-use crate::wchar_ffi::{wcharz, wcharz_t, WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::{wcharz, wcharz_t, AsWstr, WCharToFFI};
 use crate::wutil::printf::sprintf;
 use crate::wutil::wgettext_fmt;
 use cxx::{type_id, ExternType};
@@ -4387,7 +4387,7 @@ impl Ast {
         Box::new(NodeFfi::new(self.top.as_node()))
     }
     fn dump_ffi(&self, orig: &CxxWString) -> UniquePtr<CxxWString> {
-        self.dump(&orig.from_ffi()).to_ffi()
+        self.dump(orig.as_wstr()).to_ffi()
     }
 }
 
@@ -4398,7 +4398,7 @@ fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorList) -> Bo
         Some(unsafe { &*errors }.clone())
     };
     let ast = Box::new(Ast::parse(
-        &src.from_ffi(),
+        &src.as_wstr(),
         ParseTreeFlags(flags),
         &mut out_errors,
     ));
@@ -4419,7 +4419,7 @@ fn ast_parse_argument_list_ffi(
         Some(unsafe { &*errors }.clone())
     };
     let ast = Box::new(Ast::parse_argument_list(
-        &src.from_ffi(),
+        &src.as_wstr(),
         ParseTreeFlags(flags),
         &mut out_errors,
     ));
@@ -4518,28 +4518,28 @@ impl<'a> NodeFfi<'a> {
         self.as_node().source_range()
     }
     fn source_ffi(&self, orig: &CxxWString) -> UniquePtr<CxxWString> {
-        self.as_node().source(&orig.from_ffi()).to_ffi()
+        self.as_node().source(orig.as_wstr()).to_ffi()
     }
 }
 
 impl Argument {
     fn source_ffi(&self, orig: &CxxWString) -> UniquePtr<CxxWString> {
-        self.source(&orig.from_ffi()).to_ffi()
+        self.source(orig.as_wstr()).to_ffi()
     }
 }
 impl VariableAssignment {
     fn source_ffi(&self, orig: &CxxWString) -> UniquePtr<CxxWString> {
-        self.source(&orig.from_ffi()).to_ffi()
+        self.source(orig.as_wstr()).to_ffi()
     }
 }
 impl String_ {
     fn source_ffi(&self, orig: &CxxWString) -> UniquePtr<CxxWString> {
-        self.source(&orig.from_ffi()).to_ffi()
+        self.source(orig.as_wstr()).to_ffi()
     }
 }
 impl TokenRedirection {
     fn source_ffi(&self, orig: &CxxWString) -> UniquePtr<CxxWString> {
-        self.source(&orig.from_ffi()).to_ffi()
+        self.source(orig.as_wstr()).to_ffi()
     }
 }
 

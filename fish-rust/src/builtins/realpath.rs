@@ -7,7 +7,7 @@ use crate::{
     ffi::parser_t,
     path::path_apply_working_directory,
     wchar::{wstr, WExt, L},
-    wchar_ffi::WCharFromFFI,
+    wchar_ffi::AsWstr,
     wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::no_argument},
     wutil::{normalize_path, wgettext_fmt, wrealpath},
 };
@@ -118,7 +118,7 @@ pub fn realpath(
         }
     } else {
         // We need to get the *physical* pwd here.
-        let realpwd = wrealpath(&parser.vars1().get_pwd_slash().from_ffi());
+        let realpwd = wrealpath(parser.vars1().get_pwd_slash().as_wstr());
 
         if let Some(realpwd) = realpwd {
             let absolute_arg = if arg.starts_with(L!("/")) {

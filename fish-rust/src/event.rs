@@ -908,7 +908,7 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
 
 fn event_print_ffi(streams: Pin<&mut ffi::io_streams_t>, type_filter: &CxxWString) {
     let mut streams = io_streams_t::new(streams);
-    print(&mut streams, &type_filter.from_ffi());
+    print(&mut streams, type_filter.as_wstr());
 }
 
 /// Fire a generic event with the specified name.

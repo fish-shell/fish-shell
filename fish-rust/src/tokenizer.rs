@@ -7,7 +7,7 @@ use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::redirection::RedirectionMode;
 use crate::wchar::{wstr, WExt, WString, L};
-use crate::wchar_ffi::{wchar_t, WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::{wchar_t, AsWstr, WCharToFFI};
 use crate::wutil::wgettext;
 use cxx::{CxxWString, SharedPtr, UniquePtr};
 use libc::{c_int, STDIN_FILENO, STDOUT_FILENO};
@@ -283,7 +283,7 @@ impl Tok {
         &str[self.offset as usize..(self.offset + self.length) as usize]
     }
     fn get_source_ffi(self: &Tok, str: &CxxWString) -> UniquePtr<CxxWString> {
-        self.get_source(&str.from_ffi()).to_ffi()
+        self.get_source(str.as_wstr()).to_ffi()
     }
 }
 
@@ -941,7 +941,7 @@ pub fn tok_command(str: &wstr) -> WString {
     WString::new()
 }
 fn tok_command_ffi(str: &CxxWString) -> UniquePtr<CxxWString> {
-    tok_command(&str.from_ffi()).to_ffi()
+    tok_command(str.as_wstr()).to_ffi()
 }
 
 impl TryFrom<&wstr> for PipeOrRedir {
@@ -1381,7 +1381,7 @@ pub fn variable_assignment_equals_pos(txt: &wstr) -> Option<usize> {
 }
 
 fn variable_assignment_equals_pos_ffi(txt: &CxxWString) -> SharedPtr<usize> {
-    match variable_assignment_equals_pos(&txt.from_ffi()) {
+    match variable_assignment_equals_pos(txt.as_wstr()) {
         Some(p) => SharedPtr::new(p),
         None => SharedPtr::null(),
     }

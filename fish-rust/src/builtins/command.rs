@@ -7,8 +7,7 @@ use crate::builtins::shared::{
 use crate::ffi::parser_t;
 use crate::ffi::path_get_paths_ffi;
 use crate::wchar::{wstr, WString, L};
-use crate::wchar_ffi::WCharFromFFI;
-use crate::wchar_ffi::WCharToFFI;
+use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::sprintf;
 

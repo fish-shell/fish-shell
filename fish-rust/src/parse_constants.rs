@@ -3,7 +3,7 @@
 use crate::ffi::{fish_wcswidth, fish_wcwidth, wcharz_t};
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::{wstr, WString, L};
-use crate::wchar_ffi::{wcharz, WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::{wcharz, AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wutil::{sprintf, wgettext_fmt};
 use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
@@ -565,7 +565,7 @@ impl ParseError {
         src: &CxxWString,
         is_interactive: bool,
     ) -> UniquePtr<CxxWString> {
-        self.describe(&src.from_ffi(), is_interactive).to_ffi()
+        self.describe(src.as_wstr(), is_interactive).to_ffi()
     }
 
     fn describe_with_prefix_ffi(
@@ -575,13 +575,8 @@ impl ParseError {
         is_interactive: bool,
         skip_caret: bool,
     ) -> UniquePtr<CxxWString> {
-        self.describe_with_prefix(
-            &src.from_ffi(),
-            &prefix.from_ffi(),
-            is_interactive,
-            skip_caret,
-        )
-        .to_ffi()
+        self.describe_with_prefix(src.as_wstr(), prefix.as_wstr(), is_interactive, skip_caret)
+            .to_ffi()
     }
 }
 

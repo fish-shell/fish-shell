@@ -93,7 +93,7 @@ void builtin_wperror(const wchar_t *program_name, io_streams_t &streams) {
     if (err != nullptr) {
         const wcstring werr = str2wcstring(err);
         streams.err.append(werr);
-        streams.err.push_back(L'\n');
+        streams.err.push(L'\n');
     }
 }
 
@@ -501,9 +501,7 @@ wcstring_list_t builtin_get_names() {
     return result;
 }
 
-wcstring_list_ffi_t builtin_get_names_ffi() {
-    return builtin_get_names();
-}
+wcstring_list_ffi_t builtin_get_names_ffi() { return builtin_get_names(); }
 
 /// Insert all builtin names into list.
 void builtin_get_names(completion_list_t *list) {

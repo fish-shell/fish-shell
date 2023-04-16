@@ -454,10 +454,10 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
             const auto &var = parser.libdata().status_vars.command;
             if (!var.empty()) {
                 streams.out.append(var);
-                streams.out.push_back(L'\n');
+                streams.out.push(L'\n');
             } else {
                 streams.out.append(program_name);
-                streams.out.push_back(L'\n');
+                streams.out.push(L'\n');
             }
             break;
         }
@@ -465,7 +465,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const auto &var = parser.libdata().status_vars.commandline;
             streams.out.append(var);
-            streams.out.push_back(L'\n');
+            streams.out.push(L'\n');
             break;
         }
         case STATUS_FISH_PATH: {
@@ -482,19 +482,19 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
                 auto real = wrealpath(path);
                 if (real && waccess(*real, F_OK)) {
                     streams.out.append(*real);
-                    streams.out.push_back(L'\n');
+                    streams.out.push(L'\n');
                 } else {
                     // realpath did not work, just append the path
                     // - maybe this was obtained via $PATH?
                     streams.out.append(path);
-                    streams.out.push_back(L'\n');
+                    streams.out.push(L'\n');
                 }
             } else {
                 // This is a relative path, it depends on where fish's parent process
                 // was when it started it and its idea of $PATH.
                 // The best we can do is to print it directly and hope it works.
                 streams.out.append(path);
-                streams.out.push_back(L'\n');
+                streams.out.push(L'\n');
             }
             break;
         }

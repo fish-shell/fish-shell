@@ -546,14 +546,14 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
     if (env_var_t::flags_for(var_name) & env_var_t::flag_read_only) {
         streams.out.append(_(L" (read-only)\n"));
     } else
-        streams.out.push_back(L'\n');
+        streams.out.push(L'\n');
 
     for (size_t i = 0; i < vals.size(); i++) {
         if (vals.size() > 100) {
             if (i == 50) {
                 // try to print a mid-line ellipsis because we are eliding lines not words
                 streams.out.append(get_ellipsis_char() > 256 ? L"\u22EF" : get_ellipsis_str());
-                streams.out.push_back(L'\n');
+                streams.out.push(L'\n');
             }
             if (i >= 50 && i < vals.size() - 50) continue;
         }

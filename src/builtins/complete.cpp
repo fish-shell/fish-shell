@@ -342,7 +342,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
                 wcstring prefix(wcstring(cmd) + L": -n '" + condition_string + L"': ");
                 streams.err.append(*errors->at(i)->describe_with_prefix(
                     condition_string, prefix, parser.is_interactive(), false));
-                streams.err.push_back(L'\n');
+                streams.err.push(L'\n');
             }
             return STATUS_CMD_ERROR;
         }
@@ -356,7 +356,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         if (maybe_t<wcstring> err_text = parse_util_detect_errors_in_argument_list(comp, prefix)) {
             streams.err.append_format(L"%ls: %ls: contains a syntax error\n", cmd, comp);
             streams.err.append(*err_text);
-            streams.err.push_back(L'\n');
+            streams.err.push(L'\n');
             return STATUS_CMD_ERROR;
         }
     }

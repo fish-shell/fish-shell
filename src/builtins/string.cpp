@@ -775,9 +775,9 @@ static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc,
     }
     if (nargs > 0 && !opts.quiet) {
         if (is_join0) {
-            streams.out.push_back(L'\0');
+            streams.out.push(L'\0');
         } else if (aiter.want_newline()) {
-            streams.out.push_back(L'\n');
+            streams.out.push(L'\n');
         }
     }
 
@@ -1514,7 +1514,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
         }
 
         if (!first && !opts.quiet) {
-            streams.out.append(L'\n');
+            streams.out.push(L'\n');
         }
         first = false;
 
@@ -1573,7 +1573,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
 
     // Historical behavior is to never append a newline if all strings were empty.
     if (!opts.quiet && !opts.no_newline && !all_empty && aiter.want_newline()) {
-        streams.out.append(L'\n');
+        streams.out.push(L'\n');
     }
 
     return all_empty ? STATUS_CMD_ERROR : STATUS_CMD_OK;

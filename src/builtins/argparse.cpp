@@ -490,7 +490,7 @@ static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, optio
     int retval = exec_subshell(opt_spec->validation_command, parser, cmd_output, false);
     for (const auto &output : cmd_output) {
         streams.err.append(output);
-        streams.err.push_back(L'\n');
+        streams.err.push(L'\n');
     }
     vars.pop();
     return retval;

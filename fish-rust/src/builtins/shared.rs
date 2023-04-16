@@ -28,8 +28,6 @@ mod builtins_ffi {
             status_code: &mut i32,
         ) -> bool;
     }
-
-    impl Vec<wcharz_t> {}
 }
 
 /// Error message when too many arguments are supplied to a builtin.

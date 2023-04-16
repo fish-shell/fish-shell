@@ -1,9 +1,9 @@
 use crate::{
     common::{escape_string, EscapeStringStyle},
-    ffi::{self, parser_t, wcharz_t},
+    ffi::{self, parser_t, wcharz_t, wcstring_list_ffi_t},
     global_safety::RelaxedAtomicBool,
     wchar::{self, wstr, L},
-    wchar_ffi::WCharToFFI,
+    wchar_ffi::{WCharFromFFI, WCharToFFI},
 };
 
 #[cxx::bridge]
@@ -11,6 +11,7 @@ mod trace_ffi {
     extern "C++" {
         include!("wutil.h");
         include!("parser.h");
+        type wcstring_list_ffi_t = super::wcstring_list_ffi_t;
         type wcharz_t = super::wcharz_t;
         type parser_t = super::parser_t;
     }
@@ -19,7 +20,7 @@ mod trace_ffi {
         fn trace_set_enabled(do_enable: bool);
         fn trace_enabled(parser: &parser_t) -> bool;
         #[cxx_name = "trace_argv"]
-        fn trace_argv_ffi(parser: &parser_t, command: wcharz_t, args: &Vec<wcharz_t>);
+        fn trace_argv_ffi(parser: &parser_t, command: wcharz_t, args: &wcstring_list_ffi_t);
     }
 }
 
@@ -41,9 +42,9 @@ pub fn trace_enabled(parser: &parser_t) -> bool {
 /// Trace an "argv": a list of arguments where the first is the command.
 // Allow the `&Vec` parameter as this function only exists temporarily for the FFI
 #[allow(clippy::ptr_arg)]
-fn trace_argv_ffi(parser: &parser_t, command: wcharz_t, args: &Vec<wcharz_t>) {
+fn trace_argv_ffi(parser: &parser_t, command: wcharz_t, args: &wcstring_list_ffi_t) {
     let command: wchar::WString = command.into();
-    let args: Vec<wchar::WString> = args.iter().map(Into::into).collect();
+    let args: Vec<wchar::WString> = args.from_ffi();
     let args_ref: Vec<&wstr> = args.iter().map(wchar::WString::as_utfstr).collect();
     trace_argv(parser, command.as_utfstr(), &args_ref);
 }

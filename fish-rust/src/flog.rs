@@ -194,7 +194,7 @@ macro_rules! FLOG {
 // TODO implement.
 macro_rules! FLOGF {
     ($category:ident, $($elem:expr),+ $(,)*) => {
-        crate::flog::FLOG!($category, $($elem),*);
+        crate::flog::FLOG!($category, $($elem),*)
     }
 }
 

@@ -223,6 +223,12 @@ impl WCharFromFFI<Vec<u8>> for &cxx::SharedPtr<cxx::CxxString> {
     }
 }
 
+impl WCharFromFFI<WString> for &wcharz_t {
+    fn from_ffi(self) -> WString {
+        self.into()
+    }
+}
+
 /// Convert wcstring_list_ffi_t to Vec<WString>.
 impl WCharFromFFI<Vec<WString>> for &wcstring_list_ffi_t {
     fn from_ffi(self) -> Vec<WString> {

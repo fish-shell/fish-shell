@@ -1433,9 +1433,9 @@ fn can_be_encoded(wc: char) -> bool {
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
 /// \return the number of bytes read, or 0 on EOF. On EAGAIN, returns -1 if nothing was read.
-pub fn read_blocked(fd: RawFd, mut buf: &mut [u8]) -> isize {
+pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> isize {
     loop {
-        let res = unsafe { libc::read(fd, std::ptr::addr_of_mut!(buf).cast(), buf.len()) };
+        let res = unsafe { libc::read(fd, buf.as_mut_ptr().cast(), buf.len()) };
         if res < 0 && errno::errno().0 == EINTR {
             continue;
         }

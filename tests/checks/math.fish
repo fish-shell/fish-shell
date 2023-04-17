@@ -335,3 +335,6 @@ math 0x0_2.0_0_0P0_2
 # CHECK: 8
 math -0x8p-0_3
 # CHECK: -1
+
+echo 5 + 6 | math
+# CHECK: 11

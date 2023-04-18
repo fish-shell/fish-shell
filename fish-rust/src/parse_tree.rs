@@ -5,9 +5,9 @@ use std::rc::Rc;
 
 use crate::ast::Ast;
 use crate::parse_constants::{
-    token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, PARSE_FLAG_CONTINUE_AFTER_ERROR,
-    SOURCE_OFFSET_INVALID,
+    token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
+    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange,
+    PARSE_FLAG_CONTINUE_AFTER_ERROR, SOURCE_OFFSET_INVALID,
 };
 use crate::tokenizer::TokenizerError;
 use crate::wchar::{wstr, WString, L};
@@ -137,7 +137,7 @@ mod parse_tree_ffi {
     extern "C++" {
         include!("ast.h");
         pub type Ast = crate::ast::Ast;
-        pub type ParseErrorList = crate::parse_constants::ParseErrorList;
+        pub type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
     }
     extern "Rust" {
         type ParsedSourceRefFFI;
@@ -148,7 +148,7 @@ mod parse_tree_ffi {
         fn parse_source_ffi(
             src: &CxxWString,
             flags: u8,
-            errors: *mut ParseErrorList,
+            errors: *mut ParseErrorListFfi,
         ) -> Box<ParsedSourceRefFFI>;
         fn clone(self: &ParsedSourceRefFFI) -> Box<ParsedSourceRefFFI>;
         fn src(self: &ParsedSourceRefFFI) -> &CxxWString;
@@ -175,16 +175,16 @@ fn new_parsed_source_ref(src: &CxxWString, ast: Pin<&mut Ast>) -> Box<ParsedSour
 fn parse_source_ffi(
     src: &CxxWString,
     flags: u8,
-    errors: *mut ParseErrorList,
+    errors: *mut ParseErrorListFfi,
 ) -> Box<ParsedSourceRefFFI> {
     let mut out_errors: Option<ParseErrorList> = if errors.is_null() {
         None
     } else {
-        Some(unsafe { &*errors }.clone())
+        Some(unsafe { &(*errors).0 }.clone())
     };
     let ps = parse_source(src.from_ffi(), ParseTreeFlags(flags), &mut out_errors);
     if let Some(out_errors) = out_errors {
-        unsafe { *errors = out_errors };
+        unsafe { (*errors).0 = out_errors };
     }
 
     Box::new(ParsedSourceRefFFI(ps))

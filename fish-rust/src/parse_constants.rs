@@ -213,17 +213,17 @@ mod parse_constants_ffi {
             skip_caret: bool,
         ) -> UniquePtr<CxxWString>;
 
-        type ParseErrorList;
-        fn new_parse_error_list() -> Box<ParseErrorList>;
+        type ParseErrorListFfi;
+        fn new_parse_error_list() -> Box<ParseErrorListFfi>;
         #[cxx_name = "offset_source_start"]
-        fn offset_source_start_ffi(self: &mut ParseErrorList, amt: usize);
-        fn size(self: &ParseErrorList) -> usize;
-        fn at(self: &ParseErrorList, offset: usize) -> *const ParseError;
-        fn empty(self: &ParseErrorList) -> bool;
-        fn push_back(self: &mut ParseErrorList, error: &parse_error_t);
-        fn append(self: &mut ParseErrorList, other: *mut ParseErrorList);
-        fn erase(self: &mut ParseErrorList, index: usize);
-        fn clear(self: &mut ParseErrorList);
+        fn offset_source_start_ffi(self: &mut ParseErrorListFfi, amt: usize);
+        fn size(self: &ParseErrorListFfi) -> usize;
+        fn at(self: &ParseErrorListFfi, offset: usize) -> *const ParseError;
+        fn empty(self: &ParseErrorListFfi) -> bool;
+        fn push_back(self: &mut ParseErrorListFfi, error: &parse_error_t);
+        fn append(self: &mut ParseErrorListFfi, other: *mut ParseErrorListFfi);
+        fn erase(self: &mut ParseErrorListFfi, index: usize);
+        fn clear(self: &mut ParseErrorListFfi);
     }
 
     extern "Rust" {
@@ -632,12 +632,13 @@ fn token_type_user_presentable_description_ffi(
     token_type_user_presentable_description(type_, keyword).to_ffi()
 }
 
-/// TODO This should be type alias once we drop the FFI.
-#[derive(Clone)]
-pub struct ParseErrorList(pub Vec<ParseError>);
+pub type ParseErrorList = Vec<ParseError>;
 
-unsafe impl ExternType for ParseErrorList {
-    type Id = type_id!("ParseErrorList");
+#[derive(Clone)]
+pub struct ParseErrorListFfi(pub ParseErrorList);
+
+unsafe impl ExternType for ParseErrorListFfi {
+    type Id = type_id!("ParseErrorListFfi");
     type Kind = cxx::kind::Opaque;
 }
 
@@ -645,7 +646,7 @@ unsafe impl ExternType for ParseErrorList {
 /// errors in a substring of a larger source buffer.
 pub fn parse_error_offset_source_start(errors: &mut ParseErrorList, amt: usize) {
     if amt > 0 {
-        for ref mut error in errors.0.iter_mut() {
+        for ref mut error in errors.iter_mut() {
             // Preserve the special meaning of -1 as 'unknown'.
             if error.source_start != SOURCE_LOCATION_UNKNOWN {
                 error.source_start += amt;
@@ -654,13 +655,13 @@ pub fn parse_error_offset_source_start(errors: &mut ParseErrorList, amt: usize) 
     }
 }
 
-fn new_parse_error_list() -> Box<ParseErrorList> {
-    Box::new(ParseErrorList(Vec::new()))
+fn new_parse_error_list() -> Box<ParseErrorListFfi> {
+    Box::new(ParseErrorListFfi(Vec::new()))
 }
 
-impl ParseErrorList {
+impl ParseErrorListFfi {
     fn offset_source_start_ffi(&mut self, amt: usize) {
-        parse_error_offset_source_start(self, amt)
+        parse_error_offset_source_start(&mut self.0, amt)
     }
 
     fn size(&self) -> usize {
@@ -679,7 +680,7 @@ impl ParseErrorList {
         self.0.push(error.into())
     }
 
-    fn append(&mut self, other: *mut ParseErrorList) {
+    fn append(&mut self, other: *mut ParseErrorListFfi) {
         self.0.append(&mut (unsafe { &*other }.0.clone()));
     }
 

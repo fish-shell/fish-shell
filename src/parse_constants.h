@@ -23,7 +23,7 @@ using parse_keyword_t = ParseKeyword;
 using statement_decoration_t = StatementDecoration;
 using parse_error_code_t = ParseErrorCode;
 using pipeline_position_t = PipelinePosition;
-using parse_error_list_t = ParseErrorList;
+using parse_error_list_t = ParseErrorListFfi;
 
 #else
 
@@ -101,8 +101,8 @@ enum class parse_error_code_t : uint8_t {
     andor_in_pipeline,
 };
 
-struct ParseErrorList;
-using parse_error_list_t = ParseErrorList;
+struct ParseErrorListFfi;
+using parse_error_list_t = ParseErrorListFfi;
 
 #endif
 

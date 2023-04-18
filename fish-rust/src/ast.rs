@@ -13,8 +13,8 @@ use crate::common::{unescape_string, UnescapeStringStyle};
 use crate::flog::FLOG;
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseError, ParseErrorCode, ParseErrorList,
-    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
-    INVALID_PIPELINE_CMD_ERR_MSG, PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS,
+    ParseErrorListFfi, ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange,
+    StatementDecoration, INVALID_PIPELINE_CMD_ERR_MSG, PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS,
     PARSE_FLAG_CONTINUE_AFTER_ERROR, PARSE_FLAG_INCLUDE_COMMENTS, PARSE_FLAG_LEAVE_UNTERMINATED,
     PARSE_FLAG_SHOW_EXTRA_SEMIS, SOURCE_OFFSET_INVALID,
 };
@@ -2593,7 +2593,7 @@ macro_rules! parse_error_range {
                 err.code = $code;
                 err.source_start = $range.start();
                 err.source_length = $range.length();
-                errors.0.push(err);
+                errors.push(err);
             }
         }
     }
@@ -3912,7 +3912,7 @@ pub mod ast_ffi {
         type ParseTokenType = crate::parse_constants::ParseTokenType;
         type ParseKeyword = crate::parse_constants::ParseKeyword;
         type SourceRange = crate::parse_constants::SourceRange;
-        type ParseErrorList = crate::parse_constants::ParseErrorList;
+        type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
         type StatementDecoration = crate::parse_constants::StatementDecoration;
     }
 
@@ -3971,12 +3971,12 @@ pub mod ast_ffi {
         unsafe fn ast_parse_ffi(
             src: &CxxWString,
             flags: u8,
-            errors: *mut ParseErrorList,
+            errors: *mut ParseErrorListFfi,
         ) -> Box<Ast>;
         unsafe fn ast_parse_argument_list_ffi(
             src: &CxxWString,
             flags: u8,
-            errors: *mut ParseErrorList,
+            errors: *mut ParseErrorListFfi,
         ) -> Box<Ast>;
         unsafe fn errored(self: &Ast) -> bool;
         #[cxx_name = "top"]
@@ -4390,11 +4390,11 @@ impl Ast {
     }
 }
 
-fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorList) -> Box<Ast> {
+fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorListFfi) -> Box<Ast> {
     let mut out_errors: Option<ParseErrorList> = if errors.is_null() {
         None
     } else {
-        Some(unsafe { &*errors }.clone())
+        Some(unsafe { &(*errors).0 }.clone())
     };
     let ast = Box::new(Ast::parse(
         src.as_wstr(),
@@ -4402,7 +4402,7 @@ fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorList) -> Bo
         &mut out_errors,
     ));
     if let Some(out_errors) = out_errors {
-        unsafe { *errors = out_errors };
+        unsafe { (*errors).0 = out_errors };
     }
     ast
 }
@@ -4410,12 +4410,12 @@ fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorList) -> Bo
 fn ast_parse_argument_list_ffi(
     src: &CxxWString,
     flags: u8,
-    errors: *mut ParseErrorList,
+    errors: *mut ParseErrorListFfi,
 ) -> Box<Ast> {
     let mut out_errors: Option<ParseErrorList> = if errors.is_null() {
         None
     } else {
-        Some(unsafe { &*errors }.clone())
+        Some(unsafe { &(*errors).0 }.clone())
     };
     let ast = Box::new(Ast::parse_argument_list(
         src.as_wstr(),
@@ -4423,7 +4423,7 @@ fn ast_parse_argument_list_ffi(
         &mut out_errors,
     ));
     if let Some(out_errors) = out_errors {
-        unsafe { *errors = out_errors };
+        unsafe { (*errors).0 = out_errors };
     }
     ast
 }

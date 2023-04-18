@@ -6,6 +6,7 @@
 use crate::widecharwidth::{WcLookupTable, WcWidth};
 use crate::{common::is_console_session, wchar::wstr};
 use once_cell::sync::Lazy;
+use std::cmp;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::{ffi::CString, mem, os::fd::RawFd};
 
@@ -114,10 +115,17 @@ pub fn fish_tparm() {
     todo!()
 }
 
-pub fn wcscasecmp(_s1: &wstr, _s2: &wstr) {
-    todo!()
-}
-
-pub fn wcsncasecmp(_s1: &wstr, _s2: &wstr) {
-    todo!()
+pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
+    for (l, r) in lhs.chars().zip(rhs.chars()) {
+        // TODO Decide what to do for different lengths.
+        let l = l.to_lowercase();
+        let r = r.to_lowercase();
+        for (l, r) in l.zip(r) {
+            let order = l.cmp(&r);
+            if !order.is_eq() {
+                return order;
+            }
+        }
+    }
+    lhs.len().cmp(&rhs.len())
 }

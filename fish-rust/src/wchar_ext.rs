@@ -222,6 +222,10 @@ pub trait WExt {
         self.as_char_slice().iter().position(|&x| x == c)
     }
 
+    fn contains(&self, c: char) -> bool {
+        self.as_char_slice().iter().any(|&x| x == c)
+    }
+
     /// \return whether we start with a given Prefix.
     /// The Prefix can be a char, a &str, a &wstr, or a &WString.
     fn starts_with<Prefix: IntoCharIter>(&self, prefix: Prefix) -> bool {

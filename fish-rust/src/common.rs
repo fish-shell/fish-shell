@@ -981,7 +981,11 @@ static ELLIPSIS_CHAR: AtomicU32 = AtomicU32::new(0);
 
 /// The character or string to use where text has been truncated (ellipsis if possible, otherwise
 /// ...)
-pub static mut ELLIPSIS_STRING: Lazy<&'static wstr> = Lazy::new(|| L!(""));
+pub fn get_ellipsis_str() -> &'static wstr {
+    unsafe { *ELLIPSIS_STRING }
+}
+
+static mut ELLIPSIS_STRING: Lazy<&'static wstr> = Lazy::new(|| L!(""));
 
 /// Character representing an omitted newline at the end of text.
 pub fn get_omitted_newline_str() -> &'static wstr {

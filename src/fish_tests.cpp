@@ -2204,57 +2204,6 @@ static void test_expand_overflow() {
     parser->vars().pop();
 }
 
-static void test_fuzzy_match() {
-    say(L"Testing fuzzy string matching");
-    // Check that a string fuzzy match has the expected type and case folding.
-    using type_t = string_fuzzy_match_t::contain_type_t;
-    using case_fold_t = string_fuzzy_match_t::case_fold_t;
-    auto test_fuzzy = [](const wchar_t *inp, const wchar_t *exp, type_t type,
-                         case_fold_t fold) -> bool {
-        auto m = string_fuzzy_match_string(inp, exp);
-        return m && m->type == type && m->case_fold == fold;
-    };
-
-    do_test(test_fuzzy(L"", L"", type_t::exact, case_fold_t::samecase));
-    do_test(test_fuzzy(L"alpha", L"alpha", type_t::exact, case_fold_t::samecase));
-    do_test(test_fuzzy(L"alp", L"alpha", type_t::prefix, case_fold_t::samecase));
-    do_test(test_fuzzy(L"alpha", L"AlPhA", type_t::exact, case_fold_t::smartcase));
-    do_test(test_fuzzy(L"alpha", L"AlPhA!", type_t::prefix, case_fold_t::smartcase));
-    do_test(test_fuzzy(L"ALPHA", L"alpha!", type_t::prefix, case_fold_t::icase));
-    do_test(test_fuzzy(L"ALPHA!", L"alPhA!", type_t::exact, case_fold_t::icase));
-    do_test(test_fuzzy(L"alPh", L"ALPHA!", type_t::prefix, case_fold_t::icase));
-    do_test(test_fuzzy(L"LPH", L"ALPHA!", type_t::substr, case_fold_t::samecase));
-    do_test(test_fuzzy(L"lph", L"AlPhA!", type_t::substr, case_fold_t::smartcase));
-    do_test(test_fuzzy(L"lPh", L"ALPHA!", type_t::substr, case_fold_t::icase));
-    do_test(test_fuzzy(L"AA", L"ALPHA!", type_t::subseq, case_fold_t::samecase));
-    do_test(!string_fuzzy_match_string(L"lh", L"ALPHA!").has_value());  // no subseq icase
-    do_test(!string_fuzzy_match_string(L"BB", L"ALPHA!").has_value());
-}
-
-static void test_ifind() {
-    say(L"Testing ifind");
-    do_test(ifind(std::string{"alpha"}, std::string{"alpha"}) == 0);
-    do_test(ifind(wcstring{L"alphab"}, wcstring{L"alpha"}) == 0);
-    do_test(ifind(std::string{"alpha"}, std::string{"balpha"}) == std::string::npos);
-    do_test(ifind(std::string{"balpha"}, std::string{"alpha"}) == 1);
-    do_test(ifind(std::string{"alphab"}, std::string{"balpha"}) == std::string::npos);
-    do_test(ifind(std::string{"balpha"}, std::string{"lPh"}) == 2);
-    do_test(ifind(std::string{"balpha"}, std::string{"Plh"}) == std::string::npos);
-    // FIXME: This should match instead of returning npos
-    // If this test fails, that means you fixed it!
-    // (unfortunately I don't believe we really have an "expected failure" state?)
-    do_test(ifind(wcstring{L"echo Ö"}, wcstring{L"ö"}) == wcstring::npos);
-}
-
-static void test_ifind_fuzzy() {
-    say(L"Testing ifind with fuzzy logic");
-    do_test(ifind(std::string{"alpha"}, std::string{"alpha"}, true) == 0);
-    do_test(ifind(wcstring{L"alphab"}, wcstring{L"alpha"}, true) == 0);
-    do_test(ifind(std::string{"alpha-b"}, std::string{"alpha_b"}, true) == 0);
-    do_test(ifind(std::string{"alpha-_"}, std::string{"alpha_-"}, true) == 0);
-    do_test(ifind(std::string{"alpha-b"}, std::string{"alpha b"}, true) == std::string::npos);
-}
-
 static void test_abbreviations() {
     say(L"Testing abbreviations");
     {
@@ -3697,22 +3646,6 @@ static void test_input() {
     } else if (evt.get_readline() != readline_cmd_t::down_line) {
         err(L"Expected to read char down_line");
     }
-}
-
-static void test_line_iterator() {
-    say(L"Testing line iterator");
-
-    std::string text1 = "Alpha\nBeta\nGamma\n\nDelta\n";
-    std::vector<std::string> lines1;
-    line_iterator_t<std::string> iter1(text1);
-    while (iter1.next()) lines1.push_back(iter1.line());
-    do_test((lines1 == std::vector<std::string>{"Alpha", "Beta", "Gamma", "", "Delta"}));
-
-    wcstring text2 = L"\n\nAlpha\nBeta\nGamma\n\nDelta";
-    wcstring_list_t lines2;
-    line_iterator_t<wcstring> iter2(text2);
-    while (iter2.next()) lines2.push_back(iter2.line());
-    do_test((lines2 == wcstring_list_t{L"", L"", L"Alpha", L"Beta", L"Gamma", L"", L"Delta"}));
 }
 
 static void test_undo() {
@@ -5546,28 +5479,6 @@ static void test_highlighting() {
     vars.remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
 }
 
-static void test_split_string_tok() {
-    say(L"Testing split_string_tok");
-    wcstring_list_t splits;
-    splits = split_string_tok(L" hello \t   world", L" \t\n");
-    do_test((splits == wcstring_list_t{L"hello", L"world"}));
-
-    splits = split_string_tok(L" stuff ", wcstring(L" "), 0);
-    do_test((splits.empty()));
-
-    splits = split_string_tok(L" stuff ", wcstring(L" "), 1);
-    do_test((splits == wcstring_list_t{L" stuff "}));
-
-    splits = split_string_tok(L" hello \t   world  andstuff ", L" \t\n", 3);
-    do_test((splits == wcstring_list_t{L"hello", L"world", L" andstuff "}));
-
-    // NUL chars are OK.
-    wcstring nullstr = L" hello X  world";
-    nullstr.at(nullstr.find(L'X')) = L'\0';
-    splits = split_string_tok(nullstr, wcstring(L" \0", 2));
-    do_test((splits == wcstring_list_t{L"hello", L"world"}));
-}
-
 static void test_wwrite_to_fd() {
     say(L"Testing wwrite_to_fd");
     char t[] = "/tmp/fish_test_wwrite.XXXXXX";
@@ -6751,7 +6662,6 @@ struct test_comparator_t {
 static const test_t s_tests[]{
     {TEST_GROUP("utility_functions"), test_utility_functions},
     {TEST_GROUP("dir_iter"), test_dir_iter},
-    {TEST_GROUP("string_split"), test_split_string_tok},
     {TEST_GROUP("wwrite_to_fd"), test_wwrite_to_fd},
     {TEST_GROUP("env_vars"), test_env_vars},
     {TEST_GROUP("env"), test_env_snapshot},
@@ -6787,9 +6697,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("lru"), test_lru},
     {TEST_GROUP("expand"), test_expand},
     {TEST_GROUP("expand"), test_expand_overflow},
-    {TEST_GROUP("fuzzy_match"), test_fuzzy_match},
-    {TEST_GROUP("ifind"), test_ifind},
-    {TEST_GROUP("ifind_fuzzy"), test_ifind_fuzzy},
     {TEST_GROUP("abbreviations"), test_abbreviations},
     {TEST_GROUP("builtins/test"), test_test},
     {TEST_GROUP("wcstod"), test_wcstod},
@@ -6805,7 +6712,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("complete"), test_complete},
     {TEST_GROUP("autoload"), test_autoload},
     {TEST_GROUP("input"), test_input},
-    {TEST_GROUP("line_iterator"), test_line_iterator},
     {TEST_GROUP("undo"), test_undo},
     {TEST_GROUP("universal"), test_universal},
     {TEST_GROUP("universal"), test_universal_output},

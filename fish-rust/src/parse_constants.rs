@@ -12,7 +12,7 @@ use widestring_suffix::widestrs;
 
 pub type SourceOffset = u32;
 
-pub const SOURCE_OFFSET_INVALID: SourceOffset = SourceOffset::MAX;
+pub const SOURCE_OFFSET_INVALID: usize = SourceOffset::MAX as _;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
 #[derive(Copy, Clone)]
@@ -85,8 +85,10 @@ mod parse_constants_ffi {
     }
 
     extern "Rust" {
-        fn end(self: &SourceRange) -> u32;
-        fn contains_inclusive(self: &SourceRange, loc: u32) -> bool;
+        #[cxx_name = "end"]
+        fn end_ffi(self: &SourceRange) -> u32;
+        #[cxx_name = "contains_inclusive"]
+        fn contains_inclusive_ffi(self: &SourceRange, loc: u32) -> bool;
     }
 
     /// IMPORTANT: If the following enum table is modified you must also update token_type_description below.
@@ -245,15 +247,34 @@ pub use parse_constants_ffi::{
 };
 
 impl SourceRange {
-    pub fn new(start: SourceOffset, length: SourceOffset) -> Self {
-        SourceRange { start, length }
+    pub fn new(start: usize, length: usize) -> Self {
+        SourceRange {
+            start: start.try_into().unwrap(),
+            length: length.try_into().unwrap(),
+        }
     }
-    pub fn end(&self) -> SourceOffset {
+    pub fn start(&self) -> usize {
+        self.start.try_into().unwrap()
+    }
+    pub fn length(&self) -> usize {
+        self.length.try_into().unwrap()
+    }
+    pub fn end(&self) -> usize {
+        self.start
+            .checked_add(self.length)
+            .expect("Overflow")
+            .try_into()
+            .unwrap()
+    }
+    fn end_ffi(&self) -> u32 {
         self.start.checked_add(self.length).expect("Overflow")
     }
 
     // \return true if a location is in this range, including one-past-the-end.
-    pub fn contains_inclusive(&self, loc: SourceOffset) -> bool {
+    pub fn contains_inclusive(&self, loc: usize) -> bool {
+        self.start() <= loc && loc - self.start() <= self.length()
+    }
+    fn contains_inclusive_ffi(&self, loc: u32) -> bool {
         self.start <= loc && loc - self.start <= self.length
     }
 }

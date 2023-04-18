@@ -32,8 +32,8 @@ pub struct ParseToken {
     pub may_be_variable_assignment: bool,
     /// If this is a tokenizer error, that error.
     pub tok_error: TokenizerError,
-    pub source_start: SourceOffset,
-    pub source_length: SourceOffset,
+    source_start: SourceOffset,
+    source_length: SourceOffset,
 }
 
 impl ParseToken {
@@ -46,14 +46,26 @@ impl ParseToken {
             is_newline: false,
             may_be_variable_assignment: false,
             tok_error: TokenizerError::none,
-            source_start: SOURCE_OFFSET_INVALID,
+            source_start: SOURCE_OFFSET_INVALID.try_into().unwrap(),
             source_length: 0,
         }
+    }
+    pub fn set_source_start(&mut self, value: usize) {
+        self.source_start = value.try_into().unwrap();
+    }
+    pub fn source_start(&self) -> usize {
+        self.source_start.try_into().unwrap()
+    }
+    pub fn set_source_length(&mut self, value: usize) {
+        self.source_length = value.try_into().unwrap();
+    }
+    pub fn source_length(&self) -> usize {
+        self.source_length.try_into().unwrap()
     }
     /// \return the source range.
     /// Note the start may be invalid.
     pub fn range(&self) -> SourceRange {
-        SourceRange::new(self.source_start, self.source_length)
+        SourceRange::new(self.source_start(), self.source_length())
     }
     /// \return whether we are a string with the dash prefix set.
     pub fn is_dash_prefix_string(&self) -> bool {

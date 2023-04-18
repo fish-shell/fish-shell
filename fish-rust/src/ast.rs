@@ -141,8 +141,7 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
 
     /// \return the source code for this node, or none if unsourced.
     fn try_source<'s>(&self, orig: &'s wstr) -> Option<&'s wstr> {
-        self.try_source_range()
-            .map(|r| &orig[r.start as usize..r.end() as usize])
+        self.try_source_range().map(|r| &orig[r.start()..r.end()])
     }
 
     /// \return the source code for this node, or an empty string if unsourced.
@@ -2506,16 +2505,16 @@ impl<'a> TokenStream<'a> {
         result.may_be_variable_assignment = variable_assignment_equals_pos(text).is_some();
         result.tok_error = token.error;
 
-        assert!(token.offset < SOURCE_OFFSET_INVALID);
-        result.source_start = token.offset;
-        result.source_length = token.length;
+        assert!(token.offset() < SOURCE_OFFSET_INVALID);
+        result.set_source_start(token.offset());
+        result.set_source_length(token.length());
 
         if token.error != TokenizerError::none {
-            let subtoken_offset = token.error_offset_within_token;
+            let subtoken_offset = token.error_offset_within_token();
             // Skip invalid tokens that have a zero length, especially if they are at EOF.
-            if subtoken_offset < result.source_length {
-                result.source_start += subtoken_offset;
-                result.source_length = token.error_length;
+            if subtoken_offset < result.source_length() {
+                result.set_source_start(result.source_start() + subtoken_offset);
+                result.set_source_length(token.error_length());
             }
         }
 
@@ -2584,7 +2583,7 @@ macro_rules! parse_error_range {
 
             FLOG!(ast_construction, "%*sparse error - begin unwinding", $self.spaces(), "");
             // TODO: can store this conditionally dependent on flags.
-            if $range.start != SOURCE_OFFSET_INVALID {
+            if $range.start() != SOURCE_OFFSET_INVALID {
                 $self.errors.push($range);
             }
 
@@ -2592,8 +2591,8 @@ macro_rules! parse_error_range {
                 let mut err = ParseError::default();
                 err.text = text.unwrap();
                 err.code = $code;
-                err.source_start = $range.start as usize;
-                err.source_length = $range.length as usize;
+                err.source_start = $range.start();
+                err.source_length = $range.length();
                 errors.0.push(err);
             }
         }
@@ -3384,8 +3383,8 @@ impl<'s> Populator<'s> {
                         "%*schomping range %u-%u",
                         self.spaces(),
                         "",
-                        tok.source_start,
-                        tok.source_length
+                        tok.source_start(),
+                        tok.source_length()
                     );
                 }
                 FLOG!(ast_construction, "%*sdone unwinding", self.spaces(), "");

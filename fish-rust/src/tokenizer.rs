@@ -269,7 +269,7 @@ impl Tok {
         Tok {
             offset: 0,
             length: 0,
-            error_offset_within_token: SOURCE_OFFSET_INVALID,
+            error_offset_within_token: SOURCE_OFFSET_INVALID.try_into().unwrap(),
             error_length: 0,
             error: TokenizerError::none,
             type_: r#type,
@@ -284,6 +284,30 @@ impl Tok {
     }
     fn get_source_ffi(self: &Tok, str: &CxxWString) -> UniquePtr<CxxWString> {
         self.get_source(str.as_wstr()).to_ffi()
+    }
+    pub fn set_offset(&mut self, value: usize) {
+        self.offset = value.try_into().unwrap();
+    }
+    pub fn offset(&self) -> usize {
+        self.offset.try_into().unwrap()
+    }
+    pub fn length(&self) -> usize {
+        self.length.try_into().unwrap()
+    }
+    pub fn set_length(&mut self, value: usize) {
+        self.length = value.try_into().unwrap();
+    }
+    pub fn set_error_offset_within_token(&mut self, value: usize) {
+        self.error_offset_within_token = value.try_into().unwrap();
+    }
+    pub fn error_offset_within_token(&self) -> usize {
+        self.error_offset_within_token.try_into().unwrap()
+    }
+    pub fn error_length(&self) -> usize {
+        self.error_length.try_into().unwrap()
+    }
+    pub fn set_error_length(&mut self, value: usize) {
+        self.error_length = value.try_into().unwrap();
     }
 }
 
@@ -818,8 +842,8 @@ impl Tokenizer {
         }
 
         let mut result = Tok::new(TokenType::string);
-        result.offset = buff_start as u32;
-        result.length = (self.token_cursor - buff_start) as u32;
+        result.set_offset(buff_start);
+        result.set_length(self.token_cursor - buff_start);
         result
     }
 }

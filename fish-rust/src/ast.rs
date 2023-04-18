@@ -2274,7 +2274,7 @@ impl Ast {
     pub fn parse(
         src: &wstr,
         flags: ParseTreeFlags,
-        out_errors: &mut Option<ParseErrorList>,
+        out_errors: Option<&mut ParseErrorList>,
     ) -> Self {
         parse_from_top(src, flags, out_errors, Type::job_list)
     }
@@ -2282,7 +2282,7 @@ impl Ast {
     pub fn parse_argument_list(
         src: &wstr,
         flags: ParseTreeFlags,
-        out_errors: &mut Option<ParseErrorList>,
+        out_errors: Option<&mut ParseErrorList>,
     ) -> Self {
         parse_from_top(src, flags, out_errors, Type::freestanding_argument_list)
     }
@@ -2626,7 +2626,7 @@ struct Populator<'a> {
     depth: usize,
 
     // If non-null, populate with errors.
-    out_errors: &'a mut Option<ParseErrorList>,
+    out_errors: Option<&'a mut ParseErrorList>,
 }
 
 impl<'s> NodeVisitorMut for Populator<'s> {
@@ -2885,7 +2885,7 @@ impl<'s> Populator<'s> {
         src: &'s wstr,
         flags: ParseTreeFlags,
         top_type: Type,
-        out_errors: &'s mut Option<ParseErrorList>,
+        out_errors: Option<&'s mut ParseErrorList>,
     ) -> Self {
         Self {
             flags,
@@ -3758,7 +3758,7 @@ enum ParserStatus {
 fn parse_from_top(
     src: &wstr,
     flags: ParseTreeFlags,
-    out_errors: &mut Option<ParseErrorList>,
+    out_errors: Option<&mut ParseErrorList>,
     top_type: Type,
 ) -> Ast {
     assert!(
@@ -3895,7 +3895,7 @@ use crate::ffi_tests::add_test;
 add_test!("test_ast_parse", || {
     use crate::parse_constants::PARSE_FLAG_NONE;
     let src = L!("echo");
-    let ast = Ast::parse(src, PARSE_FLAG_NONE, &mut None);
+    let ast = Ast::parse(src, PARSE_FLAG_NONE, None);
     assert!(!ast.any_error);
 });
 
@@ -4391,20 +4391,15 @@ impl Ast {
 }
 
 fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorListFfi) -> Box<Ast> {
-    let mut out_errors: Option<ParseErrorList> = if errors.is_null() {
-        None
-    } else {
-        Some(unsafe { &(*errors).0 }.clone())
-    };
-    let ast = Box::new(Ast::parse(
+    Box::new(Ast::parse(
         src.as_wstr(),
         ParseTreeFlags(flags),
-        &mut out_errors,
-    ));
-    if let Some(out_errors) = out_errors {
-        unsafe { (*errors).0 = out_errors };
-    }
-    ast
+        if errors.is_null() {
+            None
+        } else {
+            Some(unsafe { &mut (*errors).0 })
+        },
+    ))
 }
 
 fn ast_parse_argument_list_ffi(
@@ -4412,20 +4407,15 @@ fn ast_parse_argument_list_ffi(
     flags: u8,
     errors: *mut ParseErrorListFfi,
 ) -> Box<Ast> {
-    let mut out_errors: Option<ParseErrorList> = if errors.is_null() {
-        None
-    } else {
-        Some(unsafe { &(*errors).0 }.clone())
-    };
-    let ast = Box::new(Ast::parse_argument_list(
+    Box::new(Ast::parse_argument_list(
         src.as_wstr(),
         ParseTreeFlags(flags),
-        &mut out_errors,
-    ));
-    if let Some(out_errors) = out_errors {
-        unsafe { (*errors).0 = out_errors };
-    }
-    ast
+        if errors.is_null() {
+            None
+        } else {
+            Some(unsafe { &mut (*errors).0 })
+        },
+    ))
 }
 
 fn new_ast_traversal<'a>(root: &'a NodeFfi<'a>) -> Box<Traversal<'a>> {

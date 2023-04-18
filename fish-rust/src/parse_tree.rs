@@ -120,7 +120,7 @@ pub type ParsedSourceRef = Option<Rc<ParsedSource>>;
 pub fn parse_source(
     src: WString,
     flags: ParseTreeFlags,
-    errors: &mut Option<ParseErrorList>,
+    errors: Option<&mut ParseErrorList>,
 ) -> ParsedSourceRef {
     let ast = Ast::parse(&src, flags, errors);
     if ast.errored() && !(flags & PARSE_FLAG_CONTINUE_AFTER_ERROR) {
@@ -177,17 +177,15 @@ fn parse_source_ffi(
     flags: u8,
     errors: *mut ParseErrorListFfi,
 ) -> Box<ParsedSourceRefFFI> {
-    let mut out_errors: Option<ParseErrorList> = if errors.is_null() {
-        None
-    } else {
-        Some(unsafe { &(*errors).0 }.clone())
-    };
-    let ps = parse_source(src.from_ffi(), ParseTreeFlags(flags), &mut out_errors);
-    if let Some(out_errors) = out_errors {
-        unsafe { (*errors).0 = out_errors };
-    }
-
-    Box::new(ParsedSourceRefFFI(ps))
+    Box::new(ParsedSourceRefFFI(parse_source(
+        src.from_ffi(),
+        ParseTreeFlags(flags),
+        if errors.is_null() {
+            None
+        } else {
+            Some(unsafe { &mut (*errors).0 })
+        },
+    )))
 }
 impl ParsedSourceRefFFI {
     fn clone(&self) -> Box<ParsedSourceRefFFI> {

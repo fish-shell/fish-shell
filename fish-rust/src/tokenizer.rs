@@ -333,10 +333,10 @@ fn new_tokenizer(start: wcharz_t, flags: u8) -> Box<Tokenizer> {
     Box::new(Tokenizer::new(start.into(), TokFlags(flags)))
 }
 
-impl Tokenizer {
-    /// Returns the next token, or none if we are at the end.
-    pub fn next(&mut self) -> Option<Tok> {
-        // TODO Implement IntoIterator.
+impl Iterator for Tokenizer {
+    type Item = Tok;
+
+    fn next(&mut self) -> Option<Self::Item> {
         if !self.has_next {
             return None;
         }
@@ -526,6 +526,8 @@ impl Tokenizer {
             }
         }
     }
+}
+impl Tokenizer {
     fn next_ffi(&mut self) -> UniquePtr<Tok> {
         match self.next() {
             Some(tok) => UniquePtr::new(tok),

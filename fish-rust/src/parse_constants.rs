@@ -79,7 +79,7 @@ mod parse_constants_ffi {
 
     /// A range of source code.
     #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-    struct SourceRange {
+    pub struct SourceRange {
         start: u32,
         length: u32,
     }
@@ -94,7 +94,7 @@ mod parse_constants_ffi {
     /// IMPORTANT: If the following enum table is modified you must also update token_type_description below.
     /// TODO above comment can be removed when we drop the FFI and get real enums.
     #[derive(Clone, Copy, Debug)]
-    enum ParseTokenType {
+    pub enum ParseTokenType {
         invalid = 1,
 
         // Terminal types.
@@ -115,7 +115,7 @@ mod parse_constants_ffi {
 
     #[repr(u8)]
     #[derive(Clone, Copy, Debug)]
-    enum ParseKeyword {
+    pub enum ParseKeyword {
         // 'none' is not a keyword, it is a sentinel indicating nothing.
         none,
 
@@ -235,7 +235,7 @@ mod parse_constants_ffi {
     }
 
     // The location of a pipeline.
-    enum PipelinePosition {
+    pub enum PipelinePosition {
         none,       // not part of a pipeline
         first,      // first command in a pipeline
         subsequent, // second or further command in a pipeline
@@ -243,7 +243,8 @@ mod parse_constants_ffi {
 }
 
 pub use parse_constants_ffi::{
-    parse_error_t, ParseErrorCode, ParseKeyword, ParseTokenType, SourceRange, StatementDecoration,
+    parse_error_t, ParseErrorCode, ParseKeyword, ParseTokenType, PipelinePosition, SourceRange,
+    StatementDecoration,
 };
 
 impl SourceRange {

@@ -1725,7 +1725,7 @@ pub fn valid_var_name_char(chr: char) -> bool {
 }
 
 /// Test if the given string is a valid variable name.
-fn valid_var_name(s: &wstr) -> bool {
+pub fn valid_var_name(s: &wstr) -> bool {
     // Note do not use c_str(), we want to fail on embedded nul bytes.
     !s.is_empty() && s.chars().all(valid_var_name_char)
 }

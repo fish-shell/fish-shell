@@ -1898,7 +1898,7 @@ define_keyword_node!(KeywordWhile, ParseKeyword::kw_while);
 
 impl DecoratedStatement {
     /// \return the decoration for this statement.
-    fn decoration(&self) -> StatementDecoration {
+    pub fn decoration(&self) -> StatementDecoration {
         let Some(decorator) = &self.opt_decoration else {
             return StatementDecoration::none;
         };
@@ -1942,6 +1942,9 @@ impl AcceptorMut for ArgumentOrRedirectionVariant {
 }
 
 impl ArgumentOrRedirectionVariant {
+    pub fn typ(&self) -> Type {
+        self.embedded_node().typ()
+    }
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             ArgumentOrRedirectionVariant::Argument(node) => node,
@@ -2032,6 +2035,9 @@ impl AcceptorMut for StatementVariant {
 }
 
 impl StatementVariant {
+    pub fn typ(&self) -> Type {
+        self.embedded_node().typ()
+    }
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             StatementVariant::None => panic!("cannot visit null statement"),
@@ -2113,6 +2119,9 @@ impl AcceptorMut for BlockStatementHeaderVariant {
 }
 
 impl BlockStatementHeaderVariant {
+    pub fn typ(&self) -> Type {
+        self.embedded_node().typ()
+    }
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),

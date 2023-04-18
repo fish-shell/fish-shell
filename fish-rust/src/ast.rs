@@ -401,6 +401,9 @@ pub trait Leaf: Node {
     /// we accepted incomplete and the token stream was exhausted.
     fn range(&self) -> Option<SourceRange>;
     fn range_mut(&mut self) -> &mut Option<SourceRange>;
+    fn has_source(&self) -> bool {
+        self.range().is_some()
+    }
     fn leaf_as_node_ffi(&self) -> &dyn Node;
 }
 

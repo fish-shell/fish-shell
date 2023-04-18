@@ -22,6 +22,16 @@ pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &w
         && wcscasecmp(&value[value.len() - suffix_size..], proposed_suffix).is_eq()
 }
 
+/// Test if a string prefixes another. Returns true if a is a prefix of b.
+pub fn string_prefixes_string(proposed_prefix: &wstr, value: &wstr) -> bool {
+    value.as_slice().starts_with(proposed_prefix.as_slice())
+}
+
+/// Test if a string is a suffix of another.
+pub fn string_suffixes_string(proposed_suffix: &wstr, value: &wstr) -> bool {
+    value.as_slice().ends_with(proposed_suffix.as_slice())
+}
+
 /// Test if a string matches a subsequence of another.
 /// Note subsequence is not substring: "foo" is a subsequence of "follow" for example.
 pub fn subsequence_in_string(needle: &wstr, haystack: &wstr) -> bool {

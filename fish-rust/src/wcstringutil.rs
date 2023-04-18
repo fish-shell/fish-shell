@@ -45,15 +45,16 @@ pub fn subsequence_in_string(needle: &wstr, haystack: &wstr) -> bool {
         return true;
     }
 
-    let mut ni = needle.chars();
-    let mut nc = ni.next();
-    for hc in haystack.chars() {
-        if nc == Some(hc) {
-            nc = ni.next();
+    let mut needle_it = needle.chars().peekable();
+    for c in haystack.chars() {
+        needle_it.next_if_eq(&c);
+
+        if needle_it.peek().is_none() {
+            return true;
         }
     }
     // We succeeded if we exhausted our sequence.
-    nc.is_none()
+    needle_it.peek().is_none()
 }
 
 /// Case-insensitive string search, modeled after std::string::find().
@@ -471,11 +472,7 @@ pub fn trim(input: WString, any_of: Option<&wstr>) -> WString {
 /// \p idx may be "one past the end."
 pub fn count_preceding_backslashes(text: &wstr, idx: usize) -> usize {
     assert!(idx <= text.len(), "Out of bounds");
-    let mut backslashes = 0;
-    while backslashes < idx && text.char_at(idx - backslashes - 1) == '\\' {
-        backslashes += 1;
-    }
-    backslashes
+    text.chars().take(idx).take_while(|&c| c == '\\').count()
 }
 
 /// Support for iterating over a newline-separated string.

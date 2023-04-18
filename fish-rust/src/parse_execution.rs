@@ -1096,7 +1096,7 @@ impl<'a> ParseExecutionContext<'a> {
                 for arg in case_args {
                     // Unescape wildcards so they can be expanded again.
                     let unescaped_arg = parse_util_unescape_wildcards(&arg);
-                    if wildcard_match(&switch_value_expanded, &unescaped_arg) {
+                    if wildcard_match(&switch_value_expanded, &unescaped_arg, false) {
                         // If this matched, we're done.
                         matching_case_item = Some(case_item);
                         break;

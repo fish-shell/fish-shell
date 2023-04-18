@@ -6,6 +6,7 @@
 #![allow(clippy::bool_assert_comparison)]
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::derivable_impls)]
+#![allow(clippy::option_map_unit_fn)]
 
 #[macro_use]
 mod common;
@@ -40,6 +41,7 @@ mod job_group;
 mod locale;
 mod nix;
 mod null_terminated_array;
+mod operation_context;
 mod parse_constants;
 mod parse_tree;
 mod parse_util;

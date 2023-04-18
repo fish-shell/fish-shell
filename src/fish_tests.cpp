@@ -439,38 +439,6 @@ static void test_escape_crazy() {
     }
 }
 
-static void test_escape_quotes() {
-    say(L"Testing escaping with quotes");
-    // These are "raw string literals"
-    do_test(parse_util_escape_string_with_quote(L"abc", L'\0') == L"abc");
-    do_test(parse_util_escape_string_with_quote(L"abc~def", L'\0') == L"abc\\~def");
-    do_test(parse_util_escape_string_with_quote(L"abc~def", L'\0', true) == L"abc~def");
-    do_test(parse_util_escape_string_with_quote(L"abc\\~def", L'\0') == L"abc\\\\\\~def");
-    do_test(parse_util_escape_string_with_quote(L"abc\\~def", L'\0', true) == L"abc\\\\~def");
-    do_test(parse_util_escape_string_with_quote(L"~abc", L'\0') == L"\\~abc");
-    do_test(parse_util_escape_string_with_quote(L"~abc", L'\0', true) == L"~abc");
-    do_test(parse_util_escape_string_with_quote(L"~abc|def", L'\0') == L"\\~abc\\|def");
-    do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0') == L"\\|abc\\~def");
-    do_test(parse_util_escape_string_with_quote(L"|abc~def", L'\0', true) == L"\\|abc~def");
-    do_test(parse_util_escape_string_with_quote(L"foo\nbar", L'\0') == L"foo\\nbar");
-
-    // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
-    do_test(parse_util_escape_string_with_quote(L"abc", L'\'') == L"abc");
-    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'\'') == L"abc\\\\def");
-    do_test(parse_util_escape_string_with_quote(L"abc'def", L'\'') == L"abc\\'def");
-    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'') == L"~abc\\'def");
-    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'\'', true) == L"~abc\\'def");
-    do_test(parse_util_escape_string_with_quote(L"foo\nba'r", L'\'') == L"foo'\\n'ba\\'r");
-    do_test(parse_util_escape_string_with_quote(L"foo\\\\bar", L'\'') == L"foo\\\\\\\\bar");
-
-    do_test(parse_util_escape_string_with_quote(L"abc", L'"') == L"abc");
-    do_test(parse_util_escape_string_with_quote(L"abc\\def", L'"') == L"abc\\\\def");
-    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"') == L"~abc'def");
-    do_test(parse_util_escape_string_with_quote(L"~abc'def", L'"', true) == L"~abc'def");
-    do_test(parse_util_escape_string_with_quote(L"foo\nba'r", L'"') == L"foo\"\\n\"ba'r");
-    do_test(parse_util_escape_string_with_quote(L"foo\\\\bar", L'"') == L"foo\\\\\\\\bar");
-}
-
 static void test_format() {
     say(L"Testing formatting functions");
     struct {
@@ -1424,38 +1392,6 @@ static void test_indents() {
     }
 }
 
-static void test_parse_util_cmdsubst_extent() {
-    const wchar_t *a = L"echo (echo (echo hi";
-    const wchar_t *begin = nullptr, *end = nullptr;
-
-    parse_util_cmdsubst_extent(a, 0, &begin, &end);
-    if (begin != a || end != begin + std::wcslen(begin)) {
-        err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    }
-    parse_util_cmdsubst_extent(a, 1, &begin, &end);
-    if (begin != a || end != begin + std::wcslen(begin)) {
-        err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    }
-    parse_util_cmdsubst_extent(a, 2, &begin, &end);
-    if (begin != a || end != begin + std::wcslen(begin)) {
-        err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    }
-    parse_util_cmdsubst_extent(a, 3, &begin, &end);
-    if (begin != a || end != begin + std::wcslen(begin)) {
-        err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    }
-
-    parse_util_cmdsubst_extent(a, 8, &begin, &end);
-    if (begin != a + const_strlen(L"echo (")) {
-        err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    }
-
-    parse_util_cmdsubst_extent(a, 17, &begin, &end);
-    if (begin != a + const_strlen(L"echo (echo (")) {
-        err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    }
-}
-
 static void test_const_strlen() {
     do_test(const_strlen("") == 0);
     do_test(const_strlen(L"") == 0);
@@ -1599,7 +1535,6 @@ void test_dir_iter() {
 
 static void test_utility_functions() {
     say(L"Testing utility functions");
-    test_parse_util_cmdsubst_extent();
     test_const_strlen();
     test_const_strcmp();
     test_is_sorted_by_name();
@@ -6677,7 +6612,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("error_messages"), test_error_messages},
     {TEST_GROUP("escape"), test_unescape_sane},
     {TEST_GROUP("escape"), test_escape_crazy},
-    {TEST_GROUP("escape"), test_escape_quotes},
     {TEST_GROUP("format"), test_format},
     {TEST_GROUP("convert"), test_convert},
     {TEST_GROUP("convert"), test_convert_private_use},

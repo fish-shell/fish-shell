@@ -151,6 +151,10 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
 
     // The address of the object, for comparison.
     fn as_ptr(&self) -> *const ();
+
+    fn pointer_eq(&self, rhs: &dyn Node) -> bool {
+        std::ptr::eq(self.as_ptr(), rhs.as_ptr())
+    }
 }
 
 /// NodeMut is a mutable node.
@@ -626,8 +630,11 @@ macro_rules! define_list_node {
         }
         impl $name {
             /// Iteration support.
-            fn iter<F>(&self) -> impl Iterator<Item = &<$name as List>::ContentsNode> {
+            pub fn iter(&self) -> impl Iterator<Item = &<$name as List>::ContentsNode> {
                 self.contents().iter().map(|b| &**b)
+            }
+            pub fn get(&self, index: usize) -> Option<&$contents> {
+                self.contents().get(index).map(|b| &**b)
             }
         }
         impl Index<usize> for $name {

@@ -1,6 +1,727 @@
-use crate::ast::{Node, NodeFfi, NodeVisitor};
+//! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
+use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeFfi, NodeVisitor};
+use crate::common::{
+    escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
+    EscapeStringStyle, UnescapeFlags, UnescapeStringStyle,
+};
+use crate::expand::{
+    expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, BRACE_BEGIN, BRACE_END,
+    BRACE_SEP, INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
+};
+use crate::ffi;
 use crate::ffi::indent_visitor_t;
+use crate::ffi_tests::add_test;
+use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::operation_context::OperationContext;
+use crate::parse_constants::{
+    parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
+    ParserTestErrorBits, PipelinePosition, StatementDecoration, ERROR_BAD_VAR_CHAR1,
+    ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_NOT_ARGV_AT,
+    ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME,
+    INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG,
+    PARSER_TEST_ERROR, PARSER_TEST_INCOMPLETE, PARSE_FLAG_LEAVE_UNTERMINATED, PARSE_FLAG_NONE,
+    UNKNOWN_BUILTIN_ERR_MSG,
+};
+use crate::tokenizer::{
+    comment_end, is_token_delimiter, quote_end, Tok, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
+    TOK_SHOW_COMMENTS,
+};
+use crate::wchar::{wstr, WString, L};
+use crate::wchar_ffi::WCharToFFI;
+use crate::wcstringutil::truncate;
+use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
+use crate::wutil::{wgettext, wgettext_fmt};
+use std::ops;
 use std::pin::Pin;
+use widestring_suffix::widestrs;
+
+/// Handles slices: the square brackets in an expression like $foo[5..4]
+/// \return the length of the slice starting at \p in, or 0 if there is no slice, or -1 on error.
+/// This never accepts incomplete slices.
+pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
+    const openc: char = '[';
+    const closec: char = ']';
+    let mut escaped = false;
+
+    // Check for initial opening [
+    let mut chars = input.chars();
+    if chars.next() != Some(openc) {
+        return Some(0);
+    }
+    let mut bracket_count = 1;
+
+    let mut pos = 0;
+    for c in chars {
+        pos += 1;
+        if !escaped {
+            if ['\'', '"'].contains(&c) {
+                pos = quote_end(input, pos, c)?;
+            }
+        } else if c == openc {
+            bracket_count += 1;
+        } else if c == closec {
+            bracket_count -= 1;
+            if bracket_count == 0 {
+                // pos points at the closing ], so add 1.
+                return Some(pos + 1);
+            }
+        }
+        if c == '\\' {
+            escaped = !escaped;
+        } else {
+            escaped = false;
+        }
+    }
+    assert!(bracket_count > 0, "Should have unclosed brackets");
+
+    None
+}
+
+/// Alternative API. Iterate over command substitutions.
+///
+/// \param str the string to search for subshells
+/// \param inout_cursor_offset On input, the location to begin the search. On output, either the end
+/// of the string, or just after the closed-paren.
+/// \param out_contents On output, the contents of the command substitution
+/// \param out_start On output, the offset of the start of the command substitution (open paren)
+/// \param out_end On output, the offset of the end of the command substitution (close paren), or
+/// the end of the string if it was incomplete
+/// \param accept_incomplete whether to permit missing closing parenthesis
+/// \param inout_is_quoted whether the cursor is in a double-quoted context.
+/// \param out_has_dollar whether the command substitution has the optional leading $.
+/// \return -1 on syntax error, 0 if no subshells exist and 1 on success
+#[allow(clippy::too_many_arguments)]
+pub fn parse_util_locate_cmdsubst_range<'a>(
+    s: &'a wstr,
+    inout_cursor_offset: &mut usize,
+    mut out_contents: Option<&'a wstr>,
+    out_start: &mut usize,
+    out_end: &mut usize,
+    accept_incomplete: bool,
+    inout_is_quoted: Option<&mut bool>,
+    out_has_dollar: Option<&mut bool>,
+) -> i32 {
+    // Clear the return values.
+    out_contents.as_mut().map(|s| *s = L!(""));
+    *out_start = 0;
+    *out_end = s.len();
+
+    // Nothing to do if the offset is at or past the end of the string.
+    if *inout_cursor_offset >= s.len() {
+        return 0;
+    }
+
+    // Defer to the wonky version.
+    let ret = parse_util_locate_cmdsub(
+        s,
+        *inout_cursor_offset,
+        out_start,
+        out_end,
+        accept_incomplete,
+        inout_is_quoted,
+        out_has_dollar,
+    );
+    if ret <= 0 {
+        return ret;
+    }
+
+    out_contents
+        .as_mut()
+        .map(|contents| *contents = &s[*out_start..*out_end]);
+
+    // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
+    // overflow is not likely.
+    *inout_cursor_offset = 1 + *out_end;
+
+    ret
+}
+
+/// Find the beginning and end of the command substitution under the cursor. If no subshell is
+/// found, the entire string is returned. If the current command substitution is not ended, i.e. the
+/// closing parenthesis is missing, then the string from the beginning of the substitution to the
+/// end of the string is returned.
+///
+/// \param buff the string to search for subshells
+/// \param cursor_pos the position of the cursor
+/// \param a the start of the searched string
+/// \param b the end of the searched string
+pub fn parse_util_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usize> {
+    // The tightest command substitution found so far.
+    let mut ap = 0;
+    let mut bp = buff.len();
+    let mut pos = 0;
+    loop {
+        let mut begin = 0;
+        let mut end = 0;
+        if parse_util_locate_cmdsub(buff, pos, &mut begin, &mut end, true, None, None) <= 0 {
+            // No subshell found, all done.
+            break;
+        }
+
+        if begin < cursor && end >= cursor {
+            // This command substitution surrounds the cursor, so it's a tighter fit.
+            begin += 1;
+            ap = begin;
+            bp = end;
+            // pos is where to begin looking for the next one. But if we reached the end there's no
+            // next one.
+            if begin >= end {
+                break;
+            }
+            pos = begin + 1;
+        } else if begin >= cursor {
+            // This command substitution starts at or after the cursor. Since it was the first
+            // command substitution in the string, we're done.
+            break;
+        } else {
+            // This command substitution ends before the cursor. Skip it.
+            assert!(end < cursor);
+            pos = end + 1;
+            assert!(pos <= buff.len());
+        }
+    }
+    ap..bp
+}
+
+fn parse_util_locate_cmdsub(
+    input: &wstr,
+    cursor: usize,
+    out_start: &mut usize,
+    out_end: &mut usize,
+    allow_incomplete: bool,
+    mut inout_is_quoted: Option<&mut bool>,
+    mut out_has_dollar: Option<&mut bool>,
+) -> i32 {
+    let input = input.as_char_slice();
+
+    let mut escaped = false;
+    let mut is_token_begin = true;
+    let mut syntax_error = false;
+    let mut paran_count = 0;
+    let mut quoted_cmdsubs = vec![];
+
+    let mut pos = cursor;
+    let mut last_dollar = None;
+    let mut paran_begin = None;
+    let mut paran_end = None;
+
+    fn process_opening_quote(
+        input: &[char],
+        inout_is_quoted: &mut Option<&mut bool>,
+        paran_count: i32,
+        quoted_cmdsubs: &mut Vec<i32>,
+        pos: usize,
+        last_dollar: &mut Option<usize>,
+        quote: char,
+    ) -> Option<usize> {
+        let q_end = quote_end(input.into(), pos, quote)?;
+        if input[q_end] == '$' {
+            *last_dollar = Some(q_end);
+            quoted_cmdsubs.push(paran_count);
+        }
+        // We want to report whether the outermost command substitution between
+        // paran_begin..paran_end is quoted.
+        if paran_count == 0 {
+            inout_is_quoted
+                .as_mut()
+                .map(|is_quoted| **is_quoted = input[q_end] == '$');
+        }
+        Some(q_end)
+    }
+
+    if inout_is_quoted
+        .as_ref()
+        .map_or(false, |is_quoted| **is_quoted)
+        && !input.is_empty()
+    {
+        pos = process_opening_quote(
+            input,
+            &mut inout_is_quoted,
+            paran_count,
+            &mut quoted_cmdsubs,
+            pos,
+            &mut last_dollar,
+            '"',
+        )
+        .unwrap_or(input.len());
+    }
+
+    while pos < input.len() {
+        let c = input[pos];
+        if !escaped {
+            if ['\'', '"'].contains(&c) {
+                match process_opening_quote(
+                    input,
+                    &mut inout_is_quoted,
+                    paran_count,
+                    &mut quoted_cmdsubs,
+                    pos,
+                    &mut last_dollar,
+                    c,
+                ) {
+                    Some(q_end) => pos = q_end,
+                    None => break,
+                }
+            } else if c == '\\' {
+                escaped = true;
+            } else if c == '#' && is_token_begin {
+                pos = comment_end(input.into(), pos) - 1;
+            } else if c == '$' {
+                last_dollar = Some(pos);
+            } else if c == '(' {
+                if paran_count == 0 && paran_begin.is_none() {
+                    paran_begin = Some(pos);
+                    out_has_dollar
+                        .as_mut()
+                        .map(|has_dollar| **has_dollar = last_dollar == Some(pos - 1));
+                }
+
+                paran_count += 1;
+            } else if c == ')' {
+                paran_count -= 1;
+
+                if paran_count == 0 && paran_end.is_none() {
+                    paran_end = Some(pos);
+                    break;
+                }
+
+                if paran_count < 0 {
+                    syntax_error = true;
+                    break;
+                }
+
+                // Check if the ) did complete a quoted command substitution.
+                if quoted_cmdsubs.last() == Some(&paran_count) {
+                    quoted_cmdsubs.pop();
+                    // Quoted command substitutions temporarily close double quotes.
+                    // In "foo$(bar)baz$(qux)"
+                    // We are here ^
+                    // After the ) in a quoted command substitution, we need to act as if
+                    // there was an invisible double quote.
+                    match quote_end(input.into(), pos, '"') {
+                        Some(q_end) => {
+                            // Found a valid closing quote.
+                            // Stop at $(qux), which is another quoted command substitution.
+                            if input[q_end] == '$' {
+                                quoted_cmdsubs.push(paran_count);
+                            }
+                            pos = q_end;
+                        }
+                        None => break,
+                    };
+                }
+            }
+            is_token_begin = is_token_delimiter(c, input.get(pos + 1).copied());
+        } else {
+            escaped = false;
+            is_token_begin = false;
+        }
+        pos += 1;
+    }
+
+    syntax_error |= paran_count < 0;
+    syntax_error |= paran_count > 0 && !allow_incomplete;
+
+    if syntax_error {
+        return -1;
+    }
+
+    let Some(paran_begin) = paran_begin else { return 0; };
+
+    *out_start = paran_begin;
+    *out_end = if paran_count != 0 {
+        input.len()
+    } else {
+        paran_end.unwrap()
+    };
+
+    1
+}
+
+/// Find the beginning and end of the process definition under the cursor
+///
+/// \param buff the string to search for subshells
+/// \param cursor_pos the position of the cursor
+/// \param a the start of the process
+/// \param b the end of the process
+/// \param tokens the tokens in the process
+pub fn parse_util_process_extent(
+    buff: &wstr,
+    cursor_pos: usize,
+    out_tokens: Option<&mut Vec<Tok>>,
+) -> ops::Range<usize> {
+    job_or_process_extent(true, buff, cursor_pos, out_tokens)
+}
+
+/// Find the beginning and end of the process definition under the cursor
+///
+/// \param buff the string to search for subshells
+/// \param cursor_pos the position of the cursor
+/// \param a the start of the process
+/// \param b the end of the process
+/// \param tokens the tokens in the process
+pub fn parse_util_job_extent(
+    buff: &wstr,
+    cursor_pos: usize,
+    out_tokens: Option<&mut Vec<Tok>>,
+) -> ops::Range<usize> {
+    job_or_process_extent(false, buff, cursor_pos, out_tokens)
+}
+
+/// Get the beginning and end of the job or process definition under the cursor.
+fn job_or_process_extent(
+    process: bool,
+    buff: &wstr,
+    cursor_pos: usize,
+    mut out_tokens: Option<&mut Vec<Tok>>,
+) -> ops::Range<usize> {
+    let mut finished = false;
+
+    let cmdsub_range = parse_util_cmdsubst_extent(buff, cursor_pos);
+    assert!(cursor_pos >= cmdsub_range.start);
+    let pos = cursor_pos - cmdsub_range.start;
+
+    let mut result = cmdsub_range.clone();
+    for token in Tokenizer::new(
+        &buff[cmdsub_range],
+        TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS,
+    ) {
+        let tok_begin = token.offset();
+        if finished {
+            break;
+        }
+        match token.type_ {
+            TokenType::pipe
+            | TokenType::end
+            | TokenType::background
+            | TokenType::andand
+            | TokenType::oror
+                if (token.type_ != TokenType::pipe || process) =>
+            {
+                if tok_begin >= pos {
+                    finished = true;
+                    result.start = tok_begin;
+                } else {
+                    // Statement at cursor might start after this token.
+                    result.end = tok_begin + token.length();
+                    out_tokens.as_mut().map(|tokens| tokens.clear());
+                }
+                continue; // Do not add this to tokens
+            }
+            _ => (),
+        }
+        out_tokens.as_mut().map(|tokens| tokens.push(token));
+    }
+    result
+}
+
+/// Find the beginning and end of the token under the cursor and the token before the current token.
+/// Any combination of tok_begin, tok_end, prev_begin and prev_end may be null.
+///
+/// \param buff the string to search for subshells
+/// \param cursor_pos the position of the cursor
+/// \param tok_begin the start of the current token
+/// \param tok_end the end of the current token
+/// \param prev_begin the start o the token before the current token
+/// \param prev_end the end of the token before the current token
+pub fn parse_util_token_extent(
+    buff: &wstr,
+    cursor_pos: usize,
+    out_tok: &mut ops::Range<usize>,
+    mut out_prev: Option<&mut ops::Range<usize>>,
+) {
+    let cmdsubst_range = parse_util_cmdsubst_extent(buff, cursor_pos);
+    let cmdsubst_begin = cmdsubst_range.start;
+
+    // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
+    let offset_within_cmdsubst = cursor_pos - cmdsubst_range.start;
+
+    let mut a = cmdsubst_begin + offset_within_cmdsubst;
+    let mut b = a;
+    let mut pa = a;
+    let mut pb = pa;
+
+    assert!(cmdsubst_begin <= buff.len());
+    assert!(cmdsubst_range.end <= buff.len());
+
+    for token in Tokenizer::new(&buff[cmdsubst_range], TOK_ACCEPT_UNFINISHED) {
+        let tok_begin = token.offset();
+        let mut tok_end = tok_begin;
+
+        // Calculate end of token.
+        if token.type_ == TokenType::string {
+            tok_end += token.length();
+        }
+
+        // Cursor was before beginning of this token, means that the cursor is between two tokens,
+        // so we set it to a zero element string and break.
+        if tok_begin > offset_within_cmdsubst {
+            a = cmdsubst_begin + offset_within_cmdsubst;
+            b = a;
+            break;
+        }
+
+        // If cursor is inside the token, this is the token we are looking for. If so, set a and b
+        // and break.
+        if token.type_ == TokenType::string && tok_end >= offset_within_cmdsubst {
+            a = cmdsubst_begin + token.offset();
+            b = a + token.length();
+            break;
+        }
+
+        // Remember previous string token.
+        if token.type_ == TokenType::string {
+            pa = cmdsubst_begin + token.offset();
+            pb = pa + token.length();
+        }
+    }
+
+    *out_tok = a..b;
+    out_prev.as_mut().map(|prev| **prev = pa..pb);
+    assert!(pa <= buff.len());
+    assert!(pb >= pa);
+    assert!(pb <= buff.len());
+}
+
+/// Get the line number at the specified character offset.
+pub fn parse_util_lineno(s: &wstr, offset: usize) -> usize {
+    // Return the line number of position offset, starting with 1.
+    if s.is_empty() {
+        return 1;
+    }
+
+    let end = offset.min(s.len());
+    s.chars().take(end).filter(|c| *c == '\n').count()
+}
+
+/// Calculate the line number of the specified cursor position.
+pub fn parse_util_get_line_from_offset(s: &wstr, pos: usize) -> isize {
+    // Return the line pos is on, or -1 if it's after the end.
+    if pos > s.len() {
+        return -1;
+    }
+    s.chars()
+        .take(pos)
+        .filter(|c| *c == '\n')
+        .count()
+        .try_into()
+        .unwrap()
+}
+
+/// Get the offset of the first character on the specified line.
+pub fn parse_util_get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
+    // Return the first position on line X, counting from 0.
+    if line < 0 {
+        return None;
+    }
+    if line == 0 {
+        return Some(0);
+    }
+
+    // let mut pos = -1 as usize;
+    let mut count = 0;
+    for (pos, _) in s.chars().enumerate().filter(|(_, c)| *c == '\n') {
+        count += 1;
+        if count == line {
+            return Some(pos + 1);
+        }
+    }
+    None
+}
+
+/// Return the total offset of the buffer for the cursor position nearest to the specified position.
+pub fn parse_util_get_offset(s: &wstr, line: i32, mut line_offset: usize) -> Option<usize> {
+    let off = parse_util_get_offset_from_line(s, line)?;
+    let off2 = parse_util_get_offset_from_line(s, line + 1).unwrap_or(s.len() + 1);
+
+    if line_offset >= off2 - off - 1 {
+        line_offset = off2 - off - 1;
+    }
+
+    Some(off + line_offset)
+}
+
+/// Return the given string, unescaping wildcard characters but not performing any other character
+/// transformation.
+pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
+    let mut result = WString::new();
+    result.reserve(s.len());
+    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+    let cs = s.as_char_slice();
+    let mut i = 0;
+    for c in cs.iter().copied() {
+        if c == '*' {
+            result.push(ANY_STRING);
+        } else if c == '?' && unesc_qmark {
+            result.push(ANY_CHAR);
+        } else if c == '\\' && cs.get(i + 1) == Some(&'*')
+            || (unesc_qmark && c == '\\' && cs.get(i + 1) == Some(&'?'))
+        {
+            result.push(cs[i + 1]);
+            i += 1;
+        } else if c == '\\' && cs.get(i + 1) == Some(&'\\') {
+            // Not a wildcard, but ensure the next iteration doesn't see this escaped backslash.
+            result.push_utfstr(L!("\\\\"));
+            i += 1;
+        } else {
+            result.push(c);
+        }
+        i += 1;
+    }
+    result
+}
+
+/// Checks if the specified string is a help option.
+#[widestrs]
+pub fn parse_util_argument_is_help(s: &wstr) -> bool {
+    ["-h"L, "--help"L].contains(&s)
+}
+
+/// Returns true if the specified command is a builtin that may not be used in a pipeline.
+#[widestrs]
+fn parser_is_pipe_forbidden(word: &wstr) -> bool {
+    ["exec"L, "case"L, "break"L, "return"L, "continue"L].contains(&word)
+}
+
+// \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
+// there are no arguments.
+fn get_first_arg(list: &ast::ArgumentOrRedirectionList) -> Option<&ast::Argument> {
+    for v in list.iter() {
+        if v.is_argument() {
+            return Some(v.argument());
+        }
+    }
+    None
+}
+
+/// Given a wide character immediately after a dollar sign, return the appropriate error message.
+/// For example, if wc is @, then the variable name was $@ and we suggest $argv.
+fn error_for_character(c: char) -> WString {
+    match c {
+        '?' => wgettext!(ERROR_NOT_STATUS).to_owned(),
+        '#' => wgettext!(ERROR_NOT_ARGV_COUNT).to_owned(),
+        '@' => wgettext!(ERROR_NOT_ARGV_AT).to_owned(),
+        '*' => wgettext!(ERROR_NOT_ARGV_STAR).to_owned(),
+        _ if [
+            '$',
+            VARIABLE_EXPAND,
+            VARIABLE_EXPAND_SINGLE,
+            VARIABLE_EXPAND_EMPTY,
+        ]
+        .contains(&c) =>
+        {
+            wgettext!(ERROR_NOT_PID).to_owned()
+        }
+        _ if [BRACE_END, '}', ',', BRACE_SEP].contains(&c) => {
+            wgettext!(ERROR_NO_VAR_NAME).to_owned()
+        }
+        _ => wgettext_fmt!(ERROR_BAD_VAR_CHAR1, c),
+    }
+}
+
+/// Calculates information on the parameter at the specified index.
+///
+/// \param cmd The command to be analyzed
+/// \param pos An index in the string which is inside the parameter
+/// \return the type of quote used by the parameter: either ' or " or \0.
+pub fn parse_util_get_quote_type(cmd: &wstr, pos: usize) -> Option<char> {
+    let mut tok = Tokenizer::new(cmd, TOK_ACCEPT_UNFINISHED);
+    while let Some(token) = tok.next() {
+        if token.type_ == TokenType::string && token.location_in_or_at_end_of_source_range(pos) {
+            return get_quote(tok.text_of(&token), pos - token.offset());
+        }
+    }
+    None
+}
+
+fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
+    let cmd = cmd_str.as_char_slice();
+    let mut i = 0;
+    while i < cmd.len() {
+        if cmd[i] == '\\' {
+            i += 1;
+            if i == cmd_str.len() {
+                return None;
+            }
+            i += 1;
+        } else if cmd[i] == '\'' || cmd[i] == '"' {
+            match quote_end(cmd_str, i, cmd[i]) {
+                Some(end) => {
+                    if end > len {
+                        return Some(cmd[i]);
+                    }
+                    i = end + 1;
+                }
+                None => return Some(cmd[i]),
+            }
+        } else {
+            i += 1;
+        }
+    }
+    None
+}
+
+/// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
+/// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
+/// thus escaping should be with backslashes). Optionally do not escape tildes.
+pub fn parse_util_escape_string_with_quote(
+    cmd: &wstr,
+    quote: Option<char>,
+    no_tilde: bool,
+) -> WString {
+    let Some(quote) = quote else {
+            let mut flags = EscapeFlags::NO_QUOTED;
+            if no_tilde {
+                flags |= EscapeFlags::NO_TILDE;
+            }
+            return escape_string(cmd, EscapeStringStyle::Script(flags));
+        };
+    // Here we are going to escape a string with quotes.
+    // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
+    // terminate the quote and then re-enter it.
+    let mut result = WString::new();
+    result.reserve(cmd.len());
+    for c in cmd.chars() {
+        match c {
+            '\n' => {
+                for c in [quote, '\\', 'n', quote] {
+                    result.push(c);
+                }
+            }
+            '\t' => {
+                for c in [quote, '\\', 't', quote] {
+                    result.push(c);
+                }
+            }
+            '\x08' => {
+                for c in [quote, '\\', 'b', quote] {
+                    result.push(c);
+                }
+            }
+            '\r' => {
+                for c in [quote, '\\', 'r', quote] {
+                    result.push(c);
+                }
+            }
+            '\\' => {
+                result.push_str("\\\\");
+            }
+            '$' => {
+                if quote == '"' {
+                    result.push('\\');
+                }
+                result.push('$');
+            }
+            _ => {
+                if c == quote {
+                    result.push('\\');
+                }
+                result.push(c);
+            }
+        }
+    }
+    result
+}
 
 struct IndentVisitor<'a> {
     companion: Pin<&'a mut indent_visitor_t>,
@@ -46,3 +767,813 @@ impl<'a> IndentVisitor<'a> {
         self.visit(node.as_node());
     }
 }
+
+/// Given a string, detect parse errors in it. If allow_incomplete is set, then if the string is
+/// incomplete (e.g. an unclosed quote), an error is not returned and the PARSER_TEST_INCOMPLETE bit
+/// is set in the return value. If allow_incomplete is not set, then incomplete strings result in an
+/// error.
+pub fn parse_util_detect_errors(
+    buff_src: &wstr,
+    mut out_errors: Option<&mut ParseErrorList>,
+    allow_incomplete: bool,
+) -> Result<(), ParserTestErrorBits> {
+    // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
+    // allow_incomplete is set.
+    let mut has_unclosed_quote_or_subshell = false;
+
+    let parse_flags = if allow_incomplete {
+        PARSE_FLAG_LEAVE_UNTERMINATED
+    } else {
+        PARSE_FLAG_NONE
+    };
+
+    // Parse the input string into an ast. Some errors are detected here.
+    let mut parse_errors = ParseErrorList::new();
+    let ast = Ast::parse(buff_src, parse_flags, Some(&mut parse_errors));
+    if allow_incomplete {
+        // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
+        // successfully.
+        parse_errors.retain(|parse_error| {
+            if [
+                ParseErrorCode::tokenizer_unterminated_quote,
+                ParseErrorCode::tokenizer_unterminated_subshell,
+            ]
+            .contains(&parse_error.code)
+            {
+                // Remove this error, since we don't consider it a real error.
+                has_unclosed_quote_or_subshell = true;
+                false
+            } else {
+                true
+            }
+        });
+    }
+
+    // has_unclosed_quote_or_subshell may only be set if allow_incomplete is true.
+    assert!(!has_unclosed_quote_or_subshell || allow_incomplete);
+    if has_unclosed_quote_or_subshell {
+        // We do not bother to validate the rest of the tree in this case.
+        return Err(PARSER_TEST_INCOMPLETE);
+    }
+
+    // Early parse error, stop here.
+    if !parse_errors.is_empty() {
+        if let Some(errors) = out_errors.as_mut() {
+            errors.extend(parse_errors.into_iter());
+            return Err(PARSER_TEST_ERROR);
+        }
+    }
+
+    // Defer to the tree-walking version.
+    parse_util_detect_errors_in_ast(&ast, buff_src, out_errors)
+}
+
+/// Like parse_util_detect_errors but accepts an already-parsed ast.
+/// The top of the ast is assumed to be a job list.
+pub fn parse_util_detect_errors_in_ast(
+    ast: &Ast,
+    buff_src: &wstr,
+    mut out_errors: Option<&mut ParseErrorList>,
+) -> Result<(), ParserTestErrorBits> {
+    let mut res = ParserTestErrorBits::default();
+
+    // Whether we encountered a parse error.
+    let mut errored = false;
+
+    // Whether we encountered an unclosed block. We detect this via an 'end_command' block without
+    // source.
+    let mut has_unclosed_block = false;
+
+    // Whether we encounter a missing statement, i.e. a newline after a pipe. This is found by
+    // detecting job_continuations that have source for pipes but not the statement.
+    let mut has_unclosed_pipe = false;
+
+    // Whether we encounter a missing job, i.e. a newline after && or ||. This is found by
+    // detecting job_conjunction_continuations that have source for && or || but not the job.
+    let mut has_unclosed_conjunction = false;
+
+    // Expand all commands.
+    // Verify 'or' and 'and' not used inside pipelines.
+    // Verify return only within a function.
+    // Verify no variable expansions.
+
+    for node in ast::Traversal::new(ast.top()) {
+        if let Some(jc) = node.as_job_continuation() {
+            // Somewhat clumsy way of checking for a statement without source in a pipeline.
+            // See if our pipe has source but our statement does not.
+            if jc.pipe.has_source() && jc.statement.try_source_range().is_some() {
+                has_unclosed_pipe = true;
+            }
+        } else if let Some(jcc) = node.as_job_conjunction_continuation() {
+            // Somewhat clumsy way of checking for a job without source in a conjunction.
+            // See if our conjunction operator (&& or ||) has source but our job does not.
+            if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
+                has_unclosed_conjunction = true;
+            }
+        } else if let Some(arg) = node.as_argument() {
+            let arg_src = arg.source(buff_src);
+            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors);
+        } else if let Some(job) = node.as_job_pipeline() {
+            // Disallow background in the following cases:
+            //
+            // foo & ; and bar
+            // foo & ; or bar
+            // if foo & ; end
+            // while foo & ; end
+            // If it's not a background job, nothing to do.
+            if job.bg.is_some() {
+                errored |= detect_errors_in_backgrounded_job(job, &mut out_errors);
+            }
+        } else if let Some(stmt) = node.as_decorated_statement() {
+            errored |= detect_errors_in_decorated_statement(buff_src, stmt, &mut out_errors);
+        } else if let Some(block) = node.as_block_statement() {
+            // If our 'end' had no source, we are unsourced.
+            if !block.end.has_source() {
+                has_unclosed_block = true;
+            }
+            errored |=
+                detect_errors_in_block_redirection_list(&block.args_or_redirs, &mut out_errors);
+        } else if let Some(ifs) = node.as_if_statement() {
+            // If our 'end' had no source, we are unsourced.
+            if !ifs.end.has_source() {
+                has_unclosed_block = true;
+            }
+            errored |=
+                detect_errors_in_block_redirection_list(&ifs.args_or_redirs, &mut out_errors);
+        } else if let Some(switchs) = node.as_switch_statement() {
+            // If our 'end' had no source, we are unsourced.
+            if !switchs.end.has_source() {
+                has_unclosed_block = true;
+            }
+            errored |=
+                detect_errors_in_block_redirection_list(&switchs.args_or_redirs, &mut out_errors);
+        }
+    }
+
+    if errored {
+        res |= PARSER_TEST_ERROR;
+    }
+
+    if has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction {
+        res |= PARSER_TEST_INCOMPLETE;
+    }
+    if res == ParserTestErrorBits::default() {
+        Ok(())
+    } else {
+        Err(res)
+    }
+}
+
+/// Detect errors in the specified string when parsed as an argument list. Returns the text of an
+/// error, or none if no error occurred.
+pub fn parse_util_detect_errors_in_argument_list(
+    arg_list_src: &wstr,
+    prefix: &wstr,
+) -> Result<(), WString> {
+    // Helper to return a description of the first error.
+    let get_error_text = |errors: &ParseErrorList| {
+        assert!(!errors.is_empty(), "Expected an error");
+        Err(errors[0].describe_with_prefix(
+            arg_list_src,
+            prefix,
+            false, /* not interactive */
+            false, /* don't skip caret */
+        ))
+    };
+
+    // Parse the string as a freestanding argument list.
+    let mut errors = ParseErrorList::new();
+    let ast = Ast::parse_argument_list(arg_list_src, PARSE_FLAG_NONE, Some(&mut errors));
+    if !errors.is_empty() {
+        return get_error_text(&errors);
+    }
+
+    // Get the root argument list and extract arguments from it.
+    // Test each of these.
+    let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
+    for arg in args.iter() {
+        let arg_src = arg.source(arg_list_src);
+        if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors))
+            != ParserTestErrorBits::default()
+        {
+            return get_error_text(&errors);
+        }
+    }
+    Ok(())
+}
+
+/// Append a syntax error to the given error list.
+macro_rules! append_syntax_error {
+    (
+        $errors:expr, $source_location:expr,
+        $source_length:expr, $fmt:expr
+        $(, $arg:expr)* $(,)?
+    ) => {
+        {
+            if let Some(ref mut errors) = $errors {
+                let mut error = ParseError::default();
+                error.source_start = $source_location;
+                error.source_length = $source_length;
+                error.code = ParseErrorCode::syntax;
+                error.text = wgettext_fmt!($fmt $(, $arg)*);
+                errors.push(error);
+            }
+            true
+        }
+    }
+}
+
+macro_rules! append_syntax_error_formatted {
+    (
+        $errors:expr, $source_location:expr,
+        $source_length:expr, $text:expr
+    ) => {{
+        if let Some(ref mut errors) = $errors {
+            let mut error = ParseError::default();
+            error.source_start = $source_location;
+            error.source_length = $source_length;
+            error.code = ParseErrorCode::syntax;
+            error.text = $text;
+            errors.push(error);
+        }
+        true
+    }};
+}
+
+/// Test if this argument contains any errors. Detected errors include syntax errors in command
+/// substitutions, improperly escaped characters and improper use of the variable expansion
+/// operator.
+pub fn parse_util_detect_errors_in_argument(
+    arg: &ast::Argument,
+    arg_src: &wstr,
+    out_errors: &mut Option<&mut ParseErrorList>,
+) -> ParserTestErrorBits {
+    let Some(source_range) = arg.try_source_range() else {
+        return ParserTestErrorBits::default();
+    };
+
+    let source_start = source_range.start();
+    let mut err = ParserTestErrorBits::default();
+
+    let check_subtoken = |begin: usize,
+                          end: usize,
+                          out_errors: &mut Option<&mut ParseErrorList>| {
+        let Some(unesc) = unescape_string(&arg_src[begin..end], UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)) else {
+                if out_errors.is_some() {
+                    let src = arg_src.as_char_slice();
+                    if src.len() == 2 && src[0] == '\\' &&
+                        (src[1] == 'c' ||
+                                src[1].to_lowercase().eq(['u'].into_iter()) ||
+                                src[1].to_lowercase().eq(['x'].into_iter()))
+                    {
+                                append_syntax_error!(
+                                    out_errors, source_start + begin, end - begin,
+                                    "Incomplete escape sequence '%ls'", arg_src);
+                                    return PARSER_TEST_ERROR;
+                    }
+                    append_syntax_error!(
+                        out_errors, source_start + begin, end - begin,
+                        "Invalid token '%ls'", arg_src);
+                }
+                return PARSER_TEST_ERROR;
+            };
+
+        let mut err = ParserTestErrorBits::default();
+        // Check for invalid variable expansions.
+        let unesc = unesc.as_char_slice();
+        for (idx, c) in unesc.iter().enumerate() {
+            if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE].contains(c) {
+                continue;
+            }
+            let next_char = unesc.get(idx + 1).copied().unwrap_or('\0');
+            if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
+                && !valid_var_name_char(next_char)
+            {
+                err = PARSER_TEST_ERROR;
+                if let Some(ref mut out_errors) = out_errors {
+                    let mut first_dollar = idx;
+                    while first_dollar > 0
+                        && [VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE]
+                            .contains(&unesc[first_dollar - 1])
+                    {
+                        first_dollar -= 1;
+                    }
+                    parse_util_expand_variable_error(
+                        unesc.into(),
+                        source_start,
+                        first_dollar,
+                        out_errors,
+                    );
+                }
+            }
+        }
+
+        err
+    };
+
+    let mut cursor = 0;
+    let mut checked = 0;
+    let subst = L!("");
+
+    let mut do_loop = true;
+    let mut is_quoted = false;
+    while do_loop {
+        let mut paren_begin = 0;
+        let mut paren_end = 0;
+        let mut has_dollar = false;
+        match parse_util_locate_cmdsubst_range(
+            arg_src,
+            &mut cursor,
+            Some(subst),
+            &mut paren_begin,
+            &mut paren_end,
+            false,
+            Some(&mut is_quoted),
+            Some(&mut has_dollar),
+        ) {
+            -1 => {
+                err |= PARSER_TEST_ERROR;
+                append_syntax_error!(out_errors, source_start, 1, "Mismatched parenthesis");
+                return err;
+            }
+            0 => {
+                do_loop = false;
+            }
+            1 => {
+                err |= check_subtoken(
+                    checked,
+                    paren_begin - if has_dollar { 1 } else { 0 },
+                    out_errors,
+                );
+                assert!(paren_begin < paren_end, "Parens out of order?");
+                let mut subst_errors = ParseErrorList::new();
+
+                // Our command substitution produced error offsets relative to its source. Tweak the
+                // offsets of the errors in the command substitution to account for both its offset
+                // within the string, and the offset of the node.
+                let error_offset = paren_begin + 1 + source_start;
+                parse_error_offset_source_start(&mut subst_errors, error_offset);
+                if let Some(ref mut out_errors) = out_errors {
+                    out_errors.extend(subst_errors.into_iter());
+                }
+
+                checked = paren_end + 1;
+            }
+            _ => panic!("unexpected parse_util_locate_cmdsubst() return value"),
+        }
+    }
+
+    err |= check_subtoken(checked, arg_src.len(), out_errors);
+
+    err
+}
+
+/// Given that the job given by node should be backgrounded, return true if we detect any errors.
+fn detect_errors_in_backgrounded_job(
+    job: &ast::JobPipeline,
+    parse_errors: &mut Option<&mut ParseErrorList>,
+) -> bool {
+    let Some(source_range) = job.try_source_range() else {return false; };
+
+    let mut errored = false;
+    // Disallow background in the following cases:
+    // foo & ; and bar
+    // foo & ; or bar
+    // if foo & ; end
+    // while foo & ; end
+    let Some(job_conj) = job.parent().unwrap().as_job_conjunction() else {
+        return false;
+    };
+
+    if job_conj.parent().unwrap().as_if_clause().is_some()
+        || job_conj.parent().unwrap().as_while_header().is_some()
+    {
+        errored = append_syntax_error!(
+            parse_errors,
+            source_range.start(),
+            source_range.length(),
+            BACKGROUND_IN_CONDITIONAL_ERROR_MSG
+        );
+    } else if let Some(jlist) = job_conj.parent().unwrap().as_job_list() {
+        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
+        // Find the index of ourselves in the job list.
+        let index = jlist
+            .iter()
+            .position(|job| job.pointer_eq(job_conj))
+            .expect("Should have found the job in the list");
+
+        // Try getting the next job and check its decorator.
+        if let Some(next) = jlist.get(index + 1) {
+            if let Some(deco) = &next.decorator {
+                assert!(
+                    [ParseKeyword::kw_and, ParseKeyword::kw_or].contains(&deco.keyword()),
+                    "Unexpected decorator keyword"
+                );
+                let deco_name = if deco.keyword() == ParseKeyword::kw_and {
+                    L!("and")
+                } else {
+                    L!("or")
+                };
+                errored = append_syntax_error!(
+                    parse_errors,
+                    deco.source_range().start(),
+                    deco.source_range().length(),
+                    BOOL_AFTER_BACKGROUND_ERROR_MSG,
+                    deco_name
+                );
+            }
+        }
+    }
+    errored
+}
+
+/// Given a source buffer \p buff_src and decorated statement \p dst within it, return true if there
+/// is an error and false if not. \p storage may be used to reduce allocations.
+fn detect_errors_in_decorated_statement(
+    buff_src: &wstr,
+    dst: &ast::DecoratedStatement,
+    parse_errors: &mut Option<&mut ParseErrorList>,
+) -> bool {
+    let mut errored = false;
+    let source_start = dst.source_range().start();
+    let source_length = dst.source_range().length();
+    let decoration = dst.decoration();
+
+    // Determine if the first argument is help.
+    let mut first_arg_is_help = false;
+    if let Some(arg) = get_first_arg(&dst.args_or_redirs) {
+        let arg_src = arg.source(buff_src);
+        first_arg_is_help = parse_util_argument_is_help(arg_src);
+    }
+
+    // Get the statement we are part of.
+    let st = dst.parent().unwrap().as_statement().unwrap();
+
+    // Walk up to the job.
+    let mut job = None;
+    let mut cursor = dst.parent();
+    while job.is_none() {
+        let c = cursor.expect("Reached root without finding a job");
+        job = c.as_job_pipeline();
+        cursor = c.parent();
+    }
+    let job = job.expect("Should have found the job");
+
+    // Check our pipeline position.
+    let pipe_pos = if job.continuation.is_empty() {
+        PipelinePosition::none
+    } else if job.statement.pointer_eq(st) {
+        PipelinePosition::first
+    } else {
+        PipelinePosition::subsequent
+    };
+
+    // Check that we don't try to pipe through exec.
+    let is_in_pipeline = pipe_pos != PipelinePosition::none;
+    if is_in_pipeline && decoration == StatementDecoration::exec {
+        errored = append_syntax_error!(
+            parse_errors,
+            source_start,
+            source_length,
+            INVALID_PIPELINE_CMD_ERR_MSG,
+            "exec"
+        );
+    }
+
+    // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
+    // beginning. We can't disallow them as commands entirely because we need to support 'and
+    // --help', etc.
+    if pipe_pos == PipelinePosition::subsequent {
+        // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
+        // commands.
+        let command = dst.command.source(buff_src);
+        if [L!("and"), L!("or")].contains(&command) {
+            errored = append_syntax_error!(
+                parse_errors,
+                source_start,
+                source_length,
+                INVALID_PIPELINE_CMD_ERR_MSG,
+                command
+            );
+        }
+
+        // Similarly for time (#8841).
+        if command == L!("time") {
+            errored = append_syntax_error!(
+                parse_errors,
+                source_start,
+                source_length,
+                TIME_IN_PIPELINE_ERR_MSG
+            );
+        }
+    }
+
+    // $status specifically is invalid as a command,
+    // to avoid people trying `if $status`.
+    // We see this surprisingly regularly.
+    let com = dst.command.source(buff_src);
+    if com == L!("$status") {
+        errored = append_syntax_error!(
+            parse_errors,
+            source_start,
+            source_length,
+            "$status is not valid as a command. See `help conditions`"
+        );
+    }
+
+    let unexp_command = com;
+    if !unexp_command.is_empty() {
+        // Check that we can expand the command.
+        // Make a new error list so we can fix the offset for just those, then append later.
+        let mut new_errors = ParseErrorList::new();
+        let mut command = WString::new();
+        if expand_to_command_and_args(
+            unexp_command,
+            &OperationContext::empty(),
+            &mut command,
+            None,
+            &mut new_errors,
+            true, /* skip wildcards */
+        ) == ExpandResultCode::error
+        {
+            errored = true;
+        }
+
+        // Check that pipes are sound.
+        if !errored && parser_is_pipe_forbidden(&command) && is_in_pipeline {
+            errored = append_syntax_error!(
+                parse_errors,
+                source_start,
+                source_length,
+                INVALID_PIPELINE_CMD_ERR_MSG,
+                command
+            );
+        }
+
+        // Check that we don't break or continue from outside a loop.
+        if !errored && [L!("break"), L!("continue")].contains(&&command[..]) && !first_arg_is_help {
+            // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
+            // stop the search; we can't break an outer loop from inside a function.
+            // This is a little funny because we can't tell if it's a 'for' or 'while'
+            // loop from the ancestor alone; we need the header. That is, we hit a
+            // block_statement, and have to check its header.
+            let mut found_loop = false;
+            let mut ancestor: Option<&dyn Node> = Some(dst);
+            while let Some(anc) = ancestor {
+                if let Some(block) = anc.as_block_statement() {
+                    if [ast::Type::for_header, ast::Type::while_header]
+                        .contains(&block.header.typ())
+                    {
+                        // This is a loop header, so we can break or continue.
+                        found_loop = true;
+                        break;
+                    } else if block.header.typ() == ast::Type::function_header {
+                        // This is a function header, so we cannot break or
+                        // continue. We stop our search here.
+                        found_loop = false;
+                        break;
+                    }
+                }
+                ancestor = anc.parent();
+            }
+
+            if !found_loop {
+                errored = if command == L!("break") {
+                    append_syntax_error!(
+                        parse_errors,
+                        source_start,
+                        source_length,
+                        INVALID_BREAK_ERR_MSG
+                    )
+                } else {
+                    append_syntax_error!(
+                        parse_errors,
+                        source_start,
+                        source_length,
+                        INVALID_CONTINUE_ERR_MSG
+                    )
+                }
+            }
+        }
+
+        // Check that we don't do an invalid builtin (issue #1252).
+        if !errored && decoration == StatementDecoration::builtin {
+            let mut command = unexp_command.to_owned();
+            if expand_one(
+                &mut command,
+                ExpandFlags::SKIP_CMDSUBST,
+                &OperationContext::empty(),
+                match parse_errors {
+                    Some(pe) => Some(pe),
+                    None => None,
+                },
+            ) && !ffi::builtin_exists(&unexp_command.to_ffi())
+            {
+                errored = append_syntax_error!(
+                    parse_errors,
+                    source_start,
+                    source_length,
+                    UNKNOWN_BUILTIN_ERR_MSG,
+                    unexp_command
+                );
+            }
+        }
+
+        if let Some(ref mut parse_errors) = parse_errors {
+            // The expansion errors here go from the *command* onwards,
+            // so we need to offset them by the *command* offset,
+            // excluding the decoration.
+            parse_error_offset_source_start(&mut new_errors, dst.command.source_range().start());
+            parse_errors.extend(new_errors.into_iter());
+        }
+    }
+    errored
+}
+
+// Given we have a trailing argument_or_redirection_list, like `begin; end > /dev/null`, verify that
+// there are no arguments in the list.
+fn detect_errors_in_block_redirection_list(
+    args_or_redirs: &ast::ArgumentOrRedirectionList,
+    out_errors: &mut Option<&mut ParseErrorList>,
+) -> bool {
+    if let Some(first_arg) = get_first_arg(args_or_redirs) {
+        return append_syntax_error!(
+            out_errors,
+            first_arg.source_range().start(),
+            first_arg.source_range().length(),
+            END_ARG_ERR_MSG
+        );
+    }
+    false
+}
+
+/// Given a string containing a variable expansion error, append an appropriate error to the errors
+/// list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos
+/// is the offset of the offending dollar sign within the token.
+pub fn parse_util_expand_variable_error(
+    token: &wstr,
+    global_token_pos: usize,
+    dollar_pos: usize,
+    errors: &mut ParseErrorList,
+) {
+    let mut errors = Some(errors);
+    // Note that dollar_pos is probably VARIABLE_EXPAND or VARIABLE_EXPAND_SINGLE, not a literal
+    // dollar sign.
+    let token = token.as_char_slice();
+    let double_quotes = token[dollar_pos] == VARIABLE_EXPAND_SINGLE;
+    let start_error_count = errors.as_ref().unwrap().len();
+    let global_dollar_pos = global_token_pos + dollar_pos;
+    let global_after_dollar_pos = global_dollar_pos + 1;
+    let char_after_dollar = token.get(dollar_pos + 1).copied().unwrap_or('\0');
+
+    match char_after_dollar {
+        BRACE_BEGIN | '{' => {
+            // The BRACE_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible
+            // quoted) ${. See if we have a }, and the stuff in between is variable material. If so,
+            // report a bracket error. Otherwise just complain about the ${.
+            let mut looks_like_variable = false;
+            let closing_bracket = token
+                .iter()
+                .skip(dollar_pos + 2)
+                .position(|c| {
+                    *c == if char_after_dollar == '{' {
+                        '}'
+                    } else {
+                        BRACE_END
+                    }
+                })
+                .map(|p| p + dollar_pos + 2);
+            let mut var_name = L!("");
+            if let Some(var_end) = closing_bracket {
+                let var_start = dollar_pos + 2;
+                var_name = (&token[var_start..var_end]).into();
+                looks_like_variable = valid_var_name(var_name);
+            }
+            if looks_like_variable {
+                if double_quotes {
+                    append_syntax_error!(
+                        errors,
+                        global_after_dollar_pos,
+                        1,
+                        ERROR_BRACKETED_VARIABLE_QUOTED1,
+                        truncate(var_name, var_err_len, None)
+                    );
+                } else {
+                    append_syntax_error!(
+                        errors,
+                        global_after_dollar_pos,
+                        1,
+                        ERROR_BRACKETED_VARIABLE1,
+                        truncate(var_name, var_err_len, None),
+                    );
+                }
+            } else {
+                append_syntax_error!(errors, global_after_dollar_pos, 1, ERROR_BAD_VAR_CHAR1, '{');
+            }
+        }
+        INTERNAL_SEPARATOR => {
+            // e.g.: echo foo"$"baz
+            // These are only ever quotes, not command substitutions. Command substitutions are
+            // handled earlier.
+            append_syntax_error!(errors, global_dollar_pos, 1, ERROR_NO_VAR_NAME);
+        }
+        '\0' => {
+            append_syntax_error!(errors, global_dollar_pos, 1, ERROR_NO_VAR_NAME);
+        }
+        _ => {
+            let mut token_stop_char = char_after_dollar;
+            // Unescape (see issue #50).
+            if token_stop_char == ANY_CHAR {
+                token_stop_char = '?';
+            } else if [ANY_STRING, ANY_STRING_RECURSIVE].contains(&token_stop_char) {
+                token_stop_char = '*';
+            }
+
+            // Determine which error message to use. The format string may not consume all the
+            // arguments we pass but that's harmless.
+            append_syntax_error_formatted!(
+                errors,
+                global_after_dollar_pos,
+                1,
+                error_for_character(token_stop_char)
+            );
+        }
+    }
+
+    // We should have appended exactly one error.
+    assert!(errors.as_ref().unwrap().len() == start_error_count + 1);
+}
+
+/// Error message for use of backgrounded commands before and/or.
+const BOOL_AFTER_BACKGROUND_ERROR_MSG: &str =
+    "The '%ls' command can not be used immediately after a backgrounded job";
+
+/// Error message for backgrounded commands as conditionals.
+const BACKGROUND_IN_CONDITIONAL_ERROR_MSG: &str =
+    "Backgrounded commands can not be used as conditionals";
+
+/// Error message for arguments to 'end'
+const END_ARG_ERR_MSG: &str = "'end' does not take arguments. Did you forget a ';'?";
+
+/// Error message when 'time' is in a pipeline.
+const TIME_IN_PIPELINE_ERR_MSG: &str =
+    "The 'time' command may only be at the beginning of a pipeline";
+
+/// Maximum length of a variable name to show in error reports before truncation
+const var_err_len: usize = 16;
+
+add_test!("test_parse_util_cmdsubst_extent", || {
+    const a: &wstr = L!("echo (echo (echo hi");
+    assert_eq!(parse_util_cmdsubst_extent(a, 0), 0..a.len());
+    assert_eq!(parse_util_cmdsubst_extent(a, 1), 0..a.len());
+    assert_eq!(parse_util_cmdsubst_extent(a, 2), 0..a.len());
+    assert_eq!(parse_util_cmdsubst_extent(a, 3), 0..a.len());
+    assert_eq!(
+        parse_util_cmdsubst_extent(a, 8),
+        "echo (".chars().count()..a.len()
+    );
+    assert_eq!(
+        parse_util_cmdsubst_extent(a, 17),
+        "echo (echo (".chars().count()..a.len()
+    );
+});
+
+add_test!("test_escape_quotes", || {
+    macro_rules! validate {
+        ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
+            assert_eq!(
+                parse_util_escape_string_with_quote(L!($cmd), $quote, $no_tilde),
+                L!($expected)
+            );
+        };
+    }
+
+    // These are "raw string literals"
+    validate!("abc", None, false, "abc");
+    validate!("abc~def", None, false, "abc\\~def");
+    validate!("abc~def", None, true, "abc~def");
+    validate!("abc\\~def", None, false, "abc\\\\\\~def");
+    validate!("abc\\~def", None, true, "abc\\\\~def");
+    validate!("~abc", None, false, "\\~abc");
+    validate!("~abc", None, true, "~abc");
+    validate!("~abc|def", None, false, "\\~abc\\|def");
+    validate!("|abc~def", None, false, "\\|abc\\~def");
+    validate!("|abc~def", None, true, "\\|abc~def");
+    validate!("foo\nbar", None, false, "foo\\nbar");
+
+    // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
+    validate!("abc", Some('\''), false, "abc");
+    validate!("abc\\def", Some('\''), false, "abc\\\\def");
+    validate!("abc'def", Some('\''), false, "abc\\'def");
+    validate!("~abc'def", Some('\''), false, "~abc\\'def");
+    validate!("~abc'def", Some('\''), true, "~abc\\'def");
+    validate!("foo\nba'r", Some('\''), false, "foo'\\n'ba\\'r");
+    validate!("foo\\\\bar", Some('\''), false, "foo\\\\\\\\bar");
+
+    validate!("abc", Some('"'), false, "abc");
+    validate!("abc\\def", Some('"'), false, "abc\\\\def");
+    validate!("~abc'def", Some('"'), false, "~abc'def");
+    validate!("~abc'def", Some('"'), true, "~abc'def");
+    validate!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
+    validate!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
+});

@@ -52,7 +52,7 @@ impl BitOrAssign for ParseTreeFlags {
     }
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Default)]
 pub struct ParserTestErrorBits(u8);
 
 pub const PARSER_TEST_ERROR: ParserTestErrorBits = ParserTestErrorBits(1);

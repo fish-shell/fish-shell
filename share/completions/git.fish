@@ -2390,7 +2390,7 @@ for file in (path filter -xZ $PATH/git-* | path basename)
     and continue
 
     # Running `git foo` ends up running `git-foo`, so we need to ignore the `git-` here.
-    set -l cmd (string replace -r '^git-' '' -- $file)
+    set -l cmd (string replace -r '^git-' '' -- $file | string escape)
     complete -c git -f -n "__fish_git_using_command $cmd" -a "(__fish_git_complete_custom_command $cmd)"
     set -a __fish_git_custom_commands_completion $file
 end

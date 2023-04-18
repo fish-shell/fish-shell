@@ -256,7 +256,7 @@ class layout_cache_t : noncopyable_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings, ordered
     // lexicographically.
-    wcstring_list_t esc_cache_;
+    std::vector<wcstring> esc_cache_;
 
     // LRU-list of prompts and their layouts.
     // Use a list so we can promote to the front on a cache hit.

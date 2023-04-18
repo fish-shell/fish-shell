@@ -58,7 +58,7 @@
 struct termios shell_modes;
 
 const wcstring g_empty_string{};
-const wcstring_list_t g_empty_string_list{};
+const std::vector<wcstring> g_empty_string_list{};
 
 /// This allows us to notice when we've forked.
 static relaxed_atomic_bool_t is_forked_proc{false};
@@ -172,13 +172,13 @@ bool is_windows_subsystem_for_linux() {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
-[[gnu::noinline]] static wcstring_list_t demangled_backtrace(int max_frames, int skip_levels) {
+[[gnu::noinline]] static std::vector<wcstring> demangled_backtrace(int max_frames, int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
     int n_frames = backtrace(callstack, n_max_frames);
     char **symbols = backtrace_symbols(callstack, n_frames);
     wchar_t text[1024];
-    wcstring_list_t backtrace_text;
+    std::vector<wcstring> backtrace_text;
 
     if (skip_levels + max_frames < n_frames) n_frames = skip_levels + max_frames;
 
@@ -207,7 +207,7 @@ bool is_windows_subsystem_for_linux() {
 [[gnu::noinline]] void show_stackframe(int frame_count, int skip_levels) {
     if (frame_count < 1) return;
 
-    wcstring_list_t bt = demangled_backtrace(frame_count, skip_levels + 2);
+    std::vector<wcstring> bt = demangled_backtrace(frame_count, skip_levels + 2);
     FLOG(error, L"Backtrace:\n" + join_strings(bt, L'\n') + L'\n');
 }
 

@@ -16,7 +16,7 @@ inline std::shared_ptr<T> box_to_shared_ptr(rust::Box<T> &&value) {
 }
 
 inline static void trace_if_enabled(const parser_t &parser, wcharz_t command,
-                                    const wcstring_list_t &args = {}) {
+                                    const std::vector<wcstring> &args = {}) {
     if (trace_enabled(parser)) {
         trace_argv(parser, command, args);
     }

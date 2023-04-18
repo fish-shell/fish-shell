@@ -114,7 +114,7 @@ static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden)
     const auto path_var = vars.get(L"fish_function_path");
     if (path_var.missing_or_empty()) return;
 
-    const wcstring_list_t &path_list = path_var->as_list();
+    const std::vector<wcstring> &path_list = path_var->as_list();
 
     for (i = 0; i < path_list.size(); i++) {
         const wcstring &ndir_str = path_list.at(i);
@@ -276,7 +276,7 @@ bool function_copy(const wcstring &name, const wcstring &new_name, parser_t &par
     return true;
 }
 
-wcstring_list_t function_get_names(bool get_hidden) {
+std::vector<wcstring> function_get_names(bool get_hidden) {
     std::unordered_set<wcstring> names;
     auto funcset = function_set.acquire();
     autoload_names(names, get_hidden);
@@ -289,7 +289,7 @@ wcstring_list_t function_get_names(bool get_hidden) {
         }
         names.insert(name);
     }
-    return wcstring_list_t(names.begin(), names.end());
+    return std::vector<wcstring>(names.begin(), names.end());
 }
 
 void function_invalidate_path() {
@@ -297,7 +297,7 @@ void function_invalidate_path() {
     // Note we don't want to risk removal during iteration; we expect this to be called
     // infrequently.
     auto funcset = function_set.acquire();
-    wcstring_list_t autoloadees;
+    std::vector<wcstring> autoloadees;
     for (const auto &kv : funcset->funcs) {
         if (kv.second->is_autoload) {
             autoloadees.push_back(kv.first);
@@ -391,7 +391,7 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
         }
     }
 
-    const wcstring_list_t &named = this->named_arguments;
+    const std::vector<wcstring> &named = this->named_arguments;
     if (!named.empty()) {
         append_format(out, L" --argument");
         for (const auto &name : named) {

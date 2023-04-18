@@ -189,7 +189,7 @@ class history_t : noncopyable_t, nonmovable_t {
     void save();
 
     /// Searches history.
-    bool search(history_search_type_t search_type, const wcstring_list_t &search_args,
+    bool search(history_search_type_t search_type, const std::vector<wcstring> &search_args,
                 const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                 bool null_terminate, bool reverse, const cancel_checker_t &cancel_check,
                 io_streams_t &streams);
@@ -211,7 +211,7 @@ class history_t : noncopyable_t, nonmovable_t {
 
     /// Gets all the history into a list. This is intended for the $history environment variable.
     /// This may be long!
-    void get_history(wcstring_list_t &result);
+    void get_history(std::vector<wcstring> &result);
 
     /// Let indexes be a list of one-based indexes into the history, matching the interpretation of
     /// $history. That is, $history[1] is the most recently executed command. Values less than one

@@ -39,7 +39,7 @@ end
 function cleanup_syname
     set -l symname $argv[1]
     set symname (string replace --all 'std::__1::basic_string<wchar_t, std::__1::char_traits<wchar_t>, std::__1::allocator<wchar_t> >' 'wcstring' $symname)
-    set symname (string replace --all 'std::__1::vector<wcstring, std::__1::allocator<wcstring > >' 'wcstring_list_t' $symname)
+    set symname (string replace --all 'std::__1::vector<wcstring, std::__1::allocator<wcstring > >' 'std::vector<wcstring>' $symname)
     echo $symname
 end
 

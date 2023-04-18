@@ -44,7 +44,7 @@ class inputter_t final : private input_event_queue_t {
     /// \p command_handler is used to run commands. If empty (in the std::function sense), when a
     /// character is encountered that would invoke a fish command, it is unread and
     /// char_event_type_t::check_exit is returned. Note the handler is not stored.
-    using command_handler_t = std::function<void(const wcstring_list_t &)>;
+    using command_handler_t = std::function<void(const std::vector<wcstring> &)>;
     char_event_t read_char(const command_handler_t &command_handler = {});
 
     /// Enqueue a char event to the queue of unread characters that input_readch will return before
@@ -114,7 +114,7 @@ class input_mapping_set_t {
 
     /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
     /// it exists, false if not.
-    bool get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
+    bool get(const wcstring &sequence, const wcstring &mode, std::vector<wcstring> *out_cmds, bool user,
              wcstring *out_sets_mode) const;
 
     /// Returns all mapping names and modes.
@@ -149,12 +149,12 @@ bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq);
 bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name);
 
 /// Return a list of all known terminfo names.
-wcstring_list_t input_terminfo_get_names(bool skip_null);
+std::vector<wcstring> input_terminfo_get_names(bool skip_null);
 
 /// Returns the input function code for the given input function name.
 maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name);
 
 /// Returns a list of all existing input function names.
-const wcstring_list_t &input_function_get_names(void);
+const std::vector<wcstring> &input_function_get_names(void);
 
 #endif

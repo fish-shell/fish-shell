@@ -88,7 +88,7 @@ static bool set_hist_cmd(const wchar_t *cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
 }
 
 static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const wchar_t *cmd,
-                                           const wcstring_list_t &args, io_streams_t &streams) {
+                                           const std::vector<wcstring> &args, io_streams_t &streams) {
     if (opts.history_search_type_defined || opts.show_time_format || opts.null_terminate) {
         const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
         streams.err.append_format(_(L"%ls: %ls: subcommand takes no options\n"), cmd, subcmd_str);
@@ -243,7 +243,7 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
 
     // Every argument that we haven't consumed already is an argument for a subcommand (e.g., a
     // search term).
-    const wcstring_list_t args(argv + optind, argv + argc);
+    const std::vector<wcstring> args(argv + optind, argv + argc);
 
     // Establish appropriate defaults.
     if (opts.hist_cmd == HIST_UNDEF) opts.hist_cmd = HIST_SEARCH;

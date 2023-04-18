@@ -53,7 +53,7 @@ wcstring kill_yank() {
     return kill_list->front();
 }
 
-wcstring_list_t kill_entries() {
+std::vector<wcstring> kill_entries() {
     auto kill_list = s_kill_list.acquire();
-    return wcstring_list_t{kill_list->begin(), kill_list->end()};
+    return std::vector<wcstring>{kill_list->begin(), kill_list->end()};
 }

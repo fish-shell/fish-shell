@@ -340,7 +340,7 @@ static int handle_flag_f(const wchar_t **argv, parser_t &parser, io_streams_t &s
         return STATUS_CMD_OK;
     } else if (opts->fields_valid) {
         for (const wcstring &s : split_string(w.woptarg, L',')) {
-            wcstring_list_t range = split_string(s, L'-');
+            std::vector<wcstring> range = split_string(s, L'-');
             if (range.size() == 2) {
                 int begin = fish_wcstoi(range.at(0).c_str());
                 if (begin <= 0 || errno == ERANGE) {
@@ -919,7 +919,7 @@ static maybe_t<re::regex_t> try_compile_regex(const wcstring &pattern, const opt
 
 /// Check if a list of capture group names is valid for variables. If any are invalid then report an
 /// error to \p streams. \return true if all names are valid.
-static bool validate_capture_group_names(const wcstring_list_t &capture_group_names,
+static bool validate_capture_group_names(const std::vector<wcstring> &capture_group_names,
                                          io_streams_t &streams) {
     for (const wcstring &name : capture_group_names) {
         if (env_var_t::flags_for(name.c_str()) & env_var_t::flag_read_only) {
@@ -943,12 +943,12 @@ class regex_matcher_t final : public string_matcher_t {
     match_data_t match_data_;
 
     // map from group name to matched substrings, for the first argument.
-    std::map<wcstring, wcstring_list_t> first_match_captures_;
+    std::map<wcstring, std::vector<wcstring>> first_match_captures_;
 
     void populate_captures_from_match(const wcstring &subject) {
         for (auto &kv : first_match_captures_) {
             const auto &name = kv.first;
-            wcstring_list_t &vals = kv.second;
+            std::vector<wcstring> &vals = kv.second;
 
             // If there are multiple named groups and --all was used, we need to ensure that
             // the indexes are always in sync between the variables. If an optional named
@@ -1011,7 +1011,7 @@ class regex_matcher_t final : public string_matcher_t {
         : string_matcher_t(opts), regex_(std::move(regex)), match_data_(regex_.prepare()) {
         // Populate first_match_captures_ with the capture group names and empty lists.
         for (const wcstring &name : regex_.capture_group_names()) {
-            first_match_captures_.emplace(name, wcstring_list_t{});
+            first_match_captures_.emplace(name, std::vector<wcstring>{});
         }
     }
 
@@ -1372,12 +1372,12 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
 
     const wcstring sep = is_split0 ? wcstring(1, L'\0') : wcstring(opts.arg1);
 
-    std::vector<wcstring_list_t> all_splits;
+    std::vector<std::vector<wcstring>> all_splits;
     size_t split_count = 0;
     size_t arg_count = 0;
     arg_iterator_t aiter(argv, optind, streams, !is_split0);
     while (const wcstring *arg = aiter.nextstr()) {
-        wcstring_list_t splits;
+        std::vector<wcstring> splits;
         if (opts.right) {
             split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max,
                         opts.no_empty);

@@ -64,7 +64,7 @@ struct get_path_result_t {
 get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &vars);
 
 /// Return all the paths that match the given command.
-wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars);
+std::vector<wcstring> path_get_paths(const wcstring &cmd, const environment_t &vars);
 
 // Needed because of issues with vectors of wstring and environment_t.
 wcstring_list_ffi_t path_get_paths_ffi(const wcstring &cmd, const parser_t &parser);
@@ -84,7 +84,7 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &vars);
 
 /// Returns the given directory with all CDPATH components applied.
-wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
+std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &env_vars);
 
 /// Returns the path resolved as an implicit cd command, or none() if none. This requires it to

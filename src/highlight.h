@@ -157,7 +157,7 @@ enum {
 };
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
-                       const wcstring_list_t &directories, const operation_context_t &ctx,
+                       const std::vector<wcstring> &directories, const operation_context_t &ctx,
                        path_flags_t flags);
 
 /// Syntax highlighter helper.

@@ -388,7 +388,7 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
     const ast::block_statement_t &statement, const ast::function_header_t &header) {
     using namespace ast;
     // Get arguments.
-    wcstring_list_t arguments;
+    std::vector<wcstring> arguments;
     ast_args_list_t arg_nodes = get_argument_nodes(header.args());
     arg_nodes.insert(arg_nodes.begin(), &header.first_arg());
     end_execution_reason_t result =
@@ -449,7 +449,7 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     }
 
     // Get the contents to iterate over.
-    wcstring_list_t arguments;
+    std::vector<wcstring> arguments;
     ast_args_list_t arg_nodes = get_argument_nodes(header.args());
     end_execution_reason_t ret = this->expand_arguments_from_nodes(arg_nodes, &arguments, nullglob);
     if (ret != end_execution_reason_t::ok) {
@@ -465,7 +465,7 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
 
     auto &vars = parser->vars();
     int retval;
-    retval = vars.set(for_var_name, ENV_LOCAL | ENV_USER, var ? var->as_list() : wcstring_list_t{});
+    retval = vars.set(for_var_name, ENV_LOCAL | ENV_USER, var ? var->as_list() : std::vector<wcstring>{});
     assert(retval == ENV_OK);
 
     trace_if_enabled(*parser, L"for", arguments);
@@ -562,7 +562,7 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
         // anything. We also report case errors, but don't stop execution; i.e. a case item that
         // contains an unexpandable process will report and then fail to match.
         ast_args_list_t arg_nodes = get_argument_nodes(case_item.arguments());
-        wcstring_list_t case_args;
+        std::vector<wcstring> case_args;
         end_execution_reason_t case_result =
             this->expand_arguments_from_nodes(arg_nodes, &case_args, failglob);
         if (case_result == end_execution_reason_t::ok) {
@@ -771,7 +771,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
     // Handle unrecognized commands with standard command not found handler that can make better
     // error messages.
-    wcstring_list_t event_args;
+    std::vector<wcstring> event_args;
     {
         ast_args_list_t args = get_argument_nodes(statement.args_or_redirs());
         end_execution_reason_t arg_result =
@@ -826,7 +826,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
 end_execution_reason_t parse_execution_context_t::expand_command(
     const ast::decorated_statement_t &statement, wcstring *out_cmd,
-    wcstring_list_t *out_args) const {
+    std::vector<wcstring> *out_args) const {
     // Here we're expanding a command, for example $HOME/bin/stuff or $randomthing. The first
     // completion becomes the command itself, everything after becomes arguments. Command
     // substitutions are not supported.
@@ -871,7 +871,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
 
     // Get the command and any arguments due to expanding the command.
     wcstring cmd;
-    wcstring_list_t args_from_cmd_expansion;
+    std::vector<wcstring> args_from_cmd_expansion;
     auto ret = expand_command(statement, &cmd, &args_from_cmd_expansion);
     if (ret != end_execution_reason_t::ok) {
         return ret;
@@ -909,7 +909,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
     }
 
     // Produce the full argument list and the set of IO redirections.
-    wcstring_list_t cmd_args;
+    std::vector<wcstring> cmd_args;
     auto redirections = new_redirection_spec_list();
     if (use_implicit_cd) {
         // Implicit cd is simple.
@@ -954,7 +954,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
 // Determine the list of arguments, expanding stuff. Reports any errors caused by expansion. If we
 // have a wildcard that could not be expanded, report the error and continue.
 end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
-    const ast_args_list_t &argument_nodes, wcstring_list_t *out_arguments,
+    const ast_args_list_t &argument_nodes, std::vector<wcstring> *out_arguments,
     globspec_t glob_behavior) {
     // Get all argument nodes underneath the statement. We guess we'll have that many arguments (but
     // may have more or fewer, if there are wildcards involved).
@@ -1145,7 +1145,7 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
                 DIE("unexpected expand_string() return value");
             }
         }
-        wcstring_list_t vals;
+        std::vector<wcstring> vals;
         for (auto &completion : expression_expanded) {
             vals.emplace_back(std::move(completion.completion));
         }

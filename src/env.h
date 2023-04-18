@@ -99,12 +99,12 @@ class env_var_t {
     using env_var_flags_t = uint8_t;
 
    private:
-    env_var_t(std::shared_ptr<const wcstring_list_t> vals, env_var_flags_t flags)
+    env_var_t(std::shared_ptr<const std::vector<wcstring>> vals, env_var_flags_t flags)
         : vals_(std::move(vals)), flags_(flags) {}
 
     /// The list of values in this variable.
     /// shared_ptr allows for cheap copying.
-    std::shared_ptr<const wcstring_list_t> vals_{empty_list()};
+    std::shared_ptr<const std::vector<wcstring>> vals_{empty_list()};
 
     /// Flag in this variable.
     env_var_flags_t flags_{};
@@ -121,14 +121,14 @@ class env_var_t {
     env_var_t(const env_var_t &) = default;
     env_var_t(env_var_t &&) = default;
 
-    env_var_t(wcstring_list_t vals, env_var_flags_t flags)
-        : env_var_t(std::make_shared<wcstring_list_t>(std::move(vals)), flags) {}
+    env_var_t(std::vector<wcstring> vals, env_var_flags_t flags)
+        : env_var_t(std::make_shared<std::vector<wcstring>>(std::move(vals)), flags) {}
 
     env_var_t(wcstring val, env_var_flags_t flags)
-        : env_var_t(wcstring_list_t{std::move(val)}, flags) {}
+        : env_var_t(std::vector<wcstring>{std::move(val)}, flags) {}
 
     // Constructors that infer the flags from a name.
-    env_var_t(const wchar_t *name, wcstring_list_t vals)
+    env_var_t(const wchar_t *name, std::vector<wcstring> vals)
         : env_var_t(std::move(vals), flags_for(name)) {}
 
     env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
@@ -139,14 +139,14 @@ class env_var_t {
     env_var_flags_t get_flags() const { return flags_; }
 
     wcstring as_string() const;
-    void to_list(wcstring_list_t &out) const;
-    const wcstring_list_t &as_list() const;
+    void to_list(std::vector<wcstring> &out) const;
+    const std::vector<wcstring> &as_list() const;
 
     /// \return the character used when delimiting quoted expansion.
     wchar_t get_delimiter() const;
 
     /// \return a copy of this variable with new values.
-    env_var_t setting_vals(wcstring_list_t vals) const {
+    env_var_t setting_vals(std::vector<wcstring> vals) const {
         return env_var_t{std::move(vals), flags_};
     }
 
@@ -171,7 +171,7 @@ class env_var_t {
     }
 
     static env_var_flags_t flags_for(const wchar_t *name);
-    static std::shared_ptr<const wcstring_list_t> empty_list();
+    static std::shared_ptr<const std::vector<wcstring>> empty_list();
 
     env_var_t &operator=(const env_var_t &) = default;
     env_var_t &operator=(env_var_t &&) = default;
@@ -191,7 +191,7 @@ class environment_t {
    public:
     virtual maybe_t<env_var_t> get(const wcstring &key,
                                    env_mode_flags_t mode = ENV_DEFAULT) const = 0;
-    virtual wcstring_list_t get_names(env_mode_flags_t flags) const = 0;
+    virtual std::vector<wcstring> get_names(env_mode_flags_t flags) const = 0;
     virtual ~environment_t();
 
     /// \return a environment variable as a unique pointer, or nullptr if none.
@@ -209,7 +209,7 @@ class null_environment_t : public environment_t {
     ~null_environment_t() override;
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
-    wcstring_list_t get_names(env_mode_flags_t flags) const override;
+    std::vector<wcstring> get_names(env_mode_flags_t flags) const override;
 };
 
 /// A mutable environment which allows scopes to be pushed and popped.
@@ -237,10 +237,10 @@ class env_stack_t final : public environment_t {
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
     /// Implementation of environment_t.
-    wcstring_list_t get_names(env_mode_flags_t flags) const override;
+    std::vector<wcstring> get_names(env_mode_flags_t flags) const override;
 
     /// Sets the variable with the specified name to the given values.
-    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+    int set(const wcstring &key, env_mode_flags_t mode, std::vector<wcstring> vals);
 
     /// Sets the variable with the specified name to the given values.
     /// The values should have type const wchar_t *const * (but autocxx doesn't support that).
@@ -287,7 +287,7 @@ class env_stack_t final : public environment_t {
     void set_last_statuses(statuses_t s);
 
     /// Sets up argv as the given list of strings.
-    void set_argv(wcstring_list_t argv);
+    void set_argv(std::vector<wcstring> argv);
 
     /// Slightly optimized implementation.
     wcstring get_pwd_slash() const override;

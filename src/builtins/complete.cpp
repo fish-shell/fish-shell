@@ -33,8 +33,8 @@
 
 /// Silly function.
 static void builtin_complete_add2(const wcstring &cmd, bool cmd_is_path, const wchar_t *short_opt,
-                                  const wcstring_list_t &gnu_opts, const wcstring_list_t &old_opts,
-                                  completion_mode_t result_mode, const wcstring_list_t &condition,
+                                  const std::vector<wcstring> &gnu_opts, const std::vector<wcstring> &old_opts,
+                                  completion_mode_t result_mode, const std::vector<wcstring> &condition,
                                   const wchar_t *comp, const wchar_t *desc,
                                   complete_flags_t flags) {
     for (const wchar_t *s = short_opt; *s; s++) {
@@ -59,10 +59,10 @@ static void builtin_complete_add2(const wcstring &cmd, bool cmd_is_path, const w
 }
 
 /// Silly function.
-static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_list_t &paths,
-                                 const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
-                                 const wcstring_list_t &old_opt, completion_mode_t result_mode,
-                                 const wcstring_list_t &condition, const wchar_t *comp,
+static void builtin_complete_add(const std::vector<wcstring> &cmds, const std::vector<wcstring> &paths,
+                                 const wchar_t *short_opt, const std::vector<wcstring> &gnu_opt,
+                                 const std::vector<wcstring> &old_opt, completion_mode_t result_mode,
+                                 const std::vector<wcstring> &condition, const wchar_t *comp,
                                  const wchar_t *desc, complete_flags_t flags) {
     for (const wcstring &cmd : cmds) {
         builtin_complete_add2(cmd, false /* not path */, short_opt, gnu_opt, old_opt, result_mode,
@@ -76,8 +76,8 @@ static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_lis
 }
 
 static void builtin_complete_remove_cmd(const wcstring &cmd, bool cmd_is_path,
-                                        const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
-                                        const wcstring_list_t &old_opt) {
+                                        const wchar_t *short_opt, const std::vector<wcstring> &gnu_opt,
+                                        const std::vector<wcstring> &old_opt) {
     bool removed = false;
     for (const wchar_t *s = short_opt; *s; s++) {
         complete_remove(cmd, cmd_is_path, wcstring{*s}, option_type_short);
@@ -100,9 +100,9 @@ static void builtin_complete_remove_cmd(const wcstring &cmd, bool cmd_is_path,
     }
 }
 
-static void builtin_complete_remove(const wcstring_list_t &cmds, const wcstring_list_t &paths,
-                                    const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
-                                    const wcstring_list_t &old_opt) {
+static void builtin_complete_remove(const std::vector<wcstring> &cmds, const std::vector<wcstring> &paths,
+                                    const wchar_t *short_opt, const std::vector<wcstring> &gnu_opt,
+                                    const std::vector<wcstring> &old_opt) {
     for (const wcstring &cmd : cmds) {
         builtin_complete_remove_cmd(cmd, false /* not path */, short_opt, gnu_opt, old_opt);
     }
@@ -137,15 +137,15 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
     completion_mode_t result_mode{};
     int remove = 0;
     wcstring short_opt;
-    wcstring_list_t gnu_opt, old_opt, subcommand;
+    std::vector<wcstring> gnu_opt, old_opt, subcommand;
     const wchar_t *comp = L"", *desc = L"";
-    wcstring_list_t condition;
+    std::vector<wcstring> condition;
     bool do_complete = false;
     bool have_do_complete_param = false;
     wcstring do_complete_param;
-    wcstring_list_t cmd_to_complete;
-    wcstring_list_t path;
-    wcstring_list_t wrap_targets;
+    std::vector<wcstring> cmd_to_complete;
+    std::vector<wcstring> path;
+    std::vector<wcstring> wrap_targets;
     bool preserve_order = false;
     bool unescape_output = true;
 

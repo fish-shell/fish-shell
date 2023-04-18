@@ -68,7 +68,7 @@ class block_t {
     uint64_t event_blocks{};
 
     // If this is a function block, the function args. Otherwise empty.
-    wcstring_list_t function_args{};
+    std::vector<wcstring> function_args{};
 
     /// Name of file that created this block.
     filename_ref_t src_filename{};
@@ -103,7 +103,7 @@ class block_t {
     /// Entry points for creating blocks.
     static block_t if_block();
     static block_t event_block(const void *evt_);
-    static block_t function_block(wcstring name, wcstring_list_t args, bool shadows);
+    static block_t function_block(wcstring name, std::vector<wcstring> args, bool shadows);
     static block_t source_block(filename_ref_t src);
     static block_t for_block();
     static block_t while_block();
@@ -210,7 +210,7 @@ struct library_data_t : public library_data_pod_t {
     /// A stack of fake values to be returned by builtin_commandline. This is used by the completion
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
     /// the command line.
-    wcstring_list_t transient_commandlines{};
+    std::vector<wcstring> transient_commandlines{};
 
     /// A file descriptor holding the current working directory, for use in openat().
     /// This is never null and never invalid.
@@ -420,7 +420,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Cover of vars().set(), which also fires any returned event handlers.
     /// \return a value like ENV_OK.
     int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val);
-    int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+    int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, std::vector<wcstring> vals);
 
     /// Update any universal variables and send event handlers.
     /// If \p always is set, then do it even if we have no pending changes (that is, look for

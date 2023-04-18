@@ -57,7 +57,7 @@ class env_universal_t {
     bool remove(const wcstring &key);
 
     // Gets variable names.
-    wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
+    std::vector<wcstring> get_names(bool show_exported, bool show_unexported) const;
 
     /// Get a view on the universal variable table.
     const var_table_t &get_table() const { return vars; }

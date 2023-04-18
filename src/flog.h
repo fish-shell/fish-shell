@@ -16,7 +16,6 @@
 #include "global_safety.h"
 
 using wcstring = std::wstring;
-using wcstring_list_t = std::vector<wcstring>;
 
 namespace flog_details {
 

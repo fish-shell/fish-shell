@@ -188,7 +188,7 @@ static bool fs_is_case_insensitive(const wcstring &path, int fd,
 ///
 /// We expect the path to already be unescaped.
 bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
-                       const wcstring_list_t &directories, const operation_context_t &ctx,
+                       const std::vector<wcstring> &directories, const operation_context_t &ctx,
                        path_flags_t flags) {
     ASSERT_IS_BACKGROUND_THREAD();
 
@@ -301,7 +301,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, bool at_cursor,
 static bool is_potential_cd_path(const wcstring &path, bool at_cursor,
                                  const wcstring &working_directory, const operation_context_t &ctx,
                                  path_flags_t flags) {
-    wcstring_list_t directories;
+    std::vector<wcstring> directories;
 
     if (string_prefixes_string(L"./", path)) {
         // Ignore the CDPATH in this case; just use the working directory.
@@ -309,8 +309,8 @@ static bool is_potential_cd_path(const wcstring &path, bool at_cursor,
     } else {
         // Get the CDPATH.
         auto cdpath = ctx.vars.get(L"CDPATH");
-        wcstring_list_t pathsv =
-            cdpath.missing_or_empty() ? wcstring_list_t{L"."} : cdpath->as_list();
+        std::vector<wcstring> pathsv =
+            cdpath.missing_or_empty() ? std::vector<wcstring>{L"."} : cdpath->as_list();
         // The current $PWD is always valid.
         pathsv.push_back(L".");
 
@@ -889,7 +889,7 @@ static bool range_is_potential_path(const wcstring &src, const source_range_t &r
         // Put it back.
         if (!token.empty() && token.at(0) == HOME_DIRECTORY) token.at(0) = L'~';
 
-        const wcstring_list_t working_directory_list(1, working_directory);
+        const std::vector<wcstring> working_directory_list(1, working_directory);
         result =
             is_potential_path(token, at_cursor, working_directory_list, ctx, PATH_EXPAND_TILDE);
     }

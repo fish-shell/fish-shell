@@ -139,8 +139,8 @@ static constexpr named_color_t named_colors[] = {
 };
 ASSERT_SORTED_BY_NAME(named_colors);
 
-wcstring_list_t rgb_color_t::named_color_names() {
-    wcstring_list_t result;
+std::vector<wcstring> rgb_color_t::named_color_names() {
+    std::vector<wcstring> result;
     constexpr size_t colors_count = sizeof(named_colors) / sizeof(named_colors[0]);
     result.reserve(1 + colors_count);
     for (const auto &named_color : named_colors) {

@@ -314,7 +314,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
     }
 
     // Every argument that we haven't consumed already is an argument for a subcommand.
-    const wcstring_list_t args(argv + optind, argv + argc);
+    const std::vector<wcstring> args(argv + optind, argv + argc);
 
     switch (opts.status_cmd) {
         case STATUS_UNDEF: {

@@ -258,16 +258,16 @@ class process_t {
 
     struct concrete_assignment {
         wcstring variable_name;
-        wcstring_list_t values;
+        std::vector<wcstring> values;
     };
     /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
     std::vector<concrete_assignment> variable_assignments;
 
     /// Sets argv.
-    void set_argv(wcstring_list_t argv) { argv_ = std::move(argv); }
+    void set_argv(std::vector<wcstring> argv) { argv_ = std::move(argv); }
 
     /// Returns argv.
-    const wcstring_list_t &argv() { return argv_; }
+    const std::vector<wcstring> &argv() { return argv_; }
 
     /// Returns argv[0], or nullptr.
     const wchar_t *argv0() const { return argv_.empty() ? nullptr : argv_.front().c_str(); }
@@ -346,7 +346,7 @@ class process_t {
     process_t &operator=(const process_t &) = delete;
 
    private:
-    wcstring_list_t argv_;
+    std::vector<wcstring> argv_;
     rust::Box<redirection_spec_list_t> proc_redirection_specs_;
 
     // The wait handle. This is constructed lazily, and cached.

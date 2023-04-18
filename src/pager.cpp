@@ -364,7 +364,7 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
     size_t prefix_len = fish_wcswidth(prefix);
     for (auto &info : *infos) {
         comp_t *comp = &info;
-        const wcstring_list_t &comp_strings = comp->comp;
+        const std::vector<wcstring> &comp_strings = comp->comp;
 
         for (size_t j = 0; j < comp_strings.size(); j++) {
             // If there's more than one, append the length of ', '.

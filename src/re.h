@@ -132,7 +132,7 @@ class regex_t : noncopyable_t {
 
     /// \return the list of capture group names.
     /// Note PCRE provides these in sorted order, not specification order.
-    wcstring_list_t capture_group_names() const;
+    std::vector<wcstring> capture_group_names() const;
 
     /// Search \p subject for matches for this regex, starting at \p start_idx, and replacing them
     /// with \p replacement. If \p repl_count is not null, populate it with the number of

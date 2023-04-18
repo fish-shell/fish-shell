@@ -167,7 +167,7 @@ class rgb_color_t {
     bool operator!=(const rgb_color_t &other) const { return !(*this == other); }
 
     /// Returns the names of all named colors.
-    static wcstring_list_t named_color_names(void);
+    static std::vector<wcstring> named_color_names(void);
 };
 
 static_assert(sizeof(rgb_color_t) <= 4, "rgb_color_t is too big");

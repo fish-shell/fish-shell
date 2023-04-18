@@ -57,7 +57,6 @@
 
 // Common string type.
 typedef std::wstring wcstring;
-typedef std::vector<wcstring> wcstring_list_t;
 
 struct termsize_t;
 
@@ -200,9 +199,9 @@ extern const bool has_working_tty_timestamps;
 /// empty string.
 extern const wcstring g_empty_string;
 
-/// A global, empty wcstring_list_t. This is useful for functions which wish to return a reference
-/// to an empty string.
-extern const wcstring_list_t g_empty_string_list;
+/// A global, empty std::vector<wcstring>. This is useful for functions which wish to return a
+/// reference to an empty string.
+extern const std::vector<wcstring> g_empty_string_list;
 
 // Pause for input, then exit the program. If supported, print a backtrace first.
 #define FATAL_EXIT()                                \

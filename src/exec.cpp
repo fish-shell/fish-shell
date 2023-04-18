@@ -573,7 +573,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
 
 // Given that we are about to execute a function, push a function block and set up the
 // variable environment.
-static block_t *function_prepare_environment(parser_t &parser, wcstring_list_t argv,
+static block_t *function_prepare_environment(parser_t &parser, std::vector<wcstring> argv,
                                              const function_properties_t &props) {
     // Extract the function name and remaining arguments.
     wcstring func_name;
@@ -650,7 +650,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return proc_performer_t{};
         }
-        const wcstring_list_t &argv = p->argv();
+        const std::vector<wcstring> &argv = p->argv();
         return [=](parser_t &parser) {
             // Pull out the job list from the function.
             const ast::job_list_t &body = props->func_node->jobs();
@@ -734,7 +734,7 @@ static proc_performer_t get_performer_for_builtin(
     // Pull out some fields which we want to copy. We don't want to store the process or job in the
     // returned closure.
     job_group_ref_t job_group = job->group;
-    const wcstring_list_t &argv = p->argv();
+    const std::vector<wcstring> &argv = p->argv();
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
@@ -1140,7 +1140,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
 }
 
 /// Populate \p lst with the output of \p buffer, perhaps splitting lines according to \p split.
-static void populate_subshell_output(wcstring_list_t *lst, const separated_buffer_t &buffer,
+static void populate_subshell_output(std::vector<wcstring> *lst, const separated_buffer_t &buffer,
                                      bool split) {
     // Walk over all the elements.
     for (const auto &elem : buffer.elements()) {
@@ -1189,7 +1189,7 @@ static void populate_subshell_output(wcstring_list_t *lst, const separated_buffe
 /// sense that subshells used during string expansion should halt that expansion. \return the value
 /// of $status.
 static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
-                                  const job_group_ref_t &job_group, wcstring_list_t *lst,
+                                  const job_group_ref_t &job_group, std::vector<wcstring> *lst,
                                   bool *break_expand, bool apply_exit_status, bool is_subcmd) {
     parser.assert_can_execute();
     auto &ld = parser.libdata();
@@ -1233,7 +1233,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
 }
 
 int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
-                             const job_group_ref_t &job_group, wcstring_list_t &outputs) {
+                             const job_group_ref_t &job_group, std::vector<wcstring> &outputs) {
     parser.assert_can_execute();
     bool break_expand = false;
     int ret = exec_subshell_internal(cmd, parser, job_group, &outputs, &break_expand, true, true);
@@ -1247,7 +1247,7 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status)
                                   false);
 }
 
-int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
+int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
                   bool apply_exit_status) {
     bool break_expand = false;
     return exec_subshell_internal(cmd, parser, nullptr, &outputs, &break_expand, apply_exit_status,

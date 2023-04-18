@@ -245,8 +245,8 @@ size_t ifind(const std::string &haystack, const std::string &needle, bool fuzzy)
     return fuzzy ? ifind_impl<true>(haystack, needle) : ifind_impl<false>(haystack, needle);
 }
 
-wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
-    wcstring_list_t out;
+std::vector<wcstring> split_string(const wcstring &val, wchar_t sep) {
+    std::vector<wcstring> out;
     size_t pos = 0, end = val.size();
     while (pos <= end) {
         size_t next_pos = val.find(sep, pos);
@@ -259,8 +259,8 @@ wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
     return out;
 }
 
-wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps, size_t max_results) {
-    wcstring_list_t out;
+std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps, size_t max_results) {
+    std::vector<wcstring> out;
     size_t end = val.size();
     size_t pos = 0;
     while (pos < end && out.size() + 1 < max_results) {
@@ -286,7 +286,7 @@ wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps, size
     return out;
 }
 
-static wcstring join_strings_impl(const wcstring_list_t &vals, const wchar_t *sep, size_t seplen) {
+static wcstring join_strings_impl(const std::vector<wcstring> &vals, const wchar_t *sep, size_t seplen) {
     if (vals.empty()) return wcstring{};
 
     // Reserve the size we will need.
@@ -310,11 +310,11 @@ static wcstring join_strings_impl(const wcstring_list_t &vals, const wchar_t *se
     return result;
 }
 
-wcstring join_strings(const wcstring_list_t &vals, wchar_t c) {
+wcstring join_strings(const std::vector<wcstring> &vals, wchar_t c) {
     return join_strings_impl(vals, &c, 1);
 }
 
-wcstring join_strings(const wcstring_list_t &vals, const wchar_t *sep) {
+wcstring join_strings(const std::vector<wcstring> &vals, const wchar_t *sep) {
     return join_strings_impl(vals, sep, wcslen(sep));
 }
 

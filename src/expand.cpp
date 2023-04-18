@@ -127,7 +127,7 @@ static bool is_quotable(const wcstring &str) {
 
 wcstring expand_escape_variable(const env_var_t &var) {
     wcstring buff;
-    const wcstring_list_t &lst = var.as_list();
+    const std::vector<wcstring> &lst = var.as_list();
 
     for (size_t j = 0; j < lst.size(); j++) {
         const wcstring &el = lst.at(j);
@@ -410,7 +410,7 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
     // Ok, we have a variable or a history. Let's expand it.
     // Start by respecting the sliced elements.
     assert((var || history) && "Should have variable or history here");
-    wcstring_list_t var_item_list;
+    std::vector<wcstring> var_item_list;
     if (all_values) {
         if (history) {
             history->get_history(var_item_list);
@@ -430,7 +430,7 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
                 }
             }
         } else {
-            const wcstring_list_t &all_var_items = var->as_list();
+            const std::vector<wcstring> &all_var_items = var->as_list();
             for (long item_index : var_idx_list) {
                 // Check that we are within array bounds. If not, skip the element. Note:
                 // Negative indices (`echo $foo[-1]`) are already converted to positive ones
@@ -639,7 +639,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
         }
     }
 
-    wcstring_list_t sub_res;
+    std::vector<wcstring> sub_res;
     int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.job_group, sub_res);
     if (subshell_status != 0) {
         // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
@@ -699,7 +699,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
 
-        wcstring_list_t sub_res2;
+        std::vector<wcstring> sub_res2;
         tail_begin = slice_end - in;
         for (long idx : slice_idx) {
             if (static_cast<size_t>(idx) > sub_res.size() || idx < 1) {
@@ -1022,7 +1022,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
         // So we're going to treat this input as a file path. Compute the "working directories",
         // which may be CDPATH if the special flag is set.
         const wcstring working_dir = ctx.vars.get_pwd_slash();
-        wcstring_list_t effective_working_dirs;
+        std::vector<wcstring> effective_working_dirs;
         bool for_cd = flags & expand_flag::special_for_cd;
         bool for_command = flags & expand_flag::special_for_command;
         if (!for_cd && !for_command) {
@@ -1052,7 +1052,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
             } else {
                 // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
-                wcstring_list_t paths;
+                std::vector<wcstring> paths;
                 if (auto paths_var = ctx.vars.get(for_cd ? L"CDPATH" : L"PATH")) {
                     paths = paths_var->as_list();
                 }
@@ -1252,7 +1252,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_
 }
 
 expand_result_t expand_to_command_and_args(const wcstring &instr, const operation_context_t &ctx,
-                                           wcstring *out_cmd, wcstring_list_t *out_args,
+                                           wcstring *out_cmd, std::vector<wcstring> *out_args,
                                            parse_error_list_t *errors, bool skip_wildcards) {
     // Fast path.
     if (expand_is_clean(instr)) {

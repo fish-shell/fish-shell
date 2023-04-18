@@ -121,9 +121,9 @@ class number_t {
 };
 
 static bool binary_primary_evaluate(test_expressions::token_t token, const wcstring &left,
-                                    const wcstring &right, wcstring_list_t &errors);
+                                    const wcstring &right, std::vector<wcstring> &errors);
 static bool unary_primary_evaluate(test_expressions::token_t token, const wcstring &arg,
-                                   io_streams_t *streams, wcstring_list_t &errors);
+                                   io_streams_t *streams, std::vector<wcstring> &errors);
 
 enum { UNARY_PRIMARY = 1 << 0, BINARY_PRIMARY = 1 << 1 };
 
@@ -195,8 +195,8 @@ static const token_info_t *token_for_string(const wcstring &str) {
 class expression;
 class test_parser {
    private:
-    wcstring_list_t strings;
-    wcstring_list_t errors;
+    std::vector<wcstring> strings;
+    std::vector<wcstring> errors;
     int error_idx;
 
     unique_ptr<expression> error(unsigned int idx, const wchar_t *fmt, ...);
@@ -205,7 +205,7 @@ class test_parser {
     const wcstring &arg(unsigned int idx) { return strings.at(idx); }
 
    public:
-    explicit test_parser(wcstring_list_t val) : strings(std::move(val)) {}
+    explicit test_parser(std::vector<wcstring> val) : strings(std::move(val)) {}
 
     unique_ptr<expression> parse_expression(unsigned int start, unsigned int end);
     unique_ptr<expression> parse_3_arg_expression(unsigned int start, unsigned int end);
@@ -219,7 +219,7 @@ class test_parser {
     unique_ptr<expression> parse_binary_primary(unsigned int start, unsigned int end);
     unique_ptr<expression> parse_just_a_string(unsigned int start, unsigned int end);
 
-    static unique_ptr<expression> parse_args(const wcstring_list_t &args, wcstring &err,
+    static unique_ptr<expression> parse_args(const std::vector<wcstring> &args, wcstring &err,
                                              const wchar_t *program_name);
 };
 
@@ -242,7 +242,7 @@ class expression {
     virtual ~expression() = default;
 
     /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
-    virtual bool evaluate(io_streams_t *streams, wcstring_list_t &errors) = 0;
+    virtual bool evaluate(io_streams_t *streams, std::vector<wcstring> &errors) = 0;
 };
 
 /// Single argument like -n foo or "just a string".
@@ -251,7 +251,7 @@ class unary_primary final : public expression {
     wcstring arg;
     unary_primary(token_t tok, range_t where, wcstring what)
         : expression(tok, where), arg(std::move(what)) {}
-    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, std::vector<wcstring> &errors) override;
 };
 
 /// Two argument primary like foo != bar.
@@ -262,7 +262,7 @@ class binary_primary final : public expression {
 
     binary_primary(token_t tok, range_t where, wcstring left, wcstring right)
         : expression(tok, where), arg_left(std::move(left)), arg_right(std::move(right)) {}
-    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, std::vector<wcstring> &errors) override;
 };
 
 /// Unary operator like bang.
@@ -271,7 +271,7 @@ class unary_operator final : public expression {
     unique_ptr<expression> subject;
     unary_operator(token_t tok, range_t where, unique_ptr<expression> exp)
         : expression(tok, where), subject(std::move(exp)) {}
-    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, std::vector<wcstring> &errors) override;
 };
 
 /// Combining expression. Contains a list of AND or OR expressions. It takes more than two so that
@@ -290,7 +290,7 @@ class combining_expression final : public expression {
 
     ~combining_expression() override = default;
 
-    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, std::vector<wcstring> &errors) override;
 };
 
 /// Parenthetical expression.
@@ -300,7 +300,7 @@ class parenthetical_expression final : public expression {
     parenthetical_expression(token_t tok, range_t where, unique_ptr<expression> expr)
         : expression(tok, where), contents(std::move(expr)) {}
 
-    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, std::vector<wcstring> &errors) override;
 };
 
 void test_parser::add_error(unsigned int idx, const wchar_t *fmt, ...) {
@@ -559,7 +559,7 @@ unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigne
     }
 }
 
-unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcstring &err,
+unique_ptr<expression> test_parser::parse_args(const std::vector<wcstring> &args, wcstring &err,
                                                const wchar_t *program_name) {
     // Empty list and one-arg list should be handled by caller.
     assert(args.size() > 1);
@@ -614,15 +614,15 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
     return result;
 }
 
-bool unary_primary::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
+bool unary_primary::evaluate(io_streams_t *streams, std::vector<wcstring> &errors) {
     return unary_primary_evaluate(token, arg, streams, errors);
 }
 
-bool binary_primary::evaluate(io_streams_t *, wcstring_list_t &errors) {
+bool binary_primary::evaluate(io_streams_t *, std::vector<wcstring> &errors) {
     return binary_primary_evaluate(token, arg_left, arg_right, errors);
 }
 
-bool unary_operator::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
+bool unary_operator::evaluate(io_streams_t *streams, std::vector<wcstring> &errors) {
     if (token == test_bang) {
         assert(subject.get());
         return !subject->evaluate(streams, errors);
@@ -632,7 +632,7 @@ bool unary_operator::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
     return false;
 }
 
-bool combining_expression::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
+bool combining_expression::evaluate(io_streams_t *streams, std::vector<wcstring> &errors) {
     if (token == test_combine_and || token == test_combine_or) {
         assert(!subjects.empty());  //!OCLINT(multiple unary operator)
         assert(combiners.size() + 1 == subjects.size());
@@ -674,7 +674,7 @@ bool combining_expression::evaluate(io_streams_t *streams, wcstring_list_t &erro
     return false;
 }
 
-bool parenthetical_expression::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
+bool parenthetical_expression::evaluate(io_streams_t *streams, std::vector<wcstring> &errors) {
     return contents->evaluate(streams, errors);
 }
 
@@ -696,7 +696,7 @@ static bool parse_double(const wcstring &argstr, double *out_res) {
 // example, should we interpret 0x10 as 0, 10, or 16? Here we use only base 10 and use wcstoll,
 // which allows for leading + and -, and whitespace. This is consistent, albeit a bit more lenient
 // since we allow trailing whitespace, with other implementations such as bash.
-static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t &errors) {
+static bool parse_number(const wcstring &arg, number_t *number, std::vector<wcstring> &errors) {
     const wchar_t *argcs = arg.c_str();
     double floating = 0;
     bool got_float = parse_double(arg, &floating);
@@ -742,7 +742,7 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
 }
 
 static bool binary_primary_evaluate(test_expressions::token_t token, const wcstring &left,
-                                    const wcstring &right, wcstring_list_t &errors) {
+                                    const wcstring &right, std::vector<wcstring> &errors) {
     using namespace test_expressions;
     number_t ln, rn;
     switch (token) {
@@ -793,7 +793,7 @@ static bool binary_primary_evaluate(test_expressions::token_t token, const wcstr
 }
 
 static bool unary_primary_evaluate(test_expressions::token_t token, const wcstring &arg,
-                                   io_streams_t *streams, wcstring_list_t &errors) {
+                                   io_streams_t *streams, std::vector<wcstring> &errors) {
     using namespace test_expressions;
     struct stat buf;
     switch (token) {
@@ -905,7 +905,7 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, const wchar_t
     }
 
     // Collect the arguments into a list.
-    const wcstring_list_t args(argv + 1, argv + 1 + argc);
+    const std::vector<wcstring> args(argv + 1, argv + 1 + argc);
 
     if (argc == 0) {
         return STATUS_INVALID_ARGS;  // Per 1003.1, exit false.
@@ -923,7 +923,7 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, const wchar_t
         return STATUS_CMD_ERROR;
     }
 
-    wcstring_list_t eval_errors;
+    std::vector<wcstring> eval_errors;
     bool result = expr->evaluate(&streams, eval_errors);
     if (!eval_errors.empty()) {
         if (!should_suppress_stderr_for_tests()) {

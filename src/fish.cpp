@@ -559,7 +559,7 @@ int main(int argc, char **argv) {
 
         // Pass additional args as $argv.
         // Note that we *don't* support setting argv[0]/$0, unlike e.g. bash.
-        wcstring_list_t list;
+        std::vector<wcstring> list;
         for (char **ptr = argv + my_optind; *ptr; ptr++) {
             list.push_back(str2wcstring(*ptr));
         }
@@ -580,7 +580,7 @@ int main(int argc, char **argv) {
             FLOGF(error, _(L"Error reading script file '%s':"), file);
             perror("error");
         } else {
-            wcstring_list_t list;
+            std::vector<wcstring> list;
             for (char **ptr = argv + my_optind; *ptr; ptr++) {
                 list.push_back(str2wcstring(*ptr));
             }

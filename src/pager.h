@@ -83,7 +83,7 @@ class pager_t {
     /// Data structure describing one or a group of related completions.
     struct comp_t {
         /// The list of all completion strings this entry applies to.
-        wcstring_list_t comp{};
+        std::vector<wcstring> comp{};
         /// The description.
         wcstring desc{};
         /// The representative completion.

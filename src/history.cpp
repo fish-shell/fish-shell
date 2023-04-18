@@ -342,7 +342,7 @@ struct history_impl_t {
 
     // Gets all the history into a list. This is intended for the $history environment variable.
     // This may be long!
-    void get_history(wcstring_list_t &result);
+    void get_history(std::vector<wcstring> &result);
 
     // Let indexes be a list of one-based indexes into the history, matching the interpretation of
     // $history. That is, $history[1] is the most recently executed command. Values less than one
@@ -350,7 +350,7 @@ struct history_impl_t {
     std::unordered_map<long, wcstring> items_at_indexes(const std::vector<long> &idxs);
 
     // Sets the valid file paths for the history item with the given identifier.
-    void set_valid_file_paths(wcstring_list_t &&valid_file_paths, history_identifier_t ident);
+    void set_valid_file_paths(std::vector<wcstring> &&valid_file_paths, history_identifier_t ident);
 
     // Return the specified history at the specified index. 0 is the index of the current
     // commandline. (So the most recent item is at index 1.)
@@ -470,7 +470,7 @@ void history_impl_t::remove(const wcstring &str_to_remove) {
     assert(first_unwritten_new_item_index <= new_items.size());
 }
 
-void history_impl_t::set_valid_file_paths(wcstring_list_t &&valid_file_paths,
+void history_impl_t::set_valid_file_paths(std::vector<wcstring> &&valid_file_paths,
                                           history_identifier_t ident) {
     // 0 identifier is used to mean "not necessary".
     if (ident == 0) {
@@ -486,7 +486,7 @@ void history_impl_t::set_valid_file_paths(wcstring_list_t &&valid_file_paths,
     }
 }
 
-void history_impl_t::get_history(wcstring_list_t &result) {
+void history_impl_t::get_history(std::vector<wcstring> &result) {
     // If we have a pending item, we skip the first encountered (i.e. last) new item.
     bool next_is_pending = this->has_pending_item;
     std::unordered_set<wcstring> seen;
@@ -1296,7 +1296,7 @@ wcstring history_session_id(const environment_t &vars) {
 
 path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
-    wcstring_list_t result;
+    std::vector<wcstring> result;
     wcstring working_directory = vars.get_pwd_slash();
     operation_context_t ctx(vars, kExpansionLimitBackground);
     for (const wcstring &path : paths) {
@@ -1480,11 +1480,11 @@ static void do_1_history_search(history_t *hist, history_search_type_t search_ty
 }
 
 // Searches history.
-bool history_t::search(history_search_type_t search_type, const wcstring_list_t &search_args,
+bool history_t::search(history_search_type_t search_type, const std::vector<wcstring> &search_args,
                        const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                        bool null_terminate, bool reverse, const cancel_checker_t &cancel_check,
                        io_streams_t &streams) {
-    wcstring_list_t collected;
+    std::vector<wcstring> collected;
     wcstring formatted_record;
     size_t remaining = max_items;
     bool output_error = false;
@@ -1548,7 +1548,7 @@ void history_t::populate_from_bash(FILE *f) { impl()->populate_from_bash(f); }
 
 void history_t::incorporate_external_changes() { impl()->incorporate_external_changes(); }
 
-void history_t::get_history(wcstring_list_t &result) { impl()->get_history(result); }
+void history_t::get_history(std::vector<wcstring> &result) { impl()->get_history(result); }
 
 std::unordered_map<long, wcstring> history_t::items_at_indexes(const std::vector<long> &idxs) {
     return impl()->items_at_indexes(idxs);

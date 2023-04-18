@@ -29,7 +29,7 @@ __warn_unused bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j,
 ///
 /// \return a value appropriate for populating $status.
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status);
-int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
+int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
                   bool apply_exit_status);
 
 /// Like exec_subshell, but only returns expansion-breaking errors. That is, a zero return means
@@ -37,7 +37,7 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &output
 /// halt expansion. If the \p pgid is supplied, then any spawned external commands should join that
 /// pgroup.
 int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
-                             const job_group_ref_t &job_group, wcstring_list_t &outputs);
+                             const job_group_ref_t &job_group, std::vector<wcstring> &outputs);
 
 /// Add signals that should be masked for external processes in this job.
 bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask);

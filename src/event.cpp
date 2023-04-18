@@ -33,7 +33,7 @@ const wchar_t *const event_filter_names[] = {L"signal",       L"variable", L"exi
                                              L"process-exit", L"job-exit", L"caller-exit",
                                              L"generic",      nullptr};
 
-void event_fire_generic(parser_t &parser, const wcstring &name, const wcstring_list_t &args) {
+void event_fire_generic(parser_t &parser, const wcstring &name, const std::vector<wcstring> &args) {
     std::vector<wcharz_t> ffi_args;
     for (const auto &arg : args) ffi_args.push_back(arg.c_str());
     event_fire_generic_ffi(parser, name, ffi_args);

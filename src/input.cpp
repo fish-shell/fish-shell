@@ -39,7 +39,7 @@ struct input_mapping_t {
     /// Character sequence which generates this event.
     wcstring seq;
     /// Commands that should be evaluated by this mapping.
-    wcstring_list_t commands;
+    std::vector<wcstring> commands;
     /// We wish to preserve the user-specified order. This is just an incrementing value.
     unsigned int specification_order;
     /// Mode in which this command should be evaluated.
@@ -47,7 +47,7 @@ struct input_mapping_t {
     /// New mode that should be switched to after command evaluation.
     wcstring sets_mode;
 
-    input_mapping_t(wcstring s, wcstring_list_t c, wcstring m, wcstring sm)
+    input_mapping_t(wcstring s, std::vector<wcstring> c, wcstring m, wcstring sm)
         : seq(std::move(s)), commands(std::move(c)), mode(std::move(m)), sets_mode(std::move(sm)) {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
@@ -250,7 +250,7 @@ void input_mapping_set_t::add(wcstring sequence, const wchar_t *const *commands,
     all_mappings_cache_.reset();
 
     // Remove existing mappings with this sequence.
-    const wcstring_list_t commands_vector(commands, commands + commands_len);
+    const std::vector<wcstring> commands_vector(commands, commands + commands_len);
 
     mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
 
@@ -825,7 +825,7 @@ bool input_mapping_set_t::erase(const wcstring &sequence, const wcstring &mode, 
 }
 
 bool input_mapping_set_t::get(const wcstring &sequence, const wcstring &mode,
-                              wcstring_list_t *out_cmds, bool user, wcstring *out_sets_mode) const {
+                              std::vector<wcstring> *out_cmds, bool user, wcstring *out_sets_mode) const {
     bool result = false;
     const auto &ml = user ? mapping_list_ : preset_mapping_list_;
     for (const input_mapping_t &m : ml) {
@@ -930,9 +930,9 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
     return false;
 }
 
-wcstring_list_t input_terminfo_get_names(bool skip_null) {
+std::vector<wcstring> input_terminfo_get_names(bool skip_null) {
     assert(s_terminfo_mappings.is_set());
-    wcstring_list_t result;
+    std::vector<wcstring> result;
     const auto &mappings = *s_terminfo_mappings;
     result.reserve(mappings.size());
     for (const terminfo_mapping_t &m : mappings) {
@@ -944,10 +944,10 @@ wcstring_list_t input_terminfo_get_names(bool skip_null) {
     return result;
 }
 
-const wcstring_list_t &input_function_get_names() {
+const std::vector<wcstring> &input_function_get_names() {
     // The list and names of input functions are hard-coded and never change
-    static wcstring_list_t result = ([&]() {
-        wcstring_list_t result;
+    static std::vector<wcstring> result = ([&]() {
+        std::vector<wcstring> result;
         result.reserve(input_function_count);
         for (const auto &md : input_function_metadata) {
             if (md.name[0]) {

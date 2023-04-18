@@ -20,6 +20,6 @@ wcstring kill_yank_rotate();
 wcstring kill_yank();
 
 /// Get copy of kill ring as vector of strings
-wcstring_list_t kill_entries();
+std::vector<wcstring> kill_entries();
 
 #endif

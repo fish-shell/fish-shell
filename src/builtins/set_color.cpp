@@ -65,7 +65,7 @@ static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool i
     }
 }
 
-static void print_colors(io_streams_t &streams, wcstring_list_t args, bool bold, bool underline,
+static void print_colors(io_streams_t &streams, std::vector<wcstring> args, bool bold, bool underline,
                          bool italics, bool dim, bool reverse, rgb_color_t bg) {
     outputter_t outp;
     if (args.empty()) args = rgb_color_t::named_color_names();
@@ -184,7 +184,7 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, const wc
         if (bgcolor && bg.is_special()) {
             bg = rgb_color_t(L"");
         }
-        wcstring_list_t args(argv + w.woptind, argv + argc);
+        std::vector<wcstring> args(argv + w.woptind, argv + argc);
         print_colors(streams, args, bold, underline, italics, dim, reverse, bg);
         return STATUS_CMD_OK;
     }

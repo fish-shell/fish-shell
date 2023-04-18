@@ -301,7 +301,7 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wcstring &ke
 /// Call vars.set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
 static int env_set_reporting_errors(const wchar_t *cmd, const wcstring &key, int scope,
-                                    wcstring_list_t list, io_streams_t &streams, parser_t &parser) {
+                                    std::vector<wcstring> list, io_streams_t &streams, parser_t &parser) {
     int retval = parser.set_var_and_fire(key, scope | ENV_USER, std::move(list));
     // If this returned OK, the parser already fired the event.
     handle_env_return(retval, cmd, key, streams);
@@ -396,7 +396,7 @@ static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_f
 
 /// Given a list of values and 1-based indexes, return a new list with those elements removed.
 /// Note this deliberately accepts both args by value, as it modifies them both.
-static wcstring_list_t erased_at_indexes(wcstring_list_t input, std::vector<long> indexes) {
+static std::vector<wcstring> erased_at_indexes(std::vector<wcstring> input, std::vector<long> indexes) {
     // Sort our indexes into *descending* order.
     std::sort(indexes.begin(), indexes.end(), std::greater<long>());
 
@@ -436,7 +436,7 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     UNUSED(parser);
 
     bool names_only = opts.list;
-    wcstring_list_t names = parser.vars().get_names(compute_scope(opts));
+    std::vector<wcstring> names = parser.vars().get_names(compute_scope(opts));
     sort(names.begin(), names.end());
 
     for (const auto &key : names) {
@@ -538,7 +538,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
 
     const wchar_t *exportv = var->exports() ? _(L"exported") : _(L"unexported");
     const wchar_t *pathvarv = var->is_pathvar() ? _(L" a path variable") : L"";
-    wcstring_list_t vals = var->as_list();
+    std::vector<wcstring> vals = var->as_list();
     streams.out.append_format(_(L"$%ls: set in %ls scope, %ls,%ls with %d elements"), var_name,
                               scope_name, exportv, pathvarv, vals.size());
     // HACK: PWD can be set, depending on how you ask.
@@ -570,7 +570,7 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
     const auto &vars = parser.vars();
     auto inheriteds = env_get_inherited();
     if (argc == 0) {  // show all vars
-        wcstring_list_t names = vars.get_names(ENV_USER);
+        std::vector<wcstring> names = vars.get_names(ENV_USER);
         sort(names.begin(), names.end());
         for (const auto &name : names) {
             if (name == L"history") continue;
@@ -656,7 +656,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                 }
             } else {  // remove just the specified indexes of the var
                 if (!split->var) return STATUS_CMD_ERROR;
-                wcstring_list_t result = erased_at_indexes(split->var->as_list(), split->indexes);
+                std::vector<wcstring> result = erased_at_indexes(split->var->as_list(), split->indexes);
                 retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(result),
                                                   streams, parser);
             }
@@ -674,9 +674,9 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 /// Return a list of new values for the variable \p varname, respecting the \p opts.
 /// The arguments are given as the argc, argv pair.
 /// This handles the simple case where there are no indexes.
-static wcstring_list_t new_var_values(const wcstring &varname, const set_cmd_opts_t &opts, int argc,
+static std::vector<wcstring> new_var_values(const wcstring &varname, const set_cmd_opts_t &opts, int argc,
                                       const wchar_t *const *argv, const environment_t &vars) {
-    wcstring_list_t result;
+    std::vector<wcstring> result;
     if (!opts.prepend && !opts.append) {
         // Not prepending or appending.
         result.assign(argv, argv + argc);
@@ -704,7 +704,7 @@ static wcstring_list_t new_var_values(const wcstring &varname, const set_cmd_opt
 }
 
 /// This handles the more difficult case of setting individual slices of a var.
-static wcstring_list_t new_var_values_by_index(const split_var_t &split, int argc,
+static std::vector<wcstring> new_var_values_by_index(const split_var_t &split, int argc,
                                                const wchar_t *const *argv) {
     assert(static_cast<size_t>(argc) == split.indexes.size() &&
            "Must have the same number of indexes as arguments");
@@ -712,7 +712,7 @@ static wcstring_list_t new_var_values_by_index(const split_var_t &split, int arg
     // Inherit any existing values.
     // Note unlike the append/prepend case, we start with a variable in the same scope as we are
     // setting.
-    wcstring_list_t result;
+    std::vector<wcstring> result;
     if (split.var) result = split.var->as_list();
 
     // For each (index, argument) pair, set the element in our \p result to the replacement string.
@@ -788,7 +788,7 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, c
         }
     }
 
-    wcstring_list_t new_values;
+    std::vector<wcstring> new_values;
     if (split->indexes.empty()) {
         // Handle the simple, common, case. Set the var to the specified values.
         new_values = new_var_values(split->varname, opts, argc, argv, parser.vars());

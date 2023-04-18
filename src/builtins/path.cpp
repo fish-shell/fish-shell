@@ -243,7 +243,7 @@ static int handle_flag_t(const wchar_t **argv, parser_t &parser, io_streams_t &s
     if (opts->type_valid) {
         if (!opts->have_type) opts->type = 0;
         opts->have_type = true;
-        wcstring_list_t types = split_string_tok(w.woptarg, L",");
+        std::vector<wcstring> types = split_string_tok(w.woptarg, L",");
         for (const auto &t : types) {
             if (t == L"file") {
                 opts->type |= TYPE_FILE;
@@ -275,7 +275,7 @@ static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &s
     if (opts->perm_valid) {
         if (!opts->have_perm) opts->perm = 0;
         opts->have_perm = true;
-        wcstring_list_t perms = split_string_tok(w.woptarg, L",");
+        std::vector<wcstring> perms = split_string_tok(w.woptarg, L",");
         for (const auto &p : perms) {
             if (p == L"read") {
                 opts->perm |= PERM_READ;
@@ -800,7 +800,7 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
         }
     }
 
-    wcstring_list_t list;
+    std::vector<wcstring> list;
     arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
         list.push_back(*arg);

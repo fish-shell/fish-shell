@@ -40,10 +40,10 @@ struct wcharz_t {
 // A helper type for passing vectors of strings back to Rust.
 // This hides the vector so that autocxx doesn't complain about templates.
 struct wcstring_list_ffi_t {
-    wcstring_list_t vals{};
+    std::vector<wcstring> vals{};
 
     wcstring_list_ffi_t() = default;
-    /* implicit */ wcstring_list_ffi_t(wcstring_list_t vals) : vals(std::move(vals)) {}
+    /* implicit */ wcstring_list_ffi_t(std::vector<wcstring> vals) : vals(std::move(vals)) {}
 
     size_t size() const { return vals.size(); }
     const wcstring &at(size_t idx) const { return vals.at(idx); }

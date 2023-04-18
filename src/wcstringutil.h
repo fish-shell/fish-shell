@@ -128,7 +128,7 @@ inline maybe_t<string_fuzzy_match_t> string_fuzzy_match_string(const wcstring &s
 }
 
 /// Split a string by a separator character.
-wcstring_list_t split_string(const wcstring &val, wchar_t sep);
+std::vector<wcstring> split_string(const wcstring &val, wchar_t sep);
 
 /// Split a string by runs of any of the separator characters provided in \p seps.
 /// Note the delimiters are the characters in \p seps, not \p seps itself.
@@ -137,12 +137,12 @@ wcstring_list_t split_string(const wcstring &val, wchar_t sep);
 /// the last output is the the remainder of the input, including leading delimiters,
 /// except for the first. This is historical behavior.
 /// Example: split_string_tok(" a  b   c ", " ", 3) -> {"a", "b", "  c  "}
-wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps,
+std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps,
                                  size_t max_results = std::numeric_limits<size_t>::max());
 
 /// Join a list of strings by a separator character or string.
-wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
-wcstring join_strings(const wcstring_list_t &vals, const wchar_t *sep);
+wcstring join_strings(const std::vector<wcstring> &vals, wchar_t sep);
+wcstring join_strings(const std::vector<wcstring> &vals, const wchar_t *sep);
 
 inline wcstring to_string(long x) {
     wchar_t buff[64];
@@ -192,7 +192,7 @@ inline bool bool_from_string(const wcstring &x) {
 /// Max output entries will be max + 1 (after max splits)
 template <typename ITER>
 void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER needle_end,
-                 wcstring_list_t *output, long max = LONG_MAX, bool no_empty = false) {
+                 std::vector<wcstring> *output, long max = LONG_MAX, bool no_empty = false) {
     long remaining = max;
     ITER haystack_cursor = haystack_start;
     while (remaining > 0 && haystack_cursor != haystack_end) {

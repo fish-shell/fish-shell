@@ -219,13 +219,13 @@ static const wchar_t *const ENV_NULL = L"\x1d";
 static const wchar_t UVAR_ARRAY_SEP = 0x1e;
 
 /// Decode a serialized universal variable value into a list.
-static wcstring_list_t decode_serialized(const wcstring &val) {
+static std::vector<wcstring> decode_serialized(const wcstring &val) {
     if (val == ENV_NULL) return {};
     return split_string(val, UVAR_ARRAY_SEP);
 }
 
 /// Decode a a list into a serialized universal variable value.
-static wcstring encode_serialized(const wcstring_list_t &vals) {
+static wcstring encode_serialized(const std::vector<wcstring> &vals) {
     if (vals.empty()) return ENV_NULL;
     return join_strings(vals, UVAR_ARRAY_SEP);
 }
@@ -265,8 +265,8 @@ bool env_universal_t::remove(const wcstring &key) {
     return false;
 }
 
-wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const {
-    wcstring_list_t result;
+std::vector<wcstring> env_universal_t::get_names(bool show_exported, bool show_unexported) const {
+    std::vector<wcstring> result;
     for (const auto &kv : vars) {
         const wcstring &key = kv.first;
         const env_var_t &var = kv.second;

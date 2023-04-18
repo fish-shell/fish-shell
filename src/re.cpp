@@ -193,7 +193,7 @@ size_t regex_t::capture_group_count() const {
     return count;
 }
 
-wcstring_list_t regex_t::capture_group_names() const {
+std::vector<wcstring> regex_t::capture_group_names() const {
     PCRE2_SPTR name_table{};
     uint32_t name_entry_size{};
     uint32_t name_count{};
@@ -230,7 +230,7 @@ wcstring_list_t regex_t::capture_group_names() const {
     };
 
     const auto *names = reinterpret_cast<const name_table_entry_t *>(name_table);
-    wcstring_list_t result;
+    std::vector<wcstring> result;
     result.reserve(name_count);
     for (uint32_t i = 0; i < name_count; ++i) {
         const auto &name_entry = names[i * name_entry_size];

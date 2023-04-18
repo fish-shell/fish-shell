@@ -81,7 +81,7 @@ class parse_execution_context_t : noncopyable_t {
     // Expand a command which may contain variables, producing an expand command and possibly
     // arguments. Prints an error message on error.
     end_execution_reason_t expand_command(const ast::decorated_statement_t &statement,
-                                          wcstring *out_cmd, wcstring_list_t *out_args) const;
+                                          wcstring *out_cmd, std::vector<wcstring> *out_args) const;
 
     /// Indicates whether a job is a simple block (one block, no redirections).
     bool job_is_simple_block(const ast::job_pipeline_t &job) const;
@@ -128,7 +128,7 @@ class parse_execution_context_t : noncopyable_t {
     static ast_args_list_t get_argument_nodes(const ast::argument_or_redirection_list_t &args);
 
     end_execution_reason_t expand_arguments_from_nodes(const ast_args_list_t &argument_nodes,
-                                                       wcstring_list_t *out_arguments,
+                                                       std::vector<wcstring> *out_arguments,
                                                        globspec_t glob_behavior);
 
     // Determines the list of redirections for a node.

@@ -70,7 +70,7 @@ rust::Box<WaitHandleStoreFFI> &parser_t::get_wait_handles_ffi() { return wait_ha
 
 const rust::Box<WaitHandleStoreFFI> &parser_t::get_wait_handles_ffi() const { return wait_handles; }
 
-int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
+int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, std::vector<wcstring> vals) {
     int res = vars().set(key, mode, std::move(vals));
     if (res == ENV_OK) {
         event_fire(*this, *new_event_variable_set(key));
@@ -79,7 +79,7 @@ int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstr
 }
 
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val) {
-    wcstring_list_t vals;
+    std::vector<wcstring> vals;
     vals.push_back(std::move(val));
     return set_var_and_fire(key, mode, std::move(vals));
 }
@@ -798,7 +798,7 @@ block_t block_t::event_block(const void *evt_) {
     return b;
 }
 
-block_t block_t::function_block(wcstring name, wcstring_list_t args, bool shadows) {
+block_t block_t::function_block(wcstring name, std::vector<wcstring> args, bool shadows) {
     block_t b{shadows ? block_type_t::function_call : block_type_t::function_call_no_shadow};
     b.function_name = std::move(name);
     b.function_args = std::move(args);

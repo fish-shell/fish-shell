@@ -47,7 +47,7 @@ class autoload_t {
 
     /// Like resolve_autoload(), but accepts the paths directly.
     /// This is exposed for testing.
-    maybe_t<wcstring> resolve_command(const wcstring &cmd, const wcstring_list_t &paths);
+    maybe_t<wcstring> resolve_command(const wcstring &cmd, const std::vector<wcstring> &paths);
 
     friend autoload_tester_t;
 
@@ -94,7 +94,7 @@ class autoload_t {
 
     /// \return the names of all commands that have been autoloaded. Note this includes "in-flight"
     /// commands.
-    wcstring_list_t get_autoloaded_commands() const;
+    std::vector<wcstring> get_autoloaded_commands() const;
 
     /// Mark that all autoloaded files have been forgotten.
     /// Future calls to path_to_autoload() will return previously-returned paths.

@@ -169,8 +169,8 @@ static void err(const wchar_t *blah, ...) {
     std::fwprintf(stdout, L"\n");
 }
 
-/// Joins a wcstring_list_t via commas.
-static wcstring comma_join(const wcstring_list_t &lst) {
+/// Joins a std::vector<wcstring> via commas.
+static wcstring comma_join(const std::vector<wcstring> &lst) {
     wcstring result;
     for (size_t i = 0; i < lst.size(); i++) {
         if (i > 0) {
@@ -1528,7 +1528,7 @@ void test_dir_iter() {
     const wcstring badlinkname = L"badlink";    // link to nowhere
     const wcstring selflinkname = L"selflink";  // link to self
     const wcstring fifoname = L"fifo";
-    const wcstring_list_t names = {dirname,     regname,      reglinkname, dirlinkname,
+    const std::vector<wcstring> names = {dirname,     regname,      reglinkname, dirlinkname,
                                    badlinkname, selflinkname, fifoname};
 
     const auto is_link_name = [&](const wcstring &name) -> bool {
@@ -1929,9 +1929,9 @@ struct test_environment_t : public environment_t {
         return none();
     }
 
-    wcstring_list_t get_names(env_mode_flags_t flags) const override {
+    std::vector<wcstring> get_names(env_mode_flags_t flags) const override {
         UNUSED(flags);
-        wcstring_list_t result;
+        std::vector<wcstring> result;
         for (const auto &kv : vars) {
             result.push_back(kv.first);
         }
@@ -1949,7 +1949,7 @@ struct pwd_environment_t : public test_environment_t {
         return test_environment_t::get(key, mode);
     }
 
-    wcstring_list_t get_names(env_mode_flags_t flags) const override {
+    std::vector<wcstring> get_names(env_mode_flags_t flags) const override {
         auto res = test_environment_t::get_names(flags);
         res.clear();
         if (std::count(res.begin(), res.end(), L"PWD") == 0) {
@@ -1985,7 +1985,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
         return false;
     }
 
-    wcstring_list_t expected;
+    std::vector<wcstring> expected;
 
     va_start(va, flags);
     while ((arg = va_arg(va, wchar_t *)) != nullptr) {
@@ -2179,7 +2179,7 @@ static void test_expand_overflow() {
 
     // Make a list of 64 elements, then expand it cartesian-style 64 times.
     // This is far too large to expand.
-    wcstring_list_t vals;
+    std::vector<wcstring> vals;
     wcstring expansion;
     for (int i = 1; i <= 64; i++) {
         vals.push_back(to_string(i));
@@ -2638,7 +2638,7 @@ static void test_is_potential_path() {
     if (system("touch test/is_potential_path_test/gamma")) err(L"touch failed");
 
     const wcstring wd = L"test/is_potential_path_test/";
-    const wcstring_list_t wds({L".", wd});
+    const std::vector<wcstring> wds({L".", wd});
 
     operation_context_t ctx{env_stack_t::principal()};
     do_test(is_potential_path(L"al", true, wds, ctx, PATH_REQUIRE_DIR));
@@ -2666,9 +2666,9 @@ static void test_is_potential_path() {
 
 /// Test the 'test' builtin.
 maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
-static bool run_one_test_test(int expected, const wcstring_list_t &lst, bool bracket) {
+static bool run_one_test_test(int expected, const std::vector<wcstring> &lst, bool bracket) {
     parser_t &parser = parser_t::principal_parser();
-    wcstring_list_t argv;
+    std::vector<wcstring> argv;
     argv.push_back(bracket ? L"[" : L"test");
     argv.insert(argv.end(), lst.begin(), lst.end());
     if (bracket) argv.push_back(L"]");
@@ -2694,7 +2694,7 @@ static bool run_test_test(int expected, const wcstring &str) {
     operation_context_t ctx{parser, nullenv, no_cancel};
     completion_list_t comps = parser_t::expand_argument_list(str, expand_flags_t{}, ctx);
 
-    wcstring_list_t argv;
+    std::vector<wcstring> argv;
     for (const auto &c : comps) {
         argv.push_back(c.completion);
     }
@@ -2916,7 +2916,7 @@ struct autoload_tester_t {
         char t2[] = "/tmp/fish_test_autoload.XXXXXX";
         wcstring p2 = str2wcstring(mkdtemp(t2));
 
-        const wcstring_list_t paths = {p1, p2};
+        const std::vector<wcstring> paths = {p1, p2};
 
         autoload_t autoload(L"test_var");
         do_test(!autoload.resolve_command(L"file1", paths));
@@ -2931,10 +2931,10 @@ struct autoload_tester_t {
         do_test(autoload.resolve_command(L"file1", paths));
         do_test(!autoload.resolve_command(L"file1", paths));
         do_test(autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.get_autoloaded_commands() == wcstring_list_t{L"file1"});
+        do_test(autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1"});
         autoload.mark_autoload_finished(L"file1");
         do_test(!autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.get_autoloaded_commands() == wcstring_list_t{L"file1"});
+        do_test(autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1"});
 
         do_test(!autoload.resolve_command(L"file1", paths));
         do_test(!autoload.resolve_command(L"nothing", paths));
@@ -2942,7 +2942,7 @@ struct autoload_tester_t {
         do_test(!autoload.resolve_command(L"file2", paths));
         autoload.mark_autoload_finished(L"file2");
         do_test(!autoload.resolve_command(L"file2", paths));
-        do_test((autoload.get_autoloaded_commands() == wcstring_list_t{L"file1", L"file2"}));
+        do_test((autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1", L"file2"}));
 
         autoload.clear();
         do_test(autoload.resolve_command(L"file1", paths));
@@ -3014,7 +3014,7 @@ static void test_complete() {
 
     auto func_props = make_test_func_props();
     struct test_complete_vars_t : environment_t {
-        wcstring_list_t get_names(env_mode_flags_t flags) const override {
+        std::vector<wcstring> get_names(env_mode_flags_t flags) const override {
             UNUSED(flags);
             return {L"Foo1", L"Foo2",  L"Foo3",   L"Bar1",   L"Bar2",
                     L"Bar3", L"alpha", L"ALPHA!", L"gamma1", L"GAMMA2"};
@@ -3587,9 +3587,9 @@ static void test_autosuggestion_combining() {
     do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
 }
 
-static void test_history_matches(history_search_t &search, const wcstring_list_t &expected,
+static void test_history_matches(history_search_t &search, const std::vector<wcstring> &expected,
                                  unsigned from_line) {
-    wcstring_list_t found;
+    std::vector<wcstring> found;
     while (search.go_to_next_match(history_search_direction_t::backward)) {
         found.push_back(search.current_string());
     }
@@ -3770,11 +3770,11 @@ static void test_universal_output() {
     const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
 
     var_table_t vars;
-    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
-    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
-    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
-    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
-    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+    vars[L"varA"] = env_var_t(std::vector<wcstring>{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(std::vector<wcstring>{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(std::vector<wcstring>{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(std::vector<wcstring>{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(std::vector<wcstring>{L"ValE1", L"ValE2"}, flag_pathvar);
 
     std::string text = env_universal_t::serialize_with_vars(vars);
     const char *expected =
@@ -3803,11 +3803,11 @@ static void test_universal_parsing() {
     const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
 
     var_table_t vars;
-    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
-    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
-    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
-    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
-    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+    vars[L"varA"] = env_var_t(std::vector<wcstring>{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(std::vector<wcstring>{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(std::vector<wcstring>{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(std::vector<wcstring>{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(std::vector<wcstring>{L"ValE1", L"ValE2"}, flag_pathvar);
 
     var_table_t parsed_vars;
     env_universal_t::populate_variables(input, &parsed_vars);
@@ -3822,8 +3822,8 @@ static void test_universal_parsing_legacy() {
         "SET_EXPORT varB:ValB1\n";
 
     var_table_t vars;
-    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
-    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, env_var_t::flag_export);
+    vars[L"varA"] = env_var_t(std::vector<wcstring>{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(std::vector<wcstring>{L"ValB1"}, env_var_t::flag_export);
 
     var_table_t parsed_vars;
     env_universal_t::populate_variables(input, &parsed_vars);
@@ -4052,7 +4052,7 @@ void history_tests_t::test_history() {
     history_search_t searcher;
     say(L"Testing history");
 
-    const wcstring_list_t items = {L"Gamma", L"beta",  L"BetA", L"Beta", L"alpha",
+    const std::vector<wcstring> items = {L"Gamma", L"beta",  L"BetA", L"Beta", L"alpha",
                                    L"AlphA", L"Alpha", L"alph", L"ALPH", L"ZZZ"};
     const history_search_flags_t nocase = history_search_ignore_case;
 
@@ -4064,7 +4064,7 @@ void history_tests_t::test_history() {
     }
 
     // Helper to set expected items to those matching a predicate, in reverse order.
-    wcstring_list_t expected;
+    std::vector<wcstring> expected;
     auto set_expected = [&](const std::function<bool(const wcstring &)> &filt) {
         expected.clear();
         for (const auto &s : items) {
@@ -4171,8 +4171,8 @@ static void time_barrier() {
     } while (time(nullptr) == start);
 }
 
-static wcstring_list_t generate_history_lines(size_t item_count, size_t idx) {
-    wcstring_list_t result;
+static std::vector<wcstring> generate_history_lines(size_t item_count, size_t idx) {
+    std::vector<wcstring> result;
     result.reserve(item_count);
     for (unsigned long i = 0; i < item_count; i++) {
         result.push_back(format_string(L"%ld %lu", (unsigned long)idx, (unsigned long)i));
@@ -4183,7 +4183,7 @@ static wcstring_list_t generate_history_lines(size_t item_count, size_t idx) {
 void history_tests_t::test_history_races_pound_on_history(size_t item_count, size_t idx) {
     // Called in child thread to modify history.
     history_t hist(L"race_test");
-    const wcstring_list_t hist_lines = generate_history_lines(item_count, idx);
+    const std::vector<wcstring> hist_lines = generate_history_lines(item_count, idx);
     for (const wcstring &line : hist_lines) {
         hist.add(line);
         hist.save();
@@ -4229,7 +4229,7 @@ void history_tests_t::test_history_races() {
     }
 
     // Compute the expected lines.
-    std::array<wcstring_list_t, RACE_COUNT> expected_lines;
+    std::array<std::vector<wcstring>, RACE_COUNT> expected_lines;
     for (size_t i = 0; i < RACE_COUNT; i++) {
         expected_lines[i] = generate_history_lines(ITEM_COUNT, i);
     }
@@ -4249,7 +4249,7 @@ void history_tests_t::test_history_races() {
         if (item.empty()) break;
 
         bool found = false;
-        for (wcstring_list_t &list : expected_lines) {
+        for (std::vector<wcstring> &list : expected_lines) {
             auto iter = std::find(list.begin(), list.end(), item.contents);
             if (iter != list.end()) {
                 found = true;
@@ -4267,7 +4267,7 @@ void history_tests_t::test_history_races() {
         }
         if (!found) {
             err(L"Line '%ls' found in history, but not found in some array", item.str().c_str());
-            for (wcstring_list_t &list : expected_lines) {
+            for (std::vector<wcstring> &list : expected_lines) {
                 if (!list.empty()) {
                     fprintf(stderr, "\tRemaining: %ls\n", list.back().c_str());
                 }
@@ -4282,7 +4282,7 @@ void history_tests_t::test_history_races() {
     }
 
     // See if anything is left in the arrays
-    for (const wcstring_list_t &list : expected_lines) {
+    for (const std::vector<wcstring> &list : expected_lines) {
         for (const wcstring &str : list) {
             err(L"Line '%ls' still left in the array", str.c_str());
         }
@@ -4345,10 +4345,10 @@ void history_tests_t::test_history_merge() {
     }
 
     // Everyone should also have items in the same order (#2312)
-    wcstring_list_t hist_vals1;
+    std::vector<wcstring> hist_vals1;
     hists[0]->get_history(hist_vals1);
     for (const auto &hist : hists) {
-        wcstring_list_t hist_vals2;
+        std::vector<wcstring> hist_vals2;
         hist->get_history(hist_vals2);
         do_test(hist_vals1 == hist_vals2);
     }
@@ -4432,7 +4432,7 @@ void history_tests_t::test_history_path_detection() {
     }
 
     // Expected sets of paths.
-    wcstring_list_t expected[hist_size] = {
+    std::vector<wcstring> expected[hist_size] = {
         {},                          // cmd0
         {filename},                  // cmd1
         {tmpdir + L"/" + filename},  // cmd2
@@ -4937,8 +4937,8 @@ static void test_new_parser_errors() {
 
 // Given a format string, returns a list of non-empty strings separated by format specifiers. The
 // format specifiers themselves are omitted.
-static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
-    wcstring_list_t result;
+static std::vector<wcstring> separate_by_format_specifiers(const wchar_t *format) {
+    std::vector<wcstring> result;
     const wchar_t *cursor = format;
     const wchar_t *end = format + std::wcslen(format);
     while (cursor < end) {
@@ -4989,7 +4989,7 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
 // that each of the remaining chunks is found (in order) in the string.
 static bool string_matches_format(const wcstring &string, const wchar_t *format) {
     bool result = true;
-    wcstring_list_t components = separate_by_format_specifiers(format);
+    std::vector<wcstring> components = separate_by_format_specifiers(format);
     size_t idx = 0;
     for (const auto &component : components) {
         size_t where = string.find(component, idx);
@@ -5529,7 +5529,7 @@ maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, const wchar
 static void run_one_string_test(const wchar_t *const *argv_raw, int expected_rc,
                                 const wchar_t *expected_out) {
     // Copy to a null terminated array, as builtin_string may wish to rearrange our pointers.
-    wcstring_list_t argv_list(argv_raw, argv_raw + null_terminated_array_length(argv_raw));
+    std::vector<wcstring> argv_list(argv_raw, argv_raw + null_terminated_array_length(argv_raw));
     null_terminated_array_t<wchar_t> argv(argv_list);
 
     parser_t &parser = parser_t::principal_parser();
@@ -5944,9 +5944,9 @@ static void test_env_vars() {
     // TODO: Add tests for the locale and ncurses vars.
 
     env_var_t v1 = {L"abc", env_var_t::flag_export};
-    env_var_t v2 = {wcstring_list_t{L"abc"}, env_var_t::flag_export};
-    env_var_t v3 = {wcstring_list_t{L"abc"}, 0};
-    env_var_t v4 = {wcstring_list_t{L"abc", L"def"}, env_var_t::flag_export};
+    env_var_t v2 = {std::vector<wcstring>{L"abc"}, env_var_t::flag_export};
+    env_var_t v3 = {std::vector<wcstring>{L"abc"}, 0};
+    env_var_t v4 = {std::vector<wcstring>{L"abc", L"def"}, env_var_t::flag_export};
     do_test(v1 == v2 && !(v1 != v2));
     do_test(v1 != v3 && !(v1 == v3));
     do_test(v1 != v4 && !(v1 == v4));
@@ -6416,20 +6416,20 @@ static void test_killring() {
     kill_add(L"b");
     kill_add(L"c");
 
-    do_test((kill_entries() == wcstring_list_t{L"c", L"b", L"a"}));
+    do_test((kill_entries() == std::vector<wcstring>{L"c", L"b", L"a"}));
 
     do_test(kill_yank_rotate() == L"b");
-    do_test((kill_entries() == wcstring_list_t{L"b", L"a", L"c"}));
+    do_test((kill_entries() == std::vector<wcstring>{L"b", L"a", L"c"}));
 
     do_test(kill_yank_rotate() == L"a");
-    do_test((kill_entries() == wcstring_list_t{L"a", L"c", L"b"}));
+    do_test((kill_entries() == std::vector<wcstring>{L"a", L"c", L"b"}));
 
     kill_add(L"d");
 
-    do_test((kill_entries() == wcstring_list_t{L"d", L"a", L"c", L"b"}));
+    do_test((kill_entries() == std::vector<wcstring>{L"d", L"a", L"c", L"b"}));
 
     do_test(kill_yank_rotate() == L"a");
-    do_test((kill_entries() == wcstring_list_t{L"a", L"c", L"b", L"d"}));
+    do_test((kill_entries() == std::vector<wcstring>{L"a", L"c", L"b", L"d"}));
 }
 
 namespace {
@@ -6464,8 +6464,8 @@ static void test_re_basic() {
     auto re = regex_t::try_compile(L"(.)\\1");
     do_test(re.has_value());
     auto md = re->prepare();
-    wcstring_list_t matches;
-    wcstring_list_t captures;
+    std::vector<wcstring> matches;
+    std::vector<wcstring> captures;
     while (auto r = re->match(md, subject)) {
         matches.push_back(substr_from_range(r));
         captures.push_back(substr_from_range(re->group(md, 1)));
@@ -6602,7 +6602,7 @@ void test_wgetopt() {
     wgetopter_t w;
     int opt;
     int a_count = 0;
-    wcstring_list_t arguments;
+    std::vector<wcstring> arguments;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'a': {

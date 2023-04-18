@@ -37,7 +37,7 @@ class autoload_file_cache_t {
     using timestamp_t = std::chrono::time_point<std::chrono::steady_clock>;
 
     /// The directories from which to load.
-    const wcstring_list_t dirs_{};
+    const std::vector<wcstring> dirs_{};
 
     /// Our LRU cache of checks that were misses.
     /// The key is the command, the  value is the time of the check.
@@ -64,13 +64,13 @@ class autoload_file_cache_t {
 
    public:
     /// Initialize with a set of directories.
-    explicit autoload_file_cache_t(wcstring_list_t dirs) : dirs_(std::move(dirs)) {}
+    explicit autoload_file_cache_t(std::vector<wcstring> dirs) : dirs_(std::move(dirs)) {}
 
     /// Initialize with empty directories.
     autoload_file_cache_t() = default;
 
     /// \return the directories.
-    const wcstring_list_t &dirs() const { return dirs_; }
+    const std::vector<wcstring> &dirs() const { return dirs_; }
 
     /// Check if a command \p cmd can be loaded.
     /// If \p allow_stale is true, allow stale entries; otherwise discard them.
@@ -170,8 +170,8 @@ bool autoload_t::can_autoload(const wcstring &cmd) {
 
 bool autoload_t::has_attempted_autoload(const wcstring &cmd) { return cache_->is_cached(cmd); }
 
-wcstring_list_t autoload_t::get_autoloaded_commands() const {
-    wcstring_list_t result;
+std::vector<wcstring> autoload_t::get_autoloaded_commands() const {
+    std::vector<wcstring> result;
     result.reserve(autoloaded_files_.size());
     for (const auto &kv : autoloaded_files_) {
         result.push_back(kv.first);
@@ -185,11 +185,11 @@ maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const environ
     if (maybe_t<env_var_t> mvar = env.get(env_var_name_)) {
         return resolve_command(cmd, mvar->as_list());
     } else {
-        return resolve_command(cmd, wcstring_list_t{});
+        return resolve_command(cmd, std::vector<wcstring>{});
     }
 }
 
-maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const wcstring_list_t &paths) {
+maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const std::vector<wcstring> &paths) {
     // Are we currently in the process of autoloading this?
     if (current_autoloading_.count(cmd) > 0) return none();
 

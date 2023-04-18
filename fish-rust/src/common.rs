@@ -1021,7 +1021,7 @@ pub const HAS_WORKING_TTY_TIMESTAMPS: bool = true;
 /// empty string.
 pub static EMPTY_STRING: WString = WString::new();
 
-/// A global, empty wcstring_list_t. This is useful for functions which wish to return a reference
+/// A global, empty string list. This is useful for functions which wish to return a reference
 /// to an empty string.
 pub static EMPTY_STRING_LIST: Vec<WString> = vec![];
 

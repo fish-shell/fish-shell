@@ -533,7 +533,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             auto tok = new_tokenizer(buff.c_str(), TOK_ACCEPT_UNFINISHED);
             if (opts.array) {
                 // Array mode: assign each token as a separate element of the sole var.
-                wcstring_list_t tokens;
+                std::vector<wcstring> tokens;
                 while (auto t = tok->next()) {
                     auto text = *tok->text_of(*t);
                     if (auto out = unescape_string(text, UNESCAPE_DEFAULT)) {
@@ -576,7 +576,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             size_t x = std::max(static_cast<size_t>(1), buff.size());
             size_t n_splits =
                 (opts.array || static_cast<size_t>(vars_left()) > x) ? x : vars_left();
-            wcstring_list_t chars;
+            std::vector<wcstring> chars;
             chars.reserve(n_splits);
 
             int i = 0;
@@ -606,11 +606,11 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             if (!opts.have_delimiter) {
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
                 // compatibility with old versions of fish.
-                wcstring_list_t tokens = split_string_tok(buff, opts.delimiter);
+                std::vector<wcstring> tokens = split_string_tok(buff, opts.delimiter);
                 parser.set_var_and_fire(*var_ptr++, opts.place, std::move(tokens));
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
-                wcstring_list_t splits;
+                std::vector<wcstring> splits;
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                             &splits);
 
@@ -622,7 +622,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
                 // compatibility with old versions of fish.
                 // Note the final variable gets any remaining text.
-                wcstring_list_t var_vals = split_string_tok(buff, opts.delimiter, vars_left());
+                std::vector<wcstring> var_vals = split_string_tok(buff, opts.delimiter, vars_left());
                 size_t val_idx = 0;
                 while (vars_left()) {
                     wcstring val;
@@ -633,7 +633,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 }
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
-                wcstring_list_t splits;
+                std::vector<wcstring> splits;
                 // We're making at most argc - 1 splits so the last variable
                 // is set to the remaining string.
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),

@@ -35,7 +35,7 @@ struct option_spec_t {
     wchar_t short_flag;
     wcstring long_flag;
     wcstring validation_command;
-    wcstring_list_t vals;
+    std::vector<wcstring> vals;
     bool short_flag_valid{true};
     int num_allowed{0};
     int num_seen{0};
@@ -52,8 +52,8 @@ struct argparse_cmd_opts_t {
     size_t max_args = SIZE_MAX;
     wchar_t implicit_int_flag = L'\0';
     wcstring name;
-    wcstring_list_t raw_exclusive_flags;
-    wcstring_list_t argv;
+    std::vector<wcstring> raw_exclusive_flags;
+    std::vector<wcstring> argv;
     std::unordered_map<wchar_t, option_spec_ref_t> options;
     std::unordered_map<wcstring, wchar_t> long_to_short_flag;
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
@@ -124,7 +124,7 @@ static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
 // information to parse the values associated with any `--exclusive` flags.
 static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams) {
     for (const wcstring &raw_xflags : opts.raw_exclusive_flags) {
-        const wcstring_list_t xflags = split_string(raw_xflags, L',');
+        const std::vector<wcstring> xflags = split_string(raw_xflags, L',');
         if (xflags.size() < 2) {
             streams.err.append_format(_(L"%ls: exclusive flag string '%ls' is not valid\n"),
                                       opts.name.c_str(), raw_xflags.c_str());
@@ -473,7 +473,7 @@ static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, optio
     // Obviously if there is no arg validation command we assume the arg is okay.
     if (opt_spec->validation_command.empty()) return STATUS_CMD_OK;
 
-    wcstring_list_t cmd_output;
+    std::vector<wcstring> cmd_output;
 
     auto &vars = parser.vars();
 

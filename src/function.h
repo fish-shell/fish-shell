@@ -29,14 +29,14 @@ struct function_properties_t {
     const ast::block_statement_t *func_node;
 
     /// List of all named arguments for this function.
-    wcstring_list_t named_arguments;
+    std::vector<wcstring> named_arguments;
 
     /// Description of the function.
     wcstring description;
 
     /// Mapping of all variables that were inherited from the function definition scope to their
     /// values.
-    std::map<wcstring, wcstring_list_t> inherit_vars;
+    std::map<wcstring, std::vector<wcstring>> inherit_vars;
 
     /// Set to true if invoking this function shadows the variables of the underlying function.
     bool shadow_scope{true};
@@ -110,7 +110,7 @@ bool function_exists_no_autoload(const wcstring &cmd);
 /// Returns all function names.
 ///
 /// \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore.
-wcstring_list_t function_get_names(bool get_hidden);
+std::vector<wcstring> function_get_names(bool get_hidden);
 
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.

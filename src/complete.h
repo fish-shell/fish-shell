@@ -242,7 +242,7 @@ void completions_sort_and_prioritize(completion_list_t *comps,
 /// \param flags A set of completion flags
 void complete_add(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, completion_mode_t result_mode,
-                  wcstring_list_t condition, const wchar_t *comp, const wchar_t *desc,
+                  std::vector<wcstring> condition, const wchar_t *comp, const wchar_t *desc,
                   complete_flags_t flags);
 
 /// Remove a previously defined completion.
@@ -263,7 +263,7 @@ bool complete_load(const wcstring &cmd, parser_t &parser);
 class operation_context_t;
 completion_list_t complete(const wcstring &cmd, completion_request_options_t flags,
                            const operation_context_t &ctx,
-                           wcstring_list_t *out_needs_load = nullptr);
+                           std::vector<wcstring> *out_needs_load = nullptr);
 
 /// Return a list of all current completions.
 wcstring complete_print(const wcstring &cmd = L"");
@@ -283,7 +283,7 @@ bool complete_add_wrapper(const wcstring &command, const wcstring &new_target);
 bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_remove);
 
 /// Returns a list of wrap targets for a given command.
-wcstring_list_t complete_get_wrap_targets(const wcstring &command);
+std::vector<wcstring> complete_get_wrap_targets(const wcstring &command);
 
 // Observes that fish_complete_path has changed.
 void complete_invalidate_path();

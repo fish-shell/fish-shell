@@ -575,7 +575,7 @@ struct autosuggestion_t {
     wcstring search_string{};
 
     // The list of completions which may need loading.
-    wcstring_list_t needs_load{};
+    std::vector<wcstring> needs_load{};
 
     // Whether the autosuggestion should be case insensitive.
     // This is true for file-generated autosuggestions, but not for history.
@@ -875,7 +875,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void move_word(editable_line_t *el, bool move_right, bool erase, move_word_style_t style,
                    bool newv);
 
-    void run_input_command_scripts(const wcstring_list_t &cmds);
+    void run_input_command_scripts(const std::vector<wcstring> &cmds);
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
@@ -1399,7 +1399,7 @@ maybe_t<abbrs_replacement_t> expand_replacer(SourceRange range, const wcstring &
 
     scoped_push<bool> not_interactive(&parser.libdata().is_interactive, false);
 
-    wcstring_list_t outputs{};
+    std::vector<wcstring> outputs{};
     int ret = exec_subshell(cmd, parser, outputs, false /* not apply_exit_status */);
     if (ret != STATUS_CMD_OK) {
         return none();
@@ -1547,7 +1547,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
         }
     }
 
-    wcstring_list_t lst;
+    std::vector<wcstring> lst;
     (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
     if (!lst.empty()) {
         wcstring title_line = L"\x1B]0;";
@@ -1569,7 +1569,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
 void reader_data_t::exec_mode_prompt() {
     mode_prompt_buff.clear();
     if (function_exists(MODE_PROMPT_FUNCTION_NAME, parser())) {
-        wcstring_list_t mode_indicator_list;
+        std::vector<wcstring> mode_indicator_list;
         exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list, false);
         // We do not support multiple lines in the mode indicator, so just concatenate all of
         // them.
@@ -1600,7 +1600,7 @@ void reader_data_t::exec_prompt() {
 
         if (!conf.left_prompt_cmd.empty()) {
             // Status is ignored.
-            wcstring_list_t prompt_list;
+            std::vector<wcstring> prompt_list;
             // Historic compatibility hack.
             // If the left prompt function is deleted, then use a default prompt instead of
             // producing an error.
@@ -1614,7 +1614,7 @@ void reader_data_t::exec_prompt() {
         if (!conf.right_prompt_cmd.empty()) {
             if (function_exists(conf.right_prompt_cmd, parser())) {
                 // Status is ignored.
-                wcstring_list_t prompt_list;
+                std::vector<wcstring> prompt_list;
                 exec_subshell(conf.right_prompt_cmd, parser(), prompt_list, false);
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 for (const auto &i : prompt_list) {
@@ -2018,7 +2018,7 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
 
         // Try normal completions.
         completion_request_options_t complete_flags = completion_request_options_t::autosuggest();
-        wcstring_list_t needs_load;
+        std::vector<wcstring> needs_load;
         completion_list_t completions = complete(search_string, complete_flags, ctx, &needs_load);
 
         autosuggestion_t result{};
@@ -3333,7 +3333,7 @@ static bool event_is_normal_char(const char_event_t &evt) {
 }
 
 /// Run a sequence of commands from an input binding.
-void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
+void reader_data_t::run_input_command_scripts(const std::vector<wcstring> &cmds) {
     auto last_statuses = parser().get_last_statuses();
     for (const wcstring &cmd : cmds) {
         update_commandline_state();
@@ -3365,7 +3365,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     size_t limit = std::min(rls.nchars - command_line.size(), READAHEAD_MAX);
 
     using command_handler_t = inputter_t::command_handler_t;
-    command_handler_t normal_handler = [this](const wcstring_list_t &cmds) {
+    command_handler_t normal_handler = [this](const std::vector<wcstring> &cmds) {
         this->run_input_command_scripts(cmds);
     };
     command_handler_t empty_handler = {};

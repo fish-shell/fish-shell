@@ -369,8 +369,8 @@ wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes)
         leading_slashes++;
     }
 
-    wcstring_list_t comps = split_string(path, sep);
-    wcstring_list_t new_comps;
+    std::vector<wcstring> comps = split_string(path, sep);
+    std::vector<wcstring> new_comps;
     for (wcstring &comp : comps) {
         if (comp.empty() || comp == L".") {
             continue;
@@ -410,8 +410,8 @@ wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path) {
     }
 
     // Split our strings by the sep.
-    wcstring_list_t wd_comps = split_string(wd, sep);
-    wcstring_list_t path_comps = split_string(path, sep);
+    std::vector<wcstring> wd_comps = split_string(wd, sep);
+    std::vector<wcstring> path_comps = split_string(path, sep);
 
     // Remove empty segments from wd_comps.
     // In particular this removes the leading and trailing empties.
@@ -903,7 +903,7 @@ bool file_id_t::operator<(const file_id_t &rhs) const { return this->compare_fil
 
 // static
 wcstring_list_ffi_t wcstring_list_ffi_t::get_test_data() {
-    return wcstring_list_t{L"foo", L"bar", L"baz"};
+    return std::vector<wcstring>{L"foo", L"bar", L"baz"};
 }
 
 // static

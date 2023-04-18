@@ -97,7 +97,7 @@ struct complete_entry_opt_t {
     /// Description of the completion.
     wcstring desc;
     // Conditions under which to use the option, expanded and evaluated at completion time.
-    wcstring_list_t conditions;
+    std::vector<wcstring> conditions;
     /// Type of the option: args_only, short, single_long, or double_long.
     complete_option_type_t type;
     /// Determines how completions should be performed on the argument after the switch.
@@ -163,7 +163,7 @@ using completion_entry_map_t = std::map<completion_key_t, completion_entry_t>;
 static owning_lock<completion_entry_map_t> s_completion_map;
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
-using wrapper_map_t = std::unordered_map<wcstring, wcstring_list_t>;
+using wrapper_map_t = std::unordered_map<wcstring, std::vector<wcstring>>;
 static owning_lock<wrapper_map_t> wrapper_map;
 
 description_func_t const_desc(const wcstring &s) {
@@ -334,7 +334,7 @@ class completer_t {
     completion_receiver_t completions;
 
     /// Commands which we would have tried to load, if we had a parser.
-    wcstring_list_t needs_load;
+    std::vector<wcstring> needs_load;
 
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
@@ -363,7 +363,7 @@ class completer_t {
     bool complete_variable(const wcstring &str, size_t start_offset);
 
     bool condition_test(const wcstring &condition);
-    bool conditions_test(const wcstring_list_t &conditions);
+    bool conditions_test(const std::vector<wcstring> &conditions);
 
     void complete_strings(const wcstring &wc_escaped, const description_func_t &desc_func,
                           const completion_list_t &possible_comp, complete_flags_t flags,
@@ -380,7 +380,7 @@ class completer_t {
     // Bag of data to support expanding a command's arguments using custom completions, including
     // the wrap chain.
     struct custom_arg_data_t {
-        explicit custom_arg_data_t(wcstring_list_t *vars) : var_assignments(vars) { assert(vars); }
+        explicit custom_arg_data_t(std::vector<wcstring> *vars) : var_assignments(vars) { assert(vars); }
 
         // The unescaped argument before the argument which is being completed, or empty if none.
         wcstring previous_argument{};
@@ -402,7 +402,7 @@ class completer_t {
         // The list of variable assignments: escaped strings of the form VAR=VAL.
         // This may be temporarily appended to as we explore the wrap chain.
         // When completing, variable assignments are really set in a local scope.
-        wcstring_list_t *var_assignments;
+        std::vector<wcstring> *var_assignments;
 
         // The set of wrapped commands which we have visited, and so should not be explored again.
         std::set<wcstring> visited_wrapped_commands{};
@@ -413,7 +413,7 @@ class completer_t {
     void walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline, source_range_t cmdrange,
                          custom_arg_data_t *ad);
 
-    cleanup_t apply_var_assignments(const wcstring_list_t &var_assignments);
+    cleanup_t apply_var_assignments(const std::vector<wcstring> &var_assignments);
 
     bool empty() const { return completions.empty(); }
 
@@ -430,7 +430,7 @@ class completer_t {
 
     completion_list_t acquire_completions() { return completions.take(); }
 
-    wcstring_list_t acquire_needs_load() { return std::move(needs_load); }
+    std::vector<wcstring> acquire_needs_load() { return std::move(needs_load); }
 };
 
 // Autoloader for completions.
@@ -462,7 +462,7 @@ bool completer_t::condition_test(const wcstring &condition) {
     return test_res;
 }
 
-bool completer_t::conditions_test(const wcstring_list_t &conditions) {
+bool completer_t::conditions_test(const std::vector<wcstring> &conditions) {
     for (const auto &c : conditions) {
         if (!condition_test(c)) return false;
     }
@@ -575,7 +575,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
     // systems with a large set of manuals, but it should be ok since apropos is only called once.
-    wcstring_list_t list;
+    std::vector<wcstring> list;
     (void)exec_subshell(lookup_cmd, *ctx.parser, list, false /* don't apply exit status */);
 
     // Then discard anything that is not a possible completion and put the result into a
@@ -657,7 +657,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
 
     if (str_cmd.empty() || (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')) {
         bool include_hidden = !str_cmd.empty() && str_cmd.at(0) == L'_';
-        wcstring_list_t names = function_get_names(include_hidden);
+        std::vector<wcstring> names = function_get_names(include_hidden);
         for (wcstring &name : names) {
             // Append all known matching functions
             append_completion(&possible_comp, std::move(name));
@@ -1312,7 +1312,7 @@ bool completer_t::try_complete_user(const wcstring &str) {
 
 // If we have variable assignments, attempt to apply them in our parser. As soon as the return
 // value goes out of scope, the variables will be removed from the parser.
-cleanup_t completer_t::apply_var_assignments(const wcstring_list_t &var_assignments) {
+cleanup_t completer_t::apply_var_assignments(const std::vector<wcstring> &var_assignments) {
     if (!ctx.parser || var_assignments.empty()) return cleanup_t{[] {}};
     env_stack_t &vars = ctx.parser->vars();
     assert(&vars == &ctx.vars &&
@@ -1335,7 +1335,7 @@ cleanup_t completer_t::apply_var_assignments(const wcstring_list_t &var_assignme
         auto expand_ret = expand_string(expression, &expression_expanded, expand_flags, ctx);
         // If expansion succeeds, set the value; if it fails (e.g. it has a cmdsub) set an empty
         // value anyways.
-        wcstring_list_t vals;
+        std::vector<wcstring> vals;
         if (expand_ret == expand_result_t::ok) {
             for (auto &completion : expression_expanded) {
                 vals.emplace_back(std::move(completion.completion));
@@ -1396,7 +1396,7 @@ void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
     // Extract command from the command line and invoke the receiver with it.
     complete_custom(cmd, cmdline, ad);
 
-    wcstring_list_t targets = complete_get_wrap_targets(cmd);
+    std::vector<wcstring> targets = complete_get_wrap_targets(cmd);
     scoped_push<size_t> saved_depth(&ad->wrap_depth, ad->wrap_depth + 1);
 
     for (const wcstring &wt : targets) {
@@ -1491,7 +1491,7 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &cmd,
                                                          const wcstring &prefix,
                                                          const std::vector<tok_t> &args) {
     // Get all the arguments, unescaped, into an array that we're going to bsearch.
-    wcstring_list_t arg_strs;
+    std::vector<wcstring> arg_strs;
     for (const auto &arg : args) {
         wcstring argstr = *arg.get_source(cmd);
         if (auto argstr_unesc = unescape_string(argstr, UNESCAPE_DEFAULT)) {
@@ -1556,7 +1556,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
 
     // Consume variable assignments in tokens strictly before the cursor.
     // This is a list of (escaped) strings of the form VAR=VAL.
-    wcstring_list_t var_assignments;
+    std::vector<wcstring> var_assignments;
     for (const tok_t &tok : tokens) {
         if (tok.location_in_or_at_end_of_source_range(cursor_pos)) break;
         wcstring tok_src = *tok.get_source(cmdline);
@@ -1715,7 +1715,7 @@ void append_completion(completion_list_t *completions, wcstring comp, wcstring d
 
 void complete_add(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, completion_mode_t result_mode,
-                  wcstring_list_t condition, const wchar_t *comp, const wchar_t *desc,
+                  std::vector<wcstring> condition, const wchar_t *comp, const wchar_t *desc,
                   complete_flags_t flags) {
     // option should be empty iff the option type is arguments only.
     assert(option.empty() == (option_type == option_type_args_only));
@@ -1756,7 +1756,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
 }
 
 completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_options_t flags,
-                           const operation_context_t &ctx, wcstring_list_t *out_needs_loads) {
+                           const operation_context_t &ctx, std::vector<wcstring> *out_needs_loads) {
     // Determine the innermost subcommand.
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
@@ -1900,7 +1900,7 @@ void complete_invalidate_path() {
     // TODO: here we unload all completions for commands that are loaded by the autoloader. We also
     // unload any completions that the user may specified on the command line. We should in
     // principle track those completions loaded by the autoloader alone.
-    wcstring_list_t cmds = completion_autoloader.acquire()->get_autoloaded_commands();
+    std::vector<wcstring> cmds = completion_autoloader.acquire()->get_autoloaded_commands();
     for (const wcstring &cmd : cmds) {
         complete_remove_all(cmd, false /* not a path */);
     }
@@ -1919,7 +1919,7 @@ bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
 
     auto locked_map = wrapper_map.acquire();
     wrapper_map_t &wraps = *locked_map;
-    wcstring_list_t *targets = &wraps[command];
+    std::vector<wcstring> *targets = &wraps[command];
     // If it's already present, we do nothing.
     if (!contains(*targets, new_target)) {
         targets->push_back(new_target);
@@ -1937,7 +1937,7 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_
     bool result = false;
     auto current_targets_iter = wraps.find(command);
     if (current_targets_iter != wraps.end()) {
-        wcstring_list_t *targets = &current_targets_iter->second;
+        std::vector<wcstring> *targets = &current_targets_iter->second;
         auto where = std::find(targets->begin(), targets->end(), target_to_remove);
         if (where != targets->end()) {
             targets->erase(where);
@@ -1947,7 +1947,7 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_
     return result;
 }
 
-wcstring_list_t complete_get_wrap_targets(const wcstring &command) {
+std::vector<wcstring> complete_get_wrap_targets(const wcstring &command) {
     if (command.empty()) {
         return {};
     }

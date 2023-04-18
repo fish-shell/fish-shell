@@ -75,7 +75,7 @@ class builtin_bind_t {
 /// Returns false if no binding with that sequence and mode exists.
 bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
                               parser_t &parser, io_streams_t &streams) {
-    wcstring_list_t ecmds;
+    std::vector<wcstring> ecmds;
     wcstring sets_mode, out;
 
     if (!input_mappings_->get(seq, bind_mode, &ecmds, user, &sets_mode)) {
@@ -161,7 +161,7 @@ void builtin_bind_t::list(const wchar_t *bind_mode, bool user, parser_t &parser,
 /// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
 /// are defined for this terminal are printed.
 void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
-    const wcstring_list_t names = input_terminfo_get_names(!all);
+    const std::vector<wcstring> names = input_terminfo_get_names(!all);
     for (const wcstring &name : names) {
         streams.out.append(name);
         streams.out.push(L'\n');
@@ -170,7 +170,7 @@ void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
 
 /// Print all the special key binding functions to string buffer used for standard output.
 void builtin_bind_t::function_names(io_streams_t &streams) {
-    wcstring_list_t names = input_function_get_names();
+    std::vector<wcstring> names = input_function_get_names();
 
     for (const auto &name : names) {
         auto seq = name.c_str();

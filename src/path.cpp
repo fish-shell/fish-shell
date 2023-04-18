@@ -26,9 +26,9 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // PREFIX is defined at build time.
-static const wcstring_list_t kDefaultPath({L"/bin", L"/usr/bin", PREFIX L"/bin"});
+static const std::vector<wcstring> kDefaultPath({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
-static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_list_t &pathsv) {
+static get_path_result_t path_get_path_core(const wcstring &cmd, const std::vector<wcstring> &pathsv) {
     const get_path_result_t noent_res{ENOENT, wcstring{}};
     get_path_result_t result{};
 
@@ -142,9 +142,9 @@ static dir_remoteness_t path_remoteness(const wcstring &path) {
 #endif
 }
 
-wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
+std::vector<wcstring> path_get_paths(const wcstring &cmd, const environment_t &vars) {
     FLOGF(path, L"path_get_paths('%ls')", cmd.c_str());
-    wcstring_list_t paths;
+    std::vector<wcstring> paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for matching commands in the PATH var.
@@ -157,7 +157,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     auto path_var = vars.get(L"PATH");
     if (!path_var) return paths;
 
-    const wcstring_list_t &pathsv = path_var->as_list();
+    const std::vector<wcstring> &pathsv = path_var->as_list();
     for (auto path : pathsv) {
         if (path.empty()) continue;
         append_path_component(path, cmd);
@@ -172,9 +172,9 @@ wcstring_list_ffi_t path_get_paths_ffi(const wcstring &cmd, const parser_t &pars
     return path_get_paths(cmd, parser.vars());
 }
 
-wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
+std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &env_vars) {
-    wcstring_list_t paths;
+    std::vector<wcstring> paths;
     if (dir.at(0) == L'/') {
         // Absolute path.
         paths.push_back(dir);
@@ -184,7 +184,7 @@ wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
         paths.push_back(path_normalize_for_cd(wd, dir));
     } else {
         // Respect CDPATH.
-        wcstring_list_t cdpathsv;
+        std::vector<wcstring> cdpathsv;
         if (auto cdpaths = env_vars.get(L"CDPATH")) {
             cdpathsv = cdpaths->as_list();
         }

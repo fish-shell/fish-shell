@@ -68,7 +68,7 @@
 
 static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd);
 static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
-                                     const wcstring_list_t &argv, RustBuiltin builtin);
+                                     const std::vector<wcstring> &argv, RustBuiltin builtin);
 
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
@@ -433,7 +433,7 @@ static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L
 static bool cmd_needs_help(const wcstring &cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_streams_t &streams) {
+proc_status_t builtin_run(parser_t &parser, const std::vector<wcstring> &argv, io_streams_t &streams) {
     if (argv.empty()) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
     const wcstring &cmdname = argv.front();
 
@@ -491,8 +491,8 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
 }
 
 /// Returns a list of all builtin names.
-wcstring_list_t builtin_get_names() {
-    wcstring_list_t result;
+std::vector<wcstring> builtin_get_names() {
+    std::vector<wcstring> result;
     result.reserve(BUILTIN_COUNT);
     for (const auto &builtin_data : builtin_datas) {
         result.push_back(builtin_data.name);
@@ -577,7 +577,7 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
 }
 
 static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
-                                     const wcstring_list_t &argv, RustBuiltin builtin) {
+                                     const std::vector<wcstring> &argv, RustBuiltin builtin) {
     int status_code;
     bool update_status = rust_run_builtin(parser, streams, argv, builtin, status_code);
     if (update_status) {

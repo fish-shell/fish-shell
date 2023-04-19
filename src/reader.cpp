@@ -4750,7 +4750,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
         // Construct a parsed source ref.
         // Be careful to transfer ownership, this could be a very large string.
         auto ps = new_parsed_source_ref(str, *ast);
-        parser.eval(*ps, io);
+        parser.eval_parsed_source(*ps, io);
         return 0;
     } else {
         wcstring sb;

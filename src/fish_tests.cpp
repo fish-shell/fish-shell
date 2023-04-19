@@ -2034,39 +2034,6 @@ static void test_abbreviations() {
     }
 }
 
-/// Test path functions.
-static void test_path() {
-    say(L"Testing path functions");
-
-    wcstring path = L"//foo//////bar/";
-    path_make_canonical(path);
-    if (path != L"/foo/bar") {
-        err(L"Bug in canonical PATH code");
-    }
-
-    path = L"/";
-    path_make_canonical(path);
-    if (path != L"/") {
-        err(L"Bug in canonical PATH code");
-    }
-
-    if (paths_are_equivalent(L"/foo/bar/baz", L"foo/bar/baz"))
-        err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
-    if (!paths_are_equivalent(L"///foo///bar/baz", L"/foo/bar////baz//"))
-        err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
-    if (!paths_are_equivalent(L"/foo/bar/baz", L"/foo/bar/baz"))
-        err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
-    if (!paths_are_equivalent(L"/", L"/"))
-        err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
-
-    do_test(path_apply_working_directory(L"abc", L"/def/") == L"/def/abc");
-    do_test(path_apply_working_directory(L"abc/", L"/def/") == L"/def/abc/");
-    do_test(path_apply_working_directory(L"/abc/", L"/def/") == L"/abc/");
-    do_test(path_apply_working_directory(L"/abc", L"/def/") == L"/abc");
-    do_test(path_apply_working_directory(L"", L"/def/").empty());
-    do_test(path_apply_working_directory(L"abc", L"") == L"abc");
-}
-
 static void test_pager_navigation() {
     say(L"Testing pager navigation");
 
@@ -6433,7 +6400,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("wcstod"), test_wcstod},
     {TEST_GROUP("dup2s"), test_dup2s},
     {TEST_GROUP("dup2s"), test_dup2s_fd_for_target_fd},
-    {TEST_GROUP("path"), test_path},
     {TEST_GROUP("pager_navigation"), test_pager_navigation},
     {TEST_GROUP("pager_layout"), test_pager_layout},
     {TEST_GROUP("word_motion"), test_word_motion},

@@ -324,6 +324,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Global event blocks.
     uint64_t global_event_blocks{};
 
+    eval_res_t eval(const wcstring &cmd, const io_chain_t &io);
+
     /// Evaluate the expressions contained in cmd.
     ///
     /// \param cmd the string to evaluate
@@ -332,18 +334,16 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \param block_type The type of block to push on the block stack, which must be either 'top'
     /// or 'subst'.
     /// \return the result of evaluation.
-    eval_res_t eval(const wcstring &cmd, const io_chain_t &io,
-                    const job_group_ref_t &job_group = {},
-                    block_type_t block_type = block_type_t::top);
+    eval_res_t eval_with(const wcstring &cmd, const io_chain_t &io,
+                         const job_group_ref_t &job_group, block_type_t block_type);
 
-    /// An ffi overload of `eval(const wcstring &cmd, ...)` but without the extra parameters.
     eval_res_t eval_string_ffi1(const wcstring &cmd);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
-    eval_res_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                    const job_group_ref_t &job_group = {},
-                    block_type_t block_type = block_type_t::top);
+    eval_res_t eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
+                                  const job_group_ref_t &job_group = {},
+                                  block_type_t block_type = block_type_t::top);
 
     /// Evaluates a node.
     /// The node type must be ast_t::statement_t or ast::job_list_t.

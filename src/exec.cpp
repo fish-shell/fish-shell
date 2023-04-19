@@ -1213,7 +1213,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
         *break_expand = true;
         return STATUS_CMD_ERROR;
     }
-    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, job_group, block_type_t::subst);
+    eval_res_t eval_res =
+        parser.eval_with(cmd, io_chain_t{bufferfill}, job_group, block_type_t::subst);
     separated_buffer_t buffer = io_bufferfill_t::finish(std::move(bufferfill));
     if (buffer.discarded()) {
         *break_expand = true;

@@ -525,13 +525,17 @@ profile_item_t *parser_t::create_profile_item() {
     return nullptr;
 }
 
-eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
-                          const job_group_ref_t &job_group, enum block_type_t block_type) {
+eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io) {
+    return eval_with(cmd, io, {}, block_type_t::top);
+}
+
+eval_res_t parser_t::eval_with(const wcstring &cmd, const io_chain_t &io,
+                               const job_group_ref_t &job_group, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     auto error_list = new_parse_error_list();
     auto ps = parse_source(wcstring{cmd}, parse_flag_none, &*error_list);
     if (ps->has_value()) {
-        return this->eval(*ps, io, job_group, block_type);
+        return this->eval_parsed_source(*ps, io, job_group, block_type);
     } else {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
@@ -549,8 +553,9 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
 
 eval_res_t parser_t::eval_string_ffi1(const wcstring &cmd) { return eval(cmd, io_chain_t()); }
 
-eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                          const job_group_ref_t &job_group, enum block_type_t block_type) {
+eval_res_t parser_t::eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
+                                        const job_group_ref_t &job_group,
+                                        enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
     const auto &job_list = ps.ast().top()->as_job_list();
     if (!job_list.empty()) {

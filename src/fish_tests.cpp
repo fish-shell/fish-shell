@@ -2592,84 +2592,6 @@ static void test_colors() {
     do_test(rgb_color_t(L"mooganta").is_none());
 }
 
-// This class allows accessing private bits of autoload_t.
-struct autoload_tester_t {
-    static void run(const wchar_t *fmt, ...) {
-        va_list va;
-        va_start(va, fmt);
-        wcstring cmd = vformat_string(fmt, va);
-        va_end(va);
-
-        int status = system(wcs2zstring(cmd).c_str());
-        do_test(status == 0);
-    }
-
-    static void touch_file(const wcstring &path) {
-        int fd = wopen_cloexec(path, O_RDWR | O_CREAT, 0666);
-        do_test(fd >= 0);
-        write_loop(fd, "Hello", 5);
-        close(fd);
-    }
-
-    static void run_test() {
-        char t1[] = "/tmp/fish_test_autoload.XXXXXX";
-        wcstring p1 = str2wcstring(mkdtemp(t1));
-        char t2[] = "/tmp/fish_test_autoload.XXXXXX";
-        wcstring p2 = str2wcstring(mkdtemp(t2));
-
-        const std::vector<wcstring> paths = {p1, p2};
-
-        autoload_t autoload(L"test_var");
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"nothing", paths));
-        do_test(autoload.get_autoloaded_commands().empty());
-
-        run(L"touch %ls/file1.fish", p1.c_str());
-        run(L"touch %ls/file2.fish", p2.c_str());
-        autoload.invalidate_cache();
-
-        do_test(!autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1"});
-        autoload.mark_autoload_finished(L"file1");
-        do_test(!autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1"});
-
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"nothing", paths));
-        do_test(autoload.resolve_command(L"file2", paths));
-        do_test(!autoload.resolve_command(L"file2", paths));
-        autoload.mark_autoload_finished(L"file2");
-        do_test(!autoload.resolve_command(L"file2", paths));
-        do_test((autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1", L"file2"}));
-
-        autoload.clear();
-        do_test(autoload.resolve_command(L"file1", paths));
-        autoload.mark_autoload_finished(L"file1");
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"nothing", paths));
-        do_test(autoload.resolve_command(L"file2", paths));
-        do_test(!autoload.resolve_command(L"file2", paths));
-        autoload.mark_autoload_finished(L"file2");
-
-        do_test(!autoload.resolve_command(L"file1", paths));
-        touch_file(format_string(L"%ls/file1.fish", p1.c_str()));
-        autoload.invalidate_cache();
-        do_test(autoload.resolve_command(L"file1", paths));
-        autoload.mark_autoload_finished(L"file1");
-
-        run(L"rm -Rf %ls", p1.c_str());
-        run(L"rm -Rf %ls", p2.c_str());
-    }
-};
-
-static void test_autoload() {
-    say(L"Testing autoload");
-    autoload_tester_t::run_test();
-}
-
 // Construct function properties for testing.
 static std::shared_ptr<function_properties_t> make_test_func_props() {
     auto ret = std::make_shared<function_properties_t>();
@@ -6401,7 +6323,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("colors"), test_colors},
     {TEST_GROUP("wildcard"), test_wildcards},
     {TEST_GROUP("complete"), test_complete},
-    {TEST_GROUP("autoload"), test_autoload},
     {TEST_GROUP("input"), test_input},
     {TEST_GROUP("undo"), test_undo},
     {TEST_GROUP("universal"), test_universal},

@@ -17,7 +17,6 @@
 class autoload_file_cache_t;
 class environment_t;
 class parser_t;
-struct autoload_tester_t;
 
 /// autoload_t is a class that knows how to autoload .fish files from a list of directories. This
 /// is used by autoloading functions and completions. It maintains a file cache, which is
@@ -48,8 +47,6 @@ class autoload_t {
     /// Like resolve_autoload(), but accepts the paths directly.
     /// This is exposed for testing.
     maybe_t<wcstring> resolve_command(const wcstring &cmd, const std::vector<wcstring> &paths);
-
-    friend autoload_tester_t;
 
    public:
     /// Construct an autoloader that loads from the paths given by \p env_var_name.

@@ -396,6 +396,7 @@ dependencies = [
  "fast-float",
  "hexponent",
  "inventory",
+ "lazy_static",
  "libc",
  "lru",
  "miette",

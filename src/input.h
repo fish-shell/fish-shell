@@ -114,8 +114,8 @@ class input_mapping_set_t {
 
     /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
     /// it exists, false if not.
-    bool get(const wcstring &sequence, const wcstring &mode, std::vector<wcstring> *out_cmds, bool user,
-             wcstring *out_sets_mode) const;
+    bool get(const wcstring &sequence, const wcstring &mode, std::vector<wcstring> *out_cmds,
+             bool user, wcstring *out_sets_mode) const;
 
     /// Returns all mapping names and modes.
     std::vector<input_mapping_name_t> get_names(bool user = true) const;

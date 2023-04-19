@@ -1214,7 +1214,8 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
 
     // Apply any selection.
     if (data.selection.has_value()) {
-        highlight_spec_t selection_color = {highlight_role_t::selection, highlight_role_t::selection};
+        highlight_spec_t selection_color = {highlight_role_t::selection,
+                                            highlight_role_t::selection};
         auto end = std::min(selection->stop, colors.size());
         for (size_t i = data.selection->start; i < end; i++) {
             colors.at(i) = selection_color;

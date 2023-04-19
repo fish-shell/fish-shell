@@ -138,7 +138,7 @@ std::vector<wcstring> split_string(const wcstring &val, wchar_t sep);
 /// except for the first. This is historical behavior.
 /// Example: split_string_tok(" a  b   c ", " ", 3) -> {"a", "b", "  c  "}
 std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps,
-                                 size_t max_results = std::numeric_limits<size_t>::max());
+                                       size_t max_results = std::numeric_limits<size_t>::max());
 
 /// Join a list of strings by a separator character or string.
 wcstring join_strings(const std::vector<wcstring> &vals, wchar_t sep);

@@ -259,7 +259,8 @@ std::vector<wcstring> split_string(const wcstring &val, wchar_t sep) {
     return out;
 }
 
-std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps, size_t max_results) {
+std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps,
+                                       size_t max_results) {
     std::vector<wcstring> out;
     size_t end = val.size();
     size_t pos = 0;
@@ -286,7 +287,8 @@ std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps
     return out;
 }
 
-static wcstring join_strings_impl(const std::vector<wcstring> &vals, const wchar_t *sep, size_t seplen) {
+static wcstring join_strings_impl(const std::vector<wcstring> &vals, const wchar_t *sep,
+                                  size_t seplen) {
     if (vals.empty()) return wcstring{};
 
     // Reserve the size we will need.

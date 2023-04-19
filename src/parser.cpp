@@ -70,7 +70,8 @@ rust::Box<WaitHandleStoreFFI> &parser_t::get_wait_handles_ffi() { return wait_ha
 
 const rust::Box<WaitHandleStoreFFI> &parser_t::get_wait_handles_ffi() const { return wait_handles; }
 
-int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, std::vector<wcstring> vals) {
+int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode,
+                               std::vector<wcstring> vals) {
     int res = vars().set(key, mode, std::move(vals));
     if (res == ENV_OK) {
         event_fire(*this, *new_event_variable_set(key));

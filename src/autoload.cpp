@@ -189,7 +189,8 @@ maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const environ
     }
 }
 
-maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const std::vector<wcstring> &paths) {
+maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd,
+                                              const std::vector<wcstring> &paths) {
     // Are we currently in the process of autoloading this?
     if (current_autoloading_.count(cmd) > 0) return none();
 

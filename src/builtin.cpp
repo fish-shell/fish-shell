@@ -433,7 +433,8 @@ static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L
 static bool cmd_needs_help(const wcstring &cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-proc_status_t builtin_run(parser_t &parser, const std::vector<wcstring> &argv, io_streams_t &streams) {
+proc_status_t builtin_run(parser_t &parser, const std::vector<wcstring> &argv,
+                          io_streams_t &streams) {
     if (argv.empty()) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
     const wcstring &cmdname = argv.front();
 

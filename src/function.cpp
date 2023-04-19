@@ -172,9 +172,7 @@ wcstring function_get_definition_file(const function_properties_t &props) {
 wcstring function_get_copy_definition_file(const function_properties_t &props) {
     return props.copy_definition_file ? *props.copy_definition_file : L"";
 }
-bool function_is_copy(const function_properties_t &props) {
-    return props.is_copy;
-}
+bool function_is_copy(const function_properties_t &props) { return props.is_copy; }
 int function_get_definition_lineno(const function_properties_t &props) {
     return props.definition_lineno();
 }
@@ -182,7 +180,8 @@ int function_get_copy_definition_lineno(const function_properties_t &props) {
     return props.copy_definition_lineno;
 }
 
-wcstring function_get_annotated_definition(const function_properties_t &props, const wcstring &name) {
+wcstring function_get_annotated_definition(const function_properties_t &props,
+                                           const wcstring &name) {
     return props.annotated_definition(name);
 }
 

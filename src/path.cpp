@@ -28,7 +28,8 @@
 // PREFIX is defined at build time.
 static const std::vector<wcstring> kDefaultPath({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
-static get_path_result_t path_get_path_core(const wcstring &cmd, const std::vector<wcstring> &pathsv) {
+static get_path_result_t path_get_path_core(const wcstring &cmd,
+                                            const std::vector<wcstring> &pathsv) {
     const get_path_result_t noent_res{ENOENT, wcstring{}};
     get_path_result_t result{};
 
@@ -173,7 +174,7 @@ wcstring_list_ffi_t path_get_paths_ffi(const wcstring &cmd, const parser_t &pars
 }
 
 std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
-                                  const environment_t &env_vars) {
+                                        const environment_t &env_vars) {
     std::vector<wcstring> paths;
     if (dir.at(0) == L'/') {
         // Absolute path.

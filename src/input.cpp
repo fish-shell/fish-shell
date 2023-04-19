@@ -825,7 +825,8 @@ bool input_mapping_set_t::erase(const wcstring &sequence, const wcstring &mode, 
 }
 
 bool input_mapping_set_t::get(const wcstring &sequence, const wcstring &mode,
-                              std::vector<wcstring> *out_cmds, bool user, wcstring *out_sets_mode) const {
+                              std::vector<wcstring> *out_cmds, bool user,
+                              wcstring *out_sets_mode) const {
     bool result = false;
     const auto &ml = user ? mapping_list_ : preset_mapping_list_;
     for (const input_mapping_t &m : ml) {

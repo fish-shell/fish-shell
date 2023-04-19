@@ -85,7 +85,7 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
 
 /// Returns the given directory with all CDPATH components applied.
 std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
-                                  const environment_t &env_vars);
+                                        const environment_t &env_vars);
 
 /// Returns the path resolved as an implicit cd command, or none() if none. This requires it to
 /// start with one of the allowed prefixes (., .., ~) and resolve to a directory.

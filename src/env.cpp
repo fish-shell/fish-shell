@@ -1018,7 +1018,8 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     /// Try setting\p key as an electric or readonly variable.
     /// \return an error code, or none() if not an electric or readonly variable.
     /// \p val will not be modified upon a none() return.
-    maybe_t<int> try_set_electric(const wcstring &key, const query_t &query, std::vector<wcstring> &val);
+    maybe_t<int> try_set_electric(const wcstring &key, const query_t &query,
+                                  std::vector<wcstring> &val);
 
     /// Set a universal value.
     void set_universal(const wcstring &key, std::vector<wcstring> val, const query_t &query);

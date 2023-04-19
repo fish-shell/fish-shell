@@ -172,7 +172,8 @@ bool is_windows_subsystem_for_linux() {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
-[[gnu::noinline]] static std::vector<wcstring> demangled_backtrace(int max_frames, int skip_levels) {
+[[gnu::noinline]] static std::vector<wcstring> demangled_backtrace(int max_frames,
+                                                                   int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
     int n_frames = backtrace(callstack, n_max_frames);

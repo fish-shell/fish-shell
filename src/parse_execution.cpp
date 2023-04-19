@@ -465,7 +465,8 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
 
     auto &vars = parser->vars();
     int retval;
-    retval = vars.set(for_var_name, ENV_LOCAL | ENV_USER, var ? var->as_list() : std::vector<wcstring>{});
+    retval = vars.set(for_var_name, ENV_LOCAL | ENV_USER,
+                      var ? var->as_list() : std::vector<wcstring>{});
     assert(retval == ENV_OK);
 
     trace_if_enabled(*parser, L"for", arguments);

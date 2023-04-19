@@ -115,7 +115,6 @@ void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &col
                      const operation_context_t &ctx, bool io_ok = false,
                      maybe_t<size_t> cursor = {});
 
-
 class parser_t;
 /// Wrapper around colorize(highlight_shell)
 wcstring colorize_shell(const wcstring &text, parser_t &parser);

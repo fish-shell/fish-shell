@@ -380,7 +380,9 @@ class completer_t {
     // Bag of data to support expanding a command's arguments using custom completions, including
     // the wrap chain.
     struct custom_arg_data_t {
-        explicit custom_arg_data_t(std::vector<wcstring> *vars) : var_assignments(vars) { assert(vars); }
+        explicit custom_arg_data_t(std::vector<wcstring> *vars) : var_assignments(vars) {
+            assert(vars);
+        }
 
         // The unescaped argument before the argument which is being completed, or empty if none.
         wcstring previous_argument{};

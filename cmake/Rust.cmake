@@ -50,7 +50,11 @@ else()
 endif()
 
 # Tell Cargo where our build directory is so it can find config.h.
-corrosion_set_env_vars(${fish_rust_target} "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}" "FISH_AUTOCXX_GEN_DIR=${fish_autocxx_gen_dir}" "FISH_RUST_TARGET_DIR=${rust_target_dir}")
+corrosion_set_env_vars(${fish_rust_target}
+    "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}"
+    "FISH_AUTOCXX_GEN_DIR=${fish_autocxx_gen_dir}"
+    "FISH_RUST_TARGET_DIR=${rust_target_dir}"
+)
 
 target_include_directories(${fish_rust_target} INTERFACE
     "${rust_target_dir}/cxxbridge/${fish_rust_target}/src/"

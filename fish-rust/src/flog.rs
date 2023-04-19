@@ -1,4 +1,5 @@
-use crate::ffi::{get_flog_file_fd, parse_util_unescape_wildcards, wildcard_match};
+use crate::ffi::{get_flog_file_fd, wildcard_match};
+use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::{widestrs, wstr, WString};
 use crate::wchar_ffi::WCharToFFI;
 use std::io::Write;
@@ -208,10 +209,10 @@ pub(crate) use {should_flog, FLOG, FLOGF};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
-    let wc = parse_util_unescape_wildcards(&wc_esc.to_ffi());
+    let wc = parse_util_unescape_wildcards(wc_esc);
     let mut match_found = false;
     for cat in categories::all_categories() {
-        if wildcard_match(&cat.name.to_ffi(), &wc, false) {
+        if wildcard_match(&cat.name.to_ffi(), &wc.to_ffi(), false) {
             cat.enabled.store(sense, Ordering::Relaxed);
             match_found = true;
         }

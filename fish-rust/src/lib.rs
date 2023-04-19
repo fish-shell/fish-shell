@@ -15,6 +15,7 @@ mod common;
 
 mod abbrs;
 mod ast;
+mod autoload;
 mod builtins;
 mod color;
 mod compat;

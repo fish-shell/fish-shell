@@ -884,10 +884,11 @@ static bool detect_errors_in_backgrounded_job(const ast::job_pipeline_t &job,
         if (const job_conjunction_t *next = jlist->at(index + 1)) {
             if (next->has_decorator()) {
                 const auto &deco = next->decorator();
-                assert(
-                    (deco.kw() == parse_keyword_t::kw_and || deco.kw() == parse_keyword_t::kw_or) &&
-                    "Unexpected decorator keyword");
-                const wchar_t *deco_name = (deco.kw() == parse_keyword_t::kw_and ? L"and" : L"or");
+                assert((deco.keyword() == parse_keyword_t::kw_and ||
+                        deco.keyword() == parse_keyword_t::kw_or) &&
+                       "Unexpected decorator keyword");
+                const wchar_t *deco_name =
+                    (deco.keyword() == parse_keyword_t::kw_and ? L"and" : L"or");
                 errored = append_syntax_error(parse_errors, deco.source_range().start,
                                               deco.source_range().length,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, deco_name);

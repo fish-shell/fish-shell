@@ -898,7 +898,7 @@ static bool range_is_potential_path(const wcstring &src, const source_range_t &r
 
 void highlighter_t::visit_keyword(const ast::node_t *kw) {
     highlight_role_t role = highlight_role_t::normal;
-    switch (kw->kw()) {
+    switch (kw->keyword()) {
         case parse_keyword_t::kw_begin:
         case parse_keyword_t::kw_builtin:
         case parse_keyword_t::kw_case:

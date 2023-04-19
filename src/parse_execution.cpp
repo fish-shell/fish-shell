@@ -1490,7 +1490,7 @@ end_execution_reason_t parse_execution_context_t::test_and_run_1_job_conjunction
     // Maybe skip the job if it has a leading and/or.
     bool skip = false;
     if (jc.has_decorator()) {
-        switch (jc.decorator().kw()) {
+        switch (jc.decorator().keyword()) {
             case parse_keyword_t::kw_and:
                 // AND. Skip if the last job failed.
                 skip = parser->get_last_status() != 0;

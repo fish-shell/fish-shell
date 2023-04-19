@@ -4031,7 +4031,7 @@ pub mod ast_ffi {
         unsafe fn pointer_eq(self: &NodeFfi<'_>, rhs: &NodeFfi) -> bool;
         unsafe fn has_value(self: &NodeFfi<'_>) -> bool;
 
-        unsafe fn kw(self: &NodeFfi<'_>) -> ParseKeyword;
+        unsafe fn keyword(self: &NodeFfi<'_>) -> ParseKeyword;
         unsafe fn token_type(self: &NodeFfi<'_>) -> ParseTokenType;
         unsafe fn has_source(self: &NodeFfi<'_>) -> bool;
 
@@ -4129,7 +4129,8 @@ pub mod ast_ffi {
 
         fn describe(self: &Statement) -> UniquePtr<CxxWString>;
 
-        fn kw(self: &JobConjunctionDecorator) -> ParseKeyword;
+        #[cxx_name = "keyword"]
+        fn keyword_ffi(self: &JobConjunctionDecorator) -> ParseKeyword;
         fn decoration(self: &DecoratedStatement) -> StatementDecoration;
 
         fn is_argument(self: &ArgumentOrRedirection) -> bool;
@@ -4507,7 +4508,7 @@ impl<'a> NodeFfi<'a> {
     fn pointer_eq(&self, rhs: &NodeFfi) -> bool {
         std::ptr::eq(self.as_node().as_ptr(), rhs.as_node().as_ptr())
     }
-    fn kw(&self) -> ParseKeyword {
+    fn keyword(&self) -> ParseKeyword {
         self.as_node().as_keyword().unwrap().keyword()
     }
     fn token_type(&self) -> ParseTokenType {
@@ -4698,7 +4699,7 @@ impl Statement {
 }
 
 impl JobConjunctionDecorator {
-    fn kw(&self) -> ParseKeyword {
+    fn keyword_ffi(&self) -> ParseKeyword {
         self.keyword()
     }
     fn source_range_ffi(&self) -> SourceRange {

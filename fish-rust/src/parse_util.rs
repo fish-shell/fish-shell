@@ -1,5 +1,5 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeFfi, NodeVisitor};
+use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor};
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
     EscapeStringStyle, UnescapeFlags, UnescapeStringStyle,
@@ -9,17 +9,18 @@ use crate::expand::{
     BRACE_SEP, INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
 };
 use crate::ffi;
-use crate::ffi::indent_visitor_t;
 use crate::ffi_tests::add_test;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParserTestErrorBits, PipelinePosition, StatementDecoration, ERROR_BAD_VAR_CHAR1,
-    ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_NOT_ARGV_AT,
-    ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME,
-    INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG,
-    PARSER_TEST_ERROR, PARSER_TEST_INCOMPLETE, PARSE_FLAG_LEAVE_UNTERMINATED, PARSE_FLAG_NONE,
+    ParseTokenType, ParserTestErrorBits, PipelinePosition, StatementDecoration,
+    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
+    ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
+    ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
+    INVALID_PIPELINE_CMD_ERR_MSG, PARSER_TEST_ERROR, PARSER_TEST_INCOMPLETE,
+    PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS, PARSE_FLAG_CONTINUE_AFTER_ERROR,
+    PARSE_FLAG_INCLUDE_COMMENTS, PARSE_FLAG_LEAVE_UNTERMINATED, PARSE_FLAG_NONE,
     UNKNOWN_BUILTIN_ERR_MSG,
 };
 use crate::tokenizer::{
@@ -27,12 +28,12 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::wchar::{wstr, WString, L};
-use crate::wchar_ffi::WCharToFFI;
+use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::{wgettext, wgettext_fmt};
+use cxx::CxxWString;
 use std::ops;
-use std::pin::Pin;
 use widestring_suffix::widestrs;
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
@@ -723,48 +724,243 @@ pub fn parse_util_escape_string_with_quote(
     result
 }
 
+/// Given a string, parse it as fish code and then return the indents. The return value has the same
+/// size as the string.
+pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
+    // Make a vector the same size as the input string, which contains the indents. Initialize them
+    // to 0.
+    let mut indents = vec![0; src.len()];
+
+    // Simple trick: if our source does not contain a newline, then all indents are 0.
+    if !src.chars().any(|c| c == '\n') {
+        return indents;
+    }
+
+    // Parse the string. We pass continue_after_error to produce a forest; the trailing indent of
+    // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
+    // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
+    // were a case item list.
+    let ast = Ast::parse(
+        src,
+        PARSE_FLAG_CONTINUE_AFTER_ERROR
+            | PARSE_FLAG_INCLUDE_COMMENTS
+            | PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS
+            | PARSE_FLAG_LEAVE_UNTERMINATED,
+        None,
+    );
+    {
+        let mut iv = IndentVisitor::new(src, &mut indents);
+        iv.visit(ast.top());
+        iv.record_line_continuations_until(iv.indents.len());
+        iv.indents[iv.last_leaf_end..].fill(iv.last_indent);
+
+        // All newlines now get the *next* indent.
+        // For example, in this code:
+        //    if true
+        //       stuff
+        // the newline "belongs" to the if statement as it ends its job.
+        // But when rendered, it visually belongs to the job list.
+
+        let mut idx = src.len();
+        let mut next_indent = iv.last_indent;
+        let src = src.as_char_slice();
+        while idx != 0 {
+            idx -= 1;
+            if src[idx] == '\n' {
+                let empty_middle_line = src.get(idx + 1) == Some(&'\n');
+                if !empty_middle_line {
+                    iv.indents[idx] = next_indent;
+                }
+            } else {
+                next_indent = iv.indents[idx];
+            }
+        }
+        // Add an extra level of indentation to continuation lines.
+        for mut idx in iv.line_continuations {
+            loop {
+                indents[idx] = indents[idx].wrapping_add(1);
+                idx += 1;
+                if idx == src.len() || src[idx] == '\n' {
+                    break;
+                }
+            }
+        }
+    }
+
+    indents
+}
+
+// Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
+// visiting its children.
 struct IndentVisitor<'a> {
-    companion: Pin<&'a mut indent_visitor_t>,
+    // companion: Pin<&'a mut indent_visitor_t>,
+    // The one-past-the-last index of the most recently encountered leaf node.
+    // We use this to populate the indents even if there's no tokens in the range.
+    last_leaf_end: usize,
+
+    // The last indent which we assigned.
+    last_indent: i32,
+
+    // The source we are indenting.
+    src: &'a wstr,
+
+    // List of indents, which we populate.
+    indents: &'a mut Vec<i32>,
+
+    // Initialize our starting indent to -1, as our top-level node is a job list which
+    // will immediately increment it.
+    indent: i32,
+
+    // List of locations of escaped newline characters.
+    line_continuations: Vec<usize>,
+}
+impl<'a> IndentVisitor<'a> {
+    fn new(src: &'a wstr, indents: &'a mut Vec<i32>) -> Self {
+        Self {
+            last_leaf_end: 0,
+            last_indent: -1,
+            src,
+            indents,
+            indent: -1,
+            line_continuations: vec![],
+        }
+    }
+    /// \return whether a maybe_newlines node contains at least one newline.
+    fn has_newline(&self, nls: &ast::MaybeNewlines) -> bool {
+        nls.source(self.src).chars().any(|c| c == '\n')
+    }
+    fn record_line_continuations_until(&mut self, offset: usize) {
+        let gap_text = &self.src[self.last_leaf_end..offset];
+        let gap_text = gap_text.as_char_slice();
+        let Some(escaped_nl) = gap_text.windows(2).position(|w| *w == ['\\', '\n']) else {
+            return;
+        };
+        if gap_text[..escaped_nl].contains(&'#') {
+            return;
+        }
+        let mut newline = escaped_nl + 1;
+        // The gap text might contain multiple newlines if there are multiple lines that
+        // don't contain an AST node, for example, comment lines, or lines containing only
+        // the escaped newline.
+        loop {
+            self.line_continuations.push(self.last_leaf_end + newline);
+            match gap_text[newline + 1..].iter().position(|c| *c == '\n') {
+                Some(nextnl) => newline = newline + 1 + nextnl,
+                None => break,
+            }
+        }
+    }
 }
 impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
     // Default implementation is to just visit children.
     fn visit(&mut self, node: &'a dyn Node) {
-        let ffi_node = NodeFfi::new(node);
-        let dec = self
-            .companion
-            .as_mut()
-            .visit((&ffi_node as *const NodeFfi<'_>).cast());
+        let mut inc = 0;
+        let mut dec = 0;
+        use ast::{Category, Type};
+        match node.typ() {
+            Type::job_list | Type::andor_job_list => {
+                // Job lists are never unwound.
+                inc = 1;
+                dec = 1;
+            }
+
+            // Increment indents for conditions in headers (#1665).
+            Type::job_conjunction => {
+                if [Type::while_header, Type::if_clause].contains(&node.parent().unwrap().typ()) {
+                    inc = 1;
+                    dec = 1;
+                }
+            }
+
+            // Increment indents for job_continuation_t if it contains a newline.
+            // This is a bit of a hack - it indents cases like:
+            //    cmd1 |
+            //    ....cmd2
+            // but avoids "double indenting" if there's no newline:
+            //   cmd1 | while cmd2
+            //   ....cmd3
+            //   end
+            // See #7252.
+            Type::job_continuation => {
+                if self.has_newline(&node.as_job_continuation().unwrap().newlines) {
+                    inc = 1;
+                    dec = 1;
+                }
+            }
+
+            // Likewise for && and ||.
+            Type::job_conjunction_continuation => {
+                if self.has_newline(&node.as_job_conjunction_continuation().unwrap().newlines) {
+                    inc = 1;
+                    dec = 1;
+                }
+            }
+
+            Type::case_item_list => {
+                // Here's a hack. Consider:
+                // switch abc
+                //    cas
+                //
+                // fish will see that 'cas' is not valid inside a switch statement because it is
+                // not "case". It will then unwind back to the top level job list, producing a
+                // parse tree like:
+                //
+                //   job_list
+                //      switch_job
+                //         <err>
+                //      normal_job
+                //         cas
+                //
+                // And so we will think that the 'cas' job is at the same level as the switch.
+                // To address this, if we see that the switch statement was not closed, do not
+                // decrement the indent afterwards.
+                inc = 1;
+                let switchs = node.parent().unwrap().as_switch_statement().unwrap();
+                dec = if switchs.end.has_source() { 1 } else { 0 };
+            }
+            Type::token_base => {
+                if node.parent().unwrap().typ() == Type::begin_header
+                    && node.as_token().unwrap().token_type() == ParseTokenType::end
+                {
+                    // The newline after "begin" is optional, so it is part of the header.
+                    // The header is not in the indented block, so indent the newline here.
+                    if node.source(self.src) == L!("\n") {
+                        inc = 1;
+                        dec = 1;
+                    }
+                }
+            }
+            _ => (),
+        }
+
+        let range = node.source_range();
+        if range.length() > 0 && node.category() == Category::leaf {
+            self.record_line_continuations_until(range.start());
+            self.indents[self.last_leaf_end..range.start()].fill(self.last_indent);
+        }
+
+        self.indent += inc;
+
+        // If we increased the indentation, apply it to the remainder of the string, even if the
+        // list is empty. For example (where _ represents the cursor):
+        //
+        //    if foo
+        //       _
+        //
+        // we want to indent the newline.
+        if inc != 0 {
+            self.last_indent = self.indent;
+        }
+
+        // If this is a leaf node, apply the current indentation.
+        if node.category() == Category::leaf && range.length() != 0 {
+            self.indents[range.start()..range.end()].fill(self.indent);
+            self.last_leaf_end = range.end();
+            self.last_indent = self.indent;
+        }
+
         node.accept(self, false);
-        self.companion.as_mut().did_visit(dec);
-    }
-}
-
-#[cxx::bridge]
-#[allow(clippy::needless_lifetimes)] // false positive
-mod parse_util_ffi {
-    extern "C++" {
-        include!("ast.h");
-        include!("parse_util.h");
-        type indent_visitor_t = crate::ffi::indent_visitor_t;
-        type Ast = crate::ast::Ast;
-        type NodeFfi<'a> = crate::ast::NodeFfi<'a>;
-    }
-    extern "Rust" {
-        type IndentVisitor<'a>;
-        unsafe fn new_indent_visitor(
-            companion: Pin<&mut indent_visitor_t>,
-        ) -> Box<IndentVisitor<'_>>;
-        #[cxx_name = "visit"]
-        unsafe fn visit_ffi<'a>(self: &mut IndentVisitor<'a>, node: &'a NodeFfi<'a>);
-    }
-}
-
-fn new_indent_visitor(companion: Pin<&mut indent_visitor_t>) -> Box<IndentVisitor<'_>> {
-    Box::new(IndentVisitor { companion })
-}
-impl<'a> IndentVisitor<'a> {
-    fn visit_ffi(self: &mut IndentVisitor<'a>, node: &'a NodeFfi<'a>) {
-        self.visit(node.as_node());
+        self.indent -= dec;
     }
 }
 
@@ -1577,3 +1773,200 @@ add_test!("test_escape_quotes", || {
     validate!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
     validate!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
 });
+
+add_test!("test_indents", || {
+    // A struct which is either text or a new indent.
+    struct Segment {
+        // The indent to set
+        indent: i32,
+        text: &'static str,
+    }
+    fn do_validate(segments: &[Segment]) {
+        // Compute the indents.
+        let mut expected_indents = vec![];
+        let mut text = WString::new();
+        for segment in segments {
+            text.push_str(segment.text);
+            for _ in segment.text.chars() {
+                expected_indents.push(segment.indent);
+            }
+        }
+        let indents = parse_util_compute_indents(&text);
+        assert_eq!(indents, expected_indents);
+    }
+    macro_rules! validate {
+        ( $( $(,)? $indent:literal, $text:literal )* ) => {
+            let segments = vec![
+                $(
+                    Segment{ indent: $indent, text: $text },
+                )*
+            ];
+            do_validate(&segments);
+        };
+    }
+
+    #[rustfmt::skip]
+    #[allow(clippy::redundant_closure_call)]
+    (|| {
+        validate!(
+            0, "if", 1, " foo",
+            0, "\nend"
+        );
+        validate!(
+            0, "if", 1, " foo",
+            1, "\nfoo",
+            0, "\nend"
+        );
+
+        validate!(
+            0, "if", 1, " foo",
+            1, "\nif", 2, " bar",
+            1, "\nend",
+            0, "\nend"
+        );
+
+        validate!(
+            0, "if", 1, " foo",
+            1, "\nif", 2, " bar",
+            2, "\n",
+            1, "\nend\n"
+        );
+
+        validate!(
+            0, "if", 1, " foo",
+            1, "\nif", 2, " bar",
+            2, "\n"
+        );
+
+        validate!(
+            0, "begin",
+            1, "\nfoo",
+            1, "\n"
+        );
+
+        validate!(
+            0, "begin",
+            1, "\n;",
+            0, "end",
+            0, "\nfoo", 0, "\n"
+        );
+
+        validate!(
+            0, "begin",
+            1, "\n;",
+            0, "end",
+            0, "\nfoo", 0, "\n"
+        );
+
+        validate!(
+            0, "if", 1, " foo",
+            1, "\nif", 2, " bar",
+            2, "\nbaz",
+            1, "\nend", 1, "\n"
+        );
+
+        validate!(
+            0, "switch foo",
+            1, "\n"
+        );
+
+        validate!(
+            0, "switch foo",
+            1, "\ncase bar",
+            1, "\ncase baz",
+            2, "\nquux",
+            2, "\nquux"
+        );
+
+        validate!(
+            0,
+            "switch foo",
+            1,
+            "\ncas" // parse error indentation handling
+        );
+
+        validate!(
+            0, "while",
+            1, " false",
+            1, "\n# comment", // comment indentation handling
+            1, "\ncommand",
+            1, "\n# comment 2"
+        );
+
+        validate!(
+            0, "begin",
+            1, "\n", // "begin" is special because this newline belongs to the block header
+            1, "\n"
+        );
+
+        // Continuation lines.
+        validate!(
+            0, "echo 'continuation line' \\",
+            1, "\ncont",
+            0, "\n"
+        );
+        validate!(
+            0, "echo 'empty continuation line' \\",
+            1, "\n"
+        );
+        validate!(
+            0, "begin # continuation line in block",
+            1, "\necho \\",
+            2, "\ncont"
+        );
+        validate!(
+            0, "begin # empty continuation line in block",
+            1, "\necho \\",
+            2, "\n",
+            0, "\nend"
+        );
+        validate!(
+            0, "echo 'multiple continuation lines' \\",
+            1, "\nline1 \\",
+            1, "\n# comment",
+            1, "\n# more comment",
+            1, "\nline2 \\",
+            1, "\n"
+        );
+        validate!(
+            0, "echo # inline comment ending in \\",
+            0, "\nline"
+        );
+        validate!(
+            0, "# line comment ending in \\",
+            0, "\nline"
+        );
+        validate!(
+            0, "echo 'multiple empty continuation lines' \\",
+            1, "\n\\",
+            1, "\n",
+            0, "\n"
+        );
+        validate!(
+            0, "echo 'multiple statements with continuation lines' \\",
+            1, "\nline 1",
+            0, "\necho \\",
+            1, "\n"
+        );
+        // This is an edge case, probably okay to change the behavior here.
+        validate!(
+            0, "begin",
+            1, " \\",
+            2, "\necho 'continuation line in block header' \\",
+            2, "\n",
+            1, "\n",
+            0, "\nend"
+        );
+    })();
+});
+
+#[cxx::bridge]
+mod parse_util_ffi {
+    extern "Rust" {
+        fn parse_util_compute_indents_ffi(src: &CxxWString) -> Vec<i32>;
+    }
+}
+
+fn parse_util_compute_indents_ffi(src: &CxxWString) -> Vec<i32> {
+    parse_util_compute_indents(&src.from_ffi())
+}

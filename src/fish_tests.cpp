@@ -1190,208 +1190,6 @@ static void test_cancellation() {
     signal_clear_cancel();
 }
 
-namespace indent_tests {
-// A struct which is either text or a new indent.
-struct segment_t {
-    // The indent to set
-    int indent{0};
-    const char *text{nullptr};
-
-    /* implicit */ segment_t(int indent) : indent(indent) {}
-    /* implicit */ segment_t(const char *text) : text(text) {}
-};
-
-using indent_test_t = std::vector<segment_t>;
-using indent_test_list_t = std::vector<indent_test_t>;
-
-// Add a new test to a test list based on a series of ints and texts.
-template <typename... Types>
-void add_test(indent_test_list_t *v, const Types &...types) {
-    segment_t segments[] = {types...};
-    v->emplace_back(std::begin(segments), std::end(segments));
-}
-}  // namespace indent_tests
-
-static void test_indents() {
-    say(L"Testing indents");
-    using namespace indent_tests;
-
-    indent_test_list_t tests;
-    add_test(&tests,              //
-             0, "if", 1, " foo",  //
-             0, "\nend");
-
-    add_test(&tests,              //
-             0, "if", 1, " foo",  //
-             1, "\nfoo",          //
-             0, "\nend");
-
-    add_test(&tests,                //
-             0, "if", 1, " foo",    //
-             1, "\nif", 2, " bar",  //
-             1, "\nend",            //
-             0, "\nend");
-
-    add_test(&tests,                //
-             0, "if", 1, " foo",    //
-             1, "\nif", 2, " bar",  //
-             2, "\n",               //
-             1, "\nend\n");
-
-    add_test(&tests,                //
-             0, "if", 1, " foo",    //
-             1, "\nif", 2, " bar",  //
-             2, "\n");
-
-    add_test(&tests,      //
-             0, "begin",  //
-             1, "\nfoo",  //
-             1, "\n");
-
-    add_test(&tests,      //
-             0, "begin",  //
-             1, "\n;",    //
-             0, "end",    //
-             0, "\nfoo", 0, "\n");
-
-    add_test(&tests,      //
-             0, "begin",  //
-             1, "\n;",    //
-             0, "end",    //
-             0, "\nfoo", 0, "\n");
-
-    add_test(&tests,                //
-             0, "if", 1, " foo",    //
-             1, "\nif", 2, " bar",  //
-             2, "\nbaz",            //
-             1, "\nend", 1, "\n");
-
-    add_test(&tests,           //
-             0, "switch foo",  //
-             1, "\n"           //
-    );
-
-    add_test(&tests,           //
-             0, "switch foo",  //
-             1, "\ncase bar",  //
-             1, "\ncase baz",  //
-             2, "\nquux",      //
-             2, "\nquux"       //
-    );
-
-    add_test(&tests,           //
-             0, "switch foo",  //
-             1, "\ncas"        // parse error indentation handling
-    );
-
-    add_test(&tests,                   //
-             0, "while", 1, " false",  //
-             1, "\n# comment",         // comment indentation handling
-             1, "\ncommand",           //
-             1, "\n# comment 2"        //
-    );
-
-    add_test(&tests,      //
-             0, "begin",  //
-             1, "\n",     // "begin" is special because this newline belongs to the block header
-             1, "\n"      //
-    );
-
-    // Continuation lines.
-    add_test(&tests,                            //
-             0, "echo 'continuation line' \\",  //
-             1, "\ncont",                       //
-             0, "\n"                            //
-    );
-    add_test(&tests,                                  //
-             0, "echo 'empty continuation line' \\",  //
-             1, "\n"                                  //
-    );
-    add_test(&tests,                                   //
-             0, "begin # continuation line in block",  //
-             1, "\necho \\",                           //
-             2, "\ncont"                               //
-    );
-    add_test(&tests,                                         //
-             0, "begin # empty continuation line in block",  //
-             1, "\necho \\",                                 //
-             2, "\n",                                        //
-             0, "\nend"                                      //
-    );
-    add_test(&tests,                                      //
-             0, "echo 'multiple continuation lines' \\",  //
-             1, "\nline1 \\",                             //
-             1, "\n# comment",                            //
-             1, "\n# more comment",                       //
-             1, "\nline2 \\",                             //
-             1, "\n"                                      //
-    );
-    add_test(&tests,                                   //
-             0, "echo # inline comment ending in \\",  //
-             0, "\nline"                               //
-    );
-    add_test(&tests,                            //
-             0, "# line comment ending in \\",  //
-             0, "\nline"                        //
-    );
-    add_test(&tests,                                            //
-             0, "echo 'multiple empty continuation lines' \\",  //
-             1, "\n\\",                                         //
-             1, "\n",                                           //
-             0, "\n"                                            //
-    );
-    add_test(&tests,                                                      //
-             0, "echo 'multiple statements with continuation lines' \\",  //
-             1, "\nline 1",                                               //
-             0, "\necho \\",                                              //
-             1, "\n"                                                      //
-    );
-    // This is an edge case, probably okay to change the behavior here.
-    add_test(&tests,                                              //
-             0, "begin", 1, " \\",                                //
-             2, "\necho 'continuation line in block header' \\",  //
-             2, "\n",                                             //
-             1, "\n",                                             //
-             0, "\nend"                                           //
-    );
-
-    int test_idx = 0;
-    for (const indent_test_t &test : tests) {
-        // Construct the input text and expected indents.
-        wcstring text;
-        std::vector<int> expected_indents;
-        int current_indent = 0;
-        for (const segment_t &segment : test) {
-            if (!segment.text) {
-                current_indent = segment.indent;
-            } else {
-                wcstring tmp = str2wcstring(segment.text);
-                text.append(tmp);
-                expected_indents.insert(expected_indents.end(), tmp.size(), current_indent);
-            }
-        }
-        do_test(expected_indents.size() == text.size());
-
-        // Compute the indents.
-        std::vector<int> indents = parse_util_compute_indents(text);
-
-        if (expected_indents.size() != indents.size()) {
-            err(L"Indent vector has wrong size! Expected %lu, actual %lu", expected_indents.size(),
-                indents.size());
-        }
-        do_test(expected_indents.size() == indents.size());
-        for (size_t i = 0; i < text.size(); i++) {
-            if (expected_indents.at(i) != indents.at(i)) {
-                err(L"Wrong indent at index %lu (char 0x%02x) in test #%lu (expected %d, actual "
-                    L"%d):\n%ls\n",
-                    i, text.at(i), test_idx, expected_indents.at(i), indents.at(i), text.c_str());
-                break;  // don't keep showing errors for the rest of the test
-            }
-        }
-        test_idx++;
-    }
-}
-
 static void test_const_strlen() {
     do_test(const_strlen("") == 0);
     do_test(const_strlen(L"") == 0);
@@ -1465,7 +1263,7 @@ void test_dir_iter() {
     const wcstring selflinkname = L"selflink";  // link to self
     const wcstring fifoname = L"fifo";
     const std::vector<wcstring> names = {dirname,     regname,      reglinkname, dirlinkname,
-                                   badlinkname, selflinkname, fifoname};
+                                         badlinkname, selflinkname, fifoname};
 
     const auto is_link_name = [&](const wcstring &name) -> bool {
         return contains({reglinkname, dirlinkname, badlinkname, selflinkname}, name);
@@ -3988,7 +3786,7 @@ void history_tests_t::test_history() {
     say(L"Testing history");
 
     const std::vector<wcstring> items = {L"Gamma", L"beta",  L"BetA", L"Beta", L"alpha",
-                                   L"AlphA", L"Alpha", L"alph", L"ALPH", L"ZZZ"};
+                                         L"AlphA", L"Alpha", L"alph", L"ALPH", L"ZZZ"};
     const history_search_flags_t nocase = history_search_ignore_case;
 
     // Populate a history.
@@ -6625,7 +6423,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("debounce"), test_debounce_timeout},
     {TEST_GROUP("parser"), test_parser},
     {TEST_GROUP("cancellation"), test_cancellation},
-    {TEST_GROUP("indents"), test_indents},
     {TEST_GROUP("utf8"), test_utf8},
     {TEST_GROUP("escape_sequences"), test_escape_sequences},
     {TEST_GROUP("lru"), test_lru},

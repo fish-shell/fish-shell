@@ -58,7 +58,6 @@ include_cpp! {
     generate!("get_flog_file_fd")
     generate!("log_extra_to_flog_file")
 
-    generate!("indent_visitor_t")
     generate!("fish_wcwidth")
     generate!("fish_wcswidth")
 

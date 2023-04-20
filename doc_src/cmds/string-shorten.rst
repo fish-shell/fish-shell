@@ -81,13 +81,15 @@ Examples
     # Taking 20 columns from the right instead:
     …in-path-with-expand
 
+.. END EXAMPLES
+
 See Also
 --------
+
+.. BEGIN SEEALSO
 
 - :ref:`string<cmd-string>`'s ``pad`` subcommand does the inverse of this command, adding padding to a specific width instead.
   
 - The :doc:`printf <printf>` command can do simple padding, for example ``printf %10s\n`` works like ``string pad -w10``.
 
 - :doc:`string length <string-length>` with the ``--visible`` option can be used to show what fish thinks the width is.
-
-.. END EXAMPLES

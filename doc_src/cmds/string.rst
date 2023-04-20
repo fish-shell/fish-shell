@@ -154,8 +154,8 @@ Examples
    :start-after: BEGIN EXAMPLES
    :end-before: END EXAMPLES
 
-"pad" and "shorten" subcommands
----------------------------------
+"pad" subcommand
+----------------
 
 .. include:: string-pad.rst
    :start-after: BEGIN SYNOPSIS
@@ -165,9 +165,21 @@ Examples
    :start-after: BEGIN DESCRIPTION
    :end-before: END DESCRIPTION
 
+Examples
+^^^^^^^^
+
 .. include:: string-pad.rst
    :start-after: BEGIN EXAMPLES
    :end-before: END EXAMPLES
+
+See also
+^^^^^^^^
+
+.. include:: string-pad.rst
+   :start-after: BEGIN SEEALSO
+
+"shorten" subcommand
+--------------------
 
 .. include:: string-shorten.rst
    :start-after: BEGIN SYNOPSIS
@@ -177,9 +189,18 @@ Examples
    :start-after: BEGIN DESCRIPTION
    :end-before: END DESCRIPTION
 
+Examples
+^^^^^^^^
+
 .. include:: string-shorten.rst
    :start-after: BEGIN EXAMPLES
    :end-before: END EXAMPLES
+
+See also
+^^^^^^^^
+
+.. include:: string-shorten.rst
+   :start-after: BEGIN SEEALSO
 
 "repeat" subcommand
 -------------------

@@ -88,7 +88,8 @@ static bool set_hist_cmd(const wchar_t *cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
 }
 
 static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const wchar_t *cmd,
-                                           const std::vector<wcstring> &args, io_streams_t &streams) {
+                                           const std::vector<wcstring> &args,
+                                           io_streams_t &streams) {
     if (opts.history_search_type_defined || opts.show_time_format || opts.null_terminate) {
         const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
         streams.err.append_format(_(L"%ls: %ls: subcommand takes no options\n"), cmd, subcmd_str);

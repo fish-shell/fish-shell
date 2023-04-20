@@ -33,10 +33,11 @@
 
 /// Silly function.
 static void builtin_complete_add2(const wcstring &cmd, bool cmd_is_path, const wchar_t *short_opt,
-                                  const std::vector<wcstring> &gnu_opts, const std::vector<wcstring> &old_opts,
-                                  completion_mode_t result_mode, const std::vector<wcstring> &condition,
-                                  const wchar_t *comp, const wchar_t *desc,
-                                  complete_flags_t flags) {
+                                  const std::vector<wcstring> &gnu_opts,
+                                  const std::vector<wcstring> &old_opts,
+                                  completion_mode_t result_mode,
+                                  const std::vector<wcstring> &condition, const wchar_t *comp,
+                                  const wchar_t *desc, complete_flags_t flags) {
     for (const wchar_t *s = short_opt; *s; s++) {
         complete_add(cmd, cmd_is_path, wcstring{*s}, option_type_short, result_mode, condition,
                      comp, desc, flags);
@@ -59,9 +60,11 @@ static void builtin_complete_add2(const wcstring &cmd, bool cmd_is_path, const w
 }
 
 /// Silly function.
-static void builtin_complete_add(const std::vector<wcstring> &cmds, const std::vector<wcstring> &paths,
-                                 const wchar_t *short_opt, const std::vector<wcstring> &gnu_opt,
-                                 const std::vector<wcstring> &old_opt, completion_mode_t result_mode,
+static void builtin_complete_add(const std::vector<wcstring> &cmds,
+                                 const std::vector<wcstring> &paths, const wchar_t *short_opt,
+                                 const std::vector<wcstring> &gnu_opt,
+                                 const std::vector<wcstring> &old_opt,
+                                 completion_mode_t result_mode,
                                  const std::vector<wcstring> &condition, const wchar_t *comp,
                                  const wchar_t *desc, complete_flags_t flags) {
     for (const wcstring &cmd : cmds) {
@@ -76,7 +79,8 @@ static void builtin_complete_add(const std::vector<wcstring> &cmds, const std::v
 }
 
 static void builtin_complete_remove_cmd(const wcstring &cmd, bool cmd_is_path,
-                                        const wchar_t *short_opt, const std::vector<wcstring> &gnu_opt,
+                                        const wchar_t *short_opt,
+                                        const std::vector<wcstring> &gnu_opt,
                                         const std::vector<wcstring> &old_opt) {
     bool removed = false;
     for (const wchar_t *s = short_opt; *s; s++) {
@@ -100,8 +104,9 @@ static void builtin_complete_remove_cmd(const wcstring &cmd, bool cmd_is_path,
     }
 }
 
-static void builtin_complete_remove(const std::vector<wcstring> &cmds, const std::vector<wcstring> &paths,
-                                    const wchar_t *short_opt, const std::vector<wcstring> &gnu_opt,
+static void builtin_complete_remove(const std::vector<wcstring> &cmds,
+                                    const std::vector<wcstring> &paths, const wchar_t *short_opt,
+                                    const std::vector<wcstring> &gnu_opt,
                                     const std::vector<wcstring> &old_opt) {
     for (const wcstring &cmd : cmds) {
         builtin_complete_remove_cmd(cmd, false /* not path */, short_opt, gnu_opt, old_opt);

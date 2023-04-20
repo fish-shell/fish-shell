@@ -301,7 +301,8 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wcstring &ke
 /// Call vars.set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
 static int env_set_reporting_errors(const wchar_t *cmd, const wcstring &key, int scope,
-                                    std::vector<wcstring> list, io_streams_t &streams, parser_t &parser) {
+                                    std::vector<wcstring> list, io_streams_t &streams,
+                                    parser_t &parser) {
     int retval = parser.set_var_and_fire(key, scope | ENV_USER, std::move(list));
     // If this returned OK, the parser already fired the event.
     handle_env_return(retval, cmd, key, streams);
@@ -396,7 +397,8 @@ static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_f
 
 /// Given a list of values and 1-based indexes, return a new list with those elements removed.
 /// Note this deliberately accepts both args by value, as it modifies them both.
-static std::vector<wcstring> erased_at_indexes(std::vector<wcstring> input, std::vector<long> indexes) {
+static std::vector<wcstring> erased_at_indexes(std::vector<wcstring> input,
+                                               std::vector<long> indexes) {
     // Sort our indexes into *descending* order.
     std::sort(indexes.begin(), indexes.end(), std::greater<long>());
 
@@ -656,7 +658,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                 }
             } else {  // remove just the specified indexes of the var
                 if (!split->var) return STATUS_CMD_ERROR;
-                std::vector<wcstring> result = erased_at_indexes(split->var->as_list(), split->indexes);
+                std::vector<wcstring> result =
+                    erased_at_indexes(split->var->as_list(), split->indexes);
                 retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(result),
                                                   streams, parser);
             }
@@ -674,8 +677,9 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 /// Return a list of new values for the variable \p varname, respecting the \p opts.
 /// The arguments are given as the argc, argv pair.
 /// This handles the simple case where there are no indexes.
-static std::vector<wcstring> new_var_values(const wcstring &varname, const set_cmd_opts_t &opts, int argc,
-                                      const wchar_t *const *argv, const environment_t &vars) {
+static std::vector<wcstring> new_var_values(const wcstring &varname, const set_cmd_opts_t &opts,
+                                            int argc, const wchar_t *const *argv,
+                                            const environment_t &vars) {
     std::vector<wcstring> result;
     if (!opts.prepend && !opts.append) {
         // Not prepending or appending.
@@ -705,7 +709,7 @@ static std::vector<wcstring> new_var_values(const wcstring &varname, const set_c
 
 /// This handles the more difficult case of setting individual slices of a var.
 static std::vector<wcstring> new_var_values_by_index(const split_var_t &split, int argc,
-                                               const wchar_t *const *argv) {
+                                                     const wchar_t *const *argv) {
     assert(static_cast<size_t>(argc) == split.indexes.size() &&
            "Must have the same number of indexes as arguments");
 

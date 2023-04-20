@@ -65,8 +65,8 @@ static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool i
     }
 }
 
-static void print_colors(io_streams_t &streams, std::vector<wcstring> args, bool bold, bool underline,
-                         bool italics, bool dim, bool reverse, rgb_color_t bg) {
+static void print_colors(io_streams_t &streams, std::vector<wcstring> args, bool bold,
+                         bool underline, bool italics, bool dim, bool reverse, rgb_color_t bg) {
     outputter_t outp;
     if (args.empty()) args = rgb_color_t::named_color_names();
     for (const auto &color_name : args) {

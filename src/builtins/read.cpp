@@ -622,7 +622,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
                 // compatibility with old versions of fish.
                 // Note the final variable gets any remaining text.
-                std::vector<wcstring> var_vals = split_string_tok(buff, opts.delimiter, vars_left());
+                std::vector<wcstring> var_vals =
+                    split_string_tok(buff, opts.delimiter, vars_left());
                 size_t val_idx = 0;
                 while (vars_left()) {
                     wcstring val;

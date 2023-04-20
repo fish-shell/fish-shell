@@ -1479,7 +1479,7 @@ fn detect_errors_in_decorated_statement(
             &OperationContext::empty(),
             &mut command,
             None,
-            &mut new_errors,
+            Some(&mut new_errors),
             true, /* skip wildcards */
         ) == ExpandResultCode::error
         {

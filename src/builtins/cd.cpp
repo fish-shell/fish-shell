@@ -43,8 +43,8 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
     if (argv[optind]) {
         dir_in = argv[optind];
     } else {
-        auto maybe_dir_in = parser.vars().get(L"HOME");
-        if (maybe_dir_in.missing_or_empty()) {
+        auto maybe_dir_in = parser.vars().get_unless_empty(L"HOME");
+        if (!maybe_dir_in) {
             streams.err.append_format(_(L"%ls: Could not find home directory\n"), cmd);
             return STATUS_CMD_ERROR;
         }

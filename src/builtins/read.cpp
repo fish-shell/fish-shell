@@ -566,8 +566,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
         }
 
         if (!opts.have_delimiter) {
-            auto ifs = parser.vars().get(L"IFS");
-            if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
+            auto ifs = parser.vars().get_unless_empty(L"IFS");
+            if (ifs) opts.delimiter = ifs->as_string();
         }
 
         if (opts.delimiter.empty()) {

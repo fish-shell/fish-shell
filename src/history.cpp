@@ -1583,5 +1583,5 @@ void start_private_mode(env_stack_t &vars) {
 }
 
 bool in_private_mode(const environment_t &vars) {
-    return !vars.get(L"fish_private_mode").missing_or_empty();
+    return vars.get_unless_empty(L"fish_private_mode").has_value();
 }

@@ -178,15 +178,25 @@ environment_t::~environment_t() = default;
 wcstring environment_t::get_pwd_slash() const {
     // Return "/" if PWD is missing.
     // See https://github.com/fish-shell/fish-shell/issues/5080
-    auto pwd_var = get(L"PWD");
+    auto pwd_var = get_unless_empty(L"PWD");
     wcstring pwd;
-    if (!pwd_var.missing_or_empty()) {
+    if (pwd_var) {
         pwd = pwd_var->as_string();
     }
     if (!string_suffixes_string(L"/", pwd)) {
         pwd.push_back(L'/');
     }
     return pwd;
+}
+
+maybe_t<env_var_t> environment_t::get_unless_empty(const wcstring &key,
+                                                   env_mode_flags_t mode) const {
+    if (auto variable = this->get(key, mode)) {
+        if (!variable->empty()) {
+            return variable;
+        }
+    }
+    return none();
 }
 
 std::unique_ptr<env_var_t> environment_t::get_or_null(wcstring const &key,
@@ -212,20 +222,20 @@ std::vector<wcstring> null_environment_t::get_names(env_mode_flags_t flags) cons
 /// Set up the USER and HOME variable.
 static void setup_user(env_stack_t &vars) {
     auto uid = geteuid();
-    auto user_var = vars.get(L"USER");
+    auto user_var = vars.get_unless_empty(L"USER");
     struct passwd userinfo;
     struct passwd *result;
     char buf[8192];
 
     // If we have a $USER, we try to get the passwd entry for the name.
     // If that has the same UID that we use, we assume the data is correct.
-    if (!user_var.missing_or_empty()) {
+    if (user_var) {
         std::string unam_narrow = wcs2zstring(user_var->as_string());
         int retval = getpwnam_r(unam_narrow.c_str(), &userinfo, buf, sizeof(buf), &result);
         if (!retval && result) {
             if (result->pw_uid == uid) {
                 // The uid matches but we still might need to set $HOME.
-                if (vars.get(L"HOME").missing_or_empty()) {
+                if (!vars.get_unless_empty(L"HOME")) {
                     if (userinfo.pw_dir) {
                         vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT,
                                      str2wcstring(userinfo.pw_dir));
@@ -246,7 +256,7 @@ static void setup_user(env_stack_t &vars) {
         vars.set_one(L"USER", ENV_GLOBAL | ENV_EXPORT, uname);
         // Only change $HOME if it's empty, so we allow e.g. `HOME=(mktemp -d)`.
         // This is okay with common `su` and `sudo` because they set $HOME.
-        if (vars.get(L"HOME").missing_or_empty()) {
+        if (!vars.get_unless_empty(L"HOME")) {
             if (userinfo.pw_dir) {
                 vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, str2wcstring(userinfo.pw_dir));
             } else {
@@ -255,7 +265,7 @@ static void setup_user(env_stack_t &vars) {
                 vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
             }
         }
-    } else if (vars.get(L"HOME").missing_or_empty()) {
+    } else if (!vars.get_unless_empty(L"HOME")) {
         // If $USER is empty as well (which we tried to set above), we can't get $HOME.
         vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
     }
@@ -276,8 +286,8 @@ void misc_init() {
 /// Make sure the PATH variable contains something.
 static void setup_path() {
     auto &vars = env_stack_t::globals();
-    const auto path = vars.get(L"PATH");
-    if (path.missing_or_empty()) {
+    const auto path = vars.get_unless_empty(L"PATH");
+    if (!path) {
 #if defined(_CS_PATH)
         // _CS_PATH: colon-separated paths to find POSIX utilities
         std::string cspath;
@@ -419,9 +429,9 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // Initialize termsize variables.
     environment_t &env_vars = vars;
     auto termsize = termsize_initialize_ffi(reinterpret_cast<const unsigned char *>(&env_vars));
-    if (vars.get(L"COLUMNS").missing_or_empty())
+    if (!vars.get_unless_empty(L"COLUMNS"))
         vars.set_one(L"COLUMNS", ENV_GLOBAL, to_string(termsize.width));
-    if (vars.get(L"LINES").missing_or_empty())
+    if (!vars.get_unless_empty(L"LINES"))
         vars.set_one(L"LINES", ENV_GLOBAL, to_string(termsize.height));
 
     // Set fish_bind_mode to "default".

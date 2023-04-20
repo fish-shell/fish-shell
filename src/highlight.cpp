@@ -308,9 +308,8 @@ static bool is_potential_cd_path(const wcstring &path, bool at_cursor,
         directories.push_back(working_directory);
     } else {
         // Get the CDPATH.
-        auto cdpath = ctx.vars.get(L"CDPATH");
-        std::vector<wcstring> pathsv =
-            cdpath.missing_or_empty() ? std::vector<wcstring>{L"."} : cdpath->as_list();
+        auto cdpath = ctx.vars.get_unless_empty(L"CDPATH");
+        std::vector<wcstring> pathsv = !cdpath ? std::vector<wcstring>{L"."} : cdpath->as_list();
         // The current $PWD is always valid.
         pathsv.push_back(L".");
 
@@ -344,9 +343,9 @@ rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_sp
     rgb_color_t result = rgb_color_t::normal();
     highlight_role_t role = is_background ? highlight.background : highlight.foreground;
 
-    auto var = vars.get(get_highlight_var_name(role));
-    if (var.missing_or_empty()) var = vars.get(get_highlight_var_name(get_fallback(role)));
-    if (var.missing_or_empty()) var = vars.get(get_highlight_var_name(highlight_role_t::normal));
+    auto var = vars.get_unless_empty(get_highlight_var_name(role));
+    if (!var) var = vars.get_unless_empty(get_highlight_var_name(get_fallback(role)));
+    if (!var) var = vars.get(get_highlight_var_name(highlight_role_t::normal));
     if (var) result = parse_color(*var, is_background);
 
     // Handle modifiers.

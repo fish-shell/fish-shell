@@ -194,6 +194,8 @@ class environment_t {
     virtual std::vector<wcstring> get_names(env_mode_flags_t flags) const = 0;
     virtual ~environment_t();
 
+    maybe_t<env_var_t> get_unless_empty(const wcstring &key,
+                                        env_mode_flags_t mode = ENV_DEFAULT) const;
     /// \return a environment variable as a unique pointer, or nullptr if none.
     std::unique_ptr<env_var_t> get_or_null(const wcstring &key,
                                            env_mode_flags_t mode = ENV_DEFAULT) const;

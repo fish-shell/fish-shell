@@ -1204,7 +1204,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
         }
     });
 
-    const bool split_output = !parser.vars().get(L"IFS").missing_or_empty();
+    const bool split_output = parser.vars().get_unless_empty(L"IFS").has_value();
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.

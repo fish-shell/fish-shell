@@ -242,13 +242,6 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     const T &operator*() const { return value(); }
     T &operator*() { return value(); }
 
-    // Helper to replace missing_or_empty() on env_var_t.
-    // Uses SFINAE to only introduce this function if T has an empty() type.
-    template <typename S = T>
-    decltype(S().empty(), bool()) missing_or_empty() const {
-        return !has_value() || value().empty();
-    }
-
     // Compare values for equality.
     bool operator==(const maybe_t &rhs) const {
         if (this->has_value() && rhs.has_value()) return this->value() == rhs.value();

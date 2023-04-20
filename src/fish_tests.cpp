@@ -5746,13 +5746,6 @@ void test_maybe() {
     maybe_t<wcstring> n = none();
     do_test(!bool(n));
 
-    maybe_t<std::string> m2("abc");
-    do_test(!m2.missing_or_empty());
-    m2 = "";
-    do_test(m2.missing_or_empty());
-    m2 = none();
-    do_test(m2.missing_or_empty());
-
     maybe_t<std::string> m0 = none();
     maybe_t<std::string> m3("hi");
     maybe_t<std::string> m4 = m3;

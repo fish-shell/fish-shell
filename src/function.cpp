@@ -111,8 +111,8 @@ static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden)
 
     // TODO: justify this.
     auto &vars = env_stack_t::principal();
-    const auto path_var = vars.get(L"fish_function_path");
-    if (path_var.missing_or_empty()) return;
+    const auto path_var = vars.get_unless_empty(L"fish_function_path");
+    if (!path_var) return;
 
     const std::vector<wcstring> &path_list = path_var->as_list();
 

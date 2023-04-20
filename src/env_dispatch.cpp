@@ -136,11 +136,11 @@ void env_dispatch_init(const environment_t &vars) {
 
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name, const environment_t &vars) {
-    const auto var = vars.get(env_var_name, ENV_DEFAULT);
+    const auto var = vars.get_unless_empty(env_var_name, ENV_DEFAULT);
     FLOGF(env_dispatch, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
-          !var ? L"MISSING" : var->as_string().c_str());
+          !var ? L"MISSING/EMPTY" : var->as_string().c_str());
     std::string name = wcs2zstring(env_var_name);
-    if (var.missing_or_empty()) {
+    if (!var) {
         unsetenv_lock(name.c_str());
     } else {
         const std::string value = wcs2zstring(var->as_string());
@@ -288,8 +288,8 @@ static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
 /// Allow the user to override the limit on how much data the `read` command will process.
 /// This is primarily for testing but could be used by users in special situations.
 static void handle_read_limit_change(const environment_t &vars) {
-    auto read_byte_limit_var = vars.get(L"fish_read_limit");
-    if (!read_byte_limit_var.missing_or_empty()) {
+    auto read_byte_limit_var = vars.get_unless_empty(L"fish_read_limit");
+    if (read_byte_limit_var) {
         size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
         if (errno) {
             FLOGF(warning, "Ignoring fish_read_limit since it is not valid");
@@ -302,7 +302,7 @@ static void handle_read_limit_change(const environment_t &vars) {
 }
 
 static void handle_fish_trace(const environment_t &vars) {
-    trace_set_enabled(!vars.get(L"fish_trace").missing_or_empty());
+    trace_set_enabled(vars.get_unless_empty(L"fish_trace").has_value());
 }
 
 /// Populate the dispatch table used by `env_dispatch_var_change()` to efficiently call the
@@ -454,8 +454,8 @@ static void initialize_curses_using_fallbacks(const environment_t &vars) {
     const wchar_t *const fallbacks[] = {L"xterm-256color", L"xterm", L"ansi", L"dumb"};
 
     wcstring termstr = L"";
-    auto term_var = vars.get(L"TERM");
-    if (!term_var.missing_or_empty()) {
+    auto term_var = vars.get_unless_empty(L"TERM");
+    if (term_var) {
         termstr = term_var->as_string();
     }
 
@@ -541,8 +541,8 @@ static void apply_term_hacks(const environment_t &vars) {
 static const wchar_t *const title_terms[] = {L"xterm", L"screen",    L"tmux",   L"nxterm",
                                              L"rxvt",  L"alacritty", L"wezterm"};
 static bool does_term_support_setting_title(const environment_t &vars) {
-    const auto term_var = vars.get(L"TERM");
-    if (term_var.missing_or_empty()) return false;
+    const auto term_var = vars.get_unless_empty(L"TERM");
+    if (!term_var) return false;
 
     const wcstring term_str = term_var->as_string();
     const wchar_t *term = term_str.c_str();
@@ -569,8 +569,8 @@ static bool does_term_support_setting_title(const environment_t &vars) {
 static void init_curses(const environment_t &vars) {
     for (const auto &var_name : curses_variables) {
         std::string name = wcs2zstring(var_name);
-        const auto var = vars.get(var_name, ENV_EXPORT);
-        if (var.missing_or_empty()) {
+        const auto var = vars.get_unless_empty(var_name, ENV_EXPORT);
+        if (!var) {
             FLOGF(term_support, L"curses var %s missing or empty", name.c_str());
             unsetenv_lock(name.c_str());
         } else {
@@ -583,9 +583,9 @@ static void init_curses(const environment_t &vars) {
     int err_ret{0};
     if (setupterm(nullptr, STDOUT_FILENO, &err_ret) == ERR) {
         if (is_interactive_session()) {
-            auto term = vars.get(L"TERM");
+            auto term = vars.get_unless_empty(L"TERM");
             FLOGF(warning, _(L"Could not set up terminal."));
-            if (term.missing_or_empty()) {
+            if (!term) {
                 FLOGF(warning, _(L"TERM environment variable not set."));
             } else {
                 FLOGF(warning, _(L"TERM environment variable set to '%ls'."),
@@ -619,9 +619,9 @@ static void init_locale(const environment_t &vars) {
     char *old_msg_locale = strdup(setlocale(LC_MESSAGES, nullptr));
 
     for (const auto &var_name : locale_variables) {
-        const auto var = vars.get(var_name, ENV_EXPORT);
+        const auto var = vars.get_unless_empty(var_name, ENV_EXPORT);
         std::string name = wcs2zstring(var_name);
-        if (var.missing_or_empty()) {
+        if (!var) {
             FLOGF(env_locale, L"locale var %s missing or empty", name.c_str());
             unsetenv_lock(name.c_str());
         } else {
@@ -637,8 +637,8 @@ static void init_locale(const environment_t &vars) {
     // A "C" locale is broken for our purposes - any wchar functions will break on it.
     // So we try *really really really hard* to not have one.
     bool fix_locale = true;
-    if (auto allow_c = vars.get(L"fish_allow_singlebyte_locale")) {
-        fix_locale = allow_c.missing_or_empty() ? true : !bool_from_string(allow_c->as_string());
+    if (auto allow_c = vars.get_unless_empty(L"fish_allow_singlebyte_locale")) {
+        fix_locale = !bool_from_string(allow_c->as_string());
     }
     if (fix_locale && MB_CUR_MAX == 1) {
         FLOGF(env_locale, L"Have singlebyte locale, trying to fix");

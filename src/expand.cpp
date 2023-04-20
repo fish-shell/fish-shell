@@ -813,8 +813,8 @@ static void expand_home_directory(wcstring &input, const environment_t &vars) {
         maybe_t<wcstring> home;
         if (username.empty()) {
             // Current users home directory.
-            auto home_var = vars.get(L"HOME");
-            if (home_var.missing_or_empty()) {
+            auto home_var = vars.get_unless_empty(L"HOME");
+            if (!home_var) {
                 input.clear();
                 return;
             }

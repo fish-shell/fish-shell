@@ -455,8 +455,8 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                     val += expand_escape_string(history->item_at_index(i).str());
                 }
             } else {
-                auto var = parser.vars().get(key, compute_scope(opts));
-                if (!var.missing_or_empty()) {
+                auto var = parser.vars().get_unless_empty(key, compute_scope(opts));
+                if (var) {
                     val = expand_escape_variable(*var);
                 }
             }

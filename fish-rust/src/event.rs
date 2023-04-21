@@ -200,7 +200,7 @@ impl From<&EventType> for event_type_t {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EventDescription {
     // TODO: remove the wrapper struct and just put `EventType` where `EventDescription` is now
-    typ: EventType,
+    pub typ: EventType,
 }
 
 impl From<&event_description_t> for EventDescription {
@@ -266,14 +266,14 @@ impl From<&EventDescription> for event_description_t {
 #[derive(Debug)]
 pub struct EventHandler {
     /// Properties of the event to match.
-    desc: EventDescription,
+    pub desc: EventDescription,
     /// Name of the function to invoke.
-    function_name: WString,
+    pub function_name: WString,
     /// A flag set when an event handler is removed from the global list.
     /// Once set, this is never cleared.
-    removed: AtomicBool,
+    pub removed: AtomicBool,
     /// A flag set when an event handler is first fired.
-    fired: AtomicBool,
+    pub fired: AtomicBool,
 }
 
 impl EventHandler {

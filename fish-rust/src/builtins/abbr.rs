@@ -4,7 +4,7 @@ use crate::builtins::shared::{
     builtin_unknown_option, io_streams_t, BUILTIN_ERR_TOO_MANY_ARGUMENTS, STATUS_CMD_ERROR,
     STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
-use crate::common::{escape_string, valid_func_name, EscapeStringStyle};
+use crate::common::{escape, escape_string, valid_func_name, EscapeStringStyle};
 use crate::env::status::{ENV_NOT_FOUND, ENV_OK};
 use crate::env::EnvMode;
 use crate::ffi::parser_t;
@@ -415,7 +415,7 @@ fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
                 result = Some(ENV_NOT_FOUND);
             }
             // Erase the old uvar - this makes `abbr -e` work.
-            let esc_src = escape_string(arg, EscapeStringStyle::Script(Default::default()));
+            let esc_src = escape(arg);
             if !esc_src.is_empty() {
                 let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
                 let ret = parser.remove_var(&var_name, EnvMode::UNIVERSAL.into());

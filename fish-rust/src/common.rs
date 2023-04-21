@@ -141,6 +141,11 @@ bitflags! {
 }
 
 /// Replace special characters with backslash escape sequences. Newline is replaced with `\n`, etc.
+pub fn escape(s: &wstr) -> WString {
+    escape_string(s, EscapeStringStyle::Script(EscapeFlags::default()))
+}
+
+/// Replace special characters with backslash escape sequences. Newline is replaced with `\n`, etc.
 pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
     match style {
         EscapeStringStyle::Script(flags) => escape_string_script(s, flags),

@@ -1,5 +1,5 @@
 use crate::{
-    common::{escape_string, EscapeStringStyle},
+    common::escape,
     ffi::{self, parser_t, wcharz_t, wcstring_list_ffi_t},
     global_safety::RelaxedAtomicBool,
     wchar::{self, wstr, L},
@@ -61,7 +61,7 @@ pub fn trace_argv(parser: &parser_t, command: &wstr, args: &[&wstr]) {
     }
     for arg in args {
         trace_text.push(' ');
-        trace_text.push_utfstr(&escape_string(arg, EscapeStringStyle::default()));
+        trace_text.push_utfstr(&escape(arg));
     }
     trace_text.push('\n');
     ffi::log_extra_to_flog_file(&trace_text.to_ffi());

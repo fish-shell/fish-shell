@@ -751,7 +751,13 @@ pub struct DirIter {
 impl DirIter {
     /// Open a directory at a given path. On failure, \p error() will return the error code.
     /// Note opendir is guaranteed to set close-on-exec by POSIX (hooray).
-    pub fn new(path: &wstr, withdot: bool) -> Self {
+    pub fn new(path: &wstr) -> Self {
+        Self::new_impl(path, false)
+    }
+    pub fn with_dot(path: &wstr) -> Self {
+        Self::new_impl(path, true)
+    }
+    fn new_impl(path: &wstr, withdot: bool) -> Self {
         let mut error = 0;
         let dir = wopendir(path);
         if dir.is_null() {
@@ -769,6 +775,25 @@ impl DirIter {
         }
     }
 
+    /// \return the errno value for the last error, or 0 if none.
+    pub fn error(&self) -> libc::c_int {
+        self.error
+    }
+
+    /// \return if we are valid: successfully opened a directory.
+    pub fn valid(&self) -> bool {
+        !self.dir.is_null()
+    }
+
+    /// \return the underlying file descriptor, or -1 if invalid.
+    pub fn fd(&self) -> RawFd {
+        if self.dir.is_null() {
+            -1
+        } else {
+            unsafe { libc::dirfd(self.dir) }
+        }
+    }
+
     /// Rewind the directory to the beginning.
     pub fn rewind(&mut self) {
         if self.dir.is_null() {
@@ -776,7 +801,7 @@ impl DirIter {
         }
     }
 
-    pub fn next(&mut self) -> Option<&DirEntry> {
+    pub fn next(&mut self) -> Option<&mut DirEntry> {
         if self.dir.is_null() {
             return None;
         }
@@ -816,7 +841,7 @@ impl DirIter {
             self.entry.typ = typ;
         }
 
-        Some(&self.entry)
+        Some(&mut self.entry)
     }
 }
 

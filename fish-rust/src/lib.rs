@@ -7,6 +7,8 @@
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::derivable_impls)]
 #![allow(clippy::option_map_unit_fn)]
+#![allow(clippy::ptr_arg)]
+#![allow(clippy::field_reassign_with_default)]
 
 #[macro_use]
 mod common;

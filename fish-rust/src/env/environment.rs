@@ -460,3 +460,49 @@ pub fn env_init(do_uvars: bool) {
         }
     }
 }
+/// A test environment that knows about PWD.
+// TODO Post-FFI: this should be cfg(test).
+pub mod test {
+    use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
+    use crate::wchar::{wstr, WString};
+    use crate::wutil::wgetcwd;
+    use std::collections::HashMap;
+    use widestring_suffix::widestrs;
+
+    /// An environment built around an std::map.
+    #[derive(Default)]
+    pub struct TestEnvironment {
+        pub vars: HashMap<WString, WString>,
+    }
+    impl Environment for TestEnvironment {
+        fn getf(&self, name: &wstr, mode: EnvMode) -> Option<EnvVar> {
+            self.vars
+                .get(name)
+                .map(|value| EnvVar::new(value.clone(), EnvVarFlags::default()))
+        }
+        fn get_names(&self, flags: EnvMode) -> Vec<WString> {
+            self.vars.keys().cloned().collect()
+        }
+    }
+    #[derive(Default)]
+    pub struct PwdEnvironment {
+        pub parent: TestEnvironment,
+    }
+    #[widestrs]
+    impl Environment for PwdEnvironment {
+        fn getf(&self, name: &wstr, mode: EnvMode) -> Option<EnvVar> {
+            if name == "PWD"L {
+                return Some(EnvVar::new(wgetcwd().unwrap(), EnvVarFlags::default()));
+            }
+            self.parent.getf(name, mode)
+        }
+
+        fn get_names(&self, flags: EnvMode) -> Vec<WString> {
+            let mut res = self.parent.get_names(flags);
+            if !res.iter().any(|n| n == "PWD"L) {
+                res.push("PWD"L.to_owned());
+            }
+            res
+        }
+    }
+}

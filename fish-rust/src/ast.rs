@@ -1952,6 +1952,9 @@ impl ArgumentOrRedirectionVariant {
     pub fn typ(&self) -> Type {
         self.embedded_node().typ()
     }
+    pub fn try_source_range(&self) -> Option<SourceRange> {
+        self.embedded_node().try_source_range()
+    }
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             ArgumentOrRedirectionVariant::Argument(node) => node,
@@ -2045,6 +2048,9 @@ impl StatementVariant {
     pub fn typ(&self) -> Type {
         self.embedded_node().typ()
     }
+    pub fn try_source_range(&self) -> Option<SourceRange> {
+        self.embedded_node().try_source_range()
+    }
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             StatementVariant::None => panic!("cannot visit null statement"),
@@ -2128,6 +2134,9 @@ impl AcceptorMut for BlockStatementHeaderVariant {
 impl BlockStatementHeaderVariant {
     pub fn typ(&self) -> Type {
         self.embedded_node().typ()
+    }
+    pub fn try_source_range(&self) -> Option<SourceRange> {
+        self.embedded_node().try_source_range()
     }
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {

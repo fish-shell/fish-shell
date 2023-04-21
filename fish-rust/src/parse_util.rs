@@ -1166,15 +1166,9 @@ macro_rules! append_syntax_error {
         $(, $arg:expr)* $(,)?
     ) => {
         {
-            if let Some(ref mut errors) = $errors {
-                let mut error = ParseError::default();
-                error.source_start = $source_location;
-                error.source_length = $source_length;
-                error.code = ParseErrorCode::syntax;
-                error.text = wgettext_fmt!($fmt $(, $arg)*);
-                errors.push(error);
-            }
-            true
+            append_syntax_error_formatted!(
+                $errors, $source_location, $source_length,
+                wgettext_fmt!($fmt $(, $arg)*))
         }
     }
 }

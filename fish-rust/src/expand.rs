@@ -1596,3 +1596,82 @@ impl<'a, 'b> Expander<'a, 'b> {
         }
     }
 }
+
+crate::ffi_tests::add_test!("test_expand", || {
+    if true {
+        return;
+    }
+    use crate::env::test::PwdEnvironment;
+    use crate::expand::ExpandResultCode;
+    use crate::operation_context::{no_cancel, EXPANSION_LIMIT_DEFAULT};
+    use crate::parser::Parser;
+    use std::collections::HashSet;
+
+    /// Perform parameter expansion and test if the output equals the zero-terminated parameter list
+    /// supplied.
+    ///
+    /// \param in the string to expand
+    /// \param flags the flags to send to expand_string
+    /// \param ... A zero-terminated parameter list of values to test.
+    /// After the zero terminator comes one more arg, a string, which is the error
+    /// message to print if the test fails.
+    fn expand_test(input: &wstr, flags: ExpandFlags, expected: Vec<WString>, failure_msg: &wstr) {
+        let mut output = CompletionList::new();
+        let mut res = true;
+        let mut errors = ParseErrorList::new();
+        let mut pwd = PwdEnvironment::default();
+        let ctx = OperationContext::with_cancel_checker(
+            Parser::principal_parser().shared(),
+            &pwd,
+            &no_cancel,
+            EXPANSION_LIMIT_DEFAULT,
+        );
+
+        if expand_string(
+            input.to_owned(),
+            &mut output,
+            flags,
+            &ctx,
+            Some(&mut errors),
+        ) == ExpandResultCode::error
+        {
+            if errors.is_empty() {
+                panic!("Bug: Parse error reported but no error text found.");
+            } else {
+                panic!(
+                    "{}",
+                    errors[0].describe(
+                        input,
+                        ctx.parser
+                            .as_ref()
+                            .unwrap()
+                            .read()
+                            .unwrap()
+                            .is_interactive()
+                    )
+                );
+            }
+        }
+        let expected: HashSet<WString> = expected.into_iter().collect();
+        let actual: HashSet<WString> = output.into_iter().map(|comp| comp.completion).collect();
+        assert_eq!(expected, actual, "{}", failure_msg);
+    }
+    macro_rules! validate {
+        ( $input:literal, $flags:expr $(, $expected:literal )*, wnull, $failure_msg:literal) => {
+            expand_test(
+                L!($input), $flags, vec![$( L!($expected).to_owned(), )*],
+                L!($failure_msg));
+        }
+    }
+
+    let noflags = ExpandFlags::default();
+
+    validate!(
+        "foo",
+        noflags,
+        "foo",
+        wnull,
+        "Strings do not expand to themselves"
+    );
+    todo!()
+});

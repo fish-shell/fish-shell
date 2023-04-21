@@ -101,9 +101,9 @@ impl From<TokenizerError> for ParseErrorCode {
 
 /// A type wrapping up a parse tree and the original source behind it.
 pub struct ParsedSource {
-    src: WString,
+    pub src: WString,
     src_ffi: UniquePtr<CxxWString>,
-    ast: Ast,
+    pub ast: Ast,
 }
 
 impl ParsedSource {

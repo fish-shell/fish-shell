@@ -1959,6 +1959,7 @@ complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_unique_
 complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command switch' -s c -l create -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command switch' -s C -l force-create -d 'Force create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -rka '(__fish_git_recent_commits --all)'
 complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -d 'Switch to a commit for inspection and discardable experiment' -rka '(__fish_git_refs)'
 complete -f -c git -n '__fish_git_using_command switch' -l guess -d 'Guess branch name from remote branch (default)'
 complete -f -c git -n '__fish_git_using_command switch' -l no-guess -d 'Do not guess branch name from remote branch'

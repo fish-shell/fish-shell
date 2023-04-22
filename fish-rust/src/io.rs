@@ -37,8 +37,8 @@ pub enum SeparationType {
 }
 
 pub struct BufferElement {
-    contents: Vec<u8>,
-    separation: SeparationType,
+    pub contents: Vec<u8>,
+    pub separation: SeparationType,
 }
 
 impl BufferElement {

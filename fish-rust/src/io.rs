@@ -15,7 +15,10 @@ use crate::topic_monitor::topic_t;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
-use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDERR_FILENO};
+use libc::{
+    EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDERR_FILENO,
+    STDOUT_FILENO,
+};
 use std::cell::UnsafeCell;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard};
 use std::{os::fd::RawFd, rc::Rc};
@@ -168,7 +171,7 @@ impl SeparatedBuffer {
 }
 
 /// Describes what type of IO operation an io_data_t represents.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum IoMode {
     file,
     pipe,
@@ -189,6 +192,9 @@ pub trait IoData {
     fn print(&self);
     // The address of the object, for comparison.
     fn as_ptr(&self) -> *const ();
+    fn as_bufferfill(&self) -> Option<&IoBufferfill> {
+        None
+    }
 }
 
 pub struct IoClose {
@@ -333,9 +339,14 @@ pub struct IoBufferfill {
 impl IoBufferfill {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
+    pub fn create() -> Option<Rc<IoBufferfill>> {
+        Self::create_opts(0, STDOUT_FILENO)
+    }
+    /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
+    /// \returns nullptr on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
-    pub fn create(buffer_limit: usize, target: RawFd) -> Option<Rc<IoBufferfill>> {
+    pub fn create_opts(buffer_limit: usize, target: RawFd) -> Option<Rc<IoBufferfill>> {
         assert!(target >= 0, "Invalid target fd");
 
         // Construct our pipes.
@@ -359,13 +370,17 @@ impl IoBufferfill {
         }))
     }
 
+    pub fn the_buffer(&self) -> &Arc<RwLock<IoBuffer>> {
+        &self.buffer
+    }
+
     pub fn buffer(&self) -> RwLockReadGuard<'_, IoBuffer> {
         self.buffer.read().unwrap()
     }
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. \return the buffer.
-    pub fn finish(filler: IoBufferfill) -> SeparatedBuffer {
+    pub fn finish(filler: Rc<IoBufferfill>) -> SeparatedBuffer {
         // The io filler is passed in. This typically holds the only instance of the write side of the
         // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
         // buffer out of the bufferfill and clear the shared_ptr; this will typically widow the pipe.
@@ -397,6 +412,9 @@ impl IoData for IoBufferfill {
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
+    }
+    fn as_bufferfill(&self) -> Option<&IoBufferfill> {
+        Some(self)
     }
 }
 
@@ -584,15 +602,16 @@ fn begin_filling(iobuffer: &mut Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
 
 pub type IoDataRef = Rc<dyn IoData>;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct IoChain(pub Vec<IoDataRef>);
 
 impl IoChain {
     pub fn new() -> Self {
         Default::default()
     }
-    pub fn remove(&mut self, element: &IoDataRef) {
-        let element = Rc::as_ptr(element) as *const ();
+    pub fn remove(&mut self, element: &dyn IoData) {
+        let element = element as *const _;
+        let element = element as *const ();
         self.0.retain(|e| {
             let e = Rc::as_ptr(e) as *const ();
             !std::ptr::eq(e, element)
@@ -776,6 +795,11 @@ pub trait OutputStream {
 /// A null output stream which ignores all writes.
 pub struct NullOutputStream {}
 
+impl NullOutputStream {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 impl OutputStream for NullOutputStream {
     fn append(&mut self, _s: &wstr) -> bool {
         true
@@ -844,6 +868,11 @@ impl OutputStream for FdOutputStream {
 #[derive(Default)]
 pub struct StringOutputStream {
     contents: WString,
+}
+impl StringOutputStream {
+    pub fn new() -> Self {
+        Default::default()
+    }
 }
 impl OutputStream for StringOutputStream {
     fn append(&mut self, s: &wstr) -> bool {
@@ -914,12 +943,12 @@ pub struct IoStreams<'a> {
     pub err_is_redirected: bool,
 
     // Actual IO redirections. This is only used by the source builtin. Unowned.
-    io_chain: *const IoChain,
+    pub io_chain: *const IoChain,
 
     // The job group of the job, if any. This enables builtins which run more code like eval() to
     // share pgid.
     // FIXME: this is awkwardly placed.
-    job_group: Option<JobGroupRef>,
+    pub job_group: Option<JobGroupRef>,
 }
 
 impl<'a> IoStreams<'a> {

@@ -1634,6 +1634,13 @@ pub fn restore_term_foreground_process_group_for_exit() {
     }
 }
 
+fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
+    a.windows(b.len()).any(|aw| aw == b)
+}
+
+#[cfg(target_os = "linux")]
+static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: once_cell::race::OnceBool = once_cell::race::OnceBool::new();
+
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
@@ -1642,55 +1649,61 @@ pub fn is_windows_subsystem_for_linux() -> bool {
     // overhead since there's no actual race condition here - even if multiple threads call this
     // routine simultaneously the first time around, we just end up needlessly querying uname(2) one
     // more time.
-    *IS_WINDOWS_SUBSYSTEM_FOR_LINUX
-}
-
-fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
-    a.windows(b.len()).any(|aw| aw == b)
-}
-
-#[cfg(not(windows))]
-static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: Lazy<bool> = Lazy::new(|| false);
-#[cfg(windows)]
-static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: Lazy<bool> = Lazy::new(|| {
-    let mut info: libc::utsname = unsafe { mem::zeroed() };
-    unsafe {
-        libc::uname(&mut info);
-    }
-
-    // Sample utsname.release under WSL, testing for something like `4.4.0-17763-Microsoft`
-    if !slice_contains_slice(&info.release, b"Microsoft") {
-        return false;
-    }
-    let dash = info.release.iter().position('-');
-
-    if dash
-        .map(|d| unsafe { libc::strtod(&info.release[d + 1], std::ptr::null()) } >= 17763)
-        .unwrap_or(false)
+    #[cfg(not(target_os = "linux"))]
     {
-        return false;
+        false
     }
 
-    // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
-    // job control under early WSL releases that prevent fish from running correctly,
-    // with unexpected failures when piping. Fish 3.0 nightly builds worked around this
-    // issue with some needlessly complicated code that was later stripped from the
-    // fish 3.0 release, so we just bail. Note that fish 2.0 was also broken, but we
-    // just didn't warn about it.
+    #[cfg(target_os = "linux")]
+    IS_WINDOWS_SUBSYSTEM_FOR_LINUX.get_or_init(|| {
+        let mut info: libc::utsname = unsafe { mem::zeroed() };
+        let release: &[u8] = unsafe {
+            libc::uname(&mut info);
+            std::mem::transmute(&info.release[..])
+        };
 
-    // #6038 & 5101bde: It's been requested that there be some sort of way to disable
-    // this check: if the environment variable FISH_NO_WSL_CHECK is present, this test
-    // is bypassed. We intentionally do not include this in the error message because
-    // it'll only allow fish to run but not to actually work. Here be dragons!
-    if env::var("FISH_NO_WSL_CHECK") == Err(env::VarError::NotPresent) {
-        FLOG!(
-            error,
-            "This version of WSL has known bugs that prevent fish from working.\
-                    Please upgrade to Windows 10 1809 (17763) or higher to use fish!"
-        );
-    }
-    true;
-});
+        // Sample utsname.release under WSL, testing for something like `4.4.0-17763-Microsoft`
+        if !slice_contains_slice(release, b"Microsoft") {
+            return false;
+        }
+
+        let release: Vec<_> = release
+            .iter()
+            .skip_while(|c| **c != b'-')
+            .skip(1) // the dash itself
+            .take_while(|c| c.is_ascii_digit())
+            .copied()
+            .collect();
+        let build: Result<u32, _> = std::str::from_utf8(&release).unwrap().parse();
+        match build {
+            Ok(17763..) => return true,
+            Ok(_) => (),       // handled below
+            _ => return false, // if parsing fails, assume this isn't WSL
+        };
+
+        // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
+        // job control under early WSL releases that prevent fish from running correctly,
+        // with unexpected failures when piping. Fish 3.0 nightly builds worked around this
+        // issue with some needlessly complicated code that was later stripped from the
+        // fish 3.0 release, so we just bail. Note that fish 2.0 was also broken, but we
+        // just didn't warn about it.
+
+        // #6038 & 5101bde: It's been requested that there be some sort of way to disable
+        // this check: if the environment variable FISH_NO_WSL_CHECK is present, this test
+        // is bypassed. We intentionally do not include this in the error message because
+        // it'll only allow fish to run but not to actually work. Here be dragons!
+        if env::var("FISH_NO_WSL_CHECK") == Err(env::VarError::NotPresent) {
+            crate::flog::FLOG!(
+                error,
+                concat!(
+                    "This version of WSL has known bugs that prevent fish from working.\n",
+                    "Please upgrade to Windows 10 1809 (17763) or higher to use fish!"
+                )
+            );
+        }
+        true
+    })
+}
 
 /// Return true if the character is in a range reserved for fish's private use.
 ///

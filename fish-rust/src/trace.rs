@@ -49,7 +49,7 @@ fn trace_argv_ffi(parser: &parser_t, command: wcharz_t, args: &wcstring_list_ffi
     trace_argv(parser, command.as_utfstr(), &args_ref);
 }
 
-pub fn trace_argv(parser: &parser_t, command: &wstr, args: &[&wstr]) {
+pub fn trace_argv<S: AsRef<wstr>>(parser: &parser_t, command: &wstr, args: &[S]) {
     // Format into a string to prevent interleaving with flog in other threads.
     // Add the + prefix.
     let mut trace_text = L!("-").repeat(parser.blocks_size() - 1);
@@ -61,14 +61,14 @@ pub fn trace_argv(parser: &parser_t, command: &wstr, args: &[&wstr]) {
     }
     for arg in args {
         trace_text.push(' ');
-        trace_text.push_utfstr(&escape(arg));
+        trace_text.push_utfstr(&escape(arg.as_ref()));
     }
     trace_text.push('\n');
     ffi::log_extra_to_flog_file(&trace_text.to_ffi());
 }
 
 /// Convenience helper to trace a single string if tracing is enabled.
-pub fn trace_if_enabled(parser: &parser_t, command: &wstr, args: &[&wstr]) {
+pub fn trace_if_enabled<S: AsRef<wstr>>(parser: &parser_t, command: &wstr, args: &[S]) {
     if trace_enabled(parser) {
         trace_argv(parser, command, args);
     }

@@ -10,12 +10,13 @@ function fish_add_path --description "Add paths to the PATH"
     # --global or --universal to decide whether to use a universal or global fish_user_paths
     # --path to set $PATH instead
     # --move to move existing entries instead of ignoring them
+    # --remove to remove existing entries
     # --verbose to print the set-command used
     # --dry-run to print the set-command without running it
     # We do not allow setting $PATH universally.
     #
     # It defaults to keeping $fish_user_paths or creating a universal, prepending and ignoring existing entries.
-    argparse -x g,U -x P,U -x a,p g/global U/universal P/path p/prepend a/append h/help m/move v/verbose n/dry-run -- $argv
+    argparse -x g,U -x P,U -x a,p -x m,r g/global U/universal P/path p/prepend a/append h/help m/move r/remove v/verbose n/dry-run -- $argv
     or return
 
     if set -q _flag_help
@@ -46,8 +47,8 @@ function fish_add_path --description "Add paths to the PATH"
         # realpath complains if a parent directory does not exist, so we silence stderr.
         set -l p (builtin realpath -s -- $path 2>/dev/null)
 
-        # Ignore non-existing paths
-        if not test -d "$p"
+        # Ignore non-existent paths if not in remove mode.
+        if not test -d "$p"; and not set -q _flag_remove
             # path does not exist
             if set -q _flag_verbose
                 # print a message in verbose mode
@@ -62,16 +63,28 @@ function fish_add_path --description "Add paths to the PATH"
                 set -a indexes $ind
                 set -a newpaths $p
             end
+            # In remove-mode, we simply remove it.
+            if set -q _flag_remove
+                set -a indexes $ind
+            end
         else if not contains -- $p $newpaths
-            # Without move, we only add it if it's not in.
-            set -a newpaths $p
+            if set -q _flag_remove
+                # Never add path in remove mode.
+                if set -q _flag_verbose
+                    # Verbose message for removing.
+                    printf (_ "Not found: %s\n") "$p"
+                end
+            else
+                # Without move, we only add it if it's not in.
+                set -a newpaths $p
+            end
         end
     end
 
     # Ensure the variable is only set once, by constructing a new variable before.
     # This is to stop any handlers or anything from firing more than once.
     set -l newvar $$var
-    if set -q _flag_move; and set -q indexes[1]
+    if set -q _flag_move; and set -q indexes[1]; or set -q _flag_remove
         # We remove in one step, so the indexes don't move.
         set -e newvar["$indexes"]
     end

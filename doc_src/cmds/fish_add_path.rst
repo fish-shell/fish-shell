@@ -10,7 +10,7 @@ Synopsis
 .. synopsis::
 
     fish_add_path path ...
-    fish_add_path [(-g | --global) | (-U | --universal) | (-P | --path)] [(-m | --move)] [(-a | --append) | (-p | --prepend)] [(-v | --verbose) | (-n | --dry-run)] PATHS ...
+    fish_add_path [(-g | --global) | (-U | --universal) | (-P | --path)] [(-m | --move) | (-r | --remove)] [(-a | --append) | (-p | --prepend)] [(-v | --verbose) | (-n | --dry-run)] PATHS ...
 
 
 Description
@@ -51,6 +51,9 @@ Options
 **-m** or **--move**
     Move already-existing components to the place they would be added - by default they would be left in place and not added again.
 
+**-r** or **--remove**
+    Remove existing components. This option is a footgun for anything other than cleaning :envvar:`fish_user_paths`.
+
 **-v** or **--verbose**
     Print the :doc:`set <set>` command used.
 
@@ -73,6 +76,11 @@ Example
    # It is at /opt/mycoolthing/bin/mycoolthing,
    # so let's add the directory: /opt/mycoolthing/bin.
    > fish_add_path /opt/mycoolthing/bin
+
+   # I want to remove the path to mycoolthing.
+   # This is the only sensible use case of -r,
+   # because removing paths from an inherited $PATH is an anti-pattern.
+   > fish_add_path -r /opt/mycoolthing/bin
 
    # I want my ~/.local/bin to be checked first,
    # even if it was already added.

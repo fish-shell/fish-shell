@@ -26,7 +26,7 @@ use widestring_suffix::widestrs;
 #[derive(Clone, Default)]
 pub struct FunctionProperties {
     /// Parsed source containing the function.
-    pub parsed_source: ParsedSourceRef,
+    pub parsed_source: Option<ParsedSourceRef>,
 
     /// Node containing the function statement, pointing into parsed_source.
     /// We store block_statement, not job_list, so that comments attached to the header are

@@ -29,7 +29,6 @@ struct callback_data_t {
     /// \return whether this callback represents an erased variable.
     bool is_erase() const { return !val.has_value(); }
 };
-
 using callback_data_list_t = std::vector<callback_data_t>;
 
 /// Wrapper type for ffi purposes.
@@ -45,6 +44,20 @@ struct env_universal_sync_result_t {
     size_t count() const { return list.size(); }
     const wcstring &get_key(size_t idx) const { return list.at(idx).key; }
     bool get_is_erase(size_t idx) const { return list.at(idx).is_erase(); }
+};
+
+/// FFI helper to import our var_table into Rust.
+/// Parallel names of strings and environment variables.
+struct var_table_ffi_t {
+    std::vector<wcstring> names;
+    std::vector<env_var_t> vars;
+
+    size_t count() const { return names.size(); }
+    const wcstring &get_name(size_t idx) const { return names.at(idx); }
+    const env_var_t &get_var(size_t idx) const { return vars.at(idx); }
+
+    explicit var_table_ffi_t(const var_table_t &table);
+    ~var_table_ffi_t();
 };
 
 // List of fish universal variable formats.
@@ -89,6 +102,7 @@ class env_universal_t {
 
     /// Get a view on the universal variable table.
     const var_table_t &get_table() const { return vars; }
+    var_table_ffi_t get_table_ffi() const { return var_table_ffi_t(vars); }
 
     /// Initialize this uvars for the default path.
     /// This should be called at most once on any given instance.
@@ -97,6 +111,19 @@ class env_universal_t {
     /// Initialize a this uvars for a given path.
     /// This is exposed for testing only.
     void initialize_at_path(callback_data_list_t &callbacks, wcstring path);
+
+    /// FFI helpers.
+    env_universal_sync_result_t initialize_ffi() {
+        env_universal_sync_result_t res{};
+        initialize(res.list);
+        return res;
+    }
+
+    env_universal_sync_result_t initialize_at_path_ffi(wcstring path) {
+        env_universal_sync_result_t res{};
+        initialize_at_path(res.list, std::move(path));
+        return res;
+    }
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.

@@ -253,7 +253,7 @@ impl EnvVar {
     }
 
     /// Returns flags for a variable with the given name.
-    fn flags_for(name: &wstr) -> EnvVarFlags {
+    pub fn flags_for(name: &wstr) -> EnvVarFlags {
         let mut result = EnvVarFlags::empty();
         if is_read_only(name) {
             result.insert(EnvVarFlags::READ_ONLY);

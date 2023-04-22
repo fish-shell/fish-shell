@@ -153,6 +153,10 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     result
 }
 
+pub fn iothread_perform_cantwait(f: impl FnOnce()) {
+    todo!()
+}
+
 #[test]
 /// Verify that spawing a thread normally via [`std::thread::spawn()`] causes the calling thread's
 /// sigmask to be inherited by the newly spawned thread.

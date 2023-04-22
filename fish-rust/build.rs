@@ -11,6 +11,14 @@ fn main() -> miette::Result<()> {
         println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");
     }
 
+    if cc::Build::new()
+        .file("src/cfg/spawn.c")
+        .try_compile("/dev/null")
+        .is_ok()
+    {
+        println!("cargo:rustc-cfg=FISH_USE_POSIX_SPAWN");
+    }
+
     let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
     let target_dir =
         std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));

@@ -1334,7 +1334,7 @@ impl EnvStack {
     }
 
     /// Returns an array containing all exported variables in a format suitable for execv.
-    fn export_arr(&self) -> Arc<OwningNullTerminatedArray> {
+    pub fn export_arr(&self) -> Arc<OwningNullTerminatedArray> {
         self.acquire_impl().base.export_array()
     }
 }
@@ -1374,6 +1374,9 @@ impl EnvStack {
     }
     pub fn globals() -> &'static dyn Environment {
         &**GLOBALS
+    }
+    pub fn set_argv(&mut self, argv: Vec<WString>) {
+        self.set(L!("argv"), EnvMode::LOCAL, argv);
     }
 }
 

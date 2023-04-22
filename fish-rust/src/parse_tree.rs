@@ -113,7 +113,7 @@ impl ParsedSource {
     }
 }
 
-pub type ParsedSourceRef = Option<Rc<ParsedSource>>;
+pub type ParsedSourceRef = Rc<ParsedSource>;
 
 /// Return a shared pointer to ParsedSource, or null on failure.
 /// If parse_flag_continue_after_error is not set, this will return null on any error.
@@ -121,7 +121,7 @@ pub fn parse_source(
     src: WString,
     flags: ParseTreeFlags,
     errors: Option<&mut ParseErrorList>,
-) -> ParsedSourceRef {
+) -> Option<ParsedSourceRef> {
     let ast = Ast::parse(&src, flags, errors);
     if ast.errored() && !(flags & PARSE_FLAG_CONTINUE_AFTER_ERROR) {
         None
@@ -130,7 +130,7 @@ pub fn parse_source(
     }
 }
 
-struct ParsedSourceRefFFI(pub ParsedSourceRef);
+struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
 
 #[cxx::bridge]
 mod parse_tree_ffi {

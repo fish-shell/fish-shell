@@ -443,10 +443,29 @@ lazy_static! {
     static ref GLOBAL_NODE: EnvNodeRef = EnvNodeRef::new(false, None);
 }
 
+/// Recursive helper to snapshot a series of nodes.
+fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
+    let next = match node.next() {
+        Some(ref next) => Some(copy_node_chain(next)),
+        None => None,
+    };
+    let node = node.borrow();
+    let env = node.env.clone();
+    let export_gen = node.export_gen;
+    let new_scope = node.new_scope;
+    let new_node = EnvNode {
+        env,
+        export_gen,
+        new_scope,
+        next,
+    };
+    EnvNodeRef(Arc::new(RefCell::new(new_node)))
+}
+
 /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
 /// different fish internal processes.
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct PerprocData {
     pwd: WString,
     statuses: Statuses,
@@ -682,6 +701,17 @@ impl EnvScopedImpl {
             pwd.push('/');
         }
         pwd
+    }
+
+    /// Return a copy of self, with copied locals but shared globals.
+    fn snapshot(&self) -> Self {
+        EnvScopedImpl {
+            locals: self.locals.clone(),
+            globals: copy_node_chain(&self.globals),
+            perproc_data: self.perproc_data.clone(),
+            export_array: None,
+            export_array_generations: Vec::new(),
+        }
     }
 }
 
@@ -1269,6 +1299,33 @@ impl EnvStackImpl {
     }
 }
 
+/// An immutable environment, used in snapshots.
+pub struct EnvScoped {
+    /// The implementation.
+    /// Do not access this directly; use the acquire_impl_*() functions which take the global lock.
+    _impl: UnsafeCell<EnvScopedImpl>,
+}
+
+impl EnvScoped {
+    fn from_impl(imp: EnvScopedImpl) -> EnvScoped {
+        EnvScoped {
+            _impl: UnsafeCell::new(imp),
+        }
+    }
+
+    /// All environment stacks are guarded by a global lock.
+    fn acquire_impl(&self) -> EnvLockGuard<EnvScopedImpl> {
+        let guard = ENV_LOCK.lock().unwrap();
+        // Safety: we have the global lock.
+        let value = unsafe { &mut *self._impl.get() };
+        EnvLockGuard {
+            guard,
+            value,
+            _phantom: PhantomData,
+        }
+    }
+}
+
 /// A mutable environment which allows scopes to be pushed and popped.
 /// This backs the parser's "vars".
 pub struct EnvStack {
@@ -1392,6 +1449,15 @@ impl EnvStack {
         self.acquire_impl().base.export_array()
     }
 
+    /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
+    /// but globals are shared (i.e. changes to global will be visible to this snapshot).
+    fn snapshot(&self) -> EnvDyn {
+        let scoped = EnvScoped::from_impl(self.acquire_impl().base.snapshot());
+        EnvDyn {
+            inner: Box::new(scoped) as Box<dyn Environment>,
+        }
+    }
+
     /// Synchronizes universal variable changes.
     /// If \p always is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
@@ -1431,11 +1497,26 @@ impl EnvStack {
 }
 
 /// Safety: EnvStack and the rest are safe for sharing across threads, because of the global lock.
+unsafe impl Sync for EnvScoped {}
 unsafe impl Sync for EnvStack {}
 unsafe impl Sync for EnvStackImpl {}
 unsafe impl Sync for EnvScopedImpl {}
 unsafe impl Sync for EnvNodeRef {}
 unsafe impl Sync for EnvNode {}
+
+impl Environment for EnvScoped {
+    fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
+        self.acquire_impl().getf(key, mode)
+    }
+
+    fn get_names(&self, flags: EnvMode) -> Vec<WString> {
+        self.acquire_impl().get_names(flags)
+    }
+
+    fn get_pwd_slash(&self) -> WString {
+        self.acquire_impl().get_pwd_slash()
+    }
+}
 
 /// Necessary for Arc<EnvStack> to be sync.
 /// Safety: again, the global lock.

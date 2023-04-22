@@ -19,6 +19,11 @@ impl NulTerminatedString for CStr {
     }
 }
 
+pub trait AsNullTerminatedArray {
+    type CharType;
+    fn get(&self) -> *mut *const Self::CharType;
+}
+
 /// This supports the null-terminated array of NUL-terminated strings consumed by exec.
 /// Given a list of strings, construct a vector of pointers to those strings contents.
 /// This is used for building null-terminated arrays of null-terminated strings.
@@ -27,7 +32,8 @@ pub struct NullTerminatedArray<'p, T: NulTerminatedString + ?Sized> {
     _phantom: PhantomData<&'p T>,
 }
 
-impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
+impl<'p, Str: NulTerminatedString + ?Sized> AsNullTerminatedArray for NullTerminatedArray<'p, Str> {
+    type CharType = Str::CharType;
     /// Return the list of pointers, appropriate for envp or argv.
     /// Note this returns a mutable array of const strings. The caller may rearrange the strings but
     /// not modify their contents.
@@ -41,7 +47,8 @@ impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
         );
         self.pointers.as_ptr() as *mut *const Str::CharType
     }
-
+}
+impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
     /// Construct from a list of "strings".
     /// This holds pointers into the strings.
     pub fn new<S: AsRef<Str>>(strs: &'p [S]) -> Self {
@@ -67,12 +74,15 @@ pub struct OwningNullTerminatedArray {
     null_terminated_array: NullTerminatedArray<'static, CStr>,
 }
 
-impl OwningNullTerminatedArray {
+impl AsNullTerminatedArray for OwningNullTerminatedArray {
+    type CharType = c_char;
     /// Cover over null_terminated_array.get().
     fn get(&self) -> *mut *const c_char {
         self.null_terminated_array.get()
     }
+}
 
+impl OwningNullTerminatedArray {
     /// Construct, taking ownership of a list of strings.
     pub fn new(strs: Vec<CString>) -> Self {
         let strings = strs.into_boxed_slice();

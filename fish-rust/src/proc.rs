@@ -35,9 +35,8 @@ use std::ffi::CString;
 use std::fs;
 use std::io::{Read, Write};
 use std::os::fd::RawFd;
-use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
-use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard};
+use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use widestring_suffix::widestrs;
 
 /// Types of processes.
@@ -502,7 +501,7 @@ pub struct Process {
 
     /// For internal block processes only, the node of the statement.
     /// This is always either block, ifs, or switchs, never boolean or decorated.
-    pub block_node_source: ParsedSourceRef,
+    pub block_node_source: Option<ParsedSourceRef>,
     pub internal_block_node: Option<std::ptr::NonNull<ast::Statement>>,
 
     /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
@@ -518,7 +517,7 @@ pub struct Process {
     pub pid: libc::pid_t,
 
     /// If we are an "internal process," that process.
-    pub internal_proc: Option<Rc<InternalProc>>,
+    pub internal_proc: Option<Arc<RwLock<InternalProc>>>,
 
     /// File descriptor that pipe output should bind to.
     pub pipe_write_fd: RawFd,
@@ -719,6 +718,10 @@ impl Job {
 
     pub fn group(&self) -> RwLockReadGuard<'_, JobGroup> {
         self.group.as_ref().unwrap().read().unwrap()
+    }
+
+    pub fn group_mut(&self) -> RwLockWriteGuard<'_, JobGroup> {
+        self.group.as_ref().unwrap().write().unwrap()
     }
 
     /// Returns the command.
@@ -1359,18 +1362,36 @@ fn process_mark_finished_children(parser: &mut Parser, block_ok: bool) {
             proc.gens.internal_exit = reapgens.internal_exit;
 
             // Has the process exited?
-            if !proc.internal_proc.as_ref().unwrap().exited() {
+            if !proc
+                .internal_proc
+                .as_ref()
+                .unwrap()
+                .read()
+                .unwrap()
+                .exited()
+            {
                 continue;
             }
 
             // The process gets the status from its internal proc.
-            let status = proc.internal_proc.as_ref().unwrap().get_status();
+            let status = proc
+                .internal_proc
+                .as_ref()
+                .unwrap()
+                .read()
+                .unwrap()
+                .get_status();
             handle_child_status(&j.read().unwrap(), &mut *proc, status);
             FLOGF!(
                 proc_reap_internal,
                 "Reaped internal process '%ls' (id %llu, status %d)",
                 proc.argv0().unwrap(),
-                proc.internal_proc.as_ref().unwrap().get_id(),
+                proc.internal_proc
+                    .as_ref()
+                    .unwrap()
+                    .read()
+                    .unwrap()
+                    .get_id(),
                 proc.status.status_value(),
             );
         }

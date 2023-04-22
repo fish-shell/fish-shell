@@ -1,3 +1,4 @@
+#include <paths.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <term.h>
@@ -21,3 +22,5 @@ uint64_t C_MNT_LOCAL() {
     return 0;
 #endif
 }
+
+const char* C_PATH_BSHELL() { return _PATH_BSHELL; }

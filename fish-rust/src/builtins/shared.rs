@@ -1,5 +1,8 @@
 use crate::builtins::{printf, wait};
 use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
+use crate::io::IoStreams;
+use crate::parser::Parser;
+use crate::proc::ProcStatus;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{c_str, empty_wstring, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
@@ -157,6 +160,10 @@ fn rust_run_builtin(
             true
         }
     }
+}
+
+pub fn builtin_run<S: AsRef<wstr>>(parser: &Parser, args: &[S], streams: &IoStreams) -> ProcStatus {
+    todo!()
 }
 
 pub fn run_builtin(

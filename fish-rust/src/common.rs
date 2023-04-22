@@ -947,7 +947,7 @@ pub const fn char_offset(base: char, offset: u32) -> char {
 }
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
-pub fn exit_without_destructors(code: i32) -> ! {
+pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
 }
 

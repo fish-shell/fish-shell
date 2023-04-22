@@ -67,6 +67,7 @@ mod parser;
 mod parser_keywords;
 mod path;
 mod pointer;
+mod postfork;
 mod proc;
 mod re;
 mod reader;

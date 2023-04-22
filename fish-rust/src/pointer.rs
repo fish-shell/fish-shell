@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
-// Raw pointer that implements Refault.
+/// Raw pointer that implements Default.
+/// Additionally it implements Deref so it's more ergonomic than Option<std::ptr::NonNull>.
 pub struct ConstPointer<T>(*const T);
 
 impl<T> Default for ConstPointer<T> {
@@ -19,6 +20,7 @@ impl<T> Deref for ConstPointer<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
+        assert!(!self.0.is_null());
         unsafe { &*self.0 }
     }
 }

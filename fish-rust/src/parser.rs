@@ -160,20 +160,30 @@ pub struct StatusVars {
 }
 
 /// The result of parser_t::eval family.
+#[derive(Default)]
 pub struct EvalRes {
     /// The value for $status.
-    status: ProcStatus,
+    pub status: ProcStatus,
 
     /// If set, there was an error that should be considered a failed expansion, such as
     /// command-not-found. For example, `touch (not-a-command)` will not invoke 'touch' because
     /// command-not-found will mark break_expand.
-    break_expand: bool,
+    pub break_expand: bool,
 
     /// If set, no commands were executed and there we no errors.
-    was_empty: bool,
+    pub was_empty: bool,
 
     /// If set, no commands produced a $status value.
-    no_status: bool,
+    pub no_status: bool,
+}
+
+impl EvalRes {
+    pub fn new(status: ProcStatus) -> Self {
+        Self {
+            status,
+            ..Default::default()
+        }
+    }
 }
 
 pub enum ParserStatusVar {
@@ -296,7 +306,7 @@ impl Parser {
     /// The node type must be ast_t::statement_t or ast::job_list_t.
     pub fn eval_node<T: Node>(
         &mut self,
-        ps: ParsedSourceRef,
+        ps: &ParsedSourceRef,
         node: &T,
         block_io: &IoChain,
         job_group: &Option<JobGroupRef>,

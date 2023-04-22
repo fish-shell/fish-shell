@@ -1201,7 +1201,7 @@ fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
         let name_cstr = wcs2zstring(username);
         let mut userinfo: libc::passwd = unsafe { std::mem::zeroed() };
         let mut result: *mut libc::passwd = std::ptr::null_mut();
-        let mut buf: [i8; 8192] = [0_i8; 8192];
+        let mut buf = [0_i8; 8192];
         let retval = unsafe {
             libc::getpwnam_r(
                 name_cstr.as_ptr(),

@@ -9,7 +9,7 @@ use std::ffi::CStr;
 use std::io::{Read, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 
-pub const PIPE_ERROR: &wstr = L!("An error occurred while setting up pipe");
+pub const PIPE_ERROR: &str = "An error occurred while setting up pipe";
 
 /// The first "high fd", which is considered outside the range of valid user-specified redirections
 /// (like >&5).

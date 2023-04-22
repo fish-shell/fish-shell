@@ -22,7 +22,6 @@ use cxx::{CxxWString, UniquePtr};
 use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
-use std::cell::RefCell;
 use std::env;
 use std::ffi::{CString, OsString};
 use std::mem::{self, ManuallyDrop};
@@ -32,7 +31,7 @@ use std::os::unix::prelude::OsStringExt;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::Mutex;
 use std::time;
 use widestring_suffix::widestrs;
@@ -1196,34 +1195,31 @@ pub fn should_suppress_stderr_for_tests() -> bool {
     unsafe { !PROGRAM_NAME.is_empty() && *PROGRAM_NAME != TESTS_PROGRAM_NAME }
 }
 
-fn assert_is_main_thread() {
-    assert!(is_main_thread() || THREAD_ASSERTS_CFG_FOR_TESTING.load());
+#[deprecated(note = "Use threads::assert_is_main_thread() instead")]
+pub fn assert_is_main_thread() {
+    crate::threads::assert_is_main_thread()
 }
 
-fn assert_is_background_thread() {
-    assert!(!is_main_thread() || THREAD_ASSERTS_CFG_FOR_TESTING.load());
+#[deprecated(note = "Use threads::assert_is_background_thread() instead")]
+pub fn assert_is_background_thread() {
+    crate::threads::assert_is_background_thread()
 }
 
-static THREAD_ASSERTS_CFG_FOR_TESTING: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+/// Converts the native rust [`ThreadId`](std::thread::ThreadId) to a `u64` for legacy interop
+/// purposes - this is the same type used by `is_main_thread()` and co.
+///
+/// Prefer to use the native type where possible.
+#[deprecated(note = "Use std::thread::current().id() instead")]
+pub fn thread_id() -> u64 {
+    // Check if we can safely transmute. ThreadId should be 64 bytes regardless of target/usize.
+    const _: () = if std::mem::size_of::<std::thread::ThreadId>() == std::mem::size_of::<u64>()
+        && std::mem::align_of::<std::thread::ThreadId>() == std::mem::align_of::<u64>()
+    {
+    } else {
+        panic!("ThreadId size/alignment assumption does not hold!");
+    };
 
-thread_local! {
-    static TL_TID: RefCell<u64> = RefCell::new(0);
-}
-
-static S_LAST_THREAD_ID: AtomicU64 = AtomicU64::new(0);
-fn next_thread_id() -> u64 {
-    // Note 0 is an invalid thread id.
-    // Note fetch_add is a CAS which returns the value *before* the modification.
-    1 + S_LAST_THREAD_ID.fetch_add(1, Ordering::Relaxed)
-}
-
-fn thread_id() -> u64 {
-    TL_TID.with(|tid| {
-        if *tid.borrow() == 0 {
-            *tid.borrow_mut() = next_thread_id()
-        }
-        *tid.borrow()
-    })
+    unsafe { std::mem::transmute(std::thread::current().id()) }
 }
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
@@ -1579,32 +1575,29 @@ pub fn timef() -> Timepoint {
     }
 }
 
+#[deprecated(note = "Use threads::is_main_thread() instead")]
+pub fn is_main_thread() -> bool {
+    crate::threads::is_main_thread()
+}
+
 /// Call the following function early in main to set the main thread. This is our replacement for
 /// pthread_main_np().
+#[deprecated(note = "This function is no longer called manually!")]
 pub fn set_main_thread() {
-    // Just call thread_id() once to force increment of thread_id.
-    let tid = thread_id();
-    assert!(tid == 1, "main thread should have thread ID 1");
+    eprintln!("set_main_thread() is removed in favor of `main_thread_id()` and co. in threads.rs!")
 }
 
-pub fn is_main_thread() -> bool {
-    thread_id() == 1
-}
-
+#[deprecated(note = "Use threads::configure_thread_assertions_for_testing() instead")]
 pub fn configure_thread_assertions_for_testing() {
-    THREAD_ASSERTS_CFG_FOR_TESTING.store(true)
+    crate::threads::configure_thread_assertions_for_testing();
 }
 
-/// This allows us to notice when we've forked.
-static IS_FORKED_PROC: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+#[deprecated(note = "This should no longer be called manually")]
+pub fn setup_fork_guards() {}
 
-pub fn setup_fork_guards() {
-    IS_FORKED_PROC.store(false);
-    todo!();
-}
-
+#[deprecated(note = "Use threads::is_forked_child() instead")]
 pub fn is_forked_child() -> bool {
-    IS_FORKED_PROC.load()
+    crate::threads::is_forked_child()
 }
 
 /// Be able to restore the term's foreground process group.

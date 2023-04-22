@@ -21,7 +21,7 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 */
 
 use crate::fd_readable_set::fd_readable_set_t;
-use crate::fds::{self, autoclose_pipes_t};
+use crate::fds::{self, AutoClosePipes};
 use crate::ffi::{self as ffi, c_int};
 use crate::flog::{FloggableDebug, FLOG};
 use crate::wchar::{widestrs, wstr, WString};
@@ -184,7 +184,7 @@ pub struct binary_semaphore_t {
     sem_: Pin<Box<UnsafeCell<libc::sem_t>>>,
 
     // Pipes used to emulate a semaphore, if not initialized.
-    pipes_: autoclose_pipes_t,
+    pipes_: AutoClosePipes,
 }
 
 impl binary_semaphore_t {
@@ -194,7 +194,7 @@ impl binary_semaphore_t {
         // sem_t does not have an initializer in Rust so we use zeroed().
         #[allow(unused_mut)]
         let mut sem_ = Pin::from(Box::new(UnsafeCell::new(unsafe { mem::zeroed() })));
-        let mut pipes_ = autoclose_pipes_t::default();
+        let mut pipes_ = AutoClosePipes::default();
         // sem_init always fails with ENOSYS on Mac and has an annoying deprecation warning.
         // On BSD sem_init uses a file descriptor under the hood which doesn't get CLOEXEC (see #7304).
         // So use fast semaphores on Linux only.

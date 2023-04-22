@@ -139,7 +139,7 @@ impl Drop for AutoCloseFd {
 
 /// Helper type returned from make_autoclose_pipes.
 #[derive(Default)]
-pub struct autoclose_pipes_t {
+pub struct AutoClosePipes {
     /// Read end of the pipe.
     pub read: AutoCloseFd,
 
@@ -149,7 +149,7 @@ pub struct autoclose_pipes_t {
 
 /// Construct a pair of connected pipes, set to close-on-exec.
 /// \return None on fd exhaustion.
-pub fn make_autoclose_pipes() -> Option<autoclose_pipes_t> {
+pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
     let pipes = ffi::make_pipes_ffi();
 
     let readp = AutoCloseFd::new(pipes.read);
@@ -157,7 +157,7 @@ pub fn make_autoclose_pipes() -> Option<autoclose_pipes_t> {
     if !readp.is_valid() || !writep.is_valid() {
         None
     } else {
-        Some(autoclose_pipes_t {
+        Some(AutoClosePipes {
             read: readp,
             write: writep,
         })

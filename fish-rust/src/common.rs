@@ -1205,23 +1205,6 @@ pub fn assert_is_background_thread() {
     crate::threads::assert_is_background_thread()
 }
 
-/// Converts the native rust [`ThreadId`](std::thread::ThreadId) to a `u64` for legacy interop
-/// purposes - this is the same type used by `is_main_thread()` and co.
-///
-/// Prefer to use the native type where possible.
-#[deprecated(note = "Use std::thread::current().id() instead")]
-pub fn thread_id() -> u64 {
-    // Check if we can safely transmute. ThreadId should be 64 bytes regardless of target/usize.
-    const _: () = if std::mem::size_of::<std::thread::ThreadId>() == std::mem::size_of::<u64>()
-        && std::mem::align_of::<std::thread::ThreadId>() == std::mem::align_of::<u64>()
-    {
-    } else {
-        panic!("ThreadId size/alignment assumption does not hold!");
-    };
-
-    unsafe { std::mem::transmute(std::thread::current().id()) }
-}
-
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 #[widestrs]
 fn format_size(mut sz: i64) -> WString {

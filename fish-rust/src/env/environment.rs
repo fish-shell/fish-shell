@@ -1,10 +1,11 @@
-use crate::common::wcs2zstring;
+use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
+use crate::common::{unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::env::{
     is_read_only, ElectricVar, EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Statuses, VarTable,
     ELECTRIC_VARIABLES, PATH_ARRAY_SEP,
 };
 use crate::event::Event;
-use crate::ffi::{self, env_universal_t, universal_notifier_t, wcstring_list_ffi_t};
+use crate::ffi::{self, env_universal_t, universal_notifier_t};
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
@@ -12,20 +13,22 @@ use crate::path::path_make_canonical;
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::{widestrs, wstr, WExt, WString, L};
 use crate::wchar_ext::ToWString;
-use crate::wchar_ffi::AsWstr;
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
+use crate::wcstringutil::join_strings;
+
+use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wutil::{fish_wcstoi_opts, sprintf, wgetcwd, wgettext, Options};
 use autocxx::WithinUniquePtr;
-use cxx::CxxWString;
+
 use cxx::UniquePtr;
 use lazy_static::lazy_static;
+use libc::c_int;
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use std::pin::Pin;
+
 use std::sync::{atomic::AtomicU64, atomic::Ordering, Arc, Mutex, MutexGuard};
 
 /// TODO: migrate to history once ported.
@@ -68,20 +71,20 @@ fn get_history_var_text(history_session_id: &wstr) -> Vec<WString> {
 }
 
 /// Convert an FFI env_var_t to our EnvVar.
-fn env_var_from_ffi(ffi_var: &ffi::env_var_t) -> EnvVar {
-    let values = ffi_var.as_list_ffi().from_ffi();
-    let mut flags = EnvVarFlags::empty();
-    flags.set(EnvVarFlags::EXPORT, ffi_var.exports());
-    flags.set(EnvVarFlags::READ_ONLY, ffi_var.is_read_only());
-    flags.set(EnvVarFlags::PATHVAR, ffi_var.is_pathvar());
-    EnvVar::new_vec(values, flags)
+impl ffi::env_var_t {
+    #[allow(clippy::wrong_self_convention)]
+    fn from_ffi(&self) -> EnvVar {
+        let var_ptr: *const EnvVar = self.ffi_ptr().cast();
+        let var: &EnvVar = unsafe { &*var_ptr };
+        var.clone()
+    }
 }
 
 /// Apply the pathvar behavior, splitting about colons.
-fn colon_split(val: Vec<WString>) -> Vec<WString> {
+fn colon_split<T: AsRef<wstr>>(val: &[T]) -> Vec<WString> {
     let mut split_val = Vec::new();
     for str in val.iter() {
-        split_val.extend(str.split(PATH_ARRAY_SEP).map(|s| s.to_owned()));
+        split_val.extend(str.as_ref().split(PATH_ARRAY_SEP).map(|s| s.to_owned()));
     }
     split_val
 }
@@ -145,25 +148,6 @@ pub trait Environment {
             return Some(var);
         }
         None
-    }
-
-    /// FFI helper.
-    /// This returns either null, or the result of Box.into_raw().
-    /// This is a workaround for the difficulty of passing an Option through FFI.
-    fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
-        match self.getf(
-            name.as_wstr(),
-            EnvMode::from_bits(mode).expect("Invalid mode bits"),
-        ) {
-            None => std::ptr::null_mut(),
-            Some(var) => Box::into_raw(Box::new(var)),
-        }
-    }
-    fn get_names_ffi(&self, mode: u16, mut out: Pin<&mut wcstring_list_ffi_t>) {
-        let names = self.get_names(EnvMode::from_bits(mode).expect("Invalid mode bits"));
-        for name in names {
-            out.as_mut().push(name.to_ffi());
-        }
     }
 }
 
@@ -431,7 +415,7 @@ impl Iterator for EnvNodeIter {
     type Item = EnvNodeRef;
 
     fn next(&mut self) -> Option<EnvNodeRef> {
-        let current = self.current.take();
+        let current: Option<EnvNodeRef> = self.current.take();
         if let Some(ref current) = current {
             self.current = current.next();
         }
@@ -445,10 +429,7 @@ lazy_static! {
 
 /// Recursive helper to snapshot a series of nodes.
 fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
-    let next = match node.next() {
-        Some(ref next) => Some(copy_node_chain(next)),
-        None => None,
-    };
+    let next = node.next().as_ref().map(copy_node_chain);
     let node = node.borrow();
     let env = node.env.clone();
     let export_gen = node.export_gen;
@@ -499,6 +480,14 @@ impl EnvScopedImpl {
             export_array: None,
             export_array_generations: Vec::new(),
         }
+    }
+
+    fn get_last_statuses(&self) -> &Statuses {
+        &self.perproc_data.statuses
+    }
+
+    fn set_last_statuses(&mut self, s: Statuses) {
+        self.perproc_data.statuses = s;
     }
 
     #[widestrs]
@@ -615,7 +604,7 @@ impl EnvScopedImpl {
             .expect("Should have non-null uvars in this function")
             .get_ffi(&key.to_ffi())
             .as_ref()
-            .map(env_var_from_ffi);
+            .map(|v| v.from_ffi());
     }
 
     fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
@@ -706,8 +695,8 @@ impl EnvScopedImpl {
     /// Return a copy of self, with copied locals but shared globals.
     fn snapshot(&self) -> Self {
         EnvScopedImpl {
-            locals: self.locals.clone(),
-            globals: copy_node_chain(&self.globals),
+            locals: copy_node_chain(&self.locals),
+            globals: self.globals.clone(),
             perproc_data: self.perproc_data.clone(),
             export_array: None,
             export_array_generations: Vec::new(),
@@ -768,8 +757,7 @@ impl EnvScopedImpl {
 
         for (key, var) in n.env.iter() {
             if var.exports() {
-                // Export the variable. Don't use std::map::insert here, since we need to overwrite
-                // existing values from previous scopes.
+                // Export the variable. Note this overwrites existing values from previous scopes.
                 table.insert(key.clone(), var.clone());
             } else {
                 // We need to erase from the map if we are not exporting, since a lower scope may have
@@ -797,7 +785,7 @@ impl EnvScopedImpl {
                 .unwrap()
                 .get_ffi(&key.to_ffi())
                 .as_ref()
-                .map(env_var_from_ffi)
+                .map(|v| v.from_ffi())
                 .expect("Variable should be present in uvars");
             // Only insert if not already present, as uvars have lowest precedence.
             // TODO: a longstanding bug is that an unexported local variable will not mask an exported uvar.
@@ -843,8 +831,8 @@ pub struct EnvDyn {
 }
 
 impl EnvDyn {
-    fn new(env: Box<dyn Environment>) -> Self {
-        Self { inner: env }
+    fn new(inner: Box<dyn Environment>) -> Self {
+        Self { inner }
     }
 }
 
@@ -1054,8 +1042,12 @@ impl EnvStackImpl {
             // pass
         } else if Self::remove_from_chain(&mut self.base.globals, key) {
             result.global_modified = true;
-        // } else if (uvars()->remove(key)) {
-        //     result.uvar_modified = true;
+        } else if uvars()
+            .as_mut()
+            .expect("Should have non-null uvars in this function")
+            .remove(&key.to_ffi())
+        {
+            result.uvar_modified = true;
         } else {
             result.status = EnvStackSetResult::ENV_NOT_FOUND;
         }
@@ -1070,7 +1062,10 @@ impl EnvStackImpl {
             for (key, val) in cursor.borrow().env.iter() {
                 if val.exports() {
                     let mut node_ref = node.borrow_mut();
-                    node_ref.env.insert(key.clone(), val.clone());
+                    // Do NOT overwrite existing values, since we go from inner scopes outwards.
+                    if node_ref.env.get(key).is_none() {
+                        node_ref.env.insert(key.clone(), val.clone());
+                    }
                     node_ref.changed_exported();
                 }
             }
@@ -1192,7 +1187,7 @@ impl EnvStackImpl {
         let uv = locked_uvars
             .as_mut()
             .expect("Should have non-null uvars in this function");
-        let oldvar = uv.get_ffi(&key.to_ffi()).as_ref().map(env_var_from_ffi);
+        let oldvar = uv.get_ffi(&key.to_ffi()).as_ref().map(|v| v.from_ffi());
         let oldvar = oldvar.as_ref();
 
         // Resolve whether or not to export.
@@ -1216,7 +1211,7 @@ impl EnvStackImpl {
 
         // Split about ':' if it's a path variable.
         if pathvar {
-            val = colon_split(val);
+            val = colon_split(&val);
         }
 
         // Construct and set the new variable.
@@ -1246,7 +1241,7 @@ impl EnvStackImpl {
             None => variable_should_auto_pathvar(key),
         };
         if res_pathvar {
-            val = colon_split(val);
+            val = colon_split(&val);
         }
 
         *var = var
@@ -1358,6 +1353,20 @@ impl EnvStack {
         self as *const Self == Arc::as_ptr(&*PRINCIPAL_STACK)
     }
 
+    /// Helpers to get and set the proc statuses.
+    /// These correspond to $status and $pipestatus.
+    pub fn get_last_statuses(&self) -> Statuses {
+        self.acquire_impl().base.get_last_statuses().clone()
+    }
+
+    pub fn get_last_status(&self) -> c_int {
+        self.acquire_impl().base.get_last_statuses().status
+    }
+
+    pub fn set_last_statuses(&self, statuses: Statuses) {
+        self.acquire_impl().base.set_last_statuses(statuses);
+    }
+
     /// Sets the variable with the specified name to the given values.
     pub fn set(&self, key: &wstr, mode: EnvMode, mut vals: Vec<WString>) -> EnvStackSetResult {
         // Historical behavior.
@@ -1370,7 +1379,7 @@ impl EnvStack {
         // Replace empties with dot. Note we ignore pathvar here.
         if key == "PATH" || key == "CDPATH" {
             // Split on colons.
-            let mut munged_vals = colon_split(vals);
+            let mut munged_vals = colon_split(&vals);
             // Replace empties with dots.
             for val in munged_vals.iter_mut() {
                 if val.is_empty() {
@@ -1385,8 +1394,7 @@ impl EnvStack {
             // If we modified the global state, or we are principal, then dispatch changes.
             // Important to not hold the lock here.
             if ret.global_modified || self.is_principal() {
-                unimplemented!()
-                //env_dispatch_var_change(key, *this);
+                ffi::env_dispatch_var_change_ffi(&key.to_ffi() /* , self */);
             }
         }
         // Mark if we modified a uvar.
@@ -1434,8 +1442,7 @@ impl EnvStack {
         if ret.status == EnvStackSetResult::ENV_OK {
             if ret.global_modified || self.is_principal() {
                 // Important to not hold the lock here.
-                //env_dispatch_var_change(key, *this);
-                unimplemented!()
+                ffi::env_dispatch_var_change_ffi(&key.to_ffi() /*,  self */);
             }
         }
         if ret.uvar_modified {
@@ -1444,14 +1451,37 @@ impl EnvStack {
         ret.status
     }
 
+    /// Push the variable stack. Used for implementing local variables for functions and for-loops.
+    pub fn push(&self, new_scope: bool) {
+        let mut imp = self.acquire_impl();
+        if new_scope {
+            imp.push_shadowing();
+        } else {
+            imp.push_nonshadowing();
+        }
+    }
+
+    /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
+    pub fn pop(&self) {
+        let popped = self.acquire_impl().pop();
+        // Only dispatch variable changes if we are the principal environment.
+        if self.is_principal() {
+            // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize
+            // once.
+            for key in popped.borrow().env.keys() {
+                ffi::env_dispatch_var_change_ffi(&key.to_ffi() /*, self */);
+            }
+        }
+    }
+
     /// Returns an array containing all exported variables in a format suitable for execv.
-    fn export_arr(&self) -> Arc<OwningNullTerminatedArray> {
+    pub fn export_array(&self) -> Arc<OwningNullTerminatedArray> {
         self.acquire_impl().base.export_array()
     }
 
     /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
     /// but globals are shared (i.e. changes to global will be visible to this snapshot).
-    fn snapshot(&self) -> EnvDyn {
+    pub fn snapshot(&self) -> EnvDyn {
         let scoped = EnvScoped::from_impl(self.acquire_impl().base.snapshot());
         EnvDyn {
             inner: Box::new(scoped) as Box<dyn Environment>,
@@ -1462,7 +1492,8 @@ impl EnvStack {
     /// If \p always is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
     /// \return a list of events for changed variables.
-    fn universal_sync(always: bool) -> Vec<Box<Event>> {
+    #[allow(clippy::vec_box)]
+    pub fn universal_sync(&self, always: bool) -> Vec<Box<Event>> {
         if UVAR_SCOPE_IS_GLOBAL.load() {
             return Vec::new();
         }
@@ -1482,17 +1513,27 @@ impl EnvStack {
         let mut result = Vec::new();
         #[allow(unreachable_code)]
         for idx in 0..sync_res.count() {
-            //env_dispatch_var_change(name, *this);
             let name = sync_res.get_key(idx).from_ffi();
+            ffi::env_dispatch_var_change_ffi(&name.to_ffi() /* , self */);
             let evt = if sync_res.get_is_erase(idx) {
                 Event::variable_erase(name)
             } else {
                 Event::variable_set(name)
             };
             result.push(Box::new(evt));
-            todo!("env_dispatch_var_change")
         }
         result
+    }
+
+    /// A variable stack that only represents globals.
+    /// Do not push or pop from this.
+    pub fn globals() -> &'static EnvStackRef {
+        &GLOBALS
+    }
+
+    /// Access the principal variable stack, associated with the principal parser.
+    pub fn principal() -> &'static EnvStackRef {
+        &PRINCIPAL_STACK
     }
 }
 
@@ -1536,35 +1577,104 @@ impl Environment for EnvStack {
     }
 }
 
+pub type EnvStackRef = Arc<EnvStack>;
+
+// A variable stack that only represents globals.
+// Do not push or pop from this.
+lazy_static! {
+    static ref GLOBALS: EnvStackRef = Arc::new(EnvStack::new());
+}
+
 // Our singleton "principal" stack.
 lazy_static! {
-    static ref PRINCIPAL_STACK: Arc<EnvStack> = Arc::new(EnvStack::new());
+    static ref PRINCIPAL_STACK: EnvStackRef = Arc::new(EnvStack::new());
 }
 
-// We have to implement these directly to make cxx happy.
-impl EnvNull {
-    pub fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
-        Environment::getf_ffi(self, name, mode)
-    }
-    pub fn get_names_ffi(&self, flags: u16, out: Pin<&mut wcstring_list_ffi_t>) {
-        Environment::get_names_ffi(self, flags, out)
+// Note: this is an incomplete port of env_init(); the rest remains in C++.
+pub fn env_init(do_uvars: bool) {
+    if !do_uvars {
+        UVAR_SCOPE_IS_GLOBAL.store(true);
+    } else {
+        // let vars = EnvStack::principal();
+
+        // Set up universal variables using the default path.
+        let callbacks = uvars()
+            .as_mut()
+            .unwrap()
+            .initialize_ffi()
+            .within_unique_ptr();
+        let callbacks = callbacks.as_ref().unwrap();
+        for idx in 0..callbacks.count() {
+            ffi::env_dispatch_var_change_ffi(callbacks.get_key(idx) /* , vars */);
+        }
+
+        // Do not import variables that have the same name and value as
+        // an exported universal variable. See issues #5258 and #5348.
+        let mut table = uvars()
+            .as_ref()
+            .unwrap()
+            .get_table_ffi()
+            .within_unique_ptr();
+        for idx in 0..table.count() {
+            // autocxx gets confused when a value goes Rust -> Cxx -> Rust.
+            let uvar = table.as_mut().unwrap().get_var(idx).from_ffi();
+            if !uvar.exports() {
+                continue;
+            }
+            let name: &wstr = table.get_name(idx).as_wstr();
+
+            // Look for a global exported variable with the same name.
+            let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
+            if global.is_some() && global.unwrap().as_string() == uvar.as_string() {
+                EnvStack::globals().remove(name, EnvMode::GLOBAL | EnvMode::EXPORT);
+            }
+        }
+
+        // Import any abbreviations from uvars.
+        // Note we do not dynamically react to changes.
+        let prefix = L!("_fish_abbr_");
+        let prefix_len = prefix.char_count();
+        let from_universal = true;
+        let mut abbrs = abbrs_get_set();
+        for idx in 0..table.count() {
+            let name: &wstr = table.get_name(idx).as_wstr();
+            if !name.starts_with(prefix) {
+                continue;
+            }
+            let escaped_name = name.slice_from(prefix_len);
+            if let Some(name) = unescape_string(escaped_name, UnescapeStringStyle::Var) {
+                let key = name.clone();
+                let uvar = table.get_var(idx).from_ffi();
+                let replacement: WString = join_strings(uvar.as_list(), ' ');
+                abbrs.add(Abbreviation::new(
+                    name,
+                    key,
+                    replacement,
+                    Position::Command,
+                    from_universal,
+                ));
+            }
+        }
     }
 }
 
-impl EnvStack {
-    pub fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
-        Environment::getf_ffi(self, name, mode)
-    }
-    pub fn get_names_ffi(&self, flags: u16, out: Pin<&mut wcstring_list_ffi_t>) {
-        Environment::get_names_ffi(self, flags, out)
-    }
-}
-
-impl EnvDyn {
-    pub fn getf_ffi(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
-        Environment::getf_ffi(self, name, mode)
-    }
-    pub fn get_names_ffi(&self, flags: u16, out: Pin<&mut wcstring_list_ffi_t>) {
-        Environment::get_names_ffi(self, flags, out)
-    }
+#[test]
+fn test_colon_split() {
+    assert_eq!(colon_split(&[L!("foo")]), &[L!("foo")]);
+    assert_eq!(
+        colon_split(&[L!("foo:bar:baz")]),
+        &[L!("foo"), L!("bar"), L!("baz")]
+    );
+    assert_eq!(
+        colon_split(&[L!("foo:bar"), L!("baz")]),
+        &[L!("foo"), L!("bar"), L!("baz")]
+    );
+    assert_eq!(
+        colon_split(&[L!("foo:bar"), L!("baz")]),
+        &[L!("foo"), L!("bar"), L!("baz")]
+    );
+    assert_eq!(
+        colon_split(&[L!("1:"), L!("2:"), L!(":3:")]),
+        &[L!("1"), L!(""), L!("2"), L!(""), L!(""), L!("3"), L!("")]
+    );
 }

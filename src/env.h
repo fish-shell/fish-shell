@@ -17,12 +17,26 @@
 #include "maybe.h"
 #include "wutil.h"
 
+/// FFI helper for events.
+struct Event;
+struct event_list_ffi_t {
+    event_list_ffi_t(const event_list_ffi_t &) = delete;
+    event_list_ffi_t &operator=(const event_list_ffi_t &) = delete;
+    event_list_ffi_t();
+#if INCLUDE_RUST_HEADERS
+    std::vector<rust::Box<Event>> events{};
+#endif
+
+    // Append an Event pointer, which came from Box::into_raw().
+    void push(void *event);
+};
+
 #if INCLUDE_RUST_HEADERS
 #include "env/env_ffi.rs.h"
 #else
 struct EnvVar;
 struct EnvNull;
-struct EnvStack;
+struct EnvStackRef;
 struct EnvDyn;
 #endif
 
@@ -30,8 +44,6 @@ struct owning_null_terminated_array_t;
 
 extern size_t read_byte_limit;
 extern bool curses_initialized;
-
-struct Event;
 
 // Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum : uint16_t {
@@ -103,34 +115,30 @@ void env_init(const struct config_paths_t *paths = nullptr, bool do_uvars = true
 void misc_init();
 
 /// env_var_t is an immutable value-type data structure representing the value of an environment
-/// variable.
+/// variable. This wraps the EnvVar type from Rust.
 class env_var_t {
    public:
     using env_var_flags_t = uint8_t;
-
-   public:
     enum {
         flag_export = 1 << 0,     // whether the variable is exported
         flag_read_only = 1 << 1,  // whether the variable is read only
         flag_pathvar = 1 << 2,    // whether the variable is a path variable
     };
-
-    // Constructors.
-    env_var_t() : env_var_t{std::vector<wcstring>{}, 0} {}
+    env_var_t() : env_var_t(wcstring_list_ffi_t{}, 0) {}
+    env_var_t(const wcstring_list_ffi_t &vals, uint8_t flags);
     env_var_t(const env_var_t &);
     env_var_t(env_var_t &&) = default;
 
-    env_var_t(std::vector<wcstring> vals, env_var_flags_t flags);
     env_var_t(wcstring val, env_var_flags_t flags)
         : env_var_t{std::vector<wcstring>{std::move(val)}, flags} {}
 
-    // Constructors that infer the flags from a name.
-    env_var_t(const wchar_t *name, std::vector<wcstring> vals);
-    env_var_t(const wchar_t *name, wcstring val)
-        : env_var_t{name, std::vector<wcstring>{std::move(val)}} {}
-
     // Construct from FFI.
     static std::unique_ptr<env_var_t> new_ffi(wcstring_list_ffi_t vals, uint8_t flags);
+
+    // Get the underlying EnvVar pointer.
+    // Note you may need to mem::transmute this, since autocxx gets confused when going from Rust ->
+    // C++ -> Rust.
+    const EnvVar *ffi_ptr() const { return &*this->impl_; }
 
     bool empty() const;
     bool exports() const;
@@ -140,39 +148,13 @@ class env_var_t {
 
     wcstring as_string() const;
     void to_list(std::vector<wcstring> &out) const;
-    const std::vector<wcstring> &as_list() const;
+    std::vector<wcstring> as_list() const;
     wcstring_list_ffi_t as_list_ffi() const { return as_list(); }
 
     /// \return the character used when delimiting quoted expansion.
     wchar_t get_delimiter() const;
 
-    /// \return a copy of this variable with new values.
-    env_var_t setting_vals(std::vector<wcstring> vals) const {
-        return env_var_t{std::move(vals), get_flags()};
-    }
-
-    env_var_t setting_exports(bool exportv) const {
-        env_var_flags_t flags = get_flags();
-        if (exportv) {
-            flags |= flag_export;
-        } else {
-            flags &= ~flag_export;
-        }
-        return env_var_t{as_list(), flags};
-    }
-
-    env_var_t setting_pathvar(bool pathvar) const {
-        env_var_flags_t flags = get_flags();
-        if (pathvar) {
-            flags |= flag_pathvar;
-        } else {
-            flags &= ~flag_pathvar;
-        }
-        return env_var_t{as_list(), flags};
-    }
-
     static env_var_flags_t flags_for(const wchar_t *name);
-    static std::shared_ptr<const std::vector<wcstring>> empty_list();
 
     env_var_t &operator=(const env_var_t &);
     env_var_t &operator=(env_var_t &&) = default;
@@ -225,21 +207,11 @@ class null_environment_t : public environment_t {
 };
 
 /// A mutable environment which allows scopes to be pushed and popped.
-class env_stack_impl_t;
 class env_stack_t final : public environment_t {
     friend class parser_t;
 
-    /// The implementation. Do not access this directly.
-    std::unique_ptr<env_stack_impl_t> impl_;
-
-    /// All environment stacks are guarded by a global lock.
-    acquired_lock<env_stack_impl_t> acquire_impl();
-    acquired_lock<const env_stack_impl_t> acquire_impl() const;
-
-    explicit env_stack_t(std::unique_ptr<env_stack_impl_t> impl);
-
     /// \return whether we are the principal stack.
-    bool is_principal() const { return this == principal_ref().get(); }
+    bool is_principal() const;
 
    public:
     ~env_stack_t() override;
@@ -323,6 +295,12 @@ class env_stack_t final : public environment_t {
     // Access a variable stack that only represents globals.
     // Do not push or pop from this.
     static env_stack_t &globals();
+
+   private:
+    env_stack_t(rust::Box<EnvStackRef> imp);
+
+    /// The implementation. Do not access this directly.
+    rust::Box<EnvStackRef> impl_;
 };
 
 bool get_use_posix_spawn();
@@ -349,5 +327,9 @@ const std::map<wcstring, wcstring> &env_get_inherited();
 /// fish_history_val is the value of the "$fish_history" variable, or "fish" if not set.
 std::unique_ptr<wcstring_list_ffi_t> get_history_variable_text_ffi(
     const wcstring &fish_history_val);
+
+/// FFI helper which assumes the principal stack.
+/// TODO: Once env_dispatch_var_change is ported, pass in the env_stack directly.
+void env_dispatch_var_change_ffi(const wcstring &key /* , env_stack_t &vars */);
 
 #endif

@@ -54,12 +54,16 @@ include_cpp! {
 
     generate_pod!("pipes_ffi_t")
     generate!("environment_t")
+    generate!("env_dispatch_var_change_ffi")
     generate!("env_stack_t")
     generate!("env_var_t")
     generate!("env_universal_t")
     generate!("env_universal_sync_result_t")
     generate!("callback_data_t")
     generate!("universal_notifier_t")
+    generate!("var_table_ffi_t")
+
+    generate!("event_list_ffi_t")
 
     generate!("make_pipes_ffi")
 

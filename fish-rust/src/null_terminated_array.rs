@@ -101,7 +101,7 @@ pub fn null_terminated_array_length<T>(mut arr: *const *const T) -> usize {
 /// FFI bits.
 /// We often work in Arc<OwningNullTerminatedArray>.
 /// Expose this to C++.
-struct OwningNullTerminatedArrayRefFFI(Arc<OwningNullTerminatedArray>);
+pub struct OwningNullTerminatedArrayRefFFI(pub Arc<OwningNullTerminatedArray>);
 impl OwningNullTerminatedArrayRefFFI {
     fn get(&self) -> *mut *const c_char {
         self.0.get()

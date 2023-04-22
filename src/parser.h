@@ -30,6 +30,7 @@ class io_chain_t;
 struct Event;
 struct job_group_t;
 class parser_t;
+class env_stack_t;
 
 /// Types of blocks.
 enum class block_type_t : uint8_t {

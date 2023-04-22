@@ -4,11 +4,12 @@
 # Also the manpage and even the grammar it accepts is utter shite (options can only be before commands, some things are only in the BNF, others only in the text)
 # It also quite likes the word "dev", even though it needs it less than the BNF specifies
 
-set -l ip_commands link address addrlabel route rule neigh ntable tunnel tuntap maddr mroute mrule monitor xfrm netns l2tp tcp_metrics
+set -l ip_commands link address addrlabel route rule neighbour ntable tunnel tuntap maddr mroute mrule monitor xfrm netns l2tp tcp_metrics
 set -l ip_addr a ad add addr addre addres address
 set -l ip_link l li lin link
+set -l ip_neigh n ne nei neig neigh neighb neighbo neighbor neighbour
 set -l ip_route r ro rou rout route
-set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_route
+set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_neigh $ip_route
 
 function __fish_ip_commandwords
     set -l skip 0
@@ -61,10 +62,10 @@ function __fish_ip_commandwords
                 else
                     echo $word
                 end
-            case n ne nei neig neigh
+            case n ne nei neig neigh neighb neighbo neighbor neighbour
                 if test $have_command = 0
                     set have_command 1
-                    echo neigh
+                    echo neighbour
                 else
                     echo $word
                 end
@@ -237,6 +238,18 @@ function __fish_ip_types
         netdevsim "Interface for netdev API tests" \
         rmnet "Qualcomm rmnet device" \
         xfrm "Virtual xfrm interface"
+end
+
+function __fish_ip_neigh_states
+    printf '%s\t%s\n' permanent "entry is valid forever" \
+        noarp "entry is valid without validation" \
+        reachable "entry is valid until timeout" \
+        stale "entry is valid but suspicious" \
+        none "pseudo state" \
+        incomplete "entry has not yet been validated" \
+        delay "entry validation is currently delayed" \
+        probe "neighbor is being probed" \
+        failed "neighbor validation has ultimately failed"
 end
 
 function __fish_complete_ip
@@ -416,6 +429,66 @@ function __fish_complete_ip
                         end
                     case show
                     case help
+                end
+            end
+        case neighbour
+            if not set -q cmd[3]
+                printf '%s\t%s\n' help "Show help" \
+                    add "Add new neighbour entry" \
+                    delete "Delete neighbour entry" \
+                    change "Change neighbour entry" \
+                    replace "Add or change neighbour entry" \
+                    show "List neighbour entries" \
+                    flush "Flush neighbour entries" \
+                    get "Lookup neighbour entry"
+            else
+                switch $cmd[2]
+                    case add del delete change replace
+                        switch $cmd[-2]
+                            case lladdr
+                            case nud
+                                __fish_ip_neigh_states
+                            case proxy
+                            case dev
+                                __fish_ip_device
+                            case '*'
+                                echo lladdr
+                                echo nud
+                                echo proxy
+                                echo dev
+                                echo router
+                                echo use
+                                echo managed
+                                echo extern_learn
+                        end
+                    case show flush
+                        switch $cmd[-2]
+                            case to
+                            case dev
+                                __fish_ip_device
+                            case vrf
+                            case nud
+                                __fish_ip_neigh_states
+                                echo all
+                            case '*'
+                                echo to
+                                echo dev
+                                echo vrf
+                                echo nomaster
+                                echo proxy
+                                echo unused
+                                echo nud
+                        end
+                    case get
+                        switch $cmd[-2]
+                            case to
+                            case dev
+                                __fish_ip_device
+                            case '*'
+                                echo proxy
+                                echo to
+                                echo dev
+                        end
                 end
             end
         case route

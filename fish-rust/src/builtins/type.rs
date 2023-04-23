@@ -6,14 +6,11 @@ use crate::builtins::shared::{
     builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
     BUILTIN_ERR_COMBO, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
+use crate::common::EMPTY_STRING;
 use crate::ffi::parser_t;
 use crate::ffi::Repin;
-use crate::ffi::{
-    builtin_exists, colorize_shell, function_get_annotated_definition,
-    function_get_copy_definition_file, function_get_copy_definition_lineno,
-    function_get_definition_file, function_get_definition_lineno, function_get_props_autoload,
-    function_is_copy, path_get_paths_ffi,
-};
+use crate::ffi::{builtin_exists, colorize_shell, path_get_paths_ffi};
+use crate::function::function_get_props_autoload;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::WCharFromFFI;
 use crate::wchar_ffi::WCharToFFI;
@@ -94,8 +91,8 @@ pub fn r#type(
     for arg in argv.iter().take(argc).skip(optind) {
         let mut found = 0;
         if !opts.force_path && !opts.no_functions {
-            let props = function_get_props_autoload(&arg.to_ffi(), parser.pin());
-            if !props.is_null() {
+            if let Some(props) = function_get_props_autoload(arg, todo!("parser")) {
+                let props = props.read().unwrap();
                 found += 1;
                 res = true;
                 // Early out - query means *any of the args exists*.
@@ -103,41 +100,42 @@ pub fn r#type(
                     return STATUS_CMD_OK;
                 }
                 if !opts.get_type {
-                    let path = function_get_definition_file(&props).from_ffi();
+                    let path: &WString = props
+                        .definition_file
+                        .as_ref()
+                        .map(|p| &**p)
+                        .unwrap_or(&EMPTY_STRING);
                     let mut comment = WString::new();
 
                     if path.is_empty() {
                         comment.push_utfstr(&wgettext_fmt!("Defined interactively"));
-                    } else if path == "-" {
+                    } else if path == L!("-") {
                         comment.push_utfstr(&wgettext_fmt!("Defined via `source`"));
                     } else {
-                        let lineno: i32 = i32::from(function_get_definition_lineno(&props));
                         comment.push_utfstr(&wgettext_fmt!(
                             "Defined in %ls @ line %d",
                             path,
-                            lineno
+                            props.definition_lineno()
                         ));
                     }
 
-                    if function_is_copy(&props) {
-                        let path = function_get_copy_definition_file(&props).from_ffi();
+                    if props.is_copy {
+                        let path = props.copy_definition_file.as_ref();
                         if path.is_empty() {
                             comment.push_utfstr(&wgettext_fmt!(", copied interactively"));
-                        } else if path == "-" {
+                        } else if path == L!("-") {
                             comment.push_utfstr(&wgettext_fmt!(", copied via `source`"));
                         } else {
-                            let lineno: i32 =
-                                i32::from(function_get_copy_definition_lineno(&props));
                             comment.push_utfstr(&wgettext_fmt!(
                                 ", copied in %ls @ line %d",
                                 path,
-                                lineno
+                                props.copy_definition_lineno
                             ));
                         }
                     }
                     if opts.path {
-                        if function_is_copy(&props) {
-                            let path = function_get_copy_definition_file(&props).from_ffi();
+                        if props.is_copy {
+                            let path = props.copy_definition_file.as_ref();
                             streams.out.append(path);
                         } else {
                             streams.out.append(path);
@@ -151,7 +149,7 @@ pub fn r#type(
                         def.push_utfstr(&sprintf!(
                             "# %ls\n%ls",
                             comment,
-                            function_get_annotated_definition(&props, &arg.to_ffi()).from_ffi()
+                            &props.annotated_definition(arg)
                         ));
 
                         if !streams.out_is_redirected && unsafe { isatty(STDOUT_FILENO) == 1 } {

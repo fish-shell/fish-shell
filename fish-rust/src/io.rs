@@ -20,7 +20,7 @@ use libc::{
     STDOUT_FILENO,
 };
 use std::cell::UnsafeCell;
-use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::{os::fd::RawFd, rc::Rc};
 use widestring_suffix::widestrs;
 
@@ -792,6 +792,8 @@ pub trait OutputStream {
     }
 }
 
+pub type OutputStreamRef = Arc<RwLock<dyn OutputStream>>;
+
 /// A null output stream which ignores all writes.
 pub struct NullOutputStream {}
 
@@ -920,8 +922,8 @@ impl OutputStream for BufferedOutputStream {
 
 pub struct IoStreams<'a> {
     // Streams for out and err.
-    pub out: &'a dyn OutputStream,
-    pub err: &'a dyn OutputStream,
+    pub out: &'a mut dyn OutputStream,
+    pub err: &'a mut dyn OutputStream,
 
     // fd representing stdin. This is not closed by the destructor.
     // Note: if stdin is explicitly closed by `<&-` then this is -1!
@@ -952,7 +954,7 @@ pub struct IoStreams<'a> {
 }
 
 impl<'a> IoStreams<'a> {
-    pub fn new(out: &'a dyn OutputStream, err: &'a dyn OutputStream) -> Self {
+    pub fn new(out: &'a mut dyn OutputStream, err: &'a mut dyn OutputStream) -> Self {
         IoStreams {
             out,
             err,

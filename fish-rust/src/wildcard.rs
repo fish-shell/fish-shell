@@ -57,3 +57,7 @@ pub fn wildcard_expand_string(
 pub fn wildcard_has_internal(p: &wstr) -> bool {
     todo!()
 }
+
+pub fn wildcard_match(a: &wstr, b: &wstr) -> bool {
+    todo!()
+}

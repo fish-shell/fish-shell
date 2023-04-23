@@ -204,9 +204,10 @@ static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
 /// For example, if we find a non-executable file, we will return its path and EACCESS.
 /// If no candidate path is found, path will be empty and err will be set to ENOENT.
 /// Possible err values are taken from access().
+#[derive(Default)]
 pub struct GetPathResult {
-    err: Option<Errno>,
-    path: WString,
+    pub err: Option<Errno>,
+    pub path: WString,
 }
 impl GetPathResult {
     fn new(err: Option<Errno>, path: WString) -> Self {

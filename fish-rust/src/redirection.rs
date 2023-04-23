@@ -113,6 +113,9 @@ pub struct RedirectionSpec {
 }
 
 impl RedirectionSpec {
+    pub fn new(fd: RawFd, mode: RedirectionMode, target: WString) -> Self {
+        Self { fd, mode, target }
+    }
     /// \return if this is a close-type redirection.
     pub fn is_close(&self) -> bool {
         self.mode == RedirectionMode::fd && self.target == L!("-")

@@ -14,7 +14,7 @@ use crate::job_group::JobId;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseErrorList, FISH_MAX_EVAL_DEPTH};
 use crate::parse_tree::ParsedSourceRef;
-use crate::proc::{Job, JobGroupRef, JobList, ProcStatus};
+use crate::proc::{Job, JobGroupRef, JobList, JobRef, ProcStatus};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString};
@@ -96,7 +96,7 @@ impl Block {
     pub fn switch_block() -> Block {
         todo!()
     }
-    pub fn scope_block() -> Block {
+    pub fn scope_block(typ: BlockType) -> Block {
         todo!()
     }
     pub fn breakpoint_block() -> Block {
@@ -115,7 +115,7 @@ pub struct ProfileItem {
 
     /// The block level of the specified command. Nested blocks and command substitutions both
     /// increase the block level.
-    pub level: usize,
+    pub level: isize,
 
     /// If the execution of this command was skipped.
     pub skipped: bool,
@@ -212,7 +212,7 @@ pub struct Parser {
     block_list: VecDeque<Block>,
 
     /// The 'depth' of the fish call stack.
-    eval_level: i32,
+    pub eval_level: isize,
 
     /// Set of variables for the parser.
     variables: Rc<EnvStack>,
@@ -239,17 +239,17 @@ pub struct Parser {
 
 impl Parser {
     /// Adds a job to the beginning of the job list.
-    fn job_add(&mut self, job: Rc<Job>) {
+    pub fn job_add(&mut self, job: JobRef) {
         todo!()
     }
 
     /// \return whether we are currently evaluating a function.
-    fn is_function(&self) -> bool {
+    pub fn is_function(&self) -> bool {
         todo!()
     }
 
     /// \return whether we are currently evaluating a command substitution.
-    fn is_command_substitution(&self) -> bool {
+    pub fn is_command_substitution(&self) -> bool {
         todo!()
     }
 
@@ -352,7 +352,7 @@ impl Parser {
 
     /// Returns the block at the given index. 0 corresponds to the innermost block. Returns nullptr
     /// when idx is at or equal to the number of blocks.
-    pub fn block_at_index(&self, idx: usize) -> Option<&Block> {
+    pub fn block_at_index(&self, idx: BlockId) -> Option<&Block> {
         todo!()
     }
     pub fn block_at_index_mut(&mut self, idx: usize) -> &mut Block {
@@ -390,6 +390,12 @@ impl Parser {
     }
     pub fn libdata_mut(&mut self) -> &mut LibraryData {
         &mut self.library_data
+    }
+    pub fn libdata_pod(&self) -> &library_data_pod_t {
+        &self.library_data.pods
+    }
+    pub fn libdata_pod_mut(&mut self) -> &mut library_data_pod_t {
+        &mut self.library_data.pods
     }
 
     /// Get our wait handle store.
@@ -454,7 +460,7 @@ impl Parser {
     }
 
     /// Returns the job with the given pid.
-    pub fn job_get_from_pid(&self, pid: libc::pid_t) -> &Job {
+    pub fn job_get_from_pid(&self, pid: libc::pid_t) -> Option<&Job> {
         todo!()
     }
 
@@ -466,7 +472,7 @@ impl Parser {
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The parser_t will deallocate it.
     /// If profiling is not active, this returns nullptr.
-    pub fn create_profile_item(&mut self) -> ProfileItem {
+    pub fn create_profile_item(&mut self) -> Option<ProfileItem> {
         todo!()
     }
 
@@ -480,7 +486,7 @@ impl Parser {
         todo!()
     }
 
-    pub fn get_backtrace(src: &wstr, errors: &ParseErrorList) -> WString {
+    pub fn get_backtrace(&self, src: &wstr, errors: &ParseErrorList) -> WString {
         todo!()
     }
 

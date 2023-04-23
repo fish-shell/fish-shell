@@ -30,7 +30,7 @@ const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 mod environment_ffi {
     #[repr(u8)]
     #[cxx_name = "env_stack_set_result_t"]
-    enum EnvStackSetResult {
+    pub enum EnvStackSetResult {
         ENV_OK,
         ENV_PERM,
         ENV_SCOPE,
@@ -38,7 +38,8 @@ mod environment_ffi {
         ENV_NOT_FOUND,
     }
 }
-use environment_ffi::EnvStackSetResult;
+
+pub use environment_ffi::EnvStackSetResult;
 
 impl Default for EnvStackSetResult {
     fn default() -> Self {

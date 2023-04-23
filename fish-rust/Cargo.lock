@@ -821,7 +821,7 @@ dependencies = [
 [[package]]
 name = "printf-compat"
 version = "0.1.1"
-source = "git+https://github.com/fish-shell/printf-compat.git?branch=fish#d5f98dc8ce7a63e6639b08082ffbc6499021260c"
+source = "git+https://github.com/fish-shell/printf-compat.git?branch=fish#ff460021ba11e2a2c69e1fe04cb1961d6a75be15"
 dependencies = [
  "bitflags",
  "itertools 0.9.0",

@@ -266,11 +266,16 @@ impl<'a> builtin_printf_state_t<'a> {
             $fmt:expr, // format string of type &wstr
             $($arg:expr),* // arguments
             ) => {
-                sprintf_locale(
-                    $fmt,
-                    &self.locale,
-                    &[$($arg.to_arg()),*]
-                )
+                {
+                    let mut target = WString::new();
+                    sprintf_locale(
+                        &mut target,
+                        $fmt,
+                        &self.locale,
+                        &[$($arg.to_arg()),*]
+                    );
+                    target
+                }
             }
         }
 

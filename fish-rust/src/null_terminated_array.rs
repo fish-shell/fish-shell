@@ -2,6 +2,7 @@ use std::ffi::{c_char, CStr, CString};
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::ptr;
+use std::sync::Arc;
 
 pub trait NulTerminatedString {
     type CharType: Copy;
@@ -21,9 +22,6 @@ impl NulTerminatedString for CStr {
 /// This supports the null-terminated array of NUL-terminated strings consumed by exec.
 /// Given a list of strings, construct a vector of pointers to those strings contents.
 /// This is used for building null-terminated arrays of null-terminated strings.
-/// *Important*: the vector stores pointers into the interior of the input strings, which may be
-/// subject to the small-string optimization. This means that pointers will be left dangling if any
-/// input string is deallocated *or moved*. This class should only be used in transient calls.
 pub struct NullTerminatedArray<'p, T: NulTerminatedString + ?Sized> {
     pointers: Vec<*const T::CharType>,
     _phantom: PhantomData<&'p T>,
@@ -98,6 +96,49 @@ pub fn null_terminated_array_length<T>(mut arr: *const *const T) -> usize {
         }
     }
     len
+}
+
+/// FFI bits.
+/// We often work in Arc<OwningNullTerminatedArray>.
+/// Expose this to C++.
+pub struct OwningNullTerminatedArrayRefFFI(pub Arc<OwningNullTerminatedArray>);
+impl OwningNullTerminatedArrayRefFFI {
+    fn get(&self) -> *mut *const c_char {
+        self.0.get()
+    }
+}
+
+/// Convert a CxxString to a CString, truncating at the first NUL.
+use cxx::{CxxString, CxxVector};
+fn cxxstring_to_cstring(s: &CxxString) -> CString {
+    let bytes: &[u8] = s.as_bytes();
+    let nul_pos = bytes.iter().position(|&b| b == 0);
+    let slice = &bytes[..nul_pos.unwrap_or(bytes.len())];
+    CString::new(slice).unwrap()
+}
+
+fn new_owning_null_terminated_array_ffi(
+    strs: &CxxVector<CxxString>,
+) -> Box<OwningNullTerminatedArrayRefFFI> {
+    let cstrs = strs.iter().map(cxxstring_to_cstring).collect();
+    Box::new(OwningNullTerminatedArrayRefFFI(Arc::new(
+        OwningNullTerminatedArray::new(cstrs),
+    )))
+}
+
+#[cxx::bridge]
+mod null_terminated_array_ffi {
+    extern "Rust" {
+        #[cxx_name = "OwningNullTerminatedArrayRef"]
+        type OwningNullTerminatedArrayRefFFI;
+
+        fn get(&self) -> *mut *const c_char;
+
+        #[cxx_name = "new_owning_null_terminated_array"]
+        fn new_owning_null_terminated_array_ffi(
+            strs: &CxxVector<CxxString>,
+        ) -> Box<OwningNullTerminatedArrayRefFFI>;
+    }
 }
 
 #[test]

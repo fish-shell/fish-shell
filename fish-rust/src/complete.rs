@@ -4,12 +4,14 @@ use crate::{
 };
 use bitflags::bitflags;
 
+#[derive(Default)]
 pub struct Completion {
     pub completion: WString,
     pub flags: CompleteFlags,
 }
 
 bitflags! {
+    #[derive(Default)]
     pub struct CompleteFlags: u8 {
         /// Do not insert space afterwards if this is the only completion. (The default is to try insert
         /// a space).

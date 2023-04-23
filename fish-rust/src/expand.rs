@@ -123,7 +123,7 @@ pub struct ExpandResult {
 
     /// If expansion resulted in an error, this is an appropriate value with which to populate
     /// $status.
-    status: libc::c_int,
+    pub status: libc::c_int,
 }
 
 impl ExpandResult {

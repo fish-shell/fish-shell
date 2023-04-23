@@ -1755,11 +1755,15 @@ pub struct ScopeGuard<T, F: FnOnce(&mut T), C> {
     captured: ManuallyDrop<T>,
     view: fn(&T) -> &C,
     view_mut: fn(&mut T) -> &mut C,
+    view_take: fn(T) -> C,
     on_drop: Option<F>,
     marker: std::marker::PhantomData<C>,
 }
 
-fn identity<T>(t: &T) -> &T {
+fn identity<T>(t: T) -> T {
+    t
+}
+fn identity_ref<T>(t: &T) -> &T {
     t
 }
 fn identity_mut<T>(t: &mut T) -> &mut T {
@@ -1770,7 +1774,7 @@ impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F, T> {
     /// Creates a new `ScopeGuard` wrapping `value`. The `on_drop` callback is executed when the
     /// ScopeGuard's lifetime expires or when it is manually dropped.
     pub fn new(value: T, on_drop: F) -> Self {
-        Self::with_view(value, identity, identity_mut, on_drop)
+        Self::with_view(value, identity_ref, identity_mut, identity, on_drop)
     }
 }
 
@@ -1779,12 +1783,14 @@ impl<T, F: FnOnce(&mut T), C> ScopeGuard<T, F, C> {
         value: T,
         view: fn(&T) -> &C,
         view_mut: fn(&mut T) -> &mut C,
+        view_take: fn(T) -> C,
         on_drop: F,
     ) -> Self {
         Self {
             captured: ManuallyDrop::new(value),
             view,
             view_mut,
+            view_take,
             on_drop: Some(on_drop),
             marker: Default::default(),
         }
@@ -1797,22 +1803,22 @@ impl<T, F: FnOnce(&mut T), C> ScopeGuard<T, F, C> {
 
     /// Cancels the unwind operation like [`ScopeGuard::cancel()`] but also returns the captured
     /// value (consuming the `ScopeGuard` in the process).
-    pub fn rollback(mut guard: Self) -> T {
+    pub fn rollback(mut guard: Self) -> C {
         guard.on_drop.take();
         // Safety: we're about to forget the guard altogether
         let value = unsafe { ManuallyDrop::take(&mut guard.captured) };
-        std::mem::forget(guard);
-        value
+        guard.on_drop.take();
+        (guard.view_take)(value)
     }
 
     /// Commits the unwind operation (i.e. applies the provided callback) and returns the captured
     /// value (consuming the `ScopeGuard` in the process).
-    pub fn commit(mut guard: Self) -> T {
+    pub fn commit(mut guard: Self) -> C {
         (guard.on_drop.take().expect("ScopeGuard already canceled!"))(&mut guard.captured);
         // Safety: we're about to forget the guard altogether
         let value = unsafe { ManuallyDrop::take(&mut guard.captured) };
-        std::mem::forget(guard);
-        value
+        guard.on_drop.take();
+        (guard.view_take)(value)
     }
 }
 
@@ -1871,11 +1877,65 @@ where
     {
         &mut data.0
     }
+    fn view_context_take<Context, Accessor, T>(data: (Context, Accessor, T)) -> Context
+    where
+        Accessor: Fn(&mut Context) -> &mut T,
+    {
+        data.0
+    }
     let saved_value = mem::replace(accessor(&mut ctx), new_value);
     ScopeGuard::with_view(
         (ctx, accessor, saved_value),
         view_context,
         view_context_mut,
+        view_context_take,
+        restore_saved_value,
+    )
+}
+
+/// Similar to scoped_push but takes a function like "std::mem::replace" instead of a function
+/// that returns a mutable reference.
+#[allow(clippy::type_complexity)] // Not sure how to extract the return type.
+pub fn scoped_push_replacer<Context, Replacer, T>(
+    mut ctx: Context,
+    replacer: Replacer,
+    new_value: T,
+) -> ScopeGuard<(Context, Replacer, T), fn(&mut (Context, Replacer, T)), Context>
+where
+    Replacer: Fn(&mut Context, T) -> T,
+    T: Copy,
+{
+    fn restore_saved_value<Context, Replacer, T: Copy>(data: &mut (Context, Replacer, T))
+    where
+        Replacer: Fn(&mut Context, T) -> T,
+    {
+        let (ref mut ctx, ref replacer, saved_value) = data;
+        replacer(ctx, *saved_value);
+    }
+    fn view_context<Context, Replacer, T>(data: &(Context, Replacer, T)) -> &Context
+    where
+        Replacer: Fn(&mut Context, T) -> T,
+    {
+        &data.0
+    }
+    fn view_context_mut<Context, Replacer, T>(data: &mut (Context, Replacer, T)) -> &mut Context
+    where
+        Replacer: Fn(&mut Context, T) -> T,
+    {
+        &mut data.0
+    }
+    fn view_context_take<Context, Replacer, T>(data: (Context, Replacer, T)) -> Context
+    where
+        Replacer: Fn(&mut Context, T) -> T,
+    {
+        data.0
+    }
+    let saved_value = replacer(&mut ctx, new_value);
+    ScopeGuard::with_view(
+        (ctx, replacer, saved_value),
+        view_context,
+        view_context_mut,
+        view_context_take,
         restore_saved_value,
     )
 }

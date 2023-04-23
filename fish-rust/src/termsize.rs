@@ -3,6 +3,7 @@ use crate::common::assert_sync;
 use crate::env::{EnvMode, Environment};
 use crate::ffi::{environment_t, parser_t, Repin};
 use crate::flog::FLOG;
+use crate::parser::Parser;
 use crate::wchar::{WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wchar_ffi::WCharToFFI;

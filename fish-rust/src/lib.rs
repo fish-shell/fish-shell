@@ -17,6 +17,7 @@
 #![allow(clippy::option_map_unit_fn)]
 #![allow(clippy::ptr_arg)]
 #![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::comparison_chain)]
 
 #[macro_use]
 mod common;
@@ -61,6 +62,7 @@ mod nix;
 mod null_terminated_array;
 mod operation_context;
 mod parse_constants;
+mod parse_execution;
 mod parse_tree;
 mod parse_util;
 mod parser;

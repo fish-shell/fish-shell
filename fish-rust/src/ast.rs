@@ -448,8 +448,8 @@ pub trait List: Node {
     fn iter(&self) -> std::slice::Iter<Box<Self::ContentsNode>> {
         self.contents().iter()
     }
-    fn get(&self, index: usize) -> Option<&Box<Self::ContentsNode>> {
-        self.contents().get(index)
+    fn get(&self, index: usize) -> Option<&Self::ContentsNode> {
+        self.contents().get(index).map(|b| &**b)
     }
 }
 

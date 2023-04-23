@@ -19,7 +19,8 @@ use crate::flog::FLOGF;
 use crate::function::{function_get_props, FunctionProperties};
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
-    IoStreams, NullOutputStream, OutputStream, SeparatedBuffer, StringOutputStream,
+    IoStreams, NullOutputStream, OutputStream, OutputStreamRef, SeparatedBuffer,
+    StringOutputStream,
 };
 use crate::null_terminated_array::{
     null_terminated_array_length, AsNullTerminatedArray, OwningNullTerminatedArray,
@@ -38,7 +39,7 @@ use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::iothread_perform_cantwait;
 use crate::timer::push_timer;
-use crate::trace::trace_if_enabled;
+use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstoi, make_fd_blocking, perror};
@@ -716,39 +717,39 @@ fn create_output_stream_for_builtin(
     fd: RawFd,
     io_chain: &IoChain,
     piped_output_needs_buffering: bool,
-) -> Rc<dyn OutputStream> {
+) -> Box<dyn OutputStream> {
     let Some(io) = io_chain.io_for_fd(fd) else {
         // Common case of no redirections.
         // Just write to the fd directly.
-        return Rc::new(FdOutputStream::new(fd));
+        return Box::new(FdOutputStream::new(fd));
     };
     match io.io_mode() {
         IoMode::bufferfill => {
             // Our IO redirection is to an internal buffer, e.g. a command substitution.
             // We will write directly to it.
             let buffer = io.as_bufferfill().unwrap().the_buffer();
-            Rc::new(BufferedOutputStream::new(buffer.clone()))
+            Box::new(BufferedOutputStream::new(buffer.clone()))
         }
         IoMode::close => {
             // Like 'echo foo >&-'
-            Rc::new(NullOutputStream::new())
+            Box::new(NullOutputStream::new())
         }
         IoMode::file => {
             // Output is to a file which has been opened.
-            Rc::new(FdOutputStream::new(io.source_fd()))
+            Box::new(FdOutputStream::new(io.source_fd()))
         }
         IoMode::pipe => {
             // Output is to a pipe. We may need to buffer.
             if piped_output_needs_buffering {
-                Rc::new(StringOutputStream::new())
+                Box::new(StringOutputStream::new())
             } else {
-                Rc::new(FdOutputStream::new(io.source_fd()))
+                Box::new(FdOutputStream::new(io.source_fd()))
             }
         }
         IoMode::fd => {
             // This is a case like 'echo foo >&5'
             // It's uncommon and unclear what should happen.
-            Rc::new(StringOutputStream::new())
+            Box::new(StringOutputStream::new())
         }
     }
 }
@@ -908,7 +909,12 @@ fn function_restore_environment(parser: &mut Parser, block: BlockId) {
 // The "performer" function of a block or function process.
 // This accepts a place to execute as \p parser and then executes the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
-type ProcPerformer = dyn FnOnce(&mut Parser, &Process) -> ProcStatus;
+type ProcPerformer = dyn FnOnce(
+    &mut Parser,
+    &Process,
+    Option<&mut dyn OutputStream>,
+    Option<&mut dyn OutputStream>,
+) -> ProcStatus;
 
 // \return a function which may be to run the given process \p.
 // May return an empty std::function in the rare case that the to-be called fish function no longer
@@ -929,48 +935,52 @@ fn get_performer_for_process(
     let io_chain = io_chain.clone();
 
     if p.typ == ProcessType::block_node {
-        Some(Box::new(move |parser: &mut Parser, p: &Process| {
-            let source = p
-                .block_node_source
-                .as_ref()
-                .expect("Process is missing source info");
-            let node = p
-                .internal_block_node
-                .as_ref()
-                .expect("Process is missing node info");
-            parser
-                .eval_node(
-                    source,
-                    unsafe { node.as_ref() },
-                    &io_chain,
-                    &job_group,
-                    BlockType::top,
-                )
-                .status
-        }))
+        Some(Box::new(
+            move |parser: &mut Parser, p: &Process, _out, _err| {
+                let source = p
+                    .block_node_source
+                    .as_ref()
+                    .expect("Process is missing source info");
+                let node = p
+                    .internal_block_node
+                    .as_ref()
+                    .expect("Process is missing node info");
+                parser
+                    .eval_node(
+                        source,
+                        unsafe { node.as_ref() },
+                        &io_chain,
+                        &job_group,
+                        BlockType::top,
+                    )
+                    .status
+            },
+        ))
     } else {
         assert!(p.typ == ProcessType::function);
         let Some(props) = function_get_props(p.argv0().unwrap()) else {
             FLOGF!(error, "%ls", wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap()));
             return None;
         };
-        Some(Box::new(move |parser: &mut Parser, p: &Process| {
-            let argv = p.argv();
-            // Pull out the job list from the function.
-            let props = props.read().unwrap();
-            let body = &props.func_node.jobs;
-            let fb = function_prepare_environment(parser, argv.clone(), &props);
-            let parsed_source = props.parsed_source.as_ref().unwrap();
-            let mut res =
-                parser.eval_node(parsed_source, body, &io_chain, &job_group, BlockType::top);
-            function_restore_environment(parser, fb);
+        Some(Box::new(
+            move |parser: &mut Parser, p: &Process, _out, _err| {
+                let argv = p.argv();
+                // Pull out the job list from the function.
+                let props = props.read().unwrap();
+                let body = &props.func_node.jobs;
+                let fb = function_prepare_environment(parser, argv.clone(), &props);
+                let parsed_source = props.parsed_source.as_ref().unwrap();
+                let mut res =
+                    parser.eval_node(parsed_source, body, &io_chain, &job_group, BlockType::top);
+                function_restore_environment(parser, fb);
 
-            // If the function did not execute anything, treat it as success.
-            if res.was_empty {
-                res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
-            }
-            res.status
-        }))
+                // If the function did not execute anything, treat it as success.
+                if res.was_empty {
+                    res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+                }
+                res.status
+            },
+        ))
     }
 }
 
@@ -1001,7 +1011,7 @@ fn exec_block_or_func_process(
     // Do it in this scoped way so that the performer function can be eagerly deallocating releasing
     // its captured io chain.
     if let Some(performer) = get_performer_for_process(p, &j.read().unwrap(), &io_chain) {
-        p.status = performer(parser, p);
+        p.status = performer(parser, p, None, None);
     } else {
         return Err(());
     }
@@ -1027,13 +1037,7 @@ fn exec_block_or_func_process(
     Ok(())
 }
 
-fn get_performer_for_builtin(
-    p: &Process,
-    j: &Job,
-    io_chain: &IoChain,
-    output_stream: &Rc<dyn OutputStream>,
-    errput_stream: &Rc<dyn OutputStream>,
-) -> Box<ProcPerformer> {
+fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
     assert!(p.typ == ProcessType::builtin, "Process must be a builtin");
 
     // Determine if we have a "direct" redirection for stdin.
@@ -1057,47 +1061,52 @@ fn get_performer_for_builtin(
     let argv = p.argv().clone();
     let job_group = j.group.clone();
     let io_chain = io_chain.clone();
-    let output_stream = Rc::clone(output_stream);
-    let errput_stream = Rc::clone(errput_stream);
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
-    Box::new(move |parser: &mut Parser, p: &Process| {
-        let out_io = io_chain.io_for_fd(STDIN_FILENO);
-        let err_io = io_chain.io_for_fd(STDERR_FILENO);
+    Box::new(
+        move |parser: &mut Parser,
+              p: &Process,
+              output_stream: Option<&mut dyn OutputStream>,
+              errput_stream: Option<&mut dyn OutputStream>| {
+            let output_stream = output_stream.unwrap();
+            let errput_stream = errput_stream.unwrap();
+            let out_io = io_chain.io_for_fd(STDIN_FILENO);
+            let err_io = io_chain.io_for_fd(STDERR_FILENO);
 
-        // Figure out what fd to use for the builtin's stdin.
-        let mut local_builtin_stdin = STDIN_FILENO;
-        if let Some(inp) = io_chain.io_for_fd(STDIN_FILENO) {
-            // Ignore fd redirections from an fd other than the
-            // standard ones. e.g. in source <&3 don't actually read from fd 3,
-            // which is internal to fish. We still respect this redirection in
-            // that we pass it on as a block IO to the code that source runs,
-            // and therefore this is not an error.
-            let ignore_redirect = inp.io_mode() == IoMode::fd && inp.source_fd() >= 3;
-            if !ignore_redirect {
-                local_builtin_stdin = inp.source_fd();
+            // Figure out what fd to use for the builtin's stdin.
+            let mut local_builtin_stdin = STDIN_FILENO;
+            if let Some(inp) = io_chain.io_for_fd(STDIN_FILENO) {
+                // Ignore fd redirections from an fd other than the
+                // standard ones. e.g. in source <&3 don't actually read from fd 3,
+                // which is internal to fish. We still respect this redirection in
+                // that we pass it on as a block IO to the code that source runs,
+                // and therefore this is not an error.
+                let ignore_redirect = inp.io_mode() == IoMode::fd && inp.source_fd() >= 3;
+                if !ignore_redirect {
+                    local_builtin_stdin = inp.source_fd();
+                }
             }
-        }
 
-        // Populate our io_streams_t. This is a bag of information for the builtin.
-        let mut streams = IoStreams::new(Rc::as_ref(&output_stream), Rc::as_ref(&errput_stream));
-        streams.job_group = job_group;
-        streams.stdin_fd = local_builtin_stdin;
-        streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
-        streams.out_is_redirected = out_io.is_some();
-        streams.err_is_redirected = err_io.is_some();
-        streams.out_is_piped = out_io
-            .map(|io| io.io_mode() == IoMode::pipe)
-            .unwrap_or(false);
-        streams.err_is_piped = err_io
-            .map(|io| io.io_mode() == IoMode::pipe)
-            .unwrap_or(false);
-        streams.io_chain = &io_chain;
+            // Populate our io_streams_t. This is a bag of information for the builtin.
+            let mut streams = IoStreams::new(output_stream, errput_stream);
+            streams.job_group = job_group;
+            streams.stdin_fd = local_builtin_stdin;
+            streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
+            streams.out_is_redirected = out_io.is_some();
+            streams.err_is_redirected = err_io.is_some();
+            streams.out_is_piped = out_io
+                .map(|io| io.io_mode() == IoMode::pipe)
+                .unwrap_or(false);
+            streams.err_is_piped = err_io
+                .map(|io| io.io_mode() == IoMode::pipe)
+                .unwrap_or(false);
+            streams.io_chain = &io_chain;
 
-        // Execute the builtin.
-        builtin_run(parser, &argv, &streams)
-    })
+            // Execute the builtin.
+            builtin_run(parser, &argv, &streams)
+        },
+    )
 }
 
 /// Executes a builtin "process".
@@ -1109,14 +1118,14 @@ fn exec_builtin_process(
     piped_output_needs_buffering: bool,
 ) -> LaunchResult {
     assert!(p.typ == ProcessType::builtin, "Process is not a builtin");
-    let out =
+    let mut out =
         create_output_stream_for_builtin(STDOUT_FILENO, io_chain, piped_output_needs_buffering);
-    let err =
+    let mut err =
         create_output_stream_for_builtin(STDERR_FILENO, io_chain, piped_output_needs_buffering);
 
-    let performer = get_performer_for_builtin(p, &j.read().unwrap(), io_chain, &out, &err);
-    p.status = performer(parser, p);
-    handle_builtin_output(parser, j, p, io_chain, out.as_ref(), err.as_ref());
+    let performer = get_performer_for_builtin(p, &j.read().unwrap(), io_chain);
+    p.status = performer(parser, p, Some(&mut *out), Some(&mut *err));
+    handle_builtin_output(parser, j, p, io_chain, &*out, &*err);
     Ok(())
 }
 
@@ -1166,10 +1175,7 @@ fn exec_process_in_job(
 
     // Maybe trace this process.
     // TODO: 'and' and 'or' will not show.
-    if true {
-        todo!()
-        // trace_if_enabled(parser, L!(""), p.argv());
-    }
+    trace_if_enabled_with_args(parser, L!(""), p.argv());
 
     // The IO chain for this process.
     let mut process_net_io_chain = block_io.clone();

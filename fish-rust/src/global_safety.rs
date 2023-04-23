@@ -1,5 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
+#[derive(Debug)]
 pub struct RelaxedAtomicBool(AtomicBool);
 
 impl RelaxedAtomicBool {

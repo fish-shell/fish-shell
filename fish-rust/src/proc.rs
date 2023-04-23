@@ -557,6 +557,15 @@ pub struct ConcreteAssignment {
     pub values: Vec<WString>,
 }
 
+impl ConcreteAssignment {
+    pub fn new(variable_name: WString, values: Vec<WString>) -> Self {
+        Self {
+            variable_name,
+            values,
+        }
+    }
+}
+
 impl Process {
     pub fn new() -> Self {
         Default::default()
@@ -581,7 +590,9 @@ impl Process {
     pub fn redirection_specs(&self) -> &RedirectionSpecList {
         &self.proc_redirection_specs
     }
-
+    pub fn redirection_specs_mut(&mut self) -> &mut RedirectionSpecList {
+        &mut self.proc_redirection_specs
+    }
     pub fn set_redirection_specs(&mut self, specs: RedirectionSpecList) {
         self.proc_redirection_specs = specs;
     }

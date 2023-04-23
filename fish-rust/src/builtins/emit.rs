@@ -33,14 +33,17 @@ pub fn emit(
         return STATUS_INVALID_ARGS;
     };
 
-    event::fire_generic(
-        parser,
-        (*event_name).to_owned(),
-        argv[opts.optind + 1..]
-            .iter()
-            .map(|&s| WString::from(s))
-            .collect(),
-    );
+    if true {
+        todo!()
+    }
+    // event::fire_generic(
+    //     parser,
+    //     (*event_name).to_owned(),
+    //     argv[opts.optind + 1..]
+    //         .iter()
+    //         .map(|&s| WString::from(s))
+    //         .collect(),
+    // );
 
     STATUS_CMD_OK
 }

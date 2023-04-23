@@ -2,6 +2,7 @@ use crate::{
     common::escape,
     ffi::{self, parser_t, wcharz_t, wcstring_list_ffi_t},
     global_safety::RelaxedAtomicBool,
+    parser::Parser,
     wchar::{self, wstr, L},
     wchar_ffi::{WCharFromFFI, WCharToFFI},
 };
@@ -67,9 +68,17 @@ pub fn trace_argv<S: AsRef<wstr>>(parser: &parser_t, command: &wstr, args: &[S])
     ffi::log_extra_to_flog_file(&trace_text.to_ffi());
 }
 
-/// Convenience helper to trace a single string if tracing is enabled.
-pub fn trace_if_enabled<S: AsRef<wstr>>(parser: &parser_t, command: &wstr, args: &[S]) {
+pub fn trace_if_enabled_ffi<S: AsRef<wstr>>(parser: &parser_t, command: &wstr, args: &[S]) {
     if trace_enabled(parser) {
         trace_argv(parser, command, args);
     }
+}
+
+/// Convenience helper to trace a single command if tracing is enabled.
+pub fn trace_if_enabled(parser: &Parser, command: &wstr) {
+    todo!()
+}
+/// Convenience helper to trace a single command and arguments if tracing is enabled.
+pub fn trace_if_enabled_with_args<S: AsRef<wstr>>(parser: &Parser, command: &wstr, args: &[S]) {
+    todo!()
 }

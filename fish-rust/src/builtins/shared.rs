@@ -34,22 +34,61 @@ mod builtins_ffi {
     }
 }
 
-/// Error message when too many arguments are supplied to a builtin.
-pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
+/// The default prompt for the read command.
+pub const DEFAULT_READ_PROMPT: &str =
+    "set_color green; echo -n read; set_color normal; echo -n \"> \"";
 
-/// Error message when integer expected
-pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
+/// Error message on missing argument.
+pub const BUILTIN_ERR_MISSING: &str = "%ls: %ls: option requires an argument\n";
 
-/// Error messages for unexpected args.
+/// Error message on missing man page.
+pub const BUILTIN_ERR_MISSING_HELP: &str = concat!(
+    "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will ",
+    "show an online version\n"
+);
+
+/// Error message on invalid combination of options.
+pub const BUILTIN_ERR_COMBO: &str = "%ls: invalid option combination\n";
+
+/// Error message on invalid combination of options.
+pub const BUILTIN_ERR_COMBO2: &str = "%ls: invalid option combination, %ls\n";
+pub const BUILTIN_ERR_COMBO2_EXCLUSIVE: &str = "%ls: %ls %ls: options cannot be used together\n";
+
+/// Error message on multiple scope levels for variables.
+pub const BUILTIN_ERR_GLOCAL: &str =
+    "%ls: scope can be only one of: universal function global local\n";
+
+/// Error message for specifying both export and unexport to set/read.
+pub const BUILTIN_ERR_EXPUNEXP: &str = "%ls: cannot both export and unexport\n";
+
+/// Error message for unknown switch.
+pub const BUILTIN_ERR_UNKNOWN: &str = "%ls: %ls: unknown option\n";
+
+/// Error message for unexpected args.
 pub const BUILTIN_ERR_ARG_COUNT0: &str = "%ls: missing argument\n";
 pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
 pub const BUILTIN_ERR_ARG_COUNT2: &str = "%ls: %ls: expected %d arguments; got %d\n";
 pub const BUILTIN_ERR_MIN_ARG_COUNT1: &str = "%ls: expected >= %d arguments; got %d\n";
 pub const BUILTIN_ERR_MAX_ARG_COUNT1: &str = "%ls: expected <= %d arguments; got %d\n";
 
-/// Error message on invalid combination of options.
-pub const BUILTIN_ERR_COMBO: &str = "%ls: invalid option combination\n";
-pub const BUILTIN_ERR_COMBO2: &str = "%ls: invalid option combination, %ls\n";
+/// Error message for invalid variable name.
+pub const BUILTIN_ERR_VARNAME: &str = "%ls: %ls: invalid variable name. See `help identifiers`\n";
+
+/// Error message for invalid bind mode name.
+pub const BUILTIN_ERR_BIND_MODE: &str = "%ls: %ls: invalid mode name. See `help identifiers`\n";
+
+/// Error message when too many arguments are supplied to a builtin.
+pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
+
+/// Error message when integer expected
+pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
+
+/// Command that requires a subcommand was invoked without a recognized subcommand.
+pub const BUILTIN_ERR_MISSING_SUBCMD: &str = "%ls: missing subcommand\n";
+pub const BUILTIN_ERR_INVALID_SUBCMD: &str = "%ls: %ls: invalid subcommand\n";
+
+/// The send stuff to foreground message.
+pub const FG_MSG: &str = "Send job %d (%ls) to foreground\n";
 
 // Return values (`$status` values for fish scripts) for various situations.
 
@@ -163,6 +202,9 @@ fn rust_run_builtin(
 }
 
 pub fn builtin_run<S: AsRef<wstr>>(parser: &Parser, args: &[S], streams: &IoStreams) -> ProcStatus {
+    todo!()
+}
+pub fn builtin_exists(cmd: &wstr) -> bool {
     todo!()
 }
 

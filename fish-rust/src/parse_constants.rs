@@ -146,6 +146,7 @@ mod parse_constants_ffi {
     }
 
     // Statement decorations like 'command' or 'exec'.
+    #[derive(Eq, PartialEq)]
     pub enum StatementDecoration {
         none,
         command,

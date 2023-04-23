@@ -36,6 +36,7 @@ fn main() -> miette::Result<()> {
         "src/future_feature_flags.rs",
         "src/highlight.rs",
         "src/job_group.rs",
+        "src/null_terminated_array.rs",
         "src/parse_constants.rs",
         "src/parse_tree.rs",
         "src/parse_util.rs",

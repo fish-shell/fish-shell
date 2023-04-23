@@ -956,11 +956,11 @@ pub const fn char_offset(base: char, offset: u32) -> char {
     }
 }
 
-/// Exits without invoking destructors; useful for forked processes.
-///
-/// [`std::process::exit()`] is used; it exits immediately without running any destructors.
+/// Exits without invoking destructors (via _exit), useful for code after fork.
 fn exit_without_destructors(code: i32) -> ! {
-    std::process::exit(code)
+    unsafe {
+        libc::_exit(code);
+    }
 }
 
 /// Save the shell mode on startup so we can restore them on exit.

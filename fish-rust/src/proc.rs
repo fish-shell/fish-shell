@@ -958,7 +958,7 @@ impl Job {
         if let Some(pgid) = self.group().get_pgid() {
             if unsafe { libc::killpg(pgid, signal) } == -1 {
                 let strsignal = unsafe { CString::from_raw(libc::strsignal(signal)) };
-                wperror(&sprintf!("killpg(%d, %s)", pgid,));
+                wperror(&sprintf!("killpg(%d, %s)", pgid));
             }
         } else {
             // This job lives in fish's pgroup and we need to signal procs individually.

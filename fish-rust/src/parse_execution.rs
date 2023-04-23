@@ -35,7 +35,7 @@ use crate::parse_constants::{
 use crate::parse_tree::ParsedSourceRef;
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::parser::{Block, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
-use crate::path::{path_as_implicit_cd, path_try_get_path, GetPathResult};
+use crate::path::{path_as_implicit_cd, path_try_get_path, GetPathError};
 use crate::proc::{
     get_job_control_mode, job_reap, no_exec, ConcreteAssignment, Job, JobControl, JobProperties,
     JobRef, Process, ProcessList, ProcessType,
@@ -54,6 +54,7 @@ use errno::Errno;
 use libc::{
     c_int, pselect, ENOENT, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
 };
+use std::io::ErrorKind;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
@@ -269,17 +270,17 @@ impl<'a> ParseExecutionContext<'a> {
         &self,
         cmd: &wstr,
         statement: &ast::DecoratedStatement,
-        err_code: Errno,
+        err: std::io::Error,
     ) -> EndExecutionReason {
         // We couldn't find the specified command. This is a non-fatal error. We want to set the exit
         // status to 127, which is the standard number used by other shells like bash and zsh.
 
-        if err_code.0 != ENOENT {
+        if err.kind() != ErrorKind::NotFound {
             // TODO: We currently handle all errors here the same,
             // but this mainly applies to EACCES. We could also feasibly get:
             // ELOOP
             // ENAMETOOLONG
-            if err_code.0 == ENOTDIR {
+            if err.raw_os_error() == Some(ENOTDIR) {
                 // If the original command did not include a "/", assume we found it via $PATH.
                 let src = self.node_source(&statement.command);
                 if !src.contains('/') {
@@ -695,40 +696,44 @@ impl<'a> ParseExecutionContext<'a> {
 
         // Determine the process type.
         let mut process_type = self.process_type_for_command(statement, &cmd);
-        let mut external_cmd = GetPathResult::default();
-        if [ProcessType::external, ProcessType::exec].contains(&process_type) {
+        let external_cmd = if [ProcessType::external, ProcessType::exec].contains(&process_type) {
             let parser = self.parser();
             // Determine the actual command. This may be an implicit cd.
-            external_cmd = path_try_get_path(&cmd, parser.vars());
-            let has_command = external_cmd.err.is_none();
-
-            // If the specified command does not exist, and is undecorated, try using an implicit cd.
-            if !has_command && statement.decoration() == StatementDecoration::none {
-                // Implicit cd requires an empty argument and redirection list.
-                if statement.args_or_redirs.is_empty() {
-                    // Ok, no arguments or redirections; check to see if the command is a directory.
-                    use_implicit_cd =
-                        path_as_implicit_cd(&cmd, &parser.vars().get_pwd_slash(), parser.vars())
+            match path_try_get_path(&cmd, parser.vars()) {
+                Ok(path) => path,
+                Err(GetPathError { err, best_path }) => {
+                    // If the specified command does not exist, and is undecorated, try using an implicit cd.
+                    if statement.decoration() == StatementDecoration::none {
+                        // Implicit cd requires an empty argument and redirection list.
+                        if statement.args_or_redirs.is_empty() {
+                            // Ok, no arguments or redirections; check to see if the command is a directory.
+                            use_implicit_cd = path_as_implicit_cd(
+                                &cmd,
+                                &parser.vars().get_pwd_slash(),
+                                parser.vars(),
+                            )
                             .is_some();
-                }
-            }
+                        }
+                    }
 
-            if !has_command && !use_implicit_cd {
-                // No command. If we're --no-execute return okay - it might be a function.
-                if no_exec() {
-                    return EndExecutionReason::ok;
-                }
-                return self.handle_command_not_found(
-                    if external_cmd.path.is_empty() {
-                        &cmd
+                    if !use_implicit_cd {
+                        // No command. If we're --no-execute return okay - it might be a function.
+                        if no_exec() {
+                            return EndExecutionReason::ok;
+                        }
+                        return self.handle_command_not_found(
+                            best_path.as_ref().unwrap_or(&cmd),
+                            statement,
+                            err,
+                        );
                     } else {
-                        &external_cmd.path
-                    },
-                    statement,
-                    external_cmd.err.unwrap(),
-                );
+                        WString::new()
+                    }
+                }
             }
-        }
+        } else {
+            WString::new()
+        };
 
         // Produce the full argument list and the set of IO redirections.
         let mut cmd_args = vec![];
@@ -736,7 +741,6 @@ impl<'a> ParseExecutionContext<'a> {
         if use_implicit_cd {
             // Implicit cd is simple.
             cmd_args = vec![L!("cd").to_owned(), cmd];
-            external_cmd = GetPathResult::default();
 
             // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
             process_type = if function_exists(L!("cd"), &mut self.parser_mut()) {
@@ -774,7 +778,7 @@ impl<'a> ParseExecutionContext<'a> {
         proc.typ = process_type;
         proc.set_argv(cmd_args);
         proc.set_redirection_specs(redirections);
-        proc.actual_cmd = external_cmd.path;
+        proc.actual_cmd = external_cmd;
         EndExecutionReason::ok
     }
 

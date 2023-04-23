@@ -1145,6 +1145,7 @@ pub fn wcs2osstring(input: &wstr) -> OsString {
     OsString::from_vec(result)
 }
 
+/// Same as [`wcs2string`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
 pub fn wcs2zstring(input: &wstr) -> CString {
     if input.is_empty() {
         return CString::default();

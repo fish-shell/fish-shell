@@ -2,6 +2,7 @@
 //! ported directly from the cpp code so we can use rust threads instead of using pthreads.
 
 use crate::flog::{FloggableDebug, FLOG};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, ThreadId};
 
 impl FloggableDebug for ThreadId {}
@@ -16,6 +17,10 @@ impl FloggableDebug for ThreadId {}
 
 /// The thread id of the main thread, as set by [`init()`] at startup.
 static mut MAIN_THREAD_ID: Option<ThreadId> = None;
+/// Used to bypass thread assertions when testing.
+static THREAD_ASSERTS_CFG_FOR_TESTING: AtomicBool = AtomicBool::new(false);
+/// This allows us to notice when we've forked.
+static IS_FORKED_PROC: AtomicBool = AtomicBool::new(false);
 
 /// Initialize some global static variables. Must be called at startup from the main thread.
 pub fn init() {
@@ -24,6 +29,14 @@ pub fn init() {
             panic!("threads::init() must only be called once (at startup)!");
         }
         MAIN_THREAD_ID = Some(thread::current().id());
+    }
+
+    extern "C" fn child_post_fork() {
+        IS_FORKED_PROC.store(true, Ordering::Relaxed);
+    }
+    unsafe {
+        let result = libc::pthread_atfork(None, None, Some(child_post_fork));
+        assert_eq!(result, 0, "pthread_atfork() failure: {}", errno::errno());
     }
 }
 
@@ -41,13 +54,18 @@ fn main_thread_id() -> ThreadId {
 }
 
 #[inline(always)]
+pub fn is_main_thread() -> bool {
+    thread::current().id() == main_thread_id()
+}
+
+#[inline(always)]
 pub fn assert_is_main_thread() {
     #[cold]
     fn not_main_thread() -> ! {
         panic!("Function is not running on the main thread!");
     }
 
-    if thread::current().id() != main_thread_id() {
+    if !is_main_thread() && !THREAD_ASSERTS_CFG_FOR_TESTING.load(Ordering::Relaxed) {
         not_main_thread();
     }
 }
@@ -59,9 +77,17 @@ pub fn assert_is_background_thread() {
         panic!("Function is not allowed to be called on the main thread!");
     }
 
-    if thread::current().id() == main_thread_id() {
+    if is_main_thread() && !THREAD_ASSERTS_CFG_FOR_TESTING.load(Ordering::Relaxed) {
         not_background_thread();
     }
+}
+
+pub fn configure_thread_assertions_for_testing() {
+    THREAD_ASSERTS_CFG_FOR_TESTING.store(true, Ordering::Relaxed);
+}
+
+pub fn is_forked_child() -> bool {
+    IS_FORKED_PROC.load(Ordering::Relaxed)
 }
 
 /// The rusty version of `iothreads::make_detached_pthread()`. We will probably need a

@@ -79,11 +79,14 @@ pub fn r#builtin(
 
     if opts.list_names {
         // List is guaranteed to be sorted by name.
-        let names: Vec<WString> = builtin_get_names_ffi().from_ffi();
-        for name in names {
+        for name in builtin_get_names() {
             streams.out.append(name + L!("\n"));
         }
     }
 
     STATUS_CMD_OK
+}
+
+pub fn builtin_get_names() -> Vec<WString> {
+    builtin_get_names_ffi().from_ffi()
 }

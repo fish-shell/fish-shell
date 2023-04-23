@@ -17,7 +17,7 @@
 #include "maybe.h"
 #include "wutil.h"
 
-class owning_null_terminated_array_t;
+struct owning_null_terminated_array_t;
 
 extern size_t read_byte_limit;
 extern bool curses_initialized;

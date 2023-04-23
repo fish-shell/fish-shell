@@ -10,6 +10,10 @@ use crate::wutil::{fish_wcstoi, wgettext, wgettext_str, wperror};
 use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
 use std::sync::atomic::{AtomicI32, Ordering};
+use crate::wchar::wstr;
+use crate::wchar_ffi::c_str;
+use libc::SIG_DFL;
+use widestring::U32CStr;
 use widestring_suffix::widestrs;
 
 #[cxx::bridge]
@@ -583,8 +587,45 @@ impl From<Signal> for NonZeroI32 {
     }
 }
 
+<<<<<<< HEAD
 // Need to use add_test for wgettext support.
 use crate::ffi_tests::add_test;
+||||||| parent of 618ac805e ([proc] WIP Port postfork)
+pub fn signal_set_handlers_once(interactive: bool) {
+    todo!()
+    // static std::once_flag s_noninter_once;
+    // std::call_once(s_noninter_once, signal_set_handlers, false);
+=======
+pub fn signal_reset_handlers() {
+    todo!()
+    // unsafe {
+    //     let mut act: libc::sigaction = std::mem::zeroed();
+    //     libc::sigemptyset(&mut act.sa_mask);
+    //     act.sa_flags = 0;
+    //     act.sa_handler = SIG_DFL;
+
+    //     for data in signal_table {
+    //         if data.signal == SIGHUP {
+    //             let mut oact: libc::sigaction = std::mem::zeroed();
+    //             libc::sigaction(SIGHUP, std::ptr::null(), &mut oact);
+    //             if oact.sa_handler == SIG_IGN {
+    //                 continue;
+    //             }
+    //         }
+    //         libc::sigaction(data.signal, &act, std::ptr::null_mut());
+    //     }
+    // }
+}
+
+pub fn get_signals_with_handlers(set: &mut libc::sigset_t) {
+    todo!()
+}
+
+pub fn signal_set_handlers_once(interactive: bool) {
+    todo!()
+    // static std::once_flag s_noninter_once;
+    // std::call_once(s_noninter_once, signal_set_handlers, false);
+>>>>>>> 618ac805e ([proc] WIP Port postfork)
 
 add_test!("test_signal_name", || {
     let sig = Signal::new(libc::SIGINT);

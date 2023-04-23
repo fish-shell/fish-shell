@@ -65,15 +65,6 @@ pub mod status {
     pub const ENV_NOT_FOUND: i32 = 4;
 }
 
-/// Return values for `EnvStack::set()`.
-pub enum EnvStackSetResult {
-    ENV_OK,
-    ENV_PERM,
-    ENV_SCOPE,
-    ENV_INVALID,
-    ENV_NOT_FOUND,
-}
-
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
 pub struct ConfigPaths {

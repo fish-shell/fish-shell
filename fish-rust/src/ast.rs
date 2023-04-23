@@ -633,6 +633,13 @@ macro_rules! define_list_node {
                 &mut self.list_contents
             }
         }
+        impl<'a> IntoIterator for &'a $name {
+            type Item = &'a Box<$contents>;
+            type IntoIter = std::slice::Iter<'a, Box<$contents>>;
+            fn into_iter(self) -> Self::IntoIter {
+                self.contents().into_iter()
+            }
+        }
         impl Index<usize> for $name {
             type Output = <$name as List>::ContentsNode;
             fn index(&self, index: usize) -> &Self::Output {

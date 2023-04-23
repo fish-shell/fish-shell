@@ -23,7 +23,7 @@ use libc::{
 pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
 use std::fs::canonicalize;
-use std::io::Write;
+use std::io::{self, Write};
 use std::os::fd::RawFd;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::unix::prelude::{OsStrExt, OsStringExt};
@@ -38,15 +38,15 @@ pub fn wopendir(name: &wstr) -> *mut libc::DIR {
 }
 
 /// Wide character version of stat().
-pub fn wstat(file_name: &wstr) -> Option<std::fs::Metadata> {
+pub fn wstat(file_name: &wstr) -> Result<std::fs::Metadata, std::io::Error> {
     let tmp = wcs2osstring(file_name);
-    std::fs::metadata(tmp).ok()
+    std::fs::metadata(tmp)
 }
 
 /// Wide character version of lstat().
-pub fn lwstat(file_name: &wstr) -> Option<std::fs::Metadata> {
+pub fn lwstat(file_name: &wstr) -> Result<std::fs::Metadata, std::io::Error> {
     let tmp = wcs2osstring(file_name);
-    std::fs::symlink_metadata(tmp).ok()
+    std::fs::symlink_metadata(tmp)
 }
 
 /// Wide character version of access().
@@ -138,7 +138,7 @@ pub fn make_fd_blocking(fd: RawFd) -> libc::c_int {
 
 /// Wide character version of readlink().
 pub fn wreadlink(file_name: &wstr) -> Option<WString> {
-    let md = lwstat(file_name)?;
+    let md = lwstat(file_name).ok()?;
     let bufsize = usize::try_from(md.len()).unwrap() + 1;
     let mut target_buf = vec![b'\0'; bufsize];
     let tmp = wcs2zstring(file_name);

@@ -5,6 +5,7 @@ use crate::ffi;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
 use crate::wchar::wstr;
 use crate::wchar_ffi::c_str;
+use libc::SIG_DFL;
 use widestring::U32CStr;
 use widestring_suffix::widestrs;
 
@@ -331,6 +332,31 @@ impl From<Signal> for NonZeroI32 {
     fn from(value: Signal) -> Self {
         value.0
     }
+}
+
+pub fn signal_reset_handlers() {
+    todo!()
+    // unsafe {
+    //     let mut act: libc::sigaction = std::mem::zeroed();
+    //     libc::sigemptyset(&mut act.sa_mask);
+    //     act.sa_flags = 0;
+    //     act.sa_handler = SIG_DFL;
+
+    //     for data in signal_table {
+    //         if data.signal == SIGHUP {
+    //             let mut oact: libc::sigaction = std::mem::zeroed();
+    //             libc::sigaction(SIGHUP, std::ptr::null(), &mut oact);
+    //             if oact.sa_handler == SIG_IGN {
+    //                 continue;
+    //             }
+    //         }
+    //         libc::sigaction(data.signal, &act, std::ptr::null_mut());
+    //     }
+    // }
+}
+
+pub fn get_signals_with_handlers(set: &mut libc::sigset_t) {
+    todo!()
 }
 
 pub fn signal_set_handlers_once(interactive: bool) {

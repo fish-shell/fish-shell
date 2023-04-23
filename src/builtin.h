@@ -117,6 +117,7 @@ enum class RustBuiltin : int32_t {
     Bg,
     Block,
     Builtin,
+    Cd,
     Contains,
     Command,
     Echo,

@@ -5,6 +5,7 @@ pub mod argparse;
 pub mod bg;
 pub mod block;
 pub mod builtin;
+pub mod cd;
 pub mod command;
 pub mod contains;
 pub mod echo;

@@ -190,6 +190,7 @@ pub fn run_builtin(
         RustBuiltin::Bg => super::bg::bg(parser, streams, args),
         RustBuiltin::Block => super::block::block(parser, streams, args),
         RustBuiltin::Builtin => super::builtin::builtin(parser, streams, args),
+        RustBuiltin::Cd => super::cd::cd(parser, streams, args),
         RustBuiltin::Contains => super::contains::contains(parser, streams, args),
         RustBuiltin::Command => super::command::command(parser, streams, args),
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),

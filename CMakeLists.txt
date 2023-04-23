@@ -100,7 +100,6 @@ endif()
 # List of sources for builtin functions.
 set(FISH_BUILTIN_SRCS
     src/builtin.cpp src/builtins/bind.cpp
-    src/builtins/cd.cpp
     src/builtins/commandline.cpp src/builtins/complete.cpp
     src/builtins/disown.cpp
     src/builtins/eval.cpp src/builtins/fg.cpp

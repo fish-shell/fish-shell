@@ -30,7 +30,6 @@
 #include <string>
 
 #include "builtins/bind.h"
-#include "builtins/cd.h"
 #include "builtins/commandline.h"
 #include "builtins/complete.h"
 #include "builtins/disown.h"
@@ -357,7 +356,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"breakpoint", &builtin_breakpoint, N_(L"Halt execution and start debug prompt")},
     {L"builtin", &implemented_in_rust, N_(L"Run a builtin specifically")},
     {L"case", &builtin_generic, N_(L"Block of code to run conditionally")},
-    {L"cd", &builtin_cd, N_(L"Change working directory")},
+    {L"cd", &implemented_in_rust, N_(L"Change working directory")},
     {L"command", &implemented_in_rust, N_(L"Run a command specifically")},
     {L"commandline", &builtin_commandline, N_(L"Set or get the commandline")},
     {L"complete", &builtin_complete, N_(L"Edit command specific completions")},
@@ -533,6 +532,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"builtin") {
         return RustBuiltin::Builtin;
+    }
+    if (cmd == L"cd") {
+        return RustBuiltin::Cd;
     }
     if (cmd == L"contains") {
         return RustBuiltin::Contains;

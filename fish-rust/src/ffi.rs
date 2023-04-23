@@ -117,16 +117,6 @@ include_cpp! {
 
     generate!("env_var_t")
 
-    generate!("function_properties_t")
-    generate!("function_properties_ref_t")
-    generate!("function_get_props_autoload")
-    generate!("function_get_definition_file")
-    generate!("function_get_copy_definition_file")
-    generate!("function_get_definition_lineno")
-    generate!("function_get_copy_definition_lineno")
-    generate!("function_get_annotated_definition")
-    generate!("function_is_copy")
-    generate!("function_exists")
     generate!("path_get_paths_ffi")
 
     generate!("colorize_shell")
@@ -324,7 +314,6 @@ impl Repin for job_t {}
 impl Repin for output_stream_t {}
 impl Repin for parser_t {}
 impl Repin for process_t {}
-impl Repin for function_properties_ref_t {}
 impl Repin for wcstring_list_ffi_t {}
 
 pub use autocxx::c_int;

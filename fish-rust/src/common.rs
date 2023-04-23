@@ -687,10 +687,14 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
     Some(result)
 }
 
-/// Reverse the effects of `escape_string_url()`. By definition the string has consist of just ASCII
-/// chars.
+/// Reverse the effects of `escape_string_url()`. By definition the consists of just ASCII chars.
+///
+/// XXX: The C++ counterpart to this function didn't panic if passed a truncated or malformed
+/// escaped string because it relied on always being able to read at least one more char until a NUL
+/// is encountered. As currently written/ported, it can panic if the passed utf-32 char slice is
+/// truncated or malformed since that is no longer guaranteed to be the case!
 fn unescape_string_url(input: &wstr) -> Option<WString> {
-    let mut result: Vec<u8> = vec![];
+    let mut result: Vec<u8> = Vec::with_capacity(input.len());
     let mut i = 0;
     while i < input.len() {
         let c = input.char_at(i);
@@ -705,12 +709,9 @@ fn unescape_string_url(input: &wstr) -> Option<WString> {
                 result.push(b'%');
                 i += 1;
             } else {
-                let c2 = input.char_at(i + 2);
-                if c2 == '\0' {
-                    return None; // string ended prematurely
-                }
                 let d1 = c1.to_digit(16)?;
-                let d2 = c2.to_digit(16)?;
+                let c2 = input.char_at(i + 2);
+                let d2 = c2.to_digit(16)?; // also fails if '\0' i.e. premature end
                 result.push((16 * d1 + d2) as u8);
                 i += 2;
             }
@@ -723,10 +724,15 @@ fn unescape_string_url(input: &wstr) -> Option<WString> {
     Some(str2wcstring(&result))
 }
 
-/// Reverse the effects of `escape_string_var()`. By definition the string has consist of just ASCII
+/// Reverse the effects of `escape_string_var()`. By definition the string consists of just ASCII
 /// chars.
+///
+/// XXX: The C++ counterpart to this function didn't panic if passed a truncated or malformed
+/// escaped string because it relied on always being able to read at least one more char until a NUL
+/// is encountered. As currently written/ported, it can panic if the passed utf-32 char slice is
+/// truncated or malformed since that is no longer guaranteed to be the case!
 fn unescape_string_var(input: &wstr) -> Option<WString> {
-    let mut result: Vec<u8> = vec![];
+    let mut result: Vec<u8> = Vec::with_capacity(input.len());
     let mut prev_was_hex_encoded = false;
     let mut i = 0;
     while i < input.len() {
@@ -746,12 +752,9 @@ fn unescape_string_var(input: &wstr) -> Option<WString> {
                 result.push(b'_');
                 i += 1;
             } else if ('0'..='9').contains(&c1) || ('A'..='F').contains(&c1) {
+                let d1 = c1.to_digit(16)?;
                 let c2 = input.char_at(i + 2);
-                if c2 == '\0' {
-                    return None; // string ended prematurely
-                }
-                let d1 = convert_hex_digit(c1)?;
-                let d2 = convert_hex_digit(c2)?;
+                let d2 = c2.to_digit(16)?; // also fails if '\0' i.e. premature end
                 result.push((16 * d1 + d2) as u8);
                 i += 2;
                 prev_was_hex_encoded = true;
@@ -944,18 +947,6 @@ pub fn read_unquoted_escape(
     }
 
     Some(in_pos)
-}
-
-/// This is a specialization of `char::to_digit()` that only handles base 16 and only uppercase.
-fn convert_hex_digit(d: char) -> Option<u32> {
-    let val = if ('0'..='9').contains(&d) {
-        u32::from(d) - u32::from('0')
-    } else if ('A'..='Z').contains(&d) {
-        10 + u32::from(d) - u32::from('A')
-    } else {
-        return None;
-    };
-    Some(val)
 }
 
 pub const fn char_offset(base: char, offset: u32) -> char {

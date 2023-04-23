@@ -232,7 +232,7 @@ pub fn exec_job(parser: &mut Parser, job: &JobRef, block_io: &IoChain) -> bool {
 /// \param apply_exit_status if set, update $status within the parser, otherwise do not.
 ///
 /// \return a value appropriate for populating $status.
-pub fn exec_subshell_(
+pub fn exec_subshell(
     cmd: &wstr,
     parser: &mut Parser,
     outputs: Option<&mut Vec<WString>>,

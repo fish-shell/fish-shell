@@ -117,6 +117,7 @@ pub enum ExpandResultCode {
 }
 
 /// These are the possible return values for expand_string.
+#[must_use]
 pub struct ExpandResult {
     /// The result of expansion.
     pub result: ExpandResultCode,
@@ -946,7 +947,7 @@ fn expand_braces(
         whole_item.push_utfstr(&input[..length_preceding_braces]);
         whole_item.push_utfstr(&item);
         whole_item.push_utfstr(&input[brace_end + 1..]);
-        expand_braces(whole_item, flags, out, errors);
+        let _ = expand_braces(whole_item, flags, out, errors);
 
         item_begin = pos + 1;
         if pos == brace_end {
@@ -1100,7 +1101,7 @@ pub fn expand_cmdsubst(
         tail.insert(0, '"');
     }
 
-    expand_cmdsubst(tail, ctx, &mut tail_expand_recv, errors); // TODO: offset error locations
+    let _ = expand_cmdsubst(tail, ctx, &mut tail_expand_recv, errors); // TODO: offset error locations
     let mut tail_expand = tail_expand_recv.take();
 
     // Combine the result of the current command substitution with the result of the recursive tail

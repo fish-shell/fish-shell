@@ -668,7 +668,7 @@ impl IoChain {
                                     let mut dname = spec.target.clone();
                                     while !dname.is_empty() {
                                         let next = wdirname(dname.clone());
-                                        if let Some(md) = wstat(&next) {
+                                        if let Ok(md) = wstat(&next) {
                                             if !md.is_dir() {
                                                 FLOGF!(
                                                     warning,

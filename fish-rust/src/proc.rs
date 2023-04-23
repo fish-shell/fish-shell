@@ -517,6 +517,7 @@ pub struct Process {
     pub pid: libc::pid_t,
 
     /// If we are an "internal process," that process.
+    // todo! remove RwLock
     pub internal_proc: Option<Arc<RwLock<InternalProc>>>,
 
     /// File descriptor that pipe output should bind to.

@@ -12,9 +12,7 @@ use crate::common::{
     valid_var_name_char, wcs2zstring, UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE,
     EXPAND_RESERVED_END,
 };
-use crate::complete::{
-    append_completion, CompleteFlags, Completion, CompletionList, CompletionReceiver,
-};
+use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
 use crate::history::{history_session_id, History};
@@ -179,7 +177,7 @@ pub fn expand_string(
     errors: Option<&mut ParseErrorList>,
 ) -> ExpandResult {
     let mut completions = vec![];
-    let mut recv = CompletionReceiver::new(completions, ctx.expansion_limit);
+    let mut recv = CompletionReceiver::from_list(completions, ctx.expansion_limit);
     let result = expand_to_receiver(input, &mut recv, flags, ctx, errors);
     *out_completions = recv.take();
     result
@@ -628,7 +626,7 @@ fn expand_variables(
     // last_idx may be 1 past the end of the string, but no further.
     assert!(last_idx <= instr.len(), "Invalid last_idx");
     if last_idx == 0 {
-        if !out.add(instr) {
+        if !out.add_string(instr) {
             return append_overflow_error(errors, None);
         }
         return ExpandResult::ok();
@@ -707,7 +705,7 @@ fn expand_variables(
         if let Some(ref var) = var {
             effective_val_count = var.as_list().len();
         } else if let Some(ref history) = history {
-            effective_val_count = history.size();
+            effective_val_count = history.lock().unwrap().size();
         }
         match parse_slice(
             &instr[slice_start..],
@@ -737,6 +735,7 @@ fn expand_variables(
             }
         }
     }
+    let var_idx_list = var_idx_list.iter().filter_map(|&n| n.try_into().ok());
 
     if var.is_none() && history.is_none() {
         // Expanding a non-existent variable.
@@ -764,7 +763,7 @@ fn expand_variables(
     let mut var_item_list = vec![];
     if all_values {
         if let Some(ref history) = history {
-            history.get_history(&mut var_item_list);
+            history.lock().unwrap().get_history(&mut var_item_list);
         } else {
             var.as_ref().unwrap().to_list(&mut var_item_list);
         }
@@ -773,7 +772,10 @@ fn expand_variables(
         if let Some(ref history) = history {
             // Ask history to map indexes to item strings.
             // Note this may have missing entries for out-of-bounds.
-            let item_map = history.items_at_indexes(&var_idx_list);
+            let item_map = history
+                .lock()
+                .unwrap()
+                .items_at_indexes(var_idx_list.clone());
             for item_index in var_idx_list {
                 if let Some(item) = item_map.get(&item_index) {
                     var_item_list.push(item.clone());
@@ -819,7 +821,7 @@ fn expand_variables(
         // Normal cartesian-product expansion.
         for item in var_item_list {
             if varexp_char_idx == 0 && var_name_and_slice_stop == instr.len() {
-                if !out.add(item) {
+                if !out.add_string(item) {
                     return append_overflow_error(errors, None);
                 }
             } else {
@@ -915,7 +917,7 @@ fn expand_braces(
 
     let Some(brace_begin) = brace_begin else {
         // No more brace expansions left; we can return the value as-is.
-        if !out.add(input) {
+        if !out.add_string(input) {
             return ExpandResult::new(ExpandResultCode::error);
         }
         return ExpandResult::ok();
@@ -997,7 +999,7 @@ pub fn expand_cmdsubst(
             return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
         }
         0 => {
-            if !out.add(input) {
+            if !out.add_string(input) {
                 return ExpandResult::new(ExpandResultCode::error);
             }
             return ExpandResult::ok();
@@ -1135,7 +1137,7 @@ pub fn expand_cmdsubst(
             whole_item.push_utfstr(&sub_res_joined);
             whole_item.push(INTERNAL_SEPARATOR);
             whole_item.push_utfstr(&tail_item.completion["\"".len()..]);
-            if !out.add(whole_item) {
+            if !out.add_string(whole_item) {
                 return append_overflow_error(errors, None);
             }
         }
@@ -1153,7 +1155,7 @@ pub fn expand_cmdsubst(
             whole_item.push_utfstr(&sub_item2);
             whole_item.push(INTERNAL_SEPARATOR);
             whole_item.push_utfstr(&tail_item.completion);
-            if !out.add(whole_item) {
+            if !out.add_string(whole_item) {
                 return append_overflow_error(errors, None);
             }
         }
@@ -1290,7 +1292,7 @@ impl<'a, 'b> Expander<'a, 'b> {
         );
         // Early out. If we're not completing, and there's no magic in the input, we're done.
         if !flags.contains(ExpandFlags::FOR_COMPLETIONS) && expand_is_clean(&input) {
-            if !out_completions.add(input) {
+            if !out_completions.add_string(input) {
                 return append_overflow_error(&mut errors, None);
             }
             return ExpandResult::ok();
@@ -1311,8 +1313,7 @@ impl<'a, 'b> Expander<'a, 'b> {
         ];
 
         // Load up our single initial completion.
-        let mut completions = CompletionList::new();
-        append_completion(&mut completions, input.clone());
+        let mut completions = vec![Completion::from_completion(input.clone())];
 
         let mut output_storage = out_completions.subreceiver();
         let mut total_result = ExpandResult::ok();
@@ -1330,7 +1331,7 @@ impl<'a, 'b> Expander<'a, 'b> {
             }
 
             // Output becomes our next stage's input.
-            completions = output_storage.clear();
+            completions = output_storage.take();
             if total_result == ExpandResultCode::error {
                 break;
             }
@@ -1374,7 +1375,7 @@ impl<'a, 'b> Expander<'a, 'b> {
                 None,
             ) {
                 0 => {
-                    if !out.add(input) {
+                    if !out.add_string(input) {
                         return append_overflow_error(self.errors, None);
                     }
                     return ExpandResult::ok();
@@ -1415,7 +1416,7 @@ impl<'a, 'b> Expander<'a, 'b> {
                     *i = '$';
                 }
             }
-            if !out.add(next) {
+            if !out.add_string(next) {
                 return append_overflow_error(self.errors, None);
             }
             ExpandResult::ok()
@@ -1434,7 +1435,7 @@ impl<'a, 'b> Expander<'a, 'b> {
     ) -> ExpandResult {
         expand_home_directory(&mut input, self.ctx.vars);
         expand_percent_self(&mut input);
-        if !out.add(input) {
+        if !out.add_string(input) {
             return append_overflow_error(self.errors, None);
         }
         ExpandResult::ok()
@@ -1541,7 +1542,7 @@ impl<'a, 'b> Expander<'a, 'b> {
             // completion on the floor.
             #[allow(clippy::collapsible_if)]
             if !self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
-                if !out.add(path_to_expand) {
+                if !out.add_string(path_to_expand) {
                     return append_overflow_error(self.errors, None);
                 }
             }

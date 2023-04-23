@@ -38,7 +38,8 @@ jobs:
         make
     - name: make test
       run: |
-        make test
+        false
+        # make test
 
   ubuntu-32bit-fetched-pcre2:
 
@@ -68,7 +69,8 @@ jobs:
         make VERBOSE=1
     - name: make test
       run: |
-        make test
+        false
+        # make test
 
   ubuntu-asan:
 
@@ -121,7 +123,8 @@ jobs:
           # UPDATE: this can cause spurious leak reports for __cxa_thread_atexit_impl() under glibc.
           LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=1:print_suppressions=0
       run: |
-        env LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt" make test
+        false
+        # env LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt" make test
 
   # Our clang++ tsan builds are not recognizing safe rust patterns (such as the fact that Drop
   # cannot be called while a thread is using the object in question). Rust has its own way of
@@ -180,4 +183,5 @@ jobs:
         make
     - name: make test
       run: |
-        make test
+        false
+        # make test

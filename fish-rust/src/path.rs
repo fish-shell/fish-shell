@@ -176,15 +176,10 @@ fn maybe_issue_path_warning(
     let _ = std::io::stdout().write(&[b'\n']);
 }
 
-/// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
-/// \returns the path if found, none if not.
+/// Finds the path of an executable named `cmd`, by looking in `$PATH` taken from `vars`.
+/// Returns the path if found, `None` if not.
 pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
-    let result = path_try_get_path(cmd, vars);
-    if result.err.is_some() {
-        None
-    } else {
-        Some(result.path)
-    }
+    path_try_get_path(cmd, vars).ok()
 }
 
 // PREFIX is defined at build time.
@@ -198,28 +193,23 @@ static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
     ]
 });
 
-/// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
-/// On success, err will be 0 and the path is returned.
-/// On failure, we return the "best path" with err set appropriately.
-/// For example, if we find a non-executable file, we will return its path and EACCESS.
-/// If no candidate path is found, path will be empty and err will be set to ENOENT.
-/// Possible err values are taken from access().
-#[derive(Default)]
-pub struct GetPathResult {
-    pub err: Option<Errno>,
-    pub path: WString,
-}
-impl GetPathResult {
-    fn new(err: Option<Errno>, path: WString) -> Self {
-        Self { err, path }
-    }
+pub struct GetPathError {
+    pub err: std::io::Error,
+    pub best_path: Option<WString>,
 }
 
-pub fn path_try_get_path(cmd: &wstr, vars: &dyn Environment) -> GetPathResult {
-    if let Some(path) = vars.get(L!("PATH")) {
-        path_get_path_core(cmd, path.as_list())
+/// Finds the path of an executable named `cmd`, by looking in `$PATH` taken from `vars`.
+/// On success, `Ok(path)` is returned.
+/// On failure, we return the "best path" along with the error that made it unsuitable.
+///
+/// For example, if we find a non-executable file, we will return its path and EACCESS.
+/// If no candidate path is found, path will be empty and err will be set to ENOENT.
+/// Possible err values are taken from `access()`.
+pub fn path_try_get_path(cmd: &wstr, vars: &dyn Environment) -> Result<WString, GetPathError> {
+    if let Some(pathvar) = vars.get(L!("PATH")) {
+        get_path_core(cmd, pathvar.as_list())
     } else {
-        path_get_path_core(cmd, &*DEFAULT_PATH)
+        get_path_core(cmd, &*DEFAULT_PATH)
     }
 }
 
@@ -264,42 +254,35 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
     paths
 }
 
-fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult {
-    let noent_res = GetPathResult::new(Some(Errno(ENOENT)), WString::new());
-    // Test if the given path can be executed.
-    // \return 0 on success, an errno value on failure.
-    let test_path = |path: &wstr| -> Result<(), Errno> {
-        let narrow = wcs2zstring(path);
-        if unsafe { libc::access(narrow.as_ptr(), X_OK) } != 0 {
-            return Err(errno());
-        }
-        let narrow: Vec<u8> = narrow.into();
-        let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else {
-            return Err(errno());
-        };
-        if md.is_file() {
-            Ok(())
-        } else {
-            Err(Errno(EACCES))
-        }
+fn get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> Result<WString, GetPathError> {
+    let noent_res = GetPathError {
+        err: ErrorKind::NotFound.into(),
+        best_path: None,
     };
 
     if cmd.is_empty() {
-        return noent_res;
+        return Err(noent_res);
     }
 
     // Commands cannot contain NUL byte.
     if cmd.contains('\0') {
-        return noent_res;
+        return Err(noent_res);
     }
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if cmd.contains('/') {
-        return GetPathResult::new(test_path(cmd).err(), cmd.to_owned());
+        let cmd = cmd.to_owned();
+        return match path_check_executable(&cmd) {
+            Ok(()) => Ok(cmd),
+            Err(err) => Err(GetPathError {
+                err,
+                best_path: Some(cmd),
+            }),
+        };
     }
 
-    let mut best = noent_res;
+    let mut best = None;
     for next_path in pathsv {
         let next_path: &wstr = next_path.as_ref();
         if next_path.is_empty() {
@@ -307,24 +290,28 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
         }
         let mut proposed_path = next_path.to_owned();
         append_path_component(&mut proposed_path, cmd);
-        match test_path(&proposed_path) {
+        match path_check_executable(&proposed_path) {
             Ok(()) => {
                 // We found one.
-                return GetPathResult::new(None, proposed_path);
+                return Ok(proposed_path);
             }
             Err(err) => {
-                if err.0 != ENOENT && best.err == Some(Errno(ENOENT)) {
+                if err.kind() != ErrorKind::NotFound && best.is_none() {
                     // Keep the first *interesting* error and path around.
                     // ENOENT isn't interesting because not having a file is the normal case.
                     // Ignore if the parent directory is already inaccessible.
                     if waccess(&wdirname(proposed_path.clone()), X_OK) == 0 {
-                        best = GetPathResult::new(Some(err), proposed_path);
+                        best = Some(GetPathError {
+                            err,
+                            best_path: Some(proposed_path),
+                        });
                     }
                 }
             }
         }
     }
-    best
+
+    Err(best.unwrap_or(noent_res))
 }
 
 /// Returns the full path of the specified directory, using the CDPATH variable as a list of base

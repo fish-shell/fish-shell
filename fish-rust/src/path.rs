@@ -16,7 +16,7 @@ use errno::{errno, set_errno, Errno};
 use libc::{EACCES, EAGAIN, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
 use std::ffi::OsStr;
-use std::io::Write;
+use std::io::{ErrorKind, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::prelude::MetadataExt;
 use widestring_suffix::widestrs;
@@ -343,7 +343,7 @@ pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<
     let paths = path_apply_cdpath(dir, wd, vars);
 
     for a_dir in paths {
-        if let Some(md) = wstat(&a_dir) {
+        if let Ok(md) = wstat(&a_dir) {
             if md.is_dir() {
                 return Some(a_dir);
             }
@@ -521,7 +521,7 @@ pub fn paths_are_same_file(path1: &wstr, path2: &wstr) -> bool {
     }
 
     match (wstat(path1), wstat(path2)) {
-        (Some(s1), Some(s2)) => s1.ino() == s2.ino() && s1.dev() == s2.dev(),
+        (Ok(s1), Ok(s2)) => s1.ino() == s2.ino() && s1.dev() == s2.dev(),
         _ => false,
     }
 }
@@ -631,18 +631,20 @@ fn create_directory(d: &wstr) -> bool {
     let mut md;
     loop {
         md = wstat(d);
-        if md.is_some() || errno().0 != EAGAIN {
-            break;
+        match &md {
+            Ok(_) => break,
+            Err(e) if e.kind() != ErrorKind::WouldBlock => break,
+            Err(_) => {}
         }
     }
     match md {
-        Some(md) => {
+        Ok(md) => {
             if md.is_dir() {
                 return true;
             }
         }
-        None => {
-            if errno().0 == ENOENT {
+        Err(e) => {
+            if e.kind() == ErrorKind::NotFound {
                 let dir = wdirname(d.to_owned());
                 if create_directory(&dir) && wmkdir(d, 0o700) == 0 {
                     return true;

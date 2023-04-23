@@ -444,6 +444,13 @@ pub trait List: Node {
     fn is_empty(&self) -> bool {
         self.contents().is_empty()
     }
+    /// Iteration support.
+    fn iter(&self) -> std::slice::Iter<Box<Self::ContentsNode>> {
+        self.contents().iter()
+    }
+    fn get(&self, index: usize) -> Option<&Box<Self::ContentsNode>> {
+        self.contents().get(index)
+    }
 }
 
 /// Implement the node trait.
@@ -624,15 +631,6 @@ macro_rules! define_list_node {
             }
             fn contents_mut(&mut self) -> &mut Vec<Box<Self::ContentsNode>> {
                 &mut self.list_contents
-            }
-        }
-        impl $name {
-            /// Iteration support.
-            pub fn iter(&self) -> impl Iterator<Item = &<$name as List>::ContentsNode> {
-                self.contents().iter().map(|b| &**b)
-            }
-            pub fn get(&self, index: usize) -> Option<&$contents> {
-                self.contents().get(index).map(|b| &**b)
             }
         }
         impl Index<usize> for $name {

@@ -38,7 +38,8 @@ jobs:
         make
     - name: make test
       run: |
-        make test
+        false
+        # make test
 
   ubuntu-32bit-fetched-pcre2:
 
@@ -68,7 +69,8 @@ jobs:
         make VERBOSE=1
     - name: make test
       run: |
-        make test
+        false
+        # make test
 
   ubuntu-asan:
 
@@ -119,7 +121,8 @@ jobs:
           # https://github.com/google/sanitizers/issues/1409 to track this issue.
           LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=0
       run: |
-        make test
+        false
+        # make test
 
   # Our clang++ tsan builds are not recognizing safe rust patterns (such as the fact that Drop
   # cannot be called while a thread is using the object in question). Rust has its own way of
@@ -178,4 +181,5 @@ jobs:
         make
     - name: make test
       run: |
-        make test
+        false
+        # make test

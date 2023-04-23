@@ -100,7 +100,7 @@ impl FunctionProperties {
     /// targets. This is to support the 'functions' builtin.
     /// Note callers must provide the function name, since the function does not know its own name.
     #[widestrs]
-    fn annotated_definition(&self, name: &wstr) -> WString {
+    pub fn annotated_definition(&self, name: &wstr) -> WString {
         let mut out = WString::new();
         let desc = self.localized_description();
         let def = get_function_body_source(self);

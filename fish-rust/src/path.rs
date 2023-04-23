@@ -631,7 +631,7 @@ fn create_directory(d: &wstr) -> bool {
     let mut md;
     loop {
         md = wstat(d);
-        if md.is_none() && errno().0 != EAGAIN {
+        if md.is_some() || errno().0 != EAGAIN {
             break;
         }
     }

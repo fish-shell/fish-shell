@@ -10,6 +10,12 @@
 #include <vector>
 
 #include "common.h"
+#include "cxx.h"
+
+struct OwningNullTerminatedArrayRef;
+#if INCLUDE_RUST_HEADERS
+#include "null_terminated_array.rs.h"
+#endif
 
 /// This supports the null-terminated array of NUL-terminated strings consumed by exec.
 /// Given a list of strings, construct a vector of pointers to those strings contents.
@@ -46,18 +52,19 @@ class null_terminated_array_t : noncopyable_t, nonmovable_t {
 /// This is useful for persisted null-terminated arrays, e.g. the exported environment variable
 /// list. This assumes char, since we don't need this for wchar_t.
 /// Note this class is not movable or copyable as it embeds a null_terminated_array_t.
-class owning_null_terminated_array_t {
+struct owning_null_terminated_array_t {
    public:
     // Access the null-terminated array of nul-terminated strings, appropriate for execv().
-    const char **get() { return pointers_.get(); }
+    const char **get();
 
     // Construct, taking ownership of a list of strings.
-    explicit owning_null_terminated_array_t(std::vector<std::string> &&strings)
-        : strings_(std::move(strings)), pointers_(strings_) {}
+    explicit owning_null_terminated_array_t(std::vector<std::string> &&strings);
+
+    // Construct from the FFI side.
+    explicit owning_null_terminated_array_t(rust::Box<OwningNullTerminatedArrayRef> impl);
 
    private:
-    const std::vector<std::string> strings_;
-    null_terminated_array_t<char> pointers_;
+    const rust::Box<OwningNullTerminatedArrayRef> impl_;
 };
 
 /// Helper to convert a list of wcstring to a list of std::string.

@@ -202,7 +202,8 @@ pub fn expand_to_receiver(
 /// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
 /// of skip_cmdsubst skip_variables and skip_wildcards
 /// \param ctx The parser, variables, and cancellation checker for this operation. The parser may be
-/// null. \param errors Resulting errors, or nullptr to ignore
+/// null.
+/// \param errors Resulting errors, or nullptr to ignore
 ///
 /// \return Whether expansion succeeded.
 pub fn expand_one(

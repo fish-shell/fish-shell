@@ -2,8 +2,7 @@ use crate::common::wcs2zstring;
 use crate::ffi;
 use crate::wchar::{wstr, L};
 use crate::wutil::perror;
-use libc::EINTR;
-use libc::O_CLOEXEC;
+use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_SETFD, O_CLOEXEC};
 use nix::unistd;
 use std::ffi::CStr;
 use std::io::{Read, Write};
@@ -161,6 +160,27 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
             read: readp,
             write: writep,
         })
+    }
+}
+
+/// Sets CLO_EXEC on a given fd according to the value of \p should_set.
+pub fn set_cloexec(fd: RawFd, should_set: bool) -> c_int {
+    // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
+    // existing flags and modify them.
+    let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
+    if flags < 0 {
+        return -1;
+    }
+    let mut new_flags = flags;
+    if should_set {
+        new_flags |= FD_CLOEXEC;
+    } else {
+        new_flags &= !FD_CLOEXEC;
+    }
+    if flags == new_flags {
+        0
+    } else {
+        unsafe { libc::fcntl(fd, F_SETFD, new_flags) }
     }
 }
 

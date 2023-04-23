@@ -8,8 +8,8 @@ use crate::builtins::shared::{
     STATUS_READ_TOO_MUCH,
 };
 use crate::common::{
-    exit_without_destructors, is_forked_child, scoped_push, str2wcstring, wcs2string, wcs2zstring,
-    write_loop, Cleanup,
+    exit_without_destructors, scoped_push, str2wcstring, wcs2string, wcs2zstring, write_loop,
+    Cleanup,
 };
 use crate::compat::_PATH_BSHELL;
 use crate::env::{EnvMode, EnvStack, Environment, Statuses};
@@ -37,7 +37,7 @@ use crate::proc::{
 };
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
-use crate::threads::iothread_perform_cantwait;
+use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::timer::push_timer;
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::{wstr, WString, L};
@@ -355,7 +355,7 @@ fn is_thompson_shell_payload(p: &[u8]) -> bool {
 /// flexible enough to permit scripts with concatenated binary content,
 /// such as Actually Portable Executable.
 /// N.B.: this is called after fork, it must not allocate heap memory.
-fn is_thompson_shell_script(path: &CStr) -> bool {
+pub fn is_thompson_shell_script(path: &CStr) -> bool {
     // Paths ending in ".fish" are never considered Thompson shell scripts.
     if path.to_bytes().ends_with(".fish".as_bytes()) {
         return false;

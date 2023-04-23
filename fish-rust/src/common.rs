@@ -1226,7 +1226,7 @@ fn format_size(mut sz: i64) -> WString {
 }
 
 /// Version of format_size that does not allocate memory.
-fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
+pub fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
     let buff_size = 128;
     let max_len = buff_size - 1; // need to leave room for a null terminator
     buff.fill(0);
@@ -1261,7 +1261,11 @@ fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
 }
 
 /// Writes out a long safely.
-pub fn format_llong_safe<CharT: From<u8>>(buff: &mut [CharT; 64], val: i64) {
+pub fn format_llong_safe<CharT: From<u8>, I64>(buff: &mut [CharT; 64], val: I64)
+where
+    i64: From<I64>,
+{
+    let val = i64::from(val);
     let uval = val.unsigned_abs();
     if val >= 0 {
         format_safe_impl(buff, 64, uval);

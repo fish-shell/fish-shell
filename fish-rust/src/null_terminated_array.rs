@@ -22,6 +22,25 @@ impl NulTerminatedString for CStr {
 pub trait AsNullTerminatedArray {
     type CharType;
     fn get(&self) -> *mut *const Self::CharType;
+    fn iter(&self) -> NullTerminatedArrayIterator<Self::CharType> {
+        NullTerminatedArrayIterator { ptr: self.get() }
+    }
+}
+
+// TODO This should expose strings as CStr.
+pub struct NullTerminatedArrayIterator<CharType> {
+    ptr: *mut *const CharType,
+}
+impl<CharType> Iterator for NullTerminatedArrayIterator<CharType> {
+    type Item = *const CharType;
+    fn next(&mut self) -> Option<*const CharType> {
+        if self.ptr.is_null() {
+            return None;
+        }
+        let result = unsafe { *self.ptr };
+        self.ptr = unsafe { self.ptr.add(1) };
+        Some(result)
+    }
 }
 
 /// This supports the null-terminated array of NUL-terminated strings consumed by exec.

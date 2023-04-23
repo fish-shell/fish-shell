@@ -84,30 +84,27 @@ impl std::ops::Deref for MaybeJobId {
     }
 }
 
+impl MaybeJobId {
+    pub fn as_num(&self) -> i64 {
+        self.0.map(|j| i64::from(u32::from(j.0))).unwrap_or(-1)
+    }
+}
+
 impl std::fmt::Display for MaybeJobId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .fmt(f)
+        self.as_num().fmt(f)
     }
 }
 
 impl ToWString for MaybeJobId {
     fn to_wstring(&self) -> WString {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .to_wstring()
+        self.as_num().to_wstring()
     }
 }
 
 impl<'a> printf_compat::args::ToArg<'a> for MaybeJobId {
     fn to_arg(self) -> printf_compat::args::Arg<'a> {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .to_arg()
+        self.as_num().to_arg()
     }
 }
 

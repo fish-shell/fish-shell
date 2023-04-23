@@ -1,7 +1,7 @@
 #![allow(clippy::extra_unused_lifetimes, clippy::needless_lifetimes)]
 use std::{
     collections::HashSet,
-    sync::{Arc, Mutex, MutexGuard},
+    sync::{Mutex, MutexGuard},
 };
 
 use crate::wchar::{wstr, WString, L};
@@ -84,8 +84,7 @@ mod abbrs_ffi {
     }
 }
 
-static abbrs: Lazy<Arc<Mutex<AbbreviationSet>>> =
-    Lazy::new(|| Arc::new(Mutex::new(Default::default())));
+static abbrs: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
 
 pub fn with_abbrs<R>(cb: impl FnOnce(&AbbreviationSet) -> R) -> R {
     let abbrs_g = abbrs.lock().unwrap();

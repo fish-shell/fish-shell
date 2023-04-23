@@ -223,14 +223,18 @@ pub fn path_try_get_path(cmd: &wstr, vars: &dyn Environment) -> GetPathResult {
     }
 }
 
-fn path_is_executable(path: &wstr) -> bool {
-    let narrow = wcs2zstring(path);
-    if unsafe { libc::access(narrow.as_ptr(), X_OK) } != 0 {
-        return false;
+fn path_check_executable(path: &wstr) -> Result<(), std::io::Error> {
+    if waccess(path, X_OK) != 0 {
+        return Err(std::io::Error::last_os_error());
     }
-    let narrow: Vec<u8> = narrow.into();
-    let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else { return false; };
-    md.is_file()
+
+    let buff = wstat(path)?;
+
+    if buff.file_type().is_file() {
+        Ok(())
+    } else {
+        Err(ErrorKind::PermissionDenied.into())
+    }
 }
 
 /// Return all the paths that match the given command.
@@ -240,7 +244,7 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for matching commands in the PATH var.
-    if cmd.contains('/') && path_is_executable(cmd) {
+    if cmd.contains('/') && path_check_executable(cmd).is_ok() {
         paths.push(cmd.to_owned());
         return paths;
     }
@@ -252,7 +256,7 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
         }
         let mut path = path.clone();
         append_path_component(&mut path, cmd);
-        if path_is_executable(&path) {
+        if path_check_executable(&path).is_ok() {
             paths.push(path);
         }
     }

@@ -1,4 +1,4 @@
-use crate::common::{is_forked_child, is_main_thread, wcs2zstring};
+use crate::common::wcs2zstring;
 use crate::env::{
     is_read_only, ElectricVar, EnvMode, EnvVar, EnvVarFlags, Statuses, VarTable,
     ELECTRIC_VARIABLES, PATH_ARRAY_SEP,
@@ -8,6 +8,7 @@ use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::path_make_canonical;
+use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::{widestrs, wstr, WExt, WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wchar_ffi::{vec_to_wcharzs, wcharzs_to_vec, WCharToFFI};

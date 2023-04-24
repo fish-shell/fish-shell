@@ -12,6 +12,7 @@ use crate::fallback;
 use crate::fds::AutoCloseFd;
 use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
 pub(crate) use gettext::{wgettext, wgettext_fmt};
 use libc::{
@@ -202,11 +203,7 @@ pub fn normalize_path(path: &wstr, allow_leading_double_slashes: bool) -> WStrin
         leading_slashes += 1;
     }
 
-    let comps = path
-        .as_char_slice()
-        .split(|&c| c == sep)
-        .map(wstr::from_char_slice)
-        .collect::<Vec<_>>();
+    let comps: Vec<&wstr> = path.split(sep).collect();
     let mut new_comps = Vec::new();
     for comp in comps {
         if comp.is_empty() || comp == "." {

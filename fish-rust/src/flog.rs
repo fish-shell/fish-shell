@@ -1,6 +1,7 @@
 use crate::ffi::{get_flog_file_fd, wildcard_match};
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::{widestrs, wstr, WString};
+use crate::wchar_ext::WExt;
 use crate::wchar_ffi::WCharToFFI;
 use std::io::Write;
 use std::os::unix::io::{FromRawFd, IntoRawFd, RawFd};
@@ -231,11 +232,11 @@ pub fn activate_flog_categories_by_pattern(wc_ptr: &wstr) {
             *c = '-';
         }
     }
-    for s in wc.as_char_slice().split(|c| *c == ',') {
-        if s.starts_with(&['-']) {
-            apply_one_wildcard(wstr::from_char_slice(&s[1..]), false);
+    for s in wc.split(',') {
+        if s.starts_with('-') {
+            apply_one_wildcard(s.slice_from(1), false);
         } else {
-            apply_one_wildcard(wstr::from_char_slice(s), true);
+            apply_one_wildcard(s, true);
         }
     }
 }

@@ -321,7 +321,7 @@ impl Parser {
     pub fn expand_argument_list(
         arg_list_src: &wstr,
         flags: ExpandFlags,
-        ctx: OperationContext<'_>,
+        ctx: &OperationContext<'_>,
     ) -> CompletionList {
         todo!()
     }

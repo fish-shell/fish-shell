@@ -161,23 +161,21 @@ where
 /// Iterator type for splitting a wide string on a char.
 pub struct WStrCharSplitIter<'a> {
     split: char,
-    chars: &'a [char],
+    chars: Option<&'a [char]>,
 }
 
 impl<'a> Iterator for WStrCharSplitIter<'a> {
     type Item = &'a wstr;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.chars.is_empty() {
-            return None;
-        } else if let Some(idx) = self.chars.iter().position(|c| *c == self.split) {
-            let (prefix, rest) = self.chars.split_at(idx);
-            self.chars = &rest[1..];
+        let chars = self.chars?;
+        if let Some(idx) = chars.iter().position(|c| *c == self.split) {
+            let (prefix, rest) = chars.split_at(idx);
+            self.chars = Some(&rest[1..]);
             return Some(wstr::from_char_slice(prefix));
         } else {
-            let res = self.chars;
-            self.chars = &[];
-            return Some(wstr::from_char_slice(res));
+            self.chars = None;
+            return Some(wstr::from_char_slice(chars));
         }
     }
 }
@@ -194,7 +192,13 @@ pub trait WExt {
         wstr::from_char_slice(&chars[start..])
     }
 
-    /// \return the char at an index.
+    /// Return the number of chars.
+    /// This is different from Rust string len, which returns the number of bytes.
+    fn char_count(&self) -> usize {
+        self.as_char_slice().len()
+    }
+
+    /// Return the char at an index.
     /// If the index is equal to the length, return '\0'.
     /// If the index exceeds the length, then panic.
     fn char_at(&self, index: usize) -> char {
@@ -208,12 +212,10 @@ pub trait WExt {
 
     /// \return an iterator over substrings, split by a given char.
     /// The split char is not included in the substrings.
-    /// If the string is empty, the iterator will return no strings.
-    /// Note this differs from std::slice::split, which return a single empty item.
     fn split(&self, c: char) -> WStrCharSplitIter {
         WStrCharSplitIter {
             split: c,
-            chars: self.as_char_slice(),
+            chars: Some(self.as_char_slice()),
         }
     }
 
@@ -292,13 +294,18 @@ mod tests {
         fn do_split(s: &wstr, c: char) -> Vec<&wstr> {
             s.split(c).collect()
         }
+        assert_eq!(do_split(L!(""), 'b'), &[""]);
         assert_eq!(do_split(L!("abc"), 'b'), &["a", "c"]);
         assert_eq!(do_split(L!("xxb"), 'x'), &["", "", "b"]);
         assert_eq!(do_split(L!("bxxxb"), 'x'), &["b", "", "", "b"]);
-        assert_eq!(do_split(L!(""), 'x'), &[] as &[&str]);
+        assert_eq!(do_split(L!(""), 'x'), &[""]);
         assert_eq!(do_split(L!("foo,bar,baz"), ','), &["foo", "bar", "baz"]);
         assert_eq!(do_split(L!("foobar"), ','), &["foobar"]);
         assert_eq!(do_split(L!("1,2,3,4,5"), ','), &["1", "2", "3", "4", "5"]);
+        assert_eq!(
+            do_split(L!("1,2,3,4,5,"), ','),
+            &["1", "2", "3", "4", "5", ""]
+        );
         assert_eq!(
             do_split(L!("Hello\nworld\nRust"), '\n'),
             &["Hello", "world", "Rust"]

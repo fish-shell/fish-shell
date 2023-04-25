@@ -1244,7 +1244,7 @@ bool completer_t::try_complete_variable(const wcstring &str) {
     // Now complete if we have a variable start. Note the variable text may be empty; in that case
     // don't generate an autosuggestion, but do allow tab completion.
     bool allow_empty = !this->flags.autosuggestion;
-    bool text_is_empty = (variable_start == len);
+    bool text_is_empty = (variable_start == len - 1);
     bool result = false;
     if (variable_start != wcstring::npos && (allow_empty || !text_is_empty)) {
         result = this->complete_variable(str, variable_start + 1);

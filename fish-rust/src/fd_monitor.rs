@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 pub use self::fd_monitor_ffi::ItemWakeReason;
-use self::fd_monitor_ffi::{new_fd_event_signaller, FdEventSignaller};
+pub use self::fd_monitor_ffi::{new_fd_event_signaller, FdEventSignaller};
 use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
 use crate::ffi::void_ptr;

@@ -51,6 +51,15 @@ static NOTIFY_SIGNALLER: once_cell::sync::Lazy<&'static crate::fd_monitor::FdEve
 
 #[cxx::bridge]
 mod ffi {
+    unsafe extern "C++" {
+        include!("callback.h");
+
+        #[rust_name = "CppCallback"]
+        type callback_t;
+        fn invoke(&self) -> *const u8;
+        fn invoke_with_param(&self, param: *const u8) -> *const u8;
+    }
+
     extern "Rust" {
         #[cxx_name = "ASSERT_IS_MAIN_THREAD"]
         fn assert_is_main_thread();
@@ -65,7 +74,7 @@ mod ffi {
 
     extern "Rust" {
         #[cxx_name = "make_detached_pthread"]
-        fn spawn_ffi(callback: *const u8, param: *const u8) -> bool;
+        fn spawn_ffi(callback: &SharedPtr<CppCallback>) -> bool;
     }
 
     extern "Rust" {
@@ -76,9 +85,9 @@ mod ffi {
         #[cxx_name = "iothread_drain_all"]
         fn iothread_drain_all_ffi();
         #[cxx_name = "iothread_perform"]
-        fn iothread_perform_ffi(callback: *const u8, param: *const u8);
+        fn iothread_perform_ffi(callback: &SharedPtr<CppCallback>);
         #[cxx_name = "iothread_perform_cantwait"]
-        fn iothread_perform_cant_wait_ffi(callback: *const u8, param: *const u8);
+        fn iothread_perform_cant_wait_ffi(callback: &SharedPtr<CppCallback>);
     }
 
     extern "Rust" {
@@ -86,20 +95,21 @@ mod ffi {
         type Debounce;
 
         #[cxx_name = "perform"]
-        fn perform_ffi(&self, callback: *const u8, param: *const u8) -> u64;
+        fn perform_ffi(&self, callback: &SharedPtr<CppCallback>) -> u64;
         #[cxx_name = "perform_with_completion"]
         fn perform_with_completion_ffi(
             &self,
-            callback: *const u8,
-            param1: *const u8,
-            completion: *const u8,
-            param2: *const u8,
+            callback: &SharedPtr<CppCallback>,
+            completion: &SharedPtr<CppCallback>,
         ) -> u64;
 
         #[cxx_name = "new_debounce_t"]
         fn new_debounce_ffi(timeout_ms: u64) -> Box<Debounce>;
     }
 }
+
+unsafe impl Send for ffi::CppCallback {}
+unsafe impl Sync for ffi::CppCallback {}
 
 fn iothread_service_main_with_timeout_ffi(timeout_usec: u64) {
     iothread_service_main_with_timeout(Duration::from_micros(timeout_usec))
@@ -109,23 +119,19 @@ fn iothread_drain_all_ffi() {
     unsafe { iothread_drain_all() }
 }
 
-fn iothread_perform_ffi(callback: *const u8, param: *const u8) {
-    type Callback = extern "C" fn(crate::ffi::void_ptr);
-    let callback: Callback = unsafe { std::mem::transmute(callback) };
-    let param = param.into();
+fn iothread_perform_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) {
+    let callback = callback.clone();
 
     iothread_perform(move || {
-        callback(param);
+        callback.invoke();
     });
 }
 
-fn iothread_perform_cant_wait_ffi(callback: *const u8, param: *const u8) {
-    type Callback = extern "C" fn(crate::ffi::void_ptr);
-    let callback: Callback = unsafe { std::mem::transmute(callback) };
-    let param = param.into();
+fn iothread_perform_cant_wait_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) {
+    let callback = callback.clone();
 
     iothread_perform_cant_wait(move || {
-        callback(param);
+        callback.invoke();
     });
 }
 
@@ -286,13 +292,10 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     result
 }
 
-fn spawn_ffi(callback: *const u8, param: *const u8) -> bool {
-    type Callback = extern "C" fn(crate::ffi::void_ptr);
-    let callback: Callback = unsafe { std::mem::transmute(callback) };
-    let param = param.into();
-
+fn spawn_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) -> bool {
+    let callback = callback.clone();
     spawn(move || {
-        callback(param);
+        callback.invoke();
     })
 }
 
@@ -645,38 +648,29 @@ impl Debounce {
         self.perform_inner(h)
     }
 
-    fn perform_with_completion_ffi(
-        &self,
-        callback: *const u8,
-        param1: *const u8,
-        completion_callback: *const u8,
-        param2: *const u8,
-    ) -> u64 {
-        type Callback = extern "C" fn(crate::ffi::void_ptr) -> crate::ffi::void_ptr;
-        type CompletionCallback = extern "C" fn(crate::ffi::void_ptr, crate::ffi::void_ptr);
+    fn perform_ffi(&self, callback: &cxx::SharedPtr<ffi::CppCallback>) -> u64 {
+        let callback = callback.clone();
 
-        let callback: Callback = unsafe { std::mem::transmute(callback) };
-        let param1 = param1.into();
-        let completion_callback: CompletionCallback =
-            unsafe { std::mem::transmute(completion_callback) };
-        let param2 = param2.into();
-
-        self.perform_with_completion(
-            move || callback(param1),
-            move |result| completion_callback(param2, result),
-        )
+        self.perform(move || {
+            callback.invoke();
+        })
         .into()
     }
 
-    fn perform_ffi(&self, callback: *const u8, param: *const u8) -> u64 {
-        type Callback = extern "C" fn(crate::ffi::void_ptr);
+    fn perform_with_completion_ffi(
+        &self,
+        callback: &cxx::SharedPtr<ffi::CppCallback>,
+        completion: &cxx::SharedPtr<ffi::CppCallback>,
+    ) -> u64 {
+        let callback = callback.clone();
+        let completion = completion.clone();
 
-        let callback: Callback = unsafe { std::mem::transmute(callback) };
-        let param = param.into();
-
-        self.perform(move || {
-            callback(param);
-        })
+        self.perform_with_completion(
+            move || -> crate::ffi::void_ptr { callback.invoke().into() },
+            move |result| {
+                completion.invoke_with_param(result.into());
+            },
+        )
         .into()
     }
 

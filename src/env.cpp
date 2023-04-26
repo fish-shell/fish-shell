@@ -35,6 +35,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "termsize.h"
+#include "threads.rs.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 

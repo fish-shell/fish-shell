@@ -30,6 +30,7 @@
 #include "parse_execution.h"
 #include "proc.h"
 #include "signals.h"
+#include "threads.rs.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class io_chain_t;

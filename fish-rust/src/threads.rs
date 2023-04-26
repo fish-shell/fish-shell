@@ -49,6 +49,86 @@ static NOTIFY_SIGNALLER: once_cell::sync::Lazy<&'static crate::fd_monitor::FdEve
         result
     });
 
+#[cxx::bridge]
+mod ffi {
+    extern "Rust" {
+        #[cxx_name = "ASSERT_IS_MAIN_THREAD"]
+        fn assert_is_main_thread();
+        #[cxx_name = "ASSERT_IS_BACKGROUND_THREAD"]
+        fn assert_is_background_thread();
+        #[cxx_name = "ASSERT_IS_NOT_FORKED_CHILD"]
+        fn assert_is_not_forked_child();
+        fn configure_thread_assertions_for_testing();
+        fn is_main_thread() -> bool;
+        fn is_forked_child() -> bool;
+    }
+
+    extern "Rust" {
+        #[cxx_name = "make_detached_pthread"]
+        fn spawn_ffi(callback: *const u8, param: *const u8) -> bool;
+    }
+
+    extern "Rust" {
+        fn iothread_port() -> i32;
+        fn iothread_service_main();
+        #[cxx_name = "iothread_service_main_with_timeout"]
+        fn iothread_service_main_with_timeout_ffi(timeout_usec: u64);
+        #[cxx_name = "iothread_drain_all"]
+        fn iothread_drain_all_ffi();
+        #[cxx_name = "iothread_perform"]
+        fn iothread_perform_ffi(callback: *const u8, param: *const u8);
+        #[cxx_name = "iothread_perform_cantwait"]
+        fn iothread_perform_cant_wait_ffi(callback: *const u8, param: *const u8);
+    }
+
+    extern "Rust" {
+        #[cxx_name = "debounce_t"]
+        type Debounce;
+
+        #[cxx_name = "perform"]
+        fn perform_ffi(&self, callback: *const u8, param: *const u8) -> u64;
+        #[cxx_name = "perform_with_completion"]
+        fn perform_with_completion_ffi(
+            &self,
+            callback: *const u8,
+            param1: *const u8,
+            completion: *const u8,
+            param2: *const u8,
+        ) -> u64;
+
+        #[cxx_name = "new_debounce_t"]
+        fn new_debounce_ffi(timeout_ms: u64) -> Box<Debounce>;
+    }
+}
+
+fn iothread_service_main_with_timeout_ffi(timeout_usec: u64) {
+    iothread_service_main_with_timeout(Duration::from_micros(timeout_usec))
+}
+
+fn iothread_drain_all_ffi() {
+    unsafe { iothread_drain_all() }
+}
+
+fn iothread_perform_ffi(callback: *const u8, param: *const u8) {
+    type Callback = extern "C" fn(crate::ffi::void_ptr);
+    let callback: Callback = unsafe { std::mem::transmute(callback) };
+    let param = param.into();
+
+    iothread_perform(move || {
+        callback(param);
+    });
+}
+
+fn iothread_perform_cant_wait_ffi(callback: *const u8, param: *const u8) {
+    type Callback = extern "C" fn(crate::ffi::void_ptr);
+    let callback: Callback = unsafe { std::mem::transmute(callback) };
+    let param = param.into();
+
+    iothread_perform_cant_wait(move || {
+        callback(param);
+    });
+}
+
 /// A [`ThreadPool`] or [`Debounce`] work request.
 type WorkItem = Box<dyn FnOnce() + 'static + Send>;
 
@@ -131,6 +211,18 @@ pub fn is_forked_child() -> bool {
     IS_FORKED_PROC.load(Ordering::Relaxed)
 }
 
+#[inline(always)]
+pub fn assert_is_not_forked_child() {
+    #[cold]
+    fn panic_is_forked_child() {
+        panic!("Function called from forked child!");
+    }
+
+    if is_forked_child() {
+        panic_is_forked_child();
+    }
+}
+
 /// The rusty version of `iothreads::make_detached_pthread()`. We will probably need a
 /// `spawn_scoped` version of the same to handle some more advanced borrow cases safely, and maybe
 /// an unsafe version that doesn't do any lifetime checking akin to
@@ -192,6 +284,16 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     };
 
     result
+}
+
+fn spawn_ffi(callback: *const u8, param: *const u8) -> bool {
+    type Callback = extern "C" fn(crate::ffi::void_ptr);
+    let callback: Callback = unsafe { std::mem::transmute(callback) };
+    let param = param.into();
+
+    spawn(move || {
+        callback(param);
+    })
 }
 
 /// Data shared between the thread pool [`ThreadPool`] and worker threads [`WorkerThread`].
@@ -422,11 +524,12 @@ pub fn iothread_perform_cant_wait(f: impl FnOnce() + 'static + Send) {
     thread_pool.perform(f, true);
 }
 
+pub fn iothread_port() -> i32 {
+    i32::from(NOTIFY_SIGNALLER.read_fd())
+}
+
 pub fn iothread_service_main_with_timeout(timeout: Duration) {
-    if crate::fd_readable_set::is_fd_readable(
-        i32::from(NOTIFY_SIGNALLER.read_fd()),
-        timeout.as_millis() as u64,
-    ) {
+    if crate::fd_readable_set::is_fd_readable(iothread_port(), timeout.as_millis() as u64) {
         iothread_service_main();
     }
 }
@@ -491,6 +594,10 @@ struct DebounceData {
     start_time: Instant,
 }
 
+fn new_debounce_ffi(timeout_ms: u64) -> Box<Debounce> {
+    Box::new(Debounce::new(Duration::from_millis(timeout_ms)))
+}
+
 impl Debounce {
     pub fn new(timeout: Duration) -> Self {
         Self {
@@ -536,6 +643,41 @@ impl Debounce {
     pub fn perform(&self, handler: impl FnOnce() + 'static + Send) -> NonZeroU64 {
         let h = Box::new(handler);
         self.perform_inner(h)
+    }
+
+    fn perform_with_completion_ffi(
+        &self,
+        callback: *const u8,
+        param1: *const u8,
+        completion_callback: *const u8,
+        param2: *const u8,
+    ) -> u64 {
+        type Callback = extern "C" fn(crate::ffi::void_ptr) -> crate::ffi::void_ptr;
+        type CompletionCallback = extern "C" fn(crate::ffi::void_ptr, crate::ffi::void_ptr);
+
+        let callback: Callback = unsafe { std::mem::transmute(callback) };
+        let param1 = param1.into();
+        let completion_callback: CompletionCallback =
+            unsafe { std::mem::transmute(completion_callback) };
+        let param2 = param2.into();
+
+        self.perform_with_completion(
+            move || callback(param1),
+            move |result| completion_callback(param2, result),
+        )
+        .into()
+    }
+
+    fn perform_ffi(&self, callback: *const u8, param: *const u8) -> u64 {
+        type Callback = extern "C" fn(crate::ffi::void_ptr);
+
+        let callback: Callback = unsafe { std::mem::transmute(callback) };
+        let param = param.into();
+
+        self.perform(move || {
+            callback(param);
+        })
+        .into()
     }
 
     /// Enqueue `handler` to be performed on a background thread with [`Completion`] `completion`

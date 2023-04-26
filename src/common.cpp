@@ -1373,24 +1373,6 @@ extern "C" {
 }
 }
 
-void set_main_thread() {
-    // Just call thread_id() once to force increment of thread_id.
-    uint64_t tid = thread_id();
-    assert(tid == 1 && "main thread should have thread ID 1");
-    (void)tid;
-}
-
-void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
-
-bool is_forked_child() { return is_forked_proc; }
-
-void setup_fork_guards() {
-    is_forked_proc = false;
-    static std::once_flag fork_guard_flag;
-    std::call_once(fork_guard_flag,
-                   [] { pthread_atfork(nullptr, nullptr, [] { is_forked_proc = true; }); });
-}
-
 void save_term_foreground_process_group() { initial_fg_process_group = tcgetpgrp(STDIN_FILENO); }
 
 void restore_term_foreground_process_group_for_exit() {
@@ -1404,32 +1386,6 @@ void restore_term_foreground_process_group_for_exit() {
     if (initial_fg_process_group > 0 && initial_fg_process_group != getpgrp()) {
         (void)signal(SIGTTOU, SIG_IGN);
         (void)tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
-    }
-}
-
-bool is_main_thread() { return thread_id() == 1; }
-
-void assert_is_main_thread(const char *who) {
-    if (!likely(is_main_thread()) && !unlikely(thread_asserts_cfg_for_testing)) {
-        FLOGF(error, L"%s called off of main thread.", who);
-        FLOGF(error, L"Break on debug_thread_error to debug.");
-        debug_thread_error();
-    }
-}
-
-void assert_is_not_forked_child(const char *who) {
-    if (unlikely(is_forked_child())) {
-        FLOGF(error, L"%s called in a forked child.", who);
-        FLOG(error, L"Break on debug_thread_error to debug.");
-        debug_thread_error();
-    }
-}
-
-void assert_is_background_thread(const char *who) {
-    if (unlikely(is_main_thread()) && !unlikely(thread_asserts_cfg_for_testing)) {
-        FLOGF(error, L"%s called on the main thread (may block!).", who);
-        FLOG(error, L"Break on debug_thread_error to debug.");
-        debug_thread_error();
     }
 }
 

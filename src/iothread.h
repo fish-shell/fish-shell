@@ -1,90 +1,123 @@
 // Handles IO that may hang.
 #ifndef FISH_IOTHREAD_H
 #define FISH_IOTHREAD_H
+#if INCLUDE_RUST_HEADERS
 
-#include <cstdint>  // for uint64_t
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <utility>
 
-/// \return the fd on which to listen for completion callbacks.
-int iothread_port();
+#include "threads.rs.h"
 
-/// Services iothread main thread completions and requests.
-/// This does not block.
-void iothread_service_main();
+struct iothread_callback_t {
+    std::function<void *(const void *param)> callback;
+    void *param;
 
-// Services any main thread requests. Does not wait more than \p timeout_usec.
-void iothread_service_main_with_timeout(uint64_t timeout_usec);
+    ~iothread_callback_t() {
+        if (param) {
+            free(param);
+            param = nullptr;
+        }
+    }
+};
 
-/// Waits for all iothreads to terminate.
-/// This is a hacky function only used in the test suite.
-void iothread_drain_all();
-
-// Internal implementation
-void iothread_perform_impl(std::function<void()> &&, bool cant_wait = false);
+extern "C" const void *iothread_trampoline(const void *callback);
+extern "C" const void *iothread_trampoline2(const void *callback, const void *param);
 
 // iothread_perform invokes a handler on a background thread.
 inline void iothread_perform(std::function<void()> &&func) {
-    iothread_perform_impl(std::move(func));
+    auto callback = new iothread_callback_t{std::bind([=] {
+                                                func();
+                                                return nullptr;
+                                            }),
+                                            nullptr};
+
+    iothread_perform((const uint8_t *)&iothread_trampoline, (const uint8_t *)callback);
 }
 
 /// Variant of iothread_perform that disrespects the thread limit.
 /// It does its best to spawn a new thread if all other threads are occupied.
 /// This is for cases where deferring a new thread might lead to deadlock.
 inline void iothread_perform_cantwait(std::function<void()> &&func) {
-    iothread_perform_impl(std::move(func), true);
+    auto callback = new iothread_callback_t{std::bind([=] {
+                                                func();
+                                                return nullptr;
+                                            }),
+                                            nullptr};
+
+    iothread_perform_cantwait((const uint8_t *)&iothread_trampoline, (const uint8_t *)callback);
 }
 
-/// Creates a pthread, manipulating the signal mask so that the thread receives no signals.
-/// The thread is detached.
-/// The pthread runs \p func.
-/// \returns true on success, false on failure.
-bool make_detached_pthread(void *(*func)(void *), void *param);
-bool make_detached_pthread(std::function<void()> &&func);
+inline uint64_t debounce_perform(const debounce_t &debouncer, const std::function<void()> &func) {
+    auto callback = new iothread_callback_t{std::bind([=] {
+                                                func();
+                                                return nullptr;
+                                            }),
+                                            nullptr};
 
-/// \returns a thread ID for this thread.
-/// Thread IDs are never repeated.
-uint64_t thread_id();
+    return debouncer.perform((const uint8_t *)&iothread_trampoline, (const uint8_t *)callback);
+}
 
-/// A Debounce is a simple class which executes one function in a background thread,
-/// while enqueuing at most one more. New execution requests overwrite the enqueued one.
-/// It has an optional timeout; if a handler does not finish within the timeout, then
-/// a new thread is spawned.
-class debounce_t {
-   public:
-    /// Enqueue \p handler to be performed on a background thread, and \p completion (if any) to be
-    /// performed on the main thread. If a function is already enqueued, this overwrites it; that
-    /// function will not execute.
-    /// If the function executes, then \p completion will be invoked on the main thread, with the
-    /// result of the handler.
-    /// The result is a token which is only of interest to the tests.
-    template <typename Handler, typename Completion>
-    uint64_t perform(const Handler &handler, const Completion &completion) {
-        // Make a trampoline function which calls the handler, puts the result into a shared
-        // pointer, and then enqueues a completion.
-        auto trampoline = [=] {
-            using result_type_t = decltype(handler());
-            auto result = std::make_shared<result_type_t>(handler());
-            enqueue_main_thread_result([=] { completion(std::move(*result)); });
-        };
-        return perform(std::move(trampoline));
-    }
+template <typename R>
+inline void debounce_perform_with_completion(const debounce_t &debouncer, std::function<R()> &&func,
+                                             std::function<void(R)> &&completion) {
+    auto callback1 = new iothread_callback_t{[=](const void *) {
+                                                 auto *result = new R(func());
+                                                 return (void *)result;
+                                             },
+                                             nullptr};
 
-    /// One-argument form with no completion.
-    /// The result is a token which is only of interest to the tests.
-    uint64_t perform(std::function<void()> handler);
+    auto callback2 = new iothread_callback_t{
+        ([=](const void *r) {
+            const R *result = (const R *)r;
+            completion(*result);
+            delete result;
+            return nullptr;
+        }),
+        nullptr,
+    };
 
-    explicit debounce_t(long timeout_msec = 0);
-    ~debounce_t();
+    debouncer.perform_with_completion(
+        (const uint8_t *)&iothread_trampoline, (const uint8_t *)callback1,
+        (const uint8_t *)&iothread_trampoline2, (const uint8_t *)callback2);
+}
 
-   private:
-    /// Helper to enqueue a function to run on the main thread.
-    static void enqueue_main_thread_result(std::function<void()> func);
+template <typename R>
+inline void debounce_perform_with_completion(const debounce_t &debouncer, std::function<R()> &&func,
+                                             std::function<void(const R &)> &&completion) {
+    auto callback1 = new iothread_callback_t{[=](const void *) {
+                                                 auto *result = new R(func());
+                                                 return (void *)result;
+                                             },
+                                             nullptr};
 
-    const long timeout_msec_;
-    struct impl_t;
-    const std::shared_ptr<impl_t> impl_;
-};
+    auto callback2 = new iothread_callback_t{
+        ([=](const void *r) {
+            const R *result = (const R *)r;
+            completion(*result);
+            delete result;
+            return nullptr;
+        }),
+        nullptr,
+    };
 
+    debouncer.perform_with_completion(
+        (const uint8_t *)&iothread_trampoline, (const uint8_t *)callback1,
+        (const uint8_t *)&iothread_trampoline2, (const uint8_t *)callback2);
+}
+
+inline bool make_detached_pthread(const std::function<void()> &func) {
+    auto callback = new iothread_callback_t{
+        [=](const void *) {
+            func();
+            return nullptr;
+        },
+        nullptr,
+    };
+
+    return make_detached_pthread((const uint8_t *)&iothread_trampoline, (const uint8_t *)callback);
+}
+
+#endif
 #endif

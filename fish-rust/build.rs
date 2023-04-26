@@ -47,6 +47,7 @@ fn main() -> miette::Result<()> {
         "src/timer.rs",
         "src/tokenizer.rs",
         "src/topic_monitor.rs",
+        "src/threads.rs",
         "src/trace.rs",
         "src/util.rs",
         "src/wait_handle.rs",

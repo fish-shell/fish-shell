@@ -288,8 +288,6 @@ static std::string no_colorize(const wcstring &text) { return wcs2zstring(text);
 
 int main(int argc, char *argv[]) {
     program_name = L"fish_indent";
-    set_main_thread();
-    setup_fork_guards();
     rust_init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
     // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.

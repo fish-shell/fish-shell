@@ -29,6 +29,7 @@
 #include "flog.h"
 #include "maybe.h"
 #include "output.h"
+#include "threads.rs.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 

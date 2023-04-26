@@ -297,7 +297,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Enter` executes the current commandline or inserts a newline if it's not complete yet (e.g. a ``)`` or ``end`` is missing).
 
-- :kbd:`Alt`\ +\ :kbd:`Enter` inserts a newline at the cursor position.
+- :kbd:`Alt`\ +\ :kbd:`Enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
 
 - :kbd:`Alt`\ +\ :kbd:`←` and :kbd:`Alt`\ +\ :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt`\ +\ :kbd:`→` (or :kbd:`Alt`\ +\ :kbd:`F`) accepts the first word in the suggestion.
 
@@ -309,9 +309,9 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the :ref:`history <history-search>` section for more information on history searching.
 
-- :kbd:`Control`\ +\ :kbd:`C` interrupt/kill whatever is running (SIGINT).
+- :kbd:`Control`\ +\ :kbd:`C` interrupts/kills whatever is running (SIGINT).
 
-- :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
+- :kbd:`Control`\ +\ :kbd:`D` deletes one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
 
 - :kbd:`Control`\ +\ :kbd:`U` removes contents from the beginning of line to the cursor (moving it to the :ref:`killring <killring>`).
 
@@ -333,7 +333,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Alt`\ +\ :kbd:`W` prints a short description of the command under the cursor.
 
-- :kbd:`Alt`\ +\ :kbd:`E` edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
+- :kbd:`Alt`\ +\ :kbd:`E` edits the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
 - :kbd:`Alt`\ +\ :kbd:`V` Same as :kbd:`Alt`\ +\ :kbd:`E`.
 

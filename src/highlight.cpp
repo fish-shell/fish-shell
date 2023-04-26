@@ -36,6 +36,7 @@
 #include "parser.h"
 #include "path.h"
 #include "redirection.h"
+#include "threads.rs.h"
 #include "tokenizer.h"
 #include "wcstringutil.h"
 #include "wildcard.h"

@@ -21,6 +21,7 @@
 #include "maybe.h"
 #include "path.h"
 #include "redirection.h"
+#include "threads.rs.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// File redirection error message.

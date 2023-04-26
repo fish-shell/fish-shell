@@ -805,7 +805,7 @@ static void test_debounce() {
     say(L"Testing debounce");
     // Run 8 functions using a condition variable.
     // Only the first and last should run.
-    debounce_t db;
+    auto db = new_debounce_t(0);
     constexpr size_t count = 8;
     std::array<bool, count> handler_ran = {};
     std::array<bool, count> completion_ran = {};
@@ -817,14 +817,14 @@ static void test_debounce() {
     // "Enqueue" all functions. Each one waits until ready_to_go.
     for (size_t idx = 0; idx < count; idx++) {
         do_test(handler_ran[idx] == false);
-        db.perform(
-            [&, idx] {
-                std::unique_lock<std::mutex> lock(m);
-                cv.wait(lock, [&] { return ready_to_go; });
-                handler_ran[idx] = true;
-                return idx;
-            },
-            [&](size_t idx) { completion_ran[idx] = true; });
+        std::function<size_t()> performer = [&, idx] {
+            std::unique_lock<std::mutex> lock(m);
+            cv.wait(lock, [&] { return ready_to_go; });
+            handler_ran[idx] = true;
+            return idx;
+        };
+        std::function<void(size_t)> completer = [&](size_t idx) { completion_ran[idx] = true; };
+        debounce_perform_with_completion(*db, std::move(performer), std::move(completer));
     }
 
     // We're ready to go.
@@ -863,7 +863,7 @@ static void test_debounce_timeout() {
     // Use a shared_ptr so we don't have to join our threads.
     const long timeout_ms = 500;
     struct data_t {
-        debounce_t db{timeout_ms};
+        rust::box<debounce_t> db = new_debounce_t(timeout_ms);
         bool exit_ok = false;
         std::mutex m;
         std::condition_variable cv;
@@ -879,14 +879,14 @@ static void test_debounce_timeout() {
     };
 
     // Spawn the handler twice. This should not modify the thread token.
-    uint64_t token1 = data->db.perform(handler);
-    uint64_t token2 = data->db.perform(handler);
+    uint64_t token1 = debounce_perform(*data->db, handler);
+    uint64_t token2 = debounce_perform(*data->db, handler);
     do_test(token1 == token2);
 
     // Wait 75 msec, then enqueue something else; this should spawn a new thread.
     std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms + timeout_ms / 2));
     do_test(data->running == 1);
-    uint64_t token3 = data->db.perform(handler);
+    uint64_t token3 = debounce_perform(*data->db, handler);
     do_test(token3 > token2);
 
     // Release all the threads.
@@ -6493,8 +6493,6 @@ int main(int argc, char **argv) {
     uname(&uname_info);
 
     say(L"Testing low-level functionality");
-    set_main_thread();
-    setup_fork_guards();
     rust_init();
     proc_init();
     env_init();

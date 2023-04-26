@@ -177,19 +177,19 @@ static constexpr long kHighlightTimeoutForExecutionMs = 250;
 /// These are deliberately leaked to avoid shutdown dtor registration.
 static debounce_t &debounce_autosuggestions() {
     const long kAutosuggestTimeoutMs = 500;
-    static auto res = new debounce_t(kAutosuggestTimeoutMs);
+    static auto res = new_debounce_t(kAutosuggestTimeoutMs);
     return *res;
 }
 
 static debounce_t &debounce_highlighting() {
     const long kHighlightTimeoutMs = 500;
-    static auto res = new debounce_t(kHighlightTimeoutMs);
+    static auto res = new_debounce_t(kHighlightTimeoutMs);
     return *res;
 }
 
 static debounce_t &debounce_history_pager() {
     const long kHistoryPagerTimeoutMs = 500;
-    static auto res = new debounce_t(kHistoryPagerTimeoutMs);
+    static auto res = new_debounce_t(kHistoryPagerTimeoutMs);
     return *res;
 }
 
@@ -1333,8 +1333,10 @@ void reader_data_t::fill_history_pager(bool new_search, history_search_direction
     }
     const wcstring &search_term = pager.search_field_line.text();
     auto shared_this = this->shared_from_this();
-    debounce_history_pager().perform(
-        [=]() { return history_pager_search(shared_this->history, direction, index, search_term); },
+    std::function<history_pager_result_t()> func = [=]() {
+        return history_pager_search(shared_this->history, direction, index, search_term);
+    };
+    std::function<void(const history_pager_result_t &)> completion =
         [=](const history_pager_result_t &result) {
             if (search_term != shared_this->pager.search_field_line.text())
                 return;  // Stale request.
@@ -1356,7 +1358,9 @@ void reader_data_t::fill_history_pager(bool new_search, history_search_direction
             shared_this->select_completion_in_direction(selection_motion_t::next, true);
             shared_this->super_highlight_me_plenty();
             shared_this->layout_and_repaint(L"history-pager");
-        });
+        };
+    auto &debouncer = debounce_history_pager();
+    debounce_perform_with_completion(debouncer, std::move(func), std::move(completion));
 }
 
 void reader_data_t::pager_selection_changed() {
@@ -2107,11 +2111,14 @@ void reader_data_t::update_autosuggestion() {
     // Clear the autosuggestion and kick it off in the background.
     FLOG(reader_render, L"Autosuggesting");
     autosuggestion.clear();
-    auto performer = get_autosuggestion_performer(parser(), el.text(), el.position(), history);
+    std::function<autosuggestion_t()> performer =
+        get_autosuggestion_performer(parser(), el.text(), el.position(), history);
     auto shared_this = this->shared_from_this();
-    debounce_autosuggestions().perform(performer, [shared_this](autosuggestion_t result) {
+    std::function<void(autosuggestion_t)> completion = [shared_this](autosuggestion_t result) {
         shared_this->autosuggest_completed(std::move(result));
-    });
+    };
+    debounce_perform_with_completion(debounce_autosuggestions(), std::move(performer),
+                                     std::move(completion));
 }
 
 // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
@@ -2827,11 +2834,14 @@ void reader_data_t::super_highlight_me_plenty() {
     in_flight_highlight_request = el->text();
 
     FLOG(reader_render, L"Highlighting");
-    auto highlight_performer = get_highlight_performer(parser(), *el, true /* io_ok */);
+    std::function<highlight_result_t()> highlight_performer =
+        get_highlight_performer(parser(), *el, true /* io_ok */);
     auto shared_this = this->shared_from_this();
-    debounce_highlighting().perform(highlight_performer, [shared_this](highlight_result_t result) {
+    std::function<void(highlight_result_t)> completion = [shared_this](highlight_result_t result) {
         shared_this->highlight_complete(std::move(result));
-    });
+    };
+    debounce_perform_with_completion(debounce_highlighting(), std::move(highlight_performer),
+                                     std::move(completion));
 }
 
 void reader_data_t::finish_highlighting_before_exec() {

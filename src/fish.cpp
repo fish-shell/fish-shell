@@ -428,8 +428,6 @@ int main(int argc, char **argv) {
     int my_optind = 0;
 
     program_name = L"fish";
-    set_main_thread();
-    setup_fork_guards();
     rust_init();
     signal_unblock_all();
 

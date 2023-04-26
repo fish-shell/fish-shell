@@ -272,8 +272,6 @@ static void process_input(bool continuous_mode, bool verbose) {
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
 [[noreturn]] static void setup_and_process_keys(bool continuous_mode, bool verbose) {
     set_interactive_session(true);
-    set_main_thread();
-    setup_fork_guards();
     rust_init();
     env_init();
     reader_init();

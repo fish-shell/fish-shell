@@ -253,6 +253,12 @@ impl SourceRange {
     }
 }
 
+impl From<SourceRange> for std::ops::Range<usize> {
+    fn from(value: SourceRange) -> Self {
+        value.start()..value.end()
+    }
+}
+
 impl Default for ParseTokenType {
     fn default() -> Self {
         ParseTokenType::invalid

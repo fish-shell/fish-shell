@@ -995,12 +995,19 @@ pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 /// Name of the current program. Should be set at startup. Used by the debug function.
 pub static mut PROGRAM_NAME: Lazy<&'static wstr> = Lazy::new(|| L!(""));
 
-#[cfg(windows)]
-/// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
-pub const HAS_WORKING_TTY_TIMESTAMPS: bool = false;
-#[cfg(not(windows))]
-/// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
-pub const HAS_WORKING_TTY_TIMESTAMPS: bool = true;
+/// MS Windows tty devices do not currently have either a read or write timestamp - those respective
+/// fields of `struct stat` are always set to the current time, which means we can't rely on them.
+/// In this case, we assume no external program has written to the terminal behind our back, making
+/// the multiline prompt usable. See #2859 and https://github.com/Microsoft/BashOnWindows/issues/545
+pub fn has_working_tty_timestamps() -> bool {
+    if cfg!(target_os = "windows") {
+        false
+    } else if cfg!(target_os = "linux") {
+        !is_windows_subsystem_for_linux()
+    } else {
+        true
+    }
+}
 
 /// A global, empty string. This is useful for functions which wish to return a reference to an
 /// empty string.
@@ -1639,7 +1646,7 @@ pub fn is_windows_subsystem_for_linux() -> bool {
         let build: Result<u32, _> = std::str::from_utf8(&release).unwrap().parse();
         match build {
             Ok(17763..) => return true,
-            Ok(_) => (),       // handled below
+            Ok(_) => (),       // return true, but first warn (see below)
             _ => return false, // if parsing fails, assume this isn't WSL
         };
 

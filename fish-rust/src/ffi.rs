@@ -338,3 +338,21 @@ impl core::convert::From<*const autocxx::c_void> for void_ptr {
         Self(value as *const _)
     }
 }
+
+impl core::convert::From<void_ptr> for *const u8 {
+    fn from(value: void_ptr) -> Self {
+        value.0 as *const _
+    }
+}
+
+impl core::convert::From<void_ptr> for *const core::ffi::c_void {
+    fn from(value: void_ptr) -> Self {
+        value.0 as *const _
+    }
+}
+
+impl core::convert::From<void_ptr> for *const autocxx::c_void {
+    fn from(value: void_ptr) -> Self {
+        value.0 as *const _
+    }
+}

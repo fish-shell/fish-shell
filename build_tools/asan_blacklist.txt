@@ -1,0 +1,3 @@
+# Ignore a one-off leak in __cxa_thread_atexit_impl that isn't under our control.
+# See https://github.com/fish-shell/fish-shell/pull/9754#issuecomment-1523782989
+fun:__cxa_thread_atexit_impl

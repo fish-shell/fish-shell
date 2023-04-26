@@ -104,7 +104,8 @@ jobs:
         mkdir build && cd build
         # Rust's ASAN requires the build system to explicitly pass a --target triple. We read that
         # value from CMake variable Rust_CARGO_TARGET (shared with corrosion).
-        cmake .. -DASAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu -DCMAKE_BUILD_TYPE=Debug
+        env CXXFLAGS="$CXXFLAGS -fsanitize-blacklist=$PWD/../build_tools/asan_blacklist.txt" \
+            cmake .. -DASAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu -DCMAKE_BUILD_TYPE=Debug
     - name: make
       run: |
         make

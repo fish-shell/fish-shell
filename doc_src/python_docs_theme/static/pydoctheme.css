@@ -565,9 +565,6 @@ div.documentwrapper {
         height: auto;
         position: relative;
     }
-    div.documentwrapper {
-        float: left;
-    }
     div.bodywrapper {
         margin-left: 0;
     }

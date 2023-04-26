@@ -33,6 +33,7 @@
 #include "parse_util.h"
 #include "parser.h"
 #include "path.h"
+#include "threads.rs.h"
 #include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"

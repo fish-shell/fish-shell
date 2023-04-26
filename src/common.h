@@ -320,14 +320,6 @@ bool should_suppress_stderr_for_tests();
 #define likely(x) __builtin_expect(bool(x), 1)
 #define unlikely(x) __builtin_expect(bool(x), 0)
 
-void assert_is_main_thread(const char *who);
-#define ASSERT_IS_MAIN_THREAD_TRAMPOLINE(x) assert_is_main_thread(x)
-#define ASSERT_IS_MAIN_THREAD() ASSERT_IS_MAIN_THREAD_TRAMPOLINE(__FUNCTION__)
-
-void assert_is_background_thread(const char *who);
-#define ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(x) assert_is_background_thread(x)
-#define ASSERT_IS_BACKGROUND_THREAD() ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(__FUNCTION__)
-
 /// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
 /// it, which it would be nice if it did, but here it is anyways.
 void assert_is_locked(std::mutex &mutex, const char *who, const char *caller);
@@ -538,26 +530,9 @@ wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize);
 using timepoint_t = double;
 timepoint_t timef();
 
-/// Call the following function early in main to set the main thread. This is our replacement for
-/// pthread_main_np().
-void set_main_thread();
-bool is_main_thread();
-
-/// Configures thread assertions for testing.
-void configure_thread_assertions_for_testing();
-
-/// Set up a guard to complain if we try to do certain things (like take a lock) after calling fork.
-void setup_fork_guards(void);
-
 /// Save the value of tcgetpgrp so we can restore it on exit.
 void save_term_foreground_process_group();
 void restore_term_foreground_process_group_for_exit();
-
-/// Return whether we are the child of a fork.
-bool is_forked_child(void);
-void assert_is_not_forked_child(const char *who);
-#define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
-#define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.

@@ -2043,27 +2043,6 @@ complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_g
 complete -f -c git -n '__fish_git_using_command tag' -n '__fish_git_contains_opt -s d delete -s v verify -s f force' -ka '(__fish_git_tags)' -d Tag
 # TODO options
 
-# -- todo --
-# done with https://git-scm.com/docs/git-update-index
-# 
-# * ignore-submodules: only with --refresh
-# * unmerged: only with --refresh too i think? also i don't like my description that much
-# * ignore-missing: only with --refresh
-# * cacheinfo: i have no idea how that one works sorry
-# * index-info: read from stdin
-# * info-only: unsure if "following" means directly following. don't think it does in this case?
-# * force-remove: implies --remove
-# * z: "only meaningful with --stdin or --index-info"
-# * untracked cache: "Please use --test-untracked-cache before enabling it"
-# * force-untracked-cache: for backwards compatability
-# 
-# * [no-]assume-unchanged: When one of these flags is specified, the object name recorded for the paths are not updated
-# * [no-]skip-worktree: When one of these flags is specified, the object name recorded for the paths are not updated
-# * [no-]fsmonitor-valid: When one of these flags is specified, the object name recorded for the paths are not updated
-# 
-# * [no-]ignore-skip-worktree-entries: those are weird, it's worded like they do the same, but they mean literally the opposite? also the only other mention of no-ignore-skip-worktree-entries was here: https://git-scm.com/docs/sparse-checkout#_implementation_goalsplans
-# 
-
 ### update-index
 complete -c git -n __fish_git_needs_command -a update-index -d 'Register file contents in the working tree to the index'
 complete -c git -n '__fish_git_using_command update-index' -l add -d 'If a specified file isn\'t in the index already then it\'s added'

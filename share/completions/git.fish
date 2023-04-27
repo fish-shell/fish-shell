@@ -2043,6 +2043,65 @@ complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_g
 complete -f -c git -n '__fish_git_using_command tag' -n '__fish_git_contains_opt -s d delete -s v verify -s f force' -ka '(__fish_git_tags)' -d Tag
 # TODO options
 
+# -- todo --
+# done with https://git-scm.com/docs/git-update-index
+# 
+# * ignore-submodules: only with --refresh
+# * unmerged: only with --refresh too i think? also i don't like my description that much
+# * ignore-missing: only with --refresh
+# * cacheinfo: i have no idea how that one works sorry
+# * index-info: read from stdin
+# * info-only: unsure if "following" means directly following. don't think it does in this case?
+# * force-remove: implies --remove
+# * z: "only meaningful with --stdin or --index-info"
+# * untracked cache: "Please use --test-untracked-cache before enabling it"
+# * force-untracked-cache: for backwards compatability
+# 
+# * [no-]assume-unchanged: When one of these flags is specified, the object name recorded for the paths are not updated
+# * [no-]skip-worktree: When one of these flags is specified, the object name recorded for the paths are not updated
+# * [no-]fsmonitor-valid: When one of these flags is specified, the object name recorded for the paths are not updated
+# 
+# * [no-]ignore-skip-worktree-entries: those are weird, it's worded like they do the same, but they mean literally the opposite? also the only other mention of no-ignore-skip-worktree-entries was here: https://git-scm.com/docs/sparse-checkout#_implementation_goalsplans
+# 
+
+### update-index
+complete -c git -n __fish_git_needs_command -a update-index -d 'Register file contents in the working tree to the index'
+complete -c git -n '__fish_git_using_command update-index' -l add -d 'If a specified file isn\'t in the index already then it\'s added'
+complete -c git -n '__fish_git_using_command update-index' -l remove -d 'If a specified file is in the index but is missing then it\'s removed'
+complete -c git -n '__fish_git_using_command update-index' -l refresh -d 'Looks at the current index and checks to see if merges or updates are needed'
+complete -c git -n '__fish_git_using_command update-index' -s q -d 'Looks at the current index and checks to see if merges or updates are needed'
+complete -c git -n '__fish_git_using_command update-index' -l ignore-submodules -d 'Do not try to update submodules'
+complete -c git -n '__fish_git_using_command update-index' -l unmerged -d 'Continue even if unmerged changes are found in the index'
+complete -c git -n '__fish_git_using_command update-index' -l ignore-missing -d 'Ignores missing files during a --refresh'
+complete -c git -n '__fish_git_using_command update-index' -l index-info -d 'Read index information from stdin'
+complete -f -c git -n '__fish_git_using_command update-index' -l chmod -x -a '+x\tAdd\ execute\ permissions -x\tRemove\ execute\ permissions' -d 'Set the execute permissions on the updated files'
+complete -c git -n '__fish_git_using_command update-index' -s g -l assume-unchanged -d 'Set the "assume unchanged" bit for the paths'
+complete -c git -n '__fish_git_using_command update-index' -s g -l no-assume-unchanged -d 'Unset the "assume unchanged" bit for the paths'
+complete -c git -n '__fish_git_using_command update-index' -l really-refresh -d 'Like --refresh, but checks stat information unconditionally'
+complete -c git -n '__fish_git_using_command update-index' -s g -l skip-worktree -d 'Set the "fsmonitor valid" bit for the paths'
+complete -c git -n '__fish_git_using_command update-index' -s g -l no-skip-worktree -d 'Unset the "fsmonitor valid" bit for the paths'
+complete -c git -n '__fish_git_using_command update-index' -l ignore-skip-worktree-entries -d 'Do not remove skip-worktree entries even when the --remove option was specified'
+complete -c git -n '__fish_git_using_command update-index' -l no-ignore-skip-worktree-entries -d 'DO not remove skip-worktree entries even when the --remove option was specified'
+complete -c git -n '__fish_git_using_command update-index' -s g -l fsmonitor-valid -d 'Set the "fsmonitor valid" bit for the paths'
+complete -c git -n '__fish_git_using_command update-index' -s g -l no-fsmonitor-valid -d 'Unset the "fsmonitor valid" bit for the paths'
+complete -c git -n '__fish_git_using_command update-index' -s g -l again -d 'Runs git update-index itself on the paths whose index entries are different from those from the HEAD commit'
+complete -c git -n '__fish_git_using_command update-index' -l unresolve -d 'Restores the unmerged or needs updating state of a file during a merge if it was cleared by accident'
+complete -c git -n '__fish_git_using_command update-index' -l info-only -d 'Do not create objects in the object database for all <file> arguments that follow this flag'
+complete -c git -n '__fish_git_using_command update-index' -l force-remove -d 'Remove the file from the index even when the working directory still has such a file'
+complete -c git -n '__fish_git_using_command update-index' -l replace -d 'Existing entries that conflict with the entry being added are automatically removed with warning messages'
+complete -c git -n '__fish_git_using_command update-index' -l stdin -d 'Instead of taking list of paths from the command line, read list of paths from the standard input'
+complete -c git -n '__fish_git_using_command update-index' -l verbose -d 'Report what is being added and removed from index'
+complete -c git -n '__fish_git_using_command update-index' -l index-version -a "2\t\t3\t\t4" -d 'Instead of taking list of paths from the command line, read list of paths from the standard input'
+complete -c git -n '__fish_git_using_command update-index' -s z -d 'Seperate paths with NUL instead of LF'
+complete -c git -n '__fish_git_using_command update-index' -l split-index -d 'Enable split index mode'
+complete -c git -n '__fish_git_using_command update-index' -l no-split-index -d 'Disable split index mode'
+complete -c git -n '__fish_git_using_command update-index' -l untracked-cache -d 'Enable untracked cache feature'
+complete -c git -n '__fish_git_using_command update-index' -l no-untracked-cache -d 'Disable untracked cache feature'
+complete -c git -n '__fish_git_using_command update-index' -l test-untracked-cache -d 'Only perform tests on the working directory to make sure untracked cache can be used'
+complete -c git -n '__fish_git_using_command update-index' -l force-untracked-cache -d 'Same as --untracked-cache'
+complete -c git -n '__fish_git_using_command update-index' -l fsmonitor -d 'Enable files system monitor feature'
+complete -c git -n '__fish_git_using_command update-index' -l no-fsmonitor -d 'Disable files system monitor feature'
+
 ### worktree
 set -l git_worktree_commands add list lock move prune remove unlock
 complete -c git -n __fish_git_needs_command -a worktree -d 'Manage multiple working trees'

@@ -5,7 +5,7 @@ use crate::builtins::shared::{
     BUILTIN_ERR_COMBO2, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::ffi::parser_t;
-use crate::ffi::{builtin_exists, builtin_get_names_ffi};
+use crate::ffi::{self, builtin_exists, builtin_get_names_ffi, wcharz_t};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::WCharFromFFI;
 use crate::wchar_ffi::WCharToFFI;
@@ -89,4 +89,13 @@ pub fn r#builtin(
 
 pub fn builtin_get_names() -> Vec<WString> {
     builtin_get_names_ffi().from_ffi()
+}
+
+pub fn builtin_get_desc(name: &wstr) -> WString {
+    let str_ = ffi::builtin_get_desc(&name.to_ffi());
+    if str_.is_null() {
+        WString::new()
+    } else {
+        WString::from(&wcharz_t { str_ })
+    }
 }

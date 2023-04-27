@@ -102,6 +102,7 @@ include_cpp! {
     generate!("builtin_print_help")
     generate!("builtin_print_error_trailer")
     generate!("builtin_get_names_ffi")
+    generate!("builtin_get_desc")
 
     generate!("pretty_printer_t")
 

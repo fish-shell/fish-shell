@@ -203,33 +203,27 @@ The advantage over aliases is that you can see the actual command before using i
 
 .. [#] Any binding that executes the ``expand-abbr`` or ``execute`` :doc:`bind function <cmds/bind>` will expand abbreviations. By default :kbd:`Control`\ +\ :kbd:`Space` is bound to just inserting a space.
 
-.. _title:
-
-Programmable title
-------------------
-
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :doc:`fish_title <cmds/fish_title>` function. The :doc:`fish_title <cmds/fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_prompt <cmds/fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
-
-The default fish title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
-
-Examples:
-
-To show the last command and working directory in the title::
-
-    function fish_title
-        # `prompt_pwd` shortens the title. This helps prevent tabs from becoming very wide.
-        echo $argv[1] (prompt_pwd)
-        pwd
-    end
-
 .. _prompt:
 
 Programmable prompt
 -------------------
 
-When it is fish's turn to ask for input (like after it started or the command ended), it will show a prompt. It does this by running the :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` functions.
+When it is fish's turn to ask for input (like after it started or the command ended), it will show a prompt. Often this looks something like::
 
-The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left, though the default function only does this when in :ref:`vi-mode <vi-mode>`.
+    you@hostname ~>
+
+This prompt is determined by running the :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` functions.
+
+The output of the former is displayed on the left and the latter's output on the right side of the terminal.
+For :ref:`vi-mode <vi-mode>`, the output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left.
+
+Fish ships with a few prompts which you can see with :doc:`fish_config <cmds/fish_config>`. If you run just ``fish_config`` it will open a web interface [#]_ where you'll be shown the prompts and can pick which one you want. ``fish_config prompt show`` will show you the prompts right in your terminal.
+
+For example ``fish_config prompt choose disco`` will temporarily select the "disco" prompt. If you like it and decide to keep it, run ``fish_config prompt save``.
+
+You can also change these functions yourself by running ``funced fish_prompt`` and ``funcsave fish_prompt`` once you are happy with the result (or ``fish_right_prompt`` if you want to change that).
+
+.. [#] The web interface runs purely locally on your computer.
 
 .. _greeting:
 
@@ -251,6 +245,25 @@ or you can script it by changing the function::
   end
 
 save this in config.fish or :ref:`a function file <syntax-function-autoloading>`. You can also use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` to edit it easily.
+
+.. _title:
+
+Programmable title
+------------------
+
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :doc:`fish_title <cmds/fish_title>` function. The :doc:`fish_title <cmds/fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_prompt <cmds/fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
+
+The default fish title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
+
+Examples:
+
+To show the last command and working directory in the title::
+
+    function fish_title
+        # `prompt_pwd` shortens the title. This helps prevent tabs from becoming very wide.
+        echo $argv[1] (prompt_pwd)
+        pwd
+    end
 
 .. _private-mode:
 

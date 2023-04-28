@@ -1,3 +1,4 @@
+#if 0
 // Utilities for keeping track of jobs, processes and subshells, as well as signal handling
 // functions for tracking children. These functions do not themselves launch new processes, the exec
 // library will call proc to create representations of the running jobs as needed.
@@ -1040,3 +1041,4 @@ void tty_transfer_t::reclaim() {
 }
 
 tty_transfer_t::~tty_transfer_t() { assert(!this->owner_ && "Forgot to reclaim() the tty"); }
+#endif

@@ -1,20 +1,15 @@
 use libc::c_int;
 use widestring_suffix::widestrs;
 
-use super::shared::{
-    builtin_print_help, io_streams_t, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
+use super::shared::{builtin_print_help, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS};
 use crate::event;
-use crate::ffi::parser_t;
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::wchar::{wstr, WString};
 use crate::wutil::printf::sprintf;
 
 #[widestrs]
-pub fn emit(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn emit(parser: &mut Parser, streams: &mut IoStreams<'_>, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
 
     let opts = match HelpOnlyCmdOpts::parse(argv, parser, streams) {

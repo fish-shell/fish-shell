@@ -7,7 +7,7 @@ use libc::c_int;
 
 pub fn function(
     parser: &mut Parser,
-    streams: &IoStreams,
+    streams: &IoStreams<'_>,
     c_args: &[WString],
     source: &ParsedSourceRef,
     func_node: &ast::BlockStatement,

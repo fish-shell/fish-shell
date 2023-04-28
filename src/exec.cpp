@@ -1,3 +1,4 @@
+#if 0
 // Functions for executing a program.
 //
 // Some of the code in this file is based on code from the Glibc manual, though the changes
@@ -1254,3 +1255,4 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &
     return exec_subshell_internal(cmd, parser, nullptr, &outputs, &break_expand, apply_exit_status,
                                   false);
 }
+#endif

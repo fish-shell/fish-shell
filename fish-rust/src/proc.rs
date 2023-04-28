@@ -130,8 +130,8 @@ impl ProcStatus {
     }
 
     /// Construct directly from a signal.
-    pub fn from_signal(signal: i32) -> ProcStatus {
-        ProcStatus::new(Self::w_exitcode(0 /* ret */, signal), false)
+    pub fn from_signal(signal: Signal) -> ProcStatus {
+        ProcStatus::new(Self::w_exitcode(0 /* ret */, signal.code()), false)
     }
 
     /// Construct an empty status_t (e.g. `set foo bar`).
@@ -1714,3 +1714,32 @@ pub fn have_proc_stat() -> bool {
 
 /// The signals that signify crashes to us.
 const CRASHSIGNALS: [libc::c_int; 6] = [SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS];
+
+pub struct JobRefFfi(JobRef);
+
+unsafe impl cxx::ExternType for JobRefFfi {
+    type Id = cxx::type_id!("JobRefFfi");
+    type Kind = cxx::kind::Opaque;
+}
+
+pub struct JobGroupRefFfi(JobGroupRef);
+
+unsafe impl cxx::ExternType for JobGroupRefFfi {
+    type Id = cxx::type_id!("JobGroupRefFfi");
+    type Kind = cxx::kind::Opaque;
+}
+
+#[cxx::bridge]
+mod proc_ffi {
+    extern "Rust" {
+        type JobRefFfi;
+        type JobGroupRefFfi;
+
+        fn new_job_group_ref() -> Box<JobGroupRefFfi>;
+    }
+}
+
+fn new_job_group_ref() -> Box<JobGroupRefFfi> {
+    todo!()
+    // Box::new(JobGroupRefFfi(JobGroupRef
+}

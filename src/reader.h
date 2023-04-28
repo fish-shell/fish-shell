@@ -17,11 +17,11 @@
 #include "highlight.h"
 #include "maybe.h"
 #include "parse_constants.h"
+#include "parser.h"
 
 class env_stack_t;
 class environment_t;
 class io_chain_t;
-class parser_t;
 
 /// An edit action that can be undone.
 struct edit_t {

@@ -1,10 +1,11 @@
 use libc::c_int;
 
 use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    STATUS_CMD_OK, STATUS_INVALID_ARGS,
+    builtin_missing_argument, builtin_print_help, builtin_unknown_option, STATUS_CMD_OK,
+    STATUS_INVALID_ARGS,
 };
-use crate::ffi::parser_t;
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{self, fish_wcstoi_opts, sprintf, wgettext_fmt, Options as WcstoiOptions};
@@ -18,8 +19,8 @@ use std::sync::Mutex;
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
 
 pub fn random(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
     argv: &mut [&wstr],
 ) -> Option<c_int> {
     let cmd = argv[0];
@@ -59,18 +60,18 @@ pub fn random(
         if arg_count == 1 {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: nothing to choose from\n", cmd,));
+                .append(&wgettext_fmt!("%ls: nothing to choose from\n", cmd,));
             return STATUS_INVALID_ARGS;
         }
 
         let rand = RNG.lock().unwrap().gen_range(0..arg_count - 1);
         streams
             .out
-            .append(sprintf!(L!("%ls\n"), argv[i + 1 + rand]));
+            .append(&sprintf!(L!("%ls\n"), argv[i + 1 + rand]));
         return STATUS_CMD_OK;
     }
     fn parse<T: PrimInt>(
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams<'_>,
         cmd: &wstr,
         num: &wstr,
     ) -> Result<T, wutil::Error> {
@@ -84,7 +85,7 @@ pub fn random(
         if res.is_err() {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: %ls: invalid integer\n", cmd, num,));
+                .append(&wgettext_fmt!("%ls: %ls: invalid integer\n", cmd, num));
         }
         return res;
     }
@@ -128,9 +129,10 @@ pub fn random(
             match parse::<u64>(streams, cmd, argv[i + 1]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(0) => {
-                    streams
-                        .err
-                        .append(wgettext_fmt!("%ls: STEP must be a positive integer\n", cmd,));
+                    streams.err.append(&wgettext_fmt!(
+                        "%ls: STEP must be a positive integer\n",
+                        cmd,
+                    ));
                     return STATUS_INVALID_ARGS;
                 }
                 Ok(x) => step = x,
@@ -144,7 +146,7 @@ pub fn random(
         _ => {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: too many arguments\n", cmd,));
+                .append(&wgettext_fmt!("%ls: too many arguments\n", cmd,));
             return Some(1);
         }
     }
@@ -152,14 +154,14 @@ pub fn random(
     if end <= start {
         streams
             .err
-            .append(wgettext_fmt!("%ls: END must be greater than START\n", cmd,));
+            .append(&wgettext_fmt!("%ls: END must be greater than START\n", cmd,));
         return STATUS_INVALID_ARGS;
     }
 
     // Using abs_diff() avoids an i64 overflow if start is i64::MIN and end is i64::MAX
     let possibilities = end.abs_diff(start) / step;
     if possibilities == 0 {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%ls: range contains only one possible value\n",
             cmd,
         ));
@@ -174,6 +176,6 @@ pub fn random(
     // Safe because end was a valid i64 and the result here is in the range start..=end.
     let result: i64 = start.checked_add_unsigned(rand * step).unwrap();
 
-    streams.out.append(sprintf!(L!("%lld\n"), result));
+    streams.out.append(&sprintf!(L!("%lld\n"), result));
     return STATUS_CMD_OK;
 }

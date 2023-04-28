@@ -1,5 +1,5 @@
 use crate::builtins::{printf, wait};
-use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
+use crate::ffi::{self, wcstring_list_ffi_t, Repin};
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::ProcStatus;
@@ -9,30 +9,6 @@ use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use libc::c_int;
 use std::os::fd::RawFd;
 use std::pin::Pin;
-
-#[cxx::bridge]
-mod builtins_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        include!("parser.h");
-        include!("builtin.h");
-
-        type wcharz_t = crate::ffi::wcharz_t;
-        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
-        type parser_t = crate::ffi::parser_t;
-        type io_streams_t = crate::ffi::io_streams_t;
-        type RustBuiltin = crate::ffi::RustBuiltin;
-    }
-    extern "Rust" {
-        fn rust_run_builtin(
-            parser: Pin<&mut parser_t>,
-            streams: Pin<&mut io_streams_t>,
-            cpp_args: &wcstring_list_ffi_t,
-            builtin: RustBuiltin,
-            status_code: &mut i32,
-        ) -> bool;
-    }
-}
 
 /// The default prompt for the read command.
 pub const DEFAULT_READ_PROMPT: &str =
@@ -116,170 +92,104 @@ pub const STATUS_READ_TOO_MUCH: Option<c_int> = Some(122);
 /// The status code when an expansion fails, for example, "$foo["
 pub const STATUS_EXPAND_ERROR: Option<c_int> = Some(121);
 
-/// A wrapper around output_stream_t.
-pub struct output_stream_t(*mut ffi::output_stream_t);
-
-impl output_stream_t {
-    /// \return the underlying output_stream_t.
-    fn ffi(&mut self) -> Pin<&mut ffi::output_stream_t> {
-        unsafe { (*self.0).pin() }
-    }
-
-    /// Append a &wtr or WString.
-    pub fn append<Str: AsRef<wstr>>(&mut self, s: Str) -> bool {
-        self.ffi().append1(c_str!(s))
-    }
-
-    /// Append a char.
-    pub fn append1(&mut self, c: char) -> bool {
-        self.append(wstr::from_char_slice(&[c]))
-    }
-}
-
-// Convenience wrappers around C++ io_streams_t.
-pub struct io_streams_t {
-    streams: *mut builtins_ffi::io_streams_t,
-    pub out: output_stream_t,
-    pub err: output_stream_t,
-    pub out_is_redirected: bool,
-}
-
-impl io_streams_t {
-    pub fn new(mut streams: Pin<&mut builtins_ffi::io_streams_t>) -> io_streams_t {
-        let out = output_stream_t(streams.as_mut().get_out().unpin());
-        let err = output_stream_t(streams.as_mut().get_err().unpin());
-        let out_is_redirected = streams.as_mut().get_out_redirected();
-        let streams = streams.unpin();
-        io_streams_t {
-            streams,
-            out,
-            err,
-            out_is_redirected,
-        }
-    }
-
-    pub fn ffi_pin(&mut self) -> Pin<&mut builtins_ffi::io_streams_t> {
-        unsafe { Pin::new_unchecked(&mut *self.streams) }
-    }
-
-    pub fn ffi_ref(&self) -> &builtins_ffi::io_streams_t {
-        unsafe { &*self.streams }
-    }
-
-    pub fn stdin_is_directly_redirected(&self) -> bool {
-        self.ffi_ref().ffi_stdin_is_directly_redirected()
-    }
-
-    pub fn stdin_fd(&self) -> Option<RawFd> {
-        let ret = self.ffi_ref().ffi_stdin_fd().0;
-
-        if ret < 0 {
-            None
-        } else {
-            Some(ret)
-        }
-    }
-}
-
-fn rust_run_builtin(
-    parser: Pin<&mut parser_t>,
-    streams: Pin<&mut builtins_ffi::io_streams_t>,
-    cpp_args: &wcstring_list_ffi_t,
-    builtin: RustBuiltin,
-    status_code: &mut i32,
-) -> bool {
-    let storage: Vec<WString> = cpp_args.from_ffi();
-    let mut args: Vec<&wstr> = storage.iter().map(|s| s.as_utfstr()).collect();
-    let streams = &mut io_streams_t::new(streams);
-
-    match run_builtin(parser.unpin(), streams, args.as_mut_slice(), builtin) {
-        None => false,
-        Some(status) => {
-            *status_code = status;
-            true
-        }
-    }
-}
-
-pub fn builtin_run<S: AsRef<wstr>>(parser: &Parser, args: &[S], streams: &IoStreams) -> ProcStatus {
+pub fn builtin_run<S: AsRef<wstr>>(
+    parser: &Parser,
+    args: &[S],
+    streams: &IoStreams<'_>,
+) -> ProcStatus {
     todo!()
 }
 pub fn builtin_exists(cmd: &wstr) -> bool {
     todo!()
 }
-
-pub fn run_builtin(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-    builtin: RustBuiltin,
-) -> Option<c_int> {
-    match builtin {
-        RustBuiltin::Abbr => super::abbr::abbr(parser, streams, args),
-        RustBuiltin::Bg => super::bg::bg(parser, streams, args),
-        RustBuiltin::Block => super::block::block(parser, streams, args),
-        RustBuiltin::Builtin => super::builtin::builtin(parser, streams, args),
-        RustBuiltin::Contains => super::contains::contains(parser, streams, args),
-        RustBuiltin::Command => super::command::command(parser, streams, args),
-        RustBuiltin::Echo => super::echo::echo(parser, streams, args),
-        RustBuiltin::Emit => super::emit::emit(parser, streams, args),
-        RustBuiltin::Exit => super::exit::exit(parser, streams, args),
-        RustBuiltin::Math => super::math::math(parser, streams, args),
-        RustBuiltin::Pwd => super::pwd::pwd(parser, streams, args),
-        RustBuiltin::Random => super::random::random(parser, streams, args),
-        RustBuiltin::Realpath => super::realpath::realpath(parser, streams, args),
-        RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
-        RustBuiltin::Type => super::r#type::r#type(parser, streams, args),
-        RustBuiltin::Wait => wait::wait(parser, streams, args),
-        RustBuiltin::Printf => printf::printf(parser, streams, args),
-    }
+pub fn builtin_get_names() -> Vec<&'static wstr> {
+    todo!()
 }
+
+// pub fn run_builtin(
+//     parser: &mut Parser,
+//     streams: &mut IoStreams<'_>,
+//     args: &mut [&wstr],
+//     builtin: RustBuiltin,
+// ) -> Option<c_int> {
+//     match builtin {
+//         RustBuiltin::Abbr => super::abbr::abbr(parser, streams, args),
+//         RustBuiltin::Bg => super::bg::bg(parser, streams, args),
+//         RustBuiltin::Block => super::block::block(parser, streams, args),
+//         RustBuiltin::Builtin => super::builtin::builtin(parser, streams, args),
+//         RustBuiltin::Contains => super::contains::contains(parser, streams, args),
+//         RustBuiltin::Command => super::command::command(parser, streams, args),
+//         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
+//         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
+//         RustBuiltin::Exit => super::exit::exit(parser, streams, args),
+//         RustBuiltin::Math => super::math::math(parser, streams, args),
+//         RustBuiltin::Pwd => super::pwd::pwd(parser, streams, args),
+//         RustBuiltin::Random => super::random::random(parser, streams, args),
+//         RustBuiltin::Realpath => super::realpath::realpath(parser, streams, args),
+//         RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
+//         RustBuiltin::Type => super::r#type::r#type(parser, streams, args),
+//         RustBuiltin::Wait => wait::wait(parser, streams, args),
+//         RustBuiltin::Printf => printf::printf(parser, streams, args),
+//     }
+// }
 
 // Covers of these functions that take care of the pinning, etc.
 // These all return STATUS_INVALID_ARGS.
 pub fn builtin_missing_argument(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
     cmd: &wstr,
     opt: &wstr,
     print_hints: bool,
 ) {
-    ffi::builtin_missing_argument(
-        parser.pin(),
-        streams.ffi_pin(),
-        c_str!(cmd),
-        c_str!(opt),
-        print_hints,
-    );
+    todo!()
+    // builtin_missing_argument(
+    //     parser.
+    //     streams.ffi_pin(),
+    //     c_str!(cmd),
+    //     c_str!(opt),
+    //     print_hints,
+    // );
 }
 
 pub fn builtin_unknown_option(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
     cmd: &wstr,
     opt: &wstr,
     print_hints: bool,
 ) {
-    ffi::builtin_unknown_option(
-        parser.pin(),
-        streams.ffi_pin(),
-        c_str!(cmd),
-        c_str!(opt),
-        print_hints,
-    );
+    todo!()
+    // ffi::builtin_unknown_option(
+    //     parser.
+    //     streams.ffi_pin(),
+    //     c_str!(cmd),
+    //     c_str!(opt),
+    //     print_hints,
+    // );
 }
 
-pub fn builtin_print_help(parser: &mut parser_t, streams: &io_streams_t, cmd: &wstr) {
-    ffi::builtin_print_help(
-        parser.pin(),
-        streams.ffi_ref(),
-        c_str!(cmd),
-        empty_wstring(),
-    );
+pub fn builtin_print_help(parser: &mut Parser, streams: &IoStreams<'_>, cmd: &wstr) {
+    todo!()
+    // ffi::builtin_print_help(
+    //     parser.
+    //     streams.ffi_ref(),
+    //     c_str!(cmd),
+    //     empty_wstring(),
+    // );
+}
+pub fn builtin_print_help_error(
+    parser: &mut Parser,
+    streams: &IoStreams<'_>,
+    cmd: &wstr,
+    error_message: &wstr,
+) {
+    todo!()
 }
 
-pub fn builtin_print_error_trailer(parser: &mut parser_t, streams: &mut io_streams_t, cmd: &wstr) {
-    ffi::builtin_print_error_trailer(parser.pin(), streams.err.ffi(), c_str!(cmd));
+pub fn builtin_print_error_trailer(parser: &mut Parser, streams: &mut IoStreams<'_>, cmd: &wstr) {
+    todo!()
+    // ffi::builtin_print_error_trailer(parser. streams.err.ffi(), c_str!(cmd));
 }
 
 pub struct HelpOnlyCmdOpts {
@@ -290,8 +200,8 @@ pub struct HelpOnlyCmdOpts {
 impl HelpOnlyCmdOpts {
     pub fn parse(
         args: &mut [&wstr],
-        parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        parser: &mut Parser,
+        streams: &mut IoStreams<'_>,
     ) -> Result<Self, Option<c_int>> {
         let cmd = args[0];
         let print_hints = true;

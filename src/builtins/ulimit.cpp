@@ -14,10 +14,9 @@
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
 #include "../maybe.h"
+#include "../parser.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
-
-class parser_t;
 
 /// Struct describing a resource limit.
 struct resource_t {

@@ -12,11 +12,10 @@ use crate::{
         builtin_unknown_option, BUILTIN_ERR_TOO_MANY_ARGUMENTS, STATUS_CMD_ERROR,
         STATUS_INVALID_ARGS,
     },
-    ffi::{fish_wcswidth2, parser_t},
+    ffi::parser_t,
     wchar::{wstr, L},
-    wchar_ffi::WCharToFFI,
     wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::no_argument},
-    wutil::{fish_wcstoi, wgettext_fmt},
+    wutil::{fish_wcstoi, fish_wcswidth, wgettext_fmt},
 };
 
 use super::shared::{builtin_wperror, io_streams_t, STATUS_CMD_OK};
@@ -227,7 +226,7 @@ fn print_all(hard: bool, streams: &mut io_streams_t) {
     let mut w = 0;
 
     for resource in RESOURCE_ARR {
-        w = max(w, fish_wcswidth2(&resource.desc.to_ffi()).0);
+        w = max(w, fish_wcswidth(resource.desc));
     }
 
     for resource in RESOURCE_ARR {
@@ -281,8 +280,9 @@ fn set_limit(
     value: u64,
     streams: &mut io_streams_t,
 ) -> Option<c_int> {
-    let (mut soft_limit, mut hard_limit) =
-        getrlimit(resource).expect("getrlimit should return valid limits");
+    let Ok((mut soft_limit, mut hard_limit)) = getrlimit(resource) else {
+        return STATUS_CMD_ERROR;
+    };
 
     if hard {
         hard_limit = value
@@ -412,7 +412,7 @@ pub fn ulimit(
         hard = true;
     }
 
-    let new_limit: u64;
+    let mut new_limit: u64;
     if args[woptind].is_empty() {
         streams.err.append(wgettext_fmt!(
             "%ls: New limit cannot be an empty string\n",
@@ -428,7 +428,10 @@ pub fn ulimit(
         new_limit = get(what, soft);
     } else {
         match fish_wcstoi(args[woptind]) {
-            Ok(lim) => new_limit = lim,
+            Ok(lim) => {
+                new_limit = lim;
+                new_limit *= get_multiplier(what) as u64
+            }
             Err(_) => {
                 streams
                     .err

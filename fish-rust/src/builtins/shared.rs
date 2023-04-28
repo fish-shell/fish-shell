@@ -1,9 +1,9 @@
 use crate::builtins::{printf, wait};
+use crate::common::str2wcstring;
 use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{c_str, empty_wstring, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::common::str2wcstring;
 use errno::errno;
 use libc::c_int;
 use std::os::fd::RawFd;

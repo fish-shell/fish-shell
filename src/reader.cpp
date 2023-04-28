@@ -3706,10 +3706,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             reader_history_search_t::mode_t mode =
                 (c == rl::history_token_search_backward || c == rl::history_token_search_forward)
                     ? reader_history_search_t::token
-                : (c == rl::history_prefix_search_backward ||
-                   c == rl::history_prefix_search_forward)
-                    ? reader_history_search_t::prefix
-                    : reader_history_search_t::line;
+                    : (c == rl::history_prefix_search_backward ||
+                       c == rl::history_prefix_search_forward)
+                          ? reader_history_search_t::prefix
+                          : reader_history_search_t::line;
 
             bool was_active_before = history_search.active();
 
@@ -3817,10 +3817,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword: {
             move_word_style_t style =
-                (c == rl::backward_kill_bigword ? move_word_style_t::move_word_style_whitespace
-                 : c == rl::backward_kill_path_component
-                     ? move_word_style_t::move_word_style_path_components
-                     : move_word_style_t::move_word_style_punctuation);
+                (c == rl::backward_kill_bigword
+                     ? move_word_style_t::move_word_style_whitespace
+                     : c == rl::backward_kill_path_component
+                           ? move_word_style_t::move_word_style_path_components
+                           : move_word_style_t::move_word_style_punctuation);
             // Is this the same killring item as the last kill?
             bool newv = (rls.last_cmd != rl::backward_kill_word &&
                          rls.last_cmd != rl::backward_kill_path_component &&

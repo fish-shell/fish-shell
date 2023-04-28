@@ -14,9 +14,9 @@
 #include "common.h"
 #include "cxx.h"
 #include "global_safety.h"
+#include "parser.h"
 #include "wutil.h"
 
-class parser_t;
 #if INCLUDE_RUST_HEADERS
 #include "event.rs.h"
 #else
@@ -31,8 +31,6 @@ struct Event;
 /// These are what are valid to pass to 'functions --handlers-type'
 // TODO: Remove after porting functions.cpp
 extern const wchar_t *const event_filter_names[];
-
-class parser_t;
 
 void event_fire_generic(parser_t &parser, const wcstring &name,
                         const std::vector<wcstring> &args = g_empty_string_list);

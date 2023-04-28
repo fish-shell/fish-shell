@@ -4,11 +4,13 @@ use libc::c_int;
 use num_traits::abs;
 
 use super::shared::{
-    builtin_missing_argument, builtin_print_error_trailer, builtin_print_help, io_streams_t,
+    builtin_missing_argument, builtin_print_error_trailer, builtin_print_help,
     BUILTIN_ERR_NOT_NUMBER, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::builtins::shared::BUILTIN_ERR_TOO_MANY_ARGUMENTS;
-use crate::ffi::parser_t;
+use crate::io::IoStreams;
+use crate::parser::Parser;
+use crate::wchar::WString;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::fish_wcstoi;
@@ -20,12 +22,10 @@ struct Options {
 }
 
 fn parse_options(
-    args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    args: &mut [WString],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = args[0];
-
     const SHORT_OPTS: &wstr = L!(":h");
     const LONG_OPTS: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
 
@@ -37,7 +37,7 @@ fn parse_options(
         match c {
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
@@ -57,16 +57,16 @@ fn parse_options(
 
 /// Function for handling the return builtin.
 pub fn r#return(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     let mut retval = match parse_return_value(args, parser, streams) {
         Ok(v) => v,
         Err(e) => return e,
     };
 
-    let has_function_block = parser.ffi_has_funtion_block();
+    let has_function_block = parser.blocks().any(|b| b.is_function_call());
 
     // *nix does not support negative return values, but our `return` builtin happily accepts being
     // called with negative literals (e.g. `return -1`).
@@ -79,7 +79,7 @@ pub fn r#return(
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
-        let ld = parser.libdata_pod();
+        let ld = parser.libdata_pod_mut();
         if !ld.is_interactive {
             ld.exit_current_script = true;
         }
@@ -87,22 +87,22 @@ pub fn r#return(
     }
 
     // Mark a return in the libdata.
-    parser.libdata_pod().returning = true;
+    parser.libdata_pod_mut().returning = true;
 
     return Some(retval);
 }
 
 pub fn parse_return_value(
-    args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    args: &mut [WString],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
 ) -> Result<i32, Option<c_int>> {
-    let cmd = args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return Err(err),
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
+    let cmd = &args[0];
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
         return Err(STATUS_CMD_OK);
@@ -110,20 +110,20 @@ pub fn parse_return_value(
     if optind + 1 < args.len() {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
-        builtin_print_error_trailer(parser, streams, cmd);
+            .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
     if optind == args.len() {
         Ok(parser.get_last_status().into())
     } else {
-        match fish_wcstoi(args[optind]) {
+        match fish_wcstoi(&args[optind]) {
             Ok(i) => Ok(i),
             Err(_e) => {
                 streams
                     .err
-                    .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
-                builtin_print_error_trailer(parser, streams, cmd);
+                    .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
+                builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
         }

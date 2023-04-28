@@ -13,13 +13,12 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use widestring_suffix::widestrs;
 
-use crate::builtins::shared::io_streams_t;
 use crate::common::{
     escape, escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard,
 };
-use crate::ffi::{self, block_t, parser_t, signal_check_cancel, signal_handle, Repin};
+use crate::ffi::{self, signal_check_cancel, signal_handle, Repin};
 use crate::flog::FLOG;
-use crate::io::IoChain;
+use crate::io::{IoChain, IoStreams};
 use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::{Block, Parser};
 use crate::signal::{signal_check_cancel, signal_handle, Signal};
@@ -36,8 +35,8 @@ mod event_ffi {
         include!("parser.h");
         include!("io.h");
         type wcharz_t = crate::ffi::wcharz_t;
-        type parser_t = crate::ffi::parser_t;
-        type io_streams_t = crate::ffi::io_streams_t;
+        type Parser = crate::parser::Parser;
+        type IoStreams<'a> = crate::io::IoStreams<'a>;
     }
 
     enum event_type_t {
@@ -84,18 +83,18 @@ mod event_ffi {
         fn set_removed(self: &mut EventHandler);
 
         fn event_fire_generic_ffi(
-            parser: Pin<&mut parser_t>,
+            parser: Pin<&mut Parser>,
             name: &CxxWString,
             arguments: &CxxVector<wcharz_t>,
         );
         #[cxx_name = "event_get_desc"]
-        fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString>;
+        fn event_get_desc_ffi(parser: &Parser, evt: &Event) -> UniquePtr<CxxWString>;
         #[cxx_name = "event_fire_delayed"]
-        fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>);
+        fn event_fire_delayed_ffi(parser: Pin<&mut Parser>);
         #[cxx_name = "event_fire"]
-        fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event);
+        fn event_fire_ffi(parser: Pin<&mut Parser>, event: &Event);
         #[cxx_name = "event_print"]
-        fn event_print_ffi(streams: Pin<&mut io_streams_t>, type_filter: &CxxWString);
+        fn event_print_ffi(streams: Pin<&mut IoStreams>, type_filter: &CxxWString);
 
         #[cxx_name = "event_enqueue_signal"]
         fn enqueue_signal(signal: i32);
@@ -597,6 +596,7 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
         EventType::ProcessExit { pid } => format!("exit handler for process {pid}"),
         EventType::JobExit { pid, .. } => {
             if let Some(job) = parser.job_get_from_pid(*pid) {
+                let job = job.read().unwrap();
                 format!("exit handler for job {}, '{}'", job.job_id(), job.command())
             } else {
                 format!("exit handler for job with pid {pid}")
@@ -610,7 +610,7 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
     WString::from_str(&s)
 }
 
-fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString> {
+fn event_get_desc_ffi(parser: &Parser, evt: &Event) -> UniquePtr<CxxWString> {
     todo!()
     // get_desc(parser, evt).to_ffi()
 }
@@ -812,7 +812,7 @@ pub fn fire_delayed(parser: &mut Parser) {
     }
 }
 
-fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>) {
+fn event_fire_delayed_ffi(parser: Pin<&mut Parser>) {
     todo!()
 }
 
@@ -834,7 +834,7 @@ pub fn fire(parser: &mut Parser, event: Event) {
     }
 }
 
-fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event) {
+fn event_fire_ffi(parser: Pin<&mut Parser>, event: &Event) {
     todo!()
     // fire(parser.unpin(), event.clone())
 }
@@ -851,7 +851,7 @@ const EVENT_FILTER_NAMES: [&wstr; 7] = [
 ];
 
 /// Print all events. If type_filter is not empty, only output events with that type.
-pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
+pub fn print(streams: &mut IoStreams<'_>, type_filter: &wstr) {
     let mut tmp = EVENT_HANDLERS
         .lock()
         .expect("event handler list should not be poisoned")
@@ -900,9 +900,8 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
     }
 }
 
-fn event_print_ffi(streams: Pin<&mut ffi::io_streams_t>, type_filter: &CxxWString) {
-    let mut streams = io_streams_t::new(streams);
-    print(&mut streams, type_filter.as_wstr());
+fn event_print_ffi(streams: Pin<&mut IoStreams>, type_filter: &CxxWString) {
+    print(streams.get_mut(), type_filter.as_wstr());
 }
 
 /// Fire a generic event with the specified name.
@@ -919,7 +918,7 @@ pub fn fire_generic(parser: &mut Parser, name: WString, arguments: Vec<WString>)
 }
 
 fn event_fire_generic_ffi(
-    parser: Pin<&mut parser_t>,
+    parser: Pin<&mut Parser>,
     name: &CxxWString,
     arguments: &CxxVector<wcharz_t>,
 ) {

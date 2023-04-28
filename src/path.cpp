@@ -169,10 +169,6 @@ std::vector<wcstring> path_get_paths(const wcstring &cmd, const environment_t &v
     return paths;
 }
 
-wcstring_list_ffi_t path_get_paths_ffi(const wcstring &cmd, const parser_t &parser) {
-    return path_get_paths(cmd, parser.vars());
-}
-
 std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
                                         const environment_t &env_vars) {
     std::vector<wcstring> paths;

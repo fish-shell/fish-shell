@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "common.h"
+#include "env.h"
 #include "maybe.h"
 
 enum class readline_cmd_t {
@@ -184,7 +185,6 @@ class char_event_t {
 };
 
 /// Adjust the escape timeout.
-class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
 
 /// A class which knows how to produce a stream of input events.

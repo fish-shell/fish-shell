@@ -1,17 +1,22 @@
+use std::pin::Pin;
+
 use libc::c_int;
 use libc::isatty;
 use libc::STDOUT_FILENO;
 
 use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
+    builtin_exists, builtin_missing_argument, builtin_print_help, builtin_unknown_option,
     BUILTIN_ERR_COMBO, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::common::EMPTY_STRING;
-use crate::ffi::parser_t;
-use crate::ffi::Repin;
-use crate::ffi::{builtin_exists, colorize_shell, path_get_paths_ffi};
+use crate::ffi::{colorize_shell, Repin};
 use crate::function::function_get_props_autoload;
+use crate::io::IoStreams;
+use crate::parser::lineno_or_minus_1;
+use crate::parser::Parser;
+use crate::path::path_get_paths;
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ffi::AsWstr;
 use crate::wchar_ffi::WCharFromFFI;
 use crate::wchar_ffi::WCharToFFI;
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
@@ -30,11 +35,10 @@ struct type_cmd_opts_t {
 }
 
 pub fn r#type(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
     let mut opts: type_cmd_opts_t = Default::default();
@@ -63,15 +67,27 @@ pub fn r#type(
             'P' => opts.force_path = true,
             'q' => opts.query = true,
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -81,7 +97,9 @@ pub fn r#type(
     }
 
     if opts.query as i64 + opts.path as i64 + opts.get_type as i64 + opts.force_path as i64 > 1 {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams
+            .err
+            .append(&wgettext_fmt!(BUILTIN_ERR_COMBO, w.cmd()));
         return STATUS_INVALID_ARGS;
     }
 
@@ -120,7 +138,7 @@ pub fn r#type(
                     }
 
                     if props.is_copy {
-                        let path = props.copy_definition_file.as_ref();
+                        let path = props.copy_definition_file.unwrap().as_ref();
                         if path.is_empty() {
                             comment.push_utfstr(&wgettext_fmt!(", copied interactively"));
                         } else if path == L!("-") {
@@ -129,21 +147,21 @@ pub fn r#type(
                             comment.push_utfstr(&wgettext_fmt!(
                                 ", copied in %ls @ line %d",
                                 path,
-                                props.copy_definition_lineno
+                                lineno_or_minus_1(props.copy_definition_lineno)
                             ));
                         }
                     }
                     if opts.path {
                         if props.is_copy {
-                            let path = props.copy_definition_file.as_ref();
+                            let path = props.copy_definition_file.unwrap().as_ref();
                             streams.out.append(path);
                         } else {
                             streams.out.append(path);
                         }
                         streams.out.append(L!("\n"));
                     } else if !opts.short_output {
-                        streams.out.append(wgettext_fmt!("%ls is a function", arg));
-                        streams.out.append(wgettext_fmt!(" with definition"));
+                        streams.out.append(&wgettext_fmt!("%ls is a function", arg));
+                        streams.out.append(&wgettext_fmt!(" with definition"));
                         streams.out.append(L!("\n"));
                         let mut def = WString::new();
                         def.push_utfstr(&sprintf!(
@@ -153,14 +171,17 @@ pub fn r#type(
                         ));
 
                         if !streams.out_is_redirected && unsafe { isatty(STDOUT_FILENO) == 1 } {
-                            let col = colorize_shell(&def.to_ffi(), parser.pin()).from_ffi();
-                            streams.out.append(col);
+                            let col = colorize_shell(
+                                &def.to_ffi(),
+                                std::ptr::addr_of_mut!(parser).cast(),
+                            );
+                            streams.out.append(col.as_wstr());
                         } else {
-                            streams.out.append(def);
+                            streams.out.append(&def);
                         }
                     } else {
-                        streams.out.append(wgettext_fmt!("%ls is a function", arg));
-                        streams.out.append(wgettext_fmt!(" (%ls)\n", comment));
+                        streams.out.append(&wgettext_fmt!("%ls is a function", arg));
+                        streams.out.append(&wgettext_fmt!(" (%ls)\n", comment));
                     }
                 } else if opts.get_type {
                     streams.out.append(L!("function\n"));
@@ -171,14 +192,16 @@ pub fn r#type(
             }
         }
 
-        if !opts.force_path && builtin_exists(&arg.to_ffi()) {
+        if !opts.force_path && builtin_exists(arg) {
             found += 1;
             res = true;
             if opts.query {
                 return STATUS_CMD_OK;
             }
             if !opts.get_type {
-                streams.out.append(wgettext_fmt!("%ls is a builtin\n", arg));
+                streams
+                    .out
+                    .append(&wgettext_fmt!("%ls is a builtin\n", arg));
             } else if opts.get_type {
                 streams.out.append(wgettext!("builtin\n"));
             }
@@ -187,7 +210,7 @@ pub fn r#type(
             }
         }
 
-        let paths: Vec<WString> = path_get_paths_ffi(&arg.to_ffi(), parser).from_ffi();
+        let paths = path_get_paths(arg, parser.vars());
 
         for path in paths.iter() {
             found += 1;
@@ -197,9 +220,11 @@ pub fn r#type(
             }
             if !opts.get_type {
                 if opts.path || opts.force_path {
-                    streams.out.append(sprintf!("%ls\n", path));
+                    streams.out.append(&sprintf!("%ls\n", path));
                 } else {
-                    streams.out.append(wgettext_fmt!("%ls is %ls\n", arg, path));
+                    streams
+                        .out
+                        .append(&wgettext_fmt!("%ls is %ls\n", arg, path));
                 }
             } else if opts.get_type {
                 streams.out.append(L!("file\n"));
@@ -215,7 +240,7 @@ pub fn r#type(
         }
 
         if found == 0 && !opts.query && !opts.path {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%ls: Could not find '%ls'\n",
                 L!("type"),
                 arg

@@ -12,17 +12,22 @@ use crate::common::{
     valid_var_name_char, wcs2zstring, UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE,
     EXPAND_RESERVED_END,
 };
-use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
-use crate::env::{EnvVar, Environment};
+use crate::complete::{
+    CompleteFlags, Completion, CompletionList, CompletionListFfi, CompletionReceiver,
+};
+use crate::env::{EnvDynFFI, EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
 use crate::history::{history_session_id, History};
 use crate::operation_context::OperationContext;
-use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
+use crate::parse_constants::{
+    ParseError, ParseErrorCode, ParseErrorList, ParseErrorListFfi, SOURCE_LOCATION_UNKNOWN,
+};
 use crate::parse_util::{parse_util_expand_variable_error, parse_util_locate_cmdsubst_range};
 use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::{ToWString, WExt};
+use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::{join_strings, trim};
 use crate::wildcard::{
     wildcard_expand_string, wildcard_has_internal, WildcardResult, ANY_CHAR, ANY_STRING,
@@ -30,6 +35,8 @@ use crate::wildcard::{
 };
 use crate::wutil::{fish_wcstoi_partial, normalize_path, wgettext, wgettext_fmt, Options};
 use bitflags::bitflags;
+use cxx::CxxWString;
+use std::pin::Pin;
 use widestring_suffix::widestrs;
 
 bitflags! {
@@ -101,29 +108,7 @@ const _: () = assert!(
     "Characters used in expansions must stay within private use area"
 );
 
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub enum ExpandResultCode {
-    /// There was an error, for example, unmatched braces.
-    error,
-    /// Expansion succeeded.
-    ok,
-    /// Expansion was cancelled (e.g. control-C).
-    cancel,
-    /// Expansion succeeded, but a wildcard in the string matched no files,
-    /// so the output is empty.
-    wildcard_no_match,
-}
-
-/// These are the possible return values for expand_string.
-#[must_use]
-pub struct ExpandResult {
-    /// The result of expansion.
-    pub result: ExpandResultCode,
-
-    /// If expansion resulted in an error, this is an appropriate value with which to populate
-    /// $status.
-    pub status: libc::c_int,
-}
+pub use expand_ffi::{ExpandResult, ExpandResultCode};
 
 impl ExpandResult {
     pub fn new(result: ExpandResultCode) -> Self {
@@ -976,7 +961,7 @@ pub fn expand_cmdsubst(
     out: &mut CompletionReceiver,
     errors: &mut Option<&mut ParseErrorList>,
 ) -> ExpandResult {
-    assert!(ctx.parser.is_some(), "Cannot expand without a parser");
+    assert!(ctx.has_parser(), "Cannot expand without a parser");
     let mut cursor = 0;
     let mut paren_begin = 0;
     let mut paren_end = 0;
@@ -1009,10 +994,11 @@ pub fn expand_cmdsubst(
     }
 
     let mut sub_res = vec![];
+    let job_group = ctx.job_group.clone();
     let subshell_status = exec_subshell_for_expand(
         subcmd,
-        &mut ctx.parser.as_ref().unwrap().write().unwrap(),
-        &ctx.job_group,
+        &mut ctx.parser_mut(),
+        job_group.as_ref(),
         &mut sub_res,
     );
     if subshell_status != 0 {
@@ -1024,14 +1010,7 @@ pub fn expand_cmdsubst(
             // TODO: STATUS_CMD_ERROR is overused and too generic. We shouldn't have to test things
             // to figure out what error to show after we've already been given an error code.
             _ if subshell_status == STATUS_CMD_ERROR.unwrap() => {
-                if ctx
-                    .parser
-                    .as_ref()
-                    .unwrap()
-                    .read()
-                    .unwrap()
-                    .is_eval_depth_exceeded()
-                {
+                if ctx.parser().is_eval_depth_exceeded() {
                     wgettext!("Unable to evaluate string substitution")
                 } else {
                     wgettext!("Too many active file descriptors")
@@ -1260,34 +1239,34 @@ fn remove_internal_separator(s: &mut WString, conv: bool) {
 }
 
 /// A type that knows how to perform expansions.
-struct Expander<'a, 'b> {
+struct Expander<'a, 'b, 'c> {
     /// Operation context for this expansion.
-    ctx: &'a OperationContext<'a>,
+    ctx: &'c OperationContext<'b>,
 
     /// Flags to use during expansion.
     flags: ExpandFlags,
 
     /// List to receive any errors generated during expansion, or null to ignore errors.
-    errors: &'b mut Option<&'a mut ParseErrorList>,
+    errors: &'c mut Option<&'a mut ParseErrorList>,
 }
 
-impl<'a, 'b> Expander<'a, 'b> {
+impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     fn new(
-        ctx: &'a OperationContext<'a>,
+        ctx: &'c OperationContext<'b>,
         flags: ExpandFlags,
-        errors: &'b mut Option<&'a mut ParseErrorList>,
+        errors: &'c mut Option<&'a mut ParseErrorList>,
     ) -> Self {
         Self { ctx, flags, errors }
     }
-    fn expand_string<'c>(
+    fn expand_string(
         input: WString,
-        out_completions: &'c mut CompletionReceiver,
+        out_completions: &'a mut CompletionReceiver,
         flags: ExpandFlags,
-        ctx: &'c OperationContext,
-        mut errors: Option<&'c mut ParseErrorList>,
+        ctx: &'a OperationContext<'b>,
+        mut errors: Option<&'a mut ParseErrorList>,
     ) -> ExpandResult {
         assert!(
-            flags.contains(ExpandFlags::SKIP_CMDSUBST) || ctx.parser.is_some(),
+            flags.contains(ExpandFlags::SKIP_CMDSUBST) || ctx.has_parser(),
             "Must have a parser if not skipping command substitutions"
         );
         // Early out. If we're not completing, and there's no magic in the input, we're done.
@@ -1315,11 +1294,11 @@ impl<'a, 'b> Expander<'a, 'b> {
         // Load up our single initial completion.
         let mut completions = vec![Completion::from_completion(input.clone())];
 
-        let mut output_storage = out_completions.subreceiver();
         let mut total_result = ExpandResult::ok();
+        let mut output_storage = out_completions.subreceiver();
         for stage in stages {
             for comp in completions {
-                if ctx.check_cancel() {
+                if expand.ctx.check_cancel() {
                     total_result = ExpandResult::new(ExpandResultCode::cancel);
                     break;
                 }
@@ -1353,7 +1332,7 @@ impl<'a, 'b> Expander<'a, 'b> {
                 expand.unexpand_tildes(&input, &mut completions);
             }
             if !out_completions.add_list(completions) {
-                total_result = append_overflow_error(&mut errors, None);
+                total_result = append_overflow_error(&mut expand.errors, None);
             }
         }
 
@@ -1394,7 +1373,7 @@ impl<'a, 'b> Expander<'a, 'b> {
             }
         } else {
             assert!(
-                self.ctx.parser.is_some(),
+                self.ctx.has_parser(),
                 "Must have a parser to expand command substitutions"
             );
             expand_cmdsubst(input, self.ctx, out, self.errors)
@@ -1422,7 +1401,8 @@ impl<'a, 'b> Expander<'a, 'b> {
             ExpandResult::ok()
         } else {
             let size = next.len();
-            expand_variables(next, out, size, self.ctx.vars, self.errors)
+            self.ctx
+                .with_vars(|vars| expand_variables(next, out, size, vars, self.errors))
         }
     }
     fn stage_braces(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
@@ -1433,7 +1413,8 @@ impl<'a, 'b> Expander<'a, 'b> {
         mut input: WString,
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
-        expand_home_directory(&mut input, self.ctx.vars);
+        self.ctx
+            .with_vars(|vars| expand_home_directory(&mut input, vars));
         expand_percent_self(&mut input);
         if !out.add_string(input) {
             return append_overflow_error(self.errors, None);
@@ -1465,7 +1446,7 @@ impl<'a, 'b> Expander<'a, 'b> {
             //
             // So we're going to treat this input as a file path. Compute the "working directories",
             // which may be CDPATH if the special flag is set.
-            let working_dir = self.ctx.vars.get_pwd_slash();
+            let working_dir = self.ctx.with_vars(|vars| vars.get_pwd_slash());
             let mut effective_working_dirs = vec![];
             let for_cd = self.flags.contains(ExpandFlags::SPECIAL_FOR_CD);
             let for_command = self.flags.contains(ExpandFlags::SPECIAL_FOR_COMMAND);
@@ -1497,12 +1478,11 @@ impl<'a, 'b> Expander<'a, 'b> {
                 } else {
                     // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                     // implies just the current directory, while an empty PATH is left empty.
-                    let mut paths = self
-                        .ctx
-                        .vars
-                        .get(if for_cd { L!("CDPATH") } else { L!("PATH") })
-                        .map(|var| var.as_list().to_owned())
-                        .unwrap_or_default();
+                    let mut paths = self.ctx.with_vars(|vars| {
+                        vars.get(if for_cd { L!("CDPATH") } else { L!("PATH") })
+                            .map(|var| var.as_list().to_owned())
+                            .unwrap_or_default()
+                    });
 
                     // The current directory is always valid.
                     paths.push(if for_cd { L!(".") } else { L!("") }.to_owned());
@@ -1585,7 +1565,7 @@ impl<'a, 'b> Expander<'a, 'b> {
         let username_with_tilde =
             WString::from_str("~") + get_home_directory_name(input, &mut tail_idx);
         let mut home = username_with_tilde.clone();
-        expand_tilde(&mut home, self.ctx.vars);
+        self.ctx.with_vars(|vars| expand_tilde(&mut home, vars));
 
         // Now for each completion that starts with home, replace it with the username_with_tilde.
         for comp in completions {
@@ -1623,10 +1603,10 @@ crate::ffi_tests::add_test!("test_expand", || {
         let mut res = true;
         let mut errors = ParseErrorList::new();
         let mut pwd = PwdEnvironment::default();
-        let ctx = OperationContext::with_cancel_checker(
+        let mut ctx = OperationContext::foreground(
             Parser::principal_parser().shared(),
-            &pwd,
-            &no_cancel,
+            // &pwd, // todo!
+            &no_cancel, // todo!
             EXPANSION_LIMIT_DEFAULT,
         );
 
@@ -1634,7 +1614,7 @@ crate::ffi_tests::add_test!("test_expand", || {
             input.to_owned(),
             &mut output,
             flags,
-            &ctx,
+            &mut ctx,
             Some(&mut errors),
         ) == ExpandResultCode::error
         {
@@ -1643,15 +1623,7 @@ crate::ffi_tests::add_test!("test_expand", || {
             } else {
                 panic!(
                     "{}",
-                    errors[0].describe(
-                        input,
-                        ctx.parser
-                            .as_ref()
-                            .unwrap()
-                            .read()
-                            .unwrap()
-                            .is_interactive()
-                    )
+                    errors[0].describe(input, ctx.parser().is_interactive())
                 );
             }
         }
@@ -1678,3 +1650,107 @@ crate::ffi_tests::add_test!("test_expand", || {
     );
     todo!()
 });
+
+#[cxx::bridge]
+mod expand_ffi {
+    extern "C++" {
+        include!("operation_context.h");
+        include!("parse_constants.h");
+        include!("env.h");
+        include!("complete.h");
+        type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
+        type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
+        #[cxx_name = "EnvDyn"]
+        type EnvDynFFI = crate::env::EnvDynFFI;
+        type CompletionListFfi = crate::complete::CompletionListFfi;
+    }
+
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    pub enum ExpandResultCode {
+        /// There was an error, for example, unmatched braces.
+        error,
+        /// Expansion succeeded.
+        ok,
+        /// Expansion was cancelled (e.g. control-C).
+        cancel,
+        /// Expansion succeeded, but a wildcard in the string matched no files,
+        /// so the output is empty.
+        wildcard_no_match,
+    }
+
+    /// These are the possible return values for expand_string.
+    #[must_use]
+    pub struct ExpandResult {
+        /// The result of expansion.
+        pub result: ExpandResultCode,
+
+        /// If expansion resulted in an error, this is an appropriate value with which to populate
+        /// $status.
+        // todo! should be c_int
+        pub status: i32,
+    }
+
+    extern "Rust" {
+        #[cxx_name = "expand_one"]
+        fn ffi_expand_one(
+            s: &mut CxxWString,
+            flags: u64,
+            ctx: &OperationContext,
+            errors: *mut ParseErrorListFfi,
+        ) -> bool;
+        #[cxx_name = "expand_tilde"]
+        fn ffi_expand_tilde(input: &mut CxxWString, vars: &EnvDynFFI);
+        #[cxx_name = "expand_string"]
+        fn ffi_expand_string(
+            input: &CxxWString,
+            out_completions: Pin<&mut CompletionListFfi>,
+            flags: u64,
+            ctx: &OperationContext,
+            errors: *mut ParseErrorListFfi,
+        ) -> ExpandResult;
+    }
+}
+
+fn ffi_expand_one(
+    s: &mut CxxWString,
+    flags: u64,
+    ctx: &OperationContext,
+    errors: *mut ParseErrorListFfi,
+) -> bool {
+    // let flags = ExpandFlags::from_bits(flags.try_into().unwrap()).unwrap();
+    // let mut tmp = s.from_ffi();
+    // let errors = if errors.is_null() {
+    //     None
+    // } else {
+    //     Some(unsafe { &mut (*errors).0 })
+    // };
+    // let ok = expand_one(&mut tmp, flags, ctx, errors);
+    // *s = tmp.to_ffi().take();
+    // ok
+    todo!()
+}
+fn ffi_expand_tilde(input: &mut CxxWString, vars: &EnvDynFFI) {
+    todo!()
+}
+fn ffi_expand_string(
+    input: &CxxWString,
+    mut out_completions: Pin<&mut CompletionListFfi>,
+    flags: u64,
+    ctx: &OperationContext<'_>,
+    errors: *mut ParseErrorListFfi,
+) -> ExpandResult {
+    let flags = ExpandFlags::from_bits(flags.try_into().unwrap()).unwrap();
+    let errors = if errors.is_null() {
+        None
+    } else {
+        Some(unsafe { &mut (*errors).0 })
+    };
+    todo!()
+    // expand_string(
+    //     input.from_ffi(),
+    //     &mut out_completions.unpin().0,
+    //     flags,
+    //     ctx,
+    //     errors,
+    // )
+}

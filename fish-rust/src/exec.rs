@@ -242,7 +242,7 @@ pub fn exec_subshell(
     exec_subshell_internal(
         cmd,
         parser,
-        &None,
+        None,
         outputs,
         &mut break_expand,
         apply_exit_status,
@@ -257,7 +257,7 @@ pub fn exec_subshell(
 pub fn exec_subshell_for_expand(
     cmd: &wstr,
     parser: &mut Parser,
-    job_group: &Option<JobGroupRef>,
+    job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
 ) -> libc::c_int {
     parser.assert_can_execute();
@@ -431,7 +431,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &mut Process) -> ! {
     let argv = OwningNullTerminatedArray::new(narrow_strings);
 
     // Construct envp.
-    let envp = vars.export_arr();
+    let envp = vars.export_array();
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
@@ -585,29 +585,30 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
     // builtin_run provide this directly, rather than setting it in the process.
     f.success_status = p.status;
 
-    iothread_perform_cant_wait(|| {
-        let mut status = f.success_status;
-        if !f.skip_out() {
-            if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
-                if err.raw_os_error().unwrap() != EPIPE {
-                    perror("write");
-                }
-                if status.is_success() {
-                    status = ProcStatus::from_exit_code(1);
-                }
-            }
-        }
-        if !f.skip_err() {
-            if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
-                if err.raw_os_error().unwrap() != EPIPE {
-                    perror("write");
-                }
-                if status.is_success() {
-                    status = ProcStatus::from_exit_code(1);
-                }
-            }
-        }
-        f.internal_proc.write().unwrap().mark_exited(status);
+    iothread_perform_cant_wait(move || {
+        todo!()
+        // let mut status = f.success_status;
+        // if !f.skip_out() {
+        //     if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
+        //         if err.raw_os_error().unwrap() != EPIPE {
+        //             perror("write");
+        //         }
+        //         if status.is_success() {
+        //             status = ProcStatus::from_exit_code(1);
+        //         }
+        //     }
+        // }
+        // if !f.skip_err() {
+        //     if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
+        //         if err.raw_os_error().unwrap() != EPIPE {
+        //             perror("write");
+        //         }
+        //         if status.is_success() {
+        //             status = ProcStatus::from_exit_code(1);
+        //         }
+        //     }
+        // }
+        // f.internal_proc.write().unwrap().mark_exited(status);
     });
 }
 
@@ -804,7 +805,7 @@ fn exec_external_command(
     // Note this will also affect stdout and stderr if they refer to the same tty.
     make_fd_blocking(STDIN_FILENO);
 
-    let envv = parser.vars().export_arr();
+    let envv = parser.vars().export_array();
 
     let actual_cmd = wcs2zstring(&p.actual_cmd);
     let file = &parser.libdata().current_filename;
@@ -874,7 +875,7 @@ fn function_prepare_environment(
         argv.clone(),
         props.shadow_scope,
     ));
-    let vars = parser.vars_mut();
+    let vars = parser.vars();
 
     // Setup the environment for the function. There are three components of the environment:
     // 1. named arguments
@@ -950,7 +951,7 @@ fn get_performer_for_process(
                         source,
                         unsafe { node.as_ref() },
                         &io_chain,
-                        &job_group,
+                        job_group.as_ref(),
                         BlockType::top,
                     )
                     .status
@@ -970,8 +971,13 @@ fn get_performer_for_process(
                 let body = &props.func_node.jobs;
                 let fb = function_prepare_environment(parser, argv.clone(), &props);
                 let parsed_source = props.parsed_source.as_ref().unwrap();
-                let mut res =
-                    parser.eval_node(parsed_source, body, &io_chain, &job_group, BlockType::top);
+                let mut res = parser.eval_node(
+                    parsed_source,
+                    body,
+                    &io_chain,
+                    job_group.as_ref(),
+                    BlockType::top,
+                );
                 function_restore_environment(parser, fb);
 
                 // If the function did not execute anything, treat it as success.
@@ -1058,9 +1064,9 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
     // Pull out some fields which we want to copy. We don't want to store the process or job in the
     // returned closure.
-    let argv = p.argv().clone();
+    let mut argv = p.argv().clone();
     let job_group = j.group.clone();
-    let io_chain = io_chain.clone();
+    let mut io_chain = io_chain.clone();
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
@@ -1088,7 +1094,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
                 }
             }
 
-            // Populate our io_streams_t. This is a bag of information for the builtin.
+            // Populate our IoStreams. This is a bag of information for the builtin.
             let mut streams = IoStreams::new(output_stream, errput_stream);
             streams.job_group = job_group;
             streams.stdin_fd = local_builtin_stdin;
@@ -1101,10 +1107,10 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             streams.err_is_piped = err_io
                 .map(|io| io.io_mode() == IoMode::pipe)
                 .unwrap_or(false);
-            streams.io_chain = &io_chain;
+            streams.io_chain = &mut io_chain;
 
             // Execute the builtin.
-            builtin_run(parser, &argv, &streams)
+            builtin_run(parser, &mut argv, &mut streams)
         },
     )
 }
@@ -1181,7 +1187,7 @@ fn exec_process_in_job(
     let mut process_net_io_chain = block_io.clone();
 
     if pipes.write.is_valid() {
-        process_net_io_chain.push(Rc::new(IoPipe::new(
+        process_net_io_chain.push(Arc::new(IoPipe::new(
             p.pipe_write_fd,
             false, /* not input */
             pipes.write,
@@ -1198,14 +1204,14 @@ fn exec_process_in_job(
 
     // Read pipe goes last.
     if pipes.read.is_valid() {
-        let pipe_read = Rc::new(IoPipe::new(STDIN_FILENO, true /* input */, pipes.read));
+        let pipe_read = Arc::new(IoPipe::new(STDIN_FILENO, true /* input */, pipes.read));
         process_net_io_chain.push(pipe_read);
     }
 
     // If we have stashed pipes, make sure those get closed in the child.
     for afd in [&deferred_pipes.read, &deferred_pipes.write] {
         if afd.is_valid() {
-            process_net_io_chain.push(Rc::new(IoClose::new(afd.fd())));
+            process_net_io_chain.push(Arc::new(IoClose::new(afd.fd())));
         }
     }
 
@@ -1385,7 +1391,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
 fn exec_subshell_internal(
     cmd: &wstr,
     parser: &mut Parser,
-    job_group: &Option<JobGroupRef>,
+    job_group: Option<&JobGroupRef>,
     lst: Option<&mut Vec<WString>>,
     break_expand: &mut bool,
     apply_exit_status: bool,

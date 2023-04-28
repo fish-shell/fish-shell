@@ -1,3 +1,4 @@
+#if 0
 // Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 #ifndef FISH_PARSE_EXECUTION_H
 #define FISH_PARSE_EXECUTION_H
@@ -12,12 +13,12 @@
 #include "maybe.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
+#include "parser.h"
 #include "proc.h"
 #include "redirection.h"
 
 class block_t;
 class operation_context_t;
-class parser_t;
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal
@@ -185,4 +186,5 @@ class parse_execution_context_t : noncopyable_t {
                                      const block_t *associated_block);
 };
 
+#endif
 #endif

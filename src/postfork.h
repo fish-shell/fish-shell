@@ -1,3 +1,4 @@
+#if 0
 // Functions that we may safely call after fork(), of which there are very few. In particular we
 // cannot allocate memory, since we're insane enough to call fork from a multithreaded process.
 #ifndef FISH_POSTFORK_H
@@ -80,4 +81,5 @@ class posix_spawner_t : noncopyable_t, nonmovable_t {
 
 #endif
 
+#endif
 #endif

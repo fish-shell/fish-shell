@@ -22,10 +22,18 @@
 #include "cxx.h"
 #include "maybe.h"
 #include "parse_tree.h"
+#include "parser.h"
 #include "redirection.h"
 #include "topic_monitor.h"
-#include "wait_handle.h"
 
+#if INCLUDE_RUST_HEADERS
+#include "proc.rs.h"
+#else
+struct JobRefFfi;
+struct JobGroupRefFfi;
+#endif
+
+#if 0
 struct statuses_t;
 
 /// Types of processes.
@@ -356,7 +364,6 @@ class process_t {
 
 using process_ptr_t = std::unique_ptr<process_t>;
 using process_list_t = std::vector<process_ptr_t>;
-class parser_t;
 
 struct RustFFIProcList {
     process_ptr_t *procs;
@@ -624,4 +631,5 @@ void add_disowned_job(const job_t *j);
 
 bool have_proc_stat();
 
+#endif
 #endif

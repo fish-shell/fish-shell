@@ -129,7 +129,12 @@ pub fn parse_source(
     }
 }
 
-struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
+pub struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
+
+unsafe impl cxx::ExternType for ParsedSourceRefFFI {
+    type Id = cxx::type_id!("ParsedSourceRefFFI");
+    type Kind = cxx::kind::Opaque;
+}
 
 #[cxx::bridge]
 mod parse_tree_ffi {

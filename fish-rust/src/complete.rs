@@ -19,10 +19,7 @@ use widestring::U32CString;
 use crate::{
     abbrs::with_abbrs,
     autoload::Autoload,
-    builtins::{
-        builtin::{builtin_get_desc, builtin_get_names},
-        shared::builtin_exists,
-    },
+    builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
     common::{
         escape_string, str2wcstring, unescape_string, valid_var_name_char, Cleanup,
         EscapeStringStyle, ScopeGuard, UnescapeFlags, UnescapeStringStyle,
@@ -33,7 +30,6 @@ use crate::{
         expand_escape_string, expand_escape_variable, expand_one, expand_string,
         expand_to_receiver, ExpandFlags, ExpandResult, ExpandResultCode,
     },
-    ffi::{env_stack_t, environment_t, operation_context_t, parser_t},
     flog::{FLOG, FLOGF},
     function::{
         function_exists_no_autoload, function_get_names, function_get_props, function_load,
@@ -76,6 +72,7 @@ static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
 /// The special cased translation macro for completions. The empty string needs to be special cased,
 /// since it can occur, and should not be translated. (Gettext returns the version information as
 /// the response).
+#[allow(non_snake_case)]
 fn C_(s: &wstr) -> &'static wstr {
     if s.is_empty() {
         L!("")
@@ -627,9 +624,7 @@ impl<'ctx> Completer<'ctx> {
         // Limit recursion, in case a user-defined completion has cycles, or the completion for "x"
         // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
         // for autosuggestions where we don't evaluate command substitutions or variable assignments.
-        let decrement = if let Some(parser) = self.ctx.parser.as_ref() {
-            let mut parser = parser.write().unwrap();
-
+        let decrement = if let Some(mut parser) = self.ctx.maybe_parser_mut() {
             let level = &mut parser.libdata_mut().pods.complete_recursion_level;
             if *level >= 24 {
                 FLOGF!(
@@ -862,7 +857,7 @@ impl<'ctx> Completer<'ctx> {
         if condition.is_empty() {
             return true;
         }
-        let Some(parser) = self.ctx.parser.as_ref() else {
+        let Some(mut parser) = self.ctx.maybe_parser_mut() else {
             return false;
         };
 
@@ -874,7 +869,7 @@ impl<'ctx> Completer<'ctx> {
             // Compute new value and reinsert it.
             let mut test_res = exec_subshell(
                 condition,
-                &mut parser.write().unwrap(),
+                &mut parser,
                 None,
                 false, /* don't apply exit status */
             ) == 0;
@@ -953,7 +948,7 @@ impl<'ctx> Completer<'ctx> {
     /// If command to complete is short enough, substitute the description with the whatis information
     /// for the executable.
     fn complete_cmd_desc(&mut self, s: &wstr) {
-        let Some(ref parser) = self.ctx.parser else {
+        let Some(mut parser) = self.ctx.maybe_parser_mut() else {
             return;
         };
 
@@ -997,7 +992,7 @@ impl<'ctx> Completer<'ctx> {
         let mut list = vec![];
         exec_subshell(
             &lookup_cmd,
-            &mut parser.write().unwrap(),
+            &mut parser,
             Some(&mut list),
             false, /* don't apply exit status */
         );
@@ -1066,7 +1061,7 @@ impl<'ctx> Completer<'ctx> {
                 | ExpandFlags::PRESERVE_HOME_TILDES
                 | ExpandFlags::EXECUTABLES_ONLY;
             expand_to_receiver(
-                &str_cmd,
+                str_cmd.clone(),
                 &mut self.completions,
                 expand_flags,
                 self.ctx,
@@ -1090,7 +1085,7 @@ impl<'ctx> Completer<'ctx> {
                 | ExpandFlags::PRESERVE_HOME_TILDES
                 | ExpandFlags::DIRECTORIES_ONLY;
             expand_to_receiver(
-                &str_cmd,
+                str_cmd.clone(),
                 &mut self.completions,
                 expand_flags,
                 self.ctx,
@@ -1117,12 +1112,14 @@ impl<'ctx> Completer<'ctx> {
             // Append all matching builtins
             let possible_comp: Vec<_> = builtin_get_names()
                 .into_iter()
+                .map(wstr::to_owned)
                 .map(Completion::from_completion)
                 .collect();
 
             self.complete_strings(
                 &str_cmd,
-                &{ Box::new(builtin_get_desc) as _ },
+                // &{ Box::new(|name| builtin_get_desc(name).unwrap_or(L!("")).to_owned()) as _ },
+                &{ todo!() },
                 &possible_comp,
                 CompleteFlags::empty(),
                 ExpandFlags::empty(),
@@ -1171,9 +1168,7 @@ impl<'ctx> Completer<'ctx> {
     fn complete_from_args(&mut self, s: &wstr, args: &wstr, desc: &wstr, flags: CompleteFlags) {
         let is_autosuggest = self.flags.autosuggestion;
 
-        let saved_state = if let Some(parser) = &self.ctx.parser {
-            let mut parser = parser.write().unwrap();
-
+        let saved_state = if let Some(mut parser) = self.ctx.maybe_parser_mut() {
             let saved_interactive = parser.libdata().pods.is_interactive;
             parser.libdata_mut().pods.is_interactive = false;
 
@@ -1190,9 +1185,7 @@ impl<'ctx> Completer<'ctx> {
 
         let possible_comp = Parser::expand_argument_list(args, eflags, self.ctx);
 
-        if let Some(parser) = &self.ctx.parser {
-            let mut parser = parser.write().unwrap();
-
+        if let Some(mut parser) = self.ctx.maybe_parser_mut() {
             let (saved_interactive, status) = saved_state.unwrap();
             parser.libdata_mut().pods.is_interactive = saved_interactive;
             parser.set_last_statuses(status);
@@ -1231,22 +1224,25 @@ impl<'ctx> Completer<'ctx> {
         let mut use_files = true;
         let mut has_force = false;
 
-        let CmdString { cmd, path } = parse_cmd_string(cmd_orig, self.ctx.vars);
+        let CmdString { cmd, path } = self.ctx.with_vars(|vars| parse_cmd_string(cmd_orig, vars));
 
         // Don't use cmd_orig here for paths. It's potentially pathed,
         // so that command might exist, but the completion script
         // won't be using it.
         let cmd_exists = builtin_exists(&cmd)
             || function_exists_no_autoload(&cmd)
-            || path_get_path(&cmd, self.ctx.vars).is_some();
+            || self
+                .ctx
+                .with_vars(|vars| path_get_path(&cmd, vars))
+                .is_some();
         if !cmd_exists {
             // Do not load custom completions if the command does not exist
             // This prevents errors caused during the execution of completion providers for
             // tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
             // and automatic completions ("gi" autosuggestion provider -> git)
             FLOG!(complete, "Skipping completions for non-existent command");
-        } else if let Some(parser) = &self.ctx.parser {
-            complete_load(&cmd, &mut parser.write().unwrap());
+        } else if let Some(mut parser) = self.ctx.maybe_parser_mut() {
+            complete_load(&cmd, &mut parser);
         } else if !completion_autoloader
             .lock()
             .unwrap()
@@ -1557,7 +1553,14 @@ impl<'ctx> Completer<'ctx> {
             // See #4954.
             let sep_string = s.slice_from(sep_index + 1);
             let mut local_completions = Vec::new();
-            if expand_string(sep_string, &mut local_completions, flags, self.ctx, None).result
+            if expand_string(
+                sep_string.to_owned(),
+                &mut local_completions,
+                flags,
+                self.ctx,
+                None,
+            )
+            .result
                 == ExpandResultCode::error
             {
                 FLOGF!(complete, "Error while expanding string '%ls'", sep_string);
@@ -1581,7 +1584,7 @@ impl<'ctx> Completer<'ctx> {
                 flags -= ExpandFlags::FUZZY_MATCH;
             }
 
-            if expand_to_receiver(s, &mut self.completions, flags, self.ctx, None).result
+            if expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None).result
                 == ExpandResultCode::error
             {
                 FLOGF!(complete, "Error while expanding string '%ls'", s);
@@ -1597,7 +1600,7 @@ impl<'ctx> Completer<'ctx> {
         let varlen = s.len() - start_offset;
         let mut res = false;
 
-        for env_name in self.ctx.vars.get_names(EnvMode::empty()) {
+        for env_name in self.ctx.with_vars(|vars| vars.get_names(EnvMode::empty())) {
             let anchor_start = self.flags.fuzzy_match;
             let Some(match_) = string_fuzzy_match_string(var, &env_name, anchor_start) else {
                 continue;
@@ -1620,7 +1623,9 @@ impl<'ctx> Completer<'ctx> {
                 // $history can be huge, don't put all of it in the completion description; see
                 // #6288.
                 if env_name == L!("history") {
-                    let history = History::with_name(&history_session_id(self.ctx.vars));
+                    let history = self
+                        .ctx
+                        .with_vars(|vars| History::with_name(&history_session_id(vars)));
                     let history = history.lock().unwrap();
                     for i in 1..history.size() {
                         if i > 1 {
@@ -1630,7 +1635,7 @@ impl<'ctx> Completer<'ctx> {
                     }
                 } else {
                     // Can't use ctx.vars here, it could be any variable.
-                    let Some(var) = self.ctx.vars.get(&env_name) else {
+                    let Some(var) = self.ctx.with_vars(|vars|vars.get(&env_name)) else {
                         continue;
                     };
 
@@ -1804,19 +1809,21 @@ impl<'ctx> Completer<'ctx> {
         &mut self,
         var_assignments: impl IntoIterator<Item = &'a wstr>,
     ) -> Option<Cleanup<(), impl FnOnce(&mut ()), ()>> {
-        let Some(parser_ref) = self.ctx.parser.as_ref() else {
+        if !self.ctx.has_parser() {
             return None;
-        };
-        let mut parser = parser_ref.write().unwrap();
+        }
+        let mut parser = self.ctx.parser_mut();
 
         let mut var_assignments = var_assignments.into_iter().peekable();
         var_assignments.peek()?;
 
         let vars = parser.vars();
-        assert_eq!(
-            vars as *const _ as *const (), self.ctx.vars as *const _ as *const (),
-            "Don't know how to tab complete with a parser but a different variable set"
-        );
+        self.ctx.with_vars(|ctx_vars| {
+            assert_eq!(
+                ctx_vars as *const _ as *const (), vars as *const _ as *const (),
+                "Don't know how to tab complete with a parser but a different variable set"
+            )
+        });
 
         // clone of parse_execution_context_t::apply_variable_assignments.
         // Crucially do NOT expand subcommands:
@@ -1834,7 +1841,7 @@ impl<'ctx> Completer<'ctx> {
 
             let mut expression_expanded = Vec::new();
             let expand_ret = expand_string(
-                expression,
+                expression.to_owned(),
                 &mut expression_expanded,
                 expand_flags,
                 self.ctx,
@@ -1859,7 +1866,7 @@ impl<'ctx> Completer<'ctx> {
         }
         drop(parser);
 
-        let parser_ref = Rc::clone(parser_ref);
+        let parser_ref = self.ctx.parser().shared();
         Some(Cleanup::new((), move |_| {
             parser_ref.write().unwrap().pop_block(block)
         }))
@@ -1879,7 +1886,7 @@ impl<'ctx> Completer<'ctx> {
         let wants_transient =
             (ad.wrap_depth > 0 || !ad.var_assignments.is_empty()) && !is_autosuggest;
         if wants_transient {
-            let parser_ref = Rc::clone(self.ctx.parser.as_ref().unwrap());
+            let parser_ref = self.ctx.parser().shared();
             parser_ref
                 .write()
                 .unwrap()
@@ -2421,7 +2428,7 @@ pub fn complete_load(cmd: &wstr, parser: &mut Parser) -> bool {
     let path_to_load = completion_autoloader
         .lock()
         .expect("mutex poisoned")
-        .resolve_command(cmd, EnvStack::globals());
+        .resolve_command(cmd, &**EnvStack::globals());
     if let Some(path_to_load) = path_to_load {
         Autoload::perform_autoload(&path_to_load, parser);
         completion_autoloader
@@ -2535,4 +2542,27 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
 
     let wrappers = wrapper_map.lock().expect("poisoned mutex");
     wrappers.get(command).cloned().unwrap_or_default()
+}
+
+pub struct CompletionListFfi(pub CompletionList);
+
+#[cxx::bridge]
+mod complete_ffi {
+    extern "C++" {
+        include!("complete.h");
+    }
+    extern "Rust" {
+        type CompletionListFfi;
+
+        fn new_completion_list() -> Box<CompletionListFfi>;
+    }
+}
+
+unsafe impl cxx::ExternType for CompletionListFfi {
+    type Id = cxx::type_id!("CompletionListFfi");
+    type Kind = cxx::kind::Opaque;
+}
+
+fn new_completion_list() -> Box<CompletionListFfi> {
+    todo!()
 }

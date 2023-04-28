@@ -12,24 +12,23 @@
 #include <utility>
 #include <vector>
 
-#include "common.h"
-#include "cxx.h"
-#include "env.h"
-#include "event.h"
-#include "expand.h"
-#include "maybe.h"
-#include "operation_context.h"
-#include "parse_constants.h"
-#include "parse_tree.h"
-#include "proc.h"
-#include "util.h"
-#include "wait_handle.h"
+#if INCLUDE_RUST_HEADERS
+#include "parser.rs.h"
+#else
+struct Parser;
+struct JobListFfi;
+#endif
+
+using parser_t = Parser;
+
+#if 0
 
 class autoclose_fd_t;
 class io_chain_t;
 struct Event;
 struct job_group_t;
-class parser_t;
+struct parser_t;
+class env_stack_t;
 
 /// Types of blocks.
 enum class block_type_t : uint8_t {
@@ -253,7 +252,7 @@ enum class parser_status_var_t : uint8_t {
     count_,
 };
 
-class parser_t : public std::enable_shared_from_this<parser_t> {
+struct parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
    private:
@@ -396,8 +395,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Rust helper - variables as an environment_t.
     const environment_t &vars_env_ffi() const { return *variables; }
 
-    int remove_var_ffi(const wcstring &key, int mode) { return vars().remove(key, mode); }
-
     /// Get the library data.
     library_data_t &libdata() { return library_data; }
     const library_data_t &libdata() const { return library_data; }
@@ -517,5 +514,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     ~parser_t();
 };
+
+#endif
 
 #endif

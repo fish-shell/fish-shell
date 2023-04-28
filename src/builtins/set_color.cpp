@@ -31,10 +31,9 @@
 #include "../io.h"
 #include "../maybe.h"
 #include "../output.h"
+#include "../parser.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
-
-class parser_t;
 
 static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool italics, bool dim,
                             bool reverse, rgb_color_t bg) {

@@ -1,3 +1,4 @@
+#if 0
 // Provides the "linkage" between an ast and actual execution structures (job_t, etc.)
 #include "config.h"  // IWYU pragma: keep
 
@@ -1681,3 +1682,4 @@ int parse_execution_context_t::get_current_source_offset() const {
     }
     return result;
 }
+#endif

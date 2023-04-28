@@ -1,3 +1,4 @@
+#if 0
 /// Functions related to tab-completion.
 ///
 /// These functions are used for storing and retrieving tab-completion data, as well as for
@@ -1959,3 +1960,4 @@ std::vector<wcstring> complete_get_wrap_targets(const wcstring &command) {
     if (iter == wraps.end()) return {};
     return iter->second;
 }
+#endif

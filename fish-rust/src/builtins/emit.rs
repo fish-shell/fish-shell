@@ -1,27 +1,26 @@
 use libc::c_int;
 use widestring_suffix::widestrs;
 
-use super::shared::{
-    builtin_print_help, io_streams_t, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
+use super::shared::{builtin_print_help, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS};
 use crate::event;
-use crate::ffi::parser_t;
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::wchar::{wstr, WString};
 use crate::wutil::printf::sprintf;
 
 #[widestrs]
 pub fn emit(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
-
     let opts = match HelpOnlyCmdOpts::parse(argv, parser, streams) {
         Ok(opts) => opts,
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
+
+    let cmd = &argv[0];
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);

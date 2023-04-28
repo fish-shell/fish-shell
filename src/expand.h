@@ -14,12 +14,10 @@
 
 #include "common.h"
 #include "enum_set.h"
+#include "env.h"
 #include "maybe.h"
+#include "operation_context.h"
 #include "parse_constants.h"
-
-class env_var_t;
-class environment_t;
-class operation_context_t;
 
 /// Set of flags controlling expansions.
 enum class expand_flag {
@@ -69,10 +67,6 @@ struct enum_info_t<expand_flag> {
 
 using expand_flags_t = enum_set_t<expand_flag>;
 
-class completion_t;
-using completion_list_t = std::vector<completion_t>;
-class completion_receiver_t;
-
 enum : wchar_t {
     /// Character representing a home directory.
     HOME_DIRECTORY = EXPAND_RESERVED_BASE,
@@ -100,6 +94,11 @@ enum : wchar_t {
     EXPAND_SENTINEL
 };
 
+#if INCLUDE_RUST_HEADERS
+#include "expand.rs.h"
+#endif
+
+#if 0
 /// These are the possible return values for expand_string.
 struct expand_result_t {
     enum result_t {
@@ -210,4 +209,5 @@ wcstring replace_home_directory_with_tilde(const wcstring &str, const environmen
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
                                         const char *const *argv);
+#endif
 #endif

@@ -69,11 +69,11 @@ fn create_job_group_with_job_control_ffi(command: &CxxWString, wants_term: bool)
 }
 
 /// A job id, corresponding to what is printed by `jobs`. 1 is the first valid job id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub struct JobId(NonZeroU32);
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct MaybeJobId(pub Option<JobId>);
 
 impl std::ops::Deref for MaybeJobId {

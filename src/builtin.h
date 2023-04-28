@@ -7,13 +7,14 @@
 #include "common.h"
 #include "complete.h"
 #include "maybe.h"
+#include "parser.h"
 #include "wutil.h"
 
-class parser_t;
+int builtin_count_args(const wchar_t *const *argv);
+
 class proc_status_t;
 class output_stream_t;
 struct io_streams_t;
-using completion_list_t = std::vector<completion_t>;
 
 /// Data structure to describe a builtin.
 struct builtin_data_t {
@@ -84,7 +85,6 @@ proc_status_t builtin_run(parser_t &parser, const std::vector<wcstring> &argv,
                           io_streams_t &streams);
 
 std::vector<wcstring> builtin_get_names();
-wcstring_list_ffi_t builtin_get_names_ffi();
 void builtin_get_names(completion_list_t *list);
 const wchar_t *builtin_get_desc(const wcstring &name);
 
@@ -92,7 +92,6 @@ wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
 void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
                         const wcstring &error_message = {});
-int builtin_count_args(const wchar_t *const *argv);
 
 void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                             const wchar_t *opt, bool print_hints = true);
@@ -110,6 +109,7 @@ struct help_only_cmd_opts_t {
 int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc,
                              const wchar_t **argv, parser_t &parser, io_streams_t &streams);
 
+#if 0
 /// An enum of the builtins implemented in Rust.
 enum class RustBuiltin : int32_t {
     Abbr,
@@ -130,4 +130,5 @@ enum class RustBuiltin : int32_t {
     Type,
     Wait,
 };
+#endif
 #endif

@@ -1,11 +1,12 @@
 use libc::c_int;
 
 use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_INVALID_ARGS,
+    builtin_missing_argument, builtin_print_help, builtin_unknown_option, STATUS_CMD_OK,
+    STATUS_CMD_UNKNOWN, STATUS_INVALID_ARGS,
 };
-use crate::ffi::parser_t;
-use crate::ffi::path_get_paths_ffi;
+use crate::io::IoStreams;
+use crate::parser::Parser;
+use crate::path::{path_get_path, path_get_paths};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
@@ -19,8 +20,8 @@ struct command_cmd_opts_t {
 }
 
 pub fn r#command(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
     argv: &mut [&wstr],
 ) -> Option<c_int> {
     let cmd = argv[0];
@@ -72,20 +73,24 @@ pub fn r#command(
     let mut res = false;
     let optind = w.woptind;
     for arg in argv.iter().take(argc).skip(optind) {
-        // TODO: This always gets all paths, and then skips a bunch.
-        // For the common case, we want to get just the one path.
-        // Port this over once path.cpp is.
-        let paths: Vec<WString> = path_get_paths_ffi(&arg.to_ffi(), parser).from_ffi();
+        if opts.all {
+            let paths = path_get_paths(arg, parser.vars());
+            for path in paths {
+                res = true;
+                if opts.quiet {
+                    return STATUS_CMD_OK;
+                }
 
-        for path in paths.iter() {
-            res = true;
-            if opts.quiet {
-                return STATUS_CMD_OK;
+                streams.out.append(&sprintf!("%ls\n", path));
             }
-
-            streams.out.append(sprintf!("%ls\n", path));
-            if !opts.all {
-                break;
+        } else {
+            // Either find_path explicitly or just quiet.
+            if let Some(path) = path_get_path(arg, parser.vars()) {
+                if opts.quiet {
+                    return STATUS_CMD_OK;
+                }
+                res = true;
+                streams.out.append(&sprintf!("%ls\n", path));
             }
         }
     }

@@ -1,3 +1,4 @@
+#if 0
 // Prototypes for functions for storing and retrieving function information. These functions also
 // take care of autoloading functions in the $fish_function_path. Actual function evaluation is
 // taken care of by the parser and to some degree the builtin handling library.
@@ -11,8 +12,7 @@
 #include "ast.h"
 #include "common.h"
 #include "parse_tree.h"
-
-class parser_t;
+#include "parser.h"
 
 /// A function's constant properties. These do not change once initialized.
 struct function_properties_t {
@@ -120,4 +120,5 @@ bool function_copy(const wcstring &name, const wcstring &new_name, parser_t &par
 /// Observes that fish_function_path has changed.
 void function_invalidate_path();
 
+#endif
 #endif

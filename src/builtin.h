@@ -1,3 +1,4 @@
+#if 0
 // Prototypes for functions for executing builtin functions.
 #ifndef FISH_BUILTIN_H
 #define FISH_BUILTIN_H
@@ -7,9 +8,9 @@
 #include "common.h"
 #include "complete.h"
 #include "maybe.h"
+#include "parser.h"
 #include "wutil.h"
 
-class parser_t;
 class proc_status_t;
 class output_stream_t;
 struct io_streams_t;
@@ -130,4 +131,5 @@ enum class RustBuiltin : int32_t {
     Type,
     Wait,
 };
+#endif
 #endif

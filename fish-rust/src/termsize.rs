@@ -1,7 +1,6 @@
 // Support for exposing the terminal size.
 use crate::common::assert_sync;
-use crate::env::{EnvMode, Environment};
-use crate::ffi::{environment_t, parser_t, Repin};
+use crate::env::{EnvMode, EnvVar, Environment};
 use crate::flog::FLOG;
 use crate::parser::Parser;
 use crate::wchar::{WString, L};
@@ -28,8 +27,6 @@ mod termsize_ffi {
         pub fn termsize_last() -> Termsize;
         pub fn termsize_initialize_ffi(vars: *const u8) -> Termsize;
         pub fn termsize_invalidate_tty();
-        pub fn handle_columns_lines_var_change_ffi(vars: *const u8);
-        pub fn termsize_update_ffi(parser: *mut u8) -> Termsize;
         pub fn termsize_handle_winch();
     }
 }
@@ -40,10 +37,10 @@ static TTY_TERMSIZE_GEN_COUNT: AtomicU32 = AtomicU32::new(0);
 
 /// Convert an environment variable to an int, or return a default value.
 /// The int must be >0 and <USHRT_MAX (from struct winsize).
-fn var_to_int_or(var: Option<WString>, default: isize) -> isize {
+fn var_to_int_or(var: Option<EnvVar>, default: isize) -> isize {
     match var {
         Some(s) => {
-            let proposed = fish_wcstoi(&s);
+            let proposed = fish_wcstoi(&s.as_string());
             if let Ok(proposed) = proposed {
                 proposed
             } else {
@@ -162,10 +159,10 @@ impl TermsizeContainer {
     /// Initialize our termsize, using the given environment stack.
     /// This will prefer to use COLUMNS and LINES, but will fall back to the tty size reader.
     /// This does not change any variables in the environment.
-    pub fn initialize(&self, vars: &environment_t) -> Termsize {
+    pub fn initialize(&self, vars: &dyn Environment) -> Termsize {
         let new_termsize = Termsize {
-            width: var_to_int_or(vars.get_as_string_flags(L!("COLUMNS"), EnvMode::GLOBAL), -1),
-            height: var_to_int_or(vars.get_as_string_flags(L!("LINES"), EnvMode::GLOBAL), -1),
+            width: var_to_int_or(vars.getf(L!("COLUMNS"), EnvMode::GLOBAL), -1),
+            height: var_to_int_or(vars.getf(L!("LINES"), EnvMode::GLOBAL), -1),
         };
 
         let mut data = self.data.lock().unwrap();
@@ -182,7 +179,7 @@ impl TermsizeContainer {
     /// registered for COLUMNS and LINES.
     /// This requires a shared reference so it can work from a static.
     /// \return the updated termsize.
-    pub fn updating(&self, parser: &mut parser_t) -> Termsize {
+    pub fn updating(&self, parser: &mut Parser) -> Termsize {
         let new_size;
         let prev_size;
 
@@ -211,23 +208,15 @@ impl TermsizeContainer {
         new_size
     }
 
-    fn set_columns_lines_vars(&self, val: Termsize, parser: &mut parser_t) {
+    fn set_columns_lines_vars(&self, val: Termsize, parser: &mut Parser) {
         let saved = self.setting_env_vars.swap(true, Ordering::Relaxed);
-        parser.pin().set_var_and_fire(
-            &L!("COLUMNS").to_ffi(),
-            EnvMode::GLOBAL.bits(),
-            val.width.to_wstring().to_ffi(),
-        );
-        parser.pin().set_var_and_fire(
-            &L!("LINES").to_ffi(),
-            EnvMode::GLOBAL.bits(),
-            val.height.to_wstring().to_ffi(),
-        );
+        parser.set_var_and_fire(L!("COLUMNS"), EnvMode::GLOBAL, vec![val.width.to_wstring()]);
+        parser.set_var_and_fire(L!("LINES"), EnvMode::GLOBAL, vec![val.height.to_wstring()]);
         self.setting_env_vars.store(saved, Ordering::Relaxed);
     }
 
     /// Note that COLUMNS and/or LINES global variables changed.
-    fn handle_columns_lines_var_change(&self, vars: &environment_t) {
+    fn handle_columns_lines_var_change(&self, vars: &dyn Environment) {
         // Do nothing if we are the ones setting it.
         if self.setting_env_vars.load(Ordering::Relaxed) {
             return;
@@ -235,11 +224,11 @@ impl TermsizeContainer {
         // Construct a new termsize from COLUMNS and LINES, then set it in our data.
         let new_termsize = Termsize {
             width: var_to_int_or(
-                vars.get_as_string_flags(L!("COLUMNS"), EnvMode::GLOBAL),
+                vars.getf(L!("COLUMNS"), EnvMode::GLOBAL),
                 Termsize::DEFAULT_WIDTH,
             ),
             height: var_to_int_or(
-                vars.get_as_string_flags(L!("LINES"), EnvMode::GLOBAL),
+                vars.getf(L!("LINES"), EnvMode::GLOBAL),
                 Termsize::DEFAULT_HEIGHT,
             ),
         };
@@ -280,32 +269,16 @@ pub fn termsize_last() -> Termsize {
     return SHARED_CONTAINER.last();
 }
 
-/// Called when the COLUMNS or LINES variables are changed.
-/// The pointer is to an environment_t, but has the wrong type to satisfy cxx.
-pub fn handle_columns_lines_var_change_ffi(vars_ptr: *const u8) {
-    assert!(!vars_ptr.is_null());
-    let vars: &environment_t = unsafe { &*(vars_ptr as *const environment_t) };
-    SHARED_CONTAINER.handle_columns_lines_var_change(vars);
-}
-
 /// Called to initialize the termsize.
 pub fn termsize_initialize(vars: &dyn Environment) -> Termsize {
     todo!()
 }
 
 /// Called to initialize the termsize.
-/// The pointer is to an environment_t, but has the wrong type to satisfy cxx.
+/// The pointer is to an dyn Environment, but has the wrong type to satisfy cxx.
 pub fn termsize_initialize_ffi(vars_ptr: *const u8) -> Termsize {
-    assert!(!vars_ptr.is_null());
-    let vars: &environment_t = unsafe { &*(vars_ptr as *const environment_t) };
-    SHARED_CONTAINER.initialize(vars)
-}
-
-/// Called to update termsize.
-pub fn termsize_update_ffi(parser_ptr: *mut u8) -> Termsize {
-    assert!(!parser_ptr.is_null());
-    let parser: &mut parser_t = unsafe { &mut *(parser_ptr as *mut parser_t) };
-    SHARED_CONTAINER.updating(parser)
+    todo!()
+    // SHARED_CONTAINER.initialize(vars)
 }
 
 /// FFI bridge for WINCH.
@@ -320,7 +293,7 @@ pub fn termsize_invalidate_tty() {
 use crate::ffi_tests::add_test;
 add_test!("test_termsize", || {
     let env_global = EnvMode::GLOBAL;
-    let parser: &mut parser_t = unsafe { &mut *parser_t::principal_parser_ffi() };
+    let mut parser = Parser::principal_parser();
 
     // Use a static variable so we can pretend we're the kernel exposing a terminal size.
     static STUBBY_TERMSIZE: Mutex<Option<Termsize>> = Mutex::new(None);
@@ -348,35 +321,45 @@ add_test!("test_termsize", || {
     assert_eq!(ts.last(), Termsize::defaults());
 
     // Ok now we tell it to update.
-    ts.updating(parser);
+    ts.updating(&mut parser);
     assert_eq!(ts.last(), Termsize::new(42, 84));
-    assert_eq!(parser.var_as_string(L!("COLUMNS")).unwrap(), "42");
-    assert_eq!(parser.var_as_string(L!("LINES")).unwrap(), "84");
+    assert_eq!(parser.vars().get(L!("COLUMNS")).unwrap().as_string(), "42");
+    assert_eq!(parser.vars().get(L!("LINES")).unwrap().as_string(), "84");
 
     // Wow someone set COLUMNS and LINES to a weird value.
     // Now the tty's termsize doesn't matter.
-    parser.set_var(L!("COLUMNS"), &[L!("75")], env_global);
-    parser.set_var(L!("LINES"), &[L!("150")], env_global);
-    ts.handle_columns_lines_var_change(parser.get_var_stack_env());
+    parser
+        .vars()
+        .set(L!("COLUMNS"), EnvMode::GLOBAL, vec![L!("75").to_owned()]);
+    parser
+        .vars()
+        .set(L!("LINES"), EnvMode::GLOBAL, vec![L!("150").to_owned()]);
+    ts.handle_columns_lines_var_change(parser.vars());
     assert_eq!(ts.last(), Termsize::new(75, 150));
-    assert_eq!(parser.var_as_string(L!("COLUMNS")).unwrap(), "75");
-    assert_eq!(parser.var_as_string(L!("LINES")).unwrap(), "150");
+    assert_eq!(parser.vars().get(L!("COLUMNS")).unwrap().as_string(), "75");
+    assert_eq!(parser.vars().get(L!("LINES")).unwrap().as_string(), "150");
 
-    parser.set_var(L!("COLUMNS"), &[L!("33")], env_global);
-    ts.handle_columns_lines_var_change(parser.get_var_stack_env());
+    parser
+        .vars()
+        .set(L!("COLUMNS"), EnvMode::GLOBAL, vec![L!("33").to_owned()]);
+    ts.handle_columns_lines_var_change(parser.vars());
     assert_eq!(ts.last(), Termsize::new(33, 150));
 
     // Oh it got SIGWINCH, now the tty matters again.
     TermsizeContainer::handle_winch();
     assert_eq!(ts.last(), Termsize::new(33, 150));
-    assert_eq!(ts.updating(parser), stubby_termsize().unwrap());
-    assert_eq!(parser.var_as_string(L!("COLUMNS")).unwrap(), "42");
-    assert_eq!(parser.var_as_string(L!("LINES")).unwrap(), "84");
+    assert_eq!(ts.updating(&mut parser), stubby_termsize().unwrap());
+    assert_eq!(parser.vars().get(L!("COLUMNS")).unwrap().as_string(), "42");
+    assert_eq!(parser.vars().get(L!("LINES")).unwrap().as_string(), "84");
 
     // Test initialize().
-    parser.set_var(L!("COLUMNS"), &[L!("83")], env_global);
-    parser.set_var(L!("LINES"), &[L!("38")], env_global);
-    ts.initialize(parser.get_var_stack_env());
+    parser
+        .vars()
+        .set(L!("COLUMNS"), EnvMode::GLOBAL, vec![L!("83").to_owned()]);
+    parser
+        .vars()
+        .set(L!("LINES"), EnvMode::GLOBAL, vec![L!("38").to_owned()]);
+    ts.initialize(parser.vars());
     assert_eq!(ts.last(), Termsize::new(83, 38));
 
     // initialize() even beats the tty reader until a sigwinch.
@@ -385,9 +368,9 @@ add_test!("test_termsize", || {
         setting_env_vars: AtomicBool::new(false),
         tty_size_reader: stubby_termsize,
     };
-    ts.initialize(parser.get_var_stack_env());
-    ts2.updating(parser);
+    ts.initialize(parser.vars());
+    ts2.updating(&mut parser);
     assert_eq!(ts.last(), Termsize::new(83, 38));
     TermsizeContainer::handle_winch();
-    assert_eq!(ts2.updating(parser), stubby_termsize().unwrap());
+    assert_eq!(ts2.updating(&mut parser), stubby_termsize().unwrap());
 });

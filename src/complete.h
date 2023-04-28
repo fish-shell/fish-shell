@@ -15,7 +15,15 @@
 
 // #include "expand.h"
 #include "common.h"
+#include "parser.h"
 #include "wcstringutil.h"
+
+#if INCLUDE_RUST_HEADERS
+#include "complete.rs.h"
+#else
+struct CompletionList;
+using completion_list_t = CompletionList;
+#endif
 
 struct completion_mode_t {
     /// If set, skip file completions.
@@ -28,8 +36,6 @@ struct completion_mode_t {
 
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
-
-class parser_t;
 
 enum {
     /// Do not insert space afterwards if this is the only completion. (The default is to try insert
@@ -52,6 +58,8 @@ enum {
     COMPLETE_REPLACES_COMMANDLINE = 1 << 7,
 };
 using complete_flags_t = uint8_t;
+
+#if 0
 
 /// std::function which accepts a completion string and returns its description.
 using description_func_t = std::function<wcstring(const wcstring &)>;
@@ -287,5 +295,7 @@ std::vector<wcstring> complete_get_wrap_targets(const wcstring &command);
 
 // Observes that fish_complete_path has changed.
 void complete_invalidate_path();
+
+#endif
 
 #endif

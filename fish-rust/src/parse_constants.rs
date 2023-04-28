@@ -1,6 +1,7 @@
 //! Constants used in the programmatic representation of fish code.
 
-use crate::ffi::{fish_wcswidth, fish_wcwidth, wcharz_t};
+use crate::fallback::{fish_wcswidth, fish_wcwidth};
+use crate::ffi::wcharz_t;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcharz, AsWstr, WCharFromFFI, WCharToFFI};
@@ -15,7 +16,7 @@ pub type SourceOffset = u32;
 pub const SOURCE_OFFSET_INVALID: usize = SourceOffset::MAX as _;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub struct ParseTreeFlags(pub u8);
 
 pub const PARSE_FLAG_NONE: ParseTreeFlags = ParseTreeFlags(0);
@@ -529,7 +530,7 @@ impl ParseError {
                 // pretend it's a space. We only expect this to be at the end of the string.
                 caret_space_line += " ";
             } else {
-                let width = fish_wcwidth(wc.into()).0;
+                let width = fish_wcwidth(wc.into());
                 if width > 0 {
                     caret_space_line += " ".repeat(width as usize).as_str();
                 }
@@ -543,7 +544,7 @@ impl ParseError {
             // We do it like this
             //               ^~~^
             // With a "^" under the start and end, and squiggles in-between.
-            let width = fish_wcswidth(unsafe { src.as_ptr().add(start) }, len).0;
+            let width = fish_wcswidth(&src[start..start + len]);
             if width >= 2 {
                 // Subtract one for each of the carets - this is important in case
                 // the starting char has a width of > 1.

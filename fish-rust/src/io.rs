@@ -605,6 +605,14 @@ pub type IoDataRef = Rc<dyn IoData>;
 #[derive(Clone, Default)]
 pub struct IoChain(pub Vec<IoDataRef>);
 
+unsafe impl cxx::ExternType for IoChain {
+    type Id = cxx::type_id!("IoChain");
+    type Kind = cxx::kind::Opaque;
+}
+
+#[derive(Clone, Default)]
+pub struct IoChainFfi(IoChain);
+
 impl IoChain {
     pub fn new() -> Self {
         Default::default()
@@ -953,6 +961,11 @@ pub struct IoStreams<'a> {
     pub job_group: Option<JobGroupRef>,
 }
 
+unsafe impl cxx::ExternType for IoStreams<'_> {
+    type Id = cxx::type_id!("IoStreams");
+    type Kind = cxx::kind::Opaque;
+}
+
 impl<'a> IoStreams<'a> {
     pub fn new(out: &'a mut dyn OutputStream, err: &'a mut dyn OutputStream) -> Self {
         IoStreams {
@@ -988,4 +1001,17 @@ fn fd_monitor() -> &'static mut FdMonitor {
     }
     let ptr: *mut FdMonitor = unsafe { (*FDM).get() };
     unsafe { &mut *ptr }
+}
+
+#[cxx::bridge]
+mod io_ffi {
+    extern "Rust" {
+        type IoChain;
+
+        fn new_io_chain() -> Box<IoChain>;
+    }
+}
+
+fn new_io_chain() -> Box<IoChain> {
+    Box::new(IoChain::new())
 }

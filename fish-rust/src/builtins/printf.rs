@@ -52,9 +52,10 @@ use libc::c_int;
 use num_traits;
 use std::result::Result;
 
-use crate::builtins::shared::{io_streams_t, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-use crate::ffi::parser_t;
+use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+use crate::io::IoStreams;
 use crate::locale::{get_numeric_locale, Locale};
+use crate::parser::Parser;
 use crate::wchar::{encode_byte_to_char, wstr, WExt, WString, L};
 use crate::wutil::errors::Error;
 use crate::wutil::gettext::{wgettext, wgettext_fmt};
@@ -79,9 +80,9 @@ fn iswxdigit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
 
-struct builtin_printf_state_t<'a> {
+struct builtin_printf_state_t<'a, 'b> {
     // Out and err streams. Note this is a captured reference!
-    streams: &'a mut io_streams_t,
+    streams: &'a mut IoStreams<'b>,
 
     // The status of the operation.
     exit_code: c_int,
@@ -205,7 +206,7 @@ fn modify_allowed_format_specifiers(ok: &mut [bool; 256], str: &str, flag: bool)
     }
 }
 
-impl<'a> builtin_printf_state_t<'a> {
+impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     #[allow(clippy::partialeq_to_none)]
     fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
@@ -582,7 +583,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         // We set the exit code to error, because one occurred,
@@ -606,7 +607,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         self.exit_code = STATUS_CMD_ERROR.unwrap();
@@ -776,8 +777,8 @@ impl<'a> builtin_printf_state_t<'a> {
 
 /// The printf builtin.
 pub fn printf(
-    _parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    _parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
     argv: &mut [&wstr],
 ) -> Option<c_int> {
     let mut argc = argv.len();

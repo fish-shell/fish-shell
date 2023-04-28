@@ -1,14 +1,17 @@
 #ifndef FISH_OPERATION_CONTEXT_H
 #define FISH_OPERATION_CONTEXT_H
 
-#include <cstddef>
-#include <functional>
-#include <memory>
+#if INCLUDE_RUST_HEADERS
+#include "operation_context.rs.h"
+#else
+struct OperationContext;
+using operation_context_t = OperationContext;
+#endif
 
-#include "common.h"
+#if 0
+#include "parser.h"
 
 class environment_t;
-class parser_t;
 struct job_group_t;
 
 /// A common helper which always returns false.
@@ -69,4 +72,5 @@ class operation_context_t {
     ~operation_context_t();
 };
 
+#endif
 #endif

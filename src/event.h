@@ -30,7 +30,7 @@ extern const wchar_t *const event_filter_names[];
 
 class parser_t;
 
-void event_fire_generic(parser_t &parser, const wcstring &name,
+bool event_fire_generic(parser_t &parser, const wcstring &name,
                         const std::vector<wcstring> &args = g_empty_string_list);
 
 #endif

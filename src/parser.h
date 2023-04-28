@@ -338,6 +338,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
                          const job_group_ref_t &job_group, block_type_t block_type);
 
     eval_res_t eval_string_ffi1(const wcstring &cmd);
+    int eval_string_ffi1_status(const wcstring &cmd);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.

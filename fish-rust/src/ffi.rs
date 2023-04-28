@@ -66,6 +66,7 @@ include_cpp! {
 
     generate!("block_t")
     generate!("parser_t")
+    generate!("eval_res_t")
 
     generate!("job_t")
     generate!("process_t")

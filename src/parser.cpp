@@ -552,6 +552,9 @@ eval_res_t parser_t::eval_with(const wcstring &cmd, const io_chain_t &io,
 }
 
 eval_res_t parser_t::eval_string_ffi1(const wcstring &cmd) { return eval(cmd, io_chain_t()); }
+int parser_t::eval_string_ffi1_status(const wcstring &cmd) {
+    return this->eval_string_ffi1(cmd).status.status_value();
+}
 
 eval_res_t parser_t::eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
                                         const job_group_ref_t &job_group,

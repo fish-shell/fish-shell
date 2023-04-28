@@ -83,13 +83,13 @@ mod event_ffi {
             parser: Pin<&mut parser_t>,
             name: &CxxWString,
             arguments: &CxxVector<wcharz_t>,
-        );
+        ) -> bool;
         #[cxx_name = "event_get_desc"]
         fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString>;
         #[cxx_name = "event_fire_delayed"]
         fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>);
         #[cxx_name = "event_fire"]
-        fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event);
+        fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event) -> bool;
         #[cxx_name = "event_print"]
         fn event_print_ffi(streams: Pin<&mut io_streams_t>, type_filter: &CxxWString);
 
@@ -679,7 +679,7 @@ fn event_get_function_handler_descs_ffi(name: &CxxWString) -> Vec<event_descript
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
-fn fire_internal(parser: &mut parser_t, event: &Event) {
+fn fire_internal(parser: &mut parser_t, event: &Event) -> bool {
     assert!(
         parser.libdata_pod().is_event >= 0,
         "is_event should not be negative"
@@ -709,6 +709,7 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
 
     // Iterate over our list of matching events. Fire the ones that are still present.
     let mut fired_one_shot = false;
+    let mut success = true;
     for handler in fire {
         // A previous handler may have erased this one.
         if handler.removed.load(Ordering::Relaxed) {
@@ -748,10 +749,10 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         let b = (*parser)
             .pin()
             .push_block(block_t::event_block((event as *const Event).cast()).within_unique_ptr());
-        (*parser)
-            .pin()
-            .eval_string_ffi1(&buffer.to_ffi())
-            .within_unique_ptr();
+        let handler_status_code = (*parser).pin().eval_string_ffi1_status(&buffer.to_ffi()).0;
+        if handler_status_code != 0 {
+            success = false;
+        }
         (*parser).pin().pop_block(b);
 
         handler.fired.store(true, Ordering::Relaxed);
@@ -761,6 +762,8 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
     if fired_one_shot {
         remove_handlers_if(|h| h.fired.load(Ordering::Relaxed) && h.is_one_shot());
     }
+
+    success
 }
 
 /// Fire all delayed events attached to the given parser.
@@ -830,18 +833,19 @@ pub fn enqueue_signal(signal: libc::c_int) {
 }
 
 /// Fire the specified event event, executing it on `parser`.
-pub fn fire(parser: &mut parser_t, event: Event) {
+pub fn fire(parser: &mut parser_t, event: Event) -> bool {
     // Fire events triggered by signals.
     fire_delayed(parser);
 
     if event.is_blocked(parser) {
         BLOCKED_EVENTS.lock().expect("Mutex poisoned!").push(event);
+        true
     } else {
-        fire_internal(parser, &event);
+        fire_internal(parser, &event)
     }
 }
 
-fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event) {
+fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event) -> bool {
     fire(parser.unpin(), event.clone())
 }
 
@@ -912,7 +916,7 @@ fn event_print_ffi(streams: Pin<&mut ffi::io_streams_t>, type_filter: &CxxWStrin
 }
 
 /// Fire a generic event with the specified name.
-pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString>) {
+pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString>) -> bool {
     fire(
         parser,
         Event {
@@ -928,10 +932,10 @@ fn event_fire_generic_ffi(
     parser: Pin<&mut parser_t>,
     name: &CxxWString,
     arguments: &CxxVector<wcharz_t>,
-) {
+) -> bool {
     fire_generic(
         parser.unpin(),
         name.from_ffi(),
         arguments.iter().map(WString::from).collect(),
-    );
+    )
 }

@@ -3238,36 +3238,39 @@ static int read_i(parser_t &parser) {
             data->update_buff_pos(&data->command_line, 0);
             data->command_line.clear();
             data->command_line_changed(&data->command_line);
-            event_fire_generic(parser, L"fish_preexec", {command});
-            auto eval_res = reader_run_command(parser, command);
-            signal_clear_cancel();
-            if (!eval_res.no_status) {
-                ++status_count;
-            }
+            bool handler_success = event_fire_generic(parser, L"fish_preexec", {command});
+            // Run the commmand only if every handler exited successfully.
+            if (handler_success) {
+                auto eval_res = reader_run_command(parser, command);
+                signal_clear_cancel();
+                if (!eval_res.no_status) {
+                    ++status_count;
+                }
 
-            // If the command requested an exit, then process it now and clear it.
-            data->exit_loop_requested |= parser.libdata().exit_current_script;
-            parser.libdata().exit_current_script = false;
+                // If the command requested an exit, then process it now and clear it.
+                data->exit_loop_requested |= parser.libdata().exit_current_script;
+                parser.libdata().exit_current_script = false;
 
-            event_fire_generic(parser, L"fish_postexec", {command});
-            // Allow any pending history items to be returned in the history array.
-            if (data->history) {
-                data->history->resolve_pending();
-            }
+                event_fire_generic(parser, L"fish_postexec", {command});
+                // Allow any pending history items to be returned in the history array.
+                if (data->history) {
+                    data->history->resolve_pending();
+                }
 
-            bool already_warned = data->did_warn_for_bg_jobs;
-            if (check_exit_loop_maybe_warning(data.get())) {
-                break;
-            }
-            if (already_warned) {
-                // We had previously warned the user and they ran another command.
-                // Reset the warning.
-                data->did_warn_for_bg_jobs = false;
-            }
+                bool already_warned = data->did_warn_for_bg_jobs;
+                if (check_exit_loop_maybe_warning(data.get())) {
+                    break;
+                }
+                if (already_warned) {
+                    // We had previously warned the user and they ran another command.
+                    // Reset the warning.
+                    data->did_warn_for_bg_jobs = false;
+                }
 
-            // Apply any command line update from this command or fish_postexec, etc.
-            // See #8807.
-            data->apply_commandline_state_changes();
+                // Apply any command line update from this command or fish_postexec, etc.
+                // See #8807.
+                data->apply_commandline_state_changes();
+            }
         }
     }
     reader_pop();

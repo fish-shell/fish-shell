@@ -1,3 +1,4 @@
+#if 0
 // Prototypes for functions for executing a program.
 #ifndef FISH_EXEC_H
 #define FISH_EXEC_H
@@ -9,9 +10,8 @@
 
 #include "flog.h"
 #include "io.h"
+#include "parser.h"
 #include "proc.h"
-
-class parser_t;
 
 /// Execute the processes specified by \p j in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for
@@ -42,4 +42,5 @@ int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
 /// Add signals that should be masked for external processes in this job.
 bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask);
 
+#endif
 #endif

@@ -6,7 +6,7 @@ use crate::ast::Node;
 use crate::autoload::Autoload;
 use crate::common::{escape, valid_func_name, FilenameRef};
 use crate::complete::complete_get_wrap_targets;
-use crate::env::EnvStack;
+use crate::env::{EnvStack, Environment};
 use crate::event::EventType;
 use crate::parse_tree::ParsedSourceRef;
 use crate::parser::Parser;
@@ -56,10 +56,10 @@ pub struct FunctionProperties {
     pub is_copy: bool,
 
     /// The file from which the function was copied, or nullptr if not from a file.
-    pub copy_definition_file: FilenameRef,
+    pub copy_definition_file: Option<FilenameRef>,
 
     /// The line number where the specified function was copied.
-    pub copy_definition_lineno: usize,
+    pub copy_definition_lineno: Option<usize>,
 }
 
 impl FunctionProperties {
@@ -264,7 +264,7 @@ pub fn function_load(name: &wstr, parser: &mut Parser) -> bool {
         if funcset.allow_autoload(name) {
             path_to_autoload = funcset
                 .autoloader
-                .resolve_command(name, EnvStack::globals());
+                .resolve_command(name, &**EnvStack::globals());
         }
     }
 

@@ -275,7 +275,7 @@ static int run_command_list(parser_t &parser, const std::vector<std::string> &cm
             // Construct a parsed source ref.
             // Be careful to transfer ownership, this could be a very large string.
             auto ps = new_parsed_source_ref(cmd_wcs, *ast);
-            parser.eval_parsed_source(*ps, io, {}, block_type_t::top);
+            parser.ffi_eval_parsed_source(*ps, io);
         } else {
             wcstring sb;
             parser.get_backtrace(cmd_wcs, *errors, sb);

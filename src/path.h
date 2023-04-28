@@ -7,6 +7,7 @@
 #include <string>
 
 #include "common.h"
+#include "env.h"
 #include "maybe.h"
 #include "parser.h"
 #include "wutil.h"
@@ -46,7 +47,6 @@ class env_stack_t;
 /// Use the given environment stack to ensure this only occurs once.
 void path_emit_config_directory_messages(env_stack_t &vars);
 
-class environment_t;
 /// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
 /// \returns the path if found, none if not.
 maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars);
@@ -65,9 +65,6 @@ get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &va
 
 /// Return all the paths that match the given command.
 std::vector<wcstring> path_get_paths(const wcstring &cmd, const environment_t &vars);
-
-// Needed because of issues with vectors of wstring and environment_t.
-wcstring_list_ffi_t path_get_paths_ffi(const wcstring &cmd, const parser_t &parser);
 
 /// Returns the full path of the specified directory, using the CDPATH variable as a list of base
 /// directories for relative paths.

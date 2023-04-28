@@ -2,8 +2,9 @@
 
 use libc::c_int;
 
-use super::shared::{builtin_missing_argument, io_streams_t, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-use crate::ffi::parser_t;
+use super::shared::{builtin_missing_argument, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::wchar::{encode_byte_to_char, wstr, WString, L};
 use crate::wgetopt::{wgetopter_t, woption};
 
@@ -25,12 +26,10 @@ impl Default for Options {
 }
 
 fn parse_options(
-    args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    args: &mut [WString],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = args[0];
-
     const SHORT_OPTS: &wstr = L!("+:Eens");
     const LONG_OPTS: &[woption] = &[];
 
@@ -47,7 +46,7 @@ fn parse_options(
             's' => opts.print_spaces = false,
             'E' => opts.interpret_special_chars = false,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
@@ -140,9 +139,9 @@ where
 /// Bash only respects `-n` if it's the first argument. We'll do the same. We also support a new,
 /// fish specific, option `-s` to mean "no spaces".
 pub fn echo(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
@@ -225,7 +224,7 @@ pub fn echo(
     }
 
     if !out.is_empty() {
-        streams.out.append(out);
+        streams.out.append(&out);
     }
 
     STATUS_CMD_OK

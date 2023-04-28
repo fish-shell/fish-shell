@@ -1,3 +1,4 @@
+#if 0
 // The fish parser. Contains functions for parsing and evaluating code.
 #include "config.h"  // IWYU pragma: keep
 
@@ -831,3 +832,5 @@ block_t block_t::breakpoint_block() { return block_t(block_type_t::breakpoint); 
 block_t block_t::variable_assignment_block() { return block_t(block_type_t::variable_assignment); }
 
 void block_t::ffi_incr_event_blocks() { ++event_blocks; }
+
+#endif

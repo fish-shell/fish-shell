@@ -1,3 +1,4 @@
+#if 0
 // Functions for storing and retrieving function information. These functions also take care of
 // autoloading functions in the $fish_function_path. Actual function evaluation is taken care of by
 // the parser and to some degree the builtin handling library.
@@ -441,3 +442,4 @@ int function_properties_t::definition_lineno() const {
     assert(func_start <= source.size() && "function start out of bounds");
     return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
 }
+#endif

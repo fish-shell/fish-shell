@@ -10,6 +10,7 @@ use crate::common::{
 };
 use crate::fallback;
 use crate::fds::AutoCloseFd;
+use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
@@ -23,7 +24,7 @@ use libc::{
 pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
 use std::fs::canonicalize;
-use std::io::{self, Write};
+use std::io::Write;
 use std::os::fd::RawFd;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::unix::prelude::{OsStrExt, OsStringExt};
@@ -98,8 +99,8 @@ pub fn wgetcwd() -> WString {
     FLOGF!(
         error,
         "getcwd() failed with errno %d/%s",
-        errno::errno().0,
-        "errno::errno"
+        errno().0,
+        "errno"
     );
     WString::new()
 }

@@ -5,7 +5,8 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
-use crate::ffi::{self, fish_wcwidth};
+use crate::fallback::fish_wcwidth;
+use crate::ffi;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::termsize::Termsize;
@@ -1499,7 +1500,7 @@ fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             while pos < msg.len() && [' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
-                let width = fish_wcwidth(msg.char_at(pos).into()).0 as isize;
+                let width = fish_wcwidth(msg.char_at(pos).into()) as isize;
                 if (tok_width + width) > (screen_width - 1) {
                     overflow = true;
                     break;
@@ -1857,37 +1858,38 @@ pub fn scoped_push<Context, Accessor, T>(
     mut ctx: Context,
     accessor: Accessor,
     new_value: T,
-) -> ScopeGuard<(Context, Accessor, T), fn(&mut (Context, Accessor, T)), Context>
+) -> ScopeGuard<(Context, Accessor, Option<T>), fn(&mut (Context, Accessor, Option<T>)), Context>
 where
     Accessor: Fn(&mut Context) -> &mut T,
-    T: Copy,
 {
-    fn restore_saved_value<Context, Accessor, T: Copy>(data: &mut (Context, Accessor, T))
+    fn restore_saved_value<Context, Accessor, T>(data: &mut (Context, Accessor, Option<T>))
     where
         Accessor: Fn(&mut Context) -> &mut T,
     {
         let (ref mut ctx, ref accessor, saved_value) = data;
-        *accessor(ctx) = *saved_value;
+        *accessor(ctx) = saved_value.take().unwrap();
     }
-    fn view_context<Context, Accessor, T>(data: &(Context, Accessor, T)) -> &Context
+    fn view_context<Context, Accessor, T>(data: &(Context, Accessor, Option<T>)) -> &Context
     where
         Accessor: Fn(&mut Context) -> &mut T,
     {
         &data.0
     }
-    fn view_context_mut<Context, Accessor, T>(data: &mut (Context, Accessor, T)) -> &mut Context
+    fn view_context_mut<Context, Accessor, T>(
+        data: &mut (Context, Accessor, Option<T>),
+    ) -> &mut Context
     where
         Accessor: Fn(&mut Context) -> &mut T,
     {
         &mut data.0
     }
-    fn view_context_take<Context, Accessor, T>(data: (Context, Accessor, T)) -> Context
+    fn view_context_take<Context, Accessor, T>(data: (Context, Accessor, Option<T>)) -> Context
     where
         Accessor: Fn(&mut Context) -> &mut T,
     {
         data.0
     }
-    let saved_value = mem::replace(accessor(&mut ctx), new_value);
+    let saved_value = Some(mem::replace(accessor(&mut ctx), new_value));
     ScopeGuard::with_view(
         (ctx, accessor, saved_value),
         view_context,
@@ -1904,37 +1906,38 @@ pub fn scoped_push_replacer<Context, Replacer, T>(
     mut ctx: Context,
     replacer: Replacer,
     new_value: T,
-) -> ScopeGuard<(Context, Replacer, T), fn(&mut (Context, Replacer, T)), Context>
+) -> ScopeGuard<(Context, Replacer, Option<T>), fn(&mut (Context, Replacer, Option<T>)), Context>
 where
     Replacer: Fn(&mut Context, T) -> T,
-    T: Copy,
 {
-    fn restore_saved_value<Context, Replacer, T: Copy>(data: &mut (Context, Replacer, T))
+    fn restore_saved_value<Context, Replacer, T>(data: &mut (Context, Replacer, Option<T>))
     where
         Replacer: Fn(&mut Context, T) -> T,
     {
         let (ref mut ctx, ref replacer, saved_value) = data;
-        replacer(ctx, *saved_value);
+        replacer(ctx, saved_value.take().unwrap());
     }
-    fn view_context<Context, Replacer, T>(data: &(Context, Replacer, T)) -> &Context
+    fn view_context<Context, Replacer, T>(data: &(Context, Replacer, Option<T>)) -> &Context
     where
         Replacer: Fn(&mut Context, T) -> T,
     {
         &data.0
     }
-    fn view_context_mut<Context, Replacer, T>(data: &mut (Context, Replacer, T)) -> &mut Context
+    fn view_context_mut<Context, Replacer, T>(
+        data: &mut (Context, Replacer, Option<T>),
+    ) -> &mut Context
     where
         Replacer: Fn(&mut Context, T) -> T,
     {
         &mut data.0
     }
-    fn view_context_take<Context, Replacer, T>(data: (Context, Replacer, T)) -> Context
+    fn view_context_take<Context, Replacer, T>(data: (Context, Replacer, Option<T>)) -> Context
     where
         Replacer: Fn(&mut Context, T) -> T,
     {
         data.0
     }
-    let saved_value = replacer(&mut ctx, new_value);
+    let saved_value = Some(replacer(&mut ctx, new_value));
     ScopeGuard::with_view(
         (ctx, replacer, saved_value),
         view_context,
@@ -2062,7 +2065,7 @@ pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&
 macro_rules! fwprintf {
     ($fd:expr, $format:literal $(, $arg:expr)*) => {
         {
-            let wide = crate::wutil::sprintf!($format $(, $arg )*);
+            let wide = crate::wutil::sprintf!($format, $( $arg ),*);
             crate::wutil::wwrite_to_fd(&wide, $fd);
         }
     }
@@ -2210,42 +2213,3 @@ crate::ffi_tests::add_test!("escape_string", tests::test_escape_string);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert_ascii);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert_private_use);
-
-#[cxx::bridge]
-mod common_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        include!("common.h");
-        type escape_string_style_t = crate::ffi::escape_string_style_t;
-    }
-    extern "Rust" {
-        fn rust_unescape_string(
-            input: *const wchar_t,
-            len: usize,
-            escape_special: u32,
-            style: escape_string_style_t,
-        ) -> UniquePtr<CxxWString>;
-    }
-}
-
-fn rust_unescape_string(
-    input: *const ffi::wchar_t,
-    len: usize,
-    escape_special: u32,
-    style: ffi::escape_string_style_t,
-) -> UniquePtr<CxxWString> {
-    let style = match style {
-        ffi::escape_string_style_t::STRING_STYLE_SCRIPT => {
-            UnescapeStringStyle::Script(UnescapeFlags::from_bits(escape_special).unwrap())
-        }
-        ffi::escape_string_style_t::STRING_STYLE_URL => UnescapeStringStyle::Url,
-        ffi::escape_string_style_t::STRING_STYLE_VAR => UnescapeStringStyle::Var,
-        _ => panic!(),
-    };
-    let input = unsafe { slice::from_raw_parts(input, len) };
-    let input = wstr::from_slice(input).unwrap();
-    match unescape_string(input, style) {
-        Some(result) => result.to_ffi(),
-        None => UniquePtr::null(),
-    }
-}

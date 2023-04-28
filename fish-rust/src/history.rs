@@ -28,11 +28,11 @@ use cxx::{CxxWString, UniquePtr};
 use widestring_suffix::widestrs;
 
 use crate::common::write_loop;
-use crate::env::Environment;
-use crate::ffi::{
-    env_stack_t, environment_t, io_streams_t, operation_context_t, wcstring_list_ffi_t, Repin,
-};
+use crate::env::{EnvDyn, EnvDynFFI, EnvStack, EnvStackRef, EnvStackRefFFI, Environment};
+use crate::ffi::{wcstring_list_ffi_t, Repin};
 use crate::flog::FLOGF;
+use crate::io::IoStreams;
+use crate::operation_context::OperationContext;
 use crate::util::find_subslice;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
@@ -46,10 +46,12 @@ mod history_ffi {
         include!("env.h");
         include!("operation_context.h");
 
-        type io_streams_t = crate::ffi::io_streams_t;
-        type environment_t = crate::ffi::environment_t;
-        type env_stack_t = crate::ffi::env_stack_t;
-        type operation_context_t = crate::ffi::operation_context_t;
+        type IoStreams<'a> = crate::io::IoStreams<'a>;
+        #[cxx_name = "EnvDyn"]
+        type EnvDynFFI = crate::env::EnvDynFFI;
+        #[cxx_name = "EnvStackRef"]
+        type EnvStackRefFFI = crate::env::EnvStackRefFFI;
+        type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
         type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
     }
 
@@ -88,16 +90,19 @@ mod history_ffi {
     extern "Rust" {
         #[cxx_name = "history_save_all"]
         fn save_all();
-        fn rust_session_id(vars: &environment_t) -> UniquePtr<CxxWString>;
+        fn rust_session_id(vars: &EnvDynFFI) -> UniquePtr<CxxWString>;
         fn rust_expand_and_detect_paths(
             paths: &wcstring_list_ffi_t,
-            vars: &environment_t,
+            vars: &EnvDynFFI,
         ) -> UniquePtr<wcstring_list_ffi_t>;
-        fn rust_all_paths_are_valid(paths: &wcstring_list_ffi_t, ctx: &operation_context_t)
-            -> bool;
+        fn rust_all_paths_are_valid(
+            paths: &wcstring_list_ffi_t,
+            ctx: &OperationContext<'_>,
+        ) -> bool;
         #[rust_name = "start_private_mode_ffi"]
-        fn start_private_mode(vars: Pin<&mut env_stack_t>);
-        fn in_private_mode(vars: &environment_t) -> bool;
+        fn start_private_mode(vars: &EnvStackRefFFI);
+        #[rust_name = "in_private_mode_ffi"]
+        fn in_private_mode(vars: &EnvDynFFI) -> bool;
         fn history_never_mmap() -> bool;
     }
 
@@ -139,7 +144,7 @@ mod history_ffi {
         fn add_pending_with_file_detection(
             &self,
             s: &CxxWString,
-            vars: &environment_t,
+            vars: &EnvDynFFI,
             persist_mode: PersistenceMode,
         );
         fn resolve_pending(&self);
@@ -154,7 +159,7 @@ mod history_ffi {
             null_terminate: bool,
             reverse: bool,
             cancel_on_signal: bool,
-            streams: Pin<&mut io_streams_t>,
+            streams: Pin<&mut IoStreams<'_>>,
         ) -> bool;
         fn clear(&self);
         fn clear_session(&self);
@@ -448,14 +453,14 @@ impl History {
     pub fn search(
         &self,
         search_type: SearchType,
-        search_args: &[&wstr],
+        search_args: &[WString],
         show_time_format: &wstr,
         max_items: usize,
         case_sensitive: bool,
         null_terminate: bool,
         reverse: bool,
         cancel_on_signal: bool,
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams<'_>,
     ) -> bool {
         todo!()
     }
@@ -611,18 +616,22 @@ pub fn expand_and_detect_paths(paths: &[&wstr], vars: &dyn Environment) -> Vec<W
 /// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
 /// Wildcard expansions are suppressed.
 /// Returns `true` if `paths` is empty or every path is valid.
-pub fn all_paths_are_valid(paths: &[&wstr], ctx: &operation_context_t) -> bool {
+pub fn all_paths_are_valid(paths: &[WString], ctx: &OperationContext<'_>) -> bool {
     todo!()
 }
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
-pub fn start_private_mode(vars: &mut env_stack_t) {
+pub fn start_private_mode(vars: &EnvStack) {
     todo!()
 }
 
 /// Queries private mode status.
-pub fn in_private_mode(vars: &dyn Environment) -> bool {
+pub fn in_private_mode(vars: &EnvDyn) -> bool {
     todo!()
+}
+
+pub fn in_private_mode_ffi(vars: &EnvDynFFI) -> bool {
+    in_private_mode(&vars.0)
 }
 
 // ========
@@ -677,11 +686,11 @@ impl HistorySharedPtr {
     fn add_pending_with_file_detection(
         &self,
         s: &CxxWString,
-        vars: &environment_t,
+        vars: &EnvDynFFI,
         persist_mode: PersistenceMode,
     ) {
         self.inner()
-            .add_pending_with_file_detection(&s.from_ffi(), vars, persist_mode)
+            .add_pending_with_file_detection(&s.from_ffi(), &vars.0, persist_mode)
     }
     fn resolve_pending(&self) {
         self.inner().resolve_pending()
@@ -699,10 +708,9 @@ impl HistorySharedPtr {
         null_terminate: bool,
         reverse: bool,
         cancel_on_signal: bool,
-        streams: Pin<&mut io_streams_t>,
+        streams: Pin<&mut IoStreams<'_>>,
     ) -> bool {
         let search_args = search_args.from_ffi();
-        let search_args: Vec<&wstr> = search_args.iter().map(|s| s.as_utfstr()).collect();
         self.inner().search(
             search_type,
             &search_args,
@@ -771,27 +779,26 @@ fn rust_history_search_new(
     ))
 }
 
-fn rust_session_id(vars: &environment_t) -> UniquePtr<CxxWString> {
-    history_session_id(vars).to_ffi()
+fn rust_session_id(vars: &EnvDynFFI) -> UniquePtr<CxxWString> {
+    history_session_id(&vars.0).to_ffi()
 }
 
 fn rust_expand_and_detect_paths(
     paths: &wcstring_list_ffi_t,
-    vars: &environment_t,
+    vars: &EnvDynFFI,
 ) -> UniquePtr<wcstring_list_ffi_t> {
     let paths = paths.from_ffi();
     let paths: Vec<&wstr> = paths.iter().map(|s| s.as_utfstr()).collect();
-    expand_and_detect_paths(&paths, vars).to_ffi()
+    expand_and_detect_paths(&paths, &vars.0).to_ffi()
 }
 
-fn rust_all_paths_are_valid(paths: &wcstring_list_ffi_t, ctx: &operation_context_t) -> bool {
+fn rust_all_paths_are_valid(paths: &wcstring_list_ffi_t, ctx: &OperationContext<'_>) -> bool {
     let paths = paths.from_ffi();
-    let paths: Vec<&wstr> = paths.iter().map(|s| s.as_utfstr()).collect();
     all_paths_are_valid(&paths, ctx)
 }
 
-fn start_private_mode_ffi(vars: Pin<&mut env_stack_t>) {
-    start_private_mode(vars.unpin())
+fn start_private_mode_ffi(vars: &EnvStackRefFFI) {
+    start_private_mode(&vars.0)
 }
 
 fn history_never_mmap() -> bool {

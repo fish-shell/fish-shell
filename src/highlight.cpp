@@ -1319,7 +1319,8 @@ void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
     color = highlighter.highlight();
 }
 
-wcstring colorize_shell(const wcstring &text, parser_t &parser) {
+wcstring colorize_shell(const wcstring &text, void *parser_) {
+    parser_t &parser = *static_cast<parser_t *>(parser_);
     std::vector<highlight_spec_t> colors;
     highlight_shell(text, colors, parser.context());
     return str2wcstring(colorize(text, colors, parser.vars()));

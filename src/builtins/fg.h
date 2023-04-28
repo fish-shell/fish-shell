@@ -3,9 +3,10 @@
 #define FISH_BUILTIN_FG_H
 
 #include "../maybe.h"
+#include "../parser.h"
 
-class parser_t;
 struct io_streams_t;
 
 maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+int builtin_fg_ffi(void *parser, void *streams, const void *argv);
 #endif

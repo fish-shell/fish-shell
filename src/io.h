@@ -18,6 +18,13 @@
 #include "redirection.h"
 #include "signals.h"
 #include "topic_monitor.h"
+#if INCLUDE_RUST_HEADERS
+#include "io.rs.h"
+#else
+struct IoChain;
+struct IoStreams;
+using io_chain_tTODO = IoChain;
+#endif
 
 using std::shared_ptr;
 

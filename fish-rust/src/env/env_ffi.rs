@@ -2,7 +2,7 @@ use super::environment::{self, EnvDyn, EnvNull, EnvStack, EnvStackRef, Environme
 use super::var::{ElectricVar, EnvVar, EnvVarFlags, Statuses};
 use crate::env::EnvMode;
 use crate::event::Event;
-use crate::ffi::{event_list_ffi_t, wchar_t, wcharz_t, wcstring_list_ffi_t};
+use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t};
 use crate::null_terminated_array::OwningNullTerminatedArrayRefFFI;
 use crate::signal::Signal;
 use crate::wchar_ffi::WCharToFFI;
@@ -28,7 +28,6 @@ mod env_ffi {
     extern "C++" {
         include!("env.h");
         include!("wutil.h");
-        type event_list_ffi_t = super::event_list_ffi_t;
         type wcstring_list_ffi_t = super::wcstring_list_ffi_t;
         type wcharz_t = super::wcharz_t;
     }
@@ -134,8 +133,6 @@ mod env_ffi {
 
         // Access the principal variable stack.
         fn env_get_principal_ffi() -> Box<EnvStackRefFFI>;
-
-        fn universal_sync(&self, always: bool, out_events: Pin<&mut event_list_ffi_t>);
     }
 
     extern "Rust" {
@@ -207,7 +204,7 @@ fn env_null_create_ffi() -> Box<EnvNull> {
 }
 
 /// FFI wrapper around EnvDyn
-pub struct EnvDynFFI(EnvDyn);
+pub struct EnvDynFFI(pub EnvDyn);
 impl EnvDynFFI {
     fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
         EnvironmentFFI::getf_ffi(&self.0, name, mode)
@@ -216,9 +213,13 @@ impl EnvDynFFI {
         EnvironmentFFI::get_names_ffi(&self.0, flags, out)
     }
 }
+unsafe impl cxx::ExternType for EnvDynFFI {
+    type Id = cxx::type_id!("EnvDyn"); // CXX name!
+    type Kind = cxx::kind::Opaque;
+}
 
 /// FFI wrapper around EnvStackRef.
-pub struct EnvStackRefFFI(EnvStackRef);
+pub struct EnvStackRefFFI(pub EnvStackRef);
 
 impl EnvStackRefFFI {
     fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
@@ -284,19 +285,11 @@ impl EnvStackRefFFI {
     fn snapshot(&self) -> Box<EnvDynFFI> {
         Box::new(EnvDynFFI(self.0.snapshot()))
     }
-
-    fn universal_sync(
-        self: &EnvStackRefFFI,
-        always: bool,
-        mut out_events: Pin<&mut event_list_ffi_t>,
-    ) {
-        let events: Vec<Box<Event>> = self.0.universal_sync(always);
-        for event in events {
-            out_events.as_mut().push(Box::into_raw(event).cast());
-        }
-    }
 }
-
+unsafe impl cxx::ExternType for EnvStackRefFFI {
+    type Id = cxx::type_id!("EnvStackRef"); // CXX name!
+    type Kind = cxx::kind::Opaque;
+}
 impl Statuses {
     fn get_status_ffi(&self) -> i32 {
         self.status

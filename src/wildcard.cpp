@@ -1,3 +1,4 @@
+#if 0
 // Fish needs it's own globbing implementation to support tab-expansion of globbed parameters. Also
 // provides recursive wildcards using **.
 #include "config.h"  // IWYU pragma: keep
@@ -992,3 +993,4 @@ wildcard_result_t wildcard_expand_string(const wcstring &wc, const wcstring &wor
     expander.expand(base_dir, effective_wc.c_str(), base_dir);
     return expander.status_code();
 }
+#endif

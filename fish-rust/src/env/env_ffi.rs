@@ -28,7 +28,6 @@ mod env_ffi {
     extern "C++" {
         include!("env.h");
         include!("wutil.h");
-        type event_list_ffi_t = super::event_list_ffi_t;
         type wcstring_list_ffi_t = super::wcstring_list_ffi_t;
         type wcharz_t = super::wcharz_t;
     }
@@ -134,8 +133,6 @@ mod env_ffi {
 
         // Access the principal variable stack.
         fn env_get_principal_ffi() -> Box<EnvStackRefFFI>;
-
-        fn universal_sync(&self, always: bool, out_events: Pin<&mut event_list_ffi_t>);
     }
 
     extern "Rust" {
@@ -283,17 +280,6 @@ impl EnvStackRefFFI {
 
     fn snapshot(&self) -> Box<EnvDynFFI> {
         Box::new(EnvDynFFI(self.0.snapshot()))
-    }
-
-    fn universal_sync(
-        self: &EnvStackRefFFI,
-        always: bool,
-        mut out_events: Pin<&mut event_list_ffi_t>,
-    ) {
-        let events: Vec<Box<Event>> = self.0.universal_sync(always);
-        for event in events {
-            out_events.as_mut().push(Box::into_raw(event).cast());
-        }
     }
 }
 

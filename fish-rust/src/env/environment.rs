@@ -304,7 +304,7 @@ impl EnvStack {
     /// instance (that is, look for changes from other fish instances).
     /// \return a list of events for changed variables.
     #[allow(clippy::vec_box)]
-    pub fn universal_sync(&self, always: bool) -> Vec<Box<Event>> {
+    pub fn universal_sync(&self, always: bool) -> Vec<Event> {
         if UVAR_SCOPE_IS_GLOBAL.load() {
             return Vec::new();
         }
@@ -331,7 +331,7 @@ impl EnvStack {
             } else {
                 Event::variable_set(name)
             };
-            result.push(Box::new(evt));
+            result.push(evt);
         }
         result
     }
@@ -345,6 +345,10 @@ impl EnvStack {
     /// Access the principal variable stack, associated with the principal parser.
     pub fn principal() -> &'static EnvStackRef {
         &PRINCIPAL_STACK
+    }
+
+    pub fn set_argv(&self, argv: Vec<WString>) {
+        self.set(L!("argv"), EnvMode::LOCAL, argv);
     }
 }
 
@@ -492,7 +496,7 @@ pub mod test {
     impl Environment for PwdEnvironment {
         fn getf(&self, name: &wstr, mode: EnvMode) -> Option<EnvVar> {
             if name == "PWD"L {
-                return Some(EnvVar::new(wgetcwd().unwrap(), EnvVarFlags::default()));
+                return Some(EnvVar::new(wgetcwd(), EnvVarFlags::default()));
             }
             self.parent.getf(name, mode)
         }

@@ -43,9 +43,9 @@ fn main() -> miette::Result<()> {
     let source_files = vec![
         "src/abbrs.rs",
         "src/ast.rs",
+        "src/complete.rs",
         "src/env/env_ffi.rs",
         "src/event.rs",
-        "src/common.rs",
         "src/fd_monitor.rs",
         "src/fd_readable_set.rs",
         "src/fds.rs",
@@ -55,11 +55,15 @@ fn main() -> miette::Result<()> {
         "src/future_feature_flags.rs",
         "src/highlight.rs",
         "src/history.rs",
+        "src/io.rs",
         "src/job_group.rs",
         "src/null_terminated_array.rs",
+        "src/operation_context.rs",
+        "src/parser.rs",
         "src/parse_constants.rs",
         "src/parse_tree.rs",
         "src/parse_util.rs",
+        "src/proc.rs",
         "src/redirection.rs",
         "src/smoke.rs",
         "src/termsize.rs",
@@ -69,8 +73,6 @@ fn main() -> miette::Result<()> {
         "src/threads.rs",
         "src/trace.rs",
         "src/util.rs",
-        "src/wait_handle.rs",
-        "src/builtins/shared.rs",
     ];
     cxx_build::bridges(&source_files)
         .flag_if_supported("-std=c++11")

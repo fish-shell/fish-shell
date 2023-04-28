@@ -1,3 +1,4 @@
+#if 0
 // Functions for executing builtin functions.
 //
 // How to add a new builtin function:
@@ -587,3 +588,5 @@ static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
         return none();
     }
 }
+
+#endif

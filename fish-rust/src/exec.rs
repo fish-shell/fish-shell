@@ -242,7 +242,7 @@ pub fn exec_subshell(
     exec_subshell_internal(
         cmd,
         parser,
-        &None,
+        None,
         outputs,
         &mut break_expand,
         apply_exit_status,
@@ -257,7 +257,7 @@ pub fn exec_subshell(
 pub fn exec_subshell_for_expand(
     cmd: &wstr,
     parser: &mut Parser,
-    job_group: &Option<JobGroupRef>,
+    job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
 ) -> libc::c_int {
     parser.assert_can_execute();
@@ -431,7 +431,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &mut Process) -> ! {
     let argv = OwningNullTerminatedArray::new(narrow_strings);
 
     // Construct envp.
-    let envp = vars.export_arr();
+    let envp = vars.export_array();
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
@@ -804,7 +804,7 @@ fn exec_external_command(
     // Note this will also affect stdout and stderr if they refer to the same tty.
     make_fd_blocking(STDIN_FILENO);
 
-    let envv = parser.vars().export_arr();
+    let envv = parser.vars().export_array();
 
     let actual_cmd = wcs2zstring(&p.actual_cmd);
     let file = &parser.libdata().current_filename;
@@ -874,7 +874,7 @@ fn function_prepare_environment(
         argv.clone(),
         props.shadow_scope,
     ));
-    let vars = parser.vars_mut();
+    let vars = parser.vars();
 
     // Setup the environment for the function. There are three components of the environment:
     // 1. named arguments
@@ -950,7 +950,7 @@ fn get_performer_for_process(
                         source,
                         unsafe { node.as_ref() },
                         &io_chain,
-                        &job_group,
+                        job_group.as_ref(),
                         BlockType::top,
                     )
                     .status
@@ -970,8 +970,13 @@ fn get_performer_for_process(
                 let body = &props.func_node.jobs;
                 let fb = function_prepare_environment(parser, argv.clone(), &props);
                 let parsed_source = props.parsed_source.as_ref().unwrap();
-                let mut res =
-                    parser.eval_node(parsed_source, body, &io_chain, &job_group, BlockType::top);
+                let mut res = parser.eval_node(
+                    parsed_source,
+                    body,
+                    &io_chain,
+                    job_group.as_ref(),
+                    BlockType::top,
+                );
                 function_restore_environment(parser, fb);
 
                 // If the function did not execute anything, treat it as success.
@@ -1088,7 +1093,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
                 }
             }
 
-            // Populate our io_streams_t. This is a bag of information for the builtin.
+            // Populate our IoStreams. This is a bag of information for the builtin.
             let mut streams = IoStreams::new(output_stream, errput_stream);
             streams.job_group = job_group;
             streams.stdin_fd = local_builtin_stdin;
@@ -1385,7 +1390,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
 fn exec_subshell_internal(
     cmd: &wstr,
     parser: &mut Parser,
-    job_group: &Option<JobGroupRef>,
+    job_group: Option<&JobGroupRef>,
     lst: Option<&mut Vec<WString>>,
     break_expand: &mut bool,
     apply_exit_status: bool,

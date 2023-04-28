@@ -10,6 +10,7 @@ use crate::common::{
 };
 use crate::fallback;
 use crate::fds::AutoCloseFd;
+use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};

@@ -2536,3 +2536,15 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
     let wrappers = wrapper_map.lock().expect("poisoned mutex");
     wrappers.get(command).cloned().unwrap_or_default()
 }
+
+#[cxx::bridge]
+mod complete_ffi {
+    extern "Rust" {
+        type CompletionList;
+    }
+}
+
+unsafe impl cxx::ExternType for CompletionList {
+    type Id = cxx::type_id!("CompletionList");
+    type Kind = cxx::kind::Opaque;
+}

@@ -15,8 +15,9 @@
 #include "color.h"
 #include "cxx.h"
 #include "flog.h"
-#include "maybe.h"
 #include "history.h"
+#include "maybe.h"
+#include "parser.h"
 
 struct Highlighter;
 
@@ -115,9 +116,8 @@ void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &col
                      const operation_context_t &ctx, bool io_ok = false,
                      maybe_t<size_t> cursor = {});
 
-class parser_t;
 /// Wrapper around colorize(highlight_shell)
-wcstring colorize_shell(const wcstring &text, parser_t &parser);
+wcstring colorize_shell(const wcstring &text, void *parser);
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
 /// It maintains a cache with no invalidation mechanism. The lifetime of these should typically be

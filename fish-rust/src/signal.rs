@@ -5,7 +5,7 @@ use crate::ffi;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
 use crate::wchar::wstr;
 use crate::wchar_ffi::c_str;
-use libc::SIG_DFL;
+use libc::{c_int, SIG_DFL};
 use widestring::U32CStr;
 use widestring_suffix::widestrs;
 
@@ -366,6 +366,14 @@ pub fn signal_set_handlers_once(interactive: bool) {
 
     // static std::once_flag s_inter_once;
     // if (interactive) std::call_once(s_inter_once, set_interactive_handlers);
+}
+
+pub fn signal_clear_cancel() {
+    todo!()
+}
+
+pub fn signal_check_cancel() -> Option<Signal> {
+    todo!()
 }
 
 #[test]

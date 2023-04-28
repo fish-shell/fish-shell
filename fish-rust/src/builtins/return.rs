@@ -4,11 +4,12 @@ use libc::c_int;
 use num_traits::abs;
 
 use super::shared::{
-    builtin_missing_argument, builtin_print_error_trailer, builtin_print_help, io_streams_t,
+    builtin_missing_argument, builtin_print_error_trailer, builtin_print_help,
     BUILTIN_ERR_NOT_NUMBER, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::builtins::shared::BUILTIN_ERR_TOO_MANY_ARGUMENTS;
-use crate::ffi::parser_t;
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::fish_wcstoi;
@@ -21,8 +22,8 @@ struct Options {
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
 
@@ -57,8 +58,8 @@ fn parse_options(
 
 /// Function for handling the return builtin.
 pub fn r#return(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
     args: &mut [&wstr],
 ) -> Option<c_int> {
     let mut retval = match parse_return_value(args, parser, streams) {
@@ -66,7 +67,7 @@ pub fn r#return(
         Err(e) => return e,
     };
 
-    let has_function_block = parser.ffi_has_funtion_block();
+    let has_function_block = parser.blocks().any(|b| b.is_function_call());
 
     // *nix does not support negative return values, but our `return` builtin happily accepts being
     // called with negative literals (e.g. `return -1`).
@@ -79,7 +80,7 @@ pub fn r#return(
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
-        let ld = parser.libdata_pod();
+        let ld = parser.libdata_pod_mut();
         if !ld.is_interactive {
             ld.exit_current_script = true;
         }
@@ -87,15 +88,15 @@ pub fn r#return(
     }
 
     // Mark a return in the libdata.
-    parser.libdata_pod().returning = true;
+    parser.libdata_pod_mut().returning = true;
 
     return Some(retval);
 }
 
 pub fn parse_return_value(
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
 ) -> Result<i32, Option<c_int>> {
     let cmd = args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
@@ -110,7 +111,7 @@ pub fn parse_return_value(
     if optind + 1 < args.len() {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+            .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
@@ -122,7 +123,7 @@ pub fn parse_return_value(
             Err(_e) => {
                 streams
                     .err
-                    .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
+                    .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
                 builtin_print_error_trailer(parser, streams, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }

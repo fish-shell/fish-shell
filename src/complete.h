@@ -13,9 +13,18 @@
 #include <utility>
 #include <vector>
 
-// #include "expand.h"
+#if INCLUDE_RUST_HEADERS
+#include "complete.rs.h"
+#else
+struct CompletionListFfi;
+#endif
+
 #include "common.h"
+#include "expand.h"
+#include "parser.h"
 #include "wcstringutil.h"
+
+using completion_list_t = CompletionListFfi;
 
 struct completion_mode_t {
     /// If set, skip file completions.
@@ -28,8 +37,6 @@ struct completion_mode_t {
 
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
-
-class parser_t;
 
 enum {
     /// Do not insert space afterwards if this is the only completion. (The default is to try insert
@@ -52,6 +59,8 @@ enum {
     COMPLETE_REPLACES_COMMANDLINE = 1 << 7,
 };
 using complete_flags_t = uint8_t;
+
+#if 0
 
 /// std::function which accepts a completion string and returns its description.
 using description_func_t = std::function<wcstring(const wcstring &)>;
@@ -260,7 +269,6 @@ bool complete_load(const wcstring &cmd, parser_t &parser);
 /// If \p ctx contains a parser, this will autoload functions and completions as needed.
 /// If it does not contain a parser, then any completions which need autoloading will be returned in
 /// \p needs_load, if not null.
-class operation_context_t;
 completion_list_t complete(const wcstring &cmd, completion_request_options_t flags,
                            const operation_context_t &ctx,
                            std::vector<wcstring> *out_needs_load = nullptr);
@@ -287,5 +295,7 @@ std::vector<wcstring> complete_get_wrap_targets(const wcstring &command);
 
 // Observes that fish_complete_path has changed.
 void complete_invalidate_path();
+
+#endif
 
 #endif

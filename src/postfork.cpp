@@ -1,3 +1,4 @@
+#if 0
 // Functions that we may safely call after fork().
 #include "config.h"  // IWYU pragma: keep
 
@@ -596,3 +597,4 @@ static char *get_interpreter(const char *command, char *buffer, size_t buff_size
     }
     return nullptr;
 };
+#endif

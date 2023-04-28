@@ -1,3 +1,5 @@
+#if 0
+
 // The classes responsible for autoloading functions and completions.
 #include "config.h"  // IWYU pragma: keep
 
@@ -228,3 +230,4 @@ void autoload_t::perform_autoload(const wcstring &path, parser_t &parser) {
     const cleanup_t put_back([&] { parser.set_last_statuses(prev_statuses); });
     parser.eval(script_source, io_chain_t{});
 }
+#endif

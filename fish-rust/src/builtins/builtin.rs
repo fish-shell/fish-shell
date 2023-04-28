@@ -1,11 +1,12 @@
 use libc::c_int;
 
 use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    BUILTIN_ERR_COMBO2, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
+    builtin_exists, builtin_get_desc, builtin_get_names, builtin_missing_argument,
+    builtin_print_help, builtin_unknown_option, BUILTIN_ERR_COMBO2, STATUS_CMD_ERROR,
+    STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
-use crate::ffi::parser_t;
-use crate::ffi::{self, builtin_exists, builtin_get_names_ffi, wcharz_t};
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::WCharFromFFI;
 use crate::wchar_ffi::WCharToFFI;
@@ -19,11 +20,10 @@ struct builtin_cmd_opts_t {
 }
 
 pub fn r#builtin(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
     let mut opts: builtin_cmd_opts_t = Default::default();
@@ -41,15 +41,27 @@ pub fn r#builtin(
             'q' => opts.query = true,
             'n' => opts.list_names = true,
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -59,9 +71,9 @@ pub fn r#builtin(
     }
 
     if opts.query && opts.list_names {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
-            cmd,
+            w.cmd(),
             wgettext!("--query and --names are mutually exclusive")
         ));
         return STATUS_INVALID_ARGS;
@@ -70,7 +82,7 @@ pub fn r#builtin(
     if opts.query {
         let optind = w.woptind;
         for arg in argv.iter().take(argc).skip(optind) {
-            if builtin_exists(&arg.to_ffi()) {
+            if builtin_exists(arg) {
                 return STATUS_CMD_OK;
             }
         }
@@ -79,23 +91,12 @@ pub fn r#builtin(
 
     if opts.list_names {
         // List is guaranteed to be sorted by name.
-        for name in builtin_get_names() {
-            streams.out.append(name + L!("\n"));
+        let names = builtin_get_names();
+        for name in names {
+            streams.out.append(&name);
+            streams.out.push('\n');
         }
     }
 
     STATUS_CMD_OK
-}
-
-pub fn builtin_get_names() -> Vec<WString> {
-    builtin_get_names_ffi().from_ffi()
-}
-
-pub fn builtin_get_desc(name: &wstr) -> WString {
-    let str_ = ffi::builtin_get_desc(&name.to_ffi());
-    if str_.is_null() {
-        WString::new()
-    } else {
-        WString::from(&wcharz_t { str_ })
-    }
 }

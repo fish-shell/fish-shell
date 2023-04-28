@@ -1,7 +1,8 @@
-use std::cmp::max;
+use std::{cmp::max, mem::MaybeUninit};
 
-use libc::c_int;
+use libc::{c_int, rlim_t, rlimit};
 use nix::{
+    errno::Errno,
     errno::Errno::EPERM,
     sys::resource::{self, getrlimit, setrlimit},
 };
@@ -19,6 +20,44 @@ use crate::{
 };
 
 use super::shared::{builtin_wperror, io_streams_t, STATUS_CMD_OK};
+
+#[derive(Debug, Copy, Clone)]
+enum ResourceLimit {
+    Nix(resource::Resource),
+    Other(c_int),
+}
+
+fn getrlimitx(resource: ResourceLimit) -> nix::Result<(rlim_t, rlim_t)> {
+    match resource {
+        ResourceLimit::Nix(known) => getrlimit(known),
+        ResourceLimit::Other(unknown) => {
+            let mut old_rlim = MaybeUninit::<rlimit>::uninit();
+
+            let res = unsafe { libc::getrlimit(unknown, old_rlim.as_mut_ptr()) };
+
+            Errno::result(res).map(|_| {
+                let rlimit { rlim_cur, rlim_max } = unsafe { old_rlim.assume_init() };
+                (rlim_cur, rlim_max)
+            })
+        }
+    }
+}
+
+fn setrlimitx(resource: ResourceLimit, soft_limit: rlim_t, hard_limit: rlim_t) -> nix::Result<()> {
+    match resource {
+        ResourceLimit::Nix(known) => setrlimit(known, soft_limit, hard_limit),
+        ResourceLimit::Other(unknown) => {
+            let new_rlim = rlimit {
+                rlim_cur: soft_limit,
+                rlim_max: hard_limit,
+            };
+
+            let res = unsafe { libc::setrlimit(unknown, &new_rlim as *const rlimit) };
+
+            Errno::result(res).map(drop)
+        }
+    }
+}
 
 /// Struct describing a resource limit.
 #[derive(Debug, Copy, Clone)]

@@ -13,16 +13,16 @@
 #include <utility>
 #include <vector>
 
-// #include "expand.h"
 #include "common.h"
+#include "expand.h"
 #include "parser.h"
 #include "wcstringutil.h"
 
 #if INCLUDE_RUST_HEADERS
 #include "complete.rs.h"
 #else
-struct CompletionList;
-using completion_list_t = CompletionList;
+struct CompletionListFfi;
+using completion_list_t = CompletionListFfi;
 #endif
 
 struct completion_mode_t {
@@ -268,7 +268,6 @@ bool complete_load(const wcstring &cmd, parser_t &parser);
 /// If \p ctx contains a parser, this will autoload functions and completions as needed.
 /// If it does not contain a parser, then any completions which need autoloading will be returned in
 /// \p needs_load, if not null.
-class operation_context_t;
 completion_list_t complete(const wcstring &cmd, completion_request_options_t flags,
                            const operation_context_t &ctx,
                            std::vector<wcstring> *out_needs_load = nullptr);

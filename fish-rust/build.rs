@@ -46,6 +46,7 @@ fn main() -> miette::Result<()> {
         "src/complete.rs",
         "src/env/env_ffi.rs",
         "src/event.rs",
+        "src/expand.rs",
         "src/fd_monitor.rs",
         "src/fd_readable_set.rs",
         "src/fds.rs",
@@ -73,6 +74,7 @@ fn main() -> miette::Result<()> {
         "src/threads.rs",
         "src/trace.rs",
         "src/util.rs",
+        "src/wildcard.rs",
     ];
     cxx_build::bridges(&source_files)
         .flag_if_supported("-std=c++11")

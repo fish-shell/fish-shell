@@ -1,3 +1,4 @@
+#if 0
 // String expansion functions. These functions perform several kinds of parameter expansion.
 #include "config.h"  // IWYU pragma: keep
 
@@ -1333,3 +1334,4 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
     }
     return result;
 }
+#endif

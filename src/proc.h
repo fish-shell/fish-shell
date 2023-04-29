@@ -25,7 +25,6 @@
 #include "parser.h"
 #include "redirection.h"
 #include "topic_monitor.h"
-#include "wait_handle.h"
 
 #if INCLUDE_RUST_HEADERS
 #include "proc.rs.h"

@@ -8,6 +8,9 @@
 #include "common.h"
 #include "complete.h"
 #include "expand.h"
+#if INCLUDE_RUST_HEADERS
+#include "wildcard.rs.h"
+#endif
 
 /// Description for generic executable.
 #define COMPLETE_EXEC_DESC _(L"command")

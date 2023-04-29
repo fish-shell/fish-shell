@@ -110,6 +110,8 @@ fn env_var_to_ffi(var: &EnvVar) -> cxx::UniquePtr<ffi::env_var_t> {
     ffi::env_var_t::new_ffi(var.as_list().to_ffi(), ffi_flags)
 }
 
+pub type EnvironmentRef = Arc<dyn Environment>;
+
 /// An environment is read-only access to variable values.
 pub trait Environment {
     /// Get a variable by name using default flags.

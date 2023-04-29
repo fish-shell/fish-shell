@@ -106,6 +106,16 @@ pub fn builtin_get_names() -> Vec<&'static wstr> {
     todo!()
 }
 
+pub fn builtin_get_desc(name: &wstr) -> WString {
+    todo!()
+    // let str_ = ffi::builtin_get_desc(&name.to_ffi());
+    // if str_.is_null() {
+    //     WString::new()
+    // } else {
+    //     WString::from(&wcharz_t { str_ })
+    // }
+}
+
 // pub fn run_builtin(
 //     parser: &mut Parser,
 //     streams: &mut IoStreams<'_>,

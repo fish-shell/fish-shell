@@ -12,8 +12,10 @@ use crate::common::{
     valid_var_name_char, wcs2zstring, UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE,
     EXPAND_RESERVED_END,
 };
-use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
-use crate::env::{EnvVar, Environment};
+use crate::complete::{
+    CompleteFlags, Completion, CompletionList, CompletionListFfi, CompletionReceiver,
+};
+use crate::env::{EnvDynFFI, EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
 use crate::history::{history_session_id, History};
 use crate::operation_context::OperationContext;
@@ -25,7 +27,7 @@ use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::{ToWString, WExt};
-use crate::wchar_ffi::WCharToFFI;
+use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::{join_strings, trim};
 use crate::wildcard::{
     wildcard_expand_string, wildcard_has_internal, WildcardResult, ANY_CHAR, ANY_STRING,
@@ -34,6 +36,7 @@ use crate::wildcard::{
 use crate::wutil::{fish_wcstoi_partial, normalize_path, wgettext, wgettext_fmt, Options};
 use bitflags::bitflags;
 use cxx::CxxWString;
+use std::pin::Pin;
 use widestring_suffix::widestrs;
 
 bitflags! {
@@ -1651,9 +1654,15 @@ crate::ffi_tests::add_test!("test_expand", || {
 #[cxx::bridge]
 mod expand_ffi {
     extern "C++" {
+        include!("operation_context.h");
+        include!("parse_constants.h");
+        include!("env.h");
+        include!("complete.h");
         type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
         type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
+        #[cxx_name = "EnvDyn"]
         type EnvDynFFI = crate::env::EnvDynFFI;
+        type CompletionListFfi = crate::complete::CompletionListFfi;
     }
 
     #[derive(Copy, Clone, Eq, PartialEq)]
@@ -1691,7 +1700,7 @@ mod expand_ffi {
         fn ffi_expand_tilde(input: &mut CxxWString, vars: &EnvDynFFI);
         fn ffi_expand_string(
             input: &CxxWString,
-            out_completions: &mut CompletionList,
+            out_completions: Pin<&mut CompletionListFfi>,
             flags: u64,
             ctx: &OperationContext,
             errors: *mut ParseErrorListFfi,
@@ -1705,23 +1714,24 @@ fn ffi_expand_one(
     ctx: &OperationContext,
     errors: *mut ParseErrorListFfi,
 ) -> bool {
-    let flags = ExpandFlags::from_bits(flags.try_into().unwrap()).unwrap();
-    let mut tmp = s.from_ffi();
-    let errors = if errors.is_null() {
-        None
-    } else {
-        Some(unsafe { &mut (*errors).0 })
-    };
-    let ok = expand_one(&mut tmp, flags, ctx, errors);
-    *s = *tmp.to_ffi();
-    ok
+    // let flags = ExpandFlags::from_bits(flags.try_into().unwrap()).unwrap();
+    // let mut tmp = s.from_ffi();
+    // let errors = if errors.is_null() {
+    //     None
+    // } else {
+    //     Some(unsafe { &mut (*errors).0 })
+    // };
+    // let ok = expand_one(&mut tmp, flags, ctx, errors);
+    // *s = tmp.to_ffi().take();
+    // ok
+    todo!()
 }
 fn ffi_expand_tilde(input: &mut CxxWString, vars: &EnvDynFFI) {
     todo!()
 }
 fn ffi_expand_string(
     input: &CxxWString,
-    out_completions: &mut CompletionList,
+    mut out_completions: Pin<&mut CompletionListFfi>,
     flags: u64,
     ctx: &OperationContext<'_>,
     errors: *mut ParseErrorListFfi,
@@ -1732,5 +1742,12 @@ fn ffi_expand_string(
     } else {
         Some(unsafe { &mut (*errors).0 })
     };
-    expand_string(input.from_ffi(), out_completions, flags, ctx, errors)
+    todo!()
+    // expand_string(
+    //     input.from_ffi(),
+    //     &mut out_completions.unpin().0,
+    //     flags,
+    //     ctx,
+    //     errors,
+    // )
 }

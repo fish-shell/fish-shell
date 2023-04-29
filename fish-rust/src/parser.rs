@@ -1031,7 +1031,7 @@ impl Parser {
     }
 
     /// \return a shared pointer reference to this parser.
-    pub fn shared(&mut self) -> ParserRef {
+    pub fn shared(&self) -> ParserRef {
         self.shared_from_this()
     }
 
@@ -1057,8 +1057,6 @@ use printf_compat::sprintf;
 
 #[cxx::bridge]
 mod parser_ffi {
-    extern "C++" {}
-
     /// Types of blocks.
     #[cxx_name = "block_type_t"]
     pub enum BlockType {

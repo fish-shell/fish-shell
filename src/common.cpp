@@ -33,7 +33,6 @@
 #include <memory>
 
 #include "common.h"
-#include "common.rs.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"

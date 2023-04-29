@@ -5,8 +5,9 @@
 #include "operation_context.rs.h"
 #else
 struct OperationContext;
-using operation_context_t = OperationContext;
 #endif
+
+using operation_context_t = OperationContext;
 
 #if 0
 #include "parser.h"

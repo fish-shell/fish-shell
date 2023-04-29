@@ -1,9 +1,9 @@
 use libc::c_int;
 
 use crate::builtins::shared::{
-    builtin_exists, builtin_get_names, builtin_missing_argument, builtin_print_help,
-    builtin_unknown_option, BUILTIN_ERR_COMBO2, STATUS_CMD_ERROR, STATUS_CMD_OK,
-    STATUS_INVALID_ARGS,
+    builtin_exists, builtin_get_desc, builtin_get_names, builtin_missing_argument,
+    builtin_print_help, builtin_unknown_option, BUILTIN_ERR_COMBO2, STATUS_CMD_ERROR,
+    STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::io::IoStreams;
 use crate::parser::Parser;
@@ -88,13 +88,4 @@ pub fn r#builtin(
     }
 
     STATUS_CMD_OK
-}
-
-pub fn builtin_get_desc(name: &wstr) -> WString {
-    let str_ = ffi::builtin_get_desc(&name.to_ffi());
-    if str_.is_null() {
-        WString::new()
-    } else {
-        WString::from(&wcharz_t { str_ })
-    }
 }

@@ -20,8 +20,8 @@ use libc::{
     STDOUT_FILENO,
 };
 use std::cell::UnsafeCell;
+use std::os::fd::RawFd;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::{os::fd::RawFd, rc::Rc};
 use widestring_suffix::widestrs;
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
@@ -339,14 +339,14 @@ pub struct IoBufferfill {
 impl IoBufferfill {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
-    pub fn create() -> Option<Rc<IoBufferfill>> {
+    pub fn create() -> Option<Arc<IoBufferfill>> {
         Self::create_opts(0, STDOUT_FILENO)
     }
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
-    pub fn create_opts(buffer_limit: usize, target: RawFd) -> Option<Rc<IoBufferfill>> {
+    pub fn create_opts(buffer_limit: usize, target: RawFd) -> Option<Arc<IoBufferfill>> {
         assert!(target >= 0, "Invalid target fd");
 
         // Construct our pipes.
@@ -363,7 +363,7 @@ impl IoBufferfill {
         let mut buffer = Arc::new(RwLock::new(IoBuffer::new(buffer_limit)));
         begin_filling(&mut buffer, pipes.read);
         assert!(pipes.write.is_valid(), "fd is not valid");
-        Some(Rc::new(IoBufferfill {
+        Some(Arc::new(IoBufferfill {
             target,
             write_fd: pipes.write,
             buffer,
@@ -380,7 +380,7 @@ impl IoBufferfill {
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. \return the buffer.
-    pub fn finish(filler: Rc<IoBufferfill>) -> SeparatedBuffer {
+    pub fn finish(filler: Arc<IoBufferfill>) -> SeparatedBuffer {
         // The io filler is passed in. This typically holds the only instance of the write side of the
         // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
         // buffer out of the bufferfill and clear the shared_ptr; this will typically widow the pipe.
@@ -600,7 +600,7 @@ fn begin_filling(iobuffer: &mut Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
         fd_monitor().add(FdMonitorItem::new(fd, None, item_callback));
 }
 
-pub type IoDataRef = Rc<dyn IoData>;
+pub type IoDataRef = Arc<dyn IoData>;
 
 #[derive(Clone, Default)]
 pub struct IoChain(pub Vec<IoDataRef>);
@@ -610,9 +610,6 @@ unsafe impl cxx::ExternType for IoChain {
     type Kind = cxx::kind::Opaque;
 }
 
-#[derive(Clone, Default)]
-pub struct IoChainFfi(IoChain);
-
 impl IoChain {
     pub fn new() -> Self {
         Default::default()
@@ -621,7 +618,7 @@ impl IoChain {
         let element = element as *const _;
         let element = element as *const ();
         self.0.retain(|e| {
-            let e = Rc::as_ptr(e) as *const ();
+            let e = Arc::as_ptr(e) as *const ();
             !std::ptr::eq(e, element)
         });
     }
@@ -648,12 +645,12 @@ impl IoChain {
             match spec.mode {
                 RedirectionMode::fd => {
                     if spec.is_close() {
-                        self.push(Rc::new(IoClose::new(spec.fd)));
+                        self.push(Arc::new(IoClose::new(spec.fd)));
                     } else {
                         let target_fd = spec
                             .get_target_as_fd()
                             .expect("fd redirection should have been validated already");
-                        self.push(Rc::new(IoFd::new(spec.fd, target_fd)));
+                        self.push(Arc::new(IoFd::new(spec.fd, target_fd)));
                     }
                 }
                 _ => {
@@ -702,11 +699,11 @@ impl IoChain {
                         // If opening a file fails, insert a closed FD instead of the file redirection
                         // and return false. This lets execution potentially recover and at least gives
                         // the shell a chance to gracefully regain control of the shell (see #7038).
-                        self.push(Rc::new(IoClose::new(spec.fd)));
+                        self.push(Arc::new(IoClose::new(spec.fd)));
                         have_error = true;
                         continue;
                     }
-                    self.push(Rc::new(IoFile::new(spec.fd, file)));
+                    self.push(Arc::new(IoFile::new(spec.fd, file)));
                 }
             }
         }
@@ -1007,6 +1004,7 @@ fn fd_monitor() -> &'static mut FdMonitor {
 mod io_ffi {
     extern "Rust" {
         type IoChain;
+        type IoStreams<'a>;
 
         fn new_io_chain() -> Box<IoChain>;
     }

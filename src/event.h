@@ -2,7 +2,6 @@
 // replacement. There is no logic still in here that needs to be ported to rust.
 
 #ifndef FISH_EVENT_H
-#ifdef INCLUDE_RUST_HEADERS
 #define FISH_EVENT_H
 
 #include <unistd.h>
@@ -13,11 +12,16 @@
 #include <vector>
 
 #include "common.h"
+#include "cxx.h"
 #include "global_safety.h"
 #include "wutil.h"
 
 class parser_t;
+#if INCLUDE_RUST_HEADERS
 #include "event.rs.h"
+#else
+struct Event;
+#endif
 
 /// The process id that is used to match any process id.
 // TODO: Remove after porting functions.cpp
@@ -33,5 +37,4 @@ class parser_t;
 void event_fire_generic(parser_t &parser, const wcstring &name,
                         const std::vector<wcstring> &args = g_empty_string_list);
 
-#endif
 #endif

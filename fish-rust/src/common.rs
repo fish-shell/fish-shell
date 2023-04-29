@@ -318,55 +318,142 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     out
 }
 
-/// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
-#[widestrs]
+/// Escape a string in a fashion suitable for using as a URL.
+///
+/// Url-safe ASCII input chars are passed through while everything else is UTF-8 percent-encoded
+/// (converted to UTF-8 then each byte encoded as a hex nibble preceded by a %).
 fn escape_string_url(input: &wstr) -> WString {
-    let narrow = wcs2string(input);
-    let mut out = WString::new();
-    for byte in narrow.into_iter() {
-        if (byte & 0x80) == 0 {
-            let c = char::from_u32(u32::from(byte)).unwrap();
-            if c.is_alphanumeric() || [b'/', b'.', b'~', b'-', b'_'].contains(&byte) {
-                // The above characters don't need to be encoded.
-                out.push(c);
-                continue;
-            }
+    let mut out = WString::with_capacity(input.len());
+    for c in input.as_char_slice() {
+        if c.is_ascii_alphanumeric() || ['/', '.', '~', '-', '_'].contains(c) {
+            // The above characters don't need to be encoded.
+            out.push(*c);
+            continue;
         }
         // All other chars need to have their UTF-8 representation encoded in hex.
-        out += &sprintf!("%%%02X"L, byte)[..];
+        // The maximum size any Unicode character can take in UTF-8 representation is four bytes.
+        let mut scratch = [0u8; 4];
+        for byte in c.encode_utf8(&mut scratch).as_bytes() {
+            out += &sprintf!(L!("%%%02X"), byte)[..];
+        }
     }
     out
 }
 
-/// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
-#[widestrs]
+/// Reverse the effects of `escape_string_url()`.
+///
+/// Valid input is all-ASCII and follows the rules of [`escape_string_url()`]. Passing in invalid
+/// input causes the function to return `None`.
+fn unescape_string_url(input: &wstr) -> Option<WString> {
+    let mut result = Vec::<u8>::with_capacity(input.len());
+    let mut chars = input.chars();
+    while let Some(c) = chars.next() {
+        if !c.is_ascii() {
+            return None;
+        }
+        if c == '%' {
+            let c1 = chars.next()?;
+            let d1 = c1.to_digit(16)?;
+            let c2 = chars.next()?;
+            let d2 = c2.to_digit(16)?;
+            result.push((16 * d1 + d2) as u8); // cannot overflow a u8
+        } else {
+            result.push(c as u8);
+        }
+    }
+
+    let decoded = String::from_utf8(result).ok()?;
+    Some(WString::from_str(&decoded))
+}
+
+/// Escape a string in a fashion suitable for using as a fish variable name.
+///
+/// Non-ASCII characters are encoded as UTF-8 and written one hex nibble at a time, preceded and
+/// followed by an underscore. ASCII characters are passed through as-is except if they could be
+/// confused with an encoded UTF-8 hex sequence (0-9 or capital A-F after an underscore), in which
+/// case they too are encoded.
 fn escape_string_var(input: &wstr) -> WString {
-    let mut prev_was_hex_encoded = false;
-    let narrow = wcs2string(input);
-    let mut out = WString::new();
-    for byte in narrow.into_iter() {
-        if (byte & 0x80) == 0 {
-            let c = char::from_u32(u32::from(byte)).unwrap();
-            if c.is_alphanumeric() && (!prev_was_hex_encoded || c.to_digit(16).is_none()) {
-                // ASCII alphanumerics don't need to be encoded.
-                if prev_was_hex_encoded {
-                    out.push('_');
-                    prev_was_hex_encoded = false;
-                }
-                out.push(c);
-                continue;
-            }
-        } else if byte == b'_' {
-            // Underscores are encoded by doubling them.
-            out += "__"L;
-            prev_was_hex_encoded = false;
+    let mut prev_was_hex = false;
+    let mut out = WString::with_capacity(input.len() + 8);
+    for c in input.as_char_slice() {
+        if *c == '_' {
+            // Underscores are escaped by doubling them.
+            out.extend(['_', '_']);
+            prev_was_hex = false;
             continue;
         }
-        // All other chars need to have their UTF-8 representation encoded in hex.
-        out += &sprintf!("_%02X"L, byte)[..];
-        prev_was_hex_encoded = true;
+        // Any character following a hex-encoded character - except for a literal underscore - is
+        // separated from the hex-encoded chars with an underscore.
+        // Alphanumeric ascii chars are passed-through except if they come after a hex sequence, in
+        // which case chars that could be uppercase hex digits must also be encoded.
+        if c.is_ascii_alphanumeric() && (!prev_was_hex || !matches!(c, 'A'..='F' | '0'..='9')) {
+            out.push(*c);
+            prev_was_hex = false;
+        } else {
+            // Any other char has its UTF-8 bytes encoded to hex, all delimited with underscores
+            // both before and after.
+            if !prev_was_hex {
+                out.push('_');
+            }
+            let mut scratch = [0u8; 4]; // Max length of any single UTF-8 sequence is 4 bytes.
+            let utf8_str = c.encode_utf8(&mut scratch);
+            for byte in utf8_str.as_bytes() {
+                out += &sprintf!(L!("%02X_"), byte)[..];
+            }
+            prev_was_hex = true;
+        }
     }
     out
+}
+
+/// Reverse the effects of [`escape_string_var()`].
+///
+/// Input not conforming to the expected format returns `None`. Valid input should be ASCII and
+/// match the escaping rules in [`escape_string_var()`].
+fn unescape_string_var(input: &wstr) -> Option<WString> {
+    let mut prev_was_hex = false;
+    let mut result = Vec::with_capacity(input.len());
+    let mut chars = input.chars();
+    while let Some(c) = chars.next() {
+        if !c.is_ascii() {
+            // Correctly-escaped strings are only ASCII.
+            return None;
+        }
+        if c == '_' {
+            let c1 = match chars.next() {
+                Some(c) => c,
+                None if prev_was_hex => break,
+                _ => return None,
+            };
+            if c1 == '_' {
+                // Two underscores in a row decodes to a single underscore.
+                result.push(b'_');
+            }
+            // We can't use c1.is_ascii_hexdigit() because we are only considering uppercase hex
+            else if c1.is_ascii_digit() || ('A'..='F').contains(&c1) {
+                let d1 = c1.to_digit(16)?;
+                // Bail if char is missing or not hex, as a nibble is always two chars/bytes.
+                let d2 = chars.next()?.to_digit(16)?;
+                result.push((16 * d1 + d2) as u8); // cannot overflow a u8
+                prev_was_hex = true;
+                continue;
+            } else if prev_was_hex && c1.is_ascii() {
+                // We insert an underscore after a hex sequence to improve readability, so it's
+                // normal to get a non-hex character here.
+                result.push(c1 as u8);
+            } else {
+                // All characters must be ASCII and an underscore is only allowed before an escape.
+                return None;
+            }
+        } else {
+            // All other ASCII characters are passed-through on encode and decode.
+            result.push(c as u8);
+        }
+        prev_was_hex = false;
+    }
+
+    let decoded = std::str::from_utf8(&result).ok()?;
+    Some(WString::from_str(decoded))
 }
 
 /// Escapes a string for use in a regex string. Not safe for use with `eval` as only
@@ -685,80 +772,6 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
         return None;
     }
     Some(result)
-}
-
-/// Reverse the effects of `escape_string_url()`. By definition the input should consist of just
-/// ASCII chars.
-fn unescape_string_url(input: &wstr) -> Option<WString> {
-    let mut result: Vec<u8> = Vec::with_capacity(input.len());
-    let mut i = 0;
-    while i < input.len() {
-        let c = input.char_at(i);
-        if c > '\u{7F}' {
-            return None; // invalid character means we can't decode the string
-        }
-        if c == '%' {
-            let c1 = input.char_at(i + 1);
-            if c1 == '\0' {
-                return None;
-            } else if c1 == '%' {
-                result.push(b'%');
-                i += 1;
-            } else {
-                let d1 = c1.to_digit(16)?;
-                let c2 = input.char_at(i + 2);
-                let d2 = c2.to_digit(16)?; // also fails if '\0' i.e. premature end
-                result.push((16 * d1 + d2) as u8);
-                i += 2;
-            }
-        } else {
-            result.push(c as u8);
-        }
-        i += 1
-    }
-
-    Some(str2wcstring(&result))
-}
-
-/// Reverse the effects of `escape_string_var()`. By definition the string should consist of just
-/// ASCII chars.
-fn unescape_string_var(input: &wstr) -> Option<WString> {
-    let mut result: Vec<u8> = Vec::with_capacity(input.len());
-    let mut prev_was_hex_encoded = false;
-    let mut i = 0;
-    while i < input.len() {
-        let c = input.char_at(i);
-        if c > '\u{7F}' {
-            return None; // invalid character means we can't decode the string
-        }
-        if c == '_' {
-            let c1 = input.char_at(i + 1);
-            if c1 == '\0' {
-                if prev_was_hex_encoded {
-                    break;
-                }
-                return None; // found unexpected escape char at end of string
-            } else if c1 == '_' {
-                result.push(b'_');
-                i += 1;
-            } else if ('0'..='9').contains(&c1) || ('A'..='F').contains(&c1) {
-                let d1 = c1.to_digit(16)?;
-                let c2 = input.char_at(i + 2);
-                let d2 = c2.to_digit(16)?; // also fails if '\0' i.e. premature end
-                result.push((16 * d1 + d2) as u8);
-                i += 2;
-                prev_was_hex_encoded = true;
-            }
-            // No "else" clause because if the first char after an underscore is not another
-            // underscore or a valid hex character then the underscore is there to improve
-            // readability after we've encoded a character not valid in a var name.
-        } else {
-            result.push(c as u8);
-        }
-        i += 1;
-    }
-
-    Some(str2wcstring(&result))
 }
 
 /// Given a string starting with a backslash, read the escape as if it is unquoted, appending

@@ -14,6 +14,7 @@
 #include "ast.h"
 #include "color.h"
 #include "cxx.h"
+#include "env.h"
 #include "flog.h"
 #include "history.h"
 #include "maybe.h"
@@ -21,8 +22,6 @@
 #include "parser.h"
 
 struct Highlighter;
-
-class environment_t;
 
 /// Describes the role of a span of text.
 enum class highlight_role_t : uint8_t {

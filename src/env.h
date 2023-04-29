@@ -17,6 +17,7 @@
 #include "maybe.h"
 #include "wutil.h"
 
+#if 0
 /// FFI helper for events.
 struct Event;
 struct event_list_ffi_t {
@@ -30,6 +31,7 @@ struct event_list_ffi_t {
     // Append an Event pointer, which came from Box::into_raw().
     void push(void *event);
 };
+#endif
 
 #if INCLUDE_RUST_HEADERS
 #include "env/env_ffi.rs.h"
@@ -40,6 +42,8 @@ struct EnvStackRef;
 struct EnvDyn;
 #endif
 
+using environment_t = EnvDyn;
+using env_var_t = EnvVar;
 struct owning_null_terminated_array_t;
 
 extern size_t read_byte_limit;
@@ -75,6 +79,8 @@ using env_mode_flags_t = uint16_t;
 
 /// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
+
+#if 0
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -330,4 +336,5 @@ std::unique_ptr<wcstring_list_ffi_t> get_history_variable_text_ffi(
 /// TODO: Once env_dispatch_var_change is ported, pass in the env_stack directly.
 void env_dispatch_var_change_ffi(const wcstring &key /* , env_stack_t &vars */);
 
+#endif
 #endif

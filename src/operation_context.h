@@ -12,7 +12,6 @@ using operation_context_t = OperationContext;
 #if 0
 #include "parser.h"
 
-class environment_t;
 struct job_group_t;
 
 /// A common helper which always returns false.

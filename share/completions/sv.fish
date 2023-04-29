@@ -11,20 +11,13 @@ set -l commands \
     try-restart check
 
 function __fish_complete_sv_list_services
-    set -l svdir
-    for candidate_svdir in \
-        "$SVDIR" \
+    set -l svdir (path filter -d -- $SVDIR  \
         /run/runit/runsvdir/current \
         /run/runit/service \
         /etc/services \
-        /services
-        if test -d $candidate_svdir
-            set svdir $candidate_svdir
-            break
-        end
-    end
+        /services)
     set -q svdir[1]; or return
-    set -l services (command ls $svdir)
+    set -l services (path basename -- $svdir[1]/*)
     set -l sv_status (sv status $services 2>/dev/null |
                       string replace -ar ';.*$' '')
     and string replace -r "^(\w+: )(.*?):" '$2\t$1' $sv_status

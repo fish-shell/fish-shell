@@ -1,3 +1,4 @@
+#if 0
 // Utilities for io redirection.
 #include "config.h"  // IWYU pragma: keep
 
@@ -27,3 +28,4 @@ operation_context_t operation_context_t::globals() {
 }
 
 operation_context_t::~operation_context_t() = default;
+#endif

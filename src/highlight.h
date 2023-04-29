@@ -17,6 +17,7 @@
 #include "flog.h"
 #include "history.h"
 #include "maybe.h"
+#include "operation_context.h"
 #include "parser.h"
 
 struct Highlighter;
@@ -94,8 +95,6 @@ struct hash<highlight_spec_t> {
     }
 };
 }  // namespace std
-
-class operation_context_t;
 
 /// Given a string and list of colors of the same size, return the string with ANSI escape sequences
 /// representing the colors.

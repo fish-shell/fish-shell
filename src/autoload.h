@@ -13,12 +13,12 @@
 #include <unordered_set>
 
 #include "common.h"
+#include "env.h"
 #include "maybe.h"
 #include "parser.h"
 #include "wutil.h"
 
 class autoload_file_cache_t;
-class environment_t;
 
 /// autoload_t is a class that knows how to autoload .fish files from a list of directories. This
 /// is used by autoloading functions and completions. It maintains a file cache, which is

@@ -4,27 +4,25 @@ pub mod gettext;
 pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
-
 use crate::common::{
     cstr2wcstring, fish_reserved_codepoint, str2wcstring, wcs2osstring, wcs2string, wcs2zstring,
 };
 use crate::fallback;
 use crate::fds::AutoCloseFd;
-use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
-use errno::{errno, set_errno, Errno};
+pub use fs::*;
 pub(crate) use gettext::{wgettext, wgettext_fmt};
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
-    ENODEV, ENOENT, ENOTDIR, F_GETFL, F_SETFL, O_NONBLOCK, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO,
-    S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK,
+    ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
+    S_IFSOCK,
 };
 pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
 use std::fs::canonicalize;
-use std::io::{self, Write};
+use std::io::Write;
 use std::os::fd::RawFd;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::unix::prelude::{OsStrExt, OsStringExt};
@@ -69,7 +67,7 @@ pub fn wperror(s: &wstr) {
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
 pub fn perror(s: &str) {
-    let e = errno().0;
+    let e = errno::errno().0;
     let mut stderr = std::io::stderr().lock();
     if !s.is_empty() {
         let _ = write!(stderr, "{s}: ");
@@ -96,7 +94,7 @@ pub fn wgetcwd() -> WString {
         return cstr2wcstring(&cwd);
     }
 
-    FLOGF!(
+    LOGF!(
         error,
         "getcwd() failed with errno %d/%s",
         errno::errno().0,
@@ -712,7 +710,7 @@ impl DirEntry {
             self.stat = Some(s);
             self.typ = stat_mode_to_entry_type(s.st_mode);
         } else {
-            match errno().0 {
+            match errno::errno().0 {
                 ELOOP => {
                     self.typ = Some(DirEntryType::lnk);
                 }
@@ -790,7 +788,7 @@ impl DirIter {
         let mut error = 0;
         let dir = wopendir(path);
         if dir.is_null() {
-            error = errno().0;
+            error = errno::errno().0;
         }
         let entry = DirEntry {
             dirfd: unsafe { libc::dirfd(dir) },
@@ -834,10 +832,10 @@ impl DirIter {
         if self.dir.is_null() {
             return None;
         }
-        set_errno(Errno(0));
+        errno::set_errno(errno::Errno(0));
         let dent = unsafe { libc::readdir(self.dir) };
         if dent.is_null() {
-            self.error = errno().0;
+            self.error = errno::errno().0;
             return None;
         }
         let dent = unsafe { &*dent };

@@ -1691,13 +1691,16 @@ mod expand_ffi {
     }
 
     extern "Rust" {
+        #[cxx_name = "expand_one"]
         fn ffi_expand_one(
             s: &mut CxxWString,
             flags: u64,
             ctx: &OperationContext,
             errors: *mut ParseErrorListFfi,
         ) -> bool;
+        #[cxx_name = "expand_tilde"]
         fn ffi_expand_tilde(input: &mut CxxWString, vars: &EnvDynFFI);
+        #[cxx_name = "expand_string"]
         fn ffi_expand_string(
             input: &CxxWString,
             out_completions: Pin<&mut CompletionListFfi>,

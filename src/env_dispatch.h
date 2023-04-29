@@ -5,8 +5,8 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include "common.h"
+#include "env.h"
 
-class environment_t;
 class env_stack_t;
 
 /// Initialize variable dispatch.

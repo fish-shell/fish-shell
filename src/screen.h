@@ -22,11 +22,11 @@
 #include <vector>
 
 #include "common.h"
+#include "env.h"
 #include "highlight.h"
 #include "maybe.h"
 #include "wcstringutil.h"
 
-class environment_t;
 class pager_t;
 class page_rendering_t;
 

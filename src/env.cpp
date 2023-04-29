@@ -1,3 +1,4 @@
+#if 0
 // Functions for setting and getting environment variables.
 #include "config.h"  // IWYU pragma: keep
 
@@ -620,3 +621,4 @@ void event_list_ffi_t::push(void *event_vp) {
     assert(event && "Null event");
     events.push_back(rust::Box<Event>::from_raw(event));
 }
+#endif

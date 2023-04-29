@@ -102,20 +102,6 @@ pub fn builtin_run<S: AsRef<wstr>>(
 pub fn builtin_exists(cmd: &wstr) -> bool {
     todo!()
 }
-pub fn builtin_get_names() -> Vec<&'static wstr> {
-    todo!()
-}
-
-pub fn builtin_get_desc(name: &wstr) -> WString {
-    todo!()
-    // let str_ = ffi::builtin_get_desc(&name.to_ffi());
-    // if str_.is_null() {
-    //     WString::new()
-    // } else {
-    //     WString::from(&wcharz_t { str_ })
-    // }
-}
-
 // pub fn run_builtin(
 //     parser: &mut Parser,
 //     streams: &mut IoStreams<'_>,
@@ -142,6 +128,38 @@ pub fn builtin_get_desc(name: &wstr) -> WString {
 //         RustBuiltin::Printf => printf::printf(parser, streams, args),
 //     }
 // }
+
+pub fn builtin_get_names() -> Vec<&'static wstr> {
+    todo!()
+}
+
+pub fn builtin_get_desc(name: &wstr) -> WString {
+    todo!()
+    // let str_ = ffi::builtin_get_desc(&name.to_ffi());
+    // if str_.is_null() {
+    //     WString::new()
+    // } else {
+    //     WString::from(&wcharz_t { str_ })
+    // }
+}
+
+pub fn builtin_print_help(parser: &mut Parser, streams: &IoStreams<'_>, cmd: &wstr) {
+    todo!()
+    // ffi::builtin_print_help(
+    //     parser.
+    //     streams.ffi_ref(),
+    //     c_str!(cmd),
+    //     empty_wstring(),
+    // );
+}
+pub fn builtin_print_help_error(
+    parser: &mut Parser,
+    streams: &IoStreams<'_>,
+    cmd: &wstr,
+    error_message: &wstr,
+) {
+    todo!()
+}
 
 // Covers of these functions that take care of the pinning, etc.
 // These all return STATUS_INVALID_ARGS.
@@ -177,24 +195,6 @@ pub fn builtin_unknown_option(
     //     c_str!(opt),
     //     print_hints,
     // );
-}
-
-pub fn builtin_print_help(parser: &mut Parser, streams: &IoStreams<'_>, cmd: &wstr) {
-    todo!()
-    // ffi::builtin_print_help(
-    //     parser.
-    //     streams.ffi_ref(),
-    //     c_str!(cmd),
-    //     empty_wstring(),
-    // );
-}
-pub fn builtin_print_help_error(
-    parser: &mut Parser,
-    streams: &IoStreams<'_>,
-    cmd: &wstr,
-    error_message: &wstr,
-) {
-    todo!()
 }
 
 pub fn builtin_print_error_trailer(parser: &mut Parser, streams: &mut IoStreams<'_>, cmd: &wstr) {

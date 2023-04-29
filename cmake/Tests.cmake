@@ -166,6 +166,12 @@ endforeach(CHECK)
 FILE(GLOB PEXPECTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/pexpects/*.py)
 foreach(PEXPECT ${PEXPECTS})
   get_filename_component(PEXPECT ${PEXPECT} NAME)
+  if(DEFINED ASAN)
+    if("${PEXPECT}" STREQUAL "exit_handlers.py")
+      # This times out due to changes to fish's exit behavior under ASAN
+      continue()
+    endif()
+  endif()
   add_test(NAME ${PEXPECT}
     COMMAND ${CMAKE_SKIPPED_HACK} sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
       ${CMAKE_CURRENT_BINARY_DIR}/tests/interactive.fish ${PEXPECT}

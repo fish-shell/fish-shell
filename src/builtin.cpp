@@ -1,4 +1,3 @@
-#if 0
 // Functions for executing builtin functions.
 //
 // How to add a new builtin function:
@@ -66,10 +65,6 @@
 #include "reader.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd);
-static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
-                                     const std::vector<wcstring> &argv, RustBuiltin builtin);
 
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
@@ -578,6 +573,7 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     return none();
 }
 
+#if 0
 static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
                                      const std::vector<wcstring> &argv, RustBuiltin builtin) {
     int status_code;
@@ -588,5 +584,4 @@ static maybe_t<int> builtin_run_rust(parser_t &parser, io_streams_t &streams,
         return none();
     }
 }
-
 #endif

@@ -19,10 +19,6 @@
 #include "operation_context.h"
 #include "parse_constants.h"
 
-#if INCLUDE_RUST_HEADERS
-#include "expand.rs.h"
-#endif
-
 /// Set of flags controlling expansions.
 enum class expand_flag {
     /// Skip command substitutions.
@@ -97,6 +93,10 @@ enum : wchar_t {
     /// characters so we can sanity check the enum range.
     EXPAND_SENTINEL
 };
+
+#if INCLUDE_RUST_HEADERS
+#include "expand.rs.h"
+#endif
 
 #if 0
 /// These are the possible return values for expand_string.

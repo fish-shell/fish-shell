@@ -8,7 +8,9 @@ use crate::common::{
 };
 use crate::complete::CompletionList;
 use crate::env::status::ENV_OK;
-use crate::env::{EnvMode, EnvStack, EnvStackRef, EnvStackSetResult, Environment, Statuses};
+use crate::env::{
+    EnvDynFFI, EnvMode, EnvStack, EnvStackRef, EnvStackSetResult, Environment, Statuses,
+};
 use crate::event::{self, Event};
 use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
@@ -1163,6 +1165,7 @@ mod parser_ffi {
     }
 
     extern "C++" {
+        include!("env.h");
         include!("io.h");
         include!("proc.h");
         include!("parse_tree.h");
@@ -1170,6 +1173,7 @@ mod parser_ffi {
         type JobRefFfi = crate::proc::JobRefFfi;
         type JobGroupRefFfi = crate::proc::JobGroupRefFfi;
         type ParsedSourceRefFFI = crate::parse_tree::ParsedSourceRefFFI;
+        // type EnvDyn = crate::env::EnvDynFFI;
     }
     extern "Rust" {
         type Block;
@@ -1194,6 +1198,7 @@ mod parser_ffi {
         fn ffi_is_breakpoint(&self) -> bool;
         fn ffi_blocks(&self) -> Vec<Block>;
         fn ffi_jobs(&self) -> Box<JobListFfi>;
+        // fn ffi_vars(&self) -> Box<EnvDyn>;
     }
 }
 
@@ -1235,6 +1240,10 @@ impl Parser {
     fn ffi_jobs(&self) -> Box<JobListFfi> {
         todo!()
     }
+    // fn ffi_vars(&self) -> Box<EnvDynFFI> {
+    //     todo!()
+    //     // Box::new(EnvDynFFI(self.vars().snapshot()))
+    // }
     // fn ffi_context(&self) ->
 }
 

@@ -13,17 +13,18 @@
 #include <utility>
 #include <vector>
 
+#if INCLUDE_RUST_HEADERS
+#include "complete.rs.h"
+#else
+struct CompletionListFfi;
+#endif
+
 #include "common.h"
 #include "expand.h"
 #include "parser.h"
 #include "wcstringutil.h"
 
-#if INCLUDE_RUST_HEADERS
-#include "complete.rs.h"
-#else
-struct CompletionListFfi;
 using completion_list_t = CompletionListFfi;
-#endif
 
 struct completion_mode_t {
     /// If set, skip file completions.

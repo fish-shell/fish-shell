@@ -103,38 +103,6 @@ pub fn wgetcwd() -> WString {
     WString::new()
 }
 
-pub fn make_fd_nonblocking(fd: RawFd) -> libc::c_int {
-    unsafe {
-        let flags = libc::fcntl(fd, F_GETFL, 0);
-        let mut err = 0;
-        let nonblocking = (flags & O_NONBLOCK) != 0;
-        if !nonblocking {
-            err = libc::fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-        }
-        if err == -1 {
-            errno().0
-        } else {
-            0
-        }
-    }
-}
-
-pub fn make_fd_blocking(fd: RawFd) -> libc::c_int {
-    unsafe {
-        let flags = libc::fcntl(fd, F_GETFL, 0);
-        let mut err = 0;
-        let nonblocking = (flags & O_NONBLOCK) != 0;
-        if nonblocking {
-            err = libc::fcntl(fd, F_SETFL, flags & !O_NONBLOCK);
-        }
-        if err == -1 {
-            errno().0
-        } else {
-            0
-        }
-    }
-}
-
 /// Wide character version of readlink().
 pub fn wreadlink(file_name: &wstr) -> Option<WString> {
     let md = lwstat(file_name).ok()?;

@@ -324,17 +324,17 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
 /// (converted to UTF-8 then each byte encoded as a hex nibble preceded by a %).
 fn escape_string_url(input: &wstr) -> WString {
     let mut out = WString::with_capacity(input.len());
-    for c in input.as_char_slice() {
-        if c.is_ascii_alphanumeric() || ['/', '.', '~', '-', '_'].contains(c) {
+    for c in input.chars() {
+        if c.is_ascii_alphanumeric() || ['/', '.', '~', '-', '_'].contains(&c) {
             // The above characters don't need to be encoded.
-            out.push(*c);
+            out.push(c);
             continue;
         }
         // All other chars need to have their UTF-8 representation encoded in hex.
         // The maximum size any Unicode character can take in UTF-8 representation is four bytes.
         let mut scratch = [0u8; 4];
         for byte in c.encode_utf8(&mut scratch).as_bytes() {
-            out += &sprintf!(L!("%%%02X"), byte)[..];
+            sprintf!(=> &mut out, L!("%%%02X"), byte);
         }
     }
     out
@@ -398,7 +398,7 @@ fn escape_string_var(input: &wstr) -> WString {
             let mut scratch = [0u8; 4]; // Max length of any single UTF-8 sequence is 4 bytes.
             let utf8_str = c.encode_utf8(&mut scratch);
             for byte in utf8_str.as_bytes() {
-                out += &sprintf!(L!("%02X_"), byte)[..];
+                sprintf!(=> &mut out, L!("%02X_"), byte);
             }
             prev_was_hex = true;
         }
@@ -1177,7 +1177,7 @@ pub fn wcs2zstring(input: &wstr) -> CString {
 
 /// Like wcs2string, but appends to \p receiver instead of returning a new string.
 pub fn wcs2string_appending(output: &mut Vec<u8>, input: &wstr) {
-    output.reserve(input.len());
+    output.reserve(output.len() + input.len());
     wcs2string_callback(input, |buff| {
         output.extend_from_slice(buff);
         true
@@ -2173,16 +2173,23 @@ mod common_ffi {
         type escape_string_style_t = crate::ffi::escape_string_style_t;
     }
     extern "Rust" {
-        fn rust_unescape_string(
+        #[cxx_name = "rust_unescape_string"]
+        fn unescape_string_ffi(
             input: *const wchar_t,
             len: usize,
             escape_special: u32,
             style: escape_string_style_t,
         ) -> UniquePtr<CxxWString>;
+
+        #[cxx_name = "rust_escape_string_url"]
+        fn escape_string_url_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
+
+        #[cxx_name = "rust_escape_string_var"]
+        fn escape_string_var_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
     }
 }
 
-fn rust_unescape_string(
+fn unescape_string_ffi(
     input: *const ffi::wchar_t,
     len: usize,
     escape_special: u32,
@@ -2202,4 +2209,14 @@ fn rust_unescape_string(
         Some(result) => result.to_ffi(),
         None => UniquePtr::null(),
     }
+}
+
+fn escape_string_var_ffi(input: *const ffi::wchar_t, len: usize) -> UniquePtr<CxxWString> {
+    let input = unsafe { slice::from_raw_parts(input, len) };
+    escape_string_var(wstr::from_slice(input).unwrap()).to_ffi()
+}
+
+fn escape_string_url_ffi(input: *const ffi::wchar_t, len: usize) -> UniquePtr<CxxWString> {
+    let input = unsafe { slice::from_raw_parts(input, len) };
+    escape_string_url(wstr::from_slice(input).unwrap()).to_ffi()
 }

@@ -117,9 +117,6 @@ long convert_digit(wchar_t d, int base) {
     return res;
 }
 
-/// Test whether the char is a valid hex digit as used by the `escape_string_*()` functions.
-static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != nullptr; }
-
 bool is_windows_subsystem_for_linux() {
 #if defined(WSL)
     return true;
@@ -723,51 +720,17 @@ wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 static void escape_string_url(const wcstring &in, wcstring &out) {
-    const std::string narrow = wcs2string(in);
-    for (auto &c1 : narrow) {
-        // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
-        if (!(c2 & 0x80) &&
-            (isalnum(c2) || c2 == '/' || c2 == '.' || c2 == '~' || c2 == '-' || c2 == '_')) {
-            // The above characters don't need to be encoded.
-            out.push_back(static_cast<wchar_t>(c2));
-        } else {
-            // All other chars need to have their UTF-8 representation encoded in hex.
-            wchar_t buf[4];
-            swprintf(buf, sizeof buf / sizeof buf[0], L"%%%02X", c2);
-            out.append(buf);
-        }
+    auto result = rust_escape_string_url(in.c_str(), in.size());
+    if (result) {
+        out = *result;
     }
 }
 
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
 static void escape_string_var(const wcstring &in, wcstring &out) {
-    bool prev_was_hex_encoded = false;
-    const std::string narrow = wcs2string(in);
-    for (auto c1 : narrow) {
-        // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
-        if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
-            // ASCII alphanumerics don't need to be encoded.
-            if (prev_was_hex_encoded) {
-                out.push_back(L'_');
-                prev_was_hex_encoded = false;
-            }
-            out.push_back(static_cast<wchar_t>(c2));
-        } else if (c2 == '_') {
-            // Underscores are encoded by doubling them.
-            out.append(L"__");
-            prev_was_hex_encoded = false;
-        } else {
-            // All other chars need to have their UTF-8 representation encoded in hex.
-            wchar_t buf[4];
-            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c2);
-            out.append(buf);
-            prev_was_hex_encoded = true;
-        }
-    }
-    if (prev_was_hex_encoded) {
-        out.push_back(L'_');
+    auto result = rust_escape_string_var(in.c_str(), in.size());
+    if (result) {
+        out = *result;
     }
 }
 

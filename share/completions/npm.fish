@@ -127,11 +127,18 @@ complete -f -c npm -n __fish_npm_needs_command -a get -d 'Echo the config value 
 complete -f -c npm -n __fish_npm_needs_command -a set -d 'Sets the config key to the value'
 
 # install
-for c in install isntall i
-    complete -c npm -n __fish_npm_needs_command -a "$c" -d 'install a package'
-    complete -c npm -n "__fish_npm_using_command $c" -l save-dev -d 'Save to devDependencies in package.json'
-    complete -c npm -n "__fish_npm_using_command $c" -l save -d 'Save to dependencies in package.json'
-    complete -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Install package globally'
+for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall
+    complete -c npm -n __fish_npm_needs_command -a "$c" -d 'Install a package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s B -l save-bundle -d 'Also save to bundleDependencies in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s E -l save-exact -d 'Save dependency with exact version rather than a semver range'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s O -l save-optional -d 'Save to optionalDependencies in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s D -l save-dev -d 'Save to devDependencies in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Install package globally'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l omit -a 'dev optional peer' -d 'Omit dependency type'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d 'Do not run scripts specified in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l install-links -d 'Pack and install file: protocol dependences as regular dependencies instead of symlinks'
 end
 
 # list

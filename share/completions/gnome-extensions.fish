@@ -13,11 +13,11 @@ function __fish_gnome-extensions_complete_disabled_extensions
 end
 
 function __fish_gnome-extensions_complete_enabled_extensions_with_preferences
-    gnome-extensions list --enabled --prefs | sort
+    gnome-extensions list --enabled --prefs
 end
 
 function __fish_gnome-extensions_complete_disabled_extensions_with_preferences
-    gnome-extensions list --disabled --prefs | sort
+    gnome-extensions list --disabled --prefs
 end
 
 set -l commands_with_quiet enable disable reset uninstall list info show prefs create pack install

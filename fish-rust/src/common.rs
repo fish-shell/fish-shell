@@ -948,6 +948,7 @@ pub const fn char_offset(base: char, offset: u32) -> char {
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 fn exit_without_destructors(code: i32) -> ! {
+    crate::threads::asan_before_exit();
     unsafe {
         libc::_exit(code);
     }

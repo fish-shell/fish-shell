@@ -49,6 +49,21 @@ static NOTIFY_SIGNALLER: once_cell::sync::Lazy<&'static crate::fd_monitor::FdEve
         result
     });
 
+/// A tuple of `(ThreadId, JoinHandle)` of all threads we've (directly) spawned that haven't yet
+/// exited.
+///
+/// Under glibc 2.18+, rust uses the weakly linked symbol __cxa_thread_atexit_impl to register
+/// destructors for thread local variables (TLS is used by some rust std::thread features).
+/// If remaining background threads aren't joined before the main process exits, ASAN can report a
+/// memory leak with the stack trace originating from __cxa_thread_atexit_impl(). Unfortunately, the
+/// -fsanitize-blacklist/-fsanitize-ignorelist compiler option can only be used to suppress the
+/// top-most stack frame and since we do not compile glibc from scratch under ASAN, we can't
+/// suppress the reported memory leak.
+///
+/// We can instead ensure that all live threads are joined before exiting when running under ASAN.
+#[cfg(feature = "asan")]
+static THREAD_HANDLES: Mutex<Vec<(ThreadId, std::thread::JoinHandle<()>)>> = Mutex::new(Vec::new());
+
 #[cxx::bridge]
 mod ffi {
     unsafe extern "C++" {
@@ -75,6 +90,7 @@ mod ffi {
     extern "Rust" {
         #[cxx_name = "make_detached_pthread"]
         fn spawn_ffi(callback: &SharedPtr<CppCallback>) -> bool;
+        fn asan_before_exit();
     }
 
     extern "Rust" {
@@ -265,12 +281,34 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     // We don't have to port the PTHREAD_CREATE_DETACHED logic. Rust threads are detached
     // automatically if the returned join handle is dropped.
 
-    let result = match std::thread::Builder::new().spawn(callback) {
+    let result = match std::thread::Builder::new().spawn(move || {
+        (callback)();
+        #[cfg(feature = "asan")]
+        {
+            let thread_id = std::thread::current().id();
+            let mut handles = THREAD_HANDLES.lock().expect("Mutex poisoned!");
+            // We can't guarantee that the parent thread was scheduled after we ran, so the handle might
+            // not be in the vector.
+            if let Some(idx) = handles.iter().rev().position(|h| h.0 == thread_id) {
+                handles.swap_remove(idx);
+            }
+        }
+    }) {
         Ok(handle) => {
-            let id = handle.thread().id();
-            FLOG!(iothread, "rust thread", id, "spawned");
-            // Drop the handle to detach the thread
-            drop(handle);
+            let thread_id = handle.thread().id();
+            FLOG!(iothread, "rust thread", thread_id, "spawned");
+            #[cfg(feature = "asan")]
+            {
+                let mut handles = THREAD_HANDLES.lock().expect("Mutex poisoned!");
+                if !handle.is_finished() {
+                    handles.push((thread_id, handle));
+                }
+            }
+            #[cfg(not(feature = "asan"))]
+            {
+                // Drop the handle to detach the thread
+                drop(handle);
+            }
             true
         }
         Err(e) => {
@@ -297,6 +335,28 @@ fn spawn_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) -> bool {
     spawn(move || {
         callback.invoke();
     })
+}
+
+/// When running under ASAN, join child threads before exiting the parent process to avoid spurious
+/// memory leak warnings regarding TLS variables.
+///
+/// This function is always defined but is a no-op if not running under ASAN. This is to make it
+/// more ergonomic to call it where needed in general and to make it possible via ffi at all.
+pub fn asan_before_exit() {
+    #[cfg(feature = "asan")]
+    if !is_forked_child() && is_main_thread() {
+        // We can't keep THREAD_HANDLES locked as threads acquire it before exiting themselves.
+        // A child thread can spawn additional threads, so we loop until no threads remain.
+        loop {
+            let mut handles = std::mem::take(&mut *THREAD_HANDLES.lock().expect("Mutex poisoned!"));
+            if handles.is_empty() {
+                break;
+            }
+            for h in handles.drain(..) {
+                let _ = h.1.join();
+            }
+        }
+    }
 }
 
 /// Data shared between the thread pool [`ThreadPool`] and worker threads [`WorkerThread`].

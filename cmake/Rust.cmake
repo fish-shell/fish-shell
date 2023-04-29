@@ -25,6 +25,7 @@ set(fish_rust_target "fish-rust")
 
 set(fish_autocxx_gen_dir "${CMAKE_BINARY_DIR}/fish-autocxx-gen/")
 
+set(FISH_CRATE_FEATURES "fish-ffi-tests")
 if(NOT DEFINED CARGO_FLAGS)
     # Corrosion doesn't like an empty string as FLAGS. This is basically a no-op alternative.
     # See https://github.com/corrosion-rs/corrosion/issues/356
@@ -32,11 +33,12 @@ if(NOT DEFINED CARGO_FLAGS)
 endif()
 if(DEFINED ASAN)
     list(APPEND CARGO_FLAGS "-Z" "build-std")
+    list(APPEND FISH_CRATE_FEATURES "asan")
 endif()
 
 corrosion_import_crate(
     MANIFEST_PATH "${CMAKE_SOURCE_DIR}/fish-rust/Cargo.toml"
-    FEATURES "fish-ffi-tests"
+    FEATURES "${FISH_CRATE_FEATURES}"
     FLAGS "${CARGO_FLAGS}"
 )
 

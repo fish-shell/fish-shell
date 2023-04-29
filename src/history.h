@@ -27,10 +27,22 @@ using history_identifier_t = uint64_t;
 
 #include "history.rs.h"
 
-struct io_streams_t;
-class env_stack_t;
-class environment_t;
-class operation_context_t;
+#else
+
+struct HistoryItem;
+
+class history_search_type_t;
+class HistorySharedPtr;
+enum class PersistenceMode;
+
+#endif  // INCLUDE_RUST_HEADERS
+
+using history_item_t = HistoryItem;
+using history_persistence_mode_t = PersistenceMode;
+
+#endif
+
+#if 0
 
 /**
 Fish supports multiple shells writing to history at once. Here is its strategy:
@@ -325,16 +337,5 @@ path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_
 inline bool all_paths_are_valid(const path_list_t &paths, const operation_context_t &ctx) {
     return rust_all_paths_are_valid(paths, ctx);
 }
-
-#else
-
-class history_search_type_t;
-class history_persistence_mode_t;
-
-class history_item_t;
-
-class HistorySharedPtr;
-
-#endif  // INCLUDE_RUST_HEADERS
 
 #endif  // FISH_HISTORY_H

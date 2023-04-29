@@ -585,29 +585,30 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
     // builtin_run provide this directly, rather than setting it in the process.
     f.success_status = p.status;
 
-    iothread_perform_cant_wait(|| {
-        let mut status = f.success_status;
-        if !f.skip_out() {
-            if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
-                if err.raw_os_error().unwrap() != EPIPE {
-                    perror("write");
-                }
-                if status.is_success() {
-                    status = ProcStatus::from_exit_code(1);
-                }
-            }
-        }
-        if !f.skip_err() {
-            if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
-                if err.raw_os_error().unwrap() != EPIPE {
-                    perror("write");
-                }
-                if status.is_success() {
-                    status = ProcStatus::from_exit_code(1);
-                }
-            }
-        }
-        f.internal_proc.write().unwrap().mark_exited(status);
+    iothread_perform_cant_wait(move || {
+        todo!()
+        // let mut status = f.success_status;
+        // if !f.skip_out() {
+        //     if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
+        //         if err.raw_os_error().unwrap() != EPIPE {
+        //             perror("write");
+        //         }
+        //         if status.is_success() {
+        //             status = ProcStatus::from_exit_code(1);
+        //         }
+        //     }
+        // }
+        // if !f.skip_err() {
+        //     if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
+        //         if err.raw_os_error().unwrap() != EPIPE {
+        //             perror("write");
+        //         }
+        //         if status.is_success() {
+        //             status = ProcStatus::from_exit_code(1);
+        //         }
+        //     }
+        // }
+        // f.internal_proc.write().unwrap().mark_exited(status);
     });
 }
 
@@ -1186,7 +1187,7 @@ fn exec_process_in_job(
     let mut process_net_io_chain = block_io.clone();
 
     if pipes.write.is_valid() {
-        process_net_io_chain.push(Rc::new(IoPipe::new(
+        process_net_io_chain.push(Arc::new(IoPipe::new(
             p.pipe_write_fd,
             false, /* not input */
             pipes.write,
@@ -1203,14 +1204,14 @@ fn exec_process_in_job(
 
     // Read pipe goes last.
     if pipes.read.is_valid() {
-        let pipe_read = Rc::new(IoPipe::new(STDIN_FILENO, true /* input */, pipes.read));
+        let pipe_read = Arc::new(IoPipe::new(STDIN_FILENO, true /* input */, pipes.read));
         process_net_io_chain.push(pipe_read);
     }
 
     // If we have stashed pipes, make sure those get closed in the child.
     for afd in [&deferred_pipes.read, &deferred_pipes.write] {
         if afd.is_valid() {
-            process_net_io_chain.push(Rc::new(IoClose::new(afd.fd())));
+            process_net_io_chain.push(Arc::new(IoClose::new(afd.fd())));
         }
     }
 

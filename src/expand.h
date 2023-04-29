@@ -14,12 +14,14 @@
 
 #include "common.h"
 #include "enum_set.h"
+#include "env.h"
 #include "maybe.h"
+#include "operation_context.h"
 #include "parse_constants.h"
 
-class env_var_t;
-class environment_t;
-class operation_context_t;
+#if INCLUDE_RUST_HEADERS
+#include "expand.rs.h"
+#endif
 
 /// Set of flags controlling expansions.
 enum class expand_flag {

@@ -2070,7 +2070,7 @@ pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&
 macro_rules! fwprintf {
     ($fd:expr, $format:literal $(, $arg:expr)*) => {
         {
-            let wide = crate::wutil::sprintf!($format $(, $arg )*);
+            let wide = crate::wutil::sprintf!($format, $( $arg ),*);
             crate::wutil::wwrite_to_fd(&wide, $fd);
         }
     }

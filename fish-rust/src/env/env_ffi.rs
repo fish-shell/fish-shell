@@ -164,7 +164,7 @@ fn env_null_create_ffi() -> Box<EnvNull> {
 }
 
 /// FFI wrapper around EnvDyn
-pub struct EnvDynFFI(EnvDyn);
+pub struct EnvDynFFI(pub EnvDyn);
 impl EnvDynFFI {
     fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
         EnvironmentFFI::getf_ffi(&self.0, name, mode)
@@ -173,9 +173,13 @@ impl EnvDynFFI {
         EnvironmentFFI::get_names_ffi(&self.0, flags, out)
     }
 }
+unsafe impl cxx::ExternType for EnvDynFFI {
+    type Id = cxx::type_id!("EnvDyn"); // CXX name!
+    type Kind = cxx::kind::Opaque;
+}
 
 /// FFI wrapper around EnvStackRef.
-pub struct EnvStackRefFFI(EnvStackRef);
+pub struct EnvStackRefFFI(pub EnvStackRef);
 
 impl EnvStackRefFFI {
     fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
@@ -242,7 +246,10 @@ impl EnvStackRefFFI {
         Box::new(EnvDynFFI(self.0.snapshot()))
     }
 }
-
+unsafe impl cxx::ExternType for EnvStackRefFFI {
+    type Id = cxx::type_id!("EnvStackRef"); // CXX name!
+    type Kind = cxx::kind::Opaque;
+}
 impl Statuses {
     fn get_status_ffi(&self) -> i32 {
         self.status

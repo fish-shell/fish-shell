@@ -31,8 +31,8 @@ pub struct OperationContext<'a> {
     pub expansion_limit: usize,
 
     /// The job group of the parental job.
-    /// This is used only when expanding command substitutions. If this is set, any jobs crated by
-    /// the command substitutions should use this tree.
+    /// This is used only when expanding command substitutions. If this is set, any jobs created
+    /// by the command substitutions should use this tree.
     pub job_group: Option<JobGroupRef>,
 
     // A function which may be used to poll for cancellation.
@@ -89,6 +89,18 @@ impl<'a> OperationContext<'a> {
     pub fn has_parser(&self) -> bool {
         matches!(self.context, Context::Foreground(_))
     }
+    pub fn maybe_parser(&self) -> Option<RwLockReadGuard<'_, Parser>> {
+        match &self.context {
+            Context::Foreground(parser) => Some(parser.read().unwrap()),
+            _ => None,
+        }
+    }
+    pub fn maybe_parser_mut(&self) -> Option<RwLockWriteGuard<'_, Parser>> {
+        match &self.context {
+            Context::Foreground(parser) => Some(parser.write().unwrap()),
+            _ => None,
+        }
+    }
     pub fn parser(&self) -> RwLockReadGuard<'_, Parser> {
         match &self.context {
             Context::Foreground(parser) => parser.read().unwrap(),
@@ -111,11 +123,11 @@ impl<'a> OperationContext<'a> {
 #[cxx::bridge]
 mod operation_context_ffi {
     extern "Rust" {
-        type OperationContext;
+        type OperationContext<'a>;
     }
 }
 
-unsafe impl cxx::ExternType for OperationContext {
+unsafe impl cxx::ExternType for OperationContext<'_> {
     type Id = cxx::type_id!("OperationContext");
     type Kind = cxx::kind::Opaque;
 }

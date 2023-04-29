@@ -634,6 +634,7 @@ impl<'a> ParseExecutionContext {
                 }
                 ExpandResultCode::wildcard_no_match |// nullglob (equivalent to set)
                     ExpandResultCode::ok => {}
+                    _ => panic!(),
             }
             let vals: Vec<_> = expression_expanded
                 .into_iter()
@@ -1120,6 +1121,7 @@ impl<'a> ParseExecutionContext {
                     );
                 }
             }
+            _ => panic!(),
         }
 
         // If we expanded to nothing, match the empty string.
@@ -1386,6 +1388,7 @@ impl<'a> ParseExecutionContext {
                     }
                 }
                 ExpandResultCode::ok => {}
+                _ => panic!(),
             }
 
             // Now copy over any expanded arguments. Use std::move() to avoid extra allocations; this

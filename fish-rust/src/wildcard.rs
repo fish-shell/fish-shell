@@ -1,5 +1,7 @@
 // Enumeration of all wildcard types.
 
+use crate::wchar_ffi::AsWstr;
+use cxx::CxxWString;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -1222,4 +1224,16 @@ pub fn wildcard_expand_string(
     let mut expander = WildcardExpander::new(prefix, flags, cancel_checker, output);
     expander.expand(base_dir, effective_wc, base_dir);
     expander.status_code()
+}
+
+#[cxx::bridge]
+mod wildcard_ffi {
+    extern "Rust" {
+        #[rust_name = "wildcard_match_ffi"]
+        fn wildcard_match(s: &CxxWString, wildcard: &CxxWString) -> bool;
+    }
+}
+
+fn wildcard_match_ffi(s: &CxxWString, wildcard: &CxxWString) -> bool {
+    wildcard_match(s.as_wstr(), wildcard.as_wstr(), false)
 }

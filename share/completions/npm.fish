@@ -162,8 +162,7 @@ for c in r remove rm un uninstall unlink
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'remove package' -xa '(__yarn_installed_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package'
     complete -x -c npm -n "__fish_npm_using_command $c" -l save -d 'Package will be removed from your dependencies'
-    complete -x -c npm -n "__fish_npm_using_command $c" -l save-dev -d 'Package will be removed from your devDependencies'
-    complete -x -c npm -n "__fish_npm_using_command $c" -l save-optional -d 'Package will be removed from your optionalDependencies'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
 end
 
 # search

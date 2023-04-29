@@ -63,6 +63,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "proc.h"
 #include "reader.h"
 #include "signals.h"
+#include "threads.rs.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -614,6 +615,7 @@ int main(int argc, char **argv) {
     if (debug_output) {
         fclose(debug_output);
     }
+    asan_maybe_exit(exit_status);
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit
 }

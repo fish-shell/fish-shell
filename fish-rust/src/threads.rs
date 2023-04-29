@@ -75,6 +75,8 @@ mod ffi {
     extern "Rust" {
         #[cxx_name = "make_detached_pthread"]
         fn spawn_ffi(callback: &SharedPtr<CppCallback>) -> bool;
+        fn asan_before_exit();
+        fn asan_maybe_exit(code: i32);
     }
 
     extern "Rust" {
@@ -265,10 +267,12 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     // We don't have to port the PTHREAD_CREATE_DETACHED logic. Rust threads are detached
     // automatically if the returned join handle is dropped.
 
-    let result = match std::thread::Builder::new().spawn(callback) {
+    let result = match std::thread::Builder::new().spawn(move || {
+        (callback)();
+    }) {
         Ok(handle) => {
-            let id = handle.thread().id();
-            FLOG!(iothread, "rust thread", id, "spawned");
+            let thread_id = handle.thread().id();
+            FLOG!(iothread, "rust thread", thread_id, "spawned");
             // Drop the handle to detach the thread
             drop(handle);
             true
@@ -297,6 +301,31 @@ fn spawn_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) -> bool {
     spawn(move || {
         callback.invoke();
     })
+}
+
+/// Exits calling onexit handlers if running under ASAN, otherwise does nothing.
+///
+/// This function is always defined but is a no-op if not running under ASAN. This is to make it
+/// more ergonomic to call it in general and also makes it possible to call it via ffi at all.
+pub fn asan_maybe_exit(#[allow(unused)] code: i32) {
+    #[cfg(feature = "asan")]
+    {
+        asan_before_exit();
+        unsafe {
+            libc::exit(code);
+        }
+    }
+}
+
+/// When running under ASAN, free up some allocations that would normally have been left for the OS
+/// to reclaim to avoid some false positive LSAN reports.
+///
+/// This function is always defined but is a no-op if not running under ASAN. This is to make it
+/// more ergonomic to call it in general and also makes it possible to call it via ffi at all.
+pub fn asan_before_exit() {
+    #[cfg(feature = "asan")]
+    if !is_forked_child() {
+    }
 }
 
 /// Data shared between the thread pool [`ThreadPool`] and worker threads [`WorkerThread`].

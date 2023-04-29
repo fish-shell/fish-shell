@@ -602,6 +602,7 @@ fn test_join_strings() {
     use crate::wchar::L;
     let empty: &[&wstr] = &[];
     assert_eq!(join_strings(empty, '/'), "");
+    assert_eq!(join_strings(&[] as &[&wstr], '/'), "");
     assert_eq!(join_strings(&[L!("foo")], '/'), "foo");
     assert_eq!(
         join_strings(&[L!("foo"), L!("bar"), L!("baz")], '/'),

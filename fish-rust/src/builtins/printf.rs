@@ -261,20 +261,19 @@ impl<'a> builtin_printf_state_t<'a> {
         argument: &wstr,
     ) {
         /// Printf macro helper which provides our locale.
-        macro_rules! sprintf_loc {
+        macro_rules! append_output_fmt {
             (
             $fmt:expr, // format string of type &wstr
             $($arg:expr),* // arguments
             ) => {
-                {
-                    let mut target = WString::new();
+                // Don't output if we're done.
+                if !self.early_exit {
                     sprintf_locale(
-                        &mut target,
+                        &mut self.buff,
                         $fmt,
                         &self.locale,
                         &[$($arg.to_arg()),*]
-                    );
-                    target
+                    )
                 }
             }
         }
@@ -307,15 +306,15 @@ impl<'a> builtin_printf_state_t<'a> {
                 let arg: i64 = string_to_scalar_type(argument, self);
                 if !have_field_width {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, arg));
+                        append_output_fmt!(fmt, arg);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, precision, arg));
+                        append_output_fmt!(fmt, precision, arg);
                     }
                 } else {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, arg));
+                        append_output_fmt!(fmt, field_width, arg);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, precision, arg));
+                        append_output_fmt!(fmt, field_width, precision, arg);
                     }
                 }
             }
@@ -323,15 +322,15 @@ impl<'a> builtin_printf_state_t<'a> {
                 let arg: u64 = string_to_scalar_type(argument, self);
                 if !have_field_width {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, arg));
+                        append_output_fmt!(fmt, arg);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, precision, arg));
+                        append_output_fmt!(fmt, precision, arg);
                     }
                 } else {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, arg));
+                        append_output_fmt!(fmt, field_width, arg);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, precision, arg));
+                        append_output_fmt!(fmt, field_width, precision, arg);
                     }
                 }
             }
@@ -340,39 +339,39 @@ impl<'a> builtin_printf_state_t<'a> {
                 let arg: f64 = string_to_scalar_type(argument, self);
                 if !have_field_width {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, arg));
+                        append_output_fmt!(fmt, arg);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, precision, arg));
+                        append_output_fmt!(fmt, precision, arg);
                     }
                 } else {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, arg));
+                        append_output_fmt!(fmt, field_width, arg);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, precision, arg));
+                        append_output_fmt!(fmt, field_width, precision, arg);
                     }
                 }
             }
 
             'c' => {
                 if !have_field_width {
-                    self.append_output_str(sprintf_loc!(fmt, argument.char_at(0)));
+                    append_output_fmt!(fmt, argument.char_at(0));
                 } else {
-                    self.append_output_str(sprintf_loc!(fmt, field_width, argument.char_at(0)));
+                    append_output_fmt!(fmt, field_width, argument.char_at(0));
                 }
             }
 
             's' => {
                 if !have_field_width {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, argument));
+                        append_output_fmt!(fmt, argument);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, precision, argument));
+                        append_output_fmt!(fmt, precision, argument);
                     }
                 } else {
                     if !have_precision {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, argument));
+                        append_output_fmt!(fmt, field_width, argument);
                     } else {
-                        self.append_output_str(sprintf_loc!(fmt, field_width, precision, argument));
+                        append_output_fmt!(fmt, field_width, precision, argument);
                     }
                 }
             }
@@ -762,15 +761,6 @@ impl<'a> builtin_printf_state_t<'a> {
         }
 
         self.buff.push(c);
-    }
-
-    fn append_output_str<Str: AsRef<wstr>>(&mut self, s: Str) {
-        // Don't output if we're done.
-        if self.early_exit {
-            return;
-        }
-
-        self.buff.push_utfstr(&s);
     }
 }
 

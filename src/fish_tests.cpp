@@ -96,6 +96,7 @@
 #include "signals.h"
 #include "smoke.rs.h"
 #include "termsize.h"
+#include "threads.rs.h"
 #include "tokenizer.h"
 #include "topic_monitor.h"
 #include "utf8.h"
@@ -6513,6 +6514,9 @@ int main(int argc, char **argv) {
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");
+
+    // Wait for background threads to avoid false positive ASAN memory leaks
+    asan_before_exit();
 
     if (err_count != 0) {
         return 1;

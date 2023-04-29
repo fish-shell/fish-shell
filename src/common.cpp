@@ -1362,8 +1362,6 @@ double timef() {
     return static_cast<timepoint_t>(tv.tv_sec) + 1e-6 * tv.tv_usec;
 }
 
-void exit_without_destructors(int code) { _exit(code); }
-
 extern "C" {
 [[gnu::noinline]] void debug_thread_error(void) {
     // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another

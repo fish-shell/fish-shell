@@ -166,7 +166,9 @@ using job_id_t = int;
 using internal_job_id_t = uint64_t;
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
-[[noreturn]] void exit_without_destructors(int code);
+extern "C" {
+[[noreturn]] extern void exit_without_destructors(int code);
+}
 
 /// Save the shell mode on startup so we can restore them on exit.
 extern struct termios shell_modes;

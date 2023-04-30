@@ -47,6 +47,7 @@ struct wcstring_list_ffi_t {
 
     size_t size() const { return vals.size(); }
     const wcstring &at(size_t idx) const { return vals.at(idx); }
+    void clear() { vals.clear(); }
 
     /// Helper to construct one.
     static std::unique_ptr<wcstring_list_ffi_t> create() {

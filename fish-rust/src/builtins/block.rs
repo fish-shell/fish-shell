@@ -5,6 +5,7 @@ use super::shared::{
 };
 use crate::io::IoStreams;
 use crate::parser::Parser;
+use crate::wchar::WString;
 use crate::{
     builtins::shared::builtin_unknown_option,
     ffi::Repin,
@@ -35,11 +36,11 @@ struct Options {
 }
 
 fn parse_options(
-    args: &mut [&wstr],
+    args: &mut [WString],
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = args[0];
+    let cmd = &args[0];
 
     const SHORT_OPTS: &wstr = L!(":eghl");
     const LONG_OPTS: &[woption] = &[
@@ -87,9 +88,9 @@ fn parse_options(
 pub fn block(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    args: &mut [&wstr],
+    args: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = args[0];
+    let cmd = &args[0];
 
     let opts = match parse_options(args, parser, streams) {
         Ok((opts, _)) => opts,

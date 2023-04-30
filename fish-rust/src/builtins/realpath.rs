@@ -3,6 +3,7 @@
 use errno::errno;
 use libc::c_int;
 
+use crate::wchar::WString;
 use crate::{
     env::Environment,
     parser::Parser,
@@ -32,11 +33,11 @@ const long_options: &[woption] = &[
 ];
 
 fn parse_options(
-    args: &mut [&wstr],
+    args: &mut [WString],
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = args[0];
+    let cmd = &args[0];
 
     let mut opts = Options::default();
 
@@ -67,9 +68,9 @@ fn parse_options(
 pub fn realpath(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    args: &mut [&wstr],
+    args: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = args[0];
+    let cmd = &args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,

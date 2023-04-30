@@ -57,10 +57,8 @@ bool curses_initialized = false;
 bool term_has_xn = false;
 
 // static
-maybe_t<env_var_t> env_var_t::from_ffi_acquiring(EnvVar *ptr) {
-    if (!ptr) {
-        return none();
-    }
+env_var_t env_var_t::new_ffi(EnvVar *ptr) {
+    assert(ptr != nullptr && "env_var_t::new_ffi called with null pointer");
     return env_var_t(rust::Box<EnvVar>::from_raw(ptr));
 }
 
@@ -99,11 +97,6 @@ env_var_t::env_var_t(const wcstring_list_ffi_t &vals, uint8_t flags)
 env_var_t::env_var_t(const env_var_t &rhs) : impl_(rhs.impl_->clone_box()) {}
 
 bool env_var_t::operator==(const env_var_t &rhs) const { return impl_->equals(*rhs.impl_); }
-
-// static
-std::unique_ptr<env_var_t> env_var_t::new_ffi(wcstring_list_ffi_t ffi_vals, uint8_t flags) {
-    return std::make_unique<env_var_t>(std::move(ffi_vals.vals), flags);
-}
 
 environment_t::~environment_t() = default;
 
@@ -146,7 +139,10 @@ null_environment_t::null_environment_t() : impl_(env_null_create()) {}
 null_environment_t::~null_environment_t() = default;
 
 maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t mode) const {
-    return env_var_t::from_ffi_acquiring(impl_->getf(key, mode));
+    if (auto *ptr = impl_->getf(key, mode)) {
+        return env_var_t::new_ffi(ptr);
+    }
+    return none();
 }
 
 std::vector<wcstring> null_environment_t::get_names(env_mode_flags_t flags) const {
@@ -415,7 +411,10 @@ void env_stack_t::set_last_statuses(statuses_t s) {
 void env_stack_t::set_pwd_from_getcwd() { impl_->set_pwd_from_getcwd(); }
 
 maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) const {
-    return env_var_t::from_ffi_acquiring(impl_->getf(key, mode));
+    if (auto *ptr = impl_->getf(key, mode)) {
+        return env_var_t::new_ffi(ptr);
+    }
+    return none();
 }
 
 std::vector<wcstring> env_stack_t::get_names(env_mode_flags_t flags) const {
@@ -464,7 +463,10 @@ class env_dyn_t final : public environment_t {
     env_dyn_t(rust::Box<EnvDyn> impl) : impl_(std::move(impl)) {}
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode) const {
-        return env_var_t::from_ffi_acquiring(impl_->getf(key, mode));
+        if (auto *ptr = impl_->getf(key, mode)) {
+            return env_var_t::new_ffi(ptr);
+        }
+        return none();
     }
 
     std::vector<wcstring> get_names(env_mode_flags_t flags) const {
@@ -585,9 +587,8 @@ void unsetenv_lock(const char *name) {
     unsetenv(name);
 }
 
-std::unique_ptr<wcstring_list_ffi_t> get_history_variable_text_ffi(
-    const wcstring &fish_history_val) {
-    auto out = make_unique<wcstring_list_ffi_t>();
+wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val) {
+    wcstring_list_ffi_t out{};
     std::shared_ptr<history_t> history = commandline_get_state().history;
     if (!history) {
         // Effective duplication of history_session_id().
@@ -608,7 +609,7 @@ std::unique_ptr<wcstring_list_ffi_t> get_history_variable_text_ffi(
         history = history_t::with_name(session_id);
     }
     if (history) {
-        history->get_history(out->vals);
+        history->get_history(out.vals);
     }
     return out;
 }

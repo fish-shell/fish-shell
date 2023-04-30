@@ -6,6 +6,7 @@ use crate::builtins::shared::{
 };
 use crate::io::IoStreams;
 use crate::parser::Parser;
+use crate::wchar::WString;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{self, fish_wcstoi_opts, sprintf, wgettext_fmt, Options as WcstoiOptions};
@@ -21,7 +22,7 @@ static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entro
 pub fn random(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    argv: &mut [&wstr],
+    argv: &mut [WString],
 ) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();

@@ -10,6 +10,7 @@ use super::shared::{
 use crate::builtins::shared::BUILTIN_ERR_TOO_MANY_ARGUMENTS;
 use crate::io::IoStreams;
 use crate::parser::Parser;
+use crate::wchar::WString;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::fish_wcstoi;
@@ -21,11 +22,11 @@ struct Options {
 }
 
 fn parse_options(
-    args: &mut [&wstr],
+    args: &mut [WString],
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = args[0];
+    let cmd = &args[0];
 
     const SHORT_OPTS: &wstr = L!(":h");
     const LONG_OPTS: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
@@ -60,7 +61,7 @@ fn parse_options(
 pub fn r#return(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    args: &mut [&wstr],
+    args: &mut [WString],
 ) -> Option<c_int> {
     let mut retval = match parse_return_value(args, parser, streams) {
         Ok(v) => v,
@@ -94,11 +95,11 @@ pub fn r#return(
 }
 
 pub fn parse_return_value(
-    args: &mut [&wstr],
+    args: &mut [WString],
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<i32, Option<c_int>> {
-    let cmd = args[0];
+    let cmd = &args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return Err(err),

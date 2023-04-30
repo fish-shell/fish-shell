@@ -9,7 +9,7 @@ use crate::wchar::{wstr, WString};
 use crate::wutil::printf::sprintf;
 
 #[widestrs]
-pub fn emit(parser: &mut Parser, streams: &mut IoStreams<'_>, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn emit(parser: &mut Parser, streams: &mut IoStreams<'_>, argv: &mut [WString]) -> Option<c_int> {
     let cmd = argv[0];
 
     let opts = match HelpOnlyCmdOpts::parse(argv, parser, streams) {

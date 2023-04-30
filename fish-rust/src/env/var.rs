@@ -1,14 +1,10 @@
-use crate::ffi::{wchar_t, wcstring_list_ffi_t};
 use crate::signal::Signal;
 use crate::wchar::{widestrs, wstr, WString};
-use crate::wchar_ffi::WCharToFFI;
 use crate::wcstringutil::join_strings;
 use bitflags::bitflags;
-use cxx::{CxxWString, UniquePtr};
 use lazy_static::lazy_static;
 use libc::c_int;
 use std::collections::HashMap;
-use std::pin::Pin;
 use std::sync::Arc;
 
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
@@ -121,7 +117,7 @@ lazy_static! {
 
 /// EnvVar is an immutable value-type data structure representing the value of an environment
 /// variable.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EnvVar {
     /// The list of values in this variable.
     /// Arc allows for cheap copying
@@ -251,40 +247,6 @@ impl EnvVar {
             result.insert(EnvVarFlags::READ_ONLY);
         }
         result
-    }
-}
-
-/// FFI bits.
-impl EnvVar {
-    pub fn equals_ffi(&self, rhs: &EnvVar) -> bool {
-        self == rhs
-    }
-
-    pub fn as_string_ffi(&self) -> UniquePtr<CxxWString> {
-        self.as_string().to_ffi()
-    }
-
-    pub fn as_list_ffi(&self) -> UniquePtr<wcstring_list_ffi_t> {
-        self.as_list().to_ffi()
-    }
-
-    pub fn to_list_ffi(&self, mut out: Pin<&mut wcstring_list_ffi_t>) {
-        out.as_mut().clear();
-        for val in self.as_list() {
-            out.as_mut().push(val);
-        }
-    }
-
-    pub fn clone_box_ffi(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
-
-    pub fn get_flags_ffi(&self) -> u8 {
-        self.flags.bits()
-    }
-
-    pub fn get_delimiter_ffi(self: &EnvVar) -> wchar_t {
-        self.get_delimiter().into()
     }
 }
 

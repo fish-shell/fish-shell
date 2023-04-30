@@ -35,6 +35,7 @@ Builtins to do a task, like
 - :doc:`set <cmds/set>` to set, query or erase variables.
 - :doc:`read <cmds/read>` to read input.
 - :doc:`string <cmds/string>` for string manipulation.
+- :doc:`path <cmds/path>` for filtering paths and handling their components.
 - :doc:`math <cmds/math>` does arithmetic.
 - :doc:`argparse <cmds/argparse>` to make arguments easier to handle.
 - :doc:`count <cmds/count>` to count arguments.

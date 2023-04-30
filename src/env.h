@@ -17,7 +17,17 @@
 #include "maybe.h"
 #include "wutil.h"
 
-#if 0
+struct event_list_ffi_t;
+
+#if INCLUDE_RUST_HEADERS
+#include "env/env_ffi.rs.h"
+#else
+struct EnvVar;
+struct EnvNull;
+struct EnvStackRef;
+struct EnvDyn;
+#endif
+
 /// FFI helper for events.
 struct Event;
 struct event_list_ffi_t {
@@ -31,19 +41,7 @@ struct event_list_ffi_t {
     // Append an Event pointer, which came from Box::into_raw().
     void push(void *event);
 };
-#endif
 
-#if INCLUDE_RUST_HEADERS
-#include "env/env_ffi.rs.h"
-#else
-struct EnvVar;
-struct EnvNull;
-struct EnvStackRef;
-struct EnvDyn;
-#endif
-
-using environment_t = EnvDyn;
-using env_var_t = EnvVar;
 struct owning_null_terminated_array_t;
 
 extern size_t read_byte_limit;
@@ -79,8 +77,6 @@ using env_mode_flags_t = uint16_t;
 
 /// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
-
-#if 0
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -138,8 +134,9 @@ class env_var_t {
     env_var_t(wcstring val, env_var_flags_t flags)
         : env_var_t{std::vector<wcstring>{std::move(val)}, flags} {}
 
-    // Construct from FFI.
-    static std::unique_ptr<env_var_t> new_ffi(wcstring_list_ffi_t vals, uint8_t flags);
+    // Construct from FFI. This transfers ownership of the EnvVar, which should originate
+    // in Box::into_raw().
+    static env_var_t new_ffi(EnvVar *ptr);
 
     // Get the underlying EnvVar pointer.
     // Note you may need to mem::transmute this, since autocxx gets confused when going from Rust ->
@@ -167,9 +164,6 @@ class env_var_t {
 
     bool operator==(const env_var_t &rhs) const;
     bool operator!=(const env_var_t &rhs) const { return !(*this == rhs); }
-
-    /// Acquire ownership (via Rust Box) of an EnvVar, or none if null.
-    static maybe_t<env_var_t> from_ffi_acquiring(EnvVar *ptr);
 
    private:
     env_var_t(rust::Box<EnvVar> &&impl) : impl_(std::move(impl)) {}
@@ -329,12 +323,6 @@ const std::map<wcstring, wcstring> &env_get_inherited();
 
 /// Populate the values in the "$history" variable.
 /// fish_history_val is the value of the "$fish_history" variable, or "fish" if not set.
-std::unique_ptr<wcstring_list_ffi_t> get_history_variable_text_ffi(
-    const wcstring &fish_history_val);
+wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val);
 
-/// FFI helper which assumes the principal stack.
-/// TODO: Once env_dispatch_var_change is ported, pass in the env_stack directly.
-void env_dispatch_var_change_ffi(const wcstring &key /* , env_stack_t &vars */);
-
-#endif
 #endif

@@ -10,12 +10,12 @@ use crate::env::{EnvMode, EnvStackSetResult};
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::re::{regex_make_anchored, to_boxed_chars};
+use crate::wchar::WString;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::wgettext_fmt;
 use libc::c_int;
 use pcre2::utf32::{Regex, RegexBuilder};
-pub use widestring::Utf32String as WString;
 
 const CMD: &wstr = L!("abbr");
 
@@ -429,11 +429,15 @@ fn abbr_erase(opts: &Options, parser: &mut Parser) -> Option<c_int> {
     })
 }
 
-pub fn abbr(parser: &mut Parser, streams: &mut IoStreams<'_>, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn abbr(
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
+) -> Option<c_int> {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 
-    let cmd = argv[0];
+    let cmd = &argv[0];
     // Note 1 is returned by wgetopt to indicate a non-option argument.
     const NON_OPTION_ARGUMENT: char = 1 as char;
     const SET_CURSOR_SHORT: char = 2 as char;
@@ -549,18 +553,18 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams<'_>, argv: &mut [&wstr]
                     cmd,
                     argv_read[w.woptind - 1]
                 ));
-                builtin_print_error_trailer(parser, streams, cmd);
+                builtin_print_error_trailer(parser, streams.err, cmd);
             }
             'h' => {
                 builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, &argv[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, &argv[w.woptind - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             _ => {

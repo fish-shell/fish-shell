@@ -13,7 +13,7 @@ use crate::wchar_ext::ToWString;
 use crate::{
     builtins::shared::{HelpOnlyCmdOpts, STATUS_CMD_OK},
     ffi::{self, Repin},
-    wchar::wstr,
+    wchar::{wstr, WString},
     wchar_ffi::{c_str, WCharFromFFI, WCharToFFI},
     wutil::{fish_wcstoi, wgettext_fmt},
 };
@@ -64,14 +64,14 @@ fn send_to_bg(
 }
 
 /// Builtin for putting a job in the background.
-pub fn bg(parser: &mut Parser, streams: &mut IoStreams<'_>, args: &mut [&wstr]) -> Option<c_int> {
+pub fn bg(parser: &mut Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
         Ok(opts) => opts,
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
 
-    let cmd = args[0];
+    let cmd = &args[0];
     if opts.print_help {
         builtin_print_help(parser, streams, args.get(0)?);
         return STATUS_CMD_OK;

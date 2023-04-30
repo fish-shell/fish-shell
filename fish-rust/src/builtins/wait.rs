@@ -9,6 +9,7 @@ use crate::parser::Parser;
 use crate::proc::{proc_wait_any, Job};
 use crate::signal::sigchecker_t;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
+use crate::wchar::WString;
 use crate::wchar::{widestrs, wstr};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{self, fish_wcstoi, wgettext_fmt};
@@ -142,7 +143,11 @@ fn wait_for_completion(
 }
 
 #[widestrs]
-pub fn wait(parser: &mut Parser, streams: &mut IoStreams<'_>, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn wait(
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
+) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option

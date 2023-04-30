@@ -13,7 +13,6 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "ffi.h"
 
 /** Kill ring */
 static owning_lock<std::list<wcstring>> s_kill_list;

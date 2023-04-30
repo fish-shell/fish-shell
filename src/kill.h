@@ -6,7 +6,6 @@
 #define FISH_KILL_H
 
 #include "common.h"
-#include "cxx.h"
 #include "wutil.h"
 
 /// Replace the specified string in the killring.

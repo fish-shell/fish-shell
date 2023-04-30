@@ -6,6 +6,7 @@ use super::shared::{
 use crate::builtins::shared::builtin_unknown_option;
 use crate::io::IoStreams;
 use crate::parser::Parser;
+use crate::wchar::WString;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::wgettext_fmt;
@@ -18,11 +19,11 @@ struct Options {
 }
 
 fn parse_options(
-    args: &mut [&wstr],
+    args: &mut [WString],
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = args[0];
+    let cmd = &args[0];
 
     const SHORT_OPTS: &wstr = L!("+:hi");
     const LONG_OPTS: &[woption] = &[
@@ -59,9 +60,9 @@ fn parse_options(
 pub fn contains(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    args: &mut [&wstr],
+    args: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = args[0];
+    let cmd = &args[0];
 
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),

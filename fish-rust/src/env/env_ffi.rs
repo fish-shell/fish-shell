@@ -2,7 +2,7 @@ use super::environment::{self, EnvDyn, EnvNull, EnvStack, EnvStackRef, Environme
 use super::var::{ElectricVar, EnvVar, EnvVarFlags, Statuses};
 use crate::env::EnvMode;
 use crate::event::Event;
-use crate::ffi::{wcharz_t, wcstring_list_ffi_t};
+use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t};
 use crate::null_terminated_array::OwningNullTerminatedArrayRefFFI;
 use crate::signal::Signal;
 use crate::wchar_ffi::WCharToFFI;
@@ -11,8 +11,8 @@ use core::ffi::c_char;
 use cxx::{CxxVector, CxxWString, UniquePtr};
 use std::pin::Pin;
 
-#[cxx::bridge]
 #[allow(clippy::module_inception)]
+#[cxx::bridge]
 mod env_ffi {
     /// Return values for `EnvStack::set()`.
     #[repr(u8)]
@@ -147,6 +147,46 @@ mod env_ffi {
     }
 }
 pub use env_ffi::EnvStackSetResult;
+
+impl Default for EnvStackSetResult {
+    fn default() -> Self {
+        EnvStackSetResult::ENV_OK
+    }
+}
+
+/// FFI bits.
+impl EnvVar {
+    pub fn equals_ffi(&self, rhs: &EnvVar) -> bool {
+        self == rhs
+    }
+
+    pub fn as_string_ffi(&self) -> UniquePtr<CxxWString> {
+        self.as_string().to_ffi()
+    }
+
+    pub fn as_list_ffi(&self) -> UniquePtr<wcstring_list_ffi_t> {
+        self.as_list().to_ffi()
+    }
+
+    pub fn to_list_ffi(&self, mut out: Pin<&mut wcstring_list_ffi_t>) {
+        out.as_mut().clear();
+        for val in self.as_list() {
+            out.as_mut().push(val);
+        }
+    }
+
+    pub fn clone_box_ffi(&self) -> Box<Self> {
+        Box::new(self.clone())
+    }
+
+    pub fn get_flags_ffi(&self) -> u8 {
+        self.get_flags().bits()
+    }
+
+    pub fn get_delimiter_ffi(self: &EnvVar) -> wchar_t {
+        self.get_delimiter().into()
+    }
+}
 
 fn env_var_create_ffi(vals: &wcstring_list_ffi_t, flags: u8) -> Box<EnvVar> {
     Box::new(EnvVar::new_vec(

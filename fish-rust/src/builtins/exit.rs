@@ -4,9 +4,14 @@ use super::r#return::parse_return_value;
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::wchar::wstr;
+use crate::wchar::WString;
 
 /// Function for handling the exit builtin.
-pub fn exit(parser: &mut Parser, streams: &mut IoStreams<'_>, args: &mut [&wstr]) -> Option<c_int> {
+pub fn exit(
+    parser: &mut Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
+) -> Option<c_int> {
     let retval = match parse_return_value(args, parser, streams) {
         Ok(v) => v,
         Err(e) => return e,

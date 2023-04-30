@@ -8,7 +8,6 @@ use crate::flog::FLOGF;
 use crate::wchar::{decode_byte_from_char, wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
-use std::convert::AsRef;
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &wstr) -> bool {

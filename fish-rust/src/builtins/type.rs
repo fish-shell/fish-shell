@@ -37,7 +37,7 @@ struct type_cmd_opts_t {
 pub fn r#type(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    argv: &mut [&wstr],
+    argv: &mut [WString],
 ) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();

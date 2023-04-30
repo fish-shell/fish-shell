@@ -25,10 +25,8 @@ struct event_list_ffi_t;
 struct EnvVar;
 struct EnvNull;
 struct EnvStackRef;
+struct EnvDyn;
 #endif
-
-// using environment_t = EnvDyn;
-// using env_var_t = EnvVar;
 
 /// FFI helper for events.
 struct Event;
@@ -43,7 +41,6 @@ struct event_list_ffi_t {
     // Append an Event pointer, which came from Box::into_raw().
     void push(void *event);
 };
-#endif
 
 struct owning_null_terminated_array_t;
 
@@ -80,8 +77,6 @@ using env_mode_flags_t = uint16_t;
 
 /// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
-
-#if 0
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -330,5 +325,4 @@ const std::map<wcstring, wcstring> &env_get_inherited();
 /// fish_history_val is the value of the "$fish_history" variable, or "fish" if not set.
 wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val);
 
-#endif
 #endif

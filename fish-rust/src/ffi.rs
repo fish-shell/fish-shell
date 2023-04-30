@@ -44,16 +44,13 @@ include_cpp! {
 
     #include "builtins/argparse.h"
     #include "builtins/bind.h"
-    #include "builtins/break_continue.h"
-    #include "builtins/breakpoint.h"
     #include "builtins/cd.h"
     #include "builtins/commandline.h"
     #include "builtins/complete.h"
-    #include "builtins/count.h"
     #include "builtins/disown.h"
     #include "builtins/eval.h"
-    #include "builtins/false.h"
     #include "builtins/fg.h"
+    #include "builtins/function.h"
     #include "builtins/functions.h"
     #include "builtins/history.h"
     #include "builtins/jobs.h"
@@ -65,7 +62,6 @@ include_cpp! {
     #include "builtins/status.h"
     #include "builtins/string.h"
     #include "builtins/test.h"
-    #include "builtins/true.h"
     #include "builtins/ulimit.h"
 
     safety!(unsafe_ffi)
@@ -111,36 +107,32 @@ include_cpp! {
 
     generate!("colorize_shell")
     generate!("reader_status_count")
-    generate!("reader_read")
+    generate!("reader_read_ffi")
     generate!("kill_entries_ffi")
 
     generate!("get_history_variable_text_ffi")
 
-    generate!("builtin_argparse")
-    generate!("builtin_bind")
-    generate!("builtin_break_continue")
-    generate!("builtin_breakpoint")
-    generate!("builtin_cd")
-    generate!("builtin_commandline")
-    generate!("builtin_complete")
-    generate!("builtin_count")
-    generate!("builtin_disown")
-    generate!("builtin_eval")
-    generate!("builtin_false")
-    generate!("builtin_fg")
-    generate!("builtin_functions")
-    generate!("builtin_history")
-    generate!("builtin_jobs")
-    generate!("builtin_path")
-    generate!("builtin_read")
-    generate!("builtin_set")
-    generate!("builtin_set_color")
-    generate!("builtin_source")
-    generate!("builtin_status")
-    generate!("builtin_string")
-    generate!("builtin_test")
-    generate!("builtin_true")
-    generate!("builtin_ulimit")
+    generate!("builtin_argparse_ffi")
+    generate!("builtin_bind_ffi")
+    generate!("builtin_cd_ffi")
+    generate!("builtin_commandline_ffi")
+    generate!("builtin_complete_ffi")
+    generate!("builtin_disown_ffi")
+    generate!("builtin_eval_ffi")
+    generate!("builtin_fg_ffi")
+    generate!("builtin_function_ffi")
+    generate!("builtin_functions_ffi")
+    generate!("builtin_history_ffi")
+    generate!("builtin_jobs_ffi")
+    generate!("builtin_path_ffi")
+    generate!("builtin_read_ffi")
+    generate!("builtin_set_ffi")
+    generate!("builtin_set_color_ffi")
+    generate!("builtin_source_ffi")
+    generate!("builtin_status_ffi")
+    generate!("builtin_string_ffi")
+    generate!("builtin_test_ffi")
+    generate!("builtin_ulimit_ffi")
 }
 
 unsafe impl Send for env_universal_t {}

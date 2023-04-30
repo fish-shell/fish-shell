@@ -779,7 +779,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 pub fn printf(
     _parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    argv: &mut [&wstr],
+    argv: &mut [WString],
 ) -> Option<c_int> {
     let mut argc = argv.len();
 

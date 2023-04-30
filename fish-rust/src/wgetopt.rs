@@ -23,7 +23,7 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-use crate::wchar::{wstr, WExt, L};
+use crate::wchar::{wstr, WExt, WString, L};
 
 /// Describe how to deal with options that follow non-option ARGV-elements.
 ///
@@ -64,14 +64,14 @@ fn empty_wstr() -> &'static wstr {
     Default::default()
 }
 
-pub struct wgetopter_t<'opts, 'args, 'argarray> {
+pub struct wgetopter_t<'opts, 'argarray> {
     /// Argv.
-    argv: &'argarray mut [&'args wstr],
+    argv: &'argarray mut [WString],
 
     /// For communication from `getopt` to the caller. When `getopt` finds an option that takes an
     /// argument, the argument value is returned here. Also, when `ordering` is RETURN_IN_ORDER, each
     /// non-option ARGV-element is returned here.
-    pub woptarg: Option<&'args wstr>,
+    pub woptarg: Option<&'argarray wstr>,
 
     shortopts: &'opts wstr,
     longopts: &'opts [woption<'opts>],
@@ -80,7 +80,7 @@ pub struct wgetopter_t<'opts, 'args, 'argarray> {
     /// returned was found. This allows us to pick up the scan where we left off.
     ///
     /// If this is empty, it means resume the scan by advancing to the next ARGV-element.
-    nextchar: &'args wstr,
+    nextchar: &'argarray wstr,
 
     /// Index in ARGV of the next element to be scanned. This is used for communication to and from
     /// the caller and for communication between successive calls to `getopt`.
@@ -153,11 +153,11 @@ pub const fn wopt(name: &wstr, has_arg: woption_argument_t, val: char) -> woptio
     woption { name, has_arg, val }
 }
 
-impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
+impl<'opts, 'argarray> wgetopter_t<'opts, 'argarray> {
     pub fn new(
         shortopts: &'opts wstr,
         longopts: &'opts [woption],
-        argv: &'argarray mut [&'args wstr],
+        argv: &'argarray mut [WString],
     ) -> Self {
         return wgetopter_t {
             woptopt: '?',
@@ -321,7 +321,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             if self.ordering == Ordering::REQUIRE_ORDER {
                 return None;
             }
-            self.woptarg = Some(self.argv[self.woptind]);
+            self.woptarg = Some(&self.argv[self.woptind]);
             self.woptind += 1;
             return Some(char::from(1));
         }
@@ -391,7 +391,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             } else {
                 // We already incremented `woptind' once; increment it again when taking next
                 // ARGV-elt as argument.
-                self.woptarg = Some(self.argv[self.woptind]);
+                self.woptarg = Some(&self.argv[self.woptind]);
                 self.woptind += 1;
             }
             self.nextchar = empty_wstr();
@@ -420,7 +420,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             }
         } else if pfound.has_arg == woption_argument_t::required_argument {
             if self.woptind < self.argc() {
-                self.woptarg = Some(self.argv[self.woptind]);
+                self.woptarg = Some(&self.argv[self.woptind]);
                 self.woptind += 1;
             } else {
                 self.nextchar = empty_wstr();

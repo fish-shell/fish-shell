@@ -29,7 +29,7 @@ struct Options {
 
 #[widestrs]
 fn parse_cmd_opts(
-    args: &mut [&wstr],
+    args: &mut [WString],
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
@@ -285,7 +285,7 @@ fn evaluate_expression(
 
 /// The math builtin evaluates math expressions.
 #[widestrs]
-pub fn math(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn math(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [WString]) -> Option<c_int> {
     let cmd = argv[0];
 
     let (opts, mut optind) = match parse_cmd_opts(argv, parser, streams) {

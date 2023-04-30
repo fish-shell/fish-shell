@@ -8,4 +8,5 @@
 struct io_streams_t;
 
 maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+int builtin_test_ffi(void *parser, void *streams, const void *argv);
 #endif

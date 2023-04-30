@@ -2,7 +2,7 @@ use super::environment::{self, EnvDyn, EnvNull, EnvStack, EnvStackRef, Environme
 use super::var::{ElectricVar, EnvVar, EnvVarFlags, Statuses};
 use crate::env::EnvMode;
 use crate::event::Event;
-use crate::ffi::{event_list_ffi_t, wchar_t, wcharz_t, wcstring_list_ffi_t};
+use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t};
 use crate::null_terminated_array::OwningNullTerminatedArrayRefFFI;
 use crate::signal::Signal;
 use crate::wchar_ffi::WCharToFFI;

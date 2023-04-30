@@ -50,9 +50,8 @@
 /// At init, we read all the environment variables from this array.
 extern char **environ;
 
-/// The character used to delimit path and non-path variables in exporting and in string expansion.
+/// The character used to delimit path variables in exporting and in string expansion.
 static constexpr wchar_t PATH_ARRAY_SEP = L':';
-static constexpr wchar_t NONPATH_ARRAY_SEP = L' ';
 
 bool curses_initialized = false;
 
@@ -151,22 +150,56 @@ static export_generation_t next_export_generation() {
     return ++*val;
 }
 
-const std::vector<wcstring> &env_var_t::as_list() const { return *vals_; }
-
-wchar_t env_var_t::get_delimiter() const {
-    return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
+// static
+env_var_t env_var_t::new_ffi(EnvVar *ptr) {
+    assert(ptr != nullptr && "env_var_t::new_ffi called with null pointer");
+    return env_var_t(rust::Box<EnvVar>::from_raw(ptr));
 }
 
-/// Return a string representation of the var.
-wcstring env_var_t::as_string() const { return join_strings(*vals_, get_delimiter()); }
+wchar_t env_var_t::get_delimiter() const { return impl_->get_delimiter(); }
 
-void env_var_t::to_list(std::vector<wcstring> &out) const { out = *vals_; }
+bool env_var_t::empty() const { return impl_->is_empty(); }
+bool env_var_t::exports() const { return impl_->exports(); }
+bool env_var_t::is_read_only() const { return impl_->is_read_only(); }
+bool env_var_t::is_pathvar() const { return impl_->is_pathvar(); }
+env_var_t::env_var_flags_t env_var_t::get_flags() const { return impl_->get_flags(); }
+
+wcstring env_var_t::as_string() const {
+    wcstring res = std::move(*impl_->as_string());
+    return res;
+}
+
+void env_var_t::to_list(std::vector<wcstring> &out) const {
+    wcstring_list_ffi_t list{};
+    impl_->to_list(list);
+    out = std::move(list.vals);
+}
+
+std::vector<wcstring> env_var_t::as_list() const {
+    std::vector<wcstring> res = std::move(impl_->as_list()->vals);
+    return res;
+}
+
+env_var_t &env_var_t::operator=(const env_var_t &rhs) {
+    this->impl_ = rhs.impl_->clone_box();
+    return *this;
+}
 
 env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
     env_var_flags_t result = 0;
-    if (is_read_only(name)) result |= flag_read_only;
+    if (::is_read_only(name)) result |= flag_read_only;
     return result;
 }
+
+env_var_t::env_var_t(const env_var_t &rhs) : impl_(rhs.impl_->clone_box()) {}
+
+env_var_t::env_var_t(std::vector<wcstring> vals, env_var_flags_t flags)
+    : impl_(env_var_create(std::move(vals), flags)) {}
+
+env_var_t::env_var_t(const wchar_t *name, std::vector<wcstring> vals)
+    : impl_(env_var_create_from_name(name, std::move(vals))) {}
+
+bool env_var_t::operator==(const env_var_t &rhs) const { return impl_->equals(*rhs.impl_); }
 
 /// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
 std::shared_ptr<const std::vector<wcstring>> env_var_t::empty_list() {

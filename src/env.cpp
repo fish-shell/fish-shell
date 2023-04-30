@@ -1619,3 +1619,38 @@ void unsetenv_lock(const char *name) {
     scoped_lock locker(s_setenv_lock);
     unsetenv(name);
 }
+
+wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val) {
+    wcstring_list_ffi_t out{};
+    std::shared_ptr<history_t> history = commandline_get_state().history;
+    if (!history) {
+        // Effective duplication of history_session_id().
+        wcstring session_id{};
+        if (fish_history_val.empty()) {
+            // No session.
+            session_id.clear();
+        } else if (!valid_var_name(fish_history_val)) {
+            session_id = L"fish";
+            FLOGF(error,
+                  _(L"History session ID '%ls' is not a valid variable name. "
+                    L"Falling back to `%ls`."),
+                  fish_history_val.c_str(), session_id.c_str());
+        } else {
+            // Valid session.
+            session_id = fish_history_val;
+        }
+        history = history_t::with_name(session_id);
+    }
+    if (history) {
+        history->get_history(out.vals);
+    }
+    return out;
+}
+
+event_list_ffi_t::event_list_ffi_t() = default;
+
+void event_list_ffi_t::push(void *event_vp) {
+    auto event = static_cast<Event *>(event_vp);
+    assert(event && "Null event");
+    events.push_back(rust::Box<Event>::from_raw(event));
+}

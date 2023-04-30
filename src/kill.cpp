@@ -57,3 +57,5 @@ std::vector<wcstring> kill_entries() {
     auto kill_list = s_kill_list.acquire();
     return std::vector<wcstring>{kill_list->begin(), kill_list->end()};
 }
+
+wcstring_list_ffi_t kill_entries_ffi() { return kill_entries(); }

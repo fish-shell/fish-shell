@@ -11,7 +11,6 @@ use std::sync::Arc;
 pub const PATH_ARRAY_SEP: char = ':';
 pub const NONPATH_ARRAY_SEP: char = ' ';
 
-// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 bitflags! {
     /// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
     #[repr(C)]
@@ -69,6 +68,12 @@ pub enum EnvStackSetResult {
     ENV_SCOPE,
     ENV_INVALID,
     ENV_NOT_FOUND,
+}
+
+impl Default for EnvStackSetResult {
+    fn default() -> Self {
+        EnvStackSetResult::ENV_OK
+    }
 }
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
@@ -213,7 +218,7 @@ impl EnvVar {
     }
 
     /// Returns the delimiter character used when converting from a list to a string.
-    fn get_delimiter(&self) -> char {
+    pub fn get_delimiter(&self) -> char {
         if self.is_pathvar() {
             PATH_ARRAY_SEP
         } else {
@@ -250,7 +255,7 @@ impl EnvVar {
     }
 
     /// Returns flags for a variable with the given name.
-    fn flags_for(name: &wstr) -> EnvVarFlags {
+    pub fn flags_for(name: &wstr) -> EnvVarFlags {
         let mut result = EnvVarFlags::empty();
         if is_read_only(name) {
             result.insert(EnvVarFlags::READ_ONLY);

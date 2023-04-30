@@ -104,6 +104,18 @@ impl ToCppWString for &wstr {
     }
 }
 
+impl ToCppWString for WString {
+    fn into_cpp(self) -> cxx::UniquePtr<cxx::CxxWString> {
+        self.to_ffi()
+    }
+}
+
+impl ToCppWString for &WString {
+    fn into_cpp(self) -> cxx::UniquePtr<cxx::CxxWString> {
+        self.to_ffi()
+    }
+}
+
 /// WString may be converted to CxxWString.
 impl WCharToFFI for WString {
     type Target = cxx::UniquePtr<cxx::CxxWString>;
@@ -210,6 +222,12 @@ impl<'a> AsWstr<'a> for cxx::UniquePtr<cxx::CxxWString> {
 impl<'a> AsWstr<'a> for cxx::CxxWString {
     fn as_wstr(&'a self) -> &'a wstr {
         wstr::from_char_slice(self.as_chars())
+    }
+}
+
+impl AsWstr<'_> for wcharz_t {
+    fn as_wstr(&self) -> &wstr {
+        wstr::from_char_slice(self.chars())
     }
 }
 

@@ -8,23 +8,23 @@ use crate::wchar_ffi::c_str;
 use widestring::U32CStr;
 use widestring_suffix::widestrs;
 
-/// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
-pub struct sigchecker_t {
+/// A Sigchecker can be used to check if a SIGINT (or SIGHUP) has been delivered.
+pub struct Sigchecker {
     topic: topic_t,
     gen: generation_t,
 }
 
-impl sigchecker_t {
+impl Sigchecker {
     /// Create a new checker for the given topic.
-    pub fn new(topic: topic_t) -> sigchecker_t {
-        let mut res = sigchecker_t { topic, gen: 0 };
+    pub fn new(topic: topic_t) -> Self {
+        let mut res = Sigchecker { topic, gen: 0 };
         // Call check() to update our generation.
         res.check();
         res
     }
 
     /// Create a new checker for SIGHUP and SIGINT.
-    pub fn new_sighupint() -> sigchecker_t {
+    pub fn new_sighupint() -> Self {
         Self::new(topic_t::sighupint)
     }
 

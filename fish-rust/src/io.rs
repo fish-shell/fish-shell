@@ -10,7 +10,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
 use crate::path::path_apply_working_directory;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
-use crate::signal::sigchecker_t;
+use crate::signal::Sigchecker;
 use crate::topic_monitor::topic_t;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wdirname, wstat, wwrite_to_fd};
@@ -789,7 +789,7 @@ pub struct FdOutputStream {
     fd: RawFd,
 
     /// Used to check if a SIGINT has been received when EINTR is encountered
-    sigcheck: sigchecker_t,
+    sigcheck: Sigchecker,
 
     /// Whether we have received an error.
     errored: bool,
@@ -800,7 +800,7 @@ impl FdOutputStream {
         assert!(fd >= 0, "Invalid fd");
         FdOutputStream {
             fd,
-            sigcheck: sigchecker_t::new(topic_t::sighupint),
+            sigcheck: Sigchecker::new(topic_t::sighupint),
             errored: false,
         }
     }

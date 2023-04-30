@@ -6,6 +6,7 @@
 #define FISH_KILL_H
 
 #include "common.h"
+#include "wutil.h"
 
 /// Replace the specified string in the killring.
 void kill_replace(const wcstring &old, const wcstring &newv);
@@ -21,5 +22,8 @@ wcstring kill_yank();
 
 /// Get copy of kill ring as vector of strings
 std::vector<wcstring> kill_entries();
+
+/// Rust-friendly kill entries.
+wcstring_list_ffi_t kill_entries_ffi();
 
 #endif

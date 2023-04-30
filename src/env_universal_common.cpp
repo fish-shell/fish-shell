@@ -236,6 +236,14 @@ maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     return none();
 }
 
+std::unique_ptr<env_var_t> env_universal_t::get_ffi(const wcstring &name) const {
+    if (auto var = this->get(name)) {
+        return make_unique<env_var_t>(var.acquire());
+    } else {
+        return nullptr;
+    }
+}
+
 maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &name) const {
     auto where = vars.find(name);
     if (where != vars.end()) {
@@ -1430,3 +1438,11 @@ bool universal_notifier_t::notification_fd_became_readable(int fd) {
     UNUSED(fd);
     return false;
 }
+
+var_table_ffi_t::var_table_ffi_t(const var_table_t &table) {
+    for (const auto &kv : table) {
+        this->names.push_back(kv.first);
+        this->vars.push_back(kv.second);
+    }
+}
+var_table_ffi_t::~var_table_ffi_t() = default;

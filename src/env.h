@@ -15,6 +15,13 @@
 #include "common.h"
 #include "cxx.h"
 #include "maybe.h"
+#include "wutil.h"
+
+#if INCLUDE_RUST_HEADERS
+#include "env/env_ffi.rs.h"
+#else
+struct EnvVar;
+#endif
 
 struct owning_null_terminated_array_t;
 
@@ -98,17 +105,6 @@ class env_var_t {
    public:
     using env_var_flags_t = uint8_t;
 
-   private:
-    env_var_t(std::shared_ptr<const std::vector<wcstring>> vals, env_var_flags_t flags)
-        : vals_(std::move(vals)), flags_(flags) {}
-
-    /// The list of values in this variable.
-    /// shared_ptr allows for cheap copying.
-    std::shared_ptr<const std::vector<wcstring>> vals_{empty_list()};
-
-    /// Flag in this variable.
-    env_var_flags_t flags_{};
-
    public:
     enum {
         flag_export = 1 << 0,     // whether the variable is exported
@@ -117,69 +113,80 @@ class env_var_t {
     };
 
     // Constructors.
-    env_var_t() = default;
-    env_var_t(const env_var_t &) = default;
+    env_var_t() : env_var_t{std::vector<wcstring>{}, 0} {}
+    env_var_t(const env_var_t &);
     env_var_t(env_var_t &&) = default;
 
-    env_var_t(std::vector<wcstring> vals, env_var_flags_t flags)
-        : env_var_t(std::make_shared<std::vector<wcstring>>(std::move(vals)), flags) {}
-
+    env_var_t(std::vector<wcstring> vals, env_var_flags_t flags);
     env_var_t(wcstring val, env_var_flags_t flags)
-        : env_var_t(std::vector<wcstring>{std::move(val)}, flags) {}
+        : env_var_t{std::vector<wcstring>{std::move(val)}, flags} {}
 
     // Constructors that infer the flags from a name.
-    env_var_t(const wchar_t *name, std::vector<wcstring> vals)
-        : env_var_t(std::move(vals), flags_for(name)) {}
+    env_var_t(const wchar_t *name, std::vector<wcstring> vals);
+    env_var_t(const wchar_t *name, wcstring val)
+        : env_var_t{name, std::vector<wcstring>{std::move(val)}} {}
 
-    env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
+    // Construct from FFI. This transfers ownership of the EnvVar, which should originate
+    // in Box::into_raw().
+    static env_var_t new_ffi(EnvVar *ptr);
 
-    bool empty() const { return vals_->empty() || (vals_->size() == 1 && vals_->front().empty()); }
-    bool exports() const { return flags_ & flag_export; }
-    bool is_pathvar() const { return flags_ & flag_pathvar; }
-    env_var_flags_t get_flags() const { return flags_; }
+    // Get the underlying EnvVar pointer.
+    // Note you may need to mem::transmute this, since autocxx gets confused when going from Rust ->
+    // C++ -> Rust.
+    const EnvVar *ffi_ptr() const { return &*this->impl_; }
+
+    bool empty() const;
+    bool exports() const;
+    bool is_read_only() const;
+    bool is_pathvar() const;
+    env_var_flags_t get_flags() const;
 
     wcstring as_string() const;
     void to_list(std::vector<wcstring> &out) const;
-    const std::vector<wcstring> &as_list() const;
+    std::vector<wcstring> as_list() const;
+    wcstring_list_ffi_t as_list_ffi() const { return as_list(); }
 
     /// \return the character used when delimiting quoted expansion.
     wchar_t get_delimiter() const;
 
     /// \return a copy of this variable with new values.
     env_var_t setting_vals(std::vector<wcstring> vals) const {
-        return env_var_t{std::move(vals), flags_};
+        return env_var_t{std::move(vals), get_flags()};
     }
 
     env_var_t setting_exports(bool exportv) const {
-        env_var_flags_t flags = flags_;
+        env_var_flags_t flags = get_flags();
         if (exportv) {
             flags |= flag_export;
         } else {
             flags &= ~flag_export;
         }
-        return env_var_t{vals_, flags};
+        return env_var_t{as_list(), flags};
     }
 
     env_var_t setting_pathvar(bool pathvar) const {
-        env_var_flags_t flags = flags_;
+        env_var_flags_t flags = get_flags();
         if (pathvar) {
             flags |= flag_pathvar;
         } else {
             flags &= ~flag_pathvar;
         }
-        return env_var_t{vals_, flags};
+        return env_var_t{as_list(), flags};
     }
 
     static env_var_flags_t flags_for(const wchar_t *name);
     static std::shared_ptr<const std::vector<wcstring>> empty_list();
 
-    env_var_t &operator=(const env_var_t &) = default;
+    env_var_t &operator=(const env_var_t &);
     env_var_t &operator=(env_var_t &&) = default;
 
-    bool operator==(const env_var_t &rhs) const {
-        return *vals_ == *rhs.vals_ && flags_ == rhs.flags_;
-    }
+    bool operator==(const env_var_t &rhs) const;
     bool operator!=(const env_var_t &rhs) const { return !(*this == rhs); }
+
+   private:
+    env_var_t(rust::Box<EnvVar> &&impl) : impl_(std::move(impl)) {}
+
+    rust::Box<EnvVar> impl_;
 };
 typedef std::unordered_map<wcstring, env_var_t> var_table_t;
 
@@ -334,4 +341,5 @@ void unsetenv_lock(const char *name);
 /// Returns the originally inherited variables and their values.
 /// This is a simple key->value map and not e.g. cut into paths.
 const std::map<wcstring, wcstring> &env_get_inherited();
+
 #endif

@@ -25,6 +25,7 @@ fn main() -> miette::Result<()> {
     let source_files = vec![
         "src/abbrs.rs",
         "src/ast.rs",
+        "src/env/env_ffi.rs",
         "src/event.rs",
         "src/common.rs",
         "src/fd_monitor.rs",

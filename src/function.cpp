@@ -360,7 +360,7 @@ wcstring function_properties_t::annotated_definition(const wcstring &name) const
     for (const auto &d : handlers) {
         switch (d.typ) {
             case event_type_t::signal: {
-                append_format(out, L" --on-signal %ls", sig2wcs(d.signal));
+                append_format(out, L" --on-signal %ls", sig2wcs(d.signal)->c_str());
                 break;
             }
             case event_type_t::variable: {

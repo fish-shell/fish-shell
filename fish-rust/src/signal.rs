@@ -5,11 +5,63 @@ use crate::event::{enqueue_signal, is_signal_observed};
 use crate::termsize::termsize_handle_winch;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
 use crate::wchar::{wstr, WExt, L};
-use crate::wutil::fish_wcstoi;
-use crate::wutil::{wgettext, wgettext_str, wperror};
+use crate::wchar_ffi::{AsWstr, WCharToFFI};
+use crate::wutil::{fish_wcstoi, wgettext, wgettext_str, wperror};
+use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
 use std::sync::atomic::{AtomicI32, Ordering};
 use widestring_suffix::widestrs;
+
+#[cxx::bridge]
+mod signal_ffi {
+    extern "Rust" {
+        fn signal_set_handlers(interactive: bool);
+        fn signal_set_handlers_once(interactive: bool);
+        #[cxx_name = "signal_handle"]
+        fn signal_handle_ffi(sig: i32);
+        fn signal_unblock_all();
+
+        #[cxx_name = "sig2wcs"]
+        fn sig2wcs_ffi(sig: i32) -> UniquePtr<CxxWString>;
+
+        #[cxx_name = "wcs2sig"]
+        fn wcs2sig_ffi(sig: &CxxWString) -> i32;
+
+        #[cxx_name = "signal_get_desc"]
+        fn signal_get_desc_ffi(sig: i32) -> UniquePtr<CxxWString>;
+
+        fn signal_check_cancel() -> i32;
+        fn signal_clear_cancel();
+        fn signal_reset_handlers();
+
+    }
+}
+
+fn sig2wcs_ffi(sig: i32) -> UniquePtr<CxxWString> {
+    Signal::new(sig).name().to_ffi()
+}
+
+fn wcs2sig_ffi(sig: &CxxWString) -> i32 {
+    if let Some(sig) = Signal::parse(sig.as_wstr()) {
+        sig.code()
+    } else {
+        -1
+    }
+}
+
+fn signal_get_desc_ffi(sig: i32) -> UniquePtr<CxxWString> {
+    Signal::new(sig).desc().to_ffi()
+}
+
+fn signal_handle_ffi(sig: i32) {
+    signal_handle(Signal::new(sig));
+}
+
+// This is extern "C" for FFI purposes, as this is used after fork().
+#[no_mangle]
+pub extern "C" fn get_signals_with_handlers_ffi(set: *mut libc::sigset_t) {
+    get_signals_with_handlers(unsafe { &mut *set });
+}
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
 static MAIN_PID: AtomicI32 = AtomicI32::new(0);
@@ -38,10 +90,15 @@ fn reraise_if_forked_child(sig: i32) -> bool {
 /// Of course this is modified from a signal handler.
 static CANCELLATION_SIGNAL: AtomicI32 = AtomicI32::new(0);
 
+/// Set the cancellation signal to zero.
+/// In generally this should only be done in interactive sessions.
 pub fn signal_clear_cancel() {
     CANCELLATION_SIGNAL.store(0, Ordering::Relaxed);
 }
 
+/// \return the most recent cancellation signal received by the fish process.
+/// Currently only SIGINT is considered a cancellation signal.
+/// This is thread safe.
 pub fn signal_check_cancel() -> i32 {
     CANCELLATION_SIGNAL.load(Ordering::Relaxed)
 }
@@ -121,7 +178,8 @@ extern "C" fn fish_signal_handler(
     set_errno(saved_errno);
 }
 
-fn signal_reset_handlers() {
+/// Set all signal handlers to SIG_DFL.
+pub fn signal_reset_handlers() {
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
     unsafe { libc::sigemptyset(&mut act.sa_mask) };
     act.sa_flags = 0;
@@ -190,8 +248,11 @@ fn set_interactive_handlers() {
     sigaction(libc::SIGWINCH, &act, nullptr);
 }
 
-/// Sets up appropriate signal handlers.
-fn signal_set_handlers(interactive: bool) {
+/// Set signal handlers to fish default handlers.
+pub fn signal_set_handlers(interactive: bool) {
+    // Mark our main pid.
+    MAIN_PID.store(unsafe { libc::getpid() }, Ordering::Relaxed);
+
     use libc::SIG_IGN;
     let nullptr = std::ptr::null_mut();
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
@@ -238,7 +299,19 @@ fn signal_set_handlers(interactive: bool) {
     }
 }
 
-pub fn signal_handle(sig: libc::c_int) {
+pub fn signal_set_handlers_once(interactive: bool) {
+    static NONINTER_ONCE: std::sync::Once = std::sync::Once::new();
+    NONINTER_ONCE.call_once(|| signal_set_handlers(false));
+
+    static INTER_ONCE: std::sync::Once = std::sync::Once::new();
+    if interactive {
+        INTER_ONCE.call_once(set_interactive_handlers);
+    }
+}
+
+/// Mark that a signal is being handled.
+pub fn signal_handle(sig: Signal) {
+    let sig = sig.code();
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
 
     // These should always be handled.
@@ -443,7 +516,8 @@ impl Signal {
             .find(|entry| entry.signal == self.code())
     }
 
-    // Previously sig2wcs().
+    /// Get string representation of a signal.
+    /// Previously sig2wcs().
     pub fn name(&self) -> &'static wstr {
         match self.get_lookup_entry() {
             Some(entry) => entry.name,
@@ -451,7 +525,8 @@ impl Signal {
         }
     }
 
-    // Previously signal_get_desc().
+    /// Returns a description of the specified signal.
+    /// Previously signal_get_desc().
     pub fn desc(&self) -> &'static wstr {
         match self.get_lookup_entry() {
             Some(entry) => wgettext_str(entry.desc),

@@ -42,6 +42,7 @@ fn main() -> miette::Result<()> {
         "src/parse_tree.rs",
         "src/parse_util.rs",
         "src/redirection.rs",
+        "src/signal.rs",
         "src/smoke.rs",
         "src/termsize.rs",
         "src/timer.rs",

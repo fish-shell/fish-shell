@@ -581,10 +581,10 @@ wcstring summary_command(const job_ref_t &j, const process_ptr_t &p = nullptr) {
         // Arguments are the signal name and description.
         int sig = p->status.signal_code();
         buffer.push_back(L' ');
-        buffer.append(escape_string(sig2wcs(sig)));
+        buffer.append(escape_string(std::move(*sig2wcs(sig))));
 
         buffer.push_back(L' ');
-        buffer.append(escape_string(signal_get_desc(sig)));
+        buffer.append(escape_string(std::move(*signal_get_desc(sig))));
 
         // If we have multiple processes, we also append the pid and argv.
         if (j->processes.size() > 1) {

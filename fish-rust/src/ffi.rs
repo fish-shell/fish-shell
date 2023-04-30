@@ -93,14 +93,8 @@ include_cpp! {
     generate!("pretty_printer_t")
 
     generate!("escape_string")
-    generate!("sig2wcs")
-    generate!("wcs2sig")
-    generate!("signal_get_desc")
 
     generate!("fd_event_signaller_t")
-
-    generate!("signal_handle")
-    generate!("signal_check_cancel")
 
     generate!("block_t")
     generate!("block_type_t")

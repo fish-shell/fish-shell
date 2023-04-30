@@ -96,6 +96,10 @@ pub fn with_abbrs_mut<R>(cb: impl FnOnce(&mut AbbreviationSet) -> R) -> R {
     cb(&mut abbrs_g)
 }
 
+pub fn abbrs_get_set() -> MutexGuard<'static, AbbreviationSet> {
+    abbrs.lock().unwrap()
+}
+
 /// Controls where in the command line abbreviations may expand.
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Position {

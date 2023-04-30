@@ -23,6 +23,20 @@
 struct EnvVar;
 #endif
 
+/// FFI helper for events.
+struct Event;
+struct event_list_ffi_t {
+    event_list_ffi_t(const event_list_ffi_t &) = delete;
+    event_list_ffi_t &operator=(const event_list_ffi_t &) = delete;
+    event_list_ffi_t();
+#if INCLUDE_RUST_HEADERS
+    std::vector<rust::Box<Event>> events{};
+#endif
+
+    // Append an Event pointer, which came from Box::into_raw().
+    void push(void *event);
+};
+
 struct owning_null_terminated_array_t;
 
 extern size_t read_byte_limit;
@@ -341,5 +355,9 @@ void unsetenv_lock(const char *name);
 /// Returns the originally inherited variables and their values.
 /// This is a simple key->value map and not e.g. cut into paths.
 const std::map<wcstring, wcstring> &env_get_inherited();
+
+/// Populate the values in the "$history" variable.
+/// fish_history_val is the value of the "$fish_history" variable, or "fish" if not set.
+wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val);
 
 #endif

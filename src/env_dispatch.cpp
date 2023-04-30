@@ -195,6 +195,10 @@ void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
     s_var_dispatch_table->dispatch(key, vars);
 }
 
+void env_dispatch_var_change_ffi(const wcstring &key) {
+    return env_dispatch_var_change(key, env_stack_t::principal());
+}
+
 static void handle_fish_term_change(const env_stack_t &vars) {
     update_fish_color_support(vars);
     reader_schedule_prompt_repaint();

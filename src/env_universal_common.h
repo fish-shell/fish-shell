@@ -29,8 +29,36 @@ struct callback_data_t {
     /// \return whether this callback represents an erased variable.
     bool is_erase() const { return !val.has_value(); }
 };
-
 using callback_data_list_t = std::vector<callback_data_t>;
+
+/// Wrapper type for ffi purposes.
+struct env_universal_sync_result_t {
+    // List of callbacks.
+    callback_data_list_t list;
+
+    // Return value of sync().
+    bool changed;
+
+    bool get_changed() const { return changed; }
+
+    size_t count() const { return list.size(); }
+    const wcstring &get_key(size_t idx) const { return list.at(idx).key; }
+    bool get_is_erase(size_t idx) const { return list.at(idx).is_erase(); }
+};
+
+/// FFI helper to import our var_table into Rust.
+/// Parallel names of strings and environment variables.
+struct var_table_ffi_t {
+    std::vector<wcstring> names;
+    std::vector<env_var_t> vars;
+
+    size_t count() const { return names.size(); }
+    const wcstring &get_name(size_t idx) const { return names.at(idx); }
+    const env_var_t &get_var(size_t idx) const { return vars.at(idx); }
+
+    explicit var_table_ffi_t(const var_table_t &table);
+    ~var_table_ffi_t();
+};
 
 // List of fish universal variable formats.
 // This is exposed for testing.
@@ -44,8 +72,16 @@ class env_universal_t {
     // Construct an empty universal variables.
     env_universal_t() = default;
 
+    // Construct inside a unique_ptr.
+    static std::unique_ptr<env_universal_t> new_unique() {
+        return std::unique_ptr<env_universal_t>(new env_universal_t());
+    }
+
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;
+
+    // Cover over get() for FFI purposes.
+    std::unique_ptr<env_var_t> get_ffi(const wcstring &name) const;
 
     // \return flags from the variable with the given name.
     maybe_t<env_var_t::env_var_flags_t> get_flags(const wcstring &name) const;
@@ -59,8 +95,14 @@ class env_universal_t {
     // Gets variable names.
     std::vector<wcstring> get_names(bool show_exported, bool show_unexported) const;
 
+    // Cover over get_names for FFI.
+    wcstring_list_ffi_t get_names_ffi(bool show_exported, bool show_unexported) const {
+        return get_names(show_exported, show_unexported);
+    }
+
     /// Get a view on the universal variable table.
     const var_table_t &get_table() const { return vars; }
+    var_table_ffi_t get_table_ffi() const { return var_table_ffi_t(vars); }
 
     /// Initialize this uvars for the default path.
     /// This should be called at most once on any given instance.
@@ -70,9 +112,29 @@ class env_universal_t {
     /// This is exposed for testing only.
     void initialize_at_path(callback_data_list_t &callbacks, wcstring path);
 
+    /// FFI helpers.
+    env_universal_sync_result_t initialize_ffi() {
+        env_universal_sync_result_t res{};
+        initialize(res.list);
+        return res;
+    }
+
+    env_universal_sync_result_t initialize_at_path_ffi(wcstring path) {
+        env_universal_sync_result_t res{};
+        initialize_at_path(res.list, std::move(path));
+        return res;
+    }
+
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
     bool sync(callback_data_list_t &callbacks);
+
+    /// FFI helper.
+    env_universal_sync_result_t sync_ffi() {
+        callback_data_list_t callbacks;
+        bool changed = sync(callbacks);
+        return env_universal_sync_result_t{std::move(callbacks), changed};
+    }
 
     /// Populate a variable table \p out_vars from a \p s string.
     /// This is exposed for testing only.
@@ -198,6 +260,9 @@ class universal_notifier_t {
 
     // Default instance. Other instances are possible for testing.
     static universal_notifier_t &default_notifier();
+
+    // FFI helper so autocxx can "deduce" the lifetime.
+    static universal_notifier_t &default_notifier_ffi(int &) { return default_notifier(); }
 
     // Does a fast poll(). Returns true if changed.
     virtual bool poll();

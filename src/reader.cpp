@@ -1002,9 +1002,11 @@ static relaxed_atomic_t<exit_state_t> s_exit_state{exit_state_t::none};
 /// This is set from a signal handler.
 static volatile sig_atomic_t s_sighup_received{false};
 
+extern "C" {
 void reader_sighup() {
     // Beware, we may be in a signal handler.
     s_sighup_received = true;
+}
 }
 
 static void redirect_tty_after_sighup() {
@@ -1256,8 +1258,10 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
     erase_substring(el, begin_idx, length);
 }
 
+extern "C" {
 // This is called from a signal handler!
 void reader_handle_sigint() { interrupted = SIGINT; }
+}
 
 /// Make sure buffers are large enough to hold the current string length.
 void reader_data_t::command_line_changed(const editable_line_t *el) {

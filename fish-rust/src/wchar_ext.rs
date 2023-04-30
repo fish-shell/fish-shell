@@ -192,6 +192,13 @@ pub trait WExt {
         wstr::from_char_slice(&chars[start..])
     }
 
+    /// Return a char slice up to a *char index*.
+    /// This is different from Rust string slicing, which takes a byte index.
+    fn slice_to(&self, end: usize) -> &wstr {
+        let chars = self.as_char_slice();
+        wstr::from_char_slice(&chars[..end])
+    }
+
     /// Return the number of chars.
     /// This is different from Rust string len, which returns the number of bytes.
     fn char_count(&self) -> usize {

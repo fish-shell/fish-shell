@@ -1,6 +1,7 @@
 use crate::ffi;
 use crate::wchar::wstr;
 use crate::wchar_ffi::{wchar_t, wcslen};
+use widestring::U32CString;
 
 /// Support for wgettext.
 
@@ -10,6 +11,12 @@ pub fn wgettext_impl_do_not_use_directly(text: &[wchar_t]) -> &'static wstr {
     let res: *const wchar_t = ffi::wgettext_ptr(text.as_ptr());
     let slice = unsafe { std::slice::from_raw_parts(res as *const u32, wcslen(res)) };
     wstr::from_slice(slice).expect("Invalid UTF-32")
+}
+
+/// Get a (possibly translated) string from a non-literal.
+pub fn wgettext_str(s: &wstr) -> &'static wstr {
+    let cstr: U32CString = U32CString::from_chars_truncate(s.as_char_slice());
+    wgettext_impl_do_not_use_directly(cstr.as_slice_with_nul())
 }
 
 /// Get a (possibly translated) string from a string literal.

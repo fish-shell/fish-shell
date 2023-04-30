@@ -791,7 +791,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
 
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
-        if sig == Signal::SIGWINCH {
+        if sig == libc::SIGWINCH {
             termsize::SHARED_CONTAINER.updating(parser);
         }
         let event = Event {

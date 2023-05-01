@@ -4,10 +4,11 @@ use crate::builtins::shared::{
     builtin_missing_argument, builtin_print_help, builtin_unknown_option, STATUS_CMD_OK,
     STATUS_INVALID_ARGS,
 };
+use crate::ffi::Repin;
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::{proc_wait_any, Job};
-use crate::signal::sigchecker_t;
+use crate::signal::Sigchecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 use crate::wchar::WString;
 use crate::wchar::{widestrs, wstr};
@@ -115,7 +116,7 @@ fn wait_for_completion(
         return Some(0);
     }
 
-    let mut sigint = sigchecker_t::new_sighupint();
+    let mut sigint = Sigchecker::new_sighupint();
     loop {
         let finished = if any_flag {
             whs.iter().any(is_completed)

@@ -16,12 +16,12 @@ use widestring_suffix::widestrs;
 use crate::common::{
     escape, escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard,
 };
-use crate::ffi::{self, signal_check_cancel, signal_handle, Repin};
+use crate::ffi::{self, Repin};
 use crate::flog::FLOG;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::{Block, Parser};
-use crate::signal::Signal;
+use crate::signal::{signal_check_cancel, signal_handle, Signal};
 use crate::termsize;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
@@ -618,7 +618,7 @@ fn event_get_desc_ffi(parser: &Parser, evt: &Event) -> UniquePtr<CxxWString> {
 /// Add an event handler.
 pub fn add_handler(eh: EventHandler) {
     if let EventType::Signal { signal } = eh.desc.typ {
-        signal_handle(ffi::c_int(signal.code()));
+        signal_handle(signal);
         inc_signal_observed(signal);
     }
 
@@ -765,7 +765,7 @@ pub fn fire_delayed(parser: &mut Parser) {
         return;
     };
     // Do not invoke new event handlers if we are unwinding (#6649).
-    if signal_check_cancel().0 != 0 {
+    if signal_check_cancel() != 0 {
         return;
     };
 
@@ -784,7 +784,7 @@ pub fn fire_delayed(parser: &mut Parser) {
 
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
-        if sig == Signal::SIGWINCH {
+        if sig == libc::SIGWINCH {
             termsize::SHARED_CONTAINER.updating(todo!("parser"));
         }
         let event = Event {

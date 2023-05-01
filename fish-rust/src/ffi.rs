@@ -94,14 +94,7 @@ include_cpp! {
 
     generate!("pretty_printer_t")
 
-    generate!("sig2wcs")
-    generate!("wcs2sig")
-    generate!("signal_get_desc")
-
     generate!("fd_event_signaller_t")
-
-    generate!("signal_handle")
-    generate!("signal_check_cancel")
 
     generate!("env_var_t")
 

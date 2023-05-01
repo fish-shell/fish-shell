@@ -5,43 +5,12 @@
 #include <csignal>
 #include <cstdint>
 
-/// Get the integer signal value representing the specified signal, or -1 of no signal was found.
-int wcs2sig(const wchar_t *str);
-
-/// Get string representation of a signal.
-const wchar_t *sig2wcs(int sig);
-
-/// Returns a description of the specified signal.
-const wchar_t *signal_get_desc(int sig);
-
-/// Set all signal handlers to SIG_DFL.
-void signal_reset_handlers();
-
-/// Set signal handlers to fish default handlers.
-void signal_set_handlers(bool interactive);
-
-/// Latch function. This sets signal handlers, but only the first time it is called.
-void signal_set_handlers_once(bool interactive);
-
-/// Tell fish what to do on the specified signal.
-///
-/// \param sig The signal to specify the action of
-void signal_handle(int sig);
-
-/// Ensure we did not inherit any blocked signals. See issue #3964.
-void signal_unblock_all();
+#if INCLUDE_RUST_HEADERS
+#include "signal.rs.h"
+#endif
 
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);
-
-/// \return the most recent cancellation signal received by the fish process.
-/// Currently only SIGINT is considered a cancellation signal.
-/// This is thread safe.
-int signal_check_cancel();
-
-/// Set the cancellation signal to zero.
-/// In generally this should only be done in interactive sessions.
-void signal_clear_cancel();
 
 enum class topic_t : uint8_t;
 /// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.

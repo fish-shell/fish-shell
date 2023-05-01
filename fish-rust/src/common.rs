@@ -949,9 +949,7 @@ pub const fn char_offset(base: char, offset: u32) -> char {
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 pub fn exit_without_destructors(code: libc::c_int) -> ! {
-    unsafe {
-        libc::_exit(code);
-    }
+    unsafe { libc::_exit(code) };
 }
 
 /// Save the shell mode on startup so we can restore them on exit.
@@ -1600,6 +1598,7 @@ pub fn restore_term_foreground_process_group_for_exit() {
     // Note initial_fg_process_group == 0 is possible with Linux pid namespaces.
     // This is called during shutdown and from a signal handler. We don't bother to complain on
     // failure because doing so is unlikely to be noticed.
+    // Safety: All of getpgrp, signal, and tcsetpgrp are async-signal-safe.
     let initial_fg_process_group = INITIAL_FG_PROCESS_GROUP.load(Ordering::Relaxed);
     if initial_fg_process_group > 0 && initial_fg_process_group != unsafe { libc::getpgrp() } {
         unsafe {

@@ -15,7 +15,7 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
 use errno::{errno, set_errno, Errno};
-pub(crate) use gettext::{wgettext, wgettext_fmt};
+pub(crate) use gettext::{wgettext, wgettext_fmt, wgettext_str};
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
     ENODEV, ENOENT, ENOTDIR, F_GETFL, F_SETFL, O_NONBLOCK, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO,

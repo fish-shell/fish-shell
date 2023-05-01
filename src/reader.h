@@ -142,7 +142,9 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 int reader_read_ffi(void *parser, int fd, const void *io);
 
 /// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
+extern "C" {
 void reader_sighup();
+}
 
 /// Initialize the reader.
 void reader_init();
@@ -252,7 +254,9 @@ void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t
 void reader_pop();
 
 /// The readers interrupt signal handler. Cancels all currently running blocks.
+extern "C" {
 void reader_handle_sigint();
+}
 
 /// \return whether fish is currently unwinding the stack in preparation to exit.
 bool fish_is_unwinding_for_exit();

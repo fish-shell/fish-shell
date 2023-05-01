@@ -29,7 +29,7 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
 use crate::parse_tree::{parse_source, ParsedSourceRef, ParsedSourceRefFFI};
 use crate::proc::{job_reap, Job, JobGroupRef, JobGroupRefFfi, JobList, JobRef, ProcStatus};
-use crate::signal::{signal_check_cancel, signal_clear_cancel};
+use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
 use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
@@ -504,11 +504,12 @@ impl Parser {
         // signal.
         // Note this only happens in interactive sessions. In non-interactive sessions, SIGINT will
         // cause fish to exit.
-        if let Some(sig) = signal_check_cancel() {
+        let sig = signal_check_cancel();
+        if sig != 0 {
             if self.is_principal && self.block_list.is_empty() {
                 signal_clear_cancel();
             } else {
-                return EvalRes::new(ProcStatus::from_signal(sig));
+                return EvalRes::new(ProcStatus::from_signal(Signal::new(sig)));
             }
         }
 
@@ -518,11 +519,13 @@ impl Parser {
         let jg = job_group.cloned();
         let check_cancel_signal = move || {
             // Did fish itself get a signal?
-            signal_check_cancel().or_else(|| {
-                // Has this job group been cancelled?
-                jg.as_ref()
-                    .and_then(|jg| jg.read().unwrap().get_cancel_signal())
-            })
+            let sig = signal_check_cancel();
+            if sig != 0 {
+                return Some(Signal::new(sig));
+            }
+            // Has this job group been cancelled?
+            jg.as_ref()
+                .and_then(|jg| jg.read().unwrap().get_cancel_signal())
         };
 
         // If we have a job group which is cancelled, then do nothing.
@@ -570,8 +573,9 @@ impl Parser {
 
         job_reap(&mut zelf, false); // reap again
 
-        if let Some(sig) = signal_check_cancel() {
-            EvalRes::new(ProcStatus::from_signal(sig))
+        let sig = signal_check_cancel();
+        if sig != 0 {
+            EvalRes::new(ProcStatus::from_signal(Signal::new(sig)))
         } else {
             let status = ProcStatus::from_exit_code(zelf.get_last_status());
             let break_expand = reason == EndExecutionReason::error;
@@ -1041,7 +1045,7 @@ impl Parser {
     pub fn context(&mut self) -> OperationContext<'static> {
         OperationContext::foreground(
             self.shared(),
-            &|| signal_check_cancel().is_some(),
+            &|| signal_check_cancel() != 0,
             EXPANSION_LIMIT_DEFAULT,
         )
     }

@@ -4,7 +4,7 @@ use crate::builtins::shared::{
     builtin_missing_argument, builtin_print_help, builtin_unknown_option, STATUS_CMD_OK,
     STATUS_INVALID_ARGS,
 };
-use crate::ffi::{job_t, parser_t, proc_wait_any, Repin};
+use crate::ffi::Repin;
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::{proc_wait_any, Job};

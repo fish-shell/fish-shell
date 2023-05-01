@@ -4,7 +4,6 @@ use crate::common::{exit_without_destructors, restore_term_foreground_process_gr
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::termsize::termsize_handle_winch;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
-use crate::wchar::wstr;
 use crate::wchar::{wstr, WExt, L};
 use crate::wchar_ffi::c_str;
 use crate::wchar_ffi::{AsWstr, WCharToFFI};

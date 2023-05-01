@@ -16,7 +16,7 @@ use widestring_suffix::widestrs;
 use crate::common::{
     escape, escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard,
 };
-use crate::ffi::{self, signal_check_cancel, signal_handle, Repin};
+use crate::ffi::{self, Repin};
 use crate::flog::FLOG;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::{JobId, MaybeJobId};

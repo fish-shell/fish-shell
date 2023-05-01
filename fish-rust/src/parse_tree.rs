@@ -6,8 +6,7 @@ use std::rc::Rc;
 use crate::ast::Ast;
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
-    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange,
-    PARSE_FLAG_CONTINUE_AFTER_ERROR, SOURCE_OFFSET_INVALID,
+    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, SOURCE_OFFSET_INVALID,
 };
 use crate::tokenizer::TokenizerError;
 use crate::wchar::{wstr, WString, L};
@@ -123,7 +122,7 @@ pub fn parse_source(
     errors: Option<&mut ParseErrorList>,
 ) -> ParsedSourceRef {
     let ast = Ast::parse(&src, flags, errors);
-    if ast.errored() && !(flags & PARSE_FLAG_CONTINUE_AFTER_ERROR) {
+    if ast.errored() && !flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR) {
         None
     } else {
         Some(Rc::new(ParsedSource::new(src, ast)))
@@ -179,7 +178,7 @@ fn parse_source_ffi(
 ) -> Box<ParsedSourceRefFFI> {
     Box::new(ParsedSourceRefFFI(parse_source(
         src.from_ffi(),
-        ParseTreeFlags(flags),
+        ParseTreeFlags::from_bits(flags).unwrap(),
         if errors.is_null() {
             None
         } else {

@@ -5,9 +5,9 @@ use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcharz, AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wutil::{sprintf, wgettext_fmt};
+use bitflags::bitflags;
 use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
-use std::ops::{BitAnd, BitOr, BitOrAssign};
 use widestring_suffix::widestrs;
 
 pub type SourceOffset = u32;
@@ -15,58 +15,30 @@ pub type SourceOffset = u32;
 pub const SOURCE_OFFSET_INVALID: usize = SourceOffset::MAX as _;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
-#[derive(Copy, Clone)]
-pub struct ParseTreeFlags(pub u8);
-
-pub const PARSE_FLAG_NONE: ParseTreeFlags = ParseTreeFlags(0);
-/// attempt to build a "parse tree" no matter what. this may result in a 'forest' of
-/// disconnected trees. this is intended to be used by syntax highlighting.
-pub const PARSE_FLAG_CONTINUE_AFTER_ERROR: ParseTreeFlags = ParseTreeFlags(1 << 0);
-/// include comment tokens.
-pub const PARSE_FLAG_INCLUDE_COMMENTS: ParseTreeFlags = ParseTreeFlags(1 << 1);
-/// indicate that the tokenizer should accept incomplete tokens */
-pub const PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS: ParseTreeFlags = ParseTreeFlags(1 << 2);
-/// indicate that the parser should not generate the terminate token, allowing an 'unfinished'
-/// tree where some nodes may have no productions.
-pub const PARSE_FLAG_LEAVE_UNTERMINATED: ParseTreeFlags = ParseTreeFlags(1 << 3);
-/// indicate that the parser should generate job_list entries for blank lines.
-pub const PARSE_FLAG_SHOW_BLANK_LINES: ParseTreeFlags = ParseTreeFlags(1 << 4);
-/// indicate that extra semis should be generated.
-pub const PARSE_FLAG_SHOW_EXTRA_SEMIS: ParseTreeFlags = ParseTreeFlags(1 << 5);
-
-impl BitAnd for ParseTreeFlags {
-    type Output = bool;
-    fn bitand(self, rhs: Self) -> Self::Output {
-        (self.0 & rhs.0) != 0
-    }
-}
-impl BitOr for ParseTreeFlags {
-    type Output = ParseTreeFlags;
-    fn bitor(self, rhs: Self) -> Self::Output {
-        Self(self.0 | rhs.0)
-    }
-}
-impl BitOrAssign for ParseTreeFlags {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0
+bitflags! {
+    pub struct ParseTreeFlags: u8 {
+        /// attempt to build a "parse tree" no matter what. this may result in a 'forest' of
+        /// disconnected trees. this is intended to be used by syntax highlighting.
+        const CONTINUE_AFTER_ERROR = 1 << 0;
+        /// include comment tokens.
+        const INCLUDE_COMMENTS = 1 << 1;
+        /// indicate that the tokenizer should accept incomplete tokens */
+        const ACCEPT_INCOMPLETE_TOKENS = 1 << 2;
+        /// indicate that the parser should not generate the terminate token, allowing an 'unfinished'
+        /// tree where some nodes may have no productions.
+        const LEAVE_UNTERMINATED = 1 << 3;
+        /// indicate that the parser should generate job_list entries for blank lines.
+        const SHOW_BLANK_LINES = 1 << 4;
+        /// indicate that extra semis should be generated.
+        const SHOW_EXTRA_SEMIS = 1 << 5;
     }
 }
 
-#[derive(PartialEq, Eq, Copy, Clone, Default)]
-pub struct ParserTestErrorBits(u8);
-
-pub const PARSER_TEST_ERROR: ParserTestErrorBits = ParserTestErrorBits(1);
-pub const PARSER_TEST_INCOMPLETE: ParserTestErrorBits = ParserTestErrorBits(2);
-
-impl BitAnd for ParserTestErrorBits {
-    type Output = bool;
-    fn bitand(self, rhs: Self) -> Self::Output {
-        (self.0 & rhs.0) != 0
-    }
-}
-impl BitOrAssign for ParserTestErrorBits {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0
+bitflags! {
+    #[derive(Default)]
+    pub struct ParserTestErrorBits: u8 {
+        const ERROR = 1;
+        const INCOMPLETE = 2;
     }
 }
 

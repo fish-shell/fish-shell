@@ -14,9 +14,7 @@ use crate::flog::FLOG;
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseError, ParseErrorCode, ParseErrorList,
     ParseErrorListFfi, ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange,
-    StatementDecoration, INVALID_PIPELINE_CMD_ERR_MSG, PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS,
-    PARSE_FLAG_CONTINUE_AFTER_ERROR, PARSE_FLAG_INCLUDE_COMMENTS, PARSE_FLAG_LEAVE_UNTERMINATED,
-    PARSE_FLAG_SHOW_EXTRA_SEMIS, SOURCE_OFFSET_INVALID,
+    StatementDecoration, INVALID_PIPELINE_CMD_ERR_MSG, SOURCE_OFFSET_INVALID,
 };
 use crate::parse_tree::ParseToken;
 use crate::tokenizer::{
@@ -2937,7 +2935,7 @@ impl<'s> Populator<'s> {
     fn status(&mut self) -> ParserStatus {
         if self.unwinding {
             ParserStatus::unwinding
-        } else if self.flags & PARSE_FLAG_LEAVE_UNTERMINATED
+        } else if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
             && self.peek_type(0) == ParseTokenType::terminate
         {
             ParserStatus::unsourcing
@@ -2956,7 +2954,7 @@ impl<'s> Populator<'s> {
 
     /// \return whether we permit an incomplete parse tree.
     fn allow_incomplete(&self) -> bool {
-        self.flags & PARSE_FLAG_LEAVE_UNTERMINATED
+        self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
     }
 
     /// \return whether a list type \p type allows arbitrary newlines in it.
@@ -3074,7 +3072,7 @@ impl<'s> Populator<'s> {
             } else if chomp_semis && peek.typ == ParseTokenType::end && !peek.is_newline {
                 let tok = self.tokens.pop();
                 // Perhaps save this extra semi.
-                if self.flags & PARSE_FLAG_SHOW_EXTRA_SEMIS {
+                if self.flags.contains(ParseTreeFlags::SHOW_EXTRA_SEMIS) {
                     self.semis.push(tok.range());
                 }
             } else {
@@ -3086,7 +3084,7 @@ impl<'s> Populator<'s> {
     /// \return whether a list type should recover from errors.s
     /// That is, whether we should stop unwinding when we encounter this type.
     fn list_type_stops_unwind(&self, typ: Type) -> bool {
-        typ == Type::job_list && self.flags & PARSE_FLAG_CONTINUE_AFTER_ERROR
+        typ == Type::job_list && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
     }
 
     /// \return a reference to a non-comment token at index \p idx.
@@ -3678,7 +3676,7 @@ impl<'s> Populator<'s> {
         }
 
         if !token.allows_token(self.peek_token(0).typ) {
-            if self.flags & PARSE_FLAG_LEAVE_UNTERMINATED
+            if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
                     TokenizerError::unterminated_quote,
                     TokenizerError::unterminated_subshell,
@@ -3714,7 +3712,7 @@ impl<'s> Populator<'s> {
         if !keyword.allows_keyword(self.peek_token(0).keyword) {
             *keyword.range_mut() = None;
 
-            if self.flags & PARSE_FLAG_LEAVE_UNTERMINATED
+            if self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
                 && [
                     TokenizerError::unterminated_quote,
                     TokenizerError::unterminated_subshell,
@@ -3842,13 +3840,13 @@ impl From<ParseTreeFlags> for TokFlags {
         let mut tok_flags = TokFlags(0);
         // Note we do not need to respect parse_flag_show_blank_lines, no clients are interested
         // in them.
-        if flags & PARSE_FLAG_INCLUDE_COMMENTS {
+        if flags.contains(ParseTreeFlags::INCLUDE_COMMENTS) {
             tok_flags |= TOK_SHOW_COMMENTS;
         }
-        if flags & PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS {
+        if flags.contains(ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS) {
             tok_flags |= TOK_ACCEPT_UNFINISHED;
         }
-        if flags & PARSE_FLAG_CONTINUE_AFTER_ERROR {
+        if flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR) {
             tok_flags |= TOK_CONTINUE_AFTER_ERROR
         }
         tok_flags
@@ -3921,9 +3919,8 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
 
 use crate::ffi_tests::add_test;
 add_test!("test_ast_parse", || {
-    use crate::parse_constants::PARSE_FLAG_NONE;
     let src = L!("echo");
-    let ast = Ast::parse(src, PARSE_FLAG_NONE, None);
+    let ast = Ast::parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);
 });
 
@@ -4422,7 +4419,7 @@ impl Ast {
 fn ast_parse_ffi(src: &CxxWString, flags: u8, errors: *mut ParseErrorListFfi) -> Box<Ast> {
     Box::new(Ast::parse(
         src.as_wstr(),
-        ParseTreeFlags(flags),
+        ParseTreeFlags::from_bits(flags).unwrap(),
         if errors.is_null() {
             None
         } else {
@@ -4438,7 +4435,7 @@ fn ast_parse_argument_list_ffi(
 ) -> Box<Ast> {
     Box::new(Ast::parse_argument_list(
         src.as_wstr(),
-        ParseTreeFlags(flags),
+        ParseTreeFlags::from_bits(flags).unwrap(),
         if errors.is_null() {
             None
         } else {

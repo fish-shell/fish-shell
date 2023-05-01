@@ -15,14 +15,11 @@ use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
-    ParseKeyword, ParseTokenType, ParserTestErrorBits, PipelinePosition, StatementDecoration,
-    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
-    ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
-    ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
-    INVALID_PIPELINE_CMD_ERR_MSG, PARSER_TEST_ERROR, PARSER_TEST_INCOMPLETE,
-    PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS, PARSE_FLAG_CONTINUE_AFTER_ERROR,
-    PARSE_FLAG_INCLUDE_COMMENTS, PARSE_FLAG_LEAVE_UNTERMINATED, PARSE_FLAG_NONE,
-    UNKNOWN_BUILTIN_ERR_MSG,
+    ParseKeyword, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition,
+    StatementDecoration, ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1,
+    ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
+    ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG,
+    INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
 };
 use crate::tokenizer::{
     comment_end, is_token_delimiter, quote_end, Tok, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
@@ -743,10 +740,10 @@ pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
     // were a case item list.
     let ast = Ast::parse(
         src,
-        PARSE_FLAG_CONTINUE_AFTER_ERROR
-            | PARSE_FLAG_INCLUDE_COMMENTS
-            | PARSE_FLAG_ACCEPT_INCOMPLETE_TOKENS
-            | PARSE_FLAG_LEAVE_UNTERMINATED,
+        ParseTreeFlags::CONTINUE_AFTER_ERROR
+            | ParseTreeFlags::INCLUDE_COMMENTS
+            | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
+            | ParseTreeFlags::LEAVE_UNTERMINATED,
         None,
     );
     {
@@ -966,7 +963,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
 }
 
 /// Given a string, detect parse errors in it. If allow_incomplete is set, then if the string is
-/// incomplete (e.g. an unclosed quote), an error is not returned and the PARSER_TEST_INCOMPLETE bit
+/// incomplete (e.g. an unclosed quote), an error is not returned and the ParserTestErrorBits::INCOMPLETE bit
 /// is set in the return value. If allow_incomplete is not set, then incomplete strings result in an
 /// error.
 pub fn parse_util_detect_errors(
@@ -979,9 +976,9 @@ pub fn parse_util_detect_errors(
     let mut has_unclosed_quote_or_subshell = false;
 
     let parse_flags = if allow_incomplete {
-        PARSE_FLAG_LEAVE_UNTERMINATED
+        ParseTreeFlags::LEAVE_UNTERMINATED
     } else {
-        PARSE_FLAG_NONE
+        ParseTreeFlags::empty()
     };
 
     // Parse the input string into an ast. Some errors are detected here.
@@ -1010,14 +1007,14 @@ pub fn parse_util_detect_errors(
     assert!(!has_unclosed_quote_or_subshell || allow_incomplete);
     if has_unclosed_quote_or_subshell {
         // We do not bother to validate the rest of the tree in this case.
-        return Err(PARSER_TEST_INCOMPLETE);
+        return Err(ParserTestErrorBits::INCOMPLETE);
     }
 
     // Early parse error, stop here.
     if !parse_errors.is_empty() {
         if let Some(errors) = out_errors.as_mut() {
             errors.extend(parse_errors.into_iter());
-            return Err(PARSER_TEST_ERROR);
+            return Err(ParserTestErrorBits::ERROR);
         }
     }
 
@@ -1108,11 +1105,11 @@ pub fn parse_util_detect_errors_in_ast(
     }
 
     if errored {
-        res |= PARSER_TEST_ERROR;
+        res |= ParserTestErrorBits::ERROR;
     }
 
     if has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction {
-        res |= PARSER_TEST_INCOMPLETE;
+        res |= ParserTestErrorBits::INCOMPLETE;
     }
     if res == ParserTestErrorBits::default() {
         Ok(())
@@ -1140,7 +1137,7 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Parse the string as a freestanding argument list.
     let mut errors = ParseErrorList::new();
-    let ast = Ast::parse_argument_list(arg_list_src, PARSE_FLAG_NONE, Some(&mut errors));
+    let ast = Ast::parse_argument_list(arg_list_src, ParseTreeFlags::empty(), Some(&mut errors));
     if !errors.is_empty() {
         return get_error_text(&errors);
     }
@@ -1220,13 +1217,13 @@ pub fn parse_util_detect_errors_in_argument(
                                 append_syntax_error!(
                                     out_errors, source_start + begin, end - begin,
                                     "Incomplete escape sequence '%ls'", arg_src);
-                                    return PARSER_TEST_ERROR;
+                                    return ParserTestErrorBits::ERROR;
                     }
                     append_syntax_error!(
                         out_errors, source_start + begin, end - begin,
                         "Invalid token '%ls'", arg_src);
                 }
-                return PARSER_TEST_ERROR;
+                return ParserTestErrorBits::ERROR;
             };
 
         let mut err = ParserTestErrorBits::default();
@@ -1240,7 +1237,7 @@ pub fn parse_util_detect_errors_in_argument(
             if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
                 && !valid_var_name_char(next_char)
             {
-                err = PARSER_TEST_ERROR;
+                err = ParserTestErrorBits::ERROR;
                 if let Some(ref mut out_errors) = out_errors {
                     let mut first_dollar = idx;
                     while first_dollar > 0
@@ -1283,7 +1280,7 @@ pub fn parse_util_detect_errors_in_argument(
             Some(&mut has_dollar),
         ) {
             -1 => {
-                err |= PARSER_TEST_ERROR;
+                err |= ParserTestErrorBits::ERROR;
                 append_syntax_error!(out_errors, source_start, 1, "Mismatched parenthesis");
                 return err;
             }
@@ -1988,5 +1985,5 @@ fn parse_util_detect_errors_ffi(
     };
     parse_util_detect_errors(buff_src.as_wstr(), out_errors, allow_incomplete)
         .err()
-        .map_or(0, |error_bits| error_bits.0)
+        .map_or(0, |error_bits| error_bits.bits())
 }

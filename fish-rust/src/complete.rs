@@ -1118,7 +1118,8 @@ impl<'ctx> Completer<'ctx> {
 
             self.complete_strings(
                 &str_cmd,
-                &{ Box::new(builtin_get_desc) as _ },
+                // &{ Box::new(|name| builtin_get_desc(name).unwrap_or(L!("")).to_owned()) as _ },
+                &{ todo!() },
                 &possible_comp,
                 CompleteFlags::empty(),
                 ExpandFlags::empty(),

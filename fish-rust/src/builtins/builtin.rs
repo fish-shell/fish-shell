@@ -24,7 +24,6 @@ pub fn r#builtin(
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
     let mut opts: builtin_cmd_opts_t = Default::default();
@@ -42,15 +41,27 @@ pub fn r#builtin(
             'q' => opts.query = true,
             'n' => opts.list_names = true,
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -62,7 +73,7 @@ pub fn r#builtin(
     if opts.query && opts.list_names {
         streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
-            cmd,
+            w.cmd(),
             wgettext!("--query and --names are mutually exclusive")
         ));
         return STATUS_INVALID_ARGS;

@@ -30,8 +30,6 @@ fn parse_options(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = &args[0];
-
     const SHORT_OPTS: &wstr = L!("+:Eens");
     const LONG_OPTS: &[woption] = &[];
 
@@ -48,7 +46,7 @@ fn parse_options(
             's' => opts.print_spaces = false,
             'E' => opts.interpret_special_chars = false,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {

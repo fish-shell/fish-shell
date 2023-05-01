@@ -219,7 +219,7 @@ impl Named for BuiltinData {
 /// @return
 ///    Pointer to a builtin_data_t
 ///
-pub fn builtin_lookup(name: &wstr) -> Option<&'static BuiltinData> {
+fn builtin_lookup(name: &wstr) -> Option<&'static BuiltinData> {
     get_by_sorted_name(name, BUILTIN_DATAS)
 }
 
@@ -247,47 +247,48 @@ fn cmd_needs_help(cmd: &wstr) -> bool {
 fn builtin_run_cpp(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
-    argv: &mut [WString],
+    argv: &[WString],
 ) -> Option<c_int> {
-    let cmdname = argv[0];
-    let parser = parser.pin();
-    let streams = streams.pin();
-    let parser = &mut parser as *mut _ as *mut autocxx::c_void;
-    let streams = &mut streams as *mut _ as *mut autocxx::c_void;
-    let mut argv: Vec<*const u32> = argv.iter().map(|s| c_str!(s)).collect();
-    argv.push(std::ptr::null());
-    let argv = std::ptr::addr_of!(argv[0]) as *const autocxx::c_void;
-    let ret = match cmdname {
-        _ if cmdname == "."L => ffi::builtin_source_ffi(parser, streams, argv),
-        _ if cmdname == "["L => ffi::builtin_test_ffi(parser, streams, argv),
-        _ if cmdname == "argparse"L => ffi::builtin_argparse_ffi(parser, streams, argv),
-        _ if cmdname == "bind"L => ffi::builtin_bind_ffi(parser, streams, argv),
-        _ if cmdname == "cd"L => ffi::builtin_cd_ffi(parser, streams, argv),
-        _ if cmdname == "commandline"L => ffi::builtin_commandline_ffi(parser, streams, argv),
-        _ if cmdname == "complete"L => ffi::builtin_complete_ffi(parser, streams, argv),
-        _ if cmdname == "disown"L => ffi::builtin_disown_ffi(parser, streams, argv),
-        _ if cmdname == "eval"L => ffi::builtin_eval_ffi(parser, streams, argv),
-        _ if cmdname == "fg"L => ffi::builtin_fg_ffi(parser, streams, argv),
-        _ if cmdname == "function"L => ffi::builtin_function_ffi(parser, streams, argv),
-        _ if cmdname == "functions"L => ffi::builtin_functions_ffi(parser, streams, argv),
-        _ if cmdname == "history"L => ffi::builtin_history_ffi(parser, streams, argv),
-        _ if cmdname == "jobs"L => ffi::builtin_jobs_ffi(parser, streams, argv),
-        _ if cmdname == "path"L => ffi::builtin_path_ffi(parser, streams, argv),
-        _ if cmdname == "read"L => ffi::builtin_read_ffi(parser, streams, argv),
-        _ if cmdname == "set"L => ffi::builtin_set_ffi(parser, streams, argv),
-        _ if cmdname == "set_color"L => ffi::builtin_set_color_ffi(parser, streams, argv),
-        _ if cmdname == "source"L => ffi::builtin_source_ffi(parser, streams, argv),
-        _ if cmdname == "status"L => ffi::builtin_status_ffi(parser, streams, argv),
-        _ if cmdname == "string"L => ffi::builtin_string_ffi(parser, streams, argv),
-        _ if cmdname == "test"L => ffi::builtin_test_ffi(parser, streams, argv),
-        _ if cmdname == "ulimit"L => ffi::builtin_ulimit_ffi(parser, streams, argv),
-        _ => panic!(),
-    };
-    if ret.0 == c_int::MAX {
-        None
-    } else {
-        Some(ret.0)
-    }
+    todo!()
+    // let cmdname = argv[0];
+    // let parser = parser.pin();
+    // let streams = streams.pin();
+    // let parser = &mut parser as *mut _ as *mut autocxx::c_void;
+    // let streams = &mut streams as *mut _ as *mut autocxx::c_void;
+    // let mut argv: Vec<*const u32> = argv.iter().map(|s| c_str!(s)).collect();
+    // argv.push(std::ptr::null());
+    // let argv = std::ptr::addr_of!(argv[0]) as *const autocxx::c_void;
+    // let ret = match cmdname {
+    //     _ if cmdname == "."L => ffi::builtin_source_ffi(parser, streams, argv),
+    //     _ if cmdname == "["L => ffi::builtin_test_ffi(parser, streams, argv),
+    //     _ if cmdname == "argparse"L => ffi::builtin_argparse_ffi(parser, streams, argv),
+    //     _ if cmdname == "bind"L => ffi::builtin_bind_ffi(parser, streams, argv),
+    //     _ if cmdname == "cd"L => ffi::builtin_cd_ffi(parser, streams, argv),
+    //     _ if cmdname == "commandline"L => ffi::builtin_commandline_ffi(parser, streams, argv),
+    //     _ if cmdname == "complete"L => ffi::builtin_complete_ffi(parser, streams, argv),
+    //     _ if cmdname == "disown"L => ffi::builtin_disown_ffi(parser, streams, argv),
+    //     _ if cmdname == "eval"L => ffi::builtin_eval_ffi(parser, streams, argv),
+    //     _ if cmdname == "fg"L => ffi::builtin_fg_ffi(parser, streams, argv),
+    //     _ if cmdname == "function"L => ffi::builtin_function_ffi(parser, streams, argv),
+    //     _ if cmdname == "functions"L => ffi::builtin_functions_ffi(parser, streams, argv),
+    //     _ if cmdname == "history"L => ffi::builtin_history_ffi(parser, streams, argv),
+    //     _ if cmdname == "jobs"L => ffi::builtin_jobs_ffi(parser, streams, argv),
+    //     _ if cmdname == "path"L => ffi::builtin_path_ffi(parser, streams, argv),
+    //     _ if cmdname == "read"L => ffi::builtin_read_ffi(parser, streams, argv),
+    //     _ if cmdname == "set"L => ffi::builtin_set_ffi(parser, streams, argv),
+    //     _ if cmdname == "set_color"L => ffi::builtin_set_color_ffi(parser, streams, argv),
+    //     _ if cmdname == "source"L => ffi::builtin_source_ffi(parser, streams, argv),
+    //     _ if cmdname == "status"L => ffi::builtin_status_ffi(parser, streams, argv),
+    //     _ if cmdname == "string"L => ffi::builtin_string_ffi(parser, streams, argv),
+    //     _ if cmdname == "test"L => ffi::builtin_test_ffi(parser, streams, argv),
+    //     _ if cmdname == "ulimit"L => ffi::builtin_ulimit_ffi(parser, streams, argv),
+    //     _ => panic!(),
+    // };
+    // if ret.0 == c_int::MAX {
+    //     None
+    // } else {
+    //     Some(ret.0)
+    // }
 }
 
 /// Execute a builtin command
@@ -299,18 +300,17 @@ pub fn builtin_run(
     if argv.is_empty() {
         return ProcStatus::from_exit_code(STATUS_INVALID_ARGS.unwrap());
     }
-    let cmdname = &argv[0];
 
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
     // handle displaying help for it here.
-    if argv.len() == 2 && parse_util_argument_is_help(&argv[1]) && cmd_needs_help(cmdname) {
-        builtin_print_help(parser, streams, cmdname);
+    if argv.len() == 2 && parse_util_argument_is_help(&argv[1]) && cmd_needs_help(&argv[0]) {
+        builtin_print_help(parser, streams, &argv[0]);
         return ProcStatus::from_exit_code(STATUS_CMD_OK.unwrap());
     }
 
-    let Some(builtin) = builtin_lookup(cmdname) else {
-        FLOGF!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, cmdname));
+    let Some(builtin) = builtin_lookup(&argv[0]) else {
+        FLOGF!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, &argv[0]));
         return ProcStatus::from_exit_code(STATUS_CMD_ERROR.unwrap());
     };
 
@@ -359,7 +359,7 @@ pub fn builtin_run(
         FLOGF!(
             warning,
             "builtin %ls returned invalid exit code %d",
-            cmdname,
+            &argv[0],
             code
         );
     }
@@ -448,12 +448,12 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
 ///    builtin or function name to get up help for
 ///
 /// Process and print help for the specified builtin or function.
-pub fn builtin_print_help(parser: &mut Parser, streams: &IoStreams<'_>, cmd: &wstr) {
+pub fn builtin_print_help(parser: &mut Parser, streams: &mut IoStreams<'_>, cmd: &wstr) {
     builtin_print_help_error(parser, streams, cmd, L!(""))
 }
 pub fn builtin_print_help_error(
     parser: &mut Parser,
-    streams: &IoStreams<'_>,
+    streams: &mut IoStreams<'_>,
     cmd: &wstr,
     error_message: &wstr,
 ) {
@@ -520,7 +520,7 @@ pub fn builtin_missing_argument(
 }
 
 /// Print the backtrace and call for help that we use at the end of error messages.
-pub fn builtin_print_error_trailer(parser: &mut Parser, b: &dyn OutputStream, cmd: &wstr) {
+pub fn builtin_print_error_trailer(parser: &mut Parser, b: &mut dyn OutputStream, cmd: &wstr) {
     b.push('\n');
     let stacktrace = parser.current_line();
     // Don't print two empty lines if we don't have a stacktrace.
@@ -558,7 +558,6 @@ impl HelpOnlyCmdOpts {
         parser: &mut Parser,
         streams: &mut IoStreams<'_>,
     ) -> Result<Self, Option<c_int>> {
-        let cmd = &args[0];
         let print_hints = true;
 
         const shortopts: &wstr = L!("+:h");
@@ -575,8 +574,8 @@ impl HelpOnlyCmdOpts {
                     builtin_missing_argument(
                         parser,
                         streams,
-                        cmd,
-                        &args[w.woptind - 1],
+                        w.cmd(),
+                        &w.argv()[w.woptind - 1],
                         print_hints,
                     );
                     return Err(STATUS_INVALID_ARGS);
@@ -585,8 +584,8 @@ impl HelpOnlyCmdOpts {
                     builtin_unknown_option(
                         parser,
                         streams,
-                        &cmd,
-                        &args[w.woptind - 1],
+                        w.cmd(),
+                        &w.argv()[w.woptind - 1],
                         print_hints,
                     );
                     return Err(STATUS_INVALID_ARGS);
@@ -611,7 +610,6 @@ fn builtin_generic(
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = &argv[0];
     let argc = argv.len();
     let opts = match HelpOnlyCmdOpts::parse(argv, parser, streams) {
         Ok(opts) => opts,
@@ -619,14 +617,14 @@ fn builtin_generic(
     };
 
     if opts.print_help {
-        builtin_print_help(parser, streams, cmd);
+        builtin_print_help(parser, streams, &argv[0]);
         return STATUS_CMD_OK;
     }
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
-    if argc == 1 || cmd == L!("time") {
-        builtin_print_help(parser, streams, cmd);
+    if argc == 1 || &argv[0] == L!("time") {
+        builtin_print_help(parser, streams, &argv[0]);
         return STATUS_INVALID_ARGS;
     }
 

@@ -950,7 +950,7 @@ pub struct IoStreams<'a> {
     pub err_is_redirected: bool,
 
     // Actual IO redirections. This is only used by the source builtin. Unowned.
-    pub io_chain: *const IoChain,
+    pub io_chain: *mut IoChain,
 
     // The job group of the job, if any. This enables builtins which run more code like eval() to
     // share pgid.
@@ -974,7 +974,7 @@ impl<'a> IoStreams<'a> {
             err_is_piped: false,
             out_is_redirected: false,
             err_is_redirected: false,
-            io_chain: std::ptr::null(),
+            io_chain: std::ptr::null_mut(),
             job_group: None,
         }
     }

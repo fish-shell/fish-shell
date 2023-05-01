@@ -26,8 +26,6 @@ fn parse_options(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = &args[0];
-
     const SHORT_OPTS: &wstr = L!(":h");
     const LONG_OPTS: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
 
@@ -39,7 +37,7 @@ fn parse_options(
         match c {
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
@@ -99,12 +97,12 @@ pub fn parse_return_value(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<i32, Option<c_int>> {
-    let cmd = &args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return Err(err),
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
+    let cmd = &args[0];
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
         return Err(STATUS_CMD_OK);
@@ -113,19 +111,19 @@ pub fn parse_return_value(
         streams
             .err
             .append(&wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
     if optind == args.len() {
         Ok(parser.get_last_status().into())
     } else {
-        match fish_wcstoi(args[optind]) {
+        match fish_wcstoi(&args[optind]) {
             Ok(i) => Ok(i),
             Err(_e) => {
                 streams
                     .err
                     .append(&wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
-                builtin_print_error_trailer(parser, streams, cmd);
+                builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
         }

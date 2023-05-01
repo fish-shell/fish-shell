@@ -386,7 +386,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
     /// Print the text in FORMAT, using ARGV for arguments to any `%' directives.
     /// Return the number of elements of ARGV used.
-    fn print_formatted(&mut self, format: &wstr, mut argv: &[&wstr]) -> usize {
+    fn print_formatted(&mut self, format: &wstr, mut argv: &[WString]) -> usize {
         let mut argc = argv.len();
         let save_argc = argc; /* Preserve original value.  */
         let mut f: &wstr; /* Pointer into `format'.  */
@@ -427,7 +427,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         // FIXME: Field width and precision are not supported for %b, even though POSIX
                         // requires it.
                         if argc > 0 {
-                            self.print_esc_string(argv[0]);
+                            self.print_esc_string(&argv[0]);
                             argv = &argv[1..];
                             argc -= 1;
                         }
@@ -468,7 +468,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         f = &f[1..];
                         direc_length += 1;
                         if argc > 0 {
-                            let width: i64 = string_to_scalar_type(argv[0], self);
+                            let width: i64 = string_to_scalar_type(&argv[0], self);
                             if (c_int::MIN as i64) <= width && width <= (c_int::MAX as i64) {
                                 field_width = width as c_int;
                             } else {
@@ -498,7 +498,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                             f = &f[1..];
                             direc_length += 1;
                             if argc > 0 {
-                                let prec: i64 = string_to_scalar_type(argv[0], self);
+                                let prec: i64 = string_to_scalar_type(&argv[0], self);
                                 if prec < 0 {
                                     // A negative precision is taken as if the precision were omitted,
                                     // so -1 is safe here even if prec < INT_MIN.
@@ -541,7 +541,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
                     let mut argument = L!("");
                     if argc > 0 {
-                        argument = argv[0];
+                        argument = &argv[0];
                         argv = &argv[1..];
                         argc -= 1;
                     }
@@ -784,7 +784,7 @@ pub fn printf(
     let mut argc = argv.len();
 
     // Rebind argv as immutable slice (can't rearrange its elements), skipping the command name.
-    let mut argv: &[&wstr] = &argv[1..];
+    let mut argv: &[WString] = &argv[1..];
     argc -= 1;
     if argc < 1 {
         return STATUS_INVALID_ARGS;
@@ -797,7 +797,7 @@ pub fn printf(
         buff: WString::new(),
         locale: get_numeric_locale(),
     };
-    let format = argv[0];
+    let format = &argv[0];
     argc -= 1;
     argv = &argv[1..];
     loop {

@@ -23,8 +23,6 @@ fn parse_options(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = &args[0];
-
     const SHORT_OPTS: &wstr = L!("+:hi");
     const LONG_OPTS: &[woption] = &[
         wopt(L!("help"), woption_argument_t::no_argument, 'h'),
@@ -39,11 +37,11 @@ fn parse_options(
             'h' => opts.print_help = true,
             'i' => opts.print_index = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => {
@@ -62,13 +60,12 @@ pub fn contains(
     streams: &mut IoStreams<'_>,
     args: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = &args[0];
-
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
+    let cmd = &args[0];
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);

@@ -39,7 +39,6 @@ pub fn r#type(
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
     let mut opts: type_cmd_opts_t = Default::default();
@@ -68,15 +67,27 @@ pub fn r#type(
             'P' => opts.force_path = true,
             'q' => opts.query = true,
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -86,7 +97,9 @@ pub fn r#type(
     }
 
     if opts.query as i64 + opts.path as i64 + opts.get_type as i64 + opts.force_path as i64 > 1 {
-        streams.err.append(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        streams
+            .err
+            .append(&wgettext_fmt!(BUILTIN_ERR_COMBO, w.cmd()));
         return STATUS_INVALID_ARGS;
     }
 

@@ -437,7 +437,6 @@ pub fn abbr(
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 
-    let cmd = &argv[0];
     // Note 1 is returned by wgetopt to indicate a non-option argument.
     const NON_OPTION_ARGUMENT: char = 1 as char;
     const SET_CURSOR_SHORT: char = 2 as char;
@@ -479,7 +478,7 @@ pub fn abbr(
                 // of the abbreviation expansion itself, rather than options to the abbr command.
                 // For example, `abbr e emacs -nw` works, because `-nw` occurs after the second
                 // non-option, and --add is implied.
-                if let Some(arg) = w.woptarg {
+                if let Some(arg) = w.woptarg() {
                     opts.args.push(arg.to_owned())
                 };
                 if opts.args.len() >= 2
@@ -497,15 +496,15 @@ pub fn abbr(
                     ));
                     return STATUS_INVALID_ARGS;
                 }
-                if w.woptarg == Some(L!("command")) {
+                if w.woptarg() == Some(L!("command")) {
                     opts.position = Some(Position::Command);
-                } else if w.woptarg == Some(L!("anywhere")) {
+                } else if w.woptarg() == Some(L!("anywhere")) {
                     opts.position = Some(Position::Anywhere);
                 } else {
                     streams.err.append(&wgettext_fmt!(
                         "%ls: Invalid position '%ls'\n",
                         CMD,
-                        w.woptarg.unwrap_or_default()
+                        w.woptarg().unwrap_or_default()
                     ));
                     streams
                         .err
@@ -521,7 +520,7 @@ pub fn abbr(
                     ));
                     return STATUS_INVALID_ARGS;
                 }
-                opts.regex_pattern = w.woptarg.map(ToOwned::to_owned);
+                opts.regex_pattern = w.woptarg().map(ToOwned::to_owned);
             }
             SET_CURSOR_SHORT => {
                 if opts.set_cursor_marker.is_some() {
@@ -534,9 +533,9 @@ pub fn abbr(
                 // The default set-cursor indicator is '%'.
                 let _ = opts
                     .set_cursor_marker
-                    .insert(w.woptarg.unwrap_or(L!("%")).to_owned());
+                    .insert(w.woptarg().unwrap_or(L!("%")).to_owned());
             }
-            'f' => opts.function = w.woptarg.map(ToOwned::to_owned),
+            'f' => opts.function = w.woptarg().map(ToOwned::to_owned),
             RENAME_SHORT => opts.rename = true,
             'e' => opts.erase = true,
             'q' => opts.query = true,
@@ -550,21 +549,21 @@ pub fn abbr(
                 // Kept and made ineffective, so we warn.
                 streams.err.append(&wgettext_fmt!(
                     "%ls: Warning: Option '%ls' was removed and is now ignored",
-                    cmd,
+                    w.cmd(),
                     argv_read[w.woptind - 1]
                 ));
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                builtin_print_error_trailer(parser, streams.err, w.cmd());
             }
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, &argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, &argv[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -573,8 +572,8 @@ pub fn abbr(
         }
     }
 
-    for arg in argv_read[w.woptind..].iter() {
-        opts.args.push((*arg).into());
+    for arg in argv_read.drain(w.woptind..) {
+        opts.args.push(arg);
     }
 
     if !opts.validate(streams) {

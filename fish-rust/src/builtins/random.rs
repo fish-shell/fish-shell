@@ -24,7 +24,6 @@ pub fn random(
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
 
@@ -35,15 +34,27 @@ pub fn random(
     while let Some(c) = w.wgetopt_long() {
         match c {
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -57,11 +68,11 @@ pub fn random(
     let mut step = 1;
     let arg_count = argc - w.woptind;
     let i = w.woptind;
-    if arg_count >= 1 && argv[i] == "choice" {
+    if arg_count >= 1 && &w.argv()[i] == "choice" {
         if arg_count == 1 {
             streams
                 .err
-                .append(&wgettext_fmt!("%ls: nothing to choose from\n", cmd,));
+                .append(&wgettext_fmt!("%ls: nothing to choose from\n", w.cmd()));
             return STATUS_INVALID_ARGS;
         }
 
@@ -97,7 +108,7 @@ pub fn random(
         }
         1 => {
             // Seed the engine persistently
-            let num = parse::<i64>(streams, cmd, argv[i]);
+            let num = parse::<i64>(streams, w.cmd(), &w.argv()[i]);
             match num {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => {
@@ -109,37 +120,37 @@ pub fn random(
         }
         2 => {
             // start is first, end is second
-            match parse::<i64>(streams, cmd, argv[i]) {
+            match parse::<i64>(streams, w.cmd(), &w.argv()[i]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => start = x,
             }
 
-            match parse::<i64>(streams, cmd, argv[i + 1]) {
+            match parse::<i64>(streams, w.cmd(), &w.argv()[i + 1]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => end = x,
             }
         }
         3 => {
             // start, step, end
-            match parse::<i64>(streams, cmd, argv[i]) {
+            match parse::<i64>(streams, w.cmd(), &w.argv()[i]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => start = x,
             }
 
             // start, step, end
-            match parse::<u64>(streams, cmd, argv[i + 1]) {
+            match parse::<u64>(streams, w.cmd(), &w.argv()[i + 1]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(0) => {
                     streams.err.append(&wgettext_fmt!(
                         "%ls: STEP must be a positive integer\n",
-                        cmd,
+                        w.cmd(),
                     ));
                     return STATUS_INVALID_ARGS;
                 }
                 Ok(x) => step = x,
             }
 
-            match parse::<i64>(streams, cmd, argv[i + 2]) {
+            match parse::<i64>(streams, w.cmd(), &w.argv()[i + 2]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => end = x,
             }
@@ -147,15 +158,16 @@ pub fn random(
         _ => {
             streams
                 .err
-                .append(&wgettext_fmt!("%ls: too many arguments\n", cmd,));
+                .append(&wgettext_fmt!("%ls: too many arguments\n", w.cmd(),));
             return Some(1);
         }
     }
 
     if end <= start {
-        streams
-            .err
-            .append(&wgettext_fmt!("%ls: END must be greater than START\n", cmd,));
+        streams.err.append(&wgettext_fmt!(
+            "%ls: END must be greater than START\n",
+            w.cmd(),
+        ));
         return STATUS_INVALID_ARGS;
     }
 
@@ -164,7 +176,7 @@ pub fn random(
     if possibilities == 0 {
         streams.err.append(&wgettext_fmt!(
             "%ls: range contains only one possible value\n",
-            cmd,
+            w.cmd(),
         ));
         return STATUS_INVALID_ARGS;
     }

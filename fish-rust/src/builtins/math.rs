@@ -57,7 +57,7 @@ fn parse_cmd_opts(
     while let Some(c) = w.wgetopt_long() {
         match c {
             's' => {
-                let optarg = w.woptarg.unwrap();
+                let optarg = w.woptarg().unwrap();
                 have_scale = true;
                 // "max" is the special value that tells us to pick the maximum scale.
                 opts.scale = if optarg == "max"L {
@@ -74,7 +74,7 @@ fn parse_cmd_opts(
                 };
             }
             'b' => {
-                let optarg = w.woptarg.unwrap();
+                let optarg = w.woptarg().unwrap();
                 opts.base = if optarg == "hex"L {
                     16
                 } else if optarg == "octal"L {
@@ -94,7 +94,13 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
@@ -122,12 +128,12 @@ fn parse_cmd_opts(
 }
 
 /// We read from stdin if we are the second or later process in a pipeline.
-fn use_args_from_stdin(streams: &IoStreams<'_>) -> bool {
+fn use_args_from_stdin(streams: &mut IoStreams<'_>) -> bool {
     streams.stdin_is_directly_redirected
 }
 
 /// Get the arguments from stdin.
-fn get_arg_from_stdin(streams: &IoStreams<'_>) -> Option<WString> {
+fn get_arg_from_stdin(streams: &mut IoStreams<'_>) -> Option<WString> {
     let mut s = Vec::new();
     loop {
         let mut buf = [0];
@@ -164,8 +170,8 @@ fn get_arg_from_stdin(streams: &IoStreams<'_>) -> Option<WString> {
 /// `string` does it.
 fn get_arg<'args>(
     argidx: &mut usize,
-    args: &'args [&'args wstr],
-    streams: &IoStreams<'_>,
+    args: &'args [WString],
+    streams: &mut IoStreams<'_>,
 ) -> Option<Cow<'args, wstr>> {
     if use_args_from_stdin(streams) {
         assert!(
@@ -175,7 +181,7 @@ fn get_arg<'args>(
 
         get_arg_from_stdin(streams).map(Cow::Owned)
     } else {
-        let ret = args.get(*argidx).copied().map(Cow::Borrowed);
+        let ret = args.get(*argidx).map(|s| Cow::Borrowed(s.as_ref()));
         *argidx += 1;
         ret
     }
@@ -286,12 +292,12 @@ fn evaluate_expression(
 /// The math builtin evaluates math expressions.
 #[widestrs]
 pub fn math(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [WString]) -> Option<c_int> {
-    let cmd = argv[0];
-
     let (opts, mut optind) = match parse_cmd_opts(argv, parser, streams) {
         Ok(x) => x,
         Err(e) => return e,
     };
+
+    let cmd = &argv[0];
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);

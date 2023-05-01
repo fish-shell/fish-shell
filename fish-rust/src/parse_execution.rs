@@ -1289,10 +1289,10 @@ impl<'a> ParseExecutionContext {
         trace_if_enabled_with_args(&ctx.parser(), L!("function"), &arguments);
         let mut outs = NullOutputStream::new();
         let mut errs = StringOutputStream::new();
-        let streams = IoStreams::new(&mut outs, &mut errs);
+        let mut streams = IoStreams::new(&mut outs, &mut errs);
         let err_code = builtins::function::function(
             &mut ctx.parser_mut(),
-            &streams,
+            &mut streams,
             &arguments,
             &self.pstree,
             statement,

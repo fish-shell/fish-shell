@@ -73,7 +73,7 @@ pub fn bg(parser: &mut Parser, streams: &mut IoStreams<'_>, args: &mut [WString]
 
     let cmd = &args[0];
     if opts.print_help {
-        builtin_print_help(parser, streams, args.get(0)?);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -102,7 +102,7 @@ pub fn bg(parser: &mut Parser, streams: &mut IoStreams<'_>, args: &mut [WString]
     let mut retval = STATUS_CMD_OK;
     let pids: Vec<pid_t> = args[opts.optind..]
         .iter()
-        .map(|&arg| {
+        .map(|arg| {
             fish_wcstoi(arg).unwrap_or_else(|_| {
                 streams.err.append(&wgettext_fmt!(
                     "%ls: '%ls' is not a valid job specifier\n",

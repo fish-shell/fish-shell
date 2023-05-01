@@ -453,7 +453,7 @@ impl History {
     pub fn search(
         &self,
         search_type: SearchType,
-        search_args: &[&wstr],
+        search_args: &[WString],
         show_time_format: &wstr,
         max_items: usize,
         case_sensitive: bool,
@@ -616,7 +616,7 @@ pub fn expand_and_detect_paths(paths: &[&wstr], vars: &dyn Environment) -> Vec<W
 /// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
 /// Wildcard expansions are suppressed.
 /// Returns `true` if `paths` is empty or every path is valid.
-pub fn all_paths_are_valid(paths: &[&wstr], ctx: &OperationContext<'_>) -> bool {
+pub fn all_paths_are_valid(paths: &[WString], ctx: &OperationContext<'_>) -> bool {
     todo!()
 }
 
@@ -711,7 +711,6 @@ impl HistorySharedPtr {
         streams: Pin<&mut IoStreams<'_>>,
     ) -> bool {
         let search_args = search_args.from_ffi();
-        let search_args: Vec<&wstr> = search_args.iter().map(|s| s.as_utfstr()).collect();
         self.inner().search(
             search_type,
             &search_args,
@@ -795,7 +794,6 @@ fn rust_expand_and_detect_paths(
 
 fn rust_all_paths_are_valid(paths: &wcstring_list_ffi_t, ctx: &OperationContext<'_>) -> bool {
     let paths = paths.from_ffi();
-    let paths: Vec<&wstr> = paths.iter().map(|s| s.as_utfstr()).collect();
     all_paths_are_valid(&paths, ctx)
 }
 

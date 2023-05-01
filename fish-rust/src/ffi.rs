@@ -165,7 +165,7 @@ impl env_stack_t {
     }
 
     /// Helper to set a value.
-    pub fn set_var(&mut self, name: &wstr, value: &[&wstr], flags: EnvMode) -> libc::c_int {
+    pub fn set_var(&mut self, name: &wstr, value: &[WString], flags: EnvMode) -> libc::c_int {
         use crate::wchar_ffi::{wstr_to_u32string, W0String};
         let strings: Vec<W0String> = value.iter().map(wstr_to_u32string).collect();
         let ptrs: Vec<*const u32> = strings.iter().map(|s| s.as_ptr()).collect();

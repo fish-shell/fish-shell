@@ -148,7 +148,6 @@ pub fn wait(
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option
     let mut print_help = false;
@@ -170,11 +169,23 @@ pub fn wait(
                 print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -184,7 +195,7 @@ pub fn wait(
     }
 
     if print_help {
-        builtin_print_help(parser, streams, cmd);
+        builtin_print_help(parser, streams, w.cmd());
         return STATUS_CMD_OK;
     }
 
@@ -197,14 +208,14 @@ pub fn wait(
     // Get the list of wait handles for our waiting.
     let mut wait_handles: Vec<WaitHandleRef> = Vec::new();
     for i in w.woptind..argc {
-        if iswnumeric(argv[i]) {
+        if iswnumeric(&w.argv()[i]) {
             // argument is pid
-            let mpid: Result<pid_t, wutil::Error> = fish_wcstoi(argv[i]);
+            let mpid: Result<pid_t, wutil::Error> = fish_wcstoi(&w.argv()[i]);
             if mpid.is_err() || mpid.unwrap() <= 0 {
                 streams.err.append(&wgettext_fmt!(
                     "%ls: '%ls' is not a valid process id\n",
-                    cmd,
-                    argv[i],
+                    w.cmd(),
+                    w.argv()[i],
                 ));
                 continue;
             }
@@ -212,21 +223,21 @@ pub fn wait(
             if !find_wait_handles(WaitHandleQuery::Pid(pid), parser, &mut wait_handles) {
                 streams.err.append(&wgettext_fmt!(
                     "%ls: Could not find a job with process id '%d'\n",
-                    cmd,
+                    w.cmd(),
                     pid,
                 ));
             }
         } else {
             // argument is process name
             if !find_wait_handles(
-                WaitHandleQuery::ProcName(argv[i]),
+                WaitHandleQuery::ProcName(&w.argv()[i]),
                 parser,
                 &mut wait_handles,
             ) {
                 streams.err.append(&wgettext_fmt!(
                     "%ls: Could not find child processes with the name '%ls'\n",
-                    cmd,
-                    argv[i],
+                    w.cmd(),
+                    w.argv()[i],
                 ));
             }
         }

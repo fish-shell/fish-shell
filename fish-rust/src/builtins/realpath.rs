@@ -37,8 +37,6 @@ fn parse_options(
     parser: &mut Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
-    let cmd = &args[0];
-
     let mut opts = Options::default();
 
     let mut w = wgetopter_t::new(short_options, long_options, args);
@@ -48,11 +46,11 @@ fn parse_options(
             's' => opts.no_symlinks = true,
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, w.cmd(), &w.argv()[w.woptind - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => panic!("unexpected retval from wgetopt_long"),
@@ -70,13 +68,12 @@ pub fn realpath(
     streams: &mut IoStreams<'_>,
     args: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = &args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
-
+    let cmd = &args[0];
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
@@ -94,10 +91,10 @@ pub fn realpath(
         return STATUS_INVALID_ARGS;
     }
 
-    let arg = args[optind];
+    let arg = &args[optind];
 
     if !opts.no_symlinks {
-        if let Some(real_path) = wrealpath(arg) {
+        if let Some(real_path) = wrealpath(&arg) {
             streams.out.append(&real_path);
         } else {
             let errno = errno();
@@ -127,7 +124,7 @@ pub fn realpath(
             let absolute_arg = if arg.starts_with(L!("/")) {
                 arg.to_owned()
             } else {
-                path_apply_working_directory(arg, &realpwd)
+                path_apply_working_directory(&arg, &realpwd)
             };
             streams.out.append(&normalize_path(&absolute_arg, false));
         } else {

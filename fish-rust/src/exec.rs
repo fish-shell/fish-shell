@@ -1064,9 +1064,9 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
     // Pull out some fields which we want to copy. We don't want to store the process or job in the
     // returned closure.
-    let argv = p.argv().clone();
+    let mut argv = p.argv().clone();
     let job_group = j.group.clone();
-    let io_chain = io_chain.clone();
+    let mut io_chain = io_chain.clone();
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
@@ -1107,10 +1107,10 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             streams.err_is_piped = err_io
                 .map(|io| io.io_mode() == IoMode::pipe)
                 .unwrap_or(false);
-            streams.io_chain = &io_chain;
+            streams.io_chain = &mut io_chain;
 
             // Execute the builtin.
-            builtin_run(parser, &argv, &streams)
+            builtin_run(parser, &mut argv, &mut streams)
         },
     )
 }

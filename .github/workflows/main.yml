@@ -118,7 +118,8 @@ jobs:
           # which seems to be an issue with TLS support in newer glibc versions under virtualized
           # environments. Follow https://github.com/google/sanitizers/issues/1342 and
           # https://github.com/google/sanitizers/issues/1409 to track this issue.
-          LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=0
+          # UPDATE: this can cause spurious leak reports for __cxa_thread_atexit_impl() under glibc.
+          LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=1
       run: |
         make test
 

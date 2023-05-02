@@ -617,5 +617,8 @@ add_test!("test_signal_parse", || {
 /// rust's native OS targeting for those.
 fn bsd_signals() {
     assert_eq!(Signal::parse(L!("SIGEMT")), Some(Signal::new(libc::SIGEMT)));
-    assert_eq!(Signal::parse(L!("SIGINFO")), Some(Signal::new(libc::SIGINFO)));
+    assert_eq!(
+        Signal::parse(L!("SIGINFO")),
+        Some(Signal::new(libc::SIGINFO))
+    );
 }

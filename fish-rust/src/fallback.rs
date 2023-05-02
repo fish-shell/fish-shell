@@ -11,14 +11,14 @@ use std::sync::atomic::{AtomicI32, Ordering};
 use std::{ffi::CString, mem, os::fd::RawFd};
 
 // Width of ambiguous characters. 1 is typical default.
-static mut FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
+static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
 
 // Width of emoji characters.
 // 1 is the typical emoji width in Unicode 8.
-static mut FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
+static FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
 
 fn fish_get_emoji_width() -> i32 {
-    unsafe { FISH_EMOJI_WIDTH.load(Ordering::Relaxed) }
+    FISH_EMOJI_WIDTH.load(Ordering::Relaxed)
 }
 
 extern "C" {
@@ -67,7 +67,7 @@ pub fn fish_wcwidth(c: char) -> i32 {
         }
         WcWidth::Ambiguous | WcWidth::PrivateUse => {
             // TR11: "All private-use characters are by default classified as Ambiguous".
-            unsafe { FISH_AMBIGUOUS_WIDTH.load(Ordering::Relaxed) }
+            FISH_AMBIGUOUS_WIDTH.load(Ordering::Relaxed)
         }
         WcWidth::One => 1,
         WcWidth::Two => 2,

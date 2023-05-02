@@ -119,9 +119,9 @@ jobs:
           # environments. Follow https://github.com/google/sanitizers/issues/1342 and
           # https://github.com/google/sanitizers/issues/1409 to track this issue.
           # UPDATE: this can cause spurious leak reports for __cxa_thread_atexit_impl() under glibc.
-          LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=1
+          LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=1:print_suppressions=0
       run: |
-        make test
+        env LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt" make test
 
   # Our clang++ tsan builds are not recognizing safe rust patterns (such as the fact that Drop
   # cannot be called while a thread is using the object in question). Rust has its own way of

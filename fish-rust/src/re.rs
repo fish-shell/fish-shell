@@ -4,12 +4,12 @@ use crate::wchar::{wstr, WString, L};
 /// This is a workaround for the fact that PCRE2_ENDANCHORED is unavailable on pre-2017 PCRE2
 /// (e.g. 10.21, on Xenial).
 pub fn regex_make_anchored(pattern: &wstr) -> WString {
-    let mut anchored = pattern.to_owned();
     // PATTERN -> ^(:?PATTERN)$.
     let prefix = L!("^(?:");
     let suffix = L!(")$");
-    anchored.reserve(pattern.len() + prefix.len() + suffix.len());
-    anchored.insert_utfstr(0, prefix);
+    let mut anchored = WString::with_capacity(prefix.len() + pattern.len() + suffix.len());
+    anchored.push_utfstr(prefix);
+    anchored.push_utfstr(pattern);
     anchored.push_utfstr(suffix);
     anchored
 }

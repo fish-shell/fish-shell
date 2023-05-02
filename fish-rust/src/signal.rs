@@ -616,6 +616,6 @@ add_test!("test_signal_parse", || {
 /// for the unknown ones too. We don't need to do this for Linux and macOS because we're using
 /// rust's native OS targeting for those.
 fn bsd_signals() {
-    assert_eq!(Signal::SIGEMT.code(), libc::SIGEMT);
-    assert_eq!(Signal::SIGINFO.code(), libc::SIGINFO);
+    assert_eq!(Signal::parse(L!("SIGEMT")), Some(Signal::new(libc::SIGEMT)));
+    assert_eq!(Signal::parse(L!("SIGINFO")), Some(Signal::new(libc::SIGINFO)));
 }

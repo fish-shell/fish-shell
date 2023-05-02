@@ -97,6 +97,7 @@ include_cpp! {
     generate!("fd_event_signaller_t")
 
     generate!("env_var_t")
+    generate!("env_universal_t")
 
     generate!("colorize_shell")
     generate!("reader_status_count")

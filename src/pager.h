@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "complete.h"
+#include "cxx.h"
 #include "highlight.h"
 #include "reader.h"
 #include "screen.h"
@@ -87,7 +88,7 @@ class pager_t {
         /// The description.
         wcstring desc{};
         /// The representative completion.
-        completion_t representative{L""};
+        rust::Box<completion_t> representative = new_completion();
         /// The per-character highlighting, used when this is a full shell command.
         std::vector<highlight_spec_t> colors{};
         /// On-screen width of the completion string.

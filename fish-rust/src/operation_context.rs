@@ -124,6 +124,8 @@ impl<'a> OperationContext<'a> {
 mod operation_context_ffi {
     extern "Rust" {
         type OperationContext<'a>;
+
+        fn check_cancel(&self) -> bool;
     }
 }
 

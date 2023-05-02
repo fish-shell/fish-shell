@@ -285,11 +285,6 @@ std::vector<wcstring> env_universal_t::get_names(bool show_exported, bool show_u
     return result;
 }
 
-std::vector<wcharz_t> env_universal_t::get_names_ffi(bool show_exported,
-                                                     bool show_unexported) const {
-    return wcstring_list_to_ffi(this->get_names(show_exported, show_unexported));
-}
-
 // Given a variable table, generate callbacks representing the difference between our vars and the
 // new vars. Update our exports generation.
 void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &new_vars,

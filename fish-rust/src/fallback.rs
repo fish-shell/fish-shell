@@ -116,16 +116,46 @@ pub fn fish_tparm() {
 }
 
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
-    for (l, r) in lhs.chars().zip(rhs.chars()) {
-        // TODO Decide what to do for different lengths.
-        let l = l.to_lowercase();
-        let r = r.to_lowercase();
-        for (l, r) in l.zip(r) {
-            let order = l.cmp(&r);
-            if !order.is_eq() {
-                return order;
+    use std::char::ToLowercase;
+    use widestring::utfstr::CharsUtf32;
+
+    /// This struct streams the underlying lowercase chars of a `UTF32String` without allocating.
+    ///
+    /// `char::to_lowercase()` returns an iterator of chars and we sometimes need to cmp the last
+    /// char of one char's `to_lowercase()` with the first char of the other char's
+    /// `to_lowercase()`. This makes that possible.
+    struct ToLowerBuffer<'a> {
+        current: ToLowercase,
+        chars: CharsUtf32<'a>,
+    }
+
+    impl<'a> Iterator for ToLowerBuffer<'a> {
+        type Item = char;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if let Some(c) = self.current.next() {
+                return Some(c);
+            }
+
+            self.current = self.chars.next()?.to_lowercase();
+            self.next()
+        }
+    }
+
+    impl<'a> ToLowerBuffer<'a> {
+        pub fn from(w: &'a wstr) -> Self {
+            let mut empty = 'a'.to_lowercase();
+            let _ = empty.next();
+            debug_assert!(empty.next().is_none());
+            let mut chars = w.chars();
+            Self {
+                current: chars.next().map(|c| c.to_lowercase()).unwrap_or(empty),
+                chars,
             }
         }
     }
-    lhs.len().cmp(&rhs.len())
+
+    let lhs = ToLowerBuffer::from(lhs);
+    let rhs = ToLowerBuffer::from(rhs);
+    lhs.cmp(rhs)
 }

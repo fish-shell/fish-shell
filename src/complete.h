@@ -17,7 +17,10 @@
 #include "complete.rs.h"
 #else
 struct CompletionListFfi;
+struct Completion;
 #endif
+
+using completion_t = Completion;
 
 #include "common.h"
 #include "expand.h"

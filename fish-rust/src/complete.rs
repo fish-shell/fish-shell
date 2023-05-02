@@ -2552,9 +2552,12 @@ mod complete_ffi {
         include!("complete.h");
     }
     extern "Rust" {
+        type Completion;
         type CompletionListFfi;
 
+        fn new_completion() -> Box<Completion>;
         fn new_completion_list() -> Box<CompletionListFfi>;
+        fn size(self: &CompletionListFfi) -> usize;
     }
 }
 
@@ -2563,6 +2566,14 @@ unsafe impl cxx::ExternType for CompletionListFfi {
     type Kind = cxx::kind::Opaque;
 }
 
+fn new_completion() -> Box<Completion> {
+    todo!()
+}
 fn new_completion_list() -> Box<CompletionListFfi> {
     todo!()
+}
+impl CompletionListFfi {
+    fn size(&self) -> usize {
+        self.0.len()
+    }
 }

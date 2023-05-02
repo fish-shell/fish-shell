@@ -11,14 +11,14 @@ use std::sync::atomic::{AtomicI32, Ordering};
 use std::{ffi::CString, mem, os::fd::RawFd};
 
 // Width of ambiguous characters. 1 is typical default.
-static mut FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
+static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
 
 // Width of emoji characters.
 // 1 is the typical emoji width in Unicode 8.
-static mut FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
+static FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
 
 fn fish_get_emoji_width() -> i32 {
-    unsafe { FISH_EMOJI_WIDTH.load(Ordering::Relaxed) }
+    FISH_EMOJI_WIDTH.load(Ordering::Relaxed)
 }
 
 extern "C" {
@@ -67,7 +67,7 @@ pub fn fish_wcwidth(c: char) -> i32 {
         }
         WcWidth::Ambiguous | WcWidth::PrivateUse => {
             // TR11: "All private-use characters are by default classified as Ambiguous".
-            unsafe { FISH_AMBIGUOUS_WIDTH.load(Ordering::Relaxed) }
+            FISH_AMBIGUOUS_WIDTH.load(Ordering::Relaxed)
         }
         WcWidth::One => 1,
         WcWidth::Two => 2,
@@ -116,16 +116,66 @@ pub fn fish_tparm() {
 }
 
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
-    for (l, r) in lhs.chars().zip(rhs.chars()) {
-        // TODO Decide what to do for different lengths.
-        let l = l.to_lowercase();
-        let r = r.to_lowercase();
-        for (l, r) in l.zip(r) {
-            let order = l.cmp(&r);
-            if !order.is_eq() {
-                return order;
+    use std::char::ToLowercase;
+    use widestring::utfstr::CharsUtf32;
+
+    /// This struct streams the underlying lowercase chars of a `UTF32String` without allocating.
+    ///
+    /// `char::to_lowercase()` returns an iterator of chars and we sometimes need to cmp the last
+    /// char of one char's `to_lowercase()` with the first char of the other char's
+    /// `to_lowercase()`. This makes that possible.
+    struct ToLowerBuffer<'a> {
+        current: ToLowercase,
+        chars: CharsUtf32<'a>,
+    }
+
+    impl<'a> Iterator for ToLowerBuffer<'a> {
+        type Item = char;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if let Some(c) = self.current.next() {
+                return Some(c);
+            }
+
+            self.current = self.chars.next()?.to_lowercase();
+            self.next()
+        }
+    }
+
+    impl<'a> ToLowerBuffer<'a> {
+        pub fn from(w: &'a wstr) -> Self {
+            let mut empty = 'a'.to_lowercase();
+            let _ = empty.next();
+            debug_assert!(empty.next().is_none());
+            let mut chars = w.chars();
+            Self {
+                current: chars.next().map(|c| c.to_lowercase()).unwrap_or(empty),
+                chars,
             }
         }
     }
-    lhs.len().cmp(&rhs.len())
+
+    let lhs = ToLowerBuffer::from(lhs);
+    let rhs = ToLowerBuffer::from(rhs);
+    lhs.cmp(rhs)
+}
+
+#[test]
+fn test_wcscasecmp() {
+    use crate::wchar::L;
+    use std::cmp::Ordering;
+
+    // Comparison with empty
+    assert_eq!(wcscasecmp(L!("a"), L!("")), Ordering::Greater);
+    assert_eq!(wcscasecmp(L!(""), L!("a")), Ordering::Less);
+    assert_eq!(wcscasecmp(L!(""), L!("")), Ordering::Equal);
+
+    // Basic comparison
+    assert_eq!(wcscasecmp(L!("A"), L!("a")), Ordering::Equal);
+    assert_eq!(wcscasecmp(L!("B"), L!("a")), Ordering::Greater);
+    assert_eq!(wcscasecmp(L!("A"), L!("B")), Ordering::Less);
+
+    // Multi-byte comparison
+    assert_eq!(wcscasecmp(L!("İ"), L!("i\u{307}")), Ordering::Equal);
+    assert_eq!(wcscasecmp(L!("ia"), L!("İa")), Ordering::Less);
 }

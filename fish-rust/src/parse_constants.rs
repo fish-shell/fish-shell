@@ -9,7 +9,6 @@ use crate::wutil::{sprintf, wgettext_fmt};
 use bitflags::bitflags;
 use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
-use std::ops::{BitAnd, BitOr, BitOrAssign};
 use widestring_suffix::widestrs;
 
 pub type SourceOffset = u32;

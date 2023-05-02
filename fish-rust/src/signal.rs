@@ -362,15 +362,15 @@ pub fn signal_unblock_all() {
 }
 
 /// A Sigchecker can be used to check if a SIGINT (or SIGHUP) has been delivered.
-pub struct Sigchecker {
+pub struct SigChecker {
     topic: topic_t,
     gen: generation_t,
 }
 
-impl Sigchecker {
+impl SigChecker {
     /// Create a new checker for the given topic.
     pub fn new(topic: topic_t) -> Self {
-        let mut res = Sigchecker { topic, gen: 0 };
+        let mut res = SigChecker { topic, gen: 0 };
         // Call check() to update our generation.
         res.check();
         res
@@ -619,6 +619,9 @@ add_test!("test_signal_parse", || {
 /// for the unknown ones too. We don't need to do this for Linux and macOS because we're using
 /// rust's native OS targeting for those.
 fn bsd_signals() {
-    assert_eq!(Signal::SIGEMT.code(), libc::SIGEMT);
-    assert_eq!(Signal::SIGINFO.code(), libc::SIGINFO);
+    assert_eq!(Signal::parse(L!("SIGEMT")), Some(Signal::new(libc::SIGEMT)));
+    assert_eq!(
+        Signal::parse(L!("SIGINFO")),
+        Some(Signal::new(libc::SIGINFO))
+    );
 }

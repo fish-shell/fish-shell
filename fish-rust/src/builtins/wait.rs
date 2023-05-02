@@ -5,7 +5,7 @@ use crate::builtins::shared::{
     STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::ffi::{job_t, parser_t, proc_wait_any, Repin};
-use crate::signal::Sigchecker;
+use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 use crate::wchar::{widestrs, wstr};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
@@ -112,7 +112,7 @@ fn wait_for_completion(
         return Some(0);
     }
 
-    let mut sigint = Sigchecker::new_sighupint();
+    let mut sigint = SigChecker::new_sighupint();
     loop {
         let finished = if any_flag {
             whs.iter().any(is_completed)

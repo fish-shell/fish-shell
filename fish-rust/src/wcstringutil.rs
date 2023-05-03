@@ -373,10 +373,7 @@ pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
 }
 
 pub fn bool_from_string(x: &wstr) -> bool {
-    if x.is_empty() {
-        return false;
-    }
-    matches!(x.chars().next().unwrap(), 'Y' | 'T' | 'y' | 't' | '1')
+    matches!(x.chars().next(), Some('Y' | 'T' | 'y' | 't' | '1'))
 }
 
 /// Given iterators into a string (forward or reverse), splits the haystack iterators

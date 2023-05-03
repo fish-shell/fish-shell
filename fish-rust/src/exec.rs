@@ -13,7 +13,7 @@ use crate::common::{
 };
 use crate::compat::_PATH_BSHELL;
 use crate::env::{EnvMode, EnvStack, Environment, Statuses};
-use crate::env_dispatch::{get_use_posix_spawn, READ_BYTE_LIMIT};
+use crate::env_dispatch::{use_posix_spawn, READ_BYTE_LIMIT};
 use crate::fds::{make_autoclose_pipes, open_cloexec, AutoCloseFd, AutoClosePipes, PIPE_ERROR};
 use crate::flog::FLOGF;
 use crate::function::{function_get_props, FunctionProperties};
@@ -447,7 +447,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &mut Process) -> ! {
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 fn can_use_posix_spawn_for_job(job: &JobRef, dup2s: &Dup2List) -> bool {
     // Is it globally disabled?
-    if !get_use_posix_spawn() {
+    if !use_posix_spawn() {
         return false;
     }
 

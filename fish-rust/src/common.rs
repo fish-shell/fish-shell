@@ -1641,13 +1641,14 @@ pub fn is_windows_subsystem_for_linux() -> bool {
             return false;
         }
 
-        let release = &release[release
+        let release: Vec<_> = release
             .iter()
-            .take_while(|c| **c != b'-').count() + 1 // the dash itself
-                ..];
-        let version_length = release.iter().take_while(|c| c.is_ascii_digit()).count();
-        let release = &release[..version_length];
-        let build: Result<u32, _> = std::str::from_utf8(release).unwrap().parse();
+            .skip_while(|c| **c != b'-')
+            .skip(1) // the dash itself
+            .take_while(|c| c.is_ascii_digit())
+            .copied()
+            .collect();
+        let build: Result<u32, _> = std::str::from_utf8(&release).unwrap().parse();
         match build {
             Ok(17763..) => return true,
             Ok(_) => (),       // return true, but first warn (see below)

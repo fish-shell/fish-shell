@@ -1612,24 +1612,37 @@ fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
     a.windows(b.len()).any(|aw| aw == b)
 }
 
-#[cfg(target_os = "linux")]
-static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: once_cell::race::OnceBool = once_cell::race::OnceBool::new();
+/// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
+/// some known limitations and/or bugs.
+///
+/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+#[cfg(not(target_os = "linux"))]
+pub fn is_windows_subsystem_for_linux() -> bool {
+    false
+}
 
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
+///
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+#[cfg(target_os = "linux")]
 pub fn is_windows_subsystem_for_linux() -> bool {
-    // We are purposely not using std::call_once as it may invoke locking, which is an unnecessary
-    // overhead since there's no actual race condition here - even if multiple threads call this
-    // routine simultaneously the first time around, we just end up needlessly querying uname(2) one
-    // more time.
-    #[cfg(not(target_os = "linux"))]
-    {
-        false
+    static RESULT: once_cell::race::OnceBool = once_cell::race::OnceBool::new();
+
+    // This is called post-fork from [`report_setpgid_error()`], so the fast path must not involve
+    // any allocations or mutexes. We can't rely on all the std functions to be alloc-free in both
+    // Debug and Release modes, so we just mandate that the result already be available.
+    //
+    // is_wsl() is called by has_working_timestamps() which is called by `screen.cpp` in the main
+    // process. If that's not good enough, we can call is_wsl() manually at shell startup.
+    if crate::threads::is_forked_child() {
+        debug_assert!(
+            RESULT.get().is_some(),
+            "is_wsl() should be called by main before forking!"
+        );
     }
 
-    #[cfg(target_os = "linux")]
-    IS_WINDOWS_SUBSYSTEM_FOR_LINUX.get_or_init(|| {
+    RESULT.get_or_init(|| {
         let mut info: libc::utsname = unsafe { mem::zeroed() };
         let release: &[u8] = unsafe {
             libc::uname(&mut info);

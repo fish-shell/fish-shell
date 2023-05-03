@@ -164,7 +164,7 @@ complete -f -c npm -n '__fish_npm_using_command owner' -a rm -d 'Remove an owner
 for c in r remove rm un uninstall unlink
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Remove a package'
     complete -x -c npm -n "__fish_npm_using_command $c" -d 'remove package' -a '(__yarn_installed_local_packages)'
-    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package' -a '(__yarn_installed_local_packages)'
+    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package' -a '(__npm_installed_global_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -l save -d 'Package will be removed from your dependencies'
     complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
 end

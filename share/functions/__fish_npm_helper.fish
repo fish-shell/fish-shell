@@ -50,11 +50,22 @@ function __yarn_find_package_json
     return 1
 end
 
-function __yarn_installed_global_packages
-	set -l prefix (npm config get prefix)
-	set -l lib "$prefix/lib"
+function __npm_installed_global_packages
+	set -l prefix (npm prefix -g)
+	set -l node_modules "$prefix/lib/node_modules"
 
-	# todo recurse
+	for path in $node_modules/*
+		set -l mod (string split '/' $path)[-1]
+
+		if test (string match -r "^@" $mod)
+			for sub_path in $path/*
+				set -l sub_mod (string split '/' $sub_path)[-1]
+				echo $mod/$sub_mod
+			end
+		else
+			echo $mod
+		end
+	end
 end
 
 function __yarn_installed_local_packages

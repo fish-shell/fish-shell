@@ -50,7 +50,14 @@ function __yarn_find_package_json
     return 1
 end
 
-function __yarn_installed_packages
+function __yarn_installed_global_packages
+	set -l prefix (npm config get prefix)
+	set -l lib "$prefix/lib"
+
+	# todo recurse
+end
+
+function __yarn_installed_local_packages
     set -l package_json (__yarn_find_package_json)
     if not test $status -eq 0
         # no package.json in tree

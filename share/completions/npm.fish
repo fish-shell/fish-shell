@@ -69,9 +69,12 @@ end
 # use npm completion for most of the things,
 # except options completion (because it sucks at it)
 # and run-script completion (reading package.json is faster).
+# and uninstall (reading dependencies is faster and more robust and yarn needs the functions anyways)
 # see: https://github.com/npm/npm/issues/9524
 # and: https://github.com/fish-shell/fish-shell/pull/2366
-complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run; and not __fish_npm_using_command run-script' -a "(__fish_complete_npm)"
+complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run; and not __fish_npm_using_command run-script;
+and not __fish_npm_using_command r; and not __fish_npm_using_command remove; and not __fish_npm_using_command rm; and not __fish_npm_using_command un;
+and not __fish_npm_using_command uninstall; and not __fish_npm_using_command unlink' -a "(__fish_complete_npm)"
 
 # list available npm scripts and their parial content
 function __fish_parse_npm_run_completions
@@ -159,8 +162,9 @@ complete -f -c npm -n '__fish_npm_using_command owner' -a rm -d 'Remove an owner
 
 # remove
 for c in r remove rm un uninstall unlink
-    complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'remove package' -xa '(__yarn_installed_packages)'
-    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package'
+    complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Remove a package'
+    complete -x -c npm -n "__fish_npm_using_command $c" -d 'remove package' -a '(__yarn_installed_local_packages)'
+    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package' -a '(__yarn_installed_local_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -l save -d 'Package will be removed from your dependencies'
     complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
 end

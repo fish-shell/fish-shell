@@ -34,12 +34,13 @@ pub struct NullTerminatedArrayIterator<CharType> {
 impl<CharType> Iterator for NullTerminatedArrayIterator<CharType> {
     type Item = *const CharType;
     fn next(&mut self) -> Option<*const CharType> {
-        if self.ptr.is_null() {
-            return None;
-        }
         let result = unsafe { *self.ptr };
-        self.ptr = unsafe { self.ptr.add(1) };
-        Some(result)
+        if result.is_null() {
+            None
+        } else {
+            self.ptr = unsafe { self.ptr.add(1) };
+            Some(result)
+        }
     }
 }
 
@@ -189,6 +190,15 @@ fn test_null_terminated_array() {
         assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
         assert_eq!(*ptr.offset(2), ptr::null());
     }
+}
+#[test]
+fn test_null_terminated_array_iter() {
+    let owned_strs = &[CString::new("foo").unwrap(), CString::new("bar").unwrap()];
+    let strs: Vec<_> = owned_strs.iter().map(|s| s.as_c_str()).collect();
+    let arr = NullTerminatedArray::new(&strs);
+    let v1: Vec<_> = arr.iter().collect();
+    let v2: Vec<_> = owned_strs.iter().map(|s| s.as_ptr()).collect();
+    assert_eq!(v1, v2);
 }
 
 #[test]

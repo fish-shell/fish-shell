@@ -56,6 +56,7 @@ use libc::{
     c_int, pselect, ENOENT, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
 };
 use std::io::ErrorKind;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
@@ -221,7 +222,8 @@ impl<'a> ParseExecutionContext {
 
         // Check for stack overflow in case of function calls (regular stack overflow) or string
         // substitution blocks, which can be recursively called with eval (issue #9302).
-        let block_type = ctx.parser().block_at_index(associated_block).unwrap().typ();
+        let blocks = ctx.parser().blocks();
+        let block_type = blocks.get(associated_block).unwrap().typ();
         if (block_type == BlockType::top && ctx.parser().function_stack_is_overflowing())
             || (block_type == BlockType::subst && ctx.parser().is_eval_depth_exceeded())
         {
@@ -278,7 +280,7 @@ impl<'a> ParseExecutionContext {
             }
 
             // Mark status.
-            ctx.parser_mut().set_last_statuses(Statuses::just(status));
+            ctx.parser().set_last_statuses(Statuses::just(status));
         }
         EndExecutionReason::error
     }
@@ -361,13 +363,13 @@ impl<'a> ParseExecutionContext {
         ));
         io.append_from_specs(&list, L!(""));
 
-        if function_exists(L!("fish_command_not_found"), &mut ctx.parser_mut()) {
+        if function_exists(L!("fish_command_not_found"), &mut ctx.parser()) {
             let mut buffer = L!("fish_command_not_found").to_owned();
             for arg in &event_args {
                 buffer.push(' ');
                 buffer.push_utfstr(&escape(arg));
             }
-            let mut parser = ctx.parser_mut();
+            let parser = ctx.parser();
             let prev_statuses = parser.get_last_statuses();
 
             let event = Event::generic(L!("fish_command_not_found").to_owned());
@@ -414,13 +416,16 @@ impl<'a> ParseExecutionContext {
         // not inside a block in that function call. If, in the future, the rules for what
         // block scopes are pushed on function invocation changes, then this check will break.
         let parser = ctx.parser();
-        let parent = match (parser.block_at_index(0), parser.block_at_index(1)) {
-            (Some(current), Some(parent))
-                if current.typ() == BlockType::top && parent.is_function_call() =>
-            {
-                parent
+        let blocks = parser.blocks();
+        let parent = {
+            match (blocks.get(0), blocks.get(1)) {
+                (Some(current), Some(parent))
+                    if current.typ() == BlockType::top && parent.is_function_call() =>
+                {
+                    parent
+                }
+                _ => return None, // Not within function call.
             }
-            _ => return None, // Not within function call.
         };
 
         // Get the function name of the immediate block.
@@ -580,7 +585,7 @@ impl<'a> ParseExecutionContext {
             StatementDecoration::command => ProcessType::external,
             StatementDecoration::builtin => ProcessType::builtin,
             StatementDecoration::none => {
-                if function_exists(cmd, &mut ctx.parser_mut()) {
+                if function_exists(cmd, &mut ctx.parser()) {
                     ProcessType::function
                 } else if builtin_exists(cmd) {
                     ProcessType::builtin
@@ -602,10 +607,7 @@ impl<'a> ParseExecutionContext {
         if variable_assignment_list.is_empty() {
             return EndExecutionReason::ok;
         }
-        *block = Some(
-            ctx.parser_mut()
-                .push_block(Block::variable_assignment_block()),
-        );
+        *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
         for variable_assignment in variable_assignment_list {
             let source = self.node_source(&**variable_assignment);
             let equals_pos = variable_assignment_equals_pos(source).unwrap();
@@ -646,11 +648,8 @@ impl<'a> ParseExecutionContext {
                     vals.clone(),
                 ));
             }
-            ctx.parser_mut().set_var_and_fire(
-                variable_name,
-                EnvMode::LOCAL | EnvMode::EXPORT,
-                vals,
-            );
+            ctx.parser()
+                .set_var_and_fire(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
         }
         EndExecutionReason::ok
     }
@@ -672,7 +671,7 @@ impl<'a> ParseExecutionContext {
             self.apply_variable_assignments(ctx, Some(proc), variable_assignments, &mut block);
         let mut ctx = Cleanup::new(ctx, |ctx| {
             if let Some(block) = block {
-                ctx.parser_mut().pop_block(block);
+                ctx.parser().pop_block(block);
             }
         });
         if result != EndExecutionReason::ok {
@@ -789,7 +788,7 @@ impl<'a> ParseExecutionContext {
             cmd_args = vec![L!("cd").to_owned(), cmd];
 
             // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
-            process_type = if function_exists(L!("cd"), &mut ctx.parser_mut()) {
+            process_type = if function_exists(L!("cd"), &mut ctx.parser()) {
                 ProcessType::function
             } else {
                 ProcessType::builtin
@@ -934,7 +933,7 @@ impl<'a> ParseExecutionContext {
             );
         }
 
-        let retval = ctx.parser_mut().vars().set(
+        let retval = ctx.parser().vars().set(
             &for_var_name,
             EnvMode::LOCAL | EnvMode::USER,
             var.map_or(vec![], |var| var.as_list().to_owned()),
@@ -942,7 +941,7 @@ impl<'a> ParseExecutionContext {
         assert!(retval == EnvStackSetResult::ENV_OK);
 
         trace_if_enabled_with_args(&mut ctx.parser(), L!("for"), &arguments);
-        let fb = ctx.parser_mut().push_block(Block::for_block());
+        let fb = ctx.parser().push_block(Block::for_block());
 
         // We fire the same event over and over again, just construct it once.
         let evt = Event::variable_set(for_var_name.clone());
@@ -955,31 +954,30 @@ impl<'a> ParseExecutionContext {
                 break;
             }
 
-            let retval = ctx.parser_mut().vars().set(
-                &for_var_name,
-                EnvMode::DEFAULT | EnvMode::USER,
-                vec![val],
-            );
+            let retval =
+                ctx.parser()
+                    .vars()
+                    .set(&for_var_name, EnvMode::DEFAULT | EnvMode::USER, vec![val]);
             assert!(
                 retval == EnvStackSetResult::ENV_OK,
                 "for loop variable should have been successfully set"
             );
-            event::fire(&mut ctx.parser_mut(), evt.clone());
+            event::fire(&mut ctx.parser(), evt.clone());
 
-            ctx.parser_mut().libdata_mut().pods.loop_status = LoopStatus::normals;
+            ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
             self.run_job_list(ctx, block_contents, Some(fb));
 
             if self.check_end_execution(ctx) == Some(EndExecutionReason::control_flow) {
                 // Handle break or continue.
                 let do_break = ctx.parser().libdata().pods.loop_status == LoopStatus::breaks;
-                ctx.parser_mut().libdata_mut().pods.loop_status = LoopStatus::normals;
+                ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
                 if do_break {
                     break;
                 }
             }
         }
 
-        ctx.parser_mut().pop_block(fb);
+        ctx.parser().pop_block(fb);
         trace_if_enabled(&ctx.parser(), L!("end for"));
         ret
     }
@@ -1049,17 +1047,17 @@ impl<'a> ParseExecutionContext {
             None => {
                 // 'if' condition failed, no else clause, return 0, we're done.
                 // No job list means no successful conditions, so return 0 (issue #1443).
-                ctx.parser_mut()
+                ctx.parser()
                     .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
             }
             Some(job_list_to_execute) => {
                 // Execute the job list we got.
-                let ib = ctx.parser_mut().push_block(Block::if_block());
+                let ib = ctx.parser().push_block(Block::if_block());
                 self.run_job_list(ctx, job_list_to_execute, Some(ib));
                 if let Some(ret) = self.check_end_execution(ctx) {
                     result = ret;
                 }
-                ctx.parser_mut().pop_block(ib);
+                ctx.parser().pop_block(ib);
             }
         }
         trace_if_enabled(&ctx.parser(), L!("end if"));
@@ -1138,7 +1136,7 @@ impl<'a> ParseExecutionContext {
         let mut result = EndExecutionReason::ok;
 
         trace_if_enabled_with_args(&ctx.parser(), L!("switch"), &[&switch_value_expanded]);
-        let sb = ctx.parser_mut().push_block(Block::switch_block());
+        let sb = ctx.parser().push_block(Block::switch_block());
 
         // Expand case statements.
         let mut matching_case_item = None;
@@ -1181,7 +1179,7 @@ impl<'a> ParseExecutionContext {
             result = self.run_job_list(ctx, &case_item.body, Some(sb));
         }
 
-        ctx.parser_mut().pop_block(sb);
+        ctx.parser().pop_block(sb);
         trace_if_enabled(&ctx.parser(), L!("end switch"));
         result
     }
@@ -1230,7 +1228,7 @@ impl<'a> ParseExecutionContext {
             if cond_ret != EndExecutionReason::ok {
                 break;
             } else if ctx.parser().get_last_status() != EXIT_SUCCESS {
-                ctx.parser_mut().set_last_statuses(cond_saved_status);
+                ctx.parser().set_last_statuses(cond_saved_status);
                 break;
             }
 
@@ -1241,17 +1239,17 @@ impl<'a> ParseExecutionContext {
             }
 
             // Push a while block and then check its cancellation reason.
-            ctx.parser_mut().libdata_mut().pods.loop_status = LoopStatus::normals;
+            ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
 
-            let wb = ctx.parser_mut().push_block(Block::while_block());
+            let wb = ctx.parser().push_block(Block::while_block());
             self.run_job_list(ctx, contents, Some(wb));
             let cancel_reason = self.check_end_execution(ctx);
-            ctx.parser_mut().pop_block(wb);
+            ctx.parser().pop_block(wb);
 
             if cancel_reason == Some(EndExecutionReason::control_flow) {
                 // Handle break or continue.
                 let do_break = ctx.parser().libdata().pods.loop_status == LoopStatus::breaks;
-                ctx.parser_mut().libdata_mut().pods.loop_status = LoopStatus::normals;
+                ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
                 if do_break {
                     break;
                 } else {
@@ -1291,14 +1289,14 @@ impl<'a> ParseExecutionContext {
         let mut errs = StringOutputStream::new();
         let mut streams = IoStreams::new(&mut outs, &mut errs);
         let err_code = builtins::function::function(
-            &mut ctx.parser_mut(),
+            &mut ctx.parser(),
             &mut streams,
             &arguments,
             &self.pstree,
             statement,
         );
-        ctx.parser_mut().libdata_mut().pods.status_count += 1;
-        ctx.parser_mut().set_last_statuses(Statuses::just(err_code));
+        ctx.parser().libdata_mut().pods.status_count += 1;
+        ctx.parser().set_last_statuses(Statuses::just(err_code));
 
         let errtext = errs.contents();
         if !errtext.is_empty() {
@@ -1314,10 +1312,10 @@ impl<'a> ParseExecutionContext {
         // Basic begin/end block. Push a scope block, run jobs, pop it
         trace_if_enabled(&ctx.parser(), L!("begin"));
         let sb = ctx
-            .parser_mut()
+            .parser()
             .push_block(Block::scope_block(BlockType::begin));
         let ret = self.run_job_list(ctx, contents, Some(sb));
-        ctx.parser_mut().pop_block(sb);
+        ctx.parser().pop_block(sb);
         trace_if_enabled(&ctx.parser(), L!("end begin"));
         ret
     }
@@ -1515,16 +1513,16 @@ impl<'a> ParseExecutionContext {
         {
             // Need real error handling here.
             perror("tcgetattr");
-            ctx.parser_mut()
+            ctx.parser()
                 .set_last_statuses(Statuses::just(STATUS_CMD_ERROR.unwrap()));
             return EndExecutionReason::error;
         }
 
         // Increment the eval_level for the duration of this command.
-        let eval_level = ctx.parser().eval_level + 1;
+        let eval_level = ctx.parser().eval_level.fetch_add(1, Ordering::Relaxed);
         let mut ctx = scoped_push_replacer(
             ctx,
-            |ctx, new_value| std::mem::replace(&mut ctx.parser_mut().eval_level, new_value),
+            |ctx, new_value| ctx.parser().eval_level.swap(new_value, Ordering::Relaxed),
             eval_level,
         );
 
@@ -1536,7 +1534,7 @@ impl<'a> ParseExecutionContext {
         );
 
         // Profiling support.
-        let mut profile_id = ctx.parser_mut().create_profile_item();
+        let mut profile_id = ctx.parser().create_profile_item();
         let start_time = if profile_id.is_some() {
             ProfileItem::now()
         } else {
@@ -1556,7 +1554,7 @@ impl<'a> ParseExecutionContext {
                 zelf.apply_variable_assignments(&mut ctx, None, &job_node.variables, &mut block);
             let mut ctx = Cleanup::new(ctx, |ctx| {
                 if let Some(block) = block {
-                    ctx.parser_mut().pop_block(block);
+                    ctx.parser().pop_block(block);
                 }
             });
 
@@ -1584,8 +1582,9 @@ impl<'a> ParseExecutionContext {
             }
 
             if let Some(profile_id) = profile_id {
-                let mut parser = ctx.parser_mut();
-                let profile_item = parser.profile_item_at(profile_id);
+                let parser = ctx.parser();
+                let mut profile_items = parser.profile_items_mut();
+                let mut profile_item = &mut profile_items[profile_id];
                 profile_item.duration = ProfileItem::now() - start_time;
                 profile_item.level = eval_level;
                 profile_item.cmd =
@@ -1629,10 +1628,7 @@ impl<'a> ParseExecutionContext {
         let mut ctx = scoped_push_replacer(
             &mut *ctx,
             |ctx, new_value| {
-                std::mem::replace(
-                    &mut ctx.parser_mut().libdata_mut().pods.caller_id,
-                    new_value,
-                )
+                std::mem::replace(&mut ctx.parser().libdata_mut().pods.caller_id, new_value)
             },
             job.read().unwrap().internal_job_id,
         );
@@ -1654,18 +1650,18 @@ impl<'a> ParseExecutionContext {
 
             // Give the job to the parser - it will clean it up.
             {
-                let mut parser = ctx.parser_mut();
+                let parser = ctx.parser();
                 parser.job_add(Arc::clone(&job));
 
                 // Actually execute the job.
-                if !exec_job(&mut parser, &job, &zelf.block_io) {
+                if !exec_job(&parser, &job, &zelf.block_io) {
                     // No process in the job successfully launched.
                     // Ensure statuses are set (#7540).
                     if let Some(statuses) = job.read().unwrap().get_statuses() {
                         parser.set_last_statuses(statuses);
                         parser.libdata_mut().pods.status_count += 1;
                     }
-                    remove_job(&mut parser, &job);
+                    remove_job(&parser, &job);
                 }
 
                 // Update universal variables on external commands.
@@ -1681,15 +1677,16 @@ impl<'a> ParseExecutionContext {
         }
 
         if let Some(profile_id) = profile_id {
-            let mut parser = ctx.parser_mut();
-            let profile_item = parser.profile_item_at(profile_id);
+            let parser = ctx.parser();
+            let mut profile_items = parser.profile_items_mut();
+            let mut profile_item = &mut profile_items[profile_id];
             profile_item.duration = ProfileItem::now() - start_time;
-            profile_item.level = ctx.parser().eval_level;
+            profile_item.level = ctx.parser().eval_level.load(Ordering::Relaxed);
             profile_item.cmd = job.read().unwrap().command().to_owned();
             profile_item.skipped = pop_result != EndExecutionReason::ok;
         }
 
-        job_reap(&mut ctx.parser_mut(), false); // clean up jobs
+        job_reap(&mut ctx.parser(), false); // clean up jobs
         pop_result
     }
     fn test_and_run_1_job_conjunction(
@@ -2056,7 +2053,7 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
     false
 }
 
-fn remove_job(parser: &mut Parser, job: &JobRef) -> bool {
+fn remove_job(parser: &Parser, job: &JobRef) -> bool {
     for i in 0..parser.jobs().len() {
         if Arc::ptr_eq(&parser.jobs()[i], job) {
             parser.jobs_mut().remove(i);

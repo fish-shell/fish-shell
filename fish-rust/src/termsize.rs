@@ -179,7 +179,7 @@ impl TermsizeContainer {
     /// registered for COLUMNS and LINES.
     /// This requires a shared reference so it can work from a static.
     /// \return the updated termsize.
-    pub fn updating(&self, parser: &mut Parser) -> Termsize {
+    pub fn updating(&self, parser: & Parser) -> Termsize {
         let new_size;
         let prev_size;
 
@@ -208,7 +208,7 @@ impl TermsizeContainer {
         new_size
     }
 
-    fn set_columns_lines_vars(&self, val: Termsize, parser: &mut Parser) {
+    fn set_columns_lines_vars(&self, val: Termsize, parser: & Parser) {
         let saved = self.setting_env_vars.swap(true, Ordering::Relaxed);
         parser.set_var_and_fire(L!("COLUMNS"), EnvMode::GLOBAL, vec![val.width.to_wstring()]);
         parser.set_var_and_fire(L!("LINES"), EnvMode::GLOBAL, vec![val.height.to_wstring()]);
@@ -293,7 +293,7 @@ pub fn termsize_invalidate_tty() {
 use crate::ffi_tests::add_test;
 add_test!("test_termsize", || {
     let env_global = EnvMode::GLOBAL;
-    let mut parser = Parser::principal_parser();
+    let parser = Parser::principal_parser();
 
     // Use a static variable so we can pretend we're the kernel exposing a terminal size.
     static STUBBY_TERMSIZE: Mutex<Option<Termsize>> = Mutex::new(None);
@@ -321,7 +321,7 @@ add_test!("test_termsize", || {
     assert_eq!(ts.last(), Termsize::defaults());
 
     // Ok now we tell it to update.
-    ts.updating(&mut parser);
+    ts.updating(& parser);
     assert_eq!(ts.last(), Termsize::new(42, 84));
     assert_eq!(parser.vars().get(L!("COLUMNS")).unwrap().as_string(), "42");
     assert_eq!(parser.vars().get(L!("LINES")).unwrap().as_string(), "84");
@@ -348,7 +348,7 @@ add_test!("test_termsize", || {
     // Oh it got SIGWINCH, now the tty matters again.
     TermsizeContainer::handle_winch();
     assert_eq!(ts.last(), Termsize::new(33, 150));
-    assert_eq!(ts.updating(&mut parser), stubby_termsize().unwrap());
+    assert_eq!(ts.updating(& parser), stubby_termsize().unwrap());
     assert_eq!(parser.vars().get(L!("COLUMNS")).unwrap().as_string(), "42");
     assert_eq!(parser.vars().get(L!("LINES")).unwrap().as_string(), "84");
 
@@ -369,8 +369,8 @@ add_test!("test_termsize", || {
         tty_size_reader: stubby_termsize,
     };
     ts.initialize(parser.vars());
-    ts2.updating(&mut parser);
+    ts2.updating(& parser);
     assert_eq!(ts.last(), Termsize::new(83, 38));
     TermsizeContainer::handle_winch();
-    assert_eq!(ts2.updating(&mut parser), stubby_termsize().unwrap());
+    assert_eq!(ts2.updating(& parser), stubby_termsize().unwrap());
 });

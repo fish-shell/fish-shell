@@ -23,7 +23,7 @@ struct Options {
 
 fn parse_options(
     args: &mut [WString],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
     const SHORT_OPTS: &wstr = L!(":h");
@@ -57,7 +57,7 @@ fn parse_options(
 
 /// Function for handling the return builtin.
 pub fn r#return(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     args: &mut [WString],
 ) -> Option<c_int> {
@@ -66,7 +66,8 @@ pub fn r#return(
         Err(e) => return e,
     };
 
-    let has_function_block = parser.blocks().any(|b| b.is_function_call());
+    let blocks = parser.blocks();
+    let has_function_block = blocks.iter().any(|b| b.is_function_call());
 
     // *nix does not support negative return values, but our `return` builtin happily accepts being
     // called with negative literals (e.g. `return -1`).
@@ -79,7 +80,7 @@ pub fn r#return(
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
-        let ld = parser.libdata_pod_mut();
+        let ld = &mut parser.libdata_mut().pods;
         if !ld.is_interactive {
             ld.exit_current_script = true;
         }
@@ -87,14 +88,14 @@ pub fn r#return(
     }
 
     // Mark a return in the libdata.
-    parser.libdata_pod_mut().returning = true;
+    parser.libdata_mut().pods.returning = true;
 
     return Some(retval);
 }
 
 pub fn parse_return_value(
     args: &mut [WString],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<i32, Option<c_int>> {
     let (opts, optind) = match parse_options(args, parser, streams) {

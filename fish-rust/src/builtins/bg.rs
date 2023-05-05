@@ -21,18 +21,15 @@ use libc::{c_int, pid_t};
 
 /// Helper function for builtin_bg().
 fn send_to_bg(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     cmd: &wstr,
     job_pos: usize,
 ) -> Option<c_int> {
-    fn job(parser: &mut Parser, job_pos: usize) -> RwLockWriteGuard<'_, Job> {
-        let job = &parser.jobs()[job_pos];
-        job.write().unwrap()
-    }
-    if !job(parser, job_pos).wants_job_control() {
+    let jobs = parser.jobs();
+    if !jobs[job_pos].read().unwrap().wants_job_control() {
         let err = {
-            let job = job(parser, job_pos);
+            let job = &jobs[job_pos].read().unwrap();
             wgettext_fmt!(
                 "%ls: Can't put job %d, '%ls' to background because it is not under job control\n",
                 cmd,
@@ -45,7 +42,7 @@ fn send_to_bg(
     }
 
     {
-        let mut job = job(parser, job_pos);
+        let mut job = jobs[job_pos].write().unwrap();
         streams.err.append(&wgettext_fmt!(
             "Send job %d '%ls' to background\n",
             job.job_id().to_wstring(),
@@ -64,7 +61,7 @@ fn send_to_bg(
 }
 
 /// Builtin for putting a job in the background.
-pub fn bg(parser: &mut Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
+pub fn bg(parser: &Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
         Ok(opts) => opts,
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,

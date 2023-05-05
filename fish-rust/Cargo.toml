@@ -44,6 +44,7 @@ default = ["fish-ffi-tests"]
 fish-ffi-tests = ["inventory"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
+asan = []
 bsd = []
 
 [patch.crates-io]

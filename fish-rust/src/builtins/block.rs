@@ -1,3 +1,5 @@
+use std::sync::atomic::Ordering;
+
 // Implementation of the block builtin.
 use super::shared::{
     builtin_missing_argument, builtin_print_help, STATUS_CMD_ERROR, STATUS_CMD_OK,
@@ -37,7 +39,7 @@ struct Options {
 
 fn parse_options(
     args: &mut [WString],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
     const SHORT_OPTS: &wstr = L!(":eghl");
@@ -83,11 +85,7 @@ fn parse_options(
 }
 
 /// The block builtin, used for temporarily blocking events.
-pub fn block(
-    parser: &mut Parser,
-    streams: &mut IoStreams<'_>,
-    args: &mut [WString],
-) -> Option<c_int> {
+pub fn block(parser: &Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
     let opts = match parse_options(args, parser, streams) {
         Ok((opts, _)) => opts,
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
@@ -110,18 +108,19 @@ pub fn block(
             return STATUS_INVALID_ARGS;
         }
 
-        if parser.global_event_blocks == 0 {
+        if parser.global_event_blocks.load(Ordering::Relaxed) == 0 {
             streams
                 .err
                 .append(&wgettext_fmt!("%ls: No blocks defined\n", cmd));
             return STATUS_CMD_ERROR;
         }
-        parser.global_event_blocks -= 1;
+        parser.global_event_blocks.fetch_sub(1, Ordering::Relaxed);
         return STATUS_CMD_OK;
     }
 
     let mut block_idx = 0;
-    let mut block = parser.block_at_index(block_idx);
+    let blocks = parser.blocks();
+    let mut block = blocks.get(block_idx);
 
     match opts.scope {
         Scope::Local => {
@@ -141,7 +140,7 @@ pub fn block(
                     }
                     // Set it in function scope
                     block_idx += 1;
-                    parser.block_at_index(block_idx)
+                    blocks.get(block_idx)
                 } else {
                     break;
                 }
@@ -150,9 +149,10 @@ pub fn block(
     }
 
     if block.is_some() {
-        parser.block_at_index_mut(block_idx).unwrap().event_blocks += 1;
+        let mut blocks = parser.blocks_mut();
+        blocks[block_idx].event_blocks += 1;
     } else {
-        parser.global_event_blocks += 1;
+        parser.global_event_blocks.fetch_add(1, Ordering::Relaxed);
     }
 
     return STATUS_CMD_OK;

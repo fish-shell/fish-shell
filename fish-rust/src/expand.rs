@@ -995,12 +995,8 @@ pub fn expand_cmdsubst(
 
     let mut sub_res = vec![];
     let job_group = ctx.job_group.clone();
-    let subshell_status = exec_subshell_for_expand(
-        subcmd,
-        &mut ctx.parser_mut(),
-        job_group.as_ref(),
-        &mut sub_res,
-    );
+    let subshell_status =
+        exec_subshell_for_expand(subcmd, &mut ctx.parser(), job_group.as_ref(), &mut sub_res);
     if subshell_status != 0 {
         // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
         let err = match subshell_status {
@@ -1401,8 +1397,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             ExpandResult::ok()
         } else {
             let size = next.len();
-            self.ctx
-                .with_vars(|vars| expand_variables(next, out, size, vars, self.errors))
+            expand_variables(next, out, size, &*self.ctx.vars, self.errors)
         }
     }
     fn stage_braces(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
@@ -1413,8 +1408,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut input: WString,
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
-        self.ctx
-            .with_vars(|vars| expand_home_directory(&mut input, vars));
+        expand_home_directory(&mut input, &*self.ctx.vars);
         expand_percent_self(&mut input);
         if !out.add_string(input) {
             return append_overflow_error(self.errors, None);
@@ -1446,7 +1440,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             //
             // So we're going to treat this input as a file path. Compute the "working directories",
             // which may be CDPATH if the special flag is set.
-            let working_dir = self.ctx.with_vars(|vars| vars.get_pwd_slash());
+            let working_dir = self.ctx.vars.get_pwd_slash();
             let mut effective_working_dirs = vec![];
             let for_cd = self.flags.contains(ExpandFlags::SPECIAL_FOR_CD);
             let for_command = self.flags.contains(ExpandFlags::SPECIAL_FOR_COMMAND);
@@ -1478,11 +1472,12 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 } else {
                     // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                     // implies just the current directory, while an empty PATH is left empty.
-                    let mut paths = self.ctx.with_vars(|vars| {
-                        vars.get(if for_cd { L!("CDPATH") } else { L!("PATH") })
-                            .map(|var| var.as_list().to_owned())
-                            .unwrap_or_default()
-                    });
+                    let mut paths = self
+                        .ctx
+                        .vars
+                        .get(if for_cd { L!("CDPATH") } else { L!("PATH") })
+                        .map(|var| var.as_list().to_owned())
+                        .unwrap_or_default();
 
                     // The current directory is always valid.
                     paths.push(if for_cd { L!(".") } else { L!("") }.to_owned());
@@ -1565,7 +1560,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         let username_with_tilde =
             WString::from_str("~") + get_home_directory_name(input, &mut tail_idx);
         let mut home = username_with_tilde.clone();
-        self.ctx.with_vars(|vars| expand_tilde(&mut home, vars));
+        expand_tilde(&mut home, &*self.ctx.vars);
 
         // Now for each completion that starts with home, replace it with the username_with_tilde.
         for comp in completions {

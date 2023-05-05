@@ -1,5 +1,5 @@
 use crate::common::CancelChecker;
-use crate::env::{EnvNull, EnvStack, Environment, EnvironmentRef};
+use crate::env::{EnvNull, EnvStack, EnvStackRef, Environment, EnvironmentRef, EnvironmentRefFFI};
 use crate::parser::{Parser, ParserRef};
 use crate::proc::JobGroupRef;
 use once_cell::sync::Lazy;
@@ -17,15 +17,17 @@ pub const EXPANSION_LIMIT_DEFAULT: usize = 512 * 1024;
 /// A smaller limit for background operations like syntax highlighting.
 pub const EXPANSION_LIMIT_BACKGROUND: usize = 512;
 
-pub enum Context {
-    Foreground(ParserRef),
-    Background(EnvironmentRef),
-}
-
 /// A operation_context_t is a simple property bag which wraps up data needed for highlighting,
 /// expansion, completion, and more.
 pub struct OperationContext<'a> {
-    pub context: Context,
+    // The parser, if this is a foreground operation. If this is a background operation, this may be
+    // nullptr.
+    pub parser: Option<ParserRef>,
+
+    // The set of variables.
+    // todo! This should be an Arc<dyn Environment> but I'm not sure how to convert from
+    // Arc<EnvStackRef>.
+    pub vars: EnvStackRef,
 
     // The limit in the number of expansions which should be produced.
     pub expansion_limit: usize,
@@ -39,7 +41,9 @@ pub struct OperationContext<'a> {
     pub cancel_checker: &'a CancelChecker,
 }
 
-static nullenv: Lazy<Arc<EnvNull>> = Lazy::new(|| Arc::new(EnvNull {}));
+// todo!
+// static nullenv: Lazy<Arc<EnvNull>> = Lazy::new(|| Arc::new(EnvNull {}));
+static nullenv: Lazy<EnvStackRef> = Lazy::new(|| Arc::new(EnvStack::new()));
 
 impl<'a> OperationContext<'a> {
     // \return an "empty" context which contains no variables, no parser, and never cancels.
@@ -59,8 +63,10 @@ impl<'a> OperationContext<'a> {
         cancel_checker: &'a CancelChecker,
         expansion_limit: usize,
     ) -> OperationContext<'a> {
+        let vars = Arc::clone(&parser.variables);
         OperationContext {
-            context: Context::Foreground(parser),
+            parser: Some(parser),
+            vars,
             expansion_limit,
             job_group: None,
             cancel_checker,
@@ -68,52 +74,22 @@ impl<'a> OperationContext<'a> {
     }
 
     /// Construct from vars alone.
-    pub fn new(vars: EnvironmentRef, expansion_limit: usize) -> OperationContext<'a> {
+    pub fn new(vars: EnvStackRef, expansion_limit: usize) -> OperationContext<'a> {
         OperationContext {
-            context: Context::Background(vars),
+            parser: None,
+            vars,
             expansion_limit,
             job_group: None,
             cancel_checker: &no_cancel,
         }
     }
 
-    pub fn with_vars<T>(&self, cb: impl FnOnce(&dyn Environment) -> T) -> T {
-        match &self.context {
-            Context::Foreground(parser) => {
-                let parser = parser.read().unwrap();
-                cb(parser.vars())
-            }
-            Context::Background(vars) => cb(&**vars),
-        }
-    }
     pub fn has_parser(&self) -> bool {
-        matches!(self.context, Context::Foreground(_))
+        self.parser.is_some()
     }
-    pub fn maybe_parser(&self) -> Option<RwLockReadGuard<'_, Parser>> {
-        match &self.context {
-            Context::Foreground(parser) => Some(parser.read().unwrap()),
-            _ => None,
-        }
+    pub fn parser(&self) -> &Parser {
+        self.parser.as_ref().unwrap()
     }
-    pub fn maybe_parser_mut(&self) -> Option<RwLockWriteGuard<'_, Parser>> {
-        match &self.context {
-            Context::Foreground(parser) => Some(parser.write().unwrap()),
-            _ => None,
-        }
-    }
-    pub fn parser(&self) -> RwLockReadGuard<'_, Parser> {
-        match &self.context {
-            Context::Foreground(parser) => parser.read().unwrap(),
-            _ => panic!(),
-        }
-    }
-    pub fn parser_mut(&self) -> RwLockWriteGuard<'_, Parser> {
-        match &self.context {
-            Context::Foreground(parser) => parser.write().unwrap(),
-            _ => panic!(),
-        }
-    }
-
     // Invoke the cancel checker. \return if we should cancel.
     pub fn check_cancel(&self) -> bool {
         (self.cancel_checker)()
@@ -122,14 +98,27 @@ impl<'a> OperationContext<'a> {
 
 #[cxx::bridge]
 mod operation_context_ffi {
+    extern "C++" {
+        include!("env.h");
+        #[cxx_name = "EnvironmentRef"]
+        type EnvironmentRefFFI = crate::env::EnvironmentRefFFI;
+    }
     extern "Rust" {
         type OperationContext<'a>;
 
         fn check_cancel(&self) -> bool;
+        // fn vars(&self) -> &EnvironmentRefFFI;
     }
 }
 
 unsafe impl cxx::ExternType for OperationContext<'_> {
     type Id = cxx::type_id!("OperationContext");
     type Kind = cxx::kind::Opaque;
+}
+
+impl OperationContext<'_> {
+    fn vars(&self) -> &EnvironmentRefFFI {
+        todo!()
+        // Box::new(EnvironmentRefFFI(Arc::clone(&self.vars)))
+    }
 }

@@ -15,7 +15,7 @@ function __fish_print_apt_packages
 
     # Do not not use `apt-cache` as it is sometimes inexplicably slow (by multiple orders of magnitude).
     if not set -q _flag_installed
-        awk -e '
+        awk '
 BEGIN {
   FS=": "
 }
@@ -32,7 +32,7 @@ BEGIN {
   pkg="" # Prevent multiple description translations from being printed
 }' < /var/lib/dpkg/status
     else
-        awk -e '
+        awk '
 BEGIN {
   FS=": "
 }

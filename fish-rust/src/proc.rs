@@ -3,7 +3,9 @@
 //! the exec library will call proc to create representations of the running jobs as needed.
 
 use crate::ast;
-use crate::common::{escape, fputws, redirect_tty_output, scoped_push, timef, Timepoint};
+use crate::common::{
+    escape, fputws, redirect_tty_output, scoped_push, scoped_push_replacer, timef, Timepoint,
+};
 use crate::compat::cur_term;
 use crate::env::Statuses;
 use crate::event::{self, Event};
@@ -897,7 +899,7 @@ impl Job {
     }
 
     /// Run ourselves. Returning once we complete or stop.
-    pub fn continue_job(&self, parser: &mut Parser) {
+    pub fn continue_job(&self, parser: &Parser) {
         FLOGF!(
             proc_job_run,
             "Run job %d (%ls), %ls, %ls",
@@ -1070,7 +1072,7 @@ static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::interactive as u8)
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If \p interactive is set, allow removing interactive jobs; otherwise skip them.
 /// \return whether text was printed to stdout.
-pub fn job_reap(parser: &mut Parser, allow_interactive: bool) -> bool {
+pub fn job_reap(parser: &Parser, allow_interactive: bool) -> bool {
     parser.assert_can_execute();
 
     // Early out for the common case that there are no jobs.
@@ -1086,7 +1088,7 @@ pub fn job_reap(parser: &mut Parser, allow_interactive: bool) -> bool {
 /// exit. An empty result (common) means no such jobs.
 pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
     let mut result = vec![];
-    for job in parser.jobs() {
+    for job in parser.jobs().iter() {
         if !job.read().unwrap().is_foreground()
             && job.read().unwrap().is_constructed()
             && !job.read().unwrap().is_completed()
@@ -1153,8 +1155,8 @@ pub fn proc_get_jiffies(inpid: libc::pid_t) -> ClockTicks {
 
 /// Update process time usage for all processes by calling the proc_get_jiffies function for every
 /// process of every job.
-pub fn proc_update_jiffies(parser: &mut Parser) {
-    for job in parser.jobs_mut() {
+pub fn proc_update_jiffies(parser: &Parser) {
+    for job in parser.jobs_mut().iter_mut() {
         for p in &mut job.write().unwrap().processes {
             p.last_time = timef();
             p.last_jiffies = proc_get_jiffies(p.pid);
@@ -1206,7 +1208,7 @@ fn handle_child_status(job: &Job, proc: &mut Process, status: ProcStatus) {
 }
 
 /// Wait for any process finishing, or receipt of a signal.
-pub fn proc_wait_any(parser: &mut Parser) {
+pub fn proc_wait_any(parser: &Parser) {
     process_mark_finished_children(parser, true /*block_ok*/);
     process_clean_after_marking(parser, parser.libdata().pods.is_interactive);
 }
@@ -1259,7 +1261,7 @@ static mut DISOWNED_PIDS: Mutex<Vec<libc::pid_t>> = Mutex::new(vec![]);
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
-fn process_mark_finished_children(parser: &mut Parser, block_ok: bool) {
+fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
     parser.assert_can_execute();
 
     // Get the exit and signal generations of all reapable processes.
@@ -1267,7 +1269,7 @@ fn process_mark_finished_children(parser: &mut Parser, block_ok: bool) {
     // SIGHUP and SIGINT.
     // Go through each process and figure out if and how it wants to be reaped.
     let mut reapgens = invalid_generations();
-    for j in parser.jobs() {
+    for j in parser.jobs().iter() {
         for proc in &j.read().unwrap().processes {
             if !j.read().unwrap().can_reap(proc) {
                 continue;
@@ -1296,7 +1298,7 @@ fn process_mark_finished_children(parser: &mut Parser, block_ok: bool) {
     // Update the hup/int generations and reap any reapable processes.
     // We structure this as two loops for some simplicity.
     // First reap all pids.
-    for j in parser.jobs_mut() {
+    for j in parser.jobs_mut().iter_mut() {
         for proc in &mut j.write().unwrap().processes {
             // Does this proc have a pid that is reapable?
             if proc.pid <= 0 || !j.read().unwrap().can_reap(proc) {
@@ -1357,7 +1359,7 @@ fn process_mark_finished_children(parser: &mut Parser, block_ok: bool) {
 
     // We are done reaping pids.
     // Reap internal processes.
-    for j in parser.jobs_mut() {
+    for j in parser.jobs_mut().iter_mut() {
         for proc in &mut j.write().unwrap().processes {
             // Does this proc have an internal process that is reapable?
             if proc.internal_proc.is_none() || !j.read().unwrap().can_reap(proc) {
@@ -1493,7 +1495,7 @@ fn job_or_proc_wants_summary(j: &Job) -> bool {
 }
 
 /// Invoke the fish_job_summary function by executing the given command.
-fn call_job_summary(parser: &mut Parser, cmd: &wstr) {
+fn call_job_summary(parser: &Parser, cmd: &wstr) {
     let event = Event::generic(L!("fish_job_summary").to_owned());
     let b = parser.push_block(Block::event_block(event));
     let saved_status = parser.get_last_statuses();
@@ -1553,7 +1555,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
 // Summarize a list of jobs, by emitting calls to fish_job_summary.
 // Note the given list must NOT be the parser's own job list, since the call to fish_job_summary
 // could modify it.
-fn summarize_jobs(parser: &mut Parser, jobs: &[JobRef]) -> bool {
+fn summarize_jobs(parser: &Parser, jobs: &[JobRef]) -> bool {
     if jobs.is_empty() {
         return false;
     }
@@ -1611,7 +1613,7 @@ fn save_wait_handle_for_completed_job(job: &JobRef, store: &mut WaitHandleStore)
 
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// \return whether something was printed.
-fn process_clean_after_marking(parser: &mut Parser, allow_interactive: bool) -> bool {
+fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool {
     parser.assert_can_execute();
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
@@ -1620,9 +1622,11 @@ fn process_clean_after_marking(parser: &mut Parser, allow_interactive: bool) -> 
         return false;
     }
 
-    let mut parser = scoped_push(
+    let parser = scoped_push_replacer(
         parser,
-        |parser| &mut parser.libdata_mut().pods.is_cleaning_procs,
+        |parser, new_value| {
+            std::mem::replace(&mut parser.libdata_mut().pods.is_cleaning_procs, new_value)
+        },
         true,
     );
 
@@ -1631,7 +1635,7 @@ fn process_clean_after_marking(parser: &mut Parser, allow_interactive: bool) -> 
     let interactive = allow_interactive && cur_term();
 
     // Remove all disowned jobs.
-    remove_disowned_jobs(parser.jobs_mut());
+    remove_disowned_jobs(&mut parser.jobs_mut());
 
     // Accumulate exit events into a new list, which we fire after the list manipulation is
     // complete.
@@ -1651,7 +1655,7 @@ fn process_clean_after_marking(parser: &mut Parser, allow_interactive: bool) -> 
     let mut jobs_to_summarize = vec![];
 
     // Handle stopped jobs. These stay in our list.
-    for jptr in parser.jobs() {
+    for jptr in parser.jobs().iter() {
         let j = jptr.read().unwrap();
         if j.is_stopped()
             && !j.flags().notified_of_stop
@@ -1664,7 +1668,7 @@ fn process_clean_after_marking(parser: &mut Parser, allow_interactive: bool) -> 
     }
 
     // Generate process_exit events for finished processes.
-    for j in parser.jobs() {
+    for j in parser.jobs().iter() {
         generate_process_exit_events(j, &mut exit_events);
     }
 
@@ -1686,11 +1690,11 @@ fn process_clean_after_marking(parser: &mut Parser, allow_interactive: bool) -> 
         false
     });
     for j in completed_jobs {
-        save_wait_handle_for_completed_job(&j, parser.mut_wait_handles());
+        save_wait_handle_for_completed_job(&j, &mut parser.mut_wait_handles());
     }
 
     // Emit calls to fish_job_summary.
-    let printed = summarize_jobs(&mut parser, &jobs_to_summarize);
+    let printed = summarize_jobs(&parser, &jobs_to_summarize);
 
     // Post pending exit events.
     for evt in exit_events {

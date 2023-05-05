@@ -8,8 +8,8 @@ use crate::builtins::shared::{
     STATUS_READ_TOO_MUCH,
 };
 use crate::common::{
-    exit_without_destructors, scoped_push, str2wcstring, wcs2string, wcs2zstring, write_loop,
-    Cleanup,
+    exit_without_destructors, scoped_push, scoped_push_replacer, str2wcstring, wcs2string,
+    wcs2zstring, write_loop, Cleanup,
 };
 use crate::compat::_PATH_BSHELL;
 use crate::env::{EnvMode, EnvStack, Environment, Statuses};
@@ -62,7 +62,7 @@ use widestring_suffix::widestrs;
 /// On a true return, the job was successfully launched and the parser will take responsibility for
 /// cleaning it up. On a false return, the job could not be launched and the caller must clean it
 /// up.
-pub fn exec_job(parser: &mut Parser, job: &JobRef, block_io: &IoChain) -> bool {
+pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
     let mut j = job.write().unwrap();
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if no_exec() {
@@ -234,7 +234,7 @@ pub fn exec_job(parser: &mut Parser, job: &JobRef, block_io: &IoChain) -> bool {
 /// \return a value appropriate for populating $status.
 pub fn exec_subshell(
     cmd: &wstr,
-    parser: &mut Parser,
+    parser: &Parser,
     outputs: Option<&mut Vec<WString>>,
     apply_exit_status: bool,
 ) -> libc::c_int {
@@ -256,7 +256,7 @@ pub fn exec_subshell(
 /// pgroup.
 pub fn exec_subshell_for_expand(
     cmd: &wstr,
-    parser: &mut Parser,
+    parser: &Parser,
     job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
 ) -> libc::c_int {
@@ -615,7 +615,7 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
 /// If \p outdata or \p errdata are both empty, then mark the process as completed immediately.
 /// Otherwise, run an internal process.
 fn run_internal_process_or_short_circuit(
-    parser: &mut Parser,
+    parser: &Parser,
     j: &JobRef,
     p: &mut Process,
     outdata: Vec<u8>,
@@ -759,7 +759,7 @@ fn create_output_stream_for_builtin(
 /// given in io_chain.
 
 fn handle_builtin_output(
-    parser: &mut Parser,
+    parser: &Parser,
     j: &JobRef,
     p: &mut Process,
     io_chain: &IoChain,
@@ -788,7 +788,7 @@ fn handle_builtin_output(
 /// An error return here indicates that the process failed to launch, and the rest of
 /// the pipeline should be cancelled.
 fn exec_external_command(
-    parser: &mut Parser,
+    parser: &Parser,
     j: &JobRef,
     p: &mut Process,
     proc_io_chain: &IoChain,
@@ -859,7 +859,7 @@ fn exec_external_command(
 // Given that we are about to execute a function, push a function block and set up the
 // variable environment.
 fn function_prepare_environment(
-    parser: &mut Parser,
+    parser: &Parser,
     mut argv: Vec<WString>,
     props: &FunctionProperties,
 ) -> BlockId {
@@ -900,7 +900,7 @@ fn function_prepare_environment(
 }
 
 // Given that we are done executing a function, restore the environment.
-fn function_restore_environment(parser: &mut Parser, block: BlockId) {
+fn function_restore_environment(parser: &Parser, block: BlockId) {
     parser.pop_block(block);
 
     // If we returned due to a return statement, then stop returning now.
@@ -911,7 +911,7 @@ fn function_restore_environment(parser: &mut Parser, block: BlockId) {
 // This accepts a place to execute as \p parser and then executes the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
 type ProcPerformer = dyn FnOnce(
-    &mut Parser,
+    &Parser,
     &Process,
     Option<&mut dyn OutputStream>,
     Option<&mut dyn OutputStream>,
@@ -936,64 +936,60 @@ fn get_performer_for_process(
     let io_chain = io_chain.clone();
 
     if p.typ == ProcessType::block_node {
-        Some(Box::new(
-            move |parser: &mut Parser, p: &Process, _out, _err| {
-                let source = p
-                    .block_node_source
-                    .as_ref()
-                    .expect("Process is missing source info");
-                let node = p
-                    .internal_block_node
-                    .as_ref()
-                    .expect("Process is missing node info");
-                parser
-                    .eval_node(
-                        source,
-                        unsafe { node.as_ref() },
-                        &io_chain,
-                        job_group.as_ref(),
-                        BlockType::top,
-                    )
-                    .status
-            },
-        ))
+        Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
+            let source = p
+                .block_node_source
+                .as_ref()
+                .expect("Process is missing source info");
+            let node = p
+                .internal_block_node
+                .as_ref()
+                .expect("Process is missing node info");
+            parser
+                .eval_node(
+                    source,
+                    unsafe { node.as_ref() },
+                    &io_chain,
+                    job_group.as_ref(),
+                    BlockType::top,
+                )
+                .status
+        }))
     } else {
         assert!(p.typ == ProcessType::function);
         let Some(props) = function_get_props(p.argv0().unwrap()) else {
             FLOGF!(error, "%ls", wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap()));
             return None;
         };
-        Some(Box::new(
-            move |parser: &mut Parser, p: &Process, _out, _err| {
-                let argv = p.argv();
-                // Pull out the job list from the function.
-                let props = props.read().unwrap();
-                let body = &props.func_node.jobs;
-                let fb = function_prepare_environment(parser, argv.clone(), &props);
-                let parsed_source = props.parsed_source.as_ref().unwrap();
-                let mut res = parser.eval_node(
-                    parsed_source,
-                    body,
-                    &io_chain,
-                    job_group.as_ref(),
-                    BlockType::top,
-                );
-                function_restore_environment(parser, fb);
+        Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
+            let argv = p.argv();
+            // Pull out the job list from the function.
+            let props = props.read().unwrap();
+            let body = &props.func_node.jobs;
+            let fb = function_prepare_environment(parser, argv.clone(), &props);
+            let parsed_source = props.parsed_source.as_ref().unwrap();
+            let mut res = parser.eval_node(
+                parsed_source,
+                body,
+                &io_chain,
+                job_group.as_ref(),
+                BlockType::top,
+            );
+            function_restore_environment(parser, fb);
 
-                // If the function did not execute anything, treat it as success.
-                if res.was_empty {
-                    res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
-                }
-                res.status
-            },
-        ))
+            // If the function did not execute anything, treat it as success.
+            if res.was_empty {
+                res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+            }
+            res.status
+        }))
     }
 }
 
 /// Execute a block node or function "process".
 /// \p piped_output_needs_buffering if true, buffer the output.
 fn exec_block_or_func_process(
-    parser: &mut Parser,
+    parser: &Parser,
     j: &JobRef,
     p: &mut Process,
     mut io_chain: IoChain,
@@ -1071,7 +1067,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
     Box::new(
-        move |parser: &mut Parser,
+        move |parser: &Parser,
               p: &Process,
               output_stream: Option<&mut dyn OutputStream>,
               errput_stream: Option<&mut dyn OutputStream>| {
@@ -1117,7 +1113,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
 /// Executes a builtin "process".
 fn exec_builtin_process(
-    parser: &mut Parser,
+    parser: &Parser,
     j: &JobRef,
     p: &mut Process,
     io_chain: &IoChain,
@@ -1143,7 +1139,7 @@ fn exec_builtin_process(
 /// An error return here indicates that the process failed to launch, and the rest of
 /// the pipeline should be cancelled.
 fn exec_process_in_job(
-    parser: &mut Parser,
+    parser: &Parser,
     p: &mut Process,
     j: &JobRef,
     block_io: &IoChain,
@@ -1224,7 +1220,7 @@ fn exec_process_in_job(
     if !p.variable_assignments.is_empty() {
         block_id = Some(parser.push_block(Block::variable_assignment_block()));
     }
-    let mut parser = Cleanup::new(parser, |parser| {
+    let parser = Cleanup::new(parser, |parser| {
         if let Some(block_id) = block_id {
             parser.pop_block(block_id);
         }
@@ -1252,21 +1248,21 @@ fn exec_process_in_job(
     p.check_generations_before_launch();
     match p.typ {
         ProcessType::function | ProcessType::block_node => exec_block_or_func_process(
-            &mut parser,
+            &parser,
             j,
             p,
             process_net_io_chain,
             piped_output_needs_buffering,
         ),
         ProcessType::builtin => exec_builtin_process(
-            &mut parser,
+            &parser,
             j,
             p,
             &process_net_io_chain,
             piped_output_needs_buffering,
         ),
         ProcessType::external => {
-            exec_external_command(&mut parser, j, p, &process_net_io_chain)?;
+            exec_external_command(&parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.
             parser.mut_wait_handles().remove_by_pid(p.pid);
@@ -1317,7 +1313,7 @@ fn abort_pipeline_from(job: &mut Job, offset: usize) {
 // Given that we are about to execute an exec() call, check if the parser is interactive and there
 // are extant background jobs. If so, warn the user and do not exec().
 // \return true if we should allow exec, false to disallow it.
-fn allow_exec_with_background_jobs(parser: &mut Parser) -> bool {
+fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
     // If we're not interactive, we cannot warn.
     if !parser.is_interactive() {
         return true;
@@ -1337,7 +1333,7 @@ fn allow_exec_with_background_jobs(parser: &mut Parser) -> bool {
         parser.libdata_mut().pods.last_exec_run_counter = current_run_count;
         false
     } else {
-        hup_jobs(parser.jobs());
+        hup_jobs(&parser.jobs());
         true
     }
 }
@@ -1390,7 +1386,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
 /// of $status.
 fn exec_subshell_internal(
     cmd: &wstr,
-    parser: &mut Parser,
+    parser: &Parser,
     job_group: Option<&JobGroupRef>,
     lst: Option<&mut Vec<WString>>,
     break_expand: &mut bool,
@@ -1398,14 +1394,16 @@ fn exec_subshell_internal(
     is_subcmd: bool,
 ) -> libc::c_int {
     parser.assert_can_execute();
-    let mut parser = scoped_push(
+    let parser = scoped_push_replacer(
         parser,
-        |parser| &mut parser.libdata_mut().pods.is_subshell,
+        |parser, new_value| {
+            std::mem::replace(&mut parser.libdata_mut().pods.is_subshell, new_value)
+        },
         true,
     );
-    let mut parser = scoped_push(
+    let parser = scoped_push_replacer(
         parser,
-        |parser| &mut parser.libdata_mut().pods.read_limit,
+        |parser, new_value| std::mem::replace(&mut parser.libdata_mut().pods.read_limit, new_value),
         if is_subcmd {
             READ_BYTE_LIMIT.load(Ordering::Relaxed)
         } else {
@@ -1414,7 +1412,7 @@ fn exec_subshell_internal(
     );
 
     let prev_statuses = parser.get_last_statuses();
-    let mut parser = Cleanup::new(parser, |parser| {
+    let parser = Cleanup::new(parser, |parser| {
         if !apply_exit_status {
             parser.set_last_statuses(prev_statuses);
         }

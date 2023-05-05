@@ -44,13 +44,13 @@ enum WaitHandleQuery<'a> {
 /// \return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
-    parser: &mut Parser,
+    parser: &Parser,
     handles: &mut Vec<WaitHandleRef>,
 ) -> bool {
     // Has a job already completed?
     // TODO: we can avoid traversing this list if searching by pid.
     let mut matched = false;
-    let wait_handles: &mut WaitHandleStore = parser.mut_wait_handles();
+    let wait_handles: &mut WaitHandleStore = &mut parser.mut_wait_handles();
     for wh in wait_handles.iter() {
         if wait_handle_matches(query, wh) {
             handles.push(wh.clone());
@@ -59,7 +59,7 @@ fn find_wait_handles(
     }
 
     // Is there a running job match?
-    for j in parser.jobs() {
+    for j in &*parser.jobs() {
         let mut j = j.write().unwrap();
         // We want to set 'matched' to true if we could have matched, even if the job was stopped.
         let provide_handle = can_wait_on_job(&j);
@@ -85,7 +85,7 @@ fn get_all_wait_handles(parser: &Parser) -> Vec<WaitHandleRef> {
     let mut result = parser.get_wait_handles().get_list();
 
     // Get wait handles for running jobs.
-    for j in parser.jobs() {
+    for j in &*parser.jobs() {
         let mut j = j.write().unwrap();
         if !can_wait_on_job(&j) {
             continue;
@@ -107,11 +107,7 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 /// Wait for the given wait handles to be marked as completed.
 /// If \p any_flag is set, wait for the first one; otherwise wait for all.
 /// \return a status code.
-fn wait_for_completion(
-    parser: &mut Parser,
-    whs: &[WaitHandleRef],
-    any_flag: bool,
-) -> Option<c_int> {
+fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> Option<c_int> {
     if whs.is_empty() {
         return Some(0);
     }
@@ -144,11 +140,7 @@ fn wait_for_completion(
 }
 
 #[widestrs]
-pub fn wait(
-    parser: &mut Parser,
-    streams: &mut IoStreams<'_>,
-    argv: &mut [WString],
-) -> Option<c_int> {
+pub fn wait(parser: &Parser, streams: &mut IoStreams<'_>, argv: &mut [WString]) -> Option<c_int> {
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option
     let mut print_help = false;

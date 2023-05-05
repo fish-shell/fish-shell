@@ -1,4 +1,6 @@
-use super::environment::{self, EnvDyn, EnvNull, EnvStack, EnvStackRef, Environment};
+use super::environment::{
+    self, EnvDyn, EnvNull, EnvStack, EnvStackRef, Environment, EnvironmentRef,
+};
 use super::var::{ElectricVar, EnvVar, EnvVarFlags, Statuses};
 use crate::env::EnvMode;
 use crate::event::Event;
@@ -98,6 +100,12 @@ mod env_ffi {
         type EnvDynFFI;
         fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar;
         fn get_names(&self, flags: u16, out: Pin<&mut wcstring_list_ffi_t>);
+    }
+
+    extern "Rust" {
+        #[cxx_name = "EnvironmentRef"]
+        type EnvironmentRefFFI;
+        fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar;
     }
 
     extern "Rust" {
@@ -215,6 +223,17 @@ impl EnvDynFFI {
 }
 unsafe impl cxx::ExternType for EnvDynFFI {
     type Id = cxx::type_id!("EnvDyn"); // CXX name!
+    type Kind = cxx::kind::Opaque;
+}
+
+pub struct EnvironmentRefFFI(pub EnvironmentRef);
+impl EnvironmentRefFFI {
+    fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {
+        todo!()
+    }
+}
+unsafe impl cxx::ExternType for EnvironmentRefFFI {
+    type Id = cxx::type_id!("EnvironmentRef"); // CXX name!
     type Kind = cxx::kind::Opaque;
 }
 

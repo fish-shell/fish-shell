@@ -767,7 +767,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 
 /// The printf builtin.
 pub fn printf(
-    _parser: &mut Parser,
+    _parser: & Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {

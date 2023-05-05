@@ -239,7 +239,7 @@ pub fn function_get_props(name: &wstr) -> Option<FunctionPropertiesRef> {
 /// \return the properties for a function, or nullptr if none, perhaps triggering autoloading.
 pub fn function_get_props_autoload(
     name: &wstr,
-    parser: &mut Parser,
+    parser: & Parser,
 ) -> Option<FunctionPropertiesRef> {
     parser.assert_can_execute();
     if parser_keywords_is_reserved(name) {
@@ -254,7 +254,7 @@ pub fn function_get_props_autoload(
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded.
 /// Note this executes fish script code.
-pub fn function_load(name: &wstr, parser: &mut Parser) -> bool {
+pub fn function_load(name: &wstr, parser: & Parser) -> bool {
     parser.assert_can_execute();
     let mut path_to_autoload = None;
     // Note we can't autoload while holding the funcset lock.
@@ -284,7 +284,7 @@ pub fn function_load(name: &wstr, parser: &mut Parser) -> bool {
 
 /// Sets the description of the function with the name \c name.
 /// This triggers autoloading.
-pub fn function_set_desc(name: &wstr, desc: &wstr, parser: &mut Parser) {
+pub fn function_set_desc(name: &wstr, desc: &wstr, parser: & Parser) {
     parser.assert_can_execute();
     function_load(name, parser);
     let mut funcset = FUNCTION_SET.lock().unwrap();
@@ -299,7 +299,7 @@ pub fn function_set_desc(name: &wstr, desc: &wstr, parser: &mut Parser) {
 
 /// Returns true if the function named \p cmd exists.
 /// This may autoload.
-pub fn function_exists(cmd: &wstr, parser: &mut Parser) -> bool {
+pub fn function_exists(cmd: &wstr, parser: & Parser) -> bool {
     parser.assert_can_execute();
     if !valid_func_name(cmd) {
         return false;
@@ -341,7 +341,7 @@ pub fn function_get_names(get_hidden: bool) -> Vec<WString> {
 
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.
-pub fn function_copy(name: &wstr, new_name: WString, parser: &mut Parser) -> bool {
+pub fn function_copy(name: &wstr, new_name: WString, parser: & Parser) -> bool {
     let filename = parser.current_filename();
     let lineno = parser.get_lineno();
 

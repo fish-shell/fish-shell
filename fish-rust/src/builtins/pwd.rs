@@ -27,7 +27,7 @@ const long_options: &[woption] = &[
 ];
 
 pub fn pwd(
-    parser: &mut Parser,
+    parser: & Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {

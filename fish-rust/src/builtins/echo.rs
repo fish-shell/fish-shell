@@ -27,7 +27,7 @@ impl Default for Options {
 
 fn parse_options(
     args: &mut [WString],
-    parser: &mut Parser,
+    parser: & Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
     const SHORT_OPTS: &wstr = L!("+:Eens");
@@ -139,7 +139,7 @@ where
 /// Bash only respects `-n` if it's the first argument. We'll do the same. We also support a new,
 /// fish specific, option `-s` to mean "no spaces".
 pub fn echo(
-    parser: &mut Parser,
+    parser: & Parser,
     streams: &mut IoStreams<'_>,
     args: &mut [WString],
 ) -> Option<c_int> {

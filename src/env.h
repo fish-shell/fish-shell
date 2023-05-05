@@ -1,3 +1,13 @@
+#if INCLUDE_RUST_HEADERS
+#include "env/env_ffi.rs.h"
+#else
+struct EnvVar;
+struct EnvNull;
+struct EnvStackRef;
+struct EnvDyn;
+struct EnvironmentRef;
+#endif
+
 // Prototypes for functions for manipulating fish script variables.
 #ifndef FISH_ENV_H
 #define FISH_ENV_H
@@ -18,15 +28,6 @@
 #include "wutil.h"
 
 struct event_list_ffi_t;
-
-#if INCLUDE_RUST_HEADERS
-#include "env/env_ffi.rs.h"
-#else
-struct EnvVar;
-struct EnvNull;
-struct EnvStackRef;
-struct EnvDyn;
-#endif
 
 /// FFI helper for events.
 struct Event;

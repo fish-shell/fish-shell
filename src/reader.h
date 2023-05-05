@@ -139,7 +139,7 @@ class editable_line_t {
 /// Read commands from \c fd until encountering EOF.
 /// The fd is not closed.
 int reader_read(parser_t &parser, int fd, const io_chain_t &io);
-int reader_read_ffi(void *parser, int fd, const void *io);
+int reader_read_ffi(const void *parser, int fd, const void *io);
 
 /// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
 extern "C" {

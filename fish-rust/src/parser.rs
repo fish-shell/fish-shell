@@ -18,7 +18,7 @@ use crate::expand::{
 use crate::fds::{open_cloexec, AutoCloseFd};
 use crate::flog::FLOGF;
 use crate::function::function_get_props;
-use crate::global_safety::{SharedFromThis, SharedFromThisBase};
+use crate::global_safety::{RelaxedAtomicBool, SharedFromThis, SharedFromThisBase};
 use crate::io::IoChain;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -37,10 +37,11 @@ use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use cxx::{CxxWString, UniquePtr};
 use libc::c_int;
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::CStr;
 use std::os::fd::{AsRawFd, RawFd};
 use std::rc::Rc;
+use std::sync::atomic::{AtomicIsize, AtomicU64, Ordering};
 use std::sync::{Arc, RwLock, RwLockWriteGuard, Weak};
 use widestring_suffix::widestrs;
 
@@ -290,51 +291,51 @@ pub enum ParserStatusVar {
 
 pub type BlockId = usize;
 
-pub type ParserRef = Arc<RwLock<Parser>>;
+pub type ParserRef = Arc<Parser>;
 
 pub struct Parser {
-    base: SharedFromThisBase<RwLock<Parser>>,
+    base: SharedFromThisBase<Parser>,
 
     /// The current execution context.
-    execution_context: Option<Box<ParseExecutionContext>>,
+    execution_context: RefCell<Option<Box<ParseExecutionContext>>>,
 
     /// The jobs associated with this parser.
-    job_list: JobList,
+    job_list: RefCell<JobList>,
 
     /// Our store of recorded wait-handles. These are jobs that finished in the background,
     /// and have been reaped, but may still be wait'ed on.
-    wait_handles: WaitHandleStore,
+    wait_handles: RefCell<WaitHandleStore>,
 
     /// The list of blocks.
     /// This is in "reverse" order: the topmost block is at the front. This enables iteration from
     /// top down using range-based for loops.
-    block_list: Vec<Block>,
+    block_list: RefCell<Vec<Block>>,
 
     /// The 'depth' of the fish call stack.
-    pub eval_level: isize,
+    pub eval_level: AtomicIsize,
 
     /// Set of variables for the parser.
-    variables: EnvStackRef,
+    pub variables: EnvStackRef,
 
     /// Miscellaneous library data.
-    library_data: LibraryData,
+    library_data: RefCell<LibraryData>,
 
     /// If set, we synchronize universal variables after external commands,
     /// including sending on-variable change events.
-    syncs_uvars: bool,
+    syncs_uvars: RelaxedAtomicBool,
 
     /// If set, we are the principal parser.
-    is_principal: bool,
+    is_principal: RelaxedAtomicBool,
 
     /// List of profile items.
-    profile_items: Vec<ProfileItem>,
+    profile_items: RefCell<Vec<ProfileItem>>,
 
     /// Global event blocks.
-    pub global_event_blocks: u64,
+    pub global_event_blocks: AtomicU64,
 }
 
-impl SharedFromThis<RwLock<Parser>> for Parser {
-    fn get_base(&self) -> &SharedFromThisBase<RwLock<Parser>> {
+impl SharedFromThis<Parser> for Parser {
+    fn get_base(&self) -> &SharedFromThisBase<Parser> {
         &self.base
     }
 }
@@ -342,39 +343,39 @@ impl SharedFromThis<RwLock<Parser>> for Parser {
 impl Parser {
     /// Create a parser
     pub fn new(variables: EnvStackRef, is_principal: bool) -> ParserRef {
-        let mut result = Self {
+        let mut result = Arc::new(Self {
             base: SharedFromThisBase::new(),
-            execution_context: None,
-            job_list: vec![],
-            wait_handles: WaitHandleStore::new(),
-            block_list: vec![],
-            eval_level: -1,
+            execution_context: RefCell::new(None),
+            job_list: RefCell::new(vec![]),
+            wait_handles: RefCell::new(WaitHandleStore::new()),
+            block_list: RefCell::new(vec![]),
+            eval_level: AtomicIsize::new(-1),
             variables,
-            library_data: LibraryData::new(),
-            syncs_uvars: false,
-            is_principal,
-            profile_items: vec![],
-            global_event_blocks: 0,
-        };
+            library_data: RefCell::new(LibraryData::new()),
+            syncs_uvars: RelaxedAtomicBool::new(false),
+            is_principal: RelaxedAtomicBool::new(is_principal),
+            profile_items: RefCell::new(vec![]),
+            global_event_blocks: AtomicU64::new(0),
+        });
         let cwd = open_cloexec(CStr::from_bytes_with_nul(b".\0").unwrap(), O_RDONLY, 0);
         if cwd < 0 {
             perror("Unable to open the current working directory");
         } else {
             result.libdata_mut().cwd_fd = Some(Rc::new(AutoCloseFd::new(cwd)));
         }
-        let result = Arc::new(RwLock::new(result));
-        result.write().unwrap().base.initialize(&result);
+        result.base.initialize(&result);
         result
     }
     /// Adds a job to the beginning of the job list.
-    pub fn job_add(&mut self, job: JobRef) {
+    pub fn job_add(&self, job: JobRef) {
         assert!(!job.read().unwrap().processes.is_empty());
-        self.job_list.insert(0, job);
+        self.jobs_mut().insert(0, job);
     }
 
     /// \return whether we are currently evaluating a function.
     pub fn is_function(&self) -> bool {
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             if b.is_function_call() {
                 return true;
             } else if b.typ() == BlockType::source {
@@ -387,7 +388,8 @@ impl Parser {
 
     /// \return whether we are currently evaluating a command substitution.
     pub fn is_command_substitution(&self) -> bool {
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             if b.typ() == BlockType::subst {
                 return true;
             } else if b.typ() == BlockType::source {
@@ -399,12 +401,12 @@ impl Parser {
     }
 
     /// Get the "principal" parser, whatever that is.
-    pub fn principal_parser() -> RwLockWriteGuard<'static, Parser> {
+    pub fn principal_parser() -> &'static Parser {
         static mut PRINCIPAL: Lazy<ParserRef> =
             Lazy::new(|| Parser::new(EnvStack::principal().clone(), true));
         unsafe {
-            PRINCIPAL.read().unwrap().assert_can_execute();
-            PRINCIPAL.write().unwrap()
+            PRINCIPAL.assert_can_execute();
+            &*PRINCIPAL
         }
     }
 
@@ -413,7 +415,7 @@ impl Parser {
         assert_is_main_thread();
     }
 
-    pub fn eval(&mut self, cmd: &wstr, io: &IoChain) -> EvalRes {
+    pub fn eval(&self, cmd: &wstr, io: &IoChain) -> EvalRes {
         self.eval_with(cmd, io, None, BlockType::top)
     }
 
@@ -426,7 +428,7 @@ impl Parser {
     /// or 'subst'.
     /// \return the result of evaluation.
     pub fn eval_with(
-        &mut self,
+        &self,
         cmd: &wstr,
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
@@ -461,7 +463,7 @@ impl Parser {
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
     pub fn eval_parsed_source(
-        &mut self,
+        &self,
         ps: &ParsedSourceRef,
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
@@ -486,7 +488,7 @@ impl Parser {
     /// Evaluates a node.
     /// The node type must be ast_t::statement_t or ast::job_list_t.
     pub fn eval_node<T: Node>(
-        &mut self,
+        &self,
         ps: &ParsedSourceRef,
         node: &T,
         block_io: &IoChain,
@@ -506,7 +508,7 @@ impl Parser {
         // cause fish to exit.
         let sig = signal_check_cancel();
         if sig != 0 {
-            if self.is_principal && self.block_list.is_empty() {
+            if self.is_principal.load() && self.block_list.borrow().is_empty() {
                 signal_clear_cancel();
             } else {
                 return EvalRes::new(ProcStatus::from_signal(Signal::new(sig)));
@@ -550,7 +552,9 @@ impl Parser {
         // Create and set a new execution context.
         let mut zelf = scoped_push_replacer(
             self,
-            |zelf, new_value| std::mem::replace(&mut zelf.execution_context, new_value),
+            |zelf, new_value| {
+                std::mem::replace(&mut zelf.execution_context.borrow_mut(), new_value)
+            },
             Some(Box::new(ParseExecutionContext::new(
                 ps.clone(),
                 block_io.clone(),
@@ -560,11 +564,12 @@ impl Parser {
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = zelf.libdata().pods.exec_count;
         let prev_status_count = zelf.libdata().pods.status_count;
-        let reason = zelf.execution_context.as_mut().unwrap().eval_node(
-            &mut op_ctx,
-            node,
-            Some(scope_block),
-        );
+        let reason = zelf
+            .execution_context
+            .borrow_mut()
+            .as_mut()
+            .unwrap()
+            .eval_node(&mut op_ctx, node, Some(scope_block));
         let new_exec_count = zelf.libdata().pods.exec_count;
         let new_status_count = zelf.libdata().pods.status_count;
 
@@ -621,11 +626,11 @@ impl Parser {
     /// LINE_NUMBER): LINE'. Example:
     ///
     /// init.fish (line 127): ls|grep pancake
-    pub fn current_line(&mut self) -> WString {
-        if self.execution_context.is_none() {
+    pub fn current_line(&self) -> WString {
+        if self.execution_context.borrow().is_none() {
             return WString::new();
         };
-        let Some(source_offset) = self.execution_context.as_mut().unwrap().get_current_source_offset()
+        let Some(source_offset) = self.execution_context.borrow_mut().as_mut().unwrap().get_current_source_offset()
             else { return WString::new(); };
 
         let lineno = self.get_lineno();
@@ -661,7 +666,11 @@ impl Parser {
         empty_error.source_start = source_offset;
 
         let mut line_info = empty_error.describe_with_prefix(
-            self.execution_context.as_ref().unwrap().get_source(),
+            self.execution_context
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .get_source(),
             &prefix,
             self.is_interactive(),
             skip_caret,
@@ -675,8 +684,9 @@ impl Parser {
     }
 
     /// Returns the current line number.
-    pub fn get_lineno(&mut self) -> Option<usize> {
+    pub fn get_lineno(&self) -> Option<usize> {
         self.execution_context
+            .borrow_mut()
             .as_mut()
             .and_then(|exctx| exctx.get_current_line_number())
     }
@@ -685,7 +695,8 @@ impl Parser {
     /// This supports 'status is-block'.
     pub fn is_block(&self) -> bool {
         // Note historically this has descended into 'source', unlike 'is_function'.
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             if ![BlockType::top, BlockType::subst].contains(&b.typ()) {
                 return true;
             }
@@ -695,7 +706,8 @@ impl Parser {
 
     /// \return whether we have a breakpoint block.
     pub fn is_breakpoint(&self) -> bool {
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             if b.typ() == BlockType::breakpoint {
                 return true;
             }
@@ -703,30 +715,24 @@ impl Parser {
         false
     }
 
-    /// Returns the block at the given index. 0 corresponds to the innermost block. Returns nullptr
-    /// when idx is at or equal to the number of blocks.
-    pub fn block_at_index(&self, idx: BlockId) -> Option<&Block> {
-        self.block_list.get(idx)
-    }
-    pub fn block_at_index_mut(&mut self, idx: usize) -> Option<&mut Block> {
-        self.block_list.get_mut(idx)
-    }
-
     /// Return the list of blocks. The first block is at the top.
-    pub fn blocks(&self) -> impl Iterator<Item = &Block> {
-        self.block_list.iter().rev()
+    pub fn blocks(&self) -> Ref<'_, Vec<Block>> {
+        self.block_list.borrow()
+    }
+    pub fn blocks_mut(&self) -> RefMut<'_, Vec<Block>> {
+        self.block_list.borrow_mut()
     }
 
     pub fn blocks_size(&self) -> usize {
-        self.block_list.len()
+        self.block_list.borrow().len()
     }
 
     /// Get the list of jobs.
-    pub fn jobs(&self) -> &JobList {
-        &self.job_list
+    pub fn jobs(&self) -> Ref<'_, JobList> {
+        self.job_list.borrow()
     }
-    pub fn jobs_mut(&mut self) -> &mut JobList {
-        &mut self.job_list
+    pub fn jobs_mut(&self) -> RefMut<'_, JobList> {
+        self.job_list.borrow_mut()
     }
 
     /// Get the variables.
@@ -735,25 +741,19 @@ impl Parser {
     }
 
     /// Get the library data.
-    pub fn libdata(&self) -> &LibraryData {
-        &self.library_data
+    pub fn libdata(&self) -> Ref<'_, LibraryData> {
+        self.library_data.borrow()
     }
-    pub fn libdata_mut(&mut self) -> &mut LibraryData {
-        &mut self.library_data
-    }
-    pub fn libdata_pod(&self) -> &library_data_pod_t {
-        &self.library_data.pods
-    }
-    pub fn libdata_pod_mut(&mut self) -> &mut library_data_pod_t {
-        &mut self.library_data.pods
+    pub fn libdata_mut(&self) -> RefMut<'_, LibraryData> {
+        self.library_data.borrow_mut()
     }
 
     /// Get our wait handle store.
-    pub fn get_wait_handles(&self) -> &WaitHandleStore {
-        &self.wait_handles
+    pub fn get_wait_handles(&self) -> Ref<'_, WaitHandleStore> {
+        self.wait_handles.borrow()
     }
-    pub fn mut_wait_handles(&mut self) -> &mut WaitHandleStore {
-        &mut self.wait_handles
+    pub fn mut_wait_handles(&self) -> RefMut<'_, WaitHandleStore> {
+        self.wait_handles.borrow_mut()
     }
 
     /// Get and set the last proc statuses.
@@ -763,14 +763,14 @@ impl Parser {
     pub fn get_last_statuses(&self) -> Statuses {
         self.vars().get_last_statuses()
     }
-    pub fn set_last_statuses(&mut self, s: Statuses) {
+    pub fn set_last_statuses(&self, s: Statuses) {
         self.vars().set_last_statuses(s)
     }
 
     /// Cover of vars().set(), which also fires any returned event handlers.
     /// \return a value like ENV_OK.
     pub fn set_var_and_fire(
-        &mut self,
+        &self,
         key: &wstr,
         mode: EnvMode,
         vals: Vec<WString>,
@@ -785,8 +785,8 @@ impl Parser {
     /// Update any universal variables and send event handlers.
     /// If \p always is set, then do it even if we have no pending changes (that is, look for
     /// changes from other fish instances); otherwise only sync if this instance has changed uvars.
-    pub fn sync_uvars_and_fire(&mut self, always: bool) {
-        if self.syncs_uvars {
+    pub fn sync_uvars_and_fire(&self, always: bool) {
+        if self.syncs_uvars.load() {
             let evts = self.vars().universal_sync(always);
             for evt in evts {
                 event::fire(self, evt);
@@ -795,7 +795,7 @@ impl Parser {
     }
 
     /// Pushes a new block. Returns a pointer to the block, stored in the parser.
-    pub fn push_block(&mut self, mut block: Block) -> BlockId {
+    pub fn push_block(&self, mut block: Block) -> BlockId {
         block.src_lineno = self.get_lineno();
         block.src_filename = self.current_filename();
         if block.typ() != BlockType::top {
@@ -804,14 +804,16 @@ impl Parser {
             block.wants_pop_env = true;
         }
 
-        self.block_list.push(block);
-        self.block_list.len() - 1
+        let mut block_list = self.block_list.borrow_mut();
+        block_list.push(block);
+        block_list.len() - 1
     }
 
     /// Remove the outermost block, asserting it's the given one.
-    pub fn pop_block(&mut self, expected: BlockId) {
-        assert!(expected == self.block_list.len() - 1);
-        let block = self.block_list.pop().unwrap();
+    pub fn pop_block(&self, expected: BlockId) {
+        let mut block_list = self.block_list.borrow_mut();
+        assert!(expected == block_list.len() - 1);
+        let block = block_list.pop().unwrap();
         if block.wants_pop_env {
             self.vars().pop();
         }
@@ -824,7 +826,8 @@ impl Parser {
             // isn't one return the function name for the current level.
             // Walk until we find a breakpoint, then take the next function.
             let mut found_breakpoint = false;
-            for b in self.blocks() {
+            let blocks = self.blocks();
+            for b in blocks.iter().rev() {
                 if b.typ() == BlockType::breakpoint {
                     found_breakpoint = true;
                 } else if found_breakpoint && b.is_function_call() {
@@ -836,7 +839,8 @@ impl Parser {
 
         // Level 1 is the topmost function call. Level 2 is its caller. Etc.
         let mut funcs_seen = 0;
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             if b.is_function_call() {
                 funcs_seen += 1;
                 if funcs_seen == level {
@@ -852,14 +856,14 @@ impl Parser {
     }
 
     /// Promotes a job to the front of the list.
-    pub fn job_promote_at(&mut self, job_pos: usize) {
+    pub fn job_promote_at(&self, job_pos: usize) {
         // Move the job to the beginning.
-        self.job_list.rotate_left(job_pos);
+        self.jobs_mut().rotate_left(job_pos);
     }
 
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
     pub fn job_with_id(&self, job_id: MaybeJobId) -> Option<JobRef> {
-        for job in &self.job_list {
+        for job in self.jobs().iter() {
             let j = job.read().unwrap();
             if job_id.is_none() || job_id == j.job_id() {
                 return Some(job.clone());
@@ -875,7 +879,7 @@ impl Parser {
 
     /// Returns the job and job index with the given pid.
     pub fn job_get_from_pid_at(&self, pid: libc::pid_t) -> Option<(usize, JobRef)> {
-        for (i, job) in self.job_list.iter().enumerate() {
+        for (i, job) in self.jobs().iter().enumerate() {
             for p in &job.read().unwrap().processes {
                 if p.pid == pid {
                     return Some((i, job.clone()));
@@ -888,21 +892,22 @@ impl Parser {
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The Parser will deallocate it.
     /// If profiling is not active, this returns nullptr.
-    pub fn create_profile_item(&mut self) -> Option<usize> {
+    pub fn create_profile_item(&self) -> Option<usize> {
         if PROFILING_ACTIVE.load() {
-            self.profile_items.push(ProfileItem::new());
-            return Some(self.profile_items.len() - 1);
+            let mut profile_items = self.profile_items.borrow_mut();
+            profile_items.push(ProfileItem::new());
+            return Some(profile_items.len() - 1);
         }
         None
     }
 
-    pub fn profile_item_at(&mut self, index: usize) -> &mut ProfileItem {
-        &mut self.profile_items[index]
+    pub fn profile_items_mut(&self) -> RefMut<'_, Vec<ProfileItem>> {
+        self.profile_items.borrow_mut()
     }
 
     /// Remove the profiling items.
-    pub fn clear_profiling(&mut self) {
-        self.profile_items.clear();
+    pub fn clear_profiling(&self) {
+        self.profile_items.borrow_mut().clear();
     }
 
     /// Output profiling data to the given filename.
@@ -927,9 +932,9 @@ impl Parser {
         fwprintf!(
             f.as_raw_fd(),
             "Time\tSum\tCommand\n",
-            self.profile_items.len()
+            self.profile_items.borrow().len()
         );
-        print_profile(&self.profile_items, f.as_raw_fd());
+        print_profile(&self.profile_items.borrow(), f.as_raw_fd());
     }
 
     pub fn get_backtrace(&self, src: &wstr, errors: &ParseErrorList) -> WString {
@@ -979,7 +984,8 @@ impl Parser {
     /// reader_current_filename, e.g. if we are evaluating a function defined in a different file
     /// than the one currently read.
     pub fn current_filename(&self) -> Option<FilenameRef> {
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             if b.is_function_call() {
                 return function_get_props(&b.function_name)
                     .and_then(|props| props.read().unwrap().definition_file.clone());
@@ -1000,7 +1006,8 @@ impl Parser {
     /// Return a string representing the current stack trace.
     pub fn stack_trace(&self) -> WString {
         let mut trace = WString::new();
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             append_block_description_to_stack_trace(self, b, &mut trace);
 
             // Stop at event handler. No reason to believe that any other code is relevant.
@@ -1020,20 +1027,22 @@ impl Parser {
         // We are interested in whether the count of functions on the stack exceeds
         // FISH_MAX_STACK_DEPTH. We don't separately track the number of functions, but we can have a
         // fast path through the eval_level. If the eval_level is in bounds, so must be the stack depth.
-        if usize::try_from(self.eval_level).unwrap() <= FISH_MAX_STACK_DEPTH {
+        if usize::try_from(self.eval_level.load(Ordering::Relaxed)).unwrap() <= FISH_MAX_STACK_DEPTH
+        {
             return false;
         }
         // Count the functions.
         let mut depth = 0;
-        for b in self.blocks() {
+        let blocks = self.blocks();
+        for b in blocks.iter().rev() {
             depth += if b.is_function_call() { 1 } else { 0 };
         }
         depth > FISH_MAX_STACK_DEPTH
     }
 
     /// Mark whether we should sync universal variables.
-    pub fn set_syncs_uvars(&mut self, flag: bool) {
-        self.syncs_uvars = flag;
+    pub fn set_syncs_uvars(&self, flag: bool) {
+        self.syncs_uvars.store(flag);
     }
 
     /// \return a shared pointer reference to this parser.
@@ -1042,7 +1051,7 @@ impl Parser {
     }
 
     /// \return the operation context for this parser.
-    pub fn context(&mut self) -> OperationContext<'static> {
+    pub fn context(&self) -> OperationContext<'static> {
         OperationContext::foreground(
             self.shared(),
             &|| signal_check_cancel() != 0,
@@ -1052,7 +1061,7 @@ impl Parser {
 
     /// Checks if the max eval depth has been exceeded
     pub fn is_eval_depth_exceeded(&self) -> bool {
-        self.eval_level as usize >= FISH_MAX_EVAL_DEPTH
+        self.eval_level.load(Ordering::Relaxed) as usize >= FISH_MAX_EVAL_DEPTH
     }
 }
 

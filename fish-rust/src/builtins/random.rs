@@ -20,7 +20,7 @@ use std::sync::Mutex;
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
 
 pub fn random(
-    parser: &mut Parser,
+    parser: & Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {

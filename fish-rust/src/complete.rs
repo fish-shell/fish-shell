@@ -6,12 +6,14 @@ use std::{
     rc::Rc,
     sync::{
         atomic::{self, AtomicUsize},
-        Mutex,
+        Arc, Mutex,
     },
     time::{Duration, Instant},
 };
 
+use crate::wchar_ffi::WCharToFFI;
 use bitflags::bitflags;
+use cxx::{CxxWString, UniquePtr};
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use widestring::U32CString;
@@ -624,7 +626,7 @@ impl<'ctx> Completer<'ctx> {
         // Limit recursion, in case a user-defined completion has cycles, or the completion for "x"
         // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
         // for autosuggestions where we don't evaluate command substitutions or variable assignments.
-        let decrement = if let Some(mut parser) = self.ctx.maybe_parser_mut() {
+        let decrement = if let Some(parser) = self.ctx.parser.as_ref() {
             let level = &mut parser.libdata_mut().pods.complete_recursion_level;
             if *level >= 24 {
                 FLOGF!(
@@ -857,7 +859,7 @@ impl<'ctx> Completer<'ctx> {
         if condition.is_empty() {
             return true;
         }
-        let Some(mut parser) = self.ctx.maybe_parser_mut() else {
+        let Some( parser) = self.ctx.parser.as_ref() else {
             return false;
         };
 
@@ -868,10 +870,7 @@ impl<'ctx> Completer<'ctx> {
         } else {
             // Compute new value and reinsert it.
             let mut test_res = exec_subshell(
-                condition,
-                &mut parser,
-                None,
-                false, /* don't apply exit status */
+                condition, &parser, None, false, /* don't apply exit status */
             ) == 0;
             self.condition_cache.insert(condition.to_owned(), test_res);
             test_res
@@ -948,7 +947,7 @@ impl<'ctx> Completer<'ctx> {
     /// If command to complete is short enough, substitute the description with the whatis information
     /// for the executable.
     fn complete_cmd_desc(&mut self, s: &wstr) {
-        let Some(mut parser) = self.ctx.maybe_parser_mut() else {
+        let Some( parser) = self.ctx.parser.as_ref() else {
             return;
         };
 
@@ -992,7 +991,7 @@ impl<'ctx> Completer<'ctx> {
         let mut list = vec![];
         exec_subshell(
             &lookup_cmd,
-            &mut parser,
+            &parser,
             Some(&mut list),
             false, /* don't apply exit status */
         );
@@ -1168,7 +1167,7 @@ impl<'ctx> Completer<'ctx> {
     fn complete_from_args(&mut self, s: &wstr, args: &wstr, desc: &wstr, flags: CompleteFlags) {
         let is_autosuggest = self.flags.autosuggestion;
 
-        let saved_state = if let Some(mut parser) = self.ctx.maybe_parser_mut() {
+        let saved_state = if let Some(parser) = self.ctx.parser.as_ref() {
             let saved_interactive = parser.libdata().pods.is_interactive;
             parser.libdata_mut().pods.is_interactive = false;
 
@@ -1185,7 +1184,7 @@ impl<'ctx> Completer<'ctx> {
 
         let possible_comp = Parser::expand_argument_list(args, eflags, self.ctx);
 
-        if let Some(mut parser) = self.ctx.maybe_parser_mut() {
+        if let Some(parser) = self.ctx.parser.as_ref() {
             let (saved_interactive, status) = saved_state.unwrap();
             parser.libdata_mut().pods.is_interactive = saved_interactive;
             parser.set_last_statuses(status);
@@ -1224,25 +1223,22 @@ impl<'ctx> Completer<'ctx> {
         let mut use_files = true;
         let mut has_force = false;
 
-        let CmdString { cmd, path } = self.ctx.with_vars(|vars| parse_cmd_string(cmd_orig, vars));
+        let CmdString { cmd, path } = parse_cmd_string(cmd_orig, &*self.ctx.vars);
 
         // Don't use cmd_orig here for paths. It's potentially pathed,
         // so that command might exist, but the completion script
         // won't be using it.
         let cmd_exists = builtin_exists(&cmd)
             || function_exists_no_autoload(&cmd)
-            || self
-                .ctx
-                .with_vars(|vars| path_get_path(&cmd, vars))
-                .is_some();
+            || path_get_path(&cmd, &*self.ctx.vars).is_some();
         if !cmd_exists {
             // Do not load custom completions if the command does not exist
             // This prevents errors caused during the execution of completion providers for
             // tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
             // and automatic completions ("gi" autosuggestion provider -> git)
             FLOG!(complete, "Skipping completions for non-existent command");
-        } else if let Some(mut parser) = self.ctx.maybe_parser_mut() {
-            complete_load(&cmd, &mut parser);
+        } else if let Some(parser) = self.ctx.parser.as_ref() {
+            complete_load(&cmd, &parser);
         } else if !completion_autoloader
             .lock()
             .unwrap()
@@ -1600,7 +1596,7 @@ impl<'ctx> Completer<'ctx> {
         let varlen = s.len() - start_offset;
         let mut res = false;
 
-        for env_name in self.ctx.with_vars(|vars| vars.get_names(EnvMode::empty())) {
+        for env_name in self.ctx.vars.get_names(EnvMode::empty()) {
             let anchor_start = self.flags.fuzzy_match;
             let Some(match_) = string_fuzzy_match_string(var, &env_name, anchor_start) else {
                 continue;
@@ -1623,9 +1619,7 @@ impl<'ctx> Completer<'ctx> {
                 // $history can be huge, don't put all of it in the completion description; see
                 // #6288.
                 if env_name == L!("history") {
-                    let history = self
-                        .ctx
-                        .with_vars(|vars| History::with_name(&history_session_id(vars)));
+                    let history = History::with_name(&history_session_id(&*self.ctx.vars));
                     let history = history.lock().unwrap();
                     for i in 1..history.size() {
                         if i > 1 {
@@ -1635,7 +1629,7 @@ impl<'ctx> Completer<'ctx> {
                     }
                 } else {
                     // Can't use ctx.vars here, it could be any variable.
-                    let Some(var) = self.ctx.with_vars(|vars|vars.get(&env_name)) else {
+                    let Some(var) = self.ctx.vars.get(&env_name) else {
                         continue;
                     };
 
@@ -1812,18 +1806,17 @@ impl<'ctx> Completer<'ctx> {
         if !self.ctx.has_parser() {
             return None;
         }
-        let mut parser = self.ctx.parser_mut();
+        let parser = self.ctx.parser();
 
         let mut var_assignments = var_assignments.into_iter().peekable();
         var_assignments.peek()?;
 
         let vars = parser.vars();
-        self.ctx.with_vars(|ctx_vars| {
-            assert_eq!(
-                ctx_vars as *const _ as *const (), vars as *const _ as *const (),
-                "Don't know how to tab complete with a parser but a different variable set"
-            )
-        });
+        assert_eq!(
+            Arc::as_ptr(&self.ctx.vars) as *const (),
+            vars as *const _ as *const (),
+            "Don't know how to tab complete with a parser but a different variable set"
+        );
 
         // clone of parse_execution_context_t::apply_variable_assignments.
         // Crucially do NOT expand subcommands:
@@ -1867,9 +1860,7 @@ impl<'ctx> Completer<'ctx> {
         drop(parser);
 
         let parser_ref = self.ctx.parser().shared();
-        Some(Cleanup::new((), move |_| {
-            parser_ref.write().unwrap().pop_block(block)
-        }))
+        Some(Cleanup::new((), move |_| parser_ref.pop_block(block)))
     }
 
     /// Complete a command by invoking user-specified completions.
@@ -1888,18 +1879,11 @@ impl<'ctx> Completer<'ctx> {
         if wants_transient {
             let parser_ref = self.ctx.parser().shared();
             parser_ref
-                .write()
-                .unwrap()
                 .libdata_mut()
                 .transient_commandlines
                 .push(cmdline.to_owned());
             _remove_transient = Some(Cleanup::new((), move |_| {
-                parser_ref
-                    .write()
-                    .unwrap()
-                    .libdata_mut()
-                    .transient_commandlines
-                    .pop();
+                parser_ref.libdata_mut().transient_commandlines.pop();
             }));
         }
 
@@ -2411,7 +2395,7 @@ fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WStr
 
 /// Load command-specific completions for the specified command.
 /// Returns `true` if something new was loaded, `false` if not.
-pub fn complete_load(cmd: &wstr, parser: &mut Parser) -> bool {
+pub fn complete_load(cmd: &wstr, parser: &Parser) -> bool {
     let mut loaded_new = false;
 
     // We have to load this as a function, since it may define a --wraps or signature.
@@ -2556,8 +2540,12 @@ mod complete_ffi {
         type CompletionListFfi;
 
         fn new_completion() -> Box<Completion>;
+        fn completion(self: &Completion) -> UniquePtr<CxxWString>;
+        fn description(self: &Completion) -> UniquePtr<CxxWString>;
+        fn replaces_commandline(self: &Completion) -> bool;
         fn new_completion_list() -> Box<CompletionListFfi>;
         fn size(self: &CompletionListFfi) -> usize;
+        fn at(self: &CompletionListFfi, i: usize) -> &Completion;
     }
 }
 
@@ -2572,8 +2560,19 @@ fn new_completion() -> Box<Completion> {
 fn new_completion_list() -> Box<CompletionListFfi> {
     todo!()
 }
+impl Completion {
+    fn completion(&self) -> UniquePtr<CxxWString> {
+        self.completion.to_ffi()
+    }
+    fn description(&self) -> UniquePtr<CxxWString> {
+        self.description.to_ffi()
+    }
+}
 impl CompletionListFfi {
     fn size(&self) -> usize {
         self.0.len()
+    }
+    fn at(&self, i: usize) -> &Completion {
+        &self.0[i]
     }
 }

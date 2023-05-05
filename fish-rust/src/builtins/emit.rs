@@ -10,7 +10,7 @@ use crate::wutil::printf::sprintf;
 
 #[widestrs]
 pub fn emit(
-    parser: &mut Parser,
+    parser: & Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {

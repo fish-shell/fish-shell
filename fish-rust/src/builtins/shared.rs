@@ -118,9 +118,7 @@ impl BuiltinData {
 }
 
 enum BuiltinImplementation {
-    Rust(
-        fn(parser: &mut Parser, streams: &mut IoStreams<'_>, argv: &mut [WString]) -> Option<c_int>,
-    ),
+    Rust(fn(parser: &Parser, streams: &mut IoStreams<'_>, argv: &mut [WString]) -> Option<c_int>),
     Cpp,
 }
 
@@ -245,7 +243,7 @@ fn cmd_needs_help(cmd: &wstr) -> bool {
 
 #[widestrs]
 fn builtin_run_cpp(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &[WString],
 ) -> Option<c_int> {
@@ -253,7 +251,7 @@ fn builtin_run_cpp(
     // let cmdname = argv[0];
     // let parser = parser.pin();
     // let streams = streams.pin();
-    // let parser = &mut parser as *mut _ as *mut autocxx::c_void;
+    // let parser = & parser as *mut _ as *mut autocxx::c_void;
     // let streams = &mut streams as *mut _ as *mut autocxx::c_void;
     // let mut argv: Vec<*const u32> = argv.iter().map(|s| c_str!(s)).collect();
     // argv.push(std::ptr::null());
@@ -293,7 +291,7 @@ fn builtin_run_cpp(
 
 /// Execute a builtin command
 pub fn builtin_run(
-    parser: &mut Parser,
+    parser: &Parser,
     argv: &mut [WString],
     streams: &mut IoStreams<'_>,
 ) -> ProcStatus {
@@ -448,11 +446,11 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
 ///    builtin or function name to get up help for
 ///
 /// Process and print help for the specified builtin or function.
-pub fn builtin_print_help(parser: &mut Parser, streams: &mut IoStreams<'_>, cmd: &wstr) {
+pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams<'_>, cmd: &wstr) {
     builtin_print_help_error(parser, streams, cmd, L!(""))
 }
 pub fn builtin_print_help_error(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     cmd: &wstr,
     error_message: &wstr,
@@ -479,7 +477,7 @@ pub fn builtin_print_help_error(
 
 /// Perform error reporting for encounter with unknown option.
 pub fn builtin_unknown_option(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     cmd: &wstr,
     opt: &wstr,
@@ -495,7 +493,7 @@ pub fn builtin_unknown_option(
 
 /// Perform error reporting for encounter with missing argument.
 pub fn builtin_missing_argument(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     cmd: &wstr,
     mut opt: &wstr,
@@ -520,7 +518,7 @@ pub fn builtin_missing_argument(
 }
 
 /// Print the backtrace and call for help that we use at the end of error messages.
-pub fn builtin_print_error_trailer(parser: &mut Parser, b: &mut dyn OutputStream, cmd: &wstr) {
+pub fn builtin_print_error_trailer(parser: &Parser, b: &mut dyn OutputStream, cmd: &wstr) {
     b.push('\n');
     let stacktrace = parser.current_line();
     // Don't print two empty lines if we don't have a stacktrace.
@@ -555,7 +553,7 @@ pub struct HelpOnlyCmdOpts {
 impl HelpOnlyCmdOpts {
     pub fn parse(
         args: &mut [WString],
-        parser: &mut Parser,
+        parser: &Parser,
         streams: &mut IoStreams<'_>,
     ) -> Result<Self, Option<c_int>> {
         let print_hints = true;
@@ -606,7 +604,7 @@ impl HelpOnlyCmdOpts {
 /// A generic builtin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
 fn builtin_generic(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
@@ -636,7 +634,7 @@ fn builtin_generic(
 const COUNT_CHUNK_SIZE: usize = 512 * 256;
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
 fn builtin_count(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
@@ -675,7 +673,7 @@ fn builtin_count(
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
 fn builtin_break_continue(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
@@ -691,7 +689,8 @@ fn builtin_break_continue(
     // Paranoia: ensure we have a real loop.
     // This is checked in the AST but we may be invoked dynamically, e.g. just via "eval break".
     let mut has_loop = false;
-    for b in parser.blocks() {
+    let blocks = parser.blocks();
+    for b in blocks.iter().rev() {
         if [BlockType::while_block, BlockType::for_block].contains(&b.typ()) {
             has_loop = true;
             break;
@@ -717,7 +716,7 @@ fn builtin_break_continue(
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
 fn builtin_breakpoint(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
@@ -739,7 +738,8 @@ fn builtin_breakpoint(
 
     // Ensure we don't allow creating a breakpoint at an interactive prompt. There may be a simpler
     // or clearer way to do this but this works.
-    let block1 = parser.block_at_index(1);
+    let blocks = parser.blocks();
+    let block1 = blocks.get(1);
     if block1.map_or(true, |b| b.typ() == BlockType::breakpoint) {
         streams.err.append(&wgettext_fmt!(
             "%ls: Command not valid at and interactive prompt\n",
@@ -757,7 +757,7 @@ fn builtin_breakpoint(
         unsafe { &mut *streams.io_chain }
     };
     ffi::reader_read_ffi(
-        &mut parser.pin() as *mut _ as *mut autocxx::c_void,
+        &parser as *const _ as *const autocxx::c_void,
         autocxx::c_int(STDIN_FILENO),
         &io_chain as *const _ as *const autocxx::c_void,
     );
@@ -766,7 +766,7 @@ fn builtin_breakpoint(
 }
 
 fn builtin_true(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
@@ -774,7 +774,7 @@ fn builtin_true(
 }
 
 fn builtin_false(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {
@@ -782,7 +782,7 @@ fn builtin_false(
 }
 
 fn builtin_gettext(
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {

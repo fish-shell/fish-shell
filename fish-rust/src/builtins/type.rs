@@ -35,7 +35,7 @@ struct type_cmd_opts_t {
 }
 
 pub fn r#type(
-    parser: &mut Parser,
+    parser: & Parser,
     streams: &mut IoStreams<'_>,
     argv: &mut [WString],
 ) -> Option<c_int> {

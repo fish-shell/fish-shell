@@ -1,5 +1,3 @@
-use miette::miette;
-
 fn main() -> miette::Result<()> {
     cc::Build::new().file("src/compat.c").compile("libcompat.a");
 
@@ -101,25 +99,33 @@ fn detect_features() {
         ("bsd", &detect_bsd),
     ] {
         match detector() {
-            Err(e) => eprintln!("{feature} detect: {e}"),
+            Err(e) => eprintln!("ERROR: {feature} detect: {e}"),
             Ok(true) => println!("cargo:rustc-cfg=feature=\"{feature}\""),
             Ok(false) => (),
         }
     }
 }
 
-/// Detect if we're being compiled on a BSD-derived OS. Does not yet play nicely with
-/// cross-compilation.
+/// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
+/// `#[cfg(feature = "bsd")]`.
 ///
 /// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
 /// doesn't necessarily include less-popular forks nor does it group them into families more
 /// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
 fn detect_bsd() -> miette::Result<bool> {
-    let uname = std::process::Command::new("uname")
-        .output()
-        .map_err(|_| miette!("Error executing uname!"))?;
-    Ok(std::str::from_utf8(&uname.stdout)
-        .map(|s| s.to_ascii_lowercase())
-        .map(|s| s.contains("bsd"))
-        .unwrap_or(false))
+    // Instead of using `uname`, we can inspect the TARGET env variable set by Cargo. This lets us
+    // support cross-compilation scenarios.
+    let mut target = std::env::var("TARGET").unwrap();
+    if !target.chars().all(|c| c.is_ascii_lowercase()) {
+        target = target.to_ascii_lowercase();
+    }
+    let result = target.ends_with("bsd") || target.ends_with("dragonfly");
+    #[cfg(any(
+        target_os = "dragonfly",
+        target_os = "freebsd",
+        target_os = "netbsd",
+        target_os = "openbsd",
+    ))]
+    assert!(result, "Target incorrectly detected as not BSD!");
+    Ok(result)
 }

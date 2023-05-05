@@ -565,6 +565,15 @@ static bool does_term_support_setting_title(const environment_t &vars) {
     return true;
 }
 
+extern "C" {
+void env_cleanup() {
+    if (cur_term != nullptr) {
+        del_curterm(cur_term);
+        cur_term = nullptr;
+    }
+}
+}
+
 /// Initialize the curses subsystem.
 static void init_curses(const environment_t &vars) {
     for (const auto &var_name : curses_variables) {
@@ -579,6 +588,10 @@ static void init_curses(const environment_t &vars) {
             setenv_lock(name.c_str(), value.c_str(), 1);
         }
     }
+
+    // init_curses() is called more than once, which can lead to a memory leak if the previous
+    // ncurses TERMINAL isn't freed before initializing it again with `setupterm()`.
+    env_cleanup();
 
     int err_ret{0};
     if (setupterm(nullptr, STDOUT_FILENO, &err_ret) == ERR) {

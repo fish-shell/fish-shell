@@ -62,40 +62,39 @@ use widestring_suffix::widestrs;
 /// On a true return, the job was successfully launched and the parser will take responsibility for
 /// cleaning it up. On a false return, the job could not be launched and the caller must clean it
 /// up.
-pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
-    let mut j = job.write().unwrap();
+pub fn exec_job(parser: &Parser, job: &Job, block_io: &IoChain) -> bool {
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if no_exec() {
         return true;
     }
 
     // Handle an exec call.
-    if j.processes[0].typ == ProcessType::exec {
+    if job.processes()[0].typ == ProcessType::exec {
         // If we are interactive, perhaps disallow exec if there are background jobs.
         if !allow_exec_with_background_jobs(parser) {
-            for p in &mut j.processes {
+            for p in job.processes().iter() {
                 p.mark_aborted_before_launch();
             }
             return false;
         }
 
-        internal_exec(parser.vars(), &mut j, block_io);
+        internal_exec(parser.vars(), job, block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
-        let status = if j.flags().negate { 0 } else { 1 };
+        let status = if job.flags().negate { 0 } else { 1 };
         parser.set_last_statuses(Statuses::just(status));
 
         // A false return tells the caller to remove the job from the list.
-        for p in &mut j.processes {
+        for p in job.processes().iter() {
             p.mark_aborted_before_launch();
         }
         return false;
     }
-    let timer = push_timer(j.wants_timing() && !no_exec());
+    let timer = push_timer(job.wants_timing() && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
     let mut deferred_pipes = AutoClosePipes::default();
-    let deferred_process = get_deferred_process(&j);
+    let deferred_process = get_deferred_process(&job);
 
     // We may want to transfer tty ownership to the pgroup leader.
     let mut transfer = TtyTransfer::new();
@@ -116,8 +115,8 @@ pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
     let mut pipe_next_read = AutoCloseFd::empty();
     let mut aborted_pipeline = false;
     let mut procs_launched = 0;
-    for i in 0..j.processes.len() {
-        let p = &j.processes[i];
+    for i in 0..job.processes().len() {
+        let p = &job.processes()[i];
         // proc_pipes is the pipes applied to this process. That is, it is the read end
         // containing the output of the previous process (if any), plus the write end that will
         // output to the next process (if any).
@@ -128,7 +127,7 @@ pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
                     FLOGF!(warning, "%ls", &wgettext!(PIPE_ERROR));
                     perror("pipe");
                     aborted_pipeline = true;
-                    abort_pipeline_from(&mut j, i);
+                    abort_pipeline_from(job, i);
                     break;
                 };
             pipe_next_read = pipes.read;
@@ -145,19 +144,19 @@ pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
         }
 
         // Regular process.
-        let p = &mut j.processes[i];
+        let p = &job.processes()[i];
         if exec_process_in_job(parser, p, job, block_io, proc_pipes, &deferred_pipes, false)
             .is_err()
         {
             aborted_pipeline = true;
-            abort_pipeline_from(&mut j, i);
+            abort_pipeline_from(job, i);
             break;
         }
         procs_launched += 1;
 
         // Transfer tty?
-        if p.leads_pgrp && j.group().wants_terminal() {
-            transfer.to_job_group(j.group.as_ref().unwrap());
+        if p.leads_pgrp && job.group().wants_terminal() {
+            transfer.to_job_group(job.group.as_ref().unwrap());
         }
     }
     pipe_next_read.close();
@@ -179,8 +178,8 @@ pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
             // The deferred proc itself failed to launch.
             || exec_process_in_job(
                 parser,
-                &mut j.processes[dp],
-                job,
+                &job.processes()[dp],
+                &job,
                 block_io,
                 deferred_pipes,
                 &AutoClosePipes::default(),
@@ -188,23 +187,23 @@ pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
             )
             .is_err()
         {
-            j.processes[dp].mark_aborted_before_launch();
+            job.processes()[dp].mark_aborted_before_launch();
         }
     }
 
     FLOGF!(
         exec_job_exec,
         "Executed job %d from command '%ls'",
-        j.job_id(),
-        j.command()
+        job.job_id(),
+        job.command()
     );
 
-    j.mark_constructed();
+    job.mark_constructed();
 
     // If exec_error then a backgrounded job would have been terminated before it was ever assigned
     // a pgroup, so error out before setting last_pid.
-    if !j.is_foreground() {
-        if let Some(last_pid) = j.get_last_pid() {
+    if !job.is_foreground() {
+        if let Some(last_pid) = job.get_last_pid() {
             parser
                 .vars()
                 .set_one(L!("last_pid"), EnvMode::GLOBAL, last_pid.to_wstring());
@@ -213,11 +212,11 @@ pub fn exec_job(parser: &Parser, job: &JobRef, block_io: &IoChain) -> bool {
         }
     }
 
-    if !j.is_initially_background() {
-        j.continue_job(parser);
+    if !job.is_initially_background() {
+        job.continue_job(parser);
     }
 
-    if j.is_stopped() {
+    if job.is_stopped() {
         transfer.save_tty_modes();
     }
     transfer.reclaim();
@@ -380,7 +379,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
 fn safe_launch_process(
-    p: &mut Process,
+    p: &Process,
     actual_cmd: &CStr,
     argv: &impl AsNullTerminatedArray<CharType = c_char>,
     envv: &impl AsNullTerminatedArray<CharType = c_char>,
@@ -423,7 +422,7 @@ fn safe_launch_process(
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
 /// calls exec) and therefore it can allocate memory.
-fn launch_process_nofork(vars: &EnvStack, p: &mut Process) -> ! {
+fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     assert!(!is_forked_child());
 
     // Construct argv. Ensure the strings stay alive for the duration of this function.
@@ -445,7 +444,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &mut Process) -> ! {
 // To avoid the race between the caller calling tcsetpgrp() and the client checking the
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
-fn can_use_posix_spawn_for_job(job: &JobRef, dup2s: &Dup2List) -> bool {
+fn can_use_posix_spawn_for_job(job: &Job, dup2s: &Dup2List) -> bool {
     // Is it globally disabled?
     if !use_posix_spawn() {
         return false;
@@ -464,16 +463,15 @@ fn can_use_posix_spawn_for_job(job: &JobRef, dup2s: &Dup2List) -> bool {
     }
     // If this job will be foregrounded, we will call tcsetpgrp(), therefore do not use
     // posix_spawn.
-    let job = job.read().unwrap();
     let wants_terminal = job.group().wants_terminal();
     !wants_terminal
 }
 
 #[widestrs]
-fn internal_exec(vars: &EnvStack, j: &mut Job, block_io: &IoChain) {
+fn internal_exec(vars: &EnvStack, j: &Job, block_io: &IoChain) {
     // Do a regular launch -  but without forking first...
     let mut all_ios = block_io.clone();
-    if !all_ios.append_from_specs(j.processes[0].redirection_specs(), &vars.get_pwd_slash()) {
+    if !all_ios.append_from_specs(j.processes()[0].redirection_specs(), &vars.get_pwd_slash()) {
         return;
     }
 
@@ -500,7 +498,7 @@ fn internal_exec(vars: &EnvStack, j: &mut Job, block_io: &IoChain) {
         }
 
         // launch_process _never_ returns.
-        launch_process_nofork(vars, &mut *j.processes[0]);
+        launch_process_nofork(vars, &j.processes()[0]);
     }
 }
 
@@ -508,7 +506,7 @@ fn internal_exec(vars: &EnvStack, j: &mut Job, block_io: &IoChain) {
 /// stdout and \p errdata to stderr, respecting the io chain \p ios. For example if target_fd is 1
 /// (stdout), and there is a dup2 3->1, then we need to write to fd 3. Then exit the internal
 /// process.
-fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &IoChain) {
+fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &IoChain) {
     p.check_generations_before_launch();
 
     // We want both the dup2s and the io_chain_ts to be kept alive by the background thread, because
@@ -524,7 +522,7 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
 
         ios: IoChain,
         dup2s: Dup2List,
-        internal_proc: Arc<RwLock<InternalProc>>,
+        internal_proc: Arc<InternalProc>,
 
         success_status: ProcStatus,
     }
@@ -537,7 +535,12 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
         }
     }
     // Construct and assign the internal process to the real process.
-    p.internal_proc = Some(Arc::new(RwLock::new(InternalProc::new())));
+    let internal_proc = Arc::new(InternalProc::new());
+    let old = p.internal_proc.replace(Some(internal_proc.clone()));
+    assert!(
+        old.is_none(),
+        "Replaced p.internal_proc, but it already had a value!"
+    );
     let mut f = Box::new(WriteFields {
         src_outfd: -1,
         outdata,
@@ -547,7 +550,7 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
 
         ios: IoChain::default(),
         dup2s: Dup2List::new(),
-        internal_proc: p.internal_proc.as_ref().unwrap().clone(),
+        internal_proc: internal_proc.clone(),
 
         success_status: ProcStatus::default(),
     });
@@ -555,7 +558,7 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
     FLOGF!(
         proc_internal_proc,
         "Created internal proc %llu to write output for proc '%ls'",
-        f.internal_proc.read().unwrap().get_id(),
+        internal_proc.get_id(),
         p.argv0().unwrap()
     );
 
@@ -573,7 +576,7 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
     // If we have nothing to write we can elide the thread.
     // TODO: support eliding output to /dev/null.
     if f.skip_out() && f.skip_err() {
-        f.internal_proc.write().unwrap().mark_exited(p.status);
+        internal_proc.mark_exited(&p.status);
         return;
     }
 
@@ -583,7 +586,7 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
     // If our process is a builtin, it will have already set its status value. Make sure we
     // propagate that if our I/O succeeds and don't read it on a background thread. TODO: have
     // builtin_run provide this directly, rather than setting it in the process.
-    f.success_status = p.status;
+    f.success_status = p.status.clone();
 
     iothread_perform_cant_wait(move || {
         todo!()
@@ -616,15 +619,14 @@ fn run_internal_process(p: &mut Process, outdata: Vec<u8>, errdata: Vec<u8>, ios
 /// Otherwise, run an internal process.
 fn run_internal_process_or_short_circuit(
     parser: &Parser,
-    j: &JobRef,
-    p: &mut Process,
+    j: &Job,
+    p: &Process,
     outdata: Vec<u8>,
     errdata: Vec<u8>,
     ios: &IoChain,
 ) {
     if outdata.is_empty() && errdata.is_empty() {
-        let j = j.read().unwrap();
-        p.completed = true;
+        p.completed.store(true, Ordering::Relaxed);
         if p.is_last_in_job {
             FLOGF!(
                 exec_job_status,
@@ -653,14 +655,14 @@ fn run_internal_process_or_short_circuit(
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
 /// context of the child.
 fn fork_child_for_process(
-    job: &JobRef,
-    p: &mut Process,
+    job: &Job,
+    p: &Process,
     dup2s: &Dup2List,
     fork_type: &wstr,
-    child_action: impl FnOnce(&mut Process),
+    child_action: impl FnOnce(&Process),
 ) -> LaunchResult {
     // Claim the tty from fish, if the job wants it and we are the pgroup leader.
-    let claim_tty_from = if p.leads_pgrp && job.read().unwrap().group().wants_terminal() {
+    let claim_tty_from = if p.leads_pgrp && job.group().wants_terminal() {
         unsafe { libc::getpgrp() }
     } else {
         INVALID_PID
@@ -674,26 +676,26 @@ fn fork_child_for_process(
 
     // Record the pgroup if this is the leader.
     // Both parent and child attempt to send the process to its new group, to resolve the race.
-    p.pid = if is_parent {
+    p.set_pid(if is_parent {
         pid
     } else {
         unsafe { libc::getpid() }
-    };
+    });
     if p.leads_pgrp {
-        job.read().unwrap().group_mut().set_pgid(pid);
+        job.group_mut().set_pgid(pid);
     }
     {
-        if let Some(pgid) = job.read().unwrap().group().get_pgid() {
-            let err = execute_setpgid(p.pid, pgid, is_parent);
+        if let Some(pgid) = job.group().get_pgid() {
+            let err = execute_setpgid(p.pid(), pgid, is_parent);
             if err != 0 {
-                report_setpgid_error(err, is_parent, pgid, &job.read().unwrap(), p);
+                report_setpgid_error(err, is_parent, pgid, &job, p);
             }
         }
     }
 
     if !is_parent {
         // Child process.
-        child_setup_process(claim_tty_from, &job.read().unwrap(), true, dup2s);
+        child_setup_process(claim_tty_from, job, true, dup2s);
         child_action(p);
         panic!("Child process returned control to fork_child lambda!");
     }
@@ -760,8 +762,8 @@ fn create_output_stream_for_builtin(
 
 fn handle_builtin_output(
     parser: &Parser,
-    j: &JobRef,
-    p: &mut Process,
+    j: &Job,
+    p: &Process,
     io_chain: &IoChain,
     out: &dyn OutputStream,
     err: &dyn OutputStream,
@@ -789,8 +791,8 @@ fn handle_builtin_output(
 /// the pipeline should be cancelled.
 fn exec_external_command(
     parser: &Parser,
-    j: &JobRef,
-    p: &mut Process,
+    j: &Job,
+    p: &Process,
     proc_io_chain: &IoChain,
 ) -> LaunchResult {
     assert!(p.typ == ProcessType::external, "Process is not external");
@@ -990,8 +992,8 @@ fn get_performer_for_process(
 /// \p piped_output_needs_buffering if true, buffer the output.
 fn exec_block_or_func_process(
     parser: &Parser,
-    j: &JobRef,
-    p: &mut Process,
+    j: &Job,
+    p: &Process,
     mut io_chain: IoChain,
     piped_output_needs_buffering: bool,
 ) -> LaunchResult {
@@ -1012,8 +1014,8 @@ fn exec_block_or_func_process(
     // Get the process performer, and just execute it directly.
     // Do it in this scoped way so that the performer function can be eagerly deallocating releasing
     // its captured io chain.
-    if let Some(performer) = get_performer_for_process(p, &j.read().unwrap(), &io_chain) {
-        p.status = performer(parser, p, None, None);
+    if let Some(performer) = get_performer_for_process(p, j, &io_chain) {
+        p.status.update(&performer(parser, p, None, None));
     } else {
         return Err(());
     }
@@ -1114,8 +1116,8 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 /// Executes a builtin "process".
 fn exec_builtin_process(
     parser: &Parser,
-    j: &JobRef,
-    p: &mut Process,
+    j: &Job,
+    p: &Process,
     io_chain: &IoChain,
     piped_output_needs_buffering: bool,
 ) -> LaunchResult {
@@ -1125,8 +1127,9 @@ fn exec_builtin_process(
     let mut err =
         create_output_stream_for_builtin(STDERR_FILENO, io_chain, piped_output_needs_buffering);
 
-    let performer = get_performer_for_builtin(p, &j.read().unwrap(), io_chain);
-    p.status = performer(parser, p, Some(&mut *out), Some(&mut *err));
+    let performer = get_performer_for_builtin(p, &j, io_chain);
+    let status = performer(parser, p, Some(&mut *out), Some(&mut *err));
+    p.status.update(&status);
     handle_builtin_output(parser, j, p, io_chain, &*out, &*err);
     Ok(())
 }
@@ -1140,8 +1143,8 @@ fn exec_builtin_process(
 /// the pipeline should be cancelled.
 fn exec_process_in_job(
     parser: &Parser,
-    p: &mut Process,
-    j: &JobRef,
+    p: &Process,
+    j: &Job,
     block_io: &IoChain,
     pipes: AutoClosePipes,
     deferred_pipes: &AutoClosePipes,
@@ -1265,7 +1268,7 @@ fn exec_process_in_job(
             exec_external_command(&parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.
-            parser.mut_wait_handles().remove_by_pid(p.pid);
+            parser.mut_wait_handles().remove_by_pid(p.pid());
             Ok(())
         }
         ProcessType::exec => {
@@ -1284,17 +1287,17 @@ fn exec_process_in_job(
 // Any such process (only one per job) will be called the "deferred" process.
 fn get_deferred_process(j: &Job) -> Option<usize> {
     // Common case is no deferred proc.
-    if j.processes.len() <= 1 {
+    if j.processes().len() <= 1 {
         return None;
     }
 
     // Skip execs, which can only appear at the front.
-    if j.processes.first().unwrap().typ == ProcessType::exec {
+    if j.processes()[0].typ == ProcessType::exec {
         return None;
     }
 
     // Find the last non-external process, and return it if it pipes into an extenal process.
-    for (i, p) in j.processes.iter().enumerate().rev() {
+    for (i, p) in j.processes().iter().enumerate().rev() {
         if p.typ != ProcessType::external {
             return if p.is_last_in_job { None } else { Some(i) };
         }
@@ -1304,8 +1307,8 @@ fn get_deferred_process(j: &Job) -> Option<usize> {
 
 /// Given that we failed to execute process \p failed_proc in job \p job, mark that process and
 /// every subsequent process in the pipeline as aborted before launch.
-fn abort_pipeline_from(job: &mut Job, offset: usize) {
-    for p in job.processes.iter_mut().skip(offset) {
+fn abort_pipeline_from(job: &Job, offset: usize) {
+    for p in job.processes().iter().skip(offset) {
         p.mark_aborted_before_launch();
     }
 }

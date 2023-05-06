@@ -60,13 +60,11 @@ fn find_wait_handles(
 
     // Is there a running job match?
     for j in &*parser.jobs() {
-        let mut j = j.write().unwrap();
         // We want to set 'matched' to true if we could have matched, even if the job was stopped.
         let provide_handle = can_wait_on_job(&j);
         let internal_job_id = j.internal_job_id;
-        for proc in &mut j.processes {
-            let wh = proc.make_wait_handle(internal_job_id);
-            let Some(wh) = wh else {
+        for proc in j.processes().iter() {
+            let Some(wh) = proc.make_wait_handle(internal_job_id) else {
                 continue;
             };
             if wait_handle_matches(query, &wh) {
@@ -86,12 +84,11 @@ fn get_all_wait_handles(parser: &Parser) -> Vec<WaitHandleRef> {
 
     // Get wait handles for running jobs.
     for j in &*parser.jobs() {
-        let mut j = j.write().unwrap();
         if !can_wait_on_job(&j) {
             continue;
         }
         let internal_job_id = j.internal_job_id;
-        for proc in j.processes.iter_mut() {
+        for proc in j.processes().iter() {
             if let Some(wh) = proc.make_wait_handle(internal_job_id) {
                 result.push(wh);
             }

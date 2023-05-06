@@ -42,7 +42,7 @@ use std::ffi::CStr;
 use std::os::fd::{AsRawFd, RawFd};
 use std::rc::Rc;
 use std::sync::atomic::{AtomicIsize, AtomicU64, Ordering};
-use std::sync::{Arc, RwLock, RwLockWriteGuard, Weak};
+use std::sync::Arc;
 use widestring_suffix::widestrs;
 
 /// block_t represents a block of commands.
@@ -368,7 +368,7 @@ impl Parser {
     }
     /// Adds a job to the beginning of the job list.
     pub fn job_add(&self, job: JobRef) {
-        assert!(!job.read().unwrap().processes.is_empty());
+        assert!(!job.processes().is_empty());
         self.jobs_mut().insert(0, job);
     }
 
@@ -864,8 +864,7 @@ impl Parser {
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
     pub fn job_with_id(&self, job_id: MaybeJobId) -> Option<JobRef> {
         for job in self.jobs().iter() {
-            let j = job.read().unwrap();
-            if job_id.is_none() || job_id == j.job_id() {
+            if job_id.is_none() || job_id == job.job_id() {
                 return Some(job.clone());
             }
         }
@@ -880,8 +879,8 @@ impl Parser {
     /// Returns the job and job index with the given pid.
     pub fn job_get_from_pid_at(&self, pid: libc::pid_t) -> Option<(usize, JobRef)> {
         for (i, job) in self.jobs().iter().enumerate() {
-            for p in &job.read().unwrap().processes {
-                if p.pid == pid {
+            for p in job.processes().iter() {
+                if p.pid() == pid {
                     return Some((i, job.clone()));
                 }
             }

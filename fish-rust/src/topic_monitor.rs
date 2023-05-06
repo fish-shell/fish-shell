@@ -31,10 +31,8 @@ use nix::unistd;
 use std::cell::UnsafeCell;
 use std::mem;
 use std::pin::Pin;
-use std::sync::{
-    atomic::{AtomicU8, Ordering},
-    Condvar, Mutex, MutexGuard,
-};
+use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
+use std::sync::{Condvar, Mutex, MutexGuard};
 
 #[cxx::bridge]
 mod topic_monitor_ffi {
@@ -42,8 +40,11 @@ mod topic_monitor_ffi {
     /// This should be kept in sync with topic_t.
     #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
     pub struct generation_list_t {
+        // TODO: Replace with AtomicU64 for interior mutability
         pub sighupint: u64,
+        // TODO: Replace with AtomicU64 for interior mutability
         pub sigchld: u64,
+        // TODO: Replace with AtomicU64 for interior mutability
         pub internal_exit: u64,
     }
 
@@ -73,6 +74,30 @@ mod topic_monitor_ffi {
         fn current_generations(self: &topic_monitor_t) -> generation_list_t;
         fn generation_for_topic(self: &topic_monitor_t, topic: topic_t) -> u64;
         fn check(self: &topic_monitor_t, gens: *mut generation_list_t, wait: bool) -> bool;
+    }
+}
+
+impl topic_monitor_ffi::generation_list_t {
+    pub fn set_sighupint(&self, value: u64) {
+        let dst: &AtomicU64 = unsafe { std::mem::transmute(&self.sighupint) };
+        dst.store(value, Ordering::Relaxed);
+    }
+
+    pub fn set_sigchld(&self, value: u64) {
+        let dst: &AtomicU64 = unsafe { std::mem::transmute(&self.sigchld) };
+        dst.store(value, Ordering::Relaxed);
+    }
+
+    pub fn set_internal_exit(&self, value: u64) {
+        let dst: &AtomicU64 = unsafe { std::mem::transmute(&self.internal_exit) };
+        dst.store(value, Ordering::Relaxed);
+    }
+
+    /// Update `self` gen counts to match those of `other`.
+    pub fn update(&self, other: &Self) {
+        self.set_sighupint(other.sighupint);
+        self.set_sigchld(other.sigchld);
+        self.set_internal_exit(other.internal_exit);
     }
 }
 

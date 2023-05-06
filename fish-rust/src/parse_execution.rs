@@ -700,8 +700,10 @@ impl<'a> ParseExecutionContext {
         proc: &mut Process,
         not_statement: &ast::NotStatement,
     ) -> EndExecutionReason {
-        let flags = job.mut_flags();
-        flags.negate = !flags.negate;
+        {
+            let mut flags = job.mut_flags();
+            flags.negate = !flags.negate;
+        }
         self.populate_job_process(
             ctx,
             job,
@@ -1617,10 +1619,7 @@ impl<'a> ParseExecutionContext {
             }
         }
 
-        let job = Arc::new(RwLock::new(Job::new(
-            props,
-            zelf.node_source(job_node).to_owned(),
-        )));
+        let mut job = Job::new(props, zelf.node_source(job_node).to_owned());
 
         // We are about to populate a job. One possible argument to the job is a command substitution
         // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
@@ -1630,34 +1629,35 @@ impl<'a> ParseExecutionContext {
             |ctx, new_value| {
                 std::mem::replace(&mut ctx.parser().libdata_mut().pods.caller_id, new_value)
             },
-            job.read().unwrap().internal_job_id,
+            job.internal_job_id,
         );
 
         // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
         // will have been printed.
-        let pop_result = zelf.populate_job_from_job_node(
-            &mut ctx,
-            &mut job.write().unwrap(),
-            job_node,
-            associated_block,
-        );
+        let pop_result =
+            zelf.populate_job_from_job_node(&mut ctx, &mut job, job_node, associated_block);
         let mut zelf = ScopeGuard::commit(zelf);
 
         // Clean up the job on failure or cancellation.
         if pop_result == EndExecutionReason::ok {
-            zelf.setup_group(&mut ctx, &mut job.write().unwrap());
-            assert!(job.read().unwrap().group.is_some(), "Should have a group");
+            zelf.setup_group(&mut ctx, &mut job);
+            assert!(job.group.is_some(), "Should have a group");
+        }
 
+        // Now that we're done mutating the Job, we can stick it in an Arc
+        let job = Arc::new(job);
+
+        if pop_result == EndExecutionReason::ok {
             // Give the job to the parser - it will clean it up.
             {
                 let parser = ctx.parser();
-                parser.job_add(Arc::clone(&job));
+                parser.job_add(job.clone());
 
                 // Actually execute the job.
                 if !exec_job(&parser, &job, &zelf.block_io) {
                     // No process in the job successfully launched.
                     // Ensure statuses are set (#7540).
-                    if let Some(statuses) = job.read().unwrap().get_statuses() {
+                    if let Some(statuses) = job.get_statuses() {
                         parser.set_last_statuses(statuses);
                         parser.libdata_mut().pods.status_count += 1;
                     }
@@ -1666,13 +1666,12 @@ impl<'a> ParseExecutionContext {
 
                 // Update universal variables on external commands.
                 // We only incorporate external changes if we had an external proc, for hysterical raisins.
-                let job = job.read().unwrap();
                 parser.sync_uvars_and_fire(job.has_external_proc() /* always */);
             }
 
             // If the job got a SIGINT or SIGQUIT, then we're going to start unwinding.
             if zelf.cancel_signal.is_none() {
-                zelf.cancel_signal = job.read().unwrap().group().get_cancel_signal();
+                zelf.cancel_signal = job.group().get_cancel_signal();
             }
         }
 
@@ -1682,7 +1681,7 @@ impl<'a> ParseExecutionContext {
             let mut profile_item = &mut profile_items[profile_id];
             profile_item.duration = ProfileItem::now() - start_time;
             profile_item.level = ctx.parser().eval_level.load(Ordering::Relaxed);
-            profile_item.cmd = job.read().unwrap().command().to_owned();
+            profile_item.cmd = job.command().to_owned();
             profile_item.skipped = pop_result != EndExecutionReason::ok;
         }
 
@@ -1785,6 +1784,7 @@ impl<'a> ParseExecutionContext {
         // Returns the result of the last job executed or skipped.
         result
     }
+
     fn populate_job_from_job_node(
         &mut self,
         ctx: &OperationContext<'_>,
@@ -1853,7 +1853,7 @@ impl<'a> ParseExecutionContext {
         if result == EndExecutionReason::ok {
             // Link up the processes.
             assert!(!processes.is_empty());
-            j.processes = processes;
+            *j.processes_mut() = processes;
         }
         result
     }
@@ -1869,12 +1869,12 @@ impl<'a> ParseExecutionContext {
             return;
         }
 
-        if j.processes[0].is_internal() || !self.use_job_control(ctx) {
+        if j.processes()[0].is_internal() || !self.use_job_control(ctx) {
             // This job either doesn't have a pgroup (e.g. a simple block), or lives in fish's pgroup.
             j.group = Some(JobGroup::create(j.command().to_owned(), j.wants_job_id()));
         } else {
             // This is a "real job" that gets its own pgroup.
-            j.processes[0].leads_pgrp = true;
+            j.processes_mut()[0].leads_pgrp = true;
             let wants_terminal = ctx.parser().libdata().pods.is_event == 0;
             j.group = Some(JobGroup::create_with_job_control(
                 j.command().to_owned(),

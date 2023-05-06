@@ -140,9 +140,9 @@ pub fn report_setpgid_error(
     let mut argv0 = [b'0'; 64];
     let mut command = [b'0'; 64];
 
-    format_llong_safe(&mut pid_buff, p.pid);
+    format_llong_safe(&mut pid_buff, p.pid());
     format_llong_safe(&mut job_id_buff, j.job_id().as_num());
-    format_llong_safe(&mut getpgid_buff, unsafe { libc::getpgid(p.pid) });
+    format_llong_safe(&mut getpgid_buff, unsafe { libc::getpgid(p.pid()) });
     format_llong_safe(&mut job_pgid_buff, desired_pgid);
     narrow_string_safe(&mut argv0, p.argv0().unwrap());
     narrow_string_safe(&mut command, j.command());

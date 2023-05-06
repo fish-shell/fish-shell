@@ -27,9 +27,9 @@ fn send_to_bg(
     job_pos: usize,
 ) -> Option<c_int> {
     let jobs = parser.jobs();
-    if !jobs[job_pos].read().unwrap().wants_job_control() {
+    if !jobs[job_pos].wants_job_control() {
         let err = {
-            let job = &jobs[job_pos].read().unwrap();
+            let job = &jobs[job_pos];
             wgettext_fmt!(
                 "%ls: Can't put job %d, '%ls' to background because it is not under job control\n",
                 cmd,
@@ -42,7 +42,7 @@ fn send_to_bg(
     }
 
     {
-        let mut job = jobs[job_pos].write().unwrap();
+        let job = &jobs[job_pos];
         streams.err.append(&wgettext_fmt!(
             "Send job %d '%ls' to background\n",
             job.job_id().to_wstring(),
@@ -77,10 +77,9 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) ->
     if opts.optind == args.len() {
         // No jobs were specified so use the most recent (i.e., last) job.
         let jobs = parser.jobs();
-        let job_pos = jobs.iter().position(|job| {
-            let job = job.read().unwrap();
-            job.is_stopped() && job.wants_job_control() && !job.is_completed()
-        });
+        let job_pos = jobs
+            .iter()
+            .position(|job| job.is_stopped() && job.wants_job_control() && !job.is_completed());
 
         let Some(job_pos) = job_pos else {
             streams

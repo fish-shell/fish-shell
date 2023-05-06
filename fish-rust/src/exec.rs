@@ -522,7 +522,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
 
         ios: IoChain,
         dup2s: Dup2List,
-        internal_proc: Arc<InternalProc>,
+        internal_proc: Rc<InternalProc>,
 
         success_status: ProcStatus,
     }
@@ -535,7 +535,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         }
     }
     // Construct and assign the internal process to the real process.
-    let internal_proc = Arc::new(InternalProc::new());
+    let internal_proc = Rc::new(InternalProc::new());
     let old = p.internal_proc.replace(Some(internal_proc.clone()));
     assert!(
         old.is_none(),

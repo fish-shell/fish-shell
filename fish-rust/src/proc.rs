@@ -38,6 +38,7 @@ use std::ffi::CString;
 use std::fs;
 use std::io::{Read, Write};
 use std::os::fd::RawFd;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use widestring_suffix::widestrs;
@@ -549,7 +550,7 @@ pub struct Process {
     pub pid: AtomicI32,
 
     /// If we are an "internal process," that process.
-    pub internal_proc: RefCell<Option<Arc<InternalProc>>>,
+    pub internal_proc: RefCell<Option<Rc<InternalProc>>>,
 
     /// File descriptor that pipe output should bind to.
     pub pipe_write_fd: RawFd,
@@ -578,6 +579,9 @@ pub struct Process {
     // The wait handle. This is constructed lazily, and cached.
     // This may be null.
     wait_handle: RefCell<Option<WaitHandleRef>>,
+
+    /// Prevent `Process` from being `Send` or `Sync`.
+    _marker: std::marker::PhantomData<*const ()>,
 }
 
 #[derive(Default)]
@@ -782,6 +786,9 @@ pub struct Job {
 
     /// Flags associated with the job.
     pub job_flags: RefCell<JobFlags>,
+
+    /// Prevent `Job` from being `Send` or `Sync`.
+    _marker: std::marker::PhantomData<*const ()>,
 }
 
 impl Job {

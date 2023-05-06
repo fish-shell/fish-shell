@@ -433,10 +433,13 @@ fn file_get_desc(
     };
 
     fn is_executable(buf: &std::fs::Metadata, filename: &wstr) -> bool {
+        // mode_t is 16-bits on FreeBSD.
+        #![allow(clippy::useless_conversion)]
+
         // Weird group permissions and other such issues make it non-trivial to find out if
         // we can actually execute a file using the result from stat. It is much safer to
         // use the access function, since it tells us exactly what we want to know.
-        buf.mode() & (S_IXUSR | S_IXGRP | S_IXOTH) != 0 && waccess(filename, X_OK) == 0
+        buf.mode() & u32::from(S_IXUSR | S_IXGRP | S_IXOTH) != 0 && waccess(filename, X_OK) == 0
     }
 
     if let Some(stat_res) = stat_res {

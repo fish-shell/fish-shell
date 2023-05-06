@@ -1419,20 +1419,11 @@ pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> isize {
 
 /// Test if the string is a valid function name.
 pub fn valid_func_name(name: &wstr) -> bool {
-    if name.is_empty() {
-        return false;
-    };
-    if name.char_at(0) == '-' {
-        return false;
-    };
+    !(name.is_empty()
+    || name.starts_with('-')
     // A function name needs to be a valid path, so no / and no NULL.
-    if name.find_char('/').is_some() {
-        return false;
-    };
-    if name.find_char('\0').is_some() {
-        return false;
-    };
-    true
+    || name.contains('/')
+    || name.contains('\0'))
 }
 
 /// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in

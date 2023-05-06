@@ -34,7 +34,7 @@ const long_options: &[woption] = &[
 
 fn parse_options(
     args: &mut [WString],
-    parser: & Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
     let mut opts = Options::default();
@@ -64,7 +64,7 @@ fn parse_options(
 /// In general scripts shouldn't invoke this directly. They should just use `realpath` which
 /// will fallback to this builtin if an external command cannot be found.
 pub fn realpath(
-    parser: & Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     args: &mut [WString],
 ) -> Option<c_int> {

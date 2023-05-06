@@ -34,11 +34,7 @@ struct type_cmd_opts_t {
     query: bool,
 }
 
-pub fn r#type(
-    parser: & Parser,
-    streams: &mut IoStreams<'_>,
-    argv: &mut [WString],
-) -> Option<c_int> {
+pub fn r#type(parser: &Parser, streams: &mut IoStreams<'_>, argv: &mut [WString]) -> Option<c_int> {
     let argc = argv.len();
     let print_hints = false;
     let mut opts: type_cmd_opts_t = Default::default();

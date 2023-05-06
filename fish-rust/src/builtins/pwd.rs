@@ -26,11 +26,7 @@ const long_options: &[woption] = &[
     wopt(L!("physical"), no_argument, 'P'),
 ];
 
-pub fn pwd(
-    parser: & Parser,
-    streams: &mut IoStreams<'_>,
-    argv: &mut [WString],
-) -> Option<c_int> {
+pub fn pwd(parser: &Parser, streams: &mut IoStreams<'_>, argv: &mut [WString]) -> Option<c_int> {
     let argc = argv.len();
     let mut resolve_symlinks = false;
     let mut w = wgetopter_t::new(short_options, long_options, argv);

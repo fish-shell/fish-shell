@@ -20,7 +20,7 @@ struct Options {
 
 fn parse_options(
     args: &mut [WString],
-    parser: & Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
     const SHORT_OPTS: &wstr = L!("+:hi");
@@ -56,7 +56,7 @@ fn parse_options(
 /// Implementation of the builtin contains command, used to check if a specified string is part of
 /// a list.
 pub fn contains(
-    parser: & Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     args: &mut [WString],
 ) -> Option<c_int> {

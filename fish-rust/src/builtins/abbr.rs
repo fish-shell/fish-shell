@@ -401,7 +401,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams<'_>) -> Option<c_int> {
 }
 
 // Erase the named abbreviations.
-fn abbr_erase(opts: &Options, parser: & Parser) -> Option<c_int> {
+fn abbr_erase(opts: &Options, parser: &Parser) -> Option<c_int> {
     if opts.args.is_empty() {
         // This has historically been a silent failure.
         return STATUS_CMD_ERROR;
@@ -429,11 +429,7 @@ fn abbr_erase(opts: &Options, parser: & Parser) -> Option<c_int> {
     })
 }
 
-pub fn abbr(
-    parser: & Parser,
-    streams: &mut IoStreams<'_>,
-    argv: &mut [WString],
-) -> Option<c_int> {
+pub fn abbr(parser: &Parser, streams: &mut IoStreams<'_>, argv: &mut [WString]) -> Option<c_int> {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 

@@ -64,7 +64,7 @@ impl Autoload {
     /// Helper to actually perform an autoload.
     /// This is a static function because it executes fish script, and so must be called without
     /// holding any particular locks.
-    pub fn perform_autoload(path: &wstr, parser: & Parser) {
+    pub fn perform_autoload(path: &wstr, parser: &Parser) {
         // We do the useful part of what exec_subshell does ourselves
         // - we source the file.
         // We don't create a buffer or check ifs or create a read_limit

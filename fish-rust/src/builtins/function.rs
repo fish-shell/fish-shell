@@ -6,7 +6,7 @@ use crate::wchar::WString;
 use libc::c_int;
 
 pub fn function(
-    parser: & Parser,
+    parser: &Parser,
     streams: &mut IoStreams<'_>,
     c_args: &[WString],
     source: &ParsedSourceRef,

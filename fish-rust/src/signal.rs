@@ -3,7 +3,7 @@ use std::num::NonZeroI32;
 use crate::common::{exit_without_destructors, restore_term_foreground_process_group_for_exit};
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::termsize::termsize_handle_winch;
-use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
+use crate::topic_monitor::{generation_t, topic_monitor_principal, topic_t, GenerationsList};
 use crate::wchar::{wstr, WExt, L};
 use crate::wchar_ffi::c_str;
 use crate::wchar_ffi::{AsWstr, WCharToFFI};
@@ -394,8 +394,8 @@ impl SigChecker {
     /// Wait until a sigint is delivered.
     pub fn wait(&self) {
         let tm = topic_monitor_principal();
-        let mut gens = invalid_generations();
-        *gens.at_mut(self.topic) = self.gen;
+        let mut gens = GenerationsList::invalid();
+        gens.set(self.topic, self.gen);
         tm.check(&mut gens, true /* wait */);
     }
 }

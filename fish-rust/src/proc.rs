@@ -18,9 +18,7 @@ use crate::parser::{Block, Parser};
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
 use crate::signal::{signal_set_handlers_once, Signal};
-use crate::topic_monitor::{
-    generation_list_t, invalid_generations, topic_monitor_principal, topic_t,
-};
+use crate::topic_monitor::{topic_monitor_principal, topic_t, GenerationsList};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
@@ -543,7 +541,7 @@ pub struct Process {
     pub actual_cmd: WString,
 
     /// Generation counts for reaping.
-    pub gens: generation_list_t,
+    pub gens: GenerationsList,
 
     /// Process ID, represented as an AtomicI32. This is actually an Option<AtomicNonZeroI32> with a
     /// value of zero representing `None`.
@@ -1343,7 +1341,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
     // Go through each process and figure out if and how it wants to be reaped.
-    let mut reapgens = invalid_generations();
+    let mut reapgens = GenerationsList::invalid();
     for j in parser.jobs().iter() {
         for proc in j.processes().iter() {
             if !j.can_reap(proc) {
@@ -1381,13 +1379,13 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             }
 
             // Always update the signal hup/int gen.
-            proc.gens.set_sighupint(reapgens.sighupint);
+            proc.gens.sighupint.set(reapgens.sighupint.get());
 
             // Nothing to do if we did not get a new sigchld.
             if proc.gens.sigchld == reapgens.sigchld {
                 continue;
             }
-            proc.gens.set_sigchld(reapgens.sigchld);
+            proc.gens.sigchld.set(reapgens.sigchld.get());
 
             // Ok, we are reapable. Run waitpid()!
             let mut statusv: libc::c_int = -1;
@@ -1444,13 +1442,13 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             }
 
             // Always update the signal hup/int gen.
-            proc.gens.set_sighupint(reapgens.sighupint);
+            proc.gens.sighupint.set(reapgens.sighupint.get());
 
             // Nothing to do if we did not get a new internal exit.
             if proc.gens.internal_exit == reapgens.internal_exit {
                 continue;
             }
-            proc.gens.set_internal_exit(reapgens.internal_exit);
+            proc.gens.internal_exit.set(reapgens.internal_exit.get());
 
             // Keep the borrow so we don't keep borrowing again and again and unwrapping again and
             // again below.

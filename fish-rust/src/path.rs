@@ -180,7 +180,11 @@ fn maybe_issue_path_warning(
 /// \returns the path if found, none if not.
 pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
     let result = path_try_get_path(cmd, vars);
-    result.err.map_or(Some(result.path), |_| None)
+    if result.err.is_some() {
+        None
+    } else {
+        Some(result.path)
+    }
 }
 
 // PREFIX is defined at build time.

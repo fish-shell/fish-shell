@@ -1711,7 +1711,7 @@ fn get_executable_path(argv0: &str) -> PathBuf {
 /// the replacement value. Useful to avoid errors about multiple references (`&mut T` for `old` then
 /// `&T` again in the `new` expression).
 pub fn replace_with<T, F: FnOnce(&T) -> T>(old: &mut T, with: F) -> T {
-    let new = with(&*old);
+    let new = with(old);
     std::mem::replace(old, new)
 }
 

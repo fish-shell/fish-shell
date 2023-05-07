@@ -34,6 +34,7 @@ Completions
 - Added completions for:
   - ``ar`` (:issue:`9719`)
 - ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
+- ``qdbus`` completions now properly handle tags (:issue:`9776`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

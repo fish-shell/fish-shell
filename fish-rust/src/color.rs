@@ -137,6 +137,56 @@ impl RgbColor {
         !self.is_named() && !self.is_rgb()
     }
 
+    /// Returns whether the color is bold.
+    pub const fn is_bold(self) -> bool {
+        self.flags.bold
+    }
+
+    /// Set whether the color is bold.
+    pub fn set_bold(&mut self, bold: bool) {
+        self.flags.bold = bold;
+    }
+
+    /// Returns whether the color is underlined.
+    pub const fn is_underline(self) -> bool {
+        self.flags.underline
+    }
+
+    /// Set whether the color is underline.
+    pub fn set_underline(&mut self, underline: bool) {
+        self.flags.underline = underline;
+    }
+
+    /// Returns whether the color is italics.
+    pub const fn is_italics(self) -> bool {
+        self.flags.italics
+    }
+
+    /// Set whether the color is italics.
+    pub fn set_italics(&mut self, italics: bool) {
+        self.flags.italics = italics;
+    }
+
+    /// Returns whether the color is dim.
+    pub const fn is_dim(self) -> bool {
+        self.flags.dim
+    }
+
+    /// Set whether the color is dim.
+    pub fn set_dim(&mut self, dim: bool) {
+        self.flags.dim = dim;
+    }
+
+    /// Returns whether the color is reverse.
+    pub const fn is_reverse(self) -> bool {
+        self.flags.reverse
+    }
+
+    /// Set whether the color is reverse.
+    pub fn set_reverse(&mut self, reverse: bool) {
+        self.flags.reverse = reverse;
+    }
+
     /// Returns a description of the color.
     #[widestrs]
     pub fn description(self) -> WString {

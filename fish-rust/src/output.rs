@@ -1,4 +1,20 @@
+// Generic output functions.
+use crate::color::RgbColor;
+use crate::common::{self, assert_is_locked, wcs2string_appending};
+use crate::curses::{self, tparm0, tparm1, Term};
+use crate::env::EnvVar;
+use crate::flog::FLOG;
+use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::WExt;
+use crate::wutil::wgettext_fmt;
 use bitflags::bitflags;
+use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::ffi::{CStr, CString};
+use std::io::{Cursor, Write};
+use std::os::fd::RawFd;
+use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::Mutex;
 
 bitflags! {
     pub struct ColorSupport: u8 {
@@ -8,6 +24,7 @@ bitflags! {
     }
 }
 
+/// FFI bits.
 pub fn output_set_color_support(value: ColorSupport) {
     extern "C" {
         pub fn output_set_color_support(value: libc::c_int);
@@ -15,5 +32,617 @@ pub fn output_set_color_support(value: ColorSupport) {
 
     unsafe {
         output_set_color_support(value.bits() as i32);
+    }
+}
+
+/// Whether term256 and term24bit are supported.
+static COLOR_SUPPORT: AtomicU8 = AtomicU8::new(0);
+
+/// Returns true if we think tparm can handle outputting a color index.
+fn term_supports_color_natively(term: &Term, c: i32) -> bool {
+    #[allow(clippy::int_plus_one)]
+    if let Some(max_colors) = term.max_colors {
+        max_colors >= c + 1
+    } else {
+        false
+    }
+}
+
+pub fn get_color_support() -> ColorSupport {
+    let val = COLOR_SUPPORT.load(Ordering::Relaxed);
+    ColorSupport::from_bits_truncate(val)
+}
+
+pub fn set_color_support(val: ColorSupport) {
+    COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
+}
+
+// These are historic. writembs() attempts to write a multibyte string of type &Option<CString> to the given outputter.
+// writembs() will noisily fail, writembs_nofail will not.
+macro_rules! writembs(
+    ($outp: expr, $mbs: expr) => {
+        crate::output::writembs_check($outp, $mbs, std::stringify!($mbs), true, std::file!(), std::line!())
+    }
+);
+
+macro_rules! writembs_nofail(
+    ($outp: expr, $mbs: expr) => {
+        crate::output::writembs_check($outp, $mbs, std::stringify!($mbs), false, std::file!(), std::line!())
+    }
+);
+
+fn index_for_color(c: RgbColor) -> u8 {
+    if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
+        return c.to_name_index();
+    }
+    c.to_term256_index()
+}
+
+// Given a Cursor which have used write! on, return the slice of written bytes.
+fn cursor_to_slice(cursor: Cursor<&mut [u8]>) -> &[u8] {
+    let len: usize = cursor
+        .position()
+        .try_into()
+        .expect("cursor position overflow");
+    let buff: &mut [u8] = cursor.into_inner();
+    &buff[..len]
+}
+
+fn write_color_escape(
+    outp: &mut Outputter,
+    term: &Term,
+    todo: &CStr,
+    mut idx: u8,
+    is_fg: bool,
+) -> bool {
+    if term_supports_color_natively(idx.into(), term) {
+        // Use tparm to emit color escape.
+        writembs!(outp, tparm1(todo, idx.into()));
+        true
+    } else {
+        // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
+        let mut buff = [0; 32];
+        let mut cursor = Cursor::new(&mut buff[..]);
+        if idx < 16 {
+            // this allows the non-bright color to happen instead of no color working at all when a
+            // bright is attempted when only colors 0-7 are supported.
+            //
+            // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that combined
+            // with what we do here, will make the brights actually work for virtual consoles/ancient
+            // emulators.
+            if term.max_colors == Some(8) && idx > 8 {
+                idx -= 8;
+            }
+            write!(
+                cursor,
+                "\x1B[{}m",
+                (if idx > 7 { 82 } else { 30 }) + i32::from(idx) + ((i32::from(!is_fg)) * 10)
+            )
+            .expect("Writing to in-memory buffer should never fail");
+        } else {
+            write!(cursor, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx).unwrap();
+        }
+        outp.write_str(cursor_to_slice(cursor));
+        true
+    }
+}
+
+/// Helper to allow more convenient usage of Option<CString>.
+/// This is similar to C++ checks like `set_a_foreground && set_a_foreground[0]`
+trait CStringIsSomeNonempty {
+    /// Returns Some if we contain a non-empty CString.
+    fn if_nonempty(&self) -> Option<&CString>;
+}
+
+impl CStringIsSomeNonempty for Option<CString> {
+    fn if_nonempty(&self) -> Option<&CString> {
+        self.as_ref().filter(|s| !s.as_bytes().is_empty())
+    }
+}
+
+fn write_foreground_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
+    if let Some(cap) = term.set_a_foreground.if_nonempty() {
+        write_color_escape(outp, term, cap, idx, true)
+    } else if let Some(cap) = &term.set_foreground.if_nonempty() {
+        write_color_escape(outp, term, cap, idx, true)
+    } else {
+        false
+    }
+}
+
+fn write_background_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
+    if let Some(cap) = term.set_a_background.if_nonempty() {
+        write_color_escape(outp, term, cap, idx, false)
+    } else if let Some(cap) = term.set_background.if_nonempty() {
+        write_color_escape(outp, term, cap, idx, false)
+    } else {
+        false
+    }
+}
+
+pub struct Outputter {
+    /// Storage for buffered contents.
+    contents: Vec<u8>,
+
+    /// Count of how many outstanding begin_buffering() calls there are.
+    buffer_count: u32,
+
+    /// fd to output to, or -1 for none.
+    fd: RawFd,
+
+    /// Foreground.
+    last_color: RgbColor,
+
+    /// Background.
+    last_color2: RgbColor,
+
+    was_bold: bool,
+    was_underline: bool,
+    was_italics: bool,
+    was_dim: bool,
+    was_reverse: bool,
+}
+
+impl Outputter {
+    /// Construct an outputter which outputs to a given fd.
+    /// If the fd is negative, the outputter will buffer its output.
+    const fn new_from_fd(fd: RawFd) -> Self {
+        Self {
+            contents: Vec::new(),
+            buffer_count: 0,
+            fd,
+            last_color: RgbColor::NORMAL,
+            last_color2: RgbColor::NORMAL,
+            was_bold: false,
+            was_underline: false,
+            was_italics: false,
+            was_dim: false,
+            was_reverse: false,
+        }
+    }
+
+    /// Construct an outputter which outputs to its string buffer.
+    pub fn new_buffering() -> Self {
+        Self::new_from_fd(-1)
+    }
+
+    fn reset_modes(&mut self) {
+        self.was_bold = false;
+        self.was_underline = false;
+        self.was_italics = false;
+        self.was_dim = false;
+        self.was_reverse = false;
+    }
+
+    fn maybe_flush(&mut self) {
+        if self.fd >= 0 && self.buffer_count == 0 {
+            self.flush_to(self.fd);
+        }
+    }
+
+    /// Unconditionally write the color string to the output.
+    /// Exported for builtin_set_color's usage only.
+    pub fn write_color(&mut self, color: RgbColor, is_fg: bool) -> bool {
+        let Some(term) = curses::term() else {
+            return false;
+        };
+        let term: &Term = &term;
+        let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
+        if !supports_term24bit || !color.is_rgb() {
+            // Indexed or non-24 bit color.
+            let idx = index_for_color(color);
+            if is_fg {
+                return write_foreground_color(self, idx, term);
+            } else {
+                return write_background_color(self, idx, term);
+            };
+        }
+
+        // 24 bit! No tparm here, just ANSI escape sequences.
+        // Foreground: ^[38;2;<r>;<g>;<b>m
+        // Background: ^[48;2;<r>;<g>;<b>m
+        let rgb = color.to_color24();
+        let mut buff = [0; 128];
+        let mut cursor = Cursor::new(&mut buff[..]);
+        write!(
+            &mut cursor,
+            "\x1B[{};2;{};{};{}m",
+            if is_fg { 38 } else { 48 },
+            rgb.r,
+            rgb.g,
+            rgb.b
+        )
+        .expect("should have written to buffer");
+        self.write_str(cursor_to_slice(cursor));
+        true
+    }
+
+    /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same
+    /// as the previous, nothing will be written. Negative values for set_color will also be ignored.
+    /// Since the terminfo string this function emits can potentially cause the screen to flicker, the
+    /// function takes care to write as little as possible.
+    ///
+    /// Possible values for colors are RgbColor colors or special values like RgbColor::NORMAL
+    ///
+    /// In order to set the color to normal, three terminfo strings may have to be written.
+    ///
+    /// - First a string to set the color, such as set_a_foreground. This is needed because otherwise
+    /// the previous strings colors might be removed as well.
+    ///
+    /// - After that we write the exit_attribute_mode string to reset all color attributes.
+    ///
+    /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
+    /// color pair to what it should be.
+    #[allow(clippy::unnecessary_unwrap)]
+    pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
+        // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
+        // just give up...
+        let Some(term) = curses::term() else {
+            return;
+        };
+        let term: &Term = &term;
+        if term.exit_attribute_mode.is_none() {
+            return;
+        }
+
+        const normal: RgbColor = RgbColor::NORMAL;
+        let mut bg_set = false;
+        let mut last_bg_set = false;
+        let is_bold = fg.is_bold() || bg.is_bold();
+        let is_underline = fg.is_underline() || bg.is_underline();
+        let is_italics = fg.is_italics() || bg.is_italics();
+        let is_dim = fg.is_dim() || bg.is_dim();
+        let is_reverse = fg.is_reverse() || bg.is_reverse();
+
+        if fg.is_reset() || bg.is_reset() {
+            #[allow(unused_assignments)]
+            {
+                fg = normal;
+                bg = normal;
+            }
+            self.reset_modes();
+            // If we exit attribute mode, we must first set a color, or previously colored text might
+            // lose its color. Terminals are weird...
+            write_foreground_color(self, 0, term);
+            writembs!(self, &term.exit_attribute_mode);
+            return;
+        }
+        if (self.was_bold && !is_bold)
+            || (self.was_dim && !is_dim)
+            || (self.was_reverse && !is_reverse)
+        {
+            // Only way to exit bold/dim/reverse mode is a reset of all attributes.
+            writembs!(self, &term.exit_attribute_mode);
+            self.last_color = normal;
+            self.last_color2 = normal;
+            self.reset_modes();
+        }
+        if !self.last_color2.is_special() {
+            // Background was set.
+            // "Special" here refers to the special "normal", "reset" and "none" colors,
+            // that really just disable the background.
+            last_bg_set = true;
+        }
+        if !bg.is_special() {
+            // Background is set.
+            bg_set = true;
+            if fg == bg {
+                fg = if bg == RgbColor::WHITE {
+                    RgbColor::BLACK
+                } else {
+                    RgbColor::WHITE
+                };
+            }
+        }
+
+        if term.enter_bold_mode.if_nonempty().is_some() {
+            if bg_set && !last_bg_set {
+                // Background color changed and is set, so we enter bold mode to make reading easier.
+                // This means bold mode is _always_ on when the background color is set.
+                writembs_nofail!(self, &term.enter_bold_mode);
+            }
+            if !bg_set && last_bg_set {
+                // Background color changed and is no longer set, so we exit bold mode.
+                writembs_nofail!(self, &term.exit_attribute_mode);
+                self.reset_modes();
+                // We don't know if exit_attribute_mode resets colors, so we set it to something known.
+                if write_foreground_color(self, 0, term) {
+                    self.last_color = RgbColor::BLACK;
+                }
+            }
+        }
+
+        if self.last_color != fg {
+            if fg.is_normal() {
+                write_foreground_color(self, 0, term);
+                writembs!(self, &term.exit_attribute_mode);
+
+                self.last_color2 = RgbColor::NORMAL;
+                self.reset_modes();
+            } else if !fg.is_special() {
+                self.write_color(fg, true /* foreground */);
+            }
+        }
+        self.last_color = fg;
+
+        if self.last_color2 != bg {
+            if bg.is_normal() {
+                write_background_color(self, 0, term);
+
+                writembs!(self, &term.exit_attribute_mode);
+                if !self.last_color.is_normal() {
+                    self.write_color(self.last_color, true /* foreground */);
+                }
+                self.reset_modes();
+                self.last_color2 = bg;
+            } else if !bg.is_special() {
+                self.write_color(bg, false /* not foreground */);
+                self.last_color2 = bg;
+            }
+        }
+
+        // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
+        let enter_bold_mode = term.enter_bold_mode.if_nonempty();
+        if is_bold && !self.was_bold && enter_bold_mode.is_some() && !bg_set {
+            // TODO: rationalize why only this one has the tparm0 call.
+            writembs_nofail!(self, tparm0(enter_bold_mode.unwrap()));
+            self.was_bold = is_bold;
+        }
+
+        if self.was_underline && !is_underline {
+            writembs_nofail!(self, &term.exit_underline_mode);
+        }
+        if !self.was_underline && is_underline {
+            writembs_nofail!(self, &term.enter_underline_mode);
+        }
+        self.was_underline = is_underline;
+
+        if self.was_italics && !is_italics && term.exit_italics_mode.if_nonempty().is_some() {
+            writembs_nofail!(self, &term.exit_italics_mode);
+            self.was_italics = is_italics;
+        }
+        if !self.was_italics && is_italics && term.enter_italics_mode.if_nonempty().is_some() {
+            writembs_nofail!(self, &term.enter_italics_mode);
+            self.was_italics = is_italics;
+        }
+
+        if is_dim && !self.was_dim && term.enter_dim_mode.if_nonempty().is_some() {
+            writembs_nofail!(self, &term.enter_dim_mode);
+            self.was_dim = is_dim;
+        }
+        // N.B. there is no exit_dim_mode in curses, it's handled by exit_attribute_mode above.
+
+        if is_reverse && !self.was_reverse {
+            // Some terms do not have a reverse mode set, so standout mode is a fallback.
+            if term.enter_reverse_mode.if_nonempty().is_some() {
+                writembs_nofail!(self, &term.enter_reverse_mode);
+                self.was_reverse = is_reverse;
+            } else if term.enter_standout_mode.if_nonempty().is_some() {
+                writembs_nofail!(self, &term.enter_standout_mode);
+                self.was_reverse = is_reverse;
+            }
+        }
+    }
+
+    /// Write a wide character to the receiver.
+    fn writech(&mut self, ch: char) {
+        self.write_wstr(wstr::from_char_slice(&[ch]));
+    }
+
+    /// Write a narrow character to the receiver.
+    fn push(&mut self, ch: u8) {
+        self.contents.push(ch);
+        self.maybe_flush();
+    }
+
+    /// Write a wide string.
+    pub fn write_wstr(&mut self, str: &wstr) {
+        wcs2string_appending(&mut self.contents, str);
+        self.maybe_flush();
+    }
+
+    /// Write a narrow string.
+    pub fn write_str(&mut self, str: &[u8]) {
+        self.contents.extend_from_slice(str);
+        self.maybe_flush();
+    }
+
+    /// \return the "output" contents.
+    pub fn contents(&self) -> &[u8] {
+        &self.contents
+    }
+
+    /// Output any buffered data to the given \p fd.
+    fn flush_to(&mut self, fd: RawFd) {
+        if fd >= 0 && !self.contents.is_empty() {
+            let _ = common::write_loop(&fd, &self.contents);
+            self.contents.clear();
+        }
+    }
+
+    /// Begins buffering. Output will not be automatically flushed until a corresponding
+    /// end_buffering() call.
+    fn begin_buffering(&mut self) {
+        self.buffer_count += 1;
+        assert!(self.buffer_count > 0, "buffer_count overflow");
+    }
+
+    /// Balance a begin_buffering() call.
+    fn end_buffering(&mut self) {
+        assert!(self.buffer_count > 0, "buffer_count underflow");
+        self.buffer_count -= 1;
+        self.maybe_flush();
+    }
+}
+
+// tputs accepts a function pointer that receives an int only.
+// Use the following lock to redirect it to the proper outputter.
+// Note we can't use an owning Mutex because the tputs_writer must access it and Mutex is not
+// recursive.
+static TPUTS_RECEIVER_LOCK: Mutex<()> = Mutex::new(());
+static mut TPUTS_RECEIVER: *mut Outputter = std::ptr::null_mut();
+
+extern "C" fn tputs_writer(b: curses::TputsArg) -> libc::c_int {
+    // Safety: we hold the lock.
+    assert_is_locked!(&TPUTS_RECEIVER_LOCK);
+    let receiver = unsafe { TPUTS_RECEIVER.as_mut().expect("null TPUTS_RECEIVER") };
+    receiver.push(b as u8);
+    0
+}
+
+impl Outputter {
+    fn term_puts(&mut self, str: &CStr, affcnt: i32) -> libc::c_int {
+        // Acquire the lock, set the receiver, and call tputs.
+        let _guard = TPUTS_RECEIVER_LOCK.lock().unwrap();
+        // Safety: we hold the lock.
+        let saved_recv = unsafe { TPUTS_RECEIVER };
+        unsafe { TPUTS_RECEIVER = self as *mut Outputter };
+        self.begin_buffering();
+        let res = curses::tputs(str, affcnt as libc::c_int, tputs_writer);
+        self.end_buffering();
+        unsafe { TPUTS_RECEIVER = saved_recv };
+        res
+    }
+
+    /// Access the outputter for stdout.
+    /// This should only be used from the main thread.
+    pub fn stdoutput() -> &'static mut RefCell<Outputter> {
+        crate::threads::assert_is_main_thread();
+        static mut STDOUTPUT: RefCell<Outputter> =
+            RefCell::new(Outputter::new_from_fd(libc::STDOUT_FILENO));
+        // Safety: this is only called from the main thread.
+        unsafe { &mut STDOUTPUT }
+    }
+}
+
+/// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
+/// RgbColor::NONE if empty.
+fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
+    if candidates.is_empty() {
+        return RgbColor::NONE;
+    }
+
+    let mut first_rgb = RgbColor::NONE;
+    let mut first_named = RgbColor::NONE;
+    for color in candidates {
+        if first_rgb.is_none() && color.is_rgb() {
+            first_rgb = *color;
+        }
+        if first_named.is_none() && color.is_named() {
+            first_named = *color;
+        }
+    }
+
+    // If we have both RGB and named colors, then prefer rgb if term256 is supported.
+    let mut result;
+    let has_term256 = support.contains(ColorSupport::TERM_256COLOR);
+    if (!first_rgb.is_none() && has_term256) || first_named.is_none() {
+        result = first_rgb;
+    } else {
+        result = first_named;
+    }
+    if result.is_none() {
+        result = candidates[0];
+    }
+    result
+}
+
+/// Return the internal color code representing the specified color.
+/// TODO: This code should be refactored to enable sharing with builtin_set_color.
+///       In particular, the argument parsing still isn't fully capable.
+#[allow(clippy::collapsible_else_if)]
+fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
+    let mut is_bold = false;
+    let mut is_underline = false;
+    let mut is_italics = false;
+    let mut is_dim = false;
+    let mut is_reverse = false;
+
+    let mut candidates: Vec<RgbColor> = Vec::new();
+
+    let prefix = L!("--background=");
+
+    let mut next_is_background = false;
+    let mut color_name = WString::new();
+    for next in var.as_list() {
+        color_name.clear();
+        if is_background {
+            if color_name.is_empty() && next_is_background {
+                color_name = next.to_owned();
+                next_is_background = false;
+            } else if next.starts_with(prefix) {
+                // Look for something like "--background=red".
+                color_name = next.slice_from(prefix.char_count()).to_owned();
+            } else if next == "--background" || next == "-b" {
+                // Without argument attached the next token is the color
+                // - if it's another option it's an error.
+                next_is_background = true;
+            } else if next == "--reverse" || next == "-r" {
+                // Reverse should be meaningful in either context
+                is_reverse = true;
+            } else if next.starts_with("-b") {
+                // Look for something like "-bred".
+                // Yes, that length is hardcoded.
+                color_name = next.slice_from(2).to_owned();
+            }
+        } else {
+            if next == "--bold" || next == "-o" {
+                is_bold = true;
+            } else if next == "--underline" || next == "-u" {
+                is_underline = true;
+            } else if next == "--italics" || next == "-i" {
+                is_italics = true;
+            } else if next == "--dim" || next == "-d" {
+                is_dim = true;
+            } else if next == "--reverse" || next == "-r" {
+                is_reverse = true;
+            } else {
+                color_name = next.clone();
+            }
+        }
+
+        if !color_name.is_empty() {
+            let color: Option<RgbColor> = RgbColor::from_wstr(&color_name);
+            if let Some(color) = color {
+                candidates.push(color);
+            }
+        }
+    }
+
+    let mut result = best_color(&candidates, get_color_support());
+    if result.is_none() {
+        result = RgbColor::NORMAL;
+    }
+    result.set_bold(is_bold);
+    result.set_underline(is_underline);
+    result.set_italics(is_italics);
+    result.set_dim(is_dim);
+    result.set_reverse(is_reverse);
+    result
+}
+
+/// Write specified multibyte string.
+/// The Borrow allows us to avoid annoying borrows at the call site.
+pub fn writembs_check<T: Borrow<Option<CString>>>(
+    outp: &mut Outputter,
+    mbs: T,
+    mbs_name: &str,
+    critical: bool,
+    file: &str,
+    line: u32,
+) {
+    let mbs: &Option<CString> = mbs.borrow();
+    if let Some(mbs) = mbs {
+        outp.term_puts(mbs, 1);
+    } else if critical {
+        let text = wgettext_fmt!(
+            "Tried to use terminfo string %s on line %ld of %s, which is \
+             undefined. Please report this error to %s",
+            mbs_name,
+            line,
+            file,
+            crate::common::PACKAGE_BUGREPORT,
+        );
+        FLOG!(error, text);
     }
 }

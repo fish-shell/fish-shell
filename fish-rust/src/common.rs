@@ -6,6 +6,7 @@ use crate::expand::{
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
 use crate::ffi::{self, fish_wcwidth};
+use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::termsize::Termsize;
@@ -32,7 +33,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
-use std::sync::Mutex;
+use std::sync::{Mutex, TryLockError};
 use std::time;
 use widestring::Utf32String;
 use widestring_suffix::widestrs;
@@ -79,6 +80,9 @@ const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
 pub const ENCODE_DIRECT_BASE: char = '\u{F600}';
 pub const ENCODE_DIRECT_END: char = char_offset(ENCODE_DIRECT_BASE, 256);
+
+// The address where bug reports for this package should be sent.
+pub const PACKAGE_BUGREPORT: &str = "https://github.com/fish-shell/fish-shell/issues";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeStringStyle {
@@ -1673,7 +1677,7 @@ pub fn is_windows_subsystem_for_linux() -> bool {
         // is bypassed. We intentionally do not include this in the error message because
         // it'll only allow fish to run but not to actually work. Here be dragons!
         if env::var_os("FISH_NO_WSL_CHECK").is_none() {
-            crate::flog::FLOG!(
+            FLOG!(
                 error,
                 concat!(
                     "This version of WSL has known bugs that prevent fish from working.\n",
@@ -1825,6 +1829,49 @@ where
 
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}
+
+pub fn assert_is_locked_impl_do_not_use_directly<T>(
+    mutex: &Mutex<T>,
+    who: &str,
+    lineno: usize,
+    filename: &str,
+) {
+    match mutex.try_lock() {
+        Err(TryLockError::WouldBlock) => {
+            // Expected case.
+        }
+        Err(TryLockError::Poisoned(_)) => {
+            panic!(
+                "Mutex {} is poisoned in {} at line {}",
+                who, filename, lineno
+            );
+        }
+        Ok(_) => {
+            FLOG!(
+                error,
+                who,
+                "is not locked when it should be in",
+                filename,
+                "at line",
+                lineno
+            );
+            FLOG!(error, "Break on debug_thread_error to debug.");
+            debug_thread_error();
+        }
+    }
+}
+
+macro_rules! assert_is_locked {
+    ($lock:expr) => {
+        crate::common::assert_is_locked_impl_do_not_use_directly(
+            $lock,
+            stringify!($lock),
+            line!() as usize,
+            file!(),
+        )
+    };
+}
+pub(crate) use assert_is_locked;
 
 /// This function attempts to distinguish between a console session (at the actual login vty) and a
 /// session within a terminal emulator inside a desktop environment or over SSH. Unfortunately
@@ -2212,12 +2259,19 @@ mod tests {
         let obj = ScopeGuarding::commit(obj);
         assert_eq!(obj.value, "nu");
     }
+
+    pub fn test_assert_is_locked() {
+        let lock = std::sync::Mutex::new(());
+        let _guard = lock.lock().unwrap();
+        assert_is_locked!(&lock);
+    }
 }
 
 crate::ffi_tests::add_test!("escape_string", tests::test_escape_string);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert_ascii);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert_private_use);
+crate::ffi_tests::add_test!("assert_is_locked", tests::test_assert_is_locked);
 
 #[cxx::bridge]
 mod common_ffi {

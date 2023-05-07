@@ -36,10 +36,31 @@ pub fn term() -> Option<Arc<Term>> {
         .map(Arc::clone)
 }
 
+/// Convert a nul-terminated pointer, which must not be itself null, to a CString.
+fn ptr_to_cstr(ptr: *const libc::c_char) -> CString {
+    assert!(!ptr.is_null());
+    unsafe { CStr::from_ptr(ptr).to_owned() }
+}
+
+/// Convert a nul-terminated pointer to a CString, or None if the pointer is null.
+fn try_ptr_to_cstr(ptr: *const libc::c_char) -> Option<CString> {
+    if ptr.is_null() {
+        None
+    } else {
+        Some(ptr_to_cstr(ptr))
+    }
+}
+
 /// Private module exposing system curses ffi.
 mod sys {
     pub const OK: i32 = 0;
     pub const ERR: i32 = -1;
+
+    /// tputs callback argument type and the callback type itself.
+    /// N.B. The C++ had a check for TPUTS_USES_INT_ARG for the first parameter of tputs
+    /// which was to support OpenIndiana, which used a char.
+    pub type tputs_arg = libc::c_int;
+    pub type putc_t = extern "C" fn(tputs_arg) -> libc::c_int;
 
     extern "C" {
         /// The ncurses `cur_term` TERMINAL pointer.
@@ -69,8 +90,13 @@ mod sys {
             id: *const libc::c_char,
             area: *mut *mut libc::c_char,
         ) -> *const libc::c_char;
+
+        pub fn tparm(str: *const libc::c_char, ...) -> *const libc::c_char;
+
+        pub fn tputs(str: *const libc::c_char, affcnt: libc::c_int, putc: putc_t) -> libc::c_int;
     }
 }
+pub use sys::tputs_arg as TputsArg;
 
 /// The safe wrapper around curses functionality, initialized by a successful call to [`setup()`]
 /// and obtained thereafter by calls to [`term()`].
@@ -79,9 +105,19 @@ mod sys {
 /// functionality that is normally performed using `cur_term` should be done via `Term` instead.
 pub struct Term {
     // String capabilities
+    pub enter_bold_mode: Option<CString>,
     pub enter_italics_mode: Option<CString>,
     pub exit_italics_mode: Option<CString>,
     pub enter_dim_mode: Option<CString>,
+    pub enter_underline_mode: Option<CString>,
+    pub exit_underline_mode: Option<CString>,
+    pub enter_reverse_mode: Option<CString>,
+    pub enter_standout_mode: Option<CString>,
+    pub set_a_foreground: Option<CString>,
+    pub set_foreground: Option<CString>,
+    pub set_a_background: Option<CString>,
+    pub set_background: Option<CString>,
+    pub exit_attribute_mode: Option<CString>,
 
     // Number capabilities
     pub max_colors: Option<i32>,
@@ -96,9 +132,19 @@ impl Term {
     fn new() -> Self {
         Term {
             // String capabilities
+            enter_bold_mode: StringCap::new("md").lookup(),
             enter_italics_mode: StringCap::new("ZH").lookup(),
             exit_italics_mode: StringCap::new("ZR").lookup(),
             enter_dim_mode: StringCap::new("mh").lookup(),
+            enter_underline_mode: StringCap::new("us").lookup(),
+            exit_underline_mode: StringCap::new("ue").lookup(),
+            enter_reverse_mode: StringCap::new("mr").lookup(),
+            enter_standout_mode: StringCap::new("so").lookup(),
+            set_a_foreground: StringCap::new("AF").lookup(),
+            set_foreground: StringCap::new("Sf").lookup(),
+            set_a_background: StringCap::new("AB").lookup(),
+            set_background: StringCap::new("Sb").lookup(),
+            exit_attribute_mode: StringCap::new("me").lookup(),
 
             // Number capabilities
             max_colors: NumberCap::new("Co").lookup(),
@@ -124,7 +170,7 @@ impl Capability for StringCap {
                 NULL => None,
                 // termcap spec says nul is not allowed in terminal sequences and must be encoded;
                 // so the terminating NUL is the end of the string.
-                result => Some(CStr::from_ptr(result).to_owned()),
+                result => Some(ptr_to_cstr(result)),
             }
         }
     }
@@ -270,4 +316,34 @@ impl FlagCap {
     const fn new(code: &str) -> Self {
         FlagCap(Code::new(code))
     }
+}
+
+/// Covers over tparm().
+pub fn tparm0(cap: &CStr) -> Option<CString> {
+    // Take the lock because tparm races with del_curterm, etc.
+    let _term = TERM.lock().unwrap();
+    let cap_ptr = cap.as_ptr() as *mut libc::c_char;
+    // Safety: we're trusting tparm here.
+    unsafe {
+        // Check for non-null and non-empty string.
+        assert!(!cap_ptr.is_null() && cap_ptr.read() != 0);
+        try_ptr_to_cstr(tparm(cap_ptr))
+    }
+}
+
+pub fn tparm1(cap: &CStr, param1: i32) -> Option<CString> {
+    // Take the lock because tparm races with del_curterm, etc.
+    let _term: std::sync::MutexGuard<Option<Arc<Term>>> = TERM.lock().unwrap();
+    assert!(!cap.to_bytes().is_empty());
+    let cap_ptr = cap.as_ptr() as *mut libc::c_char;
+    // Safety: we're trusting tparm here.
+    unsafe { try_ptr_to_cstr(tparm(cap_ptr, param1 as libc::c_int)) }
+}
+
+/// Wrapper over tputs.
+/// The caller is responsible for synchronization.
+pub fn tputs(str: &CStr, affcnt: libc::c_int, putc: sys::putc_t) -> libc::c_int {
+    let str_ptr = str.as_ptr() as *mut libc::c_char;
+    // Safety: we're trusting tputs here.
+    unsafe { sys::tputs(str_ptr, affcnt, putc) }
 }

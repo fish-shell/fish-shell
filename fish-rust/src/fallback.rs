@@ -120,10 +120,6 @@ pub fn fish_mkstemp_cloexec(name_template: CString) -> (RawFd, CString) {
     (fd, unsafe { CString::from_raw(name) })
 }
 
-pub fn fish_tparm() {
-    todo!()
-}
-
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
     use std::char::ToLowercase;
     use widestring::utfstr::CharsUtf32;

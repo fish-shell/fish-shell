@@ -94,7 +94,9 @@ jobs:
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
-        sudo pip3 install pexpect
+        # Don't install pexpect here because this constantly blows the time budget.
+        # Try again once the rust port is done and we're hopefully not as slow anymore.
+        # sudo pip3 install pexpect
     - name: cmake
       env:
           CC: clang

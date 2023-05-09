@@ -28,6 +28,7 @@ use crate::wutil::printf::sprintf;
 use crate::wutil::wgettext_fmt;
 use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
+use paste::paste;
 use std::ops::{ControlFlow, Index, IndexMut};
 use widestring_suffix::widestrs;
 
@@ -160,6 +161,18 @@ trait NodeMut: Node + AcceptorMut + ConcreteNodeMut {
     fn as_node(&self) -> &dyn Node;
 }
 
+macro_rules! fn_return_option_none {
+    ($($name:ident),*) => {
+        $(
+            paste!{
+                fn [<as_ $name>](&self) -> Option<&[<$name:camel>]> {
+                    None
+                }
+            }
+        )*
+    };
+}
+
 pub trait ConcreteNode {
     // Cast to any sub-trait.
     fn as_leaf(&self) -> Option<&dyn Leaf> {
@@ -173,110 +186,54 @@ pub trait ConcreteNode {
     }
 
     // Cast to any node type.
-    fn as_redirection(&self) -> Option<&Redirection> {
-        None
-    }
-    fn as_variable_assignment(&self) -> Option<&VariableAssignment> {
-        None
-    }
-    fn as_variable_assignment_list(&self) -> Option<&VariableAssignmentList> {
-        None
-    }
-    fn as_argument_or_redirection(&self) -> Option<&ArgumentOrRedirection> {
-        None
-    }
-    fn as_argument_or_redirection_list(&self) -> Option<&ArgumentOrRedirectionList> {
-        None
-    }
-    fn as_statement(&self) -> Option<&Statement> {
-        None
-    }
-    fn as_job_pipeline(&self) -> Option<&JobPipeline> {
-        None
-    }
-    fn as_job_conjunction(&self) -> Option<&JobConjunction> {
-        None
-    }
-    fn as_for_header(&self) -> Option<&ForHeader> {
-        None
-    }
-    fn as_while_header(&self) -> Option<&WhileHeader> {
-        None
-    }
-    fn as_function_header(&self) -> Option<&FunctionHeader> {
-        None
-    }
-    fn as_begin_header(&self) -> Option<&BeginHeader> {
-        None
-    }
-    fn as_block_statement(&self) -> Option<&BlockStatement> {
-        None
-    }
-    fn as_if_clause(&self) -> Option<&IfClause> {
-        None
-    }
-    fn as_elseif_clause(&self) -> Option<&ElseifClause> {
-        None
-    }
-    fn as_elseif_clause_list(&self) -> Option<&ElseifClauseList> {
-        None
-    }
-    fn as_else_clause(&self) -> Option<&ElseClause> {
-        None
-    }
-    fn as_if_statement(&self) -> Option<&IfStatement> {
-        None
-    }
-    fn as_case_item(&self) -> Option<&CaseItem> {
-        None
-    }
-    fn as_switch_statement(&self) -> Option<&SwitchStatement> {
-        None
-    }
-    fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
-        None
-    }
-    fn as_not_statement(&self) -> Option<&NotStatement> {
-        None
-    }
-    fn as_job_continuation(&self) -> Option<&JobContinuation> {
-        None
-    }
-    fn as_job_continuation_list(&self) -> Option<&JobContinuationList> {
-        None
-    }
-    fn as_job_conjunction_continuation(&self) -> Option<&JobConjunctionContinuation> {
-        None
-    }
-    fn as_andor_job(&self) -> Option<&AndorJob> {
-        None
-    }
-    fn as_andor_job_list(&self) -> Option<&AndorJobList> {
-        None
-    }
-    fn as_freestanding_argument_list(&self) -> Option<&FreestandingArgumentList> {
-        None
-    }
-    fn as_job_conjunction_continuation_list(&self) -> Option<&JobConjunctionContinuationList> {
-        None
-    }
-    fn as_maybe_newlines(&self) -> Option<&MaybeNewlines> {
-        None
-    }
-    fn as_case_item_list(&self) -> Option<&CaseItemList> {
-        None
-    }
-    fn as_argument(&self) -> Option<&Argument> {
-        None
-    }
-    fn as_argument_list(&self) -> Option<&ArgumentList> {
-        None
-    }
-    fn as_job_list(&self) -> Option<&JobList> {
-        None
-    }
+    fn_return_option_none!(
+        redirection,
+        variable_assignment,
+        variable_assignment_list,
+        argument_or_redirection,
+        argument_or_redirection_list,
+        statement,
+        job_pipeline,
+        job_conjunction,
+        for_header,
+        while_header,
+        function_header,
+        begin_header,
+        block_statement,
+        if_clause,
+        elseif_clause,
+        elseif_clause_list,
+        else_clause,
+        if_statement,
+        case_item,
+        switch_statement,
+        decorated_statement,
+        not_statement,
+        job_continuation,
+        job_continuation_list,
+        job_conjunction_continuation,
+        andor_job,
+        andor_job_list,
+        freestanding_argument_list,
+        job_conjunction_continuation_list,
+        maybe_newlines,
+        case_item_list,
+        argument,
+        argument_list,
+        job_list
+    );
 }
-
+macro_rules! fn_mut_self_return_option_none {
+    ($($name:ident),*) => {
+        $(
+            paste!{
+                fn [<as_mut_ $name>](&mut self) -> Option<&mut [<$name:camel>]> {
+                    None
+            }
+        }
+        )*
+    };
+}
 trait ConcreteNodeMut {
     // Cast to any sub-trait.
     fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
@@ -290,110 +247,42 @@ trait ConcreteNodeMut {
     }
 
     // Cast to any node type.
-    fn as_mut_redirection(&mut self) -> Option<&mut Redirection> {
-        None
-    }
-    fn as_mut_variable_assignment(&mut self) -> Option<&mut VariableAssignment> {
-        None
-    }
-    fn as_mut_variable_assignment_list(&mut self) -> Option<&mut VariableAssignmentList> {
-        None
-    }
-    fn as_mut_argument_or_redirection(&mut self) -> Option<&mut ArgumentOrRedirection> {
-        None
-    }
-    fn as_mut_argument_or_redirection_list(&mut self) -> Option<&mut ArgumentOrRedirectionList> {
-        None
-    }
-    fn as_mut_statement(&mut self) -> Option<&mut Statement> {
-        None
-    }
-    fn as_mut_job_pipeline(&mut self) -> Option<&mut JobPipeline> {
-        None
-    }
-    fn as_mut_job_conjunction(&mut self) -> Option<&mut JobConjunction> {
-        None
-    }
-    fn as_mut_for_header(&mut self) -> Option<&mut ForHeader> {
-        None
-    }
-    fn as_mut_while_header(&mut self) -> Option<&mut WhileHeader> {
-        None
-    }
-    fn as_mut_function_header(&mut self) -> Option<&mut FunctionHeader> {
-        None
-    }
-    fn as_mut_begin_header(&mut self) -> Option<&mut BeginHeader> {
-        None
-    }
-    fn as_mut_block_statement(&mut self) -> Option<&mut BlockStatement> {
-        None
-    }
-    fn as_mut_if_clause(&mut self) -> Option<&mut IfClause> {
-        None
-    }
-    fn as_mut_elseif_clause(&mut self) -> Option<&mut ElseifClause> {
-        None
-    }
-    fn as_mut_elseif_clause_list(&mut self) -> Option<&mut ElseifClauseList> {
-        None
-    }
-    fn as_mut_else_clause(&mut self) -> Option<&mut ElseClause> {
-        None
-    }
-    fn as_mut_if_statement(&mut self) -> Option<&mut IfStatement> {
-        None
-    }
-    fn as_mut_case_item(&mut self) -> Option<&mut CaseItem> {
-        None
-    }
-    fn as_mut_switch_statement(&mut self) -> Option<&mut SwitchStatement> {
-        None
-    }
-    fn as_mut_decorated_statement(&mut self) -> Option<&mut DecoratedStatement> {
-        None
-    }
-    fn as_mut_not_statement(&mut self) -> Option<&mut NotStatement> {
-        None
-    }
-    fn as_mut_job_continuation(&mut self) -> Option<&mut JobContinuation> {
-        None
-    }
-    fn as_mut_job_continuation_list(&mut self) -> Option<&mut JobContinuationList> {
-        None
-    }
-    fn as_mut_job_conjunction_continuation(&mut self) -> Option<&mut JobConjunctionContinuation> {
-        None
-    }
-    fn as_mut_andor_job(&mut self) -> Option<&mut AndorJob> {
-        None
-    }
-    fn as_mut_andor_job_list(&mut self) -> Option<&mut AndorJobList> {
-        None
-    }
-    fn as_mut_freestanding_argument_list(&mut self) -> Option<&mut FreestandingArgumentList> {
-        None
-    }
-    fn as_mut_job_conjunction_continuation_list(
-        &mut self,
-    ) -> Option<&mut JobConjunctionContinuationList> {
-        None
-    }
-    fn as_mut_maybe_newlines(&mut self) -> Option<&mut MaybeNewlines> {
-        None
-    }
-    fn as_mut_case_item_list(&mut self) -> Option<&mut CaseItemList> {
-        None
-    }
-    fn as_mut_argument(&mut self) -> Option<&mut Argument> {
-        None
-    }
-    fn as_mut_argument_list(&mut self) -> Option<&mut ArgumentList> {
-        None
-    }
-    fn as_mut_job_list(&mut self) -> Option<&mut JobList> {
-        None
-    }
+    fn_mut_self_return_option_none!(
+        redirection,
+        variable_assignment,
+        variable_assignment_list,
+        argument_or_redirection,
+        argument_or_redirection_list,
+        statement,
+        job_pipeline,
+        job_conjunction,
+        for_header,
+        while_header,
+        function_header,
+        begin_header,
+        block_statement,
+        if_clause,
+        elseif_clause,
+        elseif_clause_list,
+        else_clause,
+        if_statement,
+        case_item,
+        switch_statement,
+        decorated_statement,
+        not_statement,
+        job_continuation,
+        job_continuation_list,
+        job_conjunction_continuation,
+        andor_job,
+        andor_job_list,
+        freestanding_argument_list,
+        job_conjunction_continuation_list,
+        maybe_newlines,
+        case_item_list,
+        argument,
+        argument_list,
+        job_list
+    );
 }
 
 /// Trait for all "leaf" nodes: nodes with no ast children.
@@ -5126,199 +5015,101 @@ impl BlockStatement {
         &self.end
     }
 }
+macro_rules! try_as {
+    ($($name:ident),*) => {
+        $(
+            paste! {
+                fn [<try_as_ $name>](&self) -> *const [<$name:camel>] {
+                    match self {
+                        StatementVariant::[<$name:camel>](node) => node,
+                        _ => std::ptr::null(),
+                    }
+                }
+            }
+        )*
+    }
+}
 
 impl StatementVariant {
-    fn try_as_not_statement(&self) -> *const NotStatement {
-        match self {
-            StatementVariant::NotStatement(node) => node,
-            _ => std::ptr::null(),
-        }
-    }
-    fn try_as_block_statement(&self) -> *const BlockStatement {
-        match self {
-            StatementVariant::BlockStatement(node) => node,
-            _ => std::ptr::null(),
-        }
-    }
-    fn try_as_if_statement(&self) -> *const IfStatement {
-        match self {
-            StatementVariant::IfStatement(node) => node,
-            _ => std::ptr::null(),
-        }
-    }
-    fn try_as_switch_statement(&self) -> *const SwitchStatement {
-        match self {
-            StatementVariant::SwitchStatement(node) => node,
-            _ => std::ptr::null(),
-        }
-    }
-    fn try_as_decorated_statement(&self) -> *const DecoratedStatement {
-        match self {
-            StatementVariant::DecoratedStatement(node) => node,
-            _ => std::ptr::null(),
-        }
+    try_as!(
+        not_statement,
+        block_statement,
+        if_statement,
+        switch_statement,
+        decorated_statement
+    );
+}
+
+macro_rules! impl_try_as{
+    ($($name:ident),*) => {
+        $(
+            paste! {
+                fn [<try_as_ $name>](&self) -> *const [<$name:camel>] {
+                    match self.as_node().[<as_ $name>]() {
+                        Some(node) => node,
+                        None => std::ptr::null(),
+                    }
+                }
+            }
+        )*
     }
 }
 
-#[rustfmt::skip]
 impl NodeFfi<'_> {
-    fn try_as_argument(&self) -> *const Argument {
-        match self.as_node().as_argument() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_begin_header(&self) -> *const BeginHeader {
-        match self.as_node().as_begin_header() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_block_statement(&self) -> *const BlockStatement {
-        match self.as_node().as_block_statement() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_decorated_statement(&self) -> *const DecoratedStatement {
-        match self.as_node().as_decorated_statement() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_for_header(&self) -> *const ForHeader {
-        match self.as_node().as_for_header() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_function_header(&self) -> *const FunctionHeader {
-        match self.as_node().as_function_header() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_if_clause(&self) -> *const IfClause {
-        match self.as_node().as_if_clause() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_if_statement(&self) -> *const IfStatement {
-        match self.as_node().as_if_statement() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_job_conjunction(&self) -> *const JobConjunction {
-        match self.as_node().as_job_conjunction() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_job_conjunction_continuation(&self) -> *const JobConjunctionContinuation {
-        match self.as_node().as_job_conjunction_continuation() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_job_continuation(&self) -> *const JobContinuation {
-        match self.as_node().as_job_continuation() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_job_list(&self) -> *const JobList {
-        match self.as_node().as_job_list() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_job_pipeline(&self) -> *const JobPipeline {
-        match self.as_node().as_job_pipeline() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_not_statement(&self) -> *const NotStatement {
-        match self.as_node().as_not_statement() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_switch_statement(&self) -> *const SwitchStatement {
-        match self.as_node().as_switch_statement() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
-    }
-    fn try_as_while_header(&self) -> *const WhileHeader {
-        match self.as_node().as_while_header() {
-            Some(node) => node,
-            None => std::ptr::null(),
-        }
+    impl_try_as!(
+        argument,
+        begin_header,
+        block_statement,
+        decorated_statement,
+        for_header,
+        function_header,
+        if_clause,
+        if_statement,
+        job_conjunction,
+        job_conjunction_continuation,
+        job_continuation,
+        job_list,
+        job_pipeline,
+        not_statement,
+        switch_statement,
+        while_header
+    );
+}
+
+macro_rules! method_as_fn{
+    ($($name:ident),*) => {
+        $(
+            paste! {
+                fn [<as_ $name>](&self) -> &[<$name:camel>] {
+                    self.as_node().[<as_ $name>]().unwrap()
+                }
+            }
+        )*
     }
 }
 
-#[rustfmt::skip]
 impl NodeFfi<'_> {
-        fn as_if_clause(&self) -> &IfClause {
-            self.as_node().as_if_clause().unwrap()
-        }
-        fn as_job_conjunction(&self) -> &JobConjunction {
-            self.as_node().as_job_conjunction().unwrap()
-        }
-        fn as_job_pipeline(&self) -> &JobPipeline {
-            self.as_node().as_job_pipeline().unwrap()
-        }
-        fn as_argument(&self) -> &Argument {
-            self.as_node().as_argument().unwrap()
-        }
-        fn as_begin_header(&self) -> &BeginHeader {
-            self.as_node().as_begin_header().unwrap()
-        }
-        fn as_block_statement(&self) -> &BlockStatement {
-            self.as_node().as_block_statement().unwrap()
-        }
-        fn as_decorated_statement(&self) -> &DecoratedStatement {
-            self.as_node().as_decorated_statement().unwrap()
-        }
-        fn as_for_header(&self) -> &ForHeader {
-            self.as_node().as_for_header().unwrap()
-        }
-        fn as_freestanding_argument_list(&self) -> &FreestandingArgumentList {
-            self.as_node().as_freestanding_argument_list().unwrap()
-        }
-        fn as_function_header(&self) -> &FunctionHeader {
-            self.as_node().as_function_header().unwrap()
-        }
-        fn as_if_statement(&self) -> &IfStatement {
-            self.as_node().as_if_statement().unwrap()
-        }
-        fn as_job_conjunction_continuation(&self) -> &JobConjunctionContinuation {
-            self.as_node().as_job_conjunction_continuation().unwrap()
-        }
-        fn as_job_continuation(&self) -> &JobContinuation {
-            self.as_node().as_job_continuation().unwrap()
-        }
-        fn as_job_list(&self) -> &JobList {
-            self.as_node().as_job_list().unwrap()
-        }
-        fn as_not_statement(&self) -> &NotStatement {
-            self.as_node().as_not_statement().unwrap()
-        }
-        fn as_redirection(&self) -> &Redirection {
-            self.as_node().as_redirection().unwrap()
-        }
-        fn as_statement(&self) -> &Statement {
-            self.as_node().as_statement().unwrap()
-        }
-        fn as_switch_statement(&self) -> &SwitchStatement {
-            self.as_node().as_switch_statement().unwrap()
-        }
-        fn as_while_header(&self) -> &WhileHeader {
-            self.as_node().as_while_header().unwrap()
-        }
+    method_as_fn!(
+        if_clause,
+        job_conjunction,
+        job_pipeline,
+        argument,
+        begin_header,
+        block_statement,
+        decorated_statement,
+        for_header,
+        freestanding_argument_list,
+        function_header,
+        if_statement,
+        job_conjunction_continuation,
+        job_continuation,
+        job_list,
+        not_statement,
+        redirection,
+        statement,
+        switch_statement,
+        while_header
+    );
 }
 
 impl StatementVariant {
@@ -5345,379 +5136,104 @@ impl BlockStatementHeaderVariant {
     }
 }
 
-impl AndorJobList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl AndorJob {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl ArgumentList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl Argument {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl ArgumentOrRedirectionList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl ArgumentOrRedirection {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl BeginHeader {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl BlockStatement {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl CaseItemList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl CaseItem {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl DecoratedStatementDecorator {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl DecoratedStatement {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl ElseClause {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl ElseifClauseList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl ElseifClause {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl ForHeader {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl FreestandingArgumentList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl FunctionHeader {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl IfClause {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl IfStatement {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobConjunctionContinuationList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobConjunctionContinuation {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobConjunctionDecorator {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobConjunction {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobContinuationList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobContinuation {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl JobPipeline {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordBegin {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordCase {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordElse {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordEnd {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordFor {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordFunction {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordIf {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordIn {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordNot {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordTime {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl KeywordWhile {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl MaybeNewlines {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl NotStatement {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl Redirection {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl SemiNl {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl Statement {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl String_ {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl SwitchStatement {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl TokenBackground {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl TokenConjunction {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl TokenPipe {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl TokenRedirection {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl VariableAssignmentList {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl VariableAssignment {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
-    }
-}
-impl WhileHeader {
-    fn ptr(&self) -> Box<NodeFfi<'_>> {
-        Box::new(NodeFfi::new(self))
+macro_rules! impl_ptr{
+    ($($name:ident),*) => {
+        $(impl $name{
+            fn ptr(&self) -> Box<NodeFfi<'_>> {
+                Box::new(NodeFfi::new(self))
+            }
+        })*
     }
 }
 
-impl VariableAssignment {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
+impl_ptr!(
+    AndorJobList,
+    AndorJob,
+    ArgumentList,
+    Argument,
+    ArgumentOrRedirectionList,
+    ArgumentOrRedirection,
+    BeginHeader,
+    BlockStatement,
+    CaseItemList,
+    CaseItem,
+    DecoratedStatementDecorator,
+    DecoratedStatement,
+    ElseClause,
+    ElseifClauseList,
+    ElseifClause,
+    ForHeader,
+    FreestandingArgumentList,
+    FunctionHeader,
+    IfClause,
+    IfStatement,
+    JobConjunctionContinuationList,
+    JobConjunctionContinuation,
+    JobConjunctionDecorator,
+    JobConjunction,
+    JobContinuationList,
+    JobContinuation,
+    JobList,
+    JobPipeline,
+    KeywordBegin,
+    KeywordCase,
+    KeywordElse,
+    KeywordEnd,
+    KeywordFor,
+    KeywordFunction,
+    KeywordIf,
+    KeywordIn,
+    KeywordNot,
+    KeywordTime,
+    KeywordWhile,
+    MaybeNewlines,
+    NotStatement,
+    Redirection,
+    SemiNl,
+    Statement,
+    String_,
+    SwitchStatement,
+    TokenBackground,
+    TokenConjunction,
+    TokenPipe,
+    TokenRedirection,
+    VariableAssignmentList,
+    VariableAssignment,
+    WhileHeader
+);
+
+macro_rules! impl_range{
+    ($($name:ident),*) => {
+        $(
+            impl $name{
+                fn range(&self) -> SourceRange {
+                    self.range.unwrap()
+                }
+            }
+        )*
     }
 }
-impl TokenConjunction {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl MaybeNewlines {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl TokenPipe {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordNot {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl DecoratedStatementDecorator {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordEnd {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordCase {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordElse {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordIf {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordBegin {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordFunction {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordWhile {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordFor {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordIn {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl SemiNl {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl JobConjunctionDecorator {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl TokenBackground {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl KeywordTime {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl TokenRedirection {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl String_ {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
-impl Argument {
-    fn range(&self) -> SourceRange {
-        self.range.unwrap()
-    }
-}
+impl_range!(
+    VariableAssignment,
+    TokenConjunction,
+    MaybeNewlines,
+    TokenPipe,
+    KeywordNot,
+    DecoratedStatementDecorator,
+    KeywordEnd,
+    KeywordCase,
+    KeywordElse,
+    KeywordIf,
+    KeywordBegin,
+    KeywordFunction,
+    KeywordWhile,
+    KeywordFor,
+    KeywordIn,
+    SemiNl,
+    JobConjunctionDecorator,
+    TokenBackground,
+    KeywordTime,
+    TokenRedirection,
+    String_,
+    Argument
+);

@@ -1,6 +1,8 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
 #REQUIRES: uname -r | grep -qv Microsoft
+# disable on github actions because it's flakey
+#REQUIRES: test -z "$CI"
 
 isolated-tmux-start
 

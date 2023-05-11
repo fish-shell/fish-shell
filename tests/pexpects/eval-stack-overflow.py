@@ -19,6 +19,7 @@ expect_prompt()
 sendline("echo cat dog")
 expect_prompt("cat dog")
 
+sleep(0.5)
 sendline("eval (string replace dog tiger -- $history[1])")
 expect_prompt("cat tiger")
 

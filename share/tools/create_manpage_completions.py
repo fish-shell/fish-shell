@@ -837,6 +837,8 @@ def parse_manpage_at_path(manpage_path, output_directory):
 
     # Clear the output list
     built_command_output[:] = []
+    global already_output_completions
+    already_output_completions = {}
 
     if DEROFF_ONLY:
         parsers = [TypeDeroffManParser()]

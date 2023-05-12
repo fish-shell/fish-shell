@@ -601,6 +601,7 @@ class TypeDarwinManParser(ManParser):
         line = line.replace(".Nm", CMDNAME)
         line = line.replace("\\ ", " ")
         line = line.replace("\& ", "")
+        line = line.replace(".Pp", "")
         return line
 
     def is_option(self, line):

@@ -787,6 +787,26 @@ def parse_manpage_at_path(manpage_path, output_directory):
     if CMDNAME in ignoredcommands:
         return
 
+    # Ignore some commands' gazillion man pages
+    # for subcommands - especially things we already have
+    ignored_prefixes = [
+        "bundle-"
+        "cargo-",
+        "ffmpeg-",
+        "flatpak-",
+        "git-",
+        "npm-",
+        "openssl-",
+        "ostree-",
+        "perf-",
+        "perl",
+        "pip-",
+        "zsh"
+    ]
+    for prefix in ignored_prefixes:
+        if CMDNAME.startswith(prefix):
+            return
+
     # Clear diagnostics
     global diagnostic_indent
     diagnostic_output[:] = []
@@ -824,12 +844,6 @@ def parse_manpage_at_path(manpage_path, output_directory):
     fd.close()
 
     manpage = str(manpage)
-
-    # Ignore perl's gazillion man pages
-    ignored_prefixes = ["perl", "zsh"]
-    for prefix in ignored_prefixes:
-        if CMDNAME.startswith(prefix):
-            return
 
     # Ignore the millions of links to BUILTIN(1)
     if "BUILTIN 1" in manpage or "builtin.1" in manpage:

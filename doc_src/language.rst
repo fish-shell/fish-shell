@@ -683,7 +683,7 @@ Unlike all the other expansions, variable expansion also happens in double quote
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
-If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`cartesian product <cartesian-product>` section for more information.
+If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`Combining Lists <cartesian-product>` section for more information.
 
 Unlike other shells, fish doesn't do what is known as "Word Splitting". Once a variable is set to a particular set of elements, those elements expand as themselves. They aren't split on spaces or newlines or anything::
 
@@ -831,7 +831,7 @@ If there is no "," or variable expansion between the curly braces, they will not
     > echo {{a,b}}
     {a} {b} # because the inner brace pair is expanded, but the outer isn't.
 
-If after expansion there is nothing between the braces, the argument will be removed (see :ref:`the cartesian product section <cartesian-product>`)::
+If after expansion there is nothing between the braces, the argument will be removed (see :ref:`the Combining Lists <cartesian-product>` section)::
 
     > echo foo-{$undefinedvar}
     # Output is an empty line, just like a bare `echo`.
@@ -845,49 +845,44 @@ To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 
 .. _cartesian-product:
 
-Combining lists (Cartesian Product)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Combining lists
+^^^^^^^^^^^^^^^
 
-When lists are expanded with other parts attached, they are expanded with these parts still attached. Even if two lists are attached to each other, they are expanded in all combinations. This is referred to as the "cartesian product" (like in mathematics), and works basically like :ref:`brace expansion <expand-brace>`.
+When lists are expanded with other parts attached, they are expanded with these parts still attached. That means any string before a list will be concatenated to each element, and two lists will be expanded in all combinations  - every element of the first with every element of the second.
+
+This works basically like :ref:`brace expansion <expand-brace>`.
 
 Examples::
 
     # Brace expansion is the most familiar:
-    # All elements in the brace combine with the parts outside of the braces
+    # All elements in the brace combine with
+    # the parts outside of the braces
     >_ echo {good,bad}" apples"
     good apples bad apples
 
     # The same thing happens with variable expansion.
-    >_ set -l a x y z
-    >_ set -l b 1 2 3
-
-    # $a is {x,y,z}, $b is {1,2,3},
-    # so this is `echo {x,y,z}{1,2,3}`
-    >_ echo $a$b
+    >_ set -l a x y z; set -l b 1 2 3
+    >_ echo $a$b # same as {x,y,z}{1,2,3}
     x1 y1 z1 x2 y2 z2 x3 y3 z3
 
-    # Same thing if something is between the lists
-    >_ echo $a"-"$b
-    x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3
+A result of this is that, if a list has no elements, this combines the string with no elements, which means the entire token is removed!
 
-    # Or a brace expansion and a variable
-    >_ echo {x,y,z}$b
-    x1 y1 z1 x2 y2 z2 x3 y3 z3
+::
 
-    # A combined brace-variable expansion
-    >_ echo {$b}word
-    1word 2word 3word
-
-    # Special case: If $c has no elements, this expands to nothing
+    >_ set -l c # <- this list is empty!
     >_ echo {$c}word
-    # Output is an empty line
+    # Output is an empty line - the "word" part is gone
+
+This can be quite useful. For example, if you want to go through all the files in all the directories in :envvar:`PATH`, use
+::
+
+    for file in $PATH/*
+
+Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in :envvar:`PATH`, the right answer here is to expand to no files.
 
 Sometimes this may be unwanted, especially that tokens can disappear after expansion. In those cases, you should double-quote variables - ``echo "$c"word``.
 
-This also happens after :ref:`command substitution <expand-command-substitution>`. To avoid tokens disappearing there, make the inner command return a trailing newline, or store the output in a variable and double-quote it.
-
-E.g.
-::
+This also happens after :ref:`command substitution <expand-command-substitution>`. To avoid tokens disappearing there, make the inner command return a trailing newline, or double-quote it::
 
     >_ set b 1 2 3
     >_ echo (echo x)$b
@@ -900,13 +895,8 @@ E.g.
     # so the command substitution expands to an empty string,
     # so this is `''banana`
     banana
-
-This can be quite useful. For example, if you want to go through all the files in all the directories in :envvar:`PATH`, use
-::
-
-    for file in $PATH/*
-
-Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in :envvar:`PATH`, the right answer here is to expand to no files.
+    >_ echo "$(printf '%s' '')"banana
+    # quotes mean this is one argument, the banana stays
 
 .. _expand-slices:
 

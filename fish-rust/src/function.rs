@@ -641,6 +641,7 @@ mod function_ffi {
         type FunctionPropertiesRefFFI;
 
         fn definition_file(&self) -> UniquePtr<CxxWString>;
+        fn definition_lineno(&self) -> i32;
         fn copy_definition_lineno(&self) -> i32;
         fn shadow_scope(&self) -> bool;
         fn named_arguments(&self) -> UniquePtr<wcstring_list_ffi_t>;

@@ -102,7 +102,7 @@ mod event_ffi {
 
 pub use event_ffi::{event_description_t, event_type_t};
 
-const ANY_PID: pid_t = 0;
+pub const ANY_PID: pid_t = 0;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EventDescription {

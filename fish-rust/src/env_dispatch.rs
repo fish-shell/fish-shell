@@ -4,6 +4,7 @@ use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
 use crate::env::{CURSES_INITIALIZED, READ_BYTE_LIMIT, TERM_HAS_XN};
 use crate::ffi::is_interactive_session;
 use crate::flog::FLOGF;
+use crate::function;
 use crate::output::ColorSupport;
 use crate::wchar::L;
 use crate::wchar::{wstr, WString};
@@ -273,7 +274,7 @@ fn handle_autosuggestion_change(vars: &EnvStack) {
 }
 
 fn handle_function_path_change(_: &EnvStack) {
-    crate::ffi::function_invalidate_path();
+    function::invalidate_path();
 }
 
 fn handle_complete_path_change(_: &EnvStack) {

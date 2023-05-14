@@ -408,7 +408,7 @@ filename_ref_t parser_t::current_filename() const {
     for (const auto &b : block_list) {
         if (b.is_function_call()) {
             auto props = function_get_props(b.function_name);
-            return props ? props->definition_file : nullptr;
+            return props ? (*props)->definition_file() : nullptr;
         } else if (b.type() == block_type_t::source) {
             return b.sourced_file;
         }
@@ -535,6 +535,14 @@ job_t *parser_t::job_get_from_pid(int pid, size_t &job_pos) const {
         }
     }
     return nullptr;
+}
+
+const wcstring *library_data_t::get_current_filename() const {
+    if (current_filename) {
+        return &*current_filename;
+    } else {
+        return nullptr;
+    }
 }
 
 library_data_pod_t *parser_t::ffi_libdata_pod() { return &library_data; }

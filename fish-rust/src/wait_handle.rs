@@ -155,6 +155,11 @@ impl WaitHandle {
         assert!(!self.is_completed(), "wait handle already completed");
         self.status.set(Some(status));
     }
+
+    /// \return the status, or None if not yet completed.
+    pub fn status(&self) -> Option<i32> {
+        self.status.get()
+    }
 }
 
 impl WaitHandle {

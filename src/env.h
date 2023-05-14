@@ -18,6 +18,7 @@
 #include "wutil.h"
 
 struct event_list_ffi_t;
+struct function_properties_t;
 
 #if INCLUDE_RUST_HEADERS
 #include "env/env_ffi.rs.h"
@@ -292,6 +293,9 @@ class env_stack_t final : public environment_t {
     /// instance (that is, look for changes from other fish instances).
     /// \return a list of events for changed variables.
     std::vector<rust::Box<Event>> universal_sync(bool always);
+
+    /// Applies inherited variables in preparation for executing a function.
+    void apply_inherited_ffi(const function_properties_t &props);
 
     // Compatibility hack; access the "environment stack" from back when there was just one.
     static const std::shared_ptr<env_stack_t> &principal_ref();

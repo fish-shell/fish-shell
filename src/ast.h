@@ -61,11 +61,13 @@ using while_header_t = WhileHeader;
 #else
 struct Ast;
 struct NodeFfi;
+struct BlockStatement;
 namespace ast {
 using ast_t = Ast;
 
+using block_statement_t = BlockStatement;
+
 struct argument_t;
-struct block_statement_t;
 struct statement_t;
 struct string_t;
 struct maybe_newlines_t;

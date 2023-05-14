@@ -100,6 +100,7 @@ pub struct io_streams_t {
     pub out: output_stream_t,
     pub err: output_stream_t,
     pub out_is_redirected: bool,
+    pub err_is_redirected: bool,
 }
 
 impl io_streams_t {
@@ -107,12 +108,14 @@ impl io_streams_t {
         let out = output_stream_t(streams.as_mut().get_out().unpin());
         let err = output_stream_t(streams.as_mut().get_err().unpin());
         let out_is_redirected = streams.as_mut().get_out_redirected();
+        let err_is_redirected = streams.as_mut().get_err_redirected();
         let streams = streams.unpin();
         io_streams_t {
             streams,
             out,
             err,
             out_is_redirected,
+            err_is_redirected,
         }
     }
 

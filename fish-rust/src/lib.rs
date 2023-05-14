@@ -37,6 +37,7 @@ mod ffi_init;
 mod ffi_tests;
 mod fish_indent;
 mod flog;
+mod function;
 mod future_feature_flags;
 mod global_safety;
 mod highlight;

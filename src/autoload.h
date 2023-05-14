@@ -68,6 +68,9 @@ class autoload_t {
     /// code; it is the caller's responsibility to load the file.
     maybe_t<wcstring> resolve_command(const wcstring &cmd, const environment_t &env);
 
+    /// FFI cover. This always uses globals, and returns an empty string instead of None.
+    wcstring resolve_command_ffi(const wcstring &cmd);
+
     /// Helper to actually perform an autoload.
     /// This is a static function because it executes fish script, and so must be called without
     /// holding any particular locks.
@@ -103,5 +106,9 @@ class autoload_t {
         autoloaded_files_.clear();
     }
 };
+
+/// FFI helpers.
+std::unique_ptr<autoload_t> make_autoload_ffi(wcstring env_var_name);
+void perform_autoload_ffi(const wcstring &path, parser_t &parser);
 
 #endif

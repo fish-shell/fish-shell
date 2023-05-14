@@ -18,6 +18,7 @@ use libc::pid_t;
 pub type wchar_t = u32;
 
 include_cpp! {
+    #include "autoload.h"
     #include "builtin.h"
     #include "color.h"
     #include "common.h"
@@ -155,6 +156,10 @@ include_cpp! {
     generate!("function_invalidate_path")
     generate!("complete_invalidate_path")
     generate!("update_wait_on_escape_ms_ffi")
+    generate!("autoload_t")
+    generate!("make_autoload_ffi")
+    generate!("perform_autoload_ffi")
+    generate!("complete_get_wrap_targets_ffi")
 }
 
 impl parser_t {
@@ -337,6 +342,7 @@ pub trait Repin {
 }
 
 // Implement Repin for our types.
+impl Repin for autoload_t {}
 impl Repin for block_t {}
 impl Repin for env_stack_t {}
 impl Repin for env_universal_t {}

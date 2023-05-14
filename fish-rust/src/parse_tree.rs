@@ -1,9 +1,10 @@
 //! Programmatic representation of fish code.
 
+use std::ops::Deref;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::ast::Ast;
+use crate::ast::{Ast, Node};
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, SOURCE_OFFSET_INVALID,
@@ -114,6 +115,55 @@ impl ParsedSource {
 
 pub type ParsedSourceRef = Arc<ParsedSource>;
 
+/// A reference to a node within a parse tree.
+pub struct NodeRef<NodeType: Node> {
+    /// The parse tree containing the node.
+    /// This is pinned because we hold a pointer into it.
+    parsed_source: Pin<Arc<ParsedSource>>,
+
+    /// The node itself. This points into the parsed source.
+    node: *const NodeType,
+}
+
+impl<NodeType: Node> Clone for NodeRef<NodeType> {
+    fn clone(&self) -> Self {
+        NodeRef {
+            parsed_source: self.parsed_source.clone(),
+            node: self.node,
+        }
+    }
+}
+
+impl<NodeType: Node> Deref for NodeRef<NodeType> {
+    type Target = NodeType;
+    fn deref(&self) -> &Self::Target {
+        // Safety: the node is valid for the lifetime of the source.
+        unsafe { &*self.node }
+    }
+}
+
+impl<NodeType: Node> NodeRef<NodeType> {
+    pub fn parsed_source(&self) -> &ParsedSource {
+        &self.parsed_source
+    }
+
+    pub fn parsed_source_ref(&self) -> ParsedSourceRef {
+        Pin::into_inner(self.parsed_source.clone())
+    }
+
+    /// Construct a NodeRef from ParsedSource and a node, which must point into that parsed source.
+    pub unsafe fn from_parts(parsed_source: ParsedSourceRef, node: &NodeType) -> Self {
+        NodeRef {
+            parsed_source: Pin::new(parsed_source),
+            node: node as *const NodeType,
+        }
+    }
+}
+
+// Safety: NodeRef is Send and Sync because it's just a pointer into a parse tree, which is pinned.
+unsafe impl<NodeType: Node + Send> Send for NodeRef<NodeType> {}
+unsafe impl<NodeType: Node + Sync> Sync for NodeRef<NodeType> {}
+
 /// Return a shared pointer to ParsedSource, or null on failure.
 /// If parse_flag_continue_after_error is not set, this will return null on any error.
 pub fn parse_source(
@@ -129,7 +179,7 @@ pub fn parse_source(
     }
 }
 
-struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
+pub struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
 
 #[cxx::bridge]
 mod parse_tree_ffi {

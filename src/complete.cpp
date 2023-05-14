@@ -1959,3 +1959,7 @@ std::vector<wcstring> complete_get_wrap_targets(const wcstring &command) {
     if (iter == wraps.end()) return {};
     return iter->second;
 }
+
+wcstring_list_ffi_t complete_get_wrap_targets_ffi(const wcstring &command) {
+    return complete_get_wrap_targets(command);
+}

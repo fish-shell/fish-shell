@@ -30,10 +30,9 @@ use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, RawFd};
 use std::os::unix::prelude::OsStringExt;
 use std::path::PathBuf;
-use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
-use std::sync::{Mutex, TryLockError};
+use std::sync::{Arc, Mutex, TryLockError};
 use std::time;
 use widestring::Utf32String;
 use widestring_suffix::widestrs;
@@ -1376,7 +1375,7 @@ pub fn narrow_string_safe(buff: &mut [u8; 64], s: &wstr) {
 }
 
 /// Stored in blocks to reference the file which created the block.
-pub type FilenameRef = Rc<WString>;
+pub type FilenameRef = Arc<WString>;
 
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.

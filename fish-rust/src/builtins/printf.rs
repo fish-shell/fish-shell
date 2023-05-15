@@ -218,7 +218,7 @@ impl<'a> builtin_printf_state_t<'a> {
                 Error::Empty => {
                     self.fatal_error(sprintf!("%ls: %ls", s, wgettext!("Number was empty")));
                 }
-                Error::InvalidChar | Error::CharsLeft => {
+                Error::InvalidChar => {
                     panic!("Unreachable");
                 }
             }

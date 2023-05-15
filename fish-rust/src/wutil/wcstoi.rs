@@ -9,7 +9,6 @@ use std::result::Result;
 struct ParseResult {
     result: u64,
     negative: bool,
-    consumed_all: bool,
     consumed: usize,
 }
 
@@ -19,9 +18,6 @@ pub struct Options {
     /// to positive, as strtoul does.
     /// For example, strtoul("-2") returns ULONG_MAX - 1.
     pub wrap_negatives: bool,
-
-    /// If set, it is an error to have unconsumed characters.
-    pub consume_all: bool,
 
     /// The radix, or None to infer it.
     pub mradix: Option<u32>,
@@ -109,7 +105,6 @@ fn parse_radix<Iter: Iterator<Item = char>>(
         leading_zero_result = Some(ParseResult {
             result: 0,
             negative: false,
-            consumed_all: chars.peek().is_none(),
             consumed: chars.consumed,
         });
         match chars.current() {
@@ -152,11 +147,9 @@ fn parse_radix<Iter: Iterator<Item = char>>(
     if result == 0 {
         negative = false;
     }
-    let consumed_all = chars.peek().is_none();
     Ok(ParseResult {
         result,
         negative,
-        consumed_all,
         consumed,
     })
 }
@@ -177,23 +170,19 @@ where
 
     let Options {
         wrap_negatives,
-        consume_all,
         mradix,
     } = options;
 
     let ParseResult {
         result,
         negative,
-        consumed_all,
         consumed,
     } = parse_radix(src, mradix, !signed && !wrap_negatives)?;
     *out_consumed = consumed;
 
     assert!(!negative || result > 0, "Should never get negative zero");
 
-    if consume_all && !consumed_all {
-        Err(Error::CharsLeft)
-    } else if !negative {
+    if !negative {
         match Int::from(result) {
             Some(r) => Ok(r),
             None => Err(Error::Overflow),
@@ -410,7 +399,7 @@ mod tests {
                 s.chars(),
                 Options {
                     wrap_negatives: true,
-                    ..Default::default()
+                    mradix: None,
                 },
             )
         };
@@ -420,7 +409,6 @@ mod tests {
                 Options {
                     wrap_negatives: true,
                     mradix: Some(radix),
-                    ..Default::default()
                 },
             )
         };

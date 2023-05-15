@@ -501,7 +501,7 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
     return job_get_from_pid(pid, job_pos);
 }
 
-job_t *parser_t::job_get_from_pid(int64_t pid, size_t &job_pos) const {
+job_t *parser_t::job_get_from_pid(int pid, size_t &job_pos) const {
     for (auto it = job_list.begin(); it != job_list.end(); ++it) {
         for (const process_ptr_t &p : (*it)->processes) {
             if (p->pid == pid) {

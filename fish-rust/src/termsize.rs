@@ -40,17 +40,15 @@ static TTY_TERMSIZE_GEN_COUNT: AtomicU32 = AtomicU32::new(0);
 /// Convert an environment variable to an int, or return a default value.
 /// The int must be >0 and <USHRT_MAX (from struct winsize).
 fn var_to_int_or(var: Option<WString>, default: isize) -> isize {
-    match var {
-        Some(s) => {
-            let proposed = fish_wcstoi(&s);
-            if let Ok(proposed) = proposed {
-                proposed
-            } else {
-                default
+    if var.is_some() && !var.as_ref().unwrap().is_empty() {
+        #[allow(clippy::unnecessary_unwrap)]
+        if let Ok(proposed) = fish_wcstoi(&var.unwrap()) {
+            if proposed > 0 && proposed <= u16::MAX as i32 {
+                return proposed as isize;
             }
         }
-        None => default,
     }
+    default
 }
 
 /// \return a termsize from ioctl, or None on error or if not supported.

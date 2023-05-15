@@ -1,5 +1,6 @@
 pub use super::errors::Error;
-use crate::wchar::IntoCharIter;
+use crate::wchar::{wstr, IntoCharIter};
+use crate::wchar_ext::WExt;
 use num_traits::{NumCast, PrimInt};
 use std::default::Default;
 use std::iter::{Fuse, Peekable};
@@ -64,7 +65,7 @@ fn parse_radix<Iter: Iterator<Item = char>>(
     error_if_negative: bool,
 ) -> Result<ParseResult, Error> {
     if let Some(r) = mradix {
-        assert!((2..=36).contains(&r), "fish_parse_radix: invalid radix {r}");
+        assert!((2..=36).contains(&r), "parse_radix: invalid radix {r}");
     }
 
     // Construct a CharsIterator to keep track of how many we consume.
@@ -161,7 +162,7 @@ fn parse_radix<Iter: Iterator<Item = char>>(
 }
 
 /// Parse some iterator over Chars into some Integer type, optionally with a radix.
-fn fish_wcstoi_impl<Int, Chars>(
+fn wcstoi_impl<Int, Chars>(
     src: Chars,
     options: Options,
     out_consumed: &mut usize,
@@ -171,7 +172,7 @@ where
     Int: PrimInt,
 {
     let bits = Int::zero().count_zeros();
-    assert!(bits <= 64, "fish_wcstoi: Int must be <= 64 bits");
+    assert!(bits <= 64, "wcstoi: Int must be <= 64 bits");
     let signed = Int::min_value() < Int::zero();
 
     let Options {
@@ -228,22 +229,22 @@ where
 ///  - Leading whitespace is skipped.
 ///  - 0 means octal, 0x means hex
 ///  - Leading + is supported.
-pub fn fish_wcstoi<Int, Chars>(src: Chars) -> Result<Int, Error>
+pub fn wcstoi<Int, Chars>(src: Chars) -> Result<Int, Error>
 where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), Default::default(), &mut 0)
+    wcstoi_impl(src.chars(), Default::default(), &mut 0)
 }
 
 /// Convert the given wide string to an integer using the given radix.
 /// Leading whitespace is skipped.
-pub fn fish_wcstoi_opts<Int, Chars>(src: Chars, options: Options) -> Result<Int, Error>
+pub fn wcstoi_opts<Int, Chars>(src: Chars, options: Options) -> Result<Int, Error>
 where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), options, &mut 0)
+    wcstoi_impl(src.chars(), options, &mut 0)
 }
 
 /// Convert the given wide string to an integer.
@@ -252,7 +253,7 @@ where
 ///  - 0 means octal, 0x means hex
 ///  - Leading + is supported.
 /// The number of consumed characters is returned in out_consumed.
-pub fn fish_wcstoi_partial<Int, Chars>(
+pub fn wcstoi_partial<Int, Chars>(
     src: Chars,
     options: Options,
     out_consumed: &mut usize,
@@ -261,23 +262,93 @@ where
     Chars: IntoCharIter,
     Int: PrimInt,
 {
-    fish_wcstoi_impl(src.chars(), options, out_consumed)
+    wcstoi_impl(src.chars(), options, out_consumed)
+}
+
+/// A historic "enhanced" version of wcstol.
+/// Leading whitespace is ignored (per wcstol).
+/// Trailing whitespace is also ignored.
+/// Trailing characters other than whitespace are errors.
+pub fn fish_wcstol_radix(mut src: &wstr, radix: u32) -> Result<i64, Error> {
+    // Unlike wcstol, we do not infer the radix.
+    assert!(radix > 0, "radix cannot be 0");
+    let options: Options = Options {
+        mradix: Some(radix),
+        ..Default::default()
+    };
+    let mut consumed = 0;
+    let result = wcstoi_partial(src, options, &mut consumed)?;
+    // Skip trailing whitespace, erroring if we encounter a non-whitespace character.
+    src = src.slice_from(consumed);
+    while !src.is_empty() && src.char_at(0).is_whitespace() {
+        src = src.slice_from(1);
+    }
+    if !src.is_empty() {
+        return Err(Error::InvalidChar);
+    }
+    Ok(result)
+}
+
+/// Variant of fish_wcstol_radix which assumes base 10.
+pub fn fish_wcstol(src: &wstr) -> Result<i64, Error> {
+    fish_wcstol_radix(src, 10)
+}
+
+/// Variant of fish_wcstol for ints, erroring if it does not fit.
+pub fn fish_wcstoi(src: &wstr) -> Result<i32, Error> {
+    let res = fish_wcstol(src)?;
+    if let Ok(val) = res.try_into() {
+        Ok(val)
+    } else {
+        Err(Error::Overflow)
+    }
+}
+
+/// Historic "enhanced" version of wcstoul.
+/// Leading minus is considered invalid.
+/// Leading whitespace is ignored (per wcstoul).
+/// Trailing whitespace is also ignored.
+pub fn fish_wcstoul(mut src: &wstr) -> Result<u64, Error> {
+    // Skip leading whitespace.
+    while !src.is_empty() && src.char_at(0).is_whitespace() {
+        src = src.slice_from(1);
+    }
+    // Disallow minus as the first character to avoid questionable wrap-around.
+    if src.is_empty() || src.char_at(0) == '-' {
+        return Err(Error::InvalidChar);
+    }
+    let options: Options = Options {
+        mradix: Some(10),
+        ..Default::default()
+    };
+    let mut consumed = 0;
+    let result = wcstoi_partial(src, options, &mut consumed)?;
+    // Skip trailling whitespace.
+    src = src.slice_from(consumed);
+    while !src.is_empty() && src.char_at(0).is_whitespace() {
+        src = src.slice_from(1);
+    }
+    if !src.is_empty() {
+        return Err(Error::InvalidChar);
+    }
+    Ok(result)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wchar::L;
 
     fn test_min_max<Int: PrimInt + std::fmt::Display + std::fmt::Debug>(min: Int, max: Int) {
-        assert_eq!(fish_wcstoi(min.to_string().chars()), Ok(min));
-        assert_eq!(fish_wcstoi(max.to_string().chars()), Ok(max));
+        assert_eq!(wcstoi(min.to_string().chars()), Ok(min));
+        assert_eq!(wcstoi(max.to_string().chars()), Ok(max));
     }
 
     #[test]
     fn test_signed() {
-        let run1 = |s: &str| -> Result<i32, Error> { fish_wcstoi(s.chars()) };
+        let run1 = |s: &str| -> Result<i32, Error> { wcstoi(s.chars()) };
         let run1_rad = |s: &str, radix: u32| -> Result<i32, Error> {
-            fish_wcstoi_opts(
+            wcstoi_opts(
                 s.chars(),
                 Options {
                     mradix: Some(radix),
@@ -335,7 +406,7 @@ mod tests {
         }
 
         let run1 = |s: &str| -> Result<u64, Error> {
-            fish_wcstoi_opts(
+            wcstoi_opts(
                 s.chars(),
                 Options {
                     wrap_negatives: true,
@@ -344,7 +415,7 @@ mod tests {
             )
         };
         let run1_rad = |s: &str, radix: u32| -> Result<u64, Error> {
-            fish_wcstoi_opts(
+            wcstoi_opts(
                 s.chars(),
                 Options {
                     wrap_negatives: true,
@@ -394,7 +465,7 @@ mod tests {
             std::u64::MAX - x + 1
         }
 
-        let run1 = |s: &str, opts: Options| -> Result<u64, Error> { fish_wcstoi_opts(s, opts) };
+        let run1 = |s: &str, opts: Options| -> Result<u64, Error> { wcstoi_opts(s, opts) };
         let mut opts = Options::default();
         assert_eq!(run1("-123", opts), Err(Error::InvalidChar));
         assert_eq!(run1("-0x123", opts), Err(Error::InvalidChar));
@@ -410,7 +481,7 @@ mod tests {
     fn test_partial() {
         let run1 = |s: &str| -> (i32, usize) {
             let mut consumed = 0;
-            let res = fish_wcstoi_partial(s, Default::default(), &mut consumed)
+            let res = wcstoi_partial(s, Default::default(), &mut consumed)
                 .expect("Should have parsed an int");
             (res, consumed)
         };
@@ -429,5 +500,47 @@ mod tests {
         assert_eq!(run1("08"), (0, 1));
         assert_eq!(run1("0x"), (0, 1));
         assert_eq!(run1("0xx"), (0, 1));
+    }
+
+    #[test]
+    fn test_fish_wcstol() {
+        assert_eq!(fish_wcstol(L!("0")), Ok(0));
+        assert_eq!(fish_wcstol(L!("10")), Ok(10));
+        assert_eq!(fish_wcstol(L!("  10")), Ok(10));
+        assert_eq!(fish_wcstol(L!("  10  ")), Ok(10));
+        assert_eq!(fish_wcstol(L!("-10")), Ok(-10));
+        assert_eq!(fish_wcstol(L!("  +10  ")), Ok(10));
+        assert_eq!(fish_wcstol(L!("10foo")), Err(Error::InvalidChar));
+        assert_eq!(fish_wcstol(L!("10.5")), Err(Error::InvalidChar));
+        assert_eq!(fish_wcstol(L!("10   x  ")), Err(Error::InvalidChar));
+    }
+
+    #[test]
+    fn test_fish_wcstoi() {
+        assert_eq!(fish_wcstoi(L!("0")), Ok(0));
+        assert_eq!(fish_wcstoi(L!("10")), Ok(10));
+        assert_eq!(fish_wcstoi(L!("  10")), Ok(10));
+        assert_eq!(fish_wcstoi(L!("  10  ")), Ok(10));
+        assert_eq!(fish_wcstoi(L!("-10")), Ok(-10));
+        assert_eq!(fish_wcstoi(L!("  +10  ")), Ok(10));
+        assert_eq!(fish_wcstoi(L!("  2147483647  ")), Ok(2147483647));
+        assert_eq!(fish_wcstoi(L!("  2147483648  ")), Err(Error::Overflow));
+        assert_eq!(fish_wcstoi(L!("  -2147483647  ")), Ok(-2147483647));
+        assert_eq!(fish_wcstoi(L!("  -2147483648  ")), Ok(-2147483648));
+        assert_eq!(fish_wcstoi(L!("  -2147483649  ")), Err(Error::Overflow));
+        assert_eq!(fish_wcstoi(L!("10foo")), Err(Error::InvalidChar));
+        assert_eq!(fish_wcstoi(L!("10.5")), Err(Error::InvalidChar));
+    }
+
+    #[test]
+    fn test_fish_wcstoul() {
+        assert_eq!(fish_wcstoul(L!("0")), Ok(0));
+        assert_eq!(fish_wcstoul(L!("10")), Ok(10));
+        assert_eq!(fish_wcstoul(L!(" +10")), Ok(10));
+        assert_eq!(fish_wcstoul(L!("  -10")), Err(Error::InvalidChar));
+        assert_eq!(fish_wcstoul(L!("  10  ")), Ok(10));
+        assert_eq!(fish_wcstoul(L!("10foo")), Err(Error::InvalidChar));
+        assert_eq!(fish_wcstoul(L!("10.5")), Err(Error::InvalidChar));
+        assert_eq!(fish_wcstoul(L!("18446744073709551615")), Ok(u64::MAX));
     }
 }

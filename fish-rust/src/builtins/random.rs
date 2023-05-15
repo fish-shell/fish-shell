@@ -7,12 +7,10 @@ use crate::builtins::shared::{
 use crate::ffi::parser_t;
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{self, fish_wcstoi_opts, sprintf, wgettext_fmt, Options as WcstoiOptions};
-use num_traits::PrimInt;
+use crate::wutil::{self, fish_wcstol, fish_wcstoul, sprintf, wgettext_fmt};
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-use std::default::Default;
 use std::sync::Mutex;
 
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
@@ -69,22 +67,21 @@ pub fn random(
             .append(sprintf!(L!("%ls\n"), argv[i + 1 + rand]));
         return STATUS_CMD_OK;
     }
-    fn parse<T: PrimInt>(
-        streams: &mut io_streams_t,
-        cmd: &wstr,
-        num: &wstr,
-    ) -> Result<T, wutil::Error> {
-        let res = fish_wcstoi_opts(
-            num,
-            WcstoiOptions {
-                consume_all: true,
-                ..Default::default()
-            },
-        );
+    fn parse_ll(streams: &mut io_streams_t, cmd: &wstr, num: &wstr) -> Result<i64, wutil::Error> {
+        let res = fish_wcstol(num);
         if res.is_err() {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: %ls: invalid integer\n", cmd, num,));
+                .append(wgettext_fmt!("%ls: %ls: invalid integer\n", cmd, num));
+        }
+        return res;
+    }
+    fn parse_ull(streams: &mut io_streams_t, cmd: &wstr, num: &wstr) -> Result<u64, wutil::Error> {
+        let res = fish_wcstoul(num);
+        if res.is_err() {
+            streams
+                .err
+                .append(wgettext_fmt!("%ls: %ls: invalid integer\n", cmd, num));
         }
         return res;
     }
@@ -95,7 +92,7 @@ pub fn random(
         }
         1 => {
             // Seed the engine persistently
-            let num = parse::<i64>(streams, cmd, argv[i]);
+            let num = parse_ll(streams, cmd, argv[i]);
             match num {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => {
@@ -107,25 +104,25 @@ pub fn random(
         }
         2 => {
             // start is first, end is second
-            match parse::<i64>(streams, cmd, argv[i]) {
+            match parse_ll(streams, cmd, argv[i]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => start = x,
             }
 
-            match parse::<i64>(streams, cmd, argv[i + 1]) {
+            match parse_ll(streams, cmd, argv[i + 1]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => end = x,
             }
         }
         3 => {
             // start, step, end
-            match parse::<i64>(streams, cmd, argv[i]) {
+            match parse_ll(streams, cmd, argv[i]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => start = x,
             }
 
             // start, step, end
-            match parse::<u64>(streams, cmd, argv[i + 1]) {
+            match parse_ull(streams, cmd, argv[i + 1]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(0) => {
                     streams
@@ -136,7 +133,7 @@ pub fn random(
                 Ok(x) => step = x,
             }
 
-            match parse::<i64>(streams, cmd, argv[i + 2]) {
+            match parse_ll(streams, cmd, argv[i + 2]) {
                 Err(_) => return STATUS_INVALID_ARGS,
                 Ok(x) => end = x,
             }

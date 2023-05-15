@@ -11,7 +11,7 @@ use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::{widestrs, wstr, WExt, WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
-use crate::wutil::{fish_wcstoi_opts, sprintf, Options};
+use crate::wutil::{fish_wcstol_radix, sprintf};
 
 use autocxx::WithinUniquePtr;
 use cxx::UniquePtr;
@@ -95,12 +95,7 @@ fn set_umask(list_val: &Vec<WString>) -> EnvStackSetResult {
     if list_val.len() != 1 || list_val[0].is_empty() {
         return EnvStackSetResult::ENV_INVALID;
     }
-    let opts = Options {
-        wrap_negatives: false,
-        consume_all: false,
-        mradix: Some(8),
-    };
-    let Ok(mask) = fish_wcstoi_opts(&list_val[0], opts) else {
+    let Ok(mask) = fish_wcstol_radix(&list_val[0], 8) else {
             return EnvStackSetResult::ENV_INVALID;
         };
 
@@ -114,7 +109,7 @@ fn set_umask(list_val: &Vec<WString>) -> EnvStackSetResult {
     }
     // Do not actually create a umask variable. On env_stack_t::get() it will be calculated.
     // SAFETY: umask cannot fail.
-    unsafe { libc::umask(mask) };
+    unsafe { libc::umask(mask as libc::mode_t) };
     EnvStackSetResult::ENV_OK
 }
 

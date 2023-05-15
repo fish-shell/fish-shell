@@ -59,35 +59,41 @@ fn parse_cmd_opts(
                 let optarg = w.woptarg.unwrap();
                 have_scale = true;
                 // "max" is the special value that tells us to pick the maximum scale.
-                opts.scale = if optarg == "max"L {
-                    15
-                } else if let Ok(base) = fish_wcstoi(optarg) {
-                    base
+                if optarg == "max" {
+                    opts.scale = 15;
                 } else {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: invalid base value\n",
-                        cmd,
-                        optarg
-                    ));
-                    return Err(STATUS_INVALID_ARGS);
-                };
+                    let scale = fish_wcstoi(optarg);
+                    if scale.is_err() || scale.unwrap() < 0 || scale.unwrap() > 15 {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: %ls: invalid base value\n",
+                            cmd,
+                            optarg
+                        ));
+                        return Err(STATUS_INVALID_ARGS);
+                    }
+                    // We know the value is in the range [0, 15]
+                    opts.scale = scale.unwrap() as usize;
+                }
             }
             'b' => {
                 let optarg = w.woptarg.unwrap();
-                opts.base = if optarg == "hex"L {
-                    16
-                } else if optarg == "octal"L {
-                    8
-                } else if let Ok(base) = fish_wcstoi(optarg) {
-                    base
+                if optarg == "hex" {
+                    opts.base = 16;
+                } else if optarg == "octal" {
+                    opts.base = 8;
                 } else {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: invalid base value\n",
-                        cmd,
-                        optarg
-                    ));
-                    return Err(STATUS_INVALID_ARGS);
-                };
+                    let base = fish_wcstoi(optarg);
+                    if base.is_err() || (base.unwrap() != 8 && base.unwrap() != 16) {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: %ls: invalid base value\n",
+                            cmd,
+                            optarg
+                        ));
+                        return Err(STATUS_INVALID_ARGS);
+                    }
+                    // We know the value is 8 or 16.
+                    opts.base = base.unwrap() as usize;
+                }
             }
             'h' => {
                 opts.print_help = true;

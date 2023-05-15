@@ -59,7 +59,7 @@ use crate::wchar::{encode_byte_to_char, wstr, WExt, WString, L};
 use crate::wutil::errors::Error;
 use crate::wutil::gettext::{wgettext, wgettext_fmt};
 use crate::wutil::wcstod::wcstod;
-use crate::wutil::wcstoi::{fish_wcstoi_partial, Options as WcstoiOpts};
+use crate::wutil::wcstoi::{wcstoi_partial, Options as WcstoiOpts};
 use crate::wutil::{sprintf, wstr_offset_in};
 use printf_compat::args::ToArg;
 use printf_compat::printf::sprintf_locale;
@@ -129,7 +129,7 @@ impl RawStringToScalarType for i64 {
         end: &mut &'a wstr,
     ) -> Result<Self, Error> {
         let mut consumed = 0;
-        let res = fish_wcstoi_partial(s, WcstoiOpts::default(), &mut consumed);
+        let res = wcstoi_partial(s, WcstoiOpts::default(), &mut consumed);
         *end = s.slice_from(consumed);
         res
     }
@@ -142,7 +142,7 @@ impl RawStringToScalarType for u64 {
         end: &mut &'a wstr,
     ) -> Result<Self, Error> {
         let mut consumed = 0;
-        let res = fish_wcstoi_partial(
+        let res = wcstoi_partial(
             s,
             WcstoiOpts {
                 wrap_negatives: true,

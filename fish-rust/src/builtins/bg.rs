@@ -93,24 +93,25 @@ pub fn bg(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
     }
 
     // The user specified at least one job to be backgrounded.
+    let mut pids: Vec<libc::pid_t> = Vec::new();
 
     // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
     // but still print errors for all of them.
-    let mut retval = STATUS_CMD_OK;
-    let pids: Vec<i64> = args[opts.optind..]
-        .iter()
-        .map(|&arg| {
-            fish_wcstoi(arg).unwrap_or_else(|_| {
-                streams.err.append(wgettext_fmt!(
-                    "%ls: '%ls' is not a valid job specifier\n",
-                    cmd,
-                    arg
-                ));
-                retval = STATUS_INVALID_ARGS;
-                0
-            })
-        })
-        .collect();
+    let mut retval: Option<i32> = STATUS_CMD_OK;
+    for arg in &args[opts.optind..] {
+        let pid = fish_wcstoi(arg);
+        #[allow(clippy::unnecessary_unwrap)]
+        if pid.is_err() || pid.unwrap() < 0 {
+            streams.err.append(wgettext_fmt!(
+                "%ls: '%ls' is not a valid job specifier\n",
+                cmd,
+                arg
+            ));
+            retval = STATUS_INVALID_ARGS;
+        } else {
+            pids.push(pid.unwrap());
+        }
+    }
 
     if retval != STATUS_CMD_OK {
         return retval;
@@ -122,7 +123,7 @@ pub fn bg(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
         let mut job_pos = 0;
         let job = unsafe {
             parser
-                .job_get_from_pid1(pid, Pin::new(&mut job_pos))
+                .job_get_from_pid1(autocxx::c_int(pid), Pin::new(&mut job_pos))
                 .as_ref()
         };
 

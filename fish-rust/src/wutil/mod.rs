@@ -1,5 +1,6 @@
 pub mod encoding;
 pub mod errors;
+pub mod fileid;
 pub mod gettext;
 pub mod printf;
 pub mod wcstod;

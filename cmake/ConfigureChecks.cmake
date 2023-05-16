@@ -79,6 +79,12 @@ list(APPEND CMAKE_REQUIRED_INCLUDES ${CURSES_INCLUDE_DIRS})
 find_library(CURSES_TINFO tinfo)
 if (CURSES_TINFO)
     set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
+else()
+    # on NetBSD, libtinfo has a longer name (libterminfo)
+    find_library(CURSES_TINFO terminfo)
+    if (CURSES_TINFO)
+        set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
+    endif()
 endif()
 
 # Get threads.

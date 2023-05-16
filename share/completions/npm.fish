@@ -166,6 +166,14 @@ complete -f -c npm -n '__fish_npm_using_command pack' -l dry-run -d 'Only report
 complete -f -c npm -n '__fish_npm_using_command pack' -l json -d 'Output JSON data'
 complete -c npm -n '__fish_npm_using_command pack' -l pack-destination -d 'Tarball destination directory'
 
+# publish
+complete -f -c npm -n __fish_npm_needs_command -a publish -d 'Publish a package'
+complete -x -c npm -n '__fish_npm_using_command publish' -l tag -d 'Upload to tag'
+complete -x -c npm -n '__fish_npm_using_command publish' -l access -d 'Restrict access' -a "public\t'Publicly viewable' restricted\t'Restricted access (scoped packages only)'"
+complete -f -c npm -n '__fish_npm_using_command publish' -l dry-run -d 'Only report what it would have done'
+complete -x -c npm -n '__fish_npm_using_command publish' -l otp -d '2FA one-time password'
+## todo provenance ?
+
 # remove
 for c in r remove rm un uninstall unlink
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Remove a package'
@@ -204,7 +212,6 @@ complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a packag
 complete -f -c npm -n __fish_npm_needs_command -a outdated -d 'Check for outdated packages'
 complete -f -c npm -n __fish_npm_needs_command -a prefix -d 'Display NPM prefix'
 complete -f -c npm -n __fish_npm_needs_command -a prune -d 'Remove extraneous packages'
-complete -c npm -n __fish_npm_needs_command -a publish -d 'Publish a package'
 complete -f -c npm -n __fish_npm_needs_command -a 'rb rebuild' -d 'Rebuild a package'
 complete -f -c npm -n __fish_npm_needs_command -a 'root ' -d 'Display npm root'
 complete -f -c npm -n __fish_npm_needs_command -a 'run-script run' -d 'Run arbitrary package scripts'

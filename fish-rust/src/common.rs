@@ -23,7 +23,7 @@ use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, 
 use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::env;
-use std::ffi::{CString, OsString};
+use std::ffi::{CStr, CString, OsString};
 use std::mem::{self, ManuallyDrop};
 use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, RawFd};
@@ -34,6 +34,7 @@ use std::str::FromStr;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::Mutex;
 use std::time;
+use widestring::Utf32String;
 use widestring_suffix::widestrs;
 
 // Highest legal ASCII value.
@@ -1995,6 +1996,65 @@ where
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         (self.view_mut)(&mut self.value)
+    }
+}
+
+/// A trait to make it more convenient to pass ascii/Unicode strings to functions that can take
+/// non-Unicode values. The result is nul-terminated and can be passed to OS functions.
+///
+/// This is only implemented for owned types where an owned instance will skip allocations (e.g.
+/// `CString` can return `self`) but not implemented for owned instances where a new allocation is
+/// always required (e.g. implemented for `&wstr` but not `WideString`) because you might as well be
+/// left with the original item if we're going to allocate from scratch in all cases.
+pub trait ToCString {
+    /// Correctly convert to a nul-terminated [`CString`] that can be passed to OS functions.
+    fn to_cstring(self) -> CString;
+}
+
+impl ToCString for CString {
+    fn to_cstring(self) -> CString {
+        self
+    }
+}
+
+impl ToCString for &CStr {
+    fn to_cstring(self) -> CString {
+        self.to_owned()
+    }
+}
+
+/// Safely converts from `&wstr` to a `CString` to a nul-terminated `CString` that can be passed to
+/// OS functions, taking into account non-Unicode values that have been shifted into the private-use
+/// range by using [`wcs2zstring()`].
+impl ToCString for &wstr {
+    /// The wide string may contain non-Unicode bytes mapped to the private-use Unicode range, so we
+    /// have to use [`wcs2zstring()`](self::wcs2zstring) to convert it correctly.
+    fn to_cstring(self) -> CString {
+        self::wcs2zstring(self)
+    }
+}
+
+/// Safely converts from `&Utf32String` to a nul-terminated `CString` that can be passed to OS
+/// functions, taking into account non-Unicode values that have been shifted into the private-use
+/// range by using [`wcs2zstring()`].
+impl ToCString for &Utf32String {
+    fn to_cstring(self) -> CString {
+        self.as_utfstr().to_cstring()
+    }
+}
+
+/// Convert a (probably ascii) string to CString that can be passed to OS functions.
+impl ToCString for Vec<u8> {
+    fn to_cstring(mut self) -> CString {
+        self.push(b'\0');
+        CString::from_vec_with_nul(self).unwrap()
+    }
+}
+
+/// Convert a (probably ascii) string to nul-terminated CString that can be passed to OS functions.
+impl ToCString for &[u8] {
+    fn to_cstring(self) -> CString {
+        CString::new(self).unwrap()
     }
 }
 

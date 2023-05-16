@@ -129,6 +129,12 @@ end
 complete -f -c npm -n __fish_npm_needs_command -a get -d 'Echo the config value to stdout'
 complete -f -c npm -n __fish_npm_needs_command -a set -d 'Sets the config key to the value'
 
+# init
+for c in init create innit
+    complete -c npm -n __fish_npm_needs_command -a "$c" -d 'Create a package.json file'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s y -l yes -d 'Automatically answer "yes" to all prompts'
+end
+
 # install
 for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall
     complete -c npm -n __fish_npm_needs_command -a "$c" -d 'Install a package'

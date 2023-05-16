@@ -1985,6 +1985,56 @@ pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&
     }
 }
 
+/// Takes ownership of a variable and `Deref`s/`DerefMut`s into a projection of that variable.
+///
+/// Can be used as a workaround for the lack of `MutexGuard::map()` to return a `MutexGuard`
+/// exposing only a variable of the Mutex-owned object.
+pub struct Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    value: T,
+    view: F1,
+    view_mut: F2,
+}
+
+impl<T, V, F1, F2> Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    pub fn new(owned: T, project: F1, project_mut: F2) -> Self {
+        Projection {
+            value: owned,
+            view: project,
+            view_mut: project_mut,
+        }
+    }
+}
+
+impl<T, V, F1, F2> Deref for Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    type Target = V;
+
+    fn deref(&self) -> &Self::Target {
+        (self.view)(&self.value)
+    }
+}
+
+impl<T, V, F1, F2> DerefMut for Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        (self.view_mut)(&mut self.value)
+    }
+}
+
 #[allow(unused_macros)]
 macro_rules! fwprintf {
     ($fd:expr, $format:literal $(, $arg:expr)*) => {

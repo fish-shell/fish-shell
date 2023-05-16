@@ -80,6 +80,11 @@ find_library(CURSES_TINFO tinfo)
 if (CURSES_TINFO)
     set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
 endif()
+# on NetBSD, libtinfo has a longer name (libterminfo)
+find_library(CURSES_TINFO terminfo)
+if (CURSES_TINFO)
+    set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
+endif()
 
 # Get threads.
 set(THREADS_PREFER_PTHREAD_FLAG ON)

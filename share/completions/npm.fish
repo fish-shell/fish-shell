@@ -160,6 +160,12 @@ complete -f -c npm -n '__fish_npm_using_command owner' -a ls -d 'List package ow
 complete -f -c npm -n '__fish_npm_using_command owner' -a add -d 'Add a new owner to package'
 complete -f -c npm -n '__fish_npm_using_command owner' -a rm -d 'Remove an owner from package'
 
+# pack
+complete -f -c npm -n __fish_npm_needs_command -a pack -d 'Create a tarball from a package'
+complete -f -c npm -n '__fish_npm_using_command pack' -l dry-run -d 'Only report what it would have done'
+complete -f -c npm -n '__fish_npm_using_command pack' -l json -d 'Output JSON data'
+complete -c npm -n '__fish_npm_using_command pack' -l pack-destination -d 'Tarball destination directory'
+
 # remove
 for c in r remove rm un uninstall unlink
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Remove a package'
@@ -196,7 +202,6 @@ complete -f -c npm -n '__fish_npm_using_command help-search' -l long -d 'Display
 complete -f -c npm -n __fish_npm_needs_command -a 'info v view' -d 'View registry info'
 complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
 complete -f -c npm -n __fish_npm_needs_command -a outdated -d 'Check for outdated packages'
-complete -f -c npm -n __fish_npm_needs_command -a pack -d 'Create a tarball from a package'
 complete -f -c npm -n __fish_npm_needs_command -a prefix -d 'Display NPM prefix'
 complete -f -c npm -n __fish_npm_needs_command -a prune -d 'Remove extraneous packages'
 complete -c npm -n __fish_npm_needs_command -a publish -d 'Publish a package'

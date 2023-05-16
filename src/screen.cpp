@@ -63,6 +63,10 @@ class scoped_buffer_t : noncopyable_t, nonmovable_t {
 // Note this is deliberately exported so that init_curses can clear it.
 layout_cache_t layout_cache_t::shared;
 
+void screen_clear_layout_cache_ffi() {
+    layout_cache_t::shared.clear();
+}
+
 /// Tests if the specified narrow character sequence is present at the specified position of the
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
 static size_t try_sequence(const char *seq, const wchar_t *str) {

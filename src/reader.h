@@ -168,10 +168,16 @@ enum class cursor_selection_mode_t : uint8_t {
     inclusive,
 };
 
+#if INCLUDE_RUST_HEADERS
 void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode);
+#else
+void reader_change_cursor_selection_mode(uint8_t selection_mode);
+#endif
 
 /// Enable or disable autosuggestions based on the associated variable.
 void reader_set_autosuggestion_enabled(const env_stack_t &vars);
+
+void reader_set_autosuggestion_enabled_ffi(bool);
 
 /// Write the title to the titlebar. This function is called just before a new application starts
 /// executing and just after it finishes.

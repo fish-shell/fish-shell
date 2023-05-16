@@ -2922,6 +2922,10 @@ void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode)
     }
 }
 
+void reader_change_cursor_selection_mode(uint8_t selection_mode) {
+    reader_change_cursor_selection_mode((cursor_selection_mode_t) selection_mode);
+}
+
 static bool check_autosuggestion_enabled(const env_stack_t &vars) {
     if (auto val = vars.get(L"fish_autosuggestion_enabled")) {
         return val->as_string() != L"0";
@@ -2934,6 +2938,18 @@ void reader_set_autosuggestion_enabled(const env_stack_t &vars) {
     reader_data_t *data = current_data_or_null();
     if (data) {
         bool enable = check_autosuggestion_enabled(vars);
+        if (data->conf.autosuggest_ok != enable) {
+            data->conf.autosuggest_ok = enable;
+            data->force_exec_prompt_and_repaint = true;
+            data->inputter.queue_char(readline_cmd_t::repaint);
+        }
+    }
+}
+
+void reader_set_autosuggestion_enabled_ffi(bool enable) {
+    // We don't need to _change_ if we're not initialized yet.
+    reader_data_t *data = current_data_or_null();
+    if (data) {
         if (data->conf.autosuggest_ok != enable) {
             data->conf.autosuggest_ok = enable;
             data->force_exec_prompt_and_repaint = true;

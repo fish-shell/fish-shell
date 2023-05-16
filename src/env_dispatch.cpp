@@ -56,7 +56,6 @@
 // Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
 // fish_read_limit variable.
 constexpr size_t DEFAULT_READ_BYTE_LIMIT = 100 * 1024 * 1024;
-size_t read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem. These are only the variables we're possibly interested in.
@@ -298,10 +297,10 @@ static void handle_read_limit_change(const environment_t &vars) {
         if (errno) {
             FLOGF(warning, "Ignoring fish_read_limit since it is not valid");
         } else {
-            read_byte_limit = limit;
+            READ_BYTE_LIMIT = limit;
         }
     } else {
-        read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
+        READ_BYTE_LIMIT = DEFAULT_READ_BYTE_LIMIT;
     }
 }
 
@@ -617,12 +616,12 @@ static void init_curses(const environment_t &vars) {
     apply_term_hacks(vars);
 
     can_set_term_title = does_term_support_setting_title(vars);
-    term_has_xn =
+    TERM_HAS_XN =
         tigetflag(const_cast<char *>("xenl")) == 1;  // does terminal have the eat_newline_glitch
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
     layout_cache_t::shared.clear();
-    curses_initialized = true;
+    CURSES_INITIALIZED = true;
 }
 
 static constexpr const char *utf8_locales[] = {

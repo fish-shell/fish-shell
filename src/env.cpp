@@ -50,11 +50,6 @@
 /// At init, we read all the environment variables from this array.
 extern char **environ;
 
-bool curses_initialized = false;
-
-/// Does the terminal have the "eat_newline_glitch".
-bool term_has_xn = false;
-
 // static
 env_var_t env_var_t::new_ffi(EnvVar *ptr) {
     assert(ptr != nullptr && "env_var_t::new_ffi called with null pointer");
@@ -575,6 +570,7 @@ wcstring env_get_runtime_path() {
 
 static std::mutex s_setenv_lock{};
 
+extern "C" {
 void setenv_lock(const char *name, const char *value, int overwrite) {
     scoped_lock locker(s_setenv_lock);
     setenv(name, value, overwrite);
@@ -583,6 +579,7 @@ void setenv_lock(const char *name, const char *value, int overwrite) {
 void unsetenv_lock(const char *name) {
     scoped_lock locker(s_setenv_lock);
     unsetenv(name);
+}
 }
 
 wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val) {

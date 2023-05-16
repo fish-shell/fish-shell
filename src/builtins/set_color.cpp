@@ -104,7 +104,7 @@ static const struct woption long_options[] = {{L"background", required_argument,
 /// set_color builtin.
 maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     // By the time this is called we should have initialized the curses subsystem.
-    assert(curses_initialized);
+    assert(CURSES_INITIALIZED);
 
     // Variables used for parsing the argument list.
     int argc = builtin_count_args(argv);

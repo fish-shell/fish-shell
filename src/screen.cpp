@@ -1298,7 +1298,7 @@ void screen_t::reset_abandoning_line(int screen_width) {
                 const_cast<char *>(exit_attribute_mode))));  // normal text ANSI escape sequence
         }
 
-        int newline_glitch_width = term_has_xn ? 0 : 1;
+        int newline_glitch_width = TERM_HAS_XN ? 0 : 1;
         abandon_line_string.append(screen_width - non_space_width - newline_glitch_width, L' ');
     }
 

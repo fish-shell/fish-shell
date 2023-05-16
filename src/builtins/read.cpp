@@ -281,7 +281,7 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null, bool do_seek)
                 return STATUS_CMD_ERROR;
             }
             finished = true;
-        } else if (str.size() > read_byte_limit) {
+        } else if (str.size() > READ_BYTE_LIMIT) {
             exit_res = STATUS_READ_TOO_MUCH;
             finished = true;
         }
@@ -329,7 +329,7 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
             }
         }
 
-        if (nbytes > read_byte_limit) {
+        if (nbytes > READ_BYTE_LIMIT) {
             exit_res = STATUS_READ_TOO_MUCH;
             break;
         }

@@ -1345,7 +1345,7 @@ pub type FilenameRef = Rc<WString>;
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.
 #[widestrs]
-fn fish_setlocale() {
+pub fn fish_setlocale() {
     // Use various Unicode symbols if they can be encoded using the current locale, else a simple
     // ASCII char alternative. All of the can_be_encoded() invocations should return the same
     // true/false value since the code points are in the BMP but we're going to be paranoid. This
@@ -1395,6 +1395,15 @@ fn fish_setlocale() {
         );
     }
     PROFILING_ACTIVE.store(true);
+
+    // Until no C++ code uses the variables init in the C++ version of fish_setlocale(), we need to
+    // also call that one or otherwise we'll segfault trying to read those uninit values.
+    extern "C" {
+        fn fish_setlocale_ffi();
+    }
+    unsafe {
+        fish_setlocale_ffi();
+    }
 }
 
 /// Test if the character can be encoded using the current locale.

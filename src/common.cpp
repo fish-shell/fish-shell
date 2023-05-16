@@ -1572,3 +1572,12 @@ bool is_console_session() {
     }();
     return console_session;
 }
+
+/// Expose the C++ version of fish_setlocale as fish_setlocale_ffi so the variables we initialize
+/// can be init even if the rust version of the function is called instead. This is easier than
+/// declaring all those variables as extern, which I'll do in a separate PR.
+extern "C" {
+    void fish_setlocale_ffi() {
+        fish_setlocale();
+    }
+}

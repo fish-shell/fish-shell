@@ -1715,7 +1715,7 @@ pub fn replace_with<T, F: FnOnce(&T) -> T>(old: &mut T, with: F) -> T {
     std::mem::replace(old, new)
 }
 
-pub type Cleanup<T, F, C> = ScopeGuard<T, F, C>;
+pub type Cleanup<T, F> = ScopeGuard<T, F>;
 
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a
 /// callback that modifies live objects willy-nilly because then there would be two &mut references
@@ -1742,44 +1742,24 @@ pub type Cleanup<T, F, C> = ScopeGuard<T, F, C>;
 ///
 /// // hello will be written first, then goodbye.
 /// ```
-pub struct ScopeGuard<T, F: FnOnce(&mut T), C> {
+pub struct ScopeGuard<T, F: FnOnce(&mut T)> {
     captured: ManuallyDrop<T>,
-    view: fn(&T) -> &C,
-    view_mut: fn(&mut T) -> &mut C,
     on_drop: Option<F>,
-    marker: std::marker::PhantomData<C>,
 }
 
-fn identity<T>(t: &T) -> &T {
-    t
-}
-fn identity_mut<T>(t: &mut T) -> &mut T {
-    t
-}
-
-impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F, T> {
+impl<T, F> ScopeGuard<T, F>
+where
+    F: FnOnce(&mut T),
+{
     /// Creates a new `ScopeGuard` wrapping `value`. The `on_drop` callback is executed when the
     /// ScopeGuard's lifetime expires or when it is manually dropped.
     pub fn new(value: T, on_drop: F) -> Self {
-        Self::with_view(value, identity, identity_mut, on_drop)
-    }
-}
-
-impl<T, F: FnOnce(&mut T), C> ScopeGuard<T, F, C> {
-    pub fn with_view(
-        value: T,
-        view: fn(&T) -> &C,
-        view_mut: fn(&mut T) -> &mut C,
-        on_drop: F,
-    ) -> Self {
         Self {
             captured: ManuallyDrop::new(value),
-            view,
-            view_mut,
             on_drop: Some(on_drop),
-            marker: Default::default(),
         }
     }
+
     /// Cancel the unwind operation, e.g. do not call the previously passed-in `on_drop` callback
     /// when the current scope expires.
     pub fn cancel(guard: &mut Self) {
@@ -1807,21 +1787,21 @@ impl<T, F: FnOnce(&mut T), C> ScopeGuard<T, F, C> {
     }
 }
 
-impl<T, F: FnOnce(&mut T), C> Deref for ScopeGuard<T, F, C> {
-    type Target = C;
+impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {
+    type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        (self.view)(&self.captured)
+        &self.captured
     }
 }
 
-impl<T, F: FnOnce(&mut T), C> DerefMut for ScopeGuard<T, F, C> {
+impl<T, F: FnOnce(&mut T)> DerefMut for ScopeGuard<T, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        (self.view_mut)(&mut self.captured)
+        &mut self.captured
     }
 }
 
-impl<T, F: FnOnce(&mut T), C> Drop for ScopeGuard<T, F, C> {
+impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
             on_drop(&mut self.captured);
@@ -1833,46 +1813,29 @@ impl<T, F: FnOnce(&mut T), C> Drop for ScopeGuard<T, F, C> {
 
 /// A scoped manager to save the current value of some variable, and set it to a new value. When
 /// dropped, it restores the variable to its old value.
-#[allow(clippy::type_complexity)] // Not sure how to extract the return type.
 pub fn scoped_push<Context, Accessor, T>(
     mut ctx: Context,
     accessor: Accessor,
     new_value: T,
-) -> ScopeGuard<(Context, Accessor, T), fn(&mut (Context, Accessor, T)), Context>
+) -> impl Deref<Target = Context> + DerefMut<Target = Context>
 where
     Accessor: Fn(&mut Context) -> &mut T,
     T: Copy,
 {
-    fn restore_saved_value<Context, Accessor, T: Copy>(data: &mut (Context, Accessor, T))
-    where
-        Accessor: Fn(&mut Context) -> &mut T,
-    {
-        let (ref mut ctx, ref accessor, saved_value) = data;
-        *accessor(ctx) = *saved_value;
-    }
-    fn view_context<Context, Accessor, T>(data: &(Context, Accessor, T)) -> &Context
-    where
-        Accessor: Fn(&mut Context) -> &mut T,
-    {
-        &data.0
-    }
-    fn view_context_mut<Context, Accessor, T>(data: &mut (Context, Accessor, T)) -> &mut Context
-    where
-        Accessor: Fn(&mut Context) -> &mut T,
-    {
-        &mut data.0
-    }
     let saved_value = mem::replace(accessor(&mut ctx), new_value);
-    ScopeGuard::with_view(
-        (ctx, accessor, saved_value),
-        view_context,
-        view_context_mut,
-        restore_saved_value,
-    )
+    // Store the original/root value, the function to map from the original value to the variables
+    // we are changing, and a saved snapshot of the previous values of those variables in a tuple,
+    // then use ScopeGuard's `on_drop` parameter to restore the saved values when the scope ends.
+    let scope_guard = ScopeGuard::new((ctx, accessor, saved_value), |data| {
+        let (ref mut ctx, accessor, saved_value) = data;
+        *accessor(ctx) = *saved_value;
+    });
+    // `scope_guard` would deref to the tuple we gave it, so use Projection<T> to map from the tuple
+    // `(ctx, accessor, saved_value)` to the result of `accessor(ctx)`.
+    Projection::new(scope_guard, |sg| &sg.0, |sg| &mut sg.0)
 }
 
 pub const fn assert_send<T: Send>() {}
-
 pub const fn assert_sync<T: Sync>() {}
 
 /// This function attempts to distinguish between a console session (at the actual login vty) and a

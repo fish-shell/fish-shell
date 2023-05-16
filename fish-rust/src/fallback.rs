@@ -26,15 +26,17 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
 pub static FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
 
-extern "C" {
-    pub fn wcwidth(c: libc::wchar_t) -> libc::c_int;
-}
-fn system_wcwidth(c: char) -> i32 {
+static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
+
+/// A safe wrapper around the system `wcwidth()` function
+pub fn wcwidth(c: char) -> i32 {
+    extern "C" {
+        pub fn wcwidth(c: libc::wchar_t) -> libc::c_int;
+    }
+
     const _: () = assert!(mem::size_of::<libc::wchar_t>() >= mem::size_of::<char>());
     unsafe { wcwidth(c as libc::wchar_t) }
 }
-
-static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is
 // EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
@@ -43,7 +45,7 @@ pub fn fish_wcwidth(c: char) -> i32 {
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.
     if is_console_session() {
-        return system_wcwidth(c);
+        return wcwidth(c);
     }
 
     // Check for VS16 which selects emoji presentation. This "promotes" a character like U+2764
@@ -68,7 +70,7 @@ pub fn fish_wcwidth(c: char) -> i32 {
     match width {
         WcWidth::NonCharacter | WcWidth::NonPrint | WcWidth::Combining | WcWidth::Unassigned => {
             // Fall back to system wcwidth in this case.
-            system_wcwidth(c)
+            wcwidth(c)
         }
         WcWidth::Ambiguous | WcWidth::PrivateUse => {
             // TR11: "All private-use characters are by default classified as Ambiguous".

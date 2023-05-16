@@ -450,27 +450,18 @@ std::shared_ptr<owning_null_terminated_array_t> env_stack_t::export_arr() {
         rust::Box<OwningNullTerminatedArrayRefFFI>::from_raw(ptr));
 }
 
-/// Wrapper around a EnvDyn.
-class env_dyn_t final : public environment_t {
-   public:
-    env_dyn_t(rust::Box<EnvDyn> impl) : impl_(std::move(impl)) {}
-
-    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode) const {
-        if (auto *ptr = impl_->getf(key, mode)) {
-            return env_var_t::new_ffi(ptr);
-        }
-        return none();
+maybe_t<env_var_t> env_dyn_t::get(const wcstring &key, env_mode_flags_t mode) const {
+    if (auto *ptr = impl_->getf(key, mode)) {
+        return env_var_t::new_ffi(ptr);
     }
+    return none();
+}
 
-    std::vector<wcstring> get_names(env_mode_flags_t flags) const {
-        wcstring_list_ffi_t names;
-        impl_->get_names(flags, names);
-        return std::move(names.vals);
-    }
-
-   private:
-    rust::Box<EnvDyn> impl_;
-};
+std::vector<wcstring> env_dyn_t::get_names(env_mode_flags_t flags) const {
+    wcstring_list_ffi_t names;
+    impl_->get_names(flags, names);
+    return std::move(names.vals);
+}
 
 std::shared_ptr<environment_t> env_stack_t::snapshot() const {
     auto res = std::make_shared<env_dyn_t>(impl_->snapshot());

@@ -313,6 +313,21 @@ bool get_use_posix_spawn();
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();
 
+#if INCLUDE_RUST_HEADERS
+struct EnvDyn;
+/// Wrapper around rust's `&dyn Environment` deriving from `environment_t`.
+class env_dyn_t final : public environment_t {
+   public:
+    env_dyn_t(rust::Box<EnvDyn> impl) : impl_(std::move(impl)) {}
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode) const;
+
+    std::vector<wcstring> get_names(env_mode_flags_t flags) const;
+
+   private:
+    rust::Box<EnvDyn> impl_;
+};
+#endif
+
 /// Gets a path appropriate for runtime storage
 wcstring env_get_runtime_path();
 

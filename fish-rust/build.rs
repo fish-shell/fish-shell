@@ -1,3 +1,4 @@
+use rsconf::{LinkType, Target};
 use std::error::Error;
 
 fn main() {
@@ -19,7 +20,19 @@ fn main() {
     let autocxx_gen_dir = std::env::var("FISH_AUTOCXX_GEN_DIR")
         .unwrap_or(format!("{}/{}", fish_build_dir, "fish-autocxx-gen/"));
 
-    detect_features();
+    let mut build = cc::Build::new();
+    // Add to the default library search path
+    build.flag_if_supported("-L/usr/local/lib/");
+    rsconf::add_library_search_path("/usr/local/lib");
+    let mut detector = Target::new_from(build).unwrap();
+    // Keep verbose mode on until we've ironed out rust build script stuff
+    // Note that if autocxx fails to compile any rust code, you'll see the full and unredacted
+    // stdout/stderr output, which will include things that LOOK LIKE compilation errors as rsconf
+    // tries to build various test files to try and figure out which libraries and symbols are
+    // available. IGNORE THESE and scroll to the very bottom of the build script output, past all
+    // these errors, to see the actual issue.
+    detector.set_verbose(true);
+    detect_features(detector);
 
     // Emit cxx junk.
     // This allows "Rust to be used from C++"
@@ -80,9 +93,7 @@ fn main() {
     b.flag_if_supported("-std=c++11")
         .flag("-Wno-comment")
         .compile("fish-rust-autocxx");
-    for file in source_files {
-        println!("cargo:rerun-if-changed={file}");
-    }
+    rsconf::rebuild_if_paths_changed(&source_files);
 }
 
 /// Dynamically enables certain features at build-time, without their having to be explicitly
@@ -93,19 +104,20 @@ fn main() {
 /// `Cargo.toml`) behind a feature we just enabled.
 ///
 /// [0]: https://github.com/rust-lang/cargo/issues/5499
-fn detect_features() {
-    for (feature, detector) in [
-        // Ignore the first line, it just sets up the type inference. Model new entries after the
+fn detect_features(target: Target) {
+    for (feature, handler) in [
+        // Ignore the first entry, it just sets up the type inference. Model new entries after the
         // second line.
         (
             "",
-            &(|| Ok(false)) as &dyn Fn() -> Result<bool, Box<dyn Error>>,
+            &(|_: &Target| Ok(false)) as &dyn Fn(&Target) -> Result<bool, Box<dyn Error>>,
         ),
         ("bsd", &detect_bsd),
+        ("gettext", &have_gettext),
     ] {
-        match detector() {
-            Err(e) => eprintln!("ERROR: {feature} detect: {e}"),
-            Ok(true) => println!("cargo:rustc-cfg=feature=\"{feature}\""),
+        match handler(&target) {
+            Err(e) => rsconf::warn!("{}: {}", feature, e),
+            Ok(true) => rsconf::enable_feature(feature),
             Ok(false) => (),
         }
     }
@@ -117,7 +129,7 @@ fn detect_features() {
 /// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
 /// doesn't necessarily include less-popular forks nor does it group them into families more
 /// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
-fn detect_bsd() -> Result<bool, Box<dyn Error>> {
+fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
     // Instead of using `uname`, we can inspect the TARGET env variable set by Cargo. This lets us
     // support cross-compilation scenarios.
     let mut target = std::env::var("TARGET").unwrap();
@@ -133,4 +145,49 @@ fn detect_bsd() -> Result<bool, Box<dyn Error>> {
     ))]
     assert!(result, "Target incorrectly detected as not BSD!");
     Ok(result)
+}
+
+/// Detect libintl/gettext and its needed symbols to enable internationalization/localization
+/// support.
+fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
+    // The following script correctly detects and links against gettext, but so long as we are using
+    // C++ and generate a static library linked into the C++ binary via CMake, we need to account
+    // for the CMake option WITH_GETTEXT being explicitly disabled.
+    rsconf::rebuild_if_env_changed("CMAKE_WITH_GETTEXT");
+    if let Some(with_gettext) = std::env::var_os("CMAKE_WITH_GETTEXT") {
+        if with_gettext.eq_ignore_ascii_case("0") {
+            return Ok(false);
+        }
+    }
+
+    // In order for fish to correctly operate, we need some way of notifying libintl to invalidate
+    // its localizations when the locale environment variables are modified. Without the libintl
+    // symbol _nl_msg_cat_cntr, we cannot use gettext even if we find it.
+    let mut libraries = Vec::new();
+    let mut found = 0;
+    let symbols = ["gettext", "_nl_msg_cat_cntr"];
+    for symbol in &symbols {
+        // Historically, libintl was required in order to use gettext() and co, but that
+        // functionality was subsumed by some versions of libc.
+        if target.has_symbol_in::<&str>(symbol, &[]) {
+            // No need to link anything special for this symbol
+            found += 1;
+            continue;
+        }
+        for library in ["intl", "gettextlib"] {
+            if target.has_symbol(symbol, library) {
+                libraries.push(library);
+                found += 1;
+                continue;
+            }
+        }
+    }
+    match found {
+        0 => Ok(false),
+        1 => Err(format!("gettext found but cannot be used without {}", symbols[1]).into()),
+        _ => {
+            rsconf::link_libraries(&libraries, LinkType::Default);
+            Ok(true)
+        }
+    }
 }

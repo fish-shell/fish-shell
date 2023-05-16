@@ -32,6 +32,7 @@ autocxx-build = "0.23.1"
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
 cxx-build = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
 cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
+rsconf = { git = "https://github.com/mqudsi/rsconf", branch = "master" }
 
 [lib]
 crate-type = ["staticlib"]

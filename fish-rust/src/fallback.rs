@@ -10,16 +10,21 @@ use std::cmp;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::{ffi::CString, mem, os::fd::RawFd};
 
-// Width of ambiguous characters. 1 is typical default.
-static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
+/// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
+/// 1 is the typical default, but we accept any non-negative override via `$fish_ambiguous_width`.
+pub static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
 
-// Width of emoji characters.
-// 1 is the typical emoji width in Unicode 8.
-static FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
-
-fn fish_get_emoji_width() -> i32 {
-    FISH_EMOJI_WIDTH.load(Ordering::Relaxed)
-}
+/// Width of emoji characters.
+///
+/// This must be configurable because the value changed between Unicode 8 and Unicode 9, `wcwidth()`
+/// is emoji-unaware, and terminal emulators do different things.
+///
+/// See issues like #4539 and https://github.com/neovim/issues/4976 for how painful this is.
+///
+/// Valid values are 1, and 2. 1 is the typical emoji width used in Unicode 8 while some newer
+/// terminals use a width of 2 since Unicode 9.
+// For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
+pub static FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
 
 extern "C" {
     pub fn wcwidth(c: libc::wchar_t) -> libc::c_int;
@@ -71,7 +76,7 @@ pub fn fish_wcwidth(c: char) -> i32 {
         }
         WcWidth::One => 1,
         WcWidth::Two => 2,
-        WcWidth::WidenedIn9 => fish_get_emoji_width(),
+        WcWidth::WidenedIn9 => FISH_EMOJI_WIDTH.load(Ordering::Relaxed),
     }
 }
 

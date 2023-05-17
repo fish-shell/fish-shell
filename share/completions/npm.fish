@@ -73,6 +73,7 @@ end
 # see: https://github.com/npm/npm/issues/9524
 # and: https://github.com/fish-shell/fish-shell/pull/2366
 complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run; and not __fish_npm_using_command run-script;
+and not __fish_npm_using_command audit;
 and not __fish_npm_using_command r; and not __fish_npm_using_command remove; and not __fish_npm_using_command rm; and not __fish_npm_using_command un;
 and not __fish_npm_using_command uninstall; and not __fish_npm_using_command unlink' -a "(__fish_complete_npm)"
 
@@ -109,6 +110,20 @@ for c in run-script run rum urn
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Run arbitrary package scripts'
     complete -f -c npm -n "__fish_npm_using_command $c" -a "(__fish_npm_run)"
 end
+
+# audit
+complete -f -c npm -n __fish_npm_needs_command -a audit -d 'Run a security audit'
+complete -f -c npm -n '__fish_npm_using_command audit' -a signatures -d 'Verify registry signatures'
+complete -f -c npm -n '__fish_npm_using_command audit' -a fix -d 'Automatically install any compatible updates to vulnerable dependencies'
+complete -x -c npm -n '__fish_npm_using_command audit' -l audit-level -a 'info low moderate high critical none' -d 'Audit level'
+complete -f -c npm -n '__fish_npm_using_command audit' -l dry-run -d 'Only report what it would have done'
+complete -f -c npm -n '__fish_npm_using_command audit' -l force -d 'Removes various protections against unfortunate side effects, common mistakes, and malicious input'
+complete -f -c npm -n '__fish_npm_using_command audit' -l json -d 'Show information in JSON format'
+complete -f -c npm -n '__fish_npm_using_command audit' -l package-lock-only -d 'Only use the package-lock.json, ignore node_modules'
+complete -x -c npm -n '__fish_npm_using_command audit' -l omit -a 'dev optional peer' -d 'Omit dependency type'
+complete -f -c npm -n '__fish_npm_using_command audit' -l foreground-scripts -d 'Run all build scripts in the foreground process'
+complete -f -c npm -n '__fish_npm_using_command audit' -l ignore-scripts -d 'Do not run scripts specified in package.json'
+complete -f -c npm -n '__fish_npm_using_command audit' -l install-links -d 'Pack and install file: protocol dependences as regular dependencies instead of symlinks'
 
 # cache
 complete -f -c npm -n __fish_npm_needs_command -a cache -d "Manipulates package's cache"
@@ -204,7 +219,6 @@ end
 
 # misc shorter explanations
 complete -f -c npm -n __fish_npm_needs_command -a 'adduser add-user login' -d 'Add a registry user account'
-complete -f -c npm -n __fish_npm_needs_command -a audit -d 'Run a security audit'
 complete -f -c npm -n __fish_npm_needs_command -a 'bugs issues' -d 'Bugs for a package in a web browser maybe'
 complete -f -c npm -n __fish_npm_needs_command -a 'ci clean-install ic install-clean isntall-clean' -d 'Clean install a project'
 complete -f -c npm -n __fish_npm_needs_command -a 'dedupe ddp find-dupes' -d 'Reduce duplication'

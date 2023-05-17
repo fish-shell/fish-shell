@@ -72,7 +72,7 @@ end
 # and uninstall (reading dependencies is faster and more robust and yarn needs the functions anyways)
 # see: https://github.com/npm/npm/issues/9524
 # and: https://github.com/fish-shell/fish-shell/pull/2366
-complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run run-script audit r remove rm un uninstall unlink' -a "(__fish_complete_npm)"
+complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run-script run rum urn audit uninstall unlink remove rm r un' -a "(__fish_complete_npm)"
 
 # list available npm scripts and their parial content
 function __fish_parse_npm_run_completions
@@ -174,10 +174,12 @@ for c in ls list ll la
 end
 
 # owner
-complete -f -c npm -n __fish_npm_needs_command -a owner -d 'Manage package owners'
-complete -f -c npm -n '__fish_npm_using_command owner' -a ls -d 'List package owners'
-complete -f -c npm -n '__fish_npm_using_command owner' -a add -d 'Add a new owner to package'
-complete -f -c npm -n '__fish_npm_using_command owner' -a rm -d 'Remove an owner from package'
+for c in owner author
+    complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Manage package owners'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a ls -d 'List package owners'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a add -d 'Add a new owner to package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a rm -d 'Remove an owner from package'
+end
 
 # pack
 complete -f -c npm -n __fish_npm_needs_command -a pack -d 'Create a tarball from a package'
@@ -218,6 +220,7 @@ end
 complete -f -c npm -n __fish_npm_needs_command -a 'adduser add-user login' -d 'Add a registry user account'
 complete -f -c npm -n __fish_npm_needs_command -a 'bugs issues' -d 'Bugs for a package in a web browser maybe'
 complete -f -c npm -n __fish_npm_needs_command -a 'ci clean-install ic install-clean isntall-clean' -d 'Clean install a project'
+complete -f -c npm -n __fish_npm_needs_command -a completion -d 'Tab Completion for npm'
 complete -f -c npm -n __fish_npm_needs_command -a 'dedupe ddp find-dupes' -d 'Reduce duplication'
 complete -f -c npm -n __fish_npm_needs_command -a deprecate -d 'Deprecate a version of a package'
 complete -f -c npm -n __fish_npm_needs_command -a diff -d 'The registry diff command'
@@ -262,4 +265,4 @@ complete -f -c npm -n __fish_npm_needs_command -a unstar -d 'Remove star from a 
 complete -f -c npm -n __fish_npm_needs_command -a 'version verison' -d 'Bump a package version'
 complete -f -c npm -n __fish_npm_needs_command -a 'view info v show' -d 'View registry info'
 complete -f -c npm -n __fish_npm_needs_command -a whoami -d 'Display npm username'
-complete -f -c npm -n '__fish_seen_subcommand_from add i install; and not __fish_is_switch' -a "(__npm_filtered_list_packages \"$npm_install\")"
+complete -f -c npm -n '__fish_seen_subcommand_from add i in ins inst insta instal isnt isnta isntal isntall; and not __fish_is_switch' -a "(__npm_filtered_list_packages \"$npm_install\")"

@@ -21,7 +21,7 @@ function __fish_npm_using_command
     set -l cmd (commandline -opc)
 
     if test (count $cmd) -gt 1
-        if test $argv[1] = $cmd[2]
+        if contains -- $cmd[2] $argv
             return 0
         end
     end
@@ -72,10 +72,7 @@ end
 # and uninstall (reading dependencies is faster and more robust and yarn needs the functions anyways)
 # see: https://github.com/npm/npm/issues/9524
 # and: https://github.com/fish-shell/fish-shell/pull/2366
-complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run; and not __fish_npm_using_command run-script;
-and not __fish_npm_using_command audit;
-and not __fish_npm_using_command r; and not __fish_npm_using_command remove; and not __fish_npm_using_command rm; and not __fish_npm_using_command un;
-and not __fish_npm_using_command uninstall; and not __fish_npm_using_command unlink' -a "(__fish_complete_npm)"
+complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run run-script audit r remove rm un uninstall unlink' -a "(__fish_complete_npm)"
 
 # list available npm scripts and their parial content
 function __fish_parse_npm_run_completions
@@ -114,11 +111,11 @@ end
 # audit
 complete -f -c npm -n __fish_npm_needs_command -a audit -d 'Run a security audit'
 complete -f -c npm -n '__fish_npm_using_command audit' -a signatures -d 'Verify registry signatures'
-complete -f -c npm -n '__fish_npm_using_command audit' -a fix -d 'Automatically install any compatible updates to vulnerable dependencies'
+complete -f -c npm -n '__fish_npm_using_command audit' -a fix -d 'Install compatible updates to vulnerable deps'
 complete -x -c npm -n '__fish_npm_using_command audit' -l audit-level -a 'info low moderate high critical none' -d 'Audit level'
 complete -f -c npm -n '__fish_npm_using_command audit' -l dry-run -d 'Only report what it would have done'
-complete -f -c npm -n '__fish_npm_using_command audit' -l force -d 'Removes various protections against unfortunate side effects, common mistakes, and malicious input'
-complete -f -c npm -n '__fish_npm_using_command audit' -l json -d 'Show information in JSON format'
+complete -f -c npm -n '__fish_npm_using_command audit' -l force -d 'Removes various protections'
+complete -f -c npm -n '__fish_npm_using_command audit' -l json -d 'Output JSON'
 complete -f -c npm -n '__fish_npm_using_command audit' -l package-lock-only -d 'Only use the package-lock.json, ignore node_modules'
 complete -x -c npm -n '__fish_npm_using_command audit' -l omit -a 'dev optional peer' -d 'Omit dependency type'
 complete -f -c npm -n '__fish_npm_using_command audit' -l foreground-scripts -d 'Run all build scripts in the foreground process'
@@ -170,7 +167,7 @@ end
 for c in ls list ll la
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'List installed packages'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Output JSON'
     complete -f -c npm -n "__fish_npm_using_command $c" -l long -d 'Show extended information'
     complete -f -c npm -n "__fish_npm_using_command $c" -l parseable -d 'Show parseable output instead of tree view'
     complete -x -c npm -n "__fish_npm_using_command $c" -l depth -d 'Max display depth of the dependency tree'
@@ -185,7 +182,7 @@ complete -f -c npm -n '__fish_npm_using_command owner' -a rm -d 'Remove an owner
 # pack
 complete -f -c npm -n __fish_npm_needs_command -a pack -d 'Create a tarball from a package'
 complete -f -c npm -n '__fish_npm_using_command pack' -l dry-run -d 'Only report what it would have done'
-complete -f -c npm -n '__fish_npm_using_command pack' -l json -d 'Output JSON data'
+complete -f -c npm -n '__fish_npm_using_command pack' -l json -d 'Output JSON'
 complete -c npm -n '__fish_npm_using_command pack' -l pack-destination -d 'Tarball destination directory'
 
 # publish

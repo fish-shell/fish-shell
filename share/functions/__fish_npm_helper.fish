@@ -55,9 +55,9 @@ function __npm_installed_global_packages
 	set -l node_modules "$prefix/lib/node_modules"
 
 	for path in $node_modules/*
-		set -l mod (string split '/' $path)[-1]
+		set -l mod (path basename -- $path)
 
-		if test (string match -r "^@" $mod)
+		if string match -rq "^@" $mod
 			for sub_path in $path/*
 				set -l sub_mod (string split '/' $sub_path)[-1]
 				echo $mod/$sub_mod

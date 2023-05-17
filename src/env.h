@@ -308,11 +308,6 @@ class env_stack_t final : public environment_t {
     rust::Box<EnvStackRef> impl_;
 };
 
-bool get_use_posix_spawn();
-
-/// Returns true if we think the terminal supports setting its title.
-bool term_supports_setting_title();
-
 #if INCLUDE_RUST_HEADERS
 struct EnvDyn;
 /// Wrapper around rust's `&dyn Environment` deriving from `environment_t`.

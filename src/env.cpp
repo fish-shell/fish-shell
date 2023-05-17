@@ -20,7 +20,7 @@
 
 #include "abbrs.h"
 #include "common.h"
-#include "env_dispatch.h"
+#include "env_dispatch.rs.h"
 #include "env_universal_common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -364,7 +364,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
 
     // Allow changes to variables to produce events.
-    env_dispatch_init(vars);
+    env_dispatch_init_ffi(/* vars */);
 
     init_input();
 

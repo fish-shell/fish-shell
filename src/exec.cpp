@@ -32,6 +32,7 @@
 #include "builtin.h"
 #include "common.h"
 #include "env.h"
+#include "env_dispatch.rs.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
@@ -214,7 +215,7 @@ bool is_thompson_shell_script(const char *path) {
 static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
                                         const dup2_list_t &dup2s) {
     // Is it globally disabled?
-    if (!get_use_posix_spawn()) return false;
+    if (!use_posix_spawn()) return false;
 
     // Hack - do not use posix_spawn if there are self-fd redirections.
     // For example if you were to write:

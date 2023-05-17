@@ -50,6 +50,7 @@
 #include "common.h"
 #include "complete.h"
 #include "env.h"
+#include "env_dispatch.rs.h"
 #include "event.h"
 #include "exec.h"
 #include "expand.h"

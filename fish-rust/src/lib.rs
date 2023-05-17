@@ -20,6 +20,7 @@ mod color;
 mod compat;
 mod curses;
 mod env;
+mod env_dispatch;
 mod event;
 mod expand;
 mod fallback;

@@ -1273,10 +1273,10 @@ void history_impl_t::incorporate_external_changes() {
 }
 
 /// Return the prefix for the files to be used for command and read history.
-wcstring history_session_id(const environment_t &vars) {
+wcstring history_session_id(std::unique_ptr<env_var_t> fish_history) {
     wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 
-    const auto var = vars.get(L"fish_history");
+    const auto var = std::move(fish_history);
     if (var) {
         wcstring session_id = var->as_string();
         if (session_id.empty()) {
@@ -1292,6 +1292,13 @@ wcstring history_session_id(const environment_t &vars) {
     }
 
     return result;
+}
+
+wcstring history_session_id(const environment_t &vars) {
+    auto fish_history = vars.get(L"fish_history");
+    auto var =
+        fish_history ? std::make_unique<env_var_t>(*fish_history) : std::unique_ptr<env_var_t>{};
+    return history_session_id(std::move(var));
 }
 
 path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_t &vars) {

@@ -40,9 +40,11 @@ fn main() {
     let source_files = vec![
         "src/abbrs.rs",
         "src/ast.rs",
-        "src/env/env_ffi.rs",
-        "src/event.rs",
+        "src/builtins/shared.rs",
         "src/common.rs",
+        "src/env/env_ffi.rs",
+        "src/env_dispatch.rs",
+        "src/event.rs",
         "src/fd_monitor.rs",
         "src/fd_readable_set.rs",
         "src/fds.rs",
@@ -60,14 +62,13 @@ fn main() {
         "src/signal.rs",
         "src/smoke.rs",
         "src/termsize.rs",
+        "src/threads.rs",
         "src/timer.rs",
         "src/tokenizer.rs",
         "src/topic_monitor.rs",
-        "src/threads.rs",
         "src/trace.rs",
         "src/util.rs",
         "src/wait_handle.rs",
-        "src/builtins/shared.rs",
     ];
     cxx_build::bridges(&source_files)
         .flag_if_supported("-std=c++11")

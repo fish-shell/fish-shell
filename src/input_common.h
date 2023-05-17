@@ -186,6 +186,7 @@ class char_event_t {
 /// Adjust the escape timeout.
 class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
+void update_wait_on_escape_ms_ffi(std::unique_ptr<env_var_t> fish_escape_delay_ms);
 
 /// A class which knows how to produce a stream of input events.
 /// This is a base class; you may subclass it for its override points.

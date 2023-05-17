@@ -140,6 +140,23 @@ void update_wait_on_escape_ms(const environment_t& vars) {
     }
 }
 
+void update_wait_on_escape_ms_ffi(std::unique_ptr<env_var_t> fish_escape_delay_ms) {
+    if (!fish_escape_delay_ms) {
+        wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
+        return;
+    }
+
+    long tmp = fish_wcstol(fish_escape_delay_ms->as_string().c_str());
+    if (errno || tmp < 10 || tmp >= 5000) {
+        std::fwprintf(stderr,
+                      L"ignoring fish_escape_delay_ms: value '%ls' "
+                      L"is not an integer or is < 10 or >= 5000 ms\n",
+                      fish_escape_delay_ms->as_string().c_str());
+    } else {
+        wait_on_escape_ms = static_cast<int>(tmp);
+    }
+}
+
 maybe_t<char_event_t> input_event_queue_t::try_pop() {
     if (queue_.empty()) {
         return none();

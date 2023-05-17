@@ -105,7 +105,8 @@ for k,v in data["scripts"].items(): print(k + "\t" + v[:18])' <package.json 2>/d
 end
 
 # run
-for c in run run-script
+for c in run-script run rum urn
+    complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Run arbitrary package scripts'
     complete -f -c npm -n "__fish_npm_using_command $c" -a "(__fish_npm_run)"
 end
 
@@ -116,7 +117,7 @@ complete -f -c npm -n '__fish_npm_using_command cache' -a clean -d 'Delete  data
 complete -f -c npm -n '__fish_npm_using_command cache' -a ls -d 'Show the data in the cache'
 
 # config
-for c in c config
+for c in config c
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Manage the npm configuration files'
     complete -f -c npm -n "__fish_npm_using_command $c" -a set -d 'Sets the config key to the value'
     complete -f -c npm -n "__fish_npm_using_command $c" -a get -d 'Echo the config value to stdout'
@@ -151,7 +152,7 @@ for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall
 end
 
 # list
-for c in la list ll ls
+for c in ls list ll la
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'List installed packages'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
     complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
@@ -181,7 +182,7 @@ complete -x -c npm -n '__fish_npm_using_command publish' -l otp -d '2FA one-time
 ## todo provenance ?
 
 # remove
-for c in r remove rm un uninstall unlink
+for c in uninstall unlink remove rm r un
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Remove a package'
     complete -x -c npm -n "__fish_npm_using_command $c" -d 'remove package' -a '(__yarn_installed_local_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package' -a '(__npm_installed_global_packages)'
@@ -190,46 +191,64 @@ for c in r remove rm un uninstall unlink
 end
 
 # search
-for c in find s se search
+for c in search find s se
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Search for packages'
     complete -x -c npm -n "__fish_npm_using_command $c" -l long -d 'Display full package descriptions and other long text across multiple lines'
 end
 
 # update
-for c in up update
+for c in update up upgrade udpate
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Update package(s)'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Update global package(s)'
 end
 
 # misc shorter explanations
 complete -f -c npm -n __fish_npm_needs_command -a 'adduser add-user login' -d 'Add a registry user account'
-complete -f -c npm -n __fish_npm_needs_command -a bin -d 'Display npm bin folder'
+complete -f -c npm -n __fish_npm_needs_command -a audit -d 'Run a security audit'
 complete -f -c npm -n __fish_npm_needs_command -a 'bugs issues' -d 'Bugs for a package in a web browser maybe'
-complete -f -c npm -n __fish_npm_needs_command -a 'ddp dedupe find-dupes' -d 'Reduce duplication'
+complete -f -c npm -n __fish_npm_needs_command -a 'ci clean-install ic install-clean isntall-clean' -d 'Clean install a project'
+complete -f -c npm -n __fish_npm_needs_command -a 'dedupe ddp find-dupes' -d 'Reduce duplication'
 complete -f -c npm -n __fish_npm_needs_command -a deprecate -d 'Deprecate a version of a package'
+complete -f -c npm -n __fish_npm_needs_command -a diff -d 'The registry diff command'
+complete -f -c npm -n __fish_npm_needs_command -a 'dist-tag dist-tags' -d 'Modify package distribution tags'
 complete -f -c npm -n __fish_npm_needs_command -a 'docs home' -d 'Docs for a package in a web browser maybe'
+complete -f -c npm -n __fish_npm_needs_command -a doctor -d 'Check your npm environment'
 complete -f -c npm -n __fish_npm_needs_command -a edit -d 'Edit an installed package'
+complete -f -c npm -n __fish_npm_needs_command -a exec -d 'Run a command from a local or remote npm package'
+complete -f -c npm -n __fish_npm_needs_command -a 'explain why' -d 'Explain installed packages'
 complete -f -c npm -n __fish_npm_needs_command -a explore -d 'Browse an installed package'
-complete -f -c npm -n __fish_npm_needs_command -a faq -d 'Frequently Asked Questions'
+complete -f -c npm -n __fish_npm_needs_command -a fund -d 'Retrieve funding information'
+complete -f -c npm -n __fish_npm_needs_command -a 'help hlep' -d 'Get help on npm'
 complete -f -c npm -n __fish_npm_needs_command -a help-search -d 'Search npm help documentation'
 complete -f -c npm -n '__fish_npm_using_command help-search' -l long -d 'Display full package descriptions and other long text across multiple lines'
-complete -f -c npm -n __fish_npm_needs_command -a 'info v view' -d 'View registry info'
+complete -f -c npm -n __fish_npm_needs_command -a hook -d 'Manage registry hooks'
+complete -f -c npm -n __fish_npm_needs_command -a 'install-ci-test cit clean-install-test sit' -d 'Install a project with a clean slate and run tests'
+complete -f -c npm -n __fish_npm_needs_command -a 'install-test it' -d 'Install package(s) and run tests'
 complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
+complete -f -c npm -n __fish_npm_needs_command -a logout -d 'Log out of the registry'
+complete -f -c npm -n __fish_npm_needs_command -a 'org ogr' -d 'Manage orgs'
 complete -f -c npm -n __fish_npm_needs_command -a outdated -d 'Check for outdated packages'
-complete -f -c npm -n __fish_npm_needs_command -a prefix -d 'Display NPM prefix'
+complete -f -c npm -n __fish_npm_needs_command -a ping -d 'Ping npm registry'
+complete -f -c npm -n __fish_npm_needs_command -a pkg -d 'Manages your package.json'
+complete -f -c npm -n __fish_npm_needs_command -a prefix -d 'Display npm prefix'
+complete -f -c npm -n __fish_npm_needs_command -a profile -d 'Change settings on your registry profile'
 complete -f -c npm -n __fish_npm_needs_command -a prune -d 'Remove extraneous packages'
-complete -f -c npm -n __fish_npm_needs_command -a 'rb rebuild' -d 'Rebuild a package'
-complete -f -c npm -n __fish_npm_needs_command -a 'root ' -d 'Display npm root'
-complete -f -c npm -n __fish_npm_needs_command -a 'run-script run' -d 'Run arbitrary package scripts'
+complete -f -c npm -n __fish_npm_needs_command -a query -d 'Dependency selector query'
+complete -f -c npm -n __fish_npm_needs_command -a 'rebuild rb' -d 'Rebuild a package'
+complete -f -c npm -n __fish_npm_needs_command -a repo -d 'Open package repository page in the browser'
+complete -f -c npm -n __fish_npm_needs_command -a restart -d 'Restart a package'
+complete -f -c npm -n __fish_npm_needs_command -a root -d 'Display npm root'
 complete -f -c npm -n __fish_npm_needs_command -a shrinkwrap -d 'Lock down dependency versions'
 complete -f -c npm -n __fish_npm_needs_command -a star -d 'Mark your favorite packages'
 complete -f -c npm -n __fish_npm_needs_command -a stars -d 'View packages marked as favorites'
 complete -f -c npm -n __fish_npm_needs_command -a start -d 'Start a package'
 complete -f -c npm -n __fish_npm_needs_command -a stop -d 'Stop a package'
-complete -f -c npm -n __fish_npm_needs_command -a submodule -d 'Add a package as a git submodule'
-complete -f -c npm -n __fish_npm_needs_command -a 't tst test' -d 'Test a package'
+complete -f -c npm -n __fish_npm_needs_command -a team -d 'Manage organization teams and team memberships'
+complete -f -c npm -n __fish_npm_needs_command -a 'test tst t' -d 'Test a package'
+complete -f -c npm -n __fish_npm_needs_command -a token -d 'Manage your authentication tokens'
 complete -f -c npm -n __fish_npm_needs_command -a unpublish -d 'Remove a package from the registry'
 complete -f -c npm -n __fish_npm_needs_command -a unstar -d 'Remove star from a package'
-complete -f -c npm -n __fish_npm_needs_command -a version -d 'Bump a package version'
+complete -f -c npm -n __fish_npm_needs_command -a 'version verison' -d 'Bump a package version'
+complete -f -c npm -n __fish_npm_needs_command -a 'view info v show' -d 'View registry info'
 complete -f -c npm -n __fish_npm_needs_command -a whoami -d 'Display npm username'
 complete -f -c npm -n '__fish_seen_subcommand_from add i install; and not __fish_is_switch' -a "(__yarn_filtered_list_packages \"$npm_install\")"

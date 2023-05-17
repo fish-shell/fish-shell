@@ -196,7 +196,7 @@ complete -x -c npm -n '__fish_npm_using_command publish' -l otp -d '2FA one-time
 # remove
 for c in uninstall unlink remove rm r un
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Remove a package'
-    complete -x -c npm -n "__fish_npm_using_command $c" -d 'remove package' -a '(__yarn_installed_local_packages)'
+    complete -x -c npm -n "__fish_npm_using_command $c" -d 'remove package' -a '(__npm_installed_local_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package' -a '(__npm_installed_global_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -l save -d 'Package will be removed from your dependencies'
     complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
@@ -262,4 +262,4 @@ complete -f -c npm -n __fish_npm_needs_command -a unstar -d 'Remove star from a 
 complete -f -c npm -n __fish_npm_needs_command -a 'version verison' -d 'Bump a package version'
 complete -f -c npm -n __fish_npm_needs_command -a 'view info v show' -d 'View registry info'
 complete -f -c npm -n __fish_npm_needs_command -a whoami -d 'Display npm username'
-complete -f -c npm -n '__fish_seen_subcommand_from add i install; and not __fish_is_switch' -a "(__yarn_filtered_list_packages \"$npm_install\")"
+complete -f -c npm -n '__fish_seen_subcommand_from add i install; and not __fish_is_switch' -a "(__npm_filtered_list_packages \"$npm_install\")"

@@ -113,14 +113,14 @@ complete -f -c npm -n __fish_npm_needs_command -a audit -d 'Run a security audit
 complete -f -c npm -n '__fish_npm_using_command audit' -a signatures -d 'Verify registry signatures'
 complete -f -c npm -n '__fish_npm_using_command audit' -a fix -d 'Install compatible updates to vulnerable deps'
 complete -x -c npm -n '__fish_npm_using_command audit' -l audit-level -a 'info low moderate high critical none' -d 'Audit level'
-complete -f -c npm -n '__fish_npm_using_command audit' -l dry-run -d 'Only report what it would have done'
+complete -f -c npm -n '__fish_npm_using_command audit' -l dry-run -d 'Do not modify'
 complete -f -c npm -n '__fish_npm_using_command audit' -l force -d 'Removes various protections'
 complete -f -c npm -n '__fish_npm_using_command audit' -l json -d 'Output JSON'
-complete -f -c npm -n '__fish_npm_using_command audit' -l package-lock-only -d 'Only use the package-lock.json, ignore node_modules'
+complete -f -c npm -n '__fish_npm_using_command audit' -l package-lock-only -d 'Only use package-lock.json, ignore node_modules'
 complete -x -c npm -n '__fish_npm_using_command audit' -l omit -a 'dev optional peer' -d 'Omit dependency type'
-complete -f -c npm -n '__fish_npm_using_command audit' -l foreground-scripts -d 'Run all build scripts in the foreground process'
+complete -f -c npm -n '__fish_npm_using_command audit' -l foreground-scripts -d 'Run all build scripts in the foreground'
 complete -f -c npm -n '__fish_npm_using_command audit' -l ignore-scripts -d 'Do not run scripts specified in package.json'
-complete -f -c npm -n '__fish_npm_using_command audit' -l install-links -d 'Pack and install file: protocol dependences as regular dependencies instead of symlinks'
+complete -f -c npm -n '__fish_npm_using_command audit' -l install-links -d 'Install file: protocol dependencies as regular dependencies instead of symlinks'
 
 # cache
 complete -f -c npm -n __fish_npm_needs_command -a cache -d "Manipulates package's cache"
@@ -151,12 +151,12 @@ end
 # install
 for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall
     complete -c npm -n __fish_npm_needs_command -a "$c" -d 'Install a package'
-    complete -f -c npm -n "__fish_npm_using_command $c" -s B -l save-bundle -d 'Also save to bundleDependencies in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s B -l save-bundle -d 'Also save to bundleDependencies in'
     complete -f -c npm -n "__fish_npm_using_command $c" -s E -l save-exact -d 'Save dependency with exact version rather than a semver range'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies in package.json'
-    complete -f -c npm -n "__fish_npm_using_command $c" -s O -l save-optional -d 'Save to optionalDependencies in package.json'
-    complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies in package.json'
-    complete -f -c npm -n "__fish_npm_using_command $c" -s D -l save-dev -d 'Save to devDependencies in package.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s O -l save-optional -d 'Save to optionalDependencies'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s D -l save-dev -d 'Save to devDependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Install package globally'
     complete -x -c npm -n "__fish_npm_using_command $c" -l omit -a 'dev optional peer' -d 'Omit dependency type'
     complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d 'Do not run scripts specified in package.json'
@@ -183,7 +183,7 @@ end
 
 # pack
 complete -f -c npm -n __fish_npm_needs_command -a pack -d 'Create a tarball from a package'
-complete -f -c npm -n '__fish_npm_using_command pack' -l dry-run -d 'Only report what it would have done'
+complete -f -c npm -n '__fish_npm_using_command pack' -l dry-run -d 'Do not modify'
 complete -f -c npm -n '__fish_npm_using_command pack' -l json -d 'Output JSON'
 complete -c npm -n '__fish_npm_using_command pack' -l pack-destination -d 'Tarball destination directory'
 
@@ -191,7 +191,7 @@ complete -c npm -n '__fish_npm_using_command pack' -l pack-destination -d 'Tarba
 complete -f -c npm -n __fish_npm_needs_command -a publish -d 'Publish a package'
 complete -x -c npm -n '__fish_npm_using_command publish' -l tag -d 'Upload to tag'
 complete -x -c npm -n '__fish_npm_using_command publish' -l access -d 'Restrict access' -a "public\t'Publicly viewable' restricted\t'Restricted access (scoped packages only)'"
-complete -f -c npm -n '__fish_npm_using_command publish' -l dry-run -d 'Only report what it would have done'
+complete -f -c npm -n '__fish_npm_using_command publish' -l dry-run -d 'Do not modify'
 complete -x -c npm -n '__fish_npm_using_command publish' -l otp -d '2FA one-time password'
 ## todo provenance ?
 

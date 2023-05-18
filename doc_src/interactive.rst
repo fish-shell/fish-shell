@@ -552,6 +552,10 @@ If you change your mind on a binding and want to go back to fish's default, you 
 
 Fish remembers its preset bindings and so it will take effect again. This saves you from having to remember what it was before and add it again yourself.
 
+If you use :ref:`vi bindings <vi-mode>`, note that ``bind`` will by default bind keys in :ref:`command mode <vi-mode-command>`. To bind something in :ref:`insert mode <vi-mode-insert>`::
+
+  bind --mode insert \cc 'commandline -r ""'
+
 Key sequences
 """""""""""""
 

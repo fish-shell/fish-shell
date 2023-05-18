@@ -72,7 +72,7 @@ end
 # and uninstall (reading dependencies is faster and more robust and yarn needs the functions anyways)
 # see: https://github.com/npm/npm/issues/9524
 # and: https://github.com/fish-shell/fish-shell/pull/2366
-complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run-script run rum urn audit uninstall unlink remove rm r un' -a "(__fish_complete_npm)"
+complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run-script run rum urn audit cache uninstall unlink remove rm r un' -a "(__fish_complete_npm)"
 
 # list available npm scripts and their parial content
 function __fish_parse_npm_run_completions
@@ -113,14 +113,14 @@ complete -f -c npm -n __fish_npm_needs_command -a audit -d 'Run a security audit
 complete -f -c npm -n '__fish_npm_using_command audit' -a signatures -d 'Verify registry signatures'
 complete -f -c npm -n '__fish_npm_using_command audit' -a fix -d 'Install compatible updates to vulnerable deps'
 complete -x -c npm -n '__fish_npm_using_command audit' -l audit-level -a 'info low moderate high critical none' -d 'Audit level'
-complete -f -c npm -n '__fish_npm_using_command audit' -l dry-run -d 'Do not modify'
+complete -f -c npm -n '__fish_npm_using_command audit' -l dry-run -d 'Do not make any changes'
 complete -f -c npm -n '__fish_npm_using_command audit' -l force -d 'Removes various protections'
 complete -f -c npm -n '__fish_npm_using_command audit' -l json -d 'Output JSON'
 complete -f -c npm -n '__fish_npm_using_command audit' -l package-lock-only -d 'Only use package-lock.json, ignore node_modules'
 complete -x -c npm -n '__fish_npm_using_command audit' -l omit -a 'dev optional peer' -d 'Omit dependency type'
 complete -f -c npm -n '__fish_npm_using_command audit' -l foreground-scripts -d 'Run all build scripts in the foreground'
 complete -f -c npm -n '__fish_npm_using_command audit' -l ignore-scripts -d 'Do not run scripts specified in package.json'
-complete -f -c npm -n '__fish_npm_using_command audit' -l install-links -d 'Install file: protocol dependencies as regular dependencies instead of symlinks'
+complete -f -c npm -n '__fish_npm_using_command audit' -l install-links -d 'Install file: protocol deps as regular deps instead of symlinks'
 
 # cache
 complete -f -c npm -n __fish_npm_needs_command -a cache -d "Manipulates package's cache"
@@ -142,6 +142,10 @@ end
 complete -f -c npm -n __fish_npm_needs_command -a get -d 'Echo the config value to stdout'
 complete -f -c npm -n __fish_npm_needs_command -a set -d 'Sets the config key to the value'
 
+# help-search
+complete -f -c npm -n __fish_npm_needs_command -a help-search -d 'Search npm help documentation'
+complete -f -c npm -n '__fish_npm_using_command help-search' -l long -d 'Show extended information'
+
 # init
 for c in init create innit
     complete -c npm -n __fish_npm_needs_command -a "$c" -d 'Create a package.json file'
@@ -151,8 +155,8 @@ end
 # install
 for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall
     complete -c npm -n __fish_npm_needs_command -a "$c" -d 'Install a package'
-    complete -f -c npm -n "__fish_npm_using_command $c" -s B -l save-bundle -d 'Also save to bundleDependencies in'
-    complete -f -c npm -n "__fish_npm_using_command $c" -s E -l save-exact -d 'Save dependency with exact version rather than a semver range'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s B -l save-bundle -d 'Also save to bundleDependencies'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s E -l save-exact -d 'Save dependency with exact version'
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s O -l save-optional -d 'Save to optionalDependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies'
@@ -160,7 +164,7 @@ for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Install package globally'
     complete -x -c npm -n "__fish_npm_using_command $c" -l omit -a 'dev optional peer' -d 'Omit dependency type'
     complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d 'Do not run scripts specified in package.json'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l install-links -d 'Pack and install file: protocol dependences as regular dependencies instead of symlinks'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l install-links -d 'Install file: protocol deps as regular deps instead of symlinks'
 end
 
 # list
@@ -179,28 +183,29 @@ for c in owner author
     complete -f -c npm -n "__fish_npm_using_command $c" -a ls -d 'List package owners'
     complete -f -c npm -n "__fish_npm_using_command $c" -a add -d 'Add a new owner to package'
     complete -f -c npm -n "__fish_npm_using_command $c" -a rm -d 'Remove an owner from package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l registry -d 'Registry base URL'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l otp -d '2FA one-time password'
 end
 
 # pack
 complete -f -c npm -n __fish_npm_needs_command -a pack -d 'Create a tarball from a package'
-complete -f -c npm -n '__fish_npm_using_command pack' -l dry-run -d 'Do not modify'
+complete -f -c npm -n '__fish_npm_using_command pack' -l dry-run -d 'Do not make any changes'
 complete -f -c npm -n '__fish_npm_using_command pack' -l json -d 'Output JSON'
-complete -c npm -n '__fish_npm_using_command pack' -l pack-destination -d 'Tarball destination directory'
+complete -x -c npm -n '__fish_npm_using_command pack' -l pack-destination -a '(__fish_complete_directories)' -d 'Tarball destination directory'
 
 # publish
 complete -f -c npm -n __fish_npm_needs_command -a publish -d 'Publish a package'
 complete -x -c npm -n '__fish_npm_using_command publish' -l tag -d 'Upload to tag'
 complete -x -c npm -n '__fish_npm_using_command publish' -l access -d 'Restrict access' -a "public\t'Publicly viewable' restricted\t'Restricted access (scoped packages only)'"
-complete -f -c npm -n '__fish_npm_using_command publish' -l dry-run -d 'Do not modify'
+complete -f -c npm -n '__fish_npm_using_command publish' -l dry-run -d 'Do not make any changes'
 complete -x -c npm -n '__fish_npm_using_command publish' -l otp -d '2FA one-time password'
-## todo provenance ?
+complete -x -c npm -n '__fish_npm_using_command publish' -l provenance -d 'Link to build location when publishing from CI/CD'
 
 # remove
 for c in uninstall unlink remove rm r un
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Remove a package'
-    complete -x -c npm -n "__fish_npm_using_command $c" -d 'remove package' -a '(__npm_installed_local_packages)'
-    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package' -a '(__npm_installed_global_packages)'
-    complete -x -c npm -n "__fish_npm_using_command $c" -l save -d 'Package will be removed from your dependencies'
+    complete -x -c npm -n "__fish_npm_using_command $c" -d 'Remove package' -a '(__npm_installed_local_packages)'
+    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Remove global package' -a '(__npm_installed_global_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
 end
 
@@ -217,28 +222,29 @@ for c in update up upgrade udpate
 end
 
 # misc shorter explanations
-complete -f -c npm -n __fish_npm_needs_command -a 'adduser add-user login' -d 'Add a registry user account'
-complete -f -c npm -n __fish_npm_needs_command -a 'bugs issues' -d 'Bugs for a package in a web browser maybe'
+complete -f -c npm -n __fish_npm_needs_command -a access -d 'Set access level on published packages'
+complete -f -c npm -n __fish_npm_needs_command -a 'adduser add-user' -d 'Add a registry user account'
+complete -f -c npm -n __fish_npm_needs_command -a 'bugs issues' -d 'Report bugs for a package in a web browser'
 complete -f -c npm -n __fish_npm_needs_command -a 'ci clean-install ic install-clean isntall-clean' -d 'Clean install a project'
 complete -f -c npm -n __fish_npm_needs_command -a completion -d 'Tab Completion for npm'
-complete -f -c npm -n __fish_npm_needs_command -a 'dedupe ddp find-dupes' -d 'Reduce duplication'
+complete -f -c npm -n __fish_npm_needs_command -a 'dedupe ddp' -d 'Reduce duplication'
 complete -f -c npm -n __fish_npm_needs_command -a deprecate -d 'Deprecate a version of a package'
 complete -f -c npm -n __fish_npm_needs_command -a diff -d 'The registry diff command'
 complete -f -c npm -n __fish_npm_needs_command -a 'dist-tag dist-tags' -d 'Modify package distribution tags'
 complete -f -c npm -n __fish_npm_needs_command -a 'docs home' -d 'Docs for a package in a web browser maybe'
 complete -f -c npm -n __fish_npm_needs_command -a doctor -d 'Check your npm environment'
 complete -f -c npm -n __fish_npm_needs_command -a edit -d 'Edit an installed package'
-complete -f -c npm -n __fish_npm_needs_command -a exec -d 'Run a command from a local or remote npm package'
+complete -f -c npm -n __fish_npm_needs_command -a 'exec x' -d 'Run a command from a local or remote npm package'
 complete -f -c npm -n __fish_npm_needs_command -a 'explain why' -d 'Explain installed packages'
 complete -f -c npm -n __fish_npm_needs_command -a explore -d 'Browse an installed package'
+complete -f -c npm -n __fish_npm_needs_command -a find-dupes -d 'Find duplication'
 complete -f -c npm -n __fish_npm_needs_command -a fund -d 'Retrieve funding information'
 complete -f -c npm -n __fish_npm_needs_command -a 'help hlep' -d 'Get help on npm'
-complete -f -c npm -n __fish_npm_needs_command -a help-search -d 'Search npm help documentation'
-complete -f -c npm -n '__fish_npm_using_command help-search' -l long -d 'Display full package descriptions and other long text across multiple lines'
 complete -f -c npm -n __fish_npm_needs_command -a hook -d 'Manage registry hooks'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-ci-test cit clean-install-test sit' -d 'Install a project with a clean slate and run tests'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-test it' -d 'Install package(s) and run tests'
 complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
+complete -f -c npm -n __fish_npm_needs_command -a login -d 'Login to a registry user account'
 complete -f -c npm -n __fish_npm_needs_command -a logout -d 'Log out of the registry'
 complete -f -c npm -n __fish_npm_needs_command -a 'org ogr' -d 'Manage orgs'
 complete -f -c npm -n __fish_npm_needs_command -a outdated -d 'Check for outdated packages'

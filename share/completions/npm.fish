@@ -106,7 +106,7 @@ end
 for c in run-script run rum urn
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Run arbitrary package scripts'
     complete -f -c npm -n "__fish_npm_using_command $c" -a "(__fish_npm_run)"
-    complete -f -c npm -n "__fish_npm_using_command $c" -l 'if-present' -d "Don't error on nonexistant script"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l if-present -d "Don't error on nonexistant script"
     complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d "Don't run pre-, post- and life-cycle scripts"
     complete -x -c npm -n "__fish_npm_using_command $c" -s script-shell -d 'The shell to use for scripts'
     complete -f -c npm -n "__fish_npm_using_command $c" -l foreground-scripts -d 'Run all build scripts in the foreground'
@@ -115,13 +115,13 @@ end
 # access
 set -l access_commands 'list get set grant revoke'
 complete -f -c npm -n __fish_npm_needs_command -a access -d 'Set access level on published packages'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a 'list' -d 'List access info'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a 'get' -d 'Get access level'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a 'grant' -d 'Grant access to users'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a 'revoke' -d 'Revoke access from users'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a 'set' -d 'Set access level'
+complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a list -d 'List access info'
+complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a get -d 'Get access level'
+complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a grant -d 'Grant access to users'
+complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a revoke -d 'Revoke access from users'
+complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a set -d 'Set access level'
 complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from list' -a 'packages collaborators'
-complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from get' -a 'status'
+complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from get' -a status
 complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from grant' -a 'read-only read-write'
 complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from set' -a 'status=public status=private' -d 'Set package status'
 complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from set' -a 'mfa=none mfa=publish mfa=automation' -d 'Set package MFA'
@@ -204,7 +204,7 @@ complete -f -c npm -n __fish_npm_needs_command -a set -d 'Set a value in the npm
 
 # dedupe
 complete -f -c npm -n __fish_npm_needs_command -a 'dedupe ddp' -d 'Reduce duplication'
-complete -f -c npm -n __fish_npm_needs_command -a 'find-dupes' -d 'Find duplication'
+complete -f -c npm -n __fish_npm_needs_command -a find-dupes -d 'Find duplication'
 for c in dedupe ddp find-dupes
     complete -x -c npm -n "__fish_npm_using_command $c" -l install-strategy -a 'hoisted nested shallow linked' -d 'Install strategy'
     complete -x -c npm -n "__fish_npm_using_command $c" -l strict-peer-deps -d 'Treat conflicting peerDependencies as failure'
@@ -461,7 +461,7 @@ for c in search find s se
     complete -f -c npm -n __fish_npm_needs_command -a "$c" -d 'Search for packages'
     complete -f -c npm -n "__fish_npm_using_command $c" -s l -l long -d 'Show extended information'
     complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Output JSON data'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l color -a 'always' -d 'Print color'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l color -a always -d 'Print color'
     complete -f -c npm -n "__fish_npm_using_command $c" -s p -l parseable -d 'Output parseable results'
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-description -d "Don't show the description"
     complete -x -c npm -n "__fish_npm_using_command $c" -l searchopts -d 'Space-separated search options'

@@ -192,17 +192,20 @@ for c in ci clean-install ic install-clean isntall-clean install-ci-test cit cle
     complete -f -c npm -n "__fish_npm_using_command $c" -s h -l help -d 'Display help'
 end
 
+# completion
+complete -f -c npm -n __fish_npm_needs_command -a completion -d 'Tab Completion for npm'
+complete -f -c npm -n '__fish_npm_using_command completion' -s h -l help -d 'Display help'
+
 # config
 complete -f -c npm -n __fish_npm_needs_command -a config -d 'Manage the npm configuration files'
 for c in config c
-    complete -f -c npm -n "__fish_npm_using_command $c" -a set -d 'Sets the config keys to the values'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a get -d 'Echo the config value(s) to stdout'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a delete -d 'Deletes the key from all configuration files'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a list -d 'Show all the config settings'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a ls -d 'Show all the config settings'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a edit -d 'Opens the config file in an editor'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a fix -d 'Attempts to repair invalid configuration items'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a fix -d 'Attempts to repair invalid configuration items'
+    set -l config_commands 'set get delete list edit fix'
+    complete -x -c npm -n "__fish_npm_using_command $c" -n "not __fish_seen_subcommand_from $config_commands" -a set -d 'Sets the config keys to the values'
+    complete -x -c npm -n "__fish_npm_using_command $c" -n "not __fish_seen_subcommand_from $config_commands" -a get -d 'Echo the config value(s) to stdout'
+    complete -x -c npm -n "__fish_npm_using_command $c" -n "not __fish_seen_subcommand_from $config_commands" -a delete -d 'Deletes the key from all config files'
+    complete -x -c npm -n "__fish_npm_using_command $c" -n "not __fish_seen_subcommand_from $config_commands" -a list -d 'Show all config settings'
+    complete -x -c npm -n "__fish_npm_using_command $c" -n "not __fish_seen_subcommand_from $config_commands" -a edit -d 'Opens the config file in an editor'
+    complete -x -c npm -n "__fish_npm_using_command $c" -n "not __fish_seen_subcommand_from $config_commands" -a fix -d 'Attempts to repair invalid config items'
     complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Output JSON'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Edit global config'
     complete -x -c npm -n "__fish_npm_using_command $c" -l editor -d 'Specify the editor'
@@ -349,8 +352,6 @@ for c in help hlep
     complete -f -c npm -n "__fish_npm_using_command $c" -a 'ci clean-install' -d 'Clean install a project'
     complete -f -c npm -n "__fish_npm_using_command $c" -a 'install-ci-test cit' -d 'Install a project with a clean slate and run tests'
     complete -f -c npm -n "__fish_npm_using_command $c" -a config -d 'Manage the npm configuration files'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a get -d 'Get a value from the npm configuration'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a set -d 'Set a value in the npm configuration'
     complete -f -c npm -n "__fish_npm_using_command $c" -a dedupe -d 'Reduce duplication'
     complete -f -c npm -n "__fish_npm_using_command $c" -a find-dupes -d 'Find duplication'
     complete -f -c npm -n "__fish_npm_using_command $c" -a deprecate -d 'Deprecate a version of a package'
@@ -370,7 +371,7 @@ for c in help hlep
     complete -f -c npm -n "__fish_npm_using_command $c" -a 'install add i' -d 'Install a package'
     complete -f -c npm -n "__fish_npm_using_command $c" -a 'install-test it' -d 'Install package(s) and run tests'
     complete -f -c npm -n "__fish_npm_using_command $c" -a logout -d 'Log out of the registry'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls list ll' -d 'List installed packages'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls list' -d 'List installed packages'
     complete -f -c npm -n "__fish_npm_using_command $c" -a outdated -d 'Check for outdated packages'
     complete -f -c npm -n "__fish_npm_using_command $c" -a org -d 'Manage orgs'
     complete -f -c npm -n "__fish_npm_using_command $c" -a 'owner author' -d 'Manage package owners'
@@ -637,6 +638,10 @@ for c in search find s se
     complete -f -c npm -n "__fish_npm_using_command $c" -s h -l help -d 'Display help'
 end
 
+# shrinkwrap
+complete -f -c npm -n __fish_npm_needs_command -a shrinkwrap -d 'Lock down dependency versions'
+complete -f -c npm -n '__fish_npm_using_command shrinkwrap' -s h -l help -d 'Display help'
+
 # star
 complete -f -c npm -n __fish_npm_needs_command -a star -d 'Mark your favorite packages'
 complete -x -c npm -n '__fish_npm_using_command star' -l registry -d 'Registry base URL'
@@ -749,7 +754,5 @@ complete -f -c npm -n __fish_npm_needs_command -a whoami -d 'Display npm usernam
 complete -f -c npm -n '__fish_npm_using_command whoami' -a registry -d 'Check registry'
 complete -f -c npm -n '__fish_npm_using_command whoami' -s h -l help -d 'Display help'
 
-# misc shorter explanations
-complete -f -c npm -n __fish_npm_needs_command -a completion -d 'Tab Completion for npm'
-complete -f -c npm -n __fish_npm_needs_command -a shrinkwrap -d 'Lock down dependency versions'
+# misc
 complete -f -c npm -n '__fish_seen_subcommand_from add i in ins inst insta instal isnt isnta isntal isntall; and not __fish_is_switch' -a "(__npm_filtered_list_packages \"$npm_install\")"

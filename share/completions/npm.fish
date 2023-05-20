@@ -115,11 +115,11 @@ end
 # access
 set -l access_commands 'list get set grant revoke'
 complete -f -c npm -n __fish_npm_needs_command -a access -d 'Set access level on published packages'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a list -d 'List access info'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a get -d 'Get access level'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a grant -d 'Grant access to users'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a revoke -d 'Revoke access from users'
-complete -x -c npm -n "__fish_npm_using_command access; and not __fish_seen_subcommand_from $access_commands" -a set -d 'Set access level'
+complete -x -c npm -n '__fish_npm_using_command access' -n "not __fish_seen_subcommand_from $access_commands" -a list -d 'List access info'
+complete -x -c npm -n '__fish_npm_using_command access' -n "not __fish_seen_subcommand_from $access_commands" -a get -d 'Get access level'
+complete -x -c npm -n '__fish_npm_using_command access' -n "not __fish_seen_subcommand_from $access_commands" -a grant -d 'Grant access to users'
+complete -x -c npm -n '__fish_npm_using_command access' -n "not __fish_seen_subcommand_from $access_commands" -a revoke -d 'Revoke access from users'
+complete -x -c npm -n '__fish_npm_using_command access' -n "not __fish_seen_subcommand_from $access_commands" -a set -d 'Set access level'
 complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from list' -a 'packages collaborators'
 complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from get' -a status
 complete -x -c npm -n '__fish_npm_using_command access' -n '__fish_seen_subcommand_from grant' -a 'read-only read-write'
@@ -145,7 +145,7 @@ complete -f -c npm -n '__fish_npm_using_command audit' -a signatures -d 'Verify 
 complete -f -c npm -n '__fish_npm_using_command audit' -a fix -d 'Install compatible updates to vulnerable deps'
 complete -x -c npm -n '__fish_npm_using_command audit' -l audit-level -a 'info low moderate high critical none' -d 'Audit level'
 complete -f -c npm -n '__fish_npm_using_command audit' -l dry-run -d 'Do not make any changes'
-complete -f -c npm -n '__fish_npm_using_command audit' -l force -d 'Removes various protections'
+complete -f -c npm -n '__fish_npm_using_command audit' -s f -l force -d 'Removes various protections'
 complete -f -c npm -n '__fish_npm_using_command audit' -l json -d 'Output JSON'
 complete -f -c npm -n '__fish_npm_using_command audit' -l package-lock-only -d 'Only use package-lock.json, ignore node_modules'
 complete -x -c npm -n '__fish_npm_using_command audit' -l omit -a 'dev optional peer' -d 'Omit dependency type'
@@ -197,6 +197,11 @@ for c in config c
     complete -f -c npm -n "__fish_npm_using_command $c" -a edit -d 'Opens the config file in an editor'
     complete -f -c npm -n "__fish_npm_using_command $c" -a fix -d 'Attempts to repair invalid configuration items'
     complete -f -c npm -n "__fish_npm_using_command $c" -a fix -d 'Attempts to repair invalid configuration items'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Output JSON'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Edit global config'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l editor -d 'Specify the editor'
+    complete -x -c npm -n "__fish_npm_using_command $c" -s L -l location -a 'global user project' -d 'Which config file'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s l -l long -d 'Show extended information'
 end
 # get, set also exist as shorthands
 complete -f -c npm -n __fish_npm_needs_command -a get -d 'Get a value from the npm configuration'
@@ -265,7 +270,7 @@ complete -f -c npm -n '__fish_npm_using_command doctor' -a cache -d 'Verify cach
 
 # edit
 complete -f -c npm -n __fish_npm_needs_command -a edit -d 'Edit an installed package'
-complete -f -c npm -n '__fish_npm_using_command edit' -a editor -d 'Specify the editor'
+complete -f -c npm -n '__fish_npm_using_command edit' -l editor -d 'Specify the editor'
 
 # exec
 complete -f -c npm -n __fish_npm_needs_command -a exec -d 'Run a command from a local or remote npm package'
@@ -298,12 +303,13 @@ complete -f -c npm -n __fish_npm_needs_command -a help-search -d 'Search npm hel
 complete -f -c npm -n '__fish_npm_using_command help-search' -s l -l long -d 'Show extended information'
 
 # hook
+set -l hook_commands 'add ls update rm'
 complete -f -c npm -n __fish_npm_needs_command -a hook -d 'Manage registry hooks'
-complete -f -c npm -n '__fish_npm_using_command hook' -a add -d 'Add a hook'
-complete -f -c npm -n '__fish_npm_using_command hook; and __fish_seen_subcommand_from add' -l type -d 'Hook type'
-complete -f -c npm -n '__fish_npm_using_command hook' -a ls -d 'List all active hooks'
-complete -f -c npm -n '__fish_npm_using_command hook' -a update -d 'Update an existing hook'
-complete -f -c npm -n '__fish_npm_using_command hook' -a rm -d 'Remove a hook'
+complete -f -c npm -n '__fish_npm_using_command hook' -n "not __fish_seen_subcommand_from $hook_commands" -a add -d 'Add a hook'
+complete -f -c npm -n '__fish_npm_using_command hook' -n "not __fish_seen_subcommand_from $hook_commands" -a ls -d 'List all active hooks'
+complete -f -c npm -n '__fish_npm_using_command hook' -n "not __fish_seen_subcommand_from $hook_commands" -a update -d 'Update an existing hook'
+complete -f -c npm -n '__fish_npm_using_command hook' -n "not __fish_seen_subcommand_from $hook_commands" -a rm -d 'Remove a hook'
+complete -f -c npm -n '__fish_npm_using_command hook' -n '__fish_seen_subcommand_from add' -l type -d 'Hook type'
 complete -x -c npm -n '__fish_npm_using_command hook' -l registry -d 'Registry base URL'
 complete -x -c npm -n '__fish_npm_using_command hook' -l otp -d '2FA one-time password'
 
@@ -311,15 +317,18 @@ complete -x -c npm -n '__fish_npm_using_command hook' -l otp -d '2FA one-time pa
 complete -c npm -n __fish_npm_needs_command -a 'init create' -d 'Create a package.json file'
 for c in init create innit
     complete -f -c npm -n "__fish_npm_using_command $c" -s y -l yes -d 'Automatically answer "yes" to all prompts'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l force -d 'Removes various protections'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s f -l force -d 'Removes various protections'
     complete -x -c npm -n "__fish_npm_using_command $c" -l scope -d 'Create a scoped package'
 end
 
 # install
 # install-test
+# link
 complete -c npm -n __fish_npm_needs_command -a 'install add i' -d 'Install a package'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-test it' -d 'Install package(s) and run tests'
-for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall install-test it
+complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
+for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall install-test it link ln
+    complete -f -c npm -n "__fish_npm_using_command $c" -s S -l save -d 'Save to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s D -l save-dev -d 'Save to devDependencies'
@@ -374,13 +383,13 @@ complete -f -c npm -n '__fish_npm_using_command outdated' -s g -l global -d 'Che
 # org
 complete -f -c npm -n __fish_npm_needs_command -a org -d 'Manage orgs'
 for c in org ogr
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 2" -a set -d 'Add a new user'
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 2" -a rm -d 'Remove a user'
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 2" -a ls -d 'List all users'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 2' -a set -d 'Add a new user'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 2' -a rm -d 'Remove a user'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 2' -a ls -d 'List all users'
 
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 5" -n '__fish_seen_subcommand_from set' -a admin -d 'Add admin'
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 5" -n '__fish_seen_subcommand_from set' -a developer -d 'Add developer'
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 5" -n '__fish_seen_subcommand_from set' -a owner -d 'Add owner'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 5' -n '__fish_seen_subcommand_from set' -a admin -d 'Add admin'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 5' -n '__fish_seen_subcommand_from set' -a developer -d 'Add developer'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 5' -n '__fish_seen_subcommand_from set' -a owner -d 'Add owner'
 end
 
 # owner
@@ -408,12 +417,31 @@ complete -f -c npm -n __fish_npm_needs_command -a pkg -d 'Manages your package.j
 complete -x -c npm -n '__fish_npm_using_command pkg' -a set -d 'Sets a value'
 complete -x -c npm -n '__fish_npm_using_command pkg' -a get -d 'Retrieves a value'
 complete -x -c npm -n '__fish_npm_using_command pkg' -a delete -d 'Deletes a key'
-complete -f -c npm -n '__fish_npm_using_command pkg' -l force -d 'Removes various protections'
+complete -f -c npm -n '__fish_npm_using_command pkg' -s f -l force -d 'Removes various protections'
 complete -f -c npm -n '__fish_npm_using_command pkg' -l json -d 'Parse values with JSON.parse()'
 
 # prefix
 complete -f -c npm -n __fish_npm_needs_command -a prefix -d 'Display npm prefix'
 complete -f -c npm -n '__fish_npm_using_command prefix' -s g -l global -d 'Display global prefix'
+
+# profile
+set -l profile_commands 'enable-2fa disable-2fa get set'
+complete -f -c npm -n __fish_npm_needs_command -a profile -d 'Change settings on your registry profile'
+complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a enable-2fa -d 'Enables two-factor authentication'
+complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a disable-2fa -d 'Disables two-factor authentication'
+complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a get -d 'Display profile properties'
+complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a set -d 'Set the value of a profile property'
+complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a 'auth-only' -d 'Requiere an OTP on profile changes'
+complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a 'auth-and-writes' -d 'Also requiere an OTP on package changes'
+
+# prune
+complete -f -c npm -n __fish_npm_needs_command -a prune -d 'Remove extraneous packages'
+complete -x -c npm -n '__fish_npm_using_command prune' -l omit -a 'dev optional peer' -d 'Omit dependency type'
+complete -f -c npm -n '__fish_npm_using_command prune' -l dry-run -d 'Do not make any changes'
+complete -f -c npm -n '__fish_npm_using_command prune' -l json -d 'Output JSON'
+complete -f -c npm -n '__fish_npm_using_command prune' -l foreground-scripts -d 'Run all build scripts in the foreground'
+complete -f -c npm -n '__fish_npm_using_command prune' -l ignore-scripts -d "Don't run pre-, post- and life-cycle scripts"
+complete -f -c npm -n '__fish_npm_using_command prune' -l install-links -d 'Install file: protocol deps as regular deps'
 
 # publish
 complete -f -c npm -n __fish_npm_needs_command -a publish -d 'Publish a package'
@@ -427,12 +455,14 @@ complete -f -c npm -n '__fish_npm_using_command publish' -l provenance -d 'Link 
 complete -f -c npm -n __fish_npm_needs_command -a query -d 'Dependency selector query'
 complete -f -c npm -n '__fish_npm_using_command query' -s g -l global -d 'Query global packages'
 
-# remove
-complete -f -c npm -n __fish_npm_needs_command -a 'uninstall remove un' -d 'Remove a package'
-for c in uninstall unlink remove rm r un
-    complete -x -c npm -n "__fish_npm_using_command $c" -d 'Remove package' -a '(__npm_installed_local_packages)'
-    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Remove global package' -a '(__npm_installed_global_packages)'
-    complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
+# rebuild
+complete -f -c npm -n __fish_npm_needs_command -a rebuild -d 'Rebuild a package'
+for c in rebuild rb
+    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Rebuild global package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l foreground-scripts -d 'Run all build scripts in the foreground'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d "Don't run pre-, post- and life-cycle scripts"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l no-bin-links -d "Don't symblink package executables"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l install-links -d 'Install file: protocol deps as regular deps'
 end
 
 # repo
@@ -465,6 +495,8 @@ for c in search find s se
     complete -f -c npm -n "__fish_npm_using_command $c" -s l -l long -d 'Show extended information'
     complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Output JSON data'
     complete -f -c npm -n "__fish_npm_using_command $c" -l color -a always -d 'Print color'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l color -a always -d 'Print color'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l no-color -d "Don't print color"
     complete -f -c npm -n "__fish_npm_using_command $c" -s p -l parseable -d 'Output parseable results'
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-description -d "Don't show the description"
     complete -x -c npm -n "__fish_npm_using_command $c" -l searchopts -d 'Space-separated search options'
@@ -486,11 +518,63 @@ complete -x -c npm -n '__fish_npm_using_command star' -l otp -d '2FA one-time pa
 complete -f -c npm -n __fish_npm_needs_command -a stars -d 'View packages marked as favorites'
 complete -x -c npm -n '__fish_npm_using_command stars' -l registry -d 'Registry base URL'
 
+# team
+set -l team_commands 'create destroy add rm ls'
+complete -f -c npm -n __fish_npm_needs_command -a team -d 'Manage organization teams and team memberships'
+complete -x -c npm -n '__fish_npm_using_command team' -n "not __fish_seen_subcommand_from $team_commands" -a create -d 'Create a new team'
+complete -x -c npm -n '__fish_npm_using_command team' -n "not __fish_seen_subcommand_from $team_commands" -a destroy -d 'Destroy an existing team'
+complete -x -c npm -n '__fish_npm_using_command team' -n "not __fish_seen_subcommand_from $team_commands" -a add -d 'Add a user to an existing team'
+complete -x -c npm -n '__fish_npm_using_command team' -n "not __fish_seen_subcommand_from $team_commands" -a rm -d 'Remove users from a team'
+complete -x -c npm -n '__fish_npm_using_command team' -n "not __fish_seen_subcommand_from $team_commands" -a ls -d 'List teams or team members'
+complete -x -c npm -n '__fish_npm_using_command team' -n 'not __fish_seen_subcommand_from ls' -l otp -d '2FA one-time password'
+complete -x -c npm -n '__fish_npm_using_command team' -l registry -d 'Registry base URL'
+complete -f -c npm -n '__fish_npm_using_command team' -s p -l parseable -d 'Output parseable results'
+complete -f -c npm -n '__fish_npm_using_command team' -l json -d 'Output JSON'
+
+# token
+set -l token_commands 'create destroy add rm ls'
+complete -f -c npm -n __fish_npm_needs_command -a token -d 'Manage your authentication tokens'
+complete -x -c npm -n '__fish_npm_using_command token' -n "not __fish_seen_subcommand_from $token_commands" -a list -d 'Shows active authentication tokens'
+complete -x -c npm -n '__fish_npm_using_command token' -n "not __fish_seen_subcommand_from $token_commands" -a revoke -d 'Revokes an authentication token'
+complete -x -c npm -n '__fish_npm_using_command token' -n "not __fish_seen_subcommand_from $token_commands" -a create -d 'Create a new authentication token'
+complete -f -c npm -n '__fish_npm_using_command token' -n '__fish_seen_subcommand_from create' -l read-only -d 'Mark a token as unable to publish'
+complete -x -c npm -n '__fish_npm_using_command token' -n '__fish_seen_subcommand_from create' -l cidr -d 'List of CIDR address'
+complete -x -c npm -n '__fish_npm_using_command token' -l registry -d 'Registry base URL'
+complete -x -c npm -n '__fish_npm_using_command token' -l otp -d '2FA one-time password'
+
 # update
 complete -f -c npm -n __fish_npm_needs_command -a 'update up upgrade' -d 'Update package(s)'
 for c in update up upgrade udpate
+    complete -f -c npm -n "__fish_npm_using_command $c" -s S -l save -d 'Save to dependencies'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Update global package(s)'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l install-strategy -a 'hoisted nested shallow linked' -d 'Install strategy'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l omit -a 'dev optional peer' -d 'Omit dependency type'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l strict-peer-deps -d 'Treat conflicting peerDependencies as failure'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l no-package-lock -d 'Ignore package-lock.json'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l foreground-scripts -d 'Run all build scripts in the foreground'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d "Don't run pre-, post- and life-cycle scripts"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l no-audit -d "Don't submit audit reports"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l no-bin-links -d "Don't symblink package executables"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l no-fund -d "Don't display funding info"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l dry-run -d 'Do not make any changes'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l install-links -d 'Install file: protocol deps as regular deps'
 end
+
+# uninstall
+complete -f -c npm -n __fish_npm_needs_command -a 'uninstall remove un' -d 'Remove a package'
+for c in uninstall unlink remove rm r un
+    complete -x -c npm -n "__fish_npm_using_command $c" -d 'Remove package' -a '(__npm_installed_local_packages)'
+    complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Remove global package' -a '(__npm_installed_global_packages)'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s S -l save -d 'Save to dependencies'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Do not remove package from your dependencies'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l install-links -d 'Install file: protocol deps as regular deps'
+end
+
+# unpublish
+complete -f -c npm -n __fish_npm_needs_command -a unpublish -d 'Remove a package from the registry'
+complete -x -c npm -n '__fish_npm_using_command unpublish' -l dry-run -d 'Do not make any changes'
+complete -x -c npm -n '__fish_npm_using_command unpublish' -s f -l force -d 'Removes various protections'
 
 # unstar
 complete -f -c npm -n __fish_npm_needs_command -a unstar -d 'Remove star from a package'
@@ -514,10 +598,10 @@ end
 # view
 complete -f -c npm -n __fish_npm_needs_command -a 'view info' -d 'View registry info'
 for c in view info v show
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 2"
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 3" -a 'author bin bugs description engines exports homepage keywords license main name repository scripts type types'
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 3" -a 'dependencies devDependencies optionalDependencies peerDependencies'
-    complete -f -c npm -n "__fish_npm_using_command $c; and __fish_is_nth_token 3" -a 'directories dist dist-tags gitHead maintainers readme time users version versions'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 2'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 3' -a 'author bin bugs description engines exports homepage keywords license main name repository scripts type types'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 3' -a 'dependencies devDependencies optionalDependencies peerDependencies'
+    complete -f -c npm -n "__fish_npm_using_command $c" -n '__fish_is_nth_token 3' -a 'directories dist dist-tags gitHead maintainers readme time users version versions'
     complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Output JSON'
 end
 
@@ -529,12 +613,4 @@ complete -f -c npm -n '__fish_npm_using_command whoami' -a registry -d 'Check re
 complete -f -c npm -n __fish_npm_needs_command -a completion -d 'Tab Completion for npm'
 complete -f -c npm -n __fish_npm_needs_command -a 'help hlep' -d 'Get help on npm'
 complete -f -c npm -n __fish_npm_needs_command -a shrinkwrap -d 'Lock down dependency versions'
-
-complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
-complete -f -c npm -n __fish_npm_needs_command -a profile -d 'Change settings on your registry profile'
-complete -f -c npm -n __fish_npm_needs_command -a prune -d 'Remove extraneous packages'
-complete -f -c npm -n __fish_npm_needs_command -a 'rebuild rb' -d 'Rebuild a package'
-complete -f -c npm -n __fish_npm_needs_command -a team -d 'Manage organization teams and team memberships'
-complete -f -c npm -n __fish_npm_needs_command -a token -d 'Manage your authentication tokens'
-complete -f -c npm -n __fish_npm_needs_command -a unpublish -d 'Remove a package from the registry'
 complete -f -c npm -n '__fish_seen_subcommand_from add i in ins inst insta instal isnt isnta isntal isntall; and not __fish_is_switch' -a "(__npm_filtered_list_packages \"$npm_install\")"

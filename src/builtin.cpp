@@ -48,7 +48,6 @@
 #include "builtins/source.h"
 #include "builtins/status.h"
 #include "builtins/string.h"
-#include "builtins/test.h"
 #include "builtins/ulimit.h"
 #include "complete.h"
 #include "cxx.h"
@@ -348,7 +347,7 @@ static maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, con
 static constexpr builtin_data_t builtin_datas[] = {
     {L".", &builtin_source, N_(L"Evaluate contents of file")},
     {L":", &builtin_true, N_(L"Return a successful result")},
-    {L"[", &builtin_test, N_(L"Test a condition")},
+    {L"[", &implemented_in_rust, N_(L"Test a condition")},
     {L"_", &builtin_gettext, N_(L"Translate a string")},
     {L"abbr", &implemented_in_rust, N_(L"Manage abbreviations")},
     {L"and", &builtin_generic, N_(L"Run command if last command succeeded")},
@@ -400,7 +399,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"status", &builtin_status, N_(L"Return status information about fish")},
     {L"string", &builtin_string, N_(L"Manipulate strings")},
     {L"switch", &builtin_generic, N_(L"Conditionally run blocks of code")},
-    {L"test", &builtin_test, N_(L"Test a condition")},
+    {L"test", &implemented_in_rust, N_(L"Test a condition")},
     {L"time", &builtin_generic, N_(L"Measure how long a command or block takes")},
     {L"true", &builtin_true, N_(L"Return a successful result")},
     {L"type", &implemented_in_rust, N_(L"Check if a thing is a thing")},

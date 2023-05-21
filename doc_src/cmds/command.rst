@@ -15,6 +15,8 @@ Description
 
 **command** forces the shell to execute the program *COMMANDNAME* and ignore any functions or builtins with the same name.
 
+In ``command foo``, ``command`` is a keyword.
+
 The following options are available:
 
 **-a** or **--all**

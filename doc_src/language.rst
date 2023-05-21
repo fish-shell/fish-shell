@@ -747,6 +747,28 @@ Some more examples::
   # The second element of every variable, so output is
   # 2 5
 
+Variables as command
+''''''''''''''''''''
+
+Like other shells, you can run the value of a variable as a command.
+
+::
+
+   > set -g EDITOR emacs
+   > $EDITOR foo # opens emacs, possibly the GUI version
+
+If you want to give the command an argument inside the variable it needs to be a separate element::
+
+   > set EDITOR emacs -nw
+   > $EDITOR foo # opens emacs in the terminal even if the GUI is installed
+   > set EDITOR "emacs -nw"
+   > $EDITOR foo # tries to find a command called "emacs -nw"
+
+Also like other shells, this only works with commands, builtins and functions - it will not work with keywords because they have syntactical importance.
+
+For instance ``set if $if`` won't allow you to make an if-block, and ``set cmd command`` won't allow you to use the :cmds:`command <command>` decorator, but only uses like ``$cmd -q foo``.
+
+
 .. _expand-command-substitution:
 
 Command substitution

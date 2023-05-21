@@ -18,3 +18,6 @@ pub mod r#return;
 pub mod test;
 pub mod r#type;
 pub mod wait;
+
+// Note these tests will NOT run with cfg(test).
+mod tests;

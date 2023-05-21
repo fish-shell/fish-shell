@@ -91,6 +91,7 @@ include_cpp! {
 
     generate!("output_stream_t")
     generate!("io_streams_t")
+    generate!("make_null_io_streams_ffi")
 
     generate_pod!("RustFFIJobList")
     generate_pod!("RustFFIProcList")

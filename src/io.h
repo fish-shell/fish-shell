@@ -517,4 +517,7 @@ struct io_streams_t : noncopyable_t {
     int ffi_stdin_fd() const { return stdin_fd; };
 };
 
+/// FFI helper.
+std::unique_ptr<io_streams_t> make_null_io_streams_ffi();
+
 #endif

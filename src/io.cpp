@@ -404,6 +404,12 @@ int fd_output_stream_t::flush_and_check_error() {
 
 bool null_output_stream_t::append(const wchar_t *, size_t) { return true; }
 
+std::unique_ptr<io_streams_t> make_null_io_streams_ffi() {
+    // Temporary test helper.
+    static null_output_stream_t *null = new null_output_stream_t();
+    return std::make_unique<io_streams_t>(*null, *null);
+}
+
 bool string_output_stream_t::append(const wchar_t *s, size_t amt) {
     contents_.append(s, amt);
     return true;

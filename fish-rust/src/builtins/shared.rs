@@ -183,6 +183,7 @@ pub fn run_builtin(
         RustBuiltin::Random => super::random::random(parser, streams, args),
         RustBuiltin::Realpath => super::realpath::realpath(parser, streams, args),
         RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
+        RustBuiltin::Test => super::test::test(parser, streams, args),
         RustBuiltin::Type => super::r#type::r#type(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),
         RustBuiltin::Printf => printf::printf(parser, streams, args),

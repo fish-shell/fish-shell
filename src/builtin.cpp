@@ -562,6 +562,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     if (cmd == L"realpath") {
         return RustBuiltin::Realpath;
     }
+    if (cmd == L"test" || cmd == L"[") {
+        return RustBuiltin::Test;
+    }
     if (cmd == L"type") {
         return RustBuiltin::Type;
     }

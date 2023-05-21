@@ -127,6 +127,7 @@ enum class RustBuiltin : int32_t {
     Random,
     Realpath,
     Return,
+    Test,
     Type,
     Wait,
 };

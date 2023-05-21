@@ -30,7 +30,7 @@ function __fish_systemctl --description 'Call systemctl with some options from t
         # These are the normal commands, so just complete all units.
         # For "restart" et al, also complete non-running ones, since it can be used regardless of state.
         case reenable status reload {try-,}{reload-or-,}restart is-{active,enabled,failed} show cat \
-            help reset-failed list-dependencies list-units revert add-{wants,requires} edit
+            help reset-failed list-dependencies list-units revert add-{wants,requires} edit clean thaw
         case enable
             # This will only work for "list-unit-files", but won't print an error for "list-units".
             set -q _flag_state; or set _flag_state disabled
@@ -43,7 +43,7 @@ function __fish_systemctl --description 'Call systemctl with some options from t
             set -q _flag_state; or set _flag_state loaded
         case unmask
             set -q _flag_state; or set _flag_state masked
-        case stop kill
+        case stop kill freeze
             # TODO: Is "kill" useful on other unit types?
             # Running as the catch-all, "mounted" for .mount units, "active" for .target.
             set -q _flag_state; or set _flag_state running,mounted,active

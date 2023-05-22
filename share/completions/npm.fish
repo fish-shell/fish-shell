@@ -37,43 +37,6 @@ function __fish_npm_needs_option
     return 1
 end
 
-function __fish_complete_npm -d "Complete the commandline using npm's 'completion' tool"
-    # Note that this function will generate undescribed completion options, and current fish
-    # will sometimes pick these over versions with descriptions.
-    # However, this seems worth it because it means automatically getting _some_ completions if npm updates.
-
-    # Defining an npm alias that automatically calls nvm if necessary is a popular convenience measure.
-    # Because that is a function, these local variables won't be inherited and the completion would fail
-    # with weird output on stdout (!). But before the function is called, no npm command is defined,
-    # so calling the command would fail.
-    # So we'll only try if we have an npm command.
-    if command -sq npm
-        # npm completion is bash-centric, so we need to translate fish's "commandline" stuff to bash's $COMP_* stuff
-        # COMP_LINE is an array with the words in the commandline
-        set -lx COMP_LINE (commandline -opc)
-        # COMP_CWORD is the index of the current word in COMP_LINE
-        # bash starts arrays with 0, so subtract 1
-        set -lx COMP_CWORD (math (count $COMP_LINE) - 1)
-        # COMP_POINT is the index of point/cursor when the commandline is viewed as a string
-        set -lx COMP_POINT (commandline -C)
-        # If the cursor is after the last word, the empty token will disappear in the expansion
-        # Readd it
-        if test -z (commandline -ct)
-            set COMP_CWORD (math $COMP_CWORD + 1)
-            set COMP_LINE $COMP_LINE ""
-        end
-        command npm completion -- $COMP_LINE 2>/dev/null
-    end
-end
-
-# use npm completion for most of the things,
-# except options completion (because it sucks at it)
-# and run-script completion (reading package.json is faster).
-# and uninstall (reading dependencies is faster and more robust and yarn needs the functions anyways)
-# see: https://github.com/npm/npm/issues/9524
-# and: https://github.com/fish-shell/fish-shell/pull/2366
-complete -f -c npm -n 'not __fish_npm_needs_option; and not __fish_npm_using_command run-script run rum urn access audit cache uninstall unlink remove rm r un version verison view info show v' -a "(__fish_complete_npm)"
-
 # list available npm scripts and their parial content
 function __fish_parse_npm_run_completions
     while read -l name
@@ -383,10 +346,10 @@ for c in help hlep
     complete -f -c npm -n "__fish_npm_using_command $c" -a query -d 'Dependency selector query'
     complete -f -c npm -n "__fish_npm_using_command $c" -a 'uninstall remove un' -d 'Remove a package'
     complete -f -c npm -n "__fish_npm_using_command $c" -a repo -d 'Open package repository page in the browser'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a 'restart' -d 'Restart a package'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a 'start' -d 'Start a package'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a 'stop' -d 'Stop a package'
-    complete -f -c npm -n "__fish_npm_using_command $c" -a 'test' -d 'Test a package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a restart -d 'Restart a package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a start -d 'Start a package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a stop -d 'Stop a package'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a test -d 'Test a package'
     complete -f -c npm -n "__fish_npm_using_command $c" -a root -d 'Display npm root'
     complete -f -c npm -n "__fish_npm_using_command $c" -a 'search find' -d 'Search for packages'
     complete -f -c npm -n "__fish_npm_using_command $c" -a star -d 'Mark your favorite packages'
@@ -452,7 +415,6 @@ for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall inst
     complete -x -c npm -n "__fish_npm_using_command $c" -l omit -a 'dev optional peer' -d 'Omit dependency type'
     complete -x -c npm -n "__fish_npm_using_command $c" -l strict-peer-deps -d 'Treat conflicting peerDependencies as failure'
     complete -x -c npm -n "__fish_npm_using_command $c" -l no-package-lock -d 'Ignore package-lock.json'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l foreground-scripts -d 'Run all build scripts in the foreground'
     complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d "Don't run pre-, post- and life-cycle scripts"
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-audit -d "Don't submit audit reports"
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-bin-links -d "Don't symblink package executables"
@@ -460,6 +422,11 @@ for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall inst
     complete -f -c npm -n "__fish_npm_using_command $c" -l dry-run -d 'Do not make any changes'
     complete -f -c npm -n "__fish_npm_using_command $c" -l install-links -d 'Install file: protocol deps as regular deps'
     complete -f -c npm -n "__fish_npm_using_command $c" -s h -l help -d 'Display help'
+
+    if test $c != link -a $c != ln
+        complete -f -c npm -n "__fish_npm_using_command $c" -l foreground-scripts -d 'Run all build scripts in the foreground'
+        complete -f -c npm -n "__fish_npm_using_command $c" -l prefer-dedupe -d 'Prefer to deduplicate packages'
+    end
 end
 
 # logout
@@ -553,8 +520,8 @@ complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_sub
 complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a disable-2fa -d 'Disables two-factor authentication'
 complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a get -d 'Display profile properties'
 complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a set -d 'Set the value of a profile property'
-complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a 'auth-only' -d 'Requiere an OTP on profile changes'
-complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a 'auth-and-writes' -d 'Also requiere an OTP on package changes'
+complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a auth-only -d 'Requiere an OTP on profile changes'
+complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a auth-and-writes -d 'Also requiere an OTP on package changes'
 complete -f -c npm -n '__fish_npm_using_command profile' -s h -l help -d 'Display help'
 
 # prune
@@ -604,10 +571,10 @@ complete -f -c npm -n '__fish_npm_using_command repo' -s h -l help -d 'Display h
 # start
 # stop
 # test
-complete -f -c npm -n __fish_npm_needs_command -a 'restart' -d 'Restart a package'
-complete -f -c npm -n __fish_npm_needs_command -a 'start' -d 'Start a package'
-complete -f -c npm -n __fish_npm_needs_command -a 'stop' -d 'Stop a package'
-complete -f -c npm -n __fish_npm_needs_command -a 'test' -d 'Test a package'
+complete -f -c npm -n __fish_npm_needs_command -a restart -d 'Restart a package'
+complete -f -c npm -n __fish_npm_needs_command -a start -d 'Start a package'
+complete -f -c npm -n __fish_npm_needs_command -a stop -d 'Stop a package'
+complete -f -c npm -n __fish_npm_needs_command -a test -d 'Test a package'
 for c in restart start stop test tst t
     complete -f -c npm -n "__fish_npm_using_command $c" -s ignore-scripts -d "Don't run pre-, post- and life-cycle scripts"
     complete -x -c npm -n "__fish_npm_using_command $c" -s script-shell -d 'The shell to use for scripts'

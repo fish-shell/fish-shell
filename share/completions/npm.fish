@@ -178,8 +178,12 @@ for c in config c
 end
 # get, set also exist as shorthands
 complete -f -c npm -n __fish_npm_needs_command -a get -d 'Get a value from the npm configuration'
+complete -f -c npm -n '__fish_npm_using_command get' -s l -l long -d 'Show extended information'
 complete -f -c npm -n '__fish_npm_using_command get' -s h -l help -d 'Display help'
+# set
 complete -f -c npm -n __fish_npm_needs_command -a set -d 'Set a value in the npm configuration'
+complete -x -c npm -n '__fish_npm_using_command set' -s L -l location -a 'global user project' -d 'Which config file'
+complete -f -c npm -n '__fish_npm_using_command set' -s g -l global -d 'Edit global config'
 complete -f -c npm -n '__fish_npm_using_command set' -s h -l help -d 'Display help'
 
 # dedupe

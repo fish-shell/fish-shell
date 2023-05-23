@@ -766,7 +766,7 @@ If you want to give the command an argument inside the variable it needs to be a
 
 Also like other shells, this only works with commands, builtins and functions - it will not work with keywords because they have syntactical importance.
 
-For instance ``set if $if`` won't allow you to make an if-block, and ``set cmd command`` won't allow you to use the :cmds:`command <command>` decorator, but only uses like ``$cmd -q foo``.
+For instance ``set if $if`` won't allow you to make an if-block, and ``set cmd command`` won't allow you to use the :doc:`command <cmds/command>` decorator, but only uses like ``$cmd -q foo``.
 
 
 .. _expand-command-substitution:

@@ -4,13 +4,6 @@ use std::fs::{File, Metadata};
 use std::os::fd::RawFd;
 
 use std::os::fd::{FromRawFd, IntoRawFd};
-#[cfg(target_os = "freebsd")]
-use std::os::freebsd::fs::MetadataExt;
-#[cfg(target_os = "linux")]
-use std::os::linux::fs::MetadataExt;
-#[cfg(target_os = "macos")]
-use std::os::macos::fs::MetadataExt;
-#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "freebsd")))]
 use std::os::unix::fs::MetadataExt;
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among
@@ -34,13 +27,13 @@ impl FileId {
         // on different platforms.
         #[allow(clippy::useless_conversion)]
         FileId {
-            device: buf.st_dev(),
-            inode: buf.st_ino(),
-            size: buf.st_size(),
-            change_seconds: buf.st_ctime().into(),
-            change_nanoseconds: buf.st_ctime_nsec().into(),
-            mod_seconds: buf.st_mtime().into(),
-            mod_nanoseconds: buf.st_mtime_nsec().into(),
+            device: buf.dev(),
+            inode: buf.ino(),
+            size: buf.size(),
+            change_seconds: buf.ctime().into(),
+            change_nanoseconds: buf.ctime_nsec().into(),
+            mod_seconds: buf.mtime().into(),
+            mod_nanoseconds: buf.mtime_nsec().into(),
         }
     }
 

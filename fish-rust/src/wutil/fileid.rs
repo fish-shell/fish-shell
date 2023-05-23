@@ -4,11 +4,13 @@ use std::fs::{File, Metadata};
 use std::os::fd::RawFd;
 
 use std::os::fd::{FromRawFd, IntoRawFd};
+#[cfg(target_os = "freebsd")]
+use std::os::freebsd::fs::MetadataExt;
 #[cfg(target_os = "linux")]
 use std::os::linux::fs::MetadataExt;
 #[cfg(target_os = "macos")]
 use std::os::macos::fs::MetadataExt;
-#[cfg(not(any(target_os = "macos", target_os = "linux")))]
+#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "freebsd")))]
 use std::os::unix::fs::MetadataExt;
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among

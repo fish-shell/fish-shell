@@ -9,8 +9,9 @@ Most of fish is licensed under the GNU General Public License version 2, and
 you can redistribute it and/or modify it under the terms of the GNU GPL as
 published by the Free Software Foundation.
 
-fish also includes software licensed under the GNU Lesser General Public
-License version 2, the OpenBSD license, the ISC license, and the NetBSD license.
+fish also includes software licensed under the CMake license, the Python
+Software Foundation License version 2, the OpenBSD license, the ISC license,
+the NetBSD license, and the MIT license.
 
 Full licensing information is contained in doc_src/license.rst.
 

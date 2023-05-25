@@ -219,9 +219,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ----
 
-**License for wcslcpy and code derived from tmux**
+**License for code derived from tmux**
 
-``fish`` also contains small amounts of code under the OpenBSD license, namely a version of the function strlcpy, modified for use with wide character strings. This code is copyrighted by Todd C. Miller (1998). It also contains code from [tmux](http://tmux.sourceforge.net), copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and made available under an identical license.
+``fish`` contains code from [tmux](http://tmux.sourceforge.net), copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and made available under the OpenBSD license.
 
 The OpenBSD license is included below.
 

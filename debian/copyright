@@ -68,11 +68,8 @@ license. Copyright © 1997-2015 University of Cambridge.
     ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
     POSSIBILITY OF SUCH DAMAGE.
 
-Fish also contains small amounts of code under the OpenBSD license, namely a
-version of the function strlcpy, modified for use with wide character strings.
-This code is copyrighted by Todd C. Miller (1998). It also contains code from
-tmux, copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and
-made available under an identical license.
+Fish contains code from tmux, copyrighted by Nicholas Marriott
+<nicm@users.sourceforge.net> (2007), and made available under the OpenBSD license.
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above

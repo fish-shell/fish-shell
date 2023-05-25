@@ -190,7 +190,7 @@ To avoid needless typing, a frequently-run command like ``git checkout`` can be 
 
 After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, a ``gco`` in command position will turn into ``git checkout`` in the command line. If you want to use a literal ``gco`` sometimes, use :kbd:`Control`\ +\ :kbd:`Space` [#]_.
 
-This is a lot more powerful, for example you can make going up a number of directories easier with this::
+Abbreviations are a lot more powerful than just replacing literal strings. For example you can make going up a number of directories easier with this::
 
   function multicd
       echo cd (string repeat -n (math (string length -- $argv[1]) - 1) ../)
@@ -223,14 +223,14 @@ For example ``fish_config prompt choose disco`` will temporarily select the "dis
 
 You can also change these functions yourself by running ``funced fish_prompt`` and ``funcsave fish_prompt`` once you are happy with the result (or ``fish_right_prompt`` if you want to change that).
 
-.. [#] The web interface runs purely locally on your computer.
+.. [#] The web interface runs purely locally on your computer and requires python to be installed.
 
 .. _greeting:
 
 Configurable greeting
 ---------------------
 
-When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple greeting. You can change its text by changing the ``$fish_greeting`` variable, for instance using a :ref:`universal variable <variables-universal>`::
+When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple message. You can change its text by changing the ``$fish_greeting`` variable, for instance using a :ref:`universal variable <variables-universal>`::
 
   set -U fish_greeting
 
@@ -251,9 +251,11 @@ save this in config.fish or :ref:`a function file <syntax-function-autoloading>`
 Programmable title
 ------------------
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :doc:`fish_title <cmds/fish_title>` function. The :doc:`fish_title <cmds/fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_prompt <cmds/fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
+When using most terminals, it is possible to set the text displayed in the titlebar of the terminal window. Fish does this by running the :doc:`fish_title <cmds/fish_title>` function. It is executed before and after a command and the output is used as a titlebar message.
 
-The default fish title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
+The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_title <cmds/fish_title>` function is called. The first argument will contain the most recently executed foreground command as a string.
+
+The default title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
 
 Examples:
 
@@ -264,17 +266,6 @@ To show the last command and working directory in the title::
         echo $argv[1] (prompt_pwd)
         pwd
     end
-
-.. _private-mode:
-
-Private mode
--------------
-
-If ``$fish_private_mode`` is set to a non-empty value, commands will not be written to the history file on disk.
-
-You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
-
-You can query the variable ``fish_private_mode`` (``if test -n "$fish_private_mode" ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 .. _editor:
 
@@ -641,6 +632,17 @@ If the commandline reads ``cd m``, place the cursor over the ``m`` character and
 
 .. [#] Or another binding that triggers the ``history-pager`` input function. See :doc:`bind <cmds/bind>` for a list.
 .. [#] Or another binding that triggers the ``pager-toggle-search`` input function.
+
+.. _private-mode:
+
+Private mode
+-------------
+
+Fish has a private mode, in which command history will not be written to the history file on disk. To enable it, either set ``$fish_private_mode`` to a non-empty value.
+
+You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
+
+You can query the variable ``fish_private_mode`` (``if test -n "$fish_private_mode" ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 Navigating directories
 ----------------------

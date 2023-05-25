@@ -4,7 +4,7 @@ Name:                   fish
 Version:                @RPMVERSION@
 Release:                0.%{?dist}
 
-License:                GPL-2.0
+License:                GPL-2.0-only AND GPL-2.0-or-later AND BSD-2-Clause AND PSF-2.0 AND ISC AND MIT
 Group:                  System/Shells
 URL:                    https://fishshell.com/
 

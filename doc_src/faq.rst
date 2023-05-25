@@ -352,14 +352,3 @@ If you installed it with a package manager, just use that package manager's unin
     rm /usr/local/share/man/man1/fish*.1
     cd /usr/local/bin
     rm -f fish fish_indent
-
-Where can I find extra tools for fish?
---------------------------------------
-The fish user community extends fish in unique and useful ways via scripts that aren't always appropriate for bundling with the fish package. Typically because they solve a niche problem unlikely to appeal to a broad audience. You can find those extensions, including prompts, themes and useful functions, in various third-party repositories. These include:
-
-- `Fisher <https://github.com/jorgebucaran/fisher>`_
-- `Fundle <https://github.com/tuvistavie/fundle>`_
-- `Oh My Fish <https://github.com/oh-my-fish/oh-my-fish>`_
-- `Tacklebox <https://github.com/justinmayer/tacklebox>`_
-
-This is not an exhaustive list and the fish project has no opinion regarding the merits of the repositories listed above or the scripts found therein.

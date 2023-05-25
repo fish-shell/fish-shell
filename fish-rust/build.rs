@@ -1,4 +1,6 @@
-fn main() -> miette::Result<()> {
+use std::error::Error;
+
+fn main() {
     cc::Build::new().file("src/compat.c").compile("libcompat.a");
 
     let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
@@ -74,15 +76,13 @@ fn main() -> miette::Result<()> {
         // We need this reassignment because of how the builder pattern works
         builder = builder.custom_gendir(autocxx_gen_dir.into());
     }
-    let mut b = builder.build()?;
+    let mut b = builder.build().unwrap();
     b.flag_if_supported("-std=c++11")
         .flag("-Wno-comment")
         .compile("fish-rust-autocxx");
     for file in source_files {
         println!("cargo:rerun-if-changed={file}");
     }
-
-    Ok(())
 }
 
 /// Dynamically enables certain features at build-time, without their having to be explicitly
@@ -97,7 +97,10 @@ fn detect_features() {
     for (feature, detector) in [
         // Ignore the first line, it just sets up the type inference. Model new entries after the
         // second line.
-        ("", &(|| Ok(false)) as &dyn Fn() -> miette::Result<bool>),
+        (
+            "",
+            &(|| Ok(false)) as &dyn Fn() -> Result<bool, Box<dyn Error>>,
+        ),
         ("bsd", &detect_bsd),
     ] {
         match detector() {
@@ -114,7 +117,7 @@ fn detect_features() {
 /// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
 /// doesn't necessarily include less-popular forks nor does it group them into families more
 /// specific than "windows" vs "unix" so we can conditionally compile code for BSD systems.
-fn detect_bsd() -> miette::Result<bool> {
+fn detect_bsd() -> Result<bool, Box<dyn Error>> {
     // Instead of using `uname`, we can inspect the TARGET env variable set by Cargo. This lets us
     // support cross-compilation scenarios.
     let mut target = std::env::var("TARGET").unwrap();

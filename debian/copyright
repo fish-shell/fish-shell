@@ -86,12 +86,6 @@ made available under an identical license.
   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-Fish contains code from the glibc library, namely the wcstok function
-in fallback.c.  This code is licensed under the LGPL.
-
-On Debian systems, the complete text of the GNU Lesser General
-Public License can be found in `/usr/share/common-licenses/LGPL'.
-
 The Debian packaging is:
 
     Copyright (C) 2005 James Vega <jamessan@jamessan.com>

@@ -114,7 +114,7 @@ set(FISH_BUILTIN_SRCS
 # List of other sources.
 set(FISH_SRCS
     src/ast.cpp src/autoload.cpp src/color.cpp src/common.cpp src/complete.cpp
-    src/env.cpp src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp
+    src/env.cpp src/env_universal_common.cpp src/event.cpp
     src/exec.cpp src/expand.cpp src/fallback.cpp src/fish_indent_common.cpp src/fish_version.cpp
     src/flog.cpp src/function.cpp src/highlight.cpp
     src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp

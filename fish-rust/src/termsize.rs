@@ -1,6 +1,6 @@
 // Support for exposing the terminal size.
 use crate::common::assert_sync;
-use crate::env::EnvMode;
+use crate::env::{EnvMode, Environment};
 use crate::ffi::{environment_t, parser_t, Repin};
 use crate::flog::FLOG;
 use crate::wchar::{WString, L};
@@ -16,9 +16,11 @@ mod termsize_ffi {
     #[derive(Copy, Clone, Debug, PartialEq, Eq)]
     pub struct Termsize {
         /// Width of the terminal, in columns.
+        // TODO: Change to u32
         pub width: isize,
 
         /// Height of the terminal, in rows.
+        // TODO: Change to u32
         pub height: isize,
     }
 
@@ -224,7 +226,34 @@ impl TermsizeContainer {
     }
 
     /// Note that COLUMNS and/or LINES global variables changed.
-    fn handle_columns_lines_var_change(&self, vars: &environment_t) {
+    fn handle_columns_lines_var_change(&self, vars: &dyn Environment) {
+        // Do nothing if we are the ones setting it.
+        if self.setting_env_vars.load(Ordering::Relaxed) {
+            return;
+        }
+        // Construct a new termsize from COLUMNS and LINES, then set it in our data.
+        let new_termsize = Termsize {
+            width: vars
+                .getf(L!("COLUMNS"), EnvMode::GLOBAL)
+                .map(|v| v.as_string())
+                .and_then(|v| fish_wcstoi(&v).ok().map(|h| h as isize))
+                .unwrap_or(Termsize::DEFAULT_WIDTH),
+            height: vars
+                .getf(L!("LINES"), EnvMode::GLOBAL)
+                .map(|v| v.as_string())
+                .and_then(|v| fish_wcstoi(&v).ok().map(|h| h as isize))
+                .unwrap_or(Termsize::DEFAULT_HEIGHT),
+        };
+
+        // Store our termsize as an environment override.
+        self.data
+            .lock()
+            .unwrap()
+            .mark_override_from_env(new_termsize);
+    }
+
+    /// Note that COLUMNS and/or LINES global variables changed.
+    fn handle_columns_lines_var_change_ffi(&self, vars: &environment_t) {
         // Do nothing if we are the ones setting it.
         if self.setting_env_vars.load(Ordering::Relaxed) {
             return;
@@ -278,11 +307,14 @@ pub fn termsize_last() -> Termsize {
 }
 
 /// Called when the COLUMNS or LINES variables are changed.
-/// The pointer is to an environment_t, but has the wrong type to satisfy cxx.
-pub fn handle_columns_lines_var_change_ffi(vars_ptr: *const u8) {
-    assert!(!vars_ptr.is_null());
-    let vars: &environment_t = unsafe { &*(vars_ptr as *const environment_t) };
+pub fn handle_columns_lines_var_change(vars: &dyn Environment) {
     SHARED_CONTAINER.handle_columns_lines_var_change(vars);
+}
+
+fn handle_columns_lines_var_change_ffi(vars_ptr: *const u8) {
+    assert!(!vars_ptr.is_null());
+    let vars: &environment_t = unsafe { &*(vars_ptr.cast()) };
+    SHARED_CONTAINER.handle_columns_lines_var_change_ffi(vars);
 }
 
 /// Called to initialize the termsize.
@@ -349,13 +381,13 @@ add_test!("test_termsize", || {
     // Now the tty's termsize doesn't matter.
     parser.set_var(L!("COLUMNS"), &[L!("75")], env_global);
     parser.set_var(L!("LINES"), &[L!("150")], env_global);
-    ts.handle_columns_lines_var_change(parser.get_var_stack_env());
+    ts.handle_columns_lines_var_change_ffi(parser.get_var_stack_env());
     assert_eq!(ts.last(), Termsize::new(75, 150));
     assert_eq!(parser.var_as_string(L!("COLUMNS")).unwrap(), "75");
     assert_eq!(parser.var_as_string(L!("LINES")).unwrap(), "150");
 
     parser.set_var(L!("COLUMNS"), &[L!("33")], env_global);
-    ts.handle_columns_lines_var_change(parser.get_var_stack_env());
+    ts.handle_columns_lines_var_change_ffi(parser.get_var_stack_env());
     assert_eq!(ts.last(), Termsize::new(33, 150));
 
     // Oh it got SIGWINCH, now the tty matters again.

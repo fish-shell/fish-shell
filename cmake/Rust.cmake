@@ -51,12 +51,21 @@ else()
     corrosion_set_hostbuild(${fish_rust_target})
 endif()
 
+# Temporary hack to propogate CMake flags/options to build.rs. We need to get CMake to evaluate the
+# truthiness of the strings if they are set.
+set(CMAKE_WITH_GETTEXT "1")
+if(DEFINED WITH_GETTEXT AND NOT "${WITH_GETTEXT}")
+    set(CMAKE_WITH_GETTEXT "0")
+endif()
+
 # Tell Cargo where our build directory is so it can find config.h.
 corrosion_set_env_vars(${fish_rust_target}
     "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}"
     "FISH_AUTOCXX_GEN_DIR=${fish_autocxx_gen_dir}"
     "FISH_RUST_TARGET_DIR=${rust_target_dir}"
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
+    # Temporary hack to propogate CMake flags/options to build.rs.
+    "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"
 )
 
 target_include_directories(${fish_rust_target} INTERFACE

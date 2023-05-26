@@ -150,7 +150,7 @@ pub trait FloggableDisplay {
 
 impl<T: std::fmt::Display> FloggableDisplay for T {
     fn to_flog_str(&self) -> String {
-        format!("{}", self)
+        self.to_string()
     }
 }
 

@@ -56,7 +56,6 @@
 // Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
 // fish_read_limit variable.
 constexpr size_t DEFAULT_READ_BYTE_LIMIT = 100 * 1024 * 1024;
-size_t read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem. These are only the variables we're possibly interested in.
@@ -149,13 +148,13 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
     tzset();
 }
 
-/// Update the value of g_fish_emoji_width
+/// Update the value of FISH_EMOJI_WIDTH
 static void guess_emoji_width(const environment_t &vars) {
     if (auto width_str = vars.get(L"fish_emoji_width")) {
         int new_width = fish_wcstol(width_str->as_string().c_str());
-        g_fish_emoji_width = std::min(2, std::max(1, new_width));
+        FISH_EMOJI_WIDTH = std::min(2, std::max(1, new_width));
         FLOGF(term_support, "'fish_emoji_width' preference: %d, overwriting default",
-              g_fish_emoji_width);
+              FISH_EMOJI_WIDTH);
         return;
     }
 
@@ -172,18 +171,18 @@ static void guess_emoji_width(const environment_t &vars) {
 
     if (term == L"Apple_Terminal" && version >= 400) {
         // Apple Terminal on High Sierra
-        g_fish_emoji_width = 2;
+        FISH_EMOJI_WIDTH = 2;
         FLOGF(term_support, "default emoji width: 2 for %ls", term.c_str());
     } else if (term == L"iTerm.app") {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12.
-        g_fish_emoji_width = 2;
+        FISH_EMOJI_WIDTH = 2;
         FLOGF(term_support, "default emoji width for iTerm: 2");
     } else {
         // Default to whatever system wcwidth says to U+1F603,
         // but only if it's at least 1 and at most 2.
         int w = wcwidth(L'😃');
-        g_fish_emoji_width = std::min(2, std::max(1, w));
-        FLOGF(term_support, "default emoji width: %d", g_fish_emoji_width);
+        FISH_EMOJI_WIDTH = std::min(2, std::max(1, w));
+        FLOGF(term_support, "default emoji width: %d", FISH_EMOJI_WIDTH);
     }
 }
 
@@ -209,7 +208,7 @@ static void handle_change_ambiguous_width(const env_stack_t &vars) {
     if (auto width_str = vars.get(L"fish_ambiguous_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());
     }
-    g_fish_ambiguous_width = std::max(0, new_width);
+    FISH_AMBIGUOUS_WIDTH = std::max(0, new_width);
 }
 
 static void handle_term_size_change(const env_stack_t &vars) {
@@ -298,10 +297,10 @@ static void handle_read_limit_change(const environment_t &vars) {
         if (errno) {
             FLOGF(warning, "Ignoring fish_read_limit since it is not valid");
         } else {
-            read_byte_limit = limit;
+            READ_BYTE_LIMIT = limit;
         }
     } else {
-        read_byte_limit = DEFAULT_READ_BYTE_LIMIT;
+        READ_BYTE_LIMIT = DEFAULT_READ_BYTE_LIMIT;
     }
 }
 
@@ -617,12 +616,12 @@ static void init_curses(const environment_t &vars) {
     apply_term_hacks(vars);
 
     can_set_term_title = does_term_support_setting_title(vars);
-    term_has_xn =
+    TERM_HAS_XN =
         tigetflag(const_cast<char *>("xenl")) == 1;  // does terminal have the eat_newline_glitch
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
     layout_cache_t::shared.clear();
-    curses_initialized = true;
+    CURSES_INITIALIZED = true;
 }
 
 static constexpr const char *utf8_locales[] = {

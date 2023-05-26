@@ -5,6 +5,7 @@ use super::environment_impl::{
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
 use crate::common::{unescape_string, UnescapeStringStyle};
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, Statuses};
+use crate::env_dispatch::env_dispatch_var_change;
 use crate::event::Event;
 use crate::ffi::{self, env_universal_t, universal_notifier_t};
 use crate::flog::FLOG;
@@ -12,7 +13,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::path_make_canonical;
 use crate::wchar::{wstr, WExt, WString, L};
-use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::{AsWstr, WCharFromFFI};
 use crate::wcstringutil::join_strings;
 use crate::wutil::{wgetcwd, wgettext};
 
@@ -34,8 +35,12 @@ lazy_static! {
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Convert an EnvVar to an FFI env_var_t.
-fn env_var_to_ffi(var: EnvVar) -> cxx::UniquePtr<ffi::env_var_t> {
-    ffi::env_var_t::new_ffi(Box::into_raw(Box::from(var)).cast()).within_unique_ptr()
+pub fn env_var_to_ffi(var: Option<EnvVar>) -> cxx::UniquePtr<ffi::env_var_t> {
+    if let Some(var) = var {
+        ffi::env_var_t::new_ffi(Box::into_raw(Box::from(var)).cast()).within_unique_ptr()
+    } else {
+        cxx::UniquePtr::null()
+    }
 }
 
 /// An environment is read-only access to variable values.
@@ -180,7 +185,7 @@ impl EnvStack {
             // If we modified the global state, or we are principal, then dispatch changes.
             // Important to not hold the lock here.
             if ret.global_modified || self.is_principal() {
-                ffi::env_dispatch_var_change_ffi(&key.to_ffi() /* , self */);
+                env_dispatch_var_change(key, self);
             }
         }
         // Mark if we modified a uvar.
@@ -228,7 +233,7 @@ impl EnvStack {
         if ret.status == EnvStackSetResult::ENV_OK {
             if ret.global_modified || self.is_principal() {
                 // Important to not hold the lock here.
-                ffi::env_dispatch_var_change_ffi(&key.to_ffi() /*,  self */);
+                env_dispatch_var_change(key, self);
             }
         }
         if ret.uvar_modified {
@@ -255,7 +260,7 @@ impl EnvStack {
             // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize
             // once.
             for key in popped {
-                ffi::env_dispatch_var_change_ffi(&key.to_ffi() /*, self */);
+                env_dispatch_var_change(&key, self);
             }
         }
     }
@@ -298,7 +303,7 @@ impl EnvStack {
         #[allow(unreachable_code)]
         for idx in 0..sync_res.count() {
             let name = sync_res.get_key(idx).from_ffi();
-            ffi::env_dispatch_var_change_ffi(&name.to_ffi() /* , self */);
+            env_dispatch_var_change(&name, self);
             let evt = if sync_res.get_is_erase(idx) {
                 Event::variable_erase(name)
             } else {
@@ -371,17 +376,17 @@ pub fn env_init(do_uvars: bool) {
     if !do_uvars {
         UVAR_SCOPE_IS_GLOBAL.store(true);
     } else {
-        // let vars = EnvStack::principal();
-
         // Set up universal variables using the default path.
         let callbacks = uvars()
             .as_mut()
             .unwrap()
             .initialize_ffi()
             .within_unique_ptr();
+        let vars = EnvStack::principal();
         let callbacks = callbacks.as_ref().unwrap();
         for idx in 0..callbacks.count() {
-            ffi::env_dispatch_var_change_ffi(callbacks.get_key(idx) /* , vars */);
+            let name = callbacks.get_key(idx).from_ffi();
+            env_dispatch_var_change(&name, vars);
         }
 
         // Do not import variables that have the same name and value as

@@ -307,9 +307,8 @@ fn spawn_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) -> bool {
 ///
 /// This function is always defined but is a no-op if not running under ASAN. This is to make it
 /// more ergonomic to call it in general and also makes it possible to call it via ffi at all.
-pub fn asan_maybe_exit(#[allow(unused)] code: i32) {
-    #[cfg(feature = "asan")]
-    {
+pub fn asan_maybe_exit(code: i32) {
+    if cfg!(feature = "asan") {
         asan_before_exit();
         unsafe {
             libc::exit(code);
@@ -323,15 +322,9 @@ pub fn asan_maybe_exit(#[allow(unused)] code: i32) {
 /// This function is always defined but is a no-op if not running under ASAN. This is to make it
 /// more ergonomic to call it in general and also makes it possible to call it via ffi at all.
 pub fn asan_before_exit() {
-    #[cfg(feature = "asan")]
-    if !is_forked_child() {
-        unsafe {
-            // Free ncurses terminal state
-            extern "C" {
-                fn env_cleanup();
-            }
-            env_cleanup();
-        }
+    if cfg!(feature = "asan") && !is_forked_child() {
+        // Free ncurses terminal state
+        crate::curses::reset();
     }
 }
 

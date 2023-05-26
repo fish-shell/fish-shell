@@ -244,6 +244,8 @@ class screen_t {
 /// Issues an immediate clr_eos.
 void screen_force_clear_to_end();
 
+void screen_clear_layout_cache_ffi();
+
 // Information about the layout of a prompt.
 struct prompt_layout_t {
     std::vector<size_t> line_breaks;  // line breaks when rendering the prompt

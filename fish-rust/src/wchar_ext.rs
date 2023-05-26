@@ -226,6 +226,15 @@ pub trait WExt {
         }
     }
 
+    /// Returns the index of the first match against the provided substring or `None`.
+    fn find(&self, search: impl AsRef<[char]>) -> Option<usize> {
+        fn inner(lhs: &[char], rhs: &[char]) -> Option<usize> {
+            lhs.windows(rhs.len()).position(|window| window == rhs)
+        }
+
+        inner(self.as_char_slice(), search.as_ref())
+    }
+
     /// \return the index of the first occurrence of the given char, or None.
     fn find_char(&self, c: char) -> Option<usize> {
         self.as_char_slice().iter().position(|&x| x == c)
@@ -317,5 +326,48 @@ mod tests {
             do_split(L!("Hello\nworld\nRust"), '\n'),
             &["Hello", "world", "Rust"]
         );
+    }
+
+    #[test]
+    fn find_prefix() {
+        let needle = L!("hello");
+        let haystack = L!("hello world");
+        assert_eq!(haystack.find(needle), Some(0));
+    }
+
+    #[test]
+    fn find_one() {
+        let needle = L!("ello");
+        let haystack = L!("hello world");
+        assert_eq!(haystack.find(needle), Some(1));
+    }
+
+    #[test]
+    fn find_suffix() {
+        let needle = L!("world");
+        let haystack = L!("hello world");
+        assert_eq!(haystack.find(needle), Some(6));
+    }
+
+    #[test]
+    fn find_none() {
+        let needle = L!("worldz");
+        let haystack = L!("hello world");
+        assert_eq!(haystack.find(needle), None);
+    }
+
+    #[test]
+    fn find_none_larger() {
+        // Notice that `haystack` and `needle` are reversed.
+        let haystack = L!("world");
+        let needle = L!("hello world");
+        assert_eq!(haystack.find(needle), None);
+    }
+
+    #[test]
+    fn find_none_case_mismatch() {
+        let haystack = L!("wOrld");
+        let needle = L!("hello world");
+        assert_eq!(haystack.find(needle), None);
     }
 }

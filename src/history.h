@@ -316,8 +316,14 @@ class history_search_t {
 /** Saves the new history to disk. */
 void history_save_all();
 
+#if INCLUDE_RUST_HEADERS
 /** Return the prefix for the files to be used for command and read history. */
 wcstring history_session_id(const environment_t &vars);
+#endif
+
+/** FFI version of above **/
+class env_var_t;
+wcstring history_session_id(std::unique_ptr<env_var_t> fish_history);
 
 /**
     Given a list of proposed paths and a context, perform variable and home directory expansion,

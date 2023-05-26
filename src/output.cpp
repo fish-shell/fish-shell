@@ -41,9 +41,10 @@ static bool term_supports_color_natively(unsigned int c) {
     return static_cast<unsigned>(max_colors) >= c + 1;
 }
 
-color_support_t output_get_color_support() { return color_support; }
-
-void output_set_color_support(color_support_t val) { color_support = val; }
+extern "C" {
+    void output_set_color_support(color_support_t val) { color_support = val; }
+    color_support_t output_get_color_support() { return color_support; }
+}
 
 unsigned char index_for_color(rgb_color_t c) {
     if (c.is_named() || !(output_get_color_support() & color_support_term256)) {

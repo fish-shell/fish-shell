@@ -356,6 +356,7 @@ dependencies = [
  "pcre2",
  "printf-compat",
  "rand",
+ "rsconf",
  "unixstring",
  "widestring",
  "widestring-suffix",
@@ -815,6 +816,14 @@ name = "regex-syntax"
 version = "0.6.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
+
+[[package]]
+name = "rsconf"
+version = "0.1.0"
+source = "git+https://github.com/mqudsi/rsconf?branch=master#5966dd64796528e79e0dc9ba61b1dac679640273"
+dependencies = [
+ "cc",
+]
 
 [[package]]
 name = "rustc-hash"

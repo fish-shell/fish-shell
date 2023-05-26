@@ -32,6 +32,7 @@
 #include "builtin.h"
 #include "common.h"
 #include "env.h"
+#include "env_dispatch.rs.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
@@ -214,7 +215,7 @@ bool is_thompson_shell_script(const char *path) {
 static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
                                         const dup2_list_t &dup2s) {
     // Is it globally disabled?
-    if (!get_use_posix_spawn()) return false;
+    if (!use_posix_spawn()) return false;
 
     // Hack - do not use posix_spawn if there are self-fd redirections.
     // For example if you were to write:
@@ -1195,7 +1196,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
     auto &ld = parser.libdata();
 
     scoped_push<bool> is_subshell(&ld.is_subshell, true);
-    scoped_push<size_t> read_limit(&ld.read_limit, is_subcmd ? read_byte_limit : 0);
+    scoped_push<size_t> read_limit(&ld.read_limit, is_subcmd ? READ_BYTE_LIMIT : 0);
 
     auto prev_statuses = parser.get_last_statuses();
     const cleanup_t put_back([&] {

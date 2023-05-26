@@ -854,7 +854,7 @@ std::shared_ptr<const mapping_list_t> input_mapping_set_t::all_mappings() {
 
 /// Create a list of terminfo mappings.
 static std::vector<terminfo_mapping_t> create_input_terminfo() {
-    assert(curses_initialized);
+    assert(CURSES_INITIALIZED);
     if (!cur_term) return {};  // setupterm() failed so we can't referency any key definitions
 
 #define TERMINFO_ADD(key) \

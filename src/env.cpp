@@ -20,7 +20,7 @@
 
 #include "abbrs.h"
 #include "common.h"
-#include "env_dispatch.h"
+#include "env_dispatch.rs.h"
 #include "env_universal_common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -49,11 +49,6 @@
 
 /// At init, we read all the environment variables from this array.
 extern char **environ;
-
-bool curses_initialized = false;
-
-/// Does the terminal have the "eat_newline_glitch".
-bool term_has_xn = false;
 
 // static
 env_var_t env_var_t::new_ffi(EnvVar *ptr) {
@@ -369,7 +364,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
 
     // Allow changes to variables to produce events.
-    env_dispatch_init(vars);
+    env_dispatch_init_ffi(/* vars */);
 
     init_input();
 
@@ -455,27 +450,18 @@ std::shared_ptr<owning_null_terminated_array_t> env_stack_t::export_arr() {
         rust::Box<OwningNullTerminatedArrayRefFFI>::from_raw(ptr));
 }
 
-/// Wrapper around a EnvDyn.
-class env_dyn_t final : public environment_t {
-   public:
-    env_dyn_t(rust::Box<EnvDyn> impl) : impl_(std::move(impl)) {}
-
-    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode) const {
-        if (auto *ptr = impl_->getf(key, mode)) {
-            return env_var_t::new_ffi(ptr);
-        }
-        return none();
+maybe_t<env_var_t> env_dyn_t::get(const wcstring &key, env_mode_flags_t mode) const {
+    if (auto *ptr = impl_->getf(key, mode)) {
+        return env_var_t::new_ffi(ptr);
     }
+    return none();
+}
 
-    std::vector<wcstring> get_names(env_mode_flags_t flags) const {
-        wcstring_list_ffi_t names;
-        impl_->get_names(flags, names);
-        return std::move(names.vals);
-    }
-
-   private:
-    rust::Box<EnvDyn> impl_;
-};
+std::vector<wcstring> env_dyn_t::get_names(env_mode_flags_t flags) const {
+    wcstring_list_ffi_t names;
+    impl_->get_names(flags, names);
+    return std::move(names.vals);
+}
 
 std::shared_ptr<environment_t> env_stack_t::snapshot() const {
     auto res = std::make_shared<env_dyn_t>(impl_->snapshot());
@@ -575,6 +561,7 @@ wcstring env_get_runtime_path() {
 
 static std::mutex s_setenv_lock{};
 
+extern "C" {
 void setenv_lock(const char *name, const char *value, int overwrite) {
     scoped_lock locker(s_setenv_lock);
     setenv(name, value, overwrite);
@@ -583,6 +570,7 @@ void setenv_lock(const char *name, const char *value, int overwrite) {
 void unsetenv_lock(const char *name) {
     scoped_lock locker(s_setenv_lock);
     unsetenv(name);
+}
 }
 
 wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val) {

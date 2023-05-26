@@ -23,7 +23,7 @@ use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, 
 use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::env;
-use std::ffi::{CString, OsString};
+use std::ffi::{CStr, CString, OsString};
 use std::mem::{self, ManuallyDrop};
 use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, RawFd};
@@ -34,6 +34,7 @@ use std::str::FromStr;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::Mutex;
 use std::time;
+use widestring::Utf32String;
 use widestring_suffix::widestrs;
 
 // Highest legal ASCII value.
@@ -1344,7 +1345,7 @@ pub type FilenameRef = Rc<WString>;
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.
 #[widestrs]
-fn fish_setlocale() {
+pub fn fish_setlocale() {
     // Use various Unicode symbols if they can be encoded using the current locale, else a simple
     // ASCII char alternative. All of the can_be_encoded() invocations should return the same
     // true/false value since the code points are in the BMP but we're going to be paranoid. This
@@ -1394,6 +1395,15 @@ fn fish_setlocale() {
         );
     }
     PROFILING_ACTIVE.store(true);
+
+    // Until no C++ code uses the variables init in the C++ version of fish_setlocale(), we need to
+    // also call that one or otherwise we'll segfault trying to read those uninit values.
+    extern "C" {
+        fn fish_setlocale_ffi();
+    }
+    unsafe {
+        fish_setlocale_ffi();
+    }
 }
 
 /// Test if the character can be encoded using the current locale.
@@ -1715,7 +1725,7 @@ pub fn replace_with<T, F: FnOnce(&T) -> T>(old: &mut T, with: F) -> T {
     std::mem::replace(old, new)
 }
 
-pub type Cleanup<T, F, C> = ScopeGuard<T, F, C>;
+pub type Cleanup<T, F> = ScopeGuard<T, F>;
 
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a
 /// callback that modifies live objects willy-nilly because then there would be two &mut references
@@ -1742,44 +1752,24 @@ pub type Cleanup<T, F, C> = ScopeGuard<T, F, C>;
 ///
 /// // hello will be written first, then goodbye.
 /// ```
-pub struct ScopeGuard<T, F: FnOnce(&mut T), C> {
+pub struct ScopeGuard<T, F: FnOnce(&mut T)> {
     captured: ManuallyDrop<T>,
-    view: fn(&T) -> &C,
-    view_mut: fn(&mut T) -> &mut C,
     on_drop: Option<F>,
-    marker: std::marker::PhantomData<C>,
 }
 
-fn identity<T>(t: &T) -> &T {
-    t
-}
-fn identity_mut<T>(t: &mut T) -> &mut T {
-    t
-}
-
-impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F, T> {
+impl<T, F> ScopeGuard<T, F>
+where
+    F: FnOnce(&mut T),
+{
     /// Creates a new `ScopeGuard` wrapping `value`. The `on_drop` callback is executed when the
     /// ScopeGuard's lifetime expires or when it is manually dropped.
     pub fn new(value: T, on_drop: F) -> Self {
-        Self::with_view(value, identity, identity_mut, on_drop)
-    }
-}
-
-impl<T, F: FnOnce(&mut T), C> ScopeGuard<T, F, C> {
-    pub fn with_view(
-        value: T,
-        view: fn(&T) -> &C,
-        view_mut: fn(&mut T) -> &mut C,
-        on_drop: F,
-    ) -> Self {
         Self {
             captured: ManuallyDrop::new(value),
-            view,
-            view_mut,
             on_drop: Some(on_drop),
-            marker: Default::default(),
         }
     }
+
     /// Cancel the unwind operation, e.g. do not call the previously passed-in `on_drop` callback
     /// when the current scope expires.
     pub fn cancel(guard: &mut Self) {
@@ -1807,21 +1797,21 @@ impl<T, F: FnOnce(&mut T), C> ScopeGuard<T, F, C> {
     }
 }
 
-impl<T, F: FnOnce(&mut T), C> Deref for ScopeGuard<T, F, C> {
-    type Target = C;
+impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {
+    type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        (self.view)(&self.captured)
+        &self.captured
     }
 }
 
-impl<T, F: FnOnce(&mut T), C> DerefMut for ScopeGuard<T, F, C> {
+impl<T, F: FnOnce(&mut T)> DerefMut for ScopeGuard<T, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        (self.view_mut)(&mut self.captured)
+        &mut self.captured
     }
 }
 
-impl<T, F: FnOnce(&mut T), C> Drop for ScopeGuard<T, F, C> {
+impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
     fn drop(&mut self) {
         if let Some(on_drop) = self.on_drop.take() {
             on_drop(&mut self.captured);
@@ -1833,46 +1823,29 @@ impl<T, F: FnOnce(&mut T), C> Drop for ScopeGuard<T, F, C> {
 
 /// A scoped manager to save the current value of some variable, and set it to a new value. When
 /// dropped, it restores the variable to its old value.
-#[allow(clippy::type_complexity)] // Not sure how to extract the return type.
 pub fn scoped_push<Context, Accessor, T>(
     mut ctx: Context,
     accessor: Accessor,
     new_value: T,
-) -> ScopeGuard<(Context, Accessor, T), fn(&mut (Context, Accessor, T)), Context>
+) -> impl Deref<Target = Context> + DerefMut<Target = Context>
 where
     Accessor: Fn(&mut Context) -> &mut T,
     T: Copy,
 {
-    fn restore_saved_value<Context, Accessor, T: Copy>(data: &mut (Context, Accessor, T))
-    where
-        Accessor: Fn(&mut Context) -> &mut T,
-    {
-        let (ref mut ctx, ref accessor, saved_value) = data;
-        *accessor(ctx) = *saved_value;
-    }
-    fn view_context<Context, Accessor, T>(data: &(Context, Accessor, T)) -> &Context
-    where
-        Accessor: Fn(&mut Context) -> &mut T,
-    {
-        &data.0
-    }
-    fn view_context_mut<Context, Accessor, T>(data: &mut (Context, Accessor, T)) -> &mut Context
-    where
-        Accessor: Fn(&mut Context) -> &mut T,
-    {
-        &mut data.0
-    }
     let saved_value = mem::replace(accessor(&mut ctx), new_value);
-    ScopeGuard::with_view(
-        (ctx, accessor, saved_value),
-        view_context,
-        view_context_mut,
-        restore_saved_value,
-    )
+    // Store the original/root value, the function to map from the original value to the variables
+    // we are changing, and a saved snapshot of the previous values of those variables in a tuple,
+    // then use ScopeGuard's `on_drop` parameter to restore the saved values when the scope ends.
+    let scope_guard = ScopeGuard::new((ctx, accessor, saved_value), |data| {
+        let (ref mut ctx, accessor, saved_value) = data;
+        *accessor(ctx) = *saved_value;
+    });
+    // `scope_guard` would deref to the tuple we gave it, so use Projection<T> to map from the tuple
+    // `(ctx, accessor, saved_value)` to the result of `accessor(ctx)`.
+    Projection::new(scope_guard, |sg| &sg.0, |sg| &mut sg.0)
 }
 
 pub const fn assert_send<T: Send>() {}
-
 pub const fn assert_sync<T: Sync>() {}
 
 /// This function attempts to distinguish between a console session (at the actual login vty) and a
@@ -1982,6 +1955,115 @@ pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&
     match vals.binary_search_by_key(&name, |val| val.name()) {
         Ok(index) => Some(&vals[index]),
         Err(_) => None,
+    }
+}
+
+/// Takes ownership of a variable and `Deref`s/`DerefMut`s into a projection of that variable.
+///
+/// Can be used as a workaround for the lack of `MutexGuard::map()` to return a `MutexGuard`
+/// exposing only a variable of the Mutex-owned object.
+pub struct Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    value: T,
+    view: F1,
+    view_mut: F2,
+}
+
+impl<T, V, F1, F2> Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    pub fn new(owned: T, project: F1, project_mut: F2) -> Self {
+        Projection {
+            value: owned,
+            view: project,
+            view_mut: project_mut,
+        }
+    }
+}
+
+impl<T, V, F1, F2> Deref for Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    type Target = V;
+
+    fn deref(&self) -> &Self::Target {
+        (self.view)(&self.value)
+    }
+}
+
+impl<T, V, F1, F2> DerefMut for Projection<T, V, F1, F2>
+where
+    F1: Fn(&T) -> &V,
+    F2: Fn(&mut T) -> &mut V,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        (self.view_mut)(&mut self.value)
+    }
+}
+
+/// A trait to make it more convenient to pass ascii/Unicode strings to functions that can take
+/// non-Unicode values. The result is nul-terminated and can be passed to OS functions.
+///
+/// This is only implemented for owned types where an owned instance will skip allocations (e.g.
+/// `CString` can return `self`) but not implemented for owned instances where a new allocation is
+/// always required (e.g. implemented for `&wstr` but not `WideString`) because you might as well be
+/// left with the original item if we're going to allocate from scratch in all cases.
+pub trait ToCString {
+    /// Correctly convert to a nul-terminated [`CString`] that can be passed to OS functions.
+    fn to_cstring(self) -> CString;
+}
+
+impl ToCString for CString {
+    fn to_cstring(self) -> CString {
+        self
+    }
+}
+
+impl ToCString for &CStr {
+    fn to_cstring(self) -> CString {
+        self.to_owned()
+    }
+}
+
+/// Safely converts from `&wstr` to a `CString` to a nul-terminated `CString` that can be passed to
+/// OS functions, taking into account non-Unicode values that have been shifted into the private-use
+/// range by using [`wcs2zstring()`].
+impl ToCString for &wstr {
+    /// The wide string may contain non-Unicode bytes mapped to the private-use Unicode range, so we
+    /// have to use [`wcs2zstring()`](self::wcs2zstring) to convert it correctly.
+    fn to_cstring(self) -> CString {
+        self::wcs2zstring(self)
+    }
+}
+
+/// Safely converts from `&Utf32String` to a nul-terminated `CString` that can be passed to OS
+/// functions, taking into account non-Unicode values that have been shifted into the private-use
+/// range by using [`wcs2zstring()`].
+impl ToCString for &Utf32String {
+    fn to_cstring(self) -> CString {
+        self.as_utfstr().to_cstring()
+    }
+}
+
+/// Convert a (probably ascii) string to CString that can be passed to OS functions.
+impl ToCString for Vec<u8> {
+    fn to_cstring(mut self) -> CString {
+        self.push(b'\0');
+        CString::from_vec_with_nul(self).unwrap()
+    }
+}
+
+/// Convert a (probably ascii) string to nul-terminated CString that can be passed to OS functions.
+impl ToCString for &[u8] {
+    fn to_cstring(self) -> CString {
+        CString::new(self).unwrap()
     }
 }
 

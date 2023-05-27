@@ -89,10 +89,14 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
 type NamedEnvCallback = fn(name: &wstr, env: &EnvStack);
 type AnonEnvCallback = fn(env: &EnvStack);
 
+enum EnvCallback {
+    Named(NamedEnvCallback),
+    Anon(AnonEnvCallback),
+}
+
 #[derive(Default)]
 struct VarDispatchTable {
-    named_table: HashMap<&'static wstr, NamedEnvCallback>,
-    anon_table: HashMap<&'static wstr, AnonEnvCallback>,
+    table: HashMap<&'static wstr, EnvCallback>,
 }
 
 // TODO: Delete this after input_common is ported (and pass the input_function function directly).
@@ -103,36 +107,23 @@ fn update_wait_on_escape_ms(vars: &EnvStack) {
 }
 
 impl VarDispatchTable {
-    fn observes_var(&self, name: &wstr) -> bool {
-        self.named_table.contains_key(name) || self.anon_table.contains_key(name)
-    }
-
     /// Add a callback for the variable `name`. We must not already be observing this variable.
     pub fn add(&mut self, name: &'static wstr, callback: NamedEnvCallback) {
-        let prev = self.named_table.insert(name, callback);
-        assert!(
-            prev.is_none() && !self.anon_table.contains_key(name),
-            "Already observing {}",
-            name
-        );
+        let prev = self.table.insert(name, EnvCallback::Named(callback));
+        assert!(prev.is_none(), "Already observing {}", name);
     }
 
     /// Add an callback for the variable `name`. We must not already be observing this variable.
     pub fn add_anon(&mut self, name: &'static wstr, callback: AnonEnvCallback) {
-        let prev = self.anon_table.insert(name, callback);
-        assert!(
-            prev.is_none() && !self.named_table.contains_key(name),
-            "Already observing {}",
-            name
-        );
+        let prev = self.table.insert(name, EnvCallback::Anon(callback));
+        assert!(prev.is_none(), "Already observing {}", name);
     }
 
     pub fn dispatch(&self, key: &wstr, vars: &EnvStack) {
-        if let Some(named) = self.named_table.get(key) {
-            (named)(key, vars);
-        }
-        if let Some(anon) = self.anon_table.get(key) {
-            (anon)(vars);
+        match self.table.get(key) {
+            Some(EnvCallback::Named(named)) => (named)(key, vars),
+            Some(EnvCallback::Anon(anon)) => (anon)(vars),
+            None => (),
         }
     }
 }

@@ -24,7 +24,7 @@ use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::env;
 use std::ffi::{CStr, CString, OsString};
-use std::mem::{self, ManuallyDrop};
+use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, RawFd};
 use std::os::unix::prelude::OsStringExt;
@@ -1717,16 +1717,6 @@ fn get_executable_path(argv0: &str) -> PathBuf {
     std::env::current_exe().unwrap_or_else(|_| PathBuf::from_str(argv0).unwrap())
 }
 
-/// Like [`std::mem::replace()`] but provides a reference to the old value in a callback to obtain
-/// the replacement value. Useful to avoid errors about multiple references (`&mut T` for `old` then
-/// `&T` again in the `new` expression).
-pub fn replace_with<T, F: FnOnce(&T) -> T>(old: &mut T, with: F) -> T {
-    let new = with(old);
-    std::mem::replace(old, new)
-}
-
-pub type Cleanup<T, F> = ScopeGuard<T, F>;
-
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a
 /// callback that modifies live objects willy-nilly because then there would be two &mut references
 /// to the same object - the original variables we keep around to use and their captured references
@@ -1752,47 +1742,19 @@ pub type Cleanup<T, F> = ScopeGuard<T, F>;
 ///
 /// // hello will be written first, then goodbye.
 /// ```
-pub struct ScopeGuard<T, F: FnOnce(&mut T)> {
-    captured: ManuallyDrop<T>,
-    on_drop: Option<F>,
-}
+pub struct ScopeGuard<T, F: FnOnce(&mut T)>(Option<(T, F)>);
 
-impl<T, F> ScopeGuard<T, F>
-where
-    F: FnOnce(&mut T),
-{
+impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
     /// Creates a new `ScopeGuard` wrapping `value`. The `on_drop` callback is executed when the
     /// ScopeGuard's lifetime expires or when it is manually dropped.
     pub fn new(value: T, on_drop: F) -> Self {
-        Self {
-            captured: ManuallyDrop::new(value),
-            on_drop: Some(on_drop),
-        }
+        Self(Some((value, on_drop)))
     }
 
-    /// Cancel the unwind operation, e.g. do not call the previously passed-in `on_drop` callback
-    /// when the current scope expires.
-    pub fn cancel(guard: &mut Self) {
-        guard.on_drop.take();
-    }
-
-    /// Cancels the unwind operation like [`ScopeGuard::cancel()`] but also returns the captured
-    /// value (consuming the `ScopeGuard` in the process).
-    pub fn rollback(mut guard: Self) -> T {
-        guard.on_drop.take();
-        // Safety: we're about to forget the guard altogether
-        let value = unsafe { ManuallyDrop::take(&mut guard.captured) };
-        std::mem::forget(guard);
-        value
-    }
-
-    /// Commits the unwind operation (i.e. applies the provided callback) and returns the captured
-    /// value (consuming the `ScopeGuard` in the process).
+    /// Invokes the callback and returns the wrapped value, consuming the ScopeGuard.
     pub fn commit(mut guard: Self) -> T {
-        (guard.on_drop.take().expect("ScopeGuard already canceled!"))(&mut guard.captured);
-        // Safety: we're about to forget the guard altogether
-        let value = unsafe { ManuallyDrop::take(&mut guard.captured) };
-        std::mem::forget(guard);
+        let (mut value, on_drop) = guard.0.take().expect("Should always have Some value");
+        on_drop(&mut value);
         value
     }
 }
@@ -1801,23 +1763,35 @@ impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        &self.captured
+        &self.0.as_ref().unwrap().0
     }
 }
 
 impl<T, F: FnOnce(&mut T)> DerefMut for ScopeGuard<T, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.captured
+        &mut self.0.as_mut().unwrap().0
     }
 }
 
 impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
     fn drop(&mut self) {
-        if let Some(on_drop) = self.on_drop.take() {
-            on_drop(&mut self.captured);
+        if let Some((mut value, on_drop)) = self.0.take() {
+            on_drop(&mut value);
         }
-        // Safety: we're in the Drop so `self` will never be accessed again.
-        unsafe { ManuallyDrop::drop(&mut self.captured) };
+    }
+}
+
+/// A trait expressing what ScopeGuard can do. This is necessary because scoped_push returns an
+/// `impl Trait` object and therefore methods on ScopeGuard which take a self parameter cannot be
+/// used.
+pub trait ScopeGuarding: DerefMut {
+    /// Invokes the callback and returns the wrapped value, consuming the ScopeGuard.
+    fn commit(guard: Self) -> Self::Target;
+}
+
+impl<T, F: FnOnce(&mut T)> ScopeGuarding for ScopeGuard<T, F> {
+    fn commit(guard: Self) -> T {
+        ScopeGuard::commit(guard)
     }
 }
 
@@ -1827,22 +1801,15 @@ pub fn scoped_push<Context, Accessor, T>(
     mut ctx: Context,
     accessor: Accessor,
     new_value: T,
-) -> impl Deref<Target = Context> + DerefMut<Target = Context>
+) -> impl ScopeGuarding<Target = Context>
 where
     Accessor: Fn(&mut Context) -> &mut T,
-    T: Copy,
 {
-    let saved_value = mem::replace(accessor(&mut ctx), new_value);
-    // Store the original/root value, the function to map from the original value to the variables
-    // we are changing, and a saved snapshot of the previous values of those variables in a tuple,
-    // then use ScopeGuard's `on_drop` parameter to restore the saved values when the scope ends.
-    let scope_guard = ScopeGuard::new((ctx, accessor, saved_value), |data| {
-        let (ref mut ctx, accessor, saved_value) = data;
-        *accessor(ctx) = *saved_value;
-    });
-    // `scope_guard` would deref to the tuple we gave it, so use Projection<T> to map from the tuple
-    // `(ctx, accessor, saved_value)` to the result of `accessor(ctx)`.
-    Projection::new(scope_guard, |sg| &sg.0, |sg| &mut sg.0)
+    let saved = mem::replace(accessor(&mut ctx), new_value);
+    let restore_saved = move |ctx: &mut Context| {
+        *accessor(ctx) = saved;
+    };
+    ScopeGuard::new(ctx, restore_saved)
 }
 
 pub const fn assert_send<T: Send>() {}
@@ -1955,56 +1922,6 @@ pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&
     match vals.binary_search_by_key(&name, |val| val.name()) {
         Ok(index) => Some(&vals[index]),
         Err(_) => None,
-    }
-}
-
-/// Takes ownership of a variable and `Deref`s/`DerefMut`s into a projection of that variable.
-///
-/// Can be used as a workaround for the lack of `MutexGuard::map()` to return a `MutexGuard`
-/// exposing only a variable of the Mutex-owned object.
-pub struct Projection<T, V, F1, F2>
-where
-    F1: Fn(&T) -> &V,
-    F2: Fn(&mut T) -> &mut V,
-{
-    value: T,
-    view: F1,
-    view_mut: F2,
-}
-
-impl<T, V, F1, F2> Projection<T, V, F1, F2>
-where
-    F1: Fn(&T) -> &V,
-    F2: Fn(&mut T) -> &mut V,
-{
-    pub fn new(owned: T, project: F1, project_mut: F2) -> Self {
-        Projection {
-            value: owned,
-            view: project,
-            view_mut: project_mut,
-        }
-    }
-}
-
-impl<T, V, F1, F2> Deref for Projection<T, V, F1, F2>
-where
-    F1: Fn(&T) -> &V,
-    F2: Fn(&mut T) -> &mut V,
-{
-    type Target = V;
-
-    fn deref(&self) -> &Self::Target {
-        (self.view)(&self.value)
-    }
-}
-
-impl<T, V, F1, F2> DerefMut for Projection<T, V, F1, F2>
-where
-    F1: Fn(&T) -> &V,
-    F2: Fn(&mut T) -> &mut V,
-{
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        (self.view_mut)(&mut self.value)
     }
 }
 
@@ -2180,6 +2097,7 @@ mod tests {
             s[i] = saved;
         }
     }
+
     /// fish uses the private-use range to encode bytes that could not be decoded using the
     /// user's locale. If the input could be decoded, but decoded to private-use codepoints,
     /// then fish should also use the direct encoding for those bytes. Verify that characters
@@ -2212,6 +2130,76 @@ mod tests {
             assert_eq!(ws.len(), s.len());
             assert_eq!(wcs2string(&ws), s);
         }
+    }
+
+    #[test]
+    fn test_scoped_push() {
+        use super::scoped_push;
+        struct Context {
+            value: i32,
+        }
+
+        let mut value = 0;
+        let mut ctx = Context { value };
+        {
+            let mut ctx = scoped_push(&mut ctx, |ctx| &mut ctx.value, value + 1);
+            value = ctx.value;
+            assert_eq!(value, 1);
+            {
+                let mut ctx = scoped_push(&mut ctx, |ctx| &mut ctx.value, value + 1);
+                assert_eq!(ctx.value, 2);
+                ctx.value = 5;
+                assert_eq!(ctx.value, 5);
+            }
+            assert_eq!(ctx.value, 1);
+        }
+        assert_eq!(ctx.value, 0);
+    }
+
+    #[test]
+    fn test_scope_guard() {
+        use super::ScopeGuard;
+        let relaxed = std::sync::atomic::Ordering::Relaxed;
+        let counter = std::sync::atomic::AtomicUsize::new(0);
+        {
+            let guard = ScopeGuard::new(123, |arg| {
+                assert_eq!(*arg, 123);
+                counter.fetch_add(1, relaxed);
+            });
+            assert_eq!(counter.load(relaxed), 0);
+            std::mem::drop(guard);
+            assert_eq!(counter.load(relaxed), 1);
+        }
+        // commit also invokes the callback.
+        {
+            let guard = ScopeGuard::new(123, |arg| {
+                assert_eq!(*arg, 123);
+                counter.fetch_add(1, relaxed);
+            });
+            assert_eq!(counter.load(relaxed), 1);
+            let val = ScopeGuard::commit(guard);
+            assert_eq!(counter.load(relaxed), 2);
+            assert_eq!(val, 123);
+        }
+    }
+
+    #[test]
+    fn test_scope_guard_consume() {
+        // The following pattern works.
+        use super::{scoped_push, ScopeGuarding};
+        struct Storage {
+            value: &'static str,
+        }
+        let obj = Storage { value: "nu" };
+        assert_eq!(obj.value, "nu");
+        let obj = scoped_push(obj, |obj| &mut obj.value, "mu");
+        assert_eq!(obj.value, "mu");
+        let obj = scoped_push(obj, |obj| &mut obj.value, "mu2");
+        assert_eq!(obj.value, "mu2");
+        let obj = ScopeGuarding::commit(obj);
+        assert_eq!(obj.value, "mu");
+        let obj = ScopeGuarding::commit(obj);
+        assert_eq!(obj.value, "nu");
     }
 }
 

@@ -24,19 +24,19 @@ bitflags! {
     }
 }
 
-/// FFI bits.
-pub fn output_set_color_support(value: ColorSupport) {
-    extern "C" {
-        pub fn output_set_color_support(value: libc::c_int);
-    }
-
-    unsafe {
-        output_set_color_support(value.bits() as i32);
-    }
-}
-
 /// Whether term256 and term24bit are supported.
 static COLOR_SUPPORT: AtomicU8 = AtomicU8::new(0);
+
+/// FFI bits.
+#[no_mangle]
+extern "C" fn output_get_color_support() -> u8 {
+    COLOR_SUPPORT.load(Ordering::Relaxed)
+}
+
+#[no_mangle]
+extern "C" fn output_set_color_support(val: u8) {
+    COLOR_SUPPORT.store(val, Ordering::Relaxed);
+}
 
 /// Returns true if we think tparm can handle outputting a color index.
 fn term_supports_color_natively(term: &Term, c: i32) -> bool {
@@ -644,5 +644,93 @@ pub fn writembs_check<T: Borrow<Option<CString>>>(
             crate::common::PACKAGE_BUGREPORT,
         );
         FLOG!(error, text);
+    }
+}
+
+/// FFI junk.
+fn stdoutput_ffi() -> &'static mut Outputter {
+    // TODO: this is bogus because it avoids RefCell's check, but is temporary for FFI purposes.
+    unsafe { &mut *Outputter::stdoutput().as_ptr() }
+}
+
+/// Make an outputter which outputs to its string.
+fn make_buffering_outputter_ffi() -> Box<Outputter> {
+    Box::new(Outputter::new_buffering())
+}
+
+type RgbColorFFI = crate::ffi::rgb_color_t;
+use crate::wchar_ffi::AsWstr;
+impl Outputter {
+    fn set_color_ffi(&mut self, fg: &RgbColorFFI, bg: &RgbColorFFI) {
+        self.set_color(fg.from_ffi(), bg.from_ffi());
+    }
+
+    fn writech_ffi(&mut self, ch: crate::ffi::wchar_t) {
+        self.writech(char::from_u32(ch).expect("Invalid wchar"));
+    }
+
+    // Write a nul-terminated string.
+    // We accept CxxString because it prevents needing to do typecasts at the call site,
+    // as it's unclear what Cxx type corresponds to const char *.
+    // We are unconcerned with interior nul-bytes: none of the termcap sequences contain them
+    // for obvious reasons.
+    fn writembs_ffi(&mut self, mbs: &cxx::CxxString) {
+        let mbs = unsafe { CStr::from_ptr(mbs.as_ptr() as *const std::ffi::c_char) };
+        writembs!(self, Some(mbs.to_owned()));
+    }
+
+    fn writestr_ffi(&mut self, str: crate::ffi::wcharz_t) {
+        self.write_wstr(str.as_wstr());
+    }
+
+    fn write_color_ffi(&mut self, color: &RgbColorFFI, is_fg: bool) -> bool {
+        self.write_color(color.from_ffi(), is_fg)
+    }
+}
+
+#[cxx::bridge]
+mod ffi {
+    extern "C++" {
+        include!("color.h");
+        include!("wutil.h");
+
+        #[cxx_name = "rgb_color_t"]
+        type RgbColorFFI = super::RgbColorFFI;
+
+        type wcharz_t = crate::ffi::wcharz_t;
+    }
+
+    extern "Rust" {
+        #[cxx_name = "outputter_t"]
+        type Outputter;
+
+        #[cxx_name = "make_buffering_outputter"]
+        fn make_buffering_outputter_ffi() -> Box<Outputter>;
+
+        #[cxx_name = "stdoutput"]
+        fn stdoutput_ffi() -> &'static mut Outputter;
+
+        #[cxx_name = "set_color"]
+        fn set_color_ffi(&mut self, fg: &RgbColorFFI, bg: &RgbColorFFI);
+
+        #[cxx_name = "writech"]
+        fn writech_ffi(&mut self, ch: wchar_t);
+
+        #[cxx_name = "writestr"]
+        fn writestr_ffi(&mut self, str: wcharz_t);
+
+        #[cxx_name = "writembs"]
+        fn writembs_ffi(&mut self, mbs: &CxxString);
+
+        #[cxx_name = "write_color"]
+        fn write_color_ffi(&mut self, color: &RgbColorFFI, is_fg: bool) -> bool;
+
+        // These do not need separate FFI variants.
+        fn contents(&self) -> &[u8];
+        fn begin_buffering(&mut self);
+        fn end_buffering(&mut self);
+
+        #[cxx_name = "push_back"]
+        fn push(&mut self, ch: u8);
     }
 }

@@ -63,9 +63,7 @@ class scoped_buffer_t : noncopyable_t, nonmovable_t {
 // Note this is deliberately exported so that init_curses can clear it.
 layout_cache_t layout_cache_t::shared;
 
-void screen_clear_layout_cache_ffi() {
-    layout_cache_t::shared.clear();
-}
+void screen_clear_layout_cache_ffi() { layout_cache_t::shared.clear(); }
 
 /// Tests if the specified narrow character sequence is present at the specified position of the
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
@@ -584,7 +582,7 @@ void screen_t::move(int new_x, int new_y) {
     }
 
     for (i = 0; i < abs(y_steps); i++) {
-        writembs(outp, str);
+        outp.writembs(str);
     }
 
     x_steps = new_x - this->actual.cursor.x;
@@ -641,7 +639,7 @@ void screen_t::write_mbs(const char *s) { writembs(this->outp(), s); }
 
 /// Convert a wide string to a multibyte string and append it to the buffer.
 void screen_t::write_str(const wchar_t *s) { this->outp().writestr(s); }
-void screen_t::write_str(const wcstring &s) { this->outp().writestr(s); }
+void screen_t::write_str(const wcstring &s) { this->outp().writestr(s.c_str()); }
 
 /// Returns the length of the "shared prefix" of the two lines, which is the run of matching text
 /// and colors. If the prefix ends on a combining character, do not include the previous character
@@ -1333,11 +1331,11 @@ void screen_t::reset_abandoning_line(int screen_width) {
 
 void screen_force_clear_to_end() {
     if (clr_eos) {
-        writembs(outputter_t::stdoutput(), clr_eos);
+        writembs(stdoutput(), clr_eos);
     }
 }
 
-screen_t::screen_t() : outp_(outputter_t::stdoutput()) {}
+screen_t::screen_t() : outp_(stdoutput()) {}
 
 bool screen_t::cursor_is_wrapped_to_own_line() const {
     // Note == comparison against the line count is correct: we do not create a line just for the

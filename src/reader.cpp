@@ -1569,7 +1569,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
         ignore_result(write_loop(STDOUT_FILENO, narrow.data(), narrow.size()));
     }
 
-    outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
+    stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
         ignore_result(write(STDOUT_FILENO, "\r", 1));
@@ -2611,7 +2611,7 @@ static void reader_interactive_init(parser_t &parser) {
 
 /// Destroy data for interactive use.
 static void reader_interactive_destroy() {
-    outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
+    stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
 }
 
 /// Set the specified string as the current buffer.
@@ -2747,7 +2747,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
         parser.vars().set_one(L"_", ENV_GLOBAL, ft);
     }
 
-    outputter_t &outp = outputter_t::stdoutput();
+    outputter_t &outp = stdoutput();
     reader_write_title(cmd, parser);
     outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
     term_donate();
@@ -2924,7 +2924,7 @@ void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode)
 }
 
 void reader_change_cursor_selection_mode(uint8_t selection_mode) {
-    reader_change_cursor_selection_mode((cursor_selection_mode_t) selection_mode);
+    reader_change_cursor_selection_mode((cursor_selection_mode_t)selection_mode);
 }
 
 static bool check_autosuggestion_enabled(const env_stack_t &vars) {
@@ -3482,7 +3482,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::cancel_commandline: {
             if (!command_line.empty()) {
-                outputter_t &outp = outputter_t::stdoutput();
+                outputter_t &outp = stdoutput();
                 // Move cursor to the end of the line.
                 update_buff_pos(&command_line, command_line.size());
                 autosuggestion.clear();
@@ -4285,7 +4285,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::disable_mouse_tracking: {
-            outputter_t &outp = outputter_t::stdoutput();
+            outputter_t &outp = stdoutput();
             outp.writestr(L"\x1B[?1000l");
             break;
         }
@@ -4624,7 +4624,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             if (errno == EIO) redirect_tty_output();
             wperror(L"tcsetattr");  // return to previous mode
         }
-        outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
+        stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     }
     return rls.finished ? maybe_t<wcstring>{command_line.text()} : none();
 }

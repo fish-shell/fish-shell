@@ -56,6 +56,7 @@ fn main() {
         "src/job_group.rs",
         "src/kill.rs",
         "src/null_terminated_array.rs",
+        "src/output.rs",
         "src/parse_constants.rs",
         "src/parse_tree.rs",
         "src/parse_util.rs",

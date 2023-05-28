@@ -1296,19 +1296,20 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
                      const environment_t &vars) {
     assert(colors.size() == text.size());
     highlight_color_resolver_t rv;
-    outputter_t outp;
+    rust::Box<outputter_t> outp = make_buffering_outputter();
 
     highlight_spec_t last_color = highlight_role_t::normal;
     for (size_t i = 0; i < text.size(); i++) {
         highlight_spec_t color = colors.at(i);
         if (color != last_color) {
-            outp.set_color(rv.resolve_spec(color, false, vars), rgb_color_t::normal());
+            outp->set_color(rv.resolve_spec(color, false, vars), rgb_color_t::normal());
             last_color = color;
         }
-        outp.writech(text.at(i));
+        outp->writech(text.at(i));
     }
-    outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
-    return outp.contents();
+    outp->set_color(rgb_color_t::normal(), rgb_color_t::normal());
+    auto contents = outp->contents();
+    return std::string(contents.begin(), contents.end());
 }
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,

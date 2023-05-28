@@ -492,7 +492,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     let mut color_support = ColorSupport::NONE;
     color_support.set(ColorSupport::TERM_256COLOR, supports_256color);
     color_support.set(ColorSupport::TERM_24BIT, supports_24bit);
-    crate::output::output_set_color_support(color_support);
+    crate::output::set_color_support(color_support);
 }
 
 /// Try to initialize the terminfo/curses subsystem using our fallback terminal name. Do not set

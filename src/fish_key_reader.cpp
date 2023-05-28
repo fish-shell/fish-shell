@@ -312,7 +312,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode, bool *verb
                 break;
             }
             case 'h': {
-                print_help("fish_key_reader", 1);
+                print_help("fish_key_reader");
                 exit(0);
             }
             case 'v': {

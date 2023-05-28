@@ -341,7 +341,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'h': {
-                print_help("fish_indent", 1);
+                print_help("fish_indent");
                 exit(0);
             }
             case 'v': {

@@ -1364,14 +1364,7 @@ double timef() {
 
 void exit_without_destructors(int code) { _exit(code); }
 
-extern "C" {
-[[gnu::noinline]] void debug_thread_error(void) {
-    // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
-    // thread.
-    sigchecker_t sigint(topic_t::sighupint);
-    sigint.wait();
-}
-}
+extern "C" void debug_thread_error();
 
 void save_term_foreground_process_group() { initial_fg_process_group = tcgetpgrp(STDIN_FILENO); }
 

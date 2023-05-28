@@ -127,7 +127,7 @@ class screen_data_t {
     bool empty() const { return line_datas.empty(); }
 };
 
-class outputter_t;
+struct outputter_t;
 
 /// The class representing the current and desired screen contents.
 class screen_t {

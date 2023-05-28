@@ -67,7 +67,8 @@ static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool i
 
 static void print_colors(io_streams_t &streams, std::vector<wcstring> args, bool bold,
                          bool underline, bool italics, bool dim, bool reverse, rgb_color_t bg) {
-    outputter_t outp;
+    rust::Box<outputter_t> outputter = make_buffering_outputter();
+    outputter_t &outp = *outputter;
     if (args.empty()) args = rgb_color_t::named_color_names();
     for (const auto &color_name : args) {
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
@@ -78,7 +79,7 @@ static void print_colors(io_streams_t &streams, std::vector<wcstring> args, bool
                 outp.write_color(bg, false /* not is_fg */);
             }
         }
-        outp.writestr(color_name);
+        outp.writestr(color_name.c_str());
         if (!bg.is_none()) {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
@@ -87,7 +88,9 @@ static void print_colors(io_streams_t &streams, std::vector<wcstring> args, bool
         outp.writech(L'\n');
     }  // conveniently, 'normal' is always the last color so we don't need to reset here
 
-    streams.out.append(str2wcstring(outp.contents()));
+    auto contents = outp.contents();
+    streams.out.append(
+        str2wcstring(reinterpret_cast<const char *>(contents.data()), contents.size()));
 }
 
 static const wchar_t *const short_options = L":b:hoidrcu";
@@ -210,7 +213,8 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, const wc
     if (cur_term == nullptr || !exit_attribute_mode) {
         return STATUS_CMD_ERROR;
     }
-    outputter_t outp;
+    rust::Box<outputter_t> outputter = make_buffering_outputter();
+    outputter_t &outp = *outputter;
 
     print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
 
@@ -236,7 +240,9 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, const wc
     }
 
     // Output the collected string.
-    streams.out.append(str2wcstring(outp.contents()));
+    auto contents = outp.contents();
+    streams.out.append(
+        str2wcstring(reinterpret_cast<const char *>(contents.data()), contents.size()));
 
     return STATUS_CMD_OK;
 }

@@ -453,6 +453,38 @@ fn term256_color_for_rgb(color: Color24) -> u8 {
     (16 + convert_color(color, COLORS)).try_into().unwrap()
 }
 
+/// FFI junk.
+use crate::ffi::rgb_color_t;
+impl rgb_color_t {
+    /// Convert from a C++ rgb_color_t to a Rust RgbColor.
+    #[allow(clippy::wrong_self_convention)]
+    pub fn from_ffi(&self) -> RgbColor {
+        let typ = if self.is_normal() {
+            Type::Normal
+        } else if self.is_reset() {
+            Type::Reset
+        } else if self.is_none() {
+            Type::None
+        } else if self.is_named() {
+            let idx = self.to_name_index();
+            Type::Named { idx }
+        } else if self.is_rgb() {
+            let [r, g, b] = self.to_color24().rgb;
+            Type::Rgb(Color24 { r, g, b })
+        } else {
+            unreachable!("Unknown color type")
+        };
+        let flags = Flags {
+            bold: self.is_bold(),
+            underline: self.is_underline(),
+            italics: self.is_italics(),
+            dim: self.is_dim(),
+            reverse: self.is_reverse(),
+        };
+        RgbColor { typ, flags }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -497,3 +529,24 @@ mod tests {
         }
     }
 }
+
+crate::ffi_tests::add_test!("test_colors_ffi", || {
+    use autocxx::WithinUniquePtr;
+    use moveit::moveit;
+    assert_eq!(RgbColor::WHITE, moveit!(rgb_color_t::white()).from_ffi());
+    assert_eq!(RgbColor::BLACK, moveit!(rgb_color_t::black()).from_ffi());
+    assert_eq!(RgbColor::RESET, moveit!(rgb_color_t::reset()).from_ffi());
+    assert_eq!(RgbColor::NORMAL, moveit!(rgb_color_t::normal()).from_ffi());
+    assert_eq!(RgbColor::NONE, moveit!(rgb_color_t::none()).from_ffi());
+
+    let mut cxx_color = rgb_color_t::black().within_unique_ptr();
+    cxx_color.as_mut().unwrap().set_bold(true);
+    cxx_color.as_mut().unwrap().set_dim(true);
+
+    let mut rust_color = RgbColor::BLACK;
+    assert_ne!(rust_color, cxx_color.as_ref().unwrap().from_ffi());
+    rust_color.set_bold(true);
+    assert_ne!(rust_color, cxx_color.as_ref().unwrap().from_ffi());
+    rust_color.set_dim(true);
+    assert_eq!(rust_color, cxx_color.as_ref().unwrap().from_ffi());
+});

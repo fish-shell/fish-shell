@@ -19,6 +19,7 @@ pub type wchar_t = u32;
 
 include_cpp! {
     #include "builtin.h"
+    #include "color.h"
     #include "common.h"
     #include "complete.h"
     #include "env.h"
@@ -130,6 +131,8 @@ include_cpp! {
     generate!("function_exists")
     generate!("path_get_paths_ffi")
 
+    generate!("rgb_color_t")
+    generate_pod!("color24_t")
     generate!("colorize_shell")
     generate!("reader_status_count")
 

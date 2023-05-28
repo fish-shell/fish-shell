@@ -947,6 +947,17 @@ pub const fn char_offset(base: char, offset: u32) -> char {
     }
 }
 
+#[no_mangle]
+#[inline(never)]
+fn debug_thread_error() {
+    // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
+    // thread.
+    use crate::signal::SigChecker;
+    use crate::topic_monitor::topic_t;
+    let sigint = SigChecker::new(topic_t::sighupint);
+    sigint.wait();
+}
+
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 pub fn exit_without_destructors(code: i32) -> ! {
     unsafe { libc::_exit(code) };

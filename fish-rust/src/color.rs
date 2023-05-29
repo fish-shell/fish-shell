@@ -319,8 +319,10 @@ const NAMED_COLORS: &[NamedColor] = &[
 assert_sorted_by_name!(NAMED_COLORS);
 
 fn convert_color(color: Color24, colors: &[u32]) -> usize {
-    fn squared_difference(a: u8, b: u8) -> u16 {
-        u16::from(a.abs_diff(b)).pow(2)
+    fn squared_difference(a: u8, b: u8) -> u32 {
+        let a = u32::from(a);
+        let b = u32::from(b);
+        a.abs_diff(b).pow(2)
     }
 
     colors
@@ -402,7 +404,10 @@ fn term256_color_for_rgb(color: Color24) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{color::RgbColor, wchar::widestrs};
+    use crate::{
+        color::{Color24, Flags, RgbColor, Type},
+        wchar::widestrs,
+    };
 
     #[test]
     #[widestrs]
@@ -418,5 +423,17 @@ mod tests {
         assert!(RgbColor::from_wstr("magenta"L).unwrap().is_named());
         assert!(RgbColor::from_wstr("MaGeNTa"L).unwrap().is_named());
         assert!(RgbColor::from_wstr("mooganta"L).is_none());
+    }
+
+    // Regression test for multiplicative overflow in convert_color.
+    #[test]
+    fn test_term16_color_for_rgb() {
+        for c in 0..=u8::MAX {
+            let color = RgbColor {
+                typ: Type::Rgb(Color24 { r: c, g: c, b: c }),
+                flags: Flags::DEFAULT,
+            };
+            let _ = color.to_name_index();
+        }
     }
 }

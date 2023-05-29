@@ -30,7 +30,7 @@
 #include "input_common.h"
 #include "maybe.h"
 #include "parser.h"
-#include "print_help.h"
+#include "print_help.rs.h"
 #include "proc.h"
 #include "reader.h"
 #include "signals.h"
@@ -312,7 +312,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode, bool *verb
                 break;
             }
             case 'h': {
-                print_help("fish_key_reader");
+                unsafe_print_help("fish_key_reader");
                 exit(0);
             }
             case 'v': {

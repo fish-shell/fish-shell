@@ -43,7 +43,6 @@
 #include "builtins/path.h"
 #include "builtins/read.h"
 #include "builtins/set.h"
-#include "builtins/set_color.h"
 #include "builtins/shared.rs.h"
 #include "builtins/source.h"
 #include "builtins/status.h"
@@ -394,7 +393,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"realpath", &implemented_in_rust, N_(L"Show absolute path sans symlinks")},
     {L"return", &implemented_in_rust, N_(L"Stop the currently evaluated function")},
     {L"set", &builtin_set, N_(L"Handle environment variables")},
-    {L"set_color", &builtin_set_color, N_(L"Set the terminal color")},
+    {L"set_color", &implemented_in_rust, N_(L"Set the terminal color")},
     {L"source", &builtin_source, N_(L"Evaluate contents of file")},
     {L"status", &builtin_status, N_(L"Return status information about fish")},
     {L"string", &builtin_string, N_(L"Manipulate strings")},
@@ -560,6 +559,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"realpath") {
         return RustBuiltin::Realpath;
+    }
+    if (cmd == L"set_color") {
+        return RustBuiltin::SetColor;
     }
     if (cmd == L"test" || cmd == L"[") {
         return RustBuiltin::Test;

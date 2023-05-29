@@ -70,6 +70,7 @@ macro_rules! writembs_nofail(
         crate::output::writembs_check($outp, $mbs, std::stringify!($mbs), false, std::file!(), std::line!())
     }
 );
+pub(crate) use writembs_nofail;
 
 fn index_for_color(c: RgbColor) -> u8 {
     if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
@@ -425,12 +426,12 @@ impl Outputter {
     }
 
     /// Write a wide character to the receiver.
-    fn writech(&mut self, ch: char) {
+    pub fn writech(&mut self, ch: char) {
         self.write_wstr(wstr::from_char_slice(&[ch]));
     }
 
     /// Write a narrow character to the receiver.
-    fn push(&mut self, ch: u8) {
+    pub fn push(&mut self, ch: u8) {
         self.contents.push(ch);
         self.maybe_flush();
     }
@@ -517,7 +518,7 @@ impl Outputter {
 
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.
-fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
+pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
     if candidates.is_empty() {
         return RgbColor::NONE;
     }

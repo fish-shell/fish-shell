@@ -107,7 +107,7 @@ set(FISH_BUILTIN_SRCS
     src/builtins/function.cpp src/builtins/functions.cpp src/builtins/history.cpp
     src/builtins/jobs.cpp src/builtins/path.cpp
     src/builtins/read.cpp src/builtins/set.cpp
-    src/builtins/set_color.cpp src/builtins/source.cpp src/builtins/status.cpp
+    src/builtins/source.cpp src/builtins/status.cpp
     src/builtins/string.cpp src/builtins/ulimit.cpp
 )
 

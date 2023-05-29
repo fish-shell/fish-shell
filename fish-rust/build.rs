@@ -58,6 +58,7 @@ fn main() {
         "src/parse_constants.rs",
         "src/parse_tree.rs",
         "src/parse_util.rs",
+        "src/print_help.rs",
         "src/redirection.rs",
         "src/signal.rs",
         "src/smoke.rs",

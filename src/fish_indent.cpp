@@ -46,7 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "future_feature_flags.h"
 #include "highlight.h"
 #include "operation_context.h"
-#include "print_help.h"
+#include "print_help.rs.h"
 #include "tokenizer.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -341,7 +341,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'h': {
-                print_help("fish_indent");
+                unsafe_print_help("fish_indent");
                 exit(0);
             }
             case 'v': {

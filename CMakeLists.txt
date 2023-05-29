@@ -198,12 +198,12 @@ fish_link_deps_and_sign(fish)
 
 # Define fish_indent.
 add_executable(fish_indent
-               src/fish_indent.cpp src/print_help.cpp)
+               src/fish_indent.cpp)
 fish_link_deps_and_sign(fish_indent)
 
 # Define fish_key_reader.
 add_executable(fish_key_reader
-               src/fish_key_reader.cpp src/print_help.cpp)
+               src/fish_key_reader.cpp)
 fish_link_deps_and_sign(fish_key_reader)
 
 # Set up the docs.

@@ -5,17 +5,17 @@
 
 # If all-the-package-names is installed, it will be used to generate npm completions.
 # Install globally with `sudo npm install -g all-the-package-names`. Keep it up to date.
-function __yarn_helper_installed
+function __npm_helper_installed
     # This function takes the command to globally install a package as $argv[1]
     if not type -q all-the-package-names
-        if not set -qg __fish_yarn_pkg_info_shown
+        if not set -qg __fish_npm_pkg_info_shown
             set -l old (commandline)
             commandline -r ""
             echo \nfish: Run `$argv[1] all-the-package-names` to gain intelligent \
                 package completion >&2
             commandline -f repaint
             commandline -r $old
-            set -g __fish_yarn_pkg_info_shown 1
+            set -g __fish_npm_pkg_info_shown 1
         end
         return 1
     end
@@ -23,9 +23,9 @@ end
 
 # Entire list of packages is too long to be used efficiently in a `complete` subcommand.
 # Search it for matches instead.
-function __yarn_filtered_list_packages
+function __npm_filtered_list_packages
     # This function takes the command to globally install a package as $argv[1]
-    if not __yarn_helper_installed $argv[1]
+    if not __npm_helper_installed $argv[1]
         return
     end
 
@@ -37,7 +37,7 @@ function __yarn_filtered_list_packages
     end
 end
 
-function __yarn_find_package_json
+function __npm_find_package_json
     set -l parents (__fish_parent_directories (pwd -P))
 
     for p in $parents
@@ -50,8 +50,26 @@ function __yarn_find_package_json
     return 1
 end
 
-function __yarn_installed_packages
-    set -l package_json (__yarn_find_package_json)
+function __npm_installed_global_packages
+	set -l prefix (npm prefix -g)
+	set -l node_modules "$prefix/lib/node_modules"
+
+	for path in $node_modules/*
+		set -l mod (path basename -- $path)
+
+		if string match -rq "^@" $mod
+			for sub_path in $path/*
+				set -l sub_mod (string split '/' $sub_path)[-1]
+				echo $mod/$sub_mod
+			end
+		else
+			echo $mod
+		end
+	end
+end
+
+function __npm_installed_local_packages
+    set -l package_json (__npm_find_package_json)
     if not test $status -eq 0
         # no package.json in tree
         return 1

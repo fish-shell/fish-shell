@@ -33,7 +33,6 @@ include_cpp! {
     #include "history.h"
     #include "io.h"
     #include "input_common.h"
-    #include "kill.h"
     #include "parse_constants.h"
     #include "parser.h"
     #include "parse_util.h"
@@ -133,7 +132,6 @@ include_cpp! {
 
     generate!("colorize_shell")
     generate!("reader_status_count")
-    generate!("kill_entries_ffi")
 
     generate!("get_history_variable_text_ffi")
 

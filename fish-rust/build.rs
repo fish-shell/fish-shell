@@ -54,6 +54,7 @@ fn main() {
         "src/future_feature_flags.rs",
         "src/highlight.rs",
         "src/job_group.rs",
+        "src/kill.rs",
         "src/null_terminated_array.rs",
         "src/parse_constants.rs",
         "src/parse_tree.rs",

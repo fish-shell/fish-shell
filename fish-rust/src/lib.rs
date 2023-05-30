@@ -42,6 +42,7 @@ mod global_safety;
 mod highlight;
 mod io;
 mod job_group;
+mod kill;
 mod locale;
 mod nix;
 mod null_terminated_array;

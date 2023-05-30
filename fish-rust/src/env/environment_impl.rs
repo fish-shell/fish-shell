@@ -44,7 +44,7 @@ pub static UVAR_SCOPE_IS_GLOBAL: RelaxedAtomicBool = RelaxedAtomicBool::new(fals
 
 /// Helper to get the kill ring.
 fn get_kill_ring_entries() -> Vec<WString> {
-    ffi::kill_entries_ffi().from_ffi()
+    crate::kill::kill_entries()
 }
 
 /// Helper to get the history for a session ID.

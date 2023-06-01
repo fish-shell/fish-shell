@@ -359,7 +359,7 @@ msgstr "Konnte Datei '%ls' nicht zu '%ls' umbenennen: %s"
 #: src/env_universal_common.cpp:485
 #, c-format
 msgid "Unable to open temporary file '%ls': %s"
-msgstr "Die temporäre Date '%ls' kann nicht geöffnet werden: %s"
+msgstr "Die temporäre Datei '%ls' kann nicht geöffnet werden: %s"
 
 #: src/env_universal_common.cpp:499
 #, c-format
@@ -569,7 +569,7 @@ msgstr "Befehl nicht gefunden. Eine Komponente von '%ls' ist kein Verzeichnis."
 #: src/parse_execution.cpp:750
 #, c-format
 msgid "Unknown command. '%ls' exists but is not an executable file."
-msgstr "Befehl nicht gefunden '%ls' existiert, ist aber keine ausführbare Datei."
+msgstr "Befehl nicht gefunden. '%ls' existiert, ist aber keine ausführbare Datei."
 
 #: src/parse_execution.cpp:791
 msgid "Unknown command:"

@@ -791,7 +791,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
     # Ignore some commands' gazillion man pages
     # for subcommands - especially things we already have
     ignored_prefixes = [
-        "bundle-"
+        "bundle-",
         "cargo-",
         "ffmpeg-",
         "flatpak-",
@@ -802,7 +802,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
         "perf-",
         "perl",
         "pip-",
-        "zsh"
+        "zsh",
     ]
     for prefix in ignored_prefixes:
         if CMDNAME.startswith(prefix):

@@ -1,9 +1,43 @@
-Guidelines For Developers
-=========================
+Contributing To Fish
+####################
 
-This document provides guidelines for making changes to the fish-shell
-project. This includes rules for how to format the code, naming
-conventions, et cetera.
+This document tells you how you can contribute to fish.
+
+Fish is free and open source software, distributed under the terms of the GPLv2.
+
+Contributions are welcome, and there are many ways to contribute!
+
+Whether you want to change some of the core rust/C++ source, enhance or add a completion script or function,
+improve the documentation or translate something, this document will tell you how.
+
+Getting Set Up
+--------------
+
+Fish is developed on Github, at https://github.com/fish-shell/fish-shell.
+
+First, you'll need an account there, and you'll need a git clone of fish.
+Fork it on Github and then run::
+
+  git clone https://github.com/<USERNAME>/fish-shell.git
+
+This will create a copy of the fish repository in the directory fish-shell in your current working directory.
+
+Also, for most changes you want to run the tests and so you'd get a setup to compile fish.
+For that, you'll require:
+
+-  Rust (version 1.67 or later) - when in doubt, try rustup
+-  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
+-  CMake (version 3.5 or later)
+-  a curses implementation such as ncurses (headers and libraries)
+-  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
+-  gettext (headers and libraries) - optional, for translation support
+-  Sphinx - optional, to build the documentation
+
+Of course not everything is required always - if you just want to contribute something to the documentation you'll just need Sphinx,
+and if the change is very simple and obvious you can just send it in. Use your judgement!
+
+Guidelines
+----------
 
 In short:
 
@@ -42,16 +76,30 @@ Put your completion script into share/completions/name-of-command.fish. If you h
 
 If you want to add tests, you probably want to add a littlecheck test. See below for details.
 
-Contributing to fish's C++ core
--------------------------------
+Contributing documentation
+--------------------------
 
-Fish uses C++11. Newer C++ features should not be used to make it possible to use on older systems.
+The documentation is stored in ``doc_src/``, and written in ReStructured Text and built with Sphinx.
 
-It does not use exceptions, they are disabled at build time with ``-fno-exceptions``.
+To build it locally, run from the main fish-shell directory::
 
-Don't introduce new dependencies unless absolutely necessary, and if you do,
-please make it optional with graceful failure if possible.
-Add any new dependencies to the README.rst under the *Running* and/or *Building* sections.
+    sphinx-build -j 8 -b html -n doc_src/ /tmp/fish-doc/
+
+which will build the docs as html in /tmp/fish-doc. You can open it in a browser and see that it looks okay.
+
+The builtins and various functions shipped with fish are documented in doc_src/cmds/.
+
+Contributing to fish's Rust/C++ core
+------------------------------------
+
+As of now, fish is in the process of switching from C++11 to Rust, so this is in flux.
+
+See doc_internal/rust-devel.md for some information on the port.
+
+Importantly, the initial port strives for fidelity with the existing C++ codebase,
+so it won't be 100% idiomatic rust - in some cases it'll have some awkward interface code
+in order to interact with the C++.
+
 
 Linters
 -------
@@ -69,27 +117,6 @@ Fish has custom cppcheck rules in the file ``.cppcheck.rule``. These
 help catch mistakes such as using ``wcwidth()`` rather than
 ``fish_wcwidth()``. Please add a new rule if you find similar mistakes
 being made.
-
-Suppressing Lint Warnings
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Once in a while the lint tools emit a false positive warning. For
-example, cppcheck might suggest a memory leak is present when that is
-not the case. To suppress that cppcheck warning you should insert a line
-like the following immediately prior to the line cppcheck warned about:
-
-::
-
-   // cppcheck-suppress memleak // addr not really leaked
-
-The explanatory portion of the suppression comment is optional. For
-other types of warnings replace “memleak” with the value inside the
-parenthesis (e.g., “nullPointerRedundantCheck”) from a warning like the
-following:
-
-::
-
-   [src/complete.cpp:1727]: warning (nullPointerRedundantCheck): Either the condition 'cmd_node' is redundant or there is possible null pointer dereference: cmd_node.
 
 Code Style
 ----------
@@ -214,6 +241,11 @@ or
 
    /// brief description of somefunction()
    void somefunction() {
+
+Rust Style Guide
+----------------
+
+Use ``cargo fmt`` and ``cargo clippy``. Clippy warnings can be turned off if there's a good reason to.
 
 Testing
 -------

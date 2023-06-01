@@ -173,4 +173,5 @@ Other help pages
    completions
    design
    relnotes
+   contributing
    license

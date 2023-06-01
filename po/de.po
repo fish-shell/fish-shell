@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: de\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-23 11:20+0100\n"
-"PO-Revision-Date: 2023-06-01 16:49+0200\n"
+"PO-Revision-Date: 2023-06-01 23:33+0200\n"
 "Last-Translator: Fabian Homborg\n"
 "Language-Team: deutsch <de@li.org>\n"
 "Language: de\n"
@@ -150,7 +150,7 @@ msgstr "Die Anzahl Argumente zählen"
 
 #: src/builtin.cpp:376
 msgid "Remove job from job list"
-msgstr "Auftrag aus der Auftragsliste entfernen"
+msgstr "Job aus der Jobliste entfernen"
 
 #: src/builtin.cpp:377
 msgid "Print arguments"
@@ -162,7 +162,7 @@ msgstr "Werte Block aus, wenn die Bedingung falsch ist"
 
 #: src/builtin.cpp:379
 msgid "Emit an event"
-msgstr "Ein Event auslösen"
+msgstr "Ein Ereignis auslösen"
 
 #: src/builtin.cpp:380
 msgid "End a block of commands"
@@ -214,7 +214,7 @@ msgstr "Derzeit laufende Jobs ausgeben"
 
 #: src/builtin.cpp:392
 msgid "Evaluate math expressions"
-msgstr "Mathematische Formel ausführen"
+msgstr "Mathematische Formel berechnen"
 
 #: src/builtin.cpp:393
 msgid "Negate exit status of job"
@@ -246,7 +246,7 @@ msgstr "Eine Eingabezeile in Variablen einlesen"
 
 #: src/builtin.cpp:400
 msgid "Show absolute path sans symlinks"
-msgstr "Absoluten Pfad ohne Symlinks anzeigen"
+msgstr "Absoluten Pfad ohne symbolische Verknüpfungen anzeigen"
 
 #: src/builtin.cpp:401
 msgid "Stop the currently evaluated function"
@@ -270,7 +270,7 @@ msgstr "Strings manipulieren"
 
 #: src/builtin.cpp:407
 msgid "Conditionally run blocks of code"
-msgstr "Anweisungsblock Bedingungsabhängig ausführen"
+msgstr "Anweisungsblock bedingungsabhängig ausführen"
 
 #: src/builtin.cpp:409
 msgid "Measure how long a command or block takes"
@@ -313,15 +313,11 @@ msgstr "Abkürzung: %ls"
 
 #: src/complete.cpp:1514
 msgid "completion reached maximum recursion depth, possible cycle?"
-msgstr ""
-"Vervollständigung hat die maximale Rekursionstiefe erreicht, möglicher Kreis?"
+msgstr "Vervollständigung hat die maximale Rekursionstiefe erreicht, möglicher Kreis?"
 
 #: src/env.cpp:1340
-msgid ""
-"Could not determine current working directory. Is your locale set correctly?"
-msgstr ""
-"Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die "
-"Lokalisierung korrekt eingestellt?"
+msgid "Could not determine current working directory. Is your locale set correctly?"
+msgstr "Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die locale korrekt eingestellt?"
 
 #: src/env_dispatch.cpp:471
 #, c-format
@@ -339,12 +335,12 @@ msgstr "Konnte das Terminal nicht einrichten"
 
 #: src/env_dispatch.cpp:577
 msgid "TERM environment variable not set."
-msgstr "TERM Umgebungsvariable nicht gesetzt."
+msgstr "TERM-Umgebungsvariable nicht gesetzt."
 
 #: src/env_dispatch.cpp:579
 #, c-format
 msgid "TERM environment variable set to '%ls'."
-msgstr "TERM Umgebungsvariable auf '%ls' gesetzt."
+msgstr "TERM-Umgebungsvariable auf '%ls' gesetzt."
 
 #: src/env_dispatch.cpp:581
 msgid "Check that this terminal type is supported on this system."
@@ -353,7 +349,7 @@ msgstr "Überprüfe, ob dieser Terminaltyp auf diesem System unterstützt wird."
 #: src/env_universal_common.cpp:425
 #, c-format
 msgid "Unable to write to universal variables file '%ls': %s"
-msgstr "Die globale Variablen-Datei '%ls' kann nicht geschrieben werden: %s"
+msgstr "Die Universal-Variablen-Datei '%ls' kann nicht geschrieben werden: %s"
 
 #: src/env_universal_common.cpp:441
 #, c-format
@@ -368,14 +364,12 @@ msgstr "Die temporäre Date '%ls' kann nicht geöffnet werden: %s"
 #: src/env_universal_common.cpp:499
 #, c-format
 msgid "Locking the universal var file took too long (%.3f seconds)."
-msgstr ""
-"Die Datei für universelle Variablen zu sperren dauerte zu lange (%.3f "
-"Sekunden)"
+msgstr "Die Datei für universelle Variablen zu sperren dauerte zu lange (%.3f Sekunden)"
 
 #: src/env_universal_common.cpp:542
 #, c-format
 msgid "Unable to open universal variable file '%s': %s"
-msgstr "Die globale Variablen-Datei '%s' kann nicht geöffnet werden: %s"
+msgstr "Die Universal-Variablen-Datei '%s' kann nicht geöffnet werden: %s"
 
 #: src/env_universal_common.cpp:920
 #, c-format
@@ -400,12 +394,12 @@ msgstr ""
 #: src/env_universal_common.cpp:1134
 #, c-format
 msgid "Unable to make a pipe for universal variables using '%ls': %s"
-msgstr "Kann keine Pipe für die globalen Variablen über '%ls' anlegen: %s"
+msgstr "Kann keine Pipe für die universalen Variablen über '%ls' anlegen: %s"
 
 #: src/env_universal_common.cpp:1142
 #, c-format
 msgid "Unable to open a pipe for universal variables using '%ls': %s"
-msgstr "Kann keine Pipe für die globalen Variablen über '%ls' öffnen: %s"
+msgstr "Kann keine Pipe für die universalen Variablen über '%ls' öffnen: %s"
 
 #: src/event.cpp:184
 #, c-format
@@ -507,12 +501,12 @@ msgstr "Sperren der Geschichts-Datei dauerte zu lang (%.3f Sekunden)."
 #: src/history.cpp:887
 #, c-format
 msgid "Error when renaming history file: %s"
-msgstr "Fehler beim Umbenennen der History-Datei: %s"
+msgstr "Fehler beim Umbenennen der Verlaufsdatei: %s"
 
 #: src/history.cpp:1285
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. "
-msgstr "History Sitzungs-ID '%ls' ist kein gültiger Variablenname."
+msgstr "Verlaufssitzungs-ID '%ls' ist kein gültiger Variablenname."
 
 #: src/io.cpp:25
 #, c-format
@@ -535,13 +529,13 @@ msgid "Path '%ls' does not exist"
 msgstr "Pfad '%ls' nicht gefunden"
 
 #: src/output.cpp:434
-#, c-format
+#, fuzzy, c-format
 msgid "Tried to use terminfo string %s on line %ld of %s, which is "
-msgstr "Versucht, terminfo Text %s in Zeile %ld von %s zu nutzen, dieser ist"
+msgstr "Versucht, terminfo Text %s in Zeile %ld von %s zu nutzen, welcher undefiniert ist. Bitte melde diesen Fehler."
 
 #: src/pager.cpp:45
 msgid "search: "
-msgstr "suche: "
+msgstr "Suche: "
 
 #: src/pager.cpp:541
 #, c-format
@@ -560,26 +554,22 @@ msgstr "(keine Treffer)"
 #: src/parse_execution.cpp:524
 #, c-format
 msgid "switch: Expected at most one argument, got %lu\n"
-msgstr "switch: Erwartet höchstens einen Paramter, aber %lu angegeben\n"
+msgstr "switch: Erwartet höchstens einen Parameter, aber %lu angegeben\n"
 
 #: src/parse_execution.cpp:740
 #, c-format
-msgid ""
-"Unknown command. A component of '%ls' is not a directory. Check your $PATH."
-msgstr ""
-"Befehl nicht gefunden. Ein Element von '%ls' ist kein Verzeichnis. Überprüfe "
-"einen $PATH"
+msgid "Unknown command. A component of '%ls' is not a directory. Check your $PATH."
+msgstr "Befehl nicht gefunden. Ein Element von '%ls' ist kein Verzeichnis. Überprüfe deinen $PATH"
 
 #: src/parse_execution.cpp:744
 #, c-format
 msgid "Unknown command. A component of '%ls' is not a directory."
-msgstr "Befehl nicht gefunden. Ein Element von '%ls' ist kein Verzeichnis."
+msgstr "Befehl nicht gefunden. Eine Komponente von '%ls' ist kein Verzeichnis."
 
 #: src/parse_execution.cpp:750
 #, c-format
 msgid "Unknown command. '%ls' exists but is not an executable file."
-msgstr ""
-"Befehl nicht gefunden '%ls' existiert, ist aber keine ausführbare Datei"
+msgstr "Befehl nicht gefunden '%ls' existiert, ist aber keine ausführbare Datei."
 
 #: src/parse_execution.cpp:791
 msgid "Unknown command:"
@@ -602,15 +592,12 @@ msgstr "Ungültiges Umleitungsziel: %ls"
 #: src/parse_execution.cpp:1027
 #, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
-msgstr ""
-"Umleitung zu '%ls' angefordert, dies ist aber kein gültiger file descriptor"
+msgstr "Umleitung zu '%ls' angefordert, dies ist aber kein gültiger Dateideskriptor"
 
 #: src/parse_util.cpp:34
 #, c-format
 msgid "The '%ls' command can not be used immediately after a backgrounded job"
-msgstr ""
-"Der Befehl '%ls' kann nicht direkt nach einem Hintergrundjob aufgerufen "
-"werden"
+msgstr "Der Befehl '%ls' kann nicht direkt nach einem Hintergrundjob aufgerufen werden"
 
 #: src/parse_util.cpp:38
 msgid "Backgrounded commands can not be used as conditionals"
@@ -626,7 +613,7 @@ msgstr "Der 'time' Befehl darf nur am Anfang einer Pipeline stehen"
 
 #: src/parse_util.cpp:1180
 msgid "$status is not valid as a command. See `help conditions`"
-msgstr "$status ist kein gültiger Befehl. Siehe `help conditions"
+msgstr "$status ist kein gültiger Befehl. Siehe `help conditions`"
 
 #: src/parser.cpp:166
 #, c-format
@@ -664,7 +651,7 @@ msgstr "im Ereignis-Handler: %ls\n"
 #: src/parser.cpp:276
 #, c-format
 msgid "\tcalled on line %d of file %ls\n"
-msgstr "\taufgerufen in Zeile %d der Date %ls\n"
+msgstr "\taufgerufen in Zeile %d der Datei %ls\n"
 
 #: src/parser.cpp:279
 msgid "\tcalled during startup\n"
@@ -701,8 +688,7 @@ msgstr ""
 #: src/path.cpp:293
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
-msgstr ""
-"Bitte setzen sie %ls oder die HOME Umgebungsvariable bevor sie fish starten."
+msgstr "Bitte setzen sie %ls oder die HOME Umgebungsvariable bevor sie fish starten."
 
 #: src/path.cpp:297
 #, c-format
@@ -742,8 +728,7 @@ msgid "A second attempt to exit will terminate them.\n"
 msgstr "Ein zweites 'exit' wird sie beenden.\n"
 
 #: src/proc.cpp:207
-msgid ""
-"Use 'disown PID' to remove jobs from the list without terminating them.\n"
+msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
 
 #: src/proc.cpp:900
@@ -772,8 +757,7 @@ msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Kein TTY für interaktive Shell (tcgetpgrp schlug fehl)"
 
 #: src/reader.cpp:2493
-msgid ""
-"I appear to be an orphaned process, so I am quitting politely. My pid is "
+msgid "I appear to be an orphaned process, so I am quitting politely. My pid is "
 msgstr ""
 
 #: src/reader.cpp:2535
@@ -1108,17 +1092,11 @@ msgstr "Fehler beim Einrichten der Pipe aufgetreten"
 
 #: src/parse_constants.h:229
 #, c-format
-msgid ""
-"The function '%ls' calls itself immediately, which would result in an "
-"infinite loop."
-msgstr ""
-"Die Funktion '%ls' ruft sich sofort selbst auf. Dies wäre eine "
-"Endlosschleife."
+msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
+msgstr "Die Funktion '%ls' ruft sich sofort selbst auf. Dies wäre eine Endlosschleife."
 
 #: src/parse_constants.h:233
-msgid ""
-"The call stack limit has been exceeded. Do you have an accidental infinite "
-"loop?"
+msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr ""
 
 #: src/parse_constants.h:236
@@ -1194,14 +1172,11 @@ msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr ""
 
 #: src/parse_constants.h:289
-msgid ""
-"'time' is not supported for background jobs. Consider using 'command time'."
+msgid "'time' is not supported for background jobs. Consider using 'command time'."
 msgstr ""
 
 #: src/parse_constants.h:293
-msgid ""
-"'{ ... }' is not supported for grouping commands. Please use 'begin; ...; "
-"end'"
+msgid "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'"
 msgstr ""
 
 #: src/parse_tree.h:63
@@ -1311,8 +1286,7 @@ msgid "Select directory by letter or number: "
 msgstr ""
 
 #: /tmp/fish.i8YroE/explicit/share/functions/cdh.fish:6
-msgid ""
-"Error: expected a number between 1 and %d or letter in that range, got \"%s\""
+msgid "Error: expected a number between 1 and %d or letter in that range, got \"%s\""
 msgstr ""
 
 #: /tmp/fish.i8YroE/explicit/share/functions/edit_command_buffer.fish:2
@@ -22552,10 +22526,9 @@ msgstr "Änderung in der Anzahl von Worttrennern ignorieren"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/diff.fish:6
 msgid "Ignore all white space"
-msgstr "Alle Leerzeichen (Worttrenner) ignorieren"
+msgstr "Alle Leerräume (Worttrenner) ignorieren"
 
-#: /tmp/fish.i8YroE/implicit/share/completions/diff.fish:7
-#: /tmp/fish.i8YroE/implicit/share/completions/git.fish:36
+#: /tmp/fish.i8YroE/implicit/share/completions/diff.fish:7 /tmp/fish.i8YroE/implicit/share/completions/git.fish:36
 #: /tmp/fish.i8YroE/implicit/share/completions/git.fish:802
 msgid "Ignore changes whose lines are all blank"
 msgstr "Änderungen ignorieren, deren Zeilen alle leer sind"
@@ -23257,8 +23230,7 @@ msgid "Skip the interactive TUI and validate against CI rules"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:2
-msgid ""
-"If CI=true in the environment, use the given yaml to drive validation rules"
+msgid "If CI=true in the environment, use the given yaml to drive validation rules"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:3
@@ -23282,9 +23254,7 @@ msgid "Ignore image parsing errors and run the analysis anyway"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:8
-msgid ""
-"Skip the interactive TUI and write the layer analysis statistics to a given "
-"file"
+msgid "Skip the interactive TUI and write the layer analysis statistics to a given file"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:9

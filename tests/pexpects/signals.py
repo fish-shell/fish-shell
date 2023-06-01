@@ -89,16 +89,16 @@ proc = subprocess.run(
     ["pgrep", "-l", "-f", "sleep 13"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
 )
 
-remaining=[]
+remaining = []
 if proc.returncode == 0:
     # If any sleeps exist, we check them against our pids,
     # to avoid false-positives (any other `sleep 13xyz` running on the system)
     print(proc.stdout)
-    for line in proc.stdout.split(b'\n'):
-        pid = line.split(b' ', maxsplit=1)[0].decode("utf-8")
+    for line in proc.stdout.split(b"\n"):
+        pid = line.split(b" ", maxsplit=1)[0].decode("utf-8")
         if pid in pids:
             remaining += [pid]
-        
+
 # Kill any remaining sleeps ourselves, otherwise rerunning this is pointless.
 for pid in remaining:
     try:

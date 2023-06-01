@@ -30,7 +30,7 @@ BEGIN {
     print pkg "\t" desc
   }
   pkg="" # Prevent multiple description translations from being printed
-}' < /var/lib/dpkg/status
+}' </var/lib/dpkg/status
     else
         awk '
 BEGIN {
@@ -54,6 +54,6 @@ BEGIN {
     print pkg "\t" desc
     installed=0 # Prevent multiple description translations from being printed
   }
-}' < /var/lib/dpkg/status
+}' </var/lib/dpkg/status
     end
 end

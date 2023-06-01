@@ -20,4 +20,3 @@ complete -c zabbix_get -f -l tls-psk-identity -d "PSK-identity string."
 complete -c zabbix_get -l tls-psk-file -d "Full path of a file with the pre-shared key."
 complete -c zabbix_get -f -l tls-cipher13 -d "Cipher string for OpenSSL."
 complete -c zabbix_get -f -l tls-cipher -d "GnuTLS priority string."
-

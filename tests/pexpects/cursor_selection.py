@@ -8,11 +8,11 @@ expect_prompt()
 # Set up key bindings
 
 # Movement keys from the default key bindings
-home, end = "\x01", "\x05" # Ctrl-A, Ctrl-E
-left, right ="\x02", "\x06" # Ctrl-B, Ctrl-F
+home, end = "\x01", "\x05"  # Ctrl-A, Ctrl-E
+left, right = "\x02", "\x06"  # Ctrl-B, Ctrl-F
 
 # Additional keys to start selecting and dump the current selection
-select, dump = "\x00", "!" # Ctrl-Space, "!"
+select, dump = "\x00", "!"  # Ctrl-Space, "!"
 
 sendline("bind -k nul begin-selection")
 expect_prompt()

@@ -273,8 +273,8 @@ set -l options \
     synchronize-panes \
     window-active-style \
     window-style
-complete -c tmux -n '__fish_use_subcommand' -a "$setoption" -d 'Set or unset option'
-complete -c tmux -n '__fish_use_subcommand' -a "$showoptions" -d 'Show set options'
+complete -c tmux -n __fish_use_subcommand -a "$setoption" -d 'Set or unset option'
+complete -c tmux -n __fish_use_subcommand -a "$showoptions" -d 'Show set options'
 complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s p -d 'Pane option'
 complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s w -d 'Window option'
 complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s s -d 'Server option'
@@ -284,7 +284,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s u -d 'Unset opti
 complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s U -d 'Unset option, also in child panes'
 complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s o -d 'Prevent override'
 complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s q -d 'Suppress ambiguous option errors'
-complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s a -d 'Append'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s a -d Append
 complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s t -x -d 'Target pane' -a '(__fish_tmux_panes)'
 complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s q -d 'No error if unset'
 complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s v -d 'Only show value'

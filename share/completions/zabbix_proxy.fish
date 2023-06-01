@@ -15,26 +15,26 @@ end
 
 function __fish_prepend -a prefix
     set -l log_target "configuration syncer" \
-    "data sender" \
-    discoverer \
-    "history syncer" \
-    housekeeper \
-    "http poller" \
-    "icmp pinger"\
-    "ipmi manager" \
-    "ipmi poller" \
-    "java poller" \
-    poller \
-    self-monitoring \
-    "snmp trapper" \
-    "task manager" \
-    trapper \
-    "unreachable poller" \
-    "vmware collector"
+        "data sender" \
+        discoverer \
+        "history syncer" \
+        housekeeper \
+        "http poller" \
+        "icmp pinger" \
+            "ipmi manager" \
+        "ipmi poller" \
+        "java poller" \
+        poller \
+        self-monitoring \
+        "snmp trapper" \
+        "task manager" \
+        trapper \
+        "unreachable poller" \
+        "vmware collector"
 
     if string match -rq 'log_level_(in|de)crease' $prefix
         set var $log_target
-    else if string match -rq 'diaginfo' $prefix
+    else if string match -rq diaginfo $prefix
         set var historycache preprocessing
     end
 
@@ -57,4 +57,3 @@ complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_comm
 
 # Diag info
 complete -c zabbix_proxy -r -f -s R -l runtime-control -n "__fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
-

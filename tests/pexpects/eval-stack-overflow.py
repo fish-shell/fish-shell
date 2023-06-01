@@ -27,12 +27,14 @@ sendline("eval (string replace dog tiger -- $history[1])")
 expect_prompt("cat tiger")
 
 sendline("eval (string replace dog tiger -- $history[1])")
-expect_re("fish: The call stack limit has been exceeded.*"
-          + "\r\nin command substitution"
-          + "\r\nfish: Unable to evaluate string substitution"
-          + re.escape("\r\neval (string replace dog tiger -- $history[1])")
-          + "\r\n *\^~+\^\w*")
+expect_re(
+    "fish: The call stack limit has been exceeded.*"
+    + "\r\nin command substitution"
+    + "\r\nfish: Unable to evaluate string substitution"
+    + re.escape("\r\neval (string replace dog tiger -- $history[1])")
+    + "\r\n *\^~+\^\w*"
+)
 expect_prompt()
 
-sendline("\x04") # <c-d>
+sendline("\x04")  # <c-d>
 sys.exit(0)

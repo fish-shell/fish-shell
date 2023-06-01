@@ -3,7 +3,7 @@
 function __fish_meson_needs_command
     set -l cmd (commandline -opc)
     set -e cmd[1]
-    argparse -s 'v/version' -- $cmd 2>/dev/null
+    argparse -s v/version -- $cmd 2>/dev/null
     or return 0
     not set -q argv[1]
 end
@@ -79,7 +79,7 @@ complete -c meson -s h -l help -d 'Show help'
 # them in the reverse alphabetical order and use -kxa there as well.
 
 # This is to support the implicit setup/configure mode, deprecated upstream but not yet removed.
-complete -c meson -n '__fish_meson_needs_command' -kxa '(__fish_complete_directories)'
+complete -c meson -n __fish_meson_needs_command -kxa '(__fish_complete_directories)'
 
 ### wrap
 set -l wrap_cmds list search install update info status promote update-db

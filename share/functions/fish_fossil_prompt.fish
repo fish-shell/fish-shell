@@ -35,7 +35,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     set -q fish_prompt_fossil_status_renamed
     or set -g fish_prompt_fossil_status_renamed '⇒'
     set -q fish_prompt_fossil_status_deleted
-    or set -g fish_prompt_fossil_status_deleted '-'
+    or set -g fish_prompt_fossil_status_deleted -
     set -q fish_prompt_fossil_status_missing
     or set -g fish_prompt_fossil_status_missing '✖'
     set -q fish_prompt_fossil_status_untracked
@@ -43,25 +43,25 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     set -q fish_prompt_fossil_status_conflict
     or set -g fish_prompt_fossil_status_conflict '×'
 
-	set -q fish_prompt_fossil_status_order
-	or set -g fish_prompt_fossil_status_order added modified renamed deleted missing untracked conflict
+    set -q fish_prompt_fossil_status_order
+    or set -g fish_prompt_fossil_status_order added modified renamed deleted missing untracked conflict
 
 
 
     echo -n ' ('
-	set_color magenta
-	echo -n "$branch"
-	set_color normal
-	echo -n '|'
-	#set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | sort -u)
-	set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | path sort -u)
+    set_color magenta
+    echo -n "$branch"
+    set_color normal
+    echo -n '|'
+    #set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | sort -u)
+    set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | path sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"
         set_color $fish_color_fossil_clean
         echo -n '✔'
 
-    # Handle modified or dirty (unknown state)
+        # Handle modified or dirty (unknown state)
     else
         set -l fossil_statuses
 
@@ -70,19 +70,19 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
 
             # Add a character for each file status if we have one
             switch $line
-                case 'ADDED'
+                case ADDED
                     set -a fossil_statuses added
-                case 'EDITED'
+                case EDITED
                     set -a fossil_statuses modified
-                case 'EXTRA'
+                case EXTRA
                     set -a fossil_statuses untracked
-                case 'DELETED'
+                case DELETED
                     set -a fossil_statuses deleted
-                case 'MISSING'
+                case MISSING
                     set -a fossil_statuses missing
-                case 'RENAMED'
+                case RENAMED
                     set -a fossil_statuses renamed
-                case 'CONFLICT'
+                case CONFLICT
                     set -a fossil_statuses conflict
             end
         end
@@ -94,7 +94,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
         end
 
         echo -n '⚡'
-		set_color normal
+        set_color normal
 
         # Sort status symbols
         for i in $fish_prompt_fossil_status_order

@@ -38,7 +38,7 @@ function fish_config --description "Launch fish's web based configuration"
     end
 
     # Variables a theme is allowed to set
-    set -l theme_var_filter '^fish_(?:pager_)?color.*$';
+    set -l theme_var_filter '^fish_(?:pager_)?color.*$'
 
     switch $cmd
         case prompt

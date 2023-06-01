@@ -1,11 +1,11 @@
 function __fail2ban_jails
-	# No need to deduplicate because fish will take care of that for us
-	path basename {,/usr/local}/etc/fail2ban/filter.d/*.{conf,local} | path change-extension ""
+    # No need to deduplicate because fish will take care of that for us
+    path basename {,/usr/local}/etc/fail2ban/filter.d/*.{conf,local} | path change-extension ""
 end
 
 function __fail2ban_actions
-	# No need to deduplicate because fish will take care of that for us
-	path basename {,/usr/local}/etc/fail2ban/action.d/*.{conf,local} | path change-extension ""
+    # No need to deduplicate because fish will take care of that for us
+    path basename {,/usr/local}/etc/fail2ban/action.d/*.{conf,local} | path change-extension ""
 end
 
 # basic options
@@ -15,7 +15,7 @@ complete -c fail2ban-client -s p -l pidfile -d "Pidfile path"
 complete -c fail2ban-client -l pname -d "Name of the process"
 complete -c fail2ban-client -l loglevel -d "loglevel of client" -xa "CRITICAL ERROR WARNING NOTICE INFO DEBUG TRACEDEBUG HEAVYDEBUG"
 complete -c fail2ban-client -l logtarget -d "Logging target" -a "stdout stderr syslog sysout" # or path
-complete -c fail2ban-client -l logtarget -d "Syslogsocket" -a "auto" # or path
+complete -c fail2ban-client -l logtarget -d Syslogsocket -a auto # or path
 complete -c fail2ban-client -s d -d "Dump configuration"
 complete -c fail2ban-client -l dp -l dump-pretty -d "Dump configuration (pretty)"
 complete -c fail2ban-client -s t -l test -d "Test configuration"
@@ -30,20 +30,20 @@ complete -c fail2ban-client -s h -l help -d "Display help message"
 complete -c fail2ban-client -s V -l version -d "Display client version"
 
 # subcommands
-complete -c fail2ban-client -n __fish_is_first_token -xa "start" -d "Start fail2ban server or jail"
-complete -c fail2ban-client -n __fish_is_first_token -xa "restart" -d "Restart server or jail"
-complete -c fail2ban-client -n __fish_is_first_token -xa "reload" -d "Reload server configuration"
-complete -c fail2ban-client -n __fish_is_first_token -xa "stop" -d "Stop fail2ban server or jail"
-complete -c fail2ban-client -n __fish_is_first_token -xa "unban" -d "Unban ip address(es)"
-complete -c fail2ban-client -n __fish_is_first_token -xa "banned" -d "List jails w/ their banned IPs"
-complete -c fail2ban-client -n __fish_is_first_token -xa "status" -d "Get server or jail status"
-complete -c fail2ban-client -n __fish_is_first_token -xa "ping" -d "Check if server is alive"
-complete -c fail2ban-client -n __fish_is_first_token -xa "help" -d "Prints usage synopsis"
-complete -c fail2ban-client -n __fish_is_first_token -xa "version" -d "Prints server version"
-complete -c fail2ban-client -n __fish_is_first_token -xa "set"
-complete -c fail2ban-client -n __fish_is_first_token -xa "get"
-complete -c fail2ban-client -n __fish_is_first_token -xa "flushlogs" -d "Flushes log files and reopens"
-complete -c fail2ban-client -n __fish_is_first_token -xa "add"
+complete -c fail2ban-client -n __fish_is_first_token -xa start -d "Start fail2ban server or jail"
+complete -c fail2ban-client -n __fish_is_first_token -xa restart -d "Restart server or jail"
+complete -c fail2ban-client -n __fish_is_first_token -xa reload -d "Reload server configuration"
+complete -c fail2ban-client -n __fish_is_first_token -xa stop -d "Stop fail2ban server or jail"
+complete -c fail2ban-client -n __fish_is_first_token -xa unban -d "Unban ip address(es)"
+complete -c fail2ban-client -n __fish_is_first_token -xa banned -d "List jails w/ their banned IPs"
+complete -c fail2ban-client -n __fish_is_first_token -xa status -d "Get server or jail status"
+complete -c fail2ban-client -n __fish_is_first_token -xa ping -d "Check if server is alive"
+complete -c fail2ban-client -n __fish_is_first_token -xa help -d "Prints usage synopsis"
+complete -c fail2ban-client -n __fish_is_first_token -xa version -d "Prints server version"
+complete -c fail2ban-client -n __fish_is_first_token -xa set
+complete -c fail2ban-client -n __fish_is_first_token -xa get
+complete -c fail2ban-client -n __fish_is_first_token -xa flushlogs -d "Flushes log files and reopens"
+complete -c fail2ban-client -n __fish_is_first_token -xa add
 
 complete -c fail2ban-client -n "__fish_seen_subcommand_from start" -xa "(__fail2ban_jails)"
 complete -c fail2ban-client -n "__fish_seen_subcommand_from stop" -xa "(__fail2ban_jails)"
@@ -78,12 +78,12 @@ complete -c fail2ban-client -n "__fish_seen_subcommand_from set" -n "__fish_prev
 # get/set syslogsocket
 complete -c fail2ban-client -n "__fish_seen_subcommand_from get" -n "__fish_prev_arg_in get" -xa syslogsocket -d "Get server syslog socket"
 complete -c fail2ban-client -n "__fish_seen_subcommand_from set" -n "__fish_prev_arg_in set" -xa syslogsocket -d "Change server syslog socket"
-complete -c fail2ban-client -n "__fish_seen_subcommand_from set" -n "__fish_prev_arg_in syslogsocket" -a "auto" # or path
+complete -c fail2ban-client -n "__fish_seen_subcommand_from set" -n "__fish_prev_arg_in syslogsocket" -a auto # or path
 
 # get/set dbfile
 complete -c fail2ban-client -n "__fish_seen_subcommand_from get" -n "__fish_prev_arg_in get" -xa dbfile -d "Get server db path"
 complete -c fail2ban-client -n "__fish_seen_subcommand_from set" -n "__fish_prev_arg_in set" -xa dbfile -d "Change server db path"
-complete -c fail2ban-client -n "__fish_seen_subcommand_from set" -n "__fish_prev_arg_in dbfile" -a "None" # or path
+complete -c fail2ban-client -n "__fish_seen_subcommand_from set" -n "__fish_prev_arg_in dbfile" -a None # or path
 
 # get/set dbmaxmatches
 complete -c fail2ban-client -n "__fish_seen_subcommand_from get" -n "__fish_prev_arg_in get" -xa dbmaxmatches -d "Get max matches stored per ticket"

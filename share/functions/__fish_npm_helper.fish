@@ -51,21 +51,21 @@ function __npm_find_package_json
 end
 
 function __npm_installed_global_packages
-	set -l prefix (npm prefix -g)
-	set -l node_modules "$prefix/lib/node_modules"
+    set -l prefix (npm prefix -g)
+    set -l node_modules "$prefix/lib/node_modules"
 
-	for path in $node_modules/*
-		set -l mod (path basename -- $path)
+    for path in $node_modules/*
+        set -l mod (path basename -- $path)
 
-		if string match -rq "^@" $mod
-			for sub_path in $path/*
-				set -l sub_mod (string split '/' $sub_path)[-1]
-				echo $mod/$sub_mod
-			end
-		else
-			echo $mod
-		end
-	end
+        if string match -rq "^@" $mod
+            for sub_path in $path/*
+                set -l sub_mod (string split '/' $sub_path)[-1]
+                echo $mod/$sub_mod
+            end
+        else
+            echo $mod
+        end
+    end
 end
 
 function __npm_installed_local_packages

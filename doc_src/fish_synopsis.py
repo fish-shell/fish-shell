@@ -28,7 +28,7 @@ class FishSynopsisDirective(CodeBlock):
             return CodeBlock.run(self)
         lexer = FishSynopsisLexer()
         result = nodes.line_block()
-        for (start, tok, text) in lexer.get_tokens_unprocessed("\n".join(self.content)):
+        for start, tok, text in lexer.get_tokens_unprocessed("\n".join(self.content)):
             if (  # Literal text.
                 (tok in (Name.Function, Name.Constant) and not text.isupper())
                 or text.startswith("-")  # Literal option, even if it's uppercase.

@@ -406,7 +406,7 @@ end
 complete -c npm -n __fish_npm_needs_command -a 'install add i' -d 'Install a package'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-test it' -d 'Install package(s) and run tests'
 complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
-for c in install add i 'in' ins inst insta instal isnt isnta isntal isntall install-test it link ln
+for c in install add i in ins inst insta instal isnt isnta isntal isntall install-test it link ln
     complete -f -c npm -n "__fish_npm_using_command $c" -s S -l save -d 'Save to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies'

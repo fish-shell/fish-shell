@@ -16,9 +16,9 @@ set -l runtime config_cache_reload \
     service_cache_reload \
     ha_status \
     "ha_remove_node=" \
-    ha_set_failover_delay 
+    ha_set_failover_delay
 
-set -l scope rwlock mutex processing 
+set -l scope rwlock mutex processing
 
 
 function __fish_string_in_command -a ch
@@ -42,7 +42,7 @@ function __fish_prepend -a prefix
         "preprocessing manager" \
         "preprocessing worker" \
         "proxy poller" \
-        "self-monitoring" \
+        self-monitoring \
         "snmp trapper" \
         "task manager" \
         timer \
@@ -58,7 +58,7 @@ function __fish_prepend -a prefix
         set var $log_target
     else if string match -rq 'prof_(en|dis)able' $prefix
         set var $log_target 'ha manager'
-    else if string match -rq 'diaginfo' $prefix
+    else if string match -rq diaginfo $prefix
         set var historycache preprocessing alerting lld valuecache locks
     end
 
@@ -93,4 +93,3 @@ complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_com
 
 # diaginfo
 complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command diaginfo" -a "(__fish_prepend diaginfo)"
-

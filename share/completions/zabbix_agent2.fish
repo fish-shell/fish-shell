@@ -1,6 +1,6 @@
-set -l runtime "userparameter_reload" \
-    "log_level_increase" \
-    "log_level_decrease" \
+set -l runtime userparameter_reload \
+    log_level_increase \
+    log_level_decrease \
     help \
     metrics \
     version
@@ -11,4 +11,3 @@ complete -c zabbix_agent2 -f -s p -l print -d "Print known items and exit."
 complete -c zabbix_agent2 -f -s t -l test -d "Test single item and exit."
 complete -c zabbix_agent2 -f -s h -l help -d "Display this help and exit."
 complete -c zabbix_agent2 -f -s V -l version -d "Output version information and exit."
-

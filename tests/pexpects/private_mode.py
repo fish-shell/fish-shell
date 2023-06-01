@@ -16,6 +16,7 @@ recorded_history = []
 private_mode_active = False
 fish_path = os.environ.get("fish")
 
+
 # Send a line and record it in our history array if private mode is not active.
 def sendline_record(s):
     sendline(s)

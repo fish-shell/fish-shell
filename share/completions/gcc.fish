@@ -498,7 +498,7 @@ complete -c gcc -o L -d 'Add dir to the list of directories to be searched for -
 complete -c gcc -o B -d 'Specifies where to find the executables, libraries, include files, and data files of the compiler itself'
 complete -c gcc -o specs -r -d 'Process file after the compiler reads in the standard specs file'
 complete -c gcc -l sysroot -x -a '(__fish_complete_directories)' -d 'Use dir as the logical root directory for headers and libraries'
-complete -c gcc -o I- -d 'Deprecated'
+complete -c gcc -o I- -d Deprecated
 complete -c gcc -s b -d 'The argument machine specifies the target machine for compilation'
 complete -c gcc -s V -d 'The argument version specifies which version of GCC to run'
 complete -c gcc -o EL -d 'Compile code for little endian mode'
@@ -1259,7 +1259,7 @@ complete -c gcc -o mno-renesas -d 'Comply with the calling conventions defined f
 complete -c gcc -o mnomacsave -d 'Mark the "MAC" register as call-clobbered, even if -mhitachi is given'
 complete -c gcc -o mieee -d 'Increase IEEE-compliance of floating-point code'
 complete -c gcc -o misize -d 'Dump instruction size and location in the assembly code'
-complete -c gcc -o mpadstruct -d 'Deprecated'
+complete -c gcc -o mpadstruct -d Deprecated
 complete -c gcc -o mspace -d 'Optimize for space instead of speed'
 complete -c gcc -o mprefergot -d 'When generating position-independent code, emit function calls using the Global Offset Table instead of the Procedure Linkage Table'
 complete -c gcc -o musermode -d 'Generate a library function call to invalidate instruction cache entries, after fixing up a trampoline'

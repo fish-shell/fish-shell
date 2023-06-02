@@ -1,0 +1,30 @@
+body {
+    background: white;
+    font-size: 8pt;
+}
+
+.tab, .print_hidden {
+    display: none;
+}
+
+.tab.selected_tab {
+    background: white;
+    display: block;
+    font-size: 22pt;
+    font-weight: bold;
+    padding-left: 14pt;
+    text-align: left;
+}
+
+.print_only {
+    display: initial;
+}
+
+.data_table_cell {
+    border-bottom: #dbdbdb 1pt solid;
+}
+
+#ancestor {
+    width: 100%;
+    box-shadow: none;
+}

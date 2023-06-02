@@ -6,6 +6,7 @@
     <title>fish shell configuration</title>
     <link rel="icon" type="image/png" href="favicon.png"/>
     <link rel="stylesheet" type="text/css" href="fishconfig.css"/>
+    <link rel="stylesheet" type="text/css" media="print" href="fishconfig_print.css">
     <script type="text/javascript" src="js/angular.js"></script>
     <script type="text/javascript" src="js/angular-route.js"></script>
     <script type="text/javascript" src="js/angular-sanitize.js"></script>
@@ -26,7 +27,7 @@
             <div ng-class="{'tab': true, 'selected_tab': currentTab == 'functions'}" id="tab_functions" ng-click="changeView('functions')">functions</div>
             <div ng-class="{'tab': true, 'selected_tab': currentTab == 'variables'}" id="tab_variables" ng-click="changeView('variables')">variables</div>
             <div ng-class="{'tab': true, 'selected_tab': currentTab == 'history'}" id="tab_history" ng-click="changeView('history')">history</div>
-            <div ng-class="{'tab': true, 'selected_tab': currentTab == 'bindings'}" id="tab_bindings" ng-click="changeView('bindings')">bindings</div>
+            <div ng-class="{'tab': true, 'selected_tab': currentTab == 'bindings'}" id="tab_bindings" ng-click="changeView('bindings')"><span class="print_only">fish shell </span>bindings</div>
         </div>
         <div id="tab_contents">
         <ng-view></ng-view>

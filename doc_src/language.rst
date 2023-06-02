@@ -1951,7 +1951,7 @@ To specify a signal handler for the WINCH signal, write::
         echo Got WINCH signal!
     end
 
-Fish already the following named events for the ``--on-event`` switch:
+Fish already has the following named events for the ``--on-event`` switch:
 
 - ``fish_prompt`` is emitted whenever a new fish prompt is about to be displayed.
 

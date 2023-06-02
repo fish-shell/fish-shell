@@ -664,3 +664,7 @@ img.delete_icon {
         color: #AAA;
     }
 }
+
+.print_only {
+    display: none;
+}

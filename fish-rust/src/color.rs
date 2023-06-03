@@ -1,4 +1,4 @@
-use std::{array, cmp::Ordering};
+use std::cmp::Ordering;
 
 use crate::{
     wchar::{widestrs, wstr, WExt, WString, L},
@@ -97,6 +97,14 @@ impl RgbColor {
         Self::try_parse_special(s)
             .or_else(|| Self::try_parse_named(s))
             .or_else(|| Self::try_parse_rgb(s))
+    }
+
+    /// Create an RGB color.
+    pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
+        Self {
+            typ: Type::Rgb(Color24 { r, g, b }),
+            flags: Flags::DEFAULT,
+        }
     }
 
     /// Returns whether the color is the normal special color.
@@ -225,36 +233,29 @@ impl RgbColor {
             s = &s[1..];
         }
 
-        let hex_digit = |i| {
+        let hex_digit = |i| -> Option<u8> {
             s.char_at(i)
                 .to_digit(16)
                 .map(|n| n.try_into().expect("hex digit should always be < 256"))
         };
 
-        // TODO: `array::try_from_fn()`: https://github.com/rust-lang/rust/issues/89379
-        let rgb: [_; 3] = if s.len() == 3 {
+        let r;
+        let g;
+        let b;
+        if s.len() == 3 {
             // Format: FA3
-            array::from_fn(hex_digit)
+            r = hex_digit(0)? * 16 + hex_digit(0)?;
+            g = hex_digit(1)? * 16 + hex_digit(1)?;
+            b = hex_digit(2)? * 16 + hex_digit(2)?;
         } else if s.len() == 6 {
             // Format: F3A035
-            array::from_fn(|i| {
-                let hi = hex_digit(2 * i)?;
-                let lo = hex_digit(2 * i + 1)?;
-
-                Some(hi * 16 + lo)
-            })
+            r = hex_digit(0)? * 16 + hex_digit(1)?;
+            g = hex_digit(2)? * 16 + hex_digit(3)?;
+            b = hex_digit(4)? * 16 + hex_digit(5)?;
         } else {
             return None;
-        };
-
-        Some(Self {
-            typ: Type::Rgb(Color24 {
-                r: rgb[0]?,
-                g: rgb[1]?,
-                b: rgb[2]?,
-            }),
-            flags: Flags::default(),
-        })
+        }
+        Some(RgbColor::from_rgb(r, g, b))
     }
 
     /// Try parsing an explicit color name like "magenta".
@@ -423,6 +424,15 @@ mod tests {
         assert!(RgbColor::from_wstr("magenta"L).unwrap().is_named());
         assert!(RgbColor::from_wstr("MaGeNTa"L).unwrap().is_named());
         assert!(RgbColor::from_wstr("mooganta"L).is_none());
+    }
+
+    #[test]
+    #[widestrs]
+    fn parse_rgb() {
+        assert!(RgbColor::from_wstr("##FF00A0"L) == None);
+        assert!(RgbColor::from_wstr("#FF00A0"L) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(RgbColor::from_wstr("FF00A0"L) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(RgbColor::from_wstr("FAF"L) == Some(RgbColor::from_rgb(0xff, 0xAA, 0xff)));
     }
 
     // Regression test for multiplicative overflow in convert_color.

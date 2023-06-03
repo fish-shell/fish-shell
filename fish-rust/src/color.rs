@@ -432,7 +432,7 @@ mod tests {
         assert!(RgbColor::from_wstr("##FF00A0"L) == None);
         assert!(RgbColor::from_wstr("#FF00A0"L) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
         assert!(RgbColor::from_wstr("FF00A0"L) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(RgbColor::from_wstr("FAF"L) == Some(RgbColor::from_rgb(0xff, 0xAA, 0xff)));
+        assert!(RgbColor::from_wstr("FAF"L) == Some(RgbColor::from_rgb(0xff, 0xaa, 0xff)));
     }
 
     // Regression test for multiplicative overflow in convert_color.

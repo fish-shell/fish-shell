@@ -664,8 +664,8 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
         return false;
     }
 
-    // Handle the case of nothing selected yet.
     if (selected_completion_idx == PAGER_SELECTION_NONE) {
+        // Handle the case of nothing selected yet.
         switch (direction) {
             case selection_motion_t::south:
             case selection_motion_t::page_south:
@@ -679,7 +679,7 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
                 } else {
                     selected_completion_idx = 0;
                 }
-                return true;
+                break;
             }
             case selection_motion_t::page_north:
             case selection_motion_t::east:
@@ -689,119 +689,121 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
                 return false;
             }
         }
-    }
-
-    // Ok, we had something selected already. Select something different.
-    size_t new_selected_completion_idx;
-    if (!selection_direction_is_cardinal(direction)) {
-        // Next, previous, or deselect, all easy.
-        if (direction == selection_motion_t::deselect) {
-            new_selected_completion_idx = PAGER_SELECTION_NONE;
-        } else if (direction == selection_motion_t::next) {
-            new_selected_completion_idx = selected_completion_idx + 1;
-            if (new_selected_completion_idx >= completion_infos.size()) {
-                new_selected_completion_idx = 0;
-            }
-        } else if (direction == selection_motion_t::prev) {
-            if (selected_completion_idx == 0) {
-                new_selected_completion_idx = completion_infos.size() - 1;
+    } else {
+        // Ok, we had something selected already. Select something different.
+        size_t new_selected_completion_idx;
+        if (!selection_direction_is_cardinal(direction)) {
+            // Next, previous, or deselect, all easy.
+            if (direction == selection_motion_t::deselect) {
+                new_selected_completion_idx = PAGER_SELECTION_NONE;
+            } else if (direction == selection_motion_t::next) {
+                new_selected_completion_idx = selected_completion_idx + 1;
+                if (new_selected_completion_idx >= completion_infos.size()) {
+                    new_selected_completion_idx = 0;
+                }
+            } else if (direction == selection_motion_t::prev) {
+                if (selected_completion_idx == 0) {
+                    new_selected_completion_idx = completion_infos.size() - 1;
+                } else {
+                    new_selected_completion_idx = selected_completion_idx - 1;
+                }
             } else {
-                new_selected_completion_idx = selected_completion_idx - 1;
+                DIE("unknown non-cardinal direction");
             }
         } else {
-            DIE("unknown non-cardinal direction");
-        }
-    } else {
-        // Cardinal directions. We have a completion index; we wish to compute its row and column.
-        size_t current_row = this->get_selected_row(rendering);
-        size_t current_col = this->get_selected_column(rendering);
-        size_t page_height = std::max(rendering.term_height - 1, static_cast<size_t>(1));
+            // Cardinal directions. We have a completion index; we wish to compute its row and
+            // column.
+            size_t current_row = this->get_selected_row(rendering);
+            size_t current_col = this->get_selected_column(rendering);
+            size_t page_height = std::max(rendering.term_height - 1, static_cast<size_t>(1));
 
-        switch (direction) {
-            case selection_motion_t::page_north: {
-                if (current_row > page_height) {
-                    current_row = current_row - page_height;
-                } else {
-                    current_row = 0;
-                }
-                break;
-            }
-            case selection_motion_t::north: {
-                // Go up a whole row. If we cycle, go to the previous column.
-                if (current_row > 0) {
-                    current_row--;
-                } else {
-                    current_row = rendering.rows - 1;
-                    if (current_col > 0) {
-                        current_col--;
+            switch (direction) {
+                case selection_motion_t::page_north: {
+                    if (current_row > page_height) {
+                        current_row = current_row - page_height;
                     } else {
-                        current_col = rendering.cols - 1;
+                        current_row = 0;
                     }
+                    break;
                 }
-                break;
-            }
-            case selection_motion_t::page_south: {
-                if (current_row + page_height < rendering.rows) {
-                    current_row += page_height;
-                } else {
-                    current_row = rendering.rows - 1;
-                    if (current_col * rendering.rows + current_row >= completion_infos.size()) {
-                        current_row = (completion_infos.size() - 1) % rendering.rows;
-                    }
-                }
-                break;
-            }
-            case selection_motion_t::south: {
-                // Go down, unless we are in the last row.
-                // If we go over the last element, wrap to the first.
-                if (current_row + 1 < rendering.rows &&
-                    current_col * rendering.rows + current_row + 1 < completion_infos.size()) {
-                    current_row++;
-                } else {
-                    current_row = 0;
-                    current_col = (current_col + 1) % rendering.cols;
-                }
-                break;
-            }
-            case selection_motion_t::east: {
-                // Go east, wrapping to the next row. There is no "row memory," so if we run off the
-                // end, wrap.
-                if (current_col + 1 < rendering.cols &&
-                    (current_col + 1) * rendering.rows + current_row < completion_infos.size()) {
-                    current_col++;
-                } else {
-                    current_col = 0;
-                    current_row = (current_row + 1) % rendering.rows;
-                }
-                break;
-            }
-            case selection_motion_t::west: {
-                // Go west, wrapping to the previous row.
-                if (current_col > 0) {
-                    current_col--;
-                } else {
-                    current_col = rendering.cols - 1;
+                case selection_motion_t::north: {
+                    // Go up a whole row. If we cycle, go to the previous column.
                     if (current_row > 0) {
                         current_row--;
                     } else {
                         current_row = rendering.rows - 1;
+                        if (current_col > 0) {
+                            current_col--;
+                        } else {
+                            current_col = rendering.cols - 1;
+                        }
                     }
+                    break;
                 }
-                break;
+                case selection_motion_t::page_south: {
+                    if (current_row + page_height < rendering.rows) {
+                        current_row += page_height;
+                    } else {
+                        current_row = rendering.rows - 1;
+                        if (current_col * rendering.rows + current_row >= completion_infos.size()) {
+                            current_row = (completion_infos.size() - 1) % rendering.rows;
+                        }
+                    }
+                    break;
+                }
+                case selection_motion_t::south: {
+                    // Go down, unless we are in the last row.
+                    // If we go over the last element, wrap to the first.
+                    if (current_row + 1 < rendering.rows &&
+                        current_col * rendering.rows + current_row + 1 < completion_infos.size()) {
+                        current_row++;
+                    } else {
+                        current_row = 0;
+                        current_col = (current_col + 1) % rendering.cols;
+                    }
+                    break;
+                }
+                case selection_motion_t::east: {
+                    // Go east, wrapping to the next row. There is no "row memory," so if we run off
+                    // the end, wrap.
+                    if (current_col + 1 < rendering.cols &&
+                        (current_col + 1) * rendering.rows + current_row <
+                            completion_infos.size()) {
+                        current_col++;
+                    } else {
+                        current_col = 0;
+                        current_row = (current_row + 1) % rendering.rows;
+                    }
+                    break;
+                }
+                case selection_motion_t::west: {
+                    // Go west, wrapping to the previous row.
+                    if (current_col > 0) {
+                        current_col--;
+                    } else {
+                        current_col = rendering.cols - 1;
+                        if (current_row > 0) {
+                            current_row--;
+                        } else {
+                            current_row = rendering.rows - 1;
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    DIE("unknown cardinal direction");
+                }
             }
-            default: {
-                DIE("unknown cardinal direction");
-            }
+
+            // Compute the new index based on the changed row.
+            new_selected_completion_idx = current_col * rendering.rows + current_row;
         }
 
-        // Compute the new index based on the changed row.
-        new_selected_completion_idx = current_col * rendering.rows + current_row;
+        if (selected_completion_idx == new_selected_completion_idx) {
+            return false;
+        }
+        selected_completion_idx = new_selected_completion_idx;
     }
-
-    if (selected_completion_idx == new_selected_completion_idx) {
-        return false;
-    }
-    selected_completion_idx = new_selected_completion_idx;
 
     // Update suggested_row_start to ensure the selection is visible. suggested_row_start *
     // rendering.cols is the first suggested visible completion; add the visible completion

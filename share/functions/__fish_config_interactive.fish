@@ -218,10 +218,14 @@ end" >$__fish_config_dir/config.fish
     # - Any listeners (like the vi-cursor)
     if set -q TMUX
         and not set -q FISH_UNIT_TESTS_RUNNING
-        function __fish_enable_focus --on-event fish_postexec
+        # Allow overriding these - we're called very late,
+        # and so it's otherwise awkward to disable focus reporting again.
+        not functions -q __fish_enable_focus
+        and function __fish_enable_focus --on-event fish_postexec
             echo -n \e\[\?1004h
         end
-        function __fish_disable_focus --on-event fish_preexec
+        not functions -q __fish_disable_focus
+        and function __fish_disable_focus --on-event fish_preexec
             echo -n \e\[\?1004l
         end
         # Note: Don't call this initially because, even though we're in a fish_prompt event,

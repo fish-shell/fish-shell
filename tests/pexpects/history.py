@@ -111,9 +111,9 @@ expect_re("history delete -p 'echo hello'\r\n")
 expect_re("\[1\] echo hello AGAIN\r\n")
 expect_re("\[2\] echo hello again\r\n\r\n")
 expect_re(
-    'Enter nothing to cancel.*\r\nEnter "all" to delete all the matching entries\.\r\n'
+    'Enter nothing to cancel the delete, or\r\nEnter one or more of the entry IDs or ranges like \'5..12\', separated by a space.\r\nFor example \'7 10..15 35 788..812\'.\r\nEnter \'all\' to delete all the matching entries.\r\n'
 )
-expect_re("Delete which entries\? >")
+expect_re("Delete which entries\? ")
 sendline("1")
 expect_prompt('Deleting history entry 1: "echo hello AGAIN"\r\n')
 

@@ -223,18 +223,21 @@ end
 
 for jobbltn in bg wait disown
     function $jobbltn -V jobbltn
-        builtin $jobbltn (__fish_expand_pid_args $argv)
+        set -l args (__fish_expand_pid_args $argv)
+        and builtin $jobbltn $args
     end
 end
 function fg
-    builtin fg (__fish_expand_pid_args $argv)[-1]
+    set -l args (__fish_expand_pid_args $argv)
+    and builtin fg $args[-1]
 end
 
 if command -q kill
     # Only define this if something to wrap exists
     # this allows a nice "commad not found" error to be triggered.
     function kill
-        command kill (__fish_expand_pid_args $argv)
+        set -l args (__fish_expand_pid_args $argv)
+        and command kill $args
     end
 end
 

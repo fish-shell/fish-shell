@@ -319,18 +319,6 @@ impl FlagCap {
 }
 
 /// Covers over tparm().
-pub fn tparm0(cap: &CStr) -> Option<CString> {
-    // Take the lock because tparm races with del_curterm, etc.
-    let _term = TERM.lock().unwrap();
-    let cap_ptr = cap.as_ptr() as *mut libc::c_char;
-    // Safety: we're trusting tparm here.
-    unsafe {
-        // Check for non-null and non-empty string.
-        assert!(!cap_ptr.is_null() && cap_ptr.read() != 0);
-        try_ptr_to_cstr(tparm(cap_ptr))
-    }
-}
-
 pub fn tparm1(cap: &CStr, param1: i32) -> Option<CString> {
     // Take the lock because tparm races with del_curterm, etc.
     let _term: std::sync::MutexGuard<Option<Arc<Term>>> = TERM.lock().unwrap();

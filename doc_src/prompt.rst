@@ -163,7 +163,7 @@ And it looks like:
 .. parsed-literal::
     :class: highlight
 
-    :green:`~/M/L/Oneknowing`\ :red:`[1]`\ >_
+    :green:`~/M/L/Oneknowing`\ :red:`[1]`>_
 
 after we run ``false`` (which returns 1).
 

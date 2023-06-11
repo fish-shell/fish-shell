@@ -1,7 +1,7 @@
 // Generic output functions.
 use crate::color::RgbColor;
 use crate::common::{self, assert_is_locked, wcs2string_appending};
-use crate::curses::{self, tparm0, tparm1, Term};
+use crate::curses::{self, tparm1, Term};
 use crate::env::EnvVar;
 use crate::flog::FLOG;
 use crate::wchar::{wstr, WString, L};
@@ -131,6 +131,11 @@ fn write_color_escape(
 /// Helper to allow more convenient usage of Option<CString>.
 /// This is similar to C++ checks like `set_a_foreground && set_a_foreground[0]`
 trait CStringIsSomeNonempty {
+    /// Returns whether this string is Some and non-empty.
+    fn is_nonempty(&self) -> bool {
+        self.if_nonempty().is_some()
+    }
+
     /// Returns Some if we contain a non-empty CString.
     fn if_nonempty(&self) -> Option<&CString>;
 }
@@ -336,7 +341,7 @@ impl Outputter {
             }
         }
 
-        if term.enter_bold_mode.if_nonempty().is_some() {
+        if term.enter_bold_mode.is_nonempty() {
             if bg_set && !last_bg_set {
                 // Background color changed and is set, so we enter bold mode to make reading easier.
                 // This means bold mode is _always_ on when the background color is set.
@@ -383,10 +388,8 @@ impl Outputter {
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        let enter_bold_mode = term.enter_bold_mode.if_nonempty();
-        if is_bold && !self.was_bold && enter_bold_mode.is_some() && !bg_set {
-            // TODO: rationalize why only this one has the tparm0 call.
-            writembs_nofail!(self, tparm0(enter_bold_mode.unwrap()));
+        if is_bold && !self.was_bold && term.enter_bold_mode.is_nonempty() && !bg_set {
+            writembs_nofail!(self, &term.enter_bold_mode);
             self.was_bold = is_bold;
         }
 
@@ -398,16 +401,16 @@ impl Outputter {
         }
         self.was_underline = is_underline;
 
-        if self.was_italics && !is_italics && term.exit_italics_mode.if_nonempty().is_some() {
+        if self.was_italics && !is_italics && term.exit_italics_mode.is_nonempty() {
             writembs_nofail!(self, &term.exit_italics_mode);
             self.was_italics = is_italics;
         }
-        if !self.was_italics && is_italics && term.enter_italics_mode.if_nonempty().is_some() {
+        if !self.was_italics && is_italics && term.enter_italics_mode.is_nonempty() {
             writembs_nofail!(self, &term.enter_italics_mode);
             self.was_italics = is_italics;
         }
 
-        if is_dim && !self.was_dim && term.enter_dim_mode.if_nonempty().is_some() {
+        if is_dim && !self.was_dim && term.enter_dim_mode.is_nonempty() {
             writembs_nofail!(self, &term.enter_dim_mode);
             self.was_dim = is_dim;
         }
@@ -415,10 +418,10 @@ impl Outputter {
 
         if is_reverse && !self.was_reverse {
             // Some terms do not have a reverse mode set, so standout mode is a fallback.
-            if term.enter_reverse_mode.if_nonempty().is_some() {
+            if term.enter_reverse_mode.is_nonempty() {
                 writembs_nofail!(self, &term.enter_reverse_mode);
                 self.was_reverse = is_reverse;
-            } else if term.enter_standout_mode.if_nonempty().is_some() {
+            } else if term.enter_standout_mode.is_nonempty() {
                 writembs_nofail!(self, &term.enter_standout_mode);
                 self.was_reverse = is_reverse;
             }

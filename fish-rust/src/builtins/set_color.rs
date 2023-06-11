@@ -6,22 +6,13 @@ use super::shared::{
 };
 use crate::color::RgbColor;
 use crate::common::str2wcstring;
-use crate::curses::{self, tparm0, Term};
+use crate::curses::{self, Term};
 use crate::ffi::parser_t;
 use crate::output::{self, writembs_nofail, Outputter};
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::wgettext_fmt;
 use libc::c_int;
-use std::ffi::CString;
-
-// Helper to make curses::tparm0 more convenient.
-fn tparm(s: &Option<CString>) -> Option<CString> {
-    match s {
-        None => None,
-        Some(s) => tparm0(s),
-    }
-}
 
 #[allow(clippy::too_many_arguments)]
 fn print_modifiers(
@@ -45,7 +36,7 @@ fn print_modifiers(
         ..
     } = term;
     if bold && enter_bold_mode.is_some() {
-        writembs_nofail!(outp, tparm(enter_bold_mode));
+        writembs_nofail!(outp, enter_bold_mode);
     }
 
     if underline && enter_underline_mode.is_some() {
@@ -66,7 +57,7 @@ fn print_modifiers(
         writembs_nofail!(outp, enter_standout_mode);
     }
     if !bg.is_none() && bg.is_normal() {
-        writembs_nofail!(outp, tparm(exit_attribute_mode));
+        writembs_nofail!(outp, exit_attribute_mode);
     }
 }
 
@@ -110,7 +101,7 @@ fn print_colors(
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
             if let Some(term) = term.as_ref() {
-                writembs_nofail!(outp, tparm(&term.exit_attribute_mode));
+                writembs_nofail!(outp, &term.exit_attribute_mode);
             }
         }
         outp.writech('\n');
@@ -241,18 +232,20 @@ pub fn set_color(
     let Some(term) = curses::term() else {
         return STATUS_CMD_ERROR;
     };
-    let Some(exit_attribute_mode) = term.exit_attribute_mode.as_ref() else {
+    let exit_attribute_mode = &term.exit_attribute_mode;
+    if exit_attribute_mode.is_none() {
         return STATUS_CMD_ERROR;
-    };
+    }
+
     let outp = &mut output::Outputter::new_buffering();
     print_modifiers(outp, &term, bold, underline, italics, dim, reverse, bg);
     if bgcolor.is_some() && bg.is_normal() {
-        writembs_nofail!(outp, tparm0(exit_attribute_mode));
+        writembs_nofail!(outp, exit_attribute_mode);
     }
 
     if !fg.is_none() {
         if fg.is_normal() || fg.is_reset() {
-            writembs_nofail!(outp, tparm0(exit_attribute_mode));
+            writembs_nofail!(outp, exit_attribute_mode);
         } else if !outp.write_color(fg, true /* is_fg */) {
             // We need to do *something* or the lack of any output messes up
             // when the cartesian product here would make "foo" disappear:

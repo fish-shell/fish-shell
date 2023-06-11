@@ -89,17 +89,10 @@ fn cursor_to_slice(cursor: Cursor<&mut [u8]>) -> &[u8] {
     &buff[..len]
 }
 
-fn write_color_escape(
-    outp: &mut Outputter,
-    term: &Term,
-    todo: &CStr,
-    mut idx: u8,
-    is_fg: bool,
-) -> bool {
-    if term_supports_color_natively(idx.into(), term) {
+fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u8, is_fg: bool) {
+    if term_supports_color_natively(term, idx.into()) {
         // Use tparm to emit color escape.
         writembs!(outp, tparm1(todo, idx.into()));
-        true
     } else {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
         let mut buff = [0; 32];
@@ -124,7 +117,6 @@ fn write_color_escape(
             write!(cursor, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx).unwrap();
         }
         outp.write_str(cursor_to_slice(cursor));
-        true
     }
 }
 
@@ -148,9 +140,11 @@ impl CStringIsSomeNonempty for Option<CString> {
 
 fn write_foreground_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
     if let Some(cap) = term.set_a_foreground.if_nonempty() {
-        write_color_escape(outp, term, cap, idx, true)
+        write_color_escape(outp, term, cap, idx, true);
+        true
     } else if let Some(cap) = &term.set_foreground.if_nonempty() {
-        write_color_escape(outp, term, cap, idx, true)
+        write_color_escape(outp, term, cap, idx, true);
+        true
     } else {
         false
     }
@@ -158,9 +152,11 @@ fn write_foreground_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
 
 fn write_background_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
     if let Some(cap) = term.set_a_background.if_nonempty() {
-        write_color_escape(outp, term, cap, idx, false)
+        write_color_escape(outp, term, cap, idx, false);
+        true
     } else if let Some(cap) = term.set_background.if_nonempty() {
-        write_color_escape(outp, term, cap, idx, false)
+        write_color_escape(outp, term, cap, idx, false);
+        true
     } else {
         false
     }

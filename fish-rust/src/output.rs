@@ -11,7 +11,7 @@ use bitflags::bitflags;
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::ffi::{CStr, CString};
-use std::io::{Cursor, Write};
+use std::io::{Result, Write};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Mutex;
@@ -79,24 +79,12 @@ fn index_for_color(c: RgbColor) -> u8 {
     c.to_term256_index()
 }
 
-// Given a Cursor which have used write! on, return the slice of written bytes.
-fn cursor_to_slice(cursor: Cursor<&mut [u8]>) -> &[u8] {
-    let len: usize = cursor
-        .position()
-        .try_into()
-        .expect("cursor position overflow");
-    let buff: &mut [u8] = cursor.into_inner();
-    &buff[..len]
-}
-
 fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u8, is_fg: bool) {
     if term_supports_color_natively(term, idx.into()) {
         // Use tparm to emit color escape.
         writembs!(outp, tparm1(todo, idx.into()));
     } else {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
-        let mut buff = [0; 32];
-        let mut cursor = Cursor::new(&mut buff[..]);
         if idx < 16 {
             // this allows the non-bright color to happen instead of no color working at all when a
             // bright is attempted when only colors 0-7 are supported.
@@ -108,15 +96,14 @@ fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u
                 idx -= 8;
             }
             write!(
-                cursor,
+                outp,
                 "\x1B[{}m",
                 (if idx > 7 { 82 } else { 30 }) + i32::from(idx) + ((i32::from(!is_fg)) * 10)
             )
             .expect("Writing to in-memory buffer should never fail");
         } else {
-            write!(cursor, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx).unwrap();
+            write!(outp, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx).unwrap();
         }
-        outp.write_str(cursor_to_slice(cursor));
     }
 }
 
@@ -244,18 +231,15 @@ impl Outputter {
         // Foreground: ^[38;2;<r>;<g>;<b>m
         // Background: ^[48;2;<r>;<g>;<b>m
         let rgb = color.to_color24();
-        let mut buff = [0; 128];
-        let mut cursor = Cursor::new(&mut buff[..]);
         write!(
-            &mut cursor,
+            self,
             "\x1B[{};2;{};{};{}m",
             if is_fg { 38 } else { 48 },
             rgb.r,
             rgb.g,
             rgb.b
         )
-        .expect("should have written to buffer");
-        self.write_str(cursor_to_slice(cursor));
+        .expect("Outputter::write should never fail");
         true
     }
 
@@ -441,12 +425,6 @@ impl Outputter {
         self.maybe_flush();
     }
 
-    /// Write a narrow string.
-    pub fn write_str(&mut self, str: &[u8]) {
-        self.contents.extend_from_slice(str);
-        self.maybe_flush();
-    }
-
     /// \return the "output" contents.
     pub fn contents(&self) -> &[u8] {
         &self.contents
@@ -472,6 +450,21 @@ impl Outputter {
         assert!(self.buffer_count > 0, "buffer_count underflow");
         self.buffer_count -= 1;
         self.maybe_flush();
+    }
+}
+
+/// Outputter implements Write, so it may be used as the receiver of the write! macro.
+/// Only ASCII data should be written this way: do NOT assume that the receiver is UTF-8.
+impl Write for Outputter {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        self.contents.extend_from_slice(buf);
+        self.maybe_flush();
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        self.flush_to(self.fd);
+        Ok(())
     }
 }
 

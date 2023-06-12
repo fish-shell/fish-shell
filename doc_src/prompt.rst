@@ -3,7 +3,7 @@ Writing your own prompt
 
 Fish ships a number of prompts that you can view with the :doc:`fish_config <cmds/fish_config>` command, and many users have shared their prompts online.
 
-However, if you are anything like the author of this document, you sooner or later want to write your own or at least adjust the prompt you have.
+However, if you are anything like the author of this document, you sooner or later want to write your own or at least adjust the prompt you have. This is a good way to get used to fish's :doc:`scripting language <language>`.
 
 Unlike other shells, fish's prompt is built by running a function - :doc:`fish_prompt <cmds/fish_prompt>`. Or, more specifically, three functions:
 
@@ -12,6 +12,8 @@ Unlike other shells, fish's prompt is built by running a function - :doc:`fish_p
 - :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` - which it runs if :ref:`vi-mode <vi-mode>` is used.
 
 These functions are run, and whatever they print is displayed as the prompt (minus one trailing newline).
+
+Here, we will just be writing a simple fish_prompt.
 
 .. note::
    This document uses formatting to show what a prompt would look like. If you are viewing this in the man page,
@@ -26,9 +28,9 @@ Let's look at a very simple example::
       echo $PWD '>'
   end
 
-This just prints the current working directory (:envvar:`PWD`) and a ``>`` symbol to show where the prompt ends.
+This just prints the current working directory (:envvar:`PWD`) and a ``>`` symbol to show where the prompt ends. The ``>`` is :ref:`quoted <quotes>` because otherwise it would signify a :ref:`redirection <redirects>`.
 
-Because we've used :doc:`echo <cmds/echo>`, it added spaces between the two so it ends up looking like (assuming ``_`` is your cursor):
+Because we've use :doc:`echo <cmds/echo>`, it adds spaces between the two so it ends up looking like (assuming ``_`` is your cursor):
 
 .. role:: white
 .. parsed-literal::

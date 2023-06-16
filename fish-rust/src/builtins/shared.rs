@@ -37,6 +37,9 @@ pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
 /// Error message when integer expected
 pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 
+/// Error message for unknown switch.
+pub const BUILTIN_ERR_UNKNOWN: &str = "%ls: %ls: unknown option\n";
+
 /// Error messages for unexpected args.
 pub const BUILTIN_ERR_ARG_COUNT0: &str = "%ls: missing argument\n";
 pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
@@ -170,6 +173,7 @@ pub fn run_builtin(
 ) -> Option<c_int> {
     match builtin {
         RustBuiltin::Abbr => super::abbr::abbr(parser, streams, args),
+        RustBuiltin::Argparse => super::argparse::argparse(parser, streams, args),
         RustBuiltin::Bg => super::bg::bg(parser, streams, args),
         RustBuiltin::Block => super::block::block(parser, streams, args),
         RustBuiltin::Builtin => super::builtin::builtin(parser, streams, args),

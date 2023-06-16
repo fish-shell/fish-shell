@@ -434,6 +434,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Remove the outermost block, asserting it's the given one.
     void pop_block(const block_t *expected);
 
+    /// Avoid maybe_t usage for ffi, sends a empty string in case of none.
+    wcstring get_function_name_ffi(int level);
     /// Return the function name for the specified stack frame. Default is one (current frame).
     maybe_t<wcstring> get_function_name(int level = 1);
 

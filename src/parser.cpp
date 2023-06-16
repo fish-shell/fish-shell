@@ -349,6 +349,15 @@ bool parser_t::is_command_substitution() const {
     return false;
 }
 
+wcstring parser_t::get_function_name_ffi(int level) {
+    auto name = get_function_name(level);
+    if (name.has_value()) {
+        return name.acquire();
+    } else {
+        return wcstring();
+    }
+}
+
 maybe_t<wcstring> parser_t::get_function_name(int level) {
     if (level == 0) {
         // Return the function name for the level preceding the most recent breakpoint. If there

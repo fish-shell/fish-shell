@@ -80,7 +80,7 @@ pub struct wgetopter_t<'opts, 'args, 'argarray> {
     /// returned was found. This allows us to pick up the scan where we left off.
     ///
     /// If this is empty, it means resume the scan by advancing to the next ARGV-element.
-    nextchar: &'args wstr,
+    pub nextchar: &'args wstr,
 
     /// Index in ARGV of the next element to be scanned. This is used for communication to and from
     /// the caller and for communication between successive calls to `getopt`.

@@ -1,6 +1,7 @@
 pub mod shared;
 
 pub mod abbr;
+pub mod argparse;
 pub mod bg;
 pub mod block;
 pub mod builtin;

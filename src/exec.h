@@ -31,6 +31,8 @@ __warn_unused bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j,
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status);
 int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
                   bool apply_exit_status);
+int exec_subshell_ffi(const wcstring &cmd, parser_t &parser, wcstring_list_ffi_t &outputs,
+                      bool apply_exit_status);
 
 /// Like exec_subshell, but only returns expansion-breaking errors. That is, a zero return means
 /// "success" (even though the command may have failed), a non-zero return means that we should

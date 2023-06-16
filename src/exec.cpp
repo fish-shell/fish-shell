@@ -1255,3 +1255,8 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &
     return exec_subshell_internal(cmd, parser, nullptr, &outputs, &break_expand, apply_exit_status,
                                   false);
 }
+
+int exec_subshell_ffi(const wcstring &cmd, parser_t &parser, wcstring_list_ffi_t &outputs,
+                      bool apply_exit_status) {
+    return exec_subshell(cmd, parser, outputs.vals, apply_exit_status);
+}

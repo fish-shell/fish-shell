@@ -25,6 +25,7 @@ include_cpp! {
     #include "env.h"
     #include "env_universal_common.h"
     #include "event.h"
+    #include "exec.h"
     #include "fallback.h"
     #include "fds.h"
     #include "fish_indent_common.h"
@@ -119,6 +120,8 @@ include_cpp! {
 
     generate!("env_var_t")
 
+    generate!("exec_subshell_ffi")
+
     generate!("function_properties_t")
     generate!("function_properties_ref_t")
     generate!("function_get_props_autoload")
@@ -203,8 +206,20 @@ impl parser_t {
         self.vars_env_ffi()
     }
 
-    pub fn set_var(&mut self, name: &wstr, value: &[&wstr], flags: EnvMode) -> libc::c_int {
+    pub fn set_var<T: AsRef<wstr>, U: AsRef<wstr>>(
+        &mut self,
+        name: T,
+        value: &[U],
+        flags: EnvMode,
+    ) -> libc::c_int {
         self.get_var_stack().set_var(name, value, flags)
+    }
+
+    pub fn get_func_name(&mut self, level: i32) -> Option<WString> {
+        let name = self.pin().get_function_name_ffi(c_int(level));
+        name.as_ref()
+            .map(|s| s.from_ffi())
+            .filter(|s| !s.is_empty())
     }
 }
 
@@ -238,13 +253,18 @@ impl env_stack_t {
     }
 
     /// Helper to set a value.
-    pub fn set_var(&mut self, name: &wstr, value: &[&wstr], flags: EnvMode) -> libc::c_int {
+    pub fn set_var<T: AsRef<wstr>, U: AsRef<wstr>>(
+        &mut self,
+        name: T,
+        value: &[U],
+        flags: EnvMode,
+    ) -> libc::c_int {
         use crate::wchar_ffi::{wstr_to_u32string, W0String};
         let strings: Vec<W0String> = value.iter().map(wstr_to_u32string).collect();
         let ptrs: Vec<*const u32> = strings.iter().map(|s| s.as_ptr()).collect();
         self.pin()
             .set_ffi(
-                &name.to_ffi(),
+                &name.as_ref().to_ffi(),
                 flags.bits(),
                 ptrs.as_ptr() as *const c_void,
                 ptrs.len(),

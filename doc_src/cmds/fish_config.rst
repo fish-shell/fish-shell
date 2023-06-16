@@ -58,7 +58,9 @@ which will save your current theme in .theme format.
 
 The format looks like this:
 
-.. code-block:: raw
+.. highlight:: none
+
+::
 
    # name: 'Cool Beans'
    # preferred_background: black

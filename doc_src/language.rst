@@ -1996,4 +1996,24 @@ To start a debug session simply insert the :doc:`builtin command <cmds/breakpoin
 
 Another way to debug script issues is to set the :envvar:`fish_trace` variable, e.g. ``fish_trace=1 fish_prompt`` to see which commands fish executes when running the :doc:`fish_prompt <cmds/fish_prompt>` function.
 
-If you specifically want to debug performance issues, :program:`fish` can be run with the ``--profile /path/to/profile.log`` option to save a profile to the specified path. This profile log includes a breakdown of how long each step in the execution took. See :doc:`fish <cmds/fish>` for more information.
+Profiling fish scripts
+^^^^^^^^^^^^^^^^^^^^^^
+
+If you specifically want to debug performance issues, :program:`fish` can be run with the ``--profile /path/to/profile.log`` option to save a profile to the specified path. This profile log includes a breakdown of how long each step in the execution took.
+
+For example::
+
+  > fish --profile /tmp/sleep.prof -ic 'sleep 3s'
+  > cat /tmp/sleep.prof
+  Time    Sum     Command
+  3003419 3003419 > sleep 3s
+
+This will show the time for each command itself in the first column, the time for the command and every subcommand (like any commands inside of a :ref:`function <syntax-function>` or :ref:`command substitutions <expand-command-substitution>`) in the second and the command itself in the third, separated with tabs.
+
+The time is given in microseconds.
+
+To see the slowest commands last, ``sort -nk2 /path/to/logfile`` is useful.
+
+For profiling fish's startup there is also ``--profile-startup /path/to/logfile``.
+
+See :doc:`fish <cmds/fish>` for more information.

@@ -3,12 +3,9 @@ use crate::color::RgbColor;
 use crate::common::{self, assert_is_locked, wcs2string_appending};
 use crate::curses::{self, tparm1, Term};
 use crate::env::EnvVar;
-use crate::flog::FLOG;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
-use crate::wutil::wgettext_fmt;
 use bitflags::bitflags;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 use std::io::{Result, Write};
@@ -57,21 +54,6 @@ pub fn set_color_support(val: ColorSupport) {
     COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
 }
 
-// These are historic. writembs() attempts to write a multibyte string of type &Option<CString> to the given outputter.
-// writembs() will noisily fail, writembs_nofail will not.
-macro_rules! writembs(
-    ($outp: expr, $mbs: expr) => {
-        crate::output::writembs_check($outp, $mbs, std::stringify!($mbs), true, std::file!(), std::line!())
-    }
-);
-
-macro_rules! writembs_nofail(
-    ($outp: expr, $mbs: expr) => {
-        crate::output::writembs_check($outp, $mbs, std::stringify!($mbs), false, std::file!(), std::line!())
-    }
-);
-pub(crate) use writembs_nofail;
-
 fn index_for_color(c: RgbColor) -> u8 {
     if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
         return c.to_name_index();
@@ -82,7 +64,7 @@ fn index_for_color(c: RgbColor) -> u8 {
 fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u8, is_fg: bool) {
     if term_supports_color_natively(term, idx.into()) {
         // Use tparm to emit color escape.
-        writembs!(outp, tparm1(todo, idx.into()));
+        outp.tputs_if_some(&tparm1(todo, idx.into()));
     } else {
         // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
         if idx < 16 {
@@ -107,29 +89,11 @@ fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u
     }
 }
 
-/// Helper to allow more convenient usage of Option<CString>.
-/// This is similar to C++ checks like `set_a_foreground && set_a_foreground[0]`
-trait CStringIsSomeNonempty {
-    /// Returns whether this string is Some and non-empty.
-    fn is_nonempty(&self) -> bool {
-        self.if_nonempty().is_some()
-    }
-
-    /// Returns Some if we contain a non-empty CString.
-    fn if_nonempty(&self) -> Option<&CString>;
-}
-
-impl CStringIsSomeNonempty for Option<CString> {
-    fn if_nonempty(&self) -> Option<&CString> {
-        self.as_ref().filter(|s| !s.as_bytes().is_empty())
-    }
-}
-
 fn write_foreground_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
-    if let Some(cap) = term.set_a_foreground.if_nonempty() {
+    if let Some(cap) = &term.set_a_foreground {
         write_color_escape(outp, term, cap, idx, true);
         true
-    } else if let Some(cap) = &term.set_foreground.if_nonempty() {
+    } else if let Some(cap) = &term.set_foreground {
         write_color_escape(outp, term, cap, idx, true);
         true
     } else {
@@ -138,10 +102,10 @@ fn write_foreground_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
 }
 
 fn write_background_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
-    if let Some(cap) = term.set_a_background.if_nonempty() {
+    if let Some(cap) = &term.set_a_background {
         write_color_escape(outp, term, cap, idx, false);
         true
-    } else if let Some(cap) = term.set_background.if_nonempty() {
+    } else if let Some(cap) = &term.set_background {
         write_color_escape(outp, term, cap, idx, false);
         true
     } else {
@@ -259,7 +223,7 @@ impl Outputter {
     ///
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
-    #[allow(clippy::unnecessary_unwrap)]
+    #[allow(clippy::if_same_then_else)]
     pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
         // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
         // just give up...
@@ -267,9 +231,21 @@ impl Outputter {
             return;
         };
         let term: &Term = &term;
-        if term.exit_attribute_mode.is_none() {
+        let Term {
+            enter_bold_mode,
+            enter_underline_mode,
+            exit_underline_mode,
+            enter_italics_mode,
+            exit_italics_mode,
+            enter_dim_mode,
+            enter_reverse_mode,
+            enter_standout_mode,
+            exit_attribute_mode,
+            ..
+        } = term;
+        let Some(exit_attribute_mode) = exit_attribute_mode else {
             return;
-        }
+        };
 
         const normal: RgbColor = RgbColor::NORMAL;
         let mut bg_set = false;
@@ -290,7 +266,7 @@ impl Outputter {
             // If we exit attribute mode, we must first set a color, or previously colored text might
             // lose its color. Terminals are weird...
             write_foreground_color(self, 0, term);
-            writembs!(self, &term.exit_attribute_mode);
+            self.tputs(exit_attribute_mode);
             return;
         }
         if (self.was_bold && !is_bold)
@@ -298,7 +274,7 @@ impl Outputter {
             || (self.was_reverse && !is_reverse)
         {
             // Only way to exit bold/dim/reverse mode is a reset of all attributes.
-            writembs!(self, &term.exit_attribute_mode);
+            self.tputs(exit_attribute_mode);
             self.last_color = normal;
             self.last_color2 = normal;
             self.reset_modes();
@@ -321,15 +297,15 @@ impl Outputter {
             }
         }
 
-        if term.enter_bold_mode.is_nonempty() {
+        if let Some(enter_bold_mode) = &enter_bold_mode {
             if bg_set && !last_bg_set {
                 // Background color changed and is set, so we enter bold mode to make reading easier.
                 // This means bold mode is _always_ on when the background color is set.
-                writembs_nofail!(self, &term.enter_bold_mode);
+                self.tputs(enter_bold_mode);
             }
             if !bg_set && last_bg_set {
                 // Background color changed and is no longer set, so we exit bold mode.
-                writembs_nofail!(self, &term.exit_attribute_mode);
+                self.tputs(exit_attribute_mode);
                 self.reset_modes();
                 // We don't know if exit_attribute_mode resets colors, so we set it to something known.
                 if write_foreground_color(self, 0, term) {
@@ -341,7 +317,7 @@ impl Outputter {
         if self.last_color != fg {
             if fg.is_normal() {
                 write_foreground_color(self, 0, term);
-                writembs!(self, &term.exit_attribute_mode);
+                self.tputs(exit_attribute_mode);
 
                 self.last_color2 = RgbColor::NORMAL;
                 self.reset_modes();
@@ -355,7 +331,7 @@ impl Outputter {
             if bg.is_normal() {
                 write_background_color(self, 0, term);
 
-                writembs!(self, &term.exit_attribute_mode);
+                self.tputs(exit_attribute_mode);
                 if !self.last_color.is_normal() {
                     self.write_color(self.last_color, true /* foreground */);
                 }
@@ -368,41 +344,32 @@ impl Outputter {
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        if is_bold && !self.was_bold && term.enter_bold_mode.is_nonempty() && !bg_set {
-            writembs_nofail!(self, &term.enter_bold_mode);
+        if is_bold && !self.was_bold && !bg_set && self.tputs_if_some(enter_bold_mode) {
             self.was_bold = is_bold;
         }
 
-        if self.was_underline && !is_underline {
-            writembs_nofail!(self, &term.exit_underline_mode);
+        if !self.was_underline && is_underline && self.tputs_if_some(enter_underline_mode) {
+            self.was_underline = is_underline;
+        } else if self.was_underline && !is_underline && self.tputs_if_some(exit_underline_mode) {
+            self.was_underline = is_underline;
         }
-        if !self.was_underline && is_underline {
-            writembs_nofail!(self, &term.enter_underline_mode);
-        }
-        self.was_underline = is_underline;
 
-        if self.was_italics && !is_italics && term.exit_italics_mode.is_nonempty() {
-            writembs_nofail!(self, &term.exit_italics_mode);
+        if self.was_italics && !is_italics && self.tputs_if_some(exit_italics_mode) {
             self.was_italics = is_italics;
-        }
-        if !self.was_italics && is_italics && term.enter_italics_mode.is_nonempty() {
-            writembs_nofail!(self, &term.enter_italics_mode);
+        } else if !self.was_italics && is_italics && self.tputs_if_some(enter_italics_mode) {
             self.was_italics = is_italics;
         }
 
-        if is_dim && !self.was_dim && term.enter_dim_mode.is_nonempty() {
-            writembs_nofail!(self, &term.enter_dim_mode);
+        if is_dim && !self.was_dim && self.tputs_if_some(enter_dim_mode) {
             self.was_dim = is_dim;
         }
         // N.B. there is no exit_dim_mode in curses, it's handled by exit_attribute_mode above.
 
         if is_reverse && !self.was_reverse {
             // Some terms do not have a reverse mode set, so standout mode is a fallback.
-            if term.enter_reverse_mode.is_nonempty() {
-                writembs_nofail!(self, &term.enter_reverse_mode);
+            if self.tputs_if_some(enter_reverse_mode) {
                 self.was_reverse = is_reverse;
-            } else if term.enter_standout_mode.is_nonempty() {
-                writembs_nofail!(self, &term.enter_standout_mode);
+            } else if self.tputs_if_some(enter_standout_mode) {
                 self.was_reverse = is_reverse;
             }
         }
@@ -484,17 +451,30 @@ extern "C" fn tputs_writer(b: curses::TputsArg) -> libc::c_int {
 }
 
 impl Outputter {
-    fn term_puts(&mut self, str: &CStr, affcnt: i32) -> libc::c_int {
+    /// Emit a terminfo string, like tputs.
+    /// affcnt (number of lines affected) is assumed to be 1, i.e. not applicable.
+    pub fn tputs(&mut self, str: &CStr) {
+        let affcnt = 1;
         // Acquire the lock, set the receiver, and call tputs.
         let _guard = TPUTS_RECEIVER_LOCK.lock().unwrap();
         // Safety: we hold the lock.
         let saved_recv = unsafe { TPUTS_RECEIVER };
         unsafe { TPUTS_RECEIVER = self as *mut Outputter };
         self.begin_buffering();
-        let res = curses::tputs(str, affcnt as libc::c_int, tputs_writer);
+        let _ = curses::tputs(str, affcnt, tputs_writer);
         self.end_buffering();
         unsafe { TPUTS_RECEIVER = saved_recv };
-        res
+    }
+
+    /// Convenience cover over tputs, in recognition of the fact that our Term has Optional fields.
+    /// If `str` is Some, write it with tputs and return true. Otherwise, return false.
+    pub fn tputs_if_some(&mut self, str: &Option<CString>) -> bool {
+        if let Some(str) = str {
+            self.tputs(str);
+            true
+        } else {
+            false
+        }
     }
 
     /// Access the outputter for stdout.
@@ -614,32 +594,6 @@ fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
     result
 }
 
-/// Write specified multibyte string.
-/// The Borrow allows us to avoid annoying borrows at the call site.
-pub fn writembs_check<T: Borrow<Option<CString>>>(
-    outp: &mut Outputter,
-    mbs: T,
-    mbs_name: &str,
-    critical: bool,
-    file: &str,
-    line: u32,
-) {
-    let mbs: &Option<CString> = mbs.borrow();
-    if let Some(mbs) = mbs {
-        outp.term_puts(mbs, 1);
-    } else if critical {
-        let text = wgettext_fmt!(
-            "Tried to use terminfo string %s on line %ld of %s, which is \
-             undefined. Please report this error to %s",
-            mbs_name,
-            line,
-            file,
-            crate::common::PACKAGE_BUGREPORT,
-        );
-        FLOG!(error, text);
-    }
-}
-
 /// FFI junk.
 fn stdoutput_ffi() -> &'static mut Outputter {
     // TODO: this is bogus because it avoids RefCell's check, but is temporary for FFI purposes.
@@ -669,7 +623,7 @@ impl Outputter {
     // for obvious reasons.
     fn writembs_ffi(&mut self, mbs: &cxx::CxxString) {
         let mbs = unsafe { CStr::from_ptr(mbs.as_ptr() as *const std::ffi::c_char) };
-        writembs!(self, Some(mbs.to_owned()));
+        self.tputs(mbs);
     }
 
     fn writestr_ffi(&mut self, str: crate::ffi::wcharz_t) {

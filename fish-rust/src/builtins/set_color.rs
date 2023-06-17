@@ -8,7 +8,7 @@ use crate::color::RgbColor;
 use crate::common::str2wcstring;
 use crate::curses::{self, Term};
 use crate::ffi::parser_t;
-use crate::output::{self, writembs_nofail, Outputter};
+use crate::output::{self, Outputter};
 use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::wgettext_fmt;
@@ -35,29 +35,30 @@ fn print_modifiers(
         exit_attribute_mode,
         ..
     } = term;
-    if bold && enter_bold_mode.is_some() {
-        writembs_nofail!(outp, enter_bold_mode);
+    if bold {
+        outp.tputs_if_some(enter_bold_mode);
     }
 
-    if underline && enter_underline_mode.is_some() {
-        writembs_nofail!(outp, enter_underline_mode);
+    if underline {
+        outp.tputs_if_some(enter_underline_mode);
     }
 
-    if italics && enter_italics_mode.is_some() {
-        writembs_nofail!(outp, enter_italics_mode);
+    if italics {
+        outp.tputs_if_some(enter_italics_mode);
     }
 
-    if dim && enter_dim_mode.is_some() {
-        writembs_nofail!(outp, enter_dim_mode);
+    if dim {
+        outp.tputs_if_some(enter_dim_mode);
     }
 
-    if reverse && enter_reverse_mode.is_some() {
-        writembs_nofail!(outp, enter_reverse_mode);
-    } else if reverse && enter_standout_mode.is_some() {
-        writembs_nofail!(outp, enter_standout_mode);
+    #[allow(clippy::collapsible_if)]
+    if reverse {
+        if !outp.tputs_if_some(enter_reverse_mode) {
+            outp.tputs_if_some(enter_standout_mode);
+        }
     }
     if !bg.is_none() && bg.is_normal() {
-        writembs_nofail!(outp, exit_attribute_mode);
+        outp.tputs_if_some(exit_attribute_mode);
     }
 }
 
@@ -101,7 +102,7 @@ fn print_colors(
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
             if let Some(term) = term.as_ref() {
-                writembs_nofail!(outp, &term.exit_attribute_mode);
+                outp.tputs_if_some(&term.exit_attribute_mode);
             }
         }
         outp.writech('\n');
@@ -232,20 +233,19 @@ pub fn set_color(
     let Some(term) = curses::term() else {
         return STATUS_CMD_ERROR;
     };
-    let exit_attribute_mode = &term.exit_attribute_mode;
-    if exit_attribute_mode.is_none() {
+    let Some(exit_attribute_mode) = &term.exit_attribute_mode else {
         return STATUS_CMD_ERROR;
-    }
+    };
 
     let outp = &mut output::Outputter::new_buffering();
     print_modifiers(outp, &term, bold, underline, italics, dim, reverse, bg);
     if bgcolor.is_some() && bg.is_normal() {
-        writembs_nofail!(outp, exit_attribute_mode);
+        outp.tputs(exit_attribute_mode);
     }
 
     if !fg.is_none() {
         if fg.is_normal() || fg.is_reset() {
-            writembs_nofail!(outp, exit_attribute_mode);
+            outp.tputs(exit_attribute_mode);
         } else if !outp.write_color(fg, true /* is_fg */) {
             // We need to do *something* or the lack of any output messes up
             // when the cartesian product here would make "foo" disappear:

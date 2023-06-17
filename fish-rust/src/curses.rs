@@ -104,7 +104,7 @@ pub use sys::tputs_arg as TputsArg;
 /// An extant `Term` instance means the curses `TERMINAL *cur_term` pointer is non-null. Any
 /// functionality that is normally performed using `cur_term` should be done via `Term` instead.
 pub struct Term {
-    // String capabilities
+    // String capabilities. Any Some value is confirmed non-empty.
     pub enter_bold_mode: Option<CString>,
     pub enter_italics_mode: Option<CString>,
     pub exit_italics_mode: Option<CString>,
@@ -132,68 +132,26 @@ impl Term {
     fn new() -> Self {
         Term {
             // String capabilities
-            enter_bold_mode: StringCap::new("md").lookup(),
-            enter_italics_mode: StringCap::new("ZH").lookup(),
-            exit_italics_mode: StringCap::new("ZR").lookup(),
-            enter_dim_mode: StringCap::new("mh").lookup(),
-            enter_underline_mode: StringCap::new("us").lookup(),
-            exit_underline_mode: StringCap::new("ue").lookup(),
-            enter_reverse_mode: StringCap::new("mr").lookup(),
-            enter_standout_mode: StringCap::new("so").lookup(),
-            set_a_foreground: StringCap::new("AF").lookup(),
-            set_foreground: StringCap::new("Sf").lookup(),
-            set_a_background: StringCap::new("AB").lookup(),
-            set_background: StringCap::new("Sb").lookup(),
-            exit_attribute_mode: StringCap::new("me").lookup(),
+            enter_bold_mode: get_str_cap("md"),
+            enter_italics_mode: get_str_cap("ZH"),
+            exit_italics_mode: get_str_cap("ZR"),
+            enter_dim_mode: get_str_cap("mh"),
+            enter_underline_mode: get_str_cap("us"),
+            exit_underline_mode: get_str_cap("ue"),
+            enter_reverse_mode: get_str_cap("mr"),
+            enter_standout_mode: get_str_cap("so"),
+            set_a_foreground: get_str_cap("AF"),
+            set_foreground: get_str_cap("Sf"),
+            set_a_background: get_str_cap("AB"),
+            set_background: get_str_cap("Sb"),
+            exit_attribute_mode: get_str_cap("me"),
 
             // Number capabilities
-            max_colors: NumberCap::new("Co").lookup(),
+            max_colors: get_num_cap("Co"),
 
             // Flag/boolean capabilities
-            eat_newline_glitch: FlagCap::new("xn").lookup(),
+            eat_newline_glitch: get_flag_cap("xn"),
         }
-    }
-}
-
-trait Capability {
-    type Result: Sized;
-    fn lookup(&self) -> Self::Result;
-}
-
-impl Capability for StringCap {
-    type Result = Option<CString>;
-
-    fn lookup(&self) -> Self::Result {
-        unsafe {
-            const NULL: *const i8 = core::ptr::null();
-            match sys::tgetstr(self.code.as_ptr(), core::ptr::null_mut()) {
-                NULL => None,
-                // termcap spec says nul is not allowed in terminal sequences and must be encoded;
-                // so the terminating NUL is the end of the string.
-                result => Some(ptr_to_cstr(result)),
-            }
-        }
-    }
-}
-
-impl Capability for NumberCap {
-    type Result = Option<i32>;
-
-    fn lookup(&self) -> Self::Result {
-        unsafe {
-            match tgetnum(self.0.as_ptr()) {
-                -1 => None,
-                n => Some(n),
-            }
-        }
-    }
-}
-
-impl Capability for FlagCap {
-    type Result = bool;
-
-    fn lookup(&self) -> Self::Result {
-        unsafe { tgetflag(self.0.as_ptr()) != 0 }
     }
 }
 
@@ -261,61 +219,50 @@ pub fn reset() {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct Code {
-    /// The two-char termcap code for the capability, followed by a nul.
-    code: [u8; 3],
-}
-
-impl Code {
-    /// `code` is the two-digit termcap code. See termcap(5) for a reference.
-    ///
-    /// Panics if anything other than a two-ascii-character `code` is passed into the function. It
-    /// would take a hard-coded `[u8; 2]` parameter but that is less ergonomic. Since all our
-    /// termcap `Code`s are compile-time constants, the panic is a compile-time error, meaning
-    /// there's no harm to going this more ergonomic route.
-    const fn new(code: &str) -> Code {
-        let code = code.as_bytes();
-        if code.len() != 2 {
-            panic!("Invalid termcap code provided!");
-        }
-        Code {
-            code: [code[0], code[1], b'\0'],
+/// Return a nonempty String capability from termcap, or None if missing or empty.
+/// Panics if the given code string does not contain exactly two bytes.
+fn get_str_cap(code: &str) -> Option<CString> {
+    let code = to_cstr_code(code);
+    const NULL: *const i8 = core::ptr::null();
+    // termcap spec says nul is not allowed in terminal sequences and must be encoded;
+    // so the terminating NUL is the end of the string.
+    let tstr = unsafe { sys::tgetstr(code.as_ptr(), core::ptr::null_mut()) };
+    let result = try_ptr_to_cstr(tstr);
+    // Paranoia: do not return empty strings.
+    if let Some(s) = &result {
+        if s.as_bytes().is_empty() {
+            return None;
         }
     }
+    result
+}
 
-    /// The nul-terminated termcap id of the capability.
-    pub const fn as_ptr(&self) -> *const libc::c_char {
-        self.code.as_ptr().cast()
+/// Return a number capability from termcap, or None if missing.
+/// Panics if the given code string does not contain exactly two bytes.
+fn get_num_cap(code: &str) -> Option<i32> {
+    let code = to_cstr_code(code);
+    match unsafe { sys::tgetnum(code.as_ptr()) } {
+        -1 => None,
+        n => Some(n),
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct StringCap {
-    code: Code,
-}
-impl StringCap {
-    const fn new(code: &str) -> Self {
-        StringCap {
-            code: Code::new(code),
-        }
-    }
+/// Return a flag capability from termcap, or false if missing.
+/// Panics if the given code string does not contain exactly two bytes.
+fn get_flag_cap(code: &str) -> bool {
+    let code = to_cstr_code(code);
+    unsafe { sys::tgetflag(code.as_ptr()) != 0 }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct NumberCap(Code);
-impl NumberCap {
-    const fn new(code: &str) -> Self {
-        NumberCap(Code::new(code))
+/// `code` is the two-digit termcap code. See termcap(5) for a reference.
+/// Panics if anything other than a two-ascii-character `code` is passed into the function.
+const fn to_cstr_code(code: &str) -> [libc::c_char; 3] {
+    use libc::c_char;
+    let code = code.as_bytes();
+    if code.len() != 2 {
+        panic!("Invalid termcap code provided");
     }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct FlagCap(Code);
-impl FlagCap {
-    const fn new(code: &str) -> Self {
-        FlagCap(Code::new(code))
-    }
+    [code[0] as c_char, code[1] as c_char, b'\0' as c_char]
 }
 
 /// Covers over tparm().

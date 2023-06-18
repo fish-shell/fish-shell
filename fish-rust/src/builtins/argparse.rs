@@ -1,4 +1,3 @@
-use std::array;
 use std::collections::HashMap;
 
 use crate::builtins::shared::builtin_print_error_trailer;
@@ -12,6 +11,7 @@ use crate::ffi::env_stack_t;
 use crate::ffi::parser_t;
 use crate::ffi::Repin;
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::WExt;
 use crate::wcstringutil::split_string;
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{fish_iswalnum, fish_wcstol, wgettext_fmt};
@@ -117,6 +117,8 @@ fn exec_subshell(
     retval
 }
 
+// Check if any pair of mutually exclusive options was seen. Note that since every option must have
+// a short name we only need to check those.
 fn check_for_mutually_exclusive_flags(
     opts: &ArgParseCmdOpts,
     streams: &mut io_streams_t,
@@ -203,8 +205,8 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut io_streams_t) 
 
         let exclusive_set: &mut Vec<char> = &mut vec![];
         for flag in &xflags {
-            if flag.len() == 1 && opts.options.contains_key(&flag.as_char_slice()[0]) {
-                let short = flag.as_char_slice()[0];
+            if flag.char_count() == 1 && opts.options.contains_key(&flag.char_at(0)) {
+                let short = flag.char_at(0);
                 // It's a short flag.
                 exclusive_set.push(short);
             } else if let Some(short_equiv) = opts.long_to_short_flag.get(flag) {
@@ -230,45 +232,44 @@ fn parse_flag_modifiers<'args>(
     opts: &ArgParseCmdOpts<'args>,
     opt_spec: &mut OptionSpec<'args>,
     option_spec: &wstr,
-    opt_spec_str: &mut &'args [char],
+    opt_spec_str: &mut &'args wstr,
     streams: &mut io_streams_t,
 ) -> bool {
-    let s = *opt_spec_str;
-    let mut i = 0usize;
+    let mut s = *opt_spec_str;
 
-    if opt_spec.short_flag == opts.implicit_int_flag && i < s.len() && s[i] != '!' {
+    if opt_spec.short_flag == opts.implicit_int_flag && !s.is_empty() && s.char_at(0) != '!' {
         streams.err.append(wgettext_fmt!(
             "%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n",
             opts.name,
             opt_spec.short_flag,
-            s[i]
+            s.char_at(0)
         ));
         return false;
     }
 
-    if Some(&'=') == s.get(i) {
-        i += 1;
-        opt_spec.num_allowed = match s.get(i) {
-            Some(&'?') => ArgCardinality::Optional,
-            Some(&'+') => ArgCardinality::AtLeastOnce,
+    if s.char_at(0) == '=' {
+        s = s.slice_from(1);
+        opt_spec.num_allowed = match s.char_at(0) {
+            '?' => ArgCardinality::Optional,
+            '+' => ArgCardinality::AtLeastOnce,
             _ => ArgCardinality::Once,
         };
         if opt_spec.num_allowed != ArgCardinality::Once {
-            i += 1;
+            s = s.slice_from(1);
         }
     }
 
-    if Some(&'!') == s.get(i) {
-        i += 1;
-        opt_spec.validation_command = wstr::from_char_slice(&s[i..]);
+    if s.char_at(0) == '!' {
+        s = s.slice_from(1);
+        opt_spec.validation_command = s;
         // Move cursor to the end so we don't expect a long flag.
-        i = s.len();
-    } else if i < s.len() {
+        s = s.slice_from(s.char_count());
+    } else if !s.is_empty() {
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_INVALID_OPT_SPEC,
             opts.name,
             option_spec,
-            s[i]
+            s.char_at(0)
         ));
         return false;
     }
@@ -287,7 +288,7 @@ fn parse_flag_modifiers<'args>(
         return false;
     }
 
-    *opt_spec_str = &s[i..];
+    *opt_spec_str = s;
     return true;
 }
 
@@ -296,15 +297,15 @@ fn parse_option_spec_sep<'args>(
     opts: &mut ArgParseCmdOpts<'args>,
     opt_spec: &mut OptionSpec<'args>,
     option_spec: &'args wstr,
-    opt_spec_str: &mut &'args [char],
+    opt_spec_str: &mut &'args wstr,
     counter: &mut u32,
     streams: &mut io_streams_t,
 ) -> bool {
     let mut s = *opt_spec_str;
     let mut i = 1usize;
     // C++ used -1 to check for # here, we instead adjust opt_spec_str to start one earlier
-    if s[i - 1] == '#' {
-        if s[i] != '-' {
+    if s.char_at(i - 1) == '#' {
+        if s.char_at(i) != '-' {
             // Long-only!
             i -= 1;
             opt_spec.short_flag = char::from_u32(*counter).unwrap();
@@ -321,32 +322,32 @@ fn parse_option_spec_sep<'args>(
         opts.implicit_int_flag = opt_spec.short_flag;
         opt_spec.short_flag_valid = false;
         i += 1;
-        *opt_spec_str = &s[i..];
+        *opt_spec_str = s.slice_from(i);
         return true;
     }
 
-    match s[i] {
+    match s.char_at(i) {
         '-' => {
             opt_spec.short_flag_valid = false;
             i += 1;
-            if i == s.len() {
+            if i == s.char_count() {
                 streams.err.append(wgettext_fmt!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
                     opts.name,
                     option_spec,
-                    s[i - 1]
+                    s.char_at(i - 1)
                 ));
                 return false;
             }
         }
         '/' => {
             i += 1; // the struct is initialized assuming short_flag_valid should be true
-            if i == s.len() {
+            if i == s.char_count() {
                 streams.err.append(wgettext_fmt!(
                     BUILTIN_ERR_INVALID_OPT_SPEC,
                     opts.name,
                     option_spec,
-                    s[i - 1]
+                    s.char_at(i - 1)
                 ));
                 return false;
             }
@@ -367,11 +368,11 @@ fn parse_option_spec_sep<'args>(
         '!' | '?' | '=' => {
             // Try to parse any other flag modifiers
             // parse_flag_modifiers assumes opt_spec_str starts where it should, not one earlier
-            s = &s[i..];
+            s = s.slice_from(i);
+            i = 0;
             if !parse_flag_modifiers(opts, opt_spec, option_spec, &mut s, streams) {
                 return false;
             }
-            i = 0;
         }
         _ => {
             // No short flag separator and no other modifiers, so this is a long only option.
@@ -383,7 +384,7 @@ fn parse_option_spec_sep<'args>(
         }
     }
 
-    *opt_spec_str = &s[i..];
+    *opt_spec_str = s.slice_from(i);
     return true;
 }
 
@@ -401,42 +402,34 @@ fn parse_option_spec<'args>(
         return false;
     }
 
-    let s = &mut option_spec.as_char_slice();
-    let mut i = 0usize;
-    if !fish_iswalnum(s[i]) && s[i] != '#' {
+    let mut s = option_spec;
+    if !fish_iswalnum(s.char_at(0)) && s.char_at(0) != '#' {
         streams.err.append(wgettext_fmt!(
             "%ls: Short flag '%lc' invalid, must be alphanum or '#'\n",
             opts.name,
-            s[i]
+            s.char_at(0)
         ));
         return false;
     }
 
-    let mut opt_spec = OptionSpec::new(s[i]);
+    let mut opt_spec = OptionSpec::new(s.char_at(0));
 
     // Try parsing stuff after the short flag.
-    if i + 1 < s.len()
-        && !parse_option_spec_sep(opts, &mut opt_spec, option_spec, s, counter, streams)
+    if s.char_count() > 1
+        && !parse_option_spec_sep(opts, &mut opt_spec, option_spec, &mut s, counter, streams)
     {
         return false;
     }
 
     // Collect any long flag name.
-    if i < s.len() {
-        let long_flag_end: usize = s[i..]
-            .iter()
-            .enumerate()
-            .find_map(|(idx, c)| {
-                if *c == '-' || *c == '_' || fish_iswalnum(*c) {
-                    None
-                } else {
-                    Some(idx + i)
-                }
-            })
-            .unwrap_or(s.len());
+    if !s.is_empty() {
+        let long_flag_char_count = s
+            .chars()
+            .take_while(|&c| c == '-' || c == '_' || fish_iswalnum(c))
+            .count();
 
-        if long_flag_end != i {
-            opt_spec.long_flag = wstr::from_char_slice(&s[i..long_flag_end]);
+        if long_flag_char_count > 0 {
+            opt_spec.long_flag = s.slice_to(long_flag_char_count);
             if opts.long_to_short_flag.contains_key(opt_spec.long_flag) {
                 streams.err.append(wgettext_fmt!(
                     "%ls: Long flag '%ls' already defined\n",
@@ -446,11 +439,10 @@ fn parse_option_spec<'args>(
                 return false;
             }
         }
-        i = long_flag_end;
+        s = s.slice_from(long_flag_char_count);
     }
 
-    *s = &s[i..];
-    if !parse_flag_modifiers(opts, &mut opt_spec, option_spec, s, streams) {
+    if !parse_flag_modifiers(opts, &mut opt_spec, option_spec, &mut s, streams) {
         return false;
     }
 
@@ -490,7 +482,7 @@ fn collect_option_specs<'args>(
             return STATUS_INVALID_ARGS;
         }
 
-        if L!("--") == args[*optind] {
+        if "--" == args[*optind] {
             *optind += 1;
             break;
         }
@@ -588,7 +580,7 @@ fn parse_cmd_opts<'args>(
         return STATUS_CMD_OK;
     }
 
-    if L!("--") == args_read[w.woptind - 1] {
+    if "--" == args_read[w.woptind - 1] {
         w.woptind -= 1;
     }
 
@@ -657,31 +649,24 @@ fn validate_arg<'opts>(
         return STATUS_CMD_OK;
     }
 
+    // TODO: in C++ this set directly in the vars (so does not emit events), reimplement that.
     parser.get_var_stack().pin().push(true);
 
     let env_mode = EnvMode::LOCAL | EnvMode::EXPORT;
-    parser.set_var(
-        L!("_argparse_cmd"),
-        array::from_ref(&opts_name).as_slice(),
-        env_mode,
-    );
+    parser.set_var(L!("_argparse_cmd"), &[&opts_name], env_mode);
     let flag_name = WString::from(VAR_NAME_PREFIX) + "name";
     if is_long_flag {
-        parser.set_var(
-            flag_name,
-            array::from_ref(&opt_spec.long_flag).as_slice(),
-            env_mode,
-        );
+        parser.set_var(flag_name, &[&opt_spec.long_flag], env_mode);
     } else {
         parser.set_var(
             flag_name,
-            array::from_ref(&wstr::from_char_slice(&[opt_spec.short_flag])).as_slice(),
+            &[&wstr::from_char_slice(&[opt_spec.short_flag])],
             env_mode,
         );
     }
     parser.set_var(
         WString::from(VAR_NAME_PREFIX) + "value",
-        array::from_ref(&woptarg).as_slice(),
+        &[&woptarg],
         env_mode,
     );
 
@@ -815,7 +800,7 @@ fn argparse_parse_flags<'args>(
             }
             '?' => {
                 // It's not a recognized flag. See if it's an implicit int flag.
-                let arg_contents = &args_read[w.woptind - 1][1..];
+                let arg_contents = &args_read[w.woptind - 1].slice_from(1);
 
                 if is_implicit_int(opts, arg_contents) {
                     validate_and_store_implicit_int(

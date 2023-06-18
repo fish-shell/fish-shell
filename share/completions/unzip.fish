@@ -23,6 +23,13 @@ complete -c unzip -s X -d "restore UID/GID info"
 complete -c unzip -s V -d "retain VMS version numbers"
 complete -c unzip -s K -d "keep setuid/setgid/tacky permissions"
 complete -c unzip -s M -d "pipe through `more` pager"
+# Some distro has -O and -I, some hasn't.
+if unzip --help | string match -rq -- -O
+    complete -c unzip -s O -d "specify a character encoding for DOS, Windows and OS/2 archives" -x -a "(__fish_print_encodings)"
+end
+if unzip --help | string match -rq -- -I
+    complete -c unzip -s I -d "specify a character encoding for UNIX and other archives" -x -a "(__fish_print_encodings)"
+end
 
 # Debian version of unzip
 if unzip -v 2>/dev/null | string match -eq Debian

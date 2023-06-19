@@ -3,7 +3,6 @@
 
 use libc::c_char;
 use std::ffi::{CStr, OsStr, OsString};
-use std::os::unix::ffi::OsStrExt;
 use std::process::Command;
 
 const HELP_ERR: &str = "Could not show help message";
@@ -15,7 +14,7 @@ mod ffi2 {
     }
 }
 
-fn print_help(command: &OsStr) {
+fn print_help(command: &str) {
     let mut cmdline = OsString::new();
     cmdline.push("__fish_print_help ");
     cmdline.push(command);
@@ -28,6 +27,6 @@ fn print_help(command: &OsStr) {
 
 unsafe fn unsafe_print_help(command_buf: *const c_char) {
     let command_cstr: &CStr = unsafe { CStr::from_ptr(command_buf) };
-    let command = OsStr::from_bytes(command_cstr.to_bytes());
+    let command = command_cstr.to_str().unwrap();
     print_help(command);
 }

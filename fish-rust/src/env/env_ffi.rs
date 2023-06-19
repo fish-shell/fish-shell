@@ -220,7 +220,7 @@ impl EnvDynFFI {
 }
 
 /// FFI wrapper around EnvStackRef.
-pub struct EnvStackRefFFI(EnvStackRef);
+pub struct EnvStackRefFFI(pub EnvStackRef);
 
 impl EnvStackRefFFI {
     fn getf(&self, name: &CxxWString, mode: u16) -> *mut EnvVar {

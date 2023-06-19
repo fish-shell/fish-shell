@@ -4,7 +4,7 @@ use crate::wchar_ffi::WCharToFFI;
 use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
-use crate::env::EnvMode;
+use crate::env::{EnvMode, EnvStackRef, EnvStackRefFFI};
 pub use crate::wait_handle::{
     WaitHandleRef, WaitHandleRefFFI, WaitHandleStore, WaitHandleStoreFFI,
 };
@@ -193,26 +193,8 @@ impl parser_t {
         unsafe { job.as_ref() }
     }
 
-    /// Helper to get a variable as a string, using the default flags.
-    pub fn var_as_string(&mut self, name: &wstr) -> Option<WString> {
-        self.pin().vars().unpin().get_as_string(name)
-    }
-
-    pub fn get_var_stack(&mut self) -> &mut env_stack_t {
-        self.pin().vars().unpin()
-    }
-
-    pub fn get_var_stack_env(&mut self) -> &environment_t {
-        self.vars_env_ffi()
-    }
-
-    pub fn set_var<T: AsRef<wstr>, U: AsRef<wstr>>(
-        &mut self,
-        name: T,
-        value: &[U],
-        flags: EnvMode,
-    ) -> libc::c_int {
-        self.get_var_stack().set_var(name, value, flags)
+    pub fn get_vars(&mut self) -> EnvStackRef {
+        self.pin().vars().from_ffi()
     }
 
     pub fn get_func_name(&mut self, level: i32) -> Option<WString> {
@@ -224,6 +206,18 @@ impl parser_t {
 }
 
 unsafe impl Send for env_universal_t {}
+
+impl env_stack_t {
+    /// Access the underlying Rust environment stack.
+    #[allow(clippy::borrowed_box)]
+    pub fn from_ffi(&self) -> EnvStackRef {
+        // Safety: get_impl_ffi returns a pointer to a Box<EnvStackRefFFI>.
+        let envref = self.get_impl_ffi();
+        assert!(!envref.is_null());
+        let env: &Box<EnvStackRefFFI> = unsafe { &*(envref.cast()) };
+        env.0.clone()
+    }
+}
 
 impl environment_t {
     /// Helper to get a variable as a string, using the default flags.

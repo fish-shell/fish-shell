@@ -6,8 +6,7 @@ use crate::builtins::shared::{
     BUILTIN_ERR_MAX_ARG_COUNT1, BUILTIN_ERR_MIN_ARG_COUNT1, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR,
     STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
-use crate::env::EnvMode;
-use crate::ffi::env_stack_t;
+use crate::env::{EnvMode, EnvStack};
 use crate::ffi::parser_t;
 use crate::ffi::Repin;
 use crate::wchar::{wstr, WString, L};
@@ -649,25 +648,25 @@ fn validate_arg<'opts>(
         return STATUS_CMD_OK;
     }
 
-    // TODO: in C++ this set directly in the vars (so does not emit events), reimplement that.
-    parser.get_var_stack().pin().push(true);
+    let vars = parser.get_vars();
+    vars.push(true /* new_scope */);
 
     let env_mode = EnvMode::LOCAL | EnvMode::EXPORT;
-    parser.set_var(L!("_argparse_cmd"), &[&opts_name], env_mode);
+    vars.set_one(L!("_argparse_cmd"), env_mode, opts_name.to_owned());
     let flag_name = WString::from(VAR_NAME_PREFIX) + "name";
     if is_long_flag {
-        parser.set_var(flag_name, &[&opt_spec.long_flag], env_mode);
+        vars.set_one(&flag_name, env_mode, opt_spec.long_flag.to_owned());
     } else {
-        parser.set_var(
-            flag_name,
-            &[&wstr::from_char_slice(&[opt_spec.short_flag])],
+        vars.set_one(
+            &flag_name,
             env_mode,
+            WString::from_chars(vec![opt_spec.short_flag]),
         );
     }
-    parser.set_var(
-        WString::from(VAR_NAME_PREFIX) + "value",
-        &[&woptarg],
+    vars.set_one(
+        &(WString::from(VAR_NAME_PREFIX) + "value"),
         env_mode,
+        woptarg.to_owned(),
     );
 
     let mut cmd_output = Vec::new();
@@ -678,7 +677,7 @@ fn validate_arg<'opts>(
         streams.err.append(output);
         streams.err.append1('\n');
     }
-    parser.get_var_stack().pin().pop();
+    vars.pop();
     return retval;
 }
 
@@ -922,7 +921,7 @@ fn check_min_max_args_constraints(
 }
 
 /// Put the result of parsing the supplied args into the caller environment as local vars.
-fn set_argparse_result_vars(vars: &mut env_stack_t, opts: &ArgParseCmdOpts) {
+fn set_argparse_result_vars(vars: &EnvStack, opts: &ArgParseCmdOpts) {
     for opt_spec in opts.options.values() {
         if opt_spec.num_seen == 0 {
             continue;
@@ -931,7 +930,7 @@ fn set_argparse_result_vars(vars: &mut env_stack_t, opts: &ArgParseCmdOpts) {
         if opt_spec.short_flag_valid {
             let mut var_name = WString::from(VAR_NAME_PREFIX);
             var_name.push(opt_spec.short_flag);
-            vars.set_var(&var_name, opt_spec.vals.as_slice(), EnvMode::LOCAL);
+            vars.set(&var_name, EnvMode::LOCAL, opt_spec.vals.clone());
         }
 
         if !opt_spec.long_flag.is_empty() {
@@ -942,11 +941,12 @@ fn set_argparse_result_vars(vars: &mut env_stack_t, opts: &ArgParseCmdOpts) {
                 .chars()
                 .map(|c| if fish_iswalnum(c) { c } else { '_' });
             let var_name_long: WString = VAR_NAME_PREFIX.chars().chain(long_flag).collect();
-            vars.set_var(var_name_long, opt_spec.vals.as_slice(), EnvMode::LOCAL);
+            vars.set(&var_name_long, EnvMode::LOCAL, opt_spec.vals.clone());
         }
     }
 
-    vars.set_var(L!("argv"), opts.args.as_slice(), EnvMode::LOCAL);
+    let args = opts.args.iter().map(|&s| s.to_owned()).collect();
+    vars.set(L!("argv"), EnvMode::LOCAL, args);
 }
 
 /// The argparse builtin. This is explicitly not compatible with the BSD or GNU version of this
@@ -1004,7 +1004,7 @@ pub fn argparse(
         return retval;
     }
 
-    set_argparse_result_vars(parser.get_var_stack(), &opts);
+    set_argparse_result_vars(&parser.get_vars(), &opts);
 
     return retval;
 }

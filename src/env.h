@@ -301,6 +301,10 @@ class env_stack_t final : public environment_t {
     // Do not push or pop from this.
     static env_stack_t &globals();
 
+    /// Access the underlying Rust implementation.
+    /// This returns a const rust::Box<EnvStackRef> *, or in Rust terms, a *const Box<EnvStackRef>.
+    const void *get_impl_ffi() const { return &impl_; }
+
    private:
     env_stack_t(rust::Box<EnvStackRef> imp);
 

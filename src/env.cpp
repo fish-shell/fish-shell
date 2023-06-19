@@ -353,8 +353,8 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     }
 
     // Initialize termsize variables.
-    environment_t &env_vars = vars;
-    auto termsize = termsize_initialize_ffi(reinterpret_cast<const unsigned char *>(&env_vars));
+    auto termsize =
+        termsize_initialize_ffi(reinterpret_cast<const unsigned char *>(vars.get_impl_ffi()));
     if (!vars.get_unless_empty(L"COLUMNS"))
         vars.set_one(L"COLUMNS", ENV_GLOBAL, to_string(termsize.width));
     if (!vars.get_unless_empty(L"LINES"))

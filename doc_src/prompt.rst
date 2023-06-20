@@ -81,7 +81,7 @@ that could just be ``set_color red``.
 Shortening the working directory
 --------------------------------
 
-This is fine, but our $PWD can be a bit long, and we are typically only interested in the last few directories. We can shorten this with the :doc:`prompt_pwd <cmds/prompt_pwd>` helper that will give us a shortened working directory::
+This is fine, but our :envvar:`PWD` can be a bit long, and we are typically only interested in the last few directories. We can shorten this with the :doc:`prompt_pwd <cmds/prompt_pwd>` helper that will give us a shortened working directory::
 
   function fish_prompt
       string join '' -- (set_color green) (prompt_pwd) (set_color normal) '>'

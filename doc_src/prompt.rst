@@ -5,7 +5,7 @@ Writing your own prompt
 
    .. warning::
       This document uses formatting to show what a prompt would look like. If you are viewing this in the man page,
-      you probably want to switch to looking at the web version instead. Run ``help custom-prompt`` to view it.
+      you probably want to switch to looking at the html version instead. Run ``help custom-prompt`` to view it in a web browser.
 
 Fish ships a number of prompts that you can view with the :doc:`fish_config <cmds/fish_config>` command, and many users have shared their prompts online.
 

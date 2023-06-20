@@ -97,6 +97,20 @@ impl Default for EscapeStringStyle {
     }
 }
 
+impl TryFrom<&wstr> for EscapeStringStyle {
+    type Error = &'static wstr;
+    fn try_from(s: &wstr) -> Result<Self, Self::Error> {
+        use EscapeStringStyle::*;
+        match s {
+            s if s == "script" => Ok(Self::default()),
+            s if s == "var" => Ok(Var),
+            s if s == "url" => Ok(Url),
+            s if s == "regex" => Ok(Regex),
+            _ => Err(L!("Invalid escape style")),
+        }
+    }
+}
+
 bitflags! {
     /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
     /// [`EscapeStringStyle::Script`].
@@ -125,6 +139,19 @@ pub enum UnescapeStringStyle {
 impl Default for UnescapeStringStyle {
     fn default() -> Self {
         Self::Script(UnescapeFlags::default())
+    }
+}
+
+impl TryFrom<&wstr> for UnescapeStringStyle {
+    type Error = &'static wstr;
+    fn try_from(s: &wstr) -> Result<Self, Self::Error> {
+        use UnescapeStringStyle::*;
+        match s {
+            s if s == "script" => Ok(Self::default()),
+            s if s == "var" => Ok(Var),
+            s if s == "url" => Ok(Url),
+            _ => Err(L!("Invalid escape style")),
+        }
     }
 }
 

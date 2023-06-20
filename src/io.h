@@ -506,6 +506,7 @@ struct io_streams_t : noncopyable_t {
     std::shared_ptr<job_group_t> job_group{};
 
     io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
+    virtual ~io_streams_t() = default;
 
     /// autocxx junk.
     output_stream_t &get_out() { return out; };
@@ -518,6 +519,14 @@ struct io_streams_t : noncopyable_t {
 };
 
 /// FFI helper.
+struct owning_io_streams_t : io_streams_t {
+    string_output_stream_t out_storage;
+    null_output_stream_t err_storage;
+    owning_io_streams_t() : io_streams_t(out_storage, err_storage) {}
+};
+
 std::unique_ptr<io_streams_t> make_null_io_streams_ffi();
+std::unique_ptr<io_streams_t> make_test_io_streams_ffi();
+wcstring get_test_output_ffi(const io_streams_t &streams);
 
 #endif

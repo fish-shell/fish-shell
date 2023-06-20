@@ -18,7 +18,6 @@ use self::abbrs_ffi::{abbreviation_t, abbrs_position_t, abbrs_replacement_t};
 #[cxx::bridge]
 mod abbrs_ffi {
     extern "C++" {
-        include!("re.h");
         include!("parse_constants.h");
 
         type SourceRange = crate::parse_constants::SourceRange;

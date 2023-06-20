@@ -107,7 +107,7 @@ set(FISH_BUILTIN_SRCS
     src/builtins/jobs.cpp src/builtins/path.cpp
     src/builtins/read.cpp src/builtins/set.cpp
     src/builtins/source.cpp
-    src/builtins/string.cpp src/builtins/ulimit.cpp
+    src/builtins/ulimit.cpp
 )
 
 # List of other sources.
@@ -121,7 +121,7 @@ set(FISH_SRCS
     src/null_terminated_array.cpp src/operation_context.cpp src/output.cpp
     src/pager.cpp src/parse_execution.cpp src/parse_util.cpp
     src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
-    src/proc.cpp src/re.cpp src/reader.cpp src/screen.cpp
+    src/proc.cpp src/reader.cpp src/screen.cpp
     src/signals.cpp src/utf8.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp
     src/wutil.cpp src/fds.cpp src/rustffi.cpp

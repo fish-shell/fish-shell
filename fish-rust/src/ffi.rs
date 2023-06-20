@@ -99,6 +99,8 @@ include_cpp! {
     generate!("output_stream_t")
     generate!("io_streams_t")
     generate!("make_null_io_streams_ffi")
+    generate!("make_test_io_streams_ffi")
+    generate!("get_test_output_ffi")
 
     generate_pod!("RustFFIJobList")
     generate_pod!("RustFFIProcList")
@@ -137,6 +139,7 @@ include_cpp! {
     generate!("set_interactive_session")
     generate!("screen_set_midnight_commander_hack")
     generate!("screen_clear_layout_cache_ffi")
+    generate!("escape_code_length_ffi")
     generate!("reader_schedule_prompt_repaint")
     generate!("reader_change_history")
     generate!("history_session_id")

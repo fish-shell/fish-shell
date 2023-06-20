@@ -171,6 +171,7 @@ Other help pages
    fish_for_bash_users
    tutorial
    completions
+   prompt
    design
    relnotes
    license

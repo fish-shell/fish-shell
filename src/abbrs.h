@@ -9,7 +9,6 @@
 #include "common.h"
 #include "maybe.h"
 #include "parse_constants.h"
-#include "re.h"
 
 #if INCLUDE_RUST_HEADERS
 

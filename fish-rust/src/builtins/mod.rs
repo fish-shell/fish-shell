@@ -20,6 +20,7 @@ pub mod realpath;
 pub mod r#return;
 pub mod set_color;
 pub mod status;
+pub mod string;
 pub mod test;
 pub mod r#type;
 pub mod wait;

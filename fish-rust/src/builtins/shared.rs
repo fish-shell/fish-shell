@@ -1,4 +1,5 @@
 use crate::builtins::{printf, wait};
+use crate::ffi::separation_type_t;
 use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{c_str, empty_wstring, ToCppWString, WCharFromFFI};
@@ -108,6 +109,20 @@ impl output_stream_t {
     pub fn append1(&mut self, c: char) -> bool {
         self.append(wstr::from_char_slice(&[c]))
     }
+
+    pub fn append_with_separation(
+        &mut self,
+        s: impl AsRef<wstr>,
+        sep: separation_type_t,
+        want_newline: bool,
+    ) -> bool {
+        self.ffi()
+            .append_with_separation(&s.as_ref().into_cpp(), sep, want_newline)
+    }
+
+    pub fn flush_and_check_error(&mut self) -> c_int {
+        self.ffi().flush_and_check_error().into()
+    }
 }
 
 // Convenience wrappers around C++ io_streams_t.
@@ -216,6 +231,7 @@ pub fn run_builtin(
         RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
         RustBuiltin::SetColor => super::set_color::set_color(parser, streams, args),
         RustBuiltin::Status => super::status::status(parser, streams, args),
+        RustBuiltin::String => super::string::string(parser, streams, args),
         RustBuiltin::Test => super::test::test(parser, streams, args),
         RustBuiltin::Type => super::r#type::r#type(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),

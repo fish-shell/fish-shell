@@ -43,7 +43,6 @@
 #include "builtins/set.h"
 #include "builtins/shared.rs.h"
 #include "builtins/source.h"
-#include "builtins/string.h"
 #include "builtins/ulimit.h"
 #include "complete.h"
 #include "cxx.h"
@@ -393,7 +392,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"set_color", &implemented_in_rust, N_(L"Set the terminal color")},
     {L"source", &builtin_source, N_(L"Evaluate contents of file")},
     {L"status", &implemented_in_rust, N_(L"Return status information about fish")},
-    {L"string", &builtin_string, N_(L"Manipulate strings")},
+    {L"string", &implemented_in_rust, N_(L"Manipulate strings")},
     {L"switch", &builtin_generic, N_(L"Conditionally run blocks of code")},
     {L"test", &implemented_in_rust, N_(L"Test a condition")},
     {L"time", &builtin_generic, N_(L"Measure how long a command or block takes")},
@@ -568,6 +567,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"status") {
         return RustBuiltin::Status;
+    }
+    if (cmd == L"string") {
+        return RustBuiltin::String;
     }
     if (cmd == L"test" || cmd == L"[") {
         return RustBuiltin::Test;

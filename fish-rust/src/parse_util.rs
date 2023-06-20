@@ -25,6 +25,7 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::WExt;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
@@ -542,22 +543,22 @@ pub fn parse_util_get_offset(s: &wstr, line: i32, mut line_offset: usize) -> Opt
 /// Return the given string, unescaping wildcard characters but not performing any other character
 /// transformation.
 pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
-    let mut result = WString::new();
-    result.reserve(s.len());
+    let mut result = WString::with_capacity(s.len());
     let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
-    let cs = s.as_char_slice();
+
     let mut i = 0;
-    for c in cs.iter().copied() {
+    while i < s.len() {
+        let c = s.char_at(i);
         if c == '*' {
             result.push(ANY_STRING);
         } else if c == '?' && unesc_qmark {
             result.push(ANY_CHAR);
-        } else if c == '\\' && cs.get(i + 1) == Some(&'*')
-            || (unesc_qmark && c == '\\' && cs.get(i + 1) == Some(&'?'))
+        } else if (c == '\\' && s.char_at(i + 1) == '*')
+            || (unesc_qmark && c == '\\' && s.char_at(i + 1) == '?')
         {
-            result.push(cs[i + 1]);
+            result.push(s.char_at(i + 1));
             i += 1;
-        } else if c == '\\' && cs.get(i + 1) == Some(&'\\') {
+        } else if c == '\\' && s.char_at(i + 1) == '\\' {
             // Not a wildcard, but ensure the next iteration doesn't see this escaped backslash.
             result.push_utfstr(L!("\\\\"));
             i += 1;

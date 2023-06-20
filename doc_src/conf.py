@@ -187,6 +187,7 @@ man_pages = [
     ("interactive", "fish-interactive", "", [author], 1),
     ("relnotes", "fish-releasenotes", "", [author], 1),
     ("completions", "fish-completions", "", [author], 1),
+    ("prompt", "fish-prompt-tutorial", "", [author], 1),
     (
         "fish_for_bash_users",
         "fish-for-bash-users",

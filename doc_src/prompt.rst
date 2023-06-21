@@ -72,11 +72,13 @@ So, taking our previous prompt and adding some color::
 
 A "normal" color tells the terminal to go back to its normal formatting options.
 
-What ``set_color`` does internally is to print an escape sequence that tells the terminal to change color. So if you see something like::
+``set_color`` works by producing an escape sequence, which is a special piece of text that terminals
+interpret as instructions - for example, to change color. So ``set_color red`` produces the same
+effect as::
 
   echo \e\[31mfoo
 
-that could just be ``set_color red``.
+Although you can write your own escape sequences by hand, it's much easier to use ``set_color``.
 
 Shortening the working directory
 --------------------------------

@@ -132,7 +132,6 @@ include_cpp! {
     generate!("function_get_annotated_definition")
     generate!("function_is_copy")
     generate!("function_exists")
-    generate!("path_get_paths_ffi")
 
     generate!("rgb_color_t")
     generate_pod!("color24_t")

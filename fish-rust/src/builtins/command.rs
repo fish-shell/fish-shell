@@ -5,9 +5,8 @@ use crate::builtins::shared::{
     STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_INVALID_ARGS,
 };
 use crate::ffi::parser_t;
-use crate::ffi::path_get_paths_ffi;
+use crate::path::path_get_paths;
 use crate::wchar::{wstr, WString, L};
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::sprintf;
 
@@ -75,7 +74,7 @@ pub fn r#command(
         // TODO: This always gets all paths, and then skips a bunch.
         // For the common case, we want to get just the one path.
         // Port this over once path.cpp is.
-        let paths: Vec<WString> = path_get_paths_ffi(&arg.to_ffi(), parser).from_ffi();
+        let paths: Vec<WString> = path_get_paths(arg, &*parser.get_vars());
 
         for path in paths.iter() {
             res = true;

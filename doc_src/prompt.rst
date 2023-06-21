@@ -53,8 +53,8 @@ The ``--`` indicates to ``string`` that no options can come after it, in case we
 
 There are other ways to remove the space, including ``echo -s`` and :doc:`printf <cmds/printf>`.
 
-Adding colo(u)r
----------------
+Adding color
+------------
 
 This prompt is functional, but a bit boring. We could add some color.
 

@@ -87,8 +87,8 @@ impl output_stream_t {
     }
 
     /// Append a &wstr or WString.
-    pub fn append<Str: AsRef<wstr> + ToCppWString>(&mut self, s: Str) -> bool {
-        self.ffi().append(&s.into_cpp())
+    pub fn append<Str: AsRef<wstr>>(&mut self, s: Str) -> bool {
+        self.ffi().append(&s.as_ref().into_cpp())
     }
 
     /// Append a char.

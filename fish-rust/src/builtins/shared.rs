@@ -1,7 +1,7 @@
 use crate::builtins::{printf, wait};
 use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
 use crate::wchar::{wstr, WString, L};
-use crate::wchar_ffi::{c_str, empty_wstring, WCharFromFFI};
+use crate::wchar_ffi::{c_str, empty_wstring, ToCppWString, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use libc::c_int;
 use std::os::fd::RawFd;
@@ -86,9 +86,9 @@ impl output_stream_t {
         unsafe { (*self.0).pin() }
     }
 
-    /// Append a &wtr or WString.
+    /// Append a &wstr or WString.
     pub fn append<Str: AsRef<wstr>>(&mut self, s: Str) -> bool {
-        self.ffi().append1(c_str!(s))
+        self.ffi().append(&s.as_ref().into_cpp())
     }
 
     /// Append a char.

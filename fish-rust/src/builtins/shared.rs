@@ -153,7 +153,16 @@ fn rust_run_builtin(
     status_code: &mut i32,
 ) -> bool {
     let storage: Vec<WString> = cpp_args.from_ffi();
-    let mut args: Vec<&wstr> = storage.iter().map(|s| s.as_utfstr()).collect();
+    let mut args: Vec<&wstr> = storage
+        .iter()
+        .map(|s| match s.chars().position(|c| c == '\0') {
+            // We truncate on NUL for backwards-compatibility reasons.
+            // This used to be passed as c-strings (`wchar_t *`),
+            // and so we act like it for now.
+            Some(pos) => &s[..pos],
+            None => &s[..],
+        })
+        .collect();
     let streams = &mut io_streams_t::new(streams);
 
     match run_builtin(parser.unpin(), streams, args.as_mut_slice(), builtin) {

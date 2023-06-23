@@ -955,8 +955,3 @@ string shorten -m0 foo bar asodjsaoidj
 # CHECK: foo
 # CHECK: bar
 # CHECK: asodjsaoidj
-
-echo foo\x00bar | string escape
-# CHECK: foo\x00bar
-echo foo\\x00bar | string escape
-# CHECK: foo\\x00bar

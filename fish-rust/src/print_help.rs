@@ -14,7 +14,7 @@ mod ffi2 {
     }
 }
 
-fn print_help(command: &str) {
+pub fn print_help(command: &str) {
     let mut cmdline = OsString::new();
     cmdline.push("__fish_print_help ");
     cmdline.push(command);

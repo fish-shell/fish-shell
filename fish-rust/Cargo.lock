@@ -341,6 +341,7 @@ dependencies = [
  "lru",
  "moveit",
  "nix",
+ "num-derive",
  "num-traits",
  "once_cell",
  "pcre2",
@@ -631,6 +632,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-derive"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "876a53fff98e03a936a674b29568b0e605f06b29372c2489ff4de23f1949743d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -648,7 +660,7 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 [[package]]
 name = "pcre2"
 version = "0.2.3"
-source = "git+https://github.com/fish-shell/rust-pcre2?branch=master#824dd1460562f7b724a9acef218d4edb2ed7c289"
+source = "git+https://github.com/fish-shell/rust-pcre2?branch=master#813a4267546e5ca8ff349c9c67d65e52a82172d2"
 dependencies = [
  "libc",
  "log",
@@ -659,7 +671,7 @@ dependencies = [
 [[package]]
 name = "pcre2-sys"
 version = "0.2.4"
-source = "git+https://github.com/fish-shell/rust-pcre2?branch=master#824dd1460562f7b724a9acef218d4edb2ed7c289"
+source = "git+https://github.com/fish-shell/rust-pcre2?branch=master#813a4267546e5ca8ff349c9c67d65e52a82172d2"
 dependencies = [
  "cc",
  "libc",

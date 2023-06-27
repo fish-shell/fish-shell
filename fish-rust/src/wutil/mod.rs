@@ -3,6 +3,8 @@ pub mod errors;
 pub mod fileid;
 pub mod gettext;
 pub mod printf;
+#[cfg(test)]
+mod tests;
 pub mod wcstod;
 pub mod wcstoi;
 
@@ -321,22 +323,24 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
 
 /// Wide character version of dirname().
 #[widestrs]
-pub fn wdirname(mut path: WString) -> WString {
+pub fn wdirname(path: impl AsRef<wstr>) -> WString {
+    let path = path.as_ref();
     // Do not use system-provided dirname (#7837).
     // On Mac it's not thread safe, and will error for paths exceeding PATH_MAX.
     // This follows OpenGroup dirname recipe.
 
     // 1: Double-slash stays.
     if path == "//"L {
-        return path;
+        return path.to_owned();
     }
 
     // 2: All slashes => return slash.
-    if !path.is_empty() && path.chars().find(|c| *c == '/').is_none() {
+    if !path.is_empty() && path.chars().find(|&c| c != '/').is_none() {
         return "/"L.to_owned();
     }
 
     // 3: Trim trailing slashes.
+    let mut path = path.to_owned();
     while path.as_char_slice().last() == Some(&'/') {
         path.pop();
     }
@@ -347,13 +351,17 @@ pub fn wdirname(mut path: WString) -> WString {
     };
 
     // 5: Remove trailing non-slashes.
-    path.truncate(last_slash + 1);
-
     // 6: Skip as permitted.
     // 7: Remove trailing slashes again.
-    while path.as_char_slice().last() == Some(&'/') {
-        path.pop();
-    }
+    path = path
+        .chars()
+        .rev()
+        .skip(last_slash + 1)
+        .skip_while(|&c| c == '/')
+        .collect::<WString>()
+        .chars()
+        .rev()
+        .collect();
 
     // 8: Empty => return slash.
     if path.is_empty() {
@@ -364,7 +372,8 @@ pub fn wdirname(mut path: WString) -> WString {
 
 /// Wide character version of basename().
 #[widestrs]
-pub fn wbasename(mut path: WString) -> WString {
+pub fn wbasename(path: impl AsRef<wstr>) -> WString {
+    let path = path.as_ref();
     // This follows OpenGroup basename recipe.
     // 1: empty => allowed to return ".". This is what system impls do.
     if path.is_empty() {
@@ -373,21 +382,20 @@ pub fn wbasename(mut path: WString) -> WString {
 
     // 2: Skip as permitted.
     // 3: All slashes => return slash.
-    if !path.is_empty() && path.chars().find(|c| *c == '/').is_none() {
+    if !path.is_empty() && path.chars().find(|&c| c != '/').is_none() {
         return "/"L.to_owned();
     }
 
     // 4: Remove trailing slashes.
-    // while (!path.is_empty() && path.back() == '/') path.pop_back();
-    while path.as_char_slice().last() == Some(&'/') {
-        path.pop();
-    }
-
     // 5: Remove up to and including last slash.
-    if let Some(last_slash) = path.chars().rev().position(|c| c == '/') {
-        path.truncate(last_slash + 1);
-    };
-    path
+    path.chars()
+        .rev()
+        .skip_while(|&c| c == '/')
+        .take_while(|&c| c != '/')
+        .collect::<WString>()
+        .chars()
+        .rev()
+        .collect()
 }
 
 /// Wide character version of mkdir.

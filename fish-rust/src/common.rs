@@ -1728,7 +1728,7 @@ pub fn valid_var_name(s: &wstr) -> bool {
 }
 
 /// Get the absolute path to the fish executable itself
-fn get_executable_path(argv0: &str) -> PathBuf {
+pub fn get_executable_path(argv0: &str) -> PathBuf {
     std::env::current_exe().unwrap_or_else(|_| PathBuf::from_str(argv0).unwrap())
 }
 

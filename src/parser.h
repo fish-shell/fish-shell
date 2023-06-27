@@ -224,6 +224,10 @@ struct library_data_t : public library_data_pod_t {
         /// Used to get the full text of the current job for `status current-commandline`.
         wcstring commandline;
     } status_vars;
+
+    public:
+    wcstring get_status_vars_command() const { return status_vars.command; }
+    wcstring get_status_vars_commandline() const { return status_vars.commandline; }
 };
 
 /// The result of parser_t::eval family.
@@ -468,6 +472,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// reader_current_filename, e.g. if we are evaluating a function defined in a different file
     /// than the one currently read.
     filename_ref_t current_filename() const;
+    wcstring current_filename_ffi() const;
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).

@@ -412,6 +412,16 @@ filename_ref_t parser_t::current_filename() const {
     return libdata().current_filename;
 }
 
+// FFI glue
+wcstring parser_t::current_filename_ffi() const {
+    auto filename = current_filename();
+    if (filename) {
+        return wcstring(*filename);
+    } else {
+        return wcstring();
+    }
+}
+
 bool parser_t::function_stack_is_overflowing() const {
     // We are interested in whether the count of functions on the stack exceeds
     // FISH_MAX_STACK_DEPTH. We don't separately track the number of functions, but we can have a

@@ -394,7 +394,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"set", &builtin_set, N_(L"Handle environment variables")},
     {L"set_color", &implemented_in_rust, N_(L"Set the terminal color")},
     {L"source", &builtin_source, N_(L"Evaluate contents of file")},
-    {L"status", &builtin_status, N_(L"Return status information about fish")},
+    {L"status", &implemented_in_rust, N_(L"Return status information about fish")},
     {L"string", &builtin_string, N_(L"Manipulate strings")},
     {L"switch", &builtin_generic, N_(L"Conditionally run blocks of code")},
     {L"test", &implemented_in_rust, N_(L"Test a condition")},
@@ -564,6 +564,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"set_color") {
         return RustBuiltin::SetColor;
+    }
+    if (cmd == L"status") {
+        return RustBuiltin::Status;
     }
     if (cmd == L"test" || cmd == L"[") {
         return RustBuiltin::Test;

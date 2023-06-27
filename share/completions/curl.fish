@@ -116,6 +116,7 @@ complete -c curl -l ntlm-wb -d '(HTTP) Enable NTLM, but hand over auth to separa
 complete -c curl -l ntlm -d '(HTTP) Enable NTLM authentication'
 complete -c curl -l oauth2-bearer -d '(IMAP POP3 SMTP) Specify the Bearer Token for OAUTH 2'
 complete -c curl -s o -l output -d 'Write output to <file> instead of stdout'
+complete -c curl -l output-dir -d 'Directory in which files should be stored when used with -o/--output'
 complete -c curl -l pass -d '(SSH TLS) Passphrase for the private key'
 complete -c curl -l path-as-is -d 'Do not handle sequences of /../ or /./ in the given URL path'
 complete -c curl -l pinnedpubkey -d '(TLS) Use the specified public key file (or hashes)'

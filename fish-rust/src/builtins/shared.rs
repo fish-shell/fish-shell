@@ -37,6 +37,9 @@ pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
 /// Error message when integer expected
 pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
 
+pub const BUILTIN_ERR_MISSING_SUBCMD: &str = "%ls: missing subcommand\n";
+pub const BUILTIN_ERR_INVALID_SUBCMD: &str = "%ls: %ls: invalid subcommand\n";
+
 /// Error message for unknown switch.
 pub const BUILTIN_ERR_UNKNOWN: &str = "%ls: %ls: unknown option\n";
 
@@ -50,6 +53,7 @@ pub const BUILTIN_ERR_MAX_ARG_COUNT1: &str = "%ls: expected <= %d arguments; got
 /// Error message on invalid combination of options.
 pub const BUILTIN_ERR_COMBO: &str = "%ls: invalid option combination\n";
 pub const BUILTIN_ERR_COMBO2: &str = "%ls: invalid option combination, %ls\n";
+pub const BUILTIN_ERR_COMBO2_EXCLUSIVE: &str = "%ls: %ls %ls: options cannot be used together\n";
 
 // Return values (`$status` values for fish scripts) for various situations.
 
@@ -197,6 +201,7 @@ pub fn run_builtin(
         RustBuiltin::Realpath => super::realpath::realpath(parser, streams, args),
         RustBuiltin::Return => super::r#return::r#return(parser, streams, args),
         RustBuiltin::SetColor => super::set_color::set_color(parser, streams, args),
+        RustBuiltin::Status => super::status::status(parser, streams, args),
         RustBuiltin::Test => super::test::test(parser, streams, args),
         RustBuiltin::Type => super::r#type::r#type(parser, streams, args),
         RustBuiltin::Wait => wait::wait(parser, streams, args),

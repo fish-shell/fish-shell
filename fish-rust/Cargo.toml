@@ -22,6 +22,8 @@ lru = "0.10.0"
 moveit = "0.5.1"
 nix = { version = "0.25.0", default-features = false, features = [] }
 num-traits = "0.2.15"
+# to make integer->enum conversion easier
+num-derive = "0.3.3"
 once_cell = "1.17.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 unixstring = "0.2.7"

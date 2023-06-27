@@ -642,7 +642,7 @@ fn create_directory(d: &wstr) -> bool {
         }
         None => {
             if errno().0 == ENOENT {
-                let dir = wdirname(d.to_owned());
+                let dir = wdirname(d);
                 if create_directory(&dir) && wmkdir(d, 0o700) == 0 {
                     return true;
                 }

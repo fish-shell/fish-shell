@@ -129,6 +129,7 @@ enum class RustBuiltin : int32_t {
     Realpath,
     Return,
     SetColor,
+    Status,
     Test,
     Type,
     Wait,

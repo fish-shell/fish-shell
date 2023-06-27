@@ -84,6 +84,10 @@ include_cpp! {
     generate!("parser_t")
 
     generate!("job_t")
+    generate!("job_control_t")
+    generate!("get_job_control_mode")
+    generate!("set_job_control_mode")
+    generate!("get_login")
     generate!("process_t")
     generate!("library_data_t")
     generate_pod!("library_data_pod_t")
@@ -399,5 +403,18 @@ impl core::convert::From<void_ptr> for *const core::ffi::c_void {
 impl core::convert::From<void_ptr> for *const autocxx::c_void {
     fn from(value: void_ptr) -> Self {
         value.0 as *const _
+    }
+}
+
+impl TryFrom<&wstr> for job_control_t {
+    type Error = ();
+
+    fn try_from(value: &wstr) -> Result<Self, Self::Error> {
+        match value.to_string().as_str() {
+            "full" => Ok(job_control_t::all),
+            "interactive" => Ok(job_control_t::interactive),
+            "none" => Ok(job_control_t::none),
+            _ => Err(()),
+        }
     }
 }

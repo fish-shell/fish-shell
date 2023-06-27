@@ -44,7 +44,6 @@
 #include "builtins/set.h"
 #include "builtins/shared.rs.h"
 #include "builtins/source.h"
-#include "builtins/status.h"
 #include "builtins/string.h"
 #include "builtins/ulimit.h"
 #include "complete.h"

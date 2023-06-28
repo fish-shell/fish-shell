@@ -314,13 +314,19 @@ ul li, div.body li {
     line-height: 2em;
 }
 
-ul.simple p {
+ul.simple p, ol.simple p {
   /* See "special features" list on index.html */
   margin-bottom: 0;
+  margin-top: 0;
 }
 
 ul.simple > li:not(:first-child) > p {
   margin-top: 0;
+}
+
+ul li dd {
+    /* nested lists will show up like this, the left margin is massive by default */
+    margin-left: 0;
 }
 
 form.inline-search input,
@@ -522,10 +528,6 @@ div.footer {
 
 #synopsis p {
     font-size: 12pt;
-}
-
-dl {
-    margin-bottom: 1em;
 }
 
 dl.envvar, dl.describe {

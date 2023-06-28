@@ -95,10 +95,10 @@ Constants
 
 ``e``
     Euler's number
-``pi``
+``pi`` or ``π``
     π, you know this one.
     Half of Tau
-``tau``
+``tau`` or ``τ``
     Equivalent to 2π, or the number of radians in a circle
 
 Use them without a leading ``$`` - ``pi - 3`` should be about 0.

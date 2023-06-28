@@ -314,6 +314,7 @@ const BUILTINS: &[(&wstr, Function)] = &[
     ("ncr"L, Function::Fn2(ncr)),
     ("npr"L, Function::Fn2(npr)),
     ("pi"L, Function::Constant(PI)),
+    ("π"L, Function::Constant(PI)),
     ("pow"L, Function::Fn2(f64::powf)),
     ("round"L, Function::Fn1(f64::round)),
     ("sin"L, Function::Fn1(f64::sin)),
@@ -322,6 +323,7 @@ const BUILTINS: &[(&wstr, Function)] = &[
     ("tan"L, Function::Fn1(f64::tan)),
     ("tanh"L, Function::Fn1(f64::tanh)),
     ("tau"L, Function::Constant(TAU)),
+    ("τ"L, Function::Constant(TAU)),
 ];
 
 assert_sorted_by_name!(BUILTINS, 0);

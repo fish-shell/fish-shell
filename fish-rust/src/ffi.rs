@@ -405,11 +405,11 @@ impl core::convert::From<void_ptr> for *const autocxx::c_void {
     }
 }
 
-impl TryFrom<&wstr> for job_control_t {
+impl TryFrom<&str> for job_control_t {
     type Error = ();
 
-    fn try_from(value: &wstr) -> Result<Self, Self::Error> {
-        match value.to_string().as_str() {
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
             "full" => Ok(job_control_t::all),
             "interactive" => Ok(job_control_t::interactive),
             "none" => Ok(job_control_t::none),

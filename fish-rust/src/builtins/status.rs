@@ -1,20 +1,18 @@
 use std::os::unix::prelude::OsStrExt;
 
-use crate::builtins::shared::BUILTIN_ERR_NOT_NUMBER;
 use crate::builtins::shared::{
     builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
     BUILTIN_ERR_ARG_COUNT2, BUILTIN_ERR_COMBO2_EXCLUSIVE, BUILTIN_ERR_INVALID_SUBCMD,
-    STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
+    BUILTIN_ERR_NOT_NUMBER, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::common::{get_executable_path, str2wcstring};
 
-use crate::ffi::get_job_control_mode;
-use crate::ffi::get_login;
-use crate::ffi::set_job_control_mode;
-use crate::ffi::{is_interactive_session, Repin};
-use crate::ffi::{job_control_t, parser_t};
+use crate::ffi::{
+    get_job_control_mode, get_login, is_interactive_session, job_control_t, parser_t,
+    set_job_control_mode, Repin,
+};
 use crate::future_feature_flags::{feature_metadata, feature_test};
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::{wstr, L};
 
 use crate::wchar_ffi::WCharFromFFI;
 
@@ -27,16 +25,17 @@ use nix::errno::Errno;
 use nix::NixPath;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
+use once_cell::sync::Lazy;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
-        impl TryFrom<&wstr> for $name {
+        impl TryFrom<&str> for $name {
             type Error = ();
 
-            fn try_from(s: &wstr) -> Result<Self, Self::Error> {
+            fn try_from(s: &str) -> Result<Self, Self::Error> {
                 // matching on str's let's us avoid having to do binary search and friends outselves,
                 // this is ascii only anyways
-                match s.to_string().as_str() {
+                match s {
                     $($str => Ok(Self::$val)),*,
                     _ => Err(()),
                 }
@@ -44,21 +43,19 @@ macro_rules! str_enum {
         }
 
         impl $name {
-            fn to_wstr(&self) -> WString {
+            fn to_wstr(self) -> &'static wstr {
                 // There can be multiple vals => str mappings, and that's okay
                 #[allow(unreachable_patterns)]
                 match self {
-                    $(Self::$val => WString::from($str)),*,
+                    $(Self::$val => L!($str)),*,
                 }
             }
         }
     }
 }
 
-use once_cell::sync::Lazy;
 use StatusCmd::*;
-#[repr(u32)]
-#[derive(Default, PartialEq, FromPrimitive, Clone)]
+#[derive(PartialEq, FromPrimitive, Clone, Copy)]
 enum StatusCmd {
     STATUS_CURRENT_CMD = 1,
     STATUS_BASENAME,
@@ -80,8 +77,6 @@ enum StatusCmd {
     STATUS_STACK_TRACE,
     STATUS_TEST_FEATURE,
     STATUS_CURRENT_COMMANDLINE,
-    #[default]
-    STATUS_UNDEF,
 }
 
 str_enum!(
@@ -112,15 +107,12 @@ str_enum!(
     (STATUS_STACK_TRACE, "print-stack-trace"),
     (STATUS_STACK_TRACE, "stack-trace"),
     (STATUS_TEST_FEATURE, "test-feature"),
-    // this was a nullptr in C++
-    (STATUS_UNDEF, "undef"),
 );
 
 impl StatusCmd {
-    fn as_char(&self) -> char {
+    fn as_char(self) -> char {
         // TODO: once unwrap is const, make LONG_OPTIONS const
-        let ch: StatusCmd = self.clone();
-        char::from_u32(ch as u32).unwrap()
+        char::from_u32(self as u32).unwrap()
     }
 }
 
@@ -135,7 +127,7 @@ enum TestFeatureRetVal {
 struct StatusCmdOpts {
     level: i32,
     new_job_control_mode: Option<job_control_t>,
-    status_cmd: StatusCmd,
+    status_cmd: Option<StatusCmd>,
     print_help: bool,
 }
 
@@ -144,24 +136,9 @@ impl Default for StatusCmdOpts {
         Self {
             level: 1,
             new_job_control_mode: None,
-            status_cmd: StatusCmd::STATUS_UNDEF,
+            status_cmd: None,
             print_help: false,
         }
-    }
-}
-
-impl StatusCmdOpts {
-    fn set_status_cmd(&mut self, cmd: &wstr, sub_cmd: StatusCmd) -> Result<(), WString> {
-        if self.status_cmd != StatusCmd::STATUS_UNDEF {
-            return Err(wgettext_fmt!(
-                BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                cmd,
-                self.status_cmd.to_wstr(),
-                sub_cmd.to_wstr(),
-            ));
-        }
-        self.status_cmd = sub_cmd;
-        Ok(())
     }
 }
 
@@ -262,58 +239,43 @@ fn parse_cmd_opts(
                     }
                 };
             }
-            'c' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_IS_COMMAND_SUB) {
-                    streams.err.append(e);
-                    return STATUS_CMD_ERROR;
-                }
-            }
-            'b' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_IS_BLOCK) {
-                    streams.err.append(e);
-                    return STATUS_CMD_ERROR;
-                }
-            }
-            'i' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_IS_INTERACTIVE) {
-                    streams.err.append(e);
-                    return STATUS_CMD_ERROR;
-                }
-            }
-            'l' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_IS_LOGIN) {
-                    streams.err.append(e);
-                    return STATUS_CMD_ERROR;
-                }
-            }
-            'f' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_FILENAME) {
-                    streams.err.append(e);
-                    return STATUS_CMD_ERROR;
-                }
-            }
-            'n' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_LINE_NUMBER) {
-                    streams.err.append(e);
+            flag @ ('c' | 'b' | 'i' | 'l' | 'f' | 'n' | 't') => {
+                let subcmd = match flag {
+                    'c' => STATUS_IS_COMMAND_SUB,
+                    'b' => STATUS_IS_BLOCK,
+                    'i' => STATUS_IS_INTERACTIVE,
+                    'l' => STATUS_IS_LOGIN,
+                    'f' => STATUS_FILENAME,
+                    'n' => STATUS_LINE_NUMBER,
+                    't' => STATUS_STACK_TRACE,
+                    _ => unreachable!(),
+                };
+                if let Some(existing) = opts.status_cmd.replace(subcmd) {
+                    streams.err.append(wgettext_fmt!(
+                        BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                        cmd,
+                        existing.to_wstr(),
+                        subcmd.to_wstr(),
+                    ));
                     return STATUS_CMD_ERROR;
                 }
             }
             'j' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_SET_JOB_CONTROL) {
-                    streams.err.append(e);
+                let subcmd = STATUS_SET_JOB_CONTROL;
+                if let Some(existing) = opts.status_cmd.replace(subcmd) {
+                    streams.err.append(wgettext_fmt!(
+                        BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                        cmd,
+                        existing.to_wstr(),
+                        subcmd.to_wstr(),
+                    ));
                     return STATUS_CMD_ERROR;
                 }
-                let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
+                let Ok(job_mode) = w.woptarg.unwrap().to_string().as_str().try_into() else {
                     streams.err.append(wgettext_fmt!("%ls: Invalid job control mode '%ls'\n", cmd, w.woptarg.unwrap()));
                     return STATUS_CMD_ERROR;
                 };
                 opts.new_job_control_mode = Some(job_mode);
-            }
-            't' => {
-                if let Err(e) = opts.set_status_cmd(cmd, STATUS_STACK_TRACE) {
-                    streams.err.append(e);
-                    return STATUS_CMD_ERROR;
-                }
             }
             'h' => opts.print_help = true,
             ':' => {
@@ -333,8 +295,13 @@ fn parse_cmd_opts(
                     | STATUS_IS_INTERACTIVE_JOB_CTRL
                     | STATUS_IS_NO_JOB_CTRL
                     | STATUS_FISH_PATH => {
-                        if let Err(e) = opts.set_status_cmd(cmd, opt_cmd) {
-                            streams.err.append(e);
+                        if let Some(existing) = opts.status_cmd.replace(opt_cmd) {
+                            streams.err.append(wgettext_fmt!(
+                                BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                                cmd,
+                                existing.to_wstr(),
+                                opt_cmd.to_wstr(),
+                            ));
                             return STATUS_CMD_ERROR;
                         }
                     }
@@ -372,54 +339,53 @@ pub fn status(
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if optind < argc {
-        match StatusCmd::try_from(args[optind]) {
-            // TODO: can we replace UNDEF with wrapping in option?
-            Ok(STATUS_UNDEF) | Err(_) => {
+        match StatusCmd::try_from(args[optind].to_string().as_str()) {
+            Ok(s) => {
+                if let Some(existing) = opts.status_cmd.replace(s) {
+                    streams.err.append(wgettext_fmt!(
+                        BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                        cmd,
+                        existing.to_wstr(),
+                        s.to_wstr(),
+                    ));
+                    return STATUS_CMD_ERROR;
+                }
+                optind += 1;
+            }
+            Err(_) => {
                 streams
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[1]));
                 return STATUS_INVALID_ARGS;
-            }
-            Ok(s) => {
-                if let Err(e) = opts.set_status_cmd(cmd, s) {
-                    streams.err.append(e);
-                    return STATUS_CMD_ERROR;
-                }
-                optind += 1;
             }
         }
     }
     // Every argument that we haven't consumed already is an argument for a subcommand.
     let args = &args[optind..];
 
-    match opts.status_cmd {
-        STATUS_UNDEF => {
-            if !args.is_empty() {
-                streams.err.append(wgettext_fmt!(
-                    BUILTIN_ERR_ARG_COUNT2,
-                    cmd,
-                    opts.status_cmd.to_wstr(),
-                    0,
-                    args.len()
-                ));
-                return STATUS_INVALID_ARGS;
-            }
-            if get_login() {
-                streams.out.append(wgettext!("This is a login shell\n"));
-            } else {
-                streams.out.append(wgettext!("This is not a login shell\n"));
-            }
-            let job_control_mode = match get_job_control_mode() {
-                job_control_t::interactive => wgettext!("Only on interactive jobs"),
-                job_control_t::none => wgettext!("Never"),
-                job_control_t::all => wgettext!("Always"),
-            };
-            streams
-                .out
-                .append(wgettext_fmt!("Job control: %ls\n", job_control_mode));
-            streams.out.append(parser.stack_trace().from_ffi());
+    let Some(subcmd) = opts.status_cmd else {
+        debug_assert!(args.is_empty(), "passed arguments to nothing");
+
+        if get_login() {
+            streams.out.append(wgettext!("This is a login shell\n"));
+        } else {
+            streams.out.append(wgettext!("This is not a login shell\n"));
         }
-        STATUS_SET_JOB_CONTROL => {
+        let job_control_mode = match get_job_control_mode() {
+            job_control_t::interactive => wgettext!("Only on interactive jobs"),
+            job_control_t::none => wgettext!("Never"),
+            job_control_t::all => wgettext!("Always"),
+        };
+        streams
+            .out
+            .append(wgettext_fmt!("Job control: %ls\n", job_control_mode));
+        streams.out.append(parser.stack_trace().from_ffi());
+
+        return STATUS_CMD_OK;
+    };
+
+    match subcmd {
+        c @ STATUS_SET_JOB_CONTROL => {
             let job_control_mode = match opts.new_job_control_mode {
                 Some(j) => {
                     // Flag form used
@@ -427,7 +393,7 @@ pub fn status(
                         streams.err.append(wgettext_fmt!(
                             BUILTIN_ERR_ARG_COUNT2,
                             cmd,
-                            opts.status_cmd.to_wstr(),
+                            c.to_wstr(),
                             0,
                             args.len()
                         ));
@@ -440,13 +406,13 @@ pub fn status(
                         streams.err.append(wgettext_fmt!(
                             BUILTIN_ERR_ARG_COUNT2,
                             cmd,
-                            opts.status_cmd.to_wstr(),
+                            c.to_wstr(),
                             1,
                             args.len()
                         ));
                         return STATUS_INVALID_ARGS;
                     }
-                    let Ok(new_mode)= args[0].try_into() else {
+                    let Ok(new_mode)= args[0].to_string().as_str().try_into() else {
                         streams.err.append(wgettext_fmt!("%ls: Invalid job control mode '%ls'\n", cmd, args[0]));
                         return STATUS_CMD_ERROR;
                     };
@@ -456,12 +422,12 @@ pub fn status(
             set_job_control_mode(job_control_mode);
         }
         STATUS_FEATURES => print_features(streams),
-        STATUS_TEST_FEATURE => {
+        c @ STATUS_TEST_FEATURE => {
             if args.len() != 1 {
                 streams.err.append(wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
-                    opts.status_cmd.to_wstr(),
+                    c.to_wstr(),
                     1,
                     args.len()
                 ));
@@ -484,7 +450,7 @@ pub fn status(
                 streams.err.append(wgettext_fmt!(
                     BUILTIN_ERR_ARG_COUNT2,
                     cmd,
-                    opts.status_cmd.to_wstr(),
+                    s.to_wstr(),
                     0,
                     args.len()
                 ));
@@ -493,7 +459,7 @@ pub fn status(
             match s {
                 STATUS_BASENAME | STATUS_DIRNAME | STATUS_FILENAME => {
                     let res = parser.current_filename_ffi().from_ffi();
-                    let f = match (res.is_empty(), opts.status_cmd) {
+                    let f = match (res.is_empty(), s) {
                         (false, STATUS_DIRNAME) => wdirname(res),
                         (false, STATUS_BASENAME) => wbasename(res),
                         (true, _) => wgettext!("Standard input").to_owned(),
@@ -622,7 +588,7 @@ pub fn status(
                         streams.out.append1('\n');
                     }
                 }
-                STATUS_UNDEF | STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {
+                STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {
                     unreachable!("")
                 }
             }

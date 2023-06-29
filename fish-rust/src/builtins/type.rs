@@ -14,7 +14,7 @@ use crate::ffi::{
     function_get_definition_file, function_get_definition_lineno, function_get_props_autoload,
     function_is_copy,
 };
-use crate::path::path_get_paths;
+use crate::path::{path_get_path, path_get_paths};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::WCharFromFFI;
 use crate::wchar_ffi::WCharToFFI;
@@ -190,7 +190,14 @@ pub fn r#type(
             }
         }
 
-        let paths: Vec<WString> = path_get_paths(arg, &*parser.get_vars());
+        let paths = if opts.all {
+            path_get_paths(arg, &*parser.get_vars())
+        } else {
+            match path_get_path(arg, &*parser.get_vars()) {
+                Some(p) => vec![p],
+                None => vec![],
+            }
+        };
 
         for path in paths.iter() {
             found += 1;

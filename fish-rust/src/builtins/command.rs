@@ -5,8 +5,8 @@ use crate::builtins::shared::{
     STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_INVALID_ARGS,
 };
 use crate::ffi::parser_t;
-use crate::path::path_get_paths;
-use crate::wchar::{wstr, WString, L};
+use crate::path::{path_get_path, path_get_paths};
+use crate::wchar::{wstr, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::sprintf;
 
@@ -71,10 +71,14 @@ pub fn r#command(
     let mut res = false;
     let optind = w.woptind;
     for arg in argv.iter().take(argc).skip(optind) {
-        // TODO: This always gets all paths, and then skips a bunch.
-        // For the common case, we want to get just the one path.
-        // Port this over once path.cpp is.
-        let paths: Vec<WString> = path_get_paths(arg, &*parser.get_vars());
+        let paths = if opts.all {
+            path_get_paths(arg, &*parser.get_vars())
+        } else {
+            match path_get_path(arg, &*parser.get_vars()) {
+                Some(p) => vec![p],
+                None => vec![],
+            }
+        };
 
         for path in paths.iter() {
             res = true;

@@ -457,10 +457,10 @@ pub fn status(
                 STATUS_BASENAME | STATUS_DIRNAME | STATUS_FILENAME => {
                     let res = parser.current_filename_ffi().from_ffi();
                     let f = match (res.is_empty(), s) {
-                        (false, STATUS_DIRNAME) => wdirname(res),
-                        (false, STATUS_BASENAME) => wbasename(res),
-                        (true, _) => wgettext!("Standard input").to_owned(),
-                        (false, _) => res,
+                        (false, STATUS_DIRNAME) => wdirname(&res),
+                        (false, STATUS_BASENAME) => wbasename(&res),
+                        (true, _) => wgettext!("Standard input"),
+                        (false, _) => &res,
                     };
                     streams.out.append(wgettext_fmt!("%ls\n", f));
                 }

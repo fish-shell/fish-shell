@@ -646,10 +646,10 @@ impl IoChain {
                                 // or there's a non-directory component,
                                 // find the first problematic component for a better message.
                                 if [ENOENT, ENOTDIR].contains(&err) {
-                                    let mut dname = spec.target.clone();
+                                    let mut dname: &wstr = &spec.target;
                                     while !dname.is_empty() {
-                                        let next = wdirname(dname.clone());
-                                        if let Some(md) = wstat(&next) {
+                                        let next: &wstr = wdirname(dname);
+                                        if let Some(md) = wstat(next) {
                                             if !md.is_dir() {
                                                 FLOGF!(
                                                     warning,

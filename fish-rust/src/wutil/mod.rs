@@ -322,80 +322,71 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
 }
 
 /// Wide character version of dirname().
-#[widestrs]
-pub fn wdirname(path: impl AsRef<wstr>) -> WString {
-    let path = path.as_ref();
+pub fn wdirname(mut path: &wstr) -> &wstr {
     // Do not use system-provided dirname (#7837).
     // On Mac it's not thread safe, and will error for paths exceeding PATH_MAX.
     // This follows OpenGroup dirname recipe.
 
     // 1: Double-slash stays.
-    if path == "//"L {
-        return path.to_owned();
+    if path == "//" {
+        return path;
     }
 
     // 2: All slashes => return slash.
-    if !path.is_empty() && path.chars().find(|&c| c != '/').is_none() {
-        return "/"L.to_owned();
+    if !path.is_empty() && path.chars().all(|c| c == '/') {
+        return L!("/");
     }
 
     // 3: Trim trailing slashes.
-    let mut path = path.to_owned();
     while path.as_char_slice().last() == Some(&'/') {
-        path.pop();
+        path = path.slice_to(path.char_count() - 1);
     }
 
     // 4: No slashes left => return period.
-    let Some(last_slash) = path.chars().rev().position(|c| c == '/') else {
-        return "."L.to_owned()
+    let Some(last_slash) = path.chars().rposition(|c| c == '/') else {
+        return L!(".");
     };
 
     // 5: Remove trailing non-slashes.
+    path = path.slice_to(last_slash + 1);
+
     // 6: Skip as permitted.
     // 7: Remove trailing slashes again.
-    path = path
-        .chars()
-        .rev()
-        .skip(last_slash + 1)
-        .skip_while(|&c| c == '/')
-        .collect::<WString>()
-        .chars()
-        .rev()
-        .collect();
+    while path.as_char_slice().last() == Some(&'/') {
+        path = path.slice_to(path.char_count() - 1);
+    }
 
     // 8: Empty => return slash.
     if path.is_empty() {
-        path = "/"L.to_owned();
+        return L!("/");
     }
     path
 }
 
 /// Wide character version of basename().
-#[widestrs]
-pub fn wbasename(path: impl AsRef<wstr>) -> WString {
-    let path = path.as_ref();
+pub fn wbasename(mut path: &wstr) -> &wstr {
     // This follows OpenGroup basename recipe.
     // 1: empty => allowed to return ".". This is what system impls do.
     if path.is_empty() {
-        return "."L.to_owned();
+        return L!(".");
     }
 
     // 2: Skip as permitted.
     // 3: All slashes => return slash.
-    if !path.is_empty() && path.chars().find(|&c| c != '/').is_none() {
-        return "/"L.to_owned();
+    if !path.is_empty() && path.chars().all(|c| c == '/') {
+        return L!("/");
     }
 
     // 4: Remove trailing slashes.
+    while path.as_char_slice().last() == Some(&'/') {
+        path = path.slice_to(path.char_count() - 1);
+    }
+
     // 5: Remove up to and including last slash.
-    path.chars()
-        .rev()
-        .skip_while(|&c| c == '/')
-        .take_while(|&c| c != '/')
-        .collect::<WString>()
-        .chars()
-        .rev()
-        .collect()
+    if let Some(last_slash) = path.chars().rposition(|c| c == '/') {
+        path = path.slice_from(last_slash + 1);
+    }
+    path
 }
 
 /// Wide character version of mkdir.

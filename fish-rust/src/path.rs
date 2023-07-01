@@ -312,7 +312,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
                     // Keep the first *interesting* error and path around.
                     // ENOENT isn't interesting because not having a file is the normal case.
                     // Ignore if the parent directory is already inaccessible.
-                    if waccess(&wdirname(proposed_path.clone()), X_OK) == 0 {
+                    if waccess(wdirname(&proposed_path), X_OK) == 0 {
                         best = GetPathResult::new(Some(err), proposed_path);
                     }
                 }
@@ -642,8 +642,8 @@ fn create_directory(d: &wstr) -> bool {
         }
         None => {
             if errno().0 == ENOENT {
-                let dir = wdirname(d);
-                if create_directory(&dir) && wmkdir(d, 0o700) == 0 {
+                let dir: &wstr = wdirname(d);
+                if create_directory(dir) && wmkdir(d, 0o700) == 0 {
                     return true;
                 }
             }

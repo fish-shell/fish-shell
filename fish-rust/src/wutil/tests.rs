@@ -1,60 +1,53 @@
 use super::*;
-use libc::PATH_MAX;
+use libc;
+use widestring_suffix::widestrs;
 
-macro_rules! test_cases_wdirname_wbasename {
-    ($($name:ident: $test:expr),*  $(,)?) => {
-        $(
-            #[test]
-            fn $name() {
-                let (path, dir, base) = $test;
-                let actual = wdirname(WString::from(path));
-                assert_eq!(actual, WString::from(dir), "Wrong dirname for {:?}", path);
-                let actual = wbasename(WString::from(path));
-                assert_eq!(actual, WString::from(base), "Wrong basename for {:?}", path);
-            }
-        )*
-    };
-}
+#[test]
+#[widestrs]
+fn test_wdirname_wbasename() {
+    // path, dir, base
+    struct Test(&'static wstr, &'static wstr, &'static wstr);
+    const testcases: &[Test] = &[
+        Test(""L, "."L, "."L),
+        Test("foo//"L, "."L, "foo"L),
+        Test("foo//////"L, "."L, "foo"L),
+        Test("/////foo"L, "/"L, "foo"L),
+        Test("//foo/////bar"L, "//foo"L, "bar"L),
+        Test("foo/////bar"L, "foo"L, "bar"L),
+        // Examples given in XPG4.2.
+        Test("/usr/lib"L, "/usr"L, "lib"L),
+        Test("usr"L, "."L, "usr"L),
+        Test("/"L, "/"L, "/"L),
+        Test("."L, "."L, "."L),
+        Test(".."L, "."L, ".."L),
+    ];
 
-/// Helper to return a string whose length greatly exceeds PATH_MAX.
-fn overlong_path() -> WString {
-    let mut longpath = WString::with_capacity((PATH_MAX * 2 + 10) as usize);
-    while longpath.len() < (PATH_MAX * 2) as usize {
+    for tc in testcases {
+        let Test(path, tc_dir, tc_base) = *tc;
+        let dir = wdirname(&path);
+        assert_eq!(
+            dir, tc_dir,
+            "\npath: {:?}, dir: {:?}, tc.dir: {:?}",
+            path, dir, tc_dir
+        );
+
+        let base = wbasename(&path);
+        assert_eq!(
+            base, tc_base,
+            "\npath: {:?}, base: {:?}, tc.base: {:?}",
+            path, base, tc_base
+        );
+    }
+
+    // Ensure strings which greatly exceed PATH_MAX still work (#7837).
+    const PATH_MAX: usize = libc::PATH_MAX as usize;
+    let mut longpath = WString::new();
+    longpath.reserve(PATH_MAX * 2 + 10);
+    while longpath.char_count() <= PATH_MAX * 2 {
         longpath.push_str("/overlong");
     }
-    return longpath;
-}
-
-test_cases_wdirname_wbasename! {
-    wdirname_wbasename_test_1: ("", ".", "."),
-    wdirname_wbasename_test_2: ("foo//", ".", "foo"),
-    wdirname_wbasename_test_3: ("foo//////", ".", "foo"),
-    wdirname_wbasename_test_4: ("/////foo", "/", "foo"),
-    wdirname_wbasename_test_5: ("/////foo", "/", "foo"),
-    wdirname_wbasename_test_6: ("//foo/////bar", "//foo", "bar"),
-    wdirname_wbasename_test_7: ("foo/////bar", "foo", "bar"),
-    // Examples given in XPG4.2.
-    wdirname_wbasename_test_8: ("/usr/lib", "/usr", "lib"),
-    wdirname_wbasename_test_9: ("usr", ".", "usr"),
-    wdirname_wbasename_test_10: ("/", "/", "/"),
-    wdirname_wbasename_test_11: (".", ".", "."),
-    wdirname_wbasename_test_12: ("..", ".", ".."),
-}
-
-// Ensures strings which greatly exceed PATH_MAX still work (#7837).
-#[test]
-fn test_overlong_wdirname_wbasename() {
-    let path = overlong_path();
-    let dir = {
-        let mut longpath_dir = path.clone();
-        let last_slash = longpath_dir.chars().rev().position(|c| c == '/').unwrap();
-        longpath_dir.truncate(longpath_dir.len() - last_slash - 1);
-        longpath_dir
-    };
-    let base = "overlong";
-
-    let actual = wdirname(&path);
-    assert_eq!(actual, dir, "Wrong dirname for {:?}", path);
-    let actual = wbasename(&path);
-    assert_eq!(actual, base, "Wrong basename for {:?}", path);
+    let last_slash = longpath.chars().rposition(|c| c == '/').unwrap();
+    let longpath_dir = &longpath[..last_slash];
+    assert_eq!(wdirname(&longpath), longpath_dir);
+    assert_eq!(wbasename(&longpath), "overlong"L);
 }

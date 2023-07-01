@@ -2375,16 +2375,31 @@ mod common_ffi {
         type escape_string_style_t = crate::ffi::escape_string_style_t;
     }
     extern "Rust" {
-        fn rust_unescape_string(
+        #[cxx_name = "rust_unescape_string"]
+        fn unescape_string_ffi(
             input: *const wchar_t,
             len: usize,
             escape_special: u32,
             style: escape_string_style_t,
         ) -> UniquePtr<CxxWString>;
+
+        #[cxx_name = "rust_escape_string_script"]
+        fn escape_string_script_ffi(
+            input: *const wchar_t,
+            len: usize,
+            flags: u32,
+        ) -> UniquePtr<CxxWString>;
+
+        #[cxx_name = "rust_escape_string_url"]
+        fn escape_string_url_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
+
+        #[cxx_name = "rust_escape_string_var"]
+        fn escape_string_var_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
+
     }
 }
 
-fn rust_unescape_string(
+fn unescape_string_ffi(
     input: *const ffi::wchar_t,
     len: usize,
     escape_special: u32,
@@ -2404,4 +2419,27 @@ fn rust_unescape_string(
         Some(result) => result.to_ffi(),
         None => UniquePtr::null(),
     }
+}
+
+fn escape_string_script_ffi(
+    input: *const ffi::wchar_t,
+    len: usize,
+    flags: u32,
+) -> UniquePtr<CxxWString> {
+    let input = unsafe { slice::from_raw_parts(input, len) };
+    escape_string_script(
+        wstr::from_slice(input).unwrap(),
+        EscapeFlags::from_bits(flags).unwrap(),
+    )
+    .to_ffi()
+}
+
+fn escape_string_var_ffi(input: *const ffi::wchar_t, len: usize) -> UniquePtr<CxxWString> {
+    let input = unsafe { slice::from_raw_parts(input, len) };
+    escape_string_var(wstr::from_slice(input).unwrap()).to_ffi()
+}
+
+fn escape_string_url_ffi(input: *const ffi::wchar_t, len: usize) -> UniquePtr<CxxWString> {
+    let input = unsafe { slice::from_raw_parts(input, len) };
+    escape_string_url(wstr::from_slice(input).unwrap()).to_ffi()
 }

@@ -117,9 +117,6 @@ long convert_digit(wchar_t d, int base) {
     return res;
 }
 
-/// Test whether the char is a valid hex digit as used by the `escape_string_*()` functions.
-static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != nullptr; }
-
 bool is_windows_subsystem_for_linux() {
 #if defined(WSL)
     return true;
@@ -723,51 +720,17 @@ wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 static void escape_string_url(const wcstring &in, wcstring &out) {
-    const std::string narrow = wcs2string(in);
-    for (auto &c1 : narrow) {
-        // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
-        if (!(c2 & 0x80) &&
-            (isalnum(c2) || c2 == '/' || c2 == '.' || c2 == '~' || c2 == '-' || c2 == '_')) {
-            // The above characters don't need to be encoded.
-            out.push_back(static_cast<wchar_t>(c2));
-        } else {
-            // All other chars need to have their UTF-8 representation encoded in hex.
-            wchar_t buf[4];
-            swprintf(buf, sizeof buf / sizeof buf[0], L"%%%02X", c2);
-            out.append(buf);
-        }
+    auto result = rust_escape_string_url(in.c_str(), in.size());
+    if (result) {
+        out = *result;
     }
 }
 
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
 static void escape_string_var(const wcstring &in, wcstring &out) {
-    bool prev_was_hex_encoded = false;
-    const std::string narrow = wcs2string(in);
-    for (auto c1 : narrow) {
-        // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
-        if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
-            // ASCII alphanumerics don't need to be encoded.
-            if (prev_was_hex_encoded) {
-                out.push_back(L'_');
-                prev_was_hex_encoded = false;
-            }
-            out.push_back(static_cast<wchar_t>(c2));
-        } else if (c2 == '_') {
-            // Underscores are encoded by doubling them.
-            out.append(L"__");
-            prev_was_hex_encoded = false;
-        } else {
-            // All other chars need to have their UTF-8 representation encoded in hex.
-            wchar_t buf[4];
-            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c2);
-            out.append(buf);
-            prev_was_hex_encoded = true;
-        }
-    }
-    if (prev_was_hex_encoded) {
-        out.push_back(L'_');
+    auto result = rust_escape_string_var(in.c_str(), in.size());
+    if (result) {
+        out = *result;
     }
 }
 
@@ -790,177 +753,9 @@ wcstring escape_string_for_double_quotes(wcstring in) {
 /// Escape a string in a fashion suitable for using in fish script. Store the result in out_str.
 static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
                                  escape_flags_t flags) {
-    const wchar_t *in = orig_in;
-    const bool escape_printables = !(flags & ESCAPE_NO_PRINTABLES);
-    const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
-    const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
-    const bool no_qmark = feature_test(feature_flag_t::qmark_noglob);
-    const bool symbolic = static_cast<bool>(flags & ESCAPE_SYMBOLIC) && (MB_CUR_MAX > 1);
-    assert((!symbolic || !escape_printables) && "symbolic implies escape-no-printables");
-
-    bool need_escape = false;
-    bool need_complex_escape = false;
-
-    if (!no_quoted && in_len == 0) {
-        out.assign(L"''");
-        return;
-    }
-
-    for (size_t i = 0; i < in_len; i++) {
-        if ((*in >= ENCODE_DIRECT_BASE) && (*in < ENCODE_DIRECT_BASE + 256)) {
-            int val = *in - ENCODE_DIRECT_BASE;
-            int tmp;
-
-            out += L'\\';
-            out += L'X';
-
-            tmp = val / 16;
-            out += tmp > 9 ? L'a' + (tmp - 10) : L'0' + tmp;
-
-            tmp = val % 16;
-            out += tmp > 9 ? L'a' + (tmp - 10) : L'0' + tmp;
-            need_escape = need_complex_escape = true;
-
-        } else {
-            wchar_t c = *in;
-            switch (c) {
-                case L'\t': {
-                    if (symbolic)
-                        out += L'␉';
-                    else
-                        out += L"\\t";
-                    need_escape = need_complex_escape = true;
-                    break;
-                }
-                case L'\n': {
-                    if (symbolic)
-                        out += L'␤';
-                    else
-                        out += L"\\n";
-                    need_escape = need_complex_escape = true;
-                    break;
-                }
-                case L'\b': {
-                    if (symbolic)
-                        out += L'␈';
-                    else
-                        out += L"\\b";
-                    need_escape = need_complex_escape = true;
-                    break;
-                }
-                case L'\r': {
-                    if (symbolic)
-                        out += L'␍';
-                    else
-                        out += L"\\r";
-                    need_escape = need_complex_escape = true;
-                    break;
-                }
-                case L'\x1B': {
-                    if (symbolic)
-                        out += L'␛';
-                    else
-                        out += L"\\e";
-                    need_escape = need_complex_escape = true;
-                    break;
-                }
-                case L'\x7F': {
-                    if (symbolic)
-                        out += L'␡';
-                    else
-                        out += L"\\x7f";
-                    need_escape = need_complex_escape = true;
-                    break;
-                }
-                case L'\\':
-                case L'\'': {
-                    need_escape = need_complex_escape = true;
-                    if (escape_printables || (c == L'\\' && !symbolic)) out += L'\\';
-                    out += *in;
-                    break;
-                }
-                case ANY_CHAR: {
-                    // See #1614
-                    out += L'?';
-                    break;
-                }
-                case ANY_STRING: {
-                    out += L'*';
-                    break;
-                }
-                case ANY_STRING_RECURSIVE: {
-                    out += L"**";
-                    break;
-                }
-
-                case L'&':
-                case L'$':
-                case L' ':
-                case L'#':
-                case L'<':
-                case L'>':
-                case L'(':
-                case L')':
-                case L'[':
-                case L']':
-                case L'{':
-                case L'}':
-                case L'?':
-                case L'*':
-                case L'|':
-                case L';':
-                case L'"':
-                case L'%':
-                case L'~': {
-                    bool char_is_normal = (c == L'~' && no_tilde) || (c == L'?' && no_qmark);
-                    if (!char_is_normal) {
-                        need_escape = true;
-                        if (escape_printables) out += L'\\';
-                    }
-                    out += *in;
-                    break;
-                }
-
-                default: {
-                    if (*in >= 0 && *in < 32) {
-                        need_escape = need_complex_escape = true;
-
-                        if (symbolic) {
-                            out += L'\u2400' + *in;
-                            break;
-                        }
-
-                        if (*in < 27 && *in != 0) {
-                            out += L'\\';
-                            out += L'c';
-                            out += L'a' + *in - 1;
-                            break;
-                        }
-
-                        int tmp = (*in) % 16;
-                        out += L'\\';
-                        out += L'x';
-                        out += ((*in > 15) ? L'1' : L'0');
-                        out += tmp > 9 ? L'a' + (tmp - 10) : L'0' + tmp;
-                    } else {
-                        out += *in;
-                    }
-                    break;
-                }
-            }
-        }
-
-        in++;
-    }
-
-    // Use quoted escaping if possible, since most people find it easier to read.
-    if (!no_quoted && need_escape && !need_complex_escape && escape_printables) {
-        wchar_t single_quote = L'\'';
-        out.clear();
-        out.reserve(2 + in_len);
-        out.push_back(single_quote);
-        out.append(orig_in, in_len);
-        out.push_back(single_quote);
+    auto result = rust_escape_string_script(orig_in, in_len, flags);
+    if (result) {
+        out = *result;
     }
 }
 

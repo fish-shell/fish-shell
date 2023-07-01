@@ -6,19 +6,16 @@ use crate::builtins::shared::{
     BUILTIN_ERR_NOT_NUMBER, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::common::{get_executable_path, str2wcstring};
-
 use crate::ffi::{
     get_job_control_mode, get_login, is_interactive_session, job_control_t, parser_t,
     set_job_control_mode, Repin,
 };
 use crate::future_feature_flags::{feature_metadata, feature_test};
 use crate::wchar::{wstr, L};
-
-use crate::wchar_ffi::WCharFromFFI;
-
+use crate::wchar_ffi::{AsWstr, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::{
-    fish_wcstoi, waccess, wbasename, wdirname, wgettext, wgettext_fmt, wrealpath, Error,
+    fish_wcstoi, sprintf, waccess, wbasename, wdirname, wgettext, wgettext_fmt, wrealpath, Error,
 };
 use libc::{c_int, F_OK};
 use nix::errno::Errno;
@@ -191,13 +188,13 @@ fn print_features(streams: &mut io_streams_t) {
         } else {
             L!("off")
         };
-        streams.out.append(wgettext_fmt!(
+        streams.out.append(sprintf!(
             "%-*ls%-3s %ls %ls\n",
             max_len + 1,
-            md.name.from_ffi(),
+            md.name.as_wstr(),
             set,
-            md.groups.from_ffi(),
-            md.description.from_ffi(),
+            md.groups.as_wstr(),
+            md.description.as_wstr(),
         ));
     }
 }
@@ -271,7 +268,7 @@ fn parse_cmd_opts(
                     ));
                     return STATUS_CMD_ERROR;
                 }
-                let Ok(job_mode) = w.woptarg.unwrap().to_string().as_str().try_into() else {
+                let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
                     streams.err.append(wgettext_fmt!("%ls: Invalid job control mode '%ls'\n", cmd, w.woptarg.unwrap()));
                     return STATUS_CMD_ERROR;
                 };
@@ -287,7 +284,7 @@ fn parse_cmd_opts(
                 return STATUS_INVALID_ARGS;
             }
             c => {
-                let Some(opt_cmd) = StatusCmd::from_u32(c as u32) else {
+                let Some(opt_cmd) = StatusCmd::from_u32(c.into()) else {
                     panic!("unexpected retval from wgetopt_long")
                 };
                 match opt_cmd {
@@ -379,7 +376,7 @@ pub fn status(
         streams
             .out
             .append(wgettext_fmt!("Job control: %ls\n", job_control_mode));
-        streams.out.append(parser.stack_trace().from_ffi());
+        streams.out.append(parser.stack_trace().as_wstr());
 
         return STATUS_CMD_OK;
     };
@@ -412,7 +409,7 @@ pub fn status(
                         ));
                         return STATUS_INVALID_ARGS;
                     }
-                    let Ok(new_mode)= args[0].to_string().as_str().try_into() else {
+                    let Ok(new_mode)= args[0].try_into() else {
                         streams.err.append(wgettext_fmt!("%ls: Invalid job control mode '%ls'\n", cmd, args[0]));
                         return STATUS_CMD_ERROR;
                     };
@@ -436,7 +433,7 @@ pub fn status(
             use TestFeatureRetVal::*;
             let mut retval = Some(TEST_FEATURE_NOT_RECOGNIZED as c_int);
             for md in &feature_metadata() {
-                if md.name.from_ffi() == args[0] {
+                if md.name.as_wstr() == args[0] {
                     retval = match feature_test(md.flag) {
                         true => Some(TEST_FEATURE_ON as c_int),
                         false => Some(TEST_FEATURE_OFF as c_int),
@@ -539,7 +536,7 @@ pub fn status(
                     }
                 }
                 STATUS_STACK_TRACE => {
-                    streams.out.append(parser.stack_trace().from_ffi());
+                    streams.out.append(parser.stack_trace().as_wstr());
                 }
                 STATUS_CURRENT_CMD => {
                     let var = parser.pin().libdata().get_status_vars_command().from_ffi();

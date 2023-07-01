@@ -13,7 +13,10 @@ use crate::ffi::{
 use crate::future_feature_flags::{feature_metadata, feature_test};
 use crate::wchar::{wstr, L};
 use crate::wchar_ffi::{AsWstr, WCharFromFFI};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use crate::wgetopt::{
+    wgetopter_t, wopt, woption,
+    woption_argument_t::{no_argument, required_argument},
+};
 use crate::wutil::{
     fish_wcstoi, sprintf, waccess, wbasename, wdirname, wgettext, wgettext_fmt, wrealpath, Error,
 };
@@ -22,7 +25,6 @@ use nix::errno::Errno;
 use nix::NixPath;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
-use once_cell::sync::Lazy;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
@@ -30,7 +32,7 @@ macro_rules! str_enum {
             type Error = ();
 
             fn try_from(s: &str) -> Result<Self, Self::Error> {
-                // matching on str's let's us avoid having to do binary search and friends outselves,
+                // matching on str's lets us avoid having to do binary search and friends ourselves,
                 // this is ascii only anyways
                 match s {
                     $($str => Ok(Self::$val)),*,
@@ -107,9 +109,11 @@ str_enum!(
 );
 
 impl StatusCmd {
-    fn as_char(self) -> char {
-        // TODO: once unwrap is const, make LONG_OPTIONS const
-        char::from_u32(self as u32).unwrap()
+    const fn as_char(self) -> char {
+        match char::from_u32(self as u32) {
+            Some(c) => c,
+            None => panic!("Should be a valid char"),
+        }
     }
 }
 
@@ -140,40 +144,37 @@ impl Default for StatusCmdOpts {
 }
 
 const SHORT_OPTIONS: &wstr = L!(":L:cbilfnhj:t");
-static LONG_OPTIONS: Lazy<[woption; 17]> = Lazy::new(|| {
-    use woption_argument_t::*;
-    [
-        wopt(L!("help"), no_argument, 'h'),
-        wopt(L!("current-filename"), no_argument, 'f'),
-        wopt(L!("current-line-number"), no_argument, 'n'),
-        wopt(L!("filename"), no_argument, 'f'),
-        wopt(L!("fish-path"), no_argument, STATUS_FISH_PATH.as_char()),
-        wopt(L!("is-block"), no_argument, 'b'),
-        wopt(L!("is-command-substitution"), no_argument, 'c'),
-        wopt(
-            L!("is-full-job-control"),
-            no_argument,
-            STATUS_IS_FULL_JOB_CTRL.as_char(),
-        ),
-        wopt(L!("is-interactive"), no_argument, 'i'),
-        wopt(
-            L!("is-interactive-job-control"),
-            no_argument,
-            STATUS_IS_INTERACTIVE_JOB_CTRL.as_char(),
-        ),
-        wopt(L!("is-login"), no_argument, 'l'),
-        wopt(
-            L!("is-no-job-control"),
-            no_argument,
-            STATUS_IS_NO_JOB_CTRL.as_char(),
-        ),
-        wopt(L!("job-control"), required_argument, 'j'),
-        wopt(L!("level"), required_argument, 'L'),
-        wopt(L!("line"), no_argument, 'n'),
-        wopt(L!("line-number"), no_argument, 'n'),
-        wopt(L!("print-stack-trace"), no_argument, 't'),
-    ]
-});
+const LONG_OPTIONS: &[woption] = &[
+    wopt(L!("help"), no_argument, 'h'),
+    wopt(L!("current-filename"), no_argument, 'f'),
+    wopt(L!("current-line-number"), no_argument, 'n'),
+    wopt(L!("filename"), no_argument, 'f'),
+    wopt(L!("fish-path"), no_argument, STATUS_FISH_PATH.as_char()),
+    wopt(L!("is-block"), no_argument, 'b'),
+    wopt(L!("is-command-substitution"), no_argument, 'c'),
+    wopt(
+        L!("is-full-job-control"),
+        no_argument,
+        STATUS_IS_FULL_JOB_CTRL.as_char(),
+    ),
+    wopt(L!("is-interactive"), no_argument, 'i'),
+    wopt(
+        L!("is-interactive-job-control"),
+        no_argument,
+        STATUS_IS_INTERACTIVE_JOB_CTRL.as_char(),
+    ),
+    wopt(L!("is-login"), no_argument, 'l'),
+    wopt(
+        L!("is-no-job-control"),
+        no_argument,
+        STATUS_IS_NO_JOB_CTRL.as_char(),
+    ),
+    wopt(L!("job-control"), required_argument, 'j'),
+    wopt(L!("level"), required_argument, 'L'),
+    wopt(L!("line"), no_argument, 'n'),
+    wopt(L!("line-number"), no_argument, 'n'),
+    wopt(L!("print-stack-trace"), no_argument, 't'),
+];
 
 /// Print the features and their values.
 fn print_features(streams: &mut io_streams_t) {
@@ -211,7 +212,7 @@ fn parse_cmd_opts(
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, &*LONG_OPTIONS, args);
+    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, args);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'L' => {

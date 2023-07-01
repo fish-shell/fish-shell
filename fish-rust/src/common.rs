@@ -288,14 +288,14 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
 
                     if symbolic {
                         out.push(char::from_u32(0x2400 + cval).unwrap());
-                        break;
+                        continue;
                     }
 
                     if cval < 27 && cval != 0 {
                         out.push('\\');
                         out.push('c');
                         out.push(char::from_u32(u32::from(b'a') + cval - 1).unwrap());
-                        break;
+                        continue;
                     }
 
                     let nibble = cval % 16;
@@ -352,7 +352,12 @@ fn escape_string_var(input: &wstr) -> WString {
     for byte in narrow.into_iter() {
         if (byte & 0x80) == 0 {
             let c = char::from_u32(u32::from(byte)).unwrap();
-            if c.is_alphanumeric() && (!prev_was_hex_encoded || c.to_digit(16).is_none()) {
+            // we replace non-alphanumerics characters with _<hex-encoded-value>_
+            // if the character is (upper-case) hex-encoded, we cannot distinguish it from a hex-encoded value
+            // so we also hex-encode the hex-like value, instead of directly printing it
+            if c.is_alphanumeric()
+                && (!prev_was_hex_encoded || (c.is_lowercase() || c.to_digit(16).is_none()))
+            {
                 // ASCII alphanumerics don't need to be encoded.
                 if prev_was_hex_encoded {
                     out.push('_');
@@ -361,7 +366,8 @@ fn escape_string_var(input: &wstr) -> WString {
                 out.push(c);
                 continue;
             }
-        } else if byte == b'_' {
+        }
+        if byte == b'_' {
             // Underscores are encoded by doubling them.
             out += "__"L;
             prev_was_hex_encoded = false;
@@ -370,6 +376,9 @@ fn escape_string_var(input: &wstr) -> WString {
         // All other chars need to have their UTF-8 representation encoded in hex.
         out += &sprintf!("_%02X"L, byte)[..];
         prev_was_hex_encoded = true;
+    }
+    if prev_was_hex_encoded {
+        out.push('_');
     }
     out
 }
@@ -2057,10 +2066,7 @@ pub fn fputws(s: &wstr, fd: RawFd) {
 }
 
 mod tests {
-    use crate::common::{
-        escape_string, str2wcstring, wcs2string, EscapeStringStyle, ENCODE_DIRECT_BASE,
-        ENCODE_DIRECT_END,
-    };
+    use super::*;
     use crate::wchar::widestrs;
     use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
     use rand::random;
@@ -2087,8 +2093,93 @@ mod tests {
         );
     }
 
+    #[widestrs]
+    pub fn test_unescape_sane() {
+        const TEST_CASES: &[(&wstr, &wstr)] = &[
+            ("abcd"L, "abcd"L),
+            ("'abcd'"L, "abcd"L),
+            ("'abcd\\n'"L, "abcd\\n"L),
+            ("\"abcd\\n\""L, "abcd\\n"L),
+            ("\"abcd\\n\""L, "abcd\\n"L),
+            ("\\143"L, "c"L),
+            ("'\\143'"L, "\\143"L),
+            ("\\n"L, "\n"L), // \n normally becomes newline
+        ];
+
+        for (input, expected) in TEST_CASES {
+            let Some(output) = unescape_string(input, UnescapeStringStyle::default()) else {
+                panic!("Failed to unescape string {input:?}");
+            };
+
+            assert_eq!(
+                output, *expected,
+                "In unescaping {input:?}, expected {expected:?} but got {output:?}\n"
+            );
+        }
+    }
+
+    #[widestrs]
+    pub fn test_escape_var() {
+        const TEST_CASES: &[(&wstr, &wstr)] = &[
+            (" a"L, "_20_a"L),
+            ("a B "L, "a_20_42_20_"L),
+            ("a b "L, "a_20_b_20_"L),
+            (" B"L, "_20_42_"L),
+            (" f"L, "_20_f"L),
+            (" 1"L, "_20_31_"L),
+            ("a\nghi_"L, "a_0A_ghi__"L),
+        ];
+
+        for (input, expected) in TEST_CASES {
+            let output = escape_string(input, EscapeStringStyle::Var);
+
+            assert_eq!(
+                output, *expected,
+                "In escaping {input:?} with style var, expected {expected:?} but got {output:?}\n"
+            );
+        }
+    }
+
+    #[widestrs]
+    pub fn test_escape_crazy() {
+        let mut random_string = WString::new();
+        let mut escaped_string;
+        for _ in 0..(ESCAPE_TEST_COUNT as u32) {
+            random_string.clear();
+            while random::<usize>() % ESCAPE_TEST_LENGTH != 0 {
+                random_string
+                    .push(char::from_u32((random::<u32>() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
+            }
+
+            for (escape_style, unescape_style) in [
+                (EscapeStringStyle::default(), UnescapeStringStyle::default()),
+                (EscapeStringStyle::Var, UnescapeStringStyle::Var),
+                (EscapeStringStyle::Url, UnescapeStringStyle::Url),
+            ] {
+                escaped_string = escape_string(&random_string, escape_style);
+                let Some(unescaped_string) = unescape_string(&escaped_string, unescape_style) else {
+                    let slice = escaped_string.as_char_slice();
+                    panic!("Failed to unescape string {slice:?} using style {unescape_style:?}");
+                };
+                assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}. Using escape style {escape_style:?}");
+            }
+        }
+
+        // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
+        random_string = "line 1\\n\nline 2"L.to_owned();
+        escaped_string = escape_string(
+            &random_string,
+            EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+        );
+        let Some(unescaped_string) = unescape_string(&escaped_string, UnescapeStringStyle::default()) else {
+            panic!("Failed to unescape string <{escaped_string}>");
+        };
+
+        assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string '{random_string}', but got back a different string '{unescaped_string}'");
+    }
+
     /// The number of tests to run.
-    const ESCAPE_TEST_COUNT: usize = 100000;
+    const ESCAPE_TEST_COUNT: usize = 100_000;
     /// The average length of strings to unescape.
     const ESCAPE_TEST_LENGTH: usize = 100;
     /// The highest character number of character to try and escape.
@@ -2268,6 +2359,9 @@ mod tests {
 }
 
 crate::ffi_tests::add_test!("escape_string", tests::test_escape_string);
+crate::ffi_tests::add_test!("escape_string", tests::test_escape_crazy);
+crate::ffi_tests::add_test!("escape_string", tests::test_unescape_sane);
+crate::ffi_tests::add_test!("escape_string", tests::test_escape_var);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert_ascii);
 crate::ffi_tests::add_test!("escape_string", tests::test_convert_private_use);

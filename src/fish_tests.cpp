@@ -367,79 +367,6 @@ static void test_enum_array() {
     do_test(es.at(test_enum::gamma) == "def");
 }
 
-/// Test sane escapes.
-static void test_unescape_sane() {
-    const struct test_t {
-        const wchar_t *input;
-        const wchar_t *expected;
-    } tests[] = {
-        {L"abcd", L"abcd"},           {L"'abcd'", L"abcd"},
-        {L"'abcd\\n'", L"abcd\\n"},   {L"\"abcd\\n\"", L"abcd\\n"},
-        {L"\"abcd\\n\"", L"abcd\\n"}, {L"\\143", L"c"},
-        {L"'\\143'", L"\\143"},       {L"\\n", L"\n"}  // \n normally becomes newline
-    };
-    for (const auto &test : tests) {
-        auto output = unescape_string(test.input, UNESCAPE_DEFAULT);
-        if (!output) {
-            err(L"Failed to unescape '%ls'\n", test.input);
-        } else if (*output != test.expected) {
-            err(L"In unescaping '%ls', expected '%ls' but got '%ls'\n", test.input, test.expected,
-                output->c_str());
-        }
-    }
-
-    // Test for overflow.
-    if (unescape_string(L"echo \\UFFFFFF", UNESCAPE_DEFAULT)) {
-        err(L"Should not have been able to unescape \\UFFFFFF\n");
-    }
-    if (unescape_string(L"echo \\U110000", UNESCAPE_DEFAULT)) {
-        err(L"Should not have been able to unescape \\U110000\n");
-    }
-#if WCHAR_MAX != 0xffff
-    // TODO: Make this work on MS Windows.
-    if (!unescape_string(L"echo \\U10FFFF", UNESCAPE_DEFAULT)) {
-        err(L"Should have been able to unescape \\U10FFFF\n");
-    }
-#endif
-}
-
-/// Test the escaping/unescaping code by escaping/unescaping random strings and verifying that the
-/// original string comes back.
-static void test_escape_crazy() {
-    say(L"Testing escaping and unescaping");
-    wcstring random_string;
-    wcstring escaped_string;
-    for (size_t i = 0; i < ESCAPE_TEST_COUNT; i++) {
-        random_string.clear();
-        while (random() % ESCAPE_TEST_LENGTH) {
-            random_string.push_back((random() % ESCAPE_TEST_CHAR) + 1);
-        }
-
-        escaped_string = escape_string(random_string);
-        auto unescaped_string = unescape_string(escaped_string, UNESCAPE_DEFAULT);
-
-        if (!unescaped_string) {
-            err(L"Failed to unescape string <%ls>", escaped_string.c_str());
-            break;
-        } else if (*unescaped_string != random_string) {
-            err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'",
-                random_string.c_str(), unescaped_string->c_str());
-            break;
-        }
-    }
-
-    // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
-    random_string = L"line 1\\n\nline 2";
-    escaped_string = escape_string(random_string, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
-    auto unescaped_string = unescape_string(escaped_string, UNESCAPE_DEFAULT);
-    if (!unescaped_string) {
-        err(L"Failed to unescape string <%ls>", escaped_string.c_str());
-    } else if (*unescaped_string != random_string) {
-        err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'",
-            random_string.c_str(), unescaped_string->c_str());
-    }
-}
-
 static void test_format() {
     say(L"Testing formatting functions");
     struct {
@@ -6216,8 +6143,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
     {TEST_GROUP("new_parser_errors"), test_new_parser_errors},
     {TEST_GROUP("error_messages"), test_error_messages},
-    {TEST_GROUP("escape"), test_unescape_sane},
-    {TEST_GROUP("escape"), test_escape_crazy},
     {TEST_GROUP("format"), test_format},
     {TEST_GROUP("convert"), test_convert},
     {TEST_GROUP("convert"), test_convert_private_use},

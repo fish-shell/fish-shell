@@ -1,5 +1,4 @@
 use super::*;
-use libc;
 use widestring_suffix::widestrs;
 
 #[test]
@@ -24,14 +23,14 @@ fn test_wdirname_wbasename() {
 
     for tc in testcases {
         let Test(path, tc_dir, tc_base) = *tc;
-        let dir = wdirname(&path);
+        let dir = wdirname(path);
         assert_eq!(
             dir, tc_dir,
             "\npath: {:?}, dir: {:?}, tc.dir: {:?}",
             path, dir, tc_dir
         );
 
-        let base = wbasename(&path);
+        let base = wbasename(path);
         assert_eq!(
             base, tc_base,
             "\npath: {:?}, base: {:?}, tc.base: {:?}",

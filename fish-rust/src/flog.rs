@@ -1,10 +1,9 @@
-use crate::ffi::{get_flog_file_fd, wildcard_match};
+use crate::ffi::wildcard_match;
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::{widestrs, wstr, WString};
 use crate::wchar_ext::WExt;
 use crate::wchar_ffi::WCharToFFI;
 use std::io::Write;
-use std::os::unix::io::{FromRawFd, IntoRawFd, RawFd};
 use std::sync::atomic::Ordering;
 
 #[rustfmt::skip::macros(category)]
@@ -161,8 +160,10 @@ pub trait FloggableDebug: std::fmt::Debug {
 }
 
 /// Write to our FLOG file.
+#[cfg(not(test))]
 pub fn flog_impl(s: &str) {
-    let fd = get_flog_file_fd().0 as RawFd;
+    use std::os::unix::io::{FromRawFd, IntoRawFd, RawFd};
+    let fd = crate::ffi::get_flog_file_fd().0 as RawFd;
     if fd < 0 {
         return;
     }
@@ -170,6 +171,12 @@ pub fn flog_impl(s: &str) {
     let _ = file.write(s.as_bytes());
     // Ensure the file is not closed.
     file.into_raw_fd();
+}
+
+// FIXME: this is _only_ to make it possible to write some _simple_ tests from Rust before FLOG is fully ported
+#[cfg(test)]
+pub fn flog_impl(s: &str) {
+    let _ = std::io::stderr().write(s.as_bytes());
 }
 
 macro_rules! FLOG {

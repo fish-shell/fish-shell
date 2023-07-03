@@ -2065,14 +2065,81 @@ pub fn fputws(s: &wstr, fd: RawFd) {
     wwrite_to_fd(s, fd);
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wchar::widestrs;
-    use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
+
+    use crate::future_feature_flags::future_feature_flags_init;
+    use crate::tests::make_locale_sensitive;
     use rand::random;
 
+    /// The number of tests to run.
+    const ESCAPE_TEST_COUNT: usize = 100_000;
+    /// The average length of strings to unescape.
+    const ESCAPE_TEST_LENGTH: usize = 100;
+    /// The highest character number of character to try and escape.
+    const ESCAPE_TEST_CHAR: usize = 4000;
+
+    macro_rules! escape_test {
+        ($escape_style:expr, $unescape_style:expr) => {
+            future_feature_flags_init();
+            make_locale_sensitive();
+
+            let mut random_string = WString::new();
+            let mut escaped_string;
+            for _ in 0..(ESCAPE_TEST_COUNT as u32) {
+                random_string.clear();
+                while random::<usize>() % ESCAPE_TEST_LENGTH != 0 {
+                    random_string
+                    .push(char::from_u32((random::<u32>() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
+                }
+
+                escaped_string = escape_string(&random_string, $escape_style);
+                let Some(unescaped_string) = unescape_string(&escaped_string, $unescape_style) else {
+                    panic!("Failed to unescape string {escaped_string:?}");
+                };
+                assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}.");
+            }
+        };
+    }
+
+    #[test]
+    fn test_escape_script_crazy() {
+        escape_test!(EscapeStringStyle::default(), UnescapeStringStyle::default());
+    }
+
+    #[test]
+    #[ignore = "takes a minute"]
+    fn test_escape_var_crazy() {
+        escape_test!(EscapeStringStyle::Var, UnescapeStringStyle::Var);
+    }
+
+    #[test]
+    #[ignore = "takes a minute"]
+    fn test_escape_url_crazy() {
+        escape_test!(EscapeStringStyle::Url, UnescapeStringStyle::Url);
+    }
+
+    #[test]
+    fn test_escape_no_printables() {
+        future_feature_flags_init();
+        // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
+        let random_string = L!("line 1\\n\nline 2").to_owned();
+        let escaped_string = escape_string(
+            &random_string,
+            EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+        );
+        let Some(unescaped_string) = unescape_string(&escaped_string, UnescapeStringStyle::default())
+        else {
+            panic!("Failed to unescape string <{escaped_string:?}>");
+        };
+
+        assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string '{random_string:?}', but got back a different string '{unescaped_string:?}'");
+    }
+
     #[widestrs]
-    pub fn test_escape_string() {
+    #[test]
+    fn test_escape_string() {
         let regex = |input| escape_string(input, EscapeStringStyle::Regex);
 
         // plain text should not be needlessly escaped
@@ -2094,6 +2161,7 @@ mod tests {
     }
 
     #[widestrs]
+    #[test]
     pub fn test_unescape_sane() {
         const TEST_CASES: &[(&wstr, &wstr)] = &[
             ("abcd"L, "abcd"L),
@@ -2119,6 +2187,7 @@ mod tests {
     }
 
     #[widestrs]
+    #[test]
     pub fn test_escape_var() {
         const TEST_CASES: &[(&wstr, &wstr)] = &[
             (" a"L, "_20_a"L),
@@ -2140,51 +2209,6 @@ mod tests {
         }
     }
 
-    #[widestrs]
-    pub fn test_escape_crazy() {
-        let mut random_string = WString::new();
-        let mut escaped_string;
-        for _ in 0..(ESCAPE_TEST_COUNT as u32) {
-            random_string.clear();
-            while random::<usize>() % ESCAPE_TEST_LENGTH != 0 {
-                random_string
-                    .push(char::from_u32((random::<u32>() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
-            }
-
-            for (escape_style, unescape_style) in [
-                (EscapeStringStyle::default(), UnescapeStringStyle::default()),
-                (EscapeStringStyle::Var, UnescapeStringStyle::Var),
-                (EscapeStringStyle::Url, UnescapeStringStyle::Url),
-            ] {
-                escaped_string = escape_string(&random_string, escape_style);
-                let Some(unescaped_string) = unescape_string(&escaped_string, unescape_style) else {
-                    let slice = escaped_string.as_char_slice();
-                    panic!("Failed to unescape string {slice:?} using style {unescape_style:?}");
-                };
-                assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}. Using escape style {escape_style:?}");
-            }
-        }
-
-        // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
-        random_string = "line 1\\n\nline 2"L.to_owned();
-        escaped_string = escape_string(
-            &random_string,
-            EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
-        );
-        let Some(unescaped_string) = unescape_string(&escaped_string, UnescapeStringStyle::default()) else {
-            panic!("Failed to unescape string <{escaped_string}>");
-        };
-
-        assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string '{random_string}', but got back a different string '{unescaped_string}'");
-    }
-
-    /// The number of tests to run.
-    const ESCAPE_TEST_COUNT: usize = 100_000;
-    /// The average length of strings to unescape.
-    const ESCAPE_TEST_LENGTH: usize = 100;
-    /// The highest character number of character to try and escape.
-    const ESCAPE_TEST_CHAR: usize = 4000;
-
     /// Helper to convert a narrow string to a sequence of hex digits.
     fn str2hex(input: &[u8]) -> String {
         let mut output = "".to_string();
@@ -2196,7 +2220,8 @@ mod tests {
 
     /// Test wide/narrow conversion by creating random strings and verifying that the original
     /// string comes back through double conversion.
-    pub fn test_convert() {
+    #[test]
+    fn test_convert() {
         for _ in 0..ESCAPE_TEST_COUNT {
             let mut origin: Vec<u8> = vec![];
             while (random::<usize>() % ESCAPE_TEST_LENGTH) != 0 {
@@ -2210,8 +2235,8 @@ mod tests {
                 origin,
                 n,
                 "Conversion cycle of string:\n{:4} chars: {}\n\
-                 produced different string:\n\
-                 {:4} chars: {}",
+                     produced different string:\n\
+                     {:4} chars: {}",
                 origin.len(),
                 &str2hex(&origin),
                 n.len(),
@@ -2221,7 +2246,8 @@ mod tests {
     }
 
     /// Verify that ASCII narrow->wide conversions are correct.
-    pub fn test_convert_ascii() {
+    #[test]
+    fn test_convert_ascii() {
         let mut s = vec![b'\0'; 4096];
         for (i, c) in s.iter_mut().enumerate() {
             *c = u8::try_from(i % 10).unwrap() + b'0';
@@ -2251,7 +2277,8 @@ mod tests {
     /// user's locale. If the input could be decoded, but decoded to private-use codepoints,
     /// then fish should also use the direct encoding for those bytes. Verify that characters
     /// in the private use area are correctly round-tripped. See #7723.
-    pub fn test_convert_private_use() {
+    #[test]
+    fn test_convert_private_use() {
         for c in ENCODE_DIRECT_BASE..ENCODE_DIRECT_END {
             // Encode the char via the locale. Do not use fish functions which interpret these
             // specially.
@@ -2350,22 +2377,15 @@ mod tests {
         let obj = ScopeGuarding::commit(obj);
         assert_eq!(obj.value, "nu");
     }
-
-    pub fn test_assert_is_locked() {
-        let lock = std::sync::Mutex::new(());
-        let _guard = lock.lock().unwrap();
-        assert_is_locked!(&lock);
-    }
 }
 
-crate::ffi_tests::add_test!("escape_string", tests::test_escape_string);
-crate::ffi_tests::add_test!("escape_string", tests::test_escape_crazy);
-crate::ffi_tests::add_test!("escape_string", tests::test_unescape_sane);
-crate::ffi_tests::add_test!("escape_string", tests::test_escape_var);
-crate::ffi_tests::add_test!("escape_string", tests::test_convert);
-crate::ffi_tests::add_test!("escape_string", tests::test_convert_ascii);
-crate::ffi_tests::add_test!("escape_string", tests::test_convert_private_use);
-crate::ffi_tests::add_test!("assert_is_locked", tests::test_assert_is_locked);
+fn test_assert_is_locked() {
+    let lock = std::sync::Mutex::new(());
+    let _guard = lock.lock().unwrap();
+    assert_is_locked!(&lock);
+}
+
+crate::ffi_tests::add_test!("assert_is_locked", test_assert_is_locked);
 
 #[cxx::bridge]
 mod common_ffi {

@@ -96,7 +96,7 @@ impl generation_list_t {
     fn describe(&self) -> WString {
         let mut result = WString::new();
         for gen in self.as_array() {
-            if result.len() > 0 {
+            if !result.is_empty() {
                 result.push(',');
             }
             if gen == invalid_generation {

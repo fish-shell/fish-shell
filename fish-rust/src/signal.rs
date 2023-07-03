@@ -6,7 +6,7 @@ use crate::termsize::termsize_handle_winch;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
 use crate::wchar::{wstr, WExt, L};
 use crate::wchar_ffi::{AsWstr, WCharToFFI};
-use crate::wutil::{fish_wcstoi, wgettext, wgettext_str, wperror};
+use crate::wutil::{fish_wcstoi, perror, wgettext, wgettext_str};
 use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
 use std::sync::atomic::{AtomicI32, Ordering};
@@ -278,7 +278,7 @@ pub fn signal_set_handlers(interactive: bool) {
     act.sa_sigaction = fish_signal_handler as usize;
     act.sa_flags = libc::SA_SIGINFO | libc::SA_RESTART;
     if sigaction(libc::SIGCHLD, &act, nullptr) != 0 {
-        wperror(L!("sigaction"));
+        perror("sigaction");
         exit_without_destructors(1);
     }
 

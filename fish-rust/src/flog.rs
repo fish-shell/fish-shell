@@ -1,11 +1,12 @@
-use crate::ffi::{get_flog_file_fd, wildcard_match};
+use crate::ffi::wildcard_match;
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::{widestrs, wstr, WString};
 use crate::wchar_ext::WExt;
 use crate::wchar_ffi::WCharToFFI;
+use libc::c_int;
 use std::io::Write;
-use std::os::unix::io::{FromRawFd, IntoRawFd, RawFd};
-use std::sync::atomic::Ordering;
+use std::os::unix::io::{FromRawFd, IntoRawFd};
+use std::sync::atomic::{AtomicI32, Ordering};
 
 #[rustfmt::skip::macros(category)]
 #[widestrs]
@@ -162,7 +163,7 @@ pub trait FloggableDebug: std::fmt::Debug {
 
 /// Write to our FLOG file.
 pub fn flog_impl(s: &str) {
-    let fd = get_flog_file_fd().0 as RawFd;
+    let fd = get_flog_file_fd();
     if fd < 0 {
         return;
     }
@@ -239,4 +240,15 @@ pub fn activate_flog_categories_by_pattern(wc_ptr: &wstr) {
             apply_one_wildcard(s, true);
         }
     }
+}
+
+/// The flog output fd. Defaults to stderr. A value < 0 disables flog.
+static FLOG_FD: AtomicI32 = AtomicI32::new(libc::STDERR_FILENO);
+
+pub fn set_flog_file_fd(fd: c_int) {
+    FLOG_FD.store(fd, Ordering::Relaxed);
+}
+
+pub fn get_flog_file_fd() -> c_int {
+    FLOG_FD.load(Ordering::Relaxed)
 }

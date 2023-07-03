@@ -13,6 +13,7 @@ mod ffi2 {
     extern "Rust" {
         fn rust_init();
         fn rust_activate_flog_categories_by_pattern(wc_ptr: wcharz_t);
+        fn rust_set_flog_file_fd(fd: i32);
         fn rust_invalidate_numeric_locale();
     }
 }
@@ -27,6 +28,11 @@ fn rust_init() {
 /// FFI bridge for activate_flog_categories_by_pattern().
 fn rust_activate_flog_categories_by_pattern(wc_ptr: wcharz_t) {
     crate::flog::activate_flog_categories_by_pattern(wc_ptr.into());
+}
+
+/// FFI bridge for setting FLOG file descriptor.
+fn rust_set_flog_file_fd(fd: i32) {
+    crate::flog::set_flog_file_fd(fd as libc::c_int);
 }
 
 /// FFI bridge to invalidate cached locale bits.

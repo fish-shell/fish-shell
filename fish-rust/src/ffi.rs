@@ -71,7 +71,6 @@ include_cpp! {
 
     generate!("make_pipes_ffi")
 
-    generate!("get_flog_file_fd")
     generate!("log_extra_to_flog_file")
 
     generate!("fish_wcwidth")

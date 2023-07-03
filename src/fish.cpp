@@ -467,6 +467,7 @@ int main(int argc, char **argv) {
         set_cloexec(fileno(debug_output));
         setlinebuf(debug_output);
         set_flog_output_file(debug_output);
+        rust_set_flog_file_fd(get_flog_file_fd());
     }
 
     // No-exec is prohibited when in interactive mode.

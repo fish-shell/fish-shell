@@ -323,6 +323,12 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     out
 }
 
+/// Test whether the char is a valid hex digit as used by the `escape_string_*()` functions.
+/// Note this only considers uppercase characters.
+fn is_upper_hex_digit(c: char) -> bool {
+    matches!(c, '0'..='9' | 'A'..='F')
+}
+
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 #[widestrs]
 fn escape_string_url(input: &wstr) -> WString {
@@ -349,33 +355,26 @@ fn escape_string_var(input: &wstr) -> WString {
     let mut prev_was_hex_encoded = false;
     let narrow = wcs2string(input);
     let mut out = WString::new();
-    for byte in narrow.into_iter() {
-        if (byte & 0x80) == 0 {
-            let c = char::from_u32(u32::from(byte)).unwrap();
-            // we replace non-alphanumerics characters with _<hex-encoded-value>_
-            // if the character is (upper-case) hex-encoded, we cannot distinguish it from a hex-encoded value
-            // so we also hex-encode the hex-like value, instead of directly printing it
-            if c.is_alphanumeric()
-                && (!prev_was_hex_encoded || (c.is_lowercase() || c.to_digit(16).is_none()))
-            {
-                // ASCII alphanumerics don't need to be encoded.
-                if prev_was_hex_encoded {
-                    out.push('_');
-                    prev_was_hex_encoded = false;
-                }
-                out.push(c);
-                continue;
+    for c in narrow.into_iter() {
+        let ch: char = c.into();
+        if ((c & 0x80) == 0 && ch.is_alphanumeric())
+            && (!prev_was_hex_encoded || !is_upper_hex_digit(ch))
+        {
+            // ASCII alphanumerics don't need to be encoded.
+            if prev_was_hex_encoded {
+                out.push('_');
+                prev_was_hex_encoded = false;
             }
-        }
-        if byte == b'_' {
+            out.push(ch);
+        } else if c == b'_' {
             // Underscores are encoded by doubling them.
-            out += "__"L;
+            out.push_str("__");
             prev_was_hex_encoded = false;
-            continue;
+        } else {
+            // All other chars need to have their UTF-8 representation encoded in hex.
+            sprintf!(=> &mut out, "_%02X"L, c);
+            prev_was_hex_encoded = true;
         }
-        // All other chars need to have their UTF-8 representation encoded in hex.
-        sprintf!(=> &mut out, "_%02X"L, byte);
-        prev_was_hex_encoded = true;
     }
     if prev_was_hex_encoded {
         out.push('_');
@@ -755,7 +754,7 @@ fn unescape_string_var(input: &wstr) -> Option<WString> {
             } else if c1 == '_' {
                 result.push(b'_');
                 i += 1;
-            } else if ('0'..='9').contains(&c1) || ('A'..='F').contains(&c1) {
+            } else if is_upper_hex_digit(c1) {
                 let d1 = c1.to_digit(16)?;
                 let c2 = input.char_at(i + 2);
                 let d2 = c2.to_digit(16)?; // also fails if '\0' i.e. premature end

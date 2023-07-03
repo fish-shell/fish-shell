@@ -21,7 +21,6 @@ mod ffi2 {
 /// Entry point for Rust-specific initialization.
 fn rust_init() {
     crate::topic_monitor::topic_monitor_init();
-    crate::future_feature_flags::future_feature_flags_init();
     crate::threads::init();
 }
 

@@ -4,7 +4,6 @@ use crate::ffi::wcharz_t;
 use crate::wchar::wstr;
 use crate::wchar_ffi::WCharToFFI;
 use std::array;
-use std::cell::UnsafeCell;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use widestring_suffix::widestrs;
@@ -135,19 +134,17 @@ const metadata: [FeatureMetadata; 4] = [
 ];
 
 /// The singleton shared feature set.
-static mut global_features: *const UnsafeCell<Features> = std::ptr::null();
-
-pub fn future_feature_flags_init() {
-    unsafe {
-        // Leak it for now.
-        global_features = Box::into_raw(Box::new(UnsafeCell::new(Features::new())));
-    }
-}
+static mut global_features: Features = Features::new();
 
 impl Features {
-    fn new() -> Self {
+    const fn new() -> Self {
         Features {
-            values: array::from_fn(|i| AtomicBool::new(metadata[i].default_value)),
+            values: [
+                AtomicBool::new(metadata[0].default_value),
+                AtomicBool::new(metadata[1].default_value),
+                AtomicBool::new(metadata[2].default_value),
+                AtomicBool::new(metadata[3].default_value),
+            ],
         }
     }
 
@@ -208,20 +205,22 @@ impl Features {
     }
 }
 
-/// Return the global set of features for fish. This is const to prevent accidental mutation.
-pub fn fish_features() -> *const Features {
-    unsafe { (*global_features).get() }
+/// Return the global set of features for fish.
+pub fn fish_features() -> &'static Features {
+    // Safety: this will become const with atomics after Rust conversion.
+    unsafe { &global_features }
 }
 
 /// Perform a feature test on the global set of features.
 pub fn feature_test(flag: FeatureFlag) -> bool {
-    unsafe { &*(*global_features).get() }.test(flag)
+    fish_features().test(flag)
 }
 
 /// Return the global set of features for fish, but mutable. In general fish features should be set
 /// at startup only.
 pub fn mutable_fish_features() -> *mut Features {
-    unsafe { (*global_features).get() }
+    // Safety: this will be ported to use atomics after Rust conversion.
+    unsafe { &mut global_features as *mut Features }
 }
 
 // The metadata, indexed by flag.

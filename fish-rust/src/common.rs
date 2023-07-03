@@ -338,7 +338,7 @@ fn escape_string_url(input: &wstr) -> WString {
             }
         }
         // All other chars need to have their UTF-8 representation encoded in hex.
-        out += &sprintf!("%%%02X"L, byte)[..];
+        sprintf!(=> &mut out, "%%%02X"L, byte);
     }
     out
 }
@@ -374,7 +374,7 @@ fn escape_string_var(input: &wstr) -> WString {
             continue;
         }
         // All other chars need to have their UTF-8 representation encoded in hex.
-        out += &sprintf!("_%02X"L, byte)[..];
+        sprintf!(=> &mut out, "_%02X"L, byte);
         prev_was_hex_encoded = true;
     }
     if prev_was_hex_encoded {

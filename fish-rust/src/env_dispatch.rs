@@ -692,7 +692,7 @@ fn init_locale(vars: &EnvStack) {
         "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
     ];
 
-    let old_msg_locale = unsafe {
+    let old_msg_locale: CString = unsafe {
         let old = libc::setlocale(libc::LC_MESSAGES, std::ptr::null());
         // We have to make a copy because the subsequent setlocale() call to change the locale will
         // invalidate the pointer from this setlocale() call.

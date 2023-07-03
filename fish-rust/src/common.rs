@@ -25,6 +25,7 @@ use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::env;
 use std::ffi::{CStr, CString, OsString};
+use std::fmt::Write;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, RawFd};
@@ -343,14 +344,13 @@ fn escape_string_url(input: &wstr) -> WString {
                 continue;
             }
         }
-        // All other chars need to have their UTF-8 representation encoded in hex.
-        sprintf!(=> &mut out, "%%%02X"L, byte);
+        // All other chars need to have their narrow representation encoded in hex.
+        write!(out, "%{:02X}", byte).expect("Writes to strings cannot fail");
     }
     out
 }
 
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
-#[widestrs]
 fn escape_string_var(input: &wstr) -> WString {
     let mut prev_was_hex_encoded = false;
     let narrow = wcs2string(input);
@@ -371,8 +371,8 @@ fn escape_string_var(input: &wstr) -> WString {
             out.push_str("__");
             prev_was_hex_encoded = false;
         } else {
-            // All other chars need to have their UTF-8 representation encoded in hex.
-            sprintf!(=> &mut out, "_%02X"L, c);
+            // All other chars need to have their narrow representation encoded in hex.
+            write!(out, "_{:02X}", c).expect("Writes to strings cannot fail");
             prev_was_hex_encoded = true;
         }
     }

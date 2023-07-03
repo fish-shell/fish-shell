@@ -1,3 +1,7 @@
+if (APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE STRING "Minimum OS X deployment version")
+endif()
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/corrosion-vendor/")
     add_subdirectory("${CMAKE_SOURCE_DIR}/corrosion-vendor/")
 else()

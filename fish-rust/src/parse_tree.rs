@@ -1,7 +1,7 @@
 //! Programmatic representation of fish code.
 
 use std::pin::Pin;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::ast::Ast;
 use crate::parse_constants::{
@@ -112,7 +112,7 @@ impl ParsedSource {
     }
 }
 
-pub type ParsedSourceRef = Option<Rc<ParsedSource>>;
+pub type ParsedSourceRef = Arc<ParsedSource>;
 
 /// Return a shared pointer to ParsedSource, or null on failure.
 /// If parse_flag_continue_after_error is not set, this will return null on any error.
@@ -120,16 +120,16 @@ pub fn parse_source(
     src: WString,
     flags: ParseTreeFlags,
     errors: Option<&mut ParseErrorList>,
-) -> ParsedSourceRef {
+) -> Option<ParsedSourceRef> {
     let ast = Ast::parse(&src, flags, errors);
     if ast.errored() && !flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR) {
         None
     } else {
-        Some(Rc::new(ParsedSource::new(src, ast)))
+        Some(Arc::new(ParsedSource::new(src, ast)))
     }
 }
 
-struct ParsedSourceRefFFI(pub ParsedSourceRef);
+struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
 
 #[cxx::bridge]
 mod parse_tree_ffi {
@@ -160,13 +160,15 @@ impl ParsedSourceRefFFI {
         self.0.is_some()
     }
 }
+
 fn empty_parsed_source_ref() -> Box<ParsedSourceRefFFI> {
     Box::new(ParsedSourceRefFFI(None))
 }
+
 fn new_parsed_source_ref(src: &CxxWString, ast: Pin<&mut Ast>) -> Box<ParsedSourceRefFFI> {
     let mut stolen_ast = Ast::default();
     std::mem::swap(&mut stolen_ast, ast.get_mut());
-    Box::new(ParsedSourceRefFFI(Some(Rc::new(ParsedSource::new(
+    Box::new(ParsedSourceRefFFI(Some(Arc::new(ParsedSource::new(
         src.from_ffi(),
         stolen_ast,
     )))))

@@ -5,7 +5,9 @@ use crate::common::{
 };
 use crate::wchar::{widestrs, wstr, WString};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
-use rand::random;
+use rand::SeedableRng;
+use rand::{Rng, RngCore};
+use rand_pcg::Pcg64Mcg;
 
 /// wcs2string is locale-dependent, so ensure we have a multibyte locale
 /// before using it in a test.
@@ -99,15 +101,19 @@ fn test_escape_var() {
 
 #[widestrs]
 #[test]
-fn test_escape_crazy() {
+fn test_escape_random() {
     setlocale();
+    let seed: u128 = 92348567983274852905629743984572;
+    let mut rng = Pcg64Mcg::new(seed);
+
     let mut random_string = WString::new();
     let mut escaped_string;
     for _ in 0..(ESCAPE_TEST_COUNT as u32) {
         random_string.clear();
-        while random::<usize>() % ESCAPE_TEST_LENGTH != 0 {
+        let length = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+        for _ in 0..length {
             random_string
-                .push(char::from_u32((random::<u32>() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
+                .push(char::from_u32((rng.next_u32() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
         }
 
         for (escape_style, unescape_style) in [
@@ -157,6 +163,7 @@ fn str2hex(input: &[u8]) -> String {
 /// string comes back through double conversion.
 #[test]
 fn test_convert() {
+    use rand::random;
     for _ in 0..ESCAPE_TEST_COUNT {
         let mut origin: Vec<u8> = vec![];
         while (random::<usize>() % ESCAPE_TEST_LENGTH) != 0 {

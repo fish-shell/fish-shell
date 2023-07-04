@@ -1,5 +1,3 @@
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE STRING "Minimum OS X deployment version")
-
 # Code signing ID on Mac.
 # If this is falsey, codesigning is disabled.
 # '-' is ad-hoc codesign.

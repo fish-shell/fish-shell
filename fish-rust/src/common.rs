@@ -25,7 +25,6 @@ use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::env;
 use std::ffi::{CStr, CString, OsString};
-use std::fmt::Write;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::{AsRawFd, RawFd};
@@ -330,6 +329,14 @@ fn is_upper_hex_digit(c: char) -> bool {
     matches!(c, '0'..='9' | 'A'..='F')
 }
 
+/// Return the high and low nibbles of a byte, as uppercase hex characters.
+fn byte_to_hex(byte: u8) -> (char, char) {
+    const HEX: [u8; 16] = *b"0123456789ABCDEF";
+    let high = byte >> 4;
+    let low = byte & 0xF;
+    (HEX[high as usize].into(), HEX[low as usize].into())
+}
+
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 #[widestrs]
 fn escape_string_url(input: &wstr) -> WString {
@@ -345,7 +352,10 @@ fn escape_string_url(input: &wstr) -> WString {
             }
         }
         // All other chars need to have their narrow representation encoded in hex.
-        write!(out, "%{:02X}", byte).expect("Writes to strings cannot fail");
+        let (high, low) = byte_to_hex(byte);
+        out.push('%');
+        out.push(high);
+        out.push(low);
     }
     out
 }
@@ -372,7 +382,10 @@ fn escape_string_var(input: &wstr) -> WString {
             prev_was_hex_encoded = false;
         } else {
             // All other chars need to have their narrow representation encoded in hex.
-            write!(out, "_{:02X}", c).expect("Writes to strings cannot fail");
+            let (high, low) = byte_to_hex(c);
+            out.push('_');
+            out.push(high);
+            out.push(low);
             prev_was_hex_encoded = true;
         }
     }

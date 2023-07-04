@@ -164,12 +164,14 @@ fn str2hex(input: &[u8]) -> String {
 #[test]
 fn test_convert() {
     use rand::random;
+
+    let seed: u128 = random::<u128>();
+    let mut rng = Pcg64Mcg::new(seed);
+
     for _ in 0..ESCAPE_TEST_COUNT {
-        let mut origin: Vec<u8> = vec![];
-        while (random::<usize>() % ESCAPE_TEST_LENGTH) != 0 {
-            let byte = random();
-            origin.push(byte);
-        }
+        let length = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+        let mut origin: Vec<u8> = vec![0; length];
+        rng.fill_bytes(&mut origin);
 
         let w = str2wcstring(&origin[..]);
         let n = wcs2string(&w);
@@ -178,11 +180,13 @@ fn test_convert() {
             n,
             "Conversion cycle of string:\n{:4} chars: {}\n\
                 produced different string:\n\
-                {:4} chars: {}",
+                {:4} chars: {}\n
+                Use this seed to reproduce: {}",
             origin.len(),
             &str2hex(&origin),
             n.len(),
-            &str2hex(&n)
+            &str2hex(&n),
+            seed,
         );
     }
 }

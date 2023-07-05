@@ -172,6 +172,8 @@ pub fn wopen_cloexec(pathname: &wstr, flags: i32, mode: libc::c_int) -> RawFd {
 
 /// Narrow versions of wopen_cloexec.
 pub fn open_cloexec(path: &CStr, flags: i32, mode: libc::c_int) -> RawFd {
+    // Port note: the C++ version of this function had a fallback for platforms where
+    // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
     unsafe { libc::open(path.as_ptr(), flags | O_CLOEXEC, mode) }
 }
 

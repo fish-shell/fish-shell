@@ -1,11 +1,9 @@
-#![allow(unused_imports)]
 use crate::common::{
     escape_string, str2wcstring, unescape_string, wcs2string, EscapeFlags, EscapeStringStyle,
     UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
 };
 use crate::wchar::{widestrs, wstr, WString};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
-use rand::SeedableRng;
 use rand::{Rng, RngCore};
 use rand_pcg::Pcg64Mcg;
 
@@ -99,40 +97,53 @@ fn test_escape_var() {
     }
 }
 
+macro_rules! escape_test {
+    ($escape_style:expr, $unescape_style:expr) => {
+        setlocale();
+        let seed: u128 = 92348567983274852905629743984572;
+        let mut rng = Pcg64Mcg::new(seed);
+
+        let mut random_string = WString::new();
+        let mut escaped_string;
+        for _ in 0..(ESCAPE_TEST_COUNT as u32) {
+            random_string.clear();
+            let length = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+            for _ in 0..length {
+                random_string
+                    .push(char::from_u32((rng.next_u32() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
+            }
+
+            escaped_string = escape_string(&random_string, $escape_style);
+            let Some(unescaped_string) = unescape_string(&escaped_string, $unescape_style) else {
+                let slice = escaped_string.as_char_slice();
+                panic!("Failed to unescape string {slice:?}");
+            };
+            assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}.");
+        }
+    };
+}
+
+#[test]
+fn test_escape_random_script() {
+    escape_test!(EscapeStringStyle::default(), UnescapeStringStyle::default());
+}
+
+#[test]
+fn test_escape_random_var() {
+    escape_test!(EscapeStringStyle::Var, UnescapeStringStyle::Var);
+}
+
+#[test]
+fn test_escape_random_url() {
+    escape_test!(EscapeStringStyle::Url, UnescapeStringStyle::Url);
+}
+
 #[widestrs]
 #[test]
-fn test_escape_random() {
-    setlocale();
-    let seed: u128 = 92348567983274852905629743984572;
-    let mut rng = Pcg64Mcg::new(seed);
-
-    let mut random_string = WString::new();
-    let mut escaped_string;
-    for _ in 0..(ESCAPE_TEST_COUNT as u32) {
-        random_string.clear();
-        let length = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
-        for _ in 0..length {
-            random_string
-                .push(char::from_u32((rng.next_u32() % ESCAPE_TEST_CHAR as u32) + 1).unwrap());
-        }
-
-        for (escape_style, unescape_style) in [
-            (EscapeStringStyle::default(), UnescapeStringStyle::default()),
-            (EscapeStringStyle::Var, UnescapeStringStyle::Var),
-            (EscapeStringStyle::Url, UnescapeStringStyle::Url),
-        ] {
-            escaped_string = escape_string(&random_string, escape_style);
-            let Some(unescaped_string) = unescape_string(&escaped_string, unescape_style) else {
-                let slice = escaped_string.as_char_slice();
-                panic!("Failed to unescape string {slice:?} using style {unescape_style:?}");
-            };
-            assert_eq!(random_string, unescaped_string, "Escaped and then unescaped string {random_string:?}, but got back a different string {unescaped_string:?}. The intermediate escape looked like {escaped_string:?}. Using escape style {escape_style:?}");
-        }
-    }
-
+fn test_escape_no_printables() {
     // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
-    random_string = "line 1\\n\nline 2"L.to_owned();
-    escaped_string = escape_string(
+    let random_string = "line 1\\n\nline 2"L.to_owned();
+    let escaped_string = escape_string(
         &random_string,
         EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
     );
@@ -192,7 +203,8 @@ fn test_convert() {
 }
 
 /// Verify that ASCII narrow->wide conversions are correct.
-pub fn test_convert_ascii() {
+#[test]
+fn test_convert_ascii() {
     let mut s = vec![b'\0'; 4096];
     for (i, c) in s.iter_mut().enumerate() {
         *c = u8::try_from(i % 10).unwrap() + b'0';

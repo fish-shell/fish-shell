@@ -1,4 +1,3 @@
-#[allow(unused_imports)]
 use crate::common::{scoped_push, ScopeGuard, ScopeGuarding};
 
 #[test]

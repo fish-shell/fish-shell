@@ -24,7 +24,9 @@ Description
 
 The first form (``test``) is preferred. For compatibility with other shells, the second form is available: a matching pair of square brackets (``[ [EXPRESSION] ]``).
 
-When using a variable as an argument with ``test`` you should almost always enclose it in double-quotes, as variables expanding to zero or more than one argument will most likely interact badly with ``test``.
+When using a variable or command substitution as an argument with ``test`` you should almost always enclose it in double-quotes, as variables expanding to zero or more than one argument will most likely interact badly with ``test``.
+
+For historical reasons, ``test`` supports the one-argument form (``test foo``), and this will also be triggered by e.g. ``test -n $foo`` if $foo is unset. We recommend you don't use the one-argument form and quote all variables or command substitutions used with ``test``.
 
 Operators for files and directories
 -----------------------------------
@@ -175,6 +177,13 @@ If the variable :envvar:`MANPATH` is defined and not empty, print the contents. 
         echo $MANPATH
     end
 
+Be careful with unquoted variables::
+
+    if test -n $MANPATH
+        # This will also be reached if $MANPATH is unset,
+        # because in that case we have `test -n`, so it checks if "-n" is non-empty, and it is.
+        echo $MANPATH
+    end
 
 Parentheses and the ``-o`` and ``-a`` operators can be combined to produce more complicated expressions. In this example, success is printed if there is a ``/foo`` or ``/bar`` file as well as a ``/baz`` or ``/bat`` file.
 

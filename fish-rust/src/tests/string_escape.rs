@@ -183,10 +183,11 @@ fn test_convert() {
 
     let seed: u128 = random::<u128>();
     let mut rng = Pcg64Mcg::new(seed);
+    let mut origin = Vec::new();
 
     for _ in 0..ESCAPE_TEST_COUNT {
-        let length = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
-        let mut origin: Vec<u8> = vec![0; length];
+        let length: usize = rng.gen_range(0..=(2 * ESCAPE_TEST_LENGTH));
+        origin.resize(length, 0);
         rng.fill_bytes(&mut origin);
 
         let w = str2wcstring(&origin[..]);

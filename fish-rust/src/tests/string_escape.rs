@@ -6,15 +6,21 @@ use crate::wchar::{widestrs, wstr, WString};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 use rand::{Rng, RngCore};
 use rand_pcg::Pcg64Mcg;
+use std::sync::Mutex;
 
 /// wcs2string is locale-dependent, so ensure we have a multibyte locale
 /// before using it in a test.
-/// This is only needed for the variable escape function.
 fn setlocale() {
+    static LOCALE_LOCK: Mutex<()> = Mutex::new(());
+    let _guard = LOCALE_LOCK.lock().unwrap();
+
     #[rustfmt::skip]
     const UTF8_LOCALES: &[&str] = &[
         "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
     ];
+    if crate::compat::MB_CUR_MAX() > 1 {
+        return;
+    }
     for locale in UTF8_LOCALES {
         let locale = std::ffi::CString::new(locale.to_owned()).unwrap();
         unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
@@ -172,6 +178,7 @@ fn str2hex(input: &[u8]) -> String {
 /// string comes back through double conversion.
 #[test]
 fn test_convert() {
+    setlocale();
     use rand::random;
 
     let seed: u128 = random::<u128>();

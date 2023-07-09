@@ -500,10 +500,10 @@ int main(int argc, char **argv) {
     // command line takes precedence).
     if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features()->set_from_string(s.c_str());
+            feature_set_from_string(s.c_str());
         }
     }
-    mutable_fish_features()->set_from_string(opts.features.c_str());
+    feature_set_from_string(opts.features.c_str());
     proc_init();
     misc_init();
     reader_init();

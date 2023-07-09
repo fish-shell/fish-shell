@@ -10,7 +10,7 @@ use crate::ffi::{
     get_job_control_mode, get_login, is_interactive_session, job_control_t, parser_t,
     set_job_control_mode, Repin,
 };
-use crate::future_feature_flags::{feature_metadata, feature_test};
+use crate::future_feature_flags::{self as features, feature_test};
 use crate::wchar::{wstr, L};
 use crate::wchar_ffi::{AsWstr, WCharFromFFI};
 use crate::wgetopt::{
@@ -180,10 +180,10 @@ const LONG_OPTIONS: &[woption] = &[
 fn print_features(streams: &mut io_streams_t) {
     // TODO: move this to features.rs
     let mut max_len = i32::MIN;
-    for md in feature_metadata() {
+    for md in &features::METADATA {
         max_len = max_len.max(md.name.len() as i32);
     }
-    for md in feature_metadata() {
+    for md in &features::METADATA {
         let set = if feature_test(md.flag) {
             L!("on")
         } else {
@@ -192,10 +192,10 @@ fn print_features(streams: &mut io_streams_t) {
         streams.out.append(sprintf!(
             "%-*ls%-3s %ls %ls\n",
             max_len + 1,
-            md.name.as_wstr(),
+            md.name,
             set,
-            md.groups.as_wstr(),
-            md.description.as_wstr(),
+            md.groups,
+            md.description,
         ));
     }
 }
@@ -433,8 +433,8 @@ pub fn status(
             }
             use TestFeatureRetVal::*;
             let mut retval = Some(TEST_FEATURE_NOT_RECOGNIZED as c_int);
-            for md in &feature_metadata() {
-                if md.name.as_wstr() == args[0] {
+            for md in &features::METADATA {
+                if md.name == args[0] {
                     retval = match feature_test(md.flag) {
                         true => Some(TEST_FEATURE_ON as c_int),
                         false => Some(TEST_FEATURE_OFF as c_int),

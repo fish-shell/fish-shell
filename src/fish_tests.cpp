@@ -2473,15 +2473,14 @@ static void test_wildcards() {
     unescape_string_in_place(&wc, UNESCAPE_SPECIAL);
     do_test(!wildcard_has(wc) && wildcard_has_internal(wc));
 
-    auto feat = mutable_fish_features();
-    auto saved = feat->test(feature_flag_t::qmark_noglob);
-    feat->set(feature_flag_t::qmark_noglob, false);
+    auto saved = feature_test(feature_flag_t::qmark_noglob);
+    feature_set(feature_flag_t::qmark_noglob, false);
     do_test(wildcard_has(L"?"));
     do_test(!wildcard_has(L"\\?"));
-    feat->set(feature_flag_t::qmark_noglob, true);
+    feature_set(feature_flag_t::qmark_noglob, true);
     do_test(!wildcard_has(L"?"));
     do_test(!wildcard_has(L"\\?"));
-    feat->set(feature_flag_t::qmark_noglob, saved);
+    feature_set(feature_flag_t::qmark_noglob, saved);
 }
 
 static void test_complete() {
@@ -4904,7 +4903,7 @@ static void test_highlighting() {
 #endif
 
     bool saved_flag = feature_test(feature_flag_t::ampersand_nobg_in_token);
-    mutable_fish_features()->set(feature_flag_t::ampersand_nobg_in_token, true);
+    feature_set(feature_flag_t::ampersand_nobg_in_token, true);
     for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
         wcstring text;
@@ -4949,7 +4948,7 @@ static void test_highlighting() {
             }
         }
     }
-    mutable_fish_features()->set(feature_flag_t::ampersand_nobg_in_token, saved_flag);
+    feature_set(feature_flag_t::ampersand_nobg_in_token, saved_flag);
     vars.remove(L"VARIABLE_IN_COMMAND", ENV_DEFAULT);
     vars.remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
 }
@@ -5359,7 +5358,7 @@ static void test_string() {
         {{L"string", L"match", L"?*", L"a", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"?*", L"ab", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"match", L"a*\\?", L"abc?", nullptr}, STATUS_CMD_ERROR, L""}};
-    mutable_fish_features()->set(feature_flag_t::qmark_noglob, true);
+    feature_set(feature_flag_t::qmark_noglob, true);
     for (const auto &t : qmark_noglob_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }
@@ -5371,11 +5370,11 @@ static void test_string() {
         {{L"string", L"match", L"?*", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"match", L"?*", L"ab", nullptr}, STATUS_CMD_OK, L"ab\n"},
         {{L"string", L"match", L"a*\\?", L"abc?", nullptr}, STATUS_CMD_OK, L"abc?\n"}};
-    mutable_fish_features()->set(feature_flag_t::qmark_noglob, false);
+    feature_set(feature_flag_t::qmark_noglob, false);
     for (const auto &t : qmark_glob_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }
-    mutable_fish_features()->set(feature_flag_t::qmark_noglob, saved_flag);
+    feature_set(feature_flag_t::qmark_noglob, saved_flag);
 }
 
 /// Helper for test_timezone_env_vars().

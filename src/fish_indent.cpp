@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
 
     if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features()->set_from_string(s.c_str());
+            feature_set_from_string(s.c_str());
         }
     }
 

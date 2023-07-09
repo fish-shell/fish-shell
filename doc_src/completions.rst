@@ -12,7 +12,87 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
   complete -c myprog -s o -l output -a "yes no"
 
 
-There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :doc:`complete <cmds/complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
+In the complete call above, the ``-a`` arguments apply when the option -o/--output has been given, so this offers them for::
+
+  > myprog -o<TAB>
+  > myprog --output=<TAB>
+
+By default, option arguments are *optional*, so the candidates are only offered directly attached like that, so they aren't given in this case::
+
+  > myprog -o <TAB>
+
+Usually options *require* a parameter, so you would give ``--require-parameter`` / ``-r``::
+  
+  complete -c myprog -s o -l output -ra "yes no"
+
+which offers yes/no in these cases::
+
+  > myprog -o<TAB>
+  > myprog --output=<TAB>
+  > myprog -o <TAB>
+  > myprog --output <TAB>
+
+In the latter two cases, files will also be offered because file completion is enabled by default.
+
+You would either inhibit file completion for a single option::
+
+  complete -c myprog -s o -l output --no-files -ra "yes no"
+
+or with a specific condition::
+
+  complete -c myprog -f --condition '__fish_seen_subcommand_from somesubcommand'
+
+or you can disable file completions globally for the command::
+
+  complete -c myprog -f
+
+If you have disabled them globally, you can enable them just for a specific condition or option with the ``--force-files`` / ``-F`` option::
+
+  # Disable files by default
+  complete -c myprog -f
+  # but reenable them for --config-file
+  complete -c myprog -l config-file --force-files -r
+
+In the complete call above, the ``-a`` arguments apply when the option -o/--output has been given, so this offers them for::
+
+  > myprog -o<TAB>
+  > myprog --output=<TAB>
+
+By default, option arguments are *optional*, so the candidates are only offered directly attached like that, so they aren't given in this case::
+
+  > myprog -o <TAB>
+
+Usually options *require* a parameter, so you would give ``--require-parameter`` / ``-r``::
+
+  complete -c myprog -s o -l output -ra "yes no"
+
+which offers yes/no in these cases::
+
+  > myprog -o<TAB>
+  > myprog --output=<TAB>
+  > myprog -o <TAB>
+  > myprog --output <TAB>
+
+In the latter two cases, files will also be offered because file completion is enabled by default.
+
+You would either inhibit file completion for a single option::
+
+  complete -c myprog -s o -l output --no-files -ra "yes no"
+
+or with a specific condition::
+
+  complete -c myprog -f --condition '__fish_seen_subcommand_from somesubcommand'
+
+or you can disable file completions globally for the command::
+
+  complete -c myprog -f
+
+If you have disabled them globally, you can enable them just for a specific condition or option with the ``--force-files`` / ``-F`` option::
+
+  # Disable files by default
+  complete -c myprog -f
+  # but reenable them for --config-file
+  complete -c myprog -l config-file --force-files -r
 
 As a more comprehensive example, here's a commented excerpt of the completions for systemd's ``timedatectl``::
 
@@ -76,7 +156,7 @@ For examples of how to write your own complex completions, study the completions
 Useful functions for writing completions
 ----------------------------------------
 
-``fish`` ships with several functions that are very useful when writing command specific completions. Most of these functions name begins with the string ``__fish_``. Such functions are internal to ``fish`` and their name and interface may change in future fish versions. Still, some of them may be very useful when writing completions. A few of these functions are described here. Be aware that they may be removed or changed in future versions of fish.
+``fish`` ships with several functions that may be useful when writing command-specific completions. Most of these function names begin with the string ``__fish_``. Such functions are internal to ``fish`` and their name and interface may change in future fish versions. A few of these functions are described here.
 
 Functions beginning with the string ``__fish_print_`` print a newline separated list of strings. For example, ``__fish_print_filesystems`` prints a list of all known file systems. Functions beginning with ``__fish_complete_`` print out a newline separated list of completions with descriptions. The description is separated from the completion by a tab character.
 
@@ -120,7 +200,7 @@ These paths are controlled by parameters set at build, install, or run time, and
 
 This wide search may be confusing. If you are unsure, your completions probably belong in ``~/.config/fish/completions``.
 
-If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in :ref:`Further help and development <more-help>`
+If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in :ref:`Further help and development <more-help>`.
 
 If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``.
 

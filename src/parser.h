@@ -487,6 +487,10 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Mark whether we should sync universal variables.
     void set_syncs_uvars(bool flag) { syncs_uvars_ = flag; }
 
+    /// Set the given file descriptor as the working directory for this parser.
+    /// This acquires ownership.
+    void set_cwd_fd(int fd);
+
     /// \return a shared pointer reference to this parser.
     std::shared_ptr<parser_t> shared();
 

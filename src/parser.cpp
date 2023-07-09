@@ -210,6 +210,11 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
     return result;
 }
 
+void parser_t::set_cwd_fd(int fd) {
+    assert(fd >= 0 && "Invalid fd");
+    this->libdata().cwd_fd = std::make_shared<autoclose_fd_t>(fd);
+}
+
 std::shared_ptr<parser_t> parser_t::shared() { return shared_from_this(); }
 
 cancel_checker_t parser_t::cancel_checker() const {

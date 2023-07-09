@@ -26,7 +26,7 @@ By default, option arguments are *optional*, so the candidates are only offered 
   > myprog -o <TAB>
 
 Usually options *require* a parameter, so you would give ``--require-parameter`` / ``-r``::
-  
+
   complete -c myprog -s o -l output -ra "yes no"
 
 which offers yes/no in these cases::
@@ -119,7 +119,7 @@ For examples of how to write your own complex completions, study the completions
 Useful functions for writing completions
 ----------------------------------------
 
-``fish`` ships with several functions that are very useful when writing command specific completions. Most of these functions name begins with the string ``__fish_``. Such functions are internal to ``fish`` and their name and interface may change in future fish versions. Still, some of them may be very useful when writing completions. A few of these functions are described here. Be aware that they may be removed or changed in future versions of fish.
+``fish`` ships with several functions that may be useful when writing command-specific completions. Most of these function names begin with the string ``__fish_``. Such functions are internal to ``fish`` and their name and interface may change in future fish versions. A few of these functions are described here.
 
 Functions beginning with the string ``__fish_print_`` print a newline separated list of strings. For example, ``__fish_print_filesystems`` prints a list of all known file systems. Functions beginning with ``__fish_complete_`` print out a newline separated list of completions with descriptions. The description is separated from the completion by a tab character.
 
@@ -161,7 +161,7 @@ These paths are controlled by parameters set at build, install, or run time, and
 
 This wide search may be confusing. If you are unsure, your completions probably belong in ``~/.config/fish/completions``.
 
-If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in :ref:`Further help and development <more-help>`
+If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in :ref:`Further help and development <more-help>`.
 
 If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``.
 

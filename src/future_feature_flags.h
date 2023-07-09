@@ -3,6 +3,5 @@
 
 #include "future_feature_flags.rs.h"
 using feature_flag_t = FeatureFlag;
-using features_t = Features;
 
 #endif

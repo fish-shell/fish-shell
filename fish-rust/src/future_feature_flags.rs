@@ -71,7 +71,7 @@ pub struct FeatureMetadata {
 
 /// The metadata, indexed by flag.
 #[widestrs]
-pub const METADATA: [FeatureMetadata; 4] = [
+pub const METADATA: &[FeatureMetadata] = &[
     FeatureMetadata {
         flag: FeatureFlag::stderr_nocaret,
         name: "stderr-nocaret"L,
@@ -114,12 +114,11 @@ pub fn test(flag: FeatureFlag) -> bool {
     FEATURES.test(flag)
 }
 
-pub fn feature_test(flag: FeatureFlag) -> bool {
-    test(flag)
-}
+pub use test as feature_test;
 
 /// Set a flag.
-pub fn set(flag: FeatureFlag, value: bool) {
+#[cfg(any(test, feature = "fish-ffi-tests"))]
+pub(self) fn set(flag: FeatureFlag, value: bool) {
     FEATURES.set(flag, value);
 }
 
@@ -182,7 +181,7 @@ impl Features {
                     self.set(md.flag, value);
                 }
             } else {
-                for md in &METADATA {
+                for md in METADATA {
                     if md.groups == name || name == "all"L {
                         if !md.read_only {
                             self.set(md.flag, value);
@@ -205,7 +204,7 @@ fn test_feature_flags() {
 
     // Ensure every metadata is represented once.
     let mut counts: [usize; METADATA.len()] = [0; METADATA.len()];
-    for md in &METADATA {
+    for md in METADATA {
         counts[md.flag.repr as usize] += 1;
     }
     for count in counts {

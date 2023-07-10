@@ -106,12 +106,24 @@ pub const METADATA: &[FeatureMetadata] = &[
     },
 ];
 
+thread_local!(
+    #[cfg(any(test, feature = "fish-ffi-tests"))]
+    static LOCAL_FEATURES: std::cell::RefCell<Option<Features>> = std::cell::RefCell::new(None);
+);
+
 /// The singleton shared feature set.
 static FEATURES: Features = Features::new();
 
 /// Perform a feature test on the global set of features.
 pub fn test(flag: FeatureFlag) -> bool {
-    FEATURES.test(flag)
+    #[cfg(any(test, feature = "fish-ffi-tests"))]
+    {
+        LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).test(flag))
+    }
+    #[cfg(not(any(test, feature = "fish-ffi-tests")))]
+    {
+        FEATURES.test(flag)
+    }
 }
 
 pub use test as feature_test;
@@ -119,7 +131,7 @@ pub use test as feature_test;
 /// Set a flag.
 #[cfg(any(test, feature = "fish-ffi-tests"))]
 pub(self) fn set(flag: FeatureFlag, value: bool) {
-    FEATURES.set(flag, value);
+    LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).set(flag, value));
 }
 
 /// Parses a comma-separated feature-flag string, updating ourselves with the values.
@@ -127,7 +139,20 @@ pub(self) fn set(flag: FeatureFlag, value: bool) {
 /// The special group name "all" may be used for those who like to live on the edge.
 /// Unknown features are silently ignored.
 pub fn set_from_string<'a>(str: impl Into<&'a wstr>) {
-    FEATURES.set_from_string(str);
+    let wstr: &wstr = str.into();
+    #[cfg(any(test, feature = "fish-ffi-tests"))]
+    {
+        LOCAL_FEATURES.with(|fc| {
+            fc.borrow()
+                .as_ref()
+                .unwrap_or(&FEATURES)
+                .set_from_string(wstr)
+        });
+    }
+    #[cfg(not(any(test, feature = "fish-ffi-tests")))]
+    {
+        FEATURES.set_from_string(wstr)
+    }
 }
 
 impl Features {
@@ -151,8 +176,7 @@ impl Features {
     }
 
     #[widestrs]
-    fn set_from_string<'a>(&self, str: impl Into<&'a wstr>) {
-        let str: &wstr = str.into();
+    fn set_from_string<'a>(&self, str: &wstr) {
         let whitespace = "\t\n\0x0B\0x0C\r "L.as_char_slice();
         for entry in str.as_char_slice().split(|c| *c == ',') {
             if entry.is_empty() {
@@ -193,6 +217,24 @@ impl Features {
     }
 }
 
+#[cfg(any(test, feature = "fish-ffi-tests"))]
+pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
+    LOCAL_FEATURES.with(|fc| {
+        assert!(
+            fc.borrow().is_none(),
+            "scoped_test() does not support nesting"
+        );
+
+        let f = Features::new();
+        f.set(flag, value);
+        *fc.borrow_mut() = Some(f);
+
+        test_fn();
+
+        *fc.borrow_mut() = None;
+    });
+}
+
 #[test]
 #[widestrs]
 fn test_feature_flags() {
@@ -215,4 +257,27 @@ fn test_feature_flags() {
         METADATA[FeatureFlag::stderr_nocaret.repr as usize].name,
         "stderr-nocaret"L
     );
+}
+
+#[test]
+fn test_scoped() {
+    scoped_test(FeatureFlag::qmark_noglob, true, || {
+        assert!(test(FeatureFlag::qmark_noglob));
+    });
+
+    set(FeatureFlag::qmark_noglob, true);
+
+    scoped_test(FeatureFlag::qmark_noglob, false, || {
+        assert!(!test(FeatureFlag::qmark_noglob));
+    });
+
+    set(FeatureFlag::qmark_noglob, false);
+}
+
+#[test]
+#[should_panic]
+fn test_nested_scopes_not_supported() {
+    scoped_test(FeatureFlag::qmark_noglob, true, || {
+        scoped_test(FeatureFlag::qmark_noglob, false, || {});
+    });
 }

@@ -180,10 +180,10 @@ const LONG_OPTIONS: &[woption] = &[
 fn print_features(streams: &mut io_streams_t) {
     // TODO: move this to features.rs
     let mut max_len = i32::MIN;
-    for md in &features::METADATA {
+    for md in features::METADATA {
         max_len = max_len.max(md.name.len() as i32);
     }
-    for md in &features::METADATA {
+    for md in features::METADATA {
         let set = if feature_test(md.flag) {
             L!("on")
         } else {
@@ -433,7 +433,7 @@ pub fn status(
             }
             use TestFeatureRetVal::*;
             let mut retval = Some(TEST_FEATURE_NOT_RECOGNIZED as c_int);
-            for md in &features::METADATA {
+            for md in features::METADATA {
                 if md.name == args[0] {
                     retval = match feature_test(md.flag) {
                         true => Some(TEST_FEATURE_ON as c_int),

@@ -91,7 +91,7 @@ searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special t
 
 ::
 
-   apt install "postgres-*"
+    apt install "postgres-*"
 
 installs all packages with a name starting with "postgres-", instead of looking through the current directory for files named "postgres-something".
 
@@ -265,7 +265,7 @@ Now let's see a few cases::
 
   # Show the "out" on stderr, silence the "err"
   print >&2 2>/dev/null
-  
+
   # Silence both
   print >/dev/null 2>&1
 

@@ -4,7 +4,10 @@
 function cd --description "Change directory"
     set -l MAX_DIR_HIST 25
 
-    if test (count $argv) -gt (test "$argv[1]" = "--" && echo 2 || echo 1)
+    if set -q argv[2]; and begin
+            set -q argv[3]
+            or not test "$argv[1]" = --
+        end
         printf "%s\n" (_ "Too many args for cd command") >&2
         return 1
     end

@@ -572,23 +572,45 @@ $fish -c 'echo \utest'
 # CHECKERR: echo \utest
 # CHECKERR:      ^~~~~^
 
+echo $status
+# CHECK: 127
+
 $fish -c 'echo \c'
 # CHECKERR: fish: Incomplete escape sequence '\c'
 # CHECKERR: echo \c
 # CHECKERR:      ^^
 
+echo $status
+# CHECK: 127
+
 $fish -c 'echo \C'
 # CHECK: C
+echo $status
+# CHECK: 0
 
 $fish -c 'echo \U'
 # CHECKERR: fish: Incomplete escape sequence '\U'
 # CHECKERR: echo \U
 # CHECKERR:      ^^
 
+echo $status
+# CHECK: 127
+
 $fish -c 'echo \x'
 # CHECKERR: fish: Incomplete escape sequence '\x'
 # CHECKERR: echo \x
 # CHECKERR:      ^^
+
+echo $status
+# CHECK: 127
+
+$fish -c begin
+# CHECKERR: fish: Missing end to balance this begin
+# CHECKERR: begin
+# CHECKERR: ^~~~^
+
+echo $status
+# CHECK: 127
 
 printf '%s\n' "#!/bin/sh" 'echo $0' > $tmpdir/argv0.sh
 chmod +x $tmpdir/argv0.sh

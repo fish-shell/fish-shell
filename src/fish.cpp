@@ -258,6 +258,7 @@ static void read_init(parser_t &parser, const struct config_paths_t &paths) {
 
 static int run_command_list(parser_t &parser, const std::vector<std::string> &cmds,
                             const io_chain_t &io) {
+    int retval = STATUS_CMD_OK;
     for (const auto &cmd : cmds) {
         wcstring cmd_wcs = str2wcstring(cmd);
         // Parse into an ast and detect errors.
@@ -273,14 +274,17 @@ static int run_command_list(parser_t &parser, const std::vector<std::string> &cm
             parsed_source_ref_t ps =
                 std::make_shared<parsed_source_t>(std::move(cmd_wcs), std::move(ast));
             parser.eval(ps, io);
+            retval = STATUS_CMD_OK;
         } else {
             wcstring sb;
             parser.get_backtrace(cmd_wcs, errors, sb);
             std::fwprintf(stderr, L"%ls", sb.c_str());
+            // XXX: Why is this the return for "unknown command"?
+            retval = STATUS_CMD_UNKNOWN;
         }
     }
 
-    return 0;
+    return retval;
 }
 
 /// Parse the argument list, return the index of the first non-flag arguments.

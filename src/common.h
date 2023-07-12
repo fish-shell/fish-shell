@@ -320,11 +320,6 @@ bool should_suppress_stderr_for_tests();
 #define likely(x) __builtin_expect(bool(x), 1)
 #define unlikely(x) __builtin_expect(bool(x), 0)
 
-/// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
-/// it, which it would be nice if it did, but here it is anyways.
-void assert_is_locked(std::mutex &mutex, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(m) assert_is_locked(m, #m, __FUNCTION__)
-
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);
 

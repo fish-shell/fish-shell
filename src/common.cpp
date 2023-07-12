@@ -1177,17 +1177,6 @@ void restore_term_foreground_process_group_for_exit() {
     }
 }
 
-void assert_is_locked(std::mutex &mutex, const char *who, const char *caller) {
-    // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
-    // actually locked; fortunately we are checking the opposite so we're safe.
-    if (unlikely(mutex.try_lock())) {
-        FLOGF(error, L"%s is not locked when it should be in '%s'", who, caller);
-        FLOG(error, L"Break on debug_thread_error to debug.");
-        debug_thread_error();
-        mutex.unlock();
-    }
-}
-
 /// Test if the specified character is in a range that fish uses internally to store special tokens.
 ///
 /// NOTE: This is used when tokenizing the input. It is also used when reading input, before

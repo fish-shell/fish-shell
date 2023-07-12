@@ -86,10 +86,6 @@ std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
 maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
                                       const environment_t &vars);
 
-/// Remove double slashes and trailing slashes from a path, e.g. transform foo//bar/ into foo/bar.
-/// The string is modified in-place.
-void path_make_canonical(wcstring &path);
-
 /// Check if two paths are equivalent, which means to ignore runs of multiple slashes (or trailing
 /// slashes).
 bool paths_are_equivalent(const wcstring &p1, const wcstring &p2);

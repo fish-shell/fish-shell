@@ -86,9 +86,6 @@ void wperror(wcharz_t s);
 /// Wide character version of getcwd().
 wcstring wgetcwd();
 
-/// Wide character version of readlink().
-maybe_t<wcstring> wreadlink(const wcstring &file_name);
-
 /// Wide character version of realpath function.
 /// \returns the canonicalized path, or none if the path is invalid.
 maybe_t<wcstring> wrealpath(const wcstring &pathname);
@@ -139,10 +136,8 @@ inline ssize_t wwrite_to_fd(const wcstring &s, int fd) {
 // some code points. See issue #3050.
 #ifndef FISH_NO_ISW_WRAPPERS
 #define iswalnum fish_iswalnum
-#define iswgraph fish_iswgraph
 #endif
 int fish_iswalnum(wint_t wc);
-int fish_iswgraph(wint_t wc);
 
 int fish_wcswidth(const wchar_t *str);
 int fish_wcswidth(const wcstring &str);
@@ -178,7 +173,6 @@ struct file_id_t {
     bool operator<(const file_id_t &rhs) const;
 
     static file_id_t from_stat(const struct stat &buf);
-    bool older_than(const file_id_t &rhs) const;
     wcstring dump() const;
 
    private:

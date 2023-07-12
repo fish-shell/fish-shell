@@ -384,27 +384,6 @@ dir_remoteness_t path_get_data_remoteness() { return get_data_directory().remote
 
 dir_remoteness_t path_get_config_remoteness() { return get_config_directory().remoteness; }
 
-void path_make_canonical(wcstring &path) {
-    // Ignore trailing slashes, unless it's the first character.
-    size_t len = path.size();
-    while (len > 1 && path.at(len - 1) == L'/') len--;
-
-    // Turn runs of slashes into a single slash.
-    size_t trailing = 0;
-    bool prev_was_slash = false;
-    for (size_t leading = 0; leading < len; leading++) {
-        wchar_t c = path.at(leading);
-        bool is_slash = (c == '/');
-        if (!prev_was_slash || !is_slash) {
-            // This is either the first slash in a run, or not a slash at all.
-            path.at(trailing++) = c;
-        }
-        prev_was_slash = is_slash;
-    }
-    assert(trailing <= len);
-    if (trailing < len) path.resize(trailing);
-}
-
 bool paths_are_equivalent(const wcstring &p1, const wcstring &p2) {
     if (p1 == p2) return true;
 

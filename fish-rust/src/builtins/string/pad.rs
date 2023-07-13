@@ -1,11 +1,12 @@
 use std::borrow::Cow;
 
 use super::*;
-use crate::wutil::{fish_wcstol, fish_wcswidth};
+use crate::fallback::fish_wcwidth;
+use crate::wutil::fish_wcstol;
 
 pub struct Pad {
     char_to_pad: char,
-    pad_char_width: i32,
+    pad_char_width: usize,
     pad_from: Direction,
     width: usize,
 }
@@ -33,25 +34,23 @@ impl StringSubCommand<'_> for Pad {
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
             'c' => {
-                let arg = arg.expect("option -c requires an argument");
-                if arg.len() != 1 {
+                let [pad_char] = arg.unwrap().as_char_slice() else {
                     return Err(invalid_args!(
                         "%ls: Padding should be a character '%ls'\n",
                         name,
-                        Some(arg)
+                        arg
                     ));
-                }
-                let pad_char_width = fish_wcswidth(arg.slice_to(1));
-                // can we ever have negative width?
-                if pad_char_width == 0 {
+                };
+                let pad_char_width = fish_wcwidth(*pad_char);
+                if pad_char_width <= 0 {
                     return Err(invalid_args!(
                         "%ls: Invalid padding character of width zero '%ls'\n",
                         name,
-                        Some(arg)
+                        arg
                     ));
                 }
-                self.pad_char_width = pad_char_width;
-                self.char_to_pad = arg.char_at(0);
+                self.pad_char_width = pad_char_width as usize;
+                self.char_to_pad = *pad_char;
             }
             'r' => self.pad_from = Direction::Right,
             'w' => {
@@ -71,8 +70,8 @@ impl StringSubCommand<'_> for Pad {
         optind: &mut usize,
         args: &[&'args wstr],
     ) -> Option<libc::c_int> {
-        let mut max_width = 0i32;
-        let mut inputs: Vec<(Cow<'args, wstr>, i32)> = Vec::new();
+        let mut max_width = 0usize;
+        let mut inputs: Vec<(Cow<'args, wstr>, usize)> = Vec::new();
         let mut print_newline = true;
 
         for (arg, want_newline) in Arguments::new(args, optind, streams) {
@@ -82,7 +81,7 @@ impl StringSubCommand<'_> for Pad {
             print_newline = want_newline;
         }
 
-        let pad_width = max_width.max(self.width as i32);
+        let pad_width = max_width.max(self.width);
 
         for (input, width) in inputs {
             use std::iter::repeat;
@@ -91,14 +90,14 @@ impl StringSubCommand<'_> for Pad {
             let remaining_width = (pad_width - width) % self.pad_char_width;
             let mut padded: WString = match self.pad_from {
                 Direction::Left => repeat(self.char_to_pad)
-                    .take(pad as usize)
-                    .chain(repeat(' ').take(remaining_width as usize))
+                    .take(pad)
+                    .chain(repeat(' ').take(remaining_width))
                     .chain(input.chars())
                     .collect(),
                 Direction::Right => input
                     .chars()
-                    .chain(repeat(' ').take(remaining_width as usize))
-                    .chain(repeat(self.char_to_pad).take(pad as usize))
+                    .chain(repeat(' ').take(remaining_width))
+                    .chain(repeat(self.char_to_pad).take(pad))
                     .collect(),
             };
 

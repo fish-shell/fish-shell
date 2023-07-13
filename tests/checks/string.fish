@@ -91,6 +91,10 @@ string pad -c_ --width 5 longer-than-width-param x
 string pad -c ab -w4 .
 # CHECKERR: string pad: Padding should be a character 'ab'
 
+# nonprintable characters does not make sense
+string pad -c \u07 .
+# CHECKERR: string pad: Invalid padding character of width zero {{'\a'}}
+
 # Visible length. Let's start off simple, colors are ignored:
 string length --visible (set_color red)abc
 # CHECK: 3
@@ -945,6 +949,37 @@ string shorten foo foobar
 # CHECK: foo
 # CHECK: fo…
 
+# pad with a bell, it has zero width, that's fine
+string shorten -c \a foo foobar | string escape
+# CHECK: foo
+# CHECK: foo\cg
+
+string shorten -c \aw foo foobar | string escape
+# CHECK: foo
+# CHECK: fo\cgw
+
+# backspace is fine!
+string shorten -c \b foo foobar | string escape
+# CHECK: foo
+# CHECK: foo\b
+
+string shorten -c \ba foo foobar | string escape
+# CHECK: foo
+# CHECK: fo\ba
+
+string shorten -c cool\b\b\b\b foo foobar | string escape
+# CHECK: foo
+# CHECK: foocool\b\b\b\b
+
+string shorten -c cool\b\b\b\b\b foo foobar | string escape
+# CHECK: foo
+# negative width ellipsis is fine
+# CHECK: foocool\b\b\b\b\b
+
+string shorten -c \a\aXX foo foobar | string escape
+# CHECK: foo
+# CHECK: f\cg\cgXX
+
 # A weird case - our minimum width here is 1,
 # so everything that goes over the width becomes "x"
 for i in (seq 1 10)
@@ -995,6 +1030,11 @@ string shorten -m6 (set_color blue)s(set_color red)t(set_color --bold brwhite)ri
 # Note that red sequence that we still pass on because it's width 0.
 # CHECK: \e\[34ms\e\[31mt\e\[1m\e\[37mrin\e\[31m…
 
+# See that colors aren't counted in ellipsis
+string shorten -c (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g -m 8 abcdefghijklmno | string escape
+# Renders like "abstring" in colors
+# CHECK: ab\e\[34ms\e\[31mt\e\[1m\e\[37mrin\e\[31mg
+
 set -l str (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten
 for i in (seq 1 (string length -V -- $str))
     set -l len (string shorten -m$i -- $str | string length -V)
@@ -1042,3 +1082,55 @@ string shorten -m0 foo bar asodjsaoidj
 # CHECK: foo
 # CHECK: bar
 # CHECK: asodjsaoidj
+
+# backspaces are weird
+string shorten abc ab abcdef(string repeat -n 6 \b) | string escape
+# CHECK: a…
+# CHECK: ab
+# this line has length zero, since backspace removes it all
+# CHECK: abcdef\b\b\b\b\b\b
+
+# due to an integer overflow this might truncate the third backspaced one, it should not
+string shorten abc ab abcdef(string repeat -n 7 \b) | string escape
+# CHECK: a…
+# CHECK: ab
+# this line has length zero, since backspace removes it all
+# CHECK: abcdef\b\b\b\b\b\b\b
+
+# due to an integer overflow this might truncate
+string shorten abc \bab ab abcdef | string escape
+# CHECK: a…
+# backspace does not contribute length at the start
+# CHECK: \bab
+# CHECK: ab
+# CHECK: a…
+
+string shorten abc \babc ab abcdef | string escape
+# CHECK: a…
+# CHECK: \ba…
+# CHECK: ab
+# CHECK: a…
+
+# non-printable-escape-chars (in this case bell)
+string shorten abc ab abcdef(string repeat -n 6 \a) | string escape
+# CHECK: a…
+# CHECK: ab
+# CHECK: a…
+
+string shorten abc ab abcdef(string repeat -n 7 \a) | string escape
+# CHECK: a…
+# CHECK: ab
+# CHECK: a…
+
+string shorten abc \aab ab abcdef | string escape
+# CHECK: a…
+# non-printables have length 0
+# CHECK: \cgab
+# CHECK: ab
+# CHECK: a…
+
+string shorten abc \aabc ab abcdef | string escape
+# CHECK: a…
+# CHECK: \cga…
+# CHECK: ab
+# CHECK: a…

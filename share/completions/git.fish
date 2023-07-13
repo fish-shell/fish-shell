@@ -152,12 +152,6 @@ function __fish_git_files
     contains -- copied $argv; and set -l copied
     and set -l copied_desc "Copied file"
 
-    # A literal "?" for use in `case`.
-    set -l q '\\?'
-    if status test-feature qmark-noglob
-        set q '?'
-    end
-    set -l use_next
     # git status --porcelain gives us all the info we need, in a format we don't.
     # The v2 format has better documentation and doesn't use " " to denote anything,
     # but it's only been added in git 2.11.0, which was released November 2016.
@@ -365,6 +359,16 @@ function __fish_git_files
         end
     else
         # v1 format logic
+        # This is pretty terrible and reuqires us to do a lot of weird work.
+
+        # A literal "?" for use in `case`.
+        set -l q '\\?'
+        if status test-feature qmark-noglob
+            set q '?'
+        end
+        # Whether we need to use the next line - some entries have two lines.
+        set -l use_next
+
         # We need to compute relative paths on our own, which is slow.
         # Pre-remove the root at least, so we have fewer components to deal with.
         set -l _pwd_list (string replace "$root/" "" -- $PWD/ | string split /)

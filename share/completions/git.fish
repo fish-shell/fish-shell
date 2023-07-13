@@ -183,6 +183,13 @@ function __fish_git_files
     # We explicitly enable globs so we can use that to match the current token.
     set -l git_opt -c status.relativePaths -c core.quotePath=
 
+    string match -q './*' -- (commandline -ct)
+    and set -l rel ./
+    or set -l rel
+    string match -q ':*' -- (commandline -ct)
+    and set -l colon 1
+    or set -l colon
+
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
     set -l ver (__fish_git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
@@ -332,16 +339,11 @@ function __fish_git_files
                 # there is nothing we can do, but that's a general issue with scripted completions.
                 set file (string trim -c \" -- $file)
                 # The relative filename.
-                if string match -q './*' -- (commandline -ct)
-                    printf './%s\n' $file\t$desc
-                else
-                    printf '%s\n' "$file"\t$desc
-                end
+                printf "$rel%s\n" "$file"\t$desc
                 # Now from repo root.
                 # Only do this if the filename isn't a simple child,
                 # or the current token starts with ":"
-                if string match -q '../*' -- $file
-                    or string match -q ':*' -- (commandline -ct)
+                if set -ql colon[1]; or string match -q '../*' -- $file
                     set -l fromroot (builtin realpath -- $file 2>/dev/null)
                     # `:` starts pathspec "magic", and the second `:` terminates it.
                     # `/` is the magic letter for "from repo root".
@@ -481,13 +483,12 @@ function __fish_git_files
                 set -a file (string join / -- $previous)
 
                 # The filename with ":/:" prepended.
-                if string match -q '../*' -- $file
-                    or string match -q ':*' -- (commandline -ct)
+                if set -ql colon[1]; or string match -q '../*' -- $file
                     set file (string replace -- "$root/" ":/:" "$root/$relfile")
                 end
 
                 if test "$root/$relfile" -ef "$relfile"
-                    and not string match -q ':*' -- (commandline -ct)
+                    and not set -ql colon[1]
                     set file $relfile
                 end
 

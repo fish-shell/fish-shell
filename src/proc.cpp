@@ -170,8 +170,6 @@ maybe_t<statuses_t> job_t::get_statuses() const {
     return st;
 }
 
-const process_list_t &job_t::get_processes() const { return processes; }
-
 RustFFIProcList job_t::ffi_processes() const {
     return RustFFIProcList{const_cast<process_ptr_t *>(processes.data()), processes.size()};
 }

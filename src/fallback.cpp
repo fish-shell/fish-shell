@@ -262,16 +262,3 @@ int flock(int fd, int op) {
 }
 
 #endif  // HAVE_FLOCK
-
-#if !defined(HAVE_WCSTOD_L) && !defined(__NetBSD__)
-#undef wcstod_l
-#include <locale.h>
-// For platforms without wcstod_l C extension, wrap wcstod after changing the
-// thread-specific locale.
-double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
-    locale_t prev_locale = uselocale(loc);
-    double ret = std::wcstod(enptr, endptr);
-    uselocale(prev_locale);
-    return ret;
-}
-#endif  // defined(wcstod_l)

@@ -94,9 +94,6 @@
 /* Define to 1 if you have the `wcsncasecmp' function. */
 #cmakedefine HAVE_WCSNCASECMP 1
 
-/* Define to 1 if you have the `wcstod_l' function. */
-#cmakedefine HAVE_WCSTOD_L 1
-
 /* Define to 1 if the status that wait returns and WEXITSTATUS expects is signal and then ret instead of the other way around. */
 #cmakedefine HAVE_WAITSTATUS_SIGNAL_RET 1
 
@@ -143,9 +140,6 @@
 
 /* Define if xlocale.h is required for locale_t or wide character support */
 #cmakedefine HAVE_XLOCALE_H 1
-
-/* Define if uselocale is available */
-#cmakedefine HAVE_USELOCALE 1
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE

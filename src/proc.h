@@ -543,9 +543,6 @@ class job_t : noncopyable_t {
     /// \returns the statuses for this job.
     maybe_t<statuses_t> get_statuses() const;
 
-    /// \returns the list of processes.
-    const process_list_t &get_processes() const;
-
     /// autocxx junk.
     RustFFIProcList ffi_processes() const;
 

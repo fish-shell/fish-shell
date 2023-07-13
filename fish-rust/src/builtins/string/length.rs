@@ -41,8 +41,8 @@ impl StringSubCommand<'_> for Length {
                     // Carriage-return returns us to the beginning. The longest substring without
                     // carriage-return determines the overall width.
                     for reset in split_string(&line, '\r') {
-                        let n = width_without_escapes(&reset, 0) as usize;
-                        max = max.max(n);
+                        let n = width_without_escapes(&reset, 0);
+                        max = usize::max(max, n);
                     }
                     if max > 0 {
                         nnonempty += 1;

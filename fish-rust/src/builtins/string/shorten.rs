@@ -1,25 +1,26 @@
 use super::*;
 use crate::common::get_ellipsis_str;
-use crate::fallback::fish_wcwidth;
 use crate::wcstringutil::split_string;
-use crate::wutil::{fish_wcstol, fish_wcswidth};
+use crate::wutil::fish_wcstol;
 
 pub struct Shorten<'args> {
-    chars_to_shorten: &'args wstr,
+    ellipsis: &'args wstr,
+    ellipsis_width: usize,
     max: Option<usize>,
     no_newline: bool,
     quiet: bool,
-    direction: Direction,
+    shorten_from: Direction,
 }
 
 impl Default for Shorten<'_> {
     fn default() -> Self {
         Self {
-            chars_to_shorten: get_ellipsis_str(),
+            ellipsis: get_ellipsis_str(),
+            ellipsis_width: width_without_escapes(get_ellipsis_str(), 0),
             max: None,
             no_newline: false,
             quiet: false,
-            direction: Direction::Right,
+            shorten_from: Direction::Right,
         }
     }
 }
@@ -42,7 +43,10 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
         arg: Option<&'args wstr>,
     ) -> Result<(), StringError> {
         match c {
-            'c' => self.chars_to_shorten = arg.expect("option --char requires an argument"),
+            'c' => {
+                self.ellipsis = arg.unwrap();
+                self.ellipsis_width = width_without_escapes(self.ellipsis, 0);
+            }
             'm' => {
                 self.max = Some(
                     fish_wcstol(arg.unwrap())?
@@ -51,7 +55,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                 )
             }
             'N' => self.no_newline = true,
-            'l' => self.direction = Direction::Left,
+            'l' => self.shorten_from = Direction::Left,
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
         }
@@ -67,7 +71,6 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
     ) -> Option<libc::c_int> {
         let mut min_width = usize::MAX;
         let mut inputs = Vec::new();
-        let mut ell = self.chars_to_shorten;
 
         let iter = Arguments::new(args, optind, streams);
 
@@ -93,23 +96,23 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // or we handle the lines separately.
             let mut splits = split_string(&arg, '\n').into_iter();
             if self.no_newline && splits.len() > 1 {
-                let mut s = match self.direction {
+                let mut s = match self.shorten_from {
                     Direction::Right => splits.next(),
                     Direction::Left => splits.last(),
                 }
                 .unwrap();
-                s.push_utfstr(ell);
+                s.push_utfstr(self.ellipsis);
                 let width = width_without_escapes(&s, 0);
 
-                if width > 0 && (width as usize) < min_width {
-                    min_width = width as usize;
+                if width > 0 && width < min_width {
+                    min_width = width;
                 }
                 inputs.push(s);
             } else {
                 for s in splits {
                     let width = width_without_escapes(&s, 0);
-                    if width > 0 && (width as usize) < min_width {
-                        min_width = width as usize;
+                    if width > 0 && width < min_width {
+                        min_width = width;
                     }
                     inputs.push(s);
                 }
@@ -118,18 +121,12 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
         let ourmax: usize = self.max.unwrap_or(min_width);
 
-        // TODO: Can we have negative width
-
-        let ell_width: i32 = {
-            let w = fish_wcswidth(ell);
-            if w > ourmax as i32 {
-                // If we can't even print our ellipsis, we substitute nothing,
-                // truncating instead.
-                ell = L!("");
-                0
-            } else {
-                w
-            }
+        let (ell, ell_width) = if self.ellipsis_width > ourmax {
+            // If we can't even print our ellipsis, we substitute nothing,
+            // truncating instead.
+            (L!(""), 0)
+        } else {
+            (self.ellipsis, self.ellipsis_width)
         };
 
         let mut nsub = 0usize;
@@ -153,7 +150,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             let mut pos = 0usize;
             let mut max = 0usize;
             // Collect how much of the string we can use without going over the maximum.
-            if self.direction == Direction::Left {
+            if self.shorten_from == Direction::Left {
                 // Our strategy for keeping from the end.
                 // This is rather unoptimized - actually going *backwards* from the end
                 // is extremely tricky because we would have to subtract escapes again.
@@ -165,7 +162,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                     // If we're at the beginning and it fits, we sits.
                     //
                     // Otherwise we require it to fit the ellipsis
-                    if (w <= ourmax as i32 && pos == 0) || (w + ell_width <= ourmax as i32) {
+                    if (w <= ourmax && pos == 0) || (w + ell_width <= ourmax) {
                         out = line.slice_from(pos);
                         break;
                     }
@@ -191,23 +188,24 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                 streams.out.append1('\n');
                 continue;
             } else {
-                /* Direction::Right */
+                /* shorten the right side */
                 // Going from the left.
                 // This is somewhat easier.
                 while max <= ourmax && pos < line.len() {
                     pos += skip_escapes(&line, pos);
-                    let w = fish_wcwidth(line.char_at(pos));
-                    if w <= 0 || max + w as usize + ell_width as usize <= ourmax {
+                    let w = fish_wcwidth_visible(line.char_at(pos)) as isize;
+                    if w <= 0 || max + w as usize + ell_width <= ourmax {
                         // If it still fits, even if it is the last, we add it.
-                        max += w as usize;
+                        max = max.saturating_add_signed(w);
                         pos += 1;
                     } else {
                         // We're at the limit, so see if the entire string fits.
-                        let mut max2: usize = max + w as usize;
+                        let mut max2 = max + w as usize;
                         let mut pos2 = pos + 1;
                         while pos2 < line.len() {
                             pos2 += skip_escapes(&line, pos2);
-                            max2 += fish_wcwidth(line.char_at(pos2)) as usize;
+                            let w = fish_wcwidth_visible(line.char_at(pos2)) as isize;
+                            max2 = max2.saturating_add_signed(w);
                             pos2 += 1;
                         }
 

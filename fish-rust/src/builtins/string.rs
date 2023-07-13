@@ -259,7 +259,7 @@ enum Direction {
     Right,
 }
 
-pub(self) fn width_without_escapes(ins: &wstr, start_pos: usize) -> i32 {
+pub(self) fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
     let mut width: i32 = 0;
     for c in ins[start_pos..].chars() {
         let w = fish_wcwidth_visible(c);
@@ -287,8 +287,9 @@ pub(self) fn width_without_escapes(ins: &wstr, start_pos: usize) -> i32 {
             pos += 1;
         }
     }
-
-    return width;
+    // we subtracted less than we added
+    debug_assert!(width >= 0, "line has negative width");
+    return width as usize;
 }
 
 pub(self) fn escape_code_length(code: &wstr) -> Option<usize> {

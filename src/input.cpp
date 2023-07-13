@@ -174,6 +174,8 @@ static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0
               "input_function_metadata size mismatch with input_common. Did you forget to update "
               "input_function_metadata?");
 
+// Keep this function for debug purposes
+// See 031b265
 wcstring describe_char(wint_t c) {
     if (c < R_END_INPUT_FUNCTIONS) {
         return format_string(L"%02x (%ls)", c, input_function_metadata[c].name);

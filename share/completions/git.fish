@@ -196,7 +196,7 @@ function __fish_git_files
         if set -ql untracked
             # Fast path for untracked files - it is extremely easy to get a lot of these,
             # so we handle them first
-            set -l files (string match -rg '^\? (.*)' -- $stats | string trim -c \")
+            set -l files (string match -rg '^\? "?(.*)"?' -- $stats)
             set stats (string match -rv '^\? ' -- $stats)
             printf "$rel%s\n" $files\t$untracked_desc
             if set -ql colon[1]

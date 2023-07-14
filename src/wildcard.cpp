@@ -679,11 +679,8 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
     }
 
     if (!(flags & expand_flag::for_completions)) {
-        // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file if it
-        // exists.
-        if (waccess(base_dir, F_OK) == 0) {
-            this->add_expansion_result(wcstring{base_dir});
-        }
+        // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file, we already know it exists!
+        this->add_expansion_result(wcstring{base_dir});
     } else {
         // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.
         dir_iter_t dir = open_dir(base_dir);

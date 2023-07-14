@@ -14,13 +14,9 @@ jobs:
     - name: SetupRust
       uses: ATiltedTree/setup-rust@v1
       with:
-        # FIXME: We want "stable" here, but 1.71 isn't working
-        # DATE: 2023-07-14
-        rust-version: "1.70"
+        rust-version: stable
     - name: cargo fmt
       run: |
-        # Hack: setup-rust seems to fail to install this?
-        rustup component add rustfmt
         cd fish-rust
         cargo fmt --check --all
 
@@ -32,9 +28,7 @@ jobs:
     - name: SetupRust
       uses: ATiltedTree/setup-rust@v1
       with:
-        # FIXME: We want "stable" here, but 1.71 isn't working
-        # DATE: 2023-07-14
-        rust-version: "1.70"
+        rust-version: stable
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -44,7 +38,5 @@ jobs:
         cmake -B build
     - name: cargo clippy
       run: |
-        # Hack: setup-rust seems to fail to install this?
-        rustup component add clippy
         cd fish-rust
         cargo clippy --workspace --all-targets -- --deny=warnings

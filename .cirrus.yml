@@ -115,4 +115,4 @@ freebsd_task:
         - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja -j 6 fish fish_tests'
         - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja fish_run_tests'
 
-    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+    only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'

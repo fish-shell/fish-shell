@@ -1,7 +1,6 @@
-use crate::ffi::wildcard_match;
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharToFFI;
+use crate::wildcard::wildcard_match;
 use libc::c_int;
 use std::io::Write;
 use std::os::unix::prelude::*;
@@ -212,7 +211,7 @@ fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
     let wc = parse_util_unescape_wildcards(wc_esc);
     let mut match_found = false;
     for cat in categories::all_categories() {
-        if wildcard_match(&cat.name.to_ffi(), &wc.to_ffi(), false) {
+        if wildcard_match(cat.name, &wc, false) {
             cat.enabled.store(sense, Ordering::Relaxed);
             match_found = true;
         }

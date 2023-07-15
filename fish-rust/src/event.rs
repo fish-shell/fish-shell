@@ -105,7 +105,7 @@ pub use event_ffi::{event_description_t, event_type_t};
 const ANY_PID: pid_t = 0;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum EventType {
+pub enum EventDescription {
     /// Matches any event type (not always any event, as the function name may limit the choice as
     /// well).
     Any,
@@ -138,29 +138,29 @@ pub enum EventType {
     },
 }
 
-impl EventType {
+impl EventDescription {
     fn str_param1(&self) -> Option<&wstr> {
         match self {
-            EventType::Any
-            | EventType::Signal { .. }
-            | EventType::ProcessExit { .. }
-            | EventType::JobExit { .. }
-            | EventType::CallerExit { .. } => None,
-            EventType::Variable { name } => Some(name),
-            EventType::Generic { param } => Some(param),
+            EventDescription::Any
+            | EventDescription::Signal { .. }
+            | EventDescription::ProcessExit { .. }
+            | EventDescription::JobExit { .. }
+            | EventDescription::CallerExit { .. } => None,
+            EventDescription::Variable { name } => Some(name),
+            EventDescription::Generic { param } => Some(param),
         }
     }
 
     #[widestrs]
     fn name(&self) -> &'static wstr {
         match self {
-            EventType::Any => "any"L,
-            EventType::Signal { .. } => "signal"L,
-            EventType::Variable { .. } => "variable"L,
-            EventType::ProcessExit { .. } => "process-exit"L,
-            EventType::JobExit { .. } => "job-exit"L,
-            EventType::CallerExit { .. } => "caller-exit"L,
-            EventType::Generic { .. } => "generic"L,
+            EventDescription::Any => "any"L,
+            EventDescription::Signal { .. } => "signal"L,
+            EventDescription::Variable { .. } => "variable"L,
+            EventDescription::ProcessExit { .. } => "process-exit"L,
+            EventDescription::JobExit { .. } => "job-exit"L,
+            EventDescription::CallerExit { .. } => "caller-exit"L,
+            EventDescription::Generic { .. } => "generic"L,
         }
     }
 
@@ -170,10 +170,10 @@ impl EventType {
         }
 
         match self {
-            EventType::Any => false,
-            EventType::ProcessExit { .. }
-            | EventType::JobExit { .. }
-            | EventType::CallerExit { .. }
+            EventDescription::Any => false,
+            EventDescription::ProcessExit { .. }
+            | EventDescription::JobExit { .. }
+            | EventDescription::CallerExit { .. }
                 if filter == L!("exit") =>
             {
                 true
@@ -183,50 +183,42 @@ impl EventType {
     }
 }
 
-impl From<&EventType> for event_type_t {
-    fn from(typ: &EventType) -> Self {
-        match typ {
-            EventType::Any => event_type_t::any,
-            EventType::Signal { .. } => event_type_t::signal,
-            EventType::Variable { .. } => event_type_t::variable,
-            EventType::ProcessExit { .. } => event_type_t::process_exit,
-            EventType::JobExit { .. } => event_type_t::job_exit,
-            EventType::CallerExit { .. } => event_type_t::caller_exit,
-            EventType::Generic { .. } => event_type_t::generic,
+impl From<&EventDescription> for event_type_t {
+    fn from(desc: &EventDescription) -> Self {
+        match desc {
+            EventDescription::Any => event_type_t::any,
+            EventDescription::Signal { .. } => event_type_t::signal,
+            EventDescription::Variable { .. } => event_type_t::variable,
+            EventDescription::ProcessExit { .. } => event_type_t::process_exit,
+            EventDescription::JobExit { .. } => event_type_t::job_exit,
+            EventDescription::CallerExit { .. } => event_type_t::caller_exit,
+            EventDescription::Generic { .. } => event_type_t::generic,
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EventDescription {
-    // TODO: remove the wrapper struct and just put `EventType` where `EventDescription` is now
-    pub typ: EventType,
-}
-
 impl From<&event_description_t> for EventDescription {
     fn from(desc: &event_description_t) -> Self {
-        EventDescription {
-            typ: match desc.typ {
-                event_type_t::any => EventType::Any,
-                event_type_t::signal => EventType::Signal {
-                    signal: Signal::new(desc.signal),
-                },
-                event_type_t::variable => EventType::Variable {
-                    name: desc.str_param1.from_ffi(),
-                },
-                event_type_t::process_exit => EventType::ProcessExit { pid: desc.pid },
-                event_type_t::job_exit => EventType::JobExit {
-                    pid: desc.pid,
-                    internal_job_id: desc.internal_job_id,
-                },
-                event_type_t::caller_exit => EventType::CallerExit {
-                    caller_id: desc.caller_id,
-                },
-                event_type_t::generic => EventType::Generic {
-                    param: desc.str_param1.from_ffi(),
-                },
-                _ => panic!("invalid event description"),
+        match desc.typ {
+            event_type_t::any => EventDescription::Any,
+            event_type_t::signal => EventDescription::Signal {
+                signal: Signal::new(desc.signal),
             },
+            event_type_t::variable => EventDescription::Variable {
+                name: desc.str_param1.from_ffi(),
+            },
+            event_type_t::process_exit => EventDescription::ProcessExit { pid: desc.pid },
+            event_type_t::job_exit => EventDescription::JobExit {
+                pid: desc.pid,
+                internal_job_id: desc.internal_job_id,
+            },
+            event_type_t::caller_exit => EventDescription::CallerExit {
+                caller_id: desc.caller_id,
+            },
+            event_type_t::generic => EventDescription::Generic {
+                param: desc.str_param1.from_ffi(),
+            },
+            _ => panic!("invalid event description"),
         }
     }
 }
@@ -234,30 +226,30 @@ impl From<&event_description_t> for EventDescription {
 impl From<&EventDescription> for event_description_t {
     fn from(desc: &EventDescription) -> Self {
         let mut result = event_description_t {
-            typ: (&desc.typ).into(),
+            typ: desc.into(),
             signal: Default::default(),
             pid: Default::default(),
             internal_job_id: Default::default(),
             caller_id: Default::default(),
-            str_param1: match desc.typ.str_param1() {
+            str_param1: match desc.str_param1() {
                 Some(param) => param.to_ffi(),
                 None => UniquePtr::null(),
             },
         };
-        match desc.typ {
-            EventType::Any => (),
-            EventType::Signal { signal } => result.signal = signal.code(),
-            EventType::Variable { .. } => (),
-            EventType::ProcessExit { pid } => result.pid = pid,
-            EventType::JobExit {
+        match *desc {
+            EventDescription::Any => (),
+            EventDescription::Signal { signal } => result.signal = signal.code(),
+            EventDescription::Variable { .. } => (),
+            EventDescription::ProcessExit { pid } => result.pid = pid,
+            EventDescription::JobExit {
                 pid,
                 internal_job_id,
             } => {
                 result.pid = pid;
                 result.internal_job_id = internal_job_id;
             }
-            EventType::CallerExit { caller_id } => result.caller_id = caller_id,
-            EventType::Generic { .. } => (),
+            EventDescription::CallerExit { caller_id } => result.caller_id = caller_id,
+            EventDescription::Generic { .. } => (),
         }
         result
     }
@@ -288,49 +280,52 @@ impl EventHandler {
 
     /// \return true if a handler is "one shot": it fires at most once.
     fn is_one_shot(&self) -> bool {
-        match self.desc.typ {
-            EventType::ProcessExit { pid } => pid != ANY_PID,
-            EventType::JobExit { pid, .. } => pid != ANY_PID,
-            EventType::CallerExit { .. } => true,
-            EventType::Signal { .. }
-            | EventType::Variable { .. }
-            | EventType::Generic { .. }
-            | EventType::Any => false,
+        match self.desc {
+            EventDescription::ProcessExit { pid } => pid != ANY_PID,
+            EventDescription::JobExit { pid, .. } => pid != ANY_PID,
+            EventDescription::CallerExit { .. } => true,
+            EventDescription::Signal { .. }
+            | EventDescription::Variable { .. }
+            | EventDescription::Generic { .. }
+            | EventDescription::Any => false,
         }
     }
 
     /// Tests if this event handler matches an event that has occurred.
     fn matches(&self, event: &Event) -> bool {
-        match (&self.desc.typ, &event.desc.typ) {
-            (EventType::Any, _) => true,
-            (EventType::Signal { signal }, EventType::Signal { signal: ev_signal }) => {
-                signal == ev_signal
-            }
-            (EventType::Variable { name }, EventType::Variable { name: ev_name }) => {
+        match (&self.desc, &event.desc) {
+            (EventDescription::Any, _) => true,
+            (
+                EventDescription::Signal { signal },
+                EventDescription::Signal { signal: ev_signal },
+            ) => signal == ev_signal,
+            (EventDescription::Variable { name }, EventDescription::Variable { name: ev_name }) => {
                 name == ev_name
             }
-            (EventType::ProcessExit { pid }, EventType::ProcessExit { pid: ev_pid }) => {
-                *pid == ANY_PID || pid == ev_pid
-            }
             (
-                EventType::JobExit {
+                EventDescription::ProcessExit { pid },
+                EventDescription::ProcessExit { pid: ev_pid },
+            ) => *pid == ANY_PID || pid == ev_pid,
+            (
+                EventDescription::JobExit {
                     pid,
                     internal_job_id,
                 },
-                EventType::JobExit {
+                EventDescription::JobExit {
                     internal_job_id: ev_internal_job_id,
                     ..
                 },
             ) => *pid == ANY_PID || internal_job_id == ev_internal_job_id,
             (
-                EventType::CallerExit { caller_id },
-                EventType::CallerExit {
+                EventDescription::CallerExit { caller_id },
+                EventDescription::CallerExit {
                     caller_id: ev_caller_id,
                 },
             ) => caller_id == ev_caller_id,
-            (EventType::Generic { param }, EventType::Generic { param: ev_param }) => {
-                param == ev_param
-            }
+            (
+                EventDescription::Generic { param },
+                EventDescription::Generic { param: ev_param },
+            ) => param == ev_param,
             (_, _) => false,
         }
     }
@@ -358,36 +353,28 @@ pub struct Event {
 impl Event {
     pub fn generic(desc: WString) -> Self {
         Self {
-            desc: EventDescription {
-                typ: EventType::Generic { param: desc },
-            },
+            desc: EventDescription::Generic { param: desc },
             arguments: vec![],
         }
     }
 
     pub fn variable_erase(name: WString) -> Self {
         Self {
-            desc: EventDescription {
-                typ: EventType::Variable { name: name.clone() },
-            },
+            desc: EventDescription::Variable { name: name.clone() },
             arguments: vec!["VARIABLE".into(), "ERASE".into(), name],
         }
     }
 
     pub fn variable_set(name: WString) -> Self {
         Self {
-            desc: EventDescription {
-                typ: EventType::Variable { name: name.clone() },
-            },
+            desc: EventDescription::Variable { name: name.clone() },
             arguments: vec!["VARIABLE".into(), "SET".into(), name],
         }
     }
 
     pub fn process_exit(pid: pid_t, status: i32) -> Self {
         Self {
-            desc: EventDescription {
-                typ: EventType::ProcessExit { pid },
-            },
+            desc: EventDescription::ProcessExit { pid },
             arguments: vec![
                 "PROCESS_EXIT".into(),
                 pid.to_string().into(),
@@ -398,11 +385,9 @@ impl Event {
 
     pub fn job_exit(pgid: pid_t, jid: u64) -> Self {
         Self {
-            desc: EventDescription {
-                typ: EventType::JobExit {
-                    pid: pgid,
-                    internal_job_id: jid,
-                },
+            desc: EventDescription::JobExit {
+                pid: pgid,
+                internal_job_id: jid,
             },
             arguments: vec![
                 "JOB_EXIT".into(),
@@ -414,10 +399,8 @@ impl Event {
 
     pub fn caller_exit(internal_job_id: u64, job_id: MaybeJobId) -> Self {
         Self {
-            desc: EventDescription {
-                typ: EventType::CallerExit {
-                    caller_id: internal_job_id,
-                },
+            desc: EventDescription::CallerExit {
+                caller_id: internal_job_id,
             },
             arguments: vec![
                 "JOB_EXIT".into(),
@@ -585,13 +568,13 @@ pub fn is_signal_observed(sig: libc::c_int) -> bool {
 }
 
 pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
-    let s = match &evt.desc.typ {
-        EventType::Signal { signal } => {
+    let s = match &evt.desc {
+        EventDescription::Signal { signal } => {
             format!("signal handler for {} ({})", signal.name(), signal.desc(),)
         }
-        EventType::Variable { name } => format!("handler for variable '{name}'"),
-        EventType::ProcessExit { pid } => format!("exit handler for process {pid}"),
-        EventType::JobExit { pid, .. } => {
+        EventDescription::Variable { name } => format!("handler for variable '{name}'"),
+        EventDescription::ProcessExit { pid } => format!("exit handler for process {pid}"),
+        EventDescription::JobExit { pid, .. } => {
             if let Some(job) = parser.job_get_from_pid(*pid) {
                 format!(
                     "exit handler for job {}, '{}'",
@@ -602,9 +585,11 @@ pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
                 format!("exit handler for job with pid {pid}")
             }
         }
-        EventType::CallerExit { .. } => "exit handler for command substitution caller".to_string(),
-        EventType::Generic { param } => format!("handler for generic event '{param}'"),
-        EventType::Any => unreachable!(),
+        EventDescription::CallerExit { .. } => {
+            "exit handler for command substitution caller".to_string()
+        }
+        EventDescription::Generic { param } => format!("handler for generic event '{param}'"),
+        EventDescription::Any => unreachable!(),
     };
 
     WString::from_str(&s)
@@ -616,7 +601,7 @@ fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString> {
 
 /// Add an event handler.
 pub fn add_handler(eh: EventHandler) {
-    if let EventType::Signal { signal } = eh.desc.typ {
+    if let EventDescription::Signal { signal } = eh.desc {
         signal_handle(signal);
         inc_signal_observed(signal);
     }
@@ -638,7 +623,7 @@ fn remove_handlers_if(pred: impl Fn(&EventHandler) -> bool) -> usize {
         let handler = &handlers[i];
         if pred(handler) {
             handler.removed.store(true, Ordering::Relaxed);
-            if let EventType::Signal { signal } = handler.desc.typ {
+            if let EventDescription::Signal { signal } = handler.desc {
                 dec_signal_observed(signal);
             }
             handlers.remove(i);
@@ -739,7 +724,7 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         FLOG!(
             event,
             "Firing event '",
-            event.desc.typ.str_param1().unwrap_or(L!("")),
+            event.desc.str_param1().unwrap_or(L!("")),
             "' to handler '",
             handler.function_name,
             "'"
@@ -795,9 +780,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
             termsize::SHARED_CONTAINER.updating(parser);
         }
         let event = Event {
-            desc: EventDescription {
-                typ: EventType::Signal { signal: sig },
-            },
+            desc: EventDescription::Signal { signal: sig },
             arguments: vec![sig.name().into()],
         };
         to_send.push(event);
@@ -863,45 +846,45 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
         .expect("event handler list should not be poisoned")
         .clone();
 
-    tmp.sort_by(|e1, e2| e1.desc.typ.cmp(&e2.desc.typ));
+    tmp.sort_by(|e1, e2| e1.desc.cmp(&e2.desc));
 
     let mut last_type = None;
     for evt in tmp {
         // If we have a filter, skip events that don't match.
-        if !evt.desc.typ.matches_filter(type_filter) {
+        if !evt.desc.matches_filter(type_filter) {
             continue;
         }
 
-        if last_type.as_ref() != Some(&evt.desc.typ) {
+        if last_type.as_ref() != Some(&evt.desc) {
             if last_type.is_some() {
                 streams.out.append(L!("\n"));
             }
 
-            last_type = Some(evt.desc.typ.clone());
+            last_type = Some(evt.desc.clone());
             streams
                 .out
-                .append(&sprintf!(L!("Event %ls\n"), evt.desc.typ.name()));
+                .append(&sprintf!(L!("Event %ls\n"), evt.desc.name()));
         }
 
-        match &evt.desc.typ {
-            EventType::Signal { signal } => {
+        match &evt.desc {
+            EventDescription::Signal { signal } => {
                 let name: WString = signal.name().into();
                 streams
                     .out
                     .append(&sprintf!(L!("%ls %ls\n"), name, evt.function_name));
             }
-            EventType::ProcessExit { .. } | EventType::JobExit { .. } => {}
-            EventType::CallerExit { .. } => {
+            EventDescription::ProcessExit { .. } | EventDescription::JobExit { .. } => {}
+            EventDescription::CallerExit { .. } => {
                 streams
                     .out
                     .append(&sprintf!(L!("caller-exit %ls\n"), evt.function_name));
             }
-            EventType::Variable { name: param } | EventType::Generic { param } => {
+            EventDescription::Variable { name: param } | EventDescription::Generic { param } => {
                 streams
                     .out
                     .append(&sprintf!(L!("%ls %ls\n"), param, evt.function_name));
             }
-            EventType::Any => unreachable!(),
+            EventDescription::Any => unreachable!(),
         }
     }
 }
@@ -916,9 +899,7 @@ pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString
     fire(
         parser,
         Event {
-            desc: EventDescription {
-                typ: EventType::Generic { param: name },
-            },
+            desc: EventDescription::Generic { param: name },
             arguments,
         },
     )

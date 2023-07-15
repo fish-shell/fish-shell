@@ -12,7 +12,7 @@ use crate::ffi::Repin;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::split_string;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t, NONOPTION_CHAR_CODE};
 use crate::wutil::{fish_iswalnum, fish_wcstol, wgettext_fmt};
 use libc::c_int;
 
@@ -832,7 +832,7 @@ fn argparse_parse_flags<'args>(
                     STATUS_CMD_OK
                 }
             }
-            '\u{1}' => {
+            NONOPTION_CHAR_CODE => {
                 // A non-option argument.
                 // We use `-` as the first option-string-char to disable GNU getopt's reordering,
                 // otherwise we'd get ignored options first and normal arguments later.

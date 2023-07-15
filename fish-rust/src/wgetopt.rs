@@ -54,6 +54,9 @@ enum Ordering {
     RETURN_IN_ORDER,
 }
 
+/// The special character code, enabled via RETURN_IN_ORDER, indicating a non-option argument.
+pub const NONOPTION_CHAR_CODE: char = '\x01';
+
 impl Default for Ordering {
     fn default() -> Self {
         Ordering::PERMUTE
@@ -323,7 +326,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             }
             self.woptarg = Some(self.argv[self.woptind]);
             self.woptind += 1;
-            return Some(char::from(1));
+            return Some(NONOPTION_CHAR_CODE);
         }
 
         // We have found another option-ARGV-element. Skip the initial punctuation.

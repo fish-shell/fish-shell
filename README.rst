@@ -146,9 +146,8 @@ Building
 Dependencies
 ~~~~~~~~~~~~
 
-Compiling fish requires:
+Compiling fish from a tarball requires:
 
--  Rust (version 1.67 or later)
 -  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
 -  CMake (version 3.5 or later)
 -  a curses implementation such as ncurses (headers and libraries)
@@ -159,6 +158,20 @@ Sphinx is also optionally required to build the documentation from a
 cloned git repository.
 
 Additionally, running the test suite requires Python 3.5+ and the pexpect package.
+
+Dependencies, git master
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Building from git master currently requires, in addition to the dependencies for a tarball:
+
+-  Rust (version 1.67 or later)
+-  libclang, even if you are compiling with gcc
+-  an internet connection
+
+Fish is in the process of being ported to rust, replacing all C++ code, and as such these dependencies are a bit awkward and in flux.
+
+In general, we would currently not recommend running from git master if you just want to *use* fish.
+Given the nature of the port, what is currently there is mostly a slower and buggier version of the last C++-based release.
 
 Building from source (all platforms) - Makefile generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

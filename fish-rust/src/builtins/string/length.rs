@@ -9,13 +9,18 @@ pub struct Length {
 }
 
 impl StringSubCommand<'_> for Length {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("visible"), no_argument, 'V'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":qV");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            wopt(L!("quiet"), no_argument, 'q'),
+            wopt(L!("visible"), no_argument, 'V'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":qV")
+    }
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'q' => self.quiet = true,
             'V' => self.visible = true,
@@ -26,10 +31,10 @@ impl StringSubCommand<'_> for Length {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
         let mut nnonempty = 0usize;
 
@@ -48,7 +53,7 @@ impl StringSubCommand<'_> for Length {
                         nnonempty += 1;
                     }
                     if !self.quiet {
-                        streams.out.appendln(max.to_wstring());
+                        streams.out.appendln_owned(max.to_wstring());
                     } else if nnonempty > 0 {
                         return STATUS_CMD_OK;
                     }
@@ -59,7 +64,7 @@ impl StringSubCommand<'_> for Length {
                     nnonempty += 1;
                 }
                 if !self.quiet {
-                    streams.out.appendln(n.to_wstring());
+                    streams.out.appendln_owned(n.to_wstring());
                 } else if nnonempty > 0 {
                     return STATUS_CMD_OK;
                 }

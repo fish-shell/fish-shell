@@ -1,10 +1,9 @@
 use crate::builtins::prelude::*;
 use crate::builtins::test::test as builtin_test;
-
-use crate::ffi::make_null_io_streams_ffi;
+use crate::io::NullOutputStream;
 
 fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
-    let parser: &mut parser_t = unsafe { &mut *parser_t::principal_parser_ffi() };
+    let parser = Parser::principal_parser();
     let mut argv = Vec::new();
     if bracket {
         argv.push(L!("[").to_owned());
@@ -18,11 +17,10 @@ fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> boo
         argv.push(L!("]").to_owned())
     };
 
-    // Convert to &[&wstr].
-    let mut argv = argv.iter().map(|s| s.as_ref()).collect::<Vec<_>>();
+    let mut out = NullOutputStream::new();
+    let mut err = NullOutputStream::new();
+    let mut streams = IoStreams::new(&mut out, &mut err);
 
-    let mut streams_ffi = make_null_io_streams_ffi();
-    let mut streams = io_streams_t::new(streams_ffi.as_mut().unwrap());
     let result: Option<i32> = builtin_test(parser, &mut streams, &mut argv);
 
     if result != Some(expected) {
@@ -48,22 +46,32 @@ fn run_test_test(expected: i32, lst: &[&str]) -> bool {
 #[widestrs]
 fn test_test_brackets() {
     // Ensure [ knows it needs a ].
-    let parser: &mut parser_t = unsafe { &mut *parser_t::principal_parser_ffi() };
-    let mut streams_ffi = make_null_io_streams_ffi();
-    let mut streams = io_streams_t::new(streams_ffi.as_mut().unwrap());
+    let parser = Parser::principal_parser();
 
-    let args1 = &mut ["["L, "foo"L];
+    let mut out = NullOutputStream::new();
+    let mut err = NullOutputStream::new();
+    let mut streams = IoStreams::new(&mut out, &mut err);
+
+    let mut args1 = ["["L.to_owned(), "foo"L.to_owned()];
     assert_eq!(
-        builtin_test(parser, &mut streams, args1),
+        builtin_test(parser, &mut streams, &mut args1),
         STATUS_INVALID_ARGS
     );
 
-    let args2 = &mut ["["L, "foo"L, "]"L];
-    assert_eq!(builtin_test(parser, &mut streams, args2), STATUS_CMD_OK);
-
-    let args3 = &mut ["["L, "foo"L, "]"L, "bar"L];
+    let mut args2 = ["["L.to_owned(), "foo"L.to_owned(), "]"L.to_owned()];
     assert_eq!(
-        builtin_test(parser, &mut streams, args3),
+        builtin_test(parser, &mut streams, &mut args2),
+        STATUS_CMD_OK
+    );
+
+    let mut args3 = [
+        "["L.to_owned(),
+        "foo"L.to_owned(),
+        "]"L.to_owned(),
+        "bar"L.to_owned(),
+    ];
+    assert_eq!(
+        builtin_test(parser, &mut streams, &mut args3),
         STATUS_INVALID_ARGS
     );
 }

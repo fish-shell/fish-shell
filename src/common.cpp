@@ -33,7 +33,9 @@
 #include <memory>
 
 #include "common.h"
+#if INCLUDE_RUST_HEADERS
 #include "common.rs.h"
+#endif
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
@@ -660,7 +662,7 @@ void narrow_string_safe(char buff[64], const wchar_t *s) {
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 static void escape_string_url(const wcstring &in, wcstring &out) {
-    auto result = rust_escape_string_url(in.c_str(), in.size());
+    auto result = escape_string_url(in.c_str(), in.size());
     if (result) {
         out = *result;
     }
@@ -668,7 +670,7 @@ static void escape_string_url(const wcstring &in, wcstring &out) {
 
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
 static void escape_string_var(const wcstring &in, wcstring &out) {
-    auto result = rust_escape_string_var(in.c_str(), in.size());
+    auto result = escape_string_var(in.c_str(), in.size());
     if (result) {
         out = *result;
     }
@@ -693,7 +695,7 @@ wcstring escape_string_for_double_quotes(wcstring in) {
 /// Escape a string in a fashion suitable for using in fish script. Store the result in out_str.
 static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
                                  escape_flags_t flags) {
-    auto result = rust_escape_string_script(orig_in, in_len, flags);
+    auto result = escape_string_script(orig_in, in_len, flags);
     if (result) {
         out = *result;
     }
@@ -975,32 +977,6 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
     }
 
     return in_pos;
-}
-
-bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
-    assert(str != nullptr);
-    wcstring output;
-    if (auto unescaped = unescape_string(str->c_str(), str->size(), escape_special)) {
-        *str = *unescaped;
-        return true;
-    }
-    return false;
-}
-
-std::unique_ptr<wcstring> unescape_string(const wchar_t *input, unescape_flags_t escape_special,
-                                          escape_string_style_t style) {
-    return unescape_string(input, std::wcslen(input), escape_special, style);
-}
-
-std::unique_ptr<wcstring> unescape_string(const wchar_t *input, size_t len,
-                                          unescape_flags_t escape_special,
-                                          escape_string_style_t style) {
-    return rust_unescape_string(input, len, escape_special, style);
-}
-
-std::unique_ptr<wcstring> unescape_string(const wcstring &input, unescape_flags_t escape_special,
-                                          escape_string_style_t style) {
-    return unescape_string(input.c_str(), input.size(), escape_special, style);
 }
 
 wcstring format_size(long long sz) {
@@ -1294,7 +1270,5 @@ bool is_console_session() {
 /// can be init even if the rust version of the function is called instead. This is easier than
 /// declaring all those variables as extern, which I'll do in a separate PR.
 extern "C" {
-    void fish_setlocale_ffi() {
-        fish_setlocale();
-    }
+void fish_setlocale_ffi() { fish_setlocale(); }
 }

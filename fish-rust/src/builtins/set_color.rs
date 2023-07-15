@@ -56,8 +56,8 @@ fn print_modifiers(
 
 #[allow(clippy::too_many_arguments)]
 fn print_colors(
-    streams: &mut io_streams_t,
-    args: &[&wstr],
+    streams: &mut IoStreams<'_>,
+    args: &[WString],
     bold: bool,
     underline: bool,
     italics: bool,
@@ -68,11 +68,14 @@ fn print_colors(
     let outp = &mut output::Outputter::new_buffering();
 
     // Rebind args to named_colors if there are no args.
-    let named_colors;
+    let named_colors: Vec<WString>;
     let args = if !args.is_empty() {
         args
     } else {
-        named_colors = RgbColor::named_color_names();
+        named_colors = RgbColor::named_color_names()
+            .into_iter()
+            .map(|s| s.to_owned())
+            .collect();
         &named_colors
     };
 
@@ -100,11 +103,11 @@ fn print_colors(
     } // conveniently, 'normal' is always the last color so we don't need to reset here
 
     let contents = outp.contents();
-    streams.out.append(str2wcstring(contents));
+    streams.out.append(&str2wcstring(contents));
 }
 
-const short_options: &wstr = L!(":b:hoidrcu");
-const long_options: &[woption] = &[
+const SHORT_OPTIONS: &wstr = L!(":b:hoidrcu");
+const LONG_OPTIONS: &[woption] = &[
     wopt(L!("background"), woption_argument_t::required_argument, 'b'),
     wopt(L!("help"), woption_argument_t::no_argument, 'h'),
     wopt(L!("bold"), woption_argument_t::no_argument, 'o'),
@@ -117,9 +120,9 @@ const long_options: &[woption] = &[
 
 /// set_color builtin.
 pub fn set_color(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
 ) -> Option<c_int> {
     // Variables used for parsing the argument list.
     let argc = argv.len();
@@ -138,15 +141,15 @@ pub fn set_color(
     let mut reverse = false;
     let mut print = false;
 
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
+    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'b' => {
-                assert!(w.woptarg.is_some(), "Arg should have been set");
-                bgcolor = w.woptarg;
+                assert!(w.woptarg().is_some(), "Arg should have been set");
+                bgcolor = w.woptarg().map(|s| s.to_owned());
             }
             'h' => {
-                builtin_print_help(parser, streams, argv[0]);
+                builtin_print_help(parser, streams, &argv[0]);
                 return STATUS_CMD_OK;
             }
             'o' => bold = true,
@@ -165,7 +168,7 @@ pub fn set_color(
                     parser,
                     streams,
                     L!("set_color"),
-                    argv[w.woptind - 1],
+                    &argv[w.woptind - 1],
                     true, /* print_hints */
                 );
                 return STATUS_INVALID_ARGS;
@@ -176,11 +179,12 @@ pub fn set_color(
     // We want to reclaim argv so grab woptind now.
     let mut woptind = w.woptind;
 
-    let mut bg = RgbColor::from_wstr(bgcolor.unwrap_or(L!(""))).unwrap_or(RgbColor::NONE);
+    let mut bg = RgbColor::from_wstr(bgcolor.as_ref().unwrap_or(&L!("").to_owned()))
+        .unwrap_or(RgbColor::NONE);
     if bgcolor.is_some() && bg.is_none() {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             "%ls: Unknown color '%ls'\n",
-            argv[0],
+            w.argv()[0],
             bgcolor.unwrap()
         ));
         return STATUS_INVALID_ARGS;
@@ -201,9 +205,9 @@ pub fn set_color(
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
     while woptind < argc {
-        let fg = RgbColor::from_wstr(argv[woptind]).unwrap_or(RgbColor::NONE);
+        let fg = RgbColor::from_wstr(&w.argv()[woptind]).unwrap_or(RgbColor::NONE);
         if fg.is_none() {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 "%ls: Unknown color '%ls'\n",
                 argv[0],
                 argv[woptind]
@@ -250,7 +254,7 @@ pub fn set_color(
 
     // Output the collected string.
     let contents = outp.contents();
-    streams.out.append(str2wcstring(contents));
+    streams.out.append(&str2wcstring(contents));
 
     STATUS_CMD_OK
 }

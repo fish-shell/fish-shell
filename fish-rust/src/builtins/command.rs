@@ -9,11 +9,10 @@ struct command_cmd_opts_t {
 }
 
 pub fn r#command(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
     let mut opts: command_cmd_opts_t = Default::default();
@@ -36,15 +35,27 @@ pub fn r#command(
             // -s and -v are aliases
             'v' => opts.find_path = true,
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -55,7 +66,7 @@ pub fn r#command(
 
     // Quiet implies find_path.
     if !opts.find_path && !opts.all && !opts.quiet {
-        builtin_print_help(parser, streams, cmd);
+        builtin_print_help(parser, streams, w.cmd());
         return STATUS_INVALID_ARGS;
     }
 
@@ -63,21 +74,20 @@ pub fn r#command(
     let optind = w.woptind;
     for arg in argv.iter().take(argc).skip(optind) {
         let paths = if opts.all {
-            path_get_paths(arg, &*parser.get_vars())
+            path_get_paths(arg, &*parser.vars())
         } else {
-            match path_get_path(arg, &*parser.get_vars()) {
+            match path_get_path(arg, &*parser.vars()) {
                 Some(p) => vec![p],
                 None => vec![],
             }
         };
-
         for path in paths.iter() {
             res = true;
             if opts.quiet {
                 return STATUS_CMD_OK;
             }
 
-            streams.out.appendln(path);
+            streams.out.appendln(&path);
             if !opts.all {
                 break;
             }

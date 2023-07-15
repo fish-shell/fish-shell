@@ -14,6 +14,22 @@ fn main() {
         .file("fish-rust/src/compat.c")
         .compile("libcompat.a");
 
+    if cc::Build::new()
+        .file("src/cfg/w_exitcode.cpp")
+        .try_compile("/dev/null")
+        .is_ok()
+    {
+        println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");
+    }
+
+    if cc::Build::new()
+        .file("src/cfg/spawn.c")
+        .try_compile("/dev/null")
+        .is_ok()
+    {
+        println!("cargo:rustc-cfg=FISH_USE_POSIX_SPAWN");
+    }
+
     let rust_dir = env!("CARGO_MANIFEST_DIR");
     let target_dir =
         std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));
@@ -51,12 +67,14 @@ fn main() {
     let source_files = vec![
         "fish-rust/src/abbrs.rs",
         "fish-rust/src/ast.rs",
-        "fish-rust/src/builtins/shared.rs",
-        "fish-rust/src/builtins/function.rs",
         "fish-rust/src/common.rs",
-        "fish-rust/src/env/env_ffi.rs",
+        "fish-rust/src/complete.rs",
         "fish-rust/src/env_dispatch.rs",
+        "fish-rust/src/env/env_ffi.rs",
+        "fish-rust/src/env_universal_common.rs",
         "fish-rust/src/event.rs",
+        "fish-rust/src/exec.rs",
+        "fish-rust/src/expand.rs",
         "fish-rust/src/fd_monitor.rs",
         "fish-rust/src/fd_readable_set.rs",
         "fish-rust/src/fds.rs",
@@ -67,18 +85,23 @@ fn main() {
         "fish-rust/src/function.rs",
         "fish-rust/src/future_feature_flags.rs",
         "fish-rust/src/highlight.rs",
+        "fish-rust/src/history.rs",
+        "fish-rust/src/io.rs",
         "fish-rust/src/job_group.rs",
         "fish-rust/src/kill.rs",
         "fish-rust/src/null_terminated_array.rs",
+        "fish-rust/src/operation_context.rs",
         "fish-rust/src/output.rs",
         "fish-rust/src/parse_constants.rs",
+        "fish-rust/src/parser.rs",
         "fish-rust/src/parse_tree.rs",
         "fish-rust/src/parse_util.rs",
         "fish-rust/src/print_help.rs",
+        "fish-rust/src/proc.rs",
+        "fish-rust/src/reader.rs",
         "fish-rust/src/redirection.rs",
         "fish-rust/src/signal.rs",
         "fish-rust/src/smoke.rs",
-        "fish-rust/src/spawn.rs",
         "fish-rust/src/termsize.rs",
         "fish-rust/src/threads.rs",
         "fish-rust/src/timer.rs",
@@ -86,7 +109,7 @@ fn main() {
         "fish-rust/src/topic_monitor.rs",
         "fish-rust/src/trace.rs",
         "fish-rust/src/util.rs",
-        "fish-rust/src/wait_handle.rs",
+        "fish-rust/src/wildcard.rs",
     ];
     cxx_build::bridges(&source_files)
         .flag_if_supported("-std=c++11")

@@ -252,8 +252,9 @@ wcstring pretty_printer_t::clean_text(const wcstring &input) {
     // Unescape the string - this leaves special markers around if there are any
     // expansions or anything. We specifically tell it to not compute backslash-escapes
     // like \U or \x, because we want to leave them intact.
-    wcstring unescaped = input;
-    unescape_string_in_place(&unescaped, UNESCAPE_SPECIAL | UNESCAPE_NO_BACKSLASHES);
+    wcstring unescaped =
+        *unescape_string(input.c_str(), input.size(), UNESCAPE_SPECIAL | UNESCAPE_NO_BACKSLASHES,
+                         STRING_STYLE_SCRIPT);
 
     // Remove INTERNAL_SEPARATOR because that's a quote.
     auto quote = [](wchar_t ch) { return ch == INTERNAL_SEPARATOR; };

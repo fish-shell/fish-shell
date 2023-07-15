@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "common.h"
+#include "env.h"
 #include "maybe.h"
 
 enum class readline_cmd_t {
@@ -185,7 +186,6 @@ class char_event_t {
 };
 
 /// Adjust the escape timeout.
-class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
 void update_wait_on_escape_ms_ffi(std::unique_ptr<env_var_t> fish_escape_delay_ms);
 

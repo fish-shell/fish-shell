@@ -1,3 +1,11 @@
+// TODO
+#![allow(unused_variables)]
+#![allow(unused_macros)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unreachable_code)]
+#![allow(clippy::diverging_sub_expression)]
+//
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
@@ -9,6 +17,7 @@
 #![allow(clippy::option_map_unit_fn)]
 #![allow(clippy::ptr_arg)]
 #![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::comparison_chain)]
 
 pub const BUILD_VERSION: &str = match option_env!("FISH_BUILD_VERSION") {
     Some(v) => v,
@@ -20,13 +29,17 @@ mod common;
 
 mod abbrs;
 mod ast;
+mod autoload;
 mod builtins;
 mod color;
 mod compat;
+mod complete;
 mod curses;
 mod env;
 mod env_dispatch;
+mod env_universal_common;
 mod event;
+mod exec;
 mod expand;
 mod fallback;
 mod fd_monitor;
@@ -48,6 +61,9 @@ mod future_feature_flags;
 mod global_safety;
 mod highlight;
 mod history;
+mod history_file;
+mod input;
+mod input_common;
 mod io;
 mod job_group;
 mod kill;
@@ -57,11 +73,16 @@ mod null_terminated_array;
 mod operation_context;
 mod output;
 mod parse_constants;
+mod parse_execution;
 mod parse_tree;
 mod parse_util;
+mod parser;
 mod parser_keywords;
 mod path;
+mod pointer;
+mod postfork;
 mod print_help;
+mod proc;
 mod re;
 mod reader;
 mod redirection;

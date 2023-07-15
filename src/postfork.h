@@ -1,3 +1,4 @@
+#if 0
 // Functions that we may safely call after fork(), of which there are very few. In particular we
 // cannot allocate memory, since we're insane enough to call fork from a multithreaded process.
 #ifndef FISH_POSTFORK_H
@@ -49,4 +50,5 @@ pid_t execute_fork();
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
 
+#endif
 #endif

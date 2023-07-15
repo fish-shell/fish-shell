@@ -1,0 +1,2 @@
+struct EnvStackRef;
+struct EnvDyn;

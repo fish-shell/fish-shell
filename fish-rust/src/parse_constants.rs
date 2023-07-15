@@ -1,6 +1,7 @@
 //! Constants used in the programmatic representation of fish code.
 
-use crate::ffi::{fish_wcswidth, fish_wcwidth, wcharz_t};
+use crate::fallback::{fish_wcswidth, fish_wcwidth};
+use crate::ffi::wcharz_t;
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
@@ -14,6 +15,7 @@ pub const SOURCE_OFFSET_INVALID: usize = SourceOffset::MAX as _;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
 bitflags! {
+    #[derive(Default)]
     pub struct ParseTreeFlags: u8 {
         /// attempt to build a "parse tree" no matter what. this may result in a 'forest' of
         /// disconnected trees. this is intended to be used by syntax highlighting.
@@ -108,6 +110,7 @@ mod parse_constants_ffi {
     }
 
     // Statement decorations like 'command' or 'exec'.
+    #[derive(Clone, Copy, Eq, PartialEq)]
     pub enum StatementDecoration {
         none,
         command,
@@ -243,6 +246,12 @@ impl SourceRange {
     }
     fn contains_inclusive_ffi(&self, loc: u32) -> bool {
         self.start <= loc && loc - self.start <= self.length
+    }
+}
+
+impl From<SourceRange> for std::ops::Range<usize> {
+    fn from(value: SourceRange) -> Self {
+        value.start()..value.end()
     }
 }
 
@@ -475,7 +484,7 @@ impl ParseError {
                 // pretend it's a space. We only expect this to be at the end of the string.
                 caret_space_line += " ";
             } else {
-                let width = fish_wcwidth(wc.into()).0;
+                let width = fish_wcwidth(wc.into());
                 if width > 0 {
                     caret_space_line += " ".repeat(width as usize).as_str();
                 }
@@ -489,7 +498,7 @@ impl ParseError {
             // We do it like this
             //               ^~~^
             // With a "^" under the start and end, and squiggles in-between.
-            let width = fish_wcswidth(unsafe { src.as_ptr().add(start) }, len).0;
+            let width = fish_wcswidth(&src[start..start + len]);
             if width >= 2 {
                 // Subtract one for each of the carets - this is important in case
                 // the starting char has a width of > 1.

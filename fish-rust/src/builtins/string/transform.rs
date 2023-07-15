@@ -6,9 +6,14 @@ pub struct Transform {
 }
 
 impl StringSubCommand<'_> for Transform {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[wopt(L!("quiet"), no_argument, 'q')];
-    const SHORT_OPTIONS: &'static wstr = L!(":q");
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[wopt(L!("quiet"), no_argument, 'q')];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":q")
+    }
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
@@ -18,10 +23,10 @@ impl StringSubCommand<'_> for Transform {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
         let mut n_transformed = 0usize;
 

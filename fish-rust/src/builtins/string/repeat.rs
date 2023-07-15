@@ -10,25 +10,30 @@ pub struct Repeat {
 }
 
 impl StringSubCommand<'_> for Repeat {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("count"), required_argument, 'n'),
-        wopt(L!("max"), required_argument, 'm'),
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("no-newline"), no_argument, 'N'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":n:m:qN");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            wopt(L!("count"), required_argument, 'n'),
+            wopt(L!("max"), required_argument, 'm'),
+            wopt(L!("quiet"), no_argument, 'q'),
+            wopt(L!("no-newline"), no_argument, 'N'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":n:m:qN")
+    }
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'n' => {
-                self.count = fish_wcstol(arg.unwrap())?
-                    .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid count value '%ls'\n", name, arg))?
+                self.count = fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid count value '%ls'\n", w.cmd(), w.woptarg())
+                })?
             }
             'm' => {
-                self.max = fish_wcstol(arg.unwrap())?
-                    .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?
+                self.max = fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid max value '%ls'\n", w.cmd(), w.woptarg())
+                })?
             }
             'q' => self.quiet = true,
             'N' => self.no_newline = true,
@@ -39,10 +44,10 @@ impl StringSubCommand<'_> for Repeat {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
         if self.max == 0 && self.count == 0 {
             // XXX: This used to be allowed, but returned 1.

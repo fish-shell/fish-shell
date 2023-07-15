@@ -1,4 +1,6 @@
+#include <paths.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <term.h>
 #include <unistd.h>
@@ -47,3 +49,15 @@ uint64_t C_MNT_LOCAL() {
     return 0;
 #endif
 }
+
+const char* C_PATH_BSHELL() { return _PATH_BSHELL; }
+
+int C_PC_CASE_SENSITIVE() {
+#ifdef _PC_CASE_SENSITIVE
+    return _PC_CASE_SENSITIVE;
+#else
+    return 0;
+#endif
+}
+
+FILE* stdout_stream() { return stdout; }

@@ -3,9 +3,11 @@ use crate::env::{
     is_read_only, ElectricVar, EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Statuses, VarTable,
     ELECTRIC_VARIABLES, PATH_ARRAY_SEP,
 };
-use crate::ffi::{self, env_universal_t};
+use crate::env_universal_common::EnvUniversal;
+use crate::ffi;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::kill::kill_entries;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::prelude::*;
@@ -29,36 +31,21 @@ const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 
 // Universal variables instance.
 lazy_static! {
-    static ref UVARS: Mutex<UniquePtr<env_universal_t>> = Mutex::new(env_universal_t::new_unique());
+    static ref UVARS: Mutex<EnvUniversal> = Mutex::new(EnvUniversal::new());
 }
 
 /// Getter for universal variables.
 /// This is typically initialized in env_init(), and is considered empty before then.
-pub fn uvars() -> MutexGuard<'static, UniquePtr<env_universal_t>> {
+pub fn uvars() -> MutexGuard<'static, EnvUniversal> {
     UVARS.lock().unwrap()
 }
 
 /// Whether we were launched with no_config; in this case setting a uvar instead sets a global.
 pub static UVAR_SCOPE_IS_GLOBAL: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
-/// Helper to get the kill ring.
-fn get_kill_ring_entries() -> Vec<WString> {
-    crate::kill::kill_entries()
-}
-
 /// Helper to get the history for a session ID.
 fn get_history_var_text(history_session_id: &wstr) -> Vec<WString> {
     ffi::get_history_variable_text_ffi(&history_session_id.to_ffi()).from_ffi()
-}
-
-/// Convert an FFI env_var_t to our EnvVar.
-impl ffi::env_var_t {
-    #[allow(clippy::wrong_self_convention)]
-    pub fn from_ffi(&self) -> EnvVar {
-        let var_ptr: *const EnvVar = self.ffi_ptr().cast();
-        let var: &EnvVar = unsafe { &*var_ptr };
-        var.clone()
-    }
 }
 
 /// Apply the pathvar behavior, splitting about colons.
@@ -68,11 +55,6 @@ pub fn colon_split<T: AsRef<wstr>>(val: &[T]) -> Vec<WString> {
         split_val.extend(str.as_ref().split(PATH_ARRAY_SEP).map(|s| s.to_owned()));
     }
     split_val
-}
-
-/// Convert an EnvVar to an FFI env_var_t.
-fn env_var_to_ffi(var: EnvVar) -> cxx::UniquePtr<ffi::env_var_t> {
-    ffi::env_var_t::new_ffi(Box::into_raw(Box::from(var)).cast()).within_unique_ptr()
 }
 
 /// Return true if a variable should become a path variable by default. See #436.
@@ -392,10 +374,7 @@ impl EnvScopedImpl {
             let vals = get_history_var_text(history_session_id);
             return Some(EnvVar::new_from_name_vec("history"L, vals));
         } else if key == "fish_killring"L {
-            Some(EnvVar::new_from_name_vec(
-                "fish_killring"L,
-                get_kill_ring_entries(),
-            ))
+            Some(EnvVar::new_from_name_vec("fish_killring"L, kill_entries()))
         } else if key == "pipestatus"L {
             let js = &self.perproc_data.statuses;
             let mut result = Vec::new();
@@ -473,12 +452,7 @@ impl EnvScopedImpl {
     }
 
     fn try_get_universal(&self, key: &wstr) -> Option<EnvVar> {
-        return uvars()
-            .as_ref()
-            .expect("Should have non-null uvars in this function")
-            .get_ffi(&key.to_ffi())
-            .as_ref()
-            .map(|v| v.from_ffi());
+        return uvars().get(key);
     }
 
     pub fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
@@ -547,12 +521,8 @@ impl EnvScopedImpl {
         }
 
         if query.universal {
-            let uni_list = uvars()
-                .as_ref()
-                .expect("Should have non-null uvars in this function")
-                .get_names_ffi(query.exports, query.unexports)
-                .from_ffi();
-            names.extend(uni_list);
+            let uni_list = uvars().get_names(query.exports, query.unexports);
+            names.extend(uni_list.into_iter());
         }
         names.into_iter().collect()
     }
@@ -587,7 +557,7 @@ impl EnvScopedImpl {
     {
         // Our uvars generation count doesn't come from next_export_generation(), so always supply
         // it even if it's 0.
-        func(uvars().as_ref().unwrap().get_export_generation());
+        func(uvars().get_export_generation());
         if self.globals.borrow().exports() {
             func(self.globals.borrow().export_gen);
         }
@@ -648,19 +618,9 @@ impl EnvScopedImpl {
         Self::get_exported(&self.globals, &mut vals);
         Self::get_exported(&self.locals, &mut vals);
 
-        let uni = uvars()
-            .as_ref()
-            .unwrap()
-            .get_names_ffi(true, false)
-            .from_ffi();
+        let uni = uvars().get_names(true, false);
         for key in uni {
-            let var = uvars()
-                .as_ref()
-                .unwrap()
-                .get_ffi(&key.to_ffi())
-                .as_ref()
-                .map(|v| v.from_ffi())
-                .expect("Variable should be present in uvars");
+            let var = uvars().get(&key).unwrap();
             // Only insert if not already present, as uvars have lowest precedence.
             // TODO: a longstanding bug is that an unexported local variable will not mask an exported uvar.
             vals.entry(key).or_insert(var);
@@ -692,7 +652,6 @@ impl EnvScopedImpl {
 
             // Have to pull this into a local to satisfy the borrow checker.
             let mut generations = std::mem::take(&mut self.export_array_generations);
-            generations.clear();
             self.enumerate_generations(|gen| generations.push(gen));
             self.export_array_generations = generations;
         }
@@ -789,7 +748,6 @@ impl EnvStackImpl {
                 result.uvar_modified = true;
             } else if query.global || (query.universal && UVAR_SCOPE_IS_GLOBAL.load()) {
                 Self::set_in_node(&mut self.base.globals, key, val, flags);
-                result.global_modified = true;
             } else if query.local {
                 assert!(
                     !self.base.locals.ptr_eq(&self.base.globals),
@@ -824,13 +782,7 @@ impl EnvStackImpl {
             // Existing global variable.
             Self::set_in_node(&mut node, key, val, flags);
             result.global_modified = true;
-        } else if uvars()
-            .as_ref()
-            .unwrap()
-            .get_ffi(&key.to_ffi())
-            .as_ref()
-            .is_some()
-        {
+        } else if !UVAR_SCOPE_IS_GLOBAL.load() && uvars().get(key).is_some() {
             // Existing universal variable.
             self.set_universal(key, val, query);
             result.uvar_modified = true;
@@ -864,7 +816,7 @@ impl EnvStackImpl {
         if query.has_scope {
             // The user requested erasing from a particular scope.
             if query.universal {
-                if uvars().as_mut().unwrap().remove(&key.to_ffi()) {
+                if uvars().remove(key) {
                     result.status = EnvStackSetResult::ENV_OK;
                 } else {
                     result.status = EnvStackSetResult::ENV_NOT_FOUND;
@@ -892,11 +844,7 @@ impl EnvStackImpl {
             // pass
         } else if Self::remove_from_chain(&mut self.base.globals, key) {
             result.global_modified = true;
-        } else if uvars()
-            .as_mut()
-            .expect("Should have non-null uvars in this function")
-            .remove(&key.to_ffi())
-        {
+        } else if uvars().remove(&key) {
             result.uvar_modified = true;
         } else {
             result.status = EnvStackSetResult::ENV_NOT_FOUND;
@@ -1038,10 +986,7 @@ impl EnvStackImpl {
     /// Set a universal variable, inheriting as applicable from the given old variable.
     fn set_universal(&mut self, key: &wstr, mut val: Vec<WString>, query: Query) {
         let mut locked_uvars = uvars();
-        let uv = locked_uvars
-            .as_mut()
-            .expect("Should have non-null uvars in this function");
-        let oldvar = uv.get_ffi(&key.to_ffi()).as_ref().map(|v| v.from_ffi());
+        let oldvar = locked_uvars.get(key);
         let oldvar = oldvar.as_ref();
 
         // Resolve whether or not to export.
@@ -1074,7 +1019,7 @@ impl EnvStackImpl {
         varflags.set(EnvVarFlags::PATHVAR, pathvar);
         let new_var = EnvVar::new_vec(val, varflags);
 
-        uv.set(&key.to_ffi(), &env_var_to_ffi(new_var));
+        locked_uvars.set(&key, new_var);
     }
 
     /// Set a variable in a given node \p node.

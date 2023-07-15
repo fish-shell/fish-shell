@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::ffi::{builtin_exists, builtin_get_names_ffi};
+use crate::builtins::shared::{builtin_exists, builtin_get_names};
 
 #[derive(Default)]
 struct builtin_cmd_opts_t {
@@ -8,11 +8,10 @@ struct builtin_cmd_opts_t {
 }
 
 pub fn r#builtin(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
 ) -> Option<c_int> {
-    let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
     let mut opts: builtin_cmd_opts_t = Default::default();
@@ -30,15 +29,27 @@ pub fn r#builtin(
             'q' => opts.query = true,
             'n' => opts.list_names = true,
             'h' => {
-                builtin_print_help(parser, streams, cmd);
+                builtin_print_help(parser, streams, w.cmd());
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -48,9 +59,9 @@ pub fn r#builtin(
     }
 
     if opts.query && opts.list_names {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
-            cmd,
+            w.cmd(),
             wgettext!("--query and --names are mutually exclusive")
         ));
         return STATUS_INVALID_ARGS;
@@ -60,14 +71,14 @@ pub fn r#builtin(
     // This is also what e.g. command and time,
     // the other decorator/builtins do.
     if !opts.query && !opts.list_names {
-        builtin_print_help(parser, streams, cmd);
+        builtin_print_help(parser, streams, w.cmd());
         return STATUS_INVALID_ARGS;
     }
 
     if opts.query {
         let optind = w.woptind;
         for arg in argv.iter().take(argc).skip(optind) {
-            if builtin_exists(&arg.to_ffi()) {
+            if builtin_exists(arg) {
                 return STATUS_CMD_OK;
             }
         }
@@ -76,9 +87,9 @@ pub fn r#builtin(
 
     if opts.list_names {
         // List is guaranteed to be sorted by name.
-        let names: Vec<WString> = builtin_get_names_ffi().from_ffi();
+        let names = builtin_get_names();
         for name in names {
-            streams.out.appendln(name);
+            streams.out.appendln(name.into());
         }
     }
 

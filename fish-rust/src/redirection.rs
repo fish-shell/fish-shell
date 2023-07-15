@@ -1,6 +1,7 @@
 //! This file supports specifying and applying redirections.
 
 use crate::ffi::wcharz_t;
+use crate::io::IoChain;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharToFFI;
 use crate::wutil::fish_wcstoi;
@@ -58,6 +59,7 @@ mod redirection_ffi {
     }
 
     /// A class representing a sequence of basic redirections.
+    #[derive(Default)]
     struct Dup2List {
         /// The list of actions.
         actions: Vec<Dup2Action>,
@@ -86,6 +88,12 @@ impl RedirectionMode {
     }
 }
 
+impl Dup2Action {
+    pub fn new(src: RawFd, target: RawFd) -> Self {
+        Self { src, target }
+    }
+}
+
 /// A struct which represents a redirection specification from the user.
 /// Here the file descriptors don't represent open files - it's purely textual.
 #[derive(Clone)]
@@ -105,6 +113,9 @@ pub struct RedirectionSpec {
 }
 
 impl RedirectionSpec {
+    pub fn new(fd: RawFd, mode: RedirectionMode, target: WString) -> Self {
+        Self { fd, mode, target }
+    }
     /// \return if this is a close-type redirection.
     pub fn is_close(&self) -> bool {
         self.mode == RedirectionMode::fd && self.target == L!("-")
@@ -177,7 +188,19 @@ impl RedirectionSpecListFfi {
 /// Produce a dup_fd_list_t from an io_chain. This may not be called before fork().
 /// The result contains the list of fd actions (dup2 and close), as well as the list
 /// of fds opened.
-fn dup2_list_resolve_chain(io_chain: &Vec<Dup2Action>) -> Dup2List {
+pub fn dup2_list_resolve_chain(io_chain: &IoChain) -> Dup2List {
+    let mut result = Dup2List { actions: vec![] };
+    for io in &io_chain.0 {
+        if io.source_fd() < 0 {
+            result.add_close(io.fd())
+        } else {
+            result.add_dup2(io.source_fd(), io.fd())
+        }
+    }
+    result
+}
+
+fn dup2_list_resolve_chain_ffi(io_chain: &CxxVector<Dup2Action>) -> Dup2List {
     let mut result = Dup2List { actions: vec![] };
     for io in io_chain {
         if io.src < 0 {
@@ -189,11 +212,10 @@ fn dup2_list_resolve_chain(io_chain: &Vec<Dup2Action>) -> Dup2List {
     result
 }
 
-fn dup2_list_resolve_chain_ffi(io_chain: &CxxVector<Dup2Action>) -> Dup2List {
-    dup2_list_resolve_chain(&io_chain.iter().cloned().collect())
-}
-
 impl Dup2List {
+    pub fn new() -> Self {
+        Default::default()
+    }
     /// \return the list of dup2 actions.
     pub fn get_actions(&self) -> &[Dup2Action] {
         &self.actions
@@ -202,7 +224,7 @@ impl Dup2List {
     /// \return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
     /// For example, if target fd is 1, and we have a dup2 chain 5->3 and 3->1, then we will
     /// return 5. If the target is not referenced in the chain, returns target.
-    fn fd_for_target_fd(&self, target: RawFd) -> RawFd {
+    pub fn fd_for_target_fd(&self, target: RawFd) -> RawFd {
         // Paranoia.
         if target < 0 {
             return target;
@@ -223,7 +245,7 @@ impl Dup2List {
     }
 
     /// Append a dup2 action.
-    fn add_dup2(&mut self, src: RawFd, target: RawFd) {
+    pub fn add_dup2(&mut self, src: RawFd, target: RawFd) {
         assert!(src >= 0 && target >= 0, "Invalid fd in add_dup2");
         // Note: record these even if src and target is the same.
         // This is a note that we must clear the CLO_EXEC bit.
@@ -231,7 +253,7 @@ impl Dup2List {
     }
 
     /// Append a close action.
-    fn add_close(&mut self, fd: RawFd) {
+    pub fn add_close(&mut self, fd: RawFd) {
         assert!(fd >= 0, "Invalid fd in add_close");
         self.actions.push(Dup2Action {
             src: fd,

@@ -27,67 +27,57 @@ use crate::wchar::WString;
 use crate::wutil::perror;
 use nix::errno::Errno;
 use nix::unistd;
-use std::cell::UnsafeCell;
+use std::cell::{Cell, UnsafeCell};
 use std::mem;
 use std::pin::Pin;
-use std::sync::{
-    atomic::{AtomicU8, Ordering},
-    Condvar, Mutex, MutexGuard,
-};
+use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
+use std::sync::{Condvar, Mutex, MutexGuard};
+use widestring_suffix::widestrs;
 
 #[cxx::bridge]
-mod topic_monitor_ffi {
-    /// Simple value type containing the values for a topic.
-    /// This should be kept in sync with topic_t.
-    #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
-    pub struct generation_list_t {
-        pub sighupint: u64,
-        pub sigchld: u64,
-        pub internal_exit: u64,
-    }
+mod topic_monitor_ffi {}
 
-    extern "Rust" {
-        fn invalid_generations() -> generation_list_t;
-        fn set_min_from(self: &mut generation_list_t, topic: topic_t, other: &generation_list_t);
-        fn at(self: &generation_list_t, topic: topic_t) -> u64;
-        fn at_mut(self: &mut generation_list_t, topic: topic_t) -> &mut u64;
-        //fn describe(self: &generation_list_t) -> UniquePtr<wcstring>;
-    }
+/// The list of topics which may be observed.
+#[repr(u8)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum topic_t {
+    sighupint = 0,     // Corresponds to both SIGHUP and SIGINT signals.
+    sigchld = 1,       // Corresponds to SIGCHLD signal.
+    internal_exit = 2, // Corresponds to an internal process exit.
+}
 
-    /// The list of topics which may be observed.
-    #[repr(u8)]
-    #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-    pub enum topic_t {
-        sighupint,     // Corresponds to both SIGHUP and SIGINT signals.
-        sigchld,       // Corresponds to SIGCHLD signal.
-        internal_exit, // Corresponds to an internal process exit.
-    }
+// XXX: Is it correct to use the default or should the default be invalid_generation?
+#[derive(Clone, Default, PartialEq, PartialOrd, Eq, Ord)]
+pub struct GenerationsList {
+    pub sighupint: Cell<u64>,
+    pub sigchld: Cell<u64>,
+    pub internal_exit: Cell<u64>,
+}
 
-    extern "Rust" {
-        type topic_monitor_t;
-        fn new_topic_monitor() -> Box<topic_monitor_t>;
-
-        fn topic_monitor_principal() -> &'static topic_monitor_t;
-        fn post(self: &topic_monitor_t, topic: topic_t);
-        fn current_generations(self: &topic_monitor_t) -> generation_list_t;
-        fn generation_for_topic(self: &topic_monitor_t, topic: topic_t) -> u64;
-        fn check(self: &topic_monitor_t, gens: *mut generation_list_t, wait: bool) -> bool;
+/// Simple value type containing the values for a topic.
+/// This should be kept in sync with topic_t.
+impl GenerationsList {
+    /// Update `self` gen counts to match those of `other`.
+    pub fn update(&self, other: &Self) {
+        self.sighupint.set(other.sighupint.get());
+        self.sigchld.set(other.sigchld.get());
+        self.internal_exit.set(other.internal_exit.get());
     }
 }
 
-pub use topic_monitor_ffi::{generation_list_t, topic_t};
 pub type generation_t = u64;
 
 impl FloggableDebug for topic_t {}
 
 /// A generation value which indicates the topic is not of interest.
-pub const invalid_generation: generation_t = std::u64::MAX;
+pub const INVALID_GENERATION: generation_t = std::u64::MAX;
 
 pub fn all_topics() -> [topic_t; 3] {
     [topic_t::sighupint, topic_t::sigchld, topic_t::internal_exit]
 }
 
-impl generation_list_t {
+#[widestrs]
+impl GenerationsList {
     pub fn new() -> Self {
         Self::default()
     }
@@ -98,7 +88,7 @@ impl generation_list_t {
             if !result.is_empty() {
                 result.push(',');
             }
-            if gen == invalid_generation {
+            if gen == INVALID_GENERATION {
                 result.push_str("-1");
             } else {
                 result.push_str(&gen.to_string());
@@ -107,48 +97,50 @@ impl generation_list_t {
         return result;
     }
 
-    /// \return the a mutable reference to the value for a topic.
-    pub fn at_mut(&mut self, topic: topic_t) -> &mut generation_t {
+    /// Sets the generation for `topic` to `value`.
+    pub fn set(&self, topic: topic_t, value: generation_t) {
         match topic {
-            topic_t::sighupint => &mut self.sighupint,
-            topic_t::sigchld => &mut self.sigchld,
-            topic_t::internal_exit => &mut self.internal_exit,
-            _ => panic!("invalid topic"),
+            topic_t::sighupint => self.sighupint.set(value),
+            topic_t::sigchld => self.sigchld.set(value),
+            topic_t::internal_exit => self.internal_exit.set(value),
         }
     }
 
     /// \return the value for a topic.
-    pub fn at(&self, topic: topic_t) -> generation_t {
+    pub fn get(&self, topic: topic_t) -> generation_t {
         match topic {
-            topic_t::sighupint => self.sighupint,
-            topic_t::sigchld => self.sigchld,
-            topic_t::internal_exit => self.internal_exit,
-            _ => panic!("invalid topic"),
+            topic_t::sighupint => self.sighupint.get(),
+            topic_t::sigchld => self.sigchld.get(),
+            topic_t::internal_exit => self.internal_exit.get(),
         }
     }
 
     /// \return ourselves as an array.
     pub fn as_array(&self) -> [generation_t; 3] {
-        [self.sighupint, self.sigchld, self.internal_exit]
+        [
+            self.sighupint.get(),
+            self.sigchld.get(),
+            self.internal_exit.get(),
+        ]
     }
 
     /// Set the value of \p topic to the smaller of our value and the value in \p other.
-    pub fn set_min_from(&mut self, topic: topic_t, other: &generation_list_t) {
-        if self.at(topic) > other.at(topic) {
-            *self.at_mut(topic) = other.at(topic);
+    pub fn set_min_from(&mut self, topic: topic_t, other: &Self) {
+        if self.get(topic) > other.get(topic) {
+            self.set(topic, other.get(topic));
         }
     }
 
     /// \return whether a topic is valid.
     pub fn is_valid(&self, topic: topic_t) -> bool {
-        self.at(topic) != invalid_generation
+        self.get(topic) != INVALID_GENERATION
     }
 
     /// \return whether any topic is valid.
     pub fn any_valid(&self) -> bool {
         let mut valid = false;
         for gen in self.as_array() {
-            if gen != invalid_generation {
+            if gen != INVALID_GENERATION {
                 valid = true;
             }
         }
@@ -156,18 +148,13 @@ impl generation_list_t {
     }
 
     /// Generation list containing invalid generations only.
-    pub fn invalids() -> generation_list_t {
-        generation_list_t {
-            sighupint: invalid_generation,
-            sigchld: invalid_generation,
-            internal_exit: invalid_generation,
+    pub fn invalid() -> GenerationsList {
+        GenerationsList {
+            sighupint: INVALID_GENERATION.into(),
+            sigchld: INVALID_GENERATION.into(),
+            internal_exit: INVALID_GENERATION.into(),
         }
     }
-}
-
-/// CXX wrapper as it does not support member functions.
-pub fn invalid_generations() -> generation_list_t {
-    generation_list_t::invalids()
 }
 
 /// A simple binary semaphore.
@@ -206,11 +193,11 @@ impl binary_semaphore_t {
             assert!(pipes.is_some(), "Failed to make pubsub pipes");
             pipes_ = pipes.unwrap();
 
-            // Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point
-            // where instrumented code makes certain blocking calls. But tsan cannot interrupt a signal
-            // call, so if we're blocked in read() (like the topic monitor wants to be!), we'll never
-            // receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as non-blocking
-            // (so reads will never block) and use select() to poll it.
+            // Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the
+            // point where instrumented code makes certain blocking calls. But tsan cannot interrupt
+            // a signal call, so if we're blocked in read() (like the topic monitor wants to be!),
+            // we'll never receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as
+            // non-blocking (so reads will never block) and use select() to poll it.
             if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
                 let _ = make_fd_nonblocking(pipes_.read.fd());
             }
@@ -330,14 +317,14 @@ impl Default for binary_semaphore_t {
 type topic_bitmask_t = u8;
 
 fn topic_to_bit(t: topic_t) -> topic_bitmask_t {
-    1 << t.repr
+    1 << (t as u8)
 }
 
 // Some stuff that needs to be protected by the same lock.
 #[derive(Default)]
 struct data_t {
     /// The current values.
-    current: generation_list_t,
+    current: GenerationsList,
 
     /// A flag indicating that there is a current reader.
     /// The 'reader' is responsible for calling sema_.wait().
@@ -436,7 +423,7 @@ impl topic_monitor_t {
     /// Apply any pending updates to the data.
     /// This accepts data because it must be locked.
     /// \return the updated generation list.
-    fn updated_gens_in_data(&self, data: &mut MutexGuard<data_t>) -> generation_list_t {
+    fn updated_gens_in_data(&self, data: &mut MutexGuard<data_t>) -> GenerationsList {
         // Atomically acquire the pending updates, swapping in 0.
         // If there are no pending updates (likely) or a thread is waiting, just return.
         // Otherwise CAS in 0 and update our topics.
@@ -446,7 +433,7 @@ impl topic_monitor_t {
         while !cas_success {
             changed_topic_bits = self.status_.load(relaxed);
             if changed_topic_bits == 0 || changed_topic_bits == STATUS_NEEDS_WAKEUP {
-                return data.current;
+                return data.current.clone();
             }
             cas_success = self
                 .status_
@@ -461,35 +448,35 @@ impl topic_monitor_t {
         // Update the current generation with our topics and return it.
         for topic in all_topics() {
             if changed_topic_bits & topic_to_bit(topic) != 0 {
-                *data.current.at_mut(topic) += 1;
+                data.current.set(topic, data.current.get(topic) + 1);
                 FLOG!(
                     topic_monitor,
                     "Updating topic",
                     topic,
                     "to",
-                    data.current.at(topic)
+                    data.current.get(topic)
                 );
             }
         }
         // Report our change.
         self.data_notifier_.notify_all();
-        return data.current;
+        return data.current.clone();
     }
 
     /// \return the current generation list, opportunistically applying any pending updates.
-    fn updated_gens(&self) -> generation_list_t {
+    fn updated_gens(&self) -> GenerationsList {
         let mut data = self.data_.lock().unwrap();
         return self.updated_gens_in_data(&mut data);
     }
 
     /// Access the current generations.
-    pub fn current_generations(self: &topic_monitor_t) -> generation_list_t {
+    pub fn current_generations(self: &topic_monitor_t) -> GenerationsList {
         self.updated_gens()
     }
 
     /// Access the generation for a topic.
     pub fn generation_for_topic(self: &topic_monitor_t, topic: topic_t) -> generation_t {
-        self.current_generations().at(topic)
+        self.current_generations().get(topic)
     }
 
     /// Given a list of input generations, attempt to update them to something newer.
@@ -499,7 +486,7 @@ impl topic_monitor_t {
     /// indicating we should become the reader. Now it is our responsibility to wait on the
     /// semaphore and notify on a change via the condition variable. If \p gens is current, and
     /// there is already a reader, then wait until the reader notifies us and try again.
-    fn try_update_gens_maybe_becoming_reader(&self, gens: &mut generation_list_t) -> bool {
+    fn try_update_gens_maybe_becoming_reader(&self, gens: &mut GenerationsList) -> bool {
         let mut become_reader = false;
         let mut data = self.data_.lock().unwrap();
         loop {
@@ -555,9 +542,9 @@ impl topic_monitor_t {
 
     /// Wait for some entry in the list of generations to change.
     /// \return the new gens.
-    fn await_gens(&self, input_gens: &generation_list_t) -> generation_list_t {
-        let mut gens = *input_gens;
-        while gens == *input_gens {
+    fn await_gens(&self, input_gens: &GenerationsList) -> GenerationsList {
+        let mut gens = input_gens.clone();
+        while &gens == input_gens {
             let become_reader = self.try_update_gens_maybe_becoming_reader(&mut gens);
             if become_reader {
                 // Now we are the reader. Read from the pipe, and then update with any changes.
@@ -573,7 +560,7 @@ impl topic_monitor_t {
                 // We are finished waiting. We must stop being the reader, and post on the condition
                 // variable to wake up any other threads waiting for us to finish reading.
                 let mut data = self.data_.lock().unwrap();
-                gens = data.current;
+                gens = data.current.clone();
                 // FLOG(topic_monitor, "TID", thread_id(), "local", input_gens.describe(),
                 //      "read() complete, current is", gens.describe());
                 assert!(data.has_reader, "We should be the reader");
@@ -589,25 +576,23 @@ impl topic_monitor_t {
     /// If \p wait is set, then wait if there are no changes; otherwise return immediately.
     /// \return true if some topic changed, false if none did.
     /// On a true return, this updates the generation list \p gens.
-    pub fn check(&self, gens: *mut generation_list_t, wait: bool) -> bool {
-        assert!(!gens.is_null(), "gens must not be null");
-        let gens = unsafe { &mut *gens };
+    pub fn check(&self, gens: &GenerationsList, wait: bool) -> bool {
         if !gens.any_valid() {
             return false;
         }
 
-        let mut current: generation_list_t = self.updated_gens();
+        let mut current: GenerationsList = self.updated_gens();
         let mut changed = false;
         loop {
             // Load the topic list and see if anything has changed.
             for topic in all_topics() {
                 if gens.is_valid(topic) {
                     assert!(
-                        gens.at(topic) <= current.at(topic),
+                        gens.get(topic) <= current.get(topic),
                         "Incoming gen count exceeded published count"
                     );
-                    if gens.at(topic) < current.at(topic) {
-                        *gens.at_mut(topic) = current.at(topic);
+                    if gens.get(topic) < current.get(topic) {
+                        gens.set(topic, current.get(topic));
                         changed = true;
                     }
                 }

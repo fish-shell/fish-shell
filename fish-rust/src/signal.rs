@@ -2,13 +2,15 @@ use std::num::NonZeroI32;
 
 use crate::common::{exit_without_destructors, restore_term_foreground_process_group_for_exit};
 use crate::event::{enqueue_signal, is_signal_observed};
-use crate::termsize::termsize_handle_winch;
-use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
+use crate::reader::{reader_handle_sigint, reader_sighup};
+use crate::termsize::TermsizeContainer;
+use crate::topic_monitor::{generation_t, topic_monitor_principal, topic_t, GenerationsList};
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::{AsWstr, WCharToFFI};
 use crate::wutil::{fish_wcstoi, perror};
 use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
+use libc::{c_int, SIG_DFL};
 use std::sync::atomic::{AtomicI32, Ordering};
 
 #[cxx::bridge]
@@ -33,6 +35,11 @@ mod signal_ffi {
         fn signal_clear_cancel();
         fn signal_reset_handlers();
 
+    }
+    extern "Rust" {
+        type SigChecker;
+        fn new_sighupint_checker() -> Box<SigChecker>;
+        fn check(&mut self) -> bool;
     }
 }
 
@@ -102,13 +109,6 @@ pub fn signal_check_cancel() -> i32 {
     CANCELLATION_SIGNAL.load(Ordering::Relaxed)
 }
 
-// Declare these as an extern C functions and call them directly,
-// in case the autocxx ffi allocates or does something else signal-unfriendly.
-extern "C" {
-    fn reader_sighup();
-    fn reader_handle_sigint();
-}
-
 /// The single signal handler. By centralizing signal handling we ensure that we can never install
 /// the "wrong" signal handler (see #5969).
 extern "C" fn fish_signal_handler(
@@ -135,12 +135,12 @@ extern "C" fn fish_signal_handler(
     match sig {
         libc::SIGWINCH => {
             // Respond to a winch signal by telling the termsize container.
-            termsize_handle_winch();
+            TermsizeContainer::handle_winch();
         }
         libc::SIGHUP => {
             // Exit unless the signal was trapped.
             if !observed {
-                unsafe { reader_sighup() };
+                reader_sighup();
             }
             topic_monitor_principal().post(topic_t::sighupint);
         }
@@ -160,7 +160,7 @@ extern "C" fn fish_signal_handler(
             if !observed {
                 CANCELLATION_SIGNAL.store(libc::SIGINT, Ordering::Relaxed);
             }
-            unsafe { reader_handle_sigint() };
+            reader_handle_sigint();
             topic_monitor_principal().post(topic_t::sighupint);
         }
         libc::SIGCHLD => {
@@ -390,8 +390,8 @@ impl SigChecker {
     /// Wait until a sigint is delivered.
     pub fn wait(&self) {
         let tm = topic_monitor_principal();
-        let mut gens = invalid_generations();
-        *gens.at_mut(self.topic) = self.gen;
+        let mut gens = GenerationsList::invalid();
+        gens.set(self.topic, self.gen);
         tm.check(&mut gens, true /* wait */);
     }
 }
@@ -589,6 +589,10 @@ add_test!("test_signal_name", || {
     let sig = Signal::new(libc::SIGINT);
     assert_eq!(sig.name(), "SIGINT");
 });
+
+fn new_sighupint_checker() -> Box<SigChecker> {
+    Box::new(SigChecker::new_sighupint())
+}
 
 #[rustfmt::skip]
 add_test!("test_signal_parse", || {

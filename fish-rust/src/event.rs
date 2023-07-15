@@ -4,6 +4,7 @@
 //! defined when these functions produce output or perform memory allocations, since such functions
 //! may not be safely called by signal handlers.
 
+use crate::ffi::wcstring_list_ffi_t;
 use autocxx::WithinUniquePtr;
 use cxx::{CxxVector, CxxWString, UniquePtr};
 use libc::pid_t;
@@ -12,11 +13,15 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::builtins::shared::io_streams_t;
-use crate::common::{escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard};
-use crate::ffi::{self, block_t, parser_t, Repin};
+use crate::common::{
+    escape, escape_string, scoped_push, scoped_push_replacer, EscapeFlags, EscapeStringStyle,
+    ScopeGuard,
+};
+use crate::ffi::{self, Repin};
 use crate::flog::FLOG;
+use crate::io::{IoChain, IoStreams};
 use crate::job_group::{JobId, MaybeJobId};
+use crate::parser::{Block, Parser};
 use crate::signal::{signal_check_cancel, signal_handle, Signal};
 use crate::termsize;
 use crate::wchar::prelude::*;
@@ -29,8 +34,9 @@ mod event_ffi {
         include!("parser.h");
         include!("io.h");
         type wcharz_t = crate::ffi::wcharz_t;
-        type parser_t = crate::ffi::parser_t;
-        type io_streams_t = crate::ffi::io_streams_t;
+        type Parser = crate::parser::Parser;
+        type IoStreams<'a> = crate::io::IoStreams<'a>;
+        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
     }
 
     enum event_type_t {
@@ -77,18 +83,16 @@ mod event_ffi {
         fn set_removed(self: &mut EventHandler);
 
         fn event_fire_generic_ffi(
-            parser: Pin<&mut parser_t>,
+            parser: &Parser,
             name: &CxxWString,
-            arguments: &CxxVector<wcharz_t>,
+            arguments: &wcstring_list_ffi_t,
         );
         #[cxx_name = "event_get_desc"]
-        fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString>;
+        fn event_get_desc_ffi(parser: &Parser, evt: &Event) -> UniquePtr<CxxWString>;
         #[cxx_name = "event_fire_delayed"]
-        fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>);
-        #[cxx_name = "event_fire"]
-        fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event);
+        fn event_fire_delayed_ffi(parser: &Parser);
         #[cxx_name = "event_print"]
-        fn event_print_ffi(streams: Pin<&mut io_streams_t>, type_filter: &CxxWString);
+        fn event_print_ffi(streams: Pin<&mut IoStreams>, type_filter: &CxxWString);
 
         #[cxx_name = "event_enqueue_signal"]
         fn enqueue_signal(signal: i32);
@@ -408,16 +412,17 @@ impl Event {
     }
 
     /// Test if specified event is blocked.
-    fn is_blocked(&self, parser: &mut parser_t) -> bool {
+    fn is_blocked(&self, parser: &Parser) -> bool {
         let mut i = 0;
-        while let Some(block) = parser.get_block_at_index(i) {
+        let blocks = parser.blocks();
+        while let Some(block) = blocks.get(i) {
             i += 1;
-            if block.ffi_event_blocks() != 0 {
+            if block.event_blocks != 0 {
                 return true;
             }
         }
 
-        parser.ffi_global_event_blocks() != 0
+        parser.global_event_blocks.load(Ordering::Relaxed) != 0
     }
 }
 
@@ -564,7 +569,7 @@ pub fn is_signal_observed(sig: libc::c_int) -> bool {
         .map_or(false, |s| s.load(Ordering::Relaxed) > 0)
 }
 
-pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
+pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
     let s = match &evt.desc {
         EventDescription::Signal { signal } => {
             format!("signal handler for {} ({})", signal.name(), signal.desc(),)
@@ -573,11 +578,7 @@ pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
         EventDescription::ProcessExit { pid } => format!("exit handler for process {pid}"),
         EventDescription::JobExit { pid, .. } => {
             if let Some(job) = parser.job_get_from_pid(*pid) {
-                format!(
-                    "exit handler for job {}, '{}'",
-                    job.job_id().0,
-                    job.command()
-                )
+                format!("exit handler for job {}, '{}'", job.job_id(), job.command())
             } else {
                 format!("exit handler for job with pid {pid}")
             }
@@ -592,8 +593,9 @@ pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
     WString::from_str(&s)
 }
 
-fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString> {
-    get_desc(parser, evt).to_ffi()
+fn event_get_desc_ffi(parser: &Parser, evt: &Event) -> UniquePtr<CxxWString> {
+    todo!()
+    // get_desc(parser, evt).to_ffi()
 }
 
 /// Add an event handler.
@@ -661,22 +663,27 @@ fn event_get_function_handler_descs_ffi(name: &CxxWString) -> Vec<event_descript
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
-fn fire_internal(parser: &mut parser_t, event: &Event) {
+fn fire_internal(parser: &Parser, event: &Event) {
     assert!(
-        parser.libdata_pod().is_event >= 0,
+        parser.libdata().pods.is_event >= 0,
         "is_event should not be negative"
     );
 
     // Suppress fish_trace during events.
-    let is_event = parser.libdata_pod().is_event;
-    let mut parser = scoped_push(
+    let is_event = parser.libdata().pods.is_event;
+    let parser = scoped_push_replacer(
         parser,
-        |parser| &mut parser.libdata_pod().is_event,
+        |parser, new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_event, new_value),
         is_event + 1,
     );
-    let mut parser = scoped_push(
-        &mut *parser,
-        |parser| &mut parser.libdata_pod().suppress_fish_trace,
+    let parser = scoped_push_replacer(
+        &*parser,
+        |parser, new_value| {
+            std::mem::replace(
+                &mut parser.libdata_mut().pods.suppress_fish_trace,
+                new_value,
+            )
+        },
         true,
     );
 
@@ -702,20 +709,17 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
         let mut buffer = handler.function_name.clone();
         for arg in &event.arguments {
             buffer.push(' ');
-            buffer.push_utfstr(&escape_string(
-                arg,
-                EscapeStringStyle::Script(EscapeFlags::default()),
-            ));
+            buffer.push_utfstr(&escape(arg));
         }
 
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         let saved_is_interactive =
-            std::mem::replace(&mut parser.libdata_pod().is_interactive, false);
-        let saved_statuses = parser.get_last_statuses().within_unique_ptr();
-        let mut parser = ScopeGuard::new(&mut *parser, |parser| {
-            parser.pin().set_last_statuses(saved_statuses);
-            parser.libdata_pod().is_interactive = saved_is_interactive;
+            std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, false);
+        let saved_statuses = parser.get_last_statuses();
+        let parser = ScopeGuard::new(&*parser, |parser| {
+            parser.set_last_statuses(saved_statuses);
+            parser.libdata_mut().pods.is_interactive = saved_is_interactive;
         });
 
         FLOG!(
@@ -727,14 +731,9 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
             "'"
         );
 
-        let b = (*parser)
-            .pin()
-            .push_block(block_t::event_block((event as *const Event).cast()).within_unique_ptr());
-        (*parser)
-            .pin()
-            .eval_string_ffi1(&buffer.to_ffi())
-            .within_unique_ptr();
-        (*parser).pin().pop_block(b);
+        let b = (*parser).push_block(Block::event_block(event.clone()));
+        (*parser).eval(&buffer, &IoChain::new());
+        (*parser).pop_block(b);
 
         handler.fired.store(true, Ordering::Relaxed);
         fired_one_shot |= handler.is_one_shot();
@@ -746,8 +745,8 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
 }
 
 /// Fire all delayed events attached to the given parser.
-pub fn fire_delayed(parser: &mut parser_t) {
-    let ld = parser.libdata_pod();
+pub fn fire_delayed(parser: &Parser) {
+    let ld = &parser.libdata().pods;
 
     // Do not invoke new event handlers from within event handlers.
     if ld.is_event != 0 {
@@ -760,7 +759,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
 
     // We unfortunately can't keep this locked until we're done with it because the SIGWINCH handler
     // code might call back into here and we would delay processing of the events, leading to a test
-    // failure under CI. (Yes, the `&mut parser_t` is a lie.)
+    // failure under CI. (Yes, the `& Parser` is a lie.)
     let mut to_send = std::mem::take(&mut *BLOCKED_EVENTS.lock().expect("Mutex poisoned!"));
 
     // Append all signal events to to_send.
@@ -774,7 +773,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH {
-            termsize::SHARED_CONTAINER.updating(parser);
+            termsize::SHARED_CONTAINER.updating(todo!("parser"));
         }
         let event = Event {
             desc: EventDescription::Signal { signal: sig },
@@ -799,8 +798,8 @@ pub fn fire_delayed(parser: &mut parser_t) {
     }
 }
 
-fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>) {
-    fire_delayed(parser.unpin())
+fn event_fire_delayed_ffi(parser: &Parser) {
+    todo!()
 }
 
 /// Enqueue a signal event. Invoked from a signal handler.
@@ -810,7 +809,7 @@ pub fn enqueue_signal(signal: libc::c_int) {
 }
 
 /// Fire the specified event event, executing it on `parser`.
-pub fn fire(parser: &mut parser_t, event: Event) {
+pub fn fire(parser: &Parser, event: Event) {
     // Fire events triggered by signals.
     fire_delayed(parser);
 
@@ -819,10 +818,6 @@ pub fn fire(parser: &mut parser_t, event: Event) {
     } else {
         fire_internal(parser, &event);
     }
-}
-
-fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event) {
-    fire(parser.unpin(), event.clone())
 }
 
 #[widestrs]
@@ -837,7 +832,7 @@ pub const EVENT_FILTER_NAMES: [&wstr; 7] = [
 ];
 
 /// Print all events. If type_filter is not empty, only output events with that type.
-pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
+pub fn print(streams: &mut IoStreams<'_>, type_filter: &wstr) {
     let mut tmp = EVENT_HANDLERS
         .lock()
         .expect("event handler list should not be poisoned")
@@ -892,13 +887,12 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
     }
 }
 
-fn event_print_ffi(streams: Pin<&mut ffi::io_streams_t>, type_filter: &CxxWString) {
-    let mut streams = io_streams_t::new(streams);
-    print(&mut streams, type_filter.as_wstr());
+fn event_print_ffi(streams: Pin<&mut IoStreams>, type_filter: &CxxWString) {
+    print(streams.get_mut(), type_filter.as_wstr());
 }
 
 /// Fire a generic event with the specified name.
-pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString>) {
+pub fn fire_generic(parser: &Parser, name: WString, arguments: Vec<WString>) {
     fire(
         parser,
         Event {
@@ -908,14 +902,6 @@ pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString
     )
 }
 
-fn event_fire_generic_ffi(
-    parser: Pin<&mut parser_t>,
-    name: &CxxWString,
-    arguments: &CxxVector<wcharz_t>,
-) {
-    fire_generic(
-        parser.unpin(),
-        name.from_ffi(),
-        arguments.iter().map(WString::from).collect(),
-    );
+fn event_fire_generic_ffi(parser: &Parser, name: &CxxWString, arguments: &wcstring_list_ffi_t) {
+    fire_generic(parser, name.from_ffi(), arguments.from_ffi());
 }

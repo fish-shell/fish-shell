@@ -12,34 +12,35 @@ pub struct Sub {
 }
 
 impl StringSubCommand<'_> for Sub {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("length"), required_argument, 'l'),
-        wopt(L!("start"), required_argument, 's'),
-        wopt(L!("end"), required_argument, 'e'),
-        wopt(L!("quiet"), no_argument, 'q'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":l:qs:e:");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            wopt(L!("length"), required_argument, 'l'),
+            wopt(L!("start"), required_argument, 's'),
+            wopt(L!("end"), required_argument, 'e'),
+            wopt(L!("quiet"), no_argument, 'q'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":l:qs:e:")
+    }
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'l' => {
-                self.length =
-                    Some(fish_wcstol(arg.unwrap())?.try_into().map_err(|_| {
-                        invalid_args!("%ls: Invalid length value '%ls'\n", name, arg)
-                    })?)
+                self.length = Some(fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid length value '%ls'\n", w.cmd(), w.woptarg())
+                })?)
             }
             's' => {
-                self.start =
-                    Some(fish_wcstol(arg.unwrap())?.try_into().map_err(|_| {
-                        invalid_args!("%ls: Invalid start value '%ls'\n", name, arg)
-                    })?)
+                self.start = Some(fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid start value '%ls'\n", w.cmd(), w.woptarg())
+                })?)
             }
             'e' => {
-                self.end = Some(
-                    fish_wcstol(arg.unwrap())?
-                        .try_into()
-                        .map_err(|_| invalid_args!("%ls: Invalid end value '%ls'\n", name, arg))?,
-                )
+                self.end = Some(fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid end value '%ls'\n", w.cmd(), w.woptarg())
+                })?)
             }
             'q' => self.quiet = true,
             _ => return Err(StringError::UnknownOption),
@@ -49,14 +50,14 @@ impl StringSubCommand<'_> for Sub {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
-        let cmd = args[0];
+        let cmd = &args[0];
         if self.length.is_some() && self.end.is_some() {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 cmd,
                 wgettext!("--end and --length are mutually exclusive")

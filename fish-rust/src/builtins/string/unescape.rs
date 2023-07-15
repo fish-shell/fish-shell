@@ -8,22 +8,26 @@ pub struct Unescape {
 }
 
 impl StringSubCommand<'_> for Unescape {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        // FIXME: this flag means nothing, but was present in the C++ code
-        // should be removed
-        wopt(L!("no-quoted"), no_argument, 'n'),
-        wopt(L!("style"), required_argument, NONOPTION_CHAR_CODE),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":n");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            // FIXME: this flag means nothing, but was present in the C++ code
+            // should be removed
+            wopt(L!("no-quoted"), no_argument, 'n'),
+            wopt(L!("style"), required_argument, NONOPTION_CHAR_CODE),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":n")
+    }
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'n' => self.no_quoted = true,
             NONOPTION_CHAR_CODE => {
-                self.style = arg
-                    .unwrap()
-                    .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid style value '%ls'\n", name, arg))?
+                self.style = w.woptarg().unwrap().try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid style value '%ls'\n", w.cmd(), w.woptarg())
+                })?
             }
             _ => return Err(StringError::UnknownOption),
         }
@@ -32,15 +36,15 @@ impl StringSubCommand<'_> for Unescape {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
         let mut nesc = 0;
         for (arg, want_newline) in arguments(args, optind, streams) {
             if let Some(res) = unescape_string(&arg, self.style) {
-                streams.out.append(res);
+                streams.out.append(&res);
                 if want_newline {
                     streams.out.append1('\n');
                 }

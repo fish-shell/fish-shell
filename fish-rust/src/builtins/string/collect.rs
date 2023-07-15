@@ -7,13 +7,18 @@ pub struct Collect {
 }
 
 impl StringSubCommand<'_> for Collect {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("allow-empty"), no_argument, 'a'),
-        wopt(L!("no-trim-newlines"), no_argument, 'N'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":Na");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            wopt(L!("allow-empty"), no_argument, 'a'),
+            wopt(L!("no-trim-newlines"), no_argument, 'N'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":Na")
+    }
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'a' => self.allow_empty = true,
             'N' => self.no_trim_newlines = true,
@@ -24,10 +29,10 @@ impl StringSubCommand<'_> for Collect {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
         let mut appended = 0usize;
 
@@ -43,7 +48,7 @@ impl StringSubCommand<'_> for Collect {
 
             streams
                 .out
-                .append_with_separation(arg, separation_type_t::explicitly, want_newline);
+                .append_with_separation(arg, SeparationType::explicitly, want_newline);
             appended += arg.len();
         }
 
@@ -54,7 +59,7 @@ impl StringSubCommand<'_> for Collect {
         if self.allow_empty && appended == 0 {
             streams.out.append_with_separation(
                 L!(""),
-                separation_type_t::explicitly,
+                SeparationType::explicitly,
                 true, /* historical behavior is to always print a newline */
             );
         }

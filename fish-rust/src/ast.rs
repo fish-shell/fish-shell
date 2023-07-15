@@ -148,12 +148,11 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
     fn pointer_eq(&self, rhs: &dyn Node) -> bool {
         std::ptr::eq(self.as_ptr(), rhs.as_ptr())
     }
+    fn as_node(&self) -> &dyn Node;
 }
 
 /// NodeMut is a mutable node.
-trait NodeMut: Node + AcceptorMut + ConcreteNodeMut {
-    fn as_node(&self) -> &dyn Node;
-}
+trait NodeMut: Node + AcceptorMut + ConcreteNodeMut {}
 
 pub trait ConcreteNode {
     // Cast to any sub-trait.
@@ -401,7 +400,7 @@ pub trait Leaf: Node {
     fn has_source(&self) -> bool {
         self.range().is_some()
     }
-    fn leaf_as_node_ffi(&self) -> &dyn Node;
+    fn leaf_as_node(&self) -> &dyn Node;
 }
 
 // A token node is a node which contains a token, which must be one of a fixed set.
@@ -438,6 +437,13 @@ pub trait List: Node {
     /// \return whether we are empty.
     fn is_empty(&self) -> bool {
         self.contents().is_empty()
+    }
+    /// Iteration support.
+    fn iter(&self) -> std::slice::Iter<Box<Self::ContentsNode>> {
+        self.contents().iter()
+    }
+    fn get(&self, index: usize) -> Option<&Self::ContentsNode> {
+        self.contents().get(index).map(|b| &**b)
     }
 }
 
@@ -476,12 +482,11 @@ macro_rules! implement_node {
             fn as_ptr(&self) -> *const () {
                 (self as *const $name).cast()
             }
-        }
-        impl NodeMut for $name {
             fn as_node(&self) -> &dyn Node {
                 self
             }
         }
+        impl NodeMut for $name {}
     };
 }
 
@@ -495,7 +500,7 @@ macro_rules! implement_leaf {
             fn range_mut(&mut self) -> &mut Option<SourceRange> {
                 &mut self.range
             }
-            fn leaf_as_node_ffi(&self) -> &dyn Node {
+            fn leaf_as_node(&self) -> &dyn Node {
                 self
             }
         }
@@ -621,13 +626,11 @@ macro_rules! define_list_node {
                 &mut self.list_contents
             }
         }
-        impl $name {
-            /// Iteration support.
-            pub fn iter(&self) -> impl Iterator<Item = &<$name as List>::ContentsNode> {
-                self.contents().iter().map(|b| &**b)
-            }
-            pub fn get(&self, index: usize) -> Option<&$contents> {
-                self.contents().get(index).map(|b| &**b)
+        impl<'a> IntoIterator for &'a $name {
+            type Item = &'a Box<$contents>;
+            type IntoIter = std::slice::Iter<'a, Box<$contents>>;
+            fn into_iter(self) -> Self::IntoIter {
+                self.contents().into_iter()
             }
         }
         impl Index<usize> for $name {
@@ -1948,6 +1951,20 @@ impl ArgumentOrRedirectionVariant {
     pub fn try_source_range(&self) -> Option<SourceRange> {
         self.embedded_node().try_source_range()
     }
+
+    fn as_argument(&self) -> Option<&Argument> {
+        match self {
+            ArgumentOrRedirectionVariant::Argument(node) => Some(node),
+            _ => None,
+        }
+    }
+    fn as_redirection(&self) -> Option<&Redirection> {
+        match self {
+            ArgumentOrRedirectionVariant::Redirection(redirection) => Some(redirection),
+            _ => None,
+        }
+    }
+
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             ArgumentOrRedirectionVariant::Argument(node) => node,
@@ -2044,6 +2061,38 @@ impl StatementVariant {
     pub fn try_source_range(&self) -> Option<SourceRange> {
         self.embedded_node().try_source_range()
     }
+
+    pub fn as_not_statement(&self) -> Option<&NotStatement> {
+        match self {
+            StatementVariant::NotStatement(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_block_statement(&self) -> Option<&BlockStatement> {
+        match self {
+            StatementVariant::BlockStatement(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_if_statement(&self) -> Option<&IfStatement> {
+        match self {
+            StatementVariant::IfStatement(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_switch_statement(&self) -> Option<&SwitchStatement> {
+        match self {
+            StatementVariant::SwitchStatement(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
+        match self {
+            StatementVariant::DecoratedStatement(node) => Some(node),
+            _ => None,
+        }
+    }
+
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             StatementVariant::None => panic!("cannot visit null statement"),
@@ -2131,6 +2180,32 @@ impl BlockStatementHeaderVariant {
     pub fn try_source_range(&self) -> Option<SourceRange> {
         self.embedded_node().try_source_range()
     }
+
+    pub fn as_for_header(&self) -> Option<&ForHeader> {
+        match self {
+            BlockStatementHeaderVariant::ForHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_while_header(&self) -> Option<&WhileHeader> {
+        match self {
+            BlockStatementHeaderVariant::WhileHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_function_header(&self) -> Option<&FunctionHeader> {
+        match self {
+            BlockStatementHeaderVariant::FunctionHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_begin_header(&self) -> Option<&BeginHeader> {
+        match self {
+            BlockStatementHeaderVariant::BeginHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
@@ -4410,6 +4485,16 @@ unsafe impl ExternType for Ast {
     type Kind = cxx::kind::Opaque;
 }
 
+unsafe impl ExternType for DecoratedStatement {
+    type Id = type_id!("DecoratedStatement");
+    type Kind = cxx::kind::Opaque;
+}
+
+unsafe impl ExternType for BlockStatement {
+    type Id = type_id!("BlockStatement");
+    type Kind = cxx::kind::Opaque;
+}
+
 impl Ast {
     fn top_ffi(&self) -> Box<NodeFfi> {
         Box::new(NodeFfi::new(self.top.as_node()))
@@ -4470,11 +4555,6 @@ impl Statement {
     fn contents(&self) -> &StatementVariant {
         &self.contents
     }
-}
-
-unsafe impl ExternType for BlockStatement {
-    type Id = type_id!("BlockStatement");
-    type Kind = cxx::kind::Opaque;
 }
 
 #[derive(Clone)]

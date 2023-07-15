@@ -3,8 +3,8 @@ use crate::common::get_ellipsis_str;
 use crate::wcstringutil::split_string;
 use crate::wutil::fish_wcstol;
 
-pub struct Shorten<'args> {
-    ellipsis: &'args wstr,
+pub struct Shorten {
+    ellipsis: WString,
     ellipsis_width: usize,
     max: Option<usize>,
     no_newline: bool,
@@ -12,10 +12,10 @@ pub struct Shorten<'args> {
     shorten_from: Direction,
 }
 
-impl Default for Shorten<'_> {
+impl Default for Shorten {
     fn default() -> Self {
         Self {
-            ellipsis: get_ellipsis_str(),
+            ellipsis: get_ellipsis_str().to_owned(),
             ellipsis_width: width_without_escapes(get_ellipsis_str(), 0),
             max: None,
             no_newline: false,
@@ -25,34 +25,32 @@ impl Default for Shorten<'_> {
     }
 }
 
-impl<'args> StringSubCommand<'args> for Shorten<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        // FIXME: documentation says it's --char
-        wopt(L!("chars"), required_argument, 'c'),
-        wopt(L!("max"), required_argument, 'm'),
-        wopt(L!("no-newline"), no_argument, 'N'),
-        wopt(L!("left"), no_argument, 'l'),
-        wopt(L!("quiet"), no_argument, 'q'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":c:m:Nlq");
+impl StringSubCommand<'_> for Shorten {
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            // FIXME: documentation says it's --char
+            wopt(L!("chars"), required_argument, 'c'),
+            wopt(L!("max"), required_argument, 'm'),
+            wopt(L!("no-newline"), no_argument, 'N'),
+            wopt(L!("left"), no_argument, 'l'),
+            wopt(L!("quiet"), no_argument, 'q'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":c:m:Nlq")
+    }
 
-    fn parse_opt(
-        &mut self,
-        name: &wstr,
-        c: char,
-        arg: Option<&'args wstr>,
-    ) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'c' => {
-                self.ellipsis = arg.unwrap();
-                self.ellipsis_width = width_without_escapes(self.ellipsis, 0);
+                self.ellipsis = w.woptarg().unwrap().to_owned();
+                self.ellipsis_width = width_without_escapes(&self.ellipsis, 0);
             }
             'm' => {
-                self.max = Some(
-                    fish_wcstol(arg.unwrap())?
-                        .try_into()
-                        .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?,
-                )
+                self.max = Some(fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid max value '%ls'\n", w.cmd(), w.woptarg())
+                })?)
             }
             'N' => self.no_newline = true,
             'l' => self.shorten_from = Direction::Left,
@@ -64,10 +62,10 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
         let mut min_width = usize::MAX;
         let mut inputs = Vec::new();
@@ -84,7 +82,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             //     echo whatever
             // end
             for (arg, _) in iter {
-                streams.out.appendln(arg);
+                streams.out.appendln_owned(arg);
             }
             return STATUS_CMD_OK;
         }
@@ -100,7 +98,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                     Direction::Left => splits.last(),
                 }
                 .unwrap();
-                s.push_utfstr(self.ellipsis);
+                s.push_utfstr(&self.ellipsis);
                 let width = width_without_escapes(&s, 0);
 
                 if width > 0 && width < min_width {
@@ -125,7 +123,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // truncating instead.
             (L!(""), 0)
         } else {
-            (self.ellipsis, self.ellipsis_width)
+            (&self.ellipsis[..], self.ellipsis_width)
         };
 
         let mut nsub = 0usize;
@@ -183,7 +181,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                         res
                     }
                 };
-                streams.out.appendln(output);
+                streams.out.appendln_owned(output);
                 continue;
             } else {
                 /* shorten the right side */
@@ -222,7 +220,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             }
 
             if pos == line.len() {
-                streams.out.appendln(line);
+                streams.out.appendln_owned(line);
                 continue;
             }
 
@@ -231,7 +229,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             newl.truncate(pos);
             newl.push_utfstr(ell);
             newl.push('\n');
-            streams.out.append(newl);
+            streams.out.append(&newl);
         }
 
         // Return true if we have shortened something and false otherwise.

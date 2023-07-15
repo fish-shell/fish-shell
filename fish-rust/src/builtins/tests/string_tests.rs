@@ -1,7 +1,10 @@
+use super::super::prelude::*;
+use crate::common::escape;
 use crate::ffi_tests::add_test;
+use crate::io::{NullOutputStream, OutputStream, StringOutputStream};
 
 add_test! {"test_string", || {
-    use crate::ffi::parser_t;
+    use crate::parser::Parser;
     use crate::ffi;
     use crate::builtins::string::string;
     use crate::wchar_ffi::WCharFromFFI;
@@ -19,18 +22,20 @@ add_test! {"test_string", || {
     }
 
     // TODO: these should be individual tests, not all in one, port when we can run these with `cargo test`
-    fn string_test(mut args: Vec<&wstr>, expected_rc: Option<i32>, expected_out: &wstr) {
-        let parser: &mut parser_t = unsafe { &mut *parser_t::principal_parser_ffi() };
-        let mut streams = ffi::make_test_io_streams_ffi();
-        let mut io = crate::builtins::shared::io_streams_t::new(streams.pin_mut());
+    fn string_test(args: Vec<&wstr>, expected_rc: Option<i32>, expected_out: &wstr) {
+        let mut args: Vec<WString> = args.into_iter().map(|s|s.to_owned()).collect();
+        let parser: &Parser = Parser::principal_parser();
+        let mut outs = StringOutputStream::new();
+        let mut errs = NullOutputStream::new();
+        let mut streams = IoStreams::new(&mut outs, &mut errs);
+        streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
 
-        let rc = string(parser, &mut io, args.as_mut_slice()).expect("string failed");
+        let rc = string(parser, &mut streams, args.as_mut_slice()).expect("string failed");
 
         assert_eq!(expected_rc.unwrap(), rc, "string builtin returned unexpected return code");
 
-        let string_stream_contents = &ffi::get_test_output_ffi(&streams);
-        let actual = escape_string(&string_stream_contents.from_ffi(), EscapeStringStyle::default());
-        let expected = escape_string(expected_out, EscapeStringStyle::default());
+        let actual = escape(outs.contents());
+        let expected = escape(expected_out);
         assert_eq!(expected, actual, "string builtin returned unexpected output");
     }
 

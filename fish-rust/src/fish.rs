@@ -25,9 +25,11 @@ use crate::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
     },
     common::{
-        escape_string, exit_without_destructors, get_executable_path, str2wcstring, wcs2string,
+        escape_string, exit_without_destructors, get_executable_path,
+        save_term_foreground_process_group, scoped_push_replacer, str2wcstring, wcs2string,
         EscapeStringStyle, PROFILING_ACTIVE, PROGRAM_NAME,
     },
+    env::Statuses,
     env::{
         environment::{env_init, EnvStack, Environment},
         ConfigPaths, EnvMode,
@@ -35,11 +37,18 @@ use crate::{
     event::{self, Event},
     ffi::{self, Repin},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
-    function, future_feature_flags as features,
-    history::start_private_mode,
+    function, future_feature_flags as features, history,
+    history::{save_all, start_private_mode},
+    io::IoChain,
     parse_constants::{ParseErrorList, ParseErrorListFfi, ParseTreeFlags},
     parse_tree::{ParsedSource, ParsedSourceRefFFI},
+    parse_util::parse_util_detect_errors_in_ast,
+    parser::{BlockType, Parser},
     path::path_get_config,
+    proc::{
+        get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
+        set_interactive_session,
+    },
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self, asan_maybe_exit},
     topic_monitor,
@@ -264,7 +273,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 }
 
 // Source the file config.fish in the given directory.
-fn source_config_in_directory(parser: &mut ffi::parser_t, dir: &wstr) {
+fn source_config_in_directory(parser: &Parser, dir: &wstr) {
     // If the config.fish file doesn't exist or isn't readable silently return. Fish versions up
     // thru 2.2.0 would instead try to source the file with stderr redirected to /dev/null to deal
     // with that possibility.
@@ -286,17 +295,13 @@ fn source_config_in_directory(parser: &mut ffi::parser_t, dir: &wstr) {
 
     let cmd: WString = L!("builtin source ").to_owned() + escaped_pathname.as_utfstr();
 
-    parser.libdata_pod().within_fish_init = true;
-    // PORTING: you need to call `within_unique_ptr`, otherwise it is a no-op
-    let _ = parser
-        .pin()
-        .eval_string_ffi1(&cmd.to_ffi())
-        .within_unique_ptr();
-    parser.libdata_pod().within_fish_init = false;
+    parser.libdata_mut().pods.within_fish_init = true;
+    let _ = parser.eval(&cmd, &IoChain::new());
+    parser.libdata_mut().pods.within_fish_init = false;
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
-fn read_init(parser: &mut ffi::parser_t, paths: &ConfigPaths) {
+fn read_init(parser: &Parser, paths: &ConfigPaths) {
     source_config_in_directory(parser, &str2wcstring(paths.data.as_os_str().as_bytes()));
     source_config_in_directory(parser, &str2wcstring(paths.sysconf.as_os_str().as_bytes()));
 
@@ -308,7 +313,7 @@ fn read_init(parser: &mut ffi::parser_t, paths: &ConfigPaths) {
     }
 }
 
-fn run_command_list(parser: &mut ffi::parser_t, cmds: &[OsString]) -> i32 {
+fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
     let mut retval = STATUS_CMD_OK;
     for cmd in cmds {
         let cmd_wcs = str2wcstring(cmd.as_bytes());
@@ -316,44 +321,18 @@ fn run_command_list(parser: &mut ffi::parser_t, cmds: &[OsString]) -> i32 {
         let mut errors = ParseErrorList::new();
         let ast = Ast::parse(&cmd_wcs, ParseTreeFlags::empty(), Some(&mut errors));
         let errored = ast.errored() || {
-            // parse_util_detect_errors_in_ast is just partially ported
-            // parse_util_detect_errors_in_ast(&ast, &cmd_wcs, Some(&mut errors)).is_err();
-
-            let mut errors_ffi = ParseErrorListFfi(errors.clone());
-            let res = ffi::parse_util_detect_errors_ffi(
-                &ast as *const Ast as *const _,
-                &cmd_wcs.to_ffi(),
-                &mut errors_ffi as *mut ParseErrorListFfi as *mut _,
-            );
-            errors = errors_ffi.0;
-            res != 0
+            parse_util_detect_errors_in_ast(&ast, &cmd_wcs, Some(&mut errors)).is_err()
         };
 
         if !errored {
             // Construct a parsed source ref.
-            // Be careful to transfer ownership, this could be a very large string.
-
-            let ps = ParsedSourceRefFFI(Some(Arc::new(ParsedSource::new(cmd_wcs, ast))));
-            // this casting is needed since rust defines the type, so the type is incomplete when we
-            // read the headers
-            let _ = parser
-                .pin()
-                .eval_parsed_source_ffi1(
-                    &ps as *const ParsedSourceRefFFI as *const _,
-                    ffi::block_type_t::top,
-                )
-                .within_unique_ptr();
+            let ps = Arc::new(ParsedSource::new(cmd_wcs, ast));
+            let _ = parser.eval_parsed_source(&ps, &IoChain::new(), None, BlockType::top);
             retval = STATUS_CMD_OK;
         } else {
-            let mut sb = WString::new().to_ffi();
-            let errors_ffi = ParseErrorListFfi(errors);
-            parser.pin().get_backtrace_ffi(
-                &cmd_wcs.to_ffi(),
-                &errors_ffi as *const ParseErrorListFfi as *const _,
-                sb.pin_mut(),
-            );
+            let backtrace = parser.get_backtrace(&cmd_wcs, &errors);
             // fwprint! does not seem to work?
-            eprint!("{}", sb.from_ffi());
+            eprint!("{}", backtrace);
             // XXX: Why is this the return for "unknown command"?
             retval = STATUS_CMD_UNKNOWN;
         }
@@ -362,7 +341,7 @@ fn run_command_list(parser: &mut ffi::parser_t, cmds: &[OsString]) -> i32 {
     retval.unwrap()
 }
 
-fn fish_parse_opt(args: &mut [&wstr], opts: &mut FishCmdOpts) -> usize {
+fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
     use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*};
 
     const RUSAGE_ARG: char = 1 as char;
@@ -403,21 +382,21 @@ fn fish_parse_opt(args: &mut [&wstr], opts: &mut FishCmdOpts) -> usize {
         match c {
             'c' => opts
                 .batch_cmds
-                .push(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
+                .push(OsString::from_vec(wcs2string(w.woptarg().unwrap()))),
             'C' => opts
                 .postconfig_cmds
-                .push(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
+                .push(OsString::from_vec(wcs2string(w.woptarg().unwrap()))),
             'd' => {
-                ffi::activate_flog_categories_by_pattern(w.woptarg.unwrap());
-                activate_flog_categories_by_pattern(w.woptarg.unwrap());
+                ffi::activate_flog_categories_by_pattern(w.woptarg().unwrap());
+                activate_flog_categories_by_pattern(w.woptarg().unwrap());
                 for cat in flog::categories::all_categories() {
                     if cat.enabled.load(Ordering::Relaxed) {
                         println!("Debug enabled for category: {}", cat.name);
                     }
                 }
             }
-            'o' => opts.debug_output = Some(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
-            'f' => opts.features = w.woptarg.unwrap().to_owned(),
+            'o' => opts.debug_output = Some(OsString::from_vec(wcs2string(w.woptarg().unwrap()))),
+            'f' => opts.features = w.woptarg().unwrap().to_owned(),
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
             'l' => opts.is_login = true,
@@ -447,11 +426,11 @@ fn fish_parse_opt(args: &mut [&wstr], opts: &mut FishCmdOpts) -> usize {
             }
             // "--profile" - this does not activate profiling right away,
             // rather it's done after startup is finished.
-            'p' => opts.profile_output = Some(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
+            'p' => opts.profile_output = Some(OsString::from_vec(wcs2string(w.woptarg().unwrap()))),
             PROFILE_STARTUP_ARG => {
                 // With "--profile-startup" we immediately turn profiling on.
                 opts.profile_startup_output =
-                    Some(OsString::from_vec(wcs2string(w.woptarg.unwrap())));
+                    Some(OsString::from_vec(wcs2string(w.woptarg().unwrap())));
                 PROFILING_ACTIVE.store(true);
                 ffi::set_profiling_active(true);
             }
@@ -498,7 +477,7 @@ fn fish_parse_opt(args: &mut [&wstr], opts: &mut FishCmdOpts) -> usize {
         && optind == args.len()
         && unsafe { libc::isatty(libc::STDIN_FILENO) != 0 }
     {
-        ffi::set_interactive_session(true);
+        set_interactive_session(true);
     }
 
     optind
@@ -552,13 +531,8 @@ fn main() -> i32 {
         ffi::activate_flog_categories_by_pattern(s);
     }
 
-    let owning_args = args;
-    let mut args_for_opts: Vec<&wstr> = owning_args.iter().map(WString::as_utfstr).collect();
-
     let mut opts = FishCmdOpts::default();
-    my_optind = fish_parse_opt(&mut args_for_opts, &mut opts);
-
-    let args = args_for_opts;
+    my_optind = fish_parse_opt(&mut args, &mut opts);
 
     // Direct any debug output right away.
     // --debug-output takes precedence, otherwise $FISH_DEBUG_OUTPUT is used.
@@ -622,13 +596,13 @@ fn main() -> i32 {
 
     // Apply our options
     if opts.is_login {
-        ffi::mark_login();
+        mark_login();
     }
     if opts.no_exec {
-        ffi::mark_no_exec();
+        mark_no_exec();
     }
     if opts.is_interactive_session {
-        ffi::set_interactive_session(true);
+        set_interactive_session(true);
     }
     if opts.enable_private_mode {
         start_private_mode(EnvStack::globals());
@@ -636,9 +610,8 @@ fn main() -> i32 {
 
     // Only save (and therefore restore) the fg process group if we are interactive. See issues
     // #197 and #1002.
-    if ffi::is_interactive_session() {
-        // save_term_foreground_process_group();
-        ffi::save_term_foreground_process_group();
+    if is_interactive_session() {
+        save_term_foreground_process_group();
     }
 
     let mut paths: Option<ConfigPaths> = None;
@@ -646,7 +619,7 @@ fn main() -> i32 {
     if !opts.no_exec {
         // PORTING: C++ had not converted, we must revert
         paths = Some(determine_config_directory_paths(OsString::from_vec(
-            wcs2string(args[0]),
+            wcs2string(&args[0]),
         )));
         env_init(paths.as_ref(), !opts.no_config, opts.no_config);
     }
@@ -660,20 +633,20 @@ fn main() -> i32 {
         }
     }
     features::set_from_string(opts.features.as_utfstr());
-    ffi::proc_init();
-    ffi::misc_init();
+    proc_init();
+    crate::env::misc_init();
     ffi::reader_init();
 
-    let parser = unsafe { &mut *ffi::parser_t::principal_parser_ffi() };
-    parser.pin().set_syncs_uvars(!opts.no_config);
+    let parser = Parser::principal_parser();
+    parser.set_syncs_uvars(!opts.no_config);
 
     if !opts.no_exec && !opts.no_config {
         read_init(parser, paths.as_ref().unwrap());
     }
 
-    if ffi::is_interactive_session() && opts.no_config && !opts.no_exec {
+    if is_interactive_session() && opts.no_config && !opts.no_exec {
         // If we have no config, we default to the default key bindings.
-        parser.get_vars().set_one(
+        parser.vars().set_one(
             L!("fish_key_bindings"),
             EnvMode::UNEXPORT,
             L!("fish_default_key_bindings").to_owned(),
@@ -688,18 +661,16 @@ fn main() -> i32 {
 
     // Stomp the exit status of any initialization commands (issue #635).
     // PORTING: it is actually really nice that this just compiles, assuming it works
-    parser
-        .pin()
-        .set_last_statuses(ffi::statuses_t::just(c_int(STATUS_CMD_OK.unwrap())).within_box());
+    parser.set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
 
     // TODO: if-let-chains
     if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
         let s = cstr_from_osstr(&opts.profile_startup_output.unwrap());
-        parser.pin().emit_profiling(s.as_ptr());
+        parser.emit_profiling(s.as_bytes());
 
         // If we are profiling both, ensure the startup data only
         // ends up in the startup file.
-        parser.pin().clear_profiling();
+        parser.clear_profiling();
     }
 
     PROFILING_ACTIVE.store(opts.profile_output.is_some());
@@ -715,7 +686,7 @@ fn main() -> i32 {
 
     if !opts.batch_cmds.is_empty() {
         // Run the commands specified as arguments, if any.
-        if ffi::get_login() {
+        if get_login() {
             // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
             fish_xdm_login_hack_hack_hack_hack(&mut opts.batch_cmds, &args[my_optind..]);
         }
@@ -724,13 +695,13 @@ fn main() -> i32 {
         // Note that we *don't* support setting argv[0]/$0, unlike e.g. bash.
         // PORTING: the args were converted to WString here in C++
         let list = &args[my_optind..];
-        parser.get_vars().set(
+        parser.vars().set(
             L!("argv"),
             EnvMode::default(),
-            list.iter().map(|&s| s.to_owned()).collect(),
+            list.iter().map(|s| s.to_owned()).collect(),
         );
         res = run_command_list(parser, &opts.batch_cmds);
-        parser.libdata_pod().exit_current_script = false;
+        parser.libdata_mut().pods.exit_current_script = false;
     } else if my_optind == args.len() {
         // Implicitly interactive mode.
         if opts.no_exec && unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
@@ -741,10 +712,14 @@ fn main() -> i32 {
             // above line should always exit
             return libc::EXIT_FAILURE;
         }
-        res = ffi::reader_read_ffi(parser.pin(), c_int(libc::STDIN_FILENO)).into();
+        res = ffi::reader_read_ffi(
+            &parser as *const _ as *const autocxx::c_void,
+            c_int(libc::STDIN_FILENO),
+        )
+        .into();
     } else {
         // C++ had not converted at this point, we must undo
-        let n = wcs2string(args[my_optind]);
+        let n = wcs2string(&args[my_optind]);
         let path = OsStr::from_bytes(&n);
         my_optind += 1;
         // Rust sets cloexec by default, see above
@@ -761,16 +736,25 @@ fn main() -> i32 {
             Ok(f) => {
                 // PORTING: the args were converted to WString here in C++
                 let list = &args[my_optind..];
-                parser.get_vars().set(
+                parser.vars().set(
                     L!("argv"),
                     EnvMode::default(),
-                    list.iter().map(|&s| s.to_owned()).collect(),
+                    list.iter().map(|s| s.to_owned()).collect(),
                 );
                 let rel_filename = &args[my_optind - 1];
                 // PORTING: this used to be `scoped_push`
-                let old_filename = parser.pin().current_filename_ffi().from_ffi();
-                parser.pin().set_filename_ffi(rel_filename.to_ffi());
-                res = ffi::reader_read_ffi(parser.pin(), c_int(f.as_raw_fd())).into();
+                let parser = scoped_push_replacer(
+                    parser,
+                    |parser, new_value| {
+                        std::mem::replace(&mut parser.libdata_mut().current_filename, new_value)
+                    },
+                    Some(Arc::new(rel_filename.to_owned())),
+                );
+                res = ffi::reader_read_ffi(
+                    &parser as *const _ as *const autocxx::c_void,
+                    c_int(f.as_raw_fd()),
+                )
+                .into();
                 if res != 0 {
                     FLOGF!(
                         warning,
@@ -778,7 +762,6 @@ fn main() -> i32 {
                         path.to_string_lossy()
                     );
                 }
-                parser.pin().set_filename_ffi(old_filename.to_ffi());
             }
         }
     }
@@ -786,7 +769,7 @@ fn main() -> i32 {
     let exit_status = if res != 0 {
         STATUS_CMD_UNKNOWN.unwrap()
     } else {
-        parser.pin().get_last_status().into()
+        parser.get_last_status().into()
     };
 
     event::fire(
@@ -807,10 +790,10 @@ fn main() -> i32 {
 
     if let Some(profile_output) = opts.profile_output {
         let s = cstr_from_osstr(&profile_output);
-        parser.pin().emit_profiling(s.as_ptr());
+        parser.emit_profiling(s.as_bytes());
     }
 
-    ffi::history_save_all();
+    history::save_all();
     if opts.print_rusage_self {
         print_rusage_self();
     }
@@ -844,7 +827,7 @@ fn escape_single_quoted_hack_hack_hack_hack(s: &wstr) -> OsString {
     return result;
 }
 
-fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[&wstr]) -> bool {
+fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[WString]) -> bool {
     if cmds.len() != 1 {
         return false;
     }

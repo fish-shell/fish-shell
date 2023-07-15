@@ -14,64 +14,51 @@
 
 #include "common.h"
 #include "enum_set.h"
+#include "env.h"
 #include "maybe.h"
+#include "operation_context.h"
 #include "parse_constants.h"
 
-class env_var_t;
-class environment_t;
-class operation_context_t;
-
 /// Set of flags controlling expansions.
-enum class expand_flag {
+enum expand_flag {
     /// Skip command substitutions.
-    skip_cmdsubst,
+    skip_cmdsubst = 1 << 0,
     /// Skip variable expansion.
-    skip_variables,
+    skip_variables = 1 << 1,
     /// Skip wildcard expansion.
-    skip_wildcards,
+    skip_wildcards = 1 << 2,
     /// The expansion is being done for tab or auto completions. Returned completions may have the
     /// wildcard as a prefix instead of a match.
-    for_completions,
+    for_completions = 1 << 3,
     /// Only match files that are executable by the current user.
-    executables_only,
+    executables_only = 1 << 4,
     /// Only match directories.
-    directories_only,
+    directories_only = 1 << 5,
     /// Generate descriptions, stored in the description field of completions.
-    gen_descriptions,
+    gen_descriptions = 1 << 6,
     /// Un-expand home directories to tildes after.
-    preserve_home_tildes,
+    preserve_home_tildes = 1 << 7,
     /// Allow fuzzy matching.
-    fuzzy_match,
+    fuzzy_match = 1 << 8,
     /// Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if
     /// fuzzy_match is set.
-    no_fuzzy_directories,
+    no_fuzzy_directories = 1 << 9,
     /// Allows matching a leading dot even if the wildcard does not contain one.
     /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
     /// match hidden files.
-    allow_nonliteral_leading_dot,
+    allow_nonliteral_leading_dot = 1 << 10,
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
     /// working directories, and to use logical instead of physical paths.
-    special_for_cd,
+    special_for_cd = 1 << 11,
     /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
     /// completions and cd autosuggestions.
-    special_for_cd_autosuggestion,
+    special_for_cd_autosuggestion = 1 << 12,
     /// Do expansions specifically to support external command completions. This means using PATH as
     /// a list of potential working directories.
-    special_for_command,
-
-    COUNT,
+    special_for_command = 1 << 13,
 };
 
-template <>
-struct enum_info_t<expand_flag> {
-    static constexpr auto count = expand_flag::COUNT;
-};
-
-using expand_flags_t = enum_set_t<expand_flag>;
-
-class completion_t;
-using completion_list_t = std::vector<completion_t>;
-class completion_receiver_t;
+using expand_flags_t = uint64_t;
 
 enum : wchar_t {
     /// Character representing a home directory.
@@ -100,111 +87,16 @@ enum : wchar_t {
     EXPAND_SENTINEL
 };
 
-/// These are the possible return values for expand_string.
-struct expand_result_t {
-    enum result_t {
-        /// There was an error, for example, unmatched braces.
-        error,
-        /// Expansion succeeded.
-        ok,
-        /// Expansion was cancelled (e.g. control-C).
-        cancel,
-        /// Expansion succeeded, but a wildcard in the string matched no files,
-        /// so the output is empty.
-        wildcard_no_match,
-    };
-
-    /// The result of expansion.
-    result_t result;
-
-    /// If expansion resulted in an error, this is an appropriate value with which to populate
-    /// $status.
-    int status{0};
-
-    /* implicit */ expand_result_t(result_t result) : result(result) {}
-
-    /// operator== allows for comparison against result_t values.
-    bool operator==(result_t rhs) const { return result == rhs; }
-    bool operator!=(result_t rhs) const { return !(*this == rhs); }
-
-    /// Make an error value with the given status.
-    static expand_result_t make_error(int status) {
-        assert(status != 0 && "status cannot be 0 for an error result");
-        expand_result_t result(error);
-        result.status = status;
-        return result;
-    }
-};
-
 /// The string represented by PROCESS_EXPAND_SELF
 #define PROCESS_EXPAND_SELF_STR L"%self"
 #define PROCESS_EXPAND_SELF_STR_LEN 5
 
-/// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
-/// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable
-/// VAR_NAME), cmdsubst expansion and wildcard expansion. The results are inserted into the list
-/// out.
-///
-/// If the parameter does not need expansion, it is copied into the list out.
-///
-/// \param input The parameter to expand
-/// \param output The list to which the result will be appended.
-/// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
-/// of skip_cmdsubst skip_variables and skip_wildcards
-/// \param ctx The parser, variables, and cancellation checker for this operation.  The parser may
-/// be null. \param errors Resulting errors, or nullptr to ignore
-///
-/// \return An expand_result_t.
-/// wildcard_no_match and wildcard_match are normal exit conditions used only on
-/// strings containing wildcards to tell if the wildcard produced any matches.
-__warn_unused expand_result_t expand_string(wcstring input, completion_list_t *output,
-                                            expand_flags_t flags, const operation_context_t &ctx,
-                                            parse_error_list_t *errors = nullptr);
+#if INCLUDE_RUST_HEADERS
+#include "expand.rs.h"
+using expand_result_t = ExpandResult;
+#endif
 
-/// Variant of string that inserts its results into a completion_receiver_t.
-__warn_unused expand_result_t expand_string(wcstring input, completion_receiver_t *output,
-                                            expand_flags_t flags, const operation_context_t &ctx,
-                                            parse_error_list_t *errors = nullptr);
-
-/// expand_one is identical to expand_string, except it will fail if in expands to more than one
-/// string. This is used for expanding command names.
-///
-/// \param inout_str The parameter to expand in-place
-/// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
-/// of skip_cmdsubst skip_variables and skip_wildcards
-/// \param ctx The parser, variables, and cancellation checker for this operation. The parser may be
-/// null. \param errors Resulting errors, or nullptr to ignore
-///
-/// \return Whether expansion succeeded.
-bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_t &ctx,
-                parse_error_list_t *errors = nullptr);
-
-/// Expand a command string like $HOME/bin/cmd into a command and list of arguments.
-/// Return the command and arguments by reference.
-/// If the expansion resulted in no or an empty command, the command will be an empty string. Note
-/// that API does not distinguish between expansion resulting in an empty command (''), and
-/// expansion resulting in no command (e.g. unset variable).
-/// If \p skip_wildcards is true, then do not do wildcard expansion
-/// \return an expand error.
-expand_result_t expand_to_command_and_args(const wcstring &instr, const operation_context_t &ctx,
-                                           wcstring *out_cmd, std::vector<wcstring> *out_args,
-                                           parse_error_list_t *errors = nullptr,
-                                           bool skip_wildcards = false);
-
-/// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
-/// Suitable for pretty-printing.
-wcstring expand_escape_variable(const env_var_t &var);
-
-/// Convert a string value to a human readable form, i.e. escape things, handle arrays, etc.
-/// Suitable for pretty-printing.
-wcstring expand_escape_string(const wcstring &el);
-
-/// Perform tilde expansion and nothing else on the specified string, which is modified in place.
-///
 /// \param input the string to tilde expand
 void expand_tilde(wcstring &input, const environment_t &vars);
-
-/// Perform the opposite of tilde expansion on the string, which is modified in place.
-wcstring replace_home_directory_with_tilde(const wcstring &str, const environment_t &vars);
 
 #endif

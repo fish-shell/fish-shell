@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::ops::Deref;
 
 use super::*;
@@ -104,35 +103,44 @@ impl<'args> TryFrom<&'args wstr> for Fields {
 }
 
 impl<'args> StringSubCommand<'args> for Split<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("right"), no_argument, 'r'),
-        wopt(L!("max"), required_argument, 'm'),
-        wopt(L!("no-empty"), no_argument, 'n'),
-        wopt(L!("fields"), required_argument, 'f'),
-        // FIXME: allow-empty is not documented
-        wopt(L!("allow-empty"), no_argument, 'a'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":qrm:nf:a");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            wopt(L!("quiet"), no_argument, 'q'),
+            wopt(L!("right"), no_argument, 'r'),
+            wopt(L!("max"), required_argument, 'm'),
+            wopt(L!("no-empty"), no_argument, 'n'),
+            wopt(L!("fields"), required_argument, 'f'),
+            // FIXME: allow-empty is not documented
+            wopt(L!("allow-empty"), no_argument, 'a'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":qrm:nf:a")
+    }
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'q' => self.quiet = true,
             'r' => self.split_from = Direction::Right,
             'm' => {
-                self.max = fish_wcstol(arg.unwrap())?
-                    .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?
+                self.max = fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid max value '%ls'\n", w.cmd(), w.woptarg())
+                })?
             }
             'n' => self.no_empty = true,
             'f' => {
-                self.fields = arg.unwrap().try_into().map_err(|e| match e {
+                self.fields = w.woptarg().unwrap().try_into().map_err(|e| match e {
                     FieldParseError::Number => StringError::NotANumber,
                     FieldParseError::Range => {
-                        invalid_args!("%ls: Invalid range value for field '%ls'\n", name, arg)
+                        invalid_args!(
+                            "%ls: Invalid range value for field '%ls'\n",
+                            w.cmd(),
+                            w.woptarg()
+                        )
                     }
                     FieldParseError::Field => {
-                        invalid_args!("%ls: Invalid fields value '%ls'\n", name, arg)
+                        invalid_args!("%ls: Invalid fields value '%ls'\n", w.cmd(), w.woptarg())
                     }
                 })?;
             }
@@ -145,13 +153,13 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
     fn take_args(
         &mut self,
         optind: &mut usize,
-        args: &[&'args wstr],
-        streams: &mut io_streams_t,
+        args: &'args [WString],
+        streams: &mut IoStreams<'_>,
     ) -> Option<libc::c_int> {
         if self.is_split0 {
             return STATUS_CMD_OK;
         }
-        let Some(arg) = args.get(*optind).copied() else {
+        let Some(arg) = args.get(*optind) else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
             return STATUS_INVALID_ARGS;
         };
@@ -162,13 +170,13 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&'args wstr],
+        args: &'args [WString],
     ) -> Option<libc::c_int> {
         if self.fields.is_empty() && self.allow_empty {
-            streams.err.append(wgettext_fmt!(
+            streams.err.append(&wgettext_fmt!(
                 BUILTIN_ERR_COMBO2,
                 args[0],
                 wgettext!("--allow-empty is only valid with --fields")
@@ -177,7 +185,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         }
 
         let sep = self.sep;
-        let mut all_splits: Vec<Vec<Cow<'args, wstr>>> = Vec::new();
+        let mut all_splits: Vec<Vec<WString>> = Vec::new();
         let mut split_count = 0usize;
         let mut arg_count = 0usize;
 
@@ -186,34 +194,22 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
             true => SplitBehavior::Never,
         });
         for (arg, _) in argiter {
-            let splits: Vec<Cow<'args, wstr>> = match (self.split_from, arg) {
-                (Direction::Right, arg) => {
-                    let mut rev = arg.into_owned();
+            let splits: Vec<WString> = match (self.split_from, arg) {
+                (Direction::Right, mut arg) => {
+                    let mut rev = arg;
                     rev.as_char_slice_mut().reverse();
                     let sep: WString = sep.chars().rev().collect();
                     split_about(&rev, &sep, self.max, self.no_empty)
                         .into_iter()
                         // If we are from the right, split_about gave us reversed strings, in reversed order!
-                        .map(|s| Cow::Owned(s.chars().rev().collect::<WString>()))
+                        .map(|s| s.chars().rev().collect::<WString>())
                         .rev()
                         .collect()
                 }
-                // we need to special-case the Cow::Borrowed case, since
-                // let arg: &'args wstr = &arg;
-                // does not compile since `arg` can be dropped at the end of this scope
-                // making the reference invalid if it is owned.
-                (Direction::Left, Cow::Borrowed(arg)) => {
-                    split_about(arg, sep, self.max, self.no_empty)
-                        .into_iter()
-                        .map(Cow::Borrowed)
-                        .collect()
-                }
-                (Direction::Left, Cow::Owned(arg)) => {
-                    split_about(&arg, sep, self.max, self.no_empty)
-                        .into_iter()
-                        .map(|s| Cow::Owned(s.to_owned()))
-                        .collect()
-                }
+                (Direction::Left, arg) => split_about(&arg, sep, self.max, self.no_empty)
+                    .into_iter()
+                    .map(|s| s.to_owned())
+                    .collect(),
             };
 
             // If we're quiet, we return early if we've found something to split.
@@ -259,18 +255,16 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
                 }
                 for field in self.fields.iter() {
                     if let Some(val) = splits.get(*field) {
-                        streams.out.append_with_separation(
-                            val,
-                            separation_type_t::explicitly,
-                            true,
-                        );
+                        streams
+                            .out
+                            .append_with_separation(val, SeparationType::explicitly, true);
                     }
                 }
             } else {
-                for split in &splits {
+                for split in splits {
                     streams
                         .out
-                        .append_with_separation(split, separation_type_t::explicitly, true);
+                        .append_with_separation(&split, SeparationType::explicitly, true);
                 }
             }
         }

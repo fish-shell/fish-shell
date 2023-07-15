@@ -1,17 +1,17 @@
 use super::*;
 
-pub struct Trim<'args> {
-    chars_to_trim: &'args wstr,
+pub struct Trim {
+    chars_to_trim: WString,
     left: bool,
     right: bool,
     quiet: bool,
 }
 
-impl Default for Trim<'_> {
+impl Default for Trim {
     fn default() -> Self {
         Self {
             // from " \f\n\r\t\v"
-            chars_to_trim: L!(" \x0C\n\r\x09\x0B"),
+            chars_to_trim: L!(" \x0C\n\r\x09\x0B").to_owned(),
             left: false,
             right: false,
             quiet: false,
@@ -19,23 +19,23 @@ impl Default for Trim<'_> {
     }
 }
 
-impl<'args> StringSubCommand<'args> for Trim<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("chars"), required_argument, 'c'),
-        wopt(L!("left"), no_argument, 'l'),
-        wopt(L!("right"), no_argument, 'r'),
-        wopt(L!("quiet"), no_argument, 'q'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":c:lrq");
+impl StringSubCommand<'_> for Trim {
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            wopt(L!("chars"), required_argument, 'c'),
+            wopt(L!("left"), no_argument, 'l'),
+            wopt(L!("right"), no_argument, 'r'),
+            wopt(L!("quiet"), no_argument, 'q'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":c:lrq")
+    }
 
-    fn parse_opt(
-        &mut self,
-        _n: &wstr,
-        c: char,
-        arg: Option<&'args wstr>,
-    ) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
-            'c' => self.chars_to_trim = arg.unwrap(),
+            'c' => self.chars_to_trim = w.woptarg().unwrap().to_owned(),
             'l' => self.left = true,
             'r' => self.right = true,
             'q' => self.quiet = true,
@@ -46,10 +46,10 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
         // If neither left or right is specified, we do both.
         if !self.left && !self.right {

@@ -1,5 +1,10 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::cell::RefCell;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Weak,
+};
 
+#[derive(Debug)]
 pub struct RelaxedAtomicBool(AtomicBool);
 
 impl RelaxedAtomicBool {
@@ -20,5 +25,29 @@ impl RelaxedAtomicBool {
 impl Clone for RelaxedAtomicBool {
     fn clone(&self) -> Self {
         Self(AtomicBool::new(self.load()))
+    }
+}
+
+pub struct SharedFromThisBase<T> {
+    weak: RefCell<Weak<T>>,
+}
+
+impl<T> SharedFromThisBase<T> {
+    pub fn new() -> SharedFromThisBase<T> {
+        SharedFromThisBase {
+            weak: RefCell::new(Weak::new()),
+        }
+    }
+
+    pub fn initialize(&self, r: &Arc<T>) {
+        *self.weak.borrow_mut() = Arc::downgrade(r);
+    }
+}
+
+pub trait SharedFromThis<T> {
+    fn get_base(&self) -> &SharedFromThisBase<T>;
+
+    fn shared_from_this(&self) -> Arc<T> {
+        self.get_base().weak.borrow().upgrade().unwrap()
     }
 }

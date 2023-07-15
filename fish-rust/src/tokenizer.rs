@@ -1146,12 +1146,12 @@ impl PipeOrRedir {
 
     // \return if we are "valid". Here "valid" means only that the source fd did not overflow.
     // For example 99999999999> is invalid.
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         self.fd >= 0
     }
 
     // \return the token type for this redirection.
-    fn token_type(&self) -> TokenType {
+    pub fn token_type(&self) -> TokenType {
         if self.is_pipe {
             TokenType::pipe
         } else {

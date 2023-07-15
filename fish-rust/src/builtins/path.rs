@@ -24,18 +24,13 @@ macro_rules! path_error {
     $(,)?
     ) => {
         $streams.err.append(L!("path "));
-        $streams.err.append(wgettext_fmt!($string, $($args),*));
+        $streams.err.append(&wgettext_fmt!($string, $($args),*));
     };
 }
 
-fn path_unknown_option(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    subcmd: &wstr,
-    opt: &wstr,
-) {
+fn path_unknown_option(parser: &Parser, streams: &mut IoStreams<'_>, subcmd: &wstr, opt: &wstr) {
     path_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
-    builtin_print_error_trailer(parser, streams, L!("path"));
+    builtin_print_error_trailer(parser, streams.err, L!("path"));
 }
 
 // How many bytes we read() at once.
@@ -43,11 +38,11 @@ fn path_unknown_option(
 // and so we can automatically detect NULL-separated input.
 const PATH_CHUNK_SIZE: usize = PATH_MAX as usize;
 #[inline]
-fn arguments<'iter, 'args>(
-    args: &'iter [&'args wstr],
+fn arguments<'iter>(
+    args: &'iter [WString],
     optind: &'iter mut usize,
-    streams: &mut io_streams_t,
-) -> Arguments<'args, 'iter> {
+    streams: &mut IoStreams<'_>,
+) -> Arguments<'iter> {
     Arguments::new(args, optind, streams, PATH_CHUNK_SIZE)
 }
 
@@ -131,7 +126,7 @@ impl TryFrom<&wstr> for PermFlags {
 /// This is used by the subcommands to communicate with the option parser which flags are
 /// valid and get the result of parsing the command for flags.
 #[derive(Default)]
-struct Options<'args> {
+struct Options {
     null_in: bool,
     null_out: bool,
     quiet: bool,
@@ -148,7 +143,7 @@ struct Options<'args> {
     unique_valid: bool,
     unique: bool,
 
-    key: Option<&'args wstr>,
+    key: Option<WString>,
 
     types_valid: bool,
     types: Option<TypeFlags>,
@@ -156,22 +151,22 @@ struct Options<'args> {
     perms_valid: bool,
     perms: Option<PermFlags>,
 
-    arg1: Option<&'args wstr>,
+    arg1: Option<WString>,
 }
 
 #[inline]
-fn path_out(streams: &mut io_streams_t, opts: &Options<'_>, s: impl AsRef<wstr>) {
+fn path_out(streams: &mut IoStreams<'_>, opts: &Options, s: impl AsRef<wstr>) {
     let s = s.as_ref();
     if !opts.quiet {
         if !opts.null_out {
             streams
                 .out
-                .append_with_separation(s, separation_type_t::explicitly, true);
+                .append_with_separation(s, SeparationType::explicitly, true);
         } else {
             let mut output = WString::with_capacity(s.len() + 1);
             output.push_utfstr(s);
             output.push('\0');
-            streams.out.append(output);
+            streams.out.append(&output);
         }
     }
 }
@@ -221,15 +216,14 @@ const LONG_OPTIONS: [woption<'static>; 10] = [
     wopt(L!("key"), required_argument, NONOPTION_CHAR_CODE),
 ];
 
-fn parse_opts<'args>(
-    opts: &mut Options<'args>,
+fn parse_opts(
+    opts: &mut Options,
     optind: &mut usize,
     n_req_args: usize,
-    args: &mut [&'args wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    args: &mut [WString],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
 ) -> Option<c_int> {
-    let cmd = args[0];
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
@@ -240,11 +234,17 @@ fn parse_opts<'args>(
         match c {
             ':' => {
                 streams.err.append(L!("path ")); // clone of string_error
-                builtin_missing_argument(parser, streams, cmd, args_read[w.woptind - 1], false);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    w.cmd(),
+                    &args_read[w.woptind - 1],
+                    false,
+                );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                path_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                path_unknown_option(parser, streams, w.cmd(), &args_read[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
             'q' => {
@@ -265,7 +265,7 @@ fn parse_opts<'args>(
             }
             't' if opts.types_valid => {
                 let types = opts.types.get_or_insert_with(TypeFlags::default);
-                let types_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
+                let types_args = split_string_tok(w.woptarg().unwrap(), L!(","), None);
                 for t in types_args {
                     let Ok(r#type) = t.try_into() else {
                         path_error!(streams, "%ls: Invalid type '%ls'\n", "path", t);
@@ -277,7 +277,7 @@ fn parse_opts<'args>(
             }
             'p' if opts.perms_valid => {
                 let perms = opts.perms.get_or_insert_with(PermFlags::default);
-                let perms_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
+                let perms_args = split_string_tok(w.woptarg().unwrap(), L!(","), None);
                 for p in perms_args {
                     let Ok(perm) = p.try_into() else {
                         path_error!(streams, "%ls: Invalid permission '%ls'\n", "path", p);
@@ -330,12 +330,12 @@ fn parse_opts<'args>(
                 continue;
             }
             NONOPTION_CHAR_CODE => {
-                assert!(w.woptarg.is_some());
-                opts.key = w.woptarg;
+                assert!(w.woptarg().is_some());
+                opts.key = w.woptarg().map(|s| s.to_owned());
                 continue;
             }
             _ => {
-                path_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                path_unknown_option(parser, streams, w.cmd(), &args_read[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
             }
         }
@@ -345,20 +345,20 @@ fn parse_opts<'args>(
 
     if n_req_args != 0 {
         assert!(n_req_args == 1);
-        opts.arg1 = args.get(*optind).copied();
+        opts.arg1 = w.argv().get(*optind).map(|s| s.to_owned());
         if opts.arg1.is_some() {
             *optind += 1;
         }
 
         if opts.arg1.is_none() && n_req_args == 1 {
-            path_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            path_error!(streams, BUILTIN_ERR_ARG_COUNT0, w.cmd());
             return STATUS_INVALID_ARGS;
         }
     }
 
     // At this point we should not have optional args and be reading args from stdin.
-    if streams.stdin_is_directly_redirected() && args.len() > *optind {
-        path_error!(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
+    if streams.stdin_is_directly_redirected && w.argv().len() > *optind {
+        path_error!(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, w.cmd());
         return STATUS_INVALID_ARGS;
     }
 
@@ -366,9 +366,9 @@ fn parse_opts<'args>(
 }
 
 fn path_transform(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
     func: impl Fn(&wstr) -> WString,
 ) -> Option<c_int> {
     let mut opts = Options::default();
@@ -408,17 +408,17 @@ fn path_transform(
 }
 
 fn path_basename(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     path_transform(parser, streams, args, |s| wbasename(s).to_owned())
 }
 
 fn path_dirname(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     path_transform(parser, streams, args, |s| wdirname(s).to_owned())
 }
@@ -432,18 +432,14 @@ fn normalize_help(path: &wstr) -> WString {
 }
 
 fn path_normalize(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     path_transform(parser, streams, args, normalize_help)
 }
 
-fn path_mtime(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+fn path_mtime(parser: &Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
     let mut opts = Options::default();
     opts.relative_valid = true;
     let mut optind = 0;
@@ -528,9 +524,9 @@ fn test_find_extension() {
 }
 
 fn path_extension(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     let mut opts = Options::default();
     let mut optind = 0;
@@ -569,9 +565,9 @@ fn path_extension(
 }
 
 fn path_change_extension(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     let mut opts = Options::default();
     let mut optind = 0;
@@ -589,15 +585,15 @@ fn path_change_extension(
         let pos = find_extension(&arg);
         let mut ext = match pos {
             Some(pos) => {
-                arg.to_mut().truncate(pos);
-                arg.into_owned()
+                arg.truncate(pos);
+                arg
             }
-            None => arg.into_owned(),
+            None => arg,
         };
 
         // Only add on the extension "." if we have something.
         // That way specifying an empty extension strips it.
-        if let Some(replacement) = opts.arg1 {
+        if let Some(replacement) = opts.arg1.as_ref() {
             if !replacement.is_empty() {
                 if replacement.char_at(0) != '.' {
                     ext.push('.');
@@ -618,9 +614,9 @@ fn path_change_extension(
 }
 
 fn path_resolve(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     let mut opts = Options::default();
     let mut optind = 0;
@@ -640,10 +636,10 @@ fn path_resolve(
             None => {
                 // The path doesn't exist, isn't readable or a symlink loop.
                 // We go up until we find something that works.
-                let mut next = arg.into_owned();
+                let mut next = arg;
                 // First add $PWD if we're relative
                 if !next.is_empty() && next.char_at(0) != '/' {
-                    next = path_apply_working_directory(&next, &parser.get_vars().get_pwd_slash());
+                    next = path_apply_working_directory(&next, &parser.vars().get_pwd_slash());
                 }
                 let mut rest = wbasename(&next).to_owned();
                 let mut real = None;
@@ -686,11 +682,7 @@ fn path_resolve(
     }
 }
 
-fn path_sort(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+fn path_sort(parser: &Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
     let mut opts = Options::default();
     opts.reverse_valid = true;
     opts.unique_valid = true;
@@ -856,9 +848,9 @@ fn filter_path(opts: &Options, path: &wstr) -> bool {
 }
 
 fn path_filter_maybe_is(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
     is_is: bool,
 ) -> Option<c_int> {
     let mut opts = Options::default();
@@ -897,7 +889,7 @@ fn path_filter_maybe_is(
         // to $PWD. So we can add `./`.
         // Empty paths make no sense, but e.g. wbasename returns true for them.
         if !arg.is_empty() && arg.starts_with('-') {
-            let out = WString::from("./") + arg.as_ref();
+            let out = WString::from("./") + &arg[..];
             path_out(streams, &opts, out);
         } else {
             path_out(streams, &opts, arg);
@@ -916,31 +908,27 @@ fn path_filter_maybe_is(
 }
 
 fn path_filter(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    args: &mut [WString],
 ) -> Option<c_int> {
     path_filter_maybe_is(parser, streams, args, false)
 }
 
-fn path_is(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr]) -> Option<c_int> {
+fn path_is(parser: &Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
     path_filter_maybe_is(parser, streams, args, true)
 }
 
 /// The path builtin, for handling paths.
-pub fn path(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
-    let cmd = args[0];
+pub fn path(parser: &Parser, streams: &mut IoStreams<'_>, args: &mut [WString]) -> Option<c_int> {
+    let cmd = &args[0];
     let argc = args.len();
 
     if argc <= 1 {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
-        builtin_print_error_trailer(parser, streams, cmd);
+            .append(&wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -949,7 +937,7 @@ pub fn path(
         return STATUS_CMD_OK;
     }
 
-    let subcmd_name = args[1];
+    let subcmd_name = &args[1];
 
     let subcmd: BuiltinCmd = match subcmd_name.to_string().as_str() {
         "basename" => path_basename,
@@ -965,8 +953,8 @@ pub fn path(
         _ => {
             streams
                 .err
-                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
-            builtin_print_error_trailer(parser, streams, cmd);
+                .append(&wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
     };

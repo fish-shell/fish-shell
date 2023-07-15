@@ -1,12 +1,14 @@
 use self::ffi::pgid_t;
 use crate::common::{assert_send, assert_sync};
+use crate::global_safety::RelaxedAtomicBool;
+use crate::proc::JobGroupRef;
 use crate::signal::Signal;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use cxx::{CxxWString, UniquePtr};
 use std::num::NonZeroU32;
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::{Arc, Mutex, RwLock};
 
 #[cxx::bridge]
 mod ffi {
@@ -54,21 +56,23 @@ mod ffi {
 }
 
 fn create_job_group_ffi(command: &CxxWString, wants_job_id: bool) -> Box<JobGroup> {
-    let job_group = JobGroup::create(command.from_ffi(), wants_job_id);
-    Box::new(job_group)
+    todo!()
+    // let job_group = JobGroup::create(command.from_ffi(), wants_job_id);
+    // Box::new(job_group)
 }
 
 fn create_job_group_with_job_control_ffi(command: &CxxWString, wants_term: bool) -> Box<JobGroup> {
-    let job_group = JobGroup::create_with_job_control(command.from_ffi(), wants_term);
-    Box::new(job_group)
+    todo!()
+    // let job_group = JobGroup::create_with_job_control(command.from_ffi(), wants_term);
+    // Box::new(job_group)
 }
 
 /// A job id, corresponding to what is printed by `jobs`. 1 is the first valid job id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub struct JobId(NonZeroU32);
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct MaybeJobId(pub Option<JobId>);
 
 impl std::ops::Deref for MaybeJobId {
@@ -79,30 +83,27 @@ impl std::ops::Deref for MaybeJobId {
     }
 }
 
+impl MaybeJobId {
+    pub fn as_num(&self) -> i64 {
+        self.0.map(|j| i64::from(u32::from(j.0))).unwrap_or(-1)
+    }
+}
+
 impl std::fmt::Display for MaybeJobId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .fmt(f)
+        self.as_num().fmt(f)
     }
 }
 
 impl ToWString for MaybeJobId {
     fn to_wstring(&self) -> WString {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .to_wstring()
+        self.as_num().to_wstring()
     }
 }
 
 impl<'a> printf_compat::args::ToArg<'a> for MaybeJobId {
     fn to_arg(self) -> printf_compat::args::Arg<'a> {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .to_arg()
+        self.as_num().to_arg()
     }
 }
 
@@ -129,7 +130,7 @@ pub struct JobGroup {
     /// via [`Self::wants_terminal()`] only.
     wants_term: bool,
     /// Whether we are in the foreground, meaning the user is waiting for this job to complete.
-    pub is_foreground: AtomicBool,
+    pub is_foreground: RelaxedAtomicBool,
     /// The pgid leading our group. This is only ever set if [`job_control`](Self::JobControl) is
     /// true. We ensure the value (when set) is always non-negative.
     pgid: Option<libc::pid_t>,
@@ -161,12 +162,12 @@ impl JobGroup {
     /// Whether we are the currently the foreground group. Should never be true for more than one
     /// `JobGroup` at any given moment.
     pub fn is_foreground(&self) -> bool {
-        self.is_foreground.load(Ordering::Relaxed)
+        self.is_foreground.load()
     }
 
     /// Mark whether we are in the foreground.
     pub fn set_is_foreground(&self, in_foreground: bool) {
-        self.is_foreground.store(in_foreground, Ordering::Relaxed);
+        self.is_foreground.store(in_foreground);
     }
 
     /// Return the command which produced this job tree.
@@ -293,7 +294,7 @@ impl JobGroup {
 static CONSUMED_JOB_IDS: Mutex<Vec<JobId>> = Mutex::new(Vec::new());
 
 impl JobId {
-    const NONE: MaybeJobId = MaybeJobId(None);
+    pub const NONE: MaybeJobId = MaybeJobId(None);
 
     pub fn new(value: NonZeroU32) -> Self {
         JobId(value)
@@ -347,7 +348,7 @@ impl JobGroup {
             command,
             tmodes: None,
             signal: 0.into(),
-            is_foreground: false.into(),
+            is_foreground: RelaxedAtomicBool::new(false),
             pgid: None,
         }
     }
@@ -355,8 +356,8 @@ impl JobGroup {
     /// Return a new `JobGroup` with the provided `command`. The `JobGroup` is only assigned a
     /// `JobId` if `wants_job_id` is true and is created with job control disabled and
     /// [`JobGroup::wants_term`] set to false.
-    pub fn create(command: WString, wants_job_id: bool) -> JobGroup {
-        JobGroup::new(
+    pub fn create(command: WString, wants_job_id: bool) -> JobGroupRef {
+        Arc::new(RwLock::new(JobGroup::new(
             command,
             if wants_job_id {
                 MaybeJobId(Some(JobId::acquire()))
@@ -365,19 +366,19 @@ impl JobGroup {
             },
             false, /* job_control */
             false, /* wants_term */
-        )
+        )))
     }
 
     /// Return a new `JobGroup` with the provided `command` with job control enabled. A [`JobId`] is
     /// automatically acquired and assigned. If `wants_term` is true then [`JobGroup::wants_term`]
     /// is also set to `true` accordingly.
-    pub fn create_with_job_control(command: WString, wants_term: bool) -> JobGroup {
-        JobGroup::new(
+    pub fn create_with_job_control(command: WString, wants_term: bool) -> JobGroupRef {
+        Arc::new(RwLock::new(JobGroup::new(
             command,
             MaybeJobId(Some(JobId::acquire())),
             true, /* job_control */
             wants_term,
-        )
+        )))
     }
 }
 

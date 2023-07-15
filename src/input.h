@@ -13,12 +13,12 @@
 #include "common.h"
 #include "input_common.h"
 #include "maybe.h"
+#include "parser.h"
 
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 #define DEFAULT_BIND_MODE L"default"
 
 class event_queue_peeker_t;
-class parser_t;
 
 wcstring describe_char(wint_t c);
 
@@ -30,7 +30,7 @@ struct input_mapping_t;
 class inputter_t final : private input_event_queue_t {
    public:
     /// Construct from a parser, and the fd from which to read.
-    explicit inputter_t(parser_t &parser, int in = STDIN_FILENO);
+    explicit inputter_t(const parser_t &parser, int in = STDIN_FILENO);
 
     /// Read a character from stdin. Try to convert some escape sequences into character constants,
     /// but do not permanently block the escape character.
@@ -74,8 +74,10 @@ class inputter_t final : private input_event_queue_t {
     maybe_t<input_mapping_t> find_mapping(event_queue_peeker_t *peeker);
     char_event_t read_characters_no_readline();
 
+#if INCLUDE_RUST_HEADERS
     // We need a parser to evaluate bindings.
-    const std::shared_ptr<parser_t> parser_;
+    const rust::Box<ParserRef> parser_;
+#endif
 
     std::vector<wchar_t> input_function_args_{};
     bool function_status_{false};

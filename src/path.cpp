@@ -94,7 +94,7 @@ maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars) 
 
 get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &vars) {
     auto pathvar = vars.get(L"PATH");
-    return path_get_path_core(cmd, pathvar ? pathvar->as_list() : kDefaultPath);
+    return path_get_path_core(cmd, pathvar ? pathvar->as_list()->vals : kDefaultPath);
 }
 
 /// \return whether the given path is on a remote filesystem.
@@ -147,7 +147,7 @@ std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
         // Respect CDPATH.
         std::vector<wcstring> cdpathsv;
         if (auto cdpaths = env_vars.get(L"CDPATH")) {
-            cdpathsv = cdpaths->as_list();
+            cdpathsv = cdpaths->as_list()->vals;
         }
         // Always append $PWD
         cdpathsv.push_back(L".");
@@ -246,7 +246,7 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
                                      bool using_xdg, const wcstring &xdg_var, const wcstring &path,
                                      int saved_errno, env_stack_t &vars) {
     wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    if (vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT)) {
+    if (vars.getf(warning_var_name, ENV_GLOBAL | ENV_EXPORT)) {
         return;
     }
     vars.set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
@@ -311,16 +311,16 @@ static base_directory_t make_base_directory(const wcstring &xdg_var,
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
     // uvars are available.
-    const auto &vars = env_stack_t::globals();
+    const auto &vars = env_stack_globals();
     base_directory_t result{};
-    const auto xdg_dir = vars.get_unless_empty(xdg_var, ENV_GLOBAL | ENV_EXPORT);
+    const auto xdg_dir = vars.getf_unless_empty(xdg_var, ENV_GLOBAL | ENV_EXPORT);
     if (xdg_dir) {
-        result.path = xdg_dir->as_string() + L"/fish";
+        result.path = *xdg_dir->as_string() + L"/fish";
         result.used_xdg = true;
     } else {
-        const auto home = vars.get_unless_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+        const auto home = vars.getf_unless_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (home) {
-            result.path = home->as_string() + non_xdg_homepath;
+            result.path = *home->as_string() + non_xdg_homepath;
         }
     }
 

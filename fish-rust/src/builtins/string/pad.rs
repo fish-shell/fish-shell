@@ -23,30 +23,35 @@ impl Default for Pad {
 }
 
 impl StringSubCommand<'_> for Pad {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        // FIXME docs say `--char`, there was no long_opt with `--char` in C++
-        wopt(L!("chars"), required_argument, 'c'),
-        wopt(L!("right"), no_argument, 'r'),
-        wopt(L!("width"), required_argument, 'w'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":c:rw:");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            // FIXME docs say `--char`, there was no long_opt with `--char` in C++
+            wopt(L!("chars"), required_argument, 'c'),
+            wopt(L!("right"), no_argument, 'r'),
+            wopt(L!("width"), required_argument, 'w'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":c:rw:")
+    }
 
-    fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'c' => {
-                let [pad_char] = arg.unwrap().as_char_slice() else {
+                let [pad_char] = w.woptarg().unwrap().as_char_slice() else {
                     return Err(invalid_args!(
                         "%ls: Padding should be a character '%ls'\n",
-                        name,
-                        arg
+                        w.cmd(),
+                        w.woptarg()
                     ));
                 };
                 let pad_char_width = fish_wcwidth(*pad_char);
                 if pad_char_width <= 0 {
                     return Err(invalid_args!(
                         "%ls: Invalid padding character of width zero '%ls'\n",
-                        name,
-                        arg
+                        w.cmd(),
+                        w.woptarg()
                     ));
                 }
                 self.pad_char_width = pad_char_width as usize;
@@ -54,9 +59,9 @@ impl StringSubCommand<'_> for Pad {
             }
             'r' => self.pad_from = Direction::Right,
             'w' => {
-                self.width = fish_wcstol(arg.unwrap())?
-                    .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid width value '%ls'\n", name, arg))?
+                self.width = fish_wcstol(w.woptarg().unwrap())?.try_into().map_err(|_| {
+                    invalid_args!("%ls: Invalid width value '%ls'\n", w.cmd(), w.woptarg())
+                })?
             }
             _ => return Err(StringError::UnknownOption),
         }
@@ -65,13 +70,13 @@ impl StringSubCommand<'_> for Pad {
 
     fn handle<'args>(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&'args wstr],
+        args: &'args [WString],
     ) -> Option<libc::c_int> {
         let mut max_width = 0usize;
-        let mut inputs: Vec<(Cow<'args, wstr>, usize)> = Vec::new();
+        let mut inputs: Vec<(WString, usize)> = Vec::new();
         let mut print_trailing_newline = true;
 
         for (arg, want_newline) in arguments(args, optind, streams) {
@@ -105,7 +110,7 @@ impl StringSubCommand<'_> for Pad {
                 padded.push('\n');
             }
 
-            streams.out.append(padded);
+            streams.out.append(&padded);
         }
 
         STATUS_CMD_OK

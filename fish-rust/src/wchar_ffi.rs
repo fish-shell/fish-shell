@@ -35,6 +35,15 @@ impl wcharz_t {
     }
 }
 
+/// W0String can be cheaply converted to a wcharz_t (but be mindful that W0String is kept alive).
+impl From<&W0String> for wcharz_t {
+    fn from(w0: &W0String) -> Self {
+        wcharz_t {
+            str_: w0.as_ptr() as *const wchar_t,
+        }
+    }
+}
+
 /// Convert wcharz_t to an WString.
 impl From<&wcharz_t> for WString {
     fn from(wcharz: &wcharz_t) -> Self {
@@ -67,6 +76,16 @@ macro_rules! wcharz {
             str_: crate::wchar_ffi::c_str!($string),
         }
     };
+}
+
+/// Convert a CxxVector of wcharz_t to a Vec<WString>.
+pub fn wcharzs_to_vec(wcharz_vec: cxx::UniquePtr<cxx::CxxVector<wcharz_t>>) -> Vec<WString> {
+    wcharz_vec
+        .as_ref()
+        .expect("UniquePtr was null")
+        .iter()
+        .map(|s| s.into())
+        .collect()
 }
 
 pub(crate) use c_str;
@@ -190,6 +209,12 @@ impl WCharFromFFI<Vec<u8>> for &cxx::SharedPtr<cxx::CxxString> {
     }
 }
 
+impl WCharFromFFI<WString> for &wcharz_t {
+    fn from_ffi(self) -> WString {
+        self.into()
+    }
+}
+
 /// Convert wcstring_list_ffi_t to Vec<WString>.
 impl WCharFromFFI<Vec<WString>> for &wcstring_list_ffi_t {
     fn from_ffi(self) -> Vec<WString> {
@@ -197,6 +222,14 @@ impl WCharFromFFI<Vec<WString>> for &wcstring_list_ffi_t {
         (0..count).map(|i| self.at(i).from_ffi()).collect()
     }
 }
+
+// /// Convert std::vector<wcstring> to Vec<WString>.
+// impl WCharFromFFI<Vec<WString>> for &cxx::CxxVector<cxx::CxxWString> {
+//     fn from_ffi(self) -> Vec<WString> {
+//         let count: usize = self.size();
+//         (0..count).map(|i| self.at(i).from_ffi()).collect()
+//     }
+// }
 
 /// Convert from the type we get back for C++ functions which return wcstring_list_ffi_t.
 impl<T> WCharFromFFI<Vec<WString>> for T

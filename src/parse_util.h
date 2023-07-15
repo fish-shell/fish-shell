@@ -11,6 +11,9 @@
 #include "cxx.h"
 #include "maybe.h"
 #include "parse_constants.h"
+#if INCLUDE_RUST_HEADERS
+#include "parse_util.rs.h"
+#endif
 
 struct Tok;
 using tok_t = Tok;

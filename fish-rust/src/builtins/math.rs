@@ -20,9 +20,9 @@ struct Options {
 
 #[widestrs]
 fn parse_cmd_opts(
-    args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    args: &mut [WString],
+    parser: &Parser,
+    streams: &mut IoStreams<'_>,
 ) -> Result<(Options, usize), Option<c_int>> {
     const cmd: &wstr = "math"L;
     let print_hints = true;
@@ -48,7 +48,7 @@ fn parse_cmd_opts(
     while let Some(c) = w.wgetopt_long() {
         match c {
             's' => {
-                let optarg = w.woptarg.unwrap();
+                let optarg = w.woptarg().unwrap();
                 have_scale = true;
                 // "max" is the special value that tells us to pick the maximum scale.
                 if optarg == "max" {
@@ -56,7 +56,7 @@ fn parse_cmd_opts(
                 } else {
                     let scale = fish_wcstoi(optarg);
                     if scale.is_err() || scale.unwrap() < 0 || scale.unwrap() > 15 {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%ls: %ls: invalid base value\n",
                             cmd,
                             optarg
@@ -68,7 +68,7 @@ fn parse_cmd_opts(
                 }
             }
             'b' => {
-                let optarg = w.woptarg.unwrap();
+                let optarg = w.woptarg().unwrap();
                 if optarg == "hex" {
                     opts.base = 16;
                 } else if optarg == "octal" {
@@ -76,7 +76,7 @@ fn parse_cmd_opts(
                 } else {
                     let base = fish_wcstoi(optarg);
                     if base.is_err() || (base.unwrap() != 8 && base.unwrap() != 16) {
-                        streams.err.append(wgettext_fmt!(
+                        streams.err.append(&wgettext_fmt!(
                             "%ls: %ls: invalid base value\n",
                             cmd,
                             optarg
@@ -91,7 +91,13 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    &w.argv()[w.woptind - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
@@ -106,7 +112,7 @@ fn parse_cmd_opts(
     }
 
     if have_scale && opts.scale != 0 && opts.base != 10 {
-        streams.err.append(wgettext_fmt!(
+        streams.err.append(&wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
             "non-zero scale value only valid
@@ -119,16 +125,16 @@ fn parse_cmd_opts(
 }
 
 /// We read from stdin if we are the second or later process in a pipeline.
-fn use_args_from_stdin(streams: &io_streams_t) -> bool {
-    streams.stdin_is_directly_redirected()
+fn use_args_from_stdin(streams: &mut IoStreams<'_>) -> bool {
+    streams.stdin_is_directly_redirected
 }
 
 /// Get the arguments from stdin.
-fn get_arg_from_stdin(streams: &io_streams_t) -> Option<WString> {
+fn get_arg_from_stdin(streams: &mut IoStreams<'_>) -> Option<WString> {
     let mut s = Vec::new();
     loop {
         let mut buf = [0];
-        let c = match read_blocked(streams.stdin_fd().unwrap(), &mut buf) {
+        let c = match read_blocked(streams.stdin_fd, &mut buf) {
             1 => buf[0],
             0 => {
                 // EOF
@@ -161,18 +167,18 @@ fn get_arg_from_stdin(streams: &io_streams_t) -> Option<WString> {
 /// `string` does it.
 fn get_arg<'args>(
     argidx: &mut usize,
-    args: &'args [&'args wstr],
-    streams: &io_streams_t,
+    args: &'args [WString],
+    streams: &mut IoStreams<'_>,
 ) -> Option<Cow<'args, wstr>> {
     if use_args_from_stdin(streams) {
         assert!(
-            streams.stdin_fd().is_some(),
+            streams.stdin_fd != -1,
             "stdin should not be closed since it is directly redirected"
         );
 
         get_arg_from_stdin(streams).map(Cow::Owned)
     } else {
-        let ret = args.get(*argidx).copied().map(Cow::Borrowed);
+        let ret = args.get(*argidx).map(|s| Cow::Borrowed(s.as_ref()));
         *argidx += 1;
         ret
     }
@@ -225,7 +231,7 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
 #[widestrs]
 fn evaluate_expression(
     cmd: &wstr,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams<'_>,
     opts: &Options,
     expression: &wstr,
 ) -> Option<c_int> {
@@ -244,33 +250,35 @@ fn evaluate_expression(
             } else if n.abs() >= MAX_CONTIGUOUS_INTEGER {
                 "Result magnitude is too large"L
             } else {
-                let mut s = format_double(n, opts);
-                s.push('\n');
+                let s = format_double(n, opts);
 
-                streams.out.append(s);
+                streams.out.append(&s);
+                streams.out.push('\n');
                 return STATUS_CMD_OK;
             };
 
             streams
                 .err
-                .append(sprintf!("%ls: Error: %ls\n"L, cmd, error_message));
-            streams.err.append(sprintf!("'%ls'\n"L, expression));
+                .append(&sprintf!("%ls: Error: %ls\n"L, cmd, error_message));
+            streams.err.append(&sprintf!("'%ls'\n"L, expression));
 
             STATUS_CMD_ERROR
         }
         Err(err) => {
-            streams.err.append(sprintf!(
+            streams.err.append(&sprintf!(
                 "%ls: Error: %ls\n"L,
                 cmd,
                 err.kind.describe_wstr()
             ));
-            streams.err.append(sprintf!("'%ls'\n"L, expression));
+            streams.err.append(&sprintf!("'%ls'\n"L, expression));
             let padding = WString::from_chars(vec![' '; err.position + 1]);
             if err.len >= 2 {
                 let tildes = WString::from_chars(vec!['~'; err.len - 2]);
-                streams.err.append(sprintf!("%ls^%ls^\n"L, padding, tildes));
+                streams
+                    .err
+                    .append(&sprintf!("%ls^%ls^\n"L, padding, tildes));
             } else {
-                streams.err.append(sprintf!("%ls^\n"L, padding));
+                streams.err.append(&sprintf!("%ls^\n"L, padding));
             }
 
             STATUS_CMD_ERROR
@@ -280,17 +288,13 @@ fn evaluate_expression(
 
 /// The math builtin evaluates math expressions.
 #[widestrs]
-pub fn math(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
-    let cmd = argv[0];
-
+pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [WString]) -> Option<c_int> {
     let (opts, mut optind) = match parse_cmd_opts(argv, parser, streams) {
         Ok(x) => x,
         Err(e) => return e,
     };
+
+    let cmd = &argv[0];
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
@@ -308,7 +312,7 @@ pub fn math(
     if expression.is_empty() {
         streams
             .err
-            .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
+            .append(&wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
         return STATUS_CMD_ERROR;
     }
 

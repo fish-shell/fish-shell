@@ -1,7 +1,7 @@
-use crate::ffi::wildcard_match;
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharToFFI;
+use crate::wildcard::wildcard_match;
 use libc::c_int;
 use std::io::Write;
 use std::os::unix::prelude::*;
@@ -193,8 +193,19 @@ macro_rules! FLOG {
 
 macro_rules! FLOGF {
     ($category:ident, $fmt: expr, $($elem:expr),+ $(,)*) => {
-        crate::flog::FLOG!($category, sprintf!($fmt, $($elem),*));
+        crate::flog::FLOG!($category, crate::wutil::sprintf!($fmt, $($elem),*))
     }
+}
+
+macro_rules! FLOGF_SAFE {
+    ($category:ident, $($elem:expr),+ $(,)*) => {
+        if crate::flog::categories::$category
+            .enabled
+            .load(std::sync::atomic::Ordering::Relaxed)
+        {
+            crate::flog::flog_impl("FLOGF_SAFE not yet implemented");
+        }
+    };
 }
 
 macro_rules! should_flog {
@@ -205,14 +216,14 @@ macro_rules! should_flog {
     };
 }
 
-pub(crate) use {should_flog, FLOG, FLOGF};
+pub(crate) use {should_flog, FLOG, FLOGF, FLOGF_SAFE};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
     let wc = parse_util_unescape_wildcards(wc_esc);
     let mut match_found = false;
     for cat in categories::all_categories() {
-        if wildcard_match(&cat.name.to_ffi(), &wc.to_ffi(), false) {
+        if wildcard_match(&cat.name, &wc, false) {
             cat.enabled.store(sense, Ordering::Relaxed);
             match_found = true;
         }

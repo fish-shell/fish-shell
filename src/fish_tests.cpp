@@ -52,7 +52,6 @@
 #include "abbrs.h"
 #include "ast.h"
 #include "autoload.h"
-#include "builtin.h"
 #include "color.h"
 #include "common.h"
 #include "complete.h"
@@ -203,7 +202,7 @@ static bool pushd(const char *path) {
         return false;
     }
 
-    env_stack_t::principal().set_pwd_from_getcwd();
+    env_stack_principal().set_pwd_from_getcwd();
     return true;
 }
 
@@ -213,7 +212,7 @@ static void popd() {
         err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd.c_str(), errno);
     }
     pushed_dirs.pop_back();
-    env_stack_t::principal().set_pwd_from_getcwd();
+    env_stack_principal().set_pwd_from_getcwd();
 }
 
 // Helper to return a string whose length greatly exceeds PATH_MAX.
@@ -1637,7 +1636,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     pwd_environment_t pwd{};
     operation_context_t ctx{parser_t::principal_parser().shared(), pwd, no_cancel};
 
-    if (expand_string(in, &output, flags, ctx, &*errors) == expand_result_t::error) {
+    if (expand_string(in, &output, flags, ctx, &*errors) == ExpandResultCode::error) {
         if (errors->empty()) {
             err(L"Bug: Parse error reported but no error text found.");
         } else {
@@ -1860,7 +1859,7 @@ static void test_expand_overflow() {
 
     auto res = expand_string(expansion, &output, expand_flags_t{}, ctx, &*errors);
     do_test(!errors->empty());
-    do_test(res == expand_result_t::error);
+    do_test(res == ExpandResultCode::error);
 
     parser->vars().pop();
 }
@@ -2268,7 +2267,7 @@ static void test_is_potential_path() {
     const wcstring wd = L"test/is_potential_path_test/";
     const std::vector<wcstring> wds({L".", wd});
 
-    operation_context_t ctx{env_stack_t::principal()};
+    operation_context_t ctx{env_stack_principal()};
     do_test(is_potential_path(L"al", true, wds, ctx, PATH_REQUIRE_DIR));
     do_test(is_potential_path(L"alpha/", true, wds, ctx, PATH_REQUIRE_DIR));
     do_test(is_potential_path(L"aard", true, wds, ctx, 0));
@@ -2366,84 +2365,6 @@ static void test_colors() {
     do_test(rgb_color_t(L"mooganta").is_none());
 }
 
-// This class allows accessing private bits of autoload_t.
-struct autoload_tester_t {
-    static void run(const wchar_t *fmt, ...) {
-        va_list va;
-        va_start(va, fmt);
-        wcstring cmd = vformat_string(fmt, va);
-        va_end(va);
-
-        int status = system(wcs2zstring(cmd).c_str());
-        do_test(status == 0);
-    }
-
-    static void touch_file(const wcstring &path) {
-        int fd = wopen_cloexec(path, O_RDWR | O_CREAT, 0666);
-        do_test(fd >= 0);
-        write_loop(fd, "Hello", 5);
-        close(fd);
-    }
-
-    static void run_test() {
-        char t1[] = "/tmp/fish_test_autoload.XXXXXX";
-        wcstring p1 = str2wcstring(mkdtemp(t1));
-        char t2[] = "/tmp/fish_test_autoload.XXXXXX";
-        wcstring p2 = str2wcstring(mkdtemp(t2));
-
-        const std::vector<wcstring> paths = {p1, p2};
-
-        autoload_t autoload(L"test_var");
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"nothing", paths));
-        do_test(autoload.get_autoloaded_commands().empty());
-
-        run(L"touch %ls/file1.fish", p1.c_str());
-        run(L"touch %ls/file2.fish", p2.c_str());
-        autoload.invalidate_cache();
-
-        do_test(!autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1"});
-        autoload.mark_autoload_finished(L"file1");
-        do_test(!autoload.autoload_in_progress(L"file1"));
-        do_test(autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1"});
-
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"nothing", paths));
-        do_test(autoload.resolve_command(L"file2", paths));
-        do_test(!autoload.resolve_command(L"file2", paths));
-        autoload.mark_autoload_finished(L"file2");
-        do_test(!autoload.resolve_command(L"file2", paths));
-        do_test((autoload.get_autoloaded_commands() == std::vector<wcstring>{L"file1", L"file2"}));
-
-        autoload.clear();
-        do_test(autoload.resolve_command(L"file1", paths));
-        autoload.mark_autoload_finished(L"file1");
-        do_test(!autoload.resolve_command(L"file1", paths));
-        do_test(!autoload.resolve_command(L"nothing", paths));
-        do_test(autoload.resolve_command(L"file2", paths));
-        do_test(!autoload.resolve_command(L"file2", paths));
-        autoload.mark_autoload_finished(L"file2");
-
-        do_test(!autoload.resolve_command(L"file1", paths));
-        touch_file(format_string(L"%ls/file1.fish", p1.c_str()));
-        autoload.invalidate_cache();
-        do_test(autoload.resolve_command(L"file1", paths));
-        autoload.mark_autoload_finished(L"file1");
-
-        run(L"rm -Rf %ls", p1.c_str());
-        run(L"rm -Rf %ls", p2.c_str());
-    }
-};
-
-static void test_autoload() {
-    say(L"Testing autoload");
-    autoload_tester_t::run_test();
-}
-
 static void test_wildcards() {
     say(L"Testing wildcards");
     do_test(!wildcard_has(L""));
@@ -2453,7 +2374,7 @@ static void test_wildcards() {
 
     wcstring wc = L"foo*bar";
     do_test(wildcard_has(wc) && !wildcard_has_internal(wc));
-    unescape_string_in_place(&wc, UNESCAPE_SPECIAL);
+    wc = *unescape_string(wc.c_str(), wc.size(), UNESCAPE_SPECIAL, STRING_STYLE_SCRIPT);
     do_test(!wildcard_has(wc) && wildcard_has_internal(wc));
 
     auto saved = feature_test(feature_flag_t::qmark_noglob);
@@ -4906,7 +4827,8 @@ static void test_highlighting() {
         do_test(expected_colors.size() == text.size());
 
         std::vector<highlight_spec_t> colors(text.size());
-        highlight_shell(text, colors, operation_context_t{vars}, true /* io_ok */, text.size());
+        highlight_shell(text, colors, operation_context_t{vars}, true /* io_ok */,
+                        std::make_shared<size_t>(text.size()));
 
         if (expected_colors.size() != colors.size()) {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(),
@@ -5090,7 +5012,7 @@ static void test_illegal_command_exit_code() {
     };
 
     const io_chain_t empty_ios;
-    parser_t &parser = parser_t::principal_parser();
+    const parser_t &parser = parser_t::principal_parser();
 
     for (const auto &test : tests) {
         parser.eval(test.txt, empty_ios);
@@ -5597,7 +5519,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("colors"), test_colors},
     {TEST_GROUP("wildcard"), test_wildcards},
     {TEST_GROUP("complete"), test_complete},
-    {TEST_GROUP("autoload"), test_autoload},
     {TEST_GROUP("input"), test_input},
     {TEST_GROUP("undo"), test_undo},
     {TEST_GROUP("universal"), test_universal},
@@ -5692,7 +5613,7 @@ int main(int argc, char **argv) {
     signal_reset_handlers();
 
     // Set PWD from getcwd - fixes #5599
-    env_stack_t::principal().set_pwd_from_getcwd();
+    env_stack_principal().set_pwd_from_getcwd();
 
     for (const auto &test : s_tests) {
         if (should_test_function(test.group)) {

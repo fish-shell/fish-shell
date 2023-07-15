@@ -77,9 +77,9 @@ fn iswxdigit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
 
-struct builtin_printf_state_t<'a> {
+struct builtin_printf_state_t<'a, 'b> {
     // Out and err streams. Note this is a captured reference!
-    streams: &'a mut io_streams_t,
+    streams: &'a mut IoStreams<'b>,
 
     // The status of the operation.
     exit_code: c_int,
@@ -203,7 +203,7 @@ fn modify_allowed_format_specifiers(ok: &mut [bool; 256], str: &str, flag: bool)
     }
 }
 
-impl<'a> builtin_printf_state_t<'a> {
+impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     #[allow(clippy::partialeq_to_none)]
     fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
@@ -382,7 +382,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
     /// Print the text in FORMAT, using ARGV for arguments to any `%' directives.
     /// Return the number of elements of ARGV used.
-    fn print_formatted(&mut self, format: &wstr, mut argv: &[&wstr]) -> usize {
+    fn print_formatted(&mut self, format: &wstr, mut argv: &[WString]) -> usize {
         let mut argc = argv.len();
         let save_argc = argc; /* Preserve original value.  */
         let mut f: &wstr; /* Pointer into `format'.  */
@@ -423,7 +423,7 @@ impl<'a> builtin_printf_state_t<'a> {
                         // FIXME: Field width and precision are not supported for %b, even though POSIX
                         // requires it.
                         if argc > 0 {
-                            self.print_esc_string(argv[0]);
+                            self.print_esc_string(&argv[0]);
                             argv = &argv[1..];
                             argc -= 1;
                         }
@@ -464,7 +464,7 @@ impl<'a> builtin_printf_state_t<'a> {
                         f = &f[1..];
                         direc_length += 1;
                         if argc > 0 {
-                            let width: i64 = string_to_scalar_type(argv[0], self);
+                            let width: i64 = string_to_scalar_type(&argv[0], self);
                             if (c_int::MIN as i64) <= width && width <= (c_int::MAX as i64) {
                                 field_width = width as c_int;
                             } else {
@@ -494,7 +494,7 @@ impl<'a> builtin_printf_state_t<'a> {
                             f = &f[1..];
                             direc_length += 1;
                             if argc > 0 {
-                                let prec: i64 = string_to_scalar_type(argv[0], self);
+                                let prec: i64 = string_to_scalar_type(&argv[0], self);
                                 if prec < 0 {
                                     // A negative precision is taken as if the precision were omitted,
                                     // so -1 is safe here even if prec < INT_MIN.
@@ -537,7 +537,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
                     let mut argument = L!("");
                     if argc > 0 {
-                        argument = argv[0];
+                        argument = &argv[0];
                         argv = &argv[1..];
                         argc -= 1;
                     }
@@ -579,7 +579,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         // We set the exit code to error, because one occurred,
@@ -603,7 +603,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         self.exit_code = STATUS_CMD_ERROR.unwrap();
@@ -764,14 +764,14 @@ impl<'a> builtin_printf_state_t<'a> {
 
 /// The printf builtin.
 pub fn printf(
-    _parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
+    _parser: &Parser,
+    streams: &mut IoStreams<'_>,
+    argv: &mut [WString],
 ) -> Option<c_int> {
     let mut argc = argv.len();
 
     // Rebind argv as immutable slice (can't rearrange its elements), skipping the command name.
-    let mut argv: &[&wstr] = &argv[1..];
+    let mut argv: &[WString] = &argv[1..];
     argc -= 1;
     if argc < 1 {
         return STATUS_INVALID_ARGS;
@@ -784,7 +784,7 @@ pub fn printf(
         buff: WString::new(),
         locale: get_numeric_locale(),
     };
-    let format = argv[0];
+    let format = &argv[0];
     argc -= 1;
     argv = &argv[1..];
     loop {

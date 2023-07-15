@@ -13,11 +13,23 @@
 #include <vector>
 
 #include "common.h"
+#include "cxx.h"
 #include "fds.h"
 #include "global_safety.h"
 #include "redirection.h"
 #include "signals.h"
 #include "topic_monitor.h"
+#if INCLUDE_RUST_HEADERS
+#include "io.rs.h"
+#else
+struct IoChain;
+struct IoStreams;
+struct DynOutputStreamFfi;
+#endif
+using output_stream_t = DynOutputStreamFfi;
+using io_streams_t = IoStreams;
+
+// null_output_stream_t
 
 using std::shared_ptr;
 
@@ -278,255 +290,21 @@ class io_bufferfill_t final : public io_data_t {
 struct callback_args_t;
 struct autoclose_fd_t2;
 
-/// An io_buffer_t is a buffer which can populate itself by reading from an fd.
-/// It is not an io_data_t.
-class io_buffer_t {
-   public:
-    explicit io_buffer_t(size_t limit) : buffer_(limit) {}
-
-    ~io_buffer_t();
-
-    /// Append a string to the buffer.
-    bool append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
-        return buffer_.acquire()->append(std::move(str), type);
-    }
-
-    /// \return true if output was discarded due to exceeding the read limit.
-    bool discarded() { return buffer_.acquire()->discarded(); }
-
-    /// FFI callback workaround.
-    void item_callback(autoclose_fd_t2 &fd, uint8_t reason, callback_args_t *args);
-
-   private:
-    /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
-    /// held. \return positive on success, 0 if closed, -1 on error (in which case errno will be
-    /// set).
-    ssize_t read_once(int fd, acquired_lock<separated_buffer_t> &buff);
-
-    /// Begin the fill operation, reading from the given fd in the background.
-    void begin_filling(autoclose_fd_t readfd);
-
-    /// End the background fillthread operation, and return the buffer, transferring ownership.
-    separated_buffer_t complete_background_fillthread_and_take_buffer();
-
-    /// Helper to return whether the fillthread is running.
-    bool fillthread_running() const { return fill_waiter_.get() != nullptr; }
-
-    /// Buffer storing what we have read.
-    owning_lock<separated_buffer_t> buffer_;
-
-    /// Atomic flag indicating our fillthread should shut down.
-    relaxed_atomic_bool_t shutdown_fillthread_{false};
-
-    /// A promise, allowing synchronization with the background fill operation.
-    /// The operation has a reference to this as well, and fulfills this promise when it exits.
-    std::shared_ptr<std::promise<void>> fill_waiter_{};
-
-    /// The item id of our background fillthread fd monitor item.
-    uint64_t item_id_{0};
-
-    friend io_bufferfill_t;
-};
-
 using io_data_ref_t = std::shared_ptr<const io_data_t>;
 
-class io_chain_t : public std::vector<io_data_ref_t> {
-   public:
-    using std::vector<io_data_ref_t>::vector;
-    // user-declared ctor to allow const init. Do not default this, it will break the build.
-    io_chain_t() {}
-
-    /// autocxx falls over with this so hide it.
-#if INCLUDE_RUST_HEADERS
-    void remove(const io_data_ref_t &element);
-    void push_back(io_data_ref_t element);
-#endif
-    bool append(const io_chain_t &chain);
-
-    /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
-    /// if none.
-#if INCLUDE_RUST_HEADERS
-    io_data_ref_t io_for_fd(int fd) const;
-#endif
-
-    /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
-    /// \return true on success, false on error, in which case an error will have been printed.
-    bool append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd);
-
-    /// Output debugging information to stderr.
-    void print() const;
-};
+using io_chain_t = IoChain;
 
 dup2_list_t dup2_list_resolve_chain_shim(const io_chain_t &io_chain);
 
-/// Base class representing the output that a builtin can generate.
-/// This has various subclasses depending on the ultimate output destination.
-class output_stream_t : noncopyable_t, nonmovable_t {
-   public:
-    /// Required override point. The output stream receives a string \p s with \p amt chars.
-    virtual bool append(const wchar_t *s, size_t amt) = 0;
+// /// FFI helper.
+// struct owning_io_streams_t : io_streams_t {
+//     string_output_stream_t out_storage;
+//     null_output_stream_t err_storage;
+//     owning_io_streams_t() : io_streams_t(out_storage, err_storage) {}
+// };
 
-    /// \return any internally buffered contents.
-    /// This is only implemented for a string_output_stream; others flush data to their underlying
-    /// receiver (fd, or separated buffer) immediately and so will return an empty string here.
-    virtual const wcstring &contents() const;
-
-    /// Flush any unwritten data to the underlying device, and return an error code.
-    /// A 0 code indicates success. The base implementation returns 0.
-    virtual int flush_and_check_error();
-
-    /// An optional override point. This is for explicit separation.
-    /// \param want_newline this is true if the output item should be ended with a newline. This
-    /// is only relevant if we are printing the output to a stream,
-    virtual bool append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
-                                        bool want_newline = true);
-
-    /// The following are all convenience overrides.
-    bool append_with_separation(const wcstring &s, separation_type_t type,
-                                bool want_newline = true) {
-        return append_with_separation(s.data(), s.size(), type, want_newline);
-    }
-
-    /// Append a string.
-    bool append(const wcstring &s) { return append(s.data(), s.size()); }
-    bool append(const wchar_t *s) { return append(s, std::wcslen(s)); }
-
-    /// Append a char.
-    bool push(wchar_t s) { return append(&s, 1); }
-
-    // Append data from a narrow buffer, widening it.
-    bool append_narrow_buffer(const separated_buffer_t &buffer);
-
-    /// Append a format string.
-    bool append_format(const wchar_t *format, ...) {
-        va_list va;
-        va_start(va, format);
-        bool r = append_formatv(format, va);
-        va_end(va);
-
-        return r;
-    }
-
-    bool append_formatv(const wchar_t *format, va_list va) {
-        return append(vformat_string(format, va));
-    }
-
-    output_stream_t() = default;
-    virtual ~output_stream_t() = default;
-};
-
-/// A null output stream which ignores all writes.
-class null_output_stream_t final : public output_stream_t {
-    virtual bool append(const wchar_t *s, size_t amt) override;
-};
-
-/// An output stream for builtins which outputs to an fd.
-/// Note the fd may be something like stdout; there is no ownership implied here.
-class fd_output_stream_t final : public output_stream_t {
-   public:
-    /// Construct from a file descriptor, which must be nonegative.
-    explicit fd_output_stream_t(int fd);
-
-    int flush_and_check_error() override;
-
-    bool append(const wchar_t *s, size_t amt) override;
-
-   private:
-    /// The file descriptor to write to.
-    const int fd_;
-
-    /// Used to check if a SIGINT has been received when EINTR is encountered
-    sigchecker_t sigcheck_;
-
-    /// Whether we have received an error.
-    bool errored_{false};
-};
-
-/// A simple output stream which buffers into a wcstring.
-class string_output_stream_t final : public output_stream_t {
-   public:
-    string_output_stream_t() = default;
-    bool append(const wchar_t *s, size_t amt) override;
-
-    /// \return the wcstring containing the output.
-    const wcstring &contents() const override;
-
-   private:
-    wcstring contents_;
-};
-
-/// An output stream for builtins which writes into a separated buffer.
-class buffered_output_stream_t final : public output_stream_t {
-   public:
-    explicit buffered_output_stream_t(std::shared_ptr<io_buffer_t> buffer)
-        : buffer_(std::move(buffer)) {
-        assert(buffer_ && "Buffer must not be null");
-    }
-
-    bool append(const wchar_t *s, size_t amt) override;
-    bool append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
-                                bool want_newline) override;
-    int flush_and_check_error() override;
-
-   private:
-    /// The buffer we are filling.
-    std::shared_ptr<io_buffer_t> buffer_;
-};
-
-struct io_streams_t : noncopyable_t {
-    // Streams for out and err.
-    output_stream_t &out;
-    output_stream_t &err;
-
-    // fd representing stdin. This is not closed by the destructor.
-    // Note: if stdin is explicitly closed by `<&-` then this is -1!
-    int stdin_fd{-1};
-
-    // Whether stdin is "directly redirected," meaning it is the recipient of a pipe (foo | cmd) or
-    // direct redirection (cmd < foo.txt). An "indirect redirection" would be e.g.
-    //    begin ; cmd ; end < foo.txt
-    // If stdin is closed (cmd <&-) this is false.
-    bool stdin_is_directly_redirected{false};
-
-    // Indicates whether stdout and stderr are specifically piped.
-    // If this is set, then the is_redirected flags must also be set.
-    bool out_is_piped{false};
-    bool err_is_piped{false};
-
-    // Indicates whether stdout and stderr are at all redirected (e.g. to a file or piped).
-    bool out_is_redirected{false};
-    bool err_is_redirected{false};
-
-    // Actual IO redirections. This is only used by the source builtin. Unowned.
-    const io_chain_t *io_chain{nullptr};
-
-    // The job group of the job, if any. This enables builtins which run more code like eval() to
-    // share pgid.
-    // FIXME: this is awkwardly placed.
-    std::shared_ptr<job_group_t> job_group{};
-
-    io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
-    virtual ~io_streams_t() = default;
-
-    /// autocxx junk.
-    output_stream_t &get_out() { return out; };
-    output_stream_t &get_err() { return err; };
-    io_streams_t(const io_streams_t &) = delete;
-    bool get_out_redirected() { return out_is_redirected; };
-    bool get_err_redirected() { return err_is_redirected; };
-    bool ffi_stdin_is_directly_redirected() const { return stdin_is_directly_redirected; };
-    int ffi_stdin_fd() const { return stdin_fd; };
-};
-
-/// FFI helper.
-struct owning_io_streams_t : io_streams_t {
-    string_output_stream_t out_storage;
-    null_output_stream_t err_storage;
-    owning_io_streams_t() : io_streams_t(out_storage, err_storage) {}
-};
-
-std::unique_ptr<io_streams_t> make_null_io_streams_ffi();
-std::unique_ptr<io_streams_t> make_test_io_streams_ffi();
-wcstring get_test_output_ffi(const io_streams_t &streams);
+// std::unique_ptr<io_streams_t> make_null_io_streams_ffi();
+// std::unique_ptr<io_streams_t> make_test_io_streams_ffi();
+// wcstring get_test_output_ffi(const io_streams_t &streams);
 
 #endif

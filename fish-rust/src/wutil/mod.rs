@@ -18,7 +18,13 @@ use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
+use errno::{errno, set_errno, Errno};
 pub(crate) use gettext::{wgettext, wgettext_fmt, wgettext_str};
+use libc::{
+    DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
+    ENODEV, ENOENT, ENOTDIR, F_GETFL, F_SETFL, O_NONBLOCK, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO,
+    S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK,
+};
 pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
 use std::fs::{self, canonicalize};
@@ -66,7 +72,7 @@ pub fn wperror(s: &wstr) {
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
 pub fn perror(s: &str) {
-    let e = errno::errno().0;
+    let e = errno().0;
     let mut stderr = std::io::stderr().lock();
     if !s.is_empty() {
         let _ = write!(stderr, "{s}: ");
@@ -100,10 +106,42 @@ pub fn wgetcwd() -> WString {
     FLOGF!(
         error,
         "getcwd() failed with errno %d/%s",
-        errno::errno().0,
-        "errno::errno"
+        errno().0,
+        "errno"
     );
     WString::new()
+}
+
+pub fn make_fd_nonblocking(fd: RawFd) -> libc::c_int {
+    unsafe {
+        let flags = libc::fcntl(fd, F_GETFL, 0);
+        let mut err = 0;
+        let nonblocking = (flags & O_NONBLOCK) != 0;
+        if !nonblocking {
+            err = libc::fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        }
+        if err == -1 {
+            errno().0
+        } else {
+            0
+        }
+    }
+}
+
+pub fn make_fd_blocking(fd: RawFd) -> libc::c_int {
+    unsafe {
+        let flags = libc::fcntl(fd, F_GETFL, 0);
+        let mut err = 0;
+        let nonblocking = (flags & O_NONBLOCK) != 0;
+        if nonblocking {
+            err = libc::fcntl(fd, F_SETFL, flags & !O_NONBLOCK);
+        }
+        if err == -1 {
+            errno().0
+        } else {
+            0
+        }
+    }
 }
 
 /// Wide character version of readlink().

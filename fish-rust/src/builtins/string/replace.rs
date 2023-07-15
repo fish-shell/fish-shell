@@ -16,16 +16,21 @@ pub struct Replace<'args> {
 }
 
 impl<'args> StringSubCommand<'args> for Replace<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("all"), no_argument, 'a'),
-        wopt(L!("filter"), no_argument, 'f'),
-        wopt(L!("ignore-case"), no_argument, 'i'),
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("regex"), no_argument, 'r'),
-    ];
-    const SHORT_OPTIONS: &'static wstr = L!(":afiqr");
+    fn long_options(&self) -> &'static [woption<'static>] {
+        const opts: &'static [woption<'static>] = &[
+            wopt(L!("all"), no_argument, 'a'),
+            wopt(L!("filter"), no_argument, 'f'),
+            wopt(L!("ignore-case"), no_argument, 'i'),
+            wopt(L!("quiet"), no_argument, 'q'),
+            wopt(L!("regex"), no_argument, 'r'),
+        ];
+        opts
+    }
+    fn short_options(&self) -> &'static wstr {
+        L!(":afiqr")
+    }
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, w: &mut wgetopter_t<'_, '_>, c: char) -> Result<(), StringError> {
         match c {
             'a' => self.all = true,
             'f' => self.filter = true,
@@ -40,16 +45,16 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
     fn take_args(
         &mut self,
         optind: &mut usize,
-        args: &[&'args wstr],
-        streams: &mut io_streams_t,
+        args: &'args [WString],
+        streams: &mut IoStreams<'_>,
     ) -> Option<libc::c_int> {
-        let cmd = args[0];
-        let Some(pattern) = args.get(*optind).copied() else {
+        let cmd = &args[0];
+        let Some(pattern) = args.get(*optind) else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
             return STATUS_INVALID_ARGS;
         };
         *optind += 1;
-        let Some(replacement) = args.get(*optind).copied() else {
+        let Some(replacement) = args.get(*optind) else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT1, cmd, 1, 2);
             return STATUS_INVALID_ARGS;
         };
@@ -62,12 +67,12 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams<'_>,
         optind: &mut usize,
-        args: &[&wstr],
+        args: &[WString],
     ) -> Option<libc::c_int> {
-        let cmd = args[0];
+        let cmd = &args[0];
 
         let replacer = match StringReplacer::new(self.pattern, self.replacement, self) {
             Ok(x) => x,
@@ -95,7 +100,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             replace_count += replaced as usize;
 
             if !self.quiet && (!self.filter || replaced) {
-                streams.out.append(result);
+                streams.out.append(&result);
                 if want_newline {
                     streams.out.append1('\n');
                 }
@@ -193,7 +198,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
         Ok(r)
     }
 
-    fn replace<'a>(&self, arg: Cow<'a, wstr>) -> Result<(bool, Cow<'a, wstr>), pcre2::Error> {
+    fn replace<'a>(&self, arg: WString) -> Result<(bool, WString), pcre2::Error> {
         match self {
             StringReplacer::Regex {
                 replacement,
@@ -208,7 +213,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
 
                 let res = match res {
                     Cow::Borrowed(_slice_of_arg) => (false, arg),
-                    Cow::Owned(s) => (true, Cow::Owned(WString::from_chars(s))),
+                    Cow::Owned(s) => (true, WString::from_chars(s)),
                 };
                 return Ok(res);
             }
@@ -227,7 +232,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                 let subject = if opts.ignore_case {
                     arg.to_lowercase()
                 } else {
-                    arg.as_ref().to_owned()
+                    arg.clone()
                 };
 
                 let mut offset = 0;
@@ -244,7 +249,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                 }
                 result.push_utfstr(&arg[offset..]);
 
-                Ok((true, Cow::Owned(result)))
+                Ok((true, result))
             }
         }
     }

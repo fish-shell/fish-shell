@@ -201,17 +201,17 @@ static std::vector<terminfo_mapping_t> create_input_terminfo();
 /// Return the current bind mode.
 static wcstring input_get_bind_mode(const environment_t &vars) {
     auto mode = vars.get(FISH_BIND_MODE_VAR);
-    return mode ? mode->as_string() : DEFAULT_BIND_MODE;
+    return mode ? std::move(*mode->as_string()) : DEFAULT_BIND_MODE;
 }
 
 /// Set the current bind mode.
-static void input_set_bind_mode(parser_t &parser, const wcstring &bm) {
+static void input_set_bind_mode(const parser_t &parser, const wcstring &bm) {
     // Only set this if it differs to not execute variable handlers all the time.
     // modes may not be empty - empty is a sentinel value meaning to not change the mode
     assert(!bm.empty());
     if (input_get_bind_mode(parser.vars()) != bm) {
         // Must send events here - see #6653.
-        parser.set_var_and_fire(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
+        parser.set_var_and_fire(FISH_BIND_MODE_VAR, ENV_GLOBAL, wcstring_list_ffi_t{{bm}});
     }
 }
 
@@ -320,12 +320,12 @@ void init_input() {
     }
 }
 
-inputter_t::inputter_t(parser_t &parser, int in)
+inputter_t::inputter_t(const parser_t &parser, int in)
     : input_event_queue_t(in), parser_(parser.shared()) {}
 
 void inputter_t::prepare_to_select() /* override */ {
     // Fire any pending events and reap stray processes, including printing exit status messages.
-    auto &parser = *this->parser_;
+    auto &parser = this->parser_->deref();
     event_fire_delayed(parser);
     if (job_reap(parser, true)) reader_schedule_prompt_repaint();
 }
@@ -336,7 +336,7 @@ void inputter_t::select_interrupted() /* override */ {
     signal_clear_cancel();
 
     // Fire any pending events and reap stray processes, including printing exit status messages.
-    auto &parser = *this->parser_;
+    auto &parser = this->parser_->deref();
     event_fire_delayed(parser);
     if (job_reap(parser, true)) reader_schedule_prompt_repaint();
 
@@ -352,7 +352,7 @@ void inputter_t::select_interrupted() /* override */ {
 }
 
 void inputter_t::uvar_change_notified() /* override */ {
-    this->parser_->sync_uvars_and_fire(true /* always */);
+    this->parser_->deref().sync_uvars_and_fire(true /* always */);
 }
 
 void inputter_t::function_push_arg(wchar_t arg) { input_function_args_.push_back(arg); }
@@ -410,7 +410,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
 
     // !has_functions && !has_commands: only set bind mode
     if (!has_commands && !has_functions) {
-        if (!m.sets_mode.empty()) input_set_bind_mode(*parser_, m.sets_mode);
+        if (!m.sets_mode.empty()) input_set_bind_mode(parser_->deref(), m.sets_mode);
         return;
     }
 
@@ -440,7 +440,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
-    if (!m.sets_mode.empty()) input_set_bind_mode(*parser_, m.sets_mode);
+    if (!m.sets_mode.empty()) input_set_bind_mode(parser_->deref(), m.sets_mode);
 }
 
 void inputter_t::queue_char(const char_event_t &ch) {

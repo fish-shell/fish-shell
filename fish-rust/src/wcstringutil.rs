@@ -21,6 +21,16 @@ pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &w
         && wcscasecmp(&value[value.len() - suffix_size..], proposed_suffix).is_eq()
 }
 
+/// Test if a string prefixes another. Returns true if a is a prefix of b.
+pub fn string_prefixes_string(proposed_prefix: &wstr, value: &wstr) -> bool {
+    value.as_slice().starts_with(proposed_prefix.as_slice())
+}
+
+/// Test if a string is a suffix of another.
+pub fn string_suffixes_string(proposed_suffix: &wstr, value: &wstr) -> bool {
+    value.as_slice().ends_with(proposed_suffix.as_slice())
+}
+
 /// Test if a string matches a subsequence of another.
 /// Note subsequence is not substring: "foo" is a subsequence of "follow" for example.
 pub fn subsequence_in_string(needle: &wstr, haystack: &wstr) -> bool {
@@ -34,15 +44,16 @@ pub fn subsequence_in_string(needle: &wstr, haystack: &wstr) -> bool {
         return true;
     }
 
-    let mut ni = needle.chars();
-    let mut nc = ni.next();
-    for hc in haystack.chars() {
-        if nc == Some(hc) {
-            nc = ni.next();
+    let mut needle_it = needle.chars().peekable();
+    for c in haystack.chars() {
+        needle_it.next_if_eq(&c);
+
+        if needle_it.peek().is_none() {
+            return true;
         }
     }
     // We succeeded if we exhausted our sequence.
-    nc.is_none()
+    needle_it.peek().is_none()
 }
 
 /// Case-insensitive string search, modeled after std::string::find().
@@ -98,10 +109,10 @@ pub enum CaseFold {
 }
 
 /// A lightweight value-type describing how closely a string fuzzy-matches another string.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct StringFuzzyMatch {
-    typ: ContainType,
-    case_fold: CaseFold,
+    pub typ: ContainType,
+    pub case_fold: CaseFold,
 }
 
 impl StringFuzzyMatch {
@@ -297,10 +308,7 @@ fn wcs2string_bad_char(c: char) {
 
 /// Split a string by a separator character.
 pub fn split_string(val: &wstr, sep: char) -> Vec<WString> {
-    val.as_char_slice()
-        .split(|c| *c == sep)
-        .map(WString::from_chars)
-        .collect()
+    val.split(sep).map(wstr::to_owned).collect()
 }
 
 /// Split a string by runs of any of the separator characters provided in \p seps.
@@ -347,6 +355,7 @@ pub fn split_string_tok<'val>(
 }
 
 /// Joins strings with a separator.
+/// This supports both &[&wstr] and &[&WString].
 pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
     if strs.is_empty() {
         return WString::new();
@@ -363,10 +372,7 @@ pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
 }
 
 pub fn bool_from_string(x: &wstr) -> bool {
-    if x.is_empty() {
-        return false;
-    }
-    matches!(x.chars().next().unwrap(), 'Y' | 'T' | 'y' | 't' | '1')
+    matches!(x.chars().next(), Some('Y' | 'T' | 'y' | 't' | '1'))
 }
 
 /// Given iterators into a string (forward or reverse), splits the haystack iterators
@@ -464,11 +470,7 @@ pub fn trim(input: WString, any_of: Option<&wstr>) -> WString {
 /// \p idx may be "one past the end."
 pub fn count_preceding_backslashes(text: &wstr, idx: usize) -> usize {
     assert!(idx <= text.len(), "Out of bounds");
-    let mut backslashes = 0;
-    while backslashes < idx && text.char_at(idx - backslashes - 1) == '\\' {
-        backslashes += 1;
-    }
-    backslashes
+    text.chars().take(idx).take_while(|&c| c == '\\').count()
 }
 
 /// Support for iterating over a newline-separated string.

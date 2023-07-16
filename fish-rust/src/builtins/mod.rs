@@ -10,6 +10,7 @@ pub mod contains;
 pub mod echo;
 pub mod emit;
 pub mod exit;
+pub mod jobs;
 pub mod math;
 pub mod printf;
 pub mod pwd;

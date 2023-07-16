@@ -380,7 +380,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"functions", &builtin_functions, N_(L"List or remove functions")},
     {L"history", &builtin_history, N_(L"History of commands executed by user")},
     {L"if", &builtin_generic, N_(L"Evaluate block if condition is true")},
-    {L"jobs", &builtin_jobs, N_(L"Print currently running jobs")},
+    {L"jobs", &implemented_in_rust, N_(L"Print currently running jobs")},
     {L"math", &implemented_in_rust, N_(L"Evaluate math expressions")},
     {L"not", &builtin_generic, N_(L"Negate exit status of job")},
     {L"or", &builtin_generic, N_(L"Execute command if previous command failed")},
@@ -579,6 +579,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"return") {
         return RustBuiltin::Return;
+    }
+    if (cmd == L"jobs") {
+        return RustBuiltin::Jobs;
     }
     return none();
 }

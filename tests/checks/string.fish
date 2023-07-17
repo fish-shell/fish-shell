@@ -530,6 +530,10 @@ string repeat -n 17 a | string length
 string repeat -m 5 (string repeat -n 500000 aaaaaaaaaaaaaaaaaa) | string length
 # CHECK: 5
 
+# might cause integer overflow
+string repeat -n 2999 \n | count
+# CHECK: 3000
+
 # Test equivalent matches with/without the --entire, --regex, and --invert flags.
 string match -e x abc dxf xyz jkx x z
 or echo exit 1

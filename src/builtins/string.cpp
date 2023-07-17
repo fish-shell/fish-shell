@@ -1541,7 +1541,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
         wcstring chunk;
         chunk.reserve(std::min(chunk_size + w.length(), max));
 
-        for (size_t i = max; i > 0; i -= w.length()) {
+        for (size_t i = max; i > 0;) {
             // Build up the chunk.
             if (i >= w.length()) {
                 chunk.append(w);
@@ -1549,6 +1549,9 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
                 chunk.append(w.substr(0, i));
                 break;
             }
+
+            i -= w.length();
+
             if (chunk.length() >= chunk_size) {
                 // We hit the chunk size, write it repeatedly until we can't anymore.
                 streams.out.append(chunk);

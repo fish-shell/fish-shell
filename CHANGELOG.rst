@@ -47,6 +47,7 @@ Other improvements
 ------------------
 - A bug that prevented certain executables from being offered in tab-completions when root has been fixed (:issue:`9639`).
 - Builin `jobs` will print commands with non-printable chars escaped (:issue:`9808`)
+- An integer overflow in `string repeat` leading to a near-infinite loop has been fixed (:issue:`9899`).
 
 For distributors
 ----------------

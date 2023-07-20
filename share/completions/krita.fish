@@ -1,7 +1,6 @@
 function __krita_complete_image_format -d 'Function to generate image format completion'
     set -l previous_token (commandline -oc)[-1]
     set -l current_token (commandline -opc)
-    echo $current_token >&2
 
     if test $previous_token = --new-image
         switch $current_token

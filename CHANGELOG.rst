@@ -39,6 +39,7 @@ Completions
 - ``age`` (:issue:`9813`).
 - ``age-keygen`` (:issue:`9813`).
 - ``curl`` (:issue:`9863`).
+- ``gimp`` (:issue:`9904`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

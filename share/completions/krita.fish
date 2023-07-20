@@ -1,3 +1,7 @@
+complete -c krita -s h -l help -d 'show help'
+complete -c krita -l help-all -d 'show help with Qt options'
+complete -c krita -s v -l version -d 'show version'
+
 complete -c krita -l export -d 'export file as image'
 complete -c krita -l export-pdf -d 'export file as PDF'
 complete -c krita -l export-sequence -d 'export animation as sequence'

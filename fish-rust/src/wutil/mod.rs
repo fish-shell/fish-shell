@@ -22,7 +22,7 @@ pub(crate) use gettext::{wgettext, wgettext_fmt, wgettext_str};
 pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
 use std::fs::{self, canonicalize};
-use std::io::Write;
+use std::io::{self, Write};
 use std::os::fd::{FromRawFd, IntoRawFd, RawFd};
 use std::os::unix::prelude::{OsStrExt, OsStringExt};
 
@@ -79,6 +79,10 @@ pub fn perror(s: &str) {
     };
     let _ = stderr.write_all(slice);
     let _ = stderr.write_all(b"\n");
+}
+
+pub fn perror_io(s: &str, e: &io::Error) {
+    eprintln!("{}: {}", s, e);
 }
 
 /// Wide character version of getcwd().

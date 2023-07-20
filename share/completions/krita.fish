@@ -4,6 +4,8 @@ function __krita_complete_image_format -d 'Function to generate image format com
 
     if test $previous_token = --new-image
         switch $current_token
+            case '*,*,*'
+                # nothing is completed as arbitrary width and height are expected
             case '*,'
                 echo -e 'U8
 U16

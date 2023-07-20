@@ -55,7 +55,6 @@ include_cpp! {
 
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
-    generate!("make_fd_nonblocking")
     generate!("wperror")
 
     generate_pod!("pipes_ffi_t")

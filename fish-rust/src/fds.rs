@@ -3,10 +3,10 @@ use crate::ffi;
 use crate::wchar::{wstr, L};
 use crate::wutil::perror;
 use libc::EINTR;
-use libc::O_CLOEXEC;
+use libc::{fcntl, F_GETFL, F_SETFL, O_CLOEXEC, O_NONBLOCK};
 use nix::unistd;
 use std::ffi::CStr;
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 
 pub const PIPE_ERROR: &wstr = L!("An error occurred while setting up pipe");
@@ -186,4 +186,30 @@ pub fn exec_close(fd: RawFd) {
             break;
         }
     }
+}
+
+/// Mark an fd as nonblocking
+pub fn make_fd_nonblocking(fd: RawFd) -> Result<(), io::Error> {
+    let flags = unsafe { fcntl(fd, F_GETFL, 0) };
+    let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
+    if !nonblocking {
+        match unsafe { fcntl(fd, F_SETFL, flags | O_NONBLOCK) } {
+            0 => return Ok(()),
+            _ => return Err(io::Error::last_os_error()),
+        };
+    }
+    Ok(())
+}
+
+/// Mark an fd as blocking
+pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
+    let flags = unsafe { fcntl(fd, F_GETFL, 0) };
+    let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
+    if nonblocking {
+        match unsafe { fcntl(fd, F_SETFL, flags & !O_NONBLOCK) } {
+            0 => return Ok(()),
+            _ => return Err(io::Error::last_os_error()),
+        };
+    }
+    Ok(())
 }

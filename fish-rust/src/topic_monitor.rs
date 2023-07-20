@@ -21,8 +21,7 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 */
 
 use crate::fd_readable_set::fd_readable_set_t;
-use crate::fds::{self, AutoClosePipes};
-use crate::ffi::{self as ffi, c_int};
+use crate::fds::{self, make_fd_nonblocking, AutoClosePipes};
 use crate::flog::{FloggableDebug, FLOG};
 use crate::wchar::WString;
 use crate::wutil::perror;
@@ -213,7 +212,7 @@ impl binary_semaphore_t {
             // receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as non-blocking
             // (so reads will never block) and use select() to poll it.
             if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
-                ffi::make_fd_nonblocking(c_int(pipes_.read.fd()));
+                let _ = make_fd_nonblocking(&pipes_.read.fd());
             }
         }
         binary_semaphore_t {

@@ -3,8 +3,9 @@ use crate::common::{str2wcstring, wcs2string, EMPTY_STRING};
 use crate::fd_monitor::{
     FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason, NativeCallback,
 };
-use crate::fds::{make_autoclose_pipes, wopen_cloexec, AutoCloseFd, PIPE_ERROR};
-use crate::ffi;
+use crate::fds::{
+    make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec, AutoCloseFd, PIPE_ERROR,
+};
 use crate::flog::{should_flog, FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
@@ -13,7 +14,7 @@ use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
 use crate::topic_monitor::topic_t;
 use crate::wchar::{wstr, WString, L};
-use crate::wutil::{perror, wdirname, wstat, wwrite_to_fd};
+use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
 use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDERR_FILENO};
 use std::cell::UnsafeCell;
@@ -343,10 +344,13 @@ impl IoBufferfill {
         // Our buffer will read from the read end of the pipe. This end must be non-blocking. This is
         // because our fillthread needs to poll to decide if it should shut down, and also accept input
         // from direct buffer transfers.
-        if ffi::make_fd_nonblocking(autocxx::c_int(pipes.read.fd())).0 != 0 {
-            FLOG!(warning, PIPE_ERROR);
-            perror("fcntl");
-            return None;
+        match make_fd_nonblocking(&pipes.read.fd()) {
+            Ok(_) => (),
+            Err(e) => {
+                FLOG!(warning, PIPE_ERROR);
+                perror_io("fcntl", &e);
+                return None;
+            }
         }
         // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
         let mut buffer = Arc::new(RwLock::new(IoBuffer::new(buffer_limit)));

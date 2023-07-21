@@ -1,6 +1,6 @@
 function __krita_complete_image_format -d 'Function to generate image format completion'
     set -l previous_token (commandline -oc)[-1]
-    set -l current_token (commandline -opc)
+    set -l current_token (commandline --current-token)
 
     if test $previous_token = --new-image
         switch $current_token
@@ -13,11 +13,11 @@ F16
 F32' | awk "{ printf \"$current_token%s\n\", \$1 }"
             case '*'
                 echo -e 'RGBA
-                XYZA
-                LABA
-                CMYKA
-                GRAY
-                YCbCrA'
+XYZA
+LABA
+CMYKA
+GRAY
+YCbCrA'
         end
     end
 end

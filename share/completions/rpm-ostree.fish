@@ -731,7 +731,7 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l os=OSNAME -d "Operate on provided OSNAME"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l reboot -s r -d "Initiate reboot after operation"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l dry-run -s n -d "Exit after printing transaction"
-complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l cache-only -C -d "Only operate on cached data"
+complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l cache-only -s C -d "Only operate on cached data"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l sysroot=SYSROOT -d "Use system root SYSROOT"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l peer -d "Force peer-to-peer connection"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from remove" -l install=PKG -d "Overlay additional package"

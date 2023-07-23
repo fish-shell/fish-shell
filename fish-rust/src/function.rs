@@ -56,13 +56,11 @@ pub struct FunctionProperties {
     pub copy_definition_lineno: i32,
 }
 
-pub type FunctionPropertiesRef = Arc<FunctionProperties>;
-
 /// Type wrapping up the set of all functions.
 /// There's only one of these; it's managed by a lock.
 struct FunctionSet {
     /// The map of all functions by name.
-    funcs: HashMap<WString, FunctionPropertiesRef>,
+    funcs: HashMap<WString, Arc<FunctionProperties>>,
 
     /// Tombstones for functions that should no longer be autoloaded.
     autoload_tombstones: HashSet<WString>,
@@ -84,7 +82,7 @@ impl FunctionSet {
     }
 
     /// Get the properties for a function, or None if none.
-    fn get_props(&self, name: &wstr) -> Option<FunctionPropertiesRef> {
+    fn get_props(&self, name: &wstr) -> Option<Arc<FunctionProperties>> {
         self.funcs.get(name).cloned()
     }
 
@@ -185,7 +183,7 @@ fn autoload_names(names: &mut HashSet<WString>, get_hidden: bool) {
 }
 
 /// Add a function. This may mutate \p props to set is_autoload.
-pub fn add(name: WString, props: FunctionPropertiesRef) {
+pub fn add(name: WString, props: Arc<FunctionProperties>) {
     let mut funcset = FUNCTION_SET.lock().unwrap();
 
     // Historical check. TODO: rationalize this.
@@ -210,7 +208,7 @@ pub fn add(name: WString, props: FunctionPropertiesRef) {
 }
 
 /// \return the properties for a function, or None. This does not trigger autoloading.
-pub fn get_props(name: &wstr) -> Option<FunctionPropertiesRef> {
+pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
     if parser_keywords_is_reserved(name) {
         None
     } else {
@@ -219,7 +217,7 @@ pub fn get_props(name: &wstr) -> Option<FunctionPropertiesRef> {
 }
 
 /// \return the properties for a function, or None, perhaps triggering autoloading.
-pub fn get_props_autoload(name: &wstr, parser: &mut parser_t) -> Option<FunctionPropertiesRef> {
+pub fn get_props_autoload(name: &wstr, parser: &mut parser_t) -> Option<Arc<FunctionProperties>> {
     parser.assert_can_execute();
     if parser_keywords_is_reserved(name) {
         return None;
@@ -505,7 +503,7 @@ impl FunctionProperties {
     }
 }
 
-pub struct FunctionPropertiesRefFFI(pub FunctionPropertiesRef);
+pub struct FunctionPropertiesRefFFI(pub Arc<FunctionProperties>);
 
 impl FunctionPropertiesRefFFI {
     fn definition_file(&self) -> UniquePtr<CxxWString> {

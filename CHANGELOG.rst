@@ -39,6 +39,7 @@ Completions
 - ``age`` (:issue:`9813`).
 - ``age-keygen`` (:issue:`9813`).
 - ``curl`` (:issue:`9863`).
+- ``blender`` (:issue:`9905`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

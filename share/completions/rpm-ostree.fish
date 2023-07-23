@@ -131,7 +131,7 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -l force-nocache -d "Force a new build"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -l offline -d "Operate with cached data, no network access"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -l lockfile -d "Specify JSON-formatted lockfile"
-complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -l label -xs l -d "Add labels (KEY=VALUE) to the container image"
+complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -l label -s l -d "Add labels (KEY=VALUE) to the container image"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -l touch-if-changed -d "Update file timestamp on changes"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -l copy-retry-times -d "Set number of copy retries to destination"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from image" -r -F

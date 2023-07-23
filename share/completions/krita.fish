@@ -1,5 +1,7 @@
 function __krita_append_image_format_value -a value current_token
-    echo $value | string replace -r '^' $current_token | string replace -r '$' ','
+    echo $value |
+        string replace -r '^' $current_token |
+        string replace -r '$' ','
 end
 
 function __krita_complete_image_format

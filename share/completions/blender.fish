@@ -34,3 +34,6 @@ complete -c blender -s j -l frame-jump -d 'skipped frame count' -x
 complete -c blender -s o -l render-output -d 'render output' -r
 complete -c blender -s E -l engine -a '(__blender_list_engines)' -d 'render engine' -x
 complete -c blender -s t -l threads -d 'thread count'
+
+complete -c blender -s F -l render-format -a 'TGA RAWTGA JPEG IRIS IRIZ AVIRAW AVIJPEG PNG BMP' -d 'render format' -x
+complete -c blender -s x -l use-extension -a 'true false' -d 'whether add a file extension to an end of a file' -x

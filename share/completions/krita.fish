@@ -1,23 +1,27 @@
-function __krita_complete_image_format -d 'Function to generate image format completion'
+function __krita_append_image_format_value -a value current_token
+    echo $value | string replace -r '^' $current_token | string replace -r '$' ','
+end
+
+function __krita_complete_image_format
     set -l previous_token (commandline -oc)[-1]
-    set -l current_token (commandline --current-token)
+    set -l current_token (commandline -t)
 
     if test $previous_token = --new-image
         switch $current_token
             case '*,*,*'
                 # nothing is completed as arbitrary width and height are expected
             case '*,'
-                echo -e 'U8
+                __krita_append_image_format_value 'U8
 U16
 F16
-F32' | awk "{ printf \"$current_token%s\n\", \$1 }"
+F32' $current_token
             case '*'
-                echo -e 'RGBA
+                __krita_append_image_format_value 'RGBA
 XYZA
 LABA
 CMYKA
 GRAY
-YCbCrA'
+YCbCrA' $current_token
         end
     end
 end

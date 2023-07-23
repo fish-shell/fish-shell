@@ -1,6 +1,5 @@
 function __krita_append_image_format_value -a value current_token
-    echo $value |
-        string replace -r '^' $current_token |
+    string replace -r '^' -- $current_token $value |
         string replace -r '$' ','
 end
 
@@ -8,7 +7,7 @@ function __krita_complete_image_format
     set -l previous_token (commandline -oc)[-1]
     set -l current_token (commandline -t)
 
-    if test $previous_token = --new-image
+    if test "$previous_token" = --new-image
         switch $current_token
             case '*,*,*'
                 # nothing is completed as arbitrary width and height are expected
@@ -29,8 +28,8 @@ YCbCrA' $current_token
 end
 
 function __krita_list_workspaces
-    ls --format single-column --color=never $HOME/.local/share/krita/workspaces/ |
-        string replace -r '.kws$' ''
+    path basename ~/.local/share/krita/workspaces/*.kws |
+        path change-extension ''
 end
 
 complete -c krita -s h -l help -d 'show help'

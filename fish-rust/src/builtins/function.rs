@@ -315,12 +315,25 @@ pub fn function(
     let definition_file = unsafe { parser.pin().libdata().get_current_filename().as_ref() }
         .map(|s| Arc::new(s.from_ffi()));
 
+    // Ensure inherit_vars is unique and then populate it.
+    opts.inherit_vars.sort_unstable();
+    opts.inherit_vars.dedup();
+
+    let inherit_vars: Vec<(WString, Vec<WString>)> = opts
+        .inherit_vars
+        .into_iter()
+        .filter_map(|name| {
+            let vals = parser.get_vars().get(&name)?.as_list().to_vec();
+            Some((name, vals))
+        })
+        .collect();
+
     // We have what we need to actually define the function.
-    let mut props = function::FunctionProperties {
+    let props = function::FunctionProperties {
         func_node,
         named_arguments: opts.named_arguments,
         description: opts.description,
-        inherit_vars: Default::default(),
+        inherit_vars: inherit_vars.into_boxed_slice(),
         shadow_scope: opts.shadow_scope,
         is_autoload: RelaxedAtomicBool::new(false),
         definition_file,
@@ -328,13 +341,6 @@ pub fn function(
         copy_definition_file: None,
         copy_definition_lineno: 0,
     };
-
-    // Populate inherit_vars.
-    for name in opts.inherit_vars.into_iter() {
-        if let Some(var) = parser.get_vars().get(&name) {
-            props.inherit_vars.insert(name, var.as_list().to_vec());
-        }
-    }
 
     // Add the function itself.
     function::add(function_name.clone(), Arc::new(props));

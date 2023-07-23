@@ -33,8 +33,8 @@ pub struct FunctionProperties {
     pub description: WString,
 
     /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    pub inherit_vars: HashMap<WString, Vec<WString>>,
+    /// values, as (key, values) pairs.
+    pub inherit_vars: Box<[(WString, Vec<WString>)]>,
 
     /// Set to true if invoking this function shadows the variables of the underlying function.
     pub shadow_scope: bool,
@@ -374,7 +374,7 @@ impl FunctionProperties {
     }
 
     /// Return a reference to the vars that this function has inherited from its definition scope.
-    pub fn inherit_vars(&self) -> &HashMap<WString, Vec<WString>> {
+    pub fn inherit_vars(&self) -> &[(WString, Vec<WString>)] {
         &self.inherit_vars
     }
 
@@ -484,7 +484,7 @@ impl FunctionProperties {
         }
 
         // Output any inherited variables as `set -l` lines.
-        for (name, values) in &self.inherit_vars {
+        for (name, values) in self.inherit_vars.iter() {
             // We don't know what indentation style the function uses,
             // so we do what fish_indent would.
             sprintf!(=> &mut out, "\n    set -l %ls", name);

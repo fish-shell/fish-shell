@@ -1,18 +1,19 @@
 function __blender_list_scenes -a file
-    stdbuf --output=0 blender --background test.blend --python-expr 'import bpy
+    if command -q stdbuf
+        stdbuf --output=0 blender --background test.blend --python-expr 'import bpy
 
 for name in [scene.name for scene in list(bpy.data.scenes)]:
     print(name)' | head --lines=-2 | tail --lines=+6
+    end
 end
 
 function __blender_list_addons
-    ls --format single-column /usr/share/blender/scripts/addons --color=never |
-        string replace -r '.py$' ''
+    path basename /usr/share/blender/scripts/addons/*.py | path change-extension ''
 end
 
 function __blender_list_engines
-    stdbuf --output=0 blender --background --engine help |
-        tail --lines=+6 | string replace -r '^\s+' ''
+    blender --background --engine help |
+        tail --lines=+7 | string replace -r '^\s+' ''
 end
 
 function __blender_echo_input_file_name

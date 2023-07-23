@@ -111,3 +111,15 @@ complete -c blender -l verbose -d 'specify logging verbosity level' -x
 
 complete -c blender -l gpu-backend -a 'vulkan metal opengl' -d 'specify GPI backend' -x
 
+complete -c blender -l open-last -d 'open the most recent .blend file'
+complete -c blender -l open-last -a 'default' -d 'specify app template' -r
+complete -c blender -l factory-startup -d 'do not read startup.blend'
+complete -c blender -l enable-event-simulate -d 'enable event simulation'
+complete -c blender -l env-system-datafiles -d 'set BLENDER_SYSTEM_DATAFILES variable'
+complete -c blender -l env-system-scripts -d 'set BLENDER_SYSTEM_SCRIPTS variable'
+complete -c blender -l env-system-python -d 'set BLENDER_SYSTEM_PYTHON variable'
+complete -c blender -o noaudio -d 'disable sound'
+complete -c blender -o setaudio -a 'None SDL OpenAL CoreAudio JACK PulseAudio WASAPI' -d 'specify sound device' -x
+complete -c blender -s R -d 'register .blend extension'
+complete -c blender -s r -d 'silently register .blend extension'
+

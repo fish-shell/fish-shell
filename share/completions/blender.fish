@@ -9,3 +9,8 @@ function __blender_list_addons
     ls --format single-column /usr/share/blender/scripts/addons --color=never |
         string replace -r '.py$' ''
 end
+
+function __blender_list_engines
+    stdbuf --output=0 blender --background --engine help |
+        tail --lines=+6 | string replace -r '^\s+' ''
+end

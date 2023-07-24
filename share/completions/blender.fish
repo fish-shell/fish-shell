@@ -3,8 +3,7 @@ function __blender_list_scenes -a file
 
 for name in [scene.name for scene in list(bpy.data.scenes)]:
     print(f"\t{name}")' |
-        string match -e -r '^\s+' |
-        string replace -r '^\s+' ''
+        string replace -r -f '^\s+' ''
 end
 
 function __blender_list_addons
@@ -12,9 +11,7 @@ function __blender_list_addons
 end
 
 function __blender_list_engines
-    blender --background --engine help |
-        string match -e -r '^\s+' |
-        string replace -r '^\s+' ''
+    blender --background --engine help | string replace -r -f '^\s+' ''
 end
 
 function __blender_echo_input_file_name

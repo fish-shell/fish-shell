@@ -385,6 +385,10 @@ std::vector<rust::Box<Event>> env_stack_t::universal_sync(bool always) {
     return std::move(result.events);
 }
 
+void env_stack_t::apply_inherited_ffi(const function_properties_t &props) {
+    impl_->apply_inherited_ffi(props);
+}
+
 statuses_t env_stack_t::get_last_statuses() const {
     auto statuses_ffi = impl_->get_last_statuses();
     statuses_t res{};

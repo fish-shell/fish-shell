@@ -16,3 +16,9 @@ impl RelaxedAtomicBool {
         self.0.swap(value, Ordering::Relaxed)
     }
 }
+
+impl Clone for RelaxedAtomicBool {
+    fn clone(&self) -> Self {
+        Self(AtomicBool::new(self.load()))
+    }
+}

@@ -30,6 +30,16 @@ macro_rules! wgettext {
 }
 pub(crate) use wgettext;
 
+/// Like wgettext, but for non-literals.
+macro_rules! wgettext_expr {
+    ($string:expr) => {
+        crate::wutil::gettext::wgettext_impl_do_not_use_directly(
+            widestring::U32CString::from_ustr_truncate($string).as_slice_with_nul(),
+        )
+    };
+}
+pub(crate) use wgettext_expr;
+
 /// Like wgettext, but applies a sprintf format string.
 /// The result is a WString.
 macro_rules! wgettext_fmt {

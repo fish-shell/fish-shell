@@ -20,7 +20,7 @@
 
 #include "ast.h"
 #include "builtin.h"
-#include "builtins/function.h"
+#include "builtins/function.rs.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"
@@ -388,21 +388,23 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
     const ast::block_statement_t &statement, const ast::function_header_t &header) {
     using namespace ast;
     // Get arguments.
-    std::vector<wcstring> arguments;
+    wcstring_list_ffi_t arguments;
     ast_args_list_t arg_nodes = get_argument_nodes(header.args());
     arg_nodes.insert(arg_nodes.begin(), &header.first_arg());
     end_execution_reason_t result =
-        this->expand_arguments_from_nodes(arg_nodes, &arguments, failglob);
+        this->expand_arguments_from_nodes(arg_nodes, &arguments.vals, failglob);
 
     if (result != end_execution_reason_t::ok) {
         return result;
     }
 
-    trace_if_enabled(*parser, L"function", arguments);
+    trace_if_enabled(*parser, L"function", arguments.vals);
     null_output_stream_t outs;
     string_output_stream_t errs;
     io_streams_t streams(outs, errs);
-    int err_code = builtin_function(*parser, streams, arguments, *pstree, statement);
+    int err_code = builtin_function_ffi(*parser, streams, arguments,
+                                        reinterpret_cast<const uint8_t *>(&*pstree), statement);
+
     parser->libdata().status_count++;
     parser->set_last_statuses(statuses_t::just(err_code));
 

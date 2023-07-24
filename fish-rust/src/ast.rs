@@ -4469,6 +4469,11 @@ impl Statement {
     }
 }
 
+unsafe impl ExternType for BlockStatement {
+    type Id = type_id!("BlockStatement");
+    type Kind = cxx::kind::Opaque;
+}
+
 #[derive(Clone)]
 pub enum NodeFfi<'a> {
     None,

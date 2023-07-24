@@ -3,6 +3,7 @@ use super::var::{ElectricVar, EnvVar, EnvVarFlags, Statuses};
 use crate::env::EnvMode;
 use crate::event::Event;
 use crate::ffi::{event_list_ffi_t, wchar_t, wcharz_t, wcstring_list_ffi_t};
+use crate::function::FunctionPropertiesRefFFI;
 use crate::null_terminated_array::OwningNullTerminatedArrayRefFFI;
 use crate::signal::Signal;
 use crate::wchar_ffi::WCharToFFI;
@@ -31,6 +32,7 @@ mod env_ffi {
         type event_list_ffi_t = super::event_list_ffi_t;
         type wcstring_list_ffi_t = super::wcstring_list_ffi_t;
         type wcharz_t = super::wcharz_t;
+        type function_properties_t = super::FunctionPropertiesRefFFI;
 
         type OwningNullTerminatedArrayRefFFI =
             crate::null_terminated_array::OwningNullTerminatedArrayRefFFI;
@@ -138,6 +140,8 @@ mod env_ffi {
         fn env_get_principal_ffi() -> Box<EnvStackRefFFI>;
 
         fn universal_sync(&self, always: bool, out_events: Pin<&mut event_list_ffi_t>);
+
+        fn apply_inherited_ffi(&self, props: &function_properties_t);
     }
 
     extern "Rust" {
@@ -294,6 +298,17 @@ impl EnvStackRefFFI {
         let events: Vec<Box<Event>> = self.0.universal_sync(always);
         for event in events {
             out_events.as_mut().push(Box::into_raw(event).cast());
+        }
+    }
+
+    fn apply_inherited_ffi(&self, props: &FunctionPropertiesRefFFI) {
+        // Ported from C++:
+        // for (const auto &kv : props.inherit_vars) {
+        //     vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second);
+        // }
+        for (name, vals) in props.0.inherit_vars() {
+            self.0
+                .set(name, EnvMode::LOCAL | EnvMode::USER, vals.clone());
         }
     }
 }

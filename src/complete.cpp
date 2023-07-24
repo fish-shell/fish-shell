@@ -622,7 +622,8 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
 /// Returns a description for the specified function, or an empty string if none.
 static wcstring complete_function_desc(const wcstring &fn) {
     if (auto props = function_get_props(fn)) {
-        return props->description;
+        std::unique_ptr<wcstring> desc = (*props)->get_description();
+        return std::move(*desc);
     }
     return wcstring{};
 }
@@ -659,8 +660,9 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
 
     if (str_cmd.empty() || (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')) {
         bool include_hidden = !str_cmd.empty() && str_cmd.at(0) == L'_';
-        std::vector<wcstring> names = function_get_names(include_hidden);
-        for (wcstring &name : names) {
+        wcstring_list_ffi_t names{};
+        function_get_names(include_hidden, names);
+        for (wcstring &name : names.vals) {
             // Append all known matching functions
             append_completion(&possible_comp, std::move(name));
         }
@@ -1958,4 +1960,8 @@ std::vector<wcstring> complete_get_wrap_targets(const wcstring &command) {
     auto iter = wraps.find(command);
     if (iter == wraps.end()) return {};
     return iter->second;
+}
+
+wcstring_list_ffi_t complete_get_wrap_targets_ffi(const wcstring &command) {
+    return complete_get_wrap_targets(command);
 }

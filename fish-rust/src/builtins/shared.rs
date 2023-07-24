@@ -3,6 +3,7 @@ use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{c_str, empty_wstring, ToCppWString, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use cxx::{type_id, ExternType};
 use libc::c_int;
 use std::os::fd::RawFd;
 use std::pin::Pin;
@@ -31,6 +32,11 @@ mod builtins_ffi {
     }
 }
 
+unsafe impl ExternType for io_streams_t {
+    type Id = type_id!("io_streams_t");
+    type Kind = cxx::kind::Opaque;
+}
+
 /// Error message when too many arguments are supplied to a builtin.
 pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
 
@@ -49,6 +55,9 @@ pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
 pub const BUILTIN_ERR_ARG_COUNT2: &str = "%ls: %ls: expected %d arguments; got %d\n";
 pub const BUILTIN_ERR_MIN_ARG_COUNT1: &str = "%ls: expected >= %d arguments; got %d\n";
 pub const BUILTIN_ERR_MAX_ARG_COUNT1: &str = "%ls: expected <= %d arguments; got %d\n";
+
+/// Error message for invalid variable name.
+pub const BUILTIN_ERR_VARNAME: &str = "%ls: %ls: invalid variable name. See `help identifiers`\n";
 
 /// Error message on invalid combination of options.
 pub const BUILTIN_ERR_COMBO: &str = "%ls: invalid option combination\n";
@@ -149,6 +158,19 @@ impl io_streams_t {
     }
 }
 
+/// Helper function to convert Vec<WString> to Vec<&wstr>, truncating on NUL.
+/// We truncate on NUL for backwards-compatibility reasons.
+/// This used to be passed as c-strings (`wchar_t *`),
+/// and so we act like it for now.
+pub fn truncate_args_on_nul(args: &[WString]) -> Vec<&wstr> {
+    args.iter()
+        .map(|s| match s.chars().position(|c| c == '\0') {
+            Some(i) => &s[..i],
+            None => &s[..],
+        })
+        .collect()
+}
+
 fn rust_run_builtin(
     parser: Pin<&mut parser_t>,
     streams: Pin<&mut builtins_ffi::io_streams_t>,
@@ -157,16 +179,7 @@ fn rust_run_builtin(
     status_code: &mut i32,
 ) -> bool {
     let storage: Vec<WString> = cpp_args.from_ffi();
-    let mut args: Vec<&wstr> = storage
-        .iter()
-        .map(|s| match s.chars().position(|c| c == '\0') {
-            // We truncate on NUL for backwards-compatibility reasons.
-            // This used to be passed as c-strings (`wchar_t *`),
-            // and so we act like it for now.
-            Some(pos) => &s[..pos],
-            None => &s[..],
-        })
-        .collect();
+    let mut args: Vec<&wstr> = truncate_args_on_nul(&storage);
     let streams = &mut io_streams_t::new(streams);
 
     match run_builtin(parser.unpin(), streams, args.as_mut_slice(), builtin) {

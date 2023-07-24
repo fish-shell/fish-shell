@@ -189,6 +189,14 @@ maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const environ
     }
 }
 
+wcstring autoload_t::resolve_command_ffi(const wcstring &cmd) {
+    if (auto res = resolve_command(cmd, env_stack_t::globals())) {
+        return std::move(*res);
+    } else {
+        return wcstring();
+    }
+}
+
 maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd,
                                               const std::vector<wcstring> &paths) {
     // Are we currently in the process of autoloading this?
@@ -227,4 +235,12 @@ void autoload_t::perform_autoload(const wcstring &path, parser_t &parser) {
     auto prev_statuses = parser.get_last_statuses();
     const cleanup_t put_back([&] { parser.set_last_statuses(prev_statuses); });
     parser.eval(script_source, io_chain_t{});
+}
+
+std::unique_ptr<autoload_t> make_autoload_ffi(wcstring env_var_name) {
+    return make_unique<autoload_t>(std::move(env_var_name));
+}
+
+void perform_autoload_ffi(const wcstring &path, parser_t &parser) {
+    autoload_t::perform_autoload(path, parser);
 }

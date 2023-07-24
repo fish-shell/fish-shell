@@ -2444,23 +2444,6 @@ static void test_autoload() {
     autoload_tester_t::run_test();
 }
 
-// Construct function properties for testing.
-static std::shared_ptr<function_properties_t> make_test_func_props() {
-    auto ret = std::make_shared<function_properties_t>();
-    ret->parsed_source = parse_source(L"function stuff; end", parse_flag_none, nullptr);
-    assert(ret->parsed_source->has_value() && "Failed to parse");
-    for (auto ast_traversal = new_ast_traversal(*ret->parsed_source->ast().top());;) {
-        auto node = ast_traversal->next();
-        if (!node->has_value()) break;
-        if (const auto *s = node->try_as_block_statement()) {
-            ret->func_node = s;
-            break;
-        }
-    }
-    assert(ret->func_node && "Unable to find block statement");
-    return ret;
-}
-
 static void test_wildcards() {
     say(L"Testing wildcards");
     do_test(!wildcard_has(L""));
@@ -2486,7 +2469,6 @@ static void test_wildcards() {
 static void test_complete() {
     say(L"Testing complete");
 
-    auto func_props = make_test_func_props();
     struct test_complete_vars_t : environment_t {
         std::vector<wcstring> get_names(env_mode_flags_t flags) const override {
             UNUSED(flags);
@@ -2616,7 +2598,7 @@ static void test_complete() {
 #endif
 
     // Add a function and test completing it in various ways.
-    function_add(L"scuttlebutt", func_props);
+    parser->eval(L"function scuttlebutt; end", {});
 
     // Complete a function name.
     completions = do_complete(L"echo (scuttlebut", {});
@@ -2705,7 +2687,7 @@ static void test_complete() {
     completions.clear();
 
     // Test abbreviations.
-    function_add(L"testabbrsonetwothreefour", func_props);
+    parser->eval(L"function testabbrsonetwothreefour; end", {});
     abbrs_get_set()->add(L"somename", L"testabbrsonetwothreezero", L"expansion",
                          abbrs_position_t::command, false);
     completions = complete(L"testabbrsonetwothree", {}, parser->context());

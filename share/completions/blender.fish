@@ -1,10 +1,10 @@
 function __blender_list_scenes -a file
-    if command -q stdbuf
-        stdbuf --output=0 blender --background test.blend --python-expr 'import bpy
+    blender --background $file --python-expr 'import bpy
 
 for name in [scene.name for scene in list(bpy.data.scenes)]:
-    print(name)' | head --lines=-2 | tail --lines=+6
-    end
+    print(f"\t{name}")' |
+        string match -e -r '^\s+' |
+        string replace -r '^\s+' ''
 end
 
 function __blender_list_addons
@@ -13,7 +13,8 @@ end
 
 function __blender_list_engines
     blender --background --engine help |
-        tail --lines=+7 | string replace -r '^\s+' ''
+        string match -e -r '^\s+' |
+        string replace -r '^\s+' ''
 end
 
 function __blender_echo_input_file_name

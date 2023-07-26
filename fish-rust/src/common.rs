@@ -1258,7 +1258,7 @@ pub fn assert_is_background_thread() {
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 #[widestrs]
-fn format_size(mut sz: i64) -> WString {
+pub fn format_size(mut sz: i64) -> WString {
     let mut result = WString::new();
     const sz_names: [&wstr; 8] = ["kB"L, "MB"L, "GB"L, "TB"L, "PB"L, "EB"L, "ZB"L, "YB"L];
     if sz < 0 {

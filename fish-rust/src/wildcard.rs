@@ -1,14 +1,27 @@
 // Enumeration of all wildcard types.
 
+use std::collections::HashSet;
+use std::io::ErrorKind;
+use std::os::unix::prelude::*;
+use std::{fs, io};
+
 use cxx::CxxWString;
+use libc::{mode_t, ELOOP, S_IXGRP, S_IXOTH, S_IXUSR, X_OK};
 
 use crate::common::{
-    char_offset, unescape_string, UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE,
+    char_offset, format_size, is_windows_subsystem_for_linux, unescape_string, CancelChecker,
+    UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE,
 };
+use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
+use crate::expand::ExpandFlags;
 use crate::future_feature_flags::feature_test;
 use crate::future_feature_flags::FeatureFlag;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharFromFFI;
+use crate::wcstringutil::{
+    string_fuzzy_match_string, string_suffixes_string_case_insensitive, CaseFold,
+};
+use crate::wutil::{lwstat, waccess, wstat};
 
 /// Character representing any character except '/' (slash).
 pub const ANY_CHAR: char = char_offset(WILDCARD_RESERVED_BASE, 0);
@@ -19,6 +32,1013 @@ pub const ANY_STRING_RECURSIVE: char = char_offset(WILDCARD_RESERVED_BASE, 2);
 /// This is a special pseudo-char that is not used other than to mark the
 /// end of the the special characters so we can sanity check the enum range.
 pub const ANY_SENTINEL: char = char_offset(WILDCARD_RESERVED_BASE, 3);
+
+#[derive(PartialEq)]
+pub enum WildcardResult {
+    /// The wildcard did not match.
+    NoMatch,
+    /// The wildcard did match.
+    Match,
+    /// Expansion was cancelled (e.g. control-C).
+    Cancel,
+    /// Expansion produced too many results.
+    Overflow,
+}
+
+fn resolve_description<'f>(
+    full_completion: &wstr,
+    completion: &mut &wstr,
+    expand_flags: ExpandFlags,
+    description_func: Option<&'f dyn Fn(&wstr) -> WString>,
+) -> WString {
+    if let Some(complete_sep_loc) = completion.find_char(PROG_COMPLETE_SEP) {
+        // This completion has an embedded description, do not use the generic description.
+        assert!(
+            completion.len() > complete_sep_loc,
+            "resolve_description lacks a length assumption"
+        );
+        let (comp, description) = completion.split_at(complete_sep_loc + 1);
+        *completion = comp;
+        return description.to_owned();
+    }
+
+    if let Some(f) = description_func {
+        if expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+            return f(full_completion);
+        }
+    }
+
+    WString::new()
+}
+
+// A transient parameter pack needed by wildcard_complete.
+struct WcCompletePack<'orig, 'f> {
+    pub orig: &'orig wstr,
+    pub desc_func: Option<&'f dyn Fn(&wstr) -> WString>,
+    pub expand_flags: ExpandFlags,
+}
+
+// Weirdly specific and non-reusable helper function that makes its one call site much clearer.
+fn has_prefix_match(comps: &CompletionReceiver, first: usize) -> bool {
+    comps[first..]
+        .iter()
+        .any(|c| c.r#match.is_exact_or_prefix() && c.r#match.case_fold == CaseFold::samecase)
+}
+
+/// Matches the string against the wildcard, and if the wildcard is a possible completion of the
+/// string, the remainder of the string is inserted into the out vector.
+///
+/// We ignore ANY_STRING_RECURSIVE here. The consequence is that you cannot tab complete **
+/// wildcards. This is historic behavior.
+/// is_first_call is default false.
+#[allow(clippy::unnecessary_unwrap)]
+fn wildcard_complete_internal(
+    str: &wstr,
+    wc: &wstr,
+    params: &WcCompletePack,
+    flags: CompleteFlags,
+    // it is easier to recurse with this over taking it by value
+    out: &mut Option<&mut CompletionReceiver>,
+    is_first_call: bool,
+) -> WildcardResult {
+    // Maybe early out for hidden files. We require that the wildcard match these exactly (i.e. a
+    // dot); ANY_STRING not allowed.
+    if is_first_call
+        && !params
+            .expand_flags
+            .contains(ExpandFlags::ALLOW_NONLITERAL_LEADING_DOT)
+        && str.char_at(0) == '.'
+        && wc.char_at(0) == '.'
+    {
+        return WildcardResult::NoMatch;
+    }
+
+    // Locate the next wildcard character position, e.g. ANY_CHAR or ANY_STRING.
+    let next_wc_char_pos = wc
+        .chars()
+        .position(|c| matches!(c, ANY_CHAR | ANY_STRING | ANY_STRING_RECURSIVE));
+
+    // Maybe we have no more wildcards at all. This includes the empty string.
+    if next_wc_char_pos.is_none() {
+        // Try matching
+        let Some(m) = string_fuzzy_match_string(wc, str, false) else {
+            return WildcardResult::NoMatch;
+        };
+
+        // If we're not allowing fuzzy match, then we require a prefix match.
+        let needs_prefix_match = !params.expand_flags.contains(ExpandFlags::FUZZY_MATCH);
+        if needs_prefix_match && m.is_exact_or_prefix() {
+            return WildcardResult::NoMatch;
+        }
+
+        // The match was successful. If the string is not requested we're done.
+        let Some(out) = out else {
+            return WildcardResult::Match;
+        };
+
+        // Wildcard complete.
+        let full_replacement =
+            m.requires_full_replacement() || flags.contains(CompleteFlags::REPLACES_TOKEN);
+
+        // If we are not replacing the token, be careful to only store the part of the string after
+        // the wildcard.
+        assert!(!full_replacement || wc.len() <= str.len());
+        let mut out_completion = match full_replacement {
+            true => params.orig,
+            false => str.slice_from(wc.len()),
+        };
+        let out_desc = resolve_description(
+            params.orig,
+            &mut out_completion,
+            params.expand_flags,
+            params.desc_func,
+        );
+
+        // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
+        // 'foo' when a file 'foo' exists.
+        let local_flags = flags
+            | full_replacement
+                .then_some(CompleteFlags::REPLACES_TOKEN)
+                .unwrap_or_default();
+        if !out.add(Completion {
+            completion: out_completion.to_owned(),
+            description: out_desc,
+            flags: local_flags,
+            r#match: m,
+        }) {
+            return WildcardResult::Overflow;
+        }
+        return WildcardResult::Match;
+    } else if next_wc_char_pos.unwrap() > 0 {
+        let next_wc_char_pos = next_wc_char_pos.unwrap();
+        // The literal portion of a wildcard cannot be longer than the string itself,
+        // e.g. `abc*` can never match a string that is only two characters long.
+        if next_wc_char_pos >= str.len() {
+            return WildcardResult::NoMatch;
+        }
+
+        // Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before
+        // a wildcard, so just do case comparison and then recurse.
+        if str.slice_to(next_wc_char_pos) == wc.slice_to(next_wc_char_pos) {
+            // Normal match.
+            return wildcard_complete_internal(
+                str.slice_from(next_wc_char_pos),
+                wc.slice_from(next_wc_char_pos),
+                params,
+                flags,
+                out,
+                false,
+            );
+        }
+        // TODO: acually be case-insensitive
+        if str.slice_to(next_wc_char_pos).to_lowercase()
+            == wc.slice_to(next_wc_char_pos).to_lowercase()
+        {
+            // Case insensitive match.
+            return wildcard_complete_internal(
+                str.slice_from(next_wc_char_pos),
+                wc.slice_from(next_wc_char_pos),
+                params,
+                flags | CompleteFlags::REPLACES_TOKEN,
+                out,
+                false,
+            );
+        }
+
+        return WildcardResult::NoMatch;
+    }
+
+    // Our first character is a wildcard.
+    match wc.char_at(0) {
+        ANY_CHAR => {
+            if str.is_empty() {
+                return WildcardResult::NoMatch;
+            }
+            return wildcard_complete_internal(
+                str.slice_from(1),
+                wc.slice_from(1),
+                params,
+                flags,
+                out,
+                false,
+            );
+        }
+        ANY_STRING => {
+            // Hackish. If this is the last character of the wildcard, then just complete with
+            // the empty string. This fixes cases like "f*<tab>" -> "f*o".
+            if wc.char_at(1) == '\0' {
+                return wildcard_complete_internal(L!(""), L!(""), params, flags, out, false);
+            }
+
+            // Try all submatches. Issue #929: if the recursive call gives us a prefix match,
+            // just stop. This is sloppy - what we really want to do is say, once we've seen a
+            // match of a particular type, ignore all matches of that type further down the
+            // string, such that the wildcard produces the "minimal match.".
+            let mut has_match = false;
+            for i in 0..str.len() {
+                let before_count = out.as_ref().map(|o| o.len()).unwrap_or_default();
+                let submatch_res = wildcard_complete_internal(
+                    str.slice_from(i),
+                    wc.slice_from(i),
+                    params,
+                    flags,
+                    out,
+                    false,
+                );
+
+                match submatch_res {
+                    WildcardResult::NoMatch => continue,
+                    WildcardResult::Match => {
+                        has_match = true;
+                        // If out is NULL, we don't care about the actual matches. If out is not
+                        // NULL but we have a prefix match, stop there.
+                        if out.is_none() || has_prefix_match(out.as_ref().unwrap(), before_count) {
+                            return WildcardResult::Match;
+                        }
+                        continue;
+                    }
+                    // Note early return
+                    WildcardResult::Cancel | WildcardResult::Overflow => return submatch_res,
+                }
+            }
+
+            return match has_match {
+                true => WildcardResult::Match,
+                false => WildcardResult::NoMatch,
+            };
+        }
+        // We don't even try with this one.
+        ANY_STRING_RECURSIVE => WildcardResult::NoMatch,
+        _ => unreachable!(),
+    }
+}
+
+pub fn wildcard_complete<'f>(
+    str: &wstr,
+    wc: &wstr,
+    desc_func: Option<&'f dyn Fn(&wstr) -> WString>,
+    mut out: Option<&mut CompletionReceiver>,
+    expand_flags: ExpandFlags,
+    flags: CompleteFlags,
+) -> WildcardResult {
+    let params = WcCompletePack {
+        orig: str,
+        desc_func,
+        expand_flags,
+    };
+
+    return wildcard_complete_internal(str, wc, &params, flags, &mut out, true);
+}
+
+/// Obtain a description string for the file specified by the filename.
+///
+/// The returned value is a string constant and should not be free'd.
+///
+/// \param filename The file for which to find a description string
+/// \param lstat_res The result of calling lstat on the file
+/// \param lbuf The struct buf output of calling lstat on the file
+/// \param stat_res The result of calling stat on the file
+/// \param buf The struct buf output of calling stat on the file
+/// \param err The errno value after a failed stat call on the file.
+fn file_get_desc(
+    filename: &wstr,
+    lstat: Option<fs::Metadata>,
+    stat: Option<io::Result<fs::Metadata>>,
+) -> &'static wstr {
+    if lstat.is_none() {
+        return wgettext!("file");
+    }
+
+    let stat = stat.unwrap();
+    let lstat = lstat.unwrap();
+    if lstat.is_symlink() {
+        return match stat {
+            Ok(stat) if stat.is_dir() => wgettext!("dir symlink"),
+            Ok(stat)
+                if (stat.mode() as mode_t & (S_IXUSR | S_IXGRP | S_IXOTH)) != 0
+                    && waccess(filename, X_OK) == 0 =>
+            {
+                // Weird group permissions and other such issues make it non-trivial to find out if
+                // we can actually execute a file using the result from stat. It is much safer to
+                // use the access function, since it tells us exactly what we want to know.
+                wgettext!("command link")
+            }
+            Ok(_) => wgettext!("symlink"),
+            Err(e) if e.kind() == ErrorKind::NotFound => wgettext!("broken symlink"),
+            Err(e) if e.raw_os_error().unwrap() == ELOOP => wgettext!("symlink loop"),
+            _ => {
+                // On unknown errors we do nothing. The file will be given the default 'File'
+                // description or one based on the suffix.
+                wgettext!("file")
+            }
+        };
+    }
+
+    let Ok(stat) = stat else {
+        // Assuming that the metadata was zero if stat-call failed
+        return wgettext!("file");
+    };
+
+    if stat.file_type().is_char_device() {
+        wgettext!("char device")
+    } else if stat.file_type().is_block_device() {
+        wgettext!("block device")
+    } else if stat.file_type().is_fifo() {
+        wgettext!("fifo")
+    } else if stat.file_type().is_socket() {
+        wgettext!("socket")
+    } else if stat.is_dir() {
+        wgettext!("directory")
+    } else if (stat.mode() as mode_t & (S_IXUSR | S_IXGRP | S_IXOTH)) != 0
+        && waccess(filename, X_OK) == 0
+    {
+        // Weird group permissions and other such issues make it non-trivial to find out if we can
+        // actually execute a file using the result from stat. It is much safer to use the access
+        // function, since it tells us exactly what we want to know.
+        wgettext!("command")
+    } else {
+        wgettext!("file")
+    }
+}
+
+/// Test if the given file is an executable (if executables_only) or directory (if
+/// directories_only). If it matches, call wildcard_complete() with some description that we make
+/// up. Note that the filename came from a readdir() call, so we know it exists.
+fn wildcard_test_flags_then_complete(
+    filepath: &wstr,
+    filename: &wstr,
+    wc: &wstr,
+    expand_flags: ExpandFlags,
+    out: Option<&mut CompletionReceiver>,
+    known_dir: bool,
+) -> bool {
+    let executables_only = expand_flags.contains(ExpandFlags::EXECUTABLES_ONLY);
+    let need_directory = expand_flags.contains(ExpandFlags::DIRECTORIES_ONLY);
+    // Fast path: If we need directories, and we already know it is one,
+    // and we don't need to do anything else, just return it.
+    // This is a common case for cd completions, and removes the `stat` entirely in case the system
+    // supports it.
+    if known_dir && !executables_only && !expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+        return wildcard_complete(
+            &(WString::from(filename) + L!("/")),
+            wc,
+            Some(&|_| L!("").to_owned()),
+            out,
+            expand_flags,
+            CompleteFlags::NO_SPACE,
+        ) == WildcardResult::Match;
+    }
+    // Check if it will match before stat().
+    if wildcard_complete(
+        filename,
+        wc,
+        None,
+        None,
+        expand_flags,
+        CompleteFlags::default(),
+    ) != WildcardResult::Match
+    {
+        return false;
+    }
+
+    let lstat: Option<fs::Metadata> = lwstat(filepath).ok();
+    let stat: Option<io::Result<fs::Metadata>>;
+    if let Some(md) = &lstat {
+        if md.is_symlink() {
+            // In order to differentiate between e.g. broken symlinks and symlink loops, we also
+            // need to know the error status of wstat.
+            stat = Some(wstat(filepath));
+        } else {
+            stat = Some(Ok(md.clone()));
+        }
+    } else {
+        stat = None;
+    }
+
+    let (file_size, is_directory, is_executable) = stat
+        .as_ref()
+        .and_then(|s| s.as_ref().map(|s| (s.len(), s.is_dir(), s.is_file())).ok())
+        .unwrap_or_default();
+
+    if need_directory && !is_directory {
+        return false;
+    }
+
+    if executables_only && (!is_executable || waccess(filepath, X_OK) != 0) {
+        return false;
+    }
+
+    if executables_only
+        && is_windows_subsystem_for_linux()
+        && string_suffixes_string_case_insensitive(L!(".dll"), filename)
+    {
+        return false;
+    }
+
+    // Compute the description.
+    let mut desc = WString::new();
+    if expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+        desc = file_get_desc(filename, lstat, stat).to_owned();
+
+        if !is_directory && !is_executable {
+            if !desc.is_empty() {
+                desc.push_utfstr(L!(", "));
+            }
+            desc.push_utfstr(&format_size(file_size as i64));
+        }
+    }
+
+    // Append a / if this is a directory. Note this requirement may be the only reason we have to
+    // call stat() in some cases.
+    let x = |_: &wstr| desc.clone();
+    let desc_func: Option<&dyn Fn(&wstr) -> WString> = Some(&x);
+    if is_directory {
+        return wildcard_complete(
+            &(filename.to_owned() + L!("/")),
+            wc,
+            desc_func,
+            out,
+            expand_flags,
+            CompleteFlags::NO_SPACE,
+        ) == WildcardResult::Match;
+    }
+
+    wildcard_complete(
+        filename,
+        wc,
+        desc_func,
+        out,
+        expand_flags,
+        CompleteFlags::empty(),
+    ) == WildcardResult::Match
+}
+
+use expander::WildCardExpander;
+mod expander {
+    use libc::F_OK;
+
+    use crate::{
+        common::scoped_push,
+        complete::CompleteFlags,
+        path::append_path_component,
+        wcstringutil::string_fuzzy_match_string,
+        wutil::{dir_iter::DirIter, normalize_path, waccess, FileId},
+    };
+
+    use super::*;
+
+    pub struct WildCardExpander<'receiver, 'c> {
+        /// A function to call to check cancellation.
+        cancel_checker: &'c CancelChecker,
+        /// The working directory to resolve paths against
+        working_directory: WString,
+        /// The set of items we have resolved, used to efficiently avoid duplication.
+        completion_set: HashSet<WString>,
+        /// The set of file IDs we have visited, used to avoid symlink loops.
+        visited_files: HashSet<FileId>,
+        /// Flags controlling expansion.
+        flags: ExpandFlags,
+        /// Resolved items get inserted into here. This is transient of course.
+        resolved_completions: &'receiver mut CompletionReceiver,
+        /// Whether we have been interrupted.
+        did_interrupt: bool,
+        /// Whether we have overflowed.
+        did_overflow: bool,
+        /// Whether we have successfully added any completions.
+        did_add: bool,
+        /// Whether some parent expansion is fuzzy, and therefore completions always prepend their prefix
+        /// This variable is a little suspicious - it should be passed along, not stored here
+        /// If we ever try to do parallel wildcard expansion we'll have to remove this
+        has_fuzzy_ancestor: bool,
+    }
+
+    impl<'receiver, 'c> WildCardExpander<'receiver, 'c> {
+        pub fn new(
+            working_directory: WString,
+            flags: ExpandFlags,
+            cancel_checker: &'c CancelChecker,
+            resolved_completions: &'receiver mut CompletionReceiver,
+        ) -> Self {
+            Self {
+                cancel_checker,
+                working_directory,
+                completion_set: resolved_completions
+                    .iter()
+                    .map(|c| c.completion.to_owned())
+                    .collect(),
+                visited_files: HashSet::new(),
+                flags,
+                resolved_completions,
+                did_add: false,
+                did_interrupt: false,
+                did_overflow: false,
+                has_fuzzy_ancestor: false,
+            }
+        }
+
+        /// The real implementation of wildcard expansion is in this function. Other functions are just
+        /// wrappers around this one.
+        ///
+        /// This function traverses the relevant directory tree looking for matches, and recurses when
+        /// needed to handle wildcards spanning multiple components and recursive wildcards.
+        ///
+        /// Args:
+        /// base_dir: the "working directory" against which the wildcard is to be resolved
+        /// wc: the wildcard string itself, e.g. foo*bar/baz (where * is actually ANY_CHAR)
+        /// effective_prefix: the string that should be prepended for completions that replace their token.
+        ///    This is usually the same thing as the original wildcard, but for fuzzy matching, we
+        ///    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
+        pub fn expand(&mut self, base_dir: &wstr, wc: &wstr, effective_prefix: &wstr) {
+            if self.interrupted_or_overflowed() {
+                return;
+            }
+
+            // Get the current segment and compute interesting properties about it.
+            let next_slash = wc.find_char('/');
+            let is_last_segment = next_slash.is_none();
+            let wc_segment_len = next_slash.unwrap_or(wc.char_count());
+            let wc_segment = wc.slice_to(wc_segment_len);
+            let segment_has_wildcards = wildcard_has_internal(wc_segment);
+            let wc_remainder = next_slash.map(|n| wc.slice_from(n)).unwrap_or(L!(""));
+
+            if wc_segment.is_empty() {
+                assert!(!segment_has_wildcards);
+                if is_last_segment {
+                    self.expand_trailing_slash(base_dir, effective_prefix);
+                } else {
+                    let mut prefix = effective_prefix.to_owned();
+                    prefix.push('/');
+                    self.expand(base_dir, wc_remainder, &prefix);
+                }
+            } else if !segment_has_wildcards && !is_last_segment {
+                // Literal intermediate match. Note that we may not be able to actually read the directory
+                // (issue #2099).
+                assert!(next_slash.is_some());
+
+                // Absolute path of the intermediate directory
+                let mut intermediate_dirpath = base_dir.to_owned() + wc_segment;
+                intermediate_dirpath.push('/');
+
+                // This just trumps everything
+                let before = self.resolved_completions.len();
+                let mut prefix = effective_prefix.to_owned() + wc_segment;
+                prefix.push('/');
+                self.expand(&intermediate_dirpath, wc_remainder, &prefix);
+
+                // Maybe try a fuzzy match (#94) if nothing was found with the literal match. Respect
+                // EXPAND_NO_DIRECTORY_ABBREVIATIONS (issue #2413).
+                // Don't do fuzzy matches if the literal segment was valid (#3211)
+                let allow_fuzzy = self.flags.contains(ExpandFlags::FUZZY_MATCH)
+                    && !self.flags.contains(ExpandFlags::NO_FUZZY_DIRECTORIES);
+                if allow_fuzzy
+                    && self.resolved_completions.len() == before
+                    && waccess(&intermediate_dirpath, F_OK) != 0
+                {
+                    assert!(self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
+                    if let Ok(mut base_dir_iter) = self.open_dir(base_dir, false) {
+                        self.expand_literal_intermediate_segment_with_fuzz(
+                            base_dir,
+                            &mut base_dir_iter,
+                            wc_segment,
+                            wc_remainder,
+                            effective_prefix,
+                        );
+                    }
+                }
+            } else {
+                assert!(!wc_segment.is_empty() && (segment_has_wildcards || is_last_segment));
+
+                if !is_last_segment && matches!(wc_segment.as_char_slice(), [ANY_STRING_RECURSIVE])
+                {
+                    // Hack for #7222. This is an intermediate wc segment that is exactly **. The
+                    // tail matches in subdirectories as normal, but also the current directory.
+                    // That is, '**/bar' may match 'bar' and 'foo/bar'.
+                    // Implement this by matching the wildcard tail only, in this directory.
+                    // Note if the segment is not exactly ANY_STRING_RECURSIVE then the segment may only
+                    // match subdirectories.
+                    self.expand(base_dir, wc_remainder, effective_prefix);
+                    if self.interrupted_or_overflowed() {
+                        return;
+                    }
+                }
+
+                // return "." and ".." entries if we're doing completions
+                let Ok(mut dir) = self.open_dir(base_dir, /* return . and .. */ self.flags.contains(ExpandFlags::FOR_COMPLETIONS)) else {
+                    return;
+                };
+
+                if is_last_segment {
+                    // Last wildcard segment, nonempty wildcard.
+                    self.expand_last_segment(base_dir, &mut dir, wc_segment, effective_prefix);
+                } else {
+                    // Not the last segment, nonempty wildcard.
+                    assert!(next_slash.is_some());
+                    let mut prefix = effective_prefix.to_owned() + wc_segment;
+                    prefix.push('/');
+                    self.expand_intermediate_segment(
+                        base_dir,
+                        &mut dir,
+                        wc_segment,
+                        wc_remainder,
+                        &prefix,
+                    );
+                }
+
+                let Some(asr_idx) = wc_segment.find_char(ANY_STRING_RECURSIVE) else {
+                    return;
+                };
+
+                // Apply the recursive **.
+                // Construct a "head + any" wildcard for matching stuff in this directory, and an
+                // "any + tail" wildcard for matching stuff in subdirectories. Note that the
+                // ANY_STRING_RECURSIVE character is present in both the head and the tail.
+                let head_any = wc_segment.slice_to(asr_idx + 1);
+                let any_tail = wc.slice_from(asr_idx);
+                assert!(head_any.chars().last().unwrap() == ANY_STRING_RECURSIVE);
+                assert!(any_tail.char_at(0) == ANY_STRING_RECURSIVE);
+
+                dir.rewind();
+                self.expand_intermediate_segment(
+                    base_dir,
+                    &mut dir,
+                    head_any,
+                    any_tail,
+                    effective_prefix,
+                );
+            }
+        }
+
+        pub fn status_code(&self) -> WildcardResult {
+            if self.did_interrupt {
+                return WildcardResult::Cancel;
+            } else if self.did_overflow {
+                return WildcardResult::Overflow;
+            }
+            match self.did_add {
+                true => WildcardResult::Match,
+                false => WildcardResult::NoMatch,
+            }
+        }
+    }
+
+    impl<'receiver, 'c> WildCardExpander<'receiver, 'c> {
+        /// We are a trailing slash - expand at the end.
+        fn expand_trailing_slash(&mut self, base_dir: &wstr, prefix: &wstr) {
+            if self.interrupted_or_overflowed() {
+                return;
+            }
+
+            if !self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
+                // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file, we already know it exists!
+                self.add_expansion_result(base_dir.to_owned());
+                return;
+            }
+            // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.
+            let Ok(mut dir) = self.open_dir(base_dir, false) else {
+                return;
+            };
+
+            // wreaddir_resolving without the out argument is just wreaddir.
+            // So we can use the information in case we need it.
+            let need_dir = self.flags.contains(ExpandFlags::DIRECTORIES_ONLY);
+
+            while let Some(Ok(entry)) = dir.next() {
+                if self.interrupted_or_overflowed() {
+                    break;
+                }
+
+                // Note that is_dir() may cause a stat() call.
+                let known_dir = need_dir && entry.is_dir();
+                if need_dir && !known_dir {
+                    continue;
+                };
+                if !entry.name.is_empty() && !entry.name.starts_with('.') {
+                    self.try_add_completion_result(
+                        &(WString::from(base_dir) + entry.name.as_utfstr()),
+                        &entry.name,
+                        L!(""),
+                        prefix,
+                        known_dir,
+                    );
+                }
+            }
+        }
+
+        /// Given a directory base_dir, which is opened as base_dir_iter, expand an intermediate segment
+        /// of the wildcard. Treat ANY_STRING_RECURSIVE as ANY_STRING. wc_segment is the wildcard
+        /// segment for this directory, wc_remainder is the wildcard for subdirectories,
+        /// prefix is the prefix for completions.
+        fn expand_intermediate_segment(
+            &mut self,
+            base_dir: &wstr,
+            base_dir_iter: &mut DirIter,
+            wc_segment: &wstr,
+            wc_remainder: &wstr,
+            prefix: &wstr,
+        ) {
+            while !self.interrupted_or_overflowed() {
+                let Some(Ok(entry)) = base_dir_iter.next() else {
+                    break;
+                };
+                // Note that it's critical we ignore leading dots here, else we may descend into . and ..
+                if !wildcard_match(&entry.name, wc_segment, true) {
+                    // Doesn't match the wildcard for this segment, skip it.
+                    continue;
+                }
+                if !entry.is_dir() {
+                    continue;
+                }
+
+                let Some(statbuf) = entry.stat() else {
+                    continue;
+                };
+
+                let file_id = FileId::from_stat(&statbuf);
+                if !self.visited_files.insert(file_id.clone()) {
+                    // Symlink loop! This directory was already visited, so skip it.
+                    continue;
+                }
+
+                let mut full_path: WString = base_dir.to_owned() + entry.name.as_utfstr();
+                full_path.push('/');
+
+                let mut prefix: WString = prefix.to_owned() + wc_segment;
+                prefix.push('/');
+                self.expand(&full_path, wc_remainder, &prefix);
+
+                // Now remove the visited file. This is for #2414: only directories "beneath" us should be
+                // considered visited.
+                self.visited_files.remove(&file_id);
+            }
+        }
+
+        /// Given a directory base_dir, which is opened as base_dir_fp, expand an intermediate literal
+        /// segment. Use a fuzzy matching algorithm.
+        fn expand_literal_intermediate_segment_with_fuzz(
+            &mut self,
+            base_dir: &wstr,
+            base_dir_iter: &mut DirIter,
+            wc_segment: &wstr,
+            wc_remainder: &wstr,
+            prefix: &wstr,
+        ) {
+            // Mark that we are fuzzy for the duration of this function
+            let mut this = scoped_push(self, |e| &mut e.has_fuzzy_ancestor, true);
+            while !this.interrupted_or_overflowed() {
+                let Some(Ok(entry)) = base_dir_iter.next() else {
+                    break;
+                };
+
+                // Don't bother with . and ..
+                if entry.name == "." || entry.name == ".." {
+                    continue;
+                }
+
+                let Some(m) = string_fuzzy_match_string(wc_segment, &entry.name, false) else {
+                    continue;
+                };
+                if m.is_samecase_exact() {
+                    continue;
+                }
+
+                // Note is_dir() may trigger a stat call.
+                if !entry.is_dir() {
+                    continue;
+                }
+
+                // Determine the effective prefix for our children.
+                // Normally this would be the wildcard segment, but here we know our segment doesn't have
+                // wildcards ("literal") and we are doing fuzzy expansion, which means we replace the
+                // segment with files found through fuzzy matching.
+                let mut child_prefix = prefix.to_owned() + entry.name.as_utfstr();
+                child_prefix.push('/');
+                let child_prefix = child_prefix;
+
+                let mut new_full_path = base_dir.to_owned() + entry.name.as_utfstr();
+                new_full_path.push('/');
+
+                // Ok, this directory matches. Recurse to it. Then mark each resulting completion as fuzzy.
+                let before = this.resolved_completions.len();
+                this.expand(&new_full_path, wc_remainder, &child_prefix);
+                let after = this.resolved_completions.len();
+
+                assert!(before <= after);
+                for i in before..after {
+                    // Mark the completion as replacing.
+                    let c = this.resolved_completions.get_mut(i).unwrap();
+
+                    if !c.replaces_token() {
+                        c.flags |= CompleteFlags::REPLACES_TOKEN;
+                        c.prepend_token_prefix(&child_prefix);
+                    }
+
+                    // And every match must be made at least as fuzzy as ours.
+                    // TODO: justify this, tests do not exercise it yet.
+                    if m.rank() > c.r#match.rank() {
+                        // Our match is fuzzier.
+                        c.r#match = m.clone();
+                    }
+                }
+            }
+        }
+
+        /// Given a directory base_dir, which is opened as base_dir_iter, expand the last segment of the
+        /// wildcard. Treat ANY_STRING_RECURSIVE as ANY_STRING. wc is the wildcard segment to use for
+        /// matching, wc_remainder is the wildcard for subdirectories, prefix is the prefix for
+        /// completions.
+        fn expand_last_segment(
+            &mut self,
+            base_dir: &wstr,
+            base_dir_iter: &mut DirIter,
+            wc: &wstr,
+            prefix: &wstr,
+        ) {
+            let is_dir = false;
+            let need_dir = self.flags.contains(ExpandFlags::DIRECTORIES_ONLY);
+
+            while !self.interrupted_or_overflowed() {
+                let Some(Ok(entry)) = base_dir_iter.next() else {
+                    break;
+                };
+
+                if need_dir && entry.is_dir() {
+                    continue;
+                }
+
+                if self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
+                    self.try_add_completion_result(
+                        &(base_dir.to_owned() + entry.name.as_utfstr()),
+                        &entry.name,
+                        wc,
+                        prefix,
+                        is_dir,
+                    );
+                } else {
+                    // Normal wildcard expansion, not for completions.
+                    if wildcard_match(
+                        &entry.name,
+                        wc,
+                        true, /* skip files with leading dots */
+                    ) {
+                        self.add_expansion_result(base_dir.to_owned() + entry.name.as_utfstr());
+                    }
+                }
+            }
+        }
+
+        /// Indicate whether we should cancel wildcard expansion. This latches 'interrupt'.
+        fn interrupted_or_overflowed(&mut self) -> bool {
+            self.did_interrupt |= (self.cancel_checker)();
+            self.did_interrupt || self.did_overflow
+        }
+
+        fn add_expansion_result(&mut self, result: WString) {
+            // This function is only for the non-completions case.
+            assert!(!self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
+            if self.completion_set.insert(result.clone()) && !self.resolved_completions.add(result)
+            {
+                self.did_overflow = true;
+            }
+        }
+
+        // Given a start point as an absolute path, for any directory that has exactly one non-hidden
+        // entity in it which is itself a directory, return that. The result is a relative path. For
+        // example, if start_point is '/usr' we may return 'local/bin/'.
+        //
+        // The result does not have a leading slash, but does have a trailing slash if non-empty.
+        fn descend_unique_hierarchy(&mut self, start_point: &mut WString) -> WString {
+            assert!(!start_point.is_empty() && !start_point.starts_with('/'));
+
+            let mut unique_hierarchy = WString::from("");
+            let abs_unique_hierarchy = start_point;
+
+            // Ensure we don't fall into a symlink loop.
+            // Ideally we would compare both devices and inodes, but devices require a stat call, so we
+            // use inodes exclusively.
+            let mut visited_inodes: HashSet<libc::ino_t> = HashSet::new();
+
+            loop {
+                let mut unique_entry = WString::new();
+                let Ok(mut dir) = DirIter::new(abs_unique_hierarchy) else {
+                    break;
+                };
+
+                while let Some(Ok(entry)) = dir.next() {
+                    if entry.name.is_empty() || entry.name.starts_with('.') {
+                        // either hidden, or . and .. entries -- skip them
+                        continue;
+                    }
+                    if !visited_inodes.insert(entry.inode) {
+                        // Either we've visited this inode already or there's multiple files;
+                        // either way stop.
+                        break;
+                    } else if entry.is_dir() && unique_entry.is_empty() {
+                        // first candidate
+                        unique_entry = entry.name.to_owned();
+                    } else {
+                        // We either have two or more candidates, or the child is not a directory. We're
+                        // done.
+                        unique_entry.clear();
+                        break;
+                    }
+                }
+
+                // We stop if we got two or more entries; also stop if we got zero or were interrupted
+                if unique_entry.is_empty() || self.interrupted_or_overflowed() {
+                    break;
+                }
+
+                append_path_component(&mut unique_hierarchy, &unique_entry);
+                unique_hierarchy.push('/');
+
+                append_path_component(abs_unique_hierarchy, &unique_entry);
+                abs_unique_hierarchy.push('/');
+            }
+
+            return unique_hierarchy;
+        }
+
+        fn try_add_completion_result(
+            &mut self,
+            filepath: &wstr,
+            filename: &wstr,
+            wildcard: &wstr,
+            prefix: &wstr,
+            known_dir: bool,
+        ) {
+            // This function is only for the completions case.
+            assert!(self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
+            let mut abs_path = self.working_directory.clone();
+            append_path_component(&mut abs_path, filepath);
+
+            // We must normalize the path to allow 'cd ..' to operate on logical paths.
+            if self.flags.contains(ExpandFlags::SPECIAL_FOR_CD) {
+                abs_path = normalize_path(&abs_path, true);
+            }
+
+            let before = self.resolved_completions.len();
+
+            if wildcard_test_flags_then_complete(
+                &abs_path,
+                filename,
+                wildcard,
+                self.flags,
+                Some(self.resolved_completions),
+                known_dir,
+            ) {
+                // Hack. We added this completion result based on the last component of the wildcard.
+                // Prepend our prefix to each wildcard that replaces its token.
+                // Note that prepend_token_prefix is a no-op unless COMPLETE_REPLACES_TOKEN is set
+                let after = self.resolved_completions.len();
+                for i in before..after {
+                    let c = self.resolved_completions.get_mut(i).unwrap();
+                    if self.has_fuzzy_ancestor && !(c.flags.contains(CompleteFlags::REPLACES_TOKEN))
+                    {
+                        c.flags |= CompleteFlags::REPLACES_TOKEN;
+                        c.prepend_token_prefix(wildcard);
+                    }
+                    c.prepend_token_prefix(prefix);
+                }
+
+                // Implement special_for_cd_autosuggestion by descending the deepest unique
+                // hierarchy we can, and then appending any components to each new result.
+                // Only descend deepest unique for cd autosuggest and not for cd tab completion
+                // (issue #4402).
+                if self
+                    .flags
+                    .contains(ExpandFlags::SPECIAL_FOR_CD_AUTOSUGGESTION)
+                {
+                    let unique_hierarchy = self.descend_unique_hierarchy(&mut abs_path);
+                    if !unique_hierarchy.is_empty() {
+                        for i in before..after {
+                            let c = self.resolved_completions.get_mut(i).unwrap();
+                            c.completion.push_utfstr(&unique_hierarchy);
+                        }
+                    }
+                }
+
+                self.did_add = true;
+            }
+        }
+
+        // Helper to resolve using our prefix.
+        /// dotdot default is false
+        fn open_dir(&self, base_dir: &wstr, dotdot: bool) -> std::io::Result<DirIter> {
+            let mut path = self.working_directory.clone();
+            append_path_component(&mut path, base_dir);
+            if self.flags.contains(ExpandFlags::SPECIAL_FOR_CD) {
+                // cd operates on logical paths.
+                // for example, cd ../<tab> should complete "without resolving symlinks".
+                path = normalize_path(&path, true);
+            }
+
+            return match dotdot {
+                true => DirIter::new_with_dots(&path),
+                false => DirIter::new(&path),
+            };
+        }
+    }
+}
 
 /// Expand the wildcard by matching against the filesystem.
 ///
@@ -37,20 +1057,66 @@ pub const ANY_SENTINEL: char = char_offset(WILDCARD_RESERVED_BASE, 3);
 /// executables_only
 /// \param output The list in which to put the output
 ///
-enum WildcardResult {
-    /// The wildcard did not match.
-    NoMatch,
-    /// The wildcard did match.
-    Match,
-    /// Expansion was cancelled (e.g. control-C).
-    Cancel,
-    /// Expansion produced too many results.
-    Overflow,
-}
+pub fn wildcard_expand_string(
+    wc: &wstr,
+    working_directory: &wstr,
+    flags: ExpandFlags,
+    cancel_checker: &CancelChecker,
+    output: &mut CompletionReceiver,
+) -> WildcardResult {
+    // Fuzzy matching only if we're doing completions.
+    assert!(
+        flags.contains(ExpandFlags::FOR_COMPLETIONS) || !flags.contains(ExpandFlags::FUZZY_MATCH)
+    );
 
-// pub fn wildcard_expand_string(wc: &wstr, working_directory: &wstr, flags: ExpandFlags, cancel_checker: impl CancelChecker, output: *mut completion_receiver_t) -> WildcardResult {
-//     todo!()
-// }
+    // ExpandFlags::SPECIAL_FOR_CD requires expand_flag::DIRECTORIES_ONLY and
+    // ExpandFlags::FOR_COMPLETIONS and !expand_flag::GEN_DESCRIPTIONS.
+    assert!(
+        !(flags.contains(ExpandFlags::SPECIAL_FOR_CD))
+            || ((flags.contains(ExpandFlags::DIRECTORIES_ONLY))
+                && (flags.contains(ExpandFlags::FOR_COMPLETIONS))
+                && (!flags.contains(ExpandFlags::GEN_DESCRIPTIONS)))
+    );
+
+    // Hackish fix for issue #1631. We are about to call c_str(), which will produce a string
+    // truncated at any embedded nulls. We could fix this by passing around the size, etc. However
+    // embedded nulls are never allowed in a filename, so we just check for them and return 0 (no
+    // matches) if there is an embedded null.
+    if wc.contains('\0') {
+        return WildcardResult::NoMatch;
+    }
+
+    // We do not support tab-completing recursive (**) wildcards. This is historic behavior.
+    // Do not descend any directories if there is a ** wildcard.
+    if flags.contains(ExpandFlags::FOR_COMPLETIONS) && wc.contains(ANY_STRING_RECURSIVE) {
+        return WildcardResult::NoMatch;
+    }
+
+    // Compute the prefix and base dir. The prefix is what we prepend for filesystem operations
+    // (i.e. the working directory), the base_dir is the part of the wildcard consumed thus far,
+    // which we also have to append. The difference is that the base_dir is returned as part of the
+    // expansion, and the prefix is not.
+    //
+    // Check for a leading slash. If we find one, we have an absolute path: the prefix is empty, the
+    // base dir is /, and the wildcard is the remainder. If we don't find one, the prefix is the
+    // working directory, the base dir is empty.
+    let prefix;
+    let base_dir;
+    let effective_wc;
+    if wc.starts_with(L!("/")) {
+        prefix = L!("");
+        base_dir = L!("/");
+        effective_wc = wc.slice_from(1);
+    } else {
+        prefix = working_directory;
+        base_dir = L!("");
+        effective_wc = wc;
+    }
+
+    let mut expander = WildCardExpander::new(prefix.to_owned(), flags, cancel_checker, output);
+    expander.expand(base_dir, effective_wc, base_dir);
+    return expander.status_code();
+}
 
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
 ///
@@ -161,11 +1227,6 @@ fn wildcard_has(s: impl AsRef<wstr>) -> bool {
     return wildcard_has_internal(unescaped);
 }
 
-/// Test wildcard completion.
-// pub fn wildcard_complete(str: &wstr, wc: &wstr, desc_func: impl Fn(&wstr) -> WString, out: *mut completion_receiver_t, expand_flags: ExpandFlags, flags: CompleteFlags) -> bool {
-//     todo!()
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -199,6 +1260,7 @@ mod ffi {
     extern "C++" {
         include!("wutil.h");
     }
+
     extern "Rust" {
         #[cxx_name = "wildcard_match_ffi"]
         fn wildcard_match_ffi(

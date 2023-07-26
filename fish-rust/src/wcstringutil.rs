@@ -98,10 +98,10 @@ pub enum CaseFold {
 }
 
 /// A lightweight value-type describing how closely a string fuzzy-matches another string.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct StringFuzzyMatch {
-    typ: ContainType,
-    case_fold: CaseFold,
+    pub typ: ContainType,
+    pub case_fold: CaseFold,
 }
 
 impl StringFuzzyMatch {

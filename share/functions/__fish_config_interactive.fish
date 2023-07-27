@@ -31,6 +31,10 @@ if status is-interactive
 end" >$__fish_config_dir/config.fish
 
         # Regular syntax highlighting colors
+        # NOTE: These should only use named colors
+        # to give us the maximum chance they are
+        # visible in whatever terminal setup.
+        #
         __init_uvar fish_color_normal normal
         __init_uvar fish_color_command blue
         __init_uvar fish_color_param cyan
@@ -41,7 +45,7 @@ end" >$__fish_config_dir/config.fish
         __init_uvar fish_color_operator brcyan
         __init_uvar fish_color_end green
         __init_uvar fish_color_quote yellow
-        __init_uvar fish_color_autosuggestion 555 brblack
+        __init_uvar fish_color_autosuggestion brblack
         __init_uvar fish_color_user brgreen
         __init_uvar fish_color_host normal
         __init_uvar fish_color_host_remote yellow
@@ -57,14 +61,12 @@ end" >$__fish_config_dir/config.fish
         # Background color for selections
         __init_uvar fish_color_selection white --bold --background=brblack
 
-        # XXX fish_color_cancel was added in 2.6, but this was added to post-2.3 initialization
-        # when 2.4 and 2.5 were already released
         __init_uvar fish_color_cancel -r
 
         # Pager colors
         __init_uvar fish_pager_color_prefix normal --bold --underline
         __init_uvar fish_pager_color_completion normal
-        __init_uvar fish_pager_color_description B3A06D yellow -i
+        __init_uvar fish_pager_color_description yellow -i
         __init_uvar fish_pager_color_progress brwhite --background=cyan
         __init_uvar fish_pager_color_selected_background -r
 

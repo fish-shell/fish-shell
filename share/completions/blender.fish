@@ -7,7 +7,8 @@ for name in [scene.name for scene in list(bpy.data.scenes)]:
 end
 
 function __blender_list_addons
-    path basename /usr/share/blender/scripts/addons/*.py | path change-extension ''
+    path basename /usr/share/blender/scripts/addons/*.py |
+        path change-extension ''
 end
 
 function __blender_list_engines

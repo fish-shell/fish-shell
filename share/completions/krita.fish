@@ -7,17 +7,10 @@ function __krita_complete_image_format
             case '*,*,*'
                 # nothing is completed as arbitrary width and height are expected
             case '*,'
-                echo 'U8
-U16
-F16
-F32' | string replace -r '^' $current_token
+                printf '%s,\n' U8 U16 F16 F32 |
+                    string replace -r '^' $current_token
             case '*'
-                echo 'RGBA
-XYZA
-LABA
-CMYKA
-GRAY
-YCbCrA' | string replace -r '$' ','
+                printf '%s,\n' RGBA XYZA LABA CMYKA GRAY YCbCrA
         end
     end
 end

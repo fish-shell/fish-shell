@@ -25,7 +25,7 @@ function __blender_complete_addon_list
     set -l previous_token (commandline -oc)[-1]
     set -l current_token (commandline -t)
 
-    if test $previous_token = --addons
+    if test "$previous_token" = --addons
         __blender_list_addons |
             string replace -r '^' $current_token |
             string replace -r '$' ','

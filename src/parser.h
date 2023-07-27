@@ -225,9 +225,10 @@ struct library_data_t : public library_data_pod_t {
         wcstring commandline;
     } status_vars;
 
-    public:
+   public:
     wcstring get_status_vars_command() const { return status_vars.command; }
     wcstring get_status_vars_commandline() const { return status_vars.commandline; }
+    const wcstring *get_current_filename() const;  // may return nullptr if None
 };
 
 /// The result of parser_t::eval family.

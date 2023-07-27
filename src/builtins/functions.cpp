@@ -139,26 +139,29 @@ static int report_function_metadata(const wcstring &funcname, bool verbose, io_s
     wcstring copy_path = L"n/a";
     int copy_line_number = 0;
 
-    if (auto props = function_get_props_autoload(funcname, parser)) {
-        if (props->definition_file) {
-            path = *props->definition_file;
-            autoloaded = props->is_autoload ? L"autoloaded" : L"not-autoloaded";
+    if (auto mprops = function_get_props_autoload(funcname, parser)) {
+        const auto &props = *mprops;
+        if (auto def_file = props->definition_file()) {
+            path = std::move(*def_file);
+            autoloaded = props->is_autoload() ? L"autoloaded" : L"not-autoloaded";
             line_number = props->definition_lineno();
         } else {
             path = L"stdin";
         }
 
-        is_copy = props->is_copy;
+        is_copy = props->is_copy();
 
-        if (props->copy_definition_file) {
-            copy_path = *props->copy_definition_file;
-            copy_line_number = props->copy_definition_lineno;
+        auto definition_file = props->copy_definition_file();
+        if (definition_file) {
+            copy_path = *definition_file;
+            copy_line_number = props->copy_definition_lineno();
         } else {
             copy_path = L"stdin";
         }
 
-        shadows_scope = props->shadow_scope ? L"scope-shadowing" : L"no-scope-shadowing";
-        description = escape_string(props->description, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
+        shadows_scope = props->shadow_scope() ? L"scope-shadowing" : L"no-scope-shadowing";
+        description =
+            escape_string(*props->get_description(), ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED);
     }
 
     if (metadata_as_comments) {
@@ -298,7 +301,9 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
     }
 
     if (opts.list || argc == optind) {
-        std::vector<wcstring> names = function_get_names(opts.show_hidden);
+        wcstring_list_ffi_t names_ffi{};
+        function_get_names(opts.show_hidden, names_ffi);
+        std::vector<wcstring> names = std::move(names_ffi.vals);
         std::sort(names.begin(), names.end());
         bool is_screen = !streams.out_is_redirected && isatty(STDOUT_FILENO);
         if (is_screen) {
@@ -375,7 +380,8 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
                 if (!opts.no_metadata) {
                     report_function_metadata(funcname, opts.verbose, streams, parser, true);
                 }
-                wcstring def = func->annotated_definition(funcname);
+                std::unique_ptr<wcstring> def_ptr = (*func)->annotated_definition(funcname);
+                wcstring def = std::move(*def_ptr);
 
                 if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                     std::vector<highlight_spec_t> colors;

@@ -8,12 +8,8 @@ use crate::builtins::shared::{
 };
 use crate::ffi::parser_t;
 use crate::ffi::Repin;
-use crate::ffi::{
-    builtin_exists, colorize_shell, function_get_annotated_definition,
-    function_get_copy_definition_file, function_get_copy_definition_lineno,
-    function_get_definition_file, function_get_definition_lineno, function_get_props_autoload,
-    function_is_copy,
-};
+use crate::ffi::{builtin_exists, colorize_shell};
+use crate::function;
 use crate::path::{path_get_path, path_get_paths};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::WCharFromFFI;
@@ -95,8 +91,7 @@ pub fn r#type(
     for arg in argv.iter().take(argc).skip(optind) {
         let mut found = 0;
         if !opts.force_path && !opts.no_functions {
-            let props = function_get_props_autoload(&arg.to_ffi(), parser.pin());
-            if !props.is_null() {
+            if let Some(props) = function::get_props_autoload(arg, parser) {
                 found += 1;
                 res = true;
                 // Early out - query means *any of the args exists*.
@@ -104,7 +99,7 @@ pub fn r#type(
                     return STATUS_CMD_OK;
                 }
                 if !opts.get_type {
-                    let path = function_get_definition_file(&props).from_ffi();
+                    let path = props.definition_file().unwrap_or(L!(""));
                     let mut comment = WString::new();
 
                     if path.is_empty() {
@@ -112,7 +107,7 @@ pub fn r#type(
                     } else if path == "-" {
                         comment.push_utfstr(&wgettext_fmt!("Defined via `source`"));
                     } else {
-                        let lineno: i32 = i32::from(function_get_definition_lineno(&props));
+                        let lineno: i32 = props.definition_lineno();
                         comment.push_utfstr(&wgettext_fmt!(
                             "Defined in %ls @ line %d",
                             path,
@@ -120,15 +115,14 @@ pub fn r#type(
                         ));
                     }
 
-                    if function_is_copy(&props) {
-                        let path = function_get_copy_definition_file(&props).from_ffi();
+                    if props.is_copy() {
+                        let path = props.copy_definition_file().unwrap_or(L!(""));
                         if path.is_empty() {
                             comment.push_utfstr(&wgettext_fmt!(", copied interactively"));
                         } else if path == "-" {
                             comment.push_utfstr(&wgettext_fmt!(", copied via `source`"));
                         } else {
-                            let lineno: i32 =
-                                i32::from(function_get_copy_definition_lineno(&props));
+                            let lineno: i32 = props.copy_definition_lineno();
                             comment.push_utfstr(&wgettext_fmt!(
                                 ", copied in %ls @ line %d",
                                 path,
@@ -137,22 +131,21 @@ pub fn r#type(
                         }
                     }
                     if opts.path {
-                        if function_is_copy(&props) {
-                            let path = function_get_copy_definition_file(&props).from_ffi();
-                            streams.out.append(path);
+                        if let Some(orig_path) = props.copy_definition_file() {
+                            streams.out.append(orig_path);
                         } else {
                             streams.out.append(path);
                         }
-                        streams.out.append(L!("\n"));
+                        streams.out.append1('\n');
                     } else if !opts.short_output {
                         streams.out.append(wgettext_fmt!("%ls is a function", arg));
                         streams.out.append(wgettext_fmt!(" with definition"));
-                        streams.out.append(L!("\n"));
+                        streams.out.append1('\n');
                         let mut def = WString::new();
                         def.push_utfstr(&sprintf!(
                             "# %ls\n%ls",
                             comment,
-                            function_get_annotated_definition(&props, &arg.to_ffi()).from_ffi()
+                            props.annotated_definition(arg)
                         ));
 
                         if !streams.out_is_redirected && unsafe { isatty(STDOUT_FILENO) == 1 } {

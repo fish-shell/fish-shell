@@ -18,6 +18,7 @@ use libc::pid_t;
 pub type wchar_t = u32;
 
 include_cpp! {
+    #include "autoload.h"
     #include "builtin.h"
     #include "color.h"
     #include "common.h"
@@ -125,17 +126,6 @@ include_cpp! {
 
     generate!("exec_subshell_ffi")
 
-    generate!("function_properties_t")
-    generate!("function_properties_ref_t")
-    generate!("function_get_props_autoload")
-    generate!("function_get_definition_file")
-    generate!("function_get_copy_definition_file")
-    generate!("function_get_definition_lineno")
-    generate!("function_get_copy_definition_lineno")
-    generate!("function_get_annotated_definition")
-    generate!("function_is_copy")
-    generate!("function_exists")
-
     generate!("rgb_color_t")
     generate_pod!("color24_t")
     generate!("colorize_shell")
@@ -152,9 +142,13 @@ include_cpp! {
     generate!("history_session_id")
     generate!("reader_change_cursor_selection_mode")
     generate!("reader_set_autosuggestion_enabled_ffi")
-    generate!("function_invalidate_path")
     generate!("complete_invalidate_path")
+    generate!("complete_add_wrapper")
     generate!("update_wait_on_escape_ms_ffi")
+    generate!("autoload_t")
+    generate!("make_autoload_ffi")
+    generate!("perform_autoload_ffi")
+    generate!("complete_get_wrap_targets_ffi")
 }
 
 impl parser_t {
@@ -337,6 +331,7 @@ pub trait Repin {
 }
 
 // Implement Repin for our types.
+impl Repin for autoload_t {}
 impl Repin for block_t {}
 impl Repin for env_stack_t {}
 impl Repin for env_universal_t {}
@@ -345,7 +340,6 @@ impl Repin for job_t {}
 impl Repin for output_stream_t {}
 impl Repin for parser_t {}
 impl Repin for process_t {}
-impl Repin for function_properties_ref_t {}
 impl Repin for wcstring_list_ffi_t {}
 
 pub use autocxx::c_int;

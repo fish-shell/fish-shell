@@ -583,7 +583,7 @@ static block_t *function_prepare_environment(parser_t &parser, std::vector<wcstr
         func_name = std::move(*argv.begin());
         argv.erase(argv.begin());
     }
-    block_t *fb = parser.push_block(block_t::function_block(func_name, argv, props.shadow_scope));
+    block_t *fb = parser.push_block(block_t::function_block(func_name, argv, props.shadow_scope()));
     auto &vars = parser.vars();
 
     // Setup the environment for the function. There are three components of the environment:
@@ -592,7 +592,8 @@ static block_t *function_prepare_environment(parser_t &parser, std::vector<wcstr
     // 3. argv
 
     size_t idx = 0;
-    for (const wcstring &named_arg : props.named_arguments) {
+    auto args = props.named_arguments();
+    for (const wcstring &named_arg : args->vals) {
         if (idx < argv.size()) {
             vars.set_one(named_arg, ENV_LOCAL | ENV_USER, argv.at(idx));
         } else {
@@ -601,9 +602,10 @@ static block_t *function_prepare_environment(parser_t &parser, std::vector<wcstr
         idx++;
     }
 
-    for (const auto &kv : props.inherit_vars) {
-        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second);
-    }
+    vars.apply_inherited_ffi(props);
+    // for (const auto &kv : props.inherit_vars) {
+    //     vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second);
+    // }
 
     vars.set_argv(std::move(argv));
     return fb;
@@ -651,12 +653,18 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return proc_performer_t{};
         }
+        auto props_box = std::make_shared<rust::Box<function_properties_t>>(props.acquire());
         const std::vector<wcstring> &argv = p->argv();
         return [=](parser_t &parser) {
             // Pull out the job list from the function.
-            const ast::job_list_t &body = props->func_node->jobs();
-            const block_t *fb = function_prepare_environment(parser, argv, *props);
-            auto res = parser.eval_node(*props->parsed_source, body, io_chain, job_group);
+            const auto *func = reinterpret_cast<const ast::block_statement_t *>(
+                (*props_box)->get_block_statement_node());
+            const ast::job_list_t &body = func->jobs();
+            const block_t *fb = function_prepare_environment(parser, argv, **props_box);
+            const auto parsed_source_raw = (*props_box)->parsed_source();
+            const auto parsed_source_box = rust::Box<ParsedSourceRefFFI>::from_raw(
+                reinterpret_cast<ParsedSourceRefFFI *>(parsed_source_raw));
+            auto res = parser.eval_node(*parsed_source_box, body, io_chain, job_group);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.

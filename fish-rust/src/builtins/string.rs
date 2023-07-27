@@ -327,6 +327,9 @@ impl Drop for Arguments<'_, '_> {
 }
 
 impl<'args, 'iter> Arguments<'args, 'iter> {
+    /// Empirically determined.
+    /// This is probably down to some pipe buffer or some such,
+    /// but too small means we need to call `read(2)` and str2wcstring a lot.
     const STRING_CHUNK_SIZE: usize = 1024;
 
     fn new(

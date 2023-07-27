@@ -53,10 +53,10 @@ impl StringSubCommand<'_> for Repeat {
 
         let mut all_empty = true;
         let mut first = true;
-        let mut print_newline = true;
+        let mut print_trailing_newline = true;
 
         for (w, want_newline) in Arguments::new(args, optind, streams) {
-            print_newline = want_newline;
+            print_trailing_newline = want_newline;
             if w.is_empty() {
                 continue;
             }
@@ -132,7 +132,7 @@ impl StringSubCommand<'_> for Repeat {
         }
 
         // Historical behavior is to never append a newline if all strings were empty.
-        if !self.quiet && !self.no_newline && !all_empty && print_newline {
+        if !self.quiet && !self.no_newline && !all_empty && print_trailing_newline {
             streams.out.append1('\n');
         }
 

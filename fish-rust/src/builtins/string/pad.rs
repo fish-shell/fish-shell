@@ -72,13 +72,13 @@ impl StringSubCommand<'_> for Pad {
     ) -> Option<libc::c_int> {
         let mut max_width = 0usize;
         let mut inputs: Vec<(Cow<'args, wstr>, usize)> = Vec::new();
-        let mut print_newline = true;
+        let mut print_trailing_newline = true;
 
         for (arg, want_newline) in Arguments::new(args, optind, streams) {
             let width = width_without_escapes(&arg, 0);
             max_width = max_width.max(width);
             inputs.push((arg, width));
-            print_newline = want_newline;
+            print_trailing_newline = want_newline;
         }
 
         let pad_width = max_width.max(self.width);
@@ -101,7 +101,7 @@ impl StringSubCommand<'_> for Pad {
                     .collect(),
             };
 
-            if print_newline {
+            if print_trailing_newline {
                 padded.push('\n');
             }
 

@@ -93,7 +93,8 @@ None of the Rust string types are nul-terminated. We're taking this opportunity 
 One may create a `&wstr` from a string literal using the `wchar::L!` macro:
 
 ```rust
-use crate::wchar::{wstr, L!}
+use crate::wchar::prelude::*;
+// This imports wstr, the L! macro, WString, a ToWString trait that supplies .to_wstring() along with other things
 
 fn get_shell_name() -> &'static wstr {
     L!("fish")
@@ -104,10 +105,28 @@ There is also a `widestrs` proc-macro which enables L as a _suffix_, to reduce t
 
 ```rust
 use crate::wchar::{wstr, widestrs}
+// also imported by the prelude
 
 #[widestrs]
 fn get_shell_name() -> &'static wstr {
     "fish"L // equivalent to L!("fish")
+}
+```
+
+#### The wchar prelude
+
+We have a prelude to make working with these string types a whole lot more ergonomic. In particular `WExt` supplies the null-terminated-compatible `.char_at(usize)`,
+and a whole lot more methods that makes porting C++ code easier. It is also preferred to use char-based-methods like `.char_count()` and `.slice_{from,to}()` 
+of the `WExt` trait over directly calling `.len()` and `[usize..]/[..usize]`, as that makes the code compatible with a potential future change to UTF8-strings.
+
+```rust
+pub(crate) mod prelude {
+    pub(crate) use crate::{
+        wchar::{wstr, IntoCharIter, WString, L},
+        wchar_ext::{ToWString, WExt},
+        wutil::{sprintf, wgettext, wgettext_fmt, wgettext_str},
+    };
+    pub(crate) use widestring_suffix::widestrs;
 }
 ```
 

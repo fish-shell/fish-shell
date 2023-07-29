@@ -33,7 +33,7 @@ impl StringSubCommand<'_> for Length {
     ) -> Option<libc::c_int> {
         let mut nnonempty = 0usize;
 
-        for (arg, _) in Arguments::new(args, optind, streams) {
+        for (arg, _) in arguments(args, optind, streams) {
             if self.visible {
                 // Visible length only makes sense line-wise.
                 for line in split_string(&arg, '\n') {

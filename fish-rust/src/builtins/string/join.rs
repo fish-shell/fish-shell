@@ -45,9 +45,9 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         }
 
         let Some(arg) = args.get(*optind).copied() else {
-           string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
-           return STATUS_INVALID_ARGS;
-       };
+            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
+            return STATUS_INVALID_ARGS;
+        };
         *optind += 1;
         self.sep = arg;
 
@@ -64,7 +64,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         let sep = &self.sep;
         let mut nargs = 0usize;
         let mut print_trailing_newline = true;
-        for (arg, want_newline) in Arguments::new(args, optind, streams) {
+        for (arg, want_newline) in arguments(args, optind, streams) {
             if !self.quiet {
                 if self.no_empty && arg.is_empty() {
                     continue;

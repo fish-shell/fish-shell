@@ -31,7 +31,9 @@ impl StringSubCommand<'_> for Collect {
     ) -> Option<libc::c_int> {
         let mut appended = 0usize;
 
-        for (arg, want_newline) in Arguments::without_splitting_on_newline(args, optind, streams) {
+        for (arg, want_newline) in
+            arguments(args, optind, streams).with_split_behavior(SplitBehavior::Never)
+        {
             let arg = if !self.no_trim_newlines {
                 let trim_len = arg.len() - arg.chars().rev().take_while(|&c| c == '\n').count();
                 &arg[..trim_len]

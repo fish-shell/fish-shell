@@ -55,7 +55,7 @@ impl StringSubCommand<'_> for Repeat {
         let mut first = true;
         let mut print_trailing_newline = true;
 
-        for (w, want_newline) in Arguments::new(args, optind, streams) {
+        for (w, want_newline) in arguments(args, optind, streams) {
             print_trailing_newline = want_newline;
             if w.is_empty() {
                 continue;

@@ -181,10 +181,10 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         let mut split_count = 0usize;
         let mut arg_count = 0usize;
 
-        let argiter = match self.is_split0 {
-            false => Arguments::new(args, optind, streams),
-            true => Arguments::without_splitting_on_newline(args, optind, streams),
-        };
+        let argiter = arguments(args, optind, streams).with_split_behavior(match self.is_split0 {
+            false => SplitBehavior::Newline,
+            true => SplitBehavior::Never,
+        });
         for (arg, _) in argiter {
             let splits: Vec<Cow<'args, wstr>> = match (self.split_from, arg) {
                 (Direction::Right, arg) => {

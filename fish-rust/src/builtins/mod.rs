@@ -13,6 +13,7 @@ pub mod emit;
 pub mod exit;
 pub mod function;
 pub mod math;
+pub mod path;
 pub mod printf;
 pub mod pwd;
 pub mod random;

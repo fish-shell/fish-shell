@@ -38,7 +38,6 @@
 #include "builtins/functions.h"
 #include "builtins/history.h"
 #include "builtins/jobs.h"
-#include "builtins/path.h"
 #include "builtins/read.h"
 #include "builtins/set.h"
 #include "builtins/shared.rs.h"
@@ -381,7 +380,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"math", &implemented_in_rust, N_(L"Evaluate math expressions")},
     {L"not", &builtin_generic, N_(L"Negate exit status of job")},
     {L"or", &builtin_generic, N_(L"Execute command if previous command failed")},
-    {L"path", &builtin_path, N_(L"Handle paths")},
+    {L"path", &implemented_in_rust, N_(L"Handle paths")},
     {L"printf", &implemented_in_rust, N_(L"Prints formatted text")},
     {L"pwd", &implemented_in_rust, N_(L"Print the working directory")},
     {L"random", &implemented_in_rust, N_(L"Generate random number")},
@@ -579,6 +578,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"wait") {
         return RustBuiltin::Wait;
+    }
+    if (cmd == L"path") {
+        return RustBuiltin::Path;
     }
     if (cmd == L"printf") {
         return RustBuiltin::Printf;

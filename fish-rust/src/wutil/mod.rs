@@ -37,15 +37,15 @@ pub fn wopendir(name: &wstr) -> *mut libc::DIR {
 }
 
 /// Wide character version of stat().
-pub fn wstat(file_name: &wstr) -> Option<fs::Metadata> {
+pub fn wstat(file_name: &wstr) -> io::Result<fs::Metadata> {
     let tmp = wcs2osstring(file_name);
-    fs::metadata(tmp).ok()
+    fs::metadata(tmp)
 }
 
 /// Wide character version of lstat().
-pub fn lwstat(file_name: &wstr) -> Option<fs::Metadata> {
+pub fn lwstat(file_name: &wstr) -> io::Result<fs::Metadata> {
     let tmp = wcs2osstring(file_name);
-    fs::symlink_metadata(tmp).ok()
+    fs::symlink_metadata(tmp)
 }
 
 /// Wide character version of access().
@@ -109,7 +109,7 @@ pub fn wgetcwd() -> WString {
 
 /// Wide character version of readlink().
 pub fn wreadlink(file_name: &wstr) -> Option<WString> {
-    let md = lwstat(file_name)?;
+    let md = lwstat(file_name).ok()?;
     let bufsize = usize::try_from(md.len()).unwrap() + 1;
     let mut target_buf = vec![b'\0'; bufsize];
     let tmp = wcs2zstring(file_name);

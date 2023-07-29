@@ -797,9 +797,9 @@ fn filter_path(opts: &Options, path: &wstr) -> bool {
         let mut type_ok = false;
         if t.contains(TypeFlags::LINK) {
             let md = lwstat(path);
-            type_ok = md.is_some() && md.unwrap().is_symlink();
+            type_ok = md.is_ok() && md.unwrap().is_symlink();
         }
-        let Some(md) = wstat(path) else {
+        let Ok(md) = wstat(path) else {
             // Does not exist
             return false;
         };
@@ -850,9 +850,8 @@ fn filter_path(opts: &Options, path: &wstr) -> bool {
         }
 
         // Permissions that require special handling
-
         if perm.is_special() {
-            let Some(md) = wstat(path) else {
+            let Ok(md) = wstat(path) else {
                 // Does not exist, even though we just checked we can access it
                 // likely some kind of race condition
                 // We might want to warn the user about this?

@@ -653,7 +653,7 @@ impl IoChain {
                                     let mut dname: &wstr = &spec.target;
                                     while !dname.is_empty() {
                                         let next: &wstr = wdirname(dname);
-                                        if let Some(md) = wstat(next) {
+                                        if let Ok(md) = wstat(next) {
                                             if !md.is_dir() {
                                                 FLOGF!(
                                                     warning,

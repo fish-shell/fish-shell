@@ -13,10 +13,10 @@ use crate::wutil::{
     normalize_path, path_normalize_for_cd, waccess, wdirname, wgettext, wgettext_fmt, wmkdir, wstat,
 };
 use errno::{errno, set_errno, Errno};
-use libc::{EACCES, EAGAIN, ENOENT, ENOTDIR, F_OK, X_OK};
+use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
 use std::ffi::OsStr;
-use std::io::Write;
+use std::io::{ErrorKind, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::prelude::MetadataExt;
 use widestring_suffix::widestrs;
@@ -342,7 +342,7 @@ pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<
     let paths = path_apply_cdpath(dir, wd, vars);
 
     for a_dir in paths {
-        if let Some(md) = wstat(&a_dir) {
+        if let Ok(md) = wstat(&a_dir) {
             if md.is_dir() {
                 return Some(a_dir);
             }
@@ -520,7 +520,7 @@ pub fn paths_are_same_file(path1: &wstr, path2: &wstr) -> bool {
     }
 
     match (wstat(path1), wstat(path2)) {
-        (Some(s1), Some(s2)) => s1.ino() == s2.ino() && s1.dev() == s2.dev(),
+        (Ok(s1), Ok(s2)) => s1.ino() == s2.ino() && s1.dev() == s2.dev(),
         _ => false,
     }
 }
@@ -627,29 +627,20 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 ///
 /// \return 0 if, at the time of function return the directory exists, -1 otherwise.
 fn create_directory(d: &wstr) -> bool {
-    let mut md;
-    loop {
-        md = wstat(d);
-        if md.is_none() && errno().0 != EAGAIN {
-            break;
+    let md = loop {
+        match wstat(d) {
+            Err(md) if md.kind() == ErrorKind::Interrupted => continue,
+            md => break md,
         }
-    }
+    };
     match md {
-        Some(md) => {
-            if md.is_dir() {
-                return true;
-            }
+        Ok(md) if md.is_dir() => true,
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            let dir: &wstr = wdirname(d);
+            return create_directory(dir) && wmkdir(d, 0o700) == 0;
         }
-        None => {
-            if errno().0 == ENOENT {
-                let dir: &wstr = wdirname(d);
-                if create_directory(dir) && wmkdir(d, 0o700) == 0 {
-                    return true;
-                }
-            }
-        }
+        _ => false,
     }
-    false
 }
 
 /// \return whether the given path is on a remote filesystem.

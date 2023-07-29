@@ -34,6 +34,9 @@
 #define WAIT_ON_ESCAPE_DEFAULT 30
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
+#define WAIT_ON_SEQUENCE_KEY_INFINITE (-1)
+static int wait_on_sequence_key_ms = WAIT_ON_SEQUENCE_KEY_INFINITE;
+
 input_event_queue_t::input_event_queue_t(int in) : in_(in) {}
 
 /// Internal function used by readch to read one byte.
@@ -138,6 +141,26 @@ void update_wait_on_escape_ms(const environment_t& vars) {
     }
 }
 
+// Update the wait_on_sequence_key_ms value in response to the fish_sequence_key_delay_ms user variable being
+// set.
+void update_wait_on_sequence_key_ms(const environment_t& vars) {
+    auto sequence_key_time_ms = vars.get(L"fish_sequence_key_delay_ms");
+    if (sequence_key_time_ms.missing_or_empty()) {
+        wait_on_sequence_key_ms = WAIT_ON_SEQUENCE_KEY_INFINITE;
+        return;
+    }
+
+    long tmp = fish_wcstol(sequence_key_time_ms->as_string().c_str());
+    if (errno || tmp < 10 || tmp >= 5000) {
+        std::fwprintf(stderr,
+                      L"ignoring fish_sequence_key_delay_ms: value '%ls' "
+                      L"is not an integer or is < 10 or >= 5000 ms\n",
+                      sequence_key_time_ms->as_string().c_str());
+    } else {
+        wait_on_sequence_key_ms = static_cast<int>(tmp);
+    }
+}
+
 maybe_t<char_event_t> input_event_queue_t::try_pop() {
     if (queue_.empty()) {
         return none();
@@ -216,7 +239,18 @@ char_event_t input_event_queue_t::readch() {
     }
 }
 
-maybe_t<char_event_t> input_event_queue_t::readch_timed() {
+maybe_t<char_event_t> input_event_queue_t::readch_timed_esc() {
+    return readch_timed(wait_on_escape_ms);
+}
+
+maybe_t<char_event_t> input_event_queue_t::readch_timed_sequence_key() {
+    if (wait_on_sequence_key_ms == WAIT_ON_SEQUENCE_KEY_INFINITE) {
+        return readch();
+    }
+    return readch_timed(wait_on_sequence_key_ms);
+}
+
+maybe_t<char_event_t> input_event_queue_t::readch_timed(const int wait_time_ms) {
     if (auto evt = try_pop()) {
         return evt;
     }
@@ -229,7 +263,7 @@ maybe_t<char_event_t> input_event_queue_t::readch_timed() {
     // pselect expects timeouts in nanoseconds.
     const uint64_t nsec_per_msec = 1000 * 1000;
     const uint64_t nsec_per_sec = nsec_per_msec * 1000;
-    const uint64_t wait_nsec = wait_on_escape_ms * nsec_per_msec;
+    const uint64_t wait_nsec = wait_time_ms * nsec_per_msec;
     struct timespec timeout;
     timeout.tv_sec = (wait_nsec) / nsec_per_sec;
     timeout.tv_nsec = (wait_nsec) % nsec_per_sec;

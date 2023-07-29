@@ -62,7 +62,10 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table.add_anon(L!("fish_term256"), handle_fish_term_change);
         table.add_anon(L!("fish_term24bit"), handle_fish_term_change);
         table.add_anon(L!("fish_escape_delay_ms"), update_wait_on_escape_ms);
-        table.add_anon(L!("fish_sequence_key_delay_ms"), update_wait_on_sequence_key_ms);
+        table.add_anon(
+            L!("fish_sequence_key_delay_ms"),
+            update_wait_on_sequence_key_ms,
+        );
         table.add_anon(L!("fish_emoji_width"), guess_emoji_width);
         table.add_anon(L!("fish_ambiguous_width"), handle_change_ambiguous_width);
         table.add_anon(L!("LINES"), handle_term_size_change);

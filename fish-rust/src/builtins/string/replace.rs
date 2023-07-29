@@ -79,7 +79,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
 
         let mut replace_count = 0;
 
-        for (arg, want_newline) in Arguments::new(args, optind, streams) {
+        for (arg, want_newline) in arguments(args, optind, streams) {
             let (replaced, result) = match replacer.replace(arg) {
                 Ok(x) => x,
                 Err(e) => {

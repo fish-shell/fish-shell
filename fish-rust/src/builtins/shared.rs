@@ -1,4 +1,5 @@
 use crate::builtins::{printf, wait};
+use crate::common::str2wcstring;
 use crate::ffi::separation_type_t;
 use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
 use crate::wchar::{wstr, WString, L};
@@ -6,8 +7,13 @@ use crate::wchar_ffi::{c_str, empty_wstring, ToCppWString, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use cxx::{type_id, ExternType};
 use libc::c_int;
-use std::os::fd::RawFd;
+use std::borrow::Cow;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read};
+use std::os::fd::{FromRawFd, RawFd};
 use std::pin::Pin;
+
+pub type BuiltinCmd = fn(&mut parser_t, &mut io_streams_t, &mut [&wstr]) -> Option<c_int>;
 
 #[cxx::bridge]
 mod builtins_ffi {
@@ -225,6 +231,7 @@ pub fn run_builtin(
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
         RustBuiltin::Exit => super::exit::exit(parser, streams, args),
         RustBuiltin::Math => super::math::math(parser, streams, args),
+        RustBuiltin::Path => super::path::path(parser, streams, args),
         RustBuiltin::Pwd => super::pwd::pwd(parser, streams, args),
         RustBuiltin::Random => super::random::random(parser, streams, args),
         RustBuiltin::Realpath => super::realpath::realpath(parser, streams, args),
@@ -334,5 +341,145 @@ impl HelpOnlyCmdOpts {
             print_help,
             optind: w.woptind,
         })
+    }
+}
+
+#[derive(PartialEq)]
+pub enum SplitBehavior {
+    Newline,
+    /// The default behavior of the -z or --null-in switch,
+    /// Automatically start splitting on NULL if one appears in the first PATH_MAX bytes.
+    /// Otherwise on newline
+    InferNull,
+    Null,
+    Never,
+}
+
+/// A helper type for extracting arguments from either argv or stdin.
+pub struct Arguments<'args, 'iter> {
+    /// The list of arguments passed to the string builtin.
+    args: &'iter [&'args wstr],
+    /// If using argv, index of the next argument to return.
+    argidx: &'iter mut usize,
+    split_behavior: SplitBehavior,
+    /// Buffer to store what we read with the BufReader
+    /// Is only here to avoid allocating every time
+    buffer: Vec<u8>,
+    /// If not using argv, we read with a buffer
+    reader: Option<BufReader<File>>,
+}
+
+impl Drop for Arguments<'_, '_> {
+    fn drop(&mut self) {
+        if let Some(r) = self.reader.take() {
+            // we should not close stdin
+            std::mem::forget(r.into_inner());
+        }
+    }
+}
+
+impl<'args, 'iter> Arguments<'args, 'iter> {
+    pub fn new(
+        args: &'iter [&'args wstr],
+        argidx: &'iter mut usize,
+        streams: &mut io_streams_t,
+        chunk_size: usize,
+    ) -> Self {
+        let reader = streams.stdin_is_directly_redirected().then(|| {
+            let stdin_fd = streams
+                .stdin_fd()
+                .filter(|&fd| fd >= 0)
+                .expect("should have a valid fd");
+            // safety: this should be a valid fd, and already open
+            let fd = unsafe { File::from_raw_fd(stdin_fd) };
+            BufReader::with_capacity(chunk_size, fd)
+        });
+
+        Arguments {
+            args,
+            argidx,
+            split_behavior: SplitBehavior::Newline,
+            buffer: Vec::new(),
+            reader,
+        }
+    }
+
+    pub fn with_split_behavior(mut self, split_behavior: SplitBehavior) -> Self {
+        self.split_behavior = split_behavior;
+        self
+    }
+
+    fn get_arg_stdin(&mut self) -> Option<(Cow<'args, wstr>, bool)> {
+        use SplitBehavior::*;
+        let reader = self.reader.as_mut().unwrap();
+
+        if self.split_behavior == InferNull {
+            // we must determine if the first `PATH_MAX` bytes contains a null.
+            // we intentionally do not consume the buffer here
+            // the contents will be returned again later
+            let b = reader.fill_buf().ok()?;
+            if b.contains(&b'\0') {
+                self.split_behavior = Null;
+            } else {
+                self.split_behavior = Newline;
+            }
+        }
+
+        // NOTE: C++ wrongly commented that read_blocked retries for EAGAIN
+        let num_bytes: usize = match self.split_behavior {
+            Newline => reader.read_until(b'\n', &mut self.buffer),
+            Null => reader.read_until(b'\0', &mut self.buffer),
+            Never => reader.read_to_end(&mut self.buffer),
+            _ => unreachable!(),
+        }
+        .ok()?;
+
+        // to match behaviour of earlier versions
+        if num_bytes == 0 {
+            return None;
+        }
+
+        // assert!(num_bytes == self.buffer.len());
+        let (end, want_newline) = match (&self.split_behavior, self.buffer.last().unwrap()) {
+            // remove the newline — consumers do not expect it
+            (Newline, b'\n') => (num_bytes - 1, true),
+            // we are missing a trailing newline!
+            (Newline, _) => (num_bytes, false),
+            // consumers do not expect to deal with the null
+            // "want_newline" is not currently relevant for Null
+            (Null, b'\0') => (num_bytes - 1, false),
+            // we are missing a null!
+            (Null, _) => (num_bytes, false),
+            (Never, _) => (num_bytes, false),
+            _ => unreachable!(),
+        };
+
+        let parsed = str2wcstring(&self.buffer[..end]);
+
+        let retval = Some((Cow::Owned(parsed), want_newline));
+        self.buffer.clear();
+        retval
+    }
+}
+
+impl<'args> Iterator for Arguments<'args, '_> {
+    // second is want_newline
+    // If not set, we have consumed all of stdin and its last line is missing a newline character.
+    // This is an edge case -- we expect text input, which is conventionally terminated by a
+    // newline character. But if it isn't, we use this to avoid creating one out of thin air,
+    // to not corrupt input data.
+    type Item = (Cow<'args, wstr>, bool);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.reader.is_some() {
+            return self.get_arg_stdin();
+        }
+
+        if *self.argidx >= self.args.len() {
+            return None;
+        }
+        let retval = (Cow::Borrowed(self.args[*self.argidx]), true);
+        *self.argidx += 1;
+        return Some(retval);
     }
 }

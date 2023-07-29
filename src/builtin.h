@@ -124,6 +124,7 @@ enum class RustBuiltin : int32_t {
     Emit,
     Exit,
     Math,
+    Path,
     Printf,
     Pwd,
     Random,

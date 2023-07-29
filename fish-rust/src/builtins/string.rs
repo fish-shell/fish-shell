@@ -1,18 +1,12 @@
-use std::borrow::Cow;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
-use std::os::fd::FromRawFd;
-
-use crate::common::str2wcstring;
 use crate::wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
 use crate::{
     builtins::shared::{
         builtin_missing_argument, builtin_print_error_trailer, builtin_print_help, io_streams_t,
-        BUILTIN_ERR_ARG_COUNT0, BUILTIN_ERR_ARG_COUNT1, BUILTIN_ERR_COMBO2,
-        BUILTIN_ERR_INVALID_SUBCMD, BUILTIN_ERR_MISSING_SUBCMD, BUILTIN_ERR_NOT_NUMBER,
-        BUILTIN_ERR_TOO_MANY_ARGUMENTS, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR, STATUS_CMD_OK,
-        STATUS_INVALID_ARGS,
+        Arguments, SplitBehavior, BUILTIN_ERR_ARG_COUNT0, BUILTIN_ERR_ARG_COUNT1,
+        BUILTIN_ERR_COMBO2, BUILTIN_ERR_INVALID_SUBCMD, BUILTIN_ERR_MISSING_SUBCMD,
+        BUILTIN_ERR_NOT_NUMBER, BUILTIN_ERR_TOO_MANY_ARGUMENTS, BUILTIN_ERR_UNKNOWN,
+        STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
     },
     ffi::{parser_t, separation_type_t},
     wchar::{wstr, WString, L},
@@ -302,126 +296,16 @@ fn escape_code_length(code: &wstr) -> Option<usize> {
     }
 }
 
-/// A helper type for extracting arguments from either argv or stdin.
-struct Arguments<'args, 'iter> {
-    /// The list of arguments passed to the string builtin.
+/// Empirically determined.
+/// This is probably down to some pipe buffer or some such,
+/// but too small means we need to call `read(2)` and str2wcstring a lot.
+const STRING_CHUNK_SIZE: usize = 1024;
+fn arguments<'iter, 'args>(
     args: &'iter [&'args wstr],
-    /// If using argv, index of the next argument to return.
     argidx: &'iter mut usize,
-    /// If set, when reading from a stream, split on newlines.
-    split_on_newline: bool,
-    /// Buffer to store what we read with the BufReader
-    /// Is only here to avoid allocating every time
-    buffer: Vec<u8>,
-    /// If not using argv, we read with a buffer
-    reader: Option<BufReader<File>>,
-}
-
-impl Drop for Arguments<'_, '_> {
-    fn drop(&mut self) {
-        if let Some(r) = self.reader.take() {
-            // we should not close stdin
-            std::mem::forget(r.into_inner());
-        }
-    }
-}
-
-impl<'args, 'iter> Arguments<'args, 'iter> {
-    /// Empirically determined.
-    /// This is probably down to some pipe buffer or some such,
-    /// but too small means we need to call `read(2)` and str2wcstring a lot.
-    const STRING_CHUNK_SIZE: usize = 1024;
-
-    fn new(
-        args: &'iter [&'args wstr],
-        argidx: &'iter mut usize,
-        streams: &mut io_streams_t,
-    ) -> Self {
-        let reader = streams.stdin_is_directly_redirected().then(|| {
-            let stdin_fd = streams
-                .stdin_fd()
-                .filter(|&fd| fd >= 0)
-                .expect("should have a valid fd");
-            // safety: this should be a valid fd, and already open
-            let fd = unsafe { File::from_raw_fd(stdin_fd) };
-            BufReader::with_capacity(Self::STRING_CHUNK_SIZE, fd)
-        });
-
-        Arguments {
-            args,
-            argidx,
-            split_on_newline: true,
-            buffer: Vec::new(),
-            reader,
-        }
-    }
-
-    fn without_splitting_on_newline(
-        args: &'iter [&'args wstr],
-        argidx: &'iter mut usize,
-        streams: &mut io_streams_t,
-    ) -> Self {
-        let mut args = Self::new(args, argidx, streams);
-        args.split_on_newline = false;
-        args
-    }
-
-    fn get_arg_stdin(&mut self) -> Option<(Cow<'args, wstr>, bool)> {
-        let reader = self.reader.as_mut().unwrap();
-
-        // NOTE: C++ wrongly commented that read_blocked retries for EAGAIN
-        let num_bytes = match self.split_on_newline {
-            true => reader.read_until(b'\n', &mut self.buffer),
-            false => reader.read_to_end(&mut self.buffer),
-        }
-        .ok()?;
-
-        // to match behaviour of earlier versions
-        if num_bytes == 0 {
-            return None;
-        }
-
-        let mut parsed = str2wcstring(&self.buffer);
-
-        // If not set, we have consumed all of stdin and its last line is missing a newline character.
-        // This is an edge case -- we expect text input, which is conventionally terminated by a
-        // newline character. But if it isn't, we use this to avoid creating one out of thin air,
-        // to not corrupt input data.
-        let want_newline;
-        if self.split_on_newline {
-            if parsed.char_at(parsed.len() - 1) == '\n' {
-                // consumers do not expect to deal with the newline
-                parsed.pop();
-                want_newline = true;
-            } else {
-                // we are missing a trailing newline
-                want_newline = false;
-            }
-        } else {
-            want_newline = false;
-        }
-
-        let retval = Some((Cow::Owned(parsed), want_newline));
-        self.buffer.clear();
-        retval
-    }
-}
-
-impl<'args> Iterator for Arguments<'args, '_> {
-    // second is want_newline
-    type Item = (Cow<'args, wstr>, bool);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.reader.is_some() {
-            return self.get_arg_stdin();
-        }
-
-        if *self.argidx >= self.args.len() {
-            return None;
-        }
-        *self.argidx += 1;
-        return Some((Cow::Borrowed(self.args[*self.argidx - 1]), true));
-    }
+    streams: &mut io_streams_t,
+) -> Arguments<'args, 'iter> {
+    Arguments::new(args, argidx, streams, STRING_CHUNK_SIZE)
 }
 
 /// The string builtin, for manipulating strings.

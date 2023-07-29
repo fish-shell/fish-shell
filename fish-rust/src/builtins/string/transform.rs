@@ -25,7 +25,7 @@ impl StringSubCommand<'_> for Transform {
     ) -> Option<libc::c_int> {
         let mut n_transformed = 0usize;
 
-        for (arg, want_newline) in Arguments::new(args, optind, streams) {
+        for (arg, want_newline) in arguments(args, optind, streams) {
             let transformed = (self.func)(&arg);
             if transformed != arg {
                 n_transformed += 1;

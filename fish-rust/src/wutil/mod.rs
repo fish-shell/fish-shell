@@ -511,13 +511,13 @@ pub fn fish_wcswidth(s: &wstr) -> libc::c_int {
 /// problem). Therefore we include richer information.
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct FileId {
-    device: libc::dev_t,
-    inode: libc::ino_t,
-    size: u64,
-    change_seconds: libc::time_t,
-    change_nanoseconds: i64,
-    mod_seconds: libc::time_t,
-    mod_nanoseconds: i64,
+    pub device: libc::dev_t,
+    pub inode: libc::ino_t,
+    pub size: u64,
+    pub change_seconds: libc::time_t,
+    pub change_nanoseconds: i64,
+    pub mod_seconds: libc::time_t,
+    pub mod_nanoseconds: i64,
 }
 
 impl FileId {

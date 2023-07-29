@@ -65,7 +65,7 @@ impl StringSubCommand<'_> for Sub {
         }
 
         let mut nsub = 0;
-        for (s, want_newline) in Arguments::new(args, optind, streams) {
+        for (s, want_newline) in arguments(args, optind, streams) {
             let start: usize = match self.start.map(i64::from).unwrap_or_default() {
                 n @ 1.. => n as usize - 1,
                 0 => 0,

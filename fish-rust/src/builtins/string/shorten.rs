@@ -72,7 +72,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
         let mut min_width = usize::MAX;
         let mut inputs = Vec::new();
 
-        let iter = Arguments::new(args, optind, streams);
+        let iter = arguments(args, optind, streams);
 
         if self.max == Some(0) {
             // Special case: Max of 0 means no shortening.

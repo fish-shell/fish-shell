@@ -62,6 +62,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table.add_anon(L!("fish_term256"), handle_fish_term_change);
         table.add_anon(L!("fish_term24bit"), handle_fish_term_change);
         table.add_anon(L!("fish_escape_delay_ms"), update_wait_on_escape_ms);
+        table.add_anon(L!("fish_sequence_key_delay_ms"), update_wait_on_sequence_key_ms);
         table.add_anon(L!("fish_emoji_width"), guess_emoji_width);
         table.add_anon(L!("fish_ambiguous_width"), handle_change_ambiguous_width);
         table.add_anon(L!("LINES"), handle_term_size_change);
@@ -105,6 +106,11 @@ fn update_wait_on_escape_ms(vars: &EnvStack) {
     let fish_escape_delay_ms = vars.get_unless_empty(L!("fish_escape_delay_ms"));
     let var = crate::env::environment::env_var_to_ffi(fish_escape_delay_ms);
     crate::ffi::update_wait_on_escape_ms_ffi(var);
+}
+fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
+    let fish_sequence_key_delay_ms = vars.get_unless_empty(L!("fish_sequence_key_delay_ms"));
+    let var = crate::env::environment::env_var_to_ffi(fish_sequence_key_delay_ms);
+    crate::ffi::update_wait_on_sequence_key_ms_ffi(var);
 }
 
 impl VarDispatchTable {
@@ -367,6 +373,7 @@ fn run_inits(vars: &EnvStack) {
     init_curses(vars);
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
+    update_wait_on_sequence_key_ms(vars);
     handle_read_limit_change(vars);
     handle_fish_use_posix_spawn_change(vars);
     handle_fish_trace(vars);

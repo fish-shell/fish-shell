@@ -148,6 +148,7 @@ include_cpp! {
     generate!("complete_invalidate_path")
     generate!("complete_add_wrapper")
     generate!("update_wait_on_escape_ms_ffi")
+    generate!("update_wait_on_sequence_key_ms_ffi")
     generate!("autoload_t")
     generate!("make_autoload_ffi")
     generate!("perform_autoload_ffi")

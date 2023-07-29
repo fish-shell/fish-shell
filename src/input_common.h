@@ -189,6 +189,9 @@ class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
 void update_wait_on_escape_ms_ffi(std::unique_ptr<env_var_t> fish_escape_delay_ms);
 
+void update_wait_on_sequence_key_ms(const environment_t &vars);
+void update_wait_on_sequence_key_ms_ffi(std::unique_ptr<env_var_t> fish_sequence_key_delay_ms);
+
 /// A class which knows how to produce a stream of input events.
 /// This is a base class; you may subclass it for its override points.
 class input_event_queue_t {
@@ -204,7 +207,10 @@ class input_event_queue_t {
     /// Like readch(), except it will wait at most WAIT_ON_ESCAPE milliseconds for a
     /// character to be available for reading.
     /// \return none on timeout, the event on success.
-    maybe_t<char_event_t> readch_timed();
+    maybe_t<char_event_t> readch_timed(const int wait_time_ms);
+
+    maybe_t<char_event_t> readch_timed_esc();
+    maybe_t<char_event_t> readch_timed_sequence_key();
 
     /// Enqueue a character or a readline function to the queue of unread characters that
     /// readch will return before actually reading from fd 0.

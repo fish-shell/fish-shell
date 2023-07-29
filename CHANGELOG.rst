@@ -42,6 +42,7 @@ Completions
 - ``krita`` (:issue:`9903`).
 - ``blender`` (:issue:`9905`).
 - ``gimp`` (:issue:`9904`).
+- ``horcrux`` (:issue:`9922`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

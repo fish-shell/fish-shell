@@ -22,7 +22,7 @@ indent_size = 2
 indent_size = 2
 
 [share/{completions,functions}/**.fish]
-max_line_length = none
+max_line_length = off
 
 [{COMMIT_EDITMSG,git-revise-todo}]
 max_line_length = 80

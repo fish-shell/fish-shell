@@ -1,6 +1,5 @@
 use crate::env::environment::Environment;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::os::unix::prelude::{FileTypeExt, MetadataExt};
 use std::time::SystemTime;
 
@@ -735,19 +734,12 @@ fn path_sort(
         false => SplitBehavior::InferNull,
     });
 
-    let owning_list: Vec<_> = arguments.map(|(f, _)| f).collect();
-    let mut list: Vec<&wstr> = owning_list.iter().map(|f| f.as_ref()).collect();
+    let mut list: Vec<_> = arguments.map(|(f, _)| f).collect();
 
     if opts.key.is_some() {
-        // Keep a map to avoid repeated keyfunc calls
-        let key: HashMap<&wstr, &wstr> = list
-            .iter()
-            .map(|f| (<&wstr>::clone(f), keyfunc(f)))
-            .collect();
-
         // We use a stable sort here
         list.sort_by(|a, b| {
-            match wcsfilecmp_glob(key[a], key[b]) {
+            match wcsfilecmp_glob(keyfunc(a), keyfunc(b)) {
                 // to avoid changing the order so we can chain calls
                 Ordering::Equal => Ordering::Greater,
                 order if opts.reverse => order.reverse(),
@@ -757,7 +749,7 @@ fn path_sort(
 
         if opts.unique {
             // we are sorted, dedup will remove all duplicates
-            list.dedup_by(|a, b| key[a] == key[b]);
+            list.dedup_by(|a, b| keyfunc(a) == keyfunc(b));
         }
     } else {
         // Without --key, we just sort by the entire path,
@@ -778,7 +770,7 @@ fn path_sort(
     }
 
     for entry in list {
-        path_out(streams, &opts, entry);
+        path_out(streams, &opts, &entry);
     }
 
     /* TODO: Return true only if already sorted? */

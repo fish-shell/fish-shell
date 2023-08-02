@@ -11,8 +11,10 @@ use crate::wchar::{wstr, WString};
 use crate::wchar_ext::WExt;
 use crate::wutil::fish_wcstoi;
 use crate::wutil::wgettext;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
+use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 #[cxx::bridge]
@@ -693,11 +695,14 @@ fn init_locale(vars: &EnvStack) {
         "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
     ];
 
-    let old_msg_locale: CString = unsafe {
-        let old = libc::setlocale(libc::LC_MESSAGES, std::ptr::null());
+    let old_msg_locale: CString = {
+        let old = unsafe { libc::setlocale(libc::LC_MESSAGES, ptr::null()) };
+        assert_ne!(old, ptr::null_mut());
         // We have to make a copy because the subsequent setlocale() call to change the locale will
         // invalidate the pointer from this setlocale() call.
-        CStr::from_ptr(old.cast()).to_owned()
+
+        // safety: `old` is not a null-pointer, and should be a reference to the currently set locale
+        unsafe { CStr::from_ptr(old.cast()) }.to_owned()
     };
 
     for var_name in LOCALE_VARIABLES {
@@ -713,7 +718,16 @@ fn init_locale(vars: &EnvStack) {
         }
     }
 
-    let locale = unsafe { CStr::from_ptr(libc::setlocale(libc::LC_ALL, b"\0".as_ptr().cast())) };
+    let user_locale = {
+        let loc_ptr = unsafe { libc::setlocale(libc::LC_ALL, b"\0".as_ptr().cast()) };
+        if loc_ptr.is_null() {
+            FLOGF!(env_locale, "user has an invalid locale configured");
+            None
+        } else {
+            // safety: setlocale did not return a null-pointer, so it is a valid pointer
+            Some(unsafe { CStr::from_ptr(loc_ptr) })
+        }
+    };
 
     // Try to get a multibyte-capable encoding.
     // A "C" locale is broken for our purposes: any wchar function will break on it. So we try
@@ -727,9 +741,10 @@ fn init_locale(vars: &EnvStack) {
     if fix_locale && crate::compat::MB_CUR_MAX() == 1 {
         FLOGF!(env_locale, "Have singlebyte locale, trying to fix.");
         for locale in UTF8_LOCALES {
-            unsafe {
+            {
                 let locale = CString::new(locale.to_owned()).unwrap();
-                libc::setlocale(libc::LC_CTYPE, locale.as_ptr());
+                // this can fail, that is fine
+                unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
             }
             if crate::compat::MB_CUR_MAX() > 1 {
                 FLOGF!(env_locale, "Fixed locale:", locale);
@@ -743,9 +758,9 @@ fn init_locale(vars: &EnvStack) {
     }
 
     // We *always* use a C-locale for numbers because we want '.' (except for in printf).
-    unsafe {
-        libc::setlocale(libc::LC_NUMERIC, b"C\0".as_ptr().cast());
-    }
+    let loc_ptr = unsafe { libc::setlocale(libc::LC_NUMERIC, b"C\0".as_ptr().cast()) };
+    // should never fail, the C locale should always be defined
+    assert_ne!(loc_ptr, ptr::null_mut());
 
     // See that we regenerate our special locale for numbers
     crate::locale::invalidate_numeric_locale();
@@ -753,11 +768,16 @@ fn init_locale(vars: &EnvStack) {
     FLOGF!(
         env_locale,
         "init_locale() setlocale():",
-        locale.to_string_lossy()
+        user_locale
+            .map(CStr::to_string_lossy)
+            .unwrap_or(Cow::Borrowed("(null)"))
     );
 
-    let new_msg_locale =
-        unsafe { CStr::from_ptr(libc::setlocale(libc::LC_MESSAGES, std::ptr::null())) };
+    let new_msg_loc_ptr = unsafe { libc::setlocale(libc::LC_MESSAGES, std::ptr::null()) };
+    // should never fail
+    assert_ne!(new_msg_loc_ptr, ptr::null_mut());
+    // safety: we just asserted it is not a null-pointer.
+    let new_msg_locale = unsafe { CStr::from_ptr(new_msg_loc_ptr) };
     FLOGF!(
         env_locale,
         "Old LC_MESSAGES locale:",

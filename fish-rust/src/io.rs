@@ -344,7 +344,7 @@ impl IoBufferfill {
         // Our buffer will read from the read end of the pipe. This end must be non-blocking. This is
         // because our fillthread needs to poll to decide if it should shut down, and also accept input
         // from direct buffer transfers.
-        match make_fd_nonblocking(&pipes.read.fd()) {
+        match make_fd_nonblocking(pipes.read.fd()) {
             Ok(_) => (),
             Err(e) => {
                 FLOG!(warning, PIPE_ERROR);

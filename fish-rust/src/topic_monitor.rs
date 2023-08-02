@@ -212,7 +212,7 @@ impl binary_semaphore_t {
             // receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as non-blocking
             // (so reads will never block) and use select() to poll it.
             if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
-                let _ = make_fd_nonblocking(&pipes_.read.fd());
+                let _ = make_fd_nonblocking(pipes_.read.fd());
             }
         }
         binary_semaphore_t {

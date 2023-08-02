@@ -18,3 +18,7 @@ begin
     # CHECK: init
     # CHECK: normal command
 end
+
+# should not crash or segfault in the presence of an invalid locale
+LC_ALL=hello echo hello world
+# CHECK: hello world

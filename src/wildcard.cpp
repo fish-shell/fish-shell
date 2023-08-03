@@ -340,7 +340,7 @@ wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,
 /// \param err The errno value after a failed stat call on the file.
 static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
                                     const struct stat &lbuf, int stat_res, const struct stat &buf,
-                                    int err) {
+                                    int err, bool definitely_executable) {
     if (lstat_res) {
         return COMPLETE_FILE_DESC;
     }
@@ -350,10 +350,12 @@ static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
             if (S_ISDIR(buf.st_mode)) {
                 return COMPLETE_DIRECTORY_SYMLINK_DESC;
             }
-            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0) {
+            if (definitely_executable || (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0)) {
                 // Weird group permissions and other such issues make it non-trivial to find out if
                 // we can actually execute a file using the result from stat. It is much safer to
                 // use the access function, since it tells us exactly what we want to know.
+                //
+                // We skip this check in case the caller tells us the file is definitely executable.
                 return COMPLETE_EXEC_LINK_DESC;
             }
 
@@ -374,10 +376,12 @@ static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
         return COMPLETE_SOCKET_DESC;
     } else if (S_ISDIR(buf.st_mode)) {
         return COMPLETE_DIRECTORY_DESC;
-    } else if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0) {
+    } else if (definitely_executable || (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0)) {
         // Weird group permissions and other such issues make it non-trivial to find out if we can
         // actually execute a file using the result from stat. It is much safer to use the access
         // function, since it tells us exactly what we want to know.
+        //
+        // We skip this check in case the caller tells us the file is definitely executable.
         return COMPLETE_EXEC_DESC;
     }
 
@@ -444,7 +448,9 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     // Compute the description.
     wcstring desc;
     if (expand_flags & expand_flag::gen_descriptions) {
-        desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
+        // If we have executables_only, we already checked waccess above,
+        // so we tell file_get_desc that this file is definitely executable so it can skip the check.
+        desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno, executables_only);
 
         if (!is_directory && !is_executable && file_size >= 0) {
             if (!desc.empty()) desc.append(L", ");

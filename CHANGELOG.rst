@@ -1,3 +1,43 @@
+fish 3.6.2 (released ???)
+=========================
+
+This release of fish contains a number of fixes for problems identified in fish 3.6.1, as well as some enhancements.
+
+Notable improvements and fixes
+------------------------------
+???
+
+Deprecations and removed features
+---------------------------------
+???
+
+Scripting improvements
+----------------------
+???
+
+Interactive improvements
+------------------------
+???
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+???
+
+Completions
+^^^^^^^^^^^
+- Added completions for:
+  - ???
+
+Other improvements
+------------------
+- Improvements and corrections to the documentation.
+
+For distributors
+----------------
+???
+
+--------------
+
 fish 3.6.1 (released March 25, 2022)
 ====================================
 

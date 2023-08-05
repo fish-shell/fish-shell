@@ -6,7 +6,7 @@ use std::os::fd::FromRawFd;
 use crate::common::str2wcstring;
 use crate::wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
-pub(self) use crate::{
+use crate::{
     builtins::shared::{
         builtin_missing_argument, builtin_print_error_trailer, builtin_print_help, io_streams_t,
         BUILTIN_ERR_ARG_COUNT0, BUILTIN_ERR_ARG_COUNT1, BUILTIN_ERR_COMBO2,
@@ -20,7 +20,7 @@ pub(self) use crate::{
     wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*, NONOPTION_CHAR_CODE},
     wutil::{wgettext, wgettext_fmt},
 };
-pub(self) use libc::c_int;
+use libc::c_int;
 
 mod collect;
 mod escape;
@@ -48,7 +48,7 @@ macro_rules! string_error {
         $streams.err.append(wgettext_fmt!($string, $($args),*));
     };
 }
-pub(self) use string_error;
+use string_error;
 
 fn string_unknown_option(
     parser: &mut parser_t,
@@ -217,7 +217,7 @@ macro_rules! invalid_args {
         StringError::InvalidArgs(crate::wutil::wgettext_fmt!($msg, $name, $arg.unwrap()))
     };
 }
-pub(self) use invalid_args;
+use invalid_args;
 
 impl StringError {
     fn print_error(
@@ -259,7 +259,7 @@ enum Direction {
     Right,
 }
 
-pub(self) fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
+fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
     let mut width: i32 = 0;
     for c in ins[start_pos..].chars() {
         let w = fish_wcwidth_visible(c);
@@ -292,7 +292,7 @@ pub(self) fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
     return width as usize;
 }
 
-pub(self) fn escape_code_length(code: &wstr) -> Option<usize> {
+fn escape_code_length(code: &wstr) -> Option<usize> {
     use crate::ffi::escape_code_length_ffi;
     use crate::wchar_ffi::wstr_to_u32string;
 
@@ -303,7 +303,7 @@ pub(self) fn escape_code_length(code: &wstr) -> Option<usize> {
 }
 
 /// A helper type for extracting arguments from either argv or stdin.
-pub(self) struct Arguments<'args, 'iter> {
+struct Arguments<'args, 'iter> {
     /// The list of arguments passed to the string builtin.
     args: &'iter [&'args wstr],
     /// If using argv, index of the next argument to return.

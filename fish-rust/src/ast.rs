@@ -115,10 +115,10 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
     fn describe(&self) -> WString {
         let mut res = ast_type_to_string(self.typ()).to_owned();
         if let Some(n) = self.as_token() {
-            let token_type: &'static wstr = n.token_type().into();
+            let token_type = n.token_type().to_wstr();
             res += &sprintf!(" '%ls'"L, token_type)[..];
         } else if let Some(n) = self.as_keyword() {
-            let keyword: &'static wstr = n.keyword().into();
+            let keyword = n.keyword().to_wstr();
             res += &sprintf!(" '%ls'"L, keyword)[..];
         }
         res
@@ -2341,7 +2341,7 @@ impl Ast {
                     result += &sprintf!(": '%ls'"L, argsrc)[..];
                 }
             } else if let Some(n) = node.as_keyword() {
-                result += &sprintf!("keyword: %ls"L, Into::<&'static wstr>::into(n.keyword()))[..];
+                result += &sprintf!("keyword: %ls"L, n.keyword().to_wstr())[..];
             } else if let Some(n) = node.as_token() {
                 let desc = match n.token_type() {
                     ParseTokenType::string => {
@@ -2754,7 +2754,9 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         if self.unwinding {
             return;
         }
-        let VisitResult::Break(error) = flow else { return; };
+        let VisitResult::Break(error) = flow else {
+            return;
+        };
 
         /// We believe the node is some sort of block statement. Attempt to find a source range
         /// for the block's keyword (for, if, etc) and a user-presentable description. This

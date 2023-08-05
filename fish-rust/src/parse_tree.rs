@@ -73,9 +73,9 @@ impl ParseToken {
     }
     /// Returns a string description of the given parse token.
     pub fn describe(&self) -> WString {
-        let mut result = Into::<&'static wstr>::into(self.typ).to_owned();
+        let mut result = self.typ.to_wstr().to_owned();
         if self.keyword != ParseKeyword::none {
-            result += &sprintf!(L!(" <%ls>"), Into::<&'static wstr>::into(self.keyword))[..]
+            sprintf!(=> &mut result, " <%ls>", self.keyword.to_wstr())
         }
         result
     }

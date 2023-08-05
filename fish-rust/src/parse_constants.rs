@@ -252,10 +252,11 @@ impl Default for ParseTokenType {
     }
 }
 
-impl From<ParseTokenType> for &'static wstr {
+impl ParseTokenType {
+    /// Return a string describing the token type.
     #[widestrs]
-    fn from(token_type: ParseTokenType) -> Self {
-        match token_type {
+    pub fn to_wstr(self) -> &'static wstr {
+        match self {
             ParseTokenType::comment => "ParseTokenType::comment"L,
             ParseTokenType::error => "ParseTokenType::error"L,
             ParseTokenType::tokenizer_error => "ParseTokenType::tokenizer_error"L,
@@ -279,10 +280,11 @@ impl Default for ParseKeyword {
     }
 }
 
-impl From<ParseKeyword> for &'static wstr {
+impl ParseKeyword {
+    /// Return the keyword as a string.
     #[widestrs]
-    fn from(keyword: ParseKeyword) -> Self {
-        match keyword {
+    pub fn to_wstr(self) -> &'static wstr {
+        match self {
             ParseKeyword::kw_exclam => "!"L,
             ParseKeyword::kw_and => "and"L,
             ParseKeyword::kw_begin => "begin"L,
@@ -308,7 +310,7 @@ impl From<ParseKeyword> for &'static wstr {
 
 impl printf_compat::args::ToArg<'static> for ParseKeyword {
     fn to_arg(self) -> printf_compat::args::Arg<'static> {
-        printf_compat::args::Arg::Str(self.into())
+        printf_compat::args::Arg::Str(self.to_wstr())
     }
 }
 
@@ -559,7 +561,7 @@ pub fn token_type_user_presentable_description(
     keyword: ParseKeyword,
 ) -> WString {
     if keyword != ParseKeyword::none {
-        return sprintf!("keyword: '%ls'"L, Into::<&'static wstr>::into(keyword));
+        return sprintf!("keyword: '%ls'"L, keyword.to_wstr());
     }
     match type_ {
         ParseTokenType::string => "a string"L.to_owned(),
@@ -573,7 +575,7 @@ pub fn token_type_user_presentable_description(
         ParseTokenType::error => "a parse error"L.to_owned(),
         ParseTokenType::tokenizer_error => "an incomplete token"L.to_owned(),
         ParseTokenType::comment => "a comment"L.to_owned(),
-        _ => sprintf!("a %ls"L, Into::<&'static wstr>::into(type_)),
+        _ => sprintf!("a %ls"L, type_.to_wstr()),
     }
 }
 

@@ -161,6 +161,17 @@ not math -s 12
 not math 2^999999
 # CHECKERR: math: Error: Result is infinite
 # CHECKERR: '2^999999'
+not math 'sqrt(-1)'
+# CHECKERR: math: Error: Result is not a number
+# CHECKERR: 'sqrt(-1)'
+math 'sqrt(-0)'
+# CHECK: -0
+not math 2^53 + 1
+# CHECKERR: math: Error: Result magnitude is too large
+# CHECKERR: '2^53 + 1'
+not math -2^53 - 1
+# CHECKERR: math: Error: Result magnitude is too large
+# CHECKERR: '-2^53 - 1'
 printf '<%s>\n' (not math 1 / 0 2>&1)
 # CHECK: <math: Error: Division by zero>
 # CHECK: <'1 / 0'>

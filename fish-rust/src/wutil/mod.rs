@@ -508,7 +508,7 @@ pub fn fish_wcswidth(s: &wstr) -> libc::c_int {
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux
 /// seems to aggressively re-use inodes, so it cannot determine if a file has been deleted (ABA
 /// problem). Therefore we include richer information.
-#[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct FileId {
     pub device: libc::dev_t,
     pub inode: libc::ino_t,
@@ -552,18 +552,6 @@ impl FileId {
         let lhs = (self.mod_seconds, self.mod_nanoseconds);
         let rhs = (rhs.mod_seconds, rhs.mod_nanoseconds);
         lhs.cmp(&rhs).is_lt()
-    }
-
-    pub fn dump(&self) -> WString {
-        let mut result = WString::new();
-        result += &sprintf!("     device: %lld\n", self.device)[..];
-        result += &sprintf!("      inode: %lld\n", self.inode)[..];
-        result += &sprintf!("       size: %lld\n", self.size)[..];
-        result += &sprintf!("     change: %lld\n", self.change_seconds)[..];
-        result += &sprintf!("change_nano: %lld\n", self.change_nanoseconds)[..];
-        result += &sprintf!("        mod: %lld\n", self.mod_seconds)[..];
-        result += &sprintf!("   mod_nano: %lld", self.mod_nanoseconds)[..];
-        result
     }
 }
 

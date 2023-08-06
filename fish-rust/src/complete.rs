@@ -108,10 +108,16 @@ pub struct CompletionReceiver {
 // We are only wrapping a `Vec<Completion>`, any non-mutable methods can be safely deferred to the
 // Vec-impl
 impl std::ops::Deref for CompletionReceiver {
-    type Target = Vec<Completion>;
+    type Target = [Completion];
 
     fn deref(&self) -> &Self::Target {
-        &self.completions
+        self.completions.as_slice()
+    }
+}
+
+impl std::ops::DerefMut for CompletionReceiver {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.completions.as_mut_slice()
     }
 }
 

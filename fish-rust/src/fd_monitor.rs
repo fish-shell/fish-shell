@@ -1,4 +1,4 @@
-use std::os::fd::{AsRawFd, RawFd};
+use std::os::unix::prelude::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};

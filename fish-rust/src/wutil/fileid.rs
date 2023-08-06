@@ -1,10 +1,7 @@
 use crate::wutil::{wstat, wstr};
 use std::cmp::Ordering;
 use std::fs::{File, Metadata};
-use std::os::fd::RawFd;
-
-use std::os::fd::{FromRawFd, IntoRawFd};
-use std::os::unix::fs::MetadataExt;
+use std::os::unix::prelude::*;
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux  

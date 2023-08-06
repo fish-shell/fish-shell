@@ -4,7 +4,7 @@ use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharToFFI;
 use libc::c_int;
 use std::io::Write;
-use std::os::unix::io::{FromRawFd, IntoRawFd};
+use std::os::unix::prelude::*;
 use std::sync::atomic::{AtomicI32, Ordering};
 
 #[rustfmt::skip::macros(category)]

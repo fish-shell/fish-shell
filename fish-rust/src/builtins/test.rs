@@ -10,7 +10,7 @@ mod test_expressions {
     };
     use once_cell::sync::Lazy;
     use std::collections::HashMap;
-    use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
+    use std::os::unix::prelude::*;
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub(super) enum Token {

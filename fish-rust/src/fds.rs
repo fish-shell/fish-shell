@@ -7,7 +7,7 @@ use libc::{fcntl, F_GETFL, F_SETFL, O_CLOEXEC, O_NONBLOCK};
 use nix::unistd;
 use std::ffi::CStr;
 use std::io::{self, Read, Write};
-use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+use std::os::unix::prelude::*;
 
 pub const PIPE_ERROR: &wstr = L!("An error occurred while setting up pipe");
 

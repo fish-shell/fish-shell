@@ -1,5 +1,5 @@
 use libc::c_int;
-use std::os::unix::io::RawFd;
+use std::os::unix::prelude::*;
 
 pub use fd_readable_set_t as FdReadableSet;
 

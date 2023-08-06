@@ -23,8 +23,7 @@ pub(crate) use printf::sprintf;
 use std::ffi::OsStr;
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
-use std::os::fd::{FromRawFd, IntoRawFd, RawFd};
-use std::os::unix::prelude::{OsStrExt, OsStringExt};
+use std::os::unix::prelude::*;
 
 pub use wcstoi::*;
 use widestring_suffix::widestrs;

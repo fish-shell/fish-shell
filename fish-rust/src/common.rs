@@ -26,8 +26,7 @@ use std::env;
 use std::ffi::{CStr, CString, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
-use std::os::fd::{AsRawFd, RawFd};
-use std::os::unix::prelude::OsStringExt;
+use std::os::unix::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
@@ -1923,8 +1922,6 @@ pub(crate) use assert_is_locked;
 /// bullet-proof and that's OK.
 pub fn is_console_session() -> bool {
     static IS_CONSOLE_SESSION: Lazy<bool> = Lazy::new(|| {
-        use std::os::unix::ffi::OsStrExt;
-
         const PATH_MAX: usize = libc::PATH_MAX as usize;
         let mut tty_name = [0u8; PATH_MAX];
         unsafe {

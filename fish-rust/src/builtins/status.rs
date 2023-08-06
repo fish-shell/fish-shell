@@ -1,4 +1,4 @@
-use std::os::unix::prelude::OsStrExt;
+use std::os::unix::prelude::*;
 
 use super::prelude::*;
 use crate::common::{get_executable_path, str2wcstring};

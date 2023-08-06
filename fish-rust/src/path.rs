@@ -15,8 +15,7 @@ use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
 use std::ffi::OsStr;
 use std::io::{ErrorKind, Write};
-use std::os::unix::ffi::OsStrExt;
-use std::os::unix::prelude::MetadataExt;
+use std::os::unix::prelude::*;
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.

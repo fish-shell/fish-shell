@@ -5,6 +5,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::ast::{Ast, Node};
+use crate::common::{assert_send, assert_sync};
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, SOURCE_OFFSET_INVALID,
@@ -106,6 +107,13 @@ pub struct ParsedSource {
     pub ast: Ast,
 }
 
+// Safety: this can be derived once the src_ffi field is removed.
+unsafe impl Send for ParsedSource {}
+unsafe impl Sync for ParsedSource {}
+
+const _: () = assert_send::<ParsedSource>();
+const _: () = assert_sync::<ParsedSource>();
+
 impl ParsedSource {
     fn new(src: WString, ast: Ast) -> Self {
         let src_ffi = src.to_ffi();
@@ -161,8 +169,8 @@ impl<NodeType: Node> NodeRef<NodeType> {
 }
 
 // Safety: NodeRef is Send and Sync because it's just a pointer into a parse tree, which is pinned.
-unsafe impl<NodeType: Node + Send> Send for NodeRef<NodeType> {}
-unsafe impl<NodeType: Node + Sync> Sync for NodeRef<NodeType> {}
+unsafe impl<NodeType: Node> Send for NodeRef<NodeType> {}
+unsafe impl<NodeType: Node> Sync for NodeRef<NodeType> {}
 
 /// Return a shared pointer to ParsedSource, or null on failure.
 /// If parse_flag_continue_after_error is not set, this will return null on any error.

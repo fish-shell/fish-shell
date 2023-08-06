@@ -56,7 +56,7 @@ pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]
     let mut pwd = WString::new();
     let tmp = parser
         .vars1()
-        .get_or_null(&L!("PWD").to_ffi(), EnvMode::DEFAULT.bits());
+        .get_or_null(&L!("PWD").to_ffi(), EnvMode::default().bits());
     if !tmp.is_null() {
         pwd = tmp.as_string().from_ffi();
     }

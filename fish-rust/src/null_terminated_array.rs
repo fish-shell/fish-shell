@@ -1,3 +1,4 @@
+use crate::common::{assert_send, assert_sync};
 use std::ffi::{c_char, CStr, CString};
 use std::marker::PhantomData;
 use std::pin::Pin;
@@ -23,7 +24,7 @@ impl NulTerminatedString for CStr {
 /// Given a list of strings, construct a vector of pointers to those strings contents.
 /// This is used for building null-terminated arrays of null-terminated strings.
 pub struct NullTerminatedArray<'p, T: NulTerminatedString + ?Sized> {
-    pointers: Vec<*const T::CharType>,
+    pointers: Box<[*const T::CharType]>,
     _phantom: PhantomData<&'p T>,
 }
 
@@ -45,17 +46,22 @@ impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
     /// Construct from a list of "strings".
     /// This holds pointers into the strings.
     pub fn new<S: AsRef<Str>>(strs: &'p [S]) -> Self {
-        let mut pointers = Vec::with_capacity(1 + strs.len());
+        let mut pointers = Vec::new();
+        pointers.reserve_exact(1 + strs.len());
         for s in strs {
             pointers.push(s.as_ref().c_str());
         }
         pointers.push(ptr::null());
         NullTerminatedArray {
-            pointers,
+            pointers: pointers.into_boxed_slice(),
             _phantom: PhantomData,
         }
     }
 }
+
+/// Safety: NullTerminatedArray is Send and Sync because it's immutable.
+unsafe impl<T: NulTerminatedString + ?Sized + Send> Send for NullTerminatedArray<'_, T> {}
+unsafe impl<T: NulTerminatedString + ?Sized + Sync> Sync for NullTerminatedArray<'_, T> {}
 
 /// A container which exposes a null-terminated array of pointers to strings that it owns.
 /// This is useful for persisted null-terminated arrays, e.g. the exported environment variable
@@ -66,6 +72,9 @@ pub struct OwningNullTerminatedArray {
     strings: Pin<Box<[CString]>>,
     null_terminated_array: NullTerminatedArray<'static, CStr>,
 }
+
+const _: () = assert_send::<OwningNullTerminatedArray>();
+const _: () = assert_sync::<OwningNullTerminatedArray>();
 
 impl OwningNullTerminatedArray {
     /// Cover over null_terminated_array.get().

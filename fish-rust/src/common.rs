@@ -159,8 +159,6 @@ bitflags! {
     /// Flags for unescape_string functions.
     #[derive(Default)]
     pub struct UnescapeFlags: u32 {
-        /// default behavior
-        const DEFAULT = 0;
         /// escape special fish syntax characters like the semicolon
         const SPECIAL = 1 << 0;
         /// allow incomplete escape sequences

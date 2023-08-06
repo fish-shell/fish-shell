@@ -3,7 +3,7 @@
 // the parser and to some degree the builtin handling library.
 
 use crate::ast::{self, Node};
-use crate::common::{escape, valid_func_name, FilenameRef};
+use crate::common::{assert_sync, escape, valid_func_name, FilenameRef};
 use crate::env::{EnvStack, Environment};
 use crate::event::{self, EventDescription};
 use crate::ffi::{self, parser_t, Repin};
@@ -55,6 +55,9 @@ pub struct FunctionProperties {
     /// The line number where the specified function was copied.
     pub copy_definition_lineno: i32,
 }
+
+/// FunctionProperties are safe to share between threads.
+const _: () = assert_sync::<FunctionProperties>();
 
 /// Type wrapping up the set of all functions.
 /// There's only one of these; it's managed by a lock.

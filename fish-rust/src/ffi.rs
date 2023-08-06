@@ -220,7 +220,7 @@ impl env_stack_t {
 impl environment_t {
     /// Helper to get a variable as a string, using the default flags.
     pub fn get_as_string(&self, name: &wstr) -> Option<WString> {
-        self.get_as_string_flags(name, EnvMode::DEFAULT)
+        self.get_as_string_flags(name, EnvMode::default())
     }
 
     /// Helper to get a variable as a string, using the given flags.
@@ -234,7 +234,7 @@ impl environment_t {
 impl env_stack_t {
     /// Helper to get a variable as a string, using the default flags.
     pub fn get_as_string(&self, name: &wstr) -> Option<WString> {
-        self.get_as_string_flags(name, EnvMode::DEFAULT)
+        self.get_as_string_flags(name, EnvMode::default())
     }
 
     /// Helper to get a variable as a string, using the given flags.
@@ -301,6 +301,7 @@ impl process_t {
 impl From<wcharz_t> for &wchar::wstr {
     fn from(w: wcharz_t) -> Self {
         let len = w.length();
+        #[allow(clippy::unnecessary_cast)]
         let v = unsafe { slice::from_raw_parts(w.str_ as *const u32, len) };
         wchar::wstr::from_slice(v).expect("Invalid UTF-32")
     }
@@ -309,9 +310,8 @@ impl From<wcharz_t> for &wchar::wstr {
 /// Allow wcharz_t to be "into" WString.
 impl From<wcharz_t> for wchar::WString {
     fn from(w: wcharz_t) -> Self {
-        let len = w.length();
-        let v = unsafe { slice::from_raw_parts(w.str_ as *const u32, len).to_vec() };
-        Self::from_vec(v).expect("Invalid UTF-32")
+        let w: &wchar::wstr = w.into();
+        w.to_owned()
     }
 }
 

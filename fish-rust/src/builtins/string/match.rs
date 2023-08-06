@@ -58,9 +58,9 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
     ) -> Option<libc::c_int> {
         let cmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
-               string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
-               return STATUS_INVALID_ARGS;
-           };
+            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            return STATUS_INVALID_ARGS;
+        };
         *optind += 1;
         self.pattern = arg;
         STATUS_CMD_OK
@@ -128,7 +128,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         {
             let vars = parser.get_vars();
             for (name, vals) in first_match_captures.into_iter() {
-                vars.set(&WString::from(name), EnvMode::DEFAULT, vals);
+                vars.set(&WString::from(name), EnvMode::default(), vals);
             }
         }
 

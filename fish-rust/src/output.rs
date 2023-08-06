@@ -14,8 +14,8 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Mutex;
 
 bitflags! {
+    #[derive(Default)]
     pub struct ColorSupport: u8 {
-        const NONE = 0;
         const TERM_256COLOR = 1<<0;
         const TERM_24BIT = 1<<1;
     }

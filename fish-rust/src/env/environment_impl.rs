@@ -96,8 +96,8 @@ fn set_umask(list_val: &Vec<WString>) -> EnvStackSetResult {
         return EnvStackSetResult::ENV_INVALID;
     }
     let Ok(mask) = fish_wcstol_radix(&list_val[0], 8) else {
-            return EnvStackSetResult::ENV_INVALID;
-        };
+        return EnvStackSetResult::ENV_INVALID;
+    };
 
     #[allow(
         unused_comparisons,
@@ -226,7 +226,7 @@ impl EnvNode {
 }
 
 /// EnvNodeRef is a reference to an EnvNode. It may be shared between different environments.
-/// Locking uses
+/// The type Arc<RefCell<...>> may look suspicious, but all accesses to the EnvNode are protected by a global lock.
 #[derive(Clone)]
 struct EnvNodeRef(Arc<RefCell<EnvNode>>);
 
@@ -240,6 +240,9 @@ impl Deref for EnvNodeRef {
 
 impl EnvNodeRef {
     fn new(is_new_scope: bool, next: Option<EnvNodeRef>) -> EnvNodeRef {
+        // Accesses are protected by the global lock.
+        #[allow(unknown_lints)]
+        #[allow(clippy::arc_with_non_send_sync)]
         EnvNodeRef(Arc::new(RefCell::new(EnvNode {
             env: VarTable::new(),
             new_scope: is_new_scope,
@@ -311,6 +314,8 @@ fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
         new_scope: node.new_scope,
         next,
     };
+    #[allow(unknown_lints)]
+    #[allow(clippy::arc_with_non_send_sync)]
     EnvNodeRef(Arc::new(RefCell::new(new_node)))
 }
 
@@ -379,7 +384,7 @@ impl EnvScopedImpl {
                 return None;
             }
             let fish_history_var = self
-                .getf(L!("fish_history"), EnvMode::DEFAULT)
+                .getf(L!("fish_history"), EnvMode::default())
                 .map(|v| v.as_string());
             let history_session_id = fish_history_var
                 .as_ref()
@@ -548,7 +553,7 @@ impl EnvScopedImpl {
                 .expect("Should have non-null uvars in this function")
                 .get_names_ffi(query.exports, query.unexports)
                 .from_ffi();
-            names.extend(uni_list.into_iter());
+            names.extend(uni_list);
         }
         names.into_iter().collect()
     }
@@ -1172,7 +1177,7 @@ impl<'a, T: 'a> DerefMut for EnvMutexGuard<'a, T> {
     }
 }
 
-// Like Mutex, but references the global lock.\
+// Like Mutex, but references the global lock.
 pub struct EnvMutex<T> {
     inner: UnsafeCell<T>,
 }

@@ -325,7 +325,9 @@ fn parse_util_locate_cmdsub(
         return -1;
     }
 
-    let Some(paran_begin) = paran_begin else { return 0; };
+    let Some(paran_begin) = paran_begin else {
+        return 0;
+    };
 
     *out_start = paran_begin;
     *out_end = if paran_count != 0 {
@@ -669,12 +671,12 @@ pub fn parse_util_escape_string_with_quote(
     no_tilde: bool,
 ) -> WString {
     let Some(quote) = quote else {
-            let mut flags = EscapeFlags::NO_QUOTED;
-            if no_tilde {
-                flags |= EscapeFlags::NO_TILDE;
-            }
-            return escape_string(cmd, EscapeStringStyle::Script(flags));
-        };
+        let mut flags = EscapeFlags::NO_QUOTED;
+        if no_tilde {
+            flags |= EscapeFlags::NO_TILDE;
+        }
+        return escape_string(cmd, EscapeStringStyle::Script(flags));
+    };
     // Here we are going to escape a string with quotes.
     // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
     // terminate the quote and then re-enter it.
@@ -1013,7 +1015,7 @@ pub fn parse_util_detect_errors(
     // Early parse error, stop here.
     if !parse_errors.is_empty() {
         if let Some(errors) = out_errors.as_mut() {
-            errors.extend(parse_errors.into_iter());
+            errors.extend(parse_errors);
             return Err(ParserTestErrorBits::ERROR);
         }
     }
@@ -1203,61 +1205,72 @@ pub fn parse_util_detect_errors_in_argument(
     let source_start = source_range.start();
     let mut err = ParserTestErrorBits::default();
 
-    let check_subtoken = |begin: usize,
-                          end: usize,
-                          out_errors: &mut Option<&mut ParseErrorList>| {
-        let Some(unesc) = unescape_string(&arg_src[begin..end], UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)) else {
+    let check_subtoken =
+        |begin: usize, end: usize, out_errors: &mut Option<&mut ParseErrorList>| {
+            let Some(unesc) = unescape_string(
+                &arg_src[begin..end],
+                UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
+            ) else {
                 if out_errors.is_some() {
                     let src = arg_src.as_char_slice();
-                    if src.len() == 2 && src[0] == '\\' &&
-                        (src[1] == 'c' ||
-                                src[1].to_lowercase().eq(['u'].into_iter()) ||
-                                src[1].to_lowercase().eq(['x'].into_iter()))
+                    if src.len() == 2
+                        && src[0] == '\\'
+                        && (src[1] == 'c'
+                            || src[1].to_lowercase().eq(['u'])
+                            || src[1].to_lowercase().eq(['x']))
                     {
-                                append_syntax_error!(
-                                    out_errors, source_start + begin, end - begin,
-                                    "Incomplete escape sequence '%ls'", arg_src);
-                                    return ParserTestErrorBits::ERROR;
+                        append_syntax_error!(
+                            out_errors,
+                            source_start + begin,
+                            end - begin,
+                            "Incomplete escape sequence '%ls'",
+                            arg_src
+                        );
+                        return ParserTestErrorBits::ERROR;
                     }
                     append_syntax_error!(
-                        out_errors, source_start + begin, end - begin,
-                        "Invalid token '%ls'", arg_src);
+                        out_errors,
+                        source_start + begin,
+                        end - begin,
+                        "Invalid token '%ls'",
+                        arg_src
+                    );
                 }
                 return ParserTestErrorBits::ERROR;
             };
 
-        let mut err = ParserTestErrorBits::default();
-        // Check for invalid variable expansions.
-        let unesc = unesc.as_char_slice();
-        for (idx, c) in unesc.iter().enumerate() {
-            if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE].contains(c) {
-                continue;
-            }
-            let next_char = unesc.get(idx + 1).copied().unwrap_or('\0');
-            if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
-                && !valid_var_name_char(next_char)
-            {
-                err = ParserTestErrorBits::ERROR;
-                if let Some(ref mut out_errors) = out_errors {
-                    let mut first_dollar = idx;
-                    while first_dollar > 0
-                        && [VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE]
-                            .contains(&unesc[first_dollar - 1])
-                    {
-                        first_dollar -= 1;
+            let mut err = ParserTestErrorBits::default();
+            // Check for invalid variable expansions.
+            let unesc = unesc.as_char_slice();
+            for (idx, c) in unesc.iter().enumerate() {
+                if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE].contains(c) {
+                    continue;
+                }
+                let next_char = unesc.get(idx + 1).copied().unwrap_or('\0');
+                if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
+                    && !valid_var_name_char(next_char)
+                {
+                    err = ParserTestErrorBits::ERROR;
+                    if let Some(ref mut out_errors) = out_errors {
+                        let mut first_dollar = idx;
+                        while first_dollar > 0
+                            && [VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE]
+                                .contains(&unesc[first_dollar - 1])
+                        {
+                            first_dollar -= 1;
+                        }
+                        parse_util_expand_variable_error(
+                            unesc.into(),
+                            source_start,
+                            first_dollar,
+                            out_errors,
+                        );
                     }
-                    parse_util_expand_variable_error(
-                        unesc.into(),
-                        source_start,
-                        first_dollar,
-                        out_errors,
-                    );
                 }
             }
-        }
 
-        err
-    };
+            err
+        };
 
     let mut cursor = 0;
     let mut checked = 0;
@@ -1302,7 +1315,7 @@ pub fn parse_util_detect_errors_in_argument(
                 let error_offset = paren_begin + 1 + source_start;
                 parse_error_offset_source_start(&mut subst_errors, error_offset);
                 if let Some(ref mut out_errors) = out_errors {
-                    out_errors.extend(subst_errors.into_iter());
+                    out_errors.extend(subst_errors);
                 }
 
                 checked = paren_end + 1;
@@ -1321,7 +1334,9 @@ fn detect_errors_in_backgrounded_job(
     job: &ast::JobPipeline,
     parse_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
-    let Some(source_range) = job.try_source_range() else {return false; };
+    let Some(source_range) = job.try_source_range() else {
+        return false;
+    };
 
     let mut errored = false;
     // Disallow background in the following cases:
@@ -1572,7 +1587,7 @@ fn detect_errors_in_decorated_statement(
             // so we need to offset them by the *command* offset,
             // excluding the decoration.
             parse_error_offset_source_start(&mut new_errors, dst.command.source_range().start());
-            parse_errors.extend(new_errors.into_iter());
+            parse_errors.extend(new_errors);
         }
     }
     errored

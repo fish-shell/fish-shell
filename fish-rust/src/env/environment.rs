@@ -47,7 +47,7 @@ pub fn env_var_to_ffi(var: Option<EnvVar>) -> cxx::UniquePtr<ffi::env_var_t> {
 pub trait Environment {
     /// Get a variable by name using default flags.
     fn get(&self, name: &wstr) -> Option<EnvVar> {
-        self.getf(name, EnvMode::DEFAULT)
+        self.getf(name, EnvMode::default())
     }
 
     /// Get a variable by name using the specified flags.
@@ -75,7 +75,7 @@ pub trait Environment {
 
     /// Get a variable by name using default flags, unless it is empty.
     fn get_unless_empty(&self, name: &wstr) -> Option<EnvVar> {
-        self.getf_unless_empty(name, EnvMode::DEFAULT)
+        self.getf_unless_empty(name, EnvMode::default())
     }
 
     /// Get a variable by name using the given flags, unless it is empty.

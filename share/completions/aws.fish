@@ -1,7 +1,7 @@
 # AWS CLI comes bundled with a completion command.
 # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-completion.html
 if type -q aws_completer
-    complete -c aws -f -a "(env COMP_LINE=(commandline -pc) aws_completer)"
+    complete -c aws -f -a "(COMP_LINE=(commandline -pc) aws_completer)"
     exit 0
 end
 

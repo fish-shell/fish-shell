@@ -143,7 +143,19 @@ path filter --perm read stuff/* | path sort
 # CHECK: stuff/readexec
 # CHECK: stuff/readwrite
 
+path filter -r stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/read
+# CHECK: stuff/readexec
+# CHECK: stuff/readwrite
+
 path filter --perm write stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/readwrite
+# CHECK: stuff/write
+# CHECK: stuff/writeexec
+
+path filter -w stuff/* | path sort
 # CHECK: stuff/all
 # CHECK: stuff/readwrite
 # CHECK: stuff/write
@@ -154,6 +166,13 @@ path filter --perm exec stuff/* | path sort
 # CHECK: stuff/exec
 # CHECK: stuff/readexec
 # CHECK: stuff/writeexec
+
+path filter -x stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/exec
+# CHECK: stuff/readexec
+# CHECK: stuff/writeexec
+
 
 path filter --perm read,write stuff/* | path sort
 # CHECK: stuff/all

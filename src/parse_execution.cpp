@@ -904,8 +904,6 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         }
 
         if (!has_command && !use_implicit_cd) {
-            // No command. If we're --no-execute return okay - it might be a function.
-            if (no_exec()) return end_execution_reason_t::ok;
             return this->handle_command_not_found(
                 external_cmd.path.empty() ? cmd : external_cmd.path, statement, external_cmd.err);
         }
@@ -1334,8 +1332,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipel
     // is significantly faster.
     if (job_is_simple_block(job_node)) {
         bool do_time = job_node.has_time();
-        // If no-exec has been given, there is nothing to time.
-        auto timer = push_timer(do_time && !no_exec());
+        auto timer = push_timer(do_time);
         const block_t *block = nullptr;
         end_execution_reason_t result =
             this->apply_variable_assignments(nullptr, job_node.variables(), &block);

@@ -117,6 +117,69 @@ path filter --type file,dir --perm exec,write bin/fish .
 # So it passes.
 # CHECK: .
 
+mkdir -p sbin
+touch sbin/setuid-exe sbin/setgid-exe
+chmod u+s,a+x sbin/setuid-exe
+chmod g+s,a+x sbin/setgid-exe
+path filter --perm suid sbin/*
+# CHECK: sbin/setuid-exe
+path filter --perm sgid sbin/*
+# CHECK: sbin/setgid-exe
+
+mkdir stuff
+touch stuff/{read,write,exec,readwrite,readexec,writeexec,all,none}
+chmod 400 stuff/read
+chmod 200 stuff/write
+chmod 100 stuff/exec
+chmod 600 stuff/readwrite
+chmod 500 stuff/readexec
+chmod 300 stuff/writeexec
+chmod 700 stuff/all
+chmod 000 stuff/none
+
+path filter --perm read stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/read
+# CHECK: stuff/readexec
+# CHECK: stuff/readwrite
+
+path filter --perm write stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/readwrite
+# CHECK: stuff/write
+# CHECK: stuff/writeexec
+
+path filter --perm exec stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/exec
+# CHECK: stuff/readexec
+# CHECK: stuff/writeexec
+
+path filter --perm read,write stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/readwrite
+
+path filter --perm read,exec stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/readexec
+
+path filter --perm write,exec stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/writeexec
+
+path filter --perm read,write,exec stuff/* | path sort
+# CHECK: stuff/all
+
+path filter stuff/* | path sort
+# CHECK: stuff/all
+# CHECK: stuff/exec
+# CHECK: stuff/none
+# CHECK: stuff/read
+# CHECK: stuff/readexec
+# CHECK: stuff/readwrite
+# CHECK: stuff/write
+# CHECK: stuff/writeexec
+
 path normalize /usr/bin//../../etc/fish
 # The "//" is squashed and the ".." components neutralize the components before
 # CHECK:  /etc/fish

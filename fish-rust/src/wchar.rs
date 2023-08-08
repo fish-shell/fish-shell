@@ -10,6 +10,15 @@ pub use widestring::{Utf32Str as wstr, Utf32String as WString};
 /// Pull in our extensions.
 pub use crate::wchar_ext::{IntoCharIter, WExt};
 
+pub(crate) mod prelude {
+    pub(crate) use crate::{
+        wchar::{wstr, IntoCharIter, WString, L},
+        wchar_ext::{ToWString, WExt},
+        wutil::{sprintf, wgettext, wgettext_fmt, wgettext_str},
+    };
+    pub(crate) use widestring_suffix::widestrs;
+}
+
 /// Creates a wstr string slice, like the "L" prefix of C++.
 /// The result is of type wstr.
 /// It is NOT nul-terminated.

@@ -4,13 +4,12 @@ use crate::common::{exit_without_destructors, restore_term_foreground_process_gr
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::termsize::termsize_handle_winch;
 use crate::topic_monitor::{generation_t, invalid_generations, topic_monitor_principal, topic_t};
-use crate::wchar::{wstr, WExt, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{AsWstr, WCharToFFI};
-use crate::wutil::{fish_wcstoi, perror, wgettext, wgettext_str};
+use crate::wutil::{fish_wcstoi, perror};
 use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
 use std::sync::atomic::{AtomicI32, Ordering};
-use widestring_suffix::widestrs;
 
 #[cxx::bridge]
 mod signal_ffi {
@@ -593,7 +592,6 @@ add_test!("test_signal_name", || {
 
 #[rustfmt::skip]
 add_test!("test_signal_parse", || {
-    use crate::wchar_ext::ToWString;
     assert_eq!(Signal::parse(L!("SIGHUP")), Some(Signal::new(libc::SIGHUP)));
     assert_eq!(Signal::parse(L!("sigwinch")), Some(Signal::new(libc::SIGWINCH)));
     assert_eq!(Signal::parse(L!("TSTP")), Some(Signal::new(libc::SIGTSTP)));

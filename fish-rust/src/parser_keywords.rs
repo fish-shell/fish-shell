@@ -1,7 +1,6 @@
 //! Functions having to do with parser keywords, like testing if a function is a block command.
 
-use crate::wchar::wstr;
-use widestring_suffix::widestrs;
+use crate::wchar::prelude::*;
 
 #[widestrs]
 const SKIP_KEYWORDS: &[&wstr] = &["else"L, "begin"L];

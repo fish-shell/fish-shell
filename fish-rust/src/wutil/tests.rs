@@ -1,5 +1,4 @@
 use super::*;
-use widestring_suffix::widestrs;
 
 #[test]
 #[widestrs]

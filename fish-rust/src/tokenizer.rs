@@ -6,14 +6,12 @@ use crate::ffi::wcharz_t;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::redirection::RedirectionMode;
-use crate::wchar::{wstr, WExt, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{wchar_t, AsWstr, WCharToFFI};
-use crate::wutil::wgettext;
 use cxx::{CxxWString, SharedPtr, UniquePtr};
 use libc::{c_int, STDIN_FILENO, STDOUT_FILENO};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 use std::os::fd::RawFd;
-use widestring_suffix::widestrs;
 
 #[cxx::bridge]
 mod tokenizer_ffi {

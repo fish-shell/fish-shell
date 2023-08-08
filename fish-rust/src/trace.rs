@@ -2,7 +2,7 @@ use crate::{
     common::escape,
     ffi::{self, parser_t, wcharz_t, wcstring_list_ffi_t},
     global_safety::RelaxedAtomicBool,
-    wchar::{self, wstr, L},
+    wchar::prelude::*,
     wchar_ffi::{WCharFromFFI, WCharToFFI},
 };
 
@@ -43,9 +43,9 @@ pub fn trace_enabled(parser: &parser_t) -> bool {
 // Allow the `&Vec` parameter as this function only exists temporarily for the FFI
 #[allow(clippy::ptr_arg)]
 fn trace_argv_ffi(parser: &parser_t, command: wcharz_t, args: &wcstring_list_ffi_t) {
-    let command: wchar::WString = command.into();
-    let args: Vec<wchar::WString> = args.from_ffi();
-    let args_ref: Vec<&wstr> = args.iter().map(wchar::WString::as_utfstr).collect();
+    let command: WString = command.into();
+    let args: Vec<WString> = args.from_ffi();
+    let args_ref: Vec<&wstr> = args.iter().map(WString::as_utfstr).collect();
     trace_argv(parser, command.as_utfstr(), &args_ref);
 }
 

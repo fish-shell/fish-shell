@@ -6,15 +6,14 @@ use crate::builtins::shared::{
 use crate::common;
 use crate::ffi::parser_t;
 use crate::ffi::Repin;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::AsWstr;
 
 mod test_expressions {
-    use super::{io_streams_t, wstr, WString, L};
-    use crate::wchar_ext::WExt;
+    use super::*;
     use crate::wutil::{
-        file_id_for_path, fish_wcstol, fish_wcswidth, lwstat, sprintf, waccess, wcstod::wcstod,
-        wcstoi_opts, wgettext, wgettext_fmt, wstat, Error, Options,
+        file_id_for_path, fish_wcstol, fish_wcswidth, lwstat, waccess, wcstod::wcstod, wcstoi_opts,
+        wstat, Error, Options,
     };
     use once_cell::sync::Lazy;
     use std::collections::HashMap;

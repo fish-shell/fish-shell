@@ -1,6 +1,5 @@
 pub use super::errors::Error;
-use crate::wchar::{wstr, IntoCharIter};
-use crate::wchar_ext::WExt;
+use crate::wchar::prelude::*;
 use num_traits::{NumCast, PrimInt};
 use std::default::Default;
 use std::iter::{Fuse, Peekable};
@@ -326,7 +325,6 @@ pub fn fish_wcstoul(mut src: &wstr) -> Result<u64, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wchar::L;
 
     fn test_min_max<Int: PrimInt + std::fmt::Display + std::fmt::Debug>(min: Int, max: Int) {
         assert_eq!(wcstoi(min.to_string().chars()), Ok(min));

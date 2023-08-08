@@ -24,15 +24,12 @@ use crate::tokenizer::{
     comment_end, is_token_delimiter, quote_end, Tok, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
-use crate::wchar::{wstr, WString, L};
-use crate::wchar_ext::WExt;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::{wgettext, wgettext_fmt};
 use cxx::CxxWString;
 use std::ops;
-use widestring_suffix::widestrs;
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// \return the length of the slice starting at \p in, or 0 if there is no slice, or -1 on error.

@@ -1,13 +1,10 @@
-use libc::c_int;
-use widestring_suffix::widestrs;
-
 use super::shared::{
     builtin_print_help, io_streams_t, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS,
 };
 use crate::event;
 use crate::ffi::parser_t;
-use crate::wchar::{wstr, WString};
-use crate::wutil::printf::sprintf;
+use crate::wchar::prelude::*;
+use libc::c_int;
 
 #[widestrs]
 pub fn emit(

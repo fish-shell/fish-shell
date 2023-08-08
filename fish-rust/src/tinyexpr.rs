@@ -33,10 +33,8 @@ use std::{
     ops::{BitAnd, BitOr, BitXor},
 };
 
-use widestring_suffix::widestrs;
-
 use crate::{
-    wchar::wstr,
+    wchar::prelude::*,
     wutil::{wcstod::wcstod_underscores, wgettext},
 };
 

@@ -2,9 +2,8 @@ use crate::common::{char_offset, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
 use crate::env::Environment;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::ParseErrorList;
-use crate::wchar::{wstr, WString};
+use crate::wchar::prelude::*;
 use bitflags::bitflags;
-use widestring_suffix::widestrs;
 
 bitflags! {
     /// Set of flags controlling expansions.

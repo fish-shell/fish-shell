@@ -11,11 +11,10 @@ use crate::ffi::Repin;
 use crate::ffi::{builtin_exists, colorize_shell};
 use crate::function;
 use crate::path::{path_get_path, path_get_paths};
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharFromFFI;
 use crate::wchar_ffi::WCharToFFI;
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{sprintf, wgettext, wgettext_fmt};
 
 #[derive(Default)]
 struct type_cmd_opts_t {

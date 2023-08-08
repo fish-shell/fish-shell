@@ -5,8 +5,7 @@ use crate::compat::MB_CUR_MAX;
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp};
 use crate::flog::FLOGF;
-use crate::wchar::{decode_byte_from_char, wstr, WString, L};
-use crate::wchar_ext::WExt;
+use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
@@ -604,7 +603,6 @@ fn test_split_string_tok() {
 
 #[test]
 fn test_join_strings() {
-    use crate::wchar::L;
     let empty: &[&wstr] = &[];
     assert_eq!(join_strings(empty, '/'), "");
     assert_eq!(join_strings(&[] as &[&wstr], '/'), "");

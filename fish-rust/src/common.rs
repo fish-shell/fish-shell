@@ -10,13 +10,12 @@ use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::termsize::Termsize;
-use crate::wchar::{decode_byte_from_char, encode_byte_to_char, wstr, WString, L};
-use crate::wchar_ext::WExt;
+use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
 use crate::wchar_ffi::WCharToFFI;
 use crate::wcstringutil::wcs2string_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
-use crate::wutil::{fish_iswalnum, sprintf, wgettext, wwrite_to_fd};
+use crate::wutil::{fish_iswalnum, wwrite_to_fd};
 use bitflags::bitflags;
 use core::slice;
 use cxx::{CxxWString, UniquePtr};
@@ -34,8 +33,6 @@ use std::str::FromStr;
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, TryLockError};
 use std::time;
-use widestring::Utf32String;
-use widestring_suffix::widestrs;
 
 // Highest legal ASCII value.
 pub const ASCII_MAX: char = 127 as char;
@@ -2063,10 +2060,10 @@ impl ToCString for &wstr {
     }
 }
 
-/// Safely converts from `&Utf32String` to a nul-terminated `CString` that can be passed to OS
+/// Safely converts from `&WString` to a nul-terminated `CString` that can be passed to OS
 /// functions, taking into account non-Unicode values that have been shifted into the private-use
 /// range by using [`wcs2zstring()`].
-impl ToCString for &Utf32String {
+impl ToCString for &WString {
     fn to_cstring(self) -> CString {
         self.as_utfstr().to_cstring()
     }

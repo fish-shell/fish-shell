@@ -11,7 +11,6 @@ use std::num::NonZeroU32;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
-use widestring_suffix::widestrs;
 
 use crate::builtins::shared::io_streams_t;
 use crate::common::{escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard};
@@ -20,10 +19,8 @@ use crate::flog::FLOG;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::signal::{signal_check_cancel, signal_handle, Signal};
 use crate::termsize;
-use crate::wchar::{wstr, WString, L};
-use crate::wchar_ext::ToWString;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{wcharz_t, AsWstr, WCharFromFFI, WCharToFFI};
-use crate::wutil::sprintf;
 
 #[cxx::bridge]
 mod event_ffi {

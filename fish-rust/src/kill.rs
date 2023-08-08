@@ -9,7 +9,7 @@ use std::pin::Pin;
 use std::sync::Mutex;
 
 use crate::ffi::wcstring_list_ffi_t;
-use crate::wchar::WString;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharFromFFI;
 
 #[cxx::bridge]

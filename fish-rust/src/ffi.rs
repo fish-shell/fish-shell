@@ -1,4 +1,3 @@
-use crate::wchar;
 use crate::wchar_ffi::WCharToFFI;
 #[rustfmt::skip]
 use ::std::pin::Pin;
@@ -8,7 +7,7 @@ use crate::env::{EnvMode, EnvStackRef, EnvStackRefFFI};
 pub use crate::wait_handle::{
     WaitHandleRef, WaitHandleRefFFI, WaitHandleStore, WaitHandleStoreFFI,
 };
-use crate::wchar::{wstr, WString};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharFromFFI;
 use autocxx::prelude::*;
 use cxx::SharedPtr;
@@ -298,19 +297,19 @@ impl process_t {
 }
 
 /// Allow wcharz_t to be "into" wstr.
-impl From<wcharz_t> for &wchar::wstr {
+impl From<wcharz_t> for &wstr {
     fn from(w: wcharz_t) -> Self {
         let len = w.length();
         #[allow(clippy::unnecessary_cast)]
         let v = unsafe { slice::from_raw_parts(w.str_ as *const u32, len) };
-        wchar::wstr::from_slice(v).expect("Invalid UTF-32")
+        wstr::from_slice(v).expect("Invalid UTF-32")
     }
 }
 
 /// Allow wcharz_t to be "into" WString.
-impl From<wcharz_t> for wchar::WString {
+impl From<wcharz_t> for WString {
     fn from(w: wcharz_t) -> Self {
-        let w: &wchar::wstr = w.into();
+        let w: &wstr = w.into();
         w.to_owned()
     }
 }

@@ -237,6 +237,7 @@ pub fn run_builtin(
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
         RustBuiltin::Exit => super::exit::exit(parser, streams, args),
+        RustBuiltin::Functions => super::functions::functions(parser, streams, args),
         RustBuiltin::Math => super::math::math(parser, streams, args),
         RustBuiltin::Path => super::path::path(parser, streams, args),
         RustBuiltin::Pwd => super::pwd::pwd(parser, streams, args),

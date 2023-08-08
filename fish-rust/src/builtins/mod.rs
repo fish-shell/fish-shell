@@ -12,6 +12,7 @@ pub mod echo;
 pub mod emit;
 pub mod exit;
 pub mod function;
+pub mod functions;
 pub mod math;
 pub mod path;
 pub mod printf;

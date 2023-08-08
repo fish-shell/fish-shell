@@ -143,59 +143,61 @@ chmod 300 stuff/writeexec
 chmod 700 stuff/all
 chmod 000 stuff/none
 
-path filter --perm read stuff/* | path sort
+# Validate that globs are sorted.
+test (path filter stuff/* | path sort | string join ",") = (path filter stuff/* | string join ",")
+
+path filter --perm read stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/read
 # CHECK: stuff/readexec
 # CHECK: stuff/readwrite
 
-path filter -r stuff/* | path sort
+path filter -r stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/read
 # CHECK: stuff/readexec
 # CHECK: stuff/readwrite
 
-path filter --perm write stuff/* | path sort
+path filter --perm write stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/readwrite
 # CHECK: stuff/write
 # CHECK: stuff/writeexec
 
-path filter -w stuff/* | path sort
+path filter -w stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/readwrite
 # CHECK: stuff/write
 # CHECK: stuff/writeexec
 
-path filter --perm exec stuff/* | path sort
+path filter --perm exec stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/exec
 # CHECK: stuff/readexec
 # CHECK: stuff/writeexec
 
-path filter -x stuff/* | path sort
+path filter -x stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/exec
 # CHECK: stuff/readexec
 # CHECK: stuff/writeexec
 
-
-path filter --perm read,write stuff/* | path sort
+path filter --perm read,write stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/readwrite
 
-path filter --perm read,exec stuff/* | path sort
+path filter --perm read,exec stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/readexec
 
-path filter --perm write,exec stuff/* | path sort
+path filter --perm write,exec stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/writeexec
 
-path filter --perm read,write,exec stuff/* | path sort
+path filter --perm read,write,exec stuff/*
 # CHECK: stuff/all
 
-path filter stuff/* | path sort
+path filter stuff/*
 # CHECK: stuff/all
 # CHECK: stuff/exec
 # CHECK: stuff/none

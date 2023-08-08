@@ -28,3 +28,20 @@ pub mod wait;
 
 // Note these tests will NOT run with cfg(test).
 mod tests;
+
+mod prelude {
+    pub use super::shared::*;
+    pub use libc::c_int;
+
+    pub(crate) use crate::{
+        ffi::{self, parser_t, separation_type_t, Repin},
+        wchar::prelude::*,
+        wchar_ffi::{c_str, AsWstr, WCharFromFFI, WCharToFFI},
+        wgetopt::{
+            wgetopter_t, wopt, woption,
+            woption_argument_t::{self, *},
+            NONOPTION_CHAR_CODE,
+        },
+        wutil::{fish_wcstoi, fish_wcstol, fish_wcstoul},
+    };
+}

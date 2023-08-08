@@ -1,4 +1,4 @@
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 
 /// Adjust a pattern so that it is anchored at both beginning and end.
 /// This is a workaround for the fact that PCRE2_ENDANCHORED is unavailable on pre-2017 PCRE2

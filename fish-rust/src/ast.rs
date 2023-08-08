@@ -21,15 +21,11 @@ use crate::tokenizer::{
     variable_assignment_equals_pos, TokFlags, TokenType, Tokenizer, TokenizerError,
     TOK_ACCEPT_UNFINISHED, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
 };
-use crate::wchar::{wstr, WString, L};
-use crate::wchar_ext::WExt;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{wcharz, wcharz_t, AsWstr, WCharToFFI};
-use crate::wutil::printf::sprintf;
-use crate::wutil::wgettext_fmt;
 use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
 use std::ops::{ControlFlow, Index, IndexMut};
-use widestring_suffix::widestrs;
 
 /**
  * A NodeVisitor is something which can visit an AST node.

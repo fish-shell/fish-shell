@@ -1,10 +1,9 @@
 //! Flags to enable upcoming features
 
 use crate::ffi::wcharz_t;
-use crate::wchar::wstr;
+use crate::wchar::prelude::*;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use widestring_suffix::widestrs;
 
 #[cxx::bridge]
 mod future_feature_flags_ffi {

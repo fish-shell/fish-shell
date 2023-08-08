@@ -13,14 +13,13 @@ use crate::path::path_apply_working_directory;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
 use crate::topic_monitor::topic_t;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
 use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDERR_FILENO};
 use std::cell::UnsafeCell;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard};
 use std::{os::fd::RawFd, rc::Rc};
-use widestring_suffix::widestrs;
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just

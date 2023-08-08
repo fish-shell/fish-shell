@@ -1,8 +1,7 @@
 use self::ffi::pgid_t;
 use crate::common::{assert_send, assert_sync};
 use crate::signal::Signal;
-use crate::wchar::WString;
-use crate::wchar_ext::ToWString;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use cxx::{CxxWString, UniquePtr};
 use std::num::NonZeroU32;

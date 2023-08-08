@@ -1,7 +1,6 @@
 use crate::ffi::wildcard_match;
 use crate::parse_util::parse_util_unescape_wildcards;
-use crate::wchar::{widestrs, wstr, WString};
-use crate::wchar_ext::WExt;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharToFFI;
 use libc::c_int;
 use std::io::Write;

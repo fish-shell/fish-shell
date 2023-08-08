@@ -2,13 +2,11 @@
 
 use crate::ffi::{fish_wcswidth, fish_wcwidth, wcharz_t};
 use crate::tokenizer::variable_assignment_equals_pos;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{wcharz, AsWstr, WCharFromFFI, WCharToFFI};
-use crate::wutil::{sprintf, wgettext_fmt};
 use bitflags::bitflags;
 use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
-use widestring_suffix::widestrs;
 
 pub type SourceOffset = u32;
 

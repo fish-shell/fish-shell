@@ -1,4 +1,4 @@
-use crate::wchar::WString;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharFromFFI;
 use cxx::CxxWString;
 use libc::pid_t;
@@ -243,8 +243,6 @@ impl WaitHandleStore {
 
 #[test]
 fn test_wait_handles() {
-    use crate::wchar::L;
-
     let limit: usize = 4;
     let mut whs = WaitHandleStore::new_with_capacity(limit);
     assert_eq!(whs.size(), 0);

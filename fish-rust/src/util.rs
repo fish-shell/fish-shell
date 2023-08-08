@@ -1,7 +1,7 @@
 //! Generic utilities library.
 
 use crate::ffi::wcharz_t;
-use crate::wchar::wstr;
+use crate::wchar::prelude::*;
 use std::cmp::Ordering;
 use std::time;
 
@@ -261,8 +261,6 @@ fn wcsfilecmp_leading_digits(a: &wstr, b: &wstr) -> (Ordering, usize, usize) {
 /// Verify the behavior of the `wcsfilecmp()` function.
 #[test]
 fn test_wcsfilecmp() {
-    use crate::wchar::L;
-
     macro_rules! validate {
         ($str1:expr, $str2:expr, $expected_rc:expr) => {
             assert_eq!(wcsfilecmp(L!($str1), L!($str2)), $expected_rc)

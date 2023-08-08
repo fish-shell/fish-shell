@@ -4,7 +4,7 @@
 //! Many of these functions are more or less broken and incomplete.
 
 use crate::widecharwidth::{WcLookupTable, WcWidth};
-use crate::{common::is_console_session, wchar::wstr};
+use crate::{common::is_console_session, wchar::prelude::*};
 use once_cell::sync::Lazy;
 use std::cmp;
 use std::sync::atomic::{AtomicI32, Ordering};
@@ -167,7 +167,6 @@ pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
 
 #[test]
 fn test_wcscasecmp() {
-    use crate::wchar::L;
     use std::cmp::Ordering;
 
     // Comparison with empty

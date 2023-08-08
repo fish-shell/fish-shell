@@ -4,7 +4,7 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use cxx::CxxWString;
 use once_cell::sync::Lazy;
@@ -433,11 +433,8 @@ impl<'a> GlobalAbbrs<'a> {
 }
 use crate::ffi_tests::add_test;
 add_test!("rename_abbrs", || {
-    use crate::wchar::wstr;
-    use crate::{
-        abbrs::{Abbreviation, Position},
-        wchar::L,
-    };
+    use crate::abbrs::{Abbreviation, Position};
+    use crate::wchar::prelude::*;
 
     with_abbrs_mut(|abbrs_g| {
         let mut add = |name: &wstr, repl: &wstr, position: Position| {

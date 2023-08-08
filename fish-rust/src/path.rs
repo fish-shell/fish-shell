@@ -8,10 +8,8 @@ use crate::compat::{MNT_LOCAL, ST_LOCAL};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
-use crate::wchar::{wstr, WExt, WString, L};
-use crate::wutil::{
-    normalize_path, path_normalize_for_cd, waccess, wdirname, wgettext, wgettext_fmt, wmkdir, wstat,
-};
+use crate::wchar::prelude::*;
+use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wmkdir, wstat};
 use errno::{errno, set_errno, Errno};
 use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
@@ -19,7 +17,6 @@ use std::ffi::OsStr;
 use std::io::{ErrorKind, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::prelude::MetadataExt;
-use widestring_suffix::widestrs;
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.

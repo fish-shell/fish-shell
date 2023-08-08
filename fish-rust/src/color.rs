@@ -1,9 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::{
-    wchar::{widestrs, wstr, WExt, WString, L},
-    wutil::sprintf,
-};
+use crate::wchar::prelude::*;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Color24 {
@@ -487,10 +484,8 @@ impl rgb_color_t {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        color::{Color24, Flags, RgbColor, Type},
-        wchar::widestrs,
-    };
+    use crate::color::{Color24, Flags, RgbColor, Type};
+    use crate::wchar::prelude::*;
 
     #[test]
     #[widestrs]

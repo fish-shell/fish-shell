@@ -274,8 +274,8 @@ impl WExt for wstr {
 
 #[cfg(test)]
 mod tests {
-    use super::WExt;
-    use crate::wchar::{wstr, WString, L};
+    use super::*;
+    use crate::wchar::L;
     /// Write some tests.
     #[cfg(test)]
     fn test_find_char() {

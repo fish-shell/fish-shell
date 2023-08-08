@@ -1,6 +1,6 @@
 use crate::common::wcs2zstring;
 use crate::ffi;
-use crate::wchar::{wstr, L};
+use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use libc::EINTR;
 use libc::{fcntl, F_GETFL, F_SETFL, O_CLOEXEC, O_NONBLOCK};

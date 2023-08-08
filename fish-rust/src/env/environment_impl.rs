@@ -8,10 +8,9 @@ use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::threads::{is_forked_child, is_main_thread};
-use crate::wchar::{widestrs, wstr, WExt, WString, L};
-use crate::wchar_ext::ToWString;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
-use crate::wutil::{fish_wcstol_radix, sprintf};
+use crate::wutil::fish_wcstol_radix;
 
 use autocxx::WithinUniquePtr;
 use cxx::UniquePtr;

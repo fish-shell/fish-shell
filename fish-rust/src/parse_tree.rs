@@ -11,9 +11,8 @@ use crate::parse_constants::{
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, SOURCE_OFFSET_INVALID,
 };
 use crate::tokenizer::TokenizerError;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
-use crate::wutil::sprintf;
 use cxx::{CxxWString, UniquePtr};
 
 /// A struct representing the token type that we use internally.

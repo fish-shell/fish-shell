@@ -373,7 +373,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"fg", &builtin_fg, N_(L"Send job to foreground")},
     {L"for", &builtin_generic, N_(L"Perform a set of commands multiple times")},
     {L"function", &builtin_generic, N_(L"Define a new function")},
-    {L"functions", &builtin_functions, N_(L"List or remove functions")},
+    {L"functions", &implemented_in_rust, N_(L"List or remove functions")},
     {L"history", &builtin_history, N_(L"History of commands executed by user")},
     {L"if", &builtin_generic, N_(L"Evaluate block if condition is true")},
     {L"jobs", &builtin_jobs, N_(L"Print currently running jobs")},
@@ -548,6 +548,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"exit") {
         return RustBuiltin::Exit;
+    }
+    if (cmd == L"functions") {
+        return RustBuiltin::Functions;
     }
     if (cmd == L"math") {
         return RustBuiltin::Math;

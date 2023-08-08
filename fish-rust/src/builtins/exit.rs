@@ -1,9 +1,5 @@
-use libc::c_int;
-
+use super::prelude::*;
 use super::r#return::parse_return_value;
-use super::shared::io_streams_t;
-use crate::ffi::parser_t;
-use crate::wchar::wstr;
 
 /// Function for handling the exit builtin.
 pub fn exit(

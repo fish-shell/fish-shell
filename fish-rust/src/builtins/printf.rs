@@ -48,19 +48,17 @@
 
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
 
-use libc::c_int;
 use num_traits;
-use std::result::Result;
 
-use crate::builtins::shared::{io_streams_t, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-use crate::ffi::parser_t;
+use super::prelude::*;
 use crate::locale::{get_numeric_locale, Locale};
-use crate::wchar::{encode_byte_to_char, wstr, WExt, WString, L};
-use crate::wutil::errors::Error;
-use crate::wutil::gettext::{wgettext, wgettext_fmt};
-use crate::wutil::wcstod::wcstod;
-use crate::wutil::wcstoi::{wcstoi_partial, Options as WcstoiOpts};
-use crate::wutil::{sprintf, wstr_offset_in};
+use crate::wchar::encode_byte_to_char;
+use crate::wutil::{
+    errors::Error,
+    wcstod::wcstod,
+    wcstoi::{wcstoi_partial, Options as WcstoiOpts},
+    wstr_offset_in,
+};
 use printf_compat::args::ToArg;
 use printf_compat::printf::sprintf_locale;
 

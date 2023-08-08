@@ -1,8 +1,7 @@
-use crate::builtins::shared::{io_streams_t, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+use crate::builtins::prelude::*;
 use crate::builtins::test::test as builtin_test;
 
-use crate::ffi::{make_null_io_streams_ffi, parser_t};
-use crate::wchar::prelude::*;
+use crate::ffi::make_null_io_streams_ffi;
 
 fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
     let parser: &mut parser_t = unsafe { &mut *parser_t::principal_parser_ffi() };

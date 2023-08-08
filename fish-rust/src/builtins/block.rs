@@ -1,16 +1,5 @@
 // Implementation of the block builtin.
-use super::shared::{
-    builtin_missing_argument, builtin_print_help, io_streams_t, STATUS_CMD_ERROR, STATUS_CMD_OK,
-    STATUS_INVALID_ARGS,
-};
-use crate::{
-    builtins::shared::builtin_unknown_option,
-    ffi::{parser_t, Repin},
-    wchar::{wstr, L},
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t},
-    wutil::wgettext_fmt,
-};
-use libc::c_int;
+use super::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Scope {

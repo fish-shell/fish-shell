@@ -1,20 +1,7 @@
 use crate::wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
-use crate::{
-    builtins::shared::{
-        builtin_missing_argument, builtin_print_error_trailer, builtin_print_help, io_streams_t,
-        Arguments, SplitBehavior, BUILTIN_ERR_ARG_COUNT0, BUILTIN_ERR_ARG_COUNT1,
-        BUILTIN_ERR_COMBO2, BUILTIN_ERR_INVALID_SUBCMD, BUILTIN_ERR_MISSING_SUBCMD,
-        BUILTIN_ERR_NOT_NUMBER, BUILTIN_ERR_TOO_MANY_ARGUMENTS, BUILTIN_ERR_UNKNOWN,
-        STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-    },
-    ffi::{parser_t, separation_type_t},
-    wchar::{wstr, WString, L},
-    wchar_ext::{ToWString, WExt},
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*, NONOPTION_CHAR_CODE},
-    wutil::{wgettext, wgettext_fmt},
-};
-use libc::c_int;
+use super::prelude::*;
+use crate::ffi::separation_type_t;
 
 mod collect;
 mod escape;

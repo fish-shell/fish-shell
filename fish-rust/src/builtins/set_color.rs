@@ -1,18 +1,10 @@
 // Implementation of the set_color builtin.
 
-use super::shared::{
-    builtin_print_help, builtin_unknown_option, io_streams_t, STATUS_CMD_ERROR, STATUS_CMD_OK,
-    STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
 use crate::color::RgbColor;
 use crate::common::str2wcstring;
 use crate::curses::{self, Term};
-use crate::ffi::parser_t;
 use crate::output::{self, Outputter};
-use crate::wchar::{wstr, L};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::wgettext_fmt;
-use libc::c_int;
 
 #[allow(clippy::too_many_arguments)]
 fn print_modifiers(

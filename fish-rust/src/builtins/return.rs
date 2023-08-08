@@ -1,18 +1,8 @@
 // Implementation of the return builtin.
 
-use libc::c_int;
 use num_traits::abs;
 
-use super::shared::{
-    builtin_missing_argument, builtin_print_error_trailer, builtin_print_help, io_streams_t,
-    BUILTIN_ERR_NOT_NUMBER, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
-use crate::builtins::shared::BUILTIN_ERR_TOO_MANY_ARGUMENTS;
-use crate::ffi::parser_t;
-use crate::wchar::{wstr, L};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::fish_wcstoi;
-use crate::wutil::wgettext_fmt;
+use super::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
 struct Options {

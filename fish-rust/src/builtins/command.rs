@@ -1,14 +1,5 @@
-use libc::c_int;
-
-use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_INVALID_ARGS,
-};
-use crate::ffi::parser_t;
+use super::prelude::*;
 use crate::path::{path_get_path, path_get_paths};
-use crate::wchar::{wstr, L};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::sprintf;
 
 #[derive(Default)]
 struct command_cmd_opts_t {

@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use std::os::unix::prelude::{FileTypeExt, MetadataExt};
 use std::time::SystemTime;
 
+use super::prelude::*;
 use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
 use crate::wcstringutil::split_string_tok;
@@ -10,23 +11,8 @@ use crate::wutil::{
     file_id_for_path, lwstat, normalize_path, waccess, wbasename, wdirname, wrealpath, wstat,
     INVALID_FILE_ID,
 };
-use crate::{
-    builtins::shared::{
-        builtin_missing_argument, builtin_print_error_trailer, builtin_print_help, io_streams_t,
-        Arguments, SplitBehavior, BUILTIN_ERR_ARG_COUNT0, BUILTIN_ERR_INVALID_SUBCMD,
-        BUILTIN_ERR_MISSING_SUBCMD, BUILTIN_ERR_TOO_MANY_ARGUMENTS, BUILTIN_ERR_UNKNOWN,
-        STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-    },
-    ffi::{parser_t, separation_type_t},
-    wchar::{wstr, WString, L},
-    wchar_ext::{ToWString, WExt},
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*, NONOPTION_CHAR_CODE},
-    wutil::wgettext_fmt,
-};
 use bitflags::bitflags;
-use libc::{
-    c_int, getegid, geteuid, mode_t, uid_t, F_OK, PATH_MAX, R_OK, S_ISGID, S_ISUID, W_OK, X_OK,
-};
+use libc::{getegid, geteuid, mode_t, uid_t, F_OK, PATH_MAX, R_OK, S_ISGID, S_ISUID, W_OK, X_OK};
 
 use super::shared::BuiltinCmd;
 

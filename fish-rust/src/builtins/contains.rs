@@ -1,14 +1,5 @@
 // Implementation of the contains builtin.
-use super::shared::{
-    builtin_missing_argument, builtin_print_help, io_streams_t, STATUS_CMD_ERROR, STATUS_CMD_OK,
-    STATUS_INVALID_ARGS,
-};
-use crate::builtins::shared::builtin_unknown_option;
-use crate::ffi::parser_t;
-use crate::wchar::{wstr, L};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::wgettext_fmt;
-use libc::c_int;
+use super::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
 struct Options {

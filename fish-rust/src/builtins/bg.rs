@@ -2,15 +2,7 @@
 
 use std::pin::Pin;
 
-use super::shared::{builtin_print_help, io_streams_t, STATUS_CMD_ERROR, STATUS_INVALID_ARGS};
-use crate::{
-    builtins::shared::{HelpOnlyCmdOpts, STATUS_CMD_OK},
-    ffi::{self, parser_t, Repin},
-    wchar::wstr,
-    wchar_ffi::{c_str, WCharFromFFI, WCharToFFI},
-    wutil::{fish_wcstoi, wgettext_fmt},
-};
-use libc::c_int;
+use super::prelude::*;
 
 /// Helper function for builtin_bg().
 fn send_to_bg(

@@ -1,26 +1,13 @@
 use std::os::unix::prelude::OsStrExt;
 
-use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    BUILTIN_ERR_ARG_COUNT2, BUILTIN_ERR_COMBO2_EXCLUSIVE, BUILTIN_ERR_INVALID_SUBCMD,
-    BUILTIN_ERR_NOT_NUMBER, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
 use crate::common::{get_executable_path, str2wcstring};
 use crate::ffi::{
-    get_job_control_mode, get_login, is_interactive_session, job_control_t, parser_t,
-    set_job_control_mode, Repin,
+    get_job_control_mode, get_login, is_interactive_session, job_control_t, set_job_control_mode,
 };
 use crate::future_feature_flags::{self as features, feature_test};
-use crate::wchar::{wstr, L};
-use crate::wchar_ffi::{AsWstr, WCharFromFFI};
-use crate::wgetopt::{
-    wgetopter_t, wopt, woption,
-    woption_argument_t::{no_argument, required_argument},
-};
-use crate::wutil::{
-    fish_wcstoi, sprintf, waccess, wbasename, wdirname, wgettext, wgettext_fmt, wrealpath, Error,
-};
-use libc::{c_int, F_OK};
+use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
+use libc::F_OK;
 use nix::errno::Errno;
 use nix::NixPath;
 use num_derive::FromPrimitive;

@@ -1,13 +1,6 @@
-use libc::c_int;
+use super::prelude::*;
 
-use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
-use crate::ffi::parser_t;
-use crate::wchar::{wstr, L};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{self, fish_wcstol, fish_wcstoul, sprintf, wgettext_fmt};
+use crate::wutil;
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};

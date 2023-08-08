@@ -1,20 +1,11 @@
 //! Implementation of the realpath builtin.
 
 use errno::errno;
-use libc::c_int;
 
+use super::prelude::*;
 use crate::{
-    ffi::parser_t,
     path::path_apply_working_directory,
-    wchar::{wstr, WExt, L},
-    wchar_ffi::AsWstr,
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::no_argument},
-    wutil::{normalize_path, wgettext_fmt, wrealpath},
-};
-
-use super::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    BUILTIN_ERR_ARG_COUNT1, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
+    wutil::{normalize_path, wrealpath},
 };
 
 #[derive(Default)]

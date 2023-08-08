@@ -1,20 +1,11 @@
-use libc::c_int;
 use libc::isatty;
 use libc::STDOUT_FILENO;
 
-use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    BUILTIN_ERR_COMBO, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
-use crate::ffi::parser_t;
-use crate::ffi::Repin;
+use super::prelude::*;
 use crate::ffi::{builtin_exists, colorize_shell};
 use crate::function;
+
 use crate::path::{path_get_path, path_get_paths};
-use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharFromFFI;
-use crate::wchar_ffi::WCharToFFI;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 
 #[derive(Default)]
 struct type_cmd_opts_t {

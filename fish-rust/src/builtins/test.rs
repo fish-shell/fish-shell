@@ -1,19 +1,12 @@
-use libc::c_int;
-
-use crate::builtins::shared::{
-    builtin_print_error_trailer, io_streams_t, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
 use crate::common;
-use crate::ffi::parser_t;
-use crate::ffi::Repin;
-use crate::wchar::prelude::*;
-use crate::wchar_ffi::AsWstr;
 
 mod test_expressions {
     use super::*;
+
     use crate::wutil::{
-        file_id_for_path, fish_wcstol, fish_wcswidth, lwstat, waccess, wcstod::wcstod, wcstoi_opts,
-        wstat, Error, Options,
+        file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,
+        Error, Options,
     };
     use once_cell::sync::Lazy;
     use std::collections::HashMap;

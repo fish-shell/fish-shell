@@ -1,21 +1,8 @@
 //! Implementation of the pwd builtin.
 use errno::errno;
-use libc::c_int;
 
-use crate::{
-    builtins::shared::{io_streams_t, BUILTIN_ERR_ARG_COUNT1},
-    env::EnvMode,
-    ffi::parser_t,
-    wchar::{wstr, WString, L},
-    wchar_ffi::{WCharFromFFI, WCharToFFI},
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::no_argument},
-    wutil::{wgettext_fmt, wrealpath},
-};
-
-use super::shared::{
-    builtin_print_help, builtin_unknown_option, STATUS_CMD_ERROR, STATUS_CMD_OK,
-    STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
+use crate::{env::EnvMode, wutil::wrealpath};
 
 // The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");

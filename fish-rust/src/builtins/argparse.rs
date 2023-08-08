@@ -1,20 +1,10 @@
 use std::collections::HashMap;
 
-use crate::builtins::shared::builtin_print_error_trailer;
-use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    BUILTIN_ERR_MAX_ARG_COUNT1, BUILTIN_ERR_MIN_ARG_COUNT1, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR,
-    STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
+
 use crate::env::{EnvMode, EnvStack};
-use crate::ffi::parser_t;
-use crate::ffi::Repin;
-use crate::wchar::{wstr, WString, L};
-use crate::wchar_ext::WExt;
 use crate::wcstringutil::split_string;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t, NONOPTION_CHAR_CODE};
-use crate::wutil::{fish_iswalnum, fish_wcstol, wgettext_fmt};
-use libc::c_int;
+use crate::wutil::fish_iswalnum;
 
 const VAR_NAME_PREFIX: &wstr = L!("_flag_");
 
@@ -99,8 +89,6 @@ fn exec_subshell(
 ) -> Option<c_int> {
     use crate::ffi::exec_subshell_ffi;
     use crate::wchar_ffi::wcstring_list_ffi_t;
-    use crate::wchar_ffi::WCharFromFFI;
-    use crate::wchar_ffi::WCharToFFI;
 
     let mut cmd_output: cxx::UniquePtr<wcstring_list_ffi_t> = wcstring_list_ffi_t::create();
     let retval = Some(

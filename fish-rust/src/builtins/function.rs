@@ -1,24 +1,16 @@
-use super::shared::{
-    builtin_missing_argument, builtin_print_error_trailer, builtin_unknown_option, io_streams_t,
-    truncate_args_on_nul, BUILTIN_ERR_VARNAME, STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
 use crate::ast::BlockStatement;
-use crate::builtins::shared::STATUS_CMD_OK;
 use crate::common::{valid_func_name, valid_var_name};
 use crate::env::environment::Environment;
 use crate::event::{self, EventDescription, EventHandler};
-use crate::ffi::{self, io_streams_t as io_streams_ffi_t, parser_t, Repin};
+use crate::ffi::io_streams_t as io_streams_ffi_t;
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_tree::NodeRef;
 use crate::parse_tree::ParsedSourceRefFFI;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::signal::Signal;
-use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{wcstring_list_ffi_t, WCharFromFFI, WCharToFFI};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t, NONOPTION_CHAR_CODE};
-use crate::wutil::{fish_wcstoi, wgettext_fmt};
-use libc::c_int;
 use std::pin::Pin;
 use std::sync::Arc;
 

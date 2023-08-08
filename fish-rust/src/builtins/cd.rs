@@ -1,18 +1,14 @@
 // Implementation of the cd builtin.
 
-use super::shared::{builtin_print_help, io_streams_t, STATUS_CMD_ERROR};
+use super::prelude::*;
 use crate::{
-    builtins::shared::{HelpOnlyCmdOpts, STATUS_CMD_OK},
     env::{EnvMode, Environment},
     fds::{wopen_cloexec, AutoCloseFd},
-    ffi::{parser_t, Repin},
     path::path_apply_cdpath,
-    wchar::{wstr, WString, L},
-    wchar_ffi::{WCharFromFFI, WCharToFFI},
-    wutil::{normalize_path, wgettext_fmt, wperror, wreadlink},
+    wutil::{normalize_path, wperror, wreadlink},
 };
 use errno::{self, Errno};
-use libc::{c_int, fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, O_RDONLY};
+use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, O_RDONLY};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.

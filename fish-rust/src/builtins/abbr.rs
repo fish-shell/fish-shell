@@ -1,20 +1,10 @@
+use super::prelude::*;
 use crate::abbrs::{self, Abbreviation, Position};
-use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_error_trailer, builtin_print_help,
-    builtin_unknown_option, io_streams_t, BUILTIN_ERR_TOO_MANY_ARGUMENTS, STATUS_CMD_ERROR,
-    STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
 use crate::common::{escape, escape_string, valid_func_name, EscapeStringStyle};
 use crate::env::status::{ENV_NOT_FOUND, ENV_OK};
 use crate::env::EnvMode;
-use crate::ffi::parser_t;
 use crate::re::{regex_make_anchored, to_boxed_chars};
-use crate::wchar::{wstr, L};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::wgettext_fmt;
-use libc::c_int;
 use pcre2::utf32::{Regex, RegexBuilder};
-pub use widestring::Utf32String as WString;
 
 const CMD: &wstr = L!("abbr");
 

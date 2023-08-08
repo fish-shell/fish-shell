@@ -1,16 +1,5 @@
-use libc::c_int;
-
-use crate::builtins::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, io_streams_t,
-    BUILTIN_ERR_COMBO2, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
-use crate::ffi::parser_t;
+use super::prelude::*;
 use crate::ffi::{builtin_exists, builtin_get_names_ffi};
-use crate::wchar::{wstr, WString, L};
-use crate::wchar_ffi::WCharFromFFI;
-use crate::wchar_ffi::WCharToFFI;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{wgettext, wgettext_fmt};
 
 #[derive(Default)]
 struct builtin_cmd_opts_t {

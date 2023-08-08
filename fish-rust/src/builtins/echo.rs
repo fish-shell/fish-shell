@@ -1,11 +1,7 @@
 //! Implementation of the echo builtin.
 
-use libc::c_int;
-
-use super::shared::{builtin_missing_argument, io_streams_t, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-use crate::ffi::parser_t;
-use crate::wchar::{encode_byte_to_char, wstr, WString, L};
-use crate::wgetopt::{wgetopter_t, woption};
+use super::prelude::*;
+use crate::wchar::encode_byte_to_char;
 
 #[derive(Debug, Clone, Copy)]
 struct Options {

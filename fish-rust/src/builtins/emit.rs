@@ -1,10 +1,5 @@
-use super::shared::{
-    builtin_print_help, io_streams_t, HelpOnlyCmdOpts, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
 use crate::event;
-use crate::ffi::parser_t;
-use crate::wchar::prelude::*;
-use libc::c_int;
 
 #[widestrs]
 pub fn emit(

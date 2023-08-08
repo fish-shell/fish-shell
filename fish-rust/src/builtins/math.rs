@@ -1,16 +1,9 @@
-use libc::c_int;
 use std::borrow::Cow;
 
-use super::shared::{
-    builtin_missing_argument, builtin_print_help, io_streams_t, BUILTIN_ERR_COMBO2,
-    BUILTIN_ERR_MIN_ARG_COUNT1, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
 use crate::common::{read_blocked, str2wcstring};
-use crate::ffi::parser_t;
 use crate::tinyexpr::te_interp;
-use crate::wchar::prelude::*;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::{fish_wcstoi, perror};
+use crate::wutil::perror;
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;

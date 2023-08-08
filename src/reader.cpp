@@ -4389,6 +4389,13 @@ bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
     // using a backslash, insert a newline.
     // If the user hits return while navigating the pager, it only clears the pager.
     if (is_navigating_pager_contents()) {
+        if (this->history_pager_active &&
+            this->pager.selected_completion_index() == PAGER_SELECTION_NONE) {
+            command_line.push_edit(
+                edit_t{0, command_line.size(), this->pager.search_field_line.text()},
+                /* allow_coalesce */ false);
+            command_line.set_position(this->pager.search_field_line.position());
+        }
         clear_pager();
         return true;
     }

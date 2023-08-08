@@ -27,3 +27,10 @@ isolated-tmux send-keys C-z _
 tmux-sleep
 isolated-tmux capture-pane -p | grep 'prompt 2'
 # CHECK: prompt 2> _
+
+# When history pager fails to find a result, copy the search field to the command line.
+isolated-tmux send-keys C-e C-u C-r "echo no such command in history"
+tmux-sleep
+isolated-tmux send-keys Enter
+# CHECK: prompt 2> echo no such command in history
+isolated-tmux capture-pane -p | grep 'prompt 2'

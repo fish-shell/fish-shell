@@ -826,7 +826,7 @@ fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event) {
 }
 
 #[widestrs]
-const EVENT_FILTER_NAMES: [&wstr; 7] = [
+pub const EVENT_FILTER_NAMES: [&wstr; 7] = [
     "signal"L,
     "variable"L,
     "exit"L,

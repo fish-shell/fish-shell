@@ -291,7 +291,7 @@ fn get_function_body_source(props: &FunctionProperties) -> &wstr {
 
 /// Sets the description of the function with the name \c name.
 /// This triggers autoloading.
-fn set_desc(name: &wstr, desc: WString, parser: &mut parser_t) {
+pub fn set_desc(name: &wstr, desc: WString, parser: &mut parser_t) {
     parser.assert_can_execute();
     load(name, parser);
     let mut funcset = FUNCTION_SET.lock().unwrap();

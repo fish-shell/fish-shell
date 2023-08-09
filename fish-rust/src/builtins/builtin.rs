@@ -56,6 +56,14 @@ pub fn r#builtin(
         return STATUS_INVALID_ARGS;
     }
 
+    // If we don't have either, we print our help.
+    // This is also what e.g. command and time,
+    // the other decorator/builtins do.
+    if !opts.query && !opts.list_names {
+        builtin_print_help(parser, streams, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
     if opts.query {
         let optind = w.woptind;
         for arg in argv.iter().take(argc).skip(optind) {

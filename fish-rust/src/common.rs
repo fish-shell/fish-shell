@@ -1535,7 +1535,7 @@ pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize>
 
 /// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
 #[widestrs]
-fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
+pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();
 
     let screen_width = termsize.width;

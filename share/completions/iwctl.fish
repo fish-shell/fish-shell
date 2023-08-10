@@ -26,7 +26,7 @@ function __iwctl_match_subcoms
 
     set argv (commandline -poc)
     # iwctl allows to specify arguments for username, password, passphrase and dont-ask regardless of any following commands
-    argparse -i -n iwctl 'u/username=' 'p/password=' 'P/passphrase=' 'v/dont-ask' -- $argv
+    argparse -i 'u/username=' 'p/password=' 'P/passphrase=' 'v/dont-ask' -- $argv
     set argv $argv[2..]
 
     if test (count $argv) != (count $match)
@@ -43,7 +43,7 @@ end
 function __iwctl_connect
     set argv (commandline -poc)
     # remove all options
-    argparse -i -n iwctl 'u/username=' 'p/password=' 'P/passphrase=' 'v/dont-ask' -- $argv
+    argparse -i 'u/username=' 'p/password=' 'P/passphrase=' 'v/dont-ask' -- $argv
     # station name should now be the third argument (`iwctl station <wlan>`)
     __iwctl_filter station $argv[3] get-networks
 end
@@ -59,6 +59,13 @@ end
 # set wsc '(__iwctl_filter wsc "No WSC-capable devices available")'
 
 complete -f iwctl
+
+# Options
+complete -c iwctl -s h -l help
+complete -c iwctl -s p -l password -rf
+complete -c iwctl -s u -l username -rf
+complete -c iwctl -s P -l passphrase -rf
+complete -c iwctl -s v -l dont-ask -d "Don't ask for missing credentials"
 
 # Subcommand
 complete -c iwctl -n '__iwctl_match_subcoms' \

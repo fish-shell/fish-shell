@@ -845,19 +845,25 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
 
     tmp.sort_by(|e1, e2| e1.desc.cmp(&e2.desc));
 
-    let mut last_type = None;
+    let mut last_type = std::mem::discriminant(&EventDescription::Any);
     for evt in tmp {
         // If we have a filter, skip events that don't match.
         if !evt.desc.matches_filter(type_filter) {
             continue;
         }
 
-        if last_type.as_ref() != Some(&evt.desc) {
-            if last_type.is_some() {
+        // Print a "Event $TYPE" header for each event type.
+        // This compares only the event *type*, not the entire event,
+        // so we don't compare variable events for different variables as different.
+        //
+        // This assumes EventDescription::Any is not a valid value for an event to have
+        // - it's marked "unreachable!()" below!
+        if last_type != std::mem::discriminant(&evt.desc) {
+            if last_type != std::mem::discriminant(&EventDescription::Any) {
                 streams.out.append(L!("\n"));
             }
 
-            last_type = Some(evt.desc.clone());
+            last_type = std::mem::discriminant(&evt.desc);
             streams
                 .out
                 .append(&sprintf!(L!("Event %ls\n"), evt.desc.name()));

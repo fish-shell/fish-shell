@@ -171,3 +171,17 @@ functions --no-details --details t
 # CHECKERR: ^
 # CHECKERR: (Type 'help functions' for related documentation)
 # XXX FIXME ^ caret should point at --no-details --details
+
+function term1 --on-signal TERM
+end
+function term2 --on-signal TERM
+end
+function term3 --on-signal TERM
+end
+
+functions --handlers-type signal
+# CHECK: Event signal
+# CHECK: SIGTRAP fish_sigtrap_handler
+# CHECK: SIGTERM term1
+# CHECK: SIGTERM term2
+# CHECK: SIGTERM term3

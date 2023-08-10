@@ -9,19 +9,20 @@ function __iwctl_filter
     # which has the added benefit of filtering out the `No devices in ...` lines
 
     # remove color escape sequences
-    set results (iwctl $argv | string replace -ra '\e\[[\d;]+m' '')
+    set -l results (iwctl $argv | string replace -ra '\e\[[\d;]+m' '')
     # calculate column widths
-    set headers $results[3]
-    set header_spaces (string match -a -r "  +" $headers | string length)
-    set header_non_spaces (string match -a -r "[^ ]+" $headers | string length)
+    set -l headers $results[3]
+    set -l header_spaces (string match -a -r "  +" $headers | string length)
+    set -l first_column_label (string match -r "[^ ]+" $headers | string length)
 
     # only take lines starting with `  `, i.e., no `No devices ...`
     # then take the first column as substring
-    echo $results[5..]\n | string match -r "  .*" | string sub -s $header_spaces[1] -l (math $header_non_spaces[1] + $header_spaces[2]) | string trim
+    string match "  *" $results[5..] | string sub -s $header_spaces[1] -l (math $first_column_label + $header_spaces[2]) | string trim
+    # string match -rg "  .{$(math $header_spaces[1] - 2)}(.{$(math $first_column_label + $header_spaces[2])})" $results[5..] | string trim
 end
 
 function __iwctl_match_subcoms
-    set match (string split --no-empty " " $argv)
+    set -l match (string split --no-empty " " $argv)
 
     set argv (commandline -poc)
     # iwctl allows to specify arguments for username, password, passphrase and dont-ask regardless of any following commands
@@ -29,12 +30,13 @@ function __iwctl_match_subcoms
     set argv $argv[2..]
 
     if test (count $argv) != (count $match)
-        return -1
+        return 1
     end
-    for i in (seq 1 (count $argv))
-        if not string match -q $match[$i] $argv[$i]
-            return $i
-        end
+
+    while set -q argv[1]
+        string match -q -- $match[1] $argv[1]
+        or return 1
+        set -e match[1] argv[1]
     end
 end
 

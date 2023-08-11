@@ -35,7 +35,6 @@
 #include "builtins/disown.h"
 #include "builtins/eval.h"
 #include "builtins/fg.h"
-#include "builtins/functions.h"
 #include "builtins/history.h"
 #include "builtins/jobs.h"
 #include "builtins/read.h"

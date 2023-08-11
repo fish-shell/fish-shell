@@ -103,7 +103,7 @@ set(FISH_BUILTIN_SRCS
     src/builtins/commandline.cpp src/builtins/complete.cpp
     src/builtins/disown.cpp
     src/builtins/eval.cpp src/builtins/fg.cpp
-    src/builtins/functions.cpp src/builtins/history.cpp
+    src/builtins/history.cpp
     src/builtins/jobs.cpp
     src/builtins/read.cpp src/builtins/set.cpp
     src/builtins/source.cpp

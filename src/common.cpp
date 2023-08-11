@@ -657,67 +657,6 @@ void narrow_string_safe(char buff[64], const wchar_t *s) {
     buff[idx] = '\0';
 }
 
-wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
-    wcstring buff;
-
-    int screen_width = termsize.width;
-
-    if (screen_width) {
-        const wchar_t *start = msg.c_str();
-        const wchar_t *pos = start;
-        int line_width = 0;
-        while (true) {
-            int overflow = 0;
-
-            int tok_width = 0;
-
-            // Tokenize on whitespace, and also calculate the width of the token.
-            while (*pos && (!std::wcschr(L" \n\r\t", *pos))) {
-                // Check is token is wider than one line. If so we mark it as an overflow and break
-                // the token.
-                if ((tok_width + fish_wcwidth(*pos)) > (screen_width - 1)) {
-                    overflow = 1;
-                    break;
-                }
-
-                tok_width += fish_wcwidth(*pos);
-                pos++;
-            }
-
-            // If token is zero character long, we don't do anything.
-            if (pos == start) {
-                pos = pos + 1;
-            } else if (overflow) {
-                // In case of overflow, we print a newline, except if we already are at position 0.
-                wcstring token = msg.substr(start - msg.c_str(), pos - start);
-                if (line_width != 0) buff.push_back(L'\n');
-                buff.append(format_string(L"%ls-\n", token.c_str()));
-                line_width = 0;
-            } else {
-                // Print the token.
-                wcstring token = msg.substr(start - msg.c_str(), pos - start);
-                if ((line_width + (line_width != 0 ? 1 : 0) + tok_width) > screen_width) {
-                    buff.push_back(L'\n');
-                    line_width = 0;
-                }
-                buff.append(format_string(L"%ls%ls", line_width ? L" " : L"", token.c_str()));
-                line_width += (line_width != 0 ? 1 : 0) + tok_width;
-            }
-
-            // Break on end of string.
-            if (!*pos) {
-                break;
-            }
-
-            start = pos;
-        }
-    } else {
-        buff.append(msg);
-    }
-    buff.push_back(L'\n');
-    return buff;
-}
-
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 static void escape_string_url(const wcstring &in, wcstring &out) {
     auto result = rust_escape_string_url(in.c_str(), in.size());

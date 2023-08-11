@@ -7,6 +7,9 @@ use crate::wchar_ffi::{c_str, empty_wstring, ToCppWString, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use cxx::{type_id, ExternType};
 use libc::c_int;
+use libc::isatty;
+use libc::STDOUT_FILENO;
+
 use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
@@ -162,6 +165,10 @@ impl io_streams_t {
 
     pub fn ffi_ref(&self) -> &builtins_ffi::io_streams_t {
         unsafe { &*self.streams }
+    }
+
+    pub fn out_is_terminal(&self) -> bool {
+        !self.out_is_redirected && unsafe { isatty(STDOUT_FILENO) == 1 }
     }
 
     pub fn stdin_is_directly_redirected(&self) -> bool {

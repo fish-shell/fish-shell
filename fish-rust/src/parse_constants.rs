@@ -237,6 +237,18 @@ impl SourceRange {
             .try_into()
             .unwrap()
     }
+    pub fn combine(&self, other: Self) -> Self {
+        let start = std::cmp::min(self.start, other.start);
+        SourceRange {
+            start,
+            length: std::cmp::max(self.end(), other.end())
+                .checked_sub(start.try_into().unwrap())
+                .expect("Overflow")
+                .try_into()
+                .unwrap(),
+        }
+    }
+
     fn end_ffi(&self) -> u32 {
         self.start.checked_add(self.length).expect("Overflow")
     }

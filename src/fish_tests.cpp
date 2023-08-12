@@ -4883,6 +4883,11 @@ static void test_highlighting() {
     });
 #endif
 
+    highlight_tests.push_back({
+        {L">", highlight_role_t::error},
+        {L"echo", highlight_role_t::error},
+    });
+
     bool saved_flag = feature_test(feature_flag_t::ampersand_nobg_in_token);
     feature_set(feature_flag_t::ampersand_nobg_in_token, true);
     for (const highlight_component_list_t &components : highlight_tests) {

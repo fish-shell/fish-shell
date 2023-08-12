@@ -64,7 +64,7 @@ mod redirection_ffi {
     }
 
     extern "Rust" {
-        fn get_actions(self: &Dup2List) -> &Vec<Dup2Action>;
+        fn get_actions(self: &Dup2List) -> &[Dup2Action];
         #[cxx_name = "dup2_list_resolve_chain"]
         fn dup2_list_resolve_chain_ffi(io_chain: &CxxVector<Dup2Action>) -> Dup2List;
         fn fd_for_target_fd(self: &Dup2List, target: i32) -> i32;
@@ -195,7 +195,7 @@ fn dup2_list_resolve_chain_ffi(io_chain: &CxxVector<Dup2Action>) -> Dup2List {
 
 impl Dup2List {
     /// \return the list of dup2 actions.
-    fn get_actions(&self) -> &Vec<Dup2Action> {
+    pub fn get_actions(&self) -> &[Dup2Action] {
         &self.actions
     }
 

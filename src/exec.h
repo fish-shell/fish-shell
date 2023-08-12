@@ -44,4 +44,8 @@ int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
 /// Add signals that should be masked for external processes in this job.
 bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask);
 
+/// This function checks the beginning of a file to see if it's safe to
+/// pass to the system interpreter when execve() returns ENOEXEC.
+bool is_thompson_shell_script(const char *path);
+
 #endif

@@ -4,6 +4,7 @@ use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
 use crate::env::{EnvMode, EnvStackRef, EnvStackRefFFI};
+use crate::job_group::JobGroup;
 pub use crate::wait_handle::{
     WaitHandleRef, WaitHandleRefFFI, WaitHandleStore, WaitHandleStoreFFI,
 };
@@ -150,6 +151,8 @@ include_cpp! {
     generate!("make_autoload_ffi")
     generate!("perform_autoload_ffi")
     generate!("complete_get_wrap_targets_ffi")
+
+    generate!("is_thompson_shell_script")
 }
 
 impl parser_t {
@@ -269,6 +272,10 @@ impl job_t {
     pub fn get_procs(&self) -> &mut [UniquePtr<process_t>] {
         let ffi_procs = self.ffi_processes();
         unsafe { slice::from_raw_parts_mut(ffi_procs.procs, ffi_procs.count) }
+    }
+
+    pub fn get_job_group(&self) -> &JobGroup {
+        unsafe { ::std::mem::transmute::<&job_group_t, &JobGroup>(self.ffi_group()) }
     }
 }
 

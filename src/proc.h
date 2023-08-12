@@ -291,6 +291,9 @@ class process_t {
     /// \return whether this process type is internal (block, function, or builtin).
     bool is_internal() const;
 
+    /// \return whether this process leads its process group.
+    bool get_leads_pgrp() const { return leads_pgrp; }
+
     /// \return the wait handle for the process, if it exists.
     rust::Box<WaitHandleRefFFI> *get_wait_handle_ffi() const;
 

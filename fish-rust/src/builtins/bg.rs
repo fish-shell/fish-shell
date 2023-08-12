@@ -36,10 +36,7 @@ fn send_to_bg(
         job.command().from_ffi()
     ));
 
-    unsafe {
-        std::mem::transmute::<&ffi::job_group_t, &crate::job_group::JobGroup>(job.ffi_group())
-    }
-    .set_is_foreground(false);
+    job.get_job_group().set_is_foreground(false);
 
     if !job.ffi_resume() {
         return STATUS_CMD_ERROR;

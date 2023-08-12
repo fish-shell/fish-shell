@@ -31,6 +31,7 @@
 #include "ast.h"
 #include "builtin.h"
 #include "common.h"
+#include "cxx.h"
 #include "env.h"
 #include "env_dispatch.rs.h"
 #include "exec.h"
@@ -51,6 +52,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "redirection.h"
+#include "spawn.rs.h"
 #include "timer.rs.h"
 #include "trace.rs.h"
 #include "wcstringutil.h"
@@ -536,10 +538,23 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
     if (can_use_posix_spawn_for_job(j, dup2s)) {
         ++s_fork_count;  // spawn counts as a fork+exec
 
-        posix_spawner_t spawner(j.get(), dup2s);
-        maybe_t<pid_t> pid = spawner.spawn(actual_cmd, const_cast<char *const *>(argv),
-                                           const_cast<char *const *>(envv));
-        if (int err = spawner.get_error()) {
+        int err = 0;
+        maybe_t<pid_t> pid = none();
+        PosixSpawner *raw_spawner =
+            new_spawner(reinterpret_cast<uint8_t *>(j.get()), reinterpret_cast<uint8_t *>(&dup2s));
+        if (raw_spawner == nullptr) {
+            err = errno;
+        } else {
+            auto spawner = rust::Box<PosixSpawner>::from_raw(raw_spawner);
+            auto pid_or_neg = spawner->spawn(actual_cmd, const_cast<char *const *>(argv),
+                                             const_cast<char *const *>(envv));
+            if (pid_or_neg > 0) {
+                pid = pid_or_neg;
+            } else {
+                err = errno;
+            }
+        }
+        if (err) {
             safe_report_exec_error(err, actual_cmd, argv, envv);
             p->status = proc_status_t::from_exit_code(exit_code_from_exec_error(err));
             return launch_result_t::failed;

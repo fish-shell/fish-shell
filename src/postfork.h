@@ -49,35 +49,4 @@ pid_t execute_fork();
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
 
-#if FISH_USE_POSIX_SPAWN
-/// A RAII type which wraps up posix_spawn's data structures.
-class posix_spawner_t : noncopyable_t, nonmovable_t {
-   public:
-    /// Attempt to construct from a job and dup2 list.
-    /// The caller must check the error function, as this may fail.
-    posix_spawner_t(const job_t *j, const dup2_list_t &dup2s);
-
-    /// \return the last error code, or 0 if there is no error.
-    int get_error() const { return error_; }
-
-    /// If this spawner does not have an error, invoke posix_spawn. Parameters are the same as
-    /// posix_spawn.
-    /// \return the pid, or none() on failure, in which case our error will be set.
-    maybe_t<pid_t> spawn(const char *cmd, char *const argv[], char *const envp[]);
-
-    ~posix_spawner_t();
-
-   private:
-    bool check_fail(int err);
-    posix_spawnattr_t *attr() { return &*attr_; }
-    posix_spawn_file_actions_t *actions() { return &*actions_; }
-
-    posix_spawner_t();
-    int error_{0};
-    maybe_t<posix_spawnattr_t> attr_{};
-    maybe_t<posix_spawn_file_actions_t> actions_{};
-};
-
-#endif
-
 #endif

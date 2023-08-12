@@ -3,7 +3,7 @@
 use crate::ffi::{self, job_t};
 use crate::redirection::Dup2List;
 use crate::signal::get_signals_with_handlers;
-use errno::{self, Errno};
+use errno::{self, set_errno, Errno};
 use libc::{self, c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
 use std::ffi::{CStr, CString};
 
@@ -158,9 +158,9 @@ impl PosixSpawner {
         Ok(PosixSpawner { attr, actions })
     }
 
-    // Consume this spawner, attempting to spawn a new process.
+    // Attempt to spawn a new process.
     pub fn spawn(
-        self,
+        &mut self,
         cmd: *const c_char,
         argv: *const *mut c_char,
         envp: *const *mut c_char,
@@ -225,4 +225,67 @@ fn get_path_bshell() -> CString {
     // TODO: this should really use _PATH_BSHELL, but this is only used in an edge case for posix_spawns
     // which fail to run Thompson shell scripts; we simply assume it is /bin/sh.
     CString::new("/bin/sh").unwrap()
+}
+
+/// Returns a Box<PosixSpawner>::into_raw(), or nullptr on error, in which case errno is set.
+/// j is an unowned pointer to a job_t, dup2s is an unowned pointer to a Dup2List.
+fn new_spawner_ffi(j: *const u8, dup2s: *const u8) -> *mut PosixSpawner {
+    let j: &job_t = unsafe { &*j.cast() };
+    let dup2s: &Dup2List = unsafe { &*dup2s.cast() };
+    match PosixSpawner::new(j, dup2s) {
+        Ok(spawner) => Box::into_raw(Box::new(spawner)),
+        Err(err) => {
+            set_errno(err);
+            std::ptr::null_mut()
+        }
+    }
+}
+
+impl Drop for PosixSpawner {
+    fn drop(&mut self) {
+        // Necessary to define this for FFI purposes, to avoid link errors.
+    }
+}
+
+impl PosixSpawner {
+    /// Returns a pid, or -1, in which case errno is set.
+    fn spawn_ffi(
+        &mut self,
+        cmd: *const c_char,
+        argv: *const *mut c_char,
+        envp: *const *mut c_char,
+    ) -> i32 {
+        match self.spawn(cmd, argv, envp) {
+            Ok(pid) => pid,
+            Err(err) => {
+                set_errno(err);
+                -1
+            }
+        }
+    }
+}
+
+fn force_cxx_to_generate_box_do_not_call() -> Box<PosixSpawner> {
+    unimplemented!("Do not call, for linking help only");
+}
+
+#[cxx::bridge]
+mod posix_spawn_ffi {
+    extern "Rust" {
+        type PosixSpawner;
+
+        // Required to force cxx to generate a Box destructor, to avoid link errors.
+        fn force_cxx_to_generate_box_do_not_call() -> Box<PosixSpawner>;
+
+        #[cxx_name = "new_spawner"]
+        fn new_spawner_ffi(j: *const u8, dup2s: *const u8) -> *mut PosixSpawner;
+
+        #[cxx_name = "spawn"]
+        fn spawn_ffi(
+            &mut self,
+            cmd: *const c_char,
+            argv: *const *mut c_char,
+            envp: *const *mut c_char,
+        ) -> i32;
+    }
 }

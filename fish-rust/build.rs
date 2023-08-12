@@ -66,6 +66,7 @@ fn main() {
         "src/redirection.rs",
         "src/signal.rs",
         "src/smoke.rs",
+        "src/spawn.rs",
         "src/termsize.rs",
         "src/threads.rs",
         "src/timer.rs",

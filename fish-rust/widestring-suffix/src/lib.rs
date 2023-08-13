@@ -44,7 +44,7 @@ fn widen_literal(lit: Literal) -> TokenStream {
         Some(lit) if lit.suffix() == "L" => {
             let value = lit.value();
             let span = lit.span();
-            quote_spanned!(span=> crate::wchar::L!(#value)).into()
+            quote_spanned!(span=> crate::wchar::L!(#value))
         }
         _ => tt.into(),
     }

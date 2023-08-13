@@ -37,7 +37,8 @@ if(DEFINED ASAN)
 endif()
 
 corrosion_import_crate(
-    MANIFEST_PATH "${CMAKE_SOURCE_DIR}/fish-rust/Cargo.toml"
+    MANIFEST_PATH "${CMAKE_SOURCE_DIR}/Cargo.toml"
+    CRATES "fish-rust"
     FEATURES "${FISH_CRATE_FEATURES}"
     FLAGS "${CARGO_FLAGS}"
 )

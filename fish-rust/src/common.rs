@@ -1548,7 +1548,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             let mut tok_width = 0;
 
             // Tokenize on whitespace, and also calculate the width of the token.
-            while pos < msg.len() && [' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
+            while pos < msg.len() && ![' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
                 let width = fish_wcwidth(msg.char_at(pos).into()).0 as isize;
@@ -1561,7 +1561,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             }
 
             // If token is zero character long, we don't do anything.
-            if pos == 0 {
+            if pos == start {
                 pos += 1;
             } else if overflow {
                 // In case of overflow, we print a newline, except if we already are at position 0.

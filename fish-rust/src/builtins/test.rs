@@ -1026,7 +1026,9 @@ pub fn test(
             // Ignore the closing bracket from now on.
             argc -= 1;
         } else {
-            streams.err.append(L!("[: the last argument must be ']'\n"));
+            streams
+                .err
+                .appendln(wgettext!("[: the last argument must be ']'"));
             builtin_print_error_trailer(parser, streams, program_name);
             return STATUS_INVALID_ARGS;
         }
@@ -1064,8 +1066,7 @@ pub fn test(
     if !eval_errors.is_empty() {
         if !common::should_suppress_stderr_for_tests() {
             for eval_error in eval_errors {
-                streams.err.append(eval_error);
-                streams.err.append1('\n');
+                streams.err.appendln(eval_error);
             }
             // Add a backtrace but not the "see help" message
             // because this isn't about passing the wrong options.

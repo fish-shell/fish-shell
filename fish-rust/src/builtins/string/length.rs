@@ -48,7 +48,7 @@ impl StringSubCommand<'_> for Length {
                         nnonempty += 1;
                     }
                     if !self.quiet {
-                        streams.out.append(max.to_wstring() + L!("\n"));
+                        streams.out.appendln(max.to_wstring());
                     } else if nnonempty > 0 {
                         return STATUS_CMD_OK;
                     }
@@ -59,7 +59,7 @@ impl StringSubCommand<'_> for Length {
                     nnonempty += 1;
                 }
                 if !self.quiet {
-                    streams.out.append(n.to_wstring() + L!("\n"));
+                    streams.out.appendln(n.to_wstring());
                 } else if nnonempty > 0 {
                     return STATUS_CMD_OK;
                 }

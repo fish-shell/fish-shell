@@ -662,8 +662,7 @@ fn validate_arg<'opts>(
     let retval = exec_subshell(opt_spec.validation_command, parser, &mut cmd_output, false);
 
     for output in cmd_output {
-        streams.err.append(output);
-        streams.err.append1('\n');
+        streams.err.appendln(output);
     }
     vars.pop();
     return retval;

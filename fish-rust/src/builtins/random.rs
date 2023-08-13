@@ -55,9 +55,7 @@ pub fn random(
         }
 
         let rand = RNG.lock().unwrap().gen_range(0..arg_count - 1);
-        streams
-            .out
-            .append(sprintf!(L!("%ls\n"), argv[i + 1 + rand]));
+        streams.out.appendln(argv[i + 1 + rand]);
         return STATUS_CMD_OK;
     }
     fn parse_ll(streams: &mut io_streams_t, cmd: &wstr, num: &wstr) -> Result<i64, wutil::Error> {

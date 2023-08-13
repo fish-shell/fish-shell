@@ -119,15 +119,13 @@ pub fn r#type(
                     }
                     if opts.path {
                         if let Some(orig_path) = props.copy_definition_file() {
-                            streams.out.append(orig_path);
+                            streams.out.appendln(orig_path);
                         } else {
-                            streams.out.append(path);
+                            streams.out.appendln(path);
                         }
-                        streams.out.append1('\n');
                     } else if !opts.short_output {
                         streams.out.append(wgettext_fmt!("%ls is a function", arg));
-                        streams.out.append(wgettext_fmt!(" with definition"));
-                        streams.out.append1('\n');
+                        streams.out.appendln(wgettext!(" with definition"));
                         let mut def = WString::new();
                         def.push_utfstr(&sprintf!(
                             "# %ls\n%ls",
@@ -146,7 +144,7 @@ pub fn r#type(
                         streams.out.append(wgettext_fmt!(" (%ls)\n", comment));
                     }
                 } else if opts.get_type {
-                    streams.out.append(L!("function\n"));
+                    streams.out.appendln("function");
                 }
                 if !opts.all {
                     continue;
@@ -187,12 +185,12 @@ pub fn r#type(
             }
             if !opts.get_type {
                 if opts.path || opts.force_path {
-                    streams.out.append(sprintf!("%ls\n", path));
+                    streams.out.appendln(path);
                 } else {
                     streams.out.append(wgettext_fmt!("%ls is %ls\n", arg, path));
                 }
             } else if opts.get_type {
-                streams.out.append(L!("file\n"));
+                streams.out.appendln("file");
                 break;
             }
             if !opts.all {

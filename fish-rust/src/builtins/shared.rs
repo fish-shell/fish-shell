@@ -114,6 +114,12 @@ impl output_stream_t {
         self.ffi().append(&s.as_ref().into_cpp())
     }
 
+    /// Append a &wstr or WString with a newline
+    pub fn appendln(&mut self, s: impl Into<WString>) -> bool {
+        let s = s.into() + L!("\n");
+        self.ffi().append(&s.into_cpp())
+    }
+
     /// Append a char.
     pub fn append1(&mut self, c: char) -> bool {
         self.append(wstr::from_char_slice(&[c]))

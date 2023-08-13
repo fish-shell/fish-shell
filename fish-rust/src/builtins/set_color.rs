@@ -78,8 +78,7 @@ fn print_colors(
 
     let term = curses::term();
     for color_name in args {
-        // Safety: isatty cannot fail.
-        if !streams.out_is_redirected && unsafe { libc::isatty(libc::STDOUT_FILENO) == 1 } {
+        if streams.out_is_terminal() {
             if let Some(term) = term.as_ref() {
                 print_modifiers(outp, term, bold, underline, italics, dim, reverse, bg);
             }

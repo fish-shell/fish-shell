@@ -1,6 +1,3 @@
-use libc::isatty;
-use libc::STDOUT_FILENO;
-
 use super::prelude::*;
 use crate::ffi::{builtin_exists, colorize_shell};
 use crate::function;
@@ -138,7 +135,7 @@ pub fn r#type(
                             props.annotated_definition(arg)
                         ));
 
-                        if !streams.out_is_redirected && unsafe { isatty(STDOUT_FILENO) == 1 } {
+                        if streams.out_is_terminal() {
                             let col = colorize_shell(&def.to_ffi(), parser.pin()).from_ffi();
                             streams.out.append(col);
                         } else {

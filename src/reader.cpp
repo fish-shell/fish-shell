@@ -66,7 +66,7 @@
 #include "input_common.h"
 #include "io.h"
 #include "iothread.h"
-#include "kill.h"
+#include "kill.rs.h"
 #include "operation_context.h"
 #include "output.h"
 #include "pager.h"
@@ -3702,7 +3702,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::yank: {
-            wcstring yank_str = kill_yank();
+            wcstring yank_str = std::move(*kill_yank());
             insert_string(active_edit_line(), yank_str);
             rls.yank_len = yank_str.size();
             break;
@@ -3710,7 +3710,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::yank_pop: {
             if (rls.yank_len) {
                 editable_line_t *el = active_edit_line();
-                wcstring yank_str = kill_yank_rotate();
+                wcstring yank_str = std::move(*kill_yank_rotate());
                 size_t new_yank_len = yank_str.size();
                 replace_substring(el, el->position() - rls.yank_len, rls.yank_len,
                                   std::move(yank_str));

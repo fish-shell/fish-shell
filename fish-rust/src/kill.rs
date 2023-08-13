@@ -3,14 +3,15 @@
 //! Works like the killring in emacs and readline. The killring is cut and paste with a memory of
 //! previous cuts.
 
-use cxx::CxxWString;
+use cxx::{CxxWString, UniquePtr};
+use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::pin::Pin;
 use std::sync::Mutex;
 
 use crate::ffi::wcstring_list_ffi_t;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharFromFFI;
+use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 
 #[cxx::bridge]
 mod kill_ffi {
@@ -25,16 +26,15 @@ mod kill_ffi {
         #[cxx_name = "kill_replace"]
         fn kill_replace_ffi(old_entry: &CxxWString, new_entry: &CxxWString);
         #[cxx_name = "kill_yank_rotate"]
-        fn kill_yank_rotate_ffi(mut out_front: Pin<&mut CxxWString>);
+        fn kill_yank_rotate_ffi() -> UniquePtr<CxxWString>;
         #[cxx_name = "kill_yank"]
-        fn kill_yank_ffi(mut out_front: Pin<&mut CxxWString>);
+        fn kill_yank_ffi() -> UniquePtr<CxxWString>;
         #[cxx_name = "kill_entries"]
         fn kill_entries_ffi(mut out: Pin<&mut wcstring_list_ffi_t>);
     }
 }
 
-static KILL_LIST: once_cell::sync::Lazy<Mutex<VecDeque<WString>>> =
-    once_cell::sync::Lazy::new(|| Mutex::new(VecDeque::new()));
+static KILL_LIST: Lazy<Mutex<VecDeque<WString>>> = Lazy::new(|| Mutex::new(VecDeque::new()));
 
 fn kill_add_ffi(new_entry: &CxxWString) {
     kill_add(new_entry.from_ffi());
@@ -62,11 +62,8 @@ pub fn kill_replace(old_entry: WString, new_entry: WString) {
     }
 }
 
-fn kill_yank_rotate_ffi(mut out_front: Pin<&mut CxxWString>) {
-    out_front.as_mut().clear();
-    out_front
-        .as_mut()
-        .push_chars(kill_yank_rotate().as_char_slice());
+fn kill_yank_rotate_ffi() -> UniquePtr<CxxWString> {
+    kill_yank_rotate().to_ffi()
 }
 
 /// Rotate the killring.
@@ -76,9 +73,8 @@ pub fn kill_yank_rotate() -> WString {
     kill_list.front().cloned().unwrap_or_default()
 }
 
-fn kill_yank_ffi(mut out_front: Pin<&mut CxxWString>) {
-    out_front.as_mut().clear();
-    out_front.as_mut().push_chars(kill_yank().as_char_slice());
+fn kill_yank_ffi() -> UniquePtr<CxxWString> {
+    kill_yank().to_ffi()
 }
 
 /// Paste from the killring.
@@ -96,4 +92,28 @@ fn kill_entries_ffi(mut out_entries: Pin<&mut wcstring_list_ffi_t>) {
 
 pub fn kill_entries() -> Vec<WString> {
     KILL_LIST.lock().unwrap().iter().cloned().collect()
+}
+
+#[cfg(test)]
+fn test_killring() {
+    assert!(kill_entries().is_empty());
+
+    kill_add(WString::from_str("a"));
+    kill_add(WString::from_str("b"));
+    kill_add(WString::from_str("c"));
+
+    assert!((kill_entries() == [L!("c"), L!("b"), L!("a")]));
+
+    assert!(kill_yank_rotate() == L!("b"));
+    assert!((kill_entries() == [L!("b"), L!("a"), L!("c")]));
+
+    assert!(kill_yank_rotate() == L!("a"));
+    assert!((kill_entries() == [L!("a"), L!("c"), L!("b")]));
+
+    kill_add(WString::from_str("d"));
+
+    assert!((kill_entries() == [L!("d"), L!("a"), L!("c"), L!("b")]));
+
+    assert!(kill_yank_rotate() == L!("a"));
+    assert!((kill_entries() == [L!("a"), L!("c"), L!("b"), L!("d")]));
 }

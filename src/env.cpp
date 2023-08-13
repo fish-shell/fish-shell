@@ -29,7 +29,6 @@
 #include "global_safety.h"
 #include "history.h"
 #include "input.h"
-#include "kill.h"
 #include "null_terminated_array.h"
 #include "path.h"
 #include "proc.h"

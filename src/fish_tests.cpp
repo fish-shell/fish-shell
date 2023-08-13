@@ -77,7 +77,7 @@
 #include "input_common.h"
 #include "io.h"
 #include "iothread.h"
-#include "kill.h"
+#include "kill.rs.h"
 #include "lru.h"
 #include "maybe.h"
 #include "null_terminated_array.h"
@@ -5482,31 +5482,6 @@ static void test_fd_event_signaller() {
     do_test(!sema.try_consume());
 }
 
-static void test_killring() {
-    say(L"Testing killring");
-
-    do_test(kill_entries().empty());
-
-    kill_add(L"a");
-    kill_add(L"b");
-    kill_add(L"c");
-
-    do_test((kill_entries() == std::vector<wcstring>{L"c", L"b", L"a"}));
-
-    do_test(kill_yank_rotate() == L"b");
-    do_test((kill_entries() == std::vector<wcstring>{L"b", L"a", L"c"}));
-
-    do_test(kill_yank_rotate() == L"a");
-    do_test((kill_entries() == std::vector<wcstring>{L"a", L"c", L"b"}));
-
-    kill_add(L"d");
-
-    do_test((kill_entries() == std::vector<wcstring>{L"d", L"a", L"c", L"b"}));
-
-    do_test(kill_yank_rotate() == L"a");
-    do_test((kill_entries() == std::vector<wcstring>{L"a", L"c", L"b", L"d"}));
-}
-
 void test_wgetopt() {
     // Regression test for a crash.
     const wchar_t *const short_options = L"-a";
@@ -5651,7 +5626,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("topics"), test_topic_monitor_torture},
     {TEST_GROUP("pipes"), test_pipes},
     {TEST_GROUP("fd_event"), test_fd_event_signaller},
-    {TEST_GROUP("killring"), test_killring},
     {TEST_GROUP("wgetopt"), test_wgetopt},
     {TEST_GROUP("rust_smoke"), test_rust_smoke},
     {TEST_GROUP("rust_ffi"), test_rust_ffi},

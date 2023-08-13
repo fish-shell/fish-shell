@@ -3192,6 +3192,15 @@ impl<'s> Populator<'s> {
                     }
                 }
             }
+            ParseTokenType::redirection if self.peek_type(0) == ParseTokenType::string => {
+                let next = self.tokens.pop();
+                parse_error_range!(
+                    self,
+                    next.range().combine(tok.range()),
+                    ParseErrorCode::generic,
+                    "Expected a string, but found a redirection"
+                );
+            }
             ParseTokenType::pipe
             | ParseTokenType::redirection
             | ParseTokenType::background

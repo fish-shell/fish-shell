@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+
+# TODO: Move fish-rust to src, make it the root package of this workspace
+
+members = [
+    "fish-rust",
+    "fish-rust/widestring-suffix",
+]
+
+[patch.crates-io]
+cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
+cxx = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
+cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
+autocxx = { git = "https://github.com/fish-shell/autocxx", branch = "fish" }
+autocxx-build = { git = "https://github.com/fish-shell/autocxx", branch = "fish" }
+autocxx-bindgen = { git = "https://github.com/fish-shell/autocxx-bindgen", branch = "fish" }
+
+[patch.'https://github.com/fish-shell/cxx']
+cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
+
+[patch.'https://github.com/fish-shell/autocxx']
+cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
+
+
+[profile.release]
+overflow-checks = true

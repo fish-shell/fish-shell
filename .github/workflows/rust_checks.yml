@@ -16,9 +16,7 @@ jobs:
       with:
         rust-version: stable
     - name: cargo fmt
-      run: |
-        cd fish-rust
-        cargo fmt --check --all
+      run: cargo fmt --check --all
 
   clippy:
     runs-on: ubuntu-latest
@@ -37,6 +35,4 @@ jobs:
       run: |
         cmake -B build
     - name: cargo clippy
-      run: |
-        cd fish-rust
-        cargo clippy --workspace --all-targets -- --deny=warnings
+      run: cargo clippy --workspace --all-targets -- --deny=warnings

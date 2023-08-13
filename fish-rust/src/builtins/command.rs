@@ -77,7 +77,7 @@ pub fn r#command(
                 return STATUS_CMD_OK;
             }
 
-            streams.out.append(sprintf!("%ls\n", path));
+            streams.out.appendln(path);
             if !opts.all {
                 break;
             }

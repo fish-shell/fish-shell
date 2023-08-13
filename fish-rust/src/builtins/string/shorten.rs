@@ -84,8 +84,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             //     echo whatever
             // end
             for (arg, _) in iter {
-                streams.out.append(arg);
-                streams.out.append1('\n');
+                streams.out.appendln(arg);
             }
             return STATUS_CMD_OK;
         }
@@ -184,8 +183,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                         res
                     }
                 };
-                streams.out.append(output);
-                streams.out.append1('\n');
+                streams.out.appendln(output);
                 continue;
             } else {
                 /* shorten the right side */
@@ -224,8 +222,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             }
 
             if pos == line.len() {
-                streams.out.append(line);
-                streams.out.append1('\n');
+                streams.out.appendln(line);
                 continue;
             }
 

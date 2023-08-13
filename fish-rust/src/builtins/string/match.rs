@@ -315,8 +315,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
                 if self.opts.index {
                     streams.out.append(sprintf!("1 %lu\n", arg.len()));
                 } else {
-                    streams.out.append(arg);
-                    streams.out.append1('\n');
+                    streams.out.appendln(arg);
                 }
             }
             return match self.opts.invert_match {
@@ -334,8 +333,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         }
 
         if self.opts.entire {
-            streams.out.append(arg);
-            streams.out.append1('\n');
+            streams.out.appendln(arg);
         }
 
         let start = (self.opts.entire || self.opts.groups_only) as usize;
@@ -346,8 +344,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
                     .out
                     .append(sprintf!("%lu %lu\n", m.start() + 1, m.end() - m.start()));
             } else {
-                streams.out.append(&arg[m.start()..m.end()]);
-                streams.out.append1('\n');
+                streams.out.appendln(&arg[m.start()..m.end()]);
             }
         }
 
@@ -397,8 +394,7 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
                 if self.opts.index {
                     streams.out.append(sprintf!("1 %lu\n", arg.len()));
                 } else {
-                    streams.out.append(arg);
-                    streams.out.append1('\n');
+                    streams.out.appendln(arg);
                 }
             }
         }

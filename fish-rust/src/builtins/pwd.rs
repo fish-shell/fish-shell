@@ -62,6 +62,6 @@ pub fn pwd(parser: &mut parser_t, streams: &mut io_streams_t, argv: &mut [&wstr]
     if pwd.is_empty() {
         return STATUS_CMD_ERROR;
     }
-    streams.out.append(pwd + L!("\n"));
+    streams.out.appendln(pwd);
     return STATUS_CMD_OK;
 }

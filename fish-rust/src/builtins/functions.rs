@@ -211,7 +211,7 @@ pub fn functions(
         } else {
             L!("n/a").to_owned()
         };
-        streams.out.append(def_file + L!("\n"));
+        streams.out.appendln(def_file);
 
         if opts.verbose {
             let copy_place = match props.as_ref() {
@@ -226,20 +226,20 @@ pub fn functions(
                 Some(p) if !p.is_autoload.load() => L!("not-autoloaded").to_owned(),
                 _ => L!("n/a").to_owned(),
             };
-            streams.out.append(copy_place + L!("\n"));
+            streams.out.appendln(copy_place);
             let line = if let Some(p) = props.as_ref() {
                 p.definition_lineno()
             } else {
                 0
             };
-            streams.out.append(sprintf!("%d\n", line));
+            streams.out.appendln(line.to_wstring());
 
             let shadow = match props.as_ref() {
                 Some(p) if p.shadow_scope => L!("scope-shadowing").to_owned(),
                 Some(p) if !p.shadow_scope => L!("no-scope-shadowing").to_owned(),
                 _ => L!("n/a").to_owned(),
             };
-            streams.out.append(shadow + L!("\n"));
+            streams.out.appendln(shadow);
 
             let desc = match props.as_ref() {
                 Some(p) if !p.description.is_empty() => escape_string(
@@ -249,7 +249,7 @@ pub fn functions(
                 Some(p) if p.description.is_empty() => L!("").to_owned(),
                 _ => L!("n/a").to_owned(),
             };
-            streams.out.append(desc + L!("\n"));
+            streams.out.appendln(desc);
         }
         // Historical - this never failed?
         return STATUS_CMD_OK;
@@ -292,7 +292,7 @@ pub fn functions(
                 .append(reformat_for_screen(&buff, &termsize_last()));
         } else {
             for name in names {
-                streams.out.append(name + "\n");
+                streams.out.appendln(name);
             }
         }
         return STATUS_CMD_OK;

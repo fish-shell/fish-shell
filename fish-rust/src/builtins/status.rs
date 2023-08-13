@@ -450,22 +450,20 @@ pub fn status(
                         (true, _) => wgettext!("Standard input"),
                         (false, _) => &res,
                     };
-                    streams.out.append(wgettext_fmt!("%ls\n", f));
+                    streams.out.appendln(f);
                 }
                 STATUS_FUNCTION => {
                     let f = match parser.get_func_name(opts.level) {
                         Some(f) => f,
                         None => wgettext!("Not a function").to_owned(),
                     };
-                    streams.out.append(wgettext_fmt!("%ls\n", f));
+                    streams.out.appendln(f);
                 }
                 STATUS_LINE_NUMBER => {
                     // TBD is how to interpret the level argument when fetching the line number.
                     // See issue #4161.
                     // streams.out.append_format(L"%d\n", parser.get_lineno(opts.level));
-                    streams
-                        .out
-                        .append(wgettext_fmt!("%d\n", parser.get_lineno().0));
+                    streams.out.appendln(parser.get_lineno().0.to_wstring());
                 }
                 STATUS_IS_INTERACTIVE => {
                     if is_interactive_session() {
@@ -529,12 +527,11 @@ pub fn status(
                 STATUS_CURRENT_CMD => {
                     let var = parser.pin().libdata().get_status_vars_command().from_ffi();
                     if !var.is_empty() {
-                        streams.out.append(var);
+                        streams.out.appendln(var);
                     } else {
                         // FIXME: C++ used `program_name` here, no clue where it's from
-                        streams.out.append(L!("fish"));
+                        streams.out.appendln(L!("fish"));
                     }
-                    streams.out.append1('\n');
                 }
                 STATUS_CURRENT_COMMANDLINE => {
                     let var = parser
@@ -542,8 +539,7 @@ pub fn status(
                         .libdata()
                         .get_status_vars_commandline()
                         .from_ffi();
-                    streams.out.append(var);
-                    streams.out.append1('\n');
+                    streams.out.appendln(var);
                 }
                 STATUS_FISH_PATH => {
                     let path = get_executable_path("fish");
@@ -564,13 +560,11 @@ pub fn status(
                             _ => path,
                         };
 
-                        streams.out.append(real);
-                        streams.out.append1('\n');
+                        streams.out.appendln(real);
                     } else {
                         // This is a relative path, we can't canonicalize it
                         let path = str2wcstring(path.as_os_str().as_bytes());
-                        streams.out.append(path);
-                        streams.out.append1('\n');
+                        streams.out.appendln(path);
                     }
                 }
                 STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {

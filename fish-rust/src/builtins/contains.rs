@@ -69,7 +69,7 @@ pub fn contains(
         for (i, arg) in args[optind..].iter().enumerate().skip(1) {
             if needle == arg {
                 if opts.print_index {
-                    streams.out.append(wgettext_fmt!("%d\n", i));
+                    streams.out.appendln(i.to_wstring());
                 }
                 return STATUS_CMD_OK;
             }

@@ -1,12 +1,12 @@
 [workspace]
 resolver = "2"
-
-# TODO: Move fish-rust to src, make it the root package of this workspace
-
 members = [
     "fish-rust",
     "fish-rust/widestring-suffix",
 ]
+default-members = ["fish-rust"]
+
+# TODO: Move fish-rust to src, make it the root package of this workspace
 
 [patch.crates-io]
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }

@@ -6,6 +6,10 @@ members = [
 ]
 default-members = ["fish-rust"]
 
+[workspace.package]
+rust-version = "1.67"
+edition = "2021"
+
 # TODO: Move fish-rust to src, make it the root package of this workspace
 
 [patch.crates-io]

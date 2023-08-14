@@ -54,6 +54,7 @@ Other improvements
 - An integer overflow in `string repeat` leading to a near-infinite loop has been fixed (:issue:`9899`).
 - `string shorten` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
 - `string pad` no longer allows non-printable characters as padding. (:issue:`9854`)
+- PWD reporting via OSC 7 is now enabled by default for iTerm2.
 
 For distributors
 ----------------

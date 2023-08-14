@@ -267,7 +267,7 @@ end" >$__fish_config_dir/config.fish
     end
 
     # Notify terminals when $PWD changes (issue #906).
-    # VTE based terminals, Terminal.app, iTerm.app (TODO), foot, and kitty support this.
+    # VTE based terminals, Terminal.app, iTerm.app, foot, and kitty support this.
     if not set -q FISH_UNIT_TESTS_RUNNING
         and begin
             string match -q -- 'foot*' $TERM
@@ -275,6 +275,7 @@ end" >$__fish_config_dir/config.fish
             or test 0"$VTE_VERSION" -ge 3405
             or test "$TERM_PROGRAM" = Apple_Terminal && test (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
             or test "$TERM_PROGRAM" = WezTerm
+            or test "$TERM_PROGRAM" = iTerm.app
         end
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution || set -q INSIDE_EMACS

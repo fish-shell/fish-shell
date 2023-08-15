@@ -67,5 +67,5 @@ expect_prompt()
 
 # See that `functions` terminates
 sendline("functions")
-expect_re(".*fish_prompt,.*")
+expect_re(".*fish_prompt,")
 expect_prompt()

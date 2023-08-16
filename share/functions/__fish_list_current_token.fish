@@ -2,7 +2,7 @@
 # of the directory under the cursor.
 
 function __fish_list_current_token -d "List contents of token under the cursor if it is a directory, otherwise list the contents of the current directory"
-    set -l val (commandline -t)
+    set -l val (commandline -t | string replace -r '^~' "$HOME")
     printf "\n"
     if test -d $val
         ls $val

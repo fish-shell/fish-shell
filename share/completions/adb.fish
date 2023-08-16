@@ -194,7 +194,7 @@ complete -n '__fish_seen_subcommand_from push' -c adb -F -a "(__fish_adb_list_fi
 complete -n '__fish_seen_subcommand_from logcat' -c adb -f
 # general options
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s L -l last -d 'Dump logs from prior to last reboot from pstore'
-complete -n '__fish_seen_subcommand_from logcat' -c adb -s b -l buffer -d ' Request alternate ring buffer(s)' -xa '(__fish_complete_list ,  "echo main\nsystem\nradio\nevents\ncrash\ndefault\nall")'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s b -l buffer -d ' Request alternate ring buffer(s)' -xa '(__fish_append , main system radio events crash default all)'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s c -l clear -d 'Clear (flush) the entire log and exit'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s d -d 'Dump the log and then exit (don\'t block)'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l pid -d 'Only print the logs for the given PID'

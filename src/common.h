@@ -188,6 +188,7 @@ wchar_t get_obfuscation_read_char();
 
 /// Profiling flag. True if commands should be profiled.
 extern bool g_profiling_active;
+void set_profiling_active(bool val);
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
 extern const wchar_t *program_name;

@@ -4842,6 +4842,10 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     }
 }
 
+int reader_read_ffi(parser_t &parser, int fd) { 
+    return reader_read(parser, fd, {}); 
+}
+
 int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
     int res;
 

@@ -417,6 +417,10 @@ filename_ref_t parser_t::current_filename() const {
     return libdata().current_filename;
 }
 
+void parser_t::set_filename_ffi(wcstring filename) {
+    libdata().current_filename = std::make_shared<wcstring>(filename);
+}
+
 // FFI glue
 wcstring parser_t::current_filename_ffi() const {
     auto filename = current_filename();
@@ -586,6 +590,10 @@ eval_res_t parser_t::eval_with(const wcstring &cmd, const io_chain_t &io,
 
 eval_res_t parser_t::eval_string_ffi1(const wcstring &cmd) { return eval(cmd, io_chain_t()); }
 
+eval_res_t parser_t::eval_parsed_source_ffi1(const parsed_source_ref_t* ps, enum block_type_t block_type) {
+    return eval_parsed_source(*ps, io_chain_t(), {}, block_type);
+}
+
 eval_res_t parser_t::eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
                                         const job_group_ref_t &job_group,
                                         enum block_type_t block_type) {
@@ -690,6 +698,10 @@ template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::
 template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::job_list_t &,
                                         const io_chain_t &, const job_group_ref_t &, block_type_t);
 
+void parser_t::get_backtrace_ffi(const wcstring &src, const parse_error_list_t* errors,
+                       wcstring &output) const {
+    return get_backtrace(src, *errors, output);
+};
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {
     if (!errors.empty()) {

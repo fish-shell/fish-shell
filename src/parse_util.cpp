@@ -1068,6 +1068,11 @@ static bool detect_errors_in_block_redirection_list(
     return false;
 }
 
+parser_test_error_bits_t parse_util_detect_errors_ffi(const ast::ast_t* ast, const wcstring &buff_src,
+                                                  parse_error_list_t *out_errors) {
+    return parse_util_detect_errors(*ast, buff_src, out_errors);
+}
+
 parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const wcstring &buff_src,
                                                   parse_error_list_t *out_errors) {
     using namespace ast;

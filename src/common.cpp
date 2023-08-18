@@ -81,6 +81,7 @@ static relaxed_atomic_t<wchar_t> obfuscation_read_char;
 wchar_t get_obfuscation_read_char() { return obfuscation_read_char; }
 
 bool g_profiling_active = false;
+void set_profiling_active(bool val) { g_profiling_active = val; }
 
 const wchar_t *program_name;
 

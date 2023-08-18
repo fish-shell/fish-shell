@@ -185,6 +185,8 @@ extern owning_lock<logger_t> g_logger;
 /// Set the active flog categories according to the given wildcard \p wc.
 void activate_flog_categories_by_pattern(wcstring wc);
 
+void set_flog_output_file_ffi(void *fp);
+void flog_setlinebuf_ffi(void *f);
 /// Set the file that flog should output to.
 /// flog does not close this file.
 void set_flog_output_file(FILE *f);

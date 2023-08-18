@@ -21,7 +21,7 @@ use core::slice;
 use cxx::{CxxWString, UniquePtr};
 use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use num_traits::ToPrimitive;
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use std::env;
 use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
@@ -1048,7 +1048,7 @@ pub fn get_obfuscation_read_char() -> char {
 pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
-pub static mut PROGRAM_NAME: Lazy<&'static wstr> = Lazy::new(|| L!(""));
+pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
 
 /// MS Windows tty devices do not currently have either a read or write timestamp - those respective
 /// fields of `struct stat` are always set to the current time, which means we can't rely on them.
@@ -1240,7 +1240,10 @@ pub const TESTS_PROGRAM_NAME: &wstr = "(ignore)"L;
 /// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 pub fn should_suppress_stderr_for_tests() -> bool {
-    unsafe { !PROGRAM_NAME.is_empty() && *PROGRAM_NAME != TESTS_PROGRAM_NAME }
+    PROGRAM_NAME
+        .get()
+        .map(|p| p == TESTS_PROGRAM_NAME)
+        .unwrap_or_default()
 }
 
 #[deprecated(note = "Use threads::assert_is_main_thread() instead")]

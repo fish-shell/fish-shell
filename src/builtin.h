@@ -120,6 +120,7 @@ enum class RustBuiltin : int32_t {
     Cd,
     Contains,
     Command,
+    Count,
     Echo,
     Emit,
     Exit,

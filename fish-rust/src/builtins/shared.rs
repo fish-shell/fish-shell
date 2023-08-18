@@ -240,6 +240,7 @@ pub fn run_builtin(
         RustBuiltin::Cd => super::cd::cd(parser, streams, args),
         RustBuiltin::Contains => super::contains::contains(parser, streams, args),
         RustBuiltin::Command => super::command::command(parser, streams, args),
+        RustBuiltin::Count => super::count::count(parser, streams, args),
         RustBuiltin::Echo => super::echo::echo(parser, streams, args),
         RustBuiltin::Emit => super::emit::emit(parser, streams, args),
         RustBuiltin::Exit => super::exit::exit(parser, streams, args),

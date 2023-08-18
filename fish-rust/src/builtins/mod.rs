@@ -8,6 +8,7 @@ pub mod builtin;
 pub mod cd;
 pub mod command;
 pub mod contains;
+pub mod count;
 pub mod echo;
 pub mod emit;
 pub mod exit;

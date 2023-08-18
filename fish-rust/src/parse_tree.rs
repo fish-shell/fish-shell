@@ -114,7 +114,7 @@ const _: () = assert_send::<ParsedSource>();
 const _: () = assert_sync::<ParsedSource>();
 
 impl ParsedSource {
-    fn new(src: WString, ast: Ast) -> Self {
+    pub fn new(src: WString, ast: Ast) -> Self {
         let src_ffi = src.to_ffi();
         ParsedSource { src, src_ffi, ast }
     }

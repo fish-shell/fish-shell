@@ -207,7 +207,4 @@ void expand_tilde(wcstring &input, const environment_t &vars);
 /// Perform the opposite of tilde expansion on the string, which is modified in place.
 wcstring replace_home_directory_with_tilde(const wcstring &str, const environment_t &vars);
 
-// Terrible hacks
-bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,
-                                        const char *const *argv);
 #endif

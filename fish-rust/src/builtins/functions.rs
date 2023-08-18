@@ -71,7 +71,7 @@ fn parse_cmd_opts<'args>(
     parser: &mut parser_t,
     streams: &mut io_streams_t,
 ) -> Option<c_int> {
-    let cmd = L!("function");
+    let cmd = L!("functions");
     let print_hints = false;
     let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(opt) = w.wgetopt_long() {

@@ -224,3 +224,8 @@ functions --details --verbose thisfunctiondoesnotexist
 # CHECK: 0
 # CHECK: n/a
 # CHECK: n/a
+
+functions --banana
+# CHECKERR: functions: --banana: unknown option
+echo $status
+# CHECK: 2

@@ -1,7 +1,15 @@
 use rsconf::{LinkType, Target};
+use std::env;
 use std::error::Error;
 
 fn main() {
+    for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR"] {
+        if let Ok(val) = env::var(key) {
+            // Forward some CMake config
+            println!("cargo:rustc-env={key}={val}");
+        }
+    }
+
     cc::Build::new()
         .file("fish-rust/src/compat.c")
         .compile("libcompat.a");
@@ -17,6 +25,7 @@ fn main() {
     // If FISH_BUILD_DIR is given by CMake, then use it; otherwise assume it's at build.
     let fish_build_dir =
         std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{}/{}", rust_dir, "build/"));
+    println!("cargo:rustc-env=FISH_BUILD_DIR={}", fish_build_dir);
 
     // Where autocxx should put its stuff.
     let autocxx_gen_dir = std::env::var("FISH_AUTOCXX_GEN_DIR")

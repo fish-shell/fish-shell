@@ -349,7 +349,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     eval_res_t eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
                                   const job_group_ref_t &job_group = {},
                                   block_type_t block_type = block_type_t::top);
-
+    eval_res_t eval_parsed_source_ffi1(const parsed_source_ref_t* ps, block_type_t block_type);
     /// Evaluates a node.
     /// The node type must be ast_t::statement_t or ast::job_list_t.
     template <typename T>
@@ -466,6 +466,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Output profiling data to the given filename.
     void emit_profiling(const char *path) const;
 
+    void get_backtrace_ffi(const wcstring &src, const parse_error_list_t* errors,
+                       wcstring &output) const;
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                        wcstring &output) const;
 
@@ -474,6 +476,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// than the one currently read.
     filename_ref_t current_filename() const;
     wcstring current_filename_ffi() const;
+    void set_filename_ffi(wcstring filename);
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).

@@ -210,42 +210,6 @@ static maybe_t<int> implemented_in_rust(parser_t &, io_streams_t &, const wchar_
     DIE("builtin is implemented in Rust, this should not be called");
 }
 
-// How many bytes we read() at once.
-// Since this is just for counting, it can be massive.
-#define COUNT_CHUNK_SIZE (512 * 256)
-/// Implementation of the builtin count command, used to count the number of arguments sent to it.
-static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
-    UNUSED(parser);
-    int argc = 0;
-
-    // Count the newlines coming in via stdin like `wc -l`.
-    if (streams.stdin_is_directly_redirected) {
-        assert(streams.stdin_fd >= 0 &&
-               "Should have a valid fd since stdin is directly redirected");
-        char buf[COUNT_CHUNK_SIZE];
-        while (true) {
-            long n = read_blocked(streams.stdin_fd, buf, COUNT_CHUNK_SIZE);
-            if (n == 0) {
-                break;
-            } else if (n < 0) {
-                wperror(L"read");
-                return STATUS_CMD_ERROR;
-            }
-            for (int i = 0; i < n; i++) {
-                if (buf[i] == '\n') {
-                    argc++;
-                }
-            }
-        }
-    }
-
-    // Always add the size of argv.
-    // That means if you call `something | count a b c`, you'll get the count of something _plus 3_.
-    argc += builtin_count_args(argv) - 1;
-    streams.out.append_format(L"%d\n", argc);
-    return argc == 0 ? STATUS_CMD_ERROR : STATUS_CMD_OK;
-}
-
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
 static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &streams,
@@ -359,7 +323,7 @@ static constexpr builtin_data_t builtin_datas[] = {
     {L"complete", &builtin_complete, N_(L"Edit command specific completions")},
     {L"contains", &implemented_in_rust, N_(L"Search for a specified string in a list")},
     {L"continue", &builtin_break_continue, N_(L"Skip over remaining innermost loop")},
-    {L"count", &builtin_count, N_(L"Count the number of arguments")},
+    {L"count", &implemented_in_rust, N_(L"Count the number of arguments")},
     {L"disown", &builtin_disown, N_(L"Remove job from job list")},
     {L"echo", &implemented_in_rust, N_(L"Print arguments")},
     {L"else", &builtin_generic, N_(L"Evaluate block if condition is false")},
@@ -538,6 +502,9 @@ static maybe_t<RustBuiltin> try_get_rust_builtin(const wcstring &cmd) {
     }
     if (cmd == L"command") {
         return RustBuiltin::Command;
+    }
+    if (cmd == L"count") {
+        return RustBuiltin::Count;
     }
     if (cmd == L"echo") {
         return RustBuiltin::Echo;

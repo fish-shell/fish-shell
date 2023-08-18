@@ -72,7 +72,7 @@ pub fn path_get_config_remoteness() -> DirRemoteness {
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 #[widestrs]
-pub fn path_emit_config_directory_messages(vars: &mut EnvStack) {
+pub fn path_emit_config_directory_messages(vars: &EnvStack) {
     let data = get_data_directory();
     if !data.success() {
         maybe_issue_path_warning(
@@ -118,7 +118,7 @@ fn maybe_issue_path_warning(
     xdg_var: &wstr,
     path: &wstr,
     saved_errno: libc::c_int,
-    vars: &mut EnvStack,
+    vars: &EnvStack,
 ) {
     let warning_var_name = "_FISH_WARNED_"L.to_owned() + which_dir;
     if vars

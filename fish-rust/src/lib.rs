@@ -41,6 +41,7 @@ mod function;
 mod future_feature_flags;
 mod global_safety;
 mod highlight;
+mod history;
 mod io;
 mod job_group;
 mod kill;

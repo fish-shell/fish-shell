@@ -24,7 +24,7 @@ pub fn count(
         .filter(|x| x.1)
         .count();
 
-    streams.out.appendln(numargs.to_string());
+    streams.out.appendln(numargs.to_wstring());
 
     if numargs == 0 {
         return STATUS_CMD_ERROR;

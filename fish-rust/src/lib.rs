@@ -40,6 +40,7 @@ mod fds;
 mod ffi;
 mod ffi_init;
 mod ffi_tests;
+mod fish;
 mod fish_indent;
 mod flog;
 mod function;

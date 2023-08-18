@@ -21,7 +21,7 @@ pub fn count(
     // This means excluding lines that don't end in a newline!
     numargs += Arguments::new(&[] as _, &mut zero, streams, COUNT_CHUNK_SIZE)
         // second is "want_newline" - whether the line ended in a newline
-        .filter(|x| x.1)
+        .filter(|(_arg, has_trailing_newline)| has_trailing_newline)
         .count();
 
     streams.out.appendln(numargs.to_string());

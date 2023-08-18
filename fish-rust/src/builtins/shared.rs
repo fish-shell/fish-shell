@@ -59,6 +59,9 @@ pub const BUILTIN_ERR_INVALID_SUBCMD: &str = "%ls: %ls: invalid subcommand\n";
 /// Error message for unknown switch.
 pub const BUILTIN_ERR_UNKNOWN: &str = "%ls: %ls: unknown option\n";
 
+pub const BUILTIN_ERR_MISSING_HELP: &str = "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will show an online version\n";
+pub const BUILTIN_ERR_MISSING: &str = "%ls: %ls: option requires an argument\n";
+
 /// Error messages for unexpected args.
 pub const BUILTIN_ERR_ARG_COUNT0: &str = "%ls: missing argument\n";
 pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";

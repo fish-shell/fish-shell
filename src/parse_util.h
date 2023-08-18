@@ -126,6 +126,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors = nullptr,
                                                   bool allow_incomplete = false);
 
+parser_test_error_bits_t parse_util_detect_errors_ffi(const ast::ast_t *ast,
+                                                      const wcstring &buff_src,
+                                                      parse_error_list_t *out_errors);
 /// Like parse_util_detect_errors but accepts an already-parsed ast.
 /// The top of the ast is assumed to be a job list.
 parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const wcstring &buff_src,

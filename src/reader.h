@@ -139,6 +139,7 @@ class editable_line_t {
     uint32_t edit_group_id_ = -1;
 };
 
+int reader_read_ffi(parser_t &parser, int fd);
 /// Read commands from \c fd until encountering EOF.
 /// The fd is not closed.
 int reader_read(parser_t &parser, int fd, const io_chain_t &io);

@@ -69,8 +69,9 @@ corrosion_set_env_vars(${fish_rust_target}
     "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"
 )
 
+# this needs an extra fish-rust due to the poor source placement
 target_include_directories(${fish_rust_target} INTERFACE
-    "${rust_target_dir}/cxxbridge/${fish_rust_target}/src/"
+    "${rust_target_dir}/cxxbridge/${fish_rust_target}/fish-rust/src/"
     "${fish_autocxx_gen_dir}/include/"
 )
 

@@ -1584,11 +1584,6 @@ std::shared_ptr<history_t> history_t::with_name(const wcstring &name) {
     return hist;
 }
 
-void start_private_mode(env_stack_t &vars) {
-    vars.set_one(L"fish_history", ENV_GLOBAL, L"");
-    vars.set_one(L"fish_private_mode", ENV_GLOBAL, L"1");
-}
-
 bool in_private_mode(const environment_t &vars) {
     return vars.get_unless_empty(L"fish_private_mode").has_value();
 }

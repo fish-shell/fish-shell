@@ -5,6 +5,7 @@ use bitflags::bitflags;
 use lazy_static::lazy_static;
 use libc::c_int;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
@@ -77,11 +78,12 @@ impl Default for EnvStackSetResult {
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
+#[derive(Default)]
 pub struct ConfigPaths {
-    pub data: WString,    // e.g., /usr/local/share
-    pub sysconf: WString, // e.g., /usr/local/etc
-    pub doc: WString,     // e.g., /usr/local/share/doc/fish
-    pub bin: WString,     // e.g., /usr/local/bin
+    pub data: PathBuf,    // e.g., /usr/local/share
+    pub sysconf: PathBuf, // e.g., /usr/local/etc
+    pub doc: PathBuf,     // e.g., /usr/local/share/doc/fish
+    pub bin: PathBuf,     // e.g., /usr/local/bin
 }
 
 /// A collection of status and pipestatus.

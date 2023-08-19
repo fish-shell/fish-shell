@@ -106,7 +106,7 @@ complete -c rsync -l modify-window -xa '(seq 0 10)' -d "Compare NUM mod-times wi
 complete -c rsync -s T -l temp-dir -xa '(__fish_complete_directories)' -d "Create temporary files in directory DIR"
 complete -c rsync -s y -l fuzzy -d "Find similar file for basis if no dest file"
 complete -c rsync -l compare-dest -xa '(__fish_complete_directories)' -d "Also compare received files relative to DIR"
-complete -c rsync -l copy-dest -xa '(__fish_complete_directories)' -d "Also compare received files relative to DIR and include copies of unchanged files"
+complete -c rsync -l copy-dest -xa '(__fish_complete_directories)' -d "Like compare-dest but also copies unchanged files"
 complete -c rsync -l link-dest -xa '(__fish_complete_directories)' -d "Hardlink to files in DIR when unchanged"
 complete -c rsync -s z -l compress -d "Compress file data during the transfer"
 complete -c rsync -l zc -l compress-choice -xa 'zstd lz4 zlibx zlib none' -d "Choose the compression algorithm"

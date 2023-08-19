@@ -3,7 +3,7 @@ use crate::curses::{self, Term};
 use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
 use crate::env::{CURSES_INITIALIZED, READ_BYTE_LIMIT, TERM_HAS_XN};
 use crate::ffi::is_interactive_session;
-use crate::flog::FLOGF;
+use crate::flog::FLOG;
 use crate::function;
 use crate::output::ColorSupport;
 use crate::wchar::prelude::*;
@@ -130,7 +130,7 @@ impl VarDispatchTable {
 
 fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
     let var = vars.get_unless_empty(var_name).map(|v| v.as_string());
-    FLOGF!(
+    FLOG!(
         env_dispatch,
         "handle_timezone() current timezone var:",
         var_name,
@@ -162,7 +162,7 @@ fn guess_emoji_width(vars: &EnvStack) {
         // The only valid values are 1 or 2; we default to 1 if it was an invalid int.
         let new_width = fish_wcstoi(&width_str.as_string()).unwrap_or(1).clamp(1, 2);
         FISH_EMOJI_WIDTH.store(new_width, Ordering::Relaxed);
-        FLOGF!(
+        FLOG!(
             term_support,
             "Overriding default fish_emoji_width w/",
             new_width
@@ -194,17 +194,17 @@ fn guess_emoji_width(vars: &EnvStack) {
     if term == "Apple_Terminal" && version as i32 >= 400 {
         // Apple Terminal on High Sierra
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        FLOGF!(term_support, "default emoji width: 2 for", term);
+        FLOG!(term_support, "default emoji width: 2 for", term);
     } else if term == "iTerm.app" {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12
         FISH_EMOJI_WIDTH.store(2, Ordering::Relaxed);
-        FLOGF!(term_support, "default emoji width 2 for iTerm2");
+        FLOG!(term_support, "default emoji width 2 for iTerm2");
     } else {
         // Default to whatever the system's wcwidth gives for U+1F603, but only if it's at least
         // 1 and at most 2.
         let width = crate::fallback::wcwidth('😃').clamp(1, 2);
         FISH_EMOJI_WIDTH.store(width, Ordering::Relaxed);
-        FLOGF!(term_support, "default emoji width:", width);
+        FLOG!(term_support, "default emoji width:", width);
     }
 }
 
@@ -323,7 +323,7 @@ fn handle_read_limit_change(vars: &EnvStack) {
                 Some(v) => Some(v),
                 None => {
                     // We intentionally warn here even in non-interactive mode.
-                    FLOGF!(warning, "Ignoring invalid $fish_read_limit");
+                    FLOG!(warning, "Ignoring invalid $fish_read_limit");
                     None
                 }
             }
@@ -387,7 +387,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     if let Some(fish_term256) = vars.get(L!("fish_term256")).map(|v| v.as_string()) {
         // $fish_term256
         supports_256color = crate::wcstringutil::bool_from_string(&fish_term256);
-        FLOGF!(
+        FLOG!(
             term_support,
             "256-color support determined by $fish_term256:",
             supports_256color
@@ -395,16 +395,16 @@ fn update_fish_color_support(vars: &EnvStack) {
     } else if term.find(L!("256color")).is_some() {
         // TERM contains "256color": 256 colors explicitly supported.
         supports_256color = true;
-        FLOGF!(term_support, "256-color support enabled for TERM", term);
+        FLOG!(term_support, "256-color support enabled for TERM", term);
     } else if term.find(L!("xterm")).is_some() {
         // Assume that all "xterm" terminals can handle 256
         supports_256color = true;
-        FLOGF!(term_support, "256-color support enabled for TERM", term);
+        FLOG!(term_support, "256-color support enabled for TERM", term);
     }
     // See if terminfo happens to identify 256 colors
     else if let Some(max_colors) = max_colors {
         supports_256color = max_colors >= 256;
-        FLOGF!(
+        FLOG!(
             term_support,
             "256-color support:",
             max_colors,
@@ -416,7 +416,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     if let Some(fish_term24bit) = vars.get(L!("fish_term24bit")).map(|v| v.as_string()) {
         // $fish_term24bit
         supports_24bit = crate::wcstringutil::bool_from_string(&fish_term24bit);
-        FLOGF!(
+        FLOG!(
             term_support,
             "$fish_term24bit preference: 24-bit color",
             if supports_24bit {
@@ -429,7 +429,7 @@ fn update_fish_color_support(vars: &EnvStack) {
         // Screen and emacs' ansi-term swallow true-color sequences, so we ignore them unless
         // force-enabled.
         supports_24bit = false;
-        FLOGF!(
+        FLOG!(
             term_support,
             "True-color support: disabled for eterm/screen"
         );
@@ -437,7 +437,7 @@ fn update_fish_color_support(vars: &EnvStack) {
         // $TERM wins, xterm-direct reports 32767 colors and we assume that's the minimum as xterm
         // is weird when it comes to color.
         supports_24bit = true;
-        FLOGF!(
+        FLOG!(
             term_support,
             "True-color support: enabled per termcap/terminfo for",
             term,
@@ -450,7 +450,7 @@ fn update_fish_color_support(vars: &EnvStack) {
         if ct == "truecolor" || ct == "24bit" {
             supports_24bit = true;
         }
-        FLOGF!(
+        FLOG!(
             term_support,
             "True-color support",
             if supports_24bit {
@@ -467,21 +467,21 @@ fn update_fish_color_support(vars: &EnvStack) {
         // All Konsole versions that use $KONSOLE_VERSION are new enough to support this, so no
         // check is needed.
         supports_24bit = true;
-        FLOGF!(term_support, "True-color support: enabled for Konsole");
+        FLOG!(term_support, "True-color support: enabled for Konsole");
     } else if let Some(it) = vars.get(L!("ITERM_SESSION_ID")).map(|v| v.as_string()) {
         // Supporting versions of iTerm include a colon here.
         // We assume that if this is iTerm it can't also be st, so having this check inside is okay.
         if !it.contains(':') {
             supports_24bit = true;
-            FLOGF!(term_support, "True-color support: enabled for iTerm");
+            FLOG!(term_support, "True-color support: enabled for iTerm");
         }
     } else if term.starts_with("st-") {
         supports_24bit = true;
-        FLOGF!(term_support, "True-color support: enabling for st");
+        FLOG!(term_support, "True-color support: enabling for st");
     } else if let Some(vte) = vars.get(L!("VTE_VERSION")).map(|v| v.as_string()) {
         if fish_wcstoi(&vte).unwrap_or(0) > 3600 {
             supports_24bit = true;
-            FLOGF!(
+            FLOG!(
                 term_support,
                 "True-color support: enabled for VTE version",
                 vte
@@ -525,9 +525,9 @@ fn initialize_curses_using_fallbacks(vars: &EnvStack) {
         .is_some();
         if is_interactive_session() {
             if success {
-                FLOGF!(warning, wgettext!("Using fallback terminal type"), term);
+                FLOG!(warning, wgettext!("Using fallback terminal type"), term);
             } else {
-                FLOGF!(
+                FLOG!(
                     warning,
                     wgettext!("Could not set up terminal using the fallback terminal type"),
                     term,
@@ -640,10 +640,10 @@ fn init_curses(vars: &EnvStack) {
             .getf_unless_empty(var_name, EnvMode::EXPORT)
             .map(|v| v.as_string())
         {
-            FLOGF!(term_support, "curses var", var_name, "=", value);
+            FLOG!(term_support, "curses var", var_name, "=", value);
             setenv_lock(var_name, &value, true);
         } else {
-            FLOGF!(term_support, "curses var", var_name, "is missing or empty");
+            FLOG!(term_support, "curses var", var_name, "is missing or empty");
             unsetenv_lock(var_name);
         }
     }
@@ -655,15 +655,15 @@ fn init_curses(vars: &EnvStack) {
     {
         if is_interactive_session() {
             let term = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string());
-            FLOGF!(warning, wgettext!("Could not set up terminal."));
+            FLOG!(warning, wgettext!("Could not set up terminal."));
             if let Some(term) = term {
-                FLOGF!(warning, wgettext!("TERM environment variable set to"), term);
-                FLOGF!(
+                FLOG!(warning, wgettext!("TERM environment variable set to"), term);
+                FLOG!(
                     warning,
                     wgettext!("Check that this terminal type is supported on this system.")
                 );
             } else {
-                FLOGF!(warning, wgettext!("TERM environment variable not set."));
+                FLOG!(warning, wgettext!("TERM environment variable not set."));
             }
         }
 
@@ -707,10 +707,10 @@ fn init_locale(vars: &EnvStack) {
             .getf_unless_empty(var_name, EnvMode::EXPORT)
             .map(|v| v.as_string());
         if let Some(value) = var {
-            FLOGF!(env_locale, "locale var", var_name, "=", value);
+            FLOG!(env_locale, "locale var", var_name, "=", value);
             setenv_lock(var_name, &value, true);
         } else {
-            FLOGF!(env_locale, "locale var", var_name, "is missing or empty");
+            FLOG!(env_locale, "locale var", var_name, "is missing or empty");
             unsetenv_lock(var_name);
         }
     }
@@ -718,7 +718,7 @@ fn init_locale(vars: &EnvStack) {
     let user_locale = {
         let loc_ptr = unsafe { libc::setlocale(libc::LC_ALL, b"\0".as_ptr().cast()) };
         if loc_ptr.is_null() {
-            FLOGF!(env_locale, "user has an invalid locale configured");
+            FLOG!(env_locale, "user has an invalid locale configured");
             None
         } else {
             // safety: setlocale did not return a null-pointer, so it is a valid pointer
@@ -736,7 +736,7 @@ fn init_locale(vars: &EnvStack) {
         .unwrap_or(true);
 
     if fix_locale && crate::compat::MB_CUR_MAX() == 1 {
-        FLOGF!(env_locale, "Have singlebyte locale, trying to fix.");
+        FLOG!(env_locale, "Have singlebyte locale, trying to fix.");
         for locale in UTF8_LOCALES {
             {
                 let locale = CString::new(locale.to_owned()).unwrap();
@@ -744,13 +744,13 @@ fn init_locale(vars: &EnvStack) {
                 unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
             }
             if crate::compat::MB_CUR_MAX() > 1 {
-                FLOGF!(env_locale, "Fixed locale:", locale);
+                FLOG!(env_locale, "Fixed locale:", locale);
                 break;
             }
         }
 
         if crate::compat::MB_CUR_MAX() == 1 {
-            FLOGF!(env_locale, "Failed to fix locale.");
+            FLOG!(env_locale, "Failed to fix locale.");
         }
     }
 
@@ -762,7 +762,7 @@ fn init_locale(vars: &EnvStack) {
     // See that we regenerate our special locale for numbers
     crate::locale::invalidate_numeric_locale();
     crate::common::fish_setlocale();
-    FLOGF!(
+    FLOG!(
         env_locale,
         "init_locale() setlocale():",
         user_locale
@@ -775,12 +775,12 @@ fn init_locale(vars: &EnvStack) {
     assert_ne!(new_msg_loc_ptr, ptr::null_mut());
     // safety: we just asserted it is not a null-pointer.
     let new_msg_locale = unsafe { CStr::from_ptr(new_msg_loc_ptr) };
-    FLOGF!(
+    FLOG!(
         env_locale,
         "Old LC_MESSAGES locale:",
         old_msg_locale.to_string_lossy()
     );
-    FLOGF!(
+    FLOG!(
         env_locale,
         "New LC_MESSAGES locale:",
         new_msg_locale.to_string_lossy()

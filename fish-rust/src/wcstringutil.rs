@@ -4,7 +4,7 @@ use crate::common::{get_ellipsis_char, get_ellipsis_str};
 use crate::compat::MB_CUR_MAX;
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp};
-use crate::flog::FLOGF;
+use crate::flog::FLOG;
 use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 
@@ -288,7 +288,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
 }
 
 fn wcs2string_bad_char(c: char) {
-    FLOGF!(
+    FLOG!(
         char_encoding,
         L!("Wide character U+%4X has no narrow representation"),
         c

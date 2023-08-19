@@ -1,9 +1,5 @@
-use std::borrow::Cow;
-
 use super::prelude::*;
-use crate::common::{read_blocked, str2wcstring};
 use crate::tinyexpr::te_interp;
-use crate::wutil::perror;
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
@@ -118,66 +114,6 @@ fn parse_cmd_opts(
     Ok((opts, w.woptind))
 }
 
-/// We read from stdin if we are the second or later process in a pipeline.
-fn use_args_from_stdin(streams: &io_streams_t) -> bool {
-    streams.stdin_is_directly_redirected()
-}
-
-/// Get the arguments from stdin.
-fn get_arg_from_stdin(streams: &io_streams_t) -> Option<WString> {
-    let mut s = Vec::new();
-    loop {
-        let mut buf = [0];
-        let c = match read_blocked(streams.stdin_fd().unwrap(), &mut buf) {
-            1 => buf[0],
-            0 => {
-                // EOF
-                if s.is_empty() {
-                    return None;
-                } else {
-                    break;
-                }
-            }
-            n if n < 0 => {
-                // error
-                perror("read");
-                return None;
-            }
-            n => panic!("Unexpected return value from read_blocked(): {n}"),
-        };
-
-        if c == b'\n' {
-            // we're done
-            break;
-        }
-
-        s.push(c);
-    }
-
-    Some(str2wcstring(&s))
-}
-
-/// Get the arguments from argv or stdin based on the execution context. This mimics how builtin
-/// `string` does it.
-fn get_arg<'args>(
-    argidx: &mut usize,
-    args: &'args [&'args wstr],
-    streams: &io_streams_t,
-) -> Option<Cow<'args, wstr>> {
-    if use_args_from_stdin(streams) {
-        assert!(
-            streams.stdin_fd().is_some(),
-            "stdin should not be closed since it is directly redirected"
-        );
-
-        get_arg_from_stdin(streams).map(Cow::Owned)
-    } else {
-        let ret = args.get(*argidx).copied().map(Cow::Borrowed);
-        *argidx += 1;
-        ret
-    }
-}
-
 /// Return a formatted version of the value `v` respecting the given `opts`.
 fn format_double(mut v: f64, opts: &Options) -> WString {
     if opts.base == 16 {
@@ -278,6 +214,9 @@ fn evaluate_expression(
     }
 }
 
+/// How much math reads at one. We don't expect very long input.
+const MATH_CHUNK_SIZE: usize = 1024;
+
 /// The math builtin evaluates math expressions.
 #[widestrs]
 pub fn math(
@@ -298,7 +237,7 @@ pub fn math(
     }
 
     let mut expression = WString::new();
-    while let Some(arg) = get_arg(&mut optind, argv, streams) {
+    for (arg, _) in Arguments::new(argv, &mut optind, streams, MATH_CHUNK_SIZE) {
         if !expression.is_empty() {
             expression.push(' ')
         }

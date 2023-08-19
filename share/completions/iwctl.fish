@@ -15,14 +15,13 @@ function __iwctl_filter -w iwctl
     # calculate column widths
     set -l headers $results[3]
     # We exploit the fact that all colum labels will have >2 space to the left, and inside column labels there is always only one space.
-    set -l leading_ws (string match -r "^ *" $headers | string length)
-    # fish is 1 based
-    set -l column_widths (string match -a -r '(?<=  )\S.*?(?:  (?=\S)|$)' $headers | string length)
+    set -l leading_ws (string match -r "^ *" -- $headers | string length)
+    set -l column_widths (string match -a -r '(?<=  )\S.*?(?:  (?=\S)|$)' -- $headers | string length)
 
-    if test $_flag_all_columns
-        for line in (string match "  *" $results[5..] | string sub -s (math $leading_ws + 1))
+    if set -ql _flag_all_columns
+        for line in (string match "  *" -- $results[5..] | string sub -s (math $leading_ws + 1))
             for column_width in $column_widths
-                printf (string sub -l $column_width -- $line | string trim -r)\t
+                printf %s\t (string sub -l $column_width -- $line | string trim -r)
                 set line (string sub -s (math $column_width + 1) -- $line)
             end
             printf "\n"
@@ -36,7 +35,7 @@ function __iwctl_filter -w iwctl
 end
 
 function __iwctl_match_subcoms
-    set -l match (string split --no-empty " " $argv)
+    set -l match (string split --no-empty " " -- $argv)
 
     set argv (commandline -poc)
     # iwctl allows to specify arguments for username, password, passphrase and dont-ask regardless of any following commands
@@ -60,13 +59,13 @@ function __iwctl_connect
     argparse -i 'u/username=' 'p/password=' 'P/passphrase=' 'v/dont-ask' -- $argv
     # station name should now be the third argument (`iwctl station <wlan>`)
     for network in (__iwctl_filter station $argv[3] get-networks rssi-dbms --all-columns)
-        set network (string split \t $network)
-        set -l strength $network[3]
+        set network (string split \t -- $network)
+        set -l strength "$network[3]"
         # This follows iwctls display of * to ****
         # https://git.kernel.org/pub/scm/network/wireless/iwd.git/tree/client/station.c?id=4a0a97379008489daa108c9bc0a4204c1ae9c6a8#n380
         if test $strength -ge -6000
             set strength 4
-        else if test $strength -ge 6700
+        else if test $strength -ge -6700
             set strength 3
         else if test $strength -ge -7500
             set strength 2
@@ -74,7 +73,7 @@ function __iwctl_connect
             set strength 1
         end
 
-        printf "$network[1]\t[$(string repeat -n $strength '*' | string pad -rw 4 -c -)] - $network[2]\n"
+        printf "%s\t[%s] - %s\n" "$network[1]" (string repeat -n $strength '*' | string pad -rw 4 -c -) "$network[2]"
     end
 end
 

@@ -27,8 +27,7 @@ use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, TryLockError};
 use std::time;
@@ -1772,7 +1771,7 @@ pub fn valid_var_name(s: &wstr) -> bool {
 }
 
 /// Get the absolute path to the fish executable itself
-pub fn get_executable_path(argv0: &str) -> PathBuf {
+pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
     if let Ok(path) = std::env::current_exe() {
         if path.exists() {
             return path;
@@ -1794,7 +1793,7 @@ pub fn get_executable_path(argv0: &str) -> PathBuf {
         }
         return path;
     }
-    PathBuf::from_str(argv0).unwrap()
+    argv0.as_ref().to_owned()
 }
 
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a

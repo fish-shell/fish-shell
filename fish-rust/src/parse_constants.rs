@@ -3,7 +3,7 @@
 use crate::ffi::{fish_wcswidth, fish_wcwidth, wcharz_t};
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{wcharz, AsWstr, WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use bitflags::bitflags;
 use cxx::{type_id, ExternType};
 use cxx::{CxxWString, UniquePtr};
@@ -61,8 +61,6 @@ mod parse_constants_ffi {
         fn contains_inclusive_ffi(self: &SourceRange, loc: u32) -> bool;
     }
 
-    /// IMPORTANT: If the following enum table is modified you must also update token_type_description below.
-    /// TODO above comment can be removed when we drop the FFI and get real enums.
     #[derive(Clone, Copy, Debug)]
     pub enum ParseTokenType {
         invalid = 1,
@@ -107,12 +105,6 @@ mod parse_constants_ffi {
         kw_switch,
         kw_time,
         kw_while,
-    }
-
-    extern "Rust" {
-        fn token_type_description(token_type: ParseTokenType) -> wcharz_t;
-        fn keyword_description(keyword: ParseKeyword) -> wcharz_t;
-        fn keyword_from_string(s: wcharz_t) -> ParseKeyword;
     }
 
     // Statement decorations like 'command' or 'exec'.
@@ -194,14 +186,6 @@ mod parse_constants_ffi {
         fn append(self: &mut ParseErrorListFfi, other: *mut ParseErrorListFfi);
         fn erase(self: &mut ParseErrorListFfi, index: usize);
         fn clear(self: &mut ParseErrorListFfi);
-    }
-
-    extern "Rust" {
-        #[cxx_name = "token_type_user_presentable_description"]
-        fn token_type_user_presentable_description_ffi(
-            type_: ParseTokenType,
-            keyword: ParseKeyword,
-        ) -> UniquePtr<CxxWString>;
     }
 
     // The location of a pipeline.
@@ -289,11 +273,6 @@ impl From<ParseTokenType> for &'static wstr {
     }
 }
 
-fn token_type_description(token_type: ParseTokenType) -> wcharz_t {
-    let s: &'static wstr = token_type.into();
-    wcharz!(s)
-}
-
 impl Default for ParseKeyword {
     fn default() -> Self {
         ParseKeyword::none
@@ -333,11 +312,6 @@ impl printf_compat::args::ToArg<'static> for ParseKeyword {
     }
 }
 
-fn keyword_description(keyword: ParseKeyword) -> wcharz_t {
-    let s: &'static wstr = keyword.into();
-    wcharz!(s)
-}
-
 impl From<&wstr> for ParseKeyword {
     #[widestrs]
     fn from(s: &wstr) -> Self {
@@ -363,11 +337,6 @@ impl From<&wstr> for ParseKeyword {
             _ => ParseKeyword::none,
         }
     }
-}
-
-fn keyword_from_string<'a>(s: impl Into<&'a wstr>) -> ParseKeyword {
-    let s: &wstr = s.into();
-    ParseKeyword::from(s)
 }
 
 impl Default for ParseErrorCode {
@@ -606,13 +575,6 @@ pub fn token_type_user_presentable_description(
         ParseTokenType::comment => "a comment"L.to_owned(),
         _ => sprintf!("a %ls"L, Into::<&'static wstr>::into(type_)),
     }
-}
-
-fn token_type_user_presentable_description_ffi(
-    type_: ParseTokenType,
-    keyword: ParseKeyword,
-) -> UniquePtr<CxxWString> {
-    token_type_user_presentable_description(type_, keyword).to_ffi()
 }
 
 pub type ParseErrorList = Vec<ParseError>;

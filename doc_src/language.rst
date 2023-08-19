@@ -1071,7 +1071,37 @@ So you set a variable with ``set``, and use it with a ``$`` and the name.
 Variable Scope
 ^^^^^^^^^^^^^^
 
-There are four kinds of variables in fish: universal, global, function and local variables.
+All variables in fish have a scope. For example they can be global or local to a function or block::
+
+  # This variable is global, we can use it everywhere.
+  set --global name Patrick
+  # This variable is local, it will not be visible in a function we call from here.
+  set --local place "at the Krusty Krab"
+
+  function local
+      # This can find $name, but not $place
+      echo Hello this is $name $place
+
+      # This variable is local, it will not be available
+      # outside of this function
+      set --local instrument mayonnaise
+      echo My favorite instrument is $instrument
+      # This creates a local $name, and won't touch the global one
+      set --local name Spongebob
+      echo My best friend is $name
+  end
+
+  local
+  # Will print:
+  # Hello this is Patrick
+  # My favorite instrument is mayonnaise
+  # My best friend is Spongebob
+
+  echo $name, I am $place and my instrument is $instrument
+  # Will print:
+  # Patrick, I am at the Krusty Krab and my instrument is 
+
+There are four kinds of variable scopes in fish: universal, global, function and local variables.
 
 - Universal variables are shared between all fish sessions a user is running on one computer. They are stored on disk and persist even after reboot.
 - Global variables are specific to the current fish session. They can be erased by explicitly requesting ``set -e``.

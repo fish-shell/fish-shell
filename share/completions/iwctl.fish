@@ -1,5 +1,5 @@
 # Execute an `iwctl ... list` command and parse output
-function __iwctl_filter
+function __iwctl_filter -w iwctl
     # set results "iwctl $cmd list | tail -n +5"
     # if test -n "$empty"
     #     set -a results "| string match --invert '*$empty*'"
@@ -8,21 +8,34 @@ function __iwctl_filter
     # awk does not work on multiline entries, therefor we use string match,
     # which has the added benefit of filtering out the `No devices in ...` lines
 
+    argparse -i all-columns -- $argv
+
     # remove color escape sequences
     set -l results (iwctl $argv | string replace -ra '\e\[[\d;]+m' '')
     # calculate column widths
     set -l headers $results[3]
-    set -l header_spaces (string match -a -r "  +" $headers | string length)
-    set -l first_column_label (string match -r "[^ ]+" $headers | string length)
+    # We exploit the fact that all colum labels will have >2 space to the left, and inside column labels there is always only one space.
+    set -l leading_ws (string match -r "^ *" -- $headers | string length)
+    set -l column_widths (string match -a -r '(?<=  )\S.*?(?:  (?=\S)|$)' -- $headers | string length)
 
-    # only take lines starting with `  `, i.e., no `No devices ...`
-    # then take the first column as substring
-    string match "  *" $results[5..] | string sub -s $header_spaces[1] -l (math $first_column_label + $header_spaces[2]) | string trim
+    if set -ql _flag_all_columns
+        for line in (string match "  *" -- $results[5..] | string sub -s (math $leading_ws + 1))
+            for column_width in $column_widths
+                printf %s\t (string sub -l $column_width -- $line | string trim -r)
+                set line (string sub -s (math $column_width + 1) -- $line)
+            end
+            printf "\n"
+        end
+    else
+        # only take lines starting with `  `, i.e., no `No devices ...`
+        # then take the first column as substring
+        string match "  *" $results[5..] | string sub -s (math $leading_ws + 1) -l $column_widths[1] | string trim -r
+    end
     # string match -rg "  .{$(math $header_spaces[1] - 2)}(.{$(math $first_column_label + $header_spaces[2])})" $results[5..] | string trim
 end
 
 function __iwctl_match_subcoms
-    set -l match (string split --no-empty " " $argv)
+    set -l match (string split --no-empty " " -- $argv)
 
     set argv (commandline -poc)
     # iwctl allows to specify arguments for username, password, passphrase and dont-ask regardless of any following commands
@@ -45,7 +58,23 @@ function __iwctl_connect
     # remove all options
     argparse -i 'u/username=' 'p/password=' 'P/passphrase=' 'v/dont-ask' -- $argv
     # station name should now be the third argument (`iwctl station <wlan>`)
-    __iwctl_filter station $argv[3] get-networks
+    for network in (__iwctl_filter station $argv[3] get-networks rssi-dbms --all-columns)
+        set network (string split \t -- $network)
+        set -l strength "$network[3]"
+        # This follows iwctls display of * to ****
+        # https://git.kernel.org/pub/scm/network/wireless/iwd.git/tree/client/station.c?id=4a0a97379008489daa108c9bc0a4204c1ae9c6a8#n380
+        if test $strength -ge -6000
+            set strength 4
+        else if test $strength -ge -6700
+            set strength 3
+        else if test $strength -ge -7500
+            set strength 2
+        else
+            set strength 1
+        end
+
+        printf "%s\t[%s] - %s\n" "$network[1]" (string repeat -n $strength '*' | string pad -rw 4 -c -) "$network[2]"
+    end
 end
 
 # The `empty` messages in case we want to go back to using those
@@ -128,7 +157,7 @@ complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_
 complete -c iwctl -n '__iwctl_match_subcoms station' -a "list" -d "List devices in Station mode"
 complete -c iwctl -n '__iwctl_match_subcoms station' -a "(__iwctl_filter station list)"
 complete -c iwctl -n '__iwctl_match_subcoms "station *"' -n 'not __iwctl_match_subcoms station list' -a connect -d "Connect to network"
-complete -c iwctl -n '__iwctl_match_subcoms "station * connect"' -a "(__iwctl_connect)" -d "Connect to network"
+complete -c iwctl -n '__iwctl_match_subcoms "station * connect"' -a "(__iwctl_connect)" -d "Connect to network" --keep-order
 complete -c iwctl -n '__iwctl_match_subcoms "station *"' -n 'not __iwctl_match_subcoms station list' -a connect-hidden -d "Connect to hidden network"
 complete -c iwctl -n '__iwctl_match_subcoms "station *"' -n 'not __iwctl_match_subcoms station list' -a disconnect -d "Disconnect"
 complete -c iwctl -n '__iwctl_match_subcoms "station *"' -n 'not __iwctl_match_subcoms station list' -a get-networks -d "Get networks"

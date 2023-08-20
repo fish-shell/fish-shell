@@ -187,10 +187,10 @@ pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
 #[widestrs]
 static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
     [
-        "/bin"L.to_owned(),
-        "/usr/bin"L.to_owned(),
         // TODO This should use env!. The fallback is only to appease "cargo test" for now.
         WString::from_str(option_env!("PREFIX").unwrap_or("/usr/local")) + "/bin"L,
+        "/usr/bin"L.to_owned(),
+        "/bin"L.to_owned(),
     ]
 });
 

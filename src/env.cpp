@@ -233,6 +233,25 @@ static std::map<wcstring, wcstring> inheriteds;
 
 const std::map<wcstring, wcstring> &env_get_inherited() { return inheriteds; }
 
+void set_inheriteds_ffi() {
+    wcstring key, val;
+    const char *const *envp = environ;
+    int i = 0;
+    while (envp && envp[i]) i++;
+    while (i--) {
+        const wcstring key_and_val = str2wcstring(envp[i]);
+        size_t eql = key_and_val.find(L'=');
+        if (eql == wcstring::npos) {
+            // PORTING: Should this not be key_and_val?
+            inheriteds[key] = L"";
+        } else {
+            key.assign(key_and_val, 0, eql);
+            val.assign(key_and_val, eql + 1, wcstring::npos);
+            inheriteds[key] = val;
+        }
+    }
+}
+
 void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_paths) {
     env_stack_t &vars = env_stack_t::principal();
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins

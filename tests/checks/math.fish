@@ -349,3 +349,12 @@ math -0x8p-0_3
 
 echo 5 + 6 | math
 # CHECK: 11
+
+# Historical: If we have arguments on stdin and argv,
+# the former takes precedence and the latter is ignored entirely.
+echo 7 + 6 | math 2 + 2
+# CHECK: 13
+
+# It isn't checked at all.
+echo 7 + 8 | math not an expression
+# CHECK: 15

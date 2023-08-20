@@ -59,6 +59,7 @@
 #include "cxxgen.h"
 #include "enum_set.h"
 #include "env.h"
+#include "env/env_ffi.rs.h"
 #include "env_universal_common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -5683,7 +5684,7 @@ int main(int argc, char **argv) {
     say(L"Testing low-level functionality");
     rust_init();
     proc_init();
-    env_init();
+    rust_env_init(true);
     misc_init();
     reader_init();
 

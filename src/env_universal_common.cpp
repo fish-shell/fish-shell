@@ -879,25 +879,6 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
     }
 }
 
-/// Maximum length of hostname. Longer hostnames are truncated.
-#define HOSTNAME_LEN 255
-
-/// Function to get an identifier based on the hostname.
-bool get_hostname_identifier(wcstring &result) {
-    // The behavior of gethostname if the buffer size is insufficient differs by implementation and
-    // libc version Work around this by using a "guaranteed" sufficient buffer size then truncating
-    // the result.
-    bool success = false;
-    char hostname[256] = {};
-    if (gethostname(hostname, sizeof(hostname)) == 0) {
-        result.assign(str2wcstring(hostname));
-        result.assign(truncate(result, HOSTNAME_LEN));
-        // Don't return an empty hostname, we may attempt to open a directory instead.
-        success = !result.empty();
-    }
-    return success;
-}
-
 namespace {
 class universal_notifier_shmem_poller_t final : public universal_notifier_t {
 #ifdef __CYGWIN__

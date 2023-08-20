@@ -84,15 +84,6 @@ using env_mode_flags_t = uint16_t;
 /// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
 
-/// A struct of configuration directories, determined in main() that fish will optionally pass to
-/// env_init.
-struct config_paths_t {
-    wcstring data;     // e.g., /usr/local/share
-    wcstring sysconf;  // e.g., /usr/local/etc
-    wcstring doc;      // e.g., /usr/local/share/doc/fish
-    wcstring bin;      // e.g., /usr/local/bin
-};
-
 /// A collection of status and pipestatus.
 struct statuses_t {
     /// Status of the last job to exit.
@@ -113,10 +104,6 @@ struct statuses_t {
         return result;
     }
 };
-
-/// Initialize environment variable data.
-void env_init(const struct config_paths_t *paths = nullptr, bool do_uvars = true,
-              bool default_paths = false);
 
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.

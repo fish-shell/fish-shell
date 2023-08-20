@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "ast.h"
 #include "env.h"
+#include "env/env_ffi.rs.h"
 #include "fds.h"
 #include "ffi_baggage.h"
 #include "ffi_init.rs.h"
@@ -296,7 +297,7 @@ int main(int argc, char *argv[]) {
     // (e.g., "# vim: set fileencoding=<encoding-name>:") or an emacs style comment
     // (e.g., "# -*- coding: <encoding-name> -*-").
     setlocale(LC_ALL, "");
-    env_init();
+    rust_env_init(true);
 
     if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {

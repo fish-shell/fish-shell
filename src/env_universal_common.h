@@ -64,8 +64,6 @@ struct var_table_ffi_t {
 // This is exposed for testing.
 enum class uvar_format_t { fish_2_x, fish_3_0, future };
 
-bool get_hostname_identifier(wcstring &result);
-
 /// Class representing universal variables.
 class env_universal_t {
    public:

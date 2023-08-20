@@ -185,7 +185,7 @@ pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
 
 // PREFIX is defined at build time.
 #[widestrs]
-static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
+pub static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
     [
         // TODO This should use env!. The fallback is only to appease "cargo test" for now.
         WString::from_str(option_env!("PREFIX").unwrap_or("/usr/local")) + "/bin"L,

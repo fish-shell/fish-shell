@@ -512,7 +512,7 @@ fn setup_path() {
             str2wcstring(cstr.to_bytes())
         } else {
             // the above should really not fail
-            L!("/usr/bin:/bin").to_owned()
+            join_strings(crate::path::DEFAULT_PATH.as_ref(), ':')
         };
 
         vars.set_one(L!("PATH"), EnvMode::GLOBAL | EnvMode::EXPORT, path);

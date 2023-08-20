@@ -154,7 +154,7 @@ Expressions can be grouped using parentheses.
 **(** *EXPRESSION* **)**
      Returns the value of *EXPRESSION*.
 
-Note that parentheses will usually require escaping with ``\(`` to avoid being interpreted as a command substitution.
+Note that parentheses will usually require escaping with ``\`` (so they appear as ``\(`` and ``\)``) to avoid being interpreted as a command substitution.
 
 
 Examples

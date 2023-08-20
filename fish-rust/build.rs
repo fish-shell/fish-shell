@@ -14,7 +14,7 @@ fn main() {
         .file("fish-rust/src/compat.c")
         .compile("libcompat.a");
 
-    let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
+    let rust_dir = env!("CARGO_MANIFEST_DIR");
     let target_dir =
         std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));
     let cpp_fish_src_dir = format!("{}/{}", rust_dir, "src/");

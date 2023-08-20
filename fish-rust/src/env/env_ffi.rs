@@ -376,7 +376,7 @@ fn var_is_electric_ffi(name: &CxxWString) -> bool {
 }
 
 fn rust_env_init_ffi(do_uvars: bool) {
-    environment::env_init(do_uvars);
+    environment::env_init(None, do_uvars, false);
 }
 
 fn env_flags_for_ffi(name: wcharz_t) -> u8 {

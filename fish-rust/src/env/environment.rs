@@ -2,25 +2,35 @@ use super::environment_impl::{
     colon_split, uvars, EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult,
     UVAR_SCOPE_IS_GLOBAL,
 };
+use super::{ConfigPaths, ElectricVar};
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
-use crate::common::{unescape_string, UnescapeStringStyle};
+use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, Statuses};
-use crate::env_dispatch::env_dispatch_var_change;
+use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
 use crate::event::Event;
 use crate::ffi::{self, env_universal_t, universal_notifier_t};
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
-use crate::path::path_make_canonical;
-use crate::wchar::{wstr, WExt, WString, L};
+use crate::path::{
+    path_emit_config_directory_messages, path_get_config, path_get_data, path_make_canonical,
+    paths_are_same_file,
+};
+use crate::termsize;
+use crate::wchar::prelude::*;
 use crate::wchar_ffi::{AsWstr, WCharFromFFI};
 use crate::wcstringutil::join_strings;
-use crate::wutil::{wgetcwd, wgettext};
+use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 
 use autocxx::WithinUniquePtr;
 use cxx::UniquePtr;
 use lazy_static::lazy_static;
 use libc::c_int;
+use once_cell::sync::OnceCell;
+use std::collections::HashMap;
+use std::ffi::CStr;
+use std::mem::MaybeUninit;
+use std::os::unix::prelude::*;
 use std::sync::{Arc, Mutex};
 
 /// TODO: migrate to history once ported.
@@ -371,8 +381,334 @@ lazy_static! {
     static ref PRINCIPAL_STACK: EnvStackRef = Arc::new(EnvStack::new());
 }
 
-// Note: this is an incomplete port of env_init(); the rest remains in C++.
-pub fn env_init(do_uvars: bool) {
+/// Some configuration path environment variables.
+const FISH_DATADIR_VAR: &wstr = L!("__fish_data_dir");
+const FISH_SYSCONFDIR_VAR: &wstr = L!("__fish_sysconf_dir");
+const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
+const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
+const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
+const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
+
+/// Maximum length of hostname. Longer hostnames are truncated.
+const HOSTNAME_LEN: usize = 255;
+
+/// Function to get an identifier based on the hostname.
+fn get_hostname_identifier() -> Option<WString> {
+    // The behavior of gethostname if the buffer size is insufficient differs by implementation and
+    // libc version Work around this by using a "guaranteed" sufficient buffer size then truncating
+    // the result.
+    let mut b = [0 as libc::c_char; HOSTNAME_LEN + 1];
+    if unsafe { libc::gethostname(b.as_mut_ptr(), b.len()) } == 0 {
+        let cstr = unsafe { CStr::from_ptr(b.as_ptr()) };
+        let res = str2wcstring(cstr.to_bytes());
+
+        if res.is_empty() {
+            None
+        } else {
+            Some(res)
+        }
+    } else {
+        None
+    }
+}
+
+/// Set up the USER and HOME variable.
+fn setup_user(vars: &EnvStack) {
+    let uid = unsafe { libc::geteuid() };
+    let user_var = vars.get_unless_empty(L!("USER"));
+
+    let mut userinfo: MaybeUninit<libc::passwd> = MaybeUninit::uninit();
+    let mut result: *mut libc::passwd = std::ptr::null_mut();
+    let mut buf = [0 as libc::c_char; 8192];
+
+    // If we have a $USER, we try to get the passwd entry for the name.
+    // If that has the same UID that we use, we assume the data is correct.
+    if let Some(user_var) = user_var {
+        let unam_narrow = wcs2zstring(&user_var.as_string());
+        let retval = unsafe {
+            libc::getpwnam_r(
+                unam_narrow.as_ptr(),
+                userinfo.as_mut_ptr(),
+                buf.as_mut_ptr(),
+                buf.len(),
+                &mut result,
+            )
+        };
+        if retval == 0 && !result.is_null() {
+            let userinfo = unsafe { userinfo.assume_init() };
+            if unsafe { *result }.pw_uid == uid {
+                // The uid matches but we still might need to set $HOME.
+                if vars.get_unless_empty(L!("HOME")).is_none() {
+                    if !userinfo.pw_dir.is_null() {
+                        let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
+                        vars.set_one(
+                            L!("HOME"),
+                            EnvMode::GLOBAL | EnvMode::EXPORT,
+                            str2wcstring(s.to_bytes()),
+                        );
+                    } else {
+                        vars.set_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT);
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    // Either we didn't have a $USER or it had a different uid.
+    // We need to get the data *again* via the uid.
+    let retval = unsafe {
+        libc::getpwuid_r(
+            uid,
+            userinfo.as_mut_ptr(),
+            buf.as_mut_ptr(),
+            buf.len(),
+            &mut result,
+        )
+    };
+    if retval == 0 && !result.is_null() {
+        let userinfo = unsafe { userinfo.assume_init() };
+        let s = unsafe { CStr::from_ptr(userinfo.pw_name) };
+        let uname = str2wcstring(s.to_bytes());
+        vars.set_one(L!("USER"), EnvMode::GLOBAL | EnvMode::EXPORT, uname);
+        // Only change $HOME if it's empty, so we allow e.g. `HOME=(mktemp -d)`.
+        // This is okay with common `su` and `sudo` because they set $HOME.
+        if vars.get_unless_empty(L!("HOME")).is_none() {
+            if !userinfo.pw_dir.is_null() {
+                let s = unsafe { CStr::from_ptr(userinfo.pw_dir) };
+                vars.set_one(
+                    L!("HOME"),
+                    EnvMode::GLOBAL | EnvMode::EXPORT,
+                    str2wcstring(s.to_bytes()),
+                );
+            } else {
+                // We cannot get $HOME. This triggers warnings for history and config.fish already,
+                // so it isn't necessary to warn here as well.
+                vars.set_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT);
+            }
+        }
+    } else if vars.get_unless_empty(L!("HOME")).is_none() {
+        // If $USER is empty as well (which we tried to set above), we can't get $HOME.
+        vars.set_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT);
+    }
+}
+
+/// Make sure the PATH variable contains something.
+fn setup_path() {
+    use crate::compat::{confstr, _CS_PATH};
+
+    let vars = &GLOBALS;
+    let path = vars.get_unless_empty(L!("PATH"));
+    if path.is_none() {
+        // _CS_PATH: colon-separated paths to find POSIX utilities
+
+        let buf_size = unsafe { confstr(_CS_PATH(), std::ptr::null_mut(), 0) };
+        let path = if buf_size > 0 {
+            let mut buf = vec![b'\0' as libc::c_char; buf_size];
+            unsafe { confstr(_CS_PATH(), buf.as_mut_ptr(), buf_size) };
+            let buf = buf;
+            // safety: buf should contain a null-byte, and is not mutable unless we move ownership
+            let cstr = unsafe { CStr::from_ptr(buf.as_ptr()) };
+            str2wcstring(cstr.to_bytes())
+        } else {
+            // the above should really not fail
+            L!("/usr/bin:/bin").to_owned()
+        };
+
+        vars.set_one(L!("PATH"), EnvMode::GLOBAL | EnvMode::EXPORT, path);
+    }
+}
+
+/// The originally inherited variables and their values.
+/// This is a simple key->value map and not e.g. cut into paths.
+pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new();
+
+pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
+    let vars = &PRINCIPAL_STACK;
+
+    let env_iter: Vec<_> = std::env::vars_os()
+        .map(|(k, v)| (str2wcstring(k.as_bytes()), str2wcstring(v.as_bytes())))
+        .collect();
+
+    let mut inherited_vars = HashMap::new();
+    // Import environment variables. Walk backwards so that the first one out of any duplicates wins
+    // (See issue #2784).
+    // PORTING: this should behave like in C++ in regards to the above comment, but that might be
+    // with assumptions on the standard library's behavior (is it okay for them to remove duplicates?).
+    for (key, val) in env_iter.into_iter().rev() {
+        // PORTING: This is making assumptions that env::vars_os set val to empty if no equal sign
+        // PORTING: That assumption appears to be wrong https://github.com/rust-lang/rust/blob/2ceed0b6cb9e9866225d7cfcfcbb4a62db047163/library/std/src/sys/unix/os.rs#L584C30-L584C30
+        // it appears they allow names starting with =, but do not turn malformed lines
+        // into the variable name with an empty value
+        if ElectricVar::for_name(&key).is_none() {
+            // fish_user_paths should not be exported; attempting to re-import it from
+            // a value we previously (due to user error) exported will cause impossibly
+            // difficult to debug PATH problems.
+            if key != "fish_user_paths" {
+                vars.set(&key, EnvMode::EXPORT | EnvMode::GLOBAL, vec![val.clone()]);
+            }
+            inherited_vars.insert(key, val);
+        }
+    }
+
+    INHERITED_VARS
+        .set(inherited_vars)
+        .expect("env_init is being called multiple times");
+    ffi::set_inheriteds_ffi();
+
+    if let Some(paths) = paths {
+        vars.set_one(
+            FISH_DATADIR_VAR,
+            EnvMode::GLOBAL,
+            str2wcstring(paths.data.as_os_str().as_bytes()),
+        );
+        vars.set_one(
+            FISH_SYSCONFDIR_VAR,
+            EnvMode::GLOBAL,
+            str2wcstring(paths.sysconf.as_os_str().as_bytes()),
+        );
+        vars.set_one(
+            FISH_HELPDIR_VAR,
+            EnvMode::GLOBAL,
+            str2wcstring(paths.doc.as_os_str().as_bytes()),
+        );
+        vars.set_one(
+            FISH_BIN_DIR,
+            EnvMode::GLOBAL,
+            str2wcstring(paths.bin.as_os_str().as_bytes()),
+        );
+
+        if default_paths {
+            let mut scstr = paths.data.clone();
+            scstr.push("functions");
+            vars.set_one(
+                L!("fish_function_path"),
+                EnvMode::GLOBAL,
+                str2wcstring(scstr.as_os_str().as_bytes()),
+            );
+        }
+    }
+
+    // Set $USER, $HOME and $EUID
+    // This involves going to passwd and stuff.
+    vars.set_one(
+        L!("EUID"),
+        EnvMode::GLOBAL,
+        unsafe { libc::geteuid() }.to_wstring(),
+    );
+    setup_user(vars);
+
+    let user_config_dir = path_get_config();
+    vars.set_one(
+        FISH_CONFIG_DIR,
+        EnvMode::GLOBAL,
+        user_config_dir.unwrap_or_default(),
+    );
+
+    let user_data_dir = path_get_data();
+    vars.set_one(
+        FISH_USER_DATA_DIR,
+        EnvMode::GLOBAL,
+        user_data_dir.unwrap_or_default(),
+    );
+
+    // Set up a default PATH
+    setup_path();
+
+    // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
+    vars.set_one(L!("IFS"), EnvMode::GLOBAL, "\n \t".into());
+
+    // Ensure this var is present even before an interactive command is run so that if it is used
+    // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
+    // prompt is written.
+    vars.set_one(L!("CMD_DURATION"), EnvMode::UNEXPORT, "0".into());
+
+    // Set up the version variable.
+    let version = str2wcstring(crate::BUILD_VERSION.as_bytes());
+    vars.set_one(L!("version"), EnvMode::GLOBAL, version.clone());
+    vars.set_one(L!("FISH_VERSION"), EnvMode::GLOBAL, version);
+
+    // Set the $fish_pid variable.
+    vars.set_one(
+        L!("fish_pid"),
+        EnvMode::GLOBAL,
+        unsafe { libc::getpid() }.to_wstring(),
+    );
+
+    // Set the $hostname variable
+    let hostname: WString = get_hostname_identifier().unwrap_or("fish".into());
+    vars.set_one(L!("hostname"), EnvMode::GLOBAL, hostname);
+
+    // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore
+    // was not inherited from the environment.
+    if ffi::is_interactive_session() {
+        let nshlvl_str = if let Some(shlvl_var) = std::env::var_os("SHLVL") {
+            // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a
+            // diagnostic?
+            match fish_wcstol(&str2wcstring(shlvl_var.as_os_str().as_bytes())) {
+                Ok(shlvl_i) if shlvl_i >= 0 => (shlvl_i + 1).to_wstring(),
+                _ => L!("1").to_owned(),
+            }
+        } else {
+            L!("1").to_owned()
+        };
+        vars.set_one(L!("SHLVL"), EnvMode::GLOBAL | EnvMode::EXPORT, nshlvl_str);
+    } else {
+        // If we're not interactive, simply pass the value along.
+        if let Some(shlvl_var) = std::env::var_os("SHLVL") {
+            vars.set_one(
+                L!("SHLVL"),
+                EnvMode::GLOBAL | EnvMode::EXPORT,
+                str2wcstring(shlvl_var.as_os_str().as_bytes()),
+            );
+        }
+    }
+
+    // initialize the PWD variable if necessary
+    // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that
+    // if and only if it matches getcwd (#5647). Note we treat PWD as read-only so it was not set in
+    // vars.
+    //
+    // Also reject all paths that don't start with "/", this includes windows paths like "F:\foo".
+    // (see #7636)
+    let incoming_pwd_cstr = std::env::var_os("PWD");
+    let incoming_pwd = incoming_pwd_cstr
+        .map(|s| str2wcstring(s.as_os_str().as_bytes()))
+        .unwrap_or_default();
+    if !incoming_pwd.is_empty()
+        && incoming_pwd.char_at(0) == '/'
+        && paths_are_same_file(&incoming_pwd, L!("."))
+    {
+        vars.set_one(L!("PWD"), EnvMode::EXPORT | EnvMode::GLOBAL, incoming_pwd);
+    } else {
+        vars.set_pwd_from_getcwd();
+    }
+
+    // Initialize termsize variables.
+    // PORTING: 3x deref is weird
+    let termsize = termsize::SHARED_CONTAINER.initialize(&***vars as &dyn Environment);
+    if vars.get_unless_empty(L!("COLUMNS")).is_none() {
+        vars.set_one(L!("COLUMNS"), EnvMode::GLOBAL, termsize.width.to_wstring());
+    }
+    if vars.get_unless_empty(L!("LINES")).is_none() {
+        vars.set_one(L!("LINES"), EnvMode::GLOBAL, termsize.height.to_wstring());
+    }
+
+    // Set fish_bind_mode to "default".
+    // FIXME: this was a constant FISH_BIND_MODE_VAR from input.cpp
+    vars.set_one(L!("fish_bind_mode"), EnvMode::GLOBAL, "default".into());
+
+    // Allow changes to variables to produce events.
+    env_dispatch_init(vars);
+
+    ffi::init_input();
+
+    // Complain about invalid config paths.
+    // HACK: Assume the defaults are correct (in practice this is only --no-config anyway).
+    if !default_paths {
+        path_emit_config_directory_messages(vars);
+    }
+
     if !do_uvars {
         UVAR_SCOPE_IS_GLOBAL.store(true);
     } else {

@@ -36,6 +36,7 @@ include_cpp! {
     #include "history.h"
     #include "io.h"
     #include "input_common.h"
+    #include "input.h"
     #include "parse_constants.h"
     #include "parser.h"
     #include "parse_util.h"
@@ -56,6 +57,9 @@ include_cpp! {
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
     generate!("wperror")
+    generate!("set_inheriteds_ffi")
+
+    generate!("init_input")
 
     generate_pod!("pipes_ffi_t")
     generate!("environment_t")

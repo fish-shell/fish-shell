@@ -178,18 +178,6 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
     return false;
 }
 
-static const wchar_t *name_for_color_idx(uint8_t idx) {
-    constexpr size_t colors_count = sizeof(named_colors) / sizeof(named_colors[0]);
-    if (idx < colors_count) {
-        for (auto &color : named_colors) {
-            if (idx == color.idx) {
-                return color.name;
-            }
-        }
-    }
-    return L"unknown";
-}
-
 rgb_color_t::rgb_color_t(uint8_t t, uint8_t i) : type(t), flags(), data() { data.name_idx = i; }
 
 rgb_color_t rgb_color_t::normal() { return rgb_color_t(type_normal); }
@@ -289,30 +277,4 @@ rgb_color_t::rgb_color_t(const wcstring &str) : type(), flags() { this->parse(st
 
 rgb_color_t::rgb_color_t(const std::string &str) : type(), flags() {
     this->parse(str2wcstring(str));
-}
-
-wcstring rgb_color_t::description() const {
-    switch (type) {
-        case type_none: {
-            return L"none";
-        }
-        case type_named: {
-            return format_string(L"named(%d: %ls)", static_cast<int>(data.name_idx),
-                                 name_for_color_idx(data.name_idx));
-        }
-        case type_rgb: {
-            return format_string(L"rgb(0x%02x%02x%02x)", data.color.rgb[0], data.color.rgb[1],
-                                 data.color.rgb[2]);
-        }
-        case type_reset: {
-            return L"reset";
-        }
-        case type_normal: {
-            return L"normal";
-        }
-        default: {
-            break;
-        }
-    }
-    DIE("unknown color type");
 }

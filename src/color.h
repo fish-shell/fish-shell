@@ -91,9 +91,6 @@ class rgb_color_t {
     /// Returns whether the color is special, that is, not rgb or named.
     bool is_special(void) const { return type != type_named && type != type_rgb; }
 
-    /// Returns a description of the color.
-    wcstring description() const;
-
     /// Returns the name index for the given color. Requires that the color be named or RGB.
     uint8_t to_name_index() const;
 

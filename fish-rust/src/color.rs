@@ -184,22 +184,6 @@ impl RgbColor {
         self.flags.reverse = reverse;
     }
 
-    /// Returns a description of the color.
-    #[widestrs]
-    pub fn description(self) -> WString {
-        match self.typ {
-            Type::None => WString::from_str("none"),
-            Type::Named { idx } => {
-                sprintf!("named(%d, %ls)"L, idx, name_for_color_idx(idx).unwrap())
-            }
-            Type::Rgb(c) => {
-                sprintf!("rgb(0x%02x%02x%02x"L, c.r, c.g, c.b)
-            }
-            Type::Normal => WString::from_str("normal"),
-            Type::Reset => WString::from_str("reset"),
-        }
-    }
-
     /// Returns the name index for the given color. Requires that the color be named or RGB.
     pub fn to_name_index(self) -> u8 {
         // TODO: This should look for the nearest color.
@@ -385,12 +369,6 @@ fn convert_color(color: Color24, colors: &[u32]) -> usize {
         })
         .expect("convert_color() called with empty color list")
         .0
-}
-
-fn name_for_color_idx(target_idx: u8) -> Option<&'static wstr> {
-    NAMED_COLORS
-        .iter()
-        .find_map(|&NamedColor { name, idx, .. }| (idx == target_idx).then_some(name))
 }
 
 fn term16_color_for_rgb(color: Color24) -> u8 {

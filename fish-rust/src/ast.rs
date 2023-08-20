@@ -111,15 +111,14 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
     fn category(&self) -> Category;
 
     /// \return a helpful string description of this node.
-    #[widestrs]
     fn describe(&self) -> WString {
         let mut res = ast_type_to_string(self.typ()).to_owned();
         if let Some(n) = self.as_token() {
             let token_type = n.token_type().to_wstr();
-            res += &sprintf!(" '%ls'"L, token_type)[..];
+            sprintf!(=> &mut res, " '%ls'", token_type);
         } else if let Some(n) = self.as_keyword() {
             let keyword = n.keyword().to_wstr();
-            res += &sprintf!(" '%ls'"L, keyword)[..];
+            sprintf!(=> &mut res, " '%ls'", keyword);
         }
         res
     }
@@ -2323,46 +2322,45 @@ impl Ast {
     pub fn errored(&self) -> bool {
         self.any_error
     }
+
     /// \return a textual representation of the tree.
     /// Pass the original source as \p orig.
-    #[widestrs]
     fn dump(&self, orig: &wstr) -> WString {
         let mut result = WString::new();
 
-        let mut tv = self.walk();
-        while let Some(node) = tv.next() {
+        for node in self.walk() {
             let depth = get_depth(node);
             // dot-| padding
-            result += &wstr::repeat("! "L, depth)[..];
+            result += &str::repeat("! ", depth)[..];
 
             if let Some(n) = node.as_argument() {
-                result += "argument"L;
+                result += "argument";
                 if let Some(argsrc) = n.try_source(orig) {
-                    result += &sprintf!(": '%ls'"L, argsrc)[..];
+                    sprintf!(=> &mut result, ": '%ls'", argsrc);
                 }
             } else if let Some(n) = node.as_keyword() {
-                result += &sprintf!("keyword: %ls"L, n.keyword().to_wstr())[..];
+                sprintf!(=> &mut result, "keyword: %ls", n.keyword().to_wstr());
             } else if let Some(n) = node.as_token() {
                 let desc = match n.token_type() {
                     ParseTokenType::string => {
-                        let mut desc = "string"L.to_owned();
+                        let mut desc = WString::from_str("string");
                         if let Some(strsource) = n.try_source(orig) {
-                            desc += &sprintf!(": '%ls'"L, strsource)[..];
+                            sprintf!(=> &mut desc, ": '%ls'", strsource);
                         }
                         desc
                     }
                     ParseTokenType::redirection => {
-                        let mut desc = "redirection"L.to_owned();
+                        let mut desc = WString::from_str("redirection");
                         if let Some(strsource) = n.try_source(orig) {
-                            desc += &sprintf!(": '%ls'"L, strsource)[..];
+                            sprintf!(=> &mut desc, ": '%ls'", strsource);
                         }
                         desc
                     }
-                    ParseTokenType::end => "<;>"L.to_owned(),
+                    ParseTokenType::end => WString::from_str("<;>"),
                     ParseTokenType::invalid => {
                         // This may occur with errors, e.g. we expected to see a string but saw a
                         // redirection.
-                        "<error>"L.to_owned()
+                        WString::from_str("<error>")
                     }
                     _ => {
                         token_type_user_presentable_description(n.token_type(), ParseKeyword::none)
@@ -2372,7 +2370,7 @@ impl Ast {
             } else {
                 result += &node.describe()[..];
             }
-            result += "\n"L;
+            result += "\n";
         }
         result
     }
@@ -2382,13 +2380,11 @@ impl Ast {
 fn get_depth(node: &dyn Node) -> usize {
     let mut result = 0;
     let mut cursor = node;
-    loop {
-        cursor = match cursor.parent() {
-            Some(parent) => parent,
-            None => return result,
-        };
+    while let Some(parent) = cursor.parent() {
         result += 1;
+        cursor = parent;
     }
+    result
 }
 
 struct SourceRangeVisitor {

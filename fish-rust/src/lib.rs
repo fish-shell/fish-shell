@@ -10,6 +10,11 @@
 #![allow(clippy::ptr_arg)]
 #![allow(clippy::field_reassign_with_default)]
 
+pub const BUILD_VERSION: &str = match option_env!("FISH_BUILD_VERSION") {
+    Some(v) => v,
+    None => git_version::git_version!(args = ["--always", "--dirty=-dirty"], fallback = "unknown"),
+};
+
 #[macro_use]
 mod common;
 

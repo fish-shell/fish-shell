@@ -435,6 +435,14 @@ Unlike other shells, the condition command just ends after the first job, there 
       echo "Yes, 5 is greater than 2"
   end
 
+A more complicated example with a :ref:`command substitution <expand-command-substitution>`::
+
+  if test "$(uname)" = Linux
+      echo I like penguins
+  end
+
+Because ``test`` can be used for many different tests, it is important to quote variables and command substitutions. If the ``$(uname)`` was not quoted, and ``uname`` printed nothing it would run ``test = Linux``, which is an error.
+
 ``if`` can also take ``else if`` clauses with additional conditions and an  :doc:`else <cmds/else>` clause that is executed when everything else was false::
 
   if test "$number" -gt 10
@@ -459,6 +467,13 @@ The :doc:`not <cmds/not>` keyword can be used to invert the status::
   else
       echo "You have fish!"
   end
+
+Other things commonly used in if-conditions:
+
+- :doc:`contains <cmds/contains>` - to see if a list contains a specific element (``if contains -- /usr/bin $PATH``)
+- :doc:`string <cmds/string>` - to e.g. match strings (``if string match -q -- '*-' $arg``)
+- :doc:`path <cmds/path>` - to check if paths of some criteria exist (``if path is -rf -- ~/.config/fish/config.fish``)
+- :doc:`type <cmds/type>` - to see if a command, function or builtin exists (``if type -q git``)
 
 The ``switch`` statement
 ^^^^^^^^^^^^^^^^^^^^^^^^

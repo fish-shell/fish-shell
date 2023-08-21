@@ -446,7 +446,7 @@ Command mode is also known as normal mode.
 
 - :kbd:`i` enters :ref:`insert mode <vi-mode-insert>` at the current cursor position.
 
-- :kbd:`Shift`\ +\ :kbd:`R` enters :ref:`insert mode <vi-mode-insert>` at the beginning of the line.
+- :kbd:`Shift`\ +\ :kbd:`I` enters :ref:`insert mode <vi-mode-insert>` at the beginning of the line.
 
 - :kbd:`v` enters :ref:`visual mode <vi-mode-visual>` at the current cursor position.
 

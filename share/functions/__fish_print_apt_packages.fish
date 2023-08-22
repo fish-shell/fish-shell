@@ -7,7 +7,12 @@ function __fish_print_apt_packages
             return
     end
 
-    type -q -f apt-cache || return 1
+    set -l search_term (commandline -ct | string replace -ar '[\'"\\\\]' '' | string lower)
+
+    if ! test -f /var/lib/dpkg/status
+        return 1
+    end
+
     if not set -q _flag_installed
         # Do not generate the cache as apparently sometimes this is slow.
         # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
@@ -28,11 +33,32 @@ function __fish_print_apt_packages
         # The `head -n 500` causes us to stop once we have 500 lines. We do it after the `sed` because
         # Debian package descriptions can be extremely long and are hard-wrapped: texlive-latex-extra
         # has about 2700 lines on Debian 11.
-        apt-cache --no-generate show '.*'(commandline -ct)'.*' 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\x1a\n/g' | head -n 500 | string join "" | string replace --all --regex \x1a+ \n | uniq
+        apt-cache --no-generate show '.*'(commandline -ct)'.*' 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\x1a/g' | head -n 2500 | string join "" | string replace --all --regex \x1a+ \n | uniq
         return 0
     else
-        set -l packages (dpkg --get-selections | string replace -fr '(\S+)\s+install' "\$1" | string match -e (commandline -ct))
-        apt-cache --no-generate show $packages 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\x1a\n/g' | head -n 500 | string join "" | string replace --all --regex \x1a+ \n | uniq
-        return 0
+        # Do not not use `apt-cache` as it is sometimes inexplicably slow (by multiple orders of magnitude).
+        awk '
+BEGIN {
+  FS=": "
+}
+
+/^Package/ {
+  pkg=$2
+}
+
+/^Status/ {
+  installed=0
+  if ($2 ~ /(^|\s)installed/) {
+    installed=1
+  }
+}
+
+/^Description(-[a-zA-Z]+)?:/ {
+  desc=$2
+  if (installed == 1 && index(pkg, "'$search_term'") > 0) {
+    print pkg "\t" desc
+    installed=0 # Prevent multiple description translations from being printed
+  }
+}' </var/lib/dpkg/status
     end
 end

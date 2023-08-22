@@ -3,6 +3,19 @@ fish 3.7.0 (released ???)
 
 .. ignore: 9439 9440 9442 9452 9469 9480 9482
 
+Notable backwards-incompatible changes
+--------------------------------------
+fish is being (once you are reading this hopefully "has been") ported to rust, which unfortunately involves a few backwards-incompatible changes.
+We have tried to keep these to a minimum, but in some cases it is unavoidable.
+
+- ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
+  Notably, it will now work much more sensibly with very small seeds.
+  The seed was never guaranteed to give the same result across systems,
+  so we do not expect this to have a large impact (:issue:`9593`).
+- ``functions --handlers`` will now list handlers in a different order.
+  Now it is definition order, first to last, where before it was last to first.
+  This was never specifically defined, and we recommend not relying on a specific order (:issue:`9944`).
+
 Notable improvements and fixes
 ------------------------------
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.

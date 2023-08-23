@@ -22,6 +22,9 @@ html {
 
 body {
     background: var(--outer-background);
+}
+
+html, body, input {
     /* Pick a font.
        sans-serif is the Browser default. This is great because the user could change it.
        Unfortunately the defaults are decades old and e.g. on Windows still use Arial in Firefox and Edge,
@@ -437,7 +440,7 @@ code {
     margin-right: 3px;
 }
 
-tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command {
+tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command, button {
     /* Pick a monospace font.
        ui-monospace is the monospace version of system-ui - the system's monospace font.
        Unfortunately it's barely supported anywhere (at time of writing only Safari does!),

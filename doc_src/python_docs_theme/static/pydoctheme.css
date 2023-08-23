@@ -200,10 +200,6 @@ div.footer {
   font-size: 75%;
 }
 
-th, dl.field-list > dt {
-  background-color: #ede;
-}
-
 table.docutils {
   border-collapse: collapse;
 }
@@ -505,7 +501,7 @@ table p, table li {
 }
 
 th {
-    background-color: #eee;
+    background-color: #ddddea;
     padding: 0.3em 0.5em;
 }
 
@@ -669,10 +665,6 @@ div.body .internal.reference:link {
         border: 1px solid #536;
     }
 
-    .footnote, .footnote-reference {
-        background-color: #101020;
-    }
-
     kbd {
         background-color: #111;
         border: 1px solid #444;
@@ -705,7 +697,7 @@ div.body .internal.reference:link {
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
 
-    th, input {
+    th, input, .footnote, .footnote-reference {
         background-color: #112;
     }
 }

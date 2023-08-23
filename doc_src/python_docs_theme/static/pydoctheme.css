@@ -681,9 +681,6 @@ div.body .internal.reference:link {
         background-color: #111;
     }
 
-    dt:target, span.highlighted {
-        background-color: #404060;
-    }
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
 }

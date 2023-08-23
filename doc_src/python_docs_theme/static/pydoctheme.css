@@ -1,13 +1,13 @@
 :root {
     color-scheme: light dark; /* both supported */
-    --link-color: #0072aa;
+    --link-color: #0030B3;
     --visited-link-color: #6363bb;
-    --hover-link-color: #0095C4;
+    --hover-link-color: #00A5F4;
     --text-color: #222;
     --main-background: #EEEEFA;
     --secondary-background: #ddddea;
     --outer-background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
-    --code-background: rgba(20,20,80, .1);
+    --code-background: rgba(255,255,255, .2);
     --code-border: #ac9;
     --sidebar-border-color: #ccc;
     --secondary-link-color: #444;
@@ -46,7 +46,6 @@ body {
   /* These stay, assuming some browsers pick different defaults */
   font-size: 100%;
   background-color: var(--main-background);
-  color: #000;
   margin: 0;
   padding: 0;
 }
@@ -654,12 +653,12 @@ div.body .internal.reference:link {
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --link-color: #2092fa;
+        --link-color: #5fb0fc;
         --text-color: #DDD;
         --main-background: #202028;
         --secondary-background: #112;
         --outer-background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
-        --code-background: rgba(200, 200, 255, .2);
+        --code-background: rgba(20, 20, 25, .2);
         --code-border: #536;
         --sidebar-border-color: #666;
         --secondary-link-color: #DDD;

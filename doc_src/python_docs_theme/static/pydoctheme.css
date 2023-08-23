@@ -504,7 +504,7 @@ table p, table li {
     text-align: left !important;
 }
 
-table.docutils th {
+th {
     background-color: #eee;
     padding: 0.3em 0.5em;
 }
@@ -679,9 +679,6 @@ div.body .internal.reference:link {
         box-shadow: 0.1em 0.1em 0.2em rgba(100,100,100,0.1);
         color: #FFF;
     }
-    table.docutils th {
-        background-color: #222;
-    }
 
     table.docutils td {
         background-color: #111;
@@ -708,8 +705,7 @@ div.body .internal.reference:link {
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
 
-    /* The table background on fishfish Beta r1 */
-    th, dl.field-list > dt {
-        background-color: #121;
+    th {
+        background-color: #112;
     }
 }

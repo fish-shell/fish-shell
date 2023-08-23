@@ -1,5 +1,13 @@
 :root {
-  color-scheme: light dark; /* both supported */
+    color-scheme: light dark; /* both supported */
+    --link-color: #08c;
+    --text-color: #222;
+    --main-background: #EEEEFA;
+    --outer-background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
+    --code-background: rgba(20,20,80, .1);
+    --sidebar-border-color: #ccc;
+    --secondary-link-color: #444;
+    --highlight-background: #FFF;
 }
 
 html {
@@ -8,7 +16,7 @@ html {
 }
 
 body {
-    background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
+    background: var(--outer-background);
     /* Pick a font.
        sans-serif is the Browser default. This is great because the user could change it.
        Unfortunately the defaults are decades old and e.g. on Windows still use Arial in Firefox and Edge,
@@ -29,7 +37,7 @@ body {
 body {
   /* These stay, assuming some browsers pick different defaults */
   font-size: 100%;
-  background-color: #eeeefa;
+  background-color: var(--main-background);
   color: #000;
   margin: 0;
   padding: 0;
@@ -97,7 +105,7 @@ div.sphinxsidebar ul ul, div.sphinxsidebar ul.want-points {
 div.sphinxsidebar ul {
   margin: 10px;
   padding: 0;
-  color: #444444;
+  color: var(--secondary-link-color);
   margin: 10px;
   list-style: none;
 }
@@ -132,7 +140,7 @@ div.sphinxsidebar h3 {
 }
 
 div.sphinxsidebar h4 {
-  color: #444444;
+  color: var(--secondary-link-color);
   font-size: 1.3em;
   font-weight: normal;
   margin: 5px 0 0 0;
@@ -162,7 +170,7 @@ a:hover, div.footer a {
 }
 
 div.related a, div.sphinxsidebar a {
-  color: #444444;
+  color: var(--secondary-link-color);
 }
 
 div.warning {
@@ -212,9 +220,9 @@ th > :first-child, td > :first-child {
 /* End of SPHINX IMPORT */
 
 div#fmain {
-    color: #222;
+    color: var(--text-color);
     padding: 1em 2em;
-    background-color: #EEEEFA;
+    background-color: var(--main-background);
     border-radius: 14px;
     position: relative;
     margin: 1em auto 1em;
@@ -227,7 +235,8 @@ div#fmain {
 div.related {
     margin-bottom: 0;
     padding: 0.5em 0;
-    border-top: 1px solid #ccc;
+    border-top: 1px solid;
+    border-color: var(--sidebar-border-color);
     margin-top: 0;
 }
 
@@ -245,7 +254,8 @@ div.section {
 
 div.related:first-child {
     border-top: 0;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid;
+    border-color: var(--sidebar-border-color);
 }
 
 .inline-search {
@@ -259,7 +269,8 @@ form.inline-search input[type="submit"] {
 }
 
 div.sphinxsidebar {
-    border-right: 1px solid #ccc;
+    border-right: 1px solid;
+    border-color: var(--sidebar-border-color);
     border-radius: 0px;
     line-height: 1em;
     font-size: smaller;
@@ -420,7 +431,7 @@ div.body a:hover {
 
 code {
     /* Make inline-code better visible */
-    background-color: rgba(20,20,80, .1);
+    background-color: var(--code-background);
     padding-left: 5px;
     padding-right: 5px;
     margin-left: 3px;
@@ -516,7 +527,7 @@ div.footer {
 }
 
 .highlight {
-    background: #FFF;
+    background: var(--highlight-background);
 }
 
 #synopsis p {
@@ -639,12 +650,18 @@ div.body .internal.reference:link {
 }
 
 @media (prefers-color-scheme: dark) {
-    body {
-        background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
+    :root {
+        --link-color: #08c;
+        --text-color: #DDD;
+        --main-background: #202028;
+        --outer-background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
+        --code-background: rgba(200, 200, 255, .2);
+        --sidebar-border-color: #666;
+        --secondary-link-color: #DDD;
+        --highlight-background: #000;
     }
+
     div#fmain {
-        color: #DDD;
-        background-color: #202028;
         box-shadow: 0 0 5px 1px #000;
     }
 
@@ -656,28 +673,6 @@ div.body .internal.reference:link {
         background-color: #101020;
     }
 
-    div.sphinxsidebar {
-        border-right: 1px solid #666;
-    }
-
-    div.related:first-child {
-        border-bottom: 1px solid #666;
-    }
-
-    div.related {
-        border-top: 1px solid #666;
-    }
-
-    div.sphinxsidebar a, div.footer {
-        color: #DDD;
-    }
-
-    div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3, div.footer a {
-        color: #DDD;
-    }
-    .highlight {
-        background: #000;
-    }
     kbd {
         background-color: #111;
         border: 1px solid #444;
@@ -716,9 +711,5 @@ div.body .internal.reference:link {
     /* The table background on fishfish Beta r1 */
     th, dl.field-list > dt {
         background-color: #121;
-    }
-
-    code {
-        background-color: rgba(200, 200, 255, .2);
     }
 }

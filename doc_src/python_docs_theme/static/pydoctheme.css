@@ -414,10 +414,6 @@ div.body a:visited {
     color: #6363bb;
 }
 
-div.body a:hover {
-    color: #00B0E4;
-}
-
 div.related a:hover,
 div.footer a:hover,
 div.sphinxsidebar a:hover,

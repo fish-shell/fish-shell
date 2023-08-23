@@ -413,7 +413,7 @@ div.body div.seealso {
     border: 1px solid #dddd66;
 }
 
-div.body a {
+a {
     color: var(--link-color);
 }
 

@@ -639,9 +639,9 @@ If the commandline reads ``cd m``, place the cursor over the ``m`` character and
 Private mode
 -------------
 
-Fish has a private mode, in which command history will not be written to the history file on disk. To enable it, either set ``$fish_private_mode`` to a non-empty value.
+Fish has a private mode, in which command history will not be written to the history file on disk. To enable it, either set ``$fish_private_mode`` to a non-empty value, or launch with ``fish --private`` (or ``fish -P`` for short).
 
-You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
+If you launch fish with ``-P``, it both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
 
 You can query the variable ``fish_private_mode`` (``if test -n "$fish_private_mode" ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 

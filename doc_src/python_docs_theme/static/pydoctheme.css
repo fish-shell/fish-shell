@@ -681,10 +681,6 @@ div.body .internal.reference:link {
         background-color: #111;
     }
 
-    input {
-        color: #DDD;
-    }
-
     dt:target, span.highlighted {
         background-color: #404060;
     }

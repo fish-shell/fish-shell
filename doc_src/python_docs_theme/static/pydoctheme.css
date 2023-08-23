@@ -683,8 +683,8 @@ div.body .internal.reference:link {
     table.docutils td {
         background-color: #111;
     }
+
     input {
-        background-color: #222;
         color: #DDD;
     }
 
@@ -705,7 +705,7 @@ div.body .internal.reference:link {
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
 
-    th {
+    th, input {
         background-color: #112;
     }
 }

@@ -332,7 +332,8 @@ ul li dd {
 
 form.inline-search input,
 div.sphinxsidebar input {
-    border: 1px solid #999999;
+    border: 1px solid;
+    border-color: var(--sidebar-border-color);
     font-size: smaller;
     border-radius: 3px;
 }
@@ -477,7 +478,8 @@ div.body tt.xref, div.body a tt, div.body code.xref, div.body a code {
 }
 
 table.docutils {
-    border: 1px solid #ddd;
+    border: 1px solid;
+    border-color: var(--sidebar-border-color);
     min-width: 20%;
     border-radius: 3px;
     margin-top: 1em;
@@ -488,7 +490,8 @@ table.docutils {
 }
 
 table.docutils td, table.docutils th {
-    border: 1px solid #ddd !important;
+    border: 1px solid;
+    border-color: var(--sidebar-border-color);
     border-radius: 3px;
 }
 
@@ -622,7 +625,8 @@ div.documentwrapper {
 
 kbd {
   background-color: #f9f9f9;
-  border: 1px solid #aaa;
+  border: 1px solid;
+  border-color: var(--sidebar-border-color);
   border-radius: .2em;
   box-shadow: 0.1em 0.1em 0.2em rgba(0,0,0,0.1);
   color: #000;
@@ -679,17 +683,6 @@ div.body .internal.reference:link {
     dt:target, span.highlighted {
         background-color: #404060;
     }
-    table.docutils {
-        border: 1px solid #222;
-    }
-
-    table.docutils td, table.docutils th {
-        border: 1px solid #222 !important;
-    }
-    div.body a {
-        color: #2092fa;
-    }
-
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
 

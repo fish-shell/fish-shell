@@ -630,12 +630,10 @@ div.documentwrapper {
 .prompt { color: #8f7902; }
 
 kbd {
-  background-color: #f9f9f9;
+  background-color: var(--td-background);
   border: 1px solid;
   border-color: var(--sidebar-border-color);
   border-radius: .2em;
-  box-shadow: 0.1em 0.1em 0.2em rgba(0,0,0,0.1);
-  color: #000;
   padding: 0.1em 0.3em;
 }
 
@@ -671,8 +669,6 @@ div.body .internal.reference:link {
     }
 
     kbd {
-        background-color: #111;
-        border: 1px solid #444;
         box-shadow: 0.1em 0.1em 0.2em rgba(100,100,100,0.1);
         color: #FFF;
     }

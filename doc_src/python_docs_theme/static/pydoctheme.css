@@ -243,12 +243,6 @@ div.section {
     width: 100%;
 }
 
-div.related a:hover,
-div.footer a:hover,
-div.sphinxsidebar a:hover {
-    color: #0095C4;
-}
-
 div.related:first-child {
     border-top: 0;
     border-bottom: 1px solid #ccc;
@@ -415,6 +409,13 @@ div.body a:visited {
 
 div.body a:hover {
     color: #00B0E4;
+}
+
+div.related a:hover,
+div.footer a:hover,
+div.sphinxsidebar a:hover,
+div.body a:hover {
+    color: #0095C4;
 }
 
 code {

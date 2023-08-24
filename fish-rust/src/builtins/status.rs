@@ -257,7 +257,11 @@ fn parse_cmd_opts(
                     return STATUS_CMD_ERROR;
                 }
                 let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
-                    streams.err.append(wgettext_fmt!("%ls: Invalid job control mode '%ls'\n", cmd, w.woptarg.unwrap()));
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: Invalid job control mode '%ls'\n",
+                        cmd,
+                        w.woptarg.unwrap()
+                    ));
                     return STATUS_CMD_ERROR;
                 };
                 opts.new_job_control_mode = Some(job_mode);
@@ -397,8 +401,12 @@ pub fn status(
                         ));
                         return STATUS_INVALID_ARGS;
                     }
-                    let Ok(new_mode)= args[0].try_into() else {
-                        streams.err.append(wgettext_fmt!("%ls: Invalid job control mode '%ls'\n", cmd, args[0]));
+                    let Ok(new_mode) = args[0].try_into() else {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: Invalid job control mode '%ls'\n",
+                            cmd,
+                            args[0]
+                        ));
                         return STATUS_CMD_ERROR;
                     };
                     new_mode

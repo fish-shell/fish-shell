@@ -11,10 +11,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: SetupRust
-      uses: ATiltedTree/setup-rust@v1
-      with:
-        rust-version: stable
+    - uses: dtolnay/rust-toolchain@stable
     - name: cargo fmt
       run: cargo fmt --check --all
 
@@ -23,10 +20,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: SetupRust
-      uses: ATiltedTree/setup-rust@v1
-      with:
-        rust-version: stable
+    - uses: dtolnay/rust-toolchain@stable
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux

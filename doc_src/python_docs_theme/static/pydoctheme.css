@@ -1,13 +1,18 @@
 :root {
     color-scheme: light dark; /* both supported */
-    --link-color: #08c;
+    --link-color: #0072aa;
+    --visited-link-color: #6363bb;
+    --hover-link-color: #0095C4;
     --text-color: #222;
     --main-background: #EEEEFA;
+    --secondary-background: #ddddea;
     --outer-background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
     --code-background: rgba(20,20,80, .1);
+    --code-border: #ac9;
     --sidebar-border-color: #ccc;
     --secondary-link-color: #444;
     --highlight-background: #FFF;
+    --td-background: white;
 }
 
 html {
@@ -372,7 +377,8 @@ div.body hr {
 
 div.body pre, code {
     border-radius: 3px;
-    border: 1px solid #ac9;
+    border: 1px solid;
+    border-color: var(--code-border);
 }
 
 div.highlight {
@@ -408,18 +414,18 @@ div.body div.seealso {
 }
 
 div.body a {
-    color: #0072aa;
+    color: var(--link-color);
 }
 
 div.body a:visited {
-    color: #6363bb;
+    color: var(--visited-link-color);
 }
 
 div.related a:hover,
 div.footer a:hover,
 div.sphinxsidebar a:hover,
 div.body a:hover {
-    color: #0095C4;
+    color: var(--hover-link-color);
 }
 
 code {
@@ -500,12 +506,12 @@ table p, table li {
 }
 
 th {
-    background-color: #ddddea;
+    background-color: var(--secondary-background);
     padding: 0.3em 0.5em;
 }
 
 table.docutils td {
-    background-color: white;
+    background-color: var(--td-background);
     padding: 0.3em 0.5em;
 }
 
@@ -641,28 +647,27 @@ div.body .internal.reference:link {
     content: "$";
 }
 .footnote, .footnote-reference {
-    background-color: #ddddea;
+    background-color: var(--secondary-background);
     font-size: 90%;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --link-color: #08c;
+        --link-color: #2092fa;
         --text-color: #DDD;
         --main-background: #202028;
+        --secondary-background: #112;
         --outer-background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
         --code-background: rgba(200, 200, 255, .2);
+        --code-border: #536;
         --sidebar-border-color: #666;
         --secondary-link-color: #DDD;
         --highlight-background: #000;
+        --td-background: #111;
     }
 
     div#fmain {
         box-shadow: 0 0 5px 1px #000;
-    }
-
-    div.body pre, code {
-        border: 1px solid #536;
     }
 
     kbd {
@@ -685,8 +690,4 @@ div.body .internal.reference:link {
     }
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
-
-    th, input, .footnote, .footnote-reference {
-        background-color: #112;
-    }
 }

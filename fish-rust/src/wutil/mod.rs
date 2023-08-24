@@ -169,7 +169,9 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
                 canonicalize(".")
             };
 
-            let Ok(narrow_result) = narrow_res else { return None; };
+            let Ok(narrow_result) = narrow_res else {
+                return None;
+            };
 
             let pathsep_idx = pathsep_idx.map_or(0, |idx| idx + 1);
 

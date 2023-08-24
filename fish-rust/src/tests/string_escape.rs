@@ -151,7 +151,8 @@ fn test_escape_no_printables() {
         &random_string,
         EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
     );
-    let Some(unescaped_string) = unescape_string(&escaped_string, UnescapeStringStyle::default()) else {
+    let Some(unescaped_string) = unescape_string(&escaped_string, UnescapeStringStyle::default())
+    else {
         panic!("Failed to unescape string <{escaped_string}>");
     };
 

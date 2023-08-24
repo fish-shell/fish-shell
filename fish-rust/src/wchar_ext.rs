@@ -74,7 +74,9 @@ fn test_to_wstring() {
     let mut val: i64 = 1;
     loop {
         assert_eq!(val.to_wstring(), val.to_string());
-        let Some(next) = val.checked_mul(-3) else { break; };
+        let Some(next) = val.checked_mul(-3) else {
+            break;
+        };
         val = next;
     }
     assert_eq!(u64::MAX.to_wstring(), "18446744073709551615");

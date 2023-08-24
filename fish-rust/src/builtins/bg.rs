@@ -73,9 +73,9 @@ pub fn bg(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
 
         let Some(job_pos) = job_pos else {
             streams
-                    .err
-                    .append(wgettext_fmt!("%ls: There are no suitable jobs\n", cmd));
-                return STATUS_CMD_ERROR;
+                .err
+                .append(wgettext_fmt!("%ls: There are no suitable jobs\n", cmd));
+            return STATUS_CMD_ERROR;
         };
 
         return send_to_bg(parser, streams, cmd, job_pos);

@@ -107,7 +107,11 @@ fn parse_cmd_opts(
             }
             's' => {
                 let Some(signal) = Signal::parse(w.woptarg.unwrap()) else {
-                    streams.err.append(wgettext_fmt!("%ls: Unknown signal '%ls'", cmd, w.woptarg.unwrap()));
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: Unknown signal '%ls'",
+                        cmd,
+                        w.woptarg.unwrap()
+                    ));
                     return STATUS_INVALID_ARGS;
                 };
                 opts.events.push(EventDescription::Signal { signal });

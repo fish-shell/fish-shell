@@ -224,7 +224,9 @@ fn path_is_executable(path: &wstr) -> bool {
         return false;
     }
     let narrow: Vec<u8> = narrow.into();
-    let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else { return false; };
+    let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else {
+        return false;
+    };
     md.is_file()
 }
 
@@ -240,7 +242,9 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
         return paths;
     }
 
-    let Some(path_var) = vars.get(L!("PATH")) else { return paths; };
+    let Some(path_var) = vars.get(L!("PATH")) else {
+        return paths;
+    };
     for path in path_var.as_list() {
         if path.is_empty() {
             continue;

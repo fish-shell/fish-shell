@@ -161,30 +161,20 @@ where
     }
     // We build a string to pass to the system wcstod, pruned of underscores. We will take all
     // leading alphanumeric characters that can appear in a strtod numeric literal, dots (.), and
-    // signs (+/-). In order to be more clever, for example to stop earlier in the case of strings
-    // like "123xxxxx", we would need to do a full parse, because sometimes 'a' is a hex digit and
-    // sometimes it is the end of the parse, sometimes a dot '.' is a decimal delimiter and
-    // sometimes it is the end of the valid parse, as in "1_2.3_4.5_6", etc.
+    // signs (+/-).
     //
-    // We also need to check if "+"/"-" are signs in that position,
-    // or otherwise if we get a string like "1+2+3+4+5+6+..10000" we will try to read the entire thing,
-    // and the number parser will then tell us it read up to the next "+".
-    // A user like math would then go on and pass us "2+3+4+5+6+..10000", and then "3+4+5+6+...10000".
-    // We would in effect go quadratic.
+    // We try to quit early if we know it can't be a number,
+    // for instance if "+"/"-" appear where they can't be sign characters.
+    // Otherwise if we get a string like "1+2+3+4+5+6+..10000" we would copy all of it.
+    // In conjunction with math this would go quadratic.
     // This is tricky because "1e+5" and "0xe+5" exist, and in the former it's a sign,
     // in the latter it isn't.
     let mut pruned = vec![];
 
-    // We keep track of the positions *in the pruned string* where there used to be underscores. We
-    // will pass the pruned version of the input string to the system wcstod, which in turn will
-    // tell us how many characters it consumed. Then we will set our own endptr based on (1) the
-    // number of characters consumed from the pruned string, and (2) how many underscores came
-    // before the last consumed character. The alternative to doing it this way (for example, "only
-    // deleting the correct underscores") would require actually parsing the input string, so that
-    // we can know when to stop grabbing characters and dropping underscores, as in "1_2.3_4.5_6".
+    // We keep track of the positions *in the pruned string* where there used to be underscores,
+    // and add them to what the number parser consumes for position tracking.
+    // The alternative to doing it this way would require actually parsing the input string.
     let mut underscores = vec![];
-    // If we wanted to future-proof against a strtod from the future that, say, allows octal
-    // literals using 0o, etc., we could just use iswalnum, instead of iswxdigit and P/p/X/x checks.
 
     let mut sign_allowed = true;
     let mut hex = false;

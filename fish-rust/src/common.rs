@@ -23,7 +23,7 @@ use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, 
 use num_traits::ToPrimitive;
 use once_cell::sync::Lazy;
 use std::env;
-use std::ffi::{CStr, CString, OsString};
+use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
@@ -1770,7 +1770,28 @@ pub fn valid_var_name(s: &wstr) -> bool {
 
 /// Get the absolute path to the fish executable itself
 pub fn get_executable_path(argv0: &str) -> PathBuf {
-    std::env::current_exe().unwrap_or_else(|_| PathBuf::from_str(argv0).unwrap())
+    if let Ok(path) = std::env::current_exe() {
+        if path.exists() {
+            return path;
+        }
+
+        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
+        // then linux adds a " (deleted)" suffix.
+        // If that's not a valid path, let's remove that awkward suffix.
+        let pathstr = path.to_str().unwrap_or("");
+        if !pathstr.ends_with(" (deleted)") {
+            return path;
+        }
+
+        if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
+            if let Some(filename) = filename.to_str() {
+                let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
+                return parent.join(corrected_filename);
+            }
+        }
+        return path;
+    }
+    PathBuf::from_str(argv0).unwrap()
 }
 
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a

@@ -1165,8 +1165,16 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 
         // Similarly for time (#8841).
         if (command == L"time") {
-            errored = append_syntax_error(parse_errors, source_start, source_length,
-                                          TIME_IN_PIPELINE_ERR_MSG);
+            // We only reject it if we have no decoration.
+            // `echo foo | command time something`
+            // is entirely fair and valid.
+            // Other current decorations like "exec"
+            // are already forbidden.
+            const auto &deco = dst.decoration();
+            if (deco == statement_decoration_t::none) {
+                errored = append_syntax_error(parse_errors, source_start, source_length,
+                                              TIME_IN_PIPELINE_ERR_MSG);
+            }
         }
     }
 

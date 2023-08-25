@@ -35,7 +35,7 @@ use std::{
 
 use crate::{
     wchar::prelude::*,
-    wutil::{wcstod::wcstod_underscores, wgettext},
+    wutil::{wcstod::wcstod_underscores, wgettext, Error as wcstodError},
 };
 
 #[derive(Clone, Copy)]
@@ -95,6 +95,7 @@ pub enum ErrorKind {
     UnexpectedToken,
     LogicalOperator,
     DivByZero,
+    NumberTooLarge,
     Unknown,
 }
 
@@ -113,6 +114,7 @@ impl ErrorKind {
                 wgettext!("Logical operations are not supported, use `test` instead")
             }
             ErrorKind::DivByZero => wgettext!("Division by zero"),
+            ErrorKind::NumberTooLarge => wgettext!("Number is too large"),
             ErrorKind::Unknown => wgettext!("Expression is bogus"),
         }
     }
@@ -396,8 +398,21 @@ impl<'s> State<'s> {
         // Try reading a number.
         if matches!(next.first(), Some('0'..='9') | Some('.')) {
             let mut consumed = 0;
-            let num = wcstod_underscores(*next, &mut consumed).unwrap();
-            Some((consumed, Some(Token::Number(num))))
+            match wcstod_underscores(*next, &mut consumed) {
+                Ok(num) => Some((consumed, Some(Token::Number(num)))),
+                Err(wcstodError::InvalidChar) => {
+                    self.set_error(ErrorKind::Unknown, Some((self.pos + consumed, 1)));
+                    return Some((consumed, Some(Token::Error)));
+                },
+                Err(wcstodError::Overflow) => {
+                    self.set_error(ErrorKind::NumberTooLarge, Some((self.pos, consumed)));
+                    return Some((consumed, Some(Token::Error)));
+                },
+                Err(wcstodError::Empty) => {
+                    // We have a matches! above, this can't be?
+                    unreachable!()
+                }
+            }
         } else {
             // Look for a function call.
             // But not when it's an "x" followed by whitespace

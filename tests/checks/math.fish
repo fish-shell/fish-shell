@@ -358,3 +358,17 @@ echo 7 + 6 | math 2 + 2
 # It isn't checked at all.
 echo 7 + 8 | math not an expression
 # CHECK: 15
+
+math (string repeat -n 1000 1) 2>| string shorten -m50 --char=""
+# CHECK: math: Error: Number is too large
+# CHECK: '1111111111111111111111111111111111111111111111111
+# CHECK:  ^
+
+math 0x0_2.0P-0x3
+# CHECKERR: math: Error: Unknown function
+# CHECKERR: '0x0_2.0P-0x3'
+# CHECKERR:            ^^
+math 0x0_2.0P-f
+# CHECKERR: math: Error: Unexpected token
+# CHECKERR: '0x0_2.0P-f'
+# CHECKERR:           ^

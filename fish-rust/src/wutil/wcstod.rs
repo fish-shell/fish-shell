@@ -165,7 +165,16 @@ where
     // like "123xxxxx", we would need to do a full parse, because sometimes 'a' is a hex digit and
     // sometimes it is the end of the parse, sometimes a dot '.' is a decimal delimiter and
     // sometimes it is the end of the valid parse, as in "1_2.3_4.5_6", etc.
+    //
+    // We also need to check if "+"/"-" are signs in that position,
+    // or otherwise if we get a string like "1+2+3+4+5+6+..10000" we will try to read the entire thing,
+    // and the number parser will then tell us it read up to the next "+".
+    // A user like math would then go on and pass us "2+3+4+5+6+..10000", and then "3+4+5+6+...10000".
+    // We would in effect go quadratic.
+    // This is tricky because "1e+5" and "0xe+5" exist, and in the former it's a sign,
+    // in the latter it isn't.
     let mut pruned = vec![];
+
     // We keep track of the positions *in the pruned string* where there used to be underscores. We
     // will pass the pruned version of the input string to the system wcstod, which in turn will
     // tell us how many characters it consumed. Then we will set our own endptr based on (1) the
@@ -176,11 +185,37 @@ where
     let mut underscores = vec![];
     // If we wanted to future-proof against a strtod from the future that, say, allows octal
     // literals using 0o, etc., we could just use iswalnum, instead of iswxdigit and P/p/X/x checks.
-    for c in chars.take_while(|&c| c.is_ascii_hexdigit() || "PpXx._".contains(c) || is_sign(c)) {
+
+    let mut sign_allowed = true;
+    let mut hex = false;
+
+    for c in chars {
         if c == '_' {
             underscores.push(pruned.len());
+        } else if is_sign(c) {
+            // We stop at a +/- if it didn't start the string,
+            // or follow another sign or hex exponent character.
+            // (ignoring underscores)
+            // This is important for the common case of "1+1+2+3+1"
+            if !sign_allowed {
+                break;
+            }
+
+            pruned.push(c);
+        } else if (!hex && "eE".contains(c)) || (hex && "pP".contains(c)) {
+            // This starts an exponent, signs are back on the menu.
+            pruned.push(c);
+            sign_allowed = true;
+        } else if "xX".contains(c) {
+            // We assume where there's an x there's a hex number.
+            // It's *fine* to overread in case we have an error.
+            pruned.push(c);
+            hex = true;
+        } else if c.is_ascii_hexdigit() || c == '.' {
+            pruned.push(c);
+            sign_allowed = false;
         } else {
-            pruned.push(c)
+            break;
         }
     }
 

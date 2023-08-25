@@ -1459,12 +1459,19 @@ fn detect_errors_in_decorated_statement(
 
         // Similarly for time (#8841).
         if command == L!("time") {
-            errored = append_syntax_error!(
-                parse_errors,
-                source_start,
-                source_length,
-                TIME_IN_PIPELINE_ERR_MSG
-            );
+            // We only reject it if we have no decoration.
+            // `echo foo | command time something`
+            // is entirely fair and valid.
+            // Other current decorations like "exec"
+            // are already forbidden.
+            if dst.decoration() == StatementDecoration::none {
+                errored = append_syntax_error!(
+                    parse_errors,
+                    source_start,
+                    source_length,
+                    TIME_IN_PIPELINE_ERR_MSG
+                );
+            }
         }
     }
 

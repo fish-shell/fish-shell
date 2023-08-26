@@ -31,7 +31,7 @@ expect_str("char: \\cG  (or \\a)\r\nbind \\a 'do something'\r\n")
 sleep(0.020)
 # send "\x1B\xE1\x88\xB4"
 send("\x1B\u1234")
-expect_str("char: \\u1234\r\nbind \\e\\u1234 'do something'\r\n")
+expect_str("char: ሴ\r\nbind \\eሴ 'do something'\r\n")
 
 # Is a NULL char echoed correctly?
 sleep(0.020)

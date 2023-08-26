@@ -56,7 +56,7 @@ Example
    > fish_key_reader --verbose
    Press a key:
    # press alt+enter
-              hex:   1B  char: \c[  (or \e)
+              hex:   1B  char: \e
    (  0.027 ms)  hex:    D  char: \cM  (or \r)
    bind \e\r 'do something'
 

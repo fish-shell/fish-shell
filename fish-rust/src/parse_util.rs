@@ -1444,27 +1444,27 @@ fn detect_errors_in_decorated_statement(
     // beginning. We can't disallow them as commands entirely because we need to support 'and
     // --help', etc.
     if pipe_pos == PipelinePosition::subsequent {
-        // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
-        // commands.
-        let command = dst.command.source(buff_src);
-        if [L!("and"), L!("or")].contains(&command) {
-            errored = append_syntax_error!(
-                parse_errors,
-                source_start,
-                source_length,
-                INVALID_PIPELINE_CMD_ERR_MSG,
-                command
-            );
-        }
+        // We only reject it if we have no decoration.
+        // `echo foo | command time something`
+        // is entirely fair and valid.
+        // Other current decorations like "exec"
+        // are already forbidden.
+        if dst.decoration() == StatementDecoration::none {
+            // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
+            // commands.
+            let command = dst.command.source(buff_src);
+            if [L!("and"), L!("or")].contains(&command) {
+                errored = append_syntax_error!(
+                    parse_errors,
+                    source_start,
+                    source_length,
+                    INVALID_PIPELINE_CMD_ERR_MSG,
+                    command
+                );
+            }
 
-        // Similarly for time (#8841).
-        if command == L!("time") {
-            // We only reject it if we have no decoration.
-            // `echo foo | command time something`
-            // is entirely fair and valid.
-            // Other current decorations like "exec"
-            // are already forbidden.
-            if dst.decoration() == StatementDecoration::none {
+            // Similarly for time (#8841).
+            if command == L!("time") {
                 errored = append_syntax_error!(
                     parse_errors,
                     source_start,

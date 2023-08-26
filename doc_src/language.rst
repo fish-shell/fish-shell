@@ -429,12 +429,6 @@ This uses the :doc:`test <cmds/test>` command to see if the file /etc/os-release
 
 Unlike other shells, the condition command just ends after the first job, there is no ``then`` here. Combiners like ``and`` and ``or`` extend the condition.
 
-``if`` is commonly used with the :doc:`test <cmds/test>` command that can check conditions.::
-
-  if test 5 -gt 2
-      echo "Yes, 5 is greater than 2"
-  end
-
 A more complicated example with a :ref:`command substitution <expand-command-substitution>`::
 
   if test "$(uname)" = Linux
@@ -549,7 +543,7 @@ Loops and blocks
 
 Like most programming language, fish also has the familiar :doc:`while <cmds/while>` and :doc:`for <cmds/for>` loops.
 
-``while`` works like a repeated :doc:`if <cmds/if>`::
+``while`` works like a repeated :ref:`if <syntax-if>`::
 
   while true
       echo Still running

@@ -1155,23 +1155,23 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     // beginning. We can't disallow them as commands entirely because we need to support 'and
     // --help', etc.
     if (pipe_pos == pipeline_position_t::subsequent) {
-        // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
-        // commands.
-        const wcstring &command = dst.command.source(buff_src, storage);
-        if (command == L"and" || command == L"or") {
-            errored = append_syntax_error(parse_errors, source_start, source_length,
-                                          INVALID_PIPELINE_CMD_ERR_MSG, command.c_str());
-        }
+        // We only reject it if we have no decoration.
+        // `echo foo | command time something`
+        // is entirely fair and valid.
+        // Other current decorations like "exec"
+        // are already forbidden.
+        const auto &deco = dst.decoration();
+        if (deco == statement_decoration_t::none) {
+            // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
+            // commands.
+            const wcstring &command = dst.command.source(buff_src, storage);
+            if (command == L"and" || command == L"or") {
+                errored = append_syntax_error(parse_errors, source_start, source_length,
+                                              INVALID_PIPELINE_CMD_ERR_MSG, command.c_str());
+            }
 
-        // Similarly for time (#8841).
-        if (command == L"time") {
-            // We only reject it if we have no decoration.
-            // `echo foo | command time something`
-            // is entirely fair and valid.
-            // Other current decorations like "exec"
-            // are already forbidden.
-            const auto &deco = dst.decoration();
-            if (deco == statement_decoration_t::none) {
+            // Similarly for time (#8841).
+            if (command == L"time") {
                 errored = append_syntax_error(parse_errors, source_start, source_length,
                                               TIME_IN_PIPELINE_ERR_MSG);
             }

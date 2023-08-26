@@ -7,12 +7,27 @@ where
     I: Iterator<Item = char> + Clone,
 {
     let mut whitespace_skipped = 0;
+    let mut first_is_digit_or_sep = false;
+    let mut possible_hex = false;
     // Skip leading whitespace.
+    // And while we're here, remember if the first non-whitespace char
+    // could start a hex number or possible overflow
     loop {
         match chars.clone().next() {
             Some(c) if c.is_whitespace() => {
                 whitespace_skipped += 1;
                 chars.next();
+            }
+            Some('+' | '-') => {
+                possible_hex = true;
+                break;
+            }
+            Some(c) if c.is_ascii_digit() || c == decimal_sep => {
+                first_is_digit_or_sep = true;
+                if c == '0' {
+                    possible_hex = true;
+                }
+                break;
             }
             None => {
                 *consumed = 0;
@@ -23,7 +38,7 @@ where
     }
 
     // If it's a hex float, use hexponent.
-    if is_hex_float(chars.clone()) {
+    if possible_hex && is_hex_float(chars.clone()) {
         let mut n = 0;
         let res = hexponent::parse_hex_float(chars, decimal_sep, &mut n);
         if res.is_ok() {
@@ -32,7 +47,7 @@ where
         return res.map_err(hexponent_error);
     }
 
-    let ret = parse_partial_iter(chars.clone().fuse(), decimal_sep);
+    let ret = parse_partial_iter(chars.fuse(), decimal_sep);
     if ret.is_err() {
         *consumed = 0;
         return Err(Error::InvalidChar);
@@ -40,17 +55,9 @@ where
     let (val, n): (f64, usize) = ret.unwrap();
 
     // Fast-float does not return overflow errors; instead it just returns +/- infinity.
-    // Check to see if the first character is a digit or the decimal; if so that indicates overflow.
-    if val.is_infinite() {
-        for c in chars {
-            if c.is_whitespace() {
-                continue;
-            } else if c.is_ascii_digit() || c == decimal_sep {
-                return Err(Error::Overflow);
-            } else {
-                break;
-            }
-        }
+    // Check to see if the first character is a digit or the separator; if so that indicates overflow.
+    if val.is_infinite() && first_is_digit_or_sep {
+        return Err(Error::Overflow);
     }
     *consumed = n + whitespace_skipped;
     Ok(val)

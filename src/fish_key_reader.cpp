@@ -138,7 +138,10 @@ static void ascii_printable_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, boo
 static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
     static wchar_t buf[64];
 
-    if (wc < L' ') {  // ASCII control character
+    if (wc == '\x1b') {
+        // Escape - this is *technically* also \c[
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\e");
+    } else if (wc < L' ') {  // ASCII control character
         ctrl_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
     } else if (wc == L' ') {  // the "space" character
         space_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
@@ -146,6 +149,8 @@ static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
         del_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
     } else if (wc < 0x80) {  // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
+    } else if (std::iswgraph(wc)) {
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"%lc", wc);
     }
 // Conditional handling of BMP Unicode characters depends on the encoding. Assume width of wchar_t
 // corresponds to the encoding, i.e. WCHAR_T_BITS == 16 implies UTF-16 and WCHAR_T_BITS == 32

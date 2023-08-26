@@ -7,7 +7,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include <cwchar>
@@ -1306,15 +1305,6 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_pipel
 
     // We definitely do not want to execute anything if we're told we're --no-execute!
     if (no_exec()) return end_execution_reason_t::ok;
-
-    // Get terminal modes.
-    struct termios tmodes = {};
-    if (parser->is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {
-        // Need real error handling here.
-        wperror(L"tcgetattr");
-        parser->set_last_statuses(statuses_t::just(STATUS_CMD_ERROR));
-        return end_execution_reason_t::error;
-    }
 
     // Increment the eval_level for the duration of this command.
     scoped_push<int> saved_eval_level(&parser->eval_level, parser->eval_level + 1);

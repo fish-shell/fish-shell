@@ -10,8 +10,8 @@ use cxx::CxxWString;
 use libc::{mode_t, ELOOP, S_IXGRP, S_IXOTH, S_IXUSR, X_OK};
 
 use crate::common::{
-    char_offset, format_size, is_windows_subsystem_for_linux, unescape_string, CancelChecker,
-    UnescapeFlags, UnescapeStringStyle, WILDCARD_RESERVED_BASE,
+    char_offset, format_size, is_windows_subsystem_for_linux, unescape_string, UnescapeFlags,
+    UnescapeStringStyle, WILDCARD_RESERVED_BASE,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
@@ -506,7 +506,7 @@ mod expander {
 
     pub struct WildCardExpander<'e> {
         /// A function to call to check cancellation.
-        cancel_checker: &'e CancelChecker,
+        cancel_checker: &'e mut dyn FnMut() -> bool,
         /// The working directory to resolve paths against
         working_directory: &'e wstr,
         /// The set of items we have resolved, used to efficiently avoid duplication.
@@ -533,7 +533,7 @@ mod expander {
         pub fn new(
             working_directory: &'e wstr,
             flags: ExpandFlags,
-            cancel_checker: &'e CancelChecker,
+            cancel_checker: &'e mut dyn FnMut() -> bool,
             resolved_completions: &'e mut CompletionReceiver,
         ) -> Self {
             Self {
@@ -1070,11 +1070,11 @@ mod expander {
 /// executables_only
 /// \param output The list in which to put the output
 ///
-pub fn wildcard_expand_string(
+pub fn wildcard_expand_string<'closure>(
     wc: &wstr,
     working_directory: &wstr,
     flags: ExpandFlags,
-    cancel_checker: &CancelChecker,
+    mut cancel_checker: impl FnMut() -> bool + 'closure,
     output: &mut CompletionReceiver,
 ) -> WildcardResult {
     // Fuzzy matching only if we're doing completions.
@@ -1119,7 +1119,7 @@ pub fn wildcard_expand_string(
         (working_directory, L!(""), wc)
     };
 
-    let mut expander = WildCardExpander::new(prefix, flags, cancel_checker, output);
+    let mut expander = WildCardExpander::new(prefix, flags, &mut cancel_checker, output);
     expander.expand(base_dir, effective_wc, base_dir);
     return expander.status_code();
 }

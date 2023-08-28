@@ -56,6 +56,7 @@ Completions
 - ``blender`` (:issue:`9905`).
 - ``gimp`` (:issue:`9904`).
 - ``horcrux`` (:issue:`9922`).
+- ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

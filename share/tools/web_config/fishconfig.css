@@ -395,7 +395,7 @@ body {
     top: 0px;
 }
 
-.color_picker_background_cells div {
+.color_picker_background_cells label {
     width: 24px;
     height: 24px;
     border-style: solid;

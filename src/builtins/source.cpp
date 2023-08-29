@@ -98,7 +98,7 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, const wchar
     // Construct argv from our null-terminated list.
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
-    wcstring_list_t argv_list;
+    std::vector<wcstring> argv_list;
     const wchar_t *const *remaining_args = argv + optind + (argc == optind ? 0 : 1);
     for (size_t i = 0, len = null_terminated_array_length(remaining_args); i < len; i++) {
         argv_list.push_back(remaining_args[i]);

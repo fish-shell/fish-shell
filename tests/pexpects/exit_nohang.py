@@ -15,6 +15,7 @@ send, sendline, sleep, expect_prompt, expect_re = (
     sp.expect_re,
 )
 
+
 # Helper to print an error and exit.
 def error_and_exit(text):
     keys = sp.colors()

@@ -50,10 +50,12 @@
 #include "common.h"
 #include "complete.h"
 #include "env.h"
+#include "env_dispatch.rs.h"
 #include "event.h"
 #include "exec.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fd_readable_set.rs.h"
 #include "fds.h"
 #include "flog.h"
 #include "function.h"
@@ -64,7 +66,7 @@
 #include "input_common.h"
 #include "io.h"
 #include "iothread.h"
-#include "kill.h"
+#include "kill.rs.h"
 #include "operation_context.h"
 #include "output.h"
 #include "pager.h"
@@ -75,7 +77,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "screen.h"
-#include "signal.h"
+#include "signals.h"
 #include "termsize.h"
 #include "tokenizer.h"
 #include "wcstringutil.h"
@@ -176,19 +178,19 @@ static constexpr long kHighlightTimeoutForExecutionMs = 250;
 /// These are deliberately leaked to avoid shutdown dtor registration.
 static debounce_t &debounce_autosuggestions() {
     const long kAutosuggestTimeoutMs = 500;
-    static auto res = new debounce_t(kAutosuggestTimeoutMs);
+    static auto res = new_debounce_t(kAutosuggestTimeoutMs);
     return *res;
 }
 
 static debounce_t &debounce_highlighting() {
     const long kHighlightTimeoutMs = 500;
-    static auto res = new debounce_t(kHighlightTimeoutMs);
+    static auto res = new_debounce_t(kHighlightTimeoutMs);
     return *res;
 }
 
 static debounce_t &debounce_history_pager() {
     const long kHistoryPagerTimeoutMs = 500;
-    static auto res = new debounce_t(kHistoryPagerTimeoutMs);
+    static auto res = new_debounce_t(kHistoryPagerTimeoutMs);
     return *res;
 }
 
@@ -428,15 +430,22 @@ class reader_history_search_t {
         const wcstring &needle = search_string();
         if (mode_ == line || mode_ == prefix) {
             size_t offset = find(text, needle);
-            assert(offset != wcstring::npos && "Should have found a match in the search result");
-            add_if_new({std::move(text), offset});
+            // FIXME: Previous versions asserted out if this wasn't true.
+            // This could be hit with a needle of "ö" and haystack of "echo Ö"
+            // I'm not sure why - this points to a bug in ifind (probably wrong locale?)
+            // However, because the user experience of having it crash is horrible,
+            // and the worst thing that can otherwise happen here is that a search is unsuccessful,
+            // we just check it instead.
+            if (offset != wcstring::npos) {
+                add_if_new({std::move(text), offset});
+            }
         } else if (mode_ == token) {
-            tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
+            auto tok = new_tokenizer(text.c_str(), TOK_ACCEPT_UNFINISHED);
 
             std::vector<match_t> local_tokens;
-            while (auto token = tok.next()) {
-                if (token->type != token_type_t::string) continue;
-                wcstring text = tok.text_of(*token);
+            while (auto token = tok->next()) {
+                if (token->type_ != token_type_t::string) continue;
+                wcstring text = *tok->text_of(*token);
                 size_t offset = find(text, needle);
                 if (offset != wcstring::npos) {
                     local_tokens.push_back({std::move(text), offset});
@@ -567,7 +576,7 @@ struct autosuggestion_t {
     wcstring search_string{};
 
     // The list of completions which may need loading.
-    wcstring_list_t needs_load{};
+    std::vector<wcstring> needs_load{};
 
     // Whether the autosuggestion should be case insensitive.
     // This is true for file-generated autosuggestions, but not for history.
@@ -719,6 +728,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     reader_history_search_t history_search{};
     /// Whether the in-pager history search is active.
     bool history_pager_active{false};
+    /// The direction of the last successful history pager search.
+    history_search_direction_t history_pager_direction{};
     /// The range in history covered by the history pager's current page.
     size_t history_pager_history_index_start{static_cast<size_t>(-1)};
     size_t history_pager_history_index_end{static_cast<size_t>(-1)};
@@ -782,8 +793,14 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Do what we need to do whenever our command line changes.
     void command_line_changed(const editable_line_t *el);
     void maybe_refilter_pager(const editable_line_t *el);
-    void fill_history_pager(bool new_search, history_search_direction_t direction =
-                                                 history_search_direction_t::backward);
+    enum class history_pager_invocation_t {
+        anew,
+        advance,
+        refresh,
+    };
+    void fill_history_pager(
+        history_pager_invocation_t why,
+        history_search_direction_t direction = history_search_direction_t::backward);
 
     /// Do what we need to do whenever our pager selection changes.
     void pager_selection_changed();
@@ -864,10 +881,10 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// try expanding it as a wildcard, populating \p result with the expanded string.
     expand_result_t::result_t try_expand_wildcard(wcstring wc, size_t pos, wcstring *result);
 
-    void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
+    void move_word(editable_line_t *el, bool move_right, bool erase, move_word_style_t style,
                    bool newv);
 
-    void run_input_command_scripts(const wcstring_list_t &cmds);
+    void run_input_command_scripts(const std::vector<wcstring> &cmds);
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
@@ -897,8 +914,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_t result);
     void update_autosuggestion();
-    void accept_autosuggestion(bool full, bool single = false,
-                               move_word_style_t style = move_word_style_punctuation);
+    void accept_autosuggestion(
+        bool full, bool single = false,
+        move_word_style_t style = move_word_style_t::move_word_style_punctuation);
     void super_highlight_me_plenty();
 
     /// Finish up any outstanding syntax highlighting, before execution.
@@ -922,7 +940,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void delete_char(bool backward = true);
 
     /// Called to update the termsize, including $COLUMNS and $LINES, as necessary.
-    void update_termsize() { (void)termsize_container_t::shared().updating(parser()); }
+    void update_termsize() { termsize_update_ffi(reinterpret_cast<unsigned char *>(&parser())); }
 
     // Import history from older location (config path) if our current history is empty.
     void import_history_if_necessary();
@@ -993,9 +1011,11 @@ static relaxed_atomic_t<exit_state_t> s_exit_state{exit_state_t::none};
 /// This is set from a signal handler.
 static volatile sig_atomic_t s_sighup_received{false};
 
+extern "C" {
 void reader_sighup() {
     // Beware, we may be in a signal handler.
     s_sighup_received = true;
+}
 }
 
 static void redirect_tty_after_sighup() {
@@ -1055,7 +1075,7 @@ static void term_steal() {
         }
     }
 
-    termsize_container_t::shared().invalidate_tty();
+    termsize_invalidate_tty();
 }
 
 bool fish_is_unwinding_for_exit() {
@@ -1205,7 +1225,8 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
 
     // Apply any selection.
     if (data.selection.has_value()) {
-        highlight_spec_t selection_color = {highlight_role_t::normal, highlight_role_t::selection};
+        highlight_spec_t selection_color = {highlight_role_t::selection,
+                                            highlight_role_t::selection};
         auto end = std::min(selection->stop, colors.size());
         for (size_t i = data.selection->start; i < end; i++) {
             colors.at(i) = selection_color;
@@ -1246,8 +1267,10 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
     erase_substring(el, begin_idx, length);
 }
 
+extern "C" {
 // This is called from a signal handler!
 void reader_handle_sigint() { interrupted = SIGINT; }
+}
 
 /// Make sure buffers are large enough to hold the current string length.
 void reader_data_t::command_line_changed(const editable_line_t *el) {
@@ -1257,7 +1280,8 @@ void reader_data_t::command_line_changed(const editable_line_t *el) {
         s_generation.store(1 + read_generation_count(), std::memory_order_relaxed);
     } else if (el == &this->pager.search_field_line) {
         if (history_pager_active) {
-            fill_history_pager(true, history_search_direction_t::backward);
+            fill_history_pager(history_pager_invocation_t::anew,
+                               history_search_direction_t::backward);
             return;
         }
         this->pager.refilter_completions();
@@ -1283,7 +1307,7 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     // We can still push fish further upward in case the first entry is multiline,
     // but that can't really be helped.
     // (subtract 2 for the search line and the prompt)
-    size_t page_size = std::max(termsize_last().height / 2 - 2, 12);
+    size_t page_size = std::max(termsize_last().height / 2 - 2, (rust::isize)12);
 
     completion_list_t completions;
     history_search_t search{history, search_string, history_search_type_t::contains,
@@ -1310,29 +1334,45 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     return {completions, last_index, search.go_to_next_match(direction)};
 }
 
-void reader_data_t::fill_history_pager(bool new_search, history_search_direction_t direction) {
-    assert(!new_search || direction == history_search_direction_t::backward);
-    size_t index;
-    if (new_search) {
-        index = 0;
-    } else if (direction == history_search_direction_t::forward) {
-        index = history_pager_history_index_start;
-    } else {
-        assert(direction == history_search_direction_t::backward);
-        index = history_pager_history_index_end;
+void reader_data_t::fill_history_pager(history_pager_invocation_t why,
+                                       history_search_direction_t direction) {
+    size_t index = -1;
+    maybe_t<size_t> old_pager_index;
+    switch (why) {
+        case history_pager_invocation_t::anew:
+            assert(direction == history_search_direction_t::backward);
+            index = 0;
+            break;
+        case history_pager_invocation_t::advance:
+            if (direction == history_search_direction_t::forward) {
+                index = history_pager_history_index_start;
+            } else {
+                assert(direction == history_search_direction_t::backward);
+                index = history_pager_history_index_end;
+            }
+            break;
+        case history_pager_invocation_t::refresh:
+            // Redo the previous search previous direction.
+            direction = history_pager_direction;
+            index = history_pager_history_index_start;
+            old_pager_index = pager.selected_completion_index();
+            break;
     }
     const wcstring &search_term = pager.search_field_line.text();
     auto shared_this = this->shared_from_this();
-    debounce_history_pager().perform(
-        [=]() { return history_pager_search(shared_this->history, direction, index, search_term); },
+    std::function<history_pager_result_t()> func = [=]() {
+        return history_pager_search(shared_this->history, direction, index, search_term);
+    };
+    std::function<void(const history_pager_result_t &)> completion =
         [=](const history_pager_result_t &result) {
             if (search_term != shared_this->pager.search_field_line.text())
                 return;  // Stale request.
-            if (result.matched_commands.empty() && !new_search) {
+            if (result.matched_commands.empty() && why == history_pager_invocation_t::advance) {
                 // No more matches, keep the existing ones and flash.
                 shared_this->flash();
                 return;
             }
+            history_pager_direction = direction;
             if (direction == history_search_direction_t::forward) {
                 shared_this->history_pager_history_index_start = result.final_index;
                 shared_this->history_pager_history_index_end = index;
@@ -1343,10 +1383,17 @@ void reader_data_t::fill_history_pager(bool new_search, history_search_direction
             shared_this->pager.extra_progress_text =
                 result.have_more_results ? _(L"Search again for more results") : L"";
             shared_this->pager.set_completions(result.matched_commands);
-            shared_this->select_completion_in_direction(selection_motion_t::next, true);
+            if (why == history_pager_invocation_t::refresh) {
+                pager.set_selected_completion_index(*old_pager_index);
+                pager_selection_changed();
+            } else {
+                shared_this->select_completion_in_direction(selection_motion_t::next, true);
+            }
             shared_this->super_highlight_me_plenty();
             shared_this->layout_and_repaint(L"history-pager");
-        });
+        };
+    auto &debouncer = debounce_history_pager();
+    debounce_perform_with_completion(debouncer, std::move(func), std::move(completion));
 }
 
 void reader_data_t::pager_selection_changed() {
@@ -1374,29 +1421,30 @@ void reader_data_t::pager_selection_changed() {
 
 /// Expand an abbreviation replacer, which may mean running its function.
 /// \return the replacement, or none to skip it. This may run fish script!
-maybe_t<abbrs_replacement_t> expand_replacer(source_range_t range, const wcstring &token,
+maybe_t<abbrs_replacement_t> expand_replacer(SourceRange range, const wcstring &token,
                                              const abbrs_replacer_t &repl, parser_t &parser) {
     if (!repl.is_function) {
         // Literal replacement cannot fail.
         FLOGF(abbrs, L"Expanded literal abbreviation <%ls> -> <%ls>", token.c_str(),
-              repl.replacement.c_str());
-        return abbrs_replacement_t::from(range, repl.replacement, repl);
+              (*repl.replacement).c_str());
+        return abbrs_replacement_from(range, *repl.replacement, *repl.set_cursor_marker,
+                                      repl.has_cursor_marker);
     }
 
-    wcstring cmd = escape_string(repl.replacement);
+    wcstring cmd = escape_string(*repl.replacement);
     cmd.push_back(L' ');
     cmd.append(escape_string(token));
 
     scoped_push<bool> not_interactive(&parser.libdata().is_interactive, false);
 
-    wcstring_list_t outputs{};
+    std::vector<wcstring> outputs{};
     int ret = exec_subshell(cmd, parser, outputs, false /* not apply_exit_status */);
     if (ret != STATUS_CMD_OK) {
         return none();
     }
     wcstring result = join_strings(outputs, L'\n');
     FLOGF(abbrs, L"Expanded function abbreviation <%ls> -> <%ls>", token.c_str(), result.c_str());
-    return abbrs_replacement_t::from(range, std::move(result), repl);
+    return abbrs_replacement_from(range, result, *repl.set_cursor_marker, repl.has_cursor_marker);
 }
 
 // Extract all the token ranges in \p str, along with whether they are an undecorated command.
@@ -1411,13 +1459,13 @@ static std::vector<positioned_token_t> extract_tokens(const wcstring &str) {
     parse_tree_flags_t ast_flags = parse_flag_continue_after_error |
                                    parse_flag_accept_incomplete_tokens |
                                    parse_flag_leave_unterminated;
-    auto ast = ast::ast_t::parse(str, ast_flags);
+    auto ast = ast_parse(str, ast_flags);
 
     // Helper to check if a node is the command portion of an undecorated statement.
-    auto is_command = [&](const node_t *node) {
-        for (const node_t *cursor = node; cursor; cursor = cursor->parent) {
-            if (const auto *stmt = cursor->try_as<decorated_statement_t>()) {
-                if (!stmt->opt_decoration && node == &stmt->command) {
+    auto is_command = [&](const ast::node_t &node) {
+        for (auto cursor = node.ptr(); cursor->has_value(); cursor = cursor->parent()) {
+            if (const auto *stmt = cursor->try_as_decorated_statement()) {
+                if (!stmt->has_opt_decoration() && node.pointer_eq(*stmt->command().ptr())) {
                     return true;
                 }
             }
@@ -1427,10 +1475,11 @@ static std::vector<positioned_token_t> extract_tokens(const wcstring &str) {
 
     wcstring cmdsub_contents;
     std::vector<positioned_token_t> result;
-    traversal_t tv = ast.walk();
-    while (const node_t *node = tv.next()) {
+    for (auto tv = new_ast_traversal(*ast->top());;) {
+        auto node = tv->next();
+        if (!node->has_value()) break;
         // We are only interested in leaf nodes with source.
-        if (node->category != category_t::leaf) continue;
+        if (node->category() != category_t::leaf) continue;
         source_range_t r = node->source_range();
         if (r.length == 0) continue;
 
@@ -1453,7 +1502,7 @@ static std::vector<positioned_token_t> extract_tokens(const wcstring &str) {
 
         if (!has_cmd_subs) {
             // Common case of no command substitutions in this leaf node.
-            result.push_back(positioned_token_t{r, is_command(node)});
+            result.push_back(positioned_token_t{r, is_command(*node)});
         }
     }
     return result;
@@ -1499,8 +1548,12 @@ bool reader_data_t::expand_abbreviation_at_cursor(size_t cursor_backtrack) {
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
         if (auto replacement =
                 reader_expand_abbreviation_at_cursor(el->text(), cursor_pos, this->parser())) {
-            push_edit(el, edit_t{replacement->range, std::move(replacement->text)});
-            update_buff_pos(el, replacement->cursor);
+            push_edit(el, edit_t{replacement->range, *replacement->text});
+            if (replacement->has_cursor) {
+                update_buff_pos(el, replacement->cursor);
+            } else {
+                update_buff_pos(el, none());
+            }
             result = true;
         }
     }
@@ -1532,7 +1585,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
         }
     }
 
-    wcstring_list_t lst;
+    std::vector<wcstring> lst;
     (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
     if (!lst.empty()) {
         wcstring title_line = L"\x1B]0;";
@@ -1544,7 +1597,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
         ignore_result(write_loop(STDOUT_FILENO, narrow.data(), narrow.size()));
     }
 
-    outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
+    stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
         ignore_result(write(STDOUT_FILENO, "\r", 1));
@@ -1554,7 +1607,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
 void reader_data_t::exec_mode_prompt() {
     mode_prompt_buff.clear();
     if (function_exists(MODE_PROMPT_FUNCTION_NAME, parser())) {
-        wcstring_list_t mode_indicator_list;
+        std::vector<wcstring> mode_indicator_list;
         exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list, false);
         // We do not support multiple lines in the mode indicator, so just concatenate all of
         // them.
@@ -1585,7 +1638,7 @@ void reader_data_t::exec_prompt() {
 
         if (!conf.left_prompt_cmd.empty()) {
             // Status is ignored.
-            wcstring_list_t prompt_list;
+            std::vector<wcstring> prompt_list;
             // Historic compatibility hack.
             // If the left prompt function is deleted, then use a default prompt instead of
             // producing an error.
@@ -1599,7 +1652,7 @@ void reader_data_t::exec_prompt() {
         if (!conf.right_prompt_cmd.empty()) {
             if (function_exists(conf.right_prompt_cmd, parser())) {
                 // Status is ignored.
-                wcstring_list_t prompt_list;
+                std::vector<wcstring> prompt_list;
                 exec_subshell(conf.right_prompt_cmd, parser(), prompt_list, false);
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 for (const auto &i : prompt_list) {
@@ -2003,7 +2056,7 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
 
         // Try normal completions.
         completion_request_options_t complete_flags = completion_request_options_t::autosuggest();
-        wcstring_list_t needs_load;
+        std::vector<wcstring> needs_load;
         completion_list_t completions = complete(search_string, complete_flags, ctx, &needs_load);
 
         autosuggestion_t result{};
@@ -2091,11 +2144,14 @@ void reader_data_t::update_autosuggestion() {
     // Clear the autosuggestion and kick it off in the background.
     FLOG(reader_render, L"Autosuggesting");
     autosuggestion.clear();
-    auto performer = get_autosuggestion_performer(parser(), el.text(), el.position(), history);
+    std::function<autosuggestion_t()> performer =
+        get_autosuggestion_performer(parser(), el.text(), el.position(), history);
     auto shared_this = this->shared_from_this();
-    debounce_autosuggestions().perform(performer, [shared_this](autosuggestion_t result) {
+    std::function<void(autosuggestion_t)> completion = [shared_this](autosuggestion_t result) {
         shared_this->autosuggest_completed(std::move(result));
-    });
+    };
+    debounce_perform_with_completion(debounce_autosuggestions(), std::move(performer),
+                                     std::move(completion));
 }
 
 // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
@@ -2114,11 +2170,11 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
                               autosuggestion.text.substr(command_line.size(), 1));
         } else {
             // Accept characters according to the specified style.
-            move_word_state_machine_t state(style);
+            auto state = new_move_word_state_machine(style);
             size_t want;
             for (want = command_line.size(); want < autosuggestion.text.size(); want++) {
                 wchar_t wc = autosuggestion.text.at(want);
-                if (!state.consume_char(wc)) break;
+                if (!state->consume_char(wc)) break;
             }
             size_t have = command_line.size();
             replace_substring(&command_line, command_line.size(), 0,
@@ -2573,7 +2629,7 @@ static void reader_interactive_init(parser_t &parser) {
         }
     }
 
-    termsize_container_t::shared().invalidate_tty();
+    termsize_invalidate_tty();
 
     // Provide value for `status current-command`
     parser.libdata().status_vars.command = L"fish";
@@ -2583,7 +2639,7 @@ static void reader_interactive_init(parser_t &parser) {
 
 /// Destroy data for interactive use.
 static void reader_interactive_destroy() {
-    outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
+    stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
 }
 
 /// Set the specified string as the current buffer.
@@ -2647,13 +2703,13 @@ enum move_word_dir_t { MOVE_DIR_LEFT, MOVE_DIR_RIGHT };
 /// \param erase Whether to erase the characters along the way or only move past them.
 /// \param newv if the new kill item should be appended to the previous kill item or not.
 void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
-                              enum move_word_style_t style, bool newv) {
+                              move_word_style_t style, bool newv) {
     // Return if we are already at the edge.
     const size_t boundary = move_right ? el->size() : 0;
     if (el->position() == boundary) return;
 
     // When moving left, a value of 1 means the character at index 0.
-    move_word_state_machine_t state(style);
+    auto state = new_move_word_state_machine(style);
     const wchar_t *const command_line = el->text().c_str();
     const size_t start_buff_pos = el->position();
 
@@ -2661,7 +2717,7 @@ void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
     while (buff_pos != boundary) {
         size_t idx = (move_right ? buff_pos : buff_pos - 1);
         wchar_t c = command_line[idx];
-        if (!state.consume_char(c)) break;
+        if (!state->consume_char(c)) break;
         buff_pos = (move_right ? buff_pos + 1 : buff_pos - 1);
     }
 
@@ -2709,7 +2765,7 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
 /// Run the specified command with the correct terminal modes, and while taking care to perform job
 /// notification, set the title, etc.
 static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
-    wcstring ft = tok_command(cmd);
+    wcstring ft = *tok_command(cmd);
 
     // Provide values for `status current-command` and `status current-commandline`
     if (!ft.empty()) {
@@ -2719,7 +2775,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
         parser.vars().set_one(L"_", ENV_GLOBAL, ft);
     }
 
-    outputter_t &outp = outputter_t::stdoutput();
+    outputter_t &outp = stdoutput();
     reader_write_title(cmd, parser);
     outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
     term_donate();
@@ -2754,13 +2810,13 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
 }
 
 static parser_test_error_bits_t reader_shell_test(const parser_t &parser, const wcstring &bstr) {
-    parse_error_list_t errors;
+    auto errors = new_parse_error_list();
     parser_test_error_bits_t res =
-        parse_util_detect_errors(bstr, &errors, true /* do accept incomplete */);
+        parse_util_detect_errors(bstr, &*errors, true /* do accept incomplete */);
 
     if (res & PARSER_TEST_ERROR) {
         wcstring error_desc;
-        parser.get_backtrace(bstr, errors, error_desc);
+        parser.get_backtrace(bstr, *errors, error_desc);
 
         // Ensure we end with a newline. Also add an initial newline, because it's likely the user
         // just hit enter and so there's junk on the current line.
@@ -2811,11 +2867,14 @@ void reader_data_t::super_highlight_me_plenty() {
     in_flight_highlight_request = el->text();
 
     FLOG(reader_render, L"Highlighting");
-    auto highlight_performer = get_highlight_performer(parser(), *el, true /* io_ok */);
+    std::function<highlight_result_t()> highlight_performer =
+        get_highlight_performer(parser(), *el, true /* io_ok */);
     auto shared_this = this->shared_from_this();
-    debounce_highlighting().perform(highlight_performer, [shared_this](highlight_result_t result) {
+    std::function<void(highlight_result_t)> completion = [shared_this](highlight_result_t result) {
         shared_this->highlight_complete(std::move(result));
-    });
+    };
+    debounce_perform_with_completion(debounce_highlighting(), std::move(highlight_performer),
+                                     std::move(completion));
 }
 
 void reader_data_t::finish_highlighting_before_exec() {
@@ -2892,6 +2951,10 @@ void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode)
     }
 }
 
+void reader_change_cursor_selection_mode(uint8_t selection_mode) {
+    reader_change_cursor_selection_mode((cursor_selection_mode_t)selection_mode);
+}
+
 static bool check_autosuggestion_enabled(const env_stack_t &vars) {
     if (auto val = vars.get(L"fish_autosuggestion_enabled")) {
         return val->as_string() != L"0";
@@ -2904,6 +2967,18 @@ void reader_set_autosuggestion_enabled(const env_stack_t &vars) {
     reader_data_t *data = current_data_or_null();
     if (data) {
         bool enable = check_autosuggestion_enabled(vars);
+        if (data->conf.autosuggest_ok != enable) {
+            data->conf.autosuggest_ok = enable;
+            data->force_exec_prompt_and_repaint = true;
+            data->inputter.queue_char(readline_cmd_t::repaint);
+        }
+    }
+}
+
+void reader_set_autosuggestion_enabled_ffi(bool enable) {
+    // We don't need to _change_ if we're not initialized yet.
+    reader_data_t *data = current_data_or_null();
+    if (data) {
         if (data->conf.autosuggest_ok != enable) {
             data->conf.autosuggest_ok = enable;
             data->force_exec_prompt_and_repaint = true;
@@ -3302,10 +3377,10 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos) {
 
 /// Returns true if the last token is a comment.
 static bool text_ends_in_comment(const wcstring &text) {
-    tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
+    auto tok = new_tokenizer(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
     bool is_comment = false;
-    while (auto token = tok.next()) {
-        is_comment = token->type == token_type_t::comment;
+    while (auto token = tok->next()) {
+        is_comment = token->type_ == token_type_t::comment;
     }
     return is_comment;
 }
@@ -3318,7 +3393,7 @@ static bool event_is_normal_char(const char_event_t &evt) {
 }
 
 /// Run a sequence of commands from an input binding.
-void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
+void reader_data_t::run_input_command_scripts(const std::vector<wcstring> &cmds) {
     auto last_statuses = parser().get_last_statuses();
     for (const wcstring &cmd : cmds) {
         update_commandline_state();
@@ -3339,7 +3414,7 @@ void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
     if (res < 0) {
         wperror(L"tcsetattr");
     }
-    termsize_container_t::shared().invalidate_tty();
+    termsize_invalidate_tty();
 }
 
 /// Read normal characters, inserting them into the command line.
@@ -3350,7 +3425,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     size_t limit = std::min(rls.nchars - command_line.size(), READAHEAD_MAX);
 
     using command_handler_t = inputter_t::command_handler_t;
-    command_handler_t normal_handler = [this](const wcstring_list_t &cmds) {
+    command_handler_t normal_handler = [this](const std::vector<wcstring> &cmds) {
         this->run_input_command_scripts(cmds);
     };
     command_handler_t empty_handler = {};
@@ -3362,7 +3437,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
         auto evt = inputter.read_char(allow_commands ? normal_handler : empty_handler);
-        if (!event_is_normal_char(evt) || !fd_readable_set_t::poll_fd_readable(conf.in)) {
+        if (!event_is_normal_char(evt) || !poll_fd_readable(conf.in)) {
             event_needing_handling = std::move(evt);
             break;
         } else if (evt.input_style == char_input_style_t::notfirst && accumulated_chars.empty() &&
@@ -3435,7 +3510,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::cancel_commandline: {
             if (!command_line.empty()) {
-                outputter_t &outp = outputter_t::stdoutput();
+                outputter_t &outp = stdoutput();
                 // Move cursor to the end of the line.
                 update_buff_pos(&command_line, command_line.size());
                 autosuggestion.clear();
@@ -3531,7 +3606,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::pager_toggle_search: {
             if (history_pager_active) {
-                fill_history_pager(false, history_search_direction_t::forward);
+                fill_history_pager(history_pager_invocation_t::advance,
+                                   history_search_direction_t::forward);
                 break;
             }
             if (!pager.empty()) {
@@ -3626,7 +3702,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::yank: {
-            wcstring yank_str = kill_yank();
+            wcstring yank_str = std::move(*kill_yank());
             insert_string(active_edit_line(), yank_str);
             rls.yank_len = yank_str.size();
             break;
@@ -3634,7 +3710,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::yank_pop: {
             if (rls.yank_len) {
                 editable_line_t *el = active_edit_line();
-                wcstring yank_str = kill_yank_rotate();
+                wcstring yank_str = std::move(*kill_yank_rotate());
                 size_t new_yank_len = yank_str.size();
                 replace_substring(el, el->position() - rls.yank_len, rls.yank_len,
                                   std::move(yank_str));
@@ -3745,7 +3821,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::history_pager: {
             if (history_pager_active) {
-                fill_history_pager(false, history_search_direction_t::backward);
+                fill_history_pager(history_pager_invocation_t::advance,
+                                   history_search_direction_t::backward);
                 break;
             }
 
@@ -3761,6 +3838,20 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             pager.set_prefix(MB_CUR_MAX > 1 ? L"► " : L"> ", false /* highlight */);
             // Update the search field, which triggers the actual history search.
             insert_string(&pager.search_field_line, command_line.text());
+            break;
+        }
+        case rl::history_pager_delete: {
+            if (!history_pager_active) {
+                inputter.function_set_status(false);
+                break;
+            }
+            inputter.function_set_status(true);
+            if (auto completion = pager.selected_completion(current_page_rendering)) {
+                history->remove(completion->completion);
+                history->save();
+                fill_history_pager(history_pager_invocation_t::refresh,
+                                   history_search_direction_t::backward);
+            }
             break;
         }
         case rl::backward_char: {
@@ -3798,9 +3889,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword: {
             move_word_style_t style =
-                (c == rl::backward_kill_bigword          ? move_word_style_whitespace
-                 : c == rl::backward_kill_path_component ? move_word_style_path_components
-                                                         : move_word_style_punctuation);
+                (c == rl::backward_kill_bigword ? move_word_style_t::move_word_style_whitespace
+                 : c == rl::backward_kill_path_component
+                     ? move_word_style_t::move_word_style_path_components
+                     : move_word_style_t::move_word_style_punctuation);
             // Is this the same killring item as the last kill?
             bool newv = (rls.last_cmd != rl::backward_kill_word &&
                          rls.last_cmd != rl::backward_kill_path_component &&
@@ -3812,8 +3904,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::kill_bigword: {
             // The "bigword" functions differ only in that they move to the next whitespace, not
             // punctuation.
-            auto move_style =
-                (c == rl::kill_word) ? move_word_style_punctuation : move_word_style_whitespace;
+            auto move_style = (c == rl::kill_word) ? move_word_style_t::move_word_style_punctuation
+                                                   : move_word_style_t::move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_RIGHT, true /* erase */, move_style,
                       rls.last_cmd != c /* same kill item if same movement */);
             break;
@@ -3830,8 +3922,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 break;
             }
 
-            auto move_style = (c != rl::backward_bigword) ? move_word_style_punctuation
-                                                          : move_word_style_whitespace;
+            auto move_style = (c != rl::backward_bigword)
+                                  ? move_word_style_t::move_word_style_punctuation
+                                  : move_word_style_t::move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
                       false);
             break;
@@ -3848,8 +3941,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 break;
             }
 
-            auto move_style = (c != rl::forward_bigword) ? move_word_style_punctuation
-                                                         : move_word_style_whitespace;
+            auto move_style = (c != rl::forward_bigword)
+                                  ? move_word_style_t::move_word_style_punctuation
+                                  : move_word_style_t::move_word_style_whitespace;
             editable_line_t *el = active_edit_line();
             if (el->position() < el->size()) {
                 move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);
@@ -4071,7 +4165,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // We apply the operation from the current location to the end of the word.
             size_t pos = el->position();
             size_t init_pos = pos;
-            move_word(el, MOVE_DIR_RIGHT, false, move_word_style_punctuation, false);
+            move_word(el, MOVE_DIR_RIGHT, false, move_word_style_t::move_word_style_punctuation,
+                      false);
             wcstring replacement;
             for (; pos < el->position(); pos++) {
                 wchar_t chr = el->text().at(pos);
@@ -4234,7 +4329,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::disable_mouse_tracking: {
-            outputter_t &outp = outputter_t::stdoutput();
+            outputter_t &outp = stdoutput();
             outp.writestr(L"\x1B[?1000l");
             break;
         }
@@ -4309,6 +4404,13 @@ bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
     // using a backslash, insert a newline.
     // If the user hits return while navigating the pager, it only clears the pager.
     if (is_navigating_pager_contents()) {
+        if (this->history_pager_active &&
+            this->pager.selected_completion_index() == PAGER_SELECTION_NONE) {
+            command_line.push_edit(
+                edit_t{0, command_line.size(), this->pager.search_field_line.text()},
+                /* allow_coalesce */ false);
+            command_line.set_position(this->pager.search_field_line.position());
+        }
         clear_pager();
         return true;
     }
@@ -4573,7 +4675,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             if (errno == EIO) redirect_tty_output();
             wperror(L"tcsetattr");  // return to previous mode
         }
-        outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
+        stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     }
     return rls.finished ? maybe_t<wcstring>{command_line.text()} : none();
 }
@@ -4672,7 +4774,9 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     }
 
     /* FreeBSD allows read() on directories. Error explicitly in that case. */
-    if (buf.st_mode & S_IFDIR) {
+    // XXX: This can be triggered spuriously, so we'll not do that for stdin.
+    // This can be seen e.g. with node's "spawn" api.
+    if (fd != STDIN_FILENO && buf.st_mode & S_IFDIR) {
         FLOGF(error, _(L"Unable to read input file: %s"), strerror(EISDIR));
         return 1;
     }
@@ -4718,21 +4822,21 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     }
 
     // Parse into an ast and detect errors.
-    parse_error_list_t errors;
-    auto ast = ast::ast_t::parse(str, parse_flag_none, &errors);
-    bool errored = ast.errored();
+    auto errors = new_parse_error_list();
+    auto ast = ast_parse(str, parse_flag_none, &*errors);
+    bool errored = ast->errored();
     if (!errored) {
-        errored = parse_util_detect_errors(ast, str, &errors);
+        errored = parse_util_detect_errors(*ast, str, &*errors);
     }
     if (!errored) {
         // Construct a parsed source ref.
         // Be careful to transfer ownership, this could be a very large string.
-        parsed_source_ref_t ps = std::make_shared<parsed_source_t>(std::move(str), std::move(ast));
-        parser.eval(ps, io);
+        auto ps = new_parsed_source_ref(str, *ast);
+        parser.eval_parsed_source(*ps, io);
         return 0;
     } else {
         wcstring sb;
-        parser.get_backtrace(str, errors, sb);
+        parser.get_backtrace(str, *errors, sb);
         std::fwprintf(stderr, L"%ls", sb.c_str());
         return 1;
     }

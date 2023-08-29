@@ -91,9 +91,6 @@ class rgb_color_t {
     /// Returns whether the color is special, that is, not rgb or named.
     bool is_special(void) const { return type != type_named && type != type_rgb; }
 
-    /// Returns a description of the color.
-    wcstring description() const;
-
     /// Returns the name index for the given color. Requires that the color be named or RGB.
     uint8_t to_name_index() const;
 
@@ -167,7 +164,7 @@ class rgb_color_t {
     bool operator!=(const rgb_color_t &other) const { return !(*this == other); }
 
     /// Returns the names of all named colors.
-    static wcstring_list_t named_color_names(void);
+    static std::vector<wcstring> named_color_names(void);
 };
 
 static_assert(sizeof(rgb_color_t) <= 4, "rgb_color_t is too big");

@@ -180,6 +180,8 @@ void set_flog_output_file(FILE *f) {
 
 void log_extra_to_flog_file(const wcstring &s) { g_logger.acquire()->log_extra(s.c_str()); }
 
+int get_flog_file_fd() { return s_flog_file_fd; }
+
 std::vector<const category_t *> get_flog_categories() {
     std::vector<const category_t *> result(s_all_categories.begin(), s_all_categories.end());
     std::sort(result.begin(), result.end(), [](const category_t *a, const category_t *b) {

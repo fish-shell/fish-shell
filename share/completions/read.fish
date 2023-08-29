@@ -7,7 +7,6 @@ complete -c read -s g -l global -d "Make variable scope global"
 complete -c read -s l -l local -d "Make variable scope local"
 complete -c read -s U -l universal -d "Share variable with all the users fish processes on the computer"
 complete -c read -s u -l unexport -d "Do not export variable to subprocess"
-complete -c read -s m -l mode-name -d "Name to load/save history under" -r -a "read fish"
 complete -c read -s c -l command -d "Initial contents of read buffer when reading interactively" -r
 complete -c read -s S -l shell -d "Read like the shell would"
 complete -c read -s s -l silent -d "Mask input with ●"

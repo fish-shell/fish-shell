@@ -12,8 +12,8 @@
 #include <unistd.h>  // IWYU pragma: keep
 #include <wctype.h>
 
-#include <cwchar>
 #include <cstdlib>
+#include <cwchar>
 #if HAVE_GETTEXT
 #include <libintl.h>
 #endif
@@ -57,9 +57,9 @@ int fish_mkstemp_cloexec(char *name_template) {
     return result_fd;
 }
 
-/// Fallback implementations of wcsncasecmp and wcscasecmp. On systems where these are not needed (e.g.
-/// building on Linux) these should end up just being stripped, as they are static functions that
-/// are not referenced in this file.
+/// Fallback implementations of wcsncasecmp and wcscasecmp. On systems where these are not needed
+/// (e.g. building on Linux) these should end up just being stripped, as they are static functions
+/// that are not referenced in this file.
 // cppcheck-suppress unusedFunction
 [[gnu::unused]] static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
@@ -129,16 +129,9 @@ int killpg(int pgr, int sig) {
 }
 #endif
 
-// Width of ambiguous characters. 1 is typical default.
-int g_fish_ambiguous_width = 1;
-
-// Width of emoji characters.
-// 1 is the typical emoji width in Unicode 8.
-int g_fish_emoji_width = 1;
-
 static int fish_get_emoji_width(wchar_t c) {
     (void)c;
-    return g_fish_emoji_width;
+    return FISH_EMOJI_WIDTH;
 }
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is
@@ -179,7 +172,7 @@ int fish_wcwidth(wchar_t wc) {
         case widechar_ambiguous:
         case widechar_private_use:
             // TR11: "All private-use characters are by default classified as Ambiguous".
-            return g_fish_ambiguous_width;
+            return FISH_AMBIGUOUS_WIDTH;
         case widechar_widened_in_9:
             return fish_get_emoji_width(wc);
         default:
@@ -269,16 +262,3 @@ int flock(int fd, int op) {
 }
 
 #endif  // HAVE_FLOCK
-
-#if !defined(HAVE_WCSTOD_L) && !defined(__NetBSD__)
-#undef wcstod_l
-#include <locale.h>
-// For platforms without wcstod_l C extension, wrap wcstod after changing the
-// thread-specific locale.
-double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
-    locale_t prev_locale = uselocale(loc);
-    double ret = std::wcstod(enptr, endptr);
-    uselocale(prev_locale);
-    return ret;
-}
-#endif  // defined(wcstod_l)

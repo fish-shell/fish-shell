@@ -9,15 +9,20 @@ function __fish_complete_directories -d "Complete directory prefixes" --argument
     end
 
     if not set -q comp[1]
-        set comp (commandline -ct)
+        # No token given, so we use the current commandline token.
+        # If we have a --name=val option, we need to remove it,
+        # or the complete -C below would keep it, and then whatever complete
+        # called us would add it again (assuming it's in the current token)
+        set comp (commandline -ct | string replace -r -- '^-[^=]*=' '' $comp)
     end
 
-    # HACK: We call into the file completions by using a non-existent command.
+    # HACK: We call into the file completions by using an empty command
     # If we used e.g. `ls`, we'd run the risk of completing its options or another kind of argument.
     # But since we default to file completions, if something doesn't have another completion...
-    set -l dirs (complete -C"nonexistentcommandooheehoohaahaahdingdongwallawallabingbang $comp" | string match -r '.*/$')
+    # (really this should have an actual complete option)
+    set -l dirs (complete -C"'' $comp" | string match -r '.*/$')
 
     if set -q dirs[1]
-        printf "%s\t$desc\n" $dirs
+        printf "%s\n" $dirs\t"$desc"
     end
 end

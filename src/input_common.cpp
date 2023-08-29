@@ -2,7 +2,7 @@
 #include "config.h"
 
 #include <errno.h>
-#include <pthread.h> // IWYU pragma: keep
+#include <pthread.h>  // IWYU pragma: keep
 #include <signal.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -22,6 +22,7 @@
 #include "env.h"
 #include "env_universal_common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fd_readable_set.rs.h"
 #include "fds.h"
 #include "flog.h"
 #include "input_common.h"
@@ -58,7 +59,8 @@ using readb_result_t = int;
 static readb_result_t readb(int in_fd) {
     assert(in_fd >= 0 && "Invalid in fd");
     universal_notifier_t& notifier = universal_notifier_t::default_notifier();
-    fd_readable_set_t fdset;
+    auto fdset_box = new_fd_readable_set();
+    fd_readable_set_t& fdset = *fdset_box;
     for (;;) {
         fdset.clear();
         fdset.add(in_fd);
@@ -73,7 +75,7 @@ static readb_result_t readb(int in_fd) {
 
         // Get its suggested delay (possibly none).
         // Note a 0 here means do not poll.
-        uint64_t timeout = fd_readable_set_t::kNoTimeout;
+        uint64_t timeout = kNoTimeout;
         if (uint64_t usecs_delay = notifier.usec_delay_between_polls()) {
             timeout = usecs_delay;
         }
@@ -121,8 +123,8 @@ static readb_result_t readb(int in_fd) {
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
 // set.
 void update_wait_on_escape_ms(const environment_t& vars) {
-    auto escape_time_ms = vars.get(L"fish_escape_delay_ms");
-    if (escape_time_ms.missing_or_empty()) {
+    auto escape_time_ms = vars.get_unless_empty(L"fish_escape_delay_ms");
+    if (!escape_time_ms) {
         wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
         return;
     }
@@ -133,6 +135,23 @@ void update_wait_on_escape_ms(const environment_t& vars) {
                       L"ignoring fish_escape_delay_ms: value '%ls' "
                       L"is not an integer or is < 10 or >= 5000 ms\n",
                       escape_time_ms->as_string().c_str());
+    } else {
+        wait_on_escape_ms = static_cast<int>(tmp);
+    }
+}
+
+void update_wait_on_escape_ms_ffi(std::unique_ptr<env_var_t> fish_escape_delay_ms) {
+    if (!fish_escape_delay_ms) {
+        wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
+        return;
+    }
+
+    long tmp = fish_wcstol(fish_escape_delay_ms->as_string().c_str());
+    if (errno || tmp < 10 || tmp >= 5000) {
+        std::fwprintf(stderr,
+                      L"ignoring fish_escape_delay_ms: value '%ls' "
+                      L"is not an integer or is < 10 or >= 5000 ms\n",
+                      fish_escape_delay_ms->as_string().c_str());
     } else {
         wait_on_escape_ms = static_cast<int>(tmp);
     }
@@ -264,6 +283,12 @@ void input_event_queue_t::promote_interruptions_to_front() {
     auto first = std::find_if_not(queue_.begin(), queue_.end(), is_char);
     auto last = std::find_if(first, queue_.end(), is_char);
     std::rotate(queue_.begin(), first, last);
+}
+
+void input_event_queue_t::drop_leading_readline_events() {
+    queue_.erase(queue_.begin(),
+                 std::find_if(queue_.begin(), queue_.end(),
+                              [](const char_event_t& evt) { return !evt.is_readline(); }));
 }
 
 void input_event_queue_t::prepare_to_select() {}

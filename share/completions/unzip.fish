@@ -23,16 +23,20 @@ complete -c unzip -s X -d "restore UID/GID info"
 complete -c unzip -s V -d "retain VMS version numbers"
 complete -c unzip -s K -d "keep setuid/setgid/tacky permissions"
 complete -c unzip -s M -d "pipe through `more` pager"
+# Some distros have -O and -I, some don't.
+# Even "-h" might not be available.
+if unzip -h 2>/dev/null | string match -rq -- -O
+    complete -c unzip -s O -d "specify a character encoding for DOS, Windows and OS/2 archives" -x -a "(__fish_print_encodings)"
+end
+if unzip -h 2>/dev/null | string match -rq -- -I
+    complete -c unzip -s I -d "specify a character encoding for UNIX and other archives" -x -a "(__fish_print_encodings)"
+end
 
 # Debian version of unzip
 if unzip -v 2>/dev/null | string match -eq Debian
 
     # the first non-switch argument should be the zipfile
-    complete -c unzip -n "__fish_is_nth_token 1" -k -xa '(
-        __fish_complete_suffix .zip
-        __fish_complete_suffix .jar
-        __fish_complete_suffix .aar
-    )'
+    complete -c unzip -n "__fish_is_nth_token 1" -k -xa '(__fish_complete_suffix .zip .jar .aar)'
 
     # Files thereafter are either files to include or exclude from the operation
     set -l zipfile
@@ -41,10 +45,6 @@ if unzip -v 2>/dev/null | string match -eq Debian
 else
 
     # all tokens should be zip files
-    complete -c unzip -k -xa '(
-        __fish_complete_suffix .zip
-        __fish_complete_suffix .jar
-        __fish_complete_suffix .aar
-    )'
+    complete -c unzip -k -xa '(__fish_complete_suffix .zip .jar .aar)'
 
 end

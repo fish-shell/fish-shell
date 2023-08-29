@@ -20,11 +20,11 @@
 #include "fds.h"
 #include "flog.h"
 #include "iothread.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "postfork.h"
 #include "proc.h"
 #include "redirection.h"
-#include "signal.h"
+#include "signals.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 #ifndef JOIN_THREADS_BEFORE_FORK
@@ -245,128 +245,6 @@ pid_t execute_fork() {
     FATAL_EXIT();
     return 0;
 }
-
-#if FISH_USE_POSIX_SPAWN
-
-// Given an error code, if it is the first error, record it.
-// \return whether we have any error.
-bool posix_spawner_t::check_fail(int err) {
-    if (error_ == 0) error_ = err;
-    return error_ != 0;
-}
-
-posix_spawner_t::~posix_spawner_t() {
-    if (attr_.has_value()) {
-        posix_spawnattr_destroy(this->attr());
-    }
-    if (actions_.has_value()) {
-        posix_spawn_file_actions_destroy(this->actions());
-    }
-}
-
-posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
-    // Initialize our fields. This may fail.
-    {
-        posix_spawnattr_t attr;
-        if (check_fail(posix_spawnattr_init(&attr))) return;
-        this->attr_ = attr;
-    }
-
-    {
-        posix_spawn_file_actions_t actions;
-        if (check_fail(posix_spawn_file_actions_init(&actions))) return;
-        this->actions_ = actions;
-    }
-
-    // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
-    // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
-    maybe_t<pid_t> desired_pgid = none();
-    {
-        auto pgid = j->group->get_pgid();
-        if (pgid.has_value()) {
-            desired_pgid = *pgid;
-        } else if (j->processes.front()->leads_pgrp) {
-            desired_pgid = 0;
-        }
-    }
-
-    // Set the handling for job control signals back to the default.
-    bool reset_signal_handlers = true;
-
-    // Remove all signal blocks.
-    bool reset_sigmask = true;
-
-    // Set our flags.
-    short flags = 0;
-    if (reset_signal_handlers) flags |= POSIX_SPAWN_SETSIGDEF;
-    if (reset_sigmask) flags |= POSIX_SPAWN_SETSIGMASK;
-    if (desired_pgid.has_value()) flags |= POSIX_SPAWN_SETPGROUP;
-
-    if (check_fail(posix_spawnattr_setflags(attr(), flags))) return;
-
-    if (desired_pgid.has_value()) {
-        if (check_fail(posix_spawnattr_setpgroup(attr(), *desired_pgid))) return;
-    }
-
-    // Everybody gets default handlers.
-    if (reset_signal_handlers) {
-        sigset_t sigdefault;
-        get_signals_with_handlers(&sigdefault);
-        if (check_fail(posix_spawnattr_setsigdefault(attr(), &sigdefault))) return;
-    }
-
-    // No signals blocked.
-    if (reset_sigmask) {
-        sigset_t sigmask;
-        sigemptyset(&sigmask);
-        blocked_signals_for_job(*j, &sigmask);
-        if (check_fail(posix_spawnattr_setsigmask(attr(), &sigmask))) return;
-    }
-
-    // Apply our dup2s.
-    for (const auto &act : dup2s.get_actions()) {
-        if (act.target < 0) {
-            if (check_fail(posix_spawn_file_actions_addclose(actions(), act.src))) return;
-        } else {
-            if (check_fail(posix_spawn_file_actions_adddup2(actions(), act.src, act.target)))
-                return;
-        }
-    }
-}
-
-maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char *const envp[]) {
-    if (get_error()) return none();
-    pid_t pid = -1;
-    if (check_fail(posix_spawn(&pid, cmd, &*actions_, &*attr_, argv, envp))) {
-        // The shebang wasn't introduced until UNIX Seventh Edition, so if
-        // the kernel won't run the binary we hand it off to the interpreter
-        // after performing a binary safety check, recommended by POSIX: a
-        // line needs to exist before the first \0 with a lowercase letter
-        if (error_ == ENOEXEC && is_thompson_shell_script(cmd)) {
-            error_ = 0;
-            // Create a new argv with /bin/sh prepended.
-            std::vector<char *> argv2;
-            char interp[] = _PATH_BSHELL;
-            argv2.push_back(interp);
-            // The command to call should use the full path,
-            // not what we would pass as argv0.
-            std::string cmd2 = cmd;
-            argv2.push_back(&cmd2[0]);
-            for (size_t i = 1; argv[i] != nullptr; i++) {
-                argv2.push_back(argv[i]);
-            }
-            argv2.push_back(nullptr);
-            if (check_fail(posix_spawn(&pid, interp, &*actions_, &*attr_, &argv2[0], envp))) {
-                return none();
-            }
-        } else {
-            return none();
-        }
-    }
-    return pid;
-}
-
-#endif  // FISH_USE_POSIX_SPAWN
 
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv) {

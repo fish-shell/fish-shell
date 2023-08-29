@@ -106,7 +106,7 @@ The following code stores the value 'hello' in the shell variable :envvar:`foo`.
 
     echo hello|read foo
 
-While this is a neat way to handle command output line-by-line::
+The :doc:`while <while>` command is a neat way to handle command output line-by-line::
 
     printf '%s\n' line1 line2 line3 line4 | while read -l foo
                       echo "This is another line: $foo"

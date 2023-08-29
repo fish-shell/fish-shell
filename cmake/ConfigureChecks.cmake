@@ -1,8 +1,6 @@
 # The following defines affect the environment configuration tests are run in:
 # CMAKE_REQUIRED_DEFINITIONS, CMAKE_REQUIRED_FLAGS, CMAKE_REQUIRED_LIBRARIES,
 # and CMAKE_REQUIRED_INCLUDES
-# `wcstod_l` is a GNU-extension, sometimes hidden behind GNU-related defines.
-# This is the case for at least Cygwin and Newlib.
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
 include(CheckCXXCompilerFlag)
 include(CMakePushCheckState)
@@ -79,6 +77,12 @@ list(APPEND CMAKE_REQUIRED_INCLUDES ${CURSES_INCLUDE_DIRS})
 find_library(CURSES_TINFO tinfo)
 if (CURSES_TINFO)
     set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
+else()
+    # on NetBSD, libtinfo has a longer name (libterminfo)
+    find_library(CURSES_TINFO terminfo)
+    if (CURSES_TINFO)
+        set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
+    endif()
 endif()
 
 # Get threads.
@@ -161,16 +165,7 @@ if(NOT HAVE_WCSNCASECMP)
     check_cxx_symbol_exists(std::wcsncasecmp wchar.h HAVE_STD__WCSNCASECMP)
 endif()
 
-# `xlocale.h` is required to find `wcstod_l` in `wchar.h` under FreeBSD,
-# but it's not present under Linux.
 check_include_files("xlocale.h" HAVE_XLOCALE_H)
-if(HAVE_XLOCALE_H)
-    list(APPEND WCSTOD_L_INCLUDES "xlocale.h")
-endif()
-list(APPEND WCSTOD_L_INCLUDES "wchar.h")
-check_cxx_symbol_exists(wcstod_l "${WCSTOD_L_INCLUDES}" HAVE_WCSTOD_L)
-
-check_cxx_symbol_exists(uselocale "locale.h;xlocale.h" HAVE_USELOCALE)
 
 cmake_push_check_state()
 check_struct_has_member("struct winsize" ws_row "termios.h;sys/ioctl.h" _HAVE_WINSIZE)

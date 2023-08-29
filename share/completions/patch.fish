@@ -17,7 +17,7 @@ complete -c patch -s f -l force -d "Like -t, but ignore bad-Prereq patches, assu
 complete -c patch -s F -l fuzz -x -d "Number of LINES for inexact 'fuzzy' matching" -a "(seq 0 9){\tfuzz lines}"
 complete -c patch -s g -l get -x -d "Get files from RCS etc. if positive; ask if negative" -a '(seq -1 1){\t\n}'
 complete -c patch -l help -f -d "Display help"
-complete -c patch -s i -l input -x -d "Read patch from FILE instead of stdin" -k -a "( __fish_complete_suffix .patch; __fish_complete_suffix .diff)"
+complete -c patch -s i -l input -x -d "Read patch from FILE instead of stdin" -k -a "( __fish_complete_suffix .patch .diff)"
 complete -c patch -s l -l ignore-whitespace -d "Ignore whitespace changes between patch & input"
 complete -c patch -s n -l normal -d "Interpret patch as normal diff"
 complete -c patch -s N -l forward -d "Ignore patches that seem reversed or already applied"

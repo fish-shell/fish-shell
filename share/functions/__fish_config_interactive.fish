@@ -31,6 +31,10 @@ if status is-interactive
 end" >$__fish_config_dir/config.fish
 
         # Regular syntax highlighting colors
+        # NOTE: These should only use named colors
+        # to give us the maximum chance they are
+        # visible in whatever terminal setup.
+        #
         __init_uvar fish_color_normal normal
         __init_uvar fish_color_command blue
         __init_uvar fish_color_param cyan
@@ -41,7 +45,7 @@ end" >$__fish_config_dir/config.fish
         __init_uvar fish_color_operator brcyan
         __init_uvar fish_color_end green
         __init_uvar fish_color_quote yellow
-        __init_uvar fish_color_autosuggestion 555 brblack
+        __init_uvar fish_color_autosuggestion brblack
         __init_uvar fish_color_user brgreen
         __init_uvar fish_color_host normal
         __init_uvar fish_color_host_remote yellow
@@ -57,14 +61,12 @@ end" >$__fish_config_dir/config.fish
         # Background color for selections
         __init_uvar fish_color_selection white --bold --background=brblack
 
-        # XXX fish_color_cancel was added in 2.6, but this was added to post-2.3 initialization
-        # when 2.4 and 2.5 were already released
         __init_uvar fish_color_cancel -r
 
         # Pager colors
         __init_uvar fish_pager_color_prefix normal --bold --underline
         __init_uvar fish_pager_color_completion normal
-        __init_uvar fish_pager_color_description B3A06D yellow -i
+        __init_uvar fish_pager_color_description yellow -i
         __init_uvar fish_pager_color_progress brwhite --background=cyan
         __init_uvar fish_pager_color_selected_background -r
 
@@ -193,8 +195,10 @@ end" >$__fish_config_dir/config.fish
     # the sequences to bind.expect
     if not set -q FISH_UNIT_TESTS_RUNNING
         # Enable bracketed paste before every prompt (see __fish_shared_bindings for the bindings).
-        # Enable bracketed paste when the read builtin is used.
-        function __fish_enable_bracketed_paste --on-event fish_prompt --on-event fish_read
+        # We used to do this for read, but that would break non-interactive use and
+        # compound commandlines like `read; cat`, because
+        # it won't disable it after the read.
+        function __fish_enable_bracketed_paste --on-event fish_prompt
             printf "\e[?2004h"
         end
 
@@ -205,7 +209,9 @@ end" >$__fish_config_dir/config.fish
 
         # Tell the terminal we support BP. Since we are in __f_c_i, the first fish_prompt
         # has already fired.
-        __fish_enable_bracketed_paste
+        # But only if we're interactive, in case we are in `read`
+        status is-interactive
+        and __fish_enable_bracketed_paste
     end
 
     # Similarly, enable TMUX's focus reporting when in tmux.
@@ -214,10 +220,14 @@ end" >$__fish_config_dir/config.fish
     # - Any listeners (like the vi-cursor)
     if set -q TMUX
         and not set -q FISH_UNIT_TESTS_RUNNING
-        function __fish_enable_focus --on-event fish_postexec
+        # Allow overriding these - we're called very late,
+        # and so it's otherwise awkward to disable focus reporting again.
+        not functions -q __fish_enable_focus
+        and function __fish_enable_focus --on-event fish_postexec
             echo -n \e\[\?1004h
         end
-        function __fish_disable_focus --on-event fish_preexec
+        not functions -q __fish_disable_focus
+        and function __fish_disable_focus --on-event fish_preexec
             echo -n \e\[\?1004l
         end
         # Note: Don't call this initially because, even though we're in a fish_prompt event,
@@ -257,7 +267,7 @@ end" >$__fish_config_dir/config.fish
     end
 
     # Notify terminals when $PWD changes (issue #906).
-    # VTE based terminals, Terminal.app, iTerm.app (TODO), foot, and kitty support this.
+    # VTE based terminals, Terminal.app, iTerm.app, foot, and kitty support this.
     if not set -q FISH_UNIT_TESTS_RUNNING
         and begin
             string match -q -- 'foot*' $TERM
@@ -265,6 +275,7 @@ end" >$__fish_config_dir/config.fish
             or test 0"$VTE_VERSION" -ge 3405
             or test "$TERM_PROGRAM" = Apple_Terminal && test (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
             or test "$TERM_PROGRAM" = WezTerm
+            or test "$TERM_PROGRAM" = iTerm.app
         end
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution || set -q INSIDE_EMACS

@@ -342,7 +342,7 @@ struct history_impl_t {
 
     // Gets all the history into a list. This is intended for the $history environment variable.
     // This may be long!
-    void get_history(wcstring_list_t &result);
+    void get_history(std::vector<wcstring> &result);
 
     // Let indexes be a list of one-based indexes into the history, matching the interpretation of
     // $history. That is, $history[1] is the most recently executed command. Values less than one
@@ -350,7 +350,7 @@ struct history_impl_t {
     std::unordered_map<long, wcstring> items_at_indexes(const std::vector<long> &idxs);
 
     // Sets the valid file paths for the history item with the given identifier.
-    void set_valid_file_paths(wcstring_list_t &&valid_file_paths, history_identifier_t ident);
+    void set_valid_file_paths(std::vector<wcstring> &&valid_file_paths, history_identifier_t ident);
 
     // Return the specified history at the specified index. 0 is the index of the current
     // commandline. (So the most recent item is at index 1.)
@@ -470,7 +470,7 @@ void history_impl_t::remove(const wcstring &str_to_remove) {
     assert(first_unwritten_new_item_index <= new_items.size());
 }
 
-void history_impl_t::set_valid_file_paths(wcstring_list_t &&valid_file_paths,
+void history_impl_t::set_valid_file_paths(std::vector<wcstring> &&valid_file_paths,
                                           history_identifier_t ident) {
     // 0 identifier is used to mean "not necessary".
     if (ident == 0) {
@@ -486,7 +486,7 @@ void history_impl_t::set_valid_file_paths(wcstring_list_t &&valid_file_paths,
     }
 }
 
-void history_impl_t::get_history(wcstring_list_t &result) {
+void history_impl_t::get_history(std::vector<wcstring> &result) {
     // If we have a pending item, we skip the first encountered (i.e. last) new item.
     bool next_is_pending = this->has_pending_item;
     std::unordered_set<wcstring> seen;
@@ -586,8 +586,8 @@ void history_impl_t::populate_from_file_contents() {
     if (file_contents) {
         size_t cursor = 0;
         maybe_t<size_t> offset;
-        while ((offset =
-                    file_contents->offset_of_next_item(&cursor, boundary_timestamp)).has_value()) {
+        while ((offset = file_contents->offset_of_next_item(&cursor, boundary_timestamp))
+                   .has_value()) {
             // Remember this item.
             old_item_offsets.push_back(*offset);
         }
@@ -791,7 +791,7 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
 // Returns the fd of an opened temporary file, or an invalid fd on failure.
 static autoclose_fd_t create_temporary_file(const wcstring &name_template, wcstring *out_path) {
     for (int attempt = 0; attempt < 10; attempt++) {
-        std::string narrow_str = wcs2string(name_template);
+        std::string narrow_str = wcs2zstring(name_template);
         autoclose_fd_t out_fd{fish_mkstemp_cloexec(&narrow_str[0])};
         if (out_fd.valid()) {
             *out_path = str2wcstring(narrow_str);
@@ -1202,12 +1202,12 @@ static bool should_import_bash_history_line(const wcstring &line) {
     // "<<" here is a proxy for heredocs (and herestrings).
     if (line.find(L"<<") != std::string::npos) return false;
 
-    if (ast::ast_t::parse(line).errored()) return false;
+    if (ast_parse(line)->errored()) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
-    parse_error_list_t errors;
-    parse_util_detect_errors(line, &errors);
-    return errors.empty();
+    auto errors = new_parse_error_list();
+    parse_util_detect_errors(line, &*errors);
+    return errors->empty();
 }
 
 /// Import a bash command history file. Bash's history format is very simple: just lines with #s for
@@ -1273,10 +1273,10 @@ void history_impl_t::incorporate_external_changes() {
 }
 
 /// Return the prefix for the files to be used for command and read history.
-wcstring history_session_id(const environment_t &vars) {
+wcstring history_session_id(std::unique_ptr<env_var_t> fish_history) {
     wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 
-    const auto var = vars.get(L"fish_history");
+    const auto var = std::move(fish_history);
     if (var) {
         wcstring session_id = var->as_string();
         if (session_id.empty()) {
@@ -1294,9 +1294,16 @@ wcstring history_session_id(const environment_t &vars) {
     return result;
 }
 
+wcstring history_session_id(const environment_t &vars) {
+    auto fish_history = vars.get(L"fish_history");
+    auto var =
+        fish_history ? std::make_unique<env_var_t>(*fish_history) : std::unique_ptr<env_var_t>{};
+    return history_session_id(std::move(var));
+}
+
 path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
-    wcstring_list_t result;
+    std::vector<wcstring> result;
     wcstring working_directory = vars.get_pwd_slash();
     operation_context_t ctx(vars, kExpansionLimitBackground);
     for (const wcstring &path : paths) {
@@ -1396,16 +1403,18 @@ void history_t::add_pending_with_file_detection(const std::shared_ptr<history_t>
     // Find all arguments that look like they could be file paths.
     bool needs_sync_write = false;
     using namespace ast;
-    auto ast = ast_t::parse(str);
+    auto ast = ast_parse(str);
 
     path_list_t potential_paths;
-    for (const node_t &node : ast) {
-        if (const argument_t *arg = node.try_as<argument_t>()) {
-            wcstring potential_path = arg->source(str);
+    for (auto ast_traversal = new_ast_traversal(*ast->top());;) {
+        auto node = ast_traversal->next();
+        if (!node->has_value()) break;
+        if (const argument_t *arg = node->try_as_argument()) {
+            wcstring potential_path = *arg->source(str);
             if (string_could_be_path(potential_path)) {
                 potential_paths.push_back(std::move(potential_path));
             }
-        } else if (const decorated_statement_t *stmt = node.try_as<decorated_statement_t>()) {
+        } else if (const decorated_statement_t *stmt = node->try_as_decorated_statement()) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.
@@ -1416,7 +1425,7 @@ void history_t::add_pending_with_file_detection(const std::shared_ptr<history_t>
                 needs_sync_write = true;
             }
 
-            wcstring command = stmt->command.source(str);
+            wcstring command = *stmt->command().source(str);
             unescape_string_in_place(&command, UNESCAPE_DEFAULT);
             if (command == L"exit" || command == L"reboot" || command == L"restart" ||
                 command == L"echo") {
@@ -1478,11 +1487,11 @@ static void do_1_history_search(history_t *hist, history_search_type_t search_ty
 }
 
 // Searches history.
-bool history_t::search(history_search_type_t search_type, const wcstring_list_t &search_args,
+bool history_t::search(history_search_type_t search_type, const std::vector<wcstring> &search_args,
                        const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                        bool null_terminate, bool reverse, const cancel_checker_t &cancel_check,
                        io_streams_t &streams) {
-    wcstring_list_t collected;
+    std::vector<wcstring> collected;
     wcstring formatted_record;
     size_t remaining = max_items;
     bool output_error = false;
@@ -1546,7 +1555,7 @@ void history_t::populate_from_bash(FILE *f) { impl()->populate_from_bash(f); }
 
 void history_t::incorporate_external_changes() { impl()->incorporate_external_changes(); }
 
-void history_t::get_history(wcstring_list_t &result) { impl()->get_history(result); }
+void history_t::get_history(std::vector<wcstring> &result) { impl()->get_history(result); }
 
 std::unordered_map<long, wcstring> history_t::items_at_indexes(const std::vector<long> &idxs) {
     return impl()->items_at_indexes(idxs);
@@ -1581,5 +1590,5 @@ void start_private_mode(env_stack_t &vars) {
 }
 
 bool in_private_mode(const environment_t &vars) {
-    return !vars.get(L"fish_private_mode").missing_or_empty();
+    return vars.get_unless_empty(L"fish_private_mode").has_value();
 }

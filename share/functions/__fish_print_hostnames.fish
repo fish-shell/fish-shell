@@ -19,7 +19,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
     # Print nfs servers from /etc/fstab
     if test -r /etc/fstab
-        string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3]:|^[a-zA-Z\.]*:' </etc/fstab |
+        string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:|^[a-zA-Z\.]*:' </etc/fstab |
             string replace -r ':.*' ''
     end
 

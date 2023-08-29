@@ -29,6 +29,7 @@ enum class readline_cmd_t {
     history_prefix_search_backward,
     history_prefix_search_forward,
     history_pager,
+    history_pager_delete,
     delete_char,
     backward_delete_char,
     kill_line,
@@ -186,6 +187,7 @@ class char_event_t {
 /// Adjust the escape timeout.
 class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
+void update_wait_on_escape_ms_ffi(std::unique_ptr<env_var_t> fish_escape_delay_ms);
 
 /// A class which knows how to produce a stream of input events.
 /// This is a base class; you may subclass it for its override points.
@@ -222,6 +224,9 @@ class input_event_queue_t {
     void insert_front(const Iterator begin, const Iterator end) {
         queue_.insert(queue_.begin(), begin, end);
     }
+
+    /// Forget all enqueued readline events in the front of the queue.
+    void drop_leading_readline_events();
 
     /// Override point for when we are about to (potentially) block in select(). The default does
     /// nothing.

@@ -199,3 +199,8 @@ abbr --add --regex foo --function foo
 # CHECKERR: abbr --add: Name cannot be empty
 echo foo
 # CHECK: foo
+
+abbr --add regex_name --regex '(*UTF).*' bar
+# CHECKERR: abbr: Regular expression compile error: using UTF is disabled by the application
+# CHECKERR: abbr: (*UTF).*
+# CHECKERR: abbr:      ^

@@ -7,6 +7,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include "trace.rs.h"
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
@@ -29,16 +31,19 @@
 #include "ast.h"
 #include "builtin.h"
 #include "common.h"
+#include "cxx.h"
 #include "env.h"
+#include "env_dispatch.rs.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
+#include "ffi.h"
 #include "flog.h"
 #include "function.h"
 #include "global_safety.h"
 #include "io.h"
 #include "iothread.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "maybe.h"
 #include "null_terminated_array.h"
 #include "parse_tree.h"
@@ -47,9 +52,9 @@
 #include "proc.h"
 #include "reader.h"
 #include "redirection.h"
-#include "timer.h"
-#include "trace.h"
-#include "wait_handle.h"
+#include "spawn.rs.h"
+#include "timer.rs.h"
+#include "trace.rs.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -196,7 +201,7 @@ bool is_thompson_shell_script(const char *path) {
     // Construct envp.
     auto export_vars = vars.export_arr();
     const char **envp = export_vars->get();
-    std::string actual_cmd = wcs2string(p->actual_cmd);
+    std::string actual_cmd = wcs2zstring(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
@@ -212,7 +217,7 @@ bool is_thompson_shell_script(const char *path) {
 static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
                                         const dup2_list_t &dup2s) {
     // Is it globally disabled?
-    if (!get_use_posix_spawn()) return false;
+    if (!use_posix_spawn()) return false;
 
     // Hack - do not use posix_spawn if there are self-fd redirections.
     // For example if you were to write:
@@ -240,7 +245,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
     }
 
     // child_setup_process makes sure signals are properly set up.
-    dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
+    dup2_list_t redirs = dup2_list_resolve_chain_shim(all_ios);
     if (child_setup_process(false /* not claim_tty */, *j, false /* not is_forked */, redirs) ==
         0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
@@ -306,7 +311,7 @@ static void run_internal_process(process_t *p, std::string &&outdata, std::strin
     // Note it's important we do this even if we have no out or err data, because we may have been
     // asked to truncate a file (e.g. `echo -n '' > /tmp/truncateme.txt'). The open() in the dup2
     // list resolution will ensure this happens.
-    f->dup2s = dup2_list_t::resolve_chain(ios);
+    f->dup2s = dup2_list_resolve_chain_shim(ios);
 
     // Figure out which source fds to write to. If they are closed (unlikely) we just exit
     // successfully.
@@ -417,9 +422,9 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
     }
     {
         auto pgid = job->group->get_pgid();
-        if (pgid.has_value()) {
-            if (int err = execute_setpgid(p->pid, *pgid, is_parent)) {
-                report_setpgid_error(err, is_parent, *pgid, job.get(), p);
+        if (pgid) {
+            if (int err = execute_setpgid(p->pid, pgid->value, is_parent)) {
+                report_setpgid_error(err, is_parent, pgid->value, job.get(), p);
             }
         }
     }
@@ -514,7 +519,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
     null_terminated_array_t<char> argv_array(narrow_argv);
 
     // Convert our IO chain to a dup2 sequence.
-    auto dup2s = dup2_list_t::resolve_chain(proc_io_chain);
+    auto dup2s = dup2_list_resolve_chain_shim(proc_io_chain);
 
     // Ensure that stdin is blocking before we hand it off (see issue #176).
     // Note this will also affect stdout and stderr if they refer to the same tty.
@@ -524,7 +529,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
     const char *const *argv = argv_array.get();
     const char *const *envv = export_arr->get();
 
-    std::string actual_cmd_str = wcs2string(p->actual_cmd);
+    std::string actual_cmd_str = wcs2zstring(p->actual_cmd);
     const char *actual_cmd = actual_cmd_str.c_str();
     filename_ref_t file = parser.libdata().current_filename;
 
@@ -533,10 +538,23 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
     if (can_use_posix_spawn_for_job(j, dup2s)) {
         ++s_fork_count;  // spawn counts as a fork+exec
 
-        posix_spawner_t spawner(j.get(), dup2s);
-        maybe_t<pid_t> pid = spawner.spawn(actual_cmd, const_cast<char *const *>(argv),
-                                           const_cast<char *const *>(envv));
-        if (int err = spawner.get_error()) {
+        int err = 0;
+        maybe_t<pid_t> pid = none();
+        PosixSpawner *raw_spawner =
+            new_spawner(reinterpret_cast<uint8_t *>(j.get()), reinterpret_cast<uint8_t *>(&dup2s));
+        if (raw_spawner == nullptr) {
+            err = errno;
+        } else {
+            auto spawner = rust::Box<PosixSpawner>::from_raw(raw_spawner);
+            auto pid_or_neg = spawner->spawn(actual_cmd, const_cast<char *const *>(argv),
+                                             const_cast<char *const *>(envv));
+            if (pid_or_neg > 0) {
+                pid = pid_or_neg;
+            } else {
+                err = errno;
+            }
+        }
+        if (err) {
             safe_report_exec_error(err, actual_cmd, argv, envv);
             p->status = proc_status_t::from_exit_code(exit_code_from_exec_error(err));
             return launch_result_t::failed;
@@ -571,7 +589,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
 
 // Given that we are about to execute a function, push a function block and set up the
 // variable environment.
-static block_t *function_prepare_environment(parser_t &parser, wcstring_list_t argv,
+static block_t *function_prepare_environment(parser_t &parser, std::vector<wcstring> argv,
                                              const function_properties_t &props) {
     // Extract the function name and remaining arguments.
     wcstring func_name;
@@ -580,7 +598,7 @@ static block_t *function_prepare_environment(parser_t &parser, wcstring_list_t a
         func_name = std::move(*argv.begin());
         argv.erase(argv.begin());
     }
-    block_t *fb = parser.push_block(block_t::function_block(func_name, argv, props.shadow_scope));
+    block_t *fb = parser.push_block(block_t::function_block(func_name, argv, props.shadow_scope()));
     auto &vars = parser.vars();
 
     // Setup the environment for the function. There are three components of the environment:
@@ -589,7 +607,8 @@ static block_t *function_prepare_environment(parser_t &parser, wcstring_list_t a
     // 3. argv
 
     size_t idx = 0;
-    for (const wcstring &named_arg : props.named_arguments) {
+    auto args = props.named_arguments();
+    for (const wcstring &named_arg : args->vals) {
         if (idx < argv.size()) {
             vars.set_one(named_arg, ENV_LOCAL | ENV_USER, argv.at(idx));
         } else {
@@ -598,9 +617,10 @@ static block_t *function_prepare_environment(parser_t &parser, wcstring_list_t a
         idx++;
     }
 
-    for (const auto &kv : props.inherit_vars) {
-        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second);
-    }
+    vars.apply_inherited_ffi(props);
+    // for (const auto &kv : props.inherit_vars) {
+    //     vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second);
+    // }
 
     vars.set_argv(std::move(argv));
     return fb;
@@ -632,11 +652,14 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
     job_group_ref_t job_group = job->group;
 
     if (p->type == process_type_t::block_node) {
-        const parsed_source_ref_t &source = p->block_node_source;
+        const parsed_source_ref_t &source = *p->block_node_source;
         const ast::statement_t *node = p->internal_block_node;
-        assert(source && node && "Process is missing node info");
+        assert(source.has_value() && node && "Process is missing node info");
+        // The lambda will convert into a std::function which requires copyability. A Box can't
+        // be copied, so add another indirection.
+        auto source_box = std::make_shared<rust::Box<ParsedSourceRefFFI>>(source.clone());
         return [=](parser_t &parser) {
-            return parser.eval_node(source, *node, io_chain, job_group).status;
+            return parser.eval_node(**source_box, *node, io_chain, job_group).status;
         };
     } else {
         assert(p->type == process_type_t::function);
@@ -645,12 +668,18 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return proc_performer_t{};
         }
-        const wcstring_list_t &argv = p->argv();
+        auto props_box = std::make_shared<rust::Box<function_properties_t>>(props.acquire());
+        const std::vector<wcstring> &argv = p->argv();
         return [=](parser_t &parser) {
             // Pull out the job list from the function.
-            const ast::job_list_t &body = props->func_node->jobs;
-            const block_t *fb = function_prepare_environment(parser, argv, *props);
-            auto res = parser.eval_node(props->parsed_source, body, io_chain, job_group);
+            const auto *func = reinterpret_cast<const ast::block_statement_t *>(
+                (*props_box)->get_block_statement_node());
+            const ast::job_list_t &body = func->jobs();
+            const block_t *fb = function_prepare_environment(parser, argv, **props_box);
+            const auto parsed_source_raw = (*props_box)->parsed_source();
+            const auto parsed_source_box = rust::Box<ParsedSourceRefFFI>::from_raw(
+                reinterpret_cast<ParsedSourceRefFFI *>(parsed_source_raw));
+            auto res = parser.eval_node(*parsed_source_box, body, io_chain, job_group);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.
@@ -717,8 +746,9 @@ static proc_performer_t get_performer_for_builtin(
     } else {
         // We are not a pipe. Check if there is a redirection local to the process
         // that's not io_mode_t::close.
-        for (const auto &redir : p->redirection_specs()) {
-            if (redir.fd == STDIN_FILENO && !redir.is_close()) {
+        for (size_t i = 0; i < p->redirection_specs().size(); i++) {
+            const auto *redir = p->redirection_specs().at(i);
+            if (redir->fd() == STDIN_FILENO && !redir->is_close()) {
                 stdin_is_directly_redirected = true;
                 break;
             }
@@ -728,7 +758,7 @@ static proc_performer_t get_performer_for_builtin(
     // Pull out some fields which we want to copy. We don't want to store the process or job in the
     // returned closure.
     job_group_ref_t job_group = job->group;
-    const wcstring_list_t &argv = p->argv();
+    const std::vector<wcstring> &argv = p->argv();
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
@@ -827,9 +857,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
 
     // Maybe trace this process.
     // TODO: 'and' and 'or' will not show.
-    if (trace_enabled(parser)) {
-        trace_argv(parser, nullptr, p->argv());
-    }
+    trace_if_enabled(parser, L"", p->argv());
 
     // The IO chain for this process.
     io_chain_t process_net_io_chain = block_io;
@@ -916,7 +944,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
             }
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.
-            parser.get_wait_handles().remove_by_pid(p->pid);
+            parser.get_wait_handles_ffi()->remove_by_pid(p->pid);
             break;
         }
 
@@ -1018,7 +1046,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         }
         return false;
     }
-    cleanup_t timer = push_timer(j->wants_timing() && !no_exec());
+    auto timer = push_timer(j->wants_timing() && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
     autoclose_pipes_t deferred_pipes;
@@ -1136,7 +1164,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
 }
 
 /// Populate \p lst with the output of \p buffer, perhaps splitting lines according to \p split.
-static void populate_subshell_output(wcstring_list_t *lst, const separated_buffer_t &buffer,
+static void populate_subshell_output(std::vector<wcstring> *lst, const separated_buffer_t &buffer,
                                      bool split) {
     // Walk over all the elements.
     for (const auto &elem : buffer.elements()) {
@@ -1185,13 +1213,13 @@ static void populate_subshell_output(wcstring_list_t *lst, const separated_buffe
 /// sense that subshells used during string expansion should halt that expansion. \return the value
 /// of $status.
 static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
-                                  const job_group_ref_t &job_group, wcstring_list_t *lst,
+                                  const job_group_ref_t &job_group, std::vector<wcstring> *lst,
                                   bool *break_expand, bool apply_exit_status, bool is_subcmd) {
     parser.assert_can_execute();
     auto &ld = parser.libdata();
 
     scoped_push<bool> is_subshell(&ld.is_subshell, true);
-    scoped_push<size_t> read_limit(&ld.read_limit, is_subcmd ? read_byte_limit : 0);
+    scoped_push<size_t> read_limit(&ld.read_limit, is_subcmd ? READ_BYTE_LIMIT : 0);
 
     auto prev_statuses = parser.get_last_statuses();
     const cleanup_t put_back([&] {
@@ -1200,7 +1228,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
         }
     });
 
-    const bool split_output = !parser.vars().get(L"IFS").missing_or_empty();
+    const bool split_output = parser.vars().get_unless_empty(L"IFS").has_value();
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
@@ -1209,7 +1237,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
         *break_expand = true;
         return STATUS_CMD_ERROR;
     }
-    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, job_group, block_type_t::subst);
+    eval_res_t eval_res =
+        parser.eval_with(cmd, io_chain_t{bufferfill}, job_group, block_type_t::subst);
     separated_buffer_t buffer = io_bufferfill_t::finish(std::move(bufferfill));
     if (buffer.discarded()) {
         *break_expand = true;
@@ -1229,7 +1258,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
 }
 
 int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
-                             const job_group_ref_t &job_group, wcstring_list_t &outputs) {
+                             const job_group_ref_t &job_group, std::vector<wcstring> &outputs) {
     parser.assert_can_execute();
     bool break_expand = false;
     int ret = exec_subshell_internal(cmd, parser, job_group, &outputs, &break_expand, true, true);
@@ -1243,9 +1272,14 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status)
                                   false);
 }
 
-int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
+int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
                   bool apply_exit_status) {
     bool break_expand = false;
     return exec_subshell_internal(cmd, parser, nullptr, &outputs, &break_expand, apply_exit_status,
                                   false);
+}
+
+int exec_subshell_ffi(const wcstring &cmd, parser_t &parser, wcstring_list_ffi_t &outputs,
+                      bool apply_exit_status) {
+    return exec_subshell(cmd, parser, outputs.vals, apply_exit_status);
 }

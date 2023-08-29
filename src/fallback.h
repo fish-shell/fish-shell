@@ -1,6 +1,7 @@
 #ifndef FISH_FALLBACK_H
 #define FISH_FALLBACK_H
 
+#include <stdint.h>
 #include "config.h"
 
 // The following include must be kept despite what IWYU says. That's because of the interaction
@@ -8,15 +9,14 @@
 // in <wchar.h>. At least on OS X if we don't do this we get compilation errors do to the macro
 // substitution if wchar.h is included after this header.
 #include <cwchar>  // IWYU pragma: keep
+                   //
+// Width of ambiguous characters. 1 is typical default.
+extern int32_t FISH_AMBIGUOUS_WIDTH;
 
-/// The column width of ambiguous East Asian characters.
-extern int g_fish_ambiguous_width;
+// Width of emoji characters.
+// 1 is the typical emoji width in Unicode 8.
+extern int32_t FISH_EMOJI_WIDTH;
 
-/// The column width of emoji characters. This must be configurable because the value changed
-/// between Unicode 8 and Unicode 9, wcwidth() is emoji-ignorant, and terminal emulators do
-/// different things. See issues like #4539 and https://github.com/neovim/neovim/issues/4976 for how
-/// painful this is. A value of 0 means to use the guessed value.
-extern int g_fish_emoji_width;
 
 /// fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if
 /// the system one is busted.
@@ -125,23 +125,6 @@ int flock(int fd, int op);
 #define LOCK_EX 2  // Exclusive lock.
 #define LOCK_UN 8  // Unlock.
 #define LOCK_NB 4  // Don't block when locking.
-#endif
-
-// NetBSD _has_ wcstod_l, but it's doing some weak linking hullabaloo that I don't get.
-// Since it doesn't have uselocale (yes, the standard function isn't there, the non-standard
-// extension is), we can't try to use the fallback.
-#if !defined(HAVE_WCSTOD_L) && !defined(__NetBSD__)
-// On some platforms if this is incorrectly detected and a system-defined
-// defined version of `wcstod_l` exists, calling `wcstod` from our own
-// `wcstod_l` can call back into `wcstod_l` causing infinite recursion.
-// e.g. FreeBSD defines `wcstod(x, y)` as `wcstod_l(x, y, __get_locale())`.
-// Solution: namespace our implementation to make sure there is no symbol
-// duplication.
-#undef wcstod_l
-namespace fish_compat {
-double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
-}
-#define wcstod_l(x, y, z) fish_compat::wcstod_l(x, y, z)
 #endif
 
 #endif  // FISH_FALLBACK_H

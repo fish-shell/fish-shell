@@ -6,6 +6,6 @@
 #        kmutil <clear-staging|trigger-panic-medic>
 #        kmutil -h
 
-if test (command -v kmutil) = /usr/bin/kmutil
+if test "$(command -s kmutil)" = /usr/bin/kmutil
     command kmutil --generate-completion-script=fish | source
 end

@@ -14,6 +14,14 @@ set -e
 # but to get the documentation in, we need to make a symlink called "fish-VERSION"
 # and tar from that, so that the documentation gets the right prefix
 
+# Use Ninja if available, as it automatically paralellises
+BUILD_TOOL="make"
+BUILD_GENERATOR="Unix Makefiles"
+if command -v ninja >/dev/null; then
+  BUILD_TOOL="ninja"
+  BUILD_GENERATOR="Ninja"
+fi
+
 # We need GNU tar as that supports the --mtime and --transform options
 TAR=notfound
 for try in tar gtar gnutar; do
@@ -51,8 +59,8 @@ git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
 PREFIX_TMPDIR=$(mktemp -d)
 cd "$PREFIX_TMPDIR"
 echo "$VERSION" > version
-cmake "$wd"
-make doc
+cmake -G "$BUILD_GENERATOR" "$wd"
+$BUILD_TOOL doc
 
 TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 \
   --mode=g+w,a+rX --transform s/^/$prefix\//"
@@ -60,12 +68,17 @@ $TAR_APPEND --no-recursion user_doc
 $TAR_APPEND user_doc/html user_doc/man
 $TAR_APPEND version
 
+if [ -n "$VENDOR_TARBALLS" ]; then
+  $BUILD_TOOL corrosion-vendor.tar.gz
+  mv corrosion-vendor.tar.gz ${FISH_ARTEFACT_PATH:-~/fish_built}/"${prefix}"_corrosion-vendor.tar.gz
+fi
+
 cd -
 rm -r "$PREFIX_TMPDIR"
 
 # xz it
 xz "$path"
 
-# Output what we did, and the sha1 hash
+# Output what we did, and the sha256 hash
 echo "Tarball written to $path".xz
 openssl dgst -sha256 "$path".xz

@@ -27,9 +27,7 @@ which means you are all set up and can start using fish::
     you@hostname ~>
 
 
-This prompt that you see above is the fish default prompt: it shows your username, hostname, and working directory.
-- to change this prompt see :ref:`how to change your prompt <prompt>`
-- to switch to fish permanently see :ref:`Default Shell <default-shell>`.
+This prompt that you see above is the fish default prompt: it shows your username, hostname, and working directory. You can customize it, see :ref:`how to change your prompt <prompt>`.
 
 From now on, we'll pretend your prompt is just a ``>`` to save space.
 
@@ -79,7 +77,7 @@ Run ``help`` to open fish's help in a web browser, and ``man`` with the page (li
 
 To open this section, use ``help getting-help``.
 
-Fish works by running commands, which are often also installed on your computer. Usually these commands also provide help in the man system, so you can get help for them there. Try ``man ls`` to get help on your computer's ``ls`` command.
+This only works for fish's own documentation for itself and its built-in commands (the "builtins"). For any other commands on your system, they should provide their own documentation, often in the man system. For example ``man ls`` should tell you about your computer's ``ls`` command.
 
 Syntax Highlighting
 -------------------
@@ -124,55 +122,6 @@ This picks the "none" theme. To see all themes::
   fish_config theme show
 
 Just running ``fish_config`` will open up a browser interface that allows you to pick from the available themes.
-
-Wildcards
----------
-
-Fish supports the familiar wildcard ``*``. To list all JPEG files::
-
-    > ls *.jpg
-    lena.jpg
-    meena.jpg
-    santa maria.jpg
-
-
-You can include multiple wildcards::
-
-    > ls l*.p*
-    lena.png
-    lesson.pdf
-
-
-The recursive wildcard ``**`` searches directories recursively::
-
-    > ls /var/**.log
-    /var/log/system.log
-    /var/run/sntp.log
-
-
-If that directory traversal is taking a long time, you can :kbd:`Control`\ +\ :kbd:`C` out of it.
-
-For more, see :ref:`Wildcards <expand-wildcard>`.
-
-Pipes and Redirections
-----------------------
-
-You can pipe between commands with the usual vertical bar::
-
-    > echo hello world | wc
-          1       2      12
-
-stdin and stdout can be redirected via the familiar ``<`` and ``>``. stderr is redirected with a ``2>``.
-
-::
-
-    > grep fish < /etc/shells > ~/output.txt 2> ~/errors.txt
-
-To redirect stdout and stderr into one file, you can use ``&>``::
-
-    > make &> make_output.txt
-
-For more, see :ref:`Input and output redirections <redirects>` and :ref:`Pipes <pipes>`.
 
 Autosuggestions
 ---------------
@@ -366,20 +315,70 @@ You can iterate over a list (or a slice) with a for loop::
     # entry: /sbin
     # entry: /usr/local/bin
 
-Lists adjacent to other lists or strings are expanded as :ref:`cartesian products <cartesian-product>` unless quoted (see :ref:`Variable expansion <expand-variable>`)::
+One particular bit is that you can use lists like :ref:`Brace expansion <expand-brace>`. If you attach another string to a list, it'll combine every element of the list with the string::
 
-    > set a 1 2 3
-    > set 1 a b c
-    > echo $a$1
-    1a 2a 3a 1b 2b 3b 1c 2c 3c
-    > echo $a" banana"
-    1 banana 2 banana 3 banana
-    > echo "$a banana"
-    1 2 3 banana
+    > set mydirs /usr/bin /bin
+    > echo $mydirs/fish # this is just like {/usr/bin,/bin}/fish
+    /usr/bin/fish /bin/fish
 
-This is similar to :ref:`Brace expansion <expand-brace>`.
+This also means that, if the list is empty, there will be no argument::
+
+    > set empty # no argument
+    > echo $empty/this_is_gone # prints an empty line
+    
+If you quote the list, it will be used as one string and so you'll get one argument even if it is empty.
 
 For more, see :ref:`Lists <variables-lists>`.
+For more on combining lists with strings (or even other lists), see :ref:`cartesian products <cartesian-product>` and :ref:`Variable expansion <expand-variable>`.
+
+Wildcards
+---------
+
+Fish supports the familiar wildcard ``*``. To list all JPEG files::
+
+    > ls *.jpg
+    lena.jpg
+    meena.jpg
+    santa maria.jpg
+
+
+You can include multiple wildcards::
+
+    > ls l*.p*
+    lena.png
+    lesson.pdf
+
+
+The recursive wildcard ``**`` searches directories recursively::
+
+    > ls /var/**.log
+    /var/log/system.log
+    /var/run/sntp.log
+
+
+If that directory traversal is taking a long time, you can :kbd:`Control`\ +\ :kbd:`C` out of it.
+
+For more, see :ref:`Wildcards <expand-wildcard>`.
+
+Pipes and Redirections
+----------------------
+
+You can pipe between commands with the usual vertical bar::
+
+    > echo hello world | wc
+          1       2      12
+
+stdin and stdout can be redirected via the familiar ``<`` and ``>``. stderr is redirected with a ``2>``.
+
+::
+
+    > grep fish < /etc/shells > ~/output.txt 2> ~/errors.txt
+
+To redirect stdout and stderr into one file, you can use ``&>``::
+
+    > make &> make_output.txt
+
+For more, see :ref:`Input and output redirections <redirects>` and :ref:`Pipes <pipes>`.
 
 
 Command Substitutions

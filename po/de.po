@@ -4,33 +4,19 @@
 # Hermann J. Beckers <hj.beckers@onlinehome.de>, 2006.
 # Benjamin Weis <benjamin.weis@gmx.com>, 2013
 #
-#: /tmp/fish.i8YroE/implicit/share/completions/exif.fish:1
-#: /tmp/fish.i8YroE/implicit/share/completions/exif.fish:2
-#: /tmp/fish.i8YroE/implicit/share/completions/exif.fish:3
-#: /tmp/fish.i8YroE/implicit/share/completions/exif.fish:4
-#: /tmp/fish.i8YroE/implicit/share/completions/exif.fish:5
-#: /tmp/fish.i8YroE/implicit/share/completions/meson.fish:1
-#: /tmp/fish.i8YroE/implicit/share/completions/meson.fish:2
-#: /tmp/fish.i8YroE/implicit/share/completions/meson.fish:3
-#: /tmp/fish.i8YroE/implicit/share/completions/rustc.fish:3
-#: /tmp/fish.i8YroE/implicit/share/completions/rustc.fish:4
-#: /tmp/fish.i8YroE/implicit/share/completions/rustc.fish:5
-#: /tmp/fish.i8YroE/implicit/share/completions/rustc.fish:6
-#: /tmp/fish.i8YroE/implicit/share/completions/rustc.fish:7
-#: /tmp/fish.i8YroE/implicit/share/completions/rustc.fish:8
 msgid ""
 msgstr ""
 "Project-Id-Version: de\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-23 11:20+0100\n"
-"PO-Revision-Date: 2013-11-01 18:36+0100\n"
+"PO-Revision-Date: 2023-06-01 23:33+0200\n"
 "Last-Translator: Fabian Homborg\n"
 "Language-Team: deutsch <de@li.org>\n"
-"Language: \n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Poedit 3.3.1\n"
 
 #: src/ast.cpp:685 src/ast.cpp:706
 #, c-format
@@ -164,7 +150,7 @@ msgstr "Die Anzahl Argumente zählen"
 
 #: src/builtin.cpp:376
 msgid "Remove job from job list"
-msgstr ""
+msgstr "Job aus der Jobliste entfernen"
 
 #: src/builtin.cpp:377
 msgid "Print arguments"
@@ -176,7 +162,7 @@ msgstr "Werte Block aus, wenn die Bedingung falsch ist"
 
 #: src/builtin.cpp:379
 msgid "Emit an event"
-msgstr ""
+msgstr "Ein Ereignis auslösen"
 
 #: src/builtin.cpp:380
 msgid "End a block of commands"
@@ -184,7 +170,7 @@ msgstr "Befehlsblock beenden"
 
 #: src/builtin.cpp:381
 msgid "Evaluate a string as a statement"
-msgstr ""
+msgstr "Eine Zeichenfolge als Befehl ausführen"
 
 #: src/builtin.cpp:382
 msgid "Run command in current process"
@@ -228,7 +214,7 @@ msgstr "Derzeit laufende Jobs ausgeben"
 
 #: src/builtin.cpp:392
 msgid "Evaluate math expressions"
-msgstr ""
+msgstr "Mathematische Formel berechnen"
 
 #: src/builtin.cpp:393
 msgid "Negate exit status of job"
@@ -240,15 +226,15 @@ msgstr "Befehl ausführen, wenn vorheriger Befehl fehlerhaft war"
 
 #: src/builtin.cpp:395
 msgid "Handle paths"
-msgstr ""
+msgstr "Pfade behandeln"
 
 #: src/builtin.cpp:396
 msgid "Prints formatted text"
-msgstr ""
+msgstr "Formatierten Text ausgeben"
 
 #: src/builtin.cpp:397
 msgid "Print the working directory"
-msgstr ""
+msgstr "Das Arbeitsverzeichnis ausgeben"
 
 #: src/builtin.cpp:398
 msgid "Generate random number"
@@ -260,7 +246,7 @@ msgstr "Eine Eingabezeile in Variablen einlesen"
 
 #: src/builtin.cpp:400
 msgid "Show absolute path sans symlinks"
-msgstr ""
+msgstr "Absoluten Pfad ohne symbolische Verknüpfungen anzeigen"
 
 #: src/builtin.cpp:401
 msgid "Stop the currently evaluated function"
@@ -284,11 +270,11 @@ msgstr "Strings manipulieren"
 
 #: src/builtin.cpp:407
 msgid "Conditionally run blocks of code"
-msgstr ""
+msgstr "Anweisungsblock bedingungsabhängig ausführen"
 
 #: src/builtin.cpp:409
 msgid "Measure how long a command or block takes"
-msgstr ""
+msgstr "Dauer der Ausführung eines Befehls oder Blocks messen"
 
 #: src/builtin.cpp:411
 msgid "Check if a thing is a thing"
@@ -296,11 +282,11 @@ msgstr ""
 
 #: src/builtin.cpp:412
 msgid "Get/set resource usage limits"
-msgstr ""
+msgstr "Ressourcen-Limits abfragen/setzen"
 
 #: src/builtin.cpp:413
 msgid "Wait for background processes completed"
-msgstr ""
+msgstr "Auf den Abschluss von Hintergrundprozessen warten"
 
 #: src/builtin.cpp:414
 msgid "Perform a command multiple times"
@@ -318,53 +304,52 @@ msgstr "Heimordner für %ls"
 #: src/complete.cpp:63
 #, c-format
 msgid "Variable: %ls"
-msgstr ""
+msgstr "Variable: %ls"
 
 #: src/complete.cpp:66
 #, c-format
 msgid "Abbreviation: %ls"
-msgstr ""
+msgstr "Abkürzung: %ls"
 
 #: src/complete.cpp:1514
 msgid "completion reached maximum recursion depth, possible cycle?"
-msgstr ""
+msgstr "Vervollständigung hat die maximale Rekursionstiefe erreicht, möglicher Kreis?"
 
 #: src/env.cpp:1340
-msgid ""
-"Could not determine current working directory. Is your locale set correctly?"
-msgstr ""
+msgid "Could not determine current working directory. Is your locale set correctly?"
+msgstr "Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die locale korrekt eingestellt?"
 
 #: src/env_dispatch.cpp:471
 #, c-format
 msgid "Using fallback terminal type '%s'."
-msgstr ""
+msgstr "Nutze Rückfallterminaltyp '%s'."
 
 #: src/env_dispatch.cpp:474
 #, c-format
 msgid "Could not set up terminal using the fallback terminal type '%s'."
-msgstr ""
+msgstr "Konnte mit dem Rückfallterminaltyp '%s' kein Terminal einrichten."
 
 #: src/env_dispatch.cpp:575
 msgid "Could not set up terminal."
-msgstr ""
+msgstr "Konnte das Terminal nicht einrichten"
 
 #: src/env_dispatch.cpp:577
 msgid "TERM environment variable not set."
-msgstr ""
+msgstr "TERM-Umgebungsvariable nicht gesetzt."
 
 #: src/env_dispatch.cpp:579
 #, c-format
 msgid "TERM environment variable set to '%ls'."
-msgstr ""
+msgstr "TERM-Umgebungsvariable auf '%ls' gesetzt."
 
 #: src/env_dispatch.cpp:581
 msgid "Check that this terminal type is supported on this system."
-msgstr ""
+msgstr "Überprüfe, ob dieser Terminaltyp auf diesem System unterstützt wird."
 
 #: src/env_universal_common.cpp:425
 #, c-format
 msgid "Unable to write to universal variables file '%ls': %s"
-msgstr ""
+msgstr "Die Universal-Variablen-Datei '%ls' kann nicht geschrieben werden: %s"
 
 #: src/env_universal_common.cpp:441
 #, c-format
@@ -374,19 +359,17 @@ msgstr "Konnte Datei '%ls' nicht zu '%ls' umbenennen: %s"
 #: src/env_universal_common.cpp:485
 #, c-format
 msgid "Unable to open temporary file '%ls': %s"
-msgstr ""
+msgstr "Die temporäre Datei '%ls' kann nicht geöffnet werden: %s"
 
 #: src/env_universal_common.cpp:499
 #, c-format
 msgid "Locking the universal var file took too long (%.3f seconds)."
-msgstr ""
-"Die Datei für universelle Variablen zu sperren dauerte zu lange (%.3f "
-"Sekunden)"
+msgstr "Die Datei für universelle Variablen zu sperren dauerte zu lange (%.3f Sekunden)"
 
 #: src/env_universal_common.cpp:542
 #, c-format
 msgid "Unable to open universal variable file '%s': %s"
-msgstr ""
+msgstr "Die Universal-Variablen-Datei '%s' kann nicht geöffnet werden: %s"
 
 #: src/env_universal_common.cpp:920
 #, c-format
@@ -411,12 +394,12 @@ msgstr ""
 #: src/env_universal_common.cpp:1134
 #, c-format
 msgid "Unable to make a pipe for universal variables using '%ls': %s"
-msgstr ""
+msgstr "Kann keine Pipe für die universalen Variablen über '%ls' anlegen: %s"
 
 #: src/env_universal_common.cpp:1142
 #, c-format
 msgid "Unable to open a pipe for universal variables using '%ls': %s"
-msgstr ""
+msgstr "Kann keine Pipe für die universalen Variablen über '%ls' öffnen: %s"
 
 #: src/event.cpp:184
 #, c-format
@@ -463,7 +446,7 @@ msgstr ""
 
 #: src/expand.cpp:555
 msgid "Mismatched braces"
-msgstr ""
+msgstr "Unpassende Klammern"
 
 #: src/fish.cpp:395
 #, c-format
@@ -477,12 +460,12 @@ msgstr "Kann den no-execute Modus nicht in einer interaktiven Sitzung nutzen"
 #: src/fish.cpp:581
 #, c-format
 msgid "Error reading script file '%s':"
-msgstr ""
+msgstr "Die Script-Datei '%s' kann nicht gelesen werden:"
 
 #: src/fish.cpp:595
 #, c-format
 msgid "Error while reading file %ls\n"
-msgstr ""
+msgstr "Fehler beim Lesen der Datei %ls\n"
 
 #: src/fish_indent.cpp:932 src/fish_key_reader.cpp:317
 #, c-format
@@ -508,7 +491,7 @@ msgstr "Öffnen von \"%s\" fehlgeschlagen: %s\n"
 #: src/fish_indent.cpp:1072
 #, c-format
 msgid "%s\n"
-msgstr ""
+msgstr "%s\n"
 
 #: src/history.cpp:381
 #, c-format
@@ -518,41 +501,41 @@ msgstr "Sperren der Geschichts-Datei dauerte zu lang (%.3f Sekunden)."
 #: src/history.cpp:887
 #, c-format
 msgid "Error when renaming history file: %s"
-msgstr ""
+msgstr "Fehler beim Umbenennen der Verlaufsdatei: %s"
 
 #: src/history.cpp:1285
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. "
-msgstr ""
+msgstr "Verlaufssitzungs-ID '%ls' ist kein gültiger Variablenname."
 
 #: src/io.cpp:25
 #, c-format
 msgid "An error occurred while redirecting file '%ls'"
-msgstr ""
+msgstr "Bei der Umleitung der Datei '%ls' ist ein Fehler aufgetreten"
 
 #: src/io.cpp:26
 #, c-format
 msgid "The file '%ls' already exists"
-msgstr ""
+msgstr "Die Datei '%ls' existiert bereits"
 
 #: src/io.cpp:254
 #, c-format
 msgid "Path '%ls' is not a directory"
-msgstr ""
+msgstr "Pfad '%ls' ist kein Ordner"
 
 #: src/io.cpp:257
 #, c-format
 msgid "Path '%ls' does not exist"
-msgstr ""
+msgstr "Pfad '%ls' nicht gefunden"
 
 #: src/output.cpp:434
-#, c-format
+#, fuzzy, c-format
 msgid "Tried to use terminfo string %s on line %ld of %s, which is "
-msgstr ""
+msgstr "Versucht, terminfo Text %s in Zeile %ld von %s zu nutzen, welcher undefiniert ist. Bitte melde diesen Fehler."
 
 #: src/pager.cpp:45
 msgid "search: "
-msgstr ""
+msgstr "Suche: "
 
 #: src/pager.cpp:541
 #, c-format
@@ -566,32 +549,31 @@ msgstr "Zeilen %lu bis %lu von %lu"
 
 #: src/pager.cpp:551
 msgid "(no matches)"
-msgstr ""
+msgstr "(keine Treffer)"
 
 #: src/parse_execution.cpp:524
 #, c-format
 msgid "switch: Expected at most one argument, got %lu\n"
-msgstr ""
+msgstr "switch: Erwartet höchstens einen Parameter, aber %lu angegeben\n"
 
 #: src/parse_execution.cpp:740
 #, c-format
-msgid ""
-"Unknown command. A component of '%ls' is not a directory. Check your $PATH."
-msgstr ""
+msgid "Unknown command. A component of '%ls' is not a directory. Check your $PATH."
+msgstr "Befehl nicht gefunden. Ein Element von '%ls' ist kein Verzeichnis. Überprüfe deinen $PATH"
 
 #: src/parse_execution.cpp:744
 #, c-format
 msgid "Unknown command. A component of '%ls' is not a directory."
-msgstr ""
+msgstr "Befehl nicht gefunden. Eine Komponente von '%ls' ist kein Verzeichnis."
 
 #: src/parse_execution.cpp:750
 #, c-format
 msgid "Unknown command. '%ls' exists but is not an executable file."
-msgstr ""
+msgstr "Befehl nicht gefunden. '%ls' existiert, ist aber keine ausführbare Datei."
 
 #: src/parse_execution.cpp:791
 msgid "Unknown command:"
-msgstr ""
+msgstr "Befehl nicht gefunden:"
 
 #: src/parse_execution.cpp:839
 msgid "The expanded command was empty."
@@ -600,38 +582,38 @@ msgstr ""
 #: src/parse_execution.cpp:1005
 #, c-format
 msgid "Invalid redirection: %ls"
-msgstr ""
+msgstr "Ungültige Umleitung: %ls"
 
 #: src/parse_execution.cpp:1016
 #, c-format
 msgid "Invalid redirection target: %ls"
-msgstr ""
+msgstr "Ungültiges Umleitungsziel: %ls"
 
 #: src/parse_execution.cpp:1027
 #, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
-msgstr ""
+msgstr "Umleitung zu '%ls' angefordert, dies ist aber kein gültiger Dateideskriptor"
 
 #: src/parse_util.cpp:34
 #, c-format
 msgid "The '%ls' command can not be used immediately after a backgrounded job"
-msgstr ""
+msgstr "Der Befehl '%ls' kann nicht direkt nach einem Hintergrundjob aufgerufen werden"
 
 #: src/parse_util.cpp:38
 msgid "Backgrounded commands can not be used as conditionals"
-msgstr ""
+msgstr "Hintergrundbefehle können nicht als Bedingungen benutzt werden"
 
 #: src/parse_util.cpp:41
 msgid "'end' does not take arguments. Did you forget a ';'?"
-msgstr ""
+msgstr "'end' braucht keine Parameter. Fehlendes ';'?"
 
 #: src/parse_util.cpp:44
 msgid "The 'time' command may only be at the beginning of a pipeline"
-msgstr ""
+msgstr "Der 'time' Befehl darf nur am Anfang einer Pipeline stehen"
 
 #: src/parse_util.cpp:1180
 msgid "$status is not valid as a command. See `help conditions`"
-msgstr ""
+msgstr "$status ist kein gültiger Befehl. Siehe `help conditions`"
 
 #: src/parser.cpp:166
 #, c-format
@@ -645,35 +627,35 @@ msgstr "Zeit\tSum\tBefehl\n"
 #: src/parser.cpp:220
 #, c-format
 msgid "in function '%ls'"
-msgstr ""
+msgstr "in der Funktion '%ls'"
 
 #: src/parser.cpp:235
 #, c-format
 msgid " with arguments '%ls'"
-msgstr ""
+msgstr "mit den Parametern '%ls'"
 
 #: src/parser.cpp:242
 msgid "in command substitution\n"
-msgstr ""
+msgstr "in der Befehlsersetzung\n"
 
 #: src/parser.cpp:248
 #, c-format
 msgid "from sourcing file %ls\n"
-msgstr ""
+msgstr "aus der Quelldatei %ls\n"
 
 #: src/parser.cpp:256
 #, c-format
 msgid "in event handler: %ls\n"
-msgstr ""
+msgstr "im Ereignis-Handler: %ls\n"
 
 #: src/parser.cpp:276
 #, c-format
 msgid "\tcalled on line %d of file %ls\n"
-msgstr ""
+msgstr "\taufgerufen in Zeile %d der Datei %ls\n"
 
 #: src/parser.cpp:279
 msgid "\tcalled during startup\n"
-msgstr ""
+msgstr "\twährend des Starts aufgerufen\n"
 
 #: src/parser.cpp:428
 #, c-format
@@ -682,21 +664,21 @@ msgstr "%ls (Zeile %d): "
 
 #: src/parser.cpp:431
 msgid "Startup"
-msgstr ""
+msgstr "Start"
 
 #: src/parser.cpp:433
 msgid "Standard input"
-msgstr ""
+msgstr "Standardeingabe"
 
 #: src/parser.cpp:647
 #, c-format
 msgid "%ls (line %lu): "
-msgstr ""
+msgstr "%ls (Zeile %lu): "
 
 #: src/parser.cpp:651
 #, c-format
 msgid "%ls: "
-msgstr ""
+msgstr "%ls: "
 
 #: src/path.cpp:291
 #, c-format
@@ -706,8 +688,7 @@ msgstr ""
 #: src/path.cpp:293
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
-msgstr ""
-"Bitte setzen sie %ls oder die HOME Umgebungsvariable bevor sie fish starten."
+msgstr "Bitte setzen sie %ls oder die HOME Umgebungsvariable bevor sie fish starten."
 
 #: src/path.cpp:297
 #, c-format
@@ -747,8 +728,7 @@ msgid "A second attempt to exit will terminate them.\n"
 msgstr "Ein zweites 'exit' wird sie beenden.\n"
 
 #: src/proc.cpp:207
-msgid ""
-"Use 'disown PID' to remove jobs from the list without terminating them.\n"
+msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
 
 #: src/proc.cpp:900
@@ -777,8 +757,7 @@ msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "Kein TTY für interaktive Shell (tcgetpgrp schlug fehl)"
 
 #: src/reader.cpp:2493
-msgid ""
-"I appear to be an orphaned process, so I am quitting politely. My pid is "
+msgid "I appear to be an orphaned process, so I am quitting politely. My pid is "
 msgstr ""
 
 #: src/reader.cpp:2535
@@ -1113,23 +1092,17 @@ msgstr "Fehler beim Einrichten der Pipe aufgetreten"
 
 #: src/parse_constants.h:229
 #, c-format
-msgid ""
-"The function '%ls' calls itself immediately, which would result in an "
-"infinite loop."
-msgstr ""
-"Die Funktion '%ls' ruft sich sofort selbst auf. Dies wäre eine "
-"Endlosschleife."
+msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
+msgstr "Die Funktion '%ls' ruft sich sofort selbst auf. Dies wäre eine Endlosschleife."
 
 #: src/parse_constants.h:233
-msgid ""
-"The call stack limit has been exceeded. Do you have an accidental infinite "
-"loop?"
+msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr ""
 
 #: src/parse_constants.h:236
 #, c-format
 msgid "Unknown builtin '%ls'"
-msgstr "unbekannter interner Befehl '%ls'"
+msgstr "Unbekannter interner Befehl '%ls'"
 
 #: src/parse_constants.h:239
 #, c-format
@@ -1199,14 +1172,11 @@ msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr ""
 
 #: src/parse_constants.h:289
-msgid ""
-"'time' is not supported for background jobs. Consider using 'command time'."
+msgid "'time' is not supported for background jobs. Consider using 'command time'."
 msgstr ""
 
 #: src/parse_constants.h:293
-msgid ""
-"'{ ... }' is not supported for grouping commands. Please use 'begin; ...; "
-"end'"
+msgid "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'"
 msgstr ""
 
 #: src/parse_tree.h:63
@@ -1316,8 +1286,7 @@ msgid "Select directory by letter or number: "
 msgstr ""
 
 #: /tmp/fish.i8YroE/explicit/share/functions/cdh.fish:6
-msgid ""
-"Error: expected a number between 1 and %d or letter in that range, got \"%s\""
+msgid "Error: expected a number between 1 and %d or letter in that range, got \"%s\""
 msgstr ""
 
 #: /tmp/fish.i8YroE/explicit/share/functions/edit_command_buffer.fish:2
@@ -5692,7 +5661,7 @@ msgstr "Inhalt der Konfigurationsdatei ausgeben"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-extracttemplates.fish:2
 msgid "Set temp dir"
-msgstr "temp-Verzeichnis festlegen"
+msgstr "Temp-Verzeichnis festlegen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-file.fish:2
 msgid "Resync package contents from source"
@@ -5733,7 +5702,7 @@ msgstr "Architektur festlegen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-file.fish:13
 msgid "Set sources.list file"
-msgstr "sources.list-Datei angeben"
+msgstr "Sources.list-Datei festlegen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-file.fish:14
 msgid "Only display package name"
@@ -6058,7 +6027,7 @@ msgstr "Zeitablauf für Zwischenspeicher angeben"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-listbugs.fish:19
 msgid "Specify apt config file"
-msgstr "apt-Konfigurationsdatei angeben"
+msgstr "Apt-Konfigurationsdatei angeben"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-listbugs.fish:21
 msgid "Assume no to all questions"
@@ -6233,7 +6202,7 @@ msgstr "Keine Meldungen auf Standardausgabe"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-proxy-import.fish:5
 msgid "Recurse into subdir"
-msgstr "in Unterverzeichnis verzweigen"
+msgstr "In Unterverzeichnisse absteigen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-proxy-import.fish:6
 msgid "Dir to import"
@@ -6261,7 +6230,7 @@ msgstr "Status der Abhängigkeiten anzeigen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-rdepends.fish:5
 msgid "List packages depending on"
-msgstr "Pakete auflisten, die abhängen von "
+msgstr "Pakete auflisten, die abhängen von"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/apt-rdepends.fish:6
 msgid "Comma-separated list of dependency types to follow recursively"
@@ -13475,7 +13444,7 @@ msgstr ""
 #: /tmp/fish.i8YroE/implicit/share/completions/castnow.fish:14
 #: /tmp/fish.i8YroE/implicit/share/completions/mplayer.fish:7
 msgid "Play in random order"
-msgstr "in zufälliger Reihenfolge spielen"
+msgstr "In zufälliger Reihenfolge spielen"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/castnow.fish:15
 msgid "List all files in directories recursively"
@@ -16138,7 +16107,7 @@ msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/complete.fish:5
 msgid "Old style long option to complete"
-msgstr "zu vervollständigende lange Option im alten Format"
+msgstr "Zu vervollständigende lange Option im alten Format"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/complete.fish:6
 msgid "Don't use file completion"
@@ -22557,10 +22526,9 @@ msgstr "Änderung in der Anzahl von Worttrennern ignorieren"
 
 #: /tmp/fish.i8YroE/implicit/share/completions/diff.fish:6
 msgid "Ignore all white space"
-msgstr "white space (Worttrenner) ignorieren"
+msgstr "Alle Leerräume (Worttrenner) ignorieren"
 
-#: /tmp/fish.i8YroE/implicit/share/completions/diff.fish:7
-#: /tmp/fish.i8YroE/implicit/share/completions/git.fish:36
+#: /tmp/fish.i8YroE/implicit/share/completions/diff.fish:7 /tmp/fish.i8YroE/implicit/share/completions/git.fish:36
 #: /tmp/fish.i8YroE/implicit/share/completions/git.fish:802
 msgid "Ignore changes whose lines are all blank"
 msgstr "Änderungen ignorieren, deren Zeilen alle leer sind"
@@ -23262,8 +23230,7 @@ msgid "Skip the interactive TUI and validate against CI rules"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:2
-msgid ""
-"If CI=true in the environment, use the given yaml to drive validation rules"
+msgid "If CI=true in the environment, use the given yaml to drive validation rules"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:3
@@ -23287,9 +23254,7 @@ msgid "Ignore image parsing errors and run the analysis anyway"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:8
-msgid ""
-"Skip the interactive TUI and write the layer analysis statistics to a given "
-"file"
+msgid "Skip the interactive TUI and write the layer analysis statistics to a given file"
 msgstr ""
 
 #: /tmp/fish.i8YroE/implicit/share/completions/dive.fish:9

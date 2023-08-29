@@ -1,0 +1,32 @@
+name: Rust checks
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  rustfmt:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
+    - name: cargo fmt
+      run: cargo fmt --check --all
+
+  clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Install deps
+      run: |
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
+        sudo pip3 install pexpect
+    - name: cmake
+      run: |
+        cmake -B build
+    - name: cargo clippy
+      run: cargo clippy --workspace --all-targets -- --deny=warnings

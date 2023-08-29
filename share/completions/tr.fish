@@ -7,7 +7,7 @@ if command tr --version >/dev/null 2>/dev/null
     complete -c tr -x
     complete -c tr -s c -s C -l complement -d 'use the complement of SET1'
     complete -c tr -s d -l delete -d 'delete characters in SET1, do not translate'
-    complete -c tr -s s -l squeeze-repeats -d 'replace each input sequence of a repeated character that is listed in SET1 with a single occurrence of that character'
+    complete -c tr -s s -l squeeze-repeats -d 'replace each run of a character listed in SET1 with a single occurrence of that character'
     complete -c tr -s t -l truncate-set1 -d 'first truncate SET1 to length of SET2'
     complete -c tr -l help -d 'display this help and exit'
     complete -c tr -l version -d 'output version information and exit'
@@ -27,10 +27,10 @@ if command tr --version >/dev/null 2>/dev/null
 else
     # If not a GNU system, assume we have standard BSD tr features instead
     complete -c tr -x
-    complete -c tr -s C -d 'Complement the set of characters in string1.'
-    complete -c tr -s c -d 'Same as -C but complement the set of values in string1.'
-    complete -c tr -s d -d 'Delete characters in string1 from the input.'
-    complete -c tr -s s -d 'Squeeze multiple occurrences of the characters listed in the last operand (either string1 or string2) in the input into a single instance of the character.'
+    complete -c tr -s C -d 'Complement the set of characters in string1'
+    complete -c tr -s c -d 'Same as -C but complement the set of values in string1'
+    complete -c tr -s d -d 'Delete characters in string1 from the input'
+    complete -c tr -s s -d 'Squeeze runs of characters listed in the last operand into one'
     complete -c tr -l u -d 'Guarantee that any output is unbuffered.'
 
     complete -c tr -a '[:alnum:]' -d 'alphanumeric characters'

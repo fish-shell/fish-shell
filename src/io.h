@@ -16,12 +16,12 @@
 #include "fds.h"
 #include "global_safety.h"
 #include "redirection.h"
-#include "signal.h"
+#include "signals.h"
 #include "topic_monitor.h"
 
 using std::shared_ptr;
 
-class job_group_t;
+struct job_group_t;
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
@@ -275,6 +275,9 @@ class io_bufferfill_t final : public io_data_t {
     static separated_buffer_t finish(std::shared_ptr<io_bufferfill_t> &&filler);
 };
 
+struct callback_args_t;
+struct autoclose_fd_t2;
+
 /// An io_buffer_t is a buffer which can populate itself by reading from an fd.
 /// It is not an io_data_t.
 class io_buffer_t {
@@ -290,6 +293,9 @@ class io_buffer_t {
 
     /// \return true if output was discarded due to exceeding the read limit.
     bool discarded() { return buffer_.acquire()->discarded(); }
+
+    /// FFI callback workaround.
+    void item_callback(autoclose_fd_t2 &fd, uint8_t reason, callback_args_t *args);
 
    private:
     /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
@@ -330,13 +336,18 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     // user-declared ctor to allow const init. Do not default this, it will break the build.
     io_chain_t() {}
 
+    /// autocxx falls over with this so hide it.
+#if INCLUDE_RUST_HEADERS
     void remove(const io_data_ref_t &element);
     void push_back(io_data_ref_t element);
+#endif
     bool append(const io_chain_t &chain);
 
     /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
     /// if none.
+#if INCLUDE_RUST_HEADERS
     io_data_ref_t io_for_fd(int fd) const;
+#endif
 
     /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
     /// \return true on success, false on error, in which case an error will have been printed.
@@ -345,6 +356,8 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     /// Output debugging information to stderr.
     void print() const;
 };
+
+dup2_list_t dup2_list_resolve_chain_shim(const io_chain_t &io_chain);
 
 /// Base class representing the output that a builtin can generate.
 /// This has various subclasses depending on the ultimate output destination.
@@ -379,8 +392,7 @@ class output_stream_t : noncopyable_t, nonmovable_t {
     bool append(const wchar_t *s) { return append(s, std::wcslen(s)); }
 
     /// Append a char.
-    bool append(wchar_t s) { return append(&s, 1); }
-    bool push_back(wchar_t c) { return append(c); }
+    bool push(wchar_t s) { return append(&s, 1); }
 
     // Append data from a narrow buffer, widening it.
     bool append_narrow_buffer(const separated_buffer_t &buffer);
@@ -413,9 +425,7 @@ class null_output_stream_t final : public output_stream_t {
 class fd_output_stream_t final : public output_stream_t {
    public:
     /// Construct from a file descriptor, which must be nonegative.
-    explicit fd_output_stream_t(int fd) : fd_(fd), sigcheck_(topic_t::sighupint) {
-        assert(fd_ >= 0 && "Invalid fd");
-    }
+    explicit fd_output_stream_t(int fd);
 
     int flush_and_check_error() override;
 
@@ -496,6 +506,27 @@ struct io_streams_t : noncopyable_t {
     std::shared_ptr<job_group_t> job_group{};
 
     io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
+    virtual ~io_streams_t() = default;
+
+    /// autocxx junk.
+    output_stream_t &get_out() { return out; };
+    output_stream_t &get_err() { return err; };
+    io_streams_t(const io_streams_t &) = delete;
+    bool get_out_redirected() { return out_is_redirected; };
+    bool get_err_redirected() { return err_is_redirected; };
+    bool ffi_stdin_is_directly_redirected() const { return stdin_is_directly_redirected; };
+    int ffi_stdin_fd() const { return stdin_fd; };
 };
+
+/// FFI helper.
+struct owning_io_streams_t : io_streams_t {
+    string_output_stream_t out_storage;
+    null_output_stream_t err_storage;
+    owning_io_streams_t() : io_streams_t(out_storage, err_storage) {}
+};
+
+std::unique_ptr<io_streams_t> make_null_io_streams_ffi();
+std::unique_ptr<io_streams_t> make_test_io_streams_ffi();
+wcstring get_test_output_ffi(const io_streams_t &streams);
 
 #endif

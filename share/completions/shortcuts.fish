@@ -5,7 +5,7 @@
 # imagine my surprise when I found fish function stirngs in binaries in /usr/bin!
 
 # checking the path is as expected is about as far as we're going with validation
-if test (command -v shortcuts) = /usr/bin/shortcuts
+if test "$(command -s shortcuts)" = /usr/bin/shortcuts
     command shortcuts --generate-completion-script=fish | source
 end
 

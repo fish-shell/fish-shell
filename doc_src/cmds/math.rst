@@ -17,8 +17,9 @@ Description
 ``math`` performs mathematical calculations.
 It supports simple operations such as addition, subtraction, and so on, as well as functions like ``abs()``, ``sqrt()`` and ``ln()``.
 
-By default, the output is a floating-point number with trailing zeroes trimmed.
-To get a fixed representation, the ``--scale`` option can be used, including ``--scale=0`` for integer output.
+By default, the output shows up to 6 decimal places.
+To change the number of decimal places, use the ``--scale`` option, including ``--scale=0`` for integer output.
+Trailing zeroes will always be trimmed.
 
 Keep in mind that parameter expansion happens before expressions are evaluated.
 This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis (``()``) and the asterisk (``*``) glob character have to be escaped or quoted.

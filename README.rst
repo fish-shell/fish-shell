@@ -146,7 +146,7 @@ Building
 Dependencies
 ~~~~~~~~~~~~
 
-Compiling fish requires:
+Compiling fish from a tarball requires:
 
 -  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
 -  CMake (version 3.5 or later)
@@ -158,6 +158,20 @@ Sphinx is also optionally required to build the documentation from a
 cloned git repository.
 
 Additionally, running the test suite requires Python 3.5+ and the pexpect package.
+
+Dependencies, git master
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Building from git master currently requires, in addition to the dependencies for a tarball:
+
+-  Rust (version 1.67 or later)
+-  libclang, even if you are compiling with GCC
+-  an Internet connection
+
+fish is in the process of being ported to Rust, replacing all C++ code, and as such these dependencies are a bit awkward and in flux.
+
+In general, we would currently not recommend running from git master if you just want to *use* fish.
+Given the nature of the port, what is currently there is mostly a slower and buggier version of the last C++-based release.
 
 Building from source (all platforms) - Makefile generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,34 +188,12 @@ To install into ``/usr/local``, run:
 The install directory can be changed using the
 ``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.
 
-Building from source (macOS) - Xcode
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Note: The minimum supported macOS version is 10.10 "Yosemite".
-
-.. code:: bash
-
-   mkdir build; cd build
-   cmake .. -G Xcode
-
-An Xcode project will now be available in the ``build`` subdirectory.
-You can open it with Xcode, or run the following to build and install in
-``/usr/local``:
-
-.. code:: bash
-
-   xcodebuild
-   xcodebuild -scheme install
-
-The install directory can be changed using the
-``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.
-
 Build options
 ~~~~~~~~~~~~~
 
-In addition to the normal cmake build options (like ``CMAKE_INSTALL_PREFIX``), fish has some other options available to customize it.
+In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), fish has some other options available to customize it.
 
-- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when sphinx isn't installed.
+- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
 - INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
 - MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.

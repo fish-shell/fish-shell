@@ -28,8 +28,9 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"  // IWYU pragma: keep
-#include "wutil.h"   // IWYU pragma: keep
+#include "signals.h"  // IWYU pragma: keep
+#include "threads.rs.h"
+#include "wutil.h"  // IWYU pragma: keep
 
 /// A name for our own key mapping for nul.
 static const wchar_t *k_nul_mapping_name = L"nul";
@@ -39,7 +40,7 @@ struct input_mapping_t {
     /// Character sequence which generates this event.
     wcstring seq;
     /// Commands that should be evaluated by this mapping.
-    wcstring_list_t commands;
+    std::vector<wcstring> commands;
     /// We wish to preserve the user-specified order. This is just an incrementing value.
     unsigned int specification_order;
     /// Mode in which this command should be evaluated.
@@ -47,7 +48,7 @@ struct input_mapping_t {
     /// New mode that should be switched to after command evaluation.
     wcstring sets_mode;
 
-    input_mapping_t(wcstring s, wcstring_list_t c, wcstring m, wcstring sm)
+    input_mapping_t(wcstring s, std::vector<wcstring> c, wcstring m, wcstring sm)
         : seq(std::move(s)), commands(std::move(c)), mode(std::move(m)), sets_mode(std::move(sm)) {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
@@ -128,6 +129,7 @@ static constexpr const input_function_metadata_t input_function_metadata[] = {
     {L"forward-single-char", readline_cmd_t::forward_single_char},
     {L"forward-word", readline_cmd_t::forward_word},
     {L"history-pager", readline_cmd_t::history_pager},
+    {L"history-pager-delete", readline_cmd_t::history_pager_delete},
     {L"history-prefix-search-backward", readline_cmd_t::history_prefix_search_backward},
     {L"history-prefix-search-forward", readline_cmd_t::history_prefix_search_forward},
     {L"history-search-backward", readline_cmd_t::history_search_backward},
@@ -172,6 +174,8 @@ static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0
               "input_function_metadata size mismatch with input_common. Did you forget to update "
               "input_function_metadata?");
 
+// Keep this function for debug purposes
+// See 031b265
 wcstring describe_char(wint_t c) {
     if (c < R_END_INPUT_FUNCTIONS) {
         return format_string(L"%02x (%ls)", c, input_function_metadata[c].name);
@@ -250,7 +254,7 @@ void input_mapping_set_t::add(wcstring sequence, const wchar_t *const *commands,
     all_mappings_cache_.reset();
 
     // Remove existing mappings with this sequence.
-    const wcstring_list_t commands_vector(commands, commands + commands_len);
+    const std::vector<wcstring> commands_vector(commands, commands + commands_len);
 
     mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
 
@@ -750,20 +754,12 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
                 }
                 case readline_cmd_t::func_and:
                 case readline_cmd_t::func_or: {
-                    // If previous function has correct status, we keep reading tokens
-                    if (evt.get_readline() == readline_cmd_t::func_and) {
-                        // Don't return immediately, we might need to handle it here - like
-                        // self-insert.
-                        if (function_status_) continue;
-                    } else {
-                        if (!function_status_) continue;
+                    // If previous function has bad status, we want to skip all functions that
+                    // follow us.
+                    if ((evt.get_readline() == readline_cmd_t::func_and) != function_status_) {
+                        drop_leading_readline_events();
                     }
-                    // Else we flush remaining tokens
-                    do {
-                        evt = this->readch();
-                    } while (evt.is_readline());
-                    this->push_front(evt);
-                    return readch();
+                    continue;
                 }
                 default: {
                     return evt;
@@ -825,7 +821,8 @@ bool input_mapping_set_t::erase(const wcstring &sequence, const wcstring &mode, 
 }
 
 bool input_mapping_set_t::get(const wcstring &sequence, const wcstring &mode,
-                              wcstring_list_t *out_cmds, bool user, wcstring *out_sets_mode) const {
+                              std::vector<wcstring> *out_cmds, bool user,
+                              wcstring *out_sets_mode) const {
     bool result = false;
     const auto &ml = user ? mapping_list_ : preset_mapping_list_;
     for (const input_mapping_t &m : ml) {
@@ -852,7 +849,7 @@ std::shared_ptr<const mapping_list_t> input_mapping_set_t::all_mappings() {
 
 /// Create a list of terminfo mappings.
 static std::vector<terminfo_mapping_t> create_input_terminfo() {
-    assert(curses_initialized);
+    assert(CURSES_INITIALIZED);
     if (!cur_term) return {};  // setupterm() failed so we can't referency any key definitions
 
 #define TERMINFO_ADD(key) \
@@ -930,9 +927,9 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
     return false;
 }
 
-wcstring_list_t input_terminfo_get_names(bool skip_null) {
+std::vector<wcstring> input_terminfo_get_names(bool skip_null) {
     assert(s_terminfo_mappings.is_set());
-    wcstring_list_t result;
+    std::vector<wcstring> result;
     const auto &mappings = *s_terminfo_mappings;
     result.reserve(mappings.size());
     for (const terminfo_mapping_t &m : mappings) {
@@ -944,10 +941,10 @@ wcstring_list_t input_terminfo_get_names(bool skip_null) {
     return result;
 }
 
-const wcstring_list_t &input_function_get_names() {
+const std::vector<wcstring> &input_function_get_names() {
     // The list and names of input functions are hard-coded and never change
-    static wcstring_list_t result = ([&]() {
-        wcstring_list_t result;
+    static std::vector<wcstring> result = ([&]() {
+        std::vector<wcstring> result;
         result.reserve(input_function_count);
         for (const auto &md : input_function_metadata) {
             if (md.name[0]) {

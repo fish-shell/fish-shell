@@ -45,6 +45,10 @@ enum class expand_flag {
     /// Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if
     /// fuzzy_match is set.
     no_fuzzy_directories,
+    /// Allows matching a leading dot even if the wildcard does not contain one.
+    /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
+    /// match hidden files.
+    allow_nonliteral_leading_dot,
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
     /// working directories, and to use logical instead of physical paths.
     special_for_cd,
@@ -183,7 +187,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_
 /// If \p skip_wildcards is true, then do not do wildcard expansion
 /// \return an expand error.
 expand_result_t expand_to_command_and_args(const wcstring &instr, const operation_context_t &ctx,
-                                           wcstring *out_cmd, wcstring_list_t *out_args,
+                                           wcstring *out_cmd, std::vector<wcstring> *out_args,
                                            parse_error_list_t *errors = nullptr,
                                            bool skip_wildcards = false);
 

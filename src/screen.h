@@ -127,7 +127,7 @@ class screen_data_t {
     bool empty() const { return line_datas.empty(); }
 };
 
-class outputter_t;
+struct outputter_t;
 
 /// The class representing the current and desired screen contents.
 class screen_t {
@@ -244,6 +244,8 @@ class screen_t {
 /// Issues an immediate clr_eos.
 void screen_force_clear_to_end();
 
+void screen_clear_layout_cache_ffi();
+
 // Information about the layout of a prompt.
 struct prompt_layout_t {
     std::vector<size_t> line_breaks;  // line breaks when rendering the prompt
@@ -256,7 +258,7 @@ class layout_cache_t : noncopyable_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings, ordered
     // lexicographically.
-    wcstring_list_t esc_cache_;
+    std::vector<wcstring> esc_cache_;
 
     // LRU-list of prompts and their layouts.
     // Use a list so we can promote to the front on a cache hit.
@@ -330,4 +332,8 @@ class layout_cache_t : noncopyable_t {
 };
 
 maybe_t<size_t> escape_code_length(const wchar_t *code);
+// Always return a value, by moving checking of sequence start to the caller.
+long escape_code_length_ffi(const wchar_t *code);
+
+void screen_set_midnight_commander_hack();
 #endif

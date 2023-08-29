@@ -61,21 +61,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     set -q terminal[1]
     or set terminal auto
 
-    set -l function
-    switch "$terminal"
-        case auto
-            # Nowadays, konsole does not set $KONSOLE_PROFILE_NAME anymore,
-            # and it uses the xterm sequences.
-            if set -q KONSOLE_PROFILE_NAME
-                set function __fish_cursor_konsole
-            else
-                set function __fish_cursor_xterm
-            end
-        case konsole
-            set function __fish_cursor_konsole
-        case xterm
-            set function __fish_cursor_xterm
-    end
+    set -l function __fish_cursor_xterm
 
     set -q fish_cursor_unknown
     or set -g fish_cursor_unknown block
@@ -92,7 +78,10 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
 
     echo "
           function fish_vi_cursor_handle_preexec --on-event fish_preexec
-              set -l varname fish_cursor_default
+              set -l varname fish_cursor_external
+              if not set -q \$varname
+                set varname fish_cursor_default
+              end
               if not set -q \$varname
                 set varname fish_cursor_unknown
               end

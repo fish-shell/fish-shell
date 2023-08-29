@@ -41,9 +41,45 @@ Available subcommands for the ``theme`` command:
 - ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
 - ``show`` shows what the given sample theme (or all) would look like.
 
-The themes are loaded from the theme directory shipped with fish or a ``themes`` directory in the fish configuration directory (typically ``~/.config/fish/themes``).
-
 The **-h** or **--help** option displays help about using this command.
+
+Theme Files
+-----------
+
+``fish_config theme`` and the theme selector in the web config tool load their themes from theme files. These are stored in the fish configuration directory, typically ``~/.config/fish/themes``, with a .theme ending.
+
+You can add your own theme by adding a file in that directory.
+
+To get started quickly::
+
+  fish_config theme dump > ~/.config/fish/themes/my.theme
+
+which will save your current theme in .theme format.
+
+The format looks like this:
+
+.. highlight:: none
+
+::
+
+   # name: 'Cool Beans'
+   # preferred_background: black
+
+   fish_color_autosuggestion 666
+   fish_color_cancel -r
+   fish_color_command normal
+   fish_color_comment '888'  '--italics'
+   fish_color_cwd 0A0
+   fish_color_cwd_root A00
+   fish_color_end 009900
+
+The two comments at the beginning are the name and background that the web config tool shows.
+
+The other lines are just like ``set variable value``, except that no expansions are allowed. Quotes are, but aren't necessary.
+
+Any color variable fish knows about that the theme doesn't set will be set to empty when it is loaded, so the old theme is completely overwritten.
+
+Other than that, .theme files can contain any variable with a name that matches the regular expression ``'^fish_(?:pager_)?color.*$'`` - starts with ``fish_``, an optional ``pager_``, then ``color`` and then anything.
 
 Example
 -------

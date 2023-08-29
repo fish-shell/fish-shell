@@ -25,9 +25,9 @@ If this is your first time using fish, see the :ref:`tutorial <tutorial>`.
 
 If you are already familiar with other shells like bash and want to see the scripting differences, see :ref:`Fish For Bash Users <fish_for_bash_users>`.
 
-For a comprehensive overview of fish's scripting language, see :ref:`The Fish Language <language>`.
+For an overview of fish's scripting language, see :ref:`The Fish Language <language>`. If it would be useful in a script file, it's here.
 
-For information on using fish interactively, see :ref:`Interactive use <interactive>`.
+For information on using fish interactively, see :ref:`Interactive use <interactive>`. If it's about key presses, syntax highlighting or anything else that needs an interactive terminal session, look here.
 
 If you need to install fish first, read on, the rest of this document will tell you how to get, install and configure fish.
 
@@ -107,11 +107,11 @@ If you want to share your script with others, you might want to use :command:`en
   #!/usr/bin/env fish
   echo Hello from fish $version
 
-This will call ``env``, which then goes through :envvar:`PATH` to find a program called "fish". This makes it work, whether fish is installed in /usr/local/bin/fish or /usr/bin/fish or ~/.local/bin/fish, as long as that directory is in :envvar:`PATH`.
+This will call ``env``, which then goes through :envvar:`PATH` to find a program called "fish". This makes it work, whether fish is installed in (for example) ``/usr/local/bin/fish``, ``/usr/bin/fish``, or ``~/.local/bin/fish``, as long as that directory is in :envvar:`PATH`.
 
 The shebang line is only used when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
 
-When executing files without an interpreter, fish, like other shells, tries your system shell, typically /bin/sh. This is needed because some scripts are shipped without a shebang line.
+When executing files without an interpreter, fish, like other shells, tries your system shell, typically ``/bin/sh``. This is needed because some scripts are shipped without a shebang line.
        
 Configuration
 =============
@@ -171,6 +171,8 @@ Other help pages
    fish_for_bash_users
    tutorial
    completions
+   prompt
    design
    relnotes
+   contributing
    license

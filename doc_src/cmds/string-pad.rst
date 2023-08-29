@@ -48,13 +48,13 @@ Examples
     >_ string pad -w$COLUMNS (date)
     # Prints the current time on the right edge of the screen.
 
-
+.. END EXAMPLES
 
 See Also
 --------
 
+.. BEGIN SEEALSO
+
 - The :doc:`printf <printf>` command can do simple padding, for example ``printf %10s\n`` works like ``string pad -w10``.
 
 - :doc:`string length <string-length>` with the ``--visible`` option can be used to show what fish thinks the width is.
-
-.. END EXAMPLES

@@ -1,0 +1,17 @@
+# from qjs --help
+
+complete -c qjs -l help -s h -d "list options"
+complete -c qjs -l eval -s e -r -d "evaluate EXPR"
+complete -c qjs -l interactive -s i -d "go to interactive mode"
+complete -c qjs -l module -s m -d "load as ES6 module (default=autodetect)"
+complete -c qjs -l script -d "load as ES6 module (default=autodetect)"
+complete -c qjs -l include -s I -r -d "include an additional file"
+complete -c qjs -l std -d "make 'std' and 'os' available to the loaded script"
+complete -c qjs -l bignum -d "enable the bignum extensions (BigFloat, BigDecimal)"
+complete -c qjs -l qjscalc -d "load the QJSCalc runtime (default if invoked as qjscalc)"
+complete -c qjs -l trace -s T -d "trace memory allocation"
+complete -c qjs -l dump -d "dump the memory usage stats"
+complete -c qjs -l memory-limit -r -d "limit the memory usage to 'n' bytes"
+complete -c qjs -l stack-size -r -d "limit the stack size to 'n' bytes"
+complete -c qjs -l unhandled-rejection -d "dump unhandled promise rejections"
+complete -c qjs -l quit -s q -d "just instantiate the interpreter and quit"

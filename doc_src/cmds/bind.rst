@@ -23,25 +23,22 @@ It can add bindings if given a SEQUENCE of characters to bind to. These should b
 
 For example, :kbd:`Alt`\ +\ :kbd:`W` can be written as ``\ew``, and :kbd:`Control`\ +\ :kbd:`X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
 
-The generic key binding that matches if no other binding does can be set by specifying a ``SEQUENCE`` of the empty string (that is, ``''`` ). For most key bindings, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes not specifically bound to into the editor. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
+The generic key binding that matches if no other binding does can be set by specifying a ``SEQUENCE`` of the empty string (``''``). For most key bindings, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes not specifically bound to into the editor. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
 
 If the ``-k`` switch is used, the name of a key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key\_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys). Normally this will print an error if the current ``$TERM`` entry doesn't have a given key, unless the ``-s`` switch is given.
 
 To find out what sequence a key combination sends, you can use :doc:`fish_key_reader <fish_key_reader>`.
 
-``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` for a complete list of these input functions.
-
-When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a :ref:`function <syntax-function>` and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
-
+``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` or :ref:`see below <special-input-functions>` for a list of these input functions.
 
 .. note::
-   Special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script). To run special input functions from regular fish script, use ``commandline -f`` (see also :doc:`commandline <commandline>`). If a script produces output, it should finish by calling ``commandline -f repaint`` to tell fish that a repaint is in order.
+   The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script). To run special input functions from regular fish script, use ``commandline -f`` (see also :doc:`commandline <commandline>`). If a script produces output, it should finish by calling ``commandline -f repaint`` so that fish knows to redraw the prompt.
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given ``MODE``) are printed. If ``SEQUENCE`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 
-To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
-
 Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
+
+To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
 Options
 -------
@@ -87,6 +84,8 @@ The following options are available:
 **-h** or **--help**
     Displays help about using this command.
 
+.. _special-input-functions:
+   
 Special input functions
 -----------------------
 The following special input functions are available:
@@ -198,6 +197,9 @@ The following special input functions are available:
 
 ``history-pager``
     invoke the searchable pager on history (incremental search); or if the history pager is already active, search further backwards in time.
+
+``history-pager-delete``
+    permanently delete the history item selected in the history pager
 
 ``history-search-backward``
     search the history for the previous match

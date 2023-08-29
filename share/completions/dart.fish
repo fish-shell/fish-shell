@@ -49,11 +49,10 @@ complete -c dart -n '__fish_seen_subcommand_from format' -s l -l line-length -d 
 complete -c dart -n '__fish_seen_subcommand_from migrate' -l apply-changes -d 'Apply the proposed null safety changes to the files on disk.'
 complete -c dart -n '__fish_seen_subcommand_from migrate' -l ignore-errors -d 'Attempt to perform null safety analysis even if the project has analysis errors.'
 complete -c dart -n '__fish_seen_subcommand_from migrate' -l skip-import-check -d 'Go ahead with migration even if some imported files have not yet been migrated.'
-complete -c dart -n '__fish_seen_subcommand_from migrate' -l web-preview -d 'Show an interactive preview of the proposed null safety changes in a browser window. Use --no-web-preview to print proposed changes to the console. (defaults to on)'
-complete -c dart -n '__fish_seen_subcommand_from migrate' -l no-web-preview -d 'Show an interactive preview of the proposed null safety changes in a browser window. Use --no-web-preview to print proposed changes to the console. (defaults to on)'
-complete -c dart -n '__fish_seen_subcommand_from migrate' -l preview-hostname -d 'Run the preview server on the specified hostname. If not specified, "localhost" is used. Use "any" to specify IPv6.any or IPv4.any.(defaults to "localhost")'
-complete -c dart -n '__fish_seen_subcommand_from migrate' -l preview-port -d 'Run the preview server on the specified port. If not specified, dynamically allocate a port.'
-complete -c dart -n '__fish_seen_subcommand_from migrate' -l preview-port -d 'Output a machine-readable summary of migration changes.'
+complete -c dart -n '__fish_seen_subcommand_from migrate' -l web-preview -d 'Show preview of the proposed null safety changes in a browser window'
+complete -c dart -n '__fish_seen_subcommand_from migrate' -l no-web-preview -d 'Show preview of the proposed null safety changes in the console'
+complete -c dart -n '__fish_seen_subcommand_from migrate' -l preview-hostname -d 'Run the preview server on the specified hostname'
+complete -c dart -n '__fish_seen_subcommand_from migrate' -l preview-port -d 'Run the preview server on the specified port'
 
 # pub
 complete -c dart -n '__fish_seen_subcommand_from pub' -s C -l directory -d 'Run the subcommand in the directory<dir>.(defaults to ".")'
@@ -73,7 +72,7 @@ complete -c dart -n '__fish_seen_subcommand_from pub' -xa ploader -d 'Manage upl
 
 # run
 complete -c dart -n '__fish_seen_subcommand_from run' -l observe -d 'The observe flag is a convenience flag used to run a program with a set of common options useful for debugging.'
-complete -c dart -n '__fish_seen_subcommand_from run' -l enable-vm-service -d 'Enables the VM service and listens on the specified port for connections (default port number is 8181, default bind address is localhost).'
+complete -c dart -n '__fish_seen_subcommand_from run' -l enable-vm-service -d 'Enables VM service and listen on the specified port (default localhost:8181)'
 complete -c dart -n '__fish_seen_subcommand_from run' -l serve-devtools -d 'Serves an instance of the Dart DevTools debugger and profiler via the VM service at <vm-service-uri>/devtools.'
 complete -c dart -n '__fish_seen_subcommand_from run' -l no-serve-devtools -d 'Serves an instance of the Dart DevTools debugger and profiler via the VM service at <vm-service-uri>/devtools.'
 complete -c dart -n '__fish_seen_subcommand_from run' -l pause-isolates-on-exit -d 'Pause isolates on exit when running with --enable-vm-service.'

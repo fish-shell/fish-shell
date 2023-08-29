@@ -2,14 +2,14 @@
 # Copyright (c) 2018 David Sanson
 # Licensed under the GNU General Public License version 2
 
-set -l informats commonmark creole docbook docx epub gfm haddock html jats json latex markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki muse native odt opml org rst t2t textile tikiwiki twiki vimwiki
-set -l outformats asciidoc beamer commonmark context docbook docbook4 docbook5 docx dokuwiki dzslides epub epub2 epub3 fb2 gfm haddock html html4 html5 icml jats json latex man markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki ms muse native odt opendocument opml org plain pptx revealjs rst rtf s5 slideous slidy tei texinfo textile zimwiki
-set -l highlight_styles pygments tango espresso zenburn kate monochrome breezedark haddock
+set -l informats (pandoc --list-input-formats)
+set -l outformats (pandoc --list-output-formats)
+set -l highlight_styles (pandoc --list-highlight-styles)
 set -l datadir $HOME/.pandoc
 
 # Only suggest installed engines
 set -l pdfengines
-for engine in pdflatex lualatex xelatex wkhtmltopdf weasyprint prince context pdfroff
+for engine in pdflatex lualatex xelatex latexmk tectonic wkhtmltopdf weasyprint pagedjs-cli prince context pdfroff
     if type -q $engine
         set pdfengines $pdfengines $engine
     end
@@ -83,18 +83,8 @@ complete -c pandoc -r -l citation-abbreviations
 complete -c pandoc -r -f -l print-highlight-style -k -a "(__fish_complete_suffix 'theme' )"
 complete -c pandoc -r -f -l highlight_style -k -a "(__fish_complete_suffix 'theme' )"
 complete -c pandoc -r -f -l csl -k -a "(__fish_complete_suffix 'csl'   )"
-complete -c pandoc -r -f -l reference-file -k -a "(__fish_complete_suffix 'odt') (__fish_complete_suffix 'docx')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'bib')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'bibtex')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'copac')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'json')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'yaml')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'enl')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'xml')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'wos')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'medline')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'mods')"
-complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'ria')"
+complete -c pandoc -r -f -l reference-file -k -a "(__fish_complete_suffix 'odt' 'docx')"
+complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'bib' 'bibtex' 'copac' 'json' 'yaml' 'enl' 'xml' 'wos' 'medline' 'mods' 'ria')"
 complete -c pandoc -r -f -l lua-filter -k -a "(__fish_complete_suffix 'lua')"
 
 # options that take files in DATADIR

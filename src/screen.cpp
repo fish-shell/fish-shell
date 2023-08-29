@@ -63,6 +63,8 @@ class scoped_buffer_t : noncopyable_t, nonmovable_t {
 // Note this is deliberately exported so that init_curses can clear it.
 layout_cache_t layout_cache_t::shared;
 
+void screen_clear_layout_cache_ffi() { layout_cache_t::shared.clear(); }
+
 /// Tests if the specified narrow character sequence is present at the specified position of the
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
 static size_t try_sequence(const char *seq, const wchar_t *str) {
@@ -74,6 +76,10 @@ static size_t try_sequence(const char *seq, const wchar_t *str) {
     DIE("unexpectedly fell off end of try_sequence()");
     return 0;  // this should never be executed
 }
+
+static bool midnight_commander_hack = false;
+
+void screen_set_midnight_commander_hack() { midnight_commander_hack = true; }
 
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 static size_t next_tab_stop(size_t current_line_width) {
@@ -258,6 +264,11 @@ maybe_t<size_t> escape_code_length(const wchar_t *code) {
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
 
     return found ? maybe_t<size_t>{esc_seq_len} : none();
+}
+
+long escape_code_length_ffi(const wchar_t *code) {
+    auto found = escape_code_length(code);
+    return found.has_value() ? (long)*found : -1;
 }
 
 size_t layout_cache_t::escape_code_length(const wchar_t *code) {
@@ -576,7 +587,7 @@ void screen_t::move(int new_x, int new_y) {
     }
 
     for (i = 0; i < abs(y_steps); i++) {
-        writembs(outp, str);
+        outp.writembs(str);
     }
 
     x_steps = new_x - this->actual.cursor.x;
@@ -633,7 +644,7 @@ void screen_t::write_mbs(const char *s) { writembs(this->outp(), s); }
 
 /// Convert a wide string to a multibyte string and append it to the buffer.
 void screen_t::write_str(const wchar_t *s) { this->outp().writestr(s); }
-void screen_t::write_str(const wcstring &s) { this->outp().writestr(s); }
+void screen_t::write_str(const wcstring &s) { this->outp().writestr(s.c_str()); }
 
 /// Returns the length of the "shared prefix" of the two lines, which is the run of matching text
 /// and colors. If the prefix ends on a combining character, do not include the previous character
@@ -905,7 +916,11 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
 
     // Also move the cursor to the beginning of the line here,
     // in case we're wrong about the width anywhere.
-    this->move(0, 0);
+    // Don't do it when running in midnight_commander because of
+    // https://midnight-commander.org/ticket/4258.
+    if (!midnight_commander_hack) {
+        this->move(0, 0);
+    }
 
     // Clear remaining lines (if any) if we haven't cleared the screen.
     if (!has_cleared_screen && need_clear_screen && clr_eol) {
@@ -1201,8 +1216,9 @@ void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
 
     // Re-render our completions page if necessary. Limit the term size of the pager to the true
     // term size, minus the number of lines consumed by our string.
-    pager.set_term_size(termsize_t{std::max(1, curr_termsize.width),
-                                   std::max(1, curr_termsize.height - full_line_count)});
+    pager.set_term_size(
+        termsize_t{std::max((rust::isize)1, curr_termsize.width),
+                   std::max((rust::isize)1, curr_termsize.height - full_line_count)});
     pager.update_rendering(&page_rendering);
     // Append pager_data (none if empty).
     this->desired.append_lines(page_rendering.screen_data);
@@ -1289,7 +1305,7 @@ void screen_t::reset_abandoning_line(int screen_width) {
                 const_cast<char *>(exit_attribute_mode))));  // normal text ANSI escape sequence
         }
 
-        int newline_glitch_width = term_has_xn ? 0 : 1;
+        int newline_glitch_width = TERM_HAS_XN ? 0 : 1;
         abandon_line_string.append(screen_width - non_space_width - newline_glitch_width, L' ');
     }
 
@@ -1320,11 +1336,11 @@ void screen_t::reset_abandoning_line(int screen_width) {
 
 void screen_force_clear_to_end() {
     if (clr_eos) {
-        writembs(outputter_t::stdoutput(), clr_eos);
+        writembs(stdoutput(), clr_eos);
     }
 }
 
-screen_t::screen_t() : outp_(outputter_t::stdoutput()) {}
+screen_t::screen_t() : outp_(stdoutput()) {}
 
 bool screen_t::cursor_is_wrapped_to_own_line() const {
     // Note == comparison against the line count is correct: we do not create a line just for the

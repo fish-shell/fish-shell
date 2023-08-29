@@ -7,8 +7,8 @@ set -l yarn_add "yarn global add"
 # because it won't be matched. But we can prevent the slowdown from getting
 # a list of all packages and filtering through it if we only do that when
 # completing what seems to be a package name.
-complete -f -c yarn -n '__fish_seen_subcommand_from remove; and not __fish_is_switch' -xa '(__yarn_installed_packages)'
-complete -f -c yarn -n '__fish_seen_subcommand_from add; and not __fish_is_switch' -xa "(__yarn_filtered_list_packages \"$yarn_add\")"
+complete -f -c yarn -n '__fish_seen_subcommand_from remove; and not __fish_is_switch' -xa '(__npm_installed_local_packages)'
+complete -f -c yarn -n '__fish_seen_subcommand_from add; and not __fish_is_switch' -xa "(__npm_filtered_list_packages \"$yarn_add\")"
 
 complete -f -c yarn -n __fish_use_subcommand -a help -d 'Show available commands and flags'
 
@@ -22,7 +22,7 @@ complete -f -c yarn -n '__fish_seen_subcommand_from add' -l tilde -s T
 complete -f -c yarn -n __fish_use_subcommand -a bin -d 'Show location of Yarn `bin` folder'
 
 complete -f -c yarn -n __fish_use_subcommand -a cache -d 'Manage Yarn cache'
-complete -f -c yarn -n '__fish_seen_subcommand_from cache' -a 'clean'
+complete -f -c yarn -n '__fish_seen_subcommand_from cache' -a clean
 
 complete -f -c yarn -n __fish_use_subcommand -a config -d 'Manage Yarn configuration'
 complete -f -c yarn -n '__fish_seen_subcommand_from config' -a 'set get delete list'

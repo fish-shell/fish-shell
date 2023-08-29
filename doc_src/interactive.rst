@@ -125,6 +125,7 @@ Variable                                          Meaning
 .. envvar:: fish_color_status                     the last command's nonzero exit code in the default prompt
 .. envvar:: fish_color_cancel                     the '^C' indicator on a canceled command
 .. envvar:: fish_color_search_match               history search matches and selected pager items (background only)
+.. envvar:: fish_color_history_current            the current position in the history for commands like ``dirh`` and ``cdh``
 
 ==========================================        =====================================================================
 
@@ -189,7 +190,7 @@ To avoid needless typing, a frequently-run command like ``git checkout`` can be 
 
 After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, a ``gco`` in command position will turn into ``git checkout`` in the command line. If you want to use a literal ``gco`` sometimes, use :kbd:`Control`\ +\ :kbd:`Space` [#]_.
 
-This is a lot more powerful, for example you can make going up a number of directories easier with this::
+Abbreviations are a lot more powerful than just replacing literal strings. For example you can make going up a number of directories easier with this::
 
   function multicd
       echo cd (string repeat -n (math (string length -- $argv[1]) - 1) ../)
@@ -202,40 +203,34 @@ The advantage over aliases is that you can see the actual command before using i
 
 .. [#] Any binding that executes the ``expand-abbr`` or ``execute`` :doc:`bind function <cmds/bind>` will expand abbreviations. By default :kbd:`Control`\ +\ :kbd:`Space` is bound to just inserting a space.
 
-.. _title:
-
-Programmable title
-------------------
-
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :doc:`fish_title <cmds/fish_title>` function. The :doc:`fish_title <cmds/fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_prompt <cmds/fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
-
-The default fish title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
-
-Examples:
-
-To show the last command and working directory in the title::
-
-    function fish_title
-        # `prompt_pwd` shortens the title. This helps prevent tabs from becoming very wide.
-        echo $argv[1] (prompt_pwd)
-        pwd
-    end
-
 .. _prompt:
 
 Programmable prompt
 -------------------
 
-When it is fish's turn to ask for input (like after it started or the command ended), it will show a prompt. It does this by running the :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` functions.
+When it is fish's turn to ask for input (like after it started or the command ended), it will show a prompt. Often this looks something like::
 
-The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left, though the default function only does this when in :ref:`vi-mode <vi-mode>`.
+    you@hostname ~>
+
+This prompt is determined by running the :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` functions.
+
+The output of the former is displayed on the left and the latter's output on the right side of the terminal.
+For :ref:`vi-mode <vi-mode>`, the output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left.
+
+Fish ships with a few prompts which you can see with :doc:`fish_config <cmds/fish_config>`. If you run just ``fish_config`` it will open a web interface [#]_ where you'll be shown the prompts and can pick which one you want. ``fish_config prompt show`` will show you the prompts right in your terminal.
+
+For example ``fish_config prompt choose disco`` will temporarily select the "disco" prompt. If you like it and decide to keep it, run ``fish_config prompt save``.
+
+You can also change these functions yourself by running ``funced fish_prompt`` and ``funcsave fish_prompt`` once you are happy with the result (or ``fish_right_prompt`` if you want to change that).
+
+.. [#] The web interface runs purely locally on your computer and requires python to be installed.
 
 .. _greeting:
 
 Configurable greeting
 ---------------------
 
-When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple greeting. You can change its text by changing the ``$fish_greeting`` variable, for instance using a :ref:`universal variable <variables-universal>`::
+When it is started interactively, fish tries to run the :doc:`fish_greeting <cmds/fish_greeting>` function. The default fish_greeting prints a simple message. You can change its text by changing the ``$fish_greeting`` variable, for instance using a :ref:`universal variable <variables-universal>`::
 
   set -U fish_greeting
 
@@ -251,16 +246,26 @@ or you can script it by changing the function::
 
 save this in config.fish or :ref:`a function file <syntax-function-autoloading>`. You can also use :doc:`funced <cmds/funced>` and :doc:`funcsave <cmds/funcsave>` to edit it easily.
 
-.. _private-mode:
+.. _title:
 
-Private mode
--------------
+Programmable title
+------------------
 
-If ``$fish_private_mode`` is set to a non-empty value, commands will not be written to the history file on disk.
+When using most terminals, it is possible to set the text displayed in the titlebar of the terminal window. Fish does this by running the :doc:`fish_title <cmds/fish_title>` function. It is executed before and after a command and the output is used as a titlebar message.
 
-You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
+The :doc:`status current-command <cmds/status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :doc:`fish_title <cmds/fish_title>` function is called. The first argument will contain the most recently executed foreground command as a string.
 
-You can query the variable ``fish_private_mode`` (``if test -n "$fish_private_mode" ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
+The default title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
+
+Examples:
+
+To show the last command and working directory in the title::
+
+    function fish_title
+        # `prompt_pwd` shortens the title. This helps prevent tabs from becoming very wide.
+        echo $argv[1] (prompt_pwd)
+        pwd
+    end
 
 .. _editor:
 
@@ -269,7 +274,7 @@ Command line editor
 
 The fish editor features copy and paste, a :ref:`searchable history <history-search>` and many editor functions that can be bound to special keyboard shortcuts.
 
-Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the Vi text editor. The default editing mode is Emacs. You can switch to Vi mode by running ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
+Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the Vi text editor. The default editing mode is Emacs. You can switch to Vi mode by running :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>` and switch back with :doc:`fish_default_key_bindings <cmds/fish_default_key_bindings>`. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
 
 
     function fish_hybrid_key_bindings --description \
@@ -296,7 +301,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Enter` executes the current commandline or inserts a newline if it's not complete yet (e.g. a ``)`` or ``end`` is missing).
 
-- :kbd:`Alt`\ +\ :kbd:`Enter` inserts a newline at the cursor position.
+- :kbd:`Alt`\ +\ :kbd:`Enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
 
 - :kbd:`Alt`\ +\ :kbd:`←` and :kbd:`Alt`\ +\ :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt`\ +\ :kbd:`→` (or :kbd:`Alt`\ +\ :kbd:`F`) accepts the first word in the suggestion.
 
@@ -308,9 +313,9 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the :ref:`history <history-search>` section for more information on history searching.
 
-- :kbd:`Control`\ +\ :kbd:`C` interrupt/kill whatever is running (SIGINT).
+- :kbd:`Control`\ +\ :kbd:`C` interrupts/kills whatever is running (SIGINT).
 
-- :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
+- :kbd:`Control`\ +\ :kbd:`D` deletes one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
 
 - :kbd:`Control`\ +\ :kbd:`U` removes contents from the beginning of line to the cursor (moving it to the :ref:`killring <killring>`).
 
@@ -332,7 +337,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Alt`\ +\ :kbd:`W` prints a short description of the command under the cursor.
 
-- :kbd:`Alt`\ +\ :kbd:`E` edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
+- :kbd:`Alt`\ +\ :kbd:`E` edits the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
 - :kbd:`Alt`\ +\ :kbd:`V` Same as :kbd:`Alt`\ +\ :kbd:`E`.
 
@@ -345,7 +350,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 Emacs mode commands
 ^^^^^^^^^^^^^^^^^^^
 
-To enable emacs mode, use ``fish_default_key_bindings``. This is also the default.
+To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key_bindings>`. This is also the default.
 
 - :kbd:`Home` or :kbd:`Control`\ +\ :kbd:`A` moves the cursor to the beginning of the line.
 
@@ -390,8 +395,7 @@ Vi mode commands
 
 Vi mode allows for the use of Vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
 
-To enable vi mode, use ``fish_vi_key_bindings``.
-
+To enable vi mode, use :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>`.
 It is also possible to add all emacs-mode bindings to vi-mode by using something like::
 
 
@@ -418,13 +422,19 @@ The ``fish_vi_cursor`` function will be used to change the cursor's shape depend
    set fish_cursor_default block
    # Set the insert mode cursor to a line
    set fish_cursor_insert line
-   # Set the replace mode cursor to an underscore
+   # Set the replace mode cursors to an underscore
    set fish_cursor_replace_one underscore
+   set fish_cursor_replace underscore
+   # Set the external cursor to a line. The external cursor appears when a command is started. 
+   # The cursor shape takes the value of fish_cursor_default when fish_cursor_external is not specified.
+   set fish_cursor_external line
    # The following variable can be used to configure cursor shape in
    # visual mode, but due to fish_cursor_default, is redundant here
    set fish_cursor_visual block
 
 Additionally, ``blink`` can be added after each of the cursor shape parameters to set a blinking cursor in the specified shape.
+
+Fish knows the shapes "block", "line" and "underscore", other values will be ignored.
 
 If the cursor shape does not appear to be changing after setting the above variables, it's likely your terminal emulator does not support the capabilities necessary to do this. It may also be the case, however, that ``fish_vi_cursor`` has not detected your terminal's features correctly (for example, if you are using ``tmux``). If this is the case, you can force ``fish_vi_cursor`` to set the cursor shape by setting ``$fish_vi_force_cursor`` in ``config.fish``. You'll have to restart fish for any changes to take effect. If cursor shape setting remains broken after this, it's almost certainly an issue with your terminal emulator, and not fish.
 
@@ -443,7 +453,7 @@ Command mode is also known as normal mode.
 
 - :kbd:`i` enters :ref:`insert mode <vi-mode-insert>` at the current cursor position.
 
-- :kbd:`Shift`\ +\ :kbd:`R` enters :ref:`insert mode <vi-mode-insert>` at the beginning of the line.
+- :kbd:`Shift`\ +\ :kbd:`I` enters :ref:`insert mode <vi-mode-insert>` at the beginning of the line.
 
 - :kbd:`v` enters :ref:`visual mode <vi-mode-visual>` at the current cursor position.
 
@@ -534,6 +544,10 @@ If you change your mind on a binding and want to go back to fish's default, you 
 
 Fish remembers its preset bindings and so it will take effect again. This saves you from having to remember what it was before and add it again yourself.
 
+If you use :ref:`vi bindings <vi-mode>`, note that ``bind`` will by default bind keys in :ref:`command mode <vi-mode-command>`. To bind something in :ref:`insert mode <vi-mode-insert>`::
+
+  bind --mode insert \cc 'commandline -r ""'
+
 Key sequences
 """""""""""""
 
@@ -619,6 +633,17 @@ If the commandline reads ``cd m``, place the cursor over the ``m`` character and
 
 .. [#] Or another binding that triggers the ``history-pager`` input function. See :doc:`bind <cmds/bind>` for a list.
 .. [#] Or another binding that triggers the ``pager-toggle-search`` input function.
+
+.. _private-mode:
+
+Private mode
+-------------
+
+Fish has a private mode, in which command history will not be written to the history file on disk. To enable it, either set ``$fish_private_mode`` to a non-empty value, or launch with ``fish --private`` (or ``fish -P`` for short).
+
+If you launch fish with ``-P``, it both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
+
+You can query the variable ``fish_private_mode`` (``if test -n "$fish_private_mode" ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 Navigating directories
 ----------------------

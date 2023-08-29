@@ -39,11 +39,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "ast.h"
 #include "common.h"
+#include "cxxgen.h"
 #include "env.h"
 #include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fds.h"
+#include "ffi_baggage.h"
+#include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "function.h"
@@ -59,7 +62,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signals.h"
+#include "threads.rs.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -258,29 +262,32 @@ static void read_init(parser_t &parser, const struct config_paths_t &paths) {
 
 static int run_command_list(parser_t &parser, const std::vector<std::string> &cmds,
                             const io_chain_t &io) {
+    int retval = STATUS_CMD_OK;
     for (const auto &cmd : cmds) {
         wcstring cmd_wcs = str2wcstring(cmd);
         // Parse into an ast and detect errors.
-        parse_error_list_t errors;
-        auto ast = ast::ast_t::parse(cmd_wcs, parse_flag_none, &errors);
-        bool errored = ast.errored();
+        auto errors = new_parse_error_list();
+        auto ast = ast_parse(cmd_wcs, parse_flag_none, &*errors);
+        bool errored = ast->errored();
         if (!errored) {
-            errored = parse_util_detect_errors(ast, cmd_wcs, &errors);
+            errored = parse_util_detect_errors(*ast, cmd_wcs, &*errors);
         }
         if (!errored) {
             // Construct a parsed source ref.
             // Be careful to transfer ownership, this could be a very large string.
-            parsed_source_ref_t ps =
-                std::make_shared<parsed_source_t>(std::move(cmd_wcs), std::move(ast));
-            parser.eval(ps, io);
+            auto ps = new_parsed_source_ref(cmd_wcs, *ast);
+            parser.eval_parsed_source(*ps, io, {}, block_type_t::top);
+            retval = STATUS_CMD_OK;
         } else {
             wcstring sb;
-            parser.get_backtrace(cmd_wcs, errors, sb);
+            parser.get_backtrace(cmd_wcs, *errors, sb);
             std::fwprintf(stderr, L"%ls", sb.c_str());
+            // XXX: Why is this the return for "unknown command"?
+            retval = STATUS_CMD_UNKNOWN;
         }
     }
 
-    return 0;
+    return retval;
 }
 
 /// Parse the argument list, return the index of the first non-flag arguments.
@@ -319,6 +326,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             }
             case 'd': {
                 activate_flog_categories_by_pattern(str2wcstring(optarg));
+                rust_activate_flog_categories_by_pattern(str2wcstring(optarg).c_str());
                 for (auto cat : get_flog_categories()) {
                     if (cat->enabled) {
                         std::fwprintf(stdout, L"Debug enabled for category: %ls\n", cat->name);
@@ -425,8 +433,7 @@ int main(int argc, char **argv) {
     int my_optind = 0;
 
     program_name = L"fish";
-    set_main_thread();
-    setup_fork_guards();
+    rust_init();
     signal_unblock_all();
 
     setlocale(LC_ALL, "");
@@ -464,6 +471,7 @@ int main(int argc, char **argv) {
         set_cloexec(fileno(debug_output));
         setlinebuf(debug_output);
         set_flog_output_file(debug_output);
+        rust_set_flog_file_fd(get_flog_file_fd());
     }
 
     // No-exec is prohibited when in interactive mode.
@@ -496,10 +504,10 @@ int main(int argc, char **argv) {
     // command line takes precedence).
     if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {
-            mutable_fish_features().set_from_string(s);
+            feature_set_from_string(s.c_str());
         }
     }
-    mutable_fish_features().set_from_string(opts.features);
+    feature_set_from_string(opts.features.c_str());
     proc_init();
     misc_init();
     reader_init();
@@ -555,7 +563,7 @@ int main(int argc, char **argv) {
 
         // Pass additional args as $argv.
         // Note that we *don't* support setting argv[0]/$0, unlike e.g. bash.
-        wcstring_list_t list;
+        std::vector<wcstring> list;
         for (char **ptr = argv + my_optind; *ptr; ptr++) {
             list.push_back(str2wcstring(*ptr));
         }
@@ -576,7 +584,7 @@ int main(int argc, char **argv) {
             FLOGF(error, _(L"Error reading script file '%s':"), file);
             perror("error");
         } else {
-            wcstring_list_t list;
+            std::vector<wcstring> list;
             for (char **ptr = argv + my_optind; *ptr; ptr++) {
                 list.push_back(str2wcstring(*ptr));
             }
@@ -593,7 +601,7 @@ int main(int argc, char **argv) {
     }
 
     int exit_status = res ? STATUS_CMD_UNKNOWN : parser.get_last_status();
-    event_fire(parser, event_t::process_exit(getpid(), exit_status));
+    event_fire(parser, *new_event_process_exit(getpid(), exit_status));
 
     // Trigger any exit handlers.
     event_fire_generic(parser, L"fish_exit", {to_string(exit_status)});
@@ -612,6 +620,7 @@ int main(int argc, char **argv) {
     if (debug_output) {
         fclose(debug_output);
     }
+    asan_maybe_exit(exit_status);
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit
 }

@@ -50,7 +50,7 @@ function trap -d 'Perform an action when the shell receives a signal'
                 if test -n "$sig"
                     set -l sw --on-signal $sig
                     if string match -qi exit -- $sig
-                            set sw --on-event fish_exit
+                        set sw --on-event fish_exit
                     end
                     echo "function __trap_handler_$sig $sw; $cmd; end" | source
                 else

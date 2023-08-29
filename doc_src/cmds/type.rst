@@ -21,10 +21,10 @@ The following options are available:
     Prints all of possible definitions of the specified names.
 
 **-s** or **--short**
-    Suppresses function expansion when used with no options or with **-a**/**--all**.
+    Don't print function definitions when used with no options or with **-a**/**--all**.
 
 **-f** or **--no-functions**
-    Suppresses function and builtin lookup.
+    Suppresses function lookup.
 
 **-t** or **--type**
     Prints ``function``, ``builtin``, or ``file`` if *NAME* is a shell function, builtin, or disk file, respectively.

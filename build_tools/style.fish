@@ -7,6 +7,7 @@ set -l git_clang_format no
 set -l c_files
 set -l fish_files
 set -l python_files
+set -l rust_files
 set -l all no
 
 if test "$argv[1]" = --all
@@ -25,13 +26,14 @@ if test $all = yes
         echo
         echo 'You have uncommitted changes. Are you sure you want to restyle?'
         read -P 'y/N? ' -n1 -l ans
-        if not string match -qi "y" -- $ans
+        if not string match -qi y -- $ans
             exit 1
         end
     end
     set c_files src/*.h src/*.cpp src/*.c
     set fish_files share/**.fish
     set python_files {doc_src,share,tests}/**.py
+    set rust_files fish-rust/src/**.rs
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.
@@ -52,6 +54,7 @@ else
     # Extract just the fish files.
     set fish_files (string match -r '^.*\.fish$' -- $files)
     set python_files (string match -r '^.*\.py$' -- $files)
+    set rust_files (string match -r '^.*\.rs$' -- $files)
 end
 
 set -l red (set_color red)
@@ -82,9 +85,9 @@ if set -q c_files[1]
         if set -q c_files[1]
             printf "Reformat those %d files?\n" (count $c_files)
             read -P 'y/N? ' -n1 -l ans
-            if string match -qi "y" -- $ans
+            if string match -qi y -- $ans
                 clang-format -i --verbose $c_files
-            else if string match -qi "n" -- $ans
+            else if string match -qi n -- $ans
                 echo Skipping
             else # like they ctrl-C'd or something.
                 exit 1
@@ -115,5 +118,16 @@ if set -q python_files[1]
     else
         echo === Running "$blue"black"$normal"
         black $python_files
+    end
+end
+
+if set -q rust_files[1]
+    if not type -q rustfmt
+        echo
+        echo Please install "`rustfmt`" to style rust
+        echo
+    else
+        echo === Running "$blue"rustfmt"$normal"
+        rustfmt $rust_files
     end
 end

@@ -20,25 +20,28 @@
 #include <vector>
 
 #include "common.h"
+#include "cxxgen.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "ffi_baggage.h"
+#include "ffi_init.rs.h"
 #include "fish_version.h"
 #include "input.h"
 #include "input_common.h"
 #include "maybe.h"
 #include "parser.h"
-#include "print_help.h"
+#include "print_help.rs.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signals.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
 static const wchar_t *ctrl_symbolic_names[] = {
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-    L"\\b",  L"\\t",  L"\\n",  nullptr, nullptr, L"\\r",  nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr,  nullptr, nullptr, nullptr,
+    L"\\b",  L"\\t",  L"\\n",  nullptr, nullptr,  L"\\r",  nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr,  nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, L"\\e",  L"\\x1c", nullptr, nullptr, nullptr};
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
@@ -135,7 +138,10 @@ static void ascii_printable_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, boo
 static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
     static wchar_t buf[64];
 
-    if (wc < L' ') {  // ASCII control character
+    if (wc == '\x1b') {
+        // Escape - this is *technically* also \c[
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\e");
+    } else if (wc < L' ') {  // ASCII control character
         ctrl_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
     } else if (wc == L' ') {  // the "space" character
         space_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
@@ -143,6 +149,8 @@ static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
         del_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
     } else if (wc < 0x80) {  // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
+    } else if (std::iswgraph(wc)) {
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"%lc", wc);
     }
 // Conditional handling of BMP Unicode characters depends on the encoding. Assume width of wchar_t
 // corresponds to the encoding, i.e. WCHAR_T_BITS == 16 implies UTF-16 and WCHAR_T_BITS == 32
@@ -269,8 +277,7 @@ static void process_input(bool continuous_mode, bool verbose) {
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
 [[noreturn]] static void setup_and_process_keys(bool continuous_mode, bool verbose) {
     set_interactive_session(true);
-    set_main_thread();
-    setup_fork_guards();
+    rust_init();
     env_init();
     reader_init();
     parser_t &parser = parser_t::principal_parser();
@@ -310,7 +317,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode, bool *verb
                 break;
             }
             case 'h': {
-                print_help("fish_key_reader", 1);
+                unsafe_print_help("fish_key_reader");
                 exit(0);
             }
             case 'v': {

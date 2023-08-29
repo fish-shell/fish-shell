@@ -55,7 +55,7 @@ wcstring wgetcwd() {
 }
 
 DIR *wopendir(const wcstring &name) {
-    const cstring tmp = wcs2string(name);
+    const cstring tmp = wcs2zstring(name);
     return opendir(tmp.c_str());
 }
 
@@ -145,7 +145,7 @@ void dir_iter_t::entry_t::do_stat() const {
     if (this->dirfd_ < 0) {
         return;
     }
-    std::string narrow = wcs2string(this->name);
+    std::string narrow = wcs2zstring(this->name);
     struct stat s {};
     if (fstatat(this->dirfd_, narrow.c_str(), &s, 0) == 0) {
         this->stat_ = s;
@@ -167,7 +167,12 @@ void dir_iter_t::entry_t::do_stat() const {
                 break;
 
             default:
-                wperror(L"fstatat");
+                this->type_ = none();
+                // This used to print an error, but given that we have seen
+                // both ENODEV (above) and ENOTCONN,
+                // and that the error isn't actionable and shows up while typing,
+                // let's not do that.
+                // wperror(L"fstatat");
                 break;
         }
     }
@@ -232,29 +237,29 @@ const dir_iter_t::entry_t *dir_iter_t::next() {
 }
 
 int wstat(const wcstring &file_name, struct stat *buf) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return stat(tmp.c_str(), buf);
 }
 
 int lwstat(const wcstring &file_name, struct stat *buf) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return lstat(tmp.c_str(), buf);
 }
 
 int waccess(const wcstring &file_name, int mode) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return access(tmp.c_str(), mode);
 }
 
 int wunlink(const wcstring &file_name) {
-    const cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2zstring(file_name);
     return unlink(tmp.c_str());
 }
 
-void wperror(const wchar_t *s) {
+void wperror(wcharz_t s) {
     int e = errno;
-    if (s[0] != L'\0') {
-        std::fwprintf(stderr, L"%ls: ", s);
+    if (s.str[0] != L'\0') {
+        std::fwprintf(stderr, L"%ls: ", s.str);
     }
     std::fwprintf(stderr, L"%s\n", std::strerror(e));
 }
@@ -279,36 +284,13 @@ int make_fd_blocking(int fd) {
     return err == -1 ? errno : 0;
 }
 
-maybe_t<wcstring> wreadlink(const wcstring &file_name) {
-    struct stat buf;
-    if (lwstat(file_name, &buf) == -1) {
-        return none();
-    }
-    ssize_t bufsize = buf.st_size + 1;
-    char target_buf[bufsize];
-    const std::string tmp = wcs2string(file_name);
-    ssize_t nbytes = readlink(tmp.c_str(), target_buf, bufsize);
-    if (nbytes == -1) {
-        wperror(L"readlink");
-        return none();
-    }
-    // The link might have been modified after our call to lstat.  If the link now points to a path
-    // that's longer than the original one, we can't read everything in our buffer.  Simply give
-    // up. We don't need to report an error since our only caller will already fall back to ENOENT.
-    if (nbytes == bufsize) {
-        return none();
-    }
-
-    return str2wcstring(target_buf, nbytes);
-}
-
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,
 /// wrealpath() returns none() and errno is likely set.
 maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     if (pathname.empty()) return none();
 
     cstring real_path;
-    cstring narrow_path = wcs2string(pathname);
+    cstring narrow_path = wcs2zstring(pathname);
 
     // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
     while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
@@ -364,8 +346,8 @@ wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes)
         leading_slashes++;
     }
 
-    wcstring_list_t comps = split_string(path, sep);
-    wcstring_list_t new_comps;
+    std::vector<wcstring> comps = split_string(path, sep);
+    std::vector<wcstring> new_comps;
     for (wcstring &comp : comps) {
         if (comp.empty() || comp == L".") {
             continue;
@@ -405,8 +387,8 @@ wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path) {
     }
 
     // Split our strings by the sep.
-    wcstring_list_t wd_comps = split_string(wd, sep);
-    wcstring_list_t path_comps = split_string(path, sep);
+    std::vector<wcstring> wd_comps = split_string(wd, sep);
+    std::vector<wcstring> path_comps = split_string(path, sep);
 
     // Remove empty segments from wd_comps.
     // In particular this removes the leading and trailing empties.
@@ -504,7 +486,7 @@ const wcstring &wgettext(const wchar_t *in) {
     auto wmap = wgettext_map.acquire();
     wcstring &val = (*wmap)[key];
     if (val.empty()) {
-        cstring mbs_in = wcs2string(key);
+        cstring mbs_in = wcs2zstring(key);
         char *out = fish_gettext(mbs_in.c_str());
         val = format_string(L"%s", out);
     }
@@ -515,14 +497,16 @@ const wcstring &wgettext(const wchar_t *in) {
     return val;
 }
 
+const wchar_t *wgettext_ptr(const wchar_t *in) { return wgettext(in).c_str(); }
+
 int wmkdir(const wcstring &name, int mode) {
-    cstring name_narrow = wcs2string(name);
+    cstring name_narrow = wcs2zstring(name);
     return mkdir(name_narrow.c_str(), mode);
 }
 
 int wrename(const wcstring &old, const wcstring &newv) {
-    cstring old_narrow = wcs2string(old);
-    cstring new_narrow = wcs2string(newv);
+    cstring old_narrow = wcs2zstring(old);
+    cstring new_narrow = wcs2zstring(newv);
     return rename(old_narrow.c_str(), new_narrow.c_str());
 }
 
@@ -601,14 +585,6 @@ int fish_iswalnum(wint_t wc) {
     return iswalnum(wc);
 }
 
-/// We need this because there are too many implementations that don't return the proper answer for
-/// some code points. See issue #3050.
-int fish_iswgraph(wint_t wc) {
-    if (fish_reserved_codepoint(wc)) return 0;
-    if (fish_is_pua(wc)) return 1;
-    return iswgraph(wc);
-}
-
 /// Convenience variants on fish_wcwswidth().
 ///
 /// See fallback.h for the normal definitions.
@@ -619,26 +595,6 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, std::wcslen(st
 /// See fallback.h for the normal definitions.
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
-locale_t fish_c_locale() {
-    static const locale_t loc = newlocale(LC_ALL_MASK, "C", nullptr);
-    return loc;
-}
-
-static bool fish_numeric_locale_is_valid = false;
-
-void fish_invalidate_numeric_locale() { fish_numeric_locale_is_valid = false; }
-
-locale_t fish_numeric_locale() {
-    // The current locale, except LC_NUMERIC isn't forced to C.
-    static locale_t loc = nullptr;
-    if (!fish_numeric_locale_is_valid) {
-        if (loc != nullptr) freelocale(loc);
-        auto cur = duplocale(LC_GLOBAL_LOCALE);
-        loc = newlocale(LC_NUMERIC_MASK, "", cur);
-        fish_numeric_locale_is_valid = true;
-    }
-    return loc;
-}
 /// Like fish_wcstol(), but fails on a value outside the range of an int.
 ///
 /// This is needed because BSD and GNU implementations differ in several ways that make it really
@@ -709,70 +665,6 @@ long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
     return result;
 }
 
-/// An enhanced version of wcstoll().
-///
-/// This is needed because BSD and GNU implementations differ in several ways that make it really
-/// annoying to use them in a portable fashion.
-///
-/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
-/// than a digit. Leading whitespace is ignored (per the base wcstoll implementation). Trailing
-/// whitespace is also ignored.
-long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
-    while (iswspace(*str)) ++str;  // skip leading whitespace
-    if (!*str) {  // this is because some implementations don't handle this sensibly
-        errno = EINVAL;
-        if (endptr) *endptr = str;
-        return 0;
-    }
-
-    errno = 0;
-    wchar_t *_endptr;
-    long long result = std::wcstoll(str, &_endptr, base);
-    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
-    if (!errno && *_endptr) {
-        if (_endptr == str) {
-            errno = EINVAL;
-        } else {
-            errno = -1;
-        }
-    }
-    if (endptr) *endptr = _endptr;
-    return result;
-}
-
-/// An enhanced version of wcstoull().
-///
-/// This is needed because BSD and GNU implementations differ in several ways that make it really
-/// annoying to use them in a portable fashion.
-///
-/// The caller doesn't have to zero errno. Sets errno to -1 if the int ends with something other
-/// than a digit. Leading minus is considered invalid. Leading whitespace is ignored (per the base
-/// wcstoull implementation). Trailing whitespace is also ignored.
-unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int base) {
-    while (iswspace(*str)) ++str;  // skip leading whitespace
-    if (!*str ||      // this is because some implementations don't handle this sensibly
-        *str == '-')  // disallow minus as the first character to avoid questionable wrap-around
-    {
-        errno = EINVAL;
-        if (endptr) *endptr = str;
-        return 0;
-    }
-
-    errno = 0;
-    wchar_t *_endptr;
-    unsigned long long result = std::wcstoull(str, &_endptr, base);
-    while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
-    if (!errno && *_endptr) {
-        if (_endptr == str) {
-            errno = EINVAL;
-        } else {
-            errno = -1;
-        }
-    }
-    if (endptr) *endptr = _endptr;
-    return result;
-}
-
 /// Like wcstod(), but wcstod() is enormously expensive on some platforms so this tries to have a
 /// fast path.
 double fish_wcstod(const wchar_t *str, wchar_t **endptr, size_t len) {
@@ -800,68 +692,6 @@ double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
 }
 double fish_wcstod(const wcstring &str, wchar_t **endptr) {
     return fish_wcstod(str.c_str(), endptr, str.size());
-}
-
-/// Like wcstod(), but allows underscore separators. Leading, trailing, and multiple underscores are
-/// allowed, as are underscores next to decimal (.), exponent (E/e/P/p), and hexadecimal (X/x)
-/// delimiters. This consumes trailing underscores -- endptr will point past the last underscore
-/// which is legal to include in a parse (according to the above rules). Free-floating leading
-/// underscores ("_ 3") are not allowed and will result in a no-parse. Underscores are not allowed
-/// before or inside of "infinity" or "nan" input. Trailing underscores after "infinity" or "nan"
-/// are not consumed.
-double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
-    const wchar_t *orig = str;
-    while (iswspace(*str)) str++;  // Skip leading whitespace.
-    size_t leading_whitespace = size_t(str - orig);
-    auto is_sign = [](wchar_t c) { return c == L'+' || c == L'-'; };
-    auto is_inf_or_nan_char = [](wchar_t c) {
-        return c == L'i' || c == L'I' || c == L'n' || c == L'N';
-    };
-    // We don't do any underscore-stripping for infinity/NaN.
-    if (is_inf_or_nan_char(*str) || (is_sign(*str) && is_inf_or_nan_char(*(str + 1)))) {
-        return fish_wcstod(orig, endptr);
-    }
-    // We build a string to pass to the system wcstod, pruned of underscores. We will take all
-    // leading alphanumeric characters that can appear in a strtod numeric literal, dots (.), and
-    // signs (+/-). In order to be more clever, for example to stop earlier in the case of strings
-    // like "123xxxxx", we would need to do a full parse, because sometimes 'a' is a hex digit and
-    // sometimes it is the end of the parse, sometimes a dot '.' is a decimal delimiter and
-    // sometimes it is the end of the valid parse, as in "1_2.3_4.5_6", etc.
-    wcstring pruned;
-    // We keep track of the positions *in the pruned string* where there used to be underscores. We
-    // will pass the pruned version of the input string to the system wcstod, which in turn will
-    // tell us how many characters it consumed. Then we will set our own endptr based on (1) the
-    // number of characters consumed from the pruned string, and (2) how many underscores came
-    // before the last consumed character. The alternative to doing it this way (for example, "only
-    // deleting the correct underscores") would require actually parsing the input string, so that
-    // we can know when to stop grabbing characters and dropping underscores, as in "1_2.3_4.5_6".
-    std::vector<size_t> underscores;
-    // If we wanted to future-proof against a strtod from the future that, say, allows octal
-    // literals using 0o, etc., we could just use iswalnum, instead of iswxdigit and P/p/X/x checks.
-    while (iswxdigit(*str) || *str == L'P' || *str == L'p' || *str == L'X' || *str == L'x' ||
-           is_sign(*str) || *str == L'.' || *str == L'_') {
-        if (*str == L'_') {
-            underscores.push_back(pruned.length());
-        } else {
-            pruned.push_back(*str);
-        }
-        str++;
-    }
-    const wchar_t *pruned_begin = pruned.c_str();
-    const wchar_t *pruned_end = nullptr;
-    double result = fish_wcstod(pruned_begin, (wchar_t **)(&pruned_end));
-    if (pruned_end == pruned_begin) {
-        if (endptr) *endptr = (wchar_t *)orig;
-        return result;
-    }
-    auto consumed_underscores_end =
-        std::upper_bound(underscores.begin(), underscores.end(), size_t(pruned_end - pruned_begin));
-    size_t num_underscores_consumed = std::distance(underscores.begin(), consumed_underscores_end);
-    if (endptr) {
-        *endptr = (wchar_t *)(orig + leading_whitespace + (pruned_end - pruned_begin) +
-                              num_underscores_consumed);
-    }
-    return result;
 }
 
 file_id_t file_id_t::from_stat(const struct stat &buf) {
@@ -945,22 +775,6 @@ static int compare(T a, T b) {
     return 0;
 }
 
-/// \return true if \param rhs has higher mtime seconds than this file_id_t.
-/// If identical, nanoseconds are compared.
-bool file_id_t::older_than(const file_id_t &rhs) const {
-    int ret = compare(mod_seconds, rhs.mod_seconds);
-    if (!ret) ret = compare(mod_nanoseconds, rhs.mod_nanoseconds);
-    switch (ret) {
-        case -1:
-            return true;
-        case 1:
-        case 0:
-            return false;
-        default:
-            DIE("unreachable");
-    }
-}
-
 int file_id_t::compare_file_id(const file_id_t &rhs) const {
     // Compare each field, stopping when we get to a non-equal field.
     int ret = 0;
@@ -975,3 +789,16 @@ int file_id_t::compare_file_id(const file_id_t &rhs) const {
 }
 
 bool file_id_t::operator<(const file_id_t &rhs) const { return this->compare_file_id(rhs) < 0; }
+
+// static
+wcstring_list_ffi_t wcstring_list_ffi_t::get_test_data() {
+    return std::vector<wcstring>{L"foo", L"bar", L"baz"};
+}
+
+// static
+void wcstring_list_ffi_t::check_test_data(wcstring_list_ffi_t data) {
+    assert(data.size() == 3);
+    assert(data.at(0) == L"foo");
+    assert(data.at(1) == L"bar");
+    assert(data.at(2) == L"baz");
+}

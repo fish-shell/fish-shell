@@ -145,6 +145,7 @@ complete -c help -x -a command-line-editor
 complete -c help -x -a configurable-greeting
 complete -c help -x -a copy-and-paste-kill-ring
 complete -c help -x -a custom-bindings
+complete -c help -x -a custom-prompt -d 'How to write your own prompt'
 complete -c help -x -a directory-stack
 complete -c help -x -a emacs-mode-commands
 complete -c help -x -a help

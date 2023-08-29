@@ -46,6 +46,10 @@ complete -c t -l fileoption -rF
 complete -C't --fileoption ' | string match test.fish
 # CHECK: test.fish
 
+# See that an empty command gets files
+complete -C'"" t' | string match test.fish
+# CHECK: test.fish
+
 # Make sure bare `complete` is reasonable,
 complete -p '/complete test/beta1' -d 'desc, desc' -sZ
 complete -c 'complete test beta2' -r -d 'desc \' desc2 [' -a 'foo bar'
@@ -526,5 +530,21 @@ begin
     or echo Empty completions
     # CHECK: Empty completions
 end
+
+rm -$f $tmpdir/*
+
+# Leading dots are not completed for default file completion,
+# but may be for custom command (e.g. git add).
+function dotty
+end
+function notty
+end
+complete -c dotty --no-files -a '(echo .a*)'
+touch .abc .def
+complete -C'notty '
+echo "Should be nothing"
+# CHECK: Should be nothing
+complete -C'dotty '
+# CHECK: .abc
 
 rm -r $tmpdir

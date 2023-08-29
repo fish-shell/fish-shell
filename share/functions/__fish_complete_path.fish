@@ -10,8 +10,8 @@ function __fish_complete_path --description "Complete using path"
             set target "$argv[1]"
             set description "$argv[2]"
     end
-    set -l targets "$target"*
+    set -l targets (complete -C"'' $target")
     if set -q targets[1]
-        printf "%s\t$description\n" (command ls -dp $targets)
+        printf "%s\n" $targets\t"$description"
     end
 end

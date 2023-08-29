@@ -3,53 +3,71 @@ fish 3.7.0 (released ???)
 
 .. ignore: 9439 9440 9442 9452 9469 9480 9482
 
+Notable backwards-incompatible changes
+--------------------------------------
+fish is being (once you are reading this hopefully "has been") ported to rust, which unfortunately involves a few backwards-incompatible changes.
+We have tried to keep these to a minimum, but in some cases it is unavoidable.
+
+- ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
+  Notably, it will now work much more sensibly with very small seeds.
+  The seed was never guaranteed to give the same result across systems,
+  so we do not expect this to have a large impact (:issue:`9593`).
+- ``functions --handlers`` will now list handlers in a different order.
+  Now it is definition order, first to last, where before it was last to first.
+  This was never specifically defined, and we recommend not relying on a specific order (:issue:`9944`).
+
 Notable improvements and fixes
 ------------------------------
-- ``abbr --erase`` now also erases the universal variables used by the old abbr function. That means::
-    abbr --erase (abbr --list)
-
-  can now be used to clean out all old abbreviations (:issue:`9468`).
-- ``abbr --add --universal`` now warns about --universal being non-functional, to make it easier to detect old-style ``abbr`` calls (:issue:`9475`).
+- ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 
 Deprecations and removed features
 ---------------------------------
 
 Scripting improvements
 ----------------------
-- ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
-- ``read`` will now print an error if told to set a read-only variable instead of silently doing nothing (:issue:`9346`).
+- ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively``.
+- Stack trace now shows line numbers for copied functions.
 
 Interactive improvements
 ------------------------
-- Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
-- The history pager now uses more screen space, usually half the screen (:issue:`9458`).
 - The history pager now shows fuzzy (subsequence) matches in the absence of exact substring matches (:issue:`9476`).
-- Variables that were set while the locale was C (i.e. ASCII) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
-- Escape during history search restores the original commandline again (regressed in 3.6.0).
-- Using ``--help`` on builtins now respects the $MANPAGER variable in preference to $PAGER (:issue:`9488`).
+- Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
+- A new variable, :envvar:`fish_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`fish_cursor_default` (:issue:`4656`).
+- Selected text (for example, in vi visual mode) now respects the foreground color and other options such as bold (:issue:`9717`).
+- An issue where the pager would not show the last item after pressing the up arrow key has been fixed (:issue:`9833`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
+- The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
 
 Completions
 ^^^^^^^^^^^
-- Added completions for:
-
-  - ``otool``
-  - ``mix phx``
-  
-- git's completion for ``git-foo``-style commands was fixed (:issue:`9457`)
-- File completion now offers ``../`` and ``./`` again (:issue:`9477`)
+- Added or improved completions for:
+  - ``ar`` (:issue:`9719`)
+- ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
+- ``qdbus`` completions now properly handle tags (:issue:`9776`).
+- ``age`` (:issue:`9813`).
+- ``age-keygen`` (:issue:`9813`).
+- ``curl`` (:issue:`9863`).
+- ``krita`` (:issue:`9903`).
+- ``blender`` (:issue:`9905`).
+- ``gimp`` (:issue:`9904`).
+- ``horcrux`` (:issue:`9922`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Other improvements
 ------------------
-
+- A bug that prevented certain executables from being offered in tab-completions when root has been fixed (:issue:`9639`).
+- Builin `jobs` will print commands with non-printable chars escaped (:issue:`9808`)
+- An integer overflow in `string repeat` leading to a near-infinite loop has been fixed (:issue:`9899`).
+- `string shorten` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
+- `string pad` no longer allows non-printable characters as padding. (:issue:`9854`)
+- PWD reporting via OSC 7 is now enabled by default for iTerm2.
 
 For distributors
 ----------------
@@ -57,6 +75,77 @@ For distributors
 
 --------------
 
+fish 3.6.1 (released March 25, 2023)
+====================================
+
+This release of fish contains a number of fixes for problems identified in fish 3.6.0, as well as some enhancements.
+
+Notable improvements and fixes
+------------------------------
+- ``abbr --erase`` now also erases the universal variables used by the old abbr function. That means::
+    abbr --erase (abbr --list)
+
+  can now be used to clean out all old abbreviations (:issue:`9468`).
+- ``abbr --add --universal`` now warns about ``--universal`` being non-functional, to make it easier to detect old-style ``abbr`` calls (:issue:`9475`).
+
+Deprecations and removed features
+---------------------------------
+- The Web-based configuration for abbreviations has been removed, as it was not functional with the changes abbreviations introduced in 3.6.0 (:issue:`9460`).
+
+Scripting improvements
+----------------------
+- ``abbr --list`` no longer escapes the abbr name, which is necessary to be able to pass it to ``abbr --erase`` (:issue:`9470`).
+- ``read`` will now print an error if told to set a read-only variable, instead of silently doing nothing (:issue:`9346`).
+- ``set_color -v`` no longer crashes fish (:issue:`9640`).
+
+Interactive improvements
+------------------------
+- Using ``fish_vi_key_bindings`` in combination with fish's ``--no-config`` mode works without locking up the shell (:issue:`9443`).
+- The history pager now uses more screen space, usually half the screen (:issue:`9458`)
+- Variables that were set while the locale was C (the default ASCII-only locale) will now properly be encoded if the locale is switched (:issue:`2613`, :issue:`9473`).
+- Escape during history search restores the original command line again (fixing a regression in 3.6.0).
+- Using ``--help`` on builtins now respects the ``$MANPAGER`` variable, in preference to ``$PAGER`` (:issue:`9488`).
+- :kbd:`Control-G` closes the history pager, like other shells (:issue:`9484`).
+- The documentation for the ``:``, ``[`` and ``.`` builtin commands can now be looked up with ``man`` (:issue:`9552`).
+- fish no longer crashes when searching history for non-ASCII codepoints case-insensitively (:issue:`9628`).
+- The :kbd:`Alt-S` binding will now also use ``please`` if available (:issue:`9635`).
+- Themes that don't specify every color option can be installed correctly in the Web-based configuration (:issue:`9590`).
+- Compatibility with Midnight Commander's prompt integration has been improved (:issue:`9540`).
+- A spurious error, noted when using fish in Google Drive directories under WSL 2, has been silenced (:issue:`9550`).
+- Using ``read`` in ``fish_greeting`` or similar functions will not trigger an infinite loop (:issue:`9564`).
+- Compatibility when upgrading from old versions of fish (before 3.4.0) has been improved (:issue:`9569`).
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+- The git prompt will compute the stash count to be used independently of the informative status (:issue:`9572`).
+
+Completions
+^^^^^^^^^^^
+- Added completions for:
+  - ``apkanalyzer`` (:issue:`9558`)
+  - ``neovim`` (:issue:`9543`)
+  - ``otool``
+  - ``pre-commit`` (:issue:`9521`)
+  - ``proxychains`` (:issue:`9486`)
+  - ``scrypt`` (:issue:`9583`)
+  - ``stow`` (:issue:`9571`)
+  - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
+  - ``ssh-copy-id`` (:issue:`9675`)
+- Improvements to many completions, including the speed of completing directories in WSL 2 (:issue:`9574`).
+- Completions using ``__fish_complete_suffix`` are now offered in the correct order, fixing a regression in 3.6.0 (:issue:`8924`).
+- ``git`` completions for ``git-foo``-style commands was restored, fixing a regression in 3.6.0 (:issue:`9457`).
+- File completion now offers ``../`` and ``./`` again, fixing a regression in 3.6.0 (:issue:`9477`).
+- The behaviour of completions using ``__fish_complete_path`` matches standard path completions (:issue:`9285`).
+
+Other improvements
+------------------
+- Improvements and corrections to the documentation.
+
+For distributors
+----------------
+- fish 3.6.1 builds correctly on Cygwin (:issue:`9502`).
+
+--------------
 
 fish 3.6.0 (released January 7, 2023)
 =====================================

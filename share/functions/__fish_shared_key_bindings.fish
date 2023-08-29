@@ -38,6 +38,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \cs pager-toggle-search
     # shift-tab does a tab complete followed by a search.
     bind --preset $argv --key btab complete-and-search
+    bind --preset $argv -k sdc history-pager-delete or backward-delete-char # shifted delete
 
     bind --preset $argv \e\n "commandline -f expand-abbr; commandline -i \n"
     bind --preset $argv \e\r "commandline -f expand-abbr; commandline -i \n"
@@ -98,7 +99,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
     bind --preset $argv \cd delete-or-exit
 
-    bind --preset $argv \es "if command -q sudo; fish_commandline_prepend sudo; else if command -q doas; fish_commandline_prepend doas; end"
+    bind --preset $argv \es 'for cmd in sudo doas please; if command -q $cmd; fish_commandline_prepend $cmd; break; end; end'
 
     # Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh).
     bind --preset $argv -k f1 __fish_man_page

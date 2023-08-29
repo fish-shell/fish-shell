@@ -51,7 +51,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     bind --preset $argv -k home beginning-of-line
     bind --preset $argv -k end end-of-line
-    bind --preset $argv -k sdc backward-delete-char # shifted delete
 
     bind --preset $argv \ca beginning-of-line
     bind --preset $argv \ce end-of-line

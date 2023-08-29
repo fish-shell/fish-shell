@@ -175,3 +175,34 @@ foreach(PEXPECT ${PEXPECTS})
   set_tests_properties(${PEXPECT} PROPERTIES ENVIRONMENT FISH_FORCE_COLOR=1)
   add_test_target("${PEXPECT}")
 endforeach(PEXPECT)
+
+# Rust stuff.
+if(DEFINED ASAN)
+    # Rust w/ -Zsanitizer=address requires explicitly specifying the --target triple or else linker
+    # errors pertaining to asan symbols will ensue.
+    if(NOT DEFINED Rust_CARGO_TARGET)
+        message(FATAL_ERROR "ASAN requires defining the CMake variable Rust_CARGO_TARGET to the
+            intended target triple")
+    endif()
+    set(cargo_target_opt "--target" ${Rust_CARGO_TARGET})
+endif()
+
+# cargo-test is failing to link w/ ASAN enabled. For some reason it is picking up autocxx ffi
+# dependencies, even though `carg test` is supposed to be for rust-only code w/ no ffi dependencies.
+# TODO: Figure this out and fix it.
+if(NOT DEFINED ASAN)
+    add_test(
+        NAME "cargo-test"
+        COMMAND cargo test ${CARGO_FLAGS} --package fish-rust --target-dir target ${cargo_target_opt}
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+    set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
+    add_test_target("cargo-test")
+endif()
+
+add_test(
+    NAME "cargo-test-widestring"
+    COMMAND cargo test ${CARGO_FLAGS} --package widestring-suffix --target-dir target ${cargo_target_opt}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+add_test_target("cargo-test-widestring")

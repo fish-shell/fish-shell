@@ -22,7 +22,9 @@ It is (by default) safe to use :program:`fish_add_path` in config.fish, or it ca
 
 Components are normalized by :doc:`realpath <realpath>`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a component already exists, it is not added again and stays in the same place unless the ``--move`` switch is given.
 
-Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given (if $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to :envvar:`PATH`, so they still stay ahead of the system paths).
+Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given. If $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to :envvar:`PATH`, so they still stay ahead of the system paths. If the ``--path`` option is used, the paths are appended/prepended to :envvar:`PATH` directly, so this doesn't happen.
+
+With ``--path``, because :envvar:`PATH` must be a global variable instead of a universal one, the changes won't persist, so those calls need to be stored in :ref:`config.fish <configuration>`.
 
 If no component is new, the variable (:envvar:`fish_user_paths` or :envvar:`PATH`) is not set again or otherwise modified, so variable handlers are not triggered.
 
@@ -68,18 +70,26 @@ Example
 ::
 
    # I just installed mycoolthing and need to add it to the path to use it.
+   # It is at /opt/mycoolthing/bin/mycoolthing,
+   # so let's add the directory: /opt/mycoolthing/bin.
    > fish_add_path /opt/mycoolthing/bin
 
-   # I want my ~/.local/bin to be checked first.
+   # I want my ~/.local/bin to be checked first,
+   # even if it was already added.
    > fish_add_path -m ~/.local/bin
 
    # I prefer using a global fish_user_paths
+   # This isn't saved automatically, I need to add this to config.fish
+   # if I want it to stay.
    > fish_add_path -g ~/.local/bin ~/.otherbin /usr/local/sbin
 
    # I want to append to the entire $PATH because this directory contains fallbacks
-   > fish_add_path -aP /opt/fallback/bin
+   # This needs --path/-P because otherwise it appends to $fish_user_paths,
+   # which is added to the front of $PATH.
+   > fish_add_path --append --path /opt/fallback/bin
 
    # I want to add the bin/ directory of my current $PWD (say /home/nemo/)
+   # -v/--verbose shows what fish_add_path did.
    > fish_add_path -v bin/
    set fish_user_paths /home/nemo/bin /usr/bin /home/nemo/.local/bin
 

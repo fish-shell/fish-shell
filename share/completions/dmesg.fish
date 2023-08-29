@@ -10,14 +10,14 @@ switch (uname -s)
         # Loonix dmesg
         #
     case Linux
-        set -l levels '( __fish_complete_list , "echo emerg\nalert\ncrit\nerr\nwarn\nnotice\ninfo\ndebug" )'
+        set -l levels '( __fish_append , emerg alert crit err warn notice info debug)'
         complete -c dmesg -s C -l clear -f -d'Clear kernel ring buffer'
         complete -c dmesg -s c -l read-clear -f -d'Read & clear all msgs'
         complete -c dmesg -s D -l console-off -f -d'Disable writing to console'
         complete -c dmesg -s d -l show-delta -f -d'Show timestamp deltas'
         complete -c dmesg -s E -l console-on -f -d'Enable writing to console'
         complete -c dmesg -s F -l file -r -d'Use file instead of log buffer'
-        complete -c dmesg -s f -l facility -x -d'Only print for given facilities' -a '( __fish_complete_list , "echo kern\nuser\nmail\ndaemon\nauth\nsyslog\nlpr\nnews" )'
+        complete -c dmesg -s f -l facility -x -d'Only print for given facilities' -a '( __fish_append , kern user mail daemon auth syslog lpr news)'
         complete -c dmesg -s h -l help -f -d'Display help'
         complete -c dmesg -s k -l kernel -f -d'Print kernel messages'
         complete -c dmesg -s l -l level -x -d'Restrict output to given levels' -a $levels

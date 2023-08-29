@@ -64,3 +64,8 @@ expect_str("# Defined interactively\r\n")
 expect_str("function foo")
 expect_str("end")
 expect_prompt()
+
+# See that `functions` terminates
+sendline("functions")
+expect_re(".*fish_prompt,")
+expect_prompt()

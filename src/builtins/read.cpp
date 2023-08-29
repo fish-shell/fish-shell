@@ -281,7 +281,7 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null, bool do_seek)
                 return STATUS_CMD_ERROR;
             }
             finished = true;
-        } else if (str.size() > read_byte_limit) {
+        } else if (str.size() > READ_BYTE_LIMIT) {
             exit_res = STATUS_READ_TOO_MUCH;
             finished = true;
         }
@@ -329,7 +329,7 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
             }
         }
 
-        if (nbytes > read_byte_limit) {
+        if (nbytes > READ_BYTE_LIMIT) {
             exit_res = STATUS_READ_TOO_MUCH;
             break;
         }
@@ -425,7 +425,8 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
             return STATUS_INVALID_ARGS;
         }
         if (env_var_t::flags_for(argv[i]) & env_var_t::flag_read_only) {
-            streams.err.append_format(_(L"%ls: %ls: cannot overwrite read-only variable"), cmd, argv[i]);
+            streams.err.append_format(_(L"%ls: %ls: cannot overwrite read-only variable"), cmd,
+                                      argv[i]);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
@@ -529,15 +530,14 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
         }
 
         if (opts.tokenize) {
-            tokenizer_t tok{buff.c_str(), TOK_ACCEPT_UNFINISHED};
-            wcstring out;
+            auto tok = new_tokenizer(buff.c_str(), TOK_ACCEPT_UNFINISHED);
             if (opts.array) {
                 // Array mode: assign each token as a separate element of the sole var.
-                wcstring_list_t tokens;
-                while (auto t = tok.next()) {
-                    auto text = tok.text_of(*t);
-                    if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
-                        tokens.push_back(out);
+                std::vector<wcstring> tokens;
+                while (auto t = tok->next()) {
+                    auto text = *tok->text_of(*t);
+                    if (auto out = unescape_string(text, UNESCAPE_DEFAULT)) {
+                        tokens.push_back(*out);
                     } else {
                         tokens.push_back(text);
                     }
@@ -545,18 +545,18 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
 
                 parser.set_var_and_fire(*var_ptr++, opts.place, std::move(tokens));
             } else {
-                maybe_t<tok_t> t;
-                while ((vars_left() - 1 > 0) && (t = tok.next())) {
-                    auto text = tok.text_of(*t);
-                    if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
-                        parser.set_var_and_fire(*var_ptr++, opts.place, out);
+                std::unique_ptr<tok_t> t;
+                while ((vars_left() - 1 > 0) && (t = tok->next())) {
+                    auto text = *tok->text_of(*t);
+                    if (auto out = unescape_string(text, UNESCAPE_DEFAULT)) {
+                        parser.set_var_and_fire(*var_ptr++, opts.place, *out);
                     } else {
                         parser.set_var_and_fire(*var_ptr++, opts.place, text);
                     }
                 }
 
                 // If we still have tokens, set the last variable to them.
-                if ((t = tok.next())) {
+                if ((t = tok->next())) {
                     wcstring rest = wcstring(buff, t->offset);
                     parser.set_var_and_fire(*var_ptr++, opts.place, std::move(rest));
                 }
@@ -566,8 +566,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
         }
 
         if (!opts.have_delimiter) {
-            auto ifs = parser.vars().get(L"IFS");
-            if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
+            auto ifs = parser.vars().get_unless_empty(L"IFS");
+            if (ifs) opts.delimiter = ifs->as_string();
         }
 
         if (opts.delimiter.empty()) {
@@ -576,7 +576,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             size_t x = std::max(static_cast<size_t>(1), buff.size());
             size_t n_splits =
                 (opts.array || static_cast<size_t>(vars_left()) > x) ? x : vars_left();
-            wcstring_list_t chars;
+            std::vector<wcstring> chars;
             chars.reserve(n_splits);
 
             int i = 0;
@@ -606,11 +606,11 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             if (!opts.have_delimiter) {
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
                 // compatibility with old versions of fish.
-                wcstring_list_t tokens = split_string_tok(buff, opts.delimiter);
+                std::vector<wcstring> tokens = split_string_tok(buff, opts.delimiter);
                 parser.set_var_and_fire(*var_ptr++, opts.place, std::move(tokens));
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
-                wcstring_list_t splits;
+                std::vector<wcstring> splits;
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                             &splits);
 
@@ -622,7 +622,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
                 // compatibility with old versions of fish.
                 // Note the final variable gets any remaining text.
-                wcstring_list_t var_vals = split_string_tok(buff, opts.delimiter, vars_left());
+                std::vector<wcstring> var_vals =
+                    split_string_tok(buff, opts.delimiter, vars_left());
                 size_t val_idx = 0;
                 while (vars_left()) {
                     wcstring val;
@@ -633,7 +634,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 }
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
-                wcstring_list_t splits;
+                std::vector<wcstring> splits;
                 // We're making at most argc - 1 splits so the last variable
                 // is set to the remaining string.
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),

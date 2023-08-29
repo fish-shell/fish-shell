@@ -166,17 +166,20 @@ As a special case, most of the time history substitution is used as ``sudo !!``.
 
 In general, fish's history recall works like this:
 
-- Like other shells, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last executed line.  A single press replaces "!!", later presses replace "!-3" and the like.
+- Like other shells, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last executed line. So instead of typing ``!!``, you would just hit the up-arrow.
 
-- If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
+- If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like. If you want to see more context, you can press :kbd:`Ctrl`\ +\ :kbd:`R` to open the history in the pager.
 
-- :kbd:`Alt`\ +\ :kbd:`↑` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. As an alternate key binding, :kbd:`Alt`\ +\ :kbd:`.` can be used.
-
-- If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt`\ +\ :kbd:`↑`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
-
-- If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt`\ +\ :kbd:`D` and :kbd:`Alt`\ +\ :kbd:`Backspace` are your friends).
+- :kbd:`Alt`\ +\ :kbd:`↑` recalls individual arguments, starting from the last argument in the last executed line. This can be used instead of "!$".
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
+
+That being said, you can use :ref:`abbreviations` to implement history substitution. Here's just ``!!``::
+
+  function last_history_item; echo $history[1]; end
+  abbr -a !! --position anywhere --function last_history_item
+
+Run this and ``!!`` will be replaced with the last history entry, anywhere on the commandline. Put it into :ref:`config.fish <configuration>` to keep it.
 
 How do I run a subcommand? The backtick doesn't work!
 -----------------------------------------------------
@@ -294,14 +297,6 @@ For these reasons, fish does not do this, and instead expects asterisks to be qu
 
 This is similar to bash's "failglob" option.
 
-I accidentally entered a directory path and fish changed directory. What happened?
-----------------------------------------------------------------------------------
-If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it assumes that you want to change your directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
-
-The open command doesn't work.
-------------------------------
-The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider :ref:`asking for more help <more-help>`.
-
 .. _faq-ssh-interactive:
 
 Why won't SSH/SCP/rsync connect properly when fish is my login shell?
@@ -357,14 +352,3 @@ If you installed it with a package manager, just use that package manager's unin
     rm /usr/local/share/man/man1/fish*.1
     cd /usr/local/bin
     rm -f fish fish_indent
-
-Where can I find extra tools for fish?
---------------------------------------
-The fish user community extends fish in unique and useful ways via scripts that aren't always appropriate for bundling with the fish package. Typically because they solve a niche problem unlikely to appeal to a broad audience. You can find those extensions, including prompts, themes and useful functions, in various third-party repositories. These include:
-
-- `Fisher <https://github.com/jorgebucaran/fisher>`_
-- `Fundle <https://github.com/tuvistavie/fundle>`_
-- `Oh My Fish <https://github.com/oh-my-fish/oh-my-fish>`_
-- `Tacklebox <https://github.com/justinmayer/tacklebox>`_
-
-This is not an exhaustive list and the fish project has no opinion regarding the merits of the repositories listed above or the scripts found therein.

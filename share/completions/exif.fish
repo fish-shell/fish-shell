@@ -8,11 +8,11 @@ function __fish_exif_potential_targets
     set -l token (commandline -t)
     set -l matching_files (complete -C "__fish_command_without_completions $token")
     for file in $matching_files
-        if eval "test -d \"$file\""
+        if test -d "$file"
             echo $file
-        else if eval "exif \"$file\"" &>/dev/null
+        else if exif "$file" &>/dev/null
             echo $file
-        else if not eval "test -e \"$file\""
+        else if not test -e "$file"
             # Handle filenames containing $.
             if exif $file &>/dev/null
                 echo $file

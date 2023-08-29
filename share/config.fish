@@ -141,8 +141,10 @@ end
 # This handler removes itself after it is first called.
 #
 function __fish_on_interactive --on-event fish_prompt --on-event fish_read
-    __fish_config_interactive
+    # We erase this *first* so it can't be called again,
+    # e.g. if fish_greeting calls "read".
     functions -e __fish_on_interactive
+    __fish_config_interactive
 end
 
 # Set the locale if it isn't explicitly set. Allowing the lack of locale env vars to imply the
@@ -221,18 +223,21 @@ end
 
 for jobbltn in bg wait disown
     function $jobbltn -V jobbltn
-        builtin $jobbltn (__fish_expand_pid_args $argv)
+        set -l args (__fish_expand_pid_args $argv)
+        and builtin $jobbltn $args
     end
 end
 function fg
-    builtin fg (__fish_expand_pid_args $argv)[-1]
+    set -l args (__fish_expand_pid_args $argv)
+    and builtin fg $args[-1]
 end
 
 if command -q kill
     # Only define this if something to wrap exists
     # this allows a nice "commad not found" error to be triggered.
     function kill
-        command kill (__fish_expand_pid_args $argv)
+        set -l args (__fish_expand_pid_args $argv)
+        and command kill $args
     end
 end
 

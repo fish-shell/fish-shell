@@ -170,7 +170,7 @@ end
 
 # Decide if git is safe to run.
 # On Darwin, git is pre-installed as a stub, which will pop a dialog if you run it.
-if string match -q Darwin -- "$(uname)" && string match -q /usr/bin/git -- "$(command -s git)" && type -q xcode-select && type -q xcrun
+if string match -q Darwin -- (uname) && string match -q /usr/bin/git -- (command -s git) && type -q xcode-select && type -q xcrun
     if not xcode-select --print-path &>/dev/null
         # Only the stub git is installed.
         # Do not try to run it.
@@ -183,7 +183,7 @@ if string match -q Darwin -- "$(uname)" && string match -q /usr/bin/git -- "$(co
         command git --version &>/dev/null &
         disown $last_pid &>/dev/null
         function __fish_git_prompt_ready
-            path is "$(xcrun --show-cache-path 2>/dev/null)" || return 1
+            path is (xcrun --show-cache-path 2>/dev/null) || return 1
             # git is ready, erase the function.
             functions -e __fish_git_prompt_ready
             return 0
@@ -312,7 +312,13 @@ function fish_git_prompt --description "Prompt function for Git"
 
             if contains -- "$__fish_git_prompt_showstashstate" yes true 1
                 and test -r $git_dir/logs/refs/stash
-                set stashstate 1
+                # If we have informative status but don't want to actually
+                # *compute* the informative status, we might still count the stash.
+                if contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+                    set stashstate (count < $git_dir/logs/refs/stash)
+                else
+                    set stashstate 1
+                end
             end
         end
 
@@ -349,7 +355,12 @@ function fish_git_prompt --description "Prompt function for Git"
             set -l color_done $$color_done_var
             set -l symbol $$symbol_var
 
-            set f "$f$color$symbol$color_done"
+            # If we count some things, print the number
+            # This won't be done if we actually do the full informative status
+            # because that does the printing.
+            contains -- "$__fish_git_prompt_show_informative_status" yes true 1
+            and set f "$f$color$symbol$$i$color_done"
+            or set f "$f$color$symbol$color_done"
         end
     end
 

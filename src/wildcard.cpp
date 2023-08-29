@@ -53,14 +53,16 @@ bool wildcard_has_internal(const wchar_t *s, size_t len) {
 bool wildcard_has(const wchar_t *str, size_t len) {
     assert(str != nullptr);
     const wchar_t *end = str + len;
-    bool qmark_is_wild = !feature_test(features_t::qmark_noglob);
+    bool qmark_is_wild = !feature_test(feature_flag_t::qmark_noglob);
     // Fast check for * or ?; if none there is no wildcard.
     // Note some strings contain * but no wildcards, e.g. if they are quoted.
     if (std::find(str, end, L'*') == end && (!qmark_is_wild || std::find(str, end, L'?') == end)) {
         return false;
     }
     wcstring unescaped;
-    unescape_string(str, len, &unescaped, UNESCAPE_SPECIAL);
+    if (auto tmp = unescape_string(wcstring{str, len}, UNESCAPE_SPECIAL)) {
+        unescaped = *tmp;
+    }
     return wildcard_has_internal(unescaped);
 }
 
@@ -191,7 +193,8 @@ static wildcard_result_t wildcard_complete_internal(const wchar_t *const str, si
 
     // Maybe early out for hidden files. We require that the wildcard match these exactly (i.e. a
     // dot); ANY_STRING not allowed.
-    if (is_first_call && str[0] == L'.' && wc[0] != L'.') {
+    if (is_first_call && !params.expand_flags.get(expand_flag::allow_nonliteral_leading_dot) &&
+        str[0] == L'.' && wc[0] != L'.') {
         return wildcard_result_t::no_match;
     }
 
@@ -325,61 +328,6 @@ wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,
                                       out, true /* first call */);
 }
 
-static int fast_waccess(const struct stat &stat_buf, uint8_t mode) {
-    // Cache the effective user id and group id of our own shell process. These can't change on us
-    // because we don't change them.
-    static const uid_t euid = geteuid();
-    static const gid_t egid = getegid();
-
-    // Cache a list of our group memberships.
-    static const std::vector<gid_t> groups = ([&]() {
-        std::vector<gid_t> groups;
-        while (true) {
-            int ngroups = getgroups(0, nullptr);
-            // It is not defined if getgroups(2) includes the effective group of the calling process
-            groups.reserve(ngroups + 1);
-            groups.resize(ngroups, 0);
-            if (getgroups(groups.size(), groups.data()) == -1) {
-                if (errno == EINVAL) {
-                    // Race condition, ngroups has changed between the two getgroups() calls
-                    continue;
-                }
-                wperror(L"getgroups");
-            }
-            break;
-        }
-
-        groups.push_back(egid);
-        std::sort(groups.begin(), groups.end());
-        return groups;
-    })();
-
-    bool have_suid = (stat_buf.st_mode & S_ISUID);
-    if (euid == stat_buf.st_uid || have_suid) {
-        // Check permissions granted to owner
-        if (((stat_buf.st_mode & S_IRWXU) >> 6) & mode) {
-            return 0;
-        }
-    }
-    bool have_sgid = (stat_buf.st_mode & S_ISGID);
-    auto binsearch = std::lower_bound(groups.begin(), groups.end(), stat_buf.st_gid);
-    bool have_group = binsearch != groups.end() && !(stat_buf.st_gid < *binsearch);
-    if (have_group || have_sgid) {
-        // Check permissions granted to group
-        if (((stat_buf.st_mode & S_IRWXG) >> 3) & mode) {
-            return 0;
-        }
-    }
-    if (euid != stat_buf.st_uid && !have_group) {
-        // Check permissions granted to other
-        if ((stat_buf.st_mode & S_IRWXO) & mode) {
-            return 0;
-        }
-    }
-
-    return -1;
-}
-
 /// Obtain a description string for the file specified by the filename.
 ///
 /// The returned value is a string constant and should not be free'd.
@@ -390,8 +338,9 @@ static int fast_waccess(const struct stat &stat_buf, uint8_t mode) {
 /// \param stat_res The result of calling stat on the file
 /// \param buf The struct buf output of calling stat on the file
 /// \param err The errno value after a failed stat call on the file.
-static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int stat_res,
-                                    const struct stat &buf, int err) {
+static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
+                                    const struct stat &lbuf, int stat_res, const struct stat &buf,
+                                    int err, bool definitely_executable) {
     if (lstat_res) {
         return COMPLETE_FILE_DESC;
     }
@@ -401,7 +350,12 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
             if (S_ISDIR(buf.st_mode)) {
                 return COMPLETE_DIRECTORY_SYMLINK_DESC;
             }
-            if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && fast_waccess(buf, X_OK) == 0) {
+            if (definitely_executable || (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0)) {
+                // Weird group permissions and other such issues make it non-trivial to find out if
+                // we can actually execute a file using the result from stat. It is much safer to
+                // use the access function, since it tells us exactly what we want to know.
+                //
+                // We skip this check in case the caller tells us the file is definitely executable.
                 return COMPLETE_EXEC_LINK_DESC;
             }
 
@@ -422,7 +376,12 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
         return COMPLETE_SOCKET_DESC;
     } else if (S_ISDIR(buf.st_mode)) {
         return COMPLETE_DIRECTORY_DESC;
-    } else if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && fast_waccess(buf, X_OK) == 0) {
+    } else if (definitely_executable || (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0)) {
+        // Weird group permissions and other such issues make it non-trivial to find out if we can
+        // actually execute a file using the result from stat. It is much safer to use the access
+        // function, since it tells us exactly what we want to know.
+        //
+        // We skip this check in case the caller tells us the file is definitely executable.
         return COMPLETE_EXEC_DESC;
     }
 
@@ -477,7 +436,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
-    if (executables_only && (!is_executable || fast_waccess(stat_buf, X_OK) != 0)) {
+    if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
         return false;
     }
 
@@ -489,7 +448,9 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     // Compute the description.
     wcstring desc;
     if (expand_flags & expand_flag::gen_descriptions) {
-        desc = file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
+        // If we have executables_only, we already checked waccess above,
+        // so we tell file_get_desc that this file is definitely executable so it can skip the check.
+        desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno, executables_only);
 
         if (!is_directory && !is_executable && file_size >= 0) {
             if (!desc.empty()) desc.append(L", ");
@@ -724,11 +685,8 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
     }
 
     if (!(flags & expand_flag::for_completions)) {
-        // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file if it
-        // exists.
-        if (waccess(base_dir, F_OK) == 0) {
-            this->add_expansion_result(wcstring{base_dir});
-        }
+        // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file, we already know it exists!
+        this->add_expansion_result(wcstring{base_dir});
     } else {
         // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.
         dir_iter_t dir = open_dir(base_dir);
@@ -953,7 +911,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         }
 
         // return "." and ".." entries if we're doing completions
-        dir_iter_t dir = open_dir(base_dir, /* return . and .. */ flags & expand_flag::for_completions);
+        dir_iter_t dir =
+            open_dir(base_dir, /* return . and .. */ flags & expand_flag::for_completions);
         if (dir.valid()) {
             if (is_last_segment) {
                 // Last wildcard segment, nonempty wildcard.

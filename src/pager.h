@@ -83,7 +83,7 @@ class pager_t {
     /// Data structure describing one or a group of related completions.
     struct comp_t {
         /// The list of all completion strings this entry applies to.
-        wcstring_list_t comp{};
+        std::vector<wcstring> comp{};
         /// The description.
         wcstring desc{};
         /// The representative completion.
@@ -164,6 +164,9 @@ class pager_t {
 
     // Returns the currently selected completion for the given rendering.
     const completion_t *selected_completion(const page_rendering_t &rendering) const;
+
+    size_t selected_completion_index() const;
+    void set_selected_completion_index(size_t new_index);
 
     // Indicates the row and column for the given rendering. Returns -1 if no selection.
     size_t get_selected_row(const page_rendering_t &rendering) const;

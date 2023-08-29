@@ -124,6 +124,15 @@ printf '%d\n' 0g
 echo $status
 # CHECK: 1
 
+printf '%f\n' 0x2
+# CHECK: 2.000000
+
+printf '%f\n' 0x2p3
+# CHECK: 16.000000
+
+printf '%.1f\n' -0X1.5P8
+# CHECK: -336.0
+
 # Test that we ignore options
 printf -a
 printf --foo

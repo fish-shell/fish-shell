@@ -6,6 +6,7 @@
     <title>fish shell configuration</title>
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="stylesheet" type="text/css" href="fishconfig.css" />
+    <link rel="stylesheet" type="text/css" media="print" href="fishconfig_print.css">
     <script type="text/javascript" src="js/colorutils.js" defer></script>
     <script type="text/javascript" src="js/main.js" defer></script>
     <script type="text/javascript" src="js/alpine.js" defer></script>
@@ -29,7 +30,7 @@
             <a :class="{'tab': true, 'selected_tab': currentTab == 'history'}" id="tab_history"
                 @click="currentTab = 'history'">history</a>
             <a :class="{'tab': true, 'selected_tab': currentTab == 'bindings'}" id="tab_bindings"
-                @click="currentTab = 'bindings'">bindings</a>
+                @click="currentTab = 'bindings'"><span class="print_only">fish shell </span>bindings</a>
         </div>
         <div id="tab_contents">
             <template x-if="currentTab === 'colors'" x-data="colors">

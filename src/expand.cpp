@@ -33,6 +33,7 @@
 #include "parse_util.h"
 #include "parser.h"
 #include "path.h"
+#include "threads.rs.h"
 #include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
@@ -71,14 +72,14 @@ static void append_syntax_error(parse_error_list_t *errors, size_t source_start,
     parse_error_t error;
     error.source_start = source_start;
     error.source_length = 0;
-    error.code = parse_error_syntax;
+    error.code = parse_error_code_t::syntax;
 
     va_list va;
     va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
+    error.text = std::make_unique<wcstring>(vformat_string(fmt, va));
     va_end(va);
 
-    errors->push_back(error);
+    errors->push_back(std::move(error));
 }
 
 /// Append a cmdsub error to the given error list. But only do so if the error hasn't already been
@@ -91,18 +92,18 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
     parse_error_t error;
     error.source_start = source_start;
     error.source_length = source_end - source_start + 1;
-    error.code = parse_error_cmdsubst;
+    error.code = parse_error_code_t::cmdsubst;
 
     va_list va;
     va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
+    error.text = std::make_unique<wcstring>(vformat_string(fmt, va));
     va_end(va);
 
-    for (const auto &it : *errors) {
-        if (error.text == it.text) return;
+    for (size_t i = 0; i < errors->size(); i++) {
+        if (*error.text == *errors->at(i)->text()) return;
     }
 
-    errors->push_back(error);
+    errors->push_back(std::move(error));
 }
 
 /// Append an overflow error, when expansion produces too much data.
@@ -112,8 +113,8 @@ static expand_result_t append_overflow_error(parse_error_list_t *errors,
         parse_error_t error;
         error.source_start = source_start;
         error.source_length = 0;
-        error.code = parse_error_generic;
-        error.text = _(L"Expansion produced too many results");
+        error.code = parse_error_code_t::generic;
+        error.text = std::make_unique<wcstring>(_(L"Expansion produced too many results"));
         errors->push_back(std::move(error));
     }
     return expand_result_t::make_error(STATUS_EXPAND_ERROR);
@@ -127,7 +128,7 @@ static bool is_quotable(const wcstring &str) {
 
 wcstring expand_escape_variable(const env_var_t &var) {
     wcstring buff;
-    const wcstring_list_t &lst = var.as_list();
+    const std::vector<wcstring> &lst = var.as_list();
 
     for (size_t j = 0; j < lst.size(); j++) {
         const wcstring &el = lst.at(j);
@@ -410,7 +411,7 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
     // Ok, we have a variable or a history. Let's expand it.
     // Start by respecting the sliced elements.
     assert((var || history) && "Should have variable or history here");
-    wcstring_list_t var_item_list;
+    std::vector<wcstring> var_item_list;
     if (all_values) {
         if (history) {
             history->get_history(var_item_list);
@@ -430,7 +431,7 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
                 }
             }
         } else {
-            const wcstring_list_t &all_var_items = var->as_list();
+            const std::vector<wcstring> &all_var_items = var->as_list();
             for (long item_index : var_idx_list) {
                 // Check that we are within array bounds. If not, skip the element. Note:
                 // Negative indices (`echo $foo[-1]`) are already converted to positive ones
@@ -639,7 +640,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
         }
     }
 
-    wcstring_list_t sub_res;
+    std::vector<wcstring> sub_res;
     int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.job_group, sub_res);
     if (subshell_status != 0) {
         // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
@@ -699,7 +700,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
 
-        wcstring_list_t sub_res2;
+        std::vector<wcstring> sub_res2;
         tail_begin = slice_end - in;
         for (long idx : slice_idx) {
             if (static_cast<size_t>(idx) > sub_res.size() || idx < 1) {
@@ -813,8 +814,8 @@ static void expand_home_directory(wcstring &input, const environment_t &vars) {
         maybe_t<wcstring> home;
         if (username.empty()) {
             // Current users home directory.
-            auto home_var = vars.get(L"HOME");
-            if (home_var.missing_or_empty()) {
+            auto home_var = vars.get_unless_empty(L"HOME");
+            if (!home_var) {
                 input.clear();
                 return;
             }
@@ -822,7 +823,7 @@ static void expand_home_directory(wcstring &input, const environment_t &vars) {
             tail_idx = 1;
         } else {
             // Some other user's home directory.
-            std::string name_cstr = wcs2string(username);
+            std::string name_cstr = wcs2zstring(username);
             struct passwd userinfo;
             struct passwd *result;
             char buf[8192];
@@ -952,9 +953,11 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t
                 }
                 return expand_result_t::ok;
             case 1:
-                append_cmdsub_error(errors, start, end, L"command substitutions not allowed here");
+                append_cmdsub_error(errors, start, end,
+                                    L"command substitutions not allowed here");  // clang-format off
                 __fallthrough__
             case -1:
+                // clang-format on
             default:
                 return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
@@ -969,7 +972,8 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.
     wcstring next;
-    unescape_string(input, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
+    if (auto unescaped = unescape_string(input, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE))
+        next = *unescaped;
 
     if (flags & expand_flag::skip_variables) {
         for (auto &i : next) {
@@ -1019,7 +1023,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
         // So we're going to treat this input as a file path. Compute the "working directories",
         // which may be CDPATH if the special flag is set.
         const wcstring working_dir = ctx.vars.get_pwd_slash();
-        wcstring_list_t effective_working_dirs;
+        std::vector<wcstring> effective_working_dirs;
         bool for_cd = flags & expand_flag::special_for_cd;
         bool for_command = flags & expand_flag::special_for_command;
         if (!for_cd && !for_command) {
@@ -1049,7 +1053,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
             } else {
                 // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
-                wcstring_list_t paths;
+                std::vector<wcstring> paths;
                 if (auto paths_var = ctx.vars.get(for_cd ? L"CDPATH" : L"PATH")) {
                     paths = paths_var->as_list();
                 }
@@ -1249,7 +1253,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_
 }
 
 expand_result_t expand_to_command_and_args(const wcstring &instr, const operation_context_t &ctx,
-                                           wcstring *out_cmd, wcstring_list_t *out_args,
+                                           wcstring *out_cmd, std::vector<wcstring> *out_args,
                                            parse_error_list_t *errors, bool skip_wildcards) {
     // Fast path.
     if (expand_is_clean(instr)) {

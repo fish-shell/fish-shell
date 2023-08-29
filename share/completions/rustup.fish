@@ -133,7 +133,6 @@ function __rustup_triples
         x86_64-unknown-fuchsia \
         x86_64-unknown-haiku \
         x86_64-unknown-linux-gnu \
-        x86_64-unknown-linux-gnu \
         x86_64-unknown-linux-gnux32 \
         x86_64-unknown-linux-musl \
         x86_64-unknown-netbsd \

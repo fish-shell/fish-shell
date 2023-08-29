@@ -9,6 +9,10 @@ end
 functions    --details f1 f2
 #CHECKERR: functions: --details: expected 1 arguments; got 2
 
+# Verify that it still mentions "--details" even if it isn't the last option.
+functions    --details --verbose f1 f2
+#CHECKERR: functions: --details: expected 1 arguments; got 2
+
 # ==========
 # Verify that `functions --details` works as expected when given the name of a
 # known function.
@@ -53,6 +57,28 @@ set x (functions -v -D multiline_descr)
 if test $x[5] != 'line 1\\\\n\\nline 2 & more; way more'
     echo "Unexpected output for 'functions -v -D multiline_descr': $x" >&2
 end
+
+# ==========
+# Verify that `functions --details` works as expected when given the name of a
+# function that is copied. (Prints the filename where it was copied.)
+functions -c f1 f1a
+functions -D f1a
+#CHECK: {{.*}}checks/functions.fish
+functions -Dv f1a
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
+echo "functions -c f1 f1b" | source
+functions -D f1b
+#CHECK: -
+functions -Dv f1b
+#CHECK: -
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
 
 # ==========
 # Verify function description setting
@@ -106,6 +132,41 @@ functions --no-details t
 # CHECK: echo tttt;
 # CHECK: end
 
+functions -c t t2
+functions t2
+# CHECK: # Defined via `source`, copied in {{.*}}checks/functions.fish @ line {{\d+}}
+# CHECK: function t2
+# CHECK: echo tttt;
+# CHECK: end
+functions -D t2
+#CHECK: {{.*}}checks/functions.fish
+functions -Dv t2
+#CHECK: {{.*}}checks/functions.fish
+#CHECK: -
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
+
+echo "functions -c t t3" | source
+functions t3
+# CHECK: # Defined via `source`, copied via `source`
+# CHECK: function t3
+# CHECK: echo tttt;
+# CHECK: end
+functions -D t3
+#CHECK: -
+functions -Dv t3
+#CHECK: -
+#CHECK: -
+#CHECK: {{\d+}}
+#CHECK: scope-shadowing
+#CHECK:
+
+functions --no-details t2
+# CHECK: function t2
+# CHECK: echo tttt;
+# CHECK: end
+
 functions --no-details --details t
 # CHECKERR: functions: invalid option combination
 # CHECKERR:
@@ -114,3 +175,57 @@ functions --no-details --details t
 # CHECKERR: ^
 # CHECKERR: (Type 'help functions' for related documentation)
 # XXX FIXME ^ caret should point at --no-details --details
+
+function term1 --on-signal TERM
+end
+function term2 --on-signal TERM
+end
+function term3 --on-signal TERM
+end
+
+functions --handlers-type signal
+# CHECK: Event signal
+# CHECK: SIGTRAP fish_sigtrap_handler
+# CHECK: SIGTERM term1
+# CHECK: SIGTERM term2
+# CHECK: SIGTERM term3
+
+# See how --names and --all work.
+# We don't want to list all of our functions here,
+# so we just match a few that we know are there.
+functions -n | string match cd
+# CHECK: cd
+
+functions --names | string match __fish_config_interactive
+echo $status
+# CHECK: 1
+
+functions --names -a | string match __fish_config_interactive
+# CHECK: __fish_config_interactive
+
+functions --description ""
+# CHECKERR: functions: Expected exactly one function name
+# CHECKERR: checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions --description ""
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)
+
+function foo --on-variable foo; end
+# This should print *everything*
+functions --handlers-type "" | string match 'Event *'
+# CHECK: Event signal
+# CHECK: Event variable
+# CHECK: Event generic
+functions -e foo
+
+functions --details --verbose thisfunctiondoesnotexist
+# CHECK: n/a
+# CHECK: n/a
+# CHECK: 0
+# CHECK: n/a
+# CHECK: n/a
+
+functions --banana
+# CHECKERR: functions: --banana: unknown option
+echo $status
+# CHECK: 2

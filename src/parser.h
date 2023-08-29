@@ -13,9 +13,10 @@
 #include <vector>
 
 #include "common.h"
+#include "cxx.h"
 #include "env.h"
+#include "event.h"
 #include "expand.h"
-#include "job_group.h"
 #include "maybe.h"
 #include "operation_context.h"
 #include "parse_constants.h"
@@ -24,21 +25,14 @@
 #include "util.h"
 #include "wait_handle.h"
 
-struct event_t;
-class io_chain_t;
 class autoclose_fd_t;
-
-/// event_blockage_t represents a block on events.
-struct event_blockage_t {};
-
-typedef std::list<event_blockage_t> event_blockage_list_t;
-
-inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
-    return !ebls.empty();
-}
+class io_chain_t;
+struct Event;
+struct job_group_t;
+class parser_t;
 
 /// Types of blocks.
-enum class block_type_t : uint16_t {
+enum class block_type_t : uint8_t {
     while_block,              /// While loop block
     for_block,                /// For loop block
     if_block,                 /// If block
@@ -63,25 +57,24 @@ enum class loop_status_t {
 
 /// block_t represents a block of commands.
 class block_t {
-   private:
+   public:
     /// Construct from a block type.
     explicit block_t(block_type_t t);
 
-   public:
     // If this is a function block, the function name. Otherwise empty.
     wcstring function_name{};
 
     /// List of event blocks.
-    event_blockage_list_t event_blocks{};
+    uint64_t event_blocks{};
 
     // If this is a function block, the function args. Otherwise empty.
-    wcstring_list_t function_args{};
+    std::vector<wcstring> function_args{};
 
     /// Name of file that created this block.
     filename_ref_t src_filename{};
 
     // If this is an event block, the event. Otherwise ignored.
-    std::shared_ptr<event_t> event;
+    std::shared_ptr<rust::Box<Event>> event;
 
     // If this is a source block, the source'd file, interned.
     // Otherwise nothing.
@@ -105,15 +98,12 @@ class block_t {
     block_type_t type() const { return this->block_type; }
 
     /// \return if we are a function call (with or without shadowing).
-    bool is_function_call() const {
-        return type() == block_type_t::function_call ||
-               type() == block_type_t::function_call_no_shadow;
-    }
+    bool is_function_call() const;
 
     /// Entry points for creating blocks.
     static block_t if_block();
-    static block_t event_block(event_t evt);
-    static block_t function_block(wcstring name, wcstring_list_t args, bool shadows);
+    static block_t event_block(const void *evt_);
+    static block_t function_block(wcstring name, std::vector<wcstring> args, bool shadows);
     static block_t source_block(filename_ref_t src);
     static block_t for_block();
     static block_t while_block();
@@ -121,6 +111,10 @@ class block_t {
     static block_t scope_block(block_type_t type);
     static block_t breakpoint_block();
     static block_t variable_assignment_block();
+
+    /// autocxx junk.
+    void ffi_incr_event_blocks();
+    uint64_t ffi_event_blocks() const { return event_blocks; }
 };
 
 struct profile_item_t {
@@ -145,8 +139,8 @@ struct profile_item_t {
 
 class parse_execution_context_t;
 
-/// Miscellaneous data used to avoid recursion and others.
-struct library_data_t {
+/// Plain-Old-Data components of `struct library_data_t` that can be shared over FFI
+struct library_data_pod_t {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
 
@@ -206,17 +200,17 @@ struct library_data_t {
 
     /// The read limit to apply to captured subshell output, or 0 for none.
     size_t read_limit{0};
+};
 
+/// Miscellaneous data used to avoid recursion and others.
+struct library_data_t : public library_data_pod_t {
     /// The current filename we are evaluating, either from builtin source or on the command line.
     filename_ref_t current_filename{};
-
-    /// List of events that have been sent but have not yet been delivered because they are blocked.
-    std::vector<std::shared_ptr<const event_t>> blocked_events{};
 
     /// A stack of fake values to be returned by builtin_commandline. This is used by the completion
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
     /// the command line.
-    wcstring_list_t transient_commandlines{};
+    std::vector<wcstring> transient_commandlines{};
 
     /// A file descriptor holding the current working directory, for use in openat().
     /// This is never null and never invalid.
@@ -230,6 +224,11 @@ struct library_data_t {
         /// Used to get the full text of the current job for `status current-commandline`.
         wcstring commandline;
     } status_vars;
+
+   public:
+    wcstring get_status_vars_command() const { return status_vars.command; }
+    wcstring get_status_vars_commandline() const { return status_vars.commandline; }
+    const wcstring *get_current_filename() const;  // may return nullptr if None
 };
 
 /// The result of parser_t::eval family.
@@ -271,7 +270,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Our store of recorded wait-handles. These are jobs that finished in the background, and have
     /// been reaped, but may still be wait'ed on.
-    wait_handle_store_t wait_handles;
+    rust::Box<WaitHandleStoreFFI> wait_handles;
 
     /// The list of blocks. This is a deque because we give out raw pointers to callers, who hold
     /// them across manipulating this stack.
@@ -321,11 +320,16 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Get the "principal" parser, whatever that is.
     static parser_t &principal_parser();
 
+    /// ffi helper. Obviously this is totally bogus.
+    static parser_t *principal_parser_ffi();
+
     /// Assert that this parser is allowed to execute on the current thread.
     void assert_can_execute() const;
 
     /// Global event blocks.
-    event_blockage_list_t global_event_blocks;
+    uint64_t global_event_blocks{};
+
+    eval_res_t eval(const wcstring &cmd, const io_chain_t &io);
 
     /// Evaluate the expressions contained in cmd.
     ///
@@ -335,15 +339,16 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \param block_type The type of block to push on the block stack, which must be either 'top'
     /// or 'subst'.
     /// \return the result of evaluation.
-    eval_res_t eval(const wcstring &cmd, const io_chain_t &io,
-                    const job_group_ref_t &job_group = {},
-                    block_type_t block_type = block_type_t::top);
+    eval_res_t eval_with(const wcstring &cmd, const io_chain_t &io,
+                         const job_group_ref_t &job_group, block_type_t block_type);
+
+    eval_res_t eval_string_ffi1(const wcstring &cmd);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
-    eval_res_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                    const job_group_ref_t &job_group = {},
-                    block_type_t block_type = block_type_t::top);
+    eval_res_t eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
+                                  const job_group_ref_t &job_group = {},
+                                  block_type_t block_type = block_type_t::top);
 
     /// Evaluates a node.
     /// The node type must be ast_t::statement_t or ast::job_list_t.
@@ -383,6 +388,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Return the list of blocks. The first block is at the top.
     const std::deque<block_t> &blocks() const { return block_list; }
 
+    size_t blocks_size() const { return block_list.size(); }
+
     /// Get the list of jobs.
     job_list_t &jobs() { return job_list; }
     const job_list_t &jobs() const { return job_list; }
@@ -391,13 +398,21 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     env_stack_t &vars() { return *variables; }
     const env_stack_t &vars() const { return *variables; }
 
+    int remove_var_ffi(const wcstring &key, int mode) { return vars().remove(key, mode); }
+
     /// Get the library data.
     library_data_t &libdata() { return library_data; }
     const library_data_t &libdata() const { return library_data; }
 
     /// Get our wait handle store.
-    wait_handle_store_t &get_wait_handles() { return wait_handles; }
-    const wait_handle_store_t &get_wait_handles() const { return wait_handles; }
+    rust::Box<WaitHandleStoreFFI> &get_wait_handles_ffi();
+    const rust::Box<WaitHandleStoreFFI> &get_wait_handles_ffi() const;
+
+    /// As get_wait_handles(), but void* pointer-to-Box to satisfy autocxx.
+    void *get_wait_handles_void() const {
+        const void *ptr = &get_wait_handles_ffi();
+        return const_cast<void *>(ptr);
+    }
 
     /// Get and set the last proc statuses.
     int get_last_status() const { return vars().get_last_status(); }
@@ -407,7 +422,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Cover of vars().set(), which also fires any returned event handlers.
     /// \return a value like ENV_OK.
     int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val);
-    int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+    int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, std::vector<wcstring> vals);
 
     /// Update any universal variables and send event handlers.
     /// If \p always is set, then do it even if we have no pending changes (that is, look for
@@ -421,17 +436,24 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Remove the outermost block, asserting it's the given one.
     void pop_block(const block_t *expected);
 
+    /// Avoid maybe_t usage for ffi, sends a empty string in case of none.
+    wcstring get_function_name_ffi(int level);
     /// Return the function name for the specified stack frame. Default is one (current frame).
     maybe_t<wcstring> get_function_name(int level = 1);
 
     /// Promotes a job to the front of the list.
-    void job_promote(job_t *job);
+    void job_promote(job_list_t::iterator job_it);
+    void job_promote(const job_t *job);
+    void job_promote_at(size_t job_pos);
 
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
     const job_t *job_with_id(job_id_t job_id) const;
 
     /// Returns the job with the given pid.
     job_t *job_get_from_pid(pid_t pid) const;
+
+    /// Returns the job and position with the given pid.
+    job_t *job_get_from_pid(int pid, size_t &job_pos) const;
 
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The parser_t will deallocate it.
@@ -451,6 +473,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// reader_current_filename, e.g. if we are evaluating a function defined in a different file
     /// than the one currently read.
     filename_ref_t current_filename() const;
+    wcstring current_filename_ffi() const;
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).
@@ -465,17 +488,41 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Mark whether we should sync universal variables.
     void set_syncs_uvars(bool flag) { syncs_uvars_ = flag; }
 
+    /// Set the given file descriptor as the working directory for this parser.
+    /// This acquires ownership.
+    void set_cwd_fd(int fd);
+
     /// \return a shared pointer reference to this parser.
     std::shared_ptr<parser_t> shared();
 
     /// \return a cancel poller for checking if this parser has been signalled.
+    /// autocxx falls over with this so hide it.
+#if INCLUDE_RUST_HEADERS
     cancel_checker_t cancel_checker() const;
+#endif
 
     /// \return the operation context for this parser.
     operation_context_t context();
 
     /// Checks if the max eval depth has been exceeded
     bool is_eval_depth_exceeded() const { return eval_level >= FISH_MAX_EVAL_DEPTH; }
+
+    /// autocxx junk.
+    RustFFIJobList ffi_jobs() const;
+    library_data_pod_t *ffi_libdata_pod();
+    job_t *ffi_job_get_from_pid(int pid) const;
+    const library_data_pod_t &ffi_libdata_pod_const() const;
+
+    /// autocxx junk.
+    bool ffi_has_funtion_block() const;
+
+    /// autocxx junk.
+    uint64_t ffi_global_event_blocks() const;
+    void ffi_incr_global_event_blocks();
+    void ffi_decr_global_event_blocks();
+
+    /// autocxx junk.
+    size_t ffi_blocks_size() const;
 
     ~parser_t();
 };

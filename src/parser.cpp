@@ -25,11 +25,12 @@
 #include "fds.h"
 #include "flog.h"
 #include "function.h"
-#include "job_group.h"
+#include "job_group.rs.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "proc.h"
-#include "signal.h"
+#include "signals.h"
+#include "threads.rs.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class io_chain_t;
@@ -40,7 +41,9 @@ static wcstring user_presentable_path(const wcstring &path, const environment_t 
 }
 
 parser_t::parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal)
-    : variables(std::move(vars)), is_principal_(is_principal) {
+    : wait_handles(new_wait_handle_store_ffi()),
+      variables(std::move(vars)),
+      is_principal_(is_principal) {
     assert(variables.get() && "Null variables in parser initializer");
     int cwd = open_cloexec(".", O_RDONLY);
     if (cwd < 0) {
@@ -60,18 +63,25 @@ parser_t &parser_t::principal_parser() {
     return *principal;
 }
 
+parser_t *parser_t::principal_parser_ffi() { return &principal_parser(); }
+
 void parser_t::assert_can_execute() const { ASSERT_IS_MAIN_THREAD(); }
 
-int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
+rust::Box<WaitHandleStoreFFI> &parser_t::get_wait_handles_ffi() { return wait_handles; }
+
+const rust::Box<WaitHandleStoreFFI> &parser_t::get_wait_handles_ffi() const { return wait_handles; }
+
+int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode,
+                               std::vector<wcstring> vals) {
     int res = vars().set(key, mode, std::move(vals));
     if (res == ENV_OK) {
-        event_fire(*this, event_t::variable_set(key));
+        event_fire(*this, *new_event_variable_set(key));
     }
     return res;
 }
 
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val) {
-    wcstring_list_t vals;
+    std::vector<wcstring> vals;
     vals.push_back(std::move(val));
     return set_var_and_fire(key, mode, std::move(vals));
 }
@@ -80,7 +90,7 @@ void parser_t::sync_uvars_and_fire(bool always) {
     if (this->syncs_uvars_) {
         auto evts = this->vars().universal_sync(always);
         for (const auto &evt : evts) {
-            event_fire(*this, evt);
+            event_fire(*this, *evt);
         }
     }
 }
@@ -181,23 +191,28 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
                                                  expand_flags_t eflags,
                                                  const operation_context_t &ctx) {
     // Parse the string as an argument list.
-    auto ast = ast::ast_t::parse_argument_list(arg_list_src);
-    if (ast.errored()) {
+    auto ast = ast_parse_argument_list(arg_list_src);
+    if (ast->errored()) {
         // Failed to parse. Here we expect to have reported any errors in test_args.
         return {};
     }
 
     // Get the root argument list and extract arguments from it.
     completion_list_t result;
-    const ast::freestanding_argument_list_t *list =
-        ast.top()->as<ast::freestanding_argument_list_t>();
-    for (const ast::argument_t &arg : list->arguments) {
-        wcstring arg_src = arg.source(arg_list_src);
+    const ast::freestanding_argument_list_t &list = ast->top()->as_freestanding_argument_list();
+    for (size_t i = 0; i < list.arguments().count(); i++) {
+        const ast::argument_t &arg = *list.arguments().at(i);
+        wcstring arg_src = *arg.source(arg_list_src);
         if (expand_string(arg_src, &result, eflags, ctx) == expand_result_t::error) {
             break;  // failed to expand a string
         }
     }
     return result;
+}
+
+void parser_t::set_cwd_fd(int fd) {
+    assert(fd >= 0 && "Invalid fd");
+    this->libdata().cwd_fd = std::make_shared<autoclose_fd_t>(fd);
 }
 
 std::shared_ptr<parser_t> parser_t::shared() { return shared_from_this(); }
@@ -252,7 +267,7 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
         }
         case block_type_t::event: {
             assert(b.event && "Should have an event");
-            wcstring description = event_get_desc(parser, *b.event);
+            wcstring description = *event_get_desc(parser, **b.event);
             append_format(trace, _(L"in event handler: %ls\n"), description.c_str());
             print_call_site = true;
             break;
@@ -339,6 +354,15 @@ bool parser_t::is_command_substitution() const {
     return false;
 }
 
+wcstring parser_t::get_function_name_ffi(int level) {
+    auto name = get_function_name(level);
+    if (name.has_value()) {
+        return name.acquire();
+    } else {
+        return wcstring();
+    }
+}
+
 maybe_t<wcstring> parser_t::get_function_name(int level) {
     if (level == 0) {
         // Return the function name for the level preceding the most recent breakpoint. If there
@@ -384,13 +408,23 @@ filename_ref_t parser_t::current_filename() const {
     for (const auto &b : block_list) {
         if (b.is_function_call()) {
             auto props = function_get_props(b.function_name);
-            return props ? props->definition_file : nullptr;
+            return props ? (*props)->definition_file() : nullptr;
         } else if (b.type() == block_type_t::source) {
             return b.sourced_file;
         }
     }
     // Fall back to the file being sourced.
     return libdata().current_filename;
+}
+
+// FFI glue
+wcstring parser_t::current_filename_ffi() const {
+    auto filename = current_filename();
+    if (filename) {
+        return wcstring(*filename);
+    } else {
+        return wcstring();
+    }
 }
 
 bool parser_t::function_stack_is_overflowing() const {
@@ -439,10 +473,11 @@ wcstring parser_t::current_line() {
     // Use an error with empty text.
     assert(source_offset >= 0);
     parse_error_t empty_error = {};
+    empty_error.text = std::make_unique<wcstring>();
     empty_error.source_start = source_offset;
 
-    wcstring line_info = empty_error.describe_with_prefix(execution_context->get_source(), prefix,
-                                                          is_interactive(), skip_caret);
+    wcstring line_info = *empty_error.describe_with_prefix(execution_context->get_source(), prefix,
+                                                           is_interactive(), skip_caret);
     if (!line_info.empty()) {
         line_info.push_back(L'\n');
     }
@@ -454,10 +489,15 @@ wcstring parser_t::current_line() {
 void parser_t::job_add(shared_ptr<job_t> job) {
     assert(job != nullptr);
     assert(!job->processes.empty());
-    job_list.push_front(std::move(job));
+    job_list.insert(job_list.begin(), std::move(job));
 }
 
-void parser_t::job_promote(job_t *job) {
+void parser_t::job_promote(job_list_t::iterator job_it) {
+    // Move the job to the beginning.
+    std::rotate(job_list.begin(), job_it, std::next(job_it));
+}
+
+void parser_t::job_promote(const job_t *job) {
     job_list_t::iterator loc;
     for (loc = job_list.begin(); loc != job_list.end(); ++loc) {
         if (loc->get() == job) {
@@ -465,9 +505,12 @@ void parser_t::job_promote(job_t *job) {
         }
     }
     assert(loc != job_list.end());
+    job_promote(loc);
+}
 
-    // Move the job to the beginning.
-    std::rotate(job_list.begin(), loc, std::next(loc));
+void parser_t::job_promote_at(size_t job_pos) {
+    assert(job_pos < job_list.size());
+    job_promote(job_list.begin() + job_pos);
 }
 
 const job_t *parser_t::job_with_id(job_id_t id) const {
@@ -478,15 +521,34 @@ const job_t *parser_t::job_with_id(job_id_t id) const {
 }
 
 job_t *parser_t::job_get_from_pid(pid_t pid) const {
-    for (const auto &job : jobs()) {
-        for (const process_ptr_t &p : job->processes) {
+    size_t job_pos{};
+    return job_get_from_pid(pid, job_pos);
+}
+
+job_t *parser_t::job_get_from_pid(int pid, size_t &job_pos) const {
+    for (auto it = job_list.begin(); it != job_list.end(); ++it) {
+        for (const process_ptr_t &p : (*it)->processes) {
             if (p->pid == pid) {
-                return job.get();
+                job_pos = it - job_list.begin();
+                return (*it).get();
             }
         }
     }
     return nullptr;
 }
+
+const wcstring *library_data_t::get_current_filename() const {
+    if (current_filename) {
+        return &*current_filename;
+    } else {
+        return nullptr;
+    }
+}
+
+library_data_pod_t *parser_t::ffi_libdata_pod() { return &library_data; }
+
+job_t *parser_t::ffi_job_get_from_pid(int pid) const { return job_get_from_pid(pid); }
+const library_data_pod_t &parser_t::ffi_libdata_pod_const() const { return library_data; }
 
 profile_item_t *parser_t::create_profile_item() {
     if (g_profiling_active) {
@@ -496,16 +558,21 @@ profile_item_t *parser_t::create_profile_item() {
     return nullptr;
 }
 
-eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
-                          const job_group_ref_t &job_group, enum block_type_t block_type) {
+eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io) {
+    return eval_with(cmd, io, {}, block_type_t::top);
+}
+
+eval_res_t parser_t::eval_with(const wcstring &cmd, const io_chain_t &io,
+                               const job_group_ref_t &job_group, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
-    parse_error_list_t error_list;
-    if (parsed_source_ref_t ps = parse_source(wcstring{cmd}, parse_flag_none, &error_list)) {
-        return this->eval(ps, io, job_group, block_type);
+    auto error_list = new_parse_error_list();
+    auto ps = parse_source(wcstring{cmd}, parse_flag_none, &*error_list);
+    if (ps->has_value()) {
+        return this->eval_parsed_source(*ps, io, job_group, block_type);
     } else {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
-        this->get_backtrace(cmd, error_list, backtrace_and_desc);
+        this->get_backtrace(cmd, *error_list, backtrace_and_desc);
 
         // Print it.
         std::fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
@@ -517,13 +584,16 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
     }
 }
 
-eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                          const job_group_ref_t &job_group, enum block_type_t block_type) {
+eval_res_t parser_t::eval_string_ffi1(const wcstring &cmd) { return eval(cmd, io_chain_t()); }
+
+eval_res_t parser_t::eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
+                                        const job_group_ref_t &job_group,
+                                        enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
-    const auto *job_list = ps->ast.top()->as<ast::job_list_t>();
-    if (!job_list->empty()) {
+    const auto &job_list = ps.ast().top()->as_job_list();
+    if (!job_list.empty()) {
         // Execute the top job list.
-        return this->eval_node(ps, *job_list, io, job_group, block_type);
+        return this->eval_node(ps, job_list, io, job_group, block_type);
     } else {
         auto status = proc_status_t::from_exit_code(get_last_status());
         bool break_expand = false;
@@ -588,8 +658,8 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
-    scoped_push<exc_ctx_ref_t> exc(&execution_context,
-                                   make_unique<parse_execution_context_t>(ps, op_ctx, block_io));
+    scoped_push<exc_ctx_ref_t> exc(
+        &execution_context, make_unique<parse_execution_context_t>(ps.clone(), op_ctx, block_io));
 
     // Check the exec count so we know if anything got executed.
     const size_t prev_exec_count = libdata().exec_count;
@@ -623,20 +693,20 @@ template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {
     if (!errors.empty()) {
-        const parse_error_t &err = errors.at(0);
+        const auto *err = errors.at(0);
 
         // Determine if we want to try to print a caret to point at the source error. The
-        // err.source_start <= src.size() check is due to the nasty way that slices work, which is
+        // err.source_start() <= src.size() check is due to the nasty way that slices work, which is
         // by rewriting the source.
         size_t which_line = 0;
         bool skip_caret = true;
-        if (err.source_start != SOURCE_LOCATION_UNKNOWN && err.source_start <= src.size()) {
+        if (err->source_start() != SOURCE_LOCATION_UNKNOWN && err->source_start() <= src.size()) {
             // Determine which line we're on.
-            which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
+            which_line = 1 + std::count(src.begin(), src.begin() + err->source_start(), L'\n');
 
             // Don't include the caret if we're interactive, this is the first line of text, and our
             // source is at its beginning, because then it's obvious.
-            skip_caret = (is_interactive() && which_line == 1 && err.source_start == 0);
+            skip_caret = (is_interactive() && which_line == 1 && err->source_start() == 0);
         }
 
         wcstring prefix;
@@ -655,7 +725,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         }
 
         const wcstring description =
-            err.describe_with_prefix(src, prefix, is_interactive(), skip_caret);
+            *err->describe_with_prefix(src, prefix, is_interactive(), skip_caret);
         if (!description.empty()) {
             output.append(description);
             output.push_back(L'\n');
@@ -663,6 +733,25 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         output.append(this->stack_trace());
     }
 }
+
+RustFFIJobList parser_t::ffi_jobs() const {
+    return RustFFIJobList{const_cast<job_ref_t *>(job_list.data()), job_list.size()};
+}
+
+bool parser_t::ffi_has_funtion_block() const {
+    for (const auto &b : blocks()) {
+        if (b.is_function_call()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint64_t parser_t::ffi_global_event_blocks() const { return global_event_blocks; }
+void parser_t::ffi_incr_global_event_blocks() { ++global_event_blocks; }
+void parser_t::ffi_decr_global_event_blocks() { --global_event_blocks; }
+
+size_t parser_t::ffi_blocks_size() const { return block_list.size(); }
 
 block_t::block_t(block_type_t t) : block_type(t) {}
 
@@ -732,17 +821,23 @@ wcstring block_t::description() const {
     return result;
 }
 
+bool block_t::is_function_call() const {
+    return type() == block_type_t::function_call || type() == block_type_t::function_call_no_shadow;
+}
+
 // Various block constructors.
 
 block_t block_t::if_block() { return block_t(block_type_t::if_block); }
 
-block_t block_t::event_block(event_t evt) {
+block_t block_t::event_block(const void *evt_) {
+    const auto &evt = *static_cast<const Event *>(evt_);
     block_t b{block_type_t::event};
-    b.event.reset(new event_t(std::move(evt)));
+    b.event =
+        std::make_shared<rust::Box<Event>>(evt.clone());  // TODO Post-FFI: move instead of clone.
     return b;
 }
 
-block_t block_t::function_block(wcstring name, wcstring_list_t args, bool shadows) {
+block_t block_t::function_block(wcstring name, std::vector<wcstring> args, bool shadows) {
     block_t b{shadows ? block_type_t::function_call : block_type_t::function_call_no_shadow};
     b.function_name = std::move(name);
     b.function_args = std::move(args);
@@ -766,3 +861,5 @@ block_t block_t::scope_block(block_type_t type) {
 }
 block_t block_t::breakpoint_block() { return block_t(block_type_t::breakpoint); }
 block_t block_t::variable_assignment_block() { return block_t(block_type_t::variable_assignment); }
+
+void block_t::ffi_incr_event_blocks() { ++event_blocks; }

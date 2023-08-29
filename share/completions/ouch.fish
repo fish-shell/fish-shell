@@ -8,13 +8,13 @@ complete -c ouch -f --condition "not __fish_seen_subcommand_from $commands"
 
 # subcommand completions
 complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
-    -a "compress" -d "Compress one or more files into one output file [aliases: c]"
+    -a compress -d "Compress one or more files into one output file [aliases: c]"
 complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
-    -a "decompress" -d "Decompresses one or more files, optionally into another folder [aliases: d]"
+    -a decompress -d "Decompresses one or more files, optionally into another folder [aliases: d]"
 complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
-    -a "list" -d "List contents of an archive [aliases: l]"
+    -a list -d "List contents of an archive [aliases: l]"
 complete -c ouch --condition "not __fish_seen_subcommand_from $commands" \
-    -a "help" -d "Print this message or the help of the given subcommand(s)"
+    -a help -d "Print this message or the help of the given subcommand(s)"
 
 # options completions
 complete -c ouch -s y -l yes -d "Skip [Y/n] questions positively"

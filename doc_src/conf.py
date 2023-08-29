@@ -113,7 +113,7 @@ html_theme_path = ["."]
 html_theme = "python_docs_theme"
 
 # Shared styles across all doc versions.
-html_css_files = ["/docs/shared/style.css"]
+html_css_files = []
 
 # Don't add a weird "_sources" directory
 html_copy_source = False
@@ -187,6 +187,7 @@ man_pages = [
     ("interactive", "fish-interactive", "", [author], 1),
     ("relnotes", "fish-releasenotes", "", [author], 1),
     ("completions", "fish-completions", "", [author], 1),
+    ("prompt", "fish-prompt-tutorial", "", [author], 1),
     (
         "fish_for_bash_users",
         "fish-for-bash-users",

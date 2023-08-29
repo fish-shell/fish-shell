@@ -152,12 +152,6 @@ function __fish_git_files
     contains -- copied $argv; and set -l copied
     and set -l copied_desc "Copied file"
 
-    # A literal "?" for use in `case`.
-    set -l q '\\?'
-    if status test-feature qmark-noglob
-        set q '?'
-    end
-    set -l use_next
     # git status --porcelain gives us all the info we need, in a format we don't.
     # The v2 format has better documentation and doesn't use " " to denote anything,
     # but it's only been added in git 2.11.0, which was released November 2016.
@@ -183,13 +177,35 @@ function __fish_git_files
     # We explicitly enable globs so we can use that to match the current token.
     set -l git_opt -c status.relativePaths -c core.quotePath=
 
+    # If the token starts with `./`, we need to prepend that
+    string match -q './*' -- (commandline -ct)
+    and set -l rel ./
+    or set -l rel
+
+    # If the token starts with `:`, it's from the repo root
+    string match -q ':*' -- (commandline -ct)
+    and set -l colon 1
+    or set -l colon
+
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
     set -l ver (__fish_git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        __fish_git $git_opt status --porcelain=2 $status_opt \
-            | while read -la -d ' ' line
+        set -l stats (__fish_git $git_opt status --porcelain=2 $status_opt)
+        if set -ql untracked
+            # Fast path for untracked files - it is extremely easy to get a lot of these,
+            # so we handle them first
+            set -l files (string match -rg '^\? "?(.*)"?' -- $stats)
+            set stats (string match -rv '^\? ' -- $stats)
+            printf "$rel%s\n" $files\t$untracked_desc
+            if set -ql colon[1]
+                or set files (string match '../*' -- $files)
+                set files (path resolve -- $files | string replace -- "$root/" ":/:")
+                and printf '%s\n' $files\t$untracked_desc
+            end
+        end
+        printf %s\n $stats | while read -la -d ' ' line
             set -l file
             set -l desc
             # The basic status format is "XY", where X is "our" state (meaning the staging area),
@@ -309,12 +325,6 @@ function __fish_git_files
                     set -ql deleted_staged
                     and set file "$line[9..-1]"
                     and set desc $staged_deleted_desc
-                case "$q"' *'
-                    # Untracked
-                    # "? <path>" - print from element 2 on.
-                    set -ql untracked
-                    and set file "$line[2..-1]"
-                    and set desc $untracked_desc
                 case '! *'
                     # Ignored
                     # "! <path>" - print from element 2 on.
@@ -331,17 +341,12 @@ function __fish_git_files
                 # If this contains newlines or tabs,
                 # there is nothing we can do, but that's a general issue with scripted completions.
                 set file (string trim -c \" -- $file)
-                # The relative filename.
-                if string match -q './*' -- (commandline -ct)
-                    printf './%s\n' $file\t$desc
-                else
-                    printf '%s\n' "$file"\t$desc
-                end
+                # The (possibly relative) filename.
+                printf "$rel%s\n" "$file"\t$desc
                 # Now from repo root.
                 # Only do this if the filename isn't a simple child,
                 # or the current token starts with ":"
-                if string match -q '../*' -- $file
-                    or string match -q ':*' -- (commandline -ct)
+                if set -ql colon[1]; or string match -q '../*' -- $file
                     set -l fromroot (builtin realpath -- $file 2>/dev/null)
                     # `:` starts pathspec "magic", and the second `:` terminates it.
                     # `/` is the magic letter for "from repo root".
@@ -354,6 +359,16 @@ function __fish_git_files
         end
     else
         # v1 format logic
+        # This is pretty terrible and reuqires us to do a lot of weird work.
+
+        # A literal "?" for use in `case`.
+        set -l q '\\?'
+        if status test-feature qmark-noglob
+            set q '?'
+        end
+        # Whether we need to use the next line - some entries have two lines.
+        set -l use_next
+
         # We need to compute relative paths on our own, which is slow.
         # Pre-remove the root at least, so we have fewer components to deal with.
         set -l _pwd_list (string replace "$root/" "" -- $PWD/ | string split /)
@@ -481,13 +496,12 @@ function __fish_git_files
                 set -a file (string join / -- $previous)
 
                 # The filename with ":/:" prepended.
-                if string match -q '../*' -- $file
-                    or string match -q ':*' -- (commandline -ct)
+                if set -ql colon[1]; or string match -q '../*' -- $file
                     set file (string replace -- "$root/" ":/:" "$root/$relfile")
                 end
 
                 if test "$root/$relfile" -ef "$relfile"
-                    and not string match -q ':*' -- (commandline -ct)
+                    and not set -ql colon[1]
                     set file $relfile
                 end
 
@@ -1040,6 +1054,7 @@ complete -f -c git -n __fish_git_needs_command -a show -d 'Show the last commit 
 complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_tags)' -d Tag
 complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_complete_stashes)'
 complete -f -c git -n __fish_git_needs_rev_files -n 'not contains -- -- (commandline -opc)' -xa '(__fish_git_complete_rev_files)'
 complete -F -c git -n '__fish_git_using_command show' -n 'contains -- -- (commandline -opc)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
@@ -1231,7 +1246,7 @@ complete -f -c git -n '__fish_git_using_command branch' -s a -l all -d 'Lists bo
 complete -f -c git -n '__fish_git_using_command branch' -s r -l remotes -d 'List or delete (if used with -d) the remote-tracking branches.'
 complete -f -c git -n '__fish_git_using_command branch' -s t -l track -l track -d 'Track remote branch'
 complete -f -c git -n '__fish_git_using_command branch' -l no-track -d 'Do not track remote branch'
-complete -f -c git -n '__fish_git_using_command branch' -l set-upstream-to -d 'Set remote branch to track'
+complete -f -c git -n '__fish_git_using_command branch' -l set-upstream-to -d 'Set remote branch to track' -ka '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command branch' -l merged -d 'List branches that have been merged'
 complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List branches that have not been merged'
 complete -f -c git -n '__fish_git_using_command branch' -l unset-upstream -d 'Remove branch upstream information'
@@ -1369,6 +1384,7 @@ complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Fo
 ### diff
 complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between commits and working tree'
 complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_complete_stashes)'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l staged -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
@@ -1956,9 +1972,10 @@ complete -F -c git -n '__fish_git_using_command restore' -n '__fish_git_contains
 # switch options
 complete -f -c git -n __fish_git_needs_command -a switch -d 'Switch to a branch'
 complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
-complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_local_branches)'
-complete -f -c git -n '__fish_git_using_command switch' -r -s c -l create -d 'Create a new branch'
-complete -f -c git -n '__fish_git_using_command switch' -r -s C -l force-create -d 'Force create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command switch' -s c -l create -d 'Create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s C -l force-create -d 'Force create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -rka '(__fish_git_recent_commits --all)'
 complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -d 'Switch to a commit for inspection and discardable experiment' -rka '(__fish_git_refs)'
 complete -f -c git -n '__fish_git_using_command switch' -l guess -d 'Guess branch name from remote branch (default)'
 complete -f -c git -n '__fish_git_using_command switch' -l no-guess -d 'Do not guess branch name from remote branch'
@@ -2039,8 +2056,44 @@ complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify s
 complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting existing tag'
 complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_git_commits)' -d 'List tags that contain a commit'
-complete -f -c git -n '__fish_git_using_command tag' -n '__fish_git_contains_opt -s d delete -s v verify' -ka '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command tag' -n '__fish_git_contains_opt -s d delete -s v verify -s f force' -ka '(__fish_git_tags)' -d Tag
 # TODO options
+
+### update-index
+complete -c git -n __fish_git_needs_command -a update-index -d 'Register file contents in the working tree to the index'
+complete -f -c git -n '__fish_git_using_command update-index' -l add -d 'Add specified files to the index'
+complete -f -c git -n '__fish_git_using_command update-index' -l remove -d 'Remove specified files from the index'
+complete -f -c git -n '__fish_git_using_command update-index' -l refresh -d 'Refresh current index'
+complete -f -c git -n '__fish_git_using_command update-index' -s q -d 'Continue refresh after error'
+complete -f -c git -n '__fish_git_using_command update-index' -l ignore-submodules -d 'Do not try to update submodules'
+complete -f -c git -n '__fish_git_using_command update-index' -l unmerged -d 'Continue on unmerged changes in the index'
+complete -f -c git -n '__fish_git_using_command update-index' -l ignore-missing -d 'Ignores missing files during a refresh'
+complete -f -c git -n '__fish_git_using_command update-index' -l index-info -d 'Read index information from stdin'
+complete -x -c git -n '__fish_git_using_command update-index' -l chmod -a '+x\tAdd\ execute\ permissions -x\tRemove\ execute\ permissions' -d 'Set execute permissions'
+complete -f -c git -n '__fish_git_using_command update-index' -l assume-unchanged -d 'Set the "assume unchanged" bit for the paths'
+complete -f -c git -n '__fish_git_using_command update-index' -l no-assume-unchanged -d 'Unset the "assume unchanged" bit'
+complete -f -c git -n '__fish_git_using_command update-index' -l really-refresh -d 'Refresh but check stat info unconditionally'
+complete -f -c git -n '__fish_git_using_command update-index' -l skip-worktree -d 'Set the "fsmonitor valid" bit'
+complete -f -c git -n '__fish_git_using_command update-index' -l no-skip-worktree -d 'Unset the "fsmonitor valid" bit'
+complete -f -c git -n '__fish_git_using_command update-index' -l fsmonitor-valid -d 'Set the "fsmonitor valid" bit'
+complete -f -c git -n '__fish_git_using_command update-index' -l no-fsmonitor-valid -d 'Unset the "fsmonitor valid" bit'
+complete -f -c git -n '__fish_git_using_command update-index' -s g -l again -d 'Run git update-index on paths with differing index'
+complete -f -c git -n '__fish_git_using_command update-index' -l unresolve -d 'Restores the state of a file during a merge'
+complete -r -c git -n '__fish_git_using_command update-index' -l info-only -d 'Do not create objects in the object database'
+complete -f -c git -n '__fish_git_using_command update-index' -l force-remove -d 'Forcefully remove the file from the index'
+complete -f -c git -n '__fish_git_using_command update-index' -l replace -d 'Replace conflicting entries'
+complete -f -c git -n '__fish_git_using_command update-index' -l stdin -d 'Read list of paths from stdin'
+complete -f -c git -n '__fish_git_using_command update-index' -l verbose -d 'Report changes to index'
+complete -x -c git -n '__fish_git_using_command update-index' -l index-version -a "2\t\t3\t\t4" -d 'Set index-version'
+complete -f -c git -n '__fish_git_using_command update-index' -s z -d 'Seperate paths with NUL instead of LF'
+complete -f -c git -n '__fish_git_using_command update-index' -l split-index -d 'Enable split index mode'
+complete -f -c git -n '__fish_git_using_command update-index' -l no-split-index -d 'Disable split index mode'
+complete -f -c git -n '__fish_git_using_command update-index' -l untracked-cache -d 'Enable untracked cache feature'
+complete -f -c git -n '__fish_git_using_command update-index' -l no-untracked-cache -d 'Disable untracked cache feature'
+complete -f -c git -n '__fish_git_using_command update-index' -l test-untracked-cache -d 'Only perform tests on the working directory'
+complete -f -c git -n '__fish_git_using_command update-index' -l force-untracked-cache -d 'Same as --untracked-cache'
+complete -f -c git -n '__fish_git_using_command update-index' -l fsmonitor -d 'Enable files system monitor feature'
+complete -f -c git -n '__fish_git_using_command update-index' -l no-fsmonitor -d 'Disable files system monitor feature'
 
 ### worktree
 set -l git_worktree_commands add list lock move prune remove unlock
@@ -2275,6 +2328,7 @@ complete -f -c git -n '__fish_git_using_command help' -a submodule -d 'Initializ
 complete -f -c git -n '__fish_git_using_command help' -a stripspace -d 'Remove unnecessary whitespace'
 complete -f -c git -n '__fish_git_using_command help' -a switch -d 'Switch to a branch'
 complete -f -c git -n '__fish_git_using_command help' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
+complete -f -c git -n '__fish_git_using_command help' -a update-index -d 'Register file contents in the working tree to the index'
 complete -f -c git -n '__fish_git_using_command help' -a whatchanged -d 'Show logs with difference each commit introduces'
 complete -f -c git -n '__fish_git_using_command help' -a worktree -d 'Manage multiple working trees'
 
@@ -2390,7 +2444,7 @@ for file in (path filter -xZ $PATH/git-* | path basename)
     and continue
 
     # Running `git foo` ends up running `git-foo`, so we need to ignore the `git-` here.
-    set -l cmd (string replace -r '^git-' '' -- $file)
+    set -l cmd (string replace -r '^git-' '' -- $file | string escape)
     complete -c git -f -n "__fish_git_using_command $cmd" -a "(__fish_git_complete_custom_command $cmd)"
     set -a __fish_git_custom_commands_completion $file
 end

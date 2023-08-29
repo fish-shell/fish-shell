@@ -57,7 +57,6 @@
 
 // Common string type.
 typedef std::wstring wcstring;
-typedef std::vector<wcstring> wcstring_list_t;
 
 struct termsize_t;
 
@@ -87,9 +86,9 @@ struct termsize_t;
 // Make sure the ranges defined above don't exceed the range for non-characters.
 // This is to make sure we didn't do something stupid in subdividing the
 // Unicode range for our needs.
-//#if WILDCARD_RESERVED_END > RESERVED_CHAR_END
-//#error
-//#endif
+// #if WILDCARD_RESERVED_END > RESERVED_CHAR_END
+// #error
+// #endif
 
 // These are in the Unicode private-use range. We really shouldn't use this
 // range but have little choice in the matter given how our lexer/parser works.
@@ -200,6 +199,10 @@ extern const bool has_working_tty_timestamps;
 /// empty string.
 extern const wcstring g_empty_string;
 
+/// A global, empty std::vector<wcstring>. This is useful for functions which wish to return a
+/// reference to an empty string.
+extern const std::vector<wcstring> g_empty_string_list;
+
 // Pause for input, then exit the program. If supported, print a backtrace first.
 #define FATAL_EXIT()                                \
     do {                                            \
@@ -289,10 +292,10 @@ void show_stackframe(int frame_count = 100, int skip_levels = 0);
 ///
 /// This function encodes illegal character sequences in a reversible way using the private use
 /// area.
-wcstring str2wcstring(const char *in);
-wcstring str2wcstring(const char *in, size_t len);
 wcstring str2wcstring(const std::string &in);
 wcstring str2wcstring(const std::string &in, size_t len);
+wcstring str2wcstring(const char *in);
+wcstring str2wcstring(const char *in, size_t len);
 
 /// Returns a newly allocated multibyte character string equivalent of the specified wide character
 /// string.
@@ -301,6 +304,10 @@ wcstring str2wcstring(const std::string &in, size_t len);
 /// area.
 std::string wcs2string(const wcstring &input);
 std::string wcs2string(const wchar_t *in, size_t len);
+
+/// Same as wcs2string. Meant to be used when we need a zero-terminated string to feed legacy APIs.
+std::string wcs2zstring(const wcstring &input);
+std::string wcs2zstring(const wchar_t *in, size_t len);
 
 /// Like wcs2string, but appends to \p receiver instead of returning a new string.
 void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver);
@@ -312,19 +319,6 @@ bool should_suppress_stderr_for_tests();
 /// Branch prediction hints. Idea borrowed from Linux kernel. Just used for asserts.
 #define likely(x) __builtin_expect(bool(x), 1)
 #define unlikely(x) __builtin_expect(bool(x), 0)
-
-void assert_is_main_thread(const char *who);
-#define ASSERT_IS_MAIN_THREAD_TRAMPOLINE(x) assert_is_main_thread(x)
-#define ASSERT_IS_MAIN_THREAD() ASSERT_IS_MAIN_THREAD_TRAMPOLINE(__FUNCTION__)
-
-void assert_is_background_thread(const char *who);
-#define ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(x) assert_is_background_thread(x)
-#define ASSERT_IS_BACKGROUND_THREAD() ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(__FUNCTION__)
-
-/// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
-/// it, which it would be nice if it did, but here it is anyways.
-void assert_is_locked(std::mutex &mutex, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(m) assert_is_locked(m, #m, __FUNCTION__)
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);
@@ -342,7 +336,7 @@ void format_ullong_safe(wchar_t buff[64], unsigned long long val);
 void narrow_string_safe(char buff[64], const wchar_t *s);
 
 /// Stored in blocks to reference the file which created the block.
-using filename_ref_t = std::shared_ptr<const wcstring>;
+using filename_ref_t = std::shared_ptr<wcstring>;
 
 using scoped_lock = std::lock_guard<std::mutex>;
 
@@ -446,15 +440,16 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig);
 
-#ifdef HAVE_STD__MAKE_UNIQUE
-using std::make_unique;
-#else
+#ifndef HAVE_STD__MAKE_UNIQUE
 /// make_unique implementation
+namespace std {
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args &&...args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+}  // namespace std
 #endif
+using std::make_unique;
 
 /// This functions returns the end of the quoted substring beginning at \c pos. Returns 0 on error.
 ///
@@ -497,11 +492,6 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags = 0,
 /// This permits ownership transfer.
 wcstring escape_string_for_double_quotes(wcstring in);
 
-/// \return a string representation suitable for debugging (not for presenting to the user). This
-/// replaces non-ASCII characters with either tokens like <BRACE_SEP> or <\xfdd7>. No other escapes
-/// are made (i.e. this is a lossy escape).
-wcstring debug_escape(const wcstring &in);
-
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also
 /// optionally change the wildcards, the tilde character and a few more into constants which are
 /// defined in a private use area of Unicode. This assumes wchar_t is a unicode character set.
@@ -517,44 +507,24 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
 
 /// Reverse the effects of calling `escape_string`. Returns the unescaped value by reference. On
 /// failure, the output is set to an empty string.
-bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
-                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+std::unique_ptr<wcstring> unescape_string(const wchar_t *input, unescape_flags_t escape_special,
+                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
 
-bool unescape_string(const wchar_t *input, size_t len, wcstring *output,
-                     unescape_flags_t escape_special,
-                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+std::unique_ptr<wcstring> unescape_string(const wchar_t *input, size_t len,
+                                          unescape_flags_t escape_special,
+                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
 
-bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
-                     escape_string_style_t style = STRING_STYLE_SCRIPT);
-
-/// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
-wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize);
+std::unique_ptr<wcstring> unescape_string(const wcstring &input, unescape_flags_t escape_special,
+                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
 
 /// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
 /// the gettimeofday function and will have the same precision as that function.
 using timepoint_t = double;
 timepoint_t timef();
 
-/// Call the following function early in main to set the main thread. This is our replacement for
-/// pthread_main_np().
-void set_main_thread();
-bool is_main_thread();
-
-/// Configures thread assertions for testing.
-void configure_thread_assertions_for_testing();
-
-/// Set up a guard to complain if we try to do certain things (like take a lock) after calling fork.
-void setup_fork_guards(void);
-
 /// Save the value of tcgetpgrp so we can restore it on exit.
 void save_term_foreground_process_group();
 void restore_term_foreground_process_group_for_exit();
-
-/// Return whether we are the child of a fork.
-bool is_forked_child(void);
-void assert_is_not_forked_child(const char *who);
-#define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
-#define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.

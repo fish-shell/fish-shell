@@ -365,19 +365,15 @@ Examples
 
    >_ path change-extension '' ../banana
    ../banana
-   # but status 1, because there was no extension.
 
    >_ path change-extension '' ~/.config
    /home/alfa/.config
-   # status 1
 
    >_ path change-extension '' ~/.config.d
    /home/alfa/.config
-   # status 0
 
    >_ path change-extension '' ~/.config.
    /home/alfa/.config
-   # status 0
    
 "sort" subcommand
 -----------------------------

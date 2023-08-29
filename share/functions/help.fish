@@ -149,6 +149,8 @@ function help --description 'Show help for the fish shell'
             set fish_help_page faq.html
         case fish-for-bash-users
             set fish_help_page fish_for_bash_users.html
+        case custom-prompt
+            set fish_help_page prompt.html
         case $faqpages
             set fish_help_page "faq.html#$fish_help_item"
         case $for_bash_pages

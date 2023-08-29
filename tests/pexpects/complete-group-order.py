@@ -40,7 +40,9 @@ sendline("set TERM xterm")
 expect_prompt()
 
 # Generate completions
-send('fooc \t')
+send("fooc \t")
 
-expect_re("alpha\W+india\W+hotel\W+charlie\W+echo\W+kilo\r\n"
-+ "bravo\W+foxtrot\W+golf\W+delta\W+juliett\W+lima")
+expect_re(
+    "alpha\W+india\W+hotel\W+charlie\W+echo\W+kilo\r\n"
+    + "bravo\W+foxtrot\W+golf\W+delta\W+juliett\W+lima"
+)

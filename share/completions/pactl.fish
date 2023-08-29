@@ -18,15 +18,15 @@ else
 end
 
 function __fish_pa_complete_type
-    pactl list short $argv
-    # The default is to show the number, then the name and then some info - also show the name, then the number as it's a bit friendlier
-    pactl list short $argv | string replace -r '(\w+)\t([-\w]+)' '$2\t$1'
+    # Print a completion candidate for the object type (like "card" or "sink"),
+    # with a description.
+    # Pa allows both a numerical index and a name
+    pactl list short $argv | string replace -rf '(\d+)\s+(\S+)(\s+.*)?' '$2\t$1$3\n$1\t$2$3'
 end
 
 function __fish_pa_print_type
-    pactl list short $argv
-    # Pa allows both a numerical index and a name
-    pactl list short $argv | string replace -r '(\w+)\t.*' '$1'
+    # Print just the object, without description
+    __fish_pa_complete_type $argv | string replace -r '\t.*' ''
 end
 
 function __fish_pa_list_ports

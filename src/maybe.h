@@ -2,6 +2,7 @@
 #define FISH_MAYBE_H
 
 #include <cassert>
+#include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
@@ -193,6 +194,10 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     maybe_t(const maybe_t &) = default;
     maybe_t(maybe_t &&) = default;
 
+    /* implicit */ maybe_t(std::unique_ptr<T> v) : maybe_t() {
+        if (v) *this = std::move(*v);
+    }
+
     // Construct a value in-place.
     template <class... Args>
     void emplace(Args &&...args) {
@@ -236,13 +241,6 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     T *operator->() { return &value(); }
     const T &operator*() const { return value(); }
     T &operator*() { return value(); }
-
-    // Helper to replace missing_or_empty() on env_var_t.
-    // Uses SFINAE to only introduce this function if T has an empty() type.
-    template <typename S = T>
-    decltype(S().empty(), bool()) missing_or_empty() const {
-        return !has_value() || value().empty();
-    }
 
     // Compare values for equality.
     bool operator==(const maybe_t &rhs) const {

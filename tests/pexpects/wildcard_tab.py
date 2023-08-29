@@ -25,6 +25,7 @@ expect_prompt()
 sendline(r"cd (mktemp -d)")
 expect_prompt()
 
+
 # Helper function that sets the commandline to a glob,
 # optionally moves the cursor back, tab completes, and then clears the commandline.
 def tab_expand_glob(input, expected, move_cursor_back=0):

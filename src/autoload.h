@@ -47,7 +47,7 @@ class autoload_t {
 
     /// Like resolve_autoload(), but accepts the paths directly.
     /// This is exposed for testing.
-    maybe_t<wcstring> resolve_command(const wcstring &cmd, const wcstring_list_t &paths);
+    maybe_t<wcstring> resolve_command(const wcstring &cmd, const std::vector<wcstring> &paths);
 
     friend autoload_tester_t;
 
@@ -67,6 +67,9 @@ class autoload_t {
     /// mark_autoload_finished() with the same command. Note this does not actually execute any
     /// code; it is the caller's responsibility to load the file.
     maybe_t<wcstring> resolve_command(const wcstring &cmd, const environment_t &env);
+
+    /// FFI cover. This always uses globals, and returns an empty string instead of None.
+    wcstring resolve_command_ffi(const wcstring &cmd);
 
     /// Helper to actually perform an autoload.
     /// This is a static function because it executes fish script, and so must be called without
@@ -94,7 +97,7 @@ class autoload_t {
 
     /// \return the names of all commands that have been autoloaded. Note this includes "in-flight"
     /// commands.
-    wcstring_list_t get_autoloaded_commands() const;
+    std::vector<wcstring> get_autoloaded_commands() const;
 
     /// Mark that all autoloaded files have been forgotten.
     /// Future calls to path_to_autoload() will return previously-returned paths.
@@ -103,5 +106,9 @@ class autoload_t {
         autoloaded_files_.clear();
     }
 };
+
+/// FFI helpers.
+std::unique_ptr<autoload_t> make_autoload_ffi(wcstring env_var_name);
+void perform_autoload_ffi(const wcstring &path, parser_t &parser);
 
 #endif

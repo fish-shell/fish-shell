@@ -72,7 +72,10 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 
             out.append(j->is_stopped() ? _(L"stopped") : _(L"running"));
             out.append(L"\t");
-            out.append(j->command_wcstr());
+
+            const wcstring cmd = escape_string(j->command(), ESCAPE_NO_PRINTABLES);
+            out.append(cmd);
+
             out.append(L"\n");
             streams.out.append(out);
             break;

@@ -8,7 +8,6 @@ IS_PY3 = sys.version_info[0] >= 3
 
 
 class Deroffer:
-
     g_specs_specletter = {
         # Output composed latin1 letters
         "-D": "\320",
@@ -1058,7 +1057,6 @@ class Deroffer:
                     # deroff.c has a bug where it can loop forever here...we try to work around it
                     self.skip_char()
                 else:  # Parse option
-
                     option = self.s
                     arg = ""
 

@@ -2,7 +2,7 @@
 
 function __fish_adb_no_subcommand -d 'Test if adb has yet to be given the subcommand'
     for i in (commandline -opc)
-        if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect
+        if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect unroot exec-out
             return 1
         end
     end
@@ -14,7 +14,7 @@ function __fish_adb_get_devices -d 'Run adb devices and parse output'
     set -l procs (ps -Ao comm= | string match 'adb')
     # Don't run adb devices unless the server is already started - it takes a while to init
     if set -q procs[1]
-        adb devices -l | string replace -rf '(\S+).*model:(\S+).*' '$1'\t'$2'
+        adb devices -l | string replace -rf '(\S+).*product:(\S+).*model:(\S+).*' '$1'\t'$2 $3'
     end
 end
 
@@ -74,9 +74,20 @@ function __fish_adb_list_files
     end
 
     # Return list of directories suffixed with '/'
-    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type d 2\>/dev/null | awk '{print $1"/"}'
+    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type d 2\>/dev/null | awk '{print $0"/"}'
     # Return list of files
     __fish_adb_run_command find -H "$token*" -maxdepth 0 -type f 2\>/dev/null
+end
+
+function __fish_adb_list_bin
+    # list all binary without group
+    __fish_adb_run_command ls -1 /system/bin/ 2\>/dev/null
+    __fish_adb_run_command ls -1 /system/xbin/ 2\>/dev/null
+
+end
+
+function __fish_adb_list_properties
+    __fish_adb_run_command getprop | string match -rg '\[(.*)\]:'
 end
 
 # Generic options, must come before command
@@ -118,11 +129,13 @@ complete -f -n __fish_adb_no_subcommand -c adb -a get-serialno -d 'Prints serial
 complete -f -n __fish_adb_no_subcommand -c adb -a get-devpath -d 'Prints device path'
 complete -f -n __fish_adb_no_subcommand -c adb -a status-window -d 'Continuously print the device status'
 complete -f -n __fish_adb_no_subcommand -c adb -a root -d 'Restart the adbd daemon with root permissions'
+complete -f -n __fish_adb_no_subcommand -c adb -a unroot -d 'Restart the adbd daemon without root permissions'
 complete -f -n __fish_adb_no_subcommand -c adb -a usb -d 'Restart the adbd daemon listening on USB'
 complete -f -n __fish_adb_no_subcommand -c adb -a tcpip -d 'Restart the adbd daemon listening on TCP'
 complete -f -n __fish_adb_no_subcommand -c adb -a ppp -d 'Run PPP over USB'
 complete -f -n __fish_adb_no_subcommand -c adb -a sideload -d 'Sideloads the given package'
 complete -f -n __fish_adb_no_subcommand -c adb -a reconnect -d 'Kick current connection from host side and make it reconnect.'
+complete -f -n __fish_adb_no_subcommand -c adb -a exec-out -d 'Execute a command on the device and send its stdout back'
 
 # install options
 complete -n '__fish_seen_subcommand_from install' -c adb -s l -d 'Forward-lock the app'
@@ -181,7 +194,7 @@ complete -n '__fish_seen_subcommand_from push' -c adb -F -a "(__fish_adb_list_fi
 complete -n '__fish_seen_subcommand_from logcat' -c adb -f
 # general options
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s L -l last -d 'Dump logs from prior to last reboot from pstore'
-complete -n '__fish_seen_subcommand_from logcat' -c adb -s b -l buffer -d ' Request alternate ring buffer(s)' -xa '(__fish_complete_list ,  "echo main\nsystem\nradio\nevents\ncrash\ndefault\nall")'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -s b -l buffer -d ' Request alternate ring buffer(s)' -xa '(__fish_append , main system radio events crash default all)'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s c -l clear -d 'Clear (flush) the entire log and exit'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s d -d 'Dump the log and then exit (don\'t block)'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l pid -d 'Only print the logs for the given PID'
@@ -207,3 +220,11 @@ complete -n '__fish_seen_subcommand_from logcat' -c adb -s e -l regex -d 'Only p
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s m -l max-count -d 'Quit after print <count> lines'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l print -d 'Print all message even if they do not matches, requires --regex and --max-count'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -l uid -d 'Only display log messages from UIDs present in the comma separate list <uids>'
+
+# commands that accept listing device binaries
+complete -n '__fish_seen_subcommand_from exec-out' -c adb -f -a "(__fish_adb_list_bin)" -d "Command on device"
+complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_bin)" -d "Command on device"
+
+# setprop and getprop in shell
+complete -n '__fish_seen_subcommand_from setprop' -c adb -f -a "(__fish_adb_list_properties)" -d 'Property to set'
+complete -n '__fish_seen_subcommand_from getprop' -c adb -f -a "(__fish_adb_list_properties)" -d 'Property to get'

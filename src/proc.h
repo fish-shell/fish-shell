@@ -17,8 +17,9 @@
 #include <utility>
 #include <vector>
 
+#include "ast.h"
 #include "common.h"
-#include "job_group.h"
+#include "cxx.h"
 #include "maybe.h"
 #include "parse_tree.h"
 #include "redirection.h"
@@ -54,10 +55,7 @@ using clock_ticks_t = uint64_t;
 /// This uses sysconf(_SC_CLK_TCK) to convert to seconds.
 double clock_ticks_to_seconds(clock_ticks_t ticks);
 
-namespace ast {
-struct statement_t;
-}
-
+struct job_group_t;
 using job_group_ref_t = std::shared_ptr<job_group_t>;
 
 /// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
@@ -94,8 +92,9 @@ class proc_status_t {
 
     /// Construct directly from an exit code.
     static proc_status_t from_exit_code(int ret) {
-        assert(ret >= 0 && "trying to create proc_status_t from failed wait{,id,pid}() call"
-                " or invalid builtin exit code!");
+        assert(ret >= 0 &&
+               "trying to create proc_status_t from failed wait{,id,pid}() call"
+               " or invalid builtin exit code!");
 
         // Some paranoia.
         constexpr int zerocode = w_exitcode(0, 0);
@@ -241,7 +240,7 @@ class tty_transfer_t : nonmovable_t, noncopyable_t {
 ///
 /// If the process is of type process_type_t::function, argv is the argument vector, and argv[0] is
 /// the name of the shellscript function.
-class process_t : noncopyable_t {
+class process_t {
    public:
     process_t();
 
@@ -254,29 +253,29 @@ class process_t : noncopyable_t {
 
     /// For internal block processes only, the node of the statement.
     /// This is always either block, ifs, or switchs, never boolean or decorated.
-    parsed_source_ref_t block_node_source{};
+    rust::Box<ParsedSourceRefFFI> block_node_source;
     const ast::statement_t *internal_block_node{};
 
     struct concrete_assignment {
         wcstring variable_name;
-        wcstring_list_t values;
+        std::vector<wcstring> values;
     };
     /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
     std::vector<concrete_assignment> variable_assignments;
 
     /// Sets argv.
-    void set_argv(wcstring_list_t argv) { argv_ = std::move(argv); }
+    void set_argv(std::vector<wcstring> argv) { argv_ = std::move(argv); }
 
     /// Returns argv.
-    const wcstring_list_t &argv() { return argv_; }
+    const std::vector<wcstring> &argv() { return argv_; }
 
     /// Returns argv[0], or nullptr.
     const wchar_t *argv0() const { return argv_.empty() ? nullptr : argv_.front().c_str(); }
 
     /// Redirection list getter and setter.
-    const redirection_spec_list_t &redirection_specs() const { return proc_redirection_specs_; }
+    const redirection_spec_list_t &redirection_specs() const { return *proc_redirection_specs_; }
 
-    void set_redirection_specs(redirection_spec_list_t specs) {
+    void set_redirection_specs(rust::Box<redirection_spec_list_t> specs) {
         this->proc_redirection_specs_ = std::move(specs);
     }
 
@@ -292,13 +291,20 @@ class process_t : noncopyable_t {
     /// \return whether this process type is internal (block, function, or builtin).
     bool is_internal() const;
 
+    /// \return whether this process leads its process group.
+    bool get_leads_pgrp() const { return leads_pgrp; }
+
     /// \return the wait handle for the process, if it exists.
-    wait_handle_ref_t get_wait_handle() { return wait_handle_; }
+    rust::Box<WaitHandleRefFFI> *get_wait_handle_ffi() const;
 
     /// Create a wait handle for the process.
     /// As a process does not know its job id, we pass it in.
     /// Note this will return null if the process is not waitable (has no pid).
-    wait_handle_ref_t make_wait_handle(internal_job_id_t jid);
+    rust::Box<WaitHandleRefFFI> *make_wait_handle_ffi(internal_job_id_t jid);
+
+    /// Variants of get and make that return void*, to satisfy autocxx.
+    void *get_wait_handle_void() const;
+    void *make_wait_handle_void(internal_job_id_t jid);
 
     /// Actual command to pass to exec in case of process_type_t::external or process_type_t::exec.
     wcstring actual_cmd;
@@ -337,17 +343,28 @@ class process_t : noncopyable_t {
     /// Number of jiffies spent in process at last cpu time check.
     clock_ticks_t last_jiffies{0};
 
+    process_t(process_t &&) = delete;
+    process_t &operator=(process_t &&) = delete;
+    process_t(const process_t &) = delete;
+    process_t &operator=(const process_t &) = delete;
+
    private:
-    wcstring_list_t argv_;
-    redirection_spec_list_t proc_redirection_specs_;
+    std::vector<wcstring> argv_;
+    rust::Box<redirection_spec_list_t> proc_redirection_specs_;
 
     // The wait handle. This is constructed lazily, and cached.
-    wait_handle_ref_t wait_handle_{};
+    // This may be null.
+    std::unique_ptr<rust::Box<WaitHandleRefFFI>> wait_handle_;
 };
 
 using process_ptr_t = std::unique_ptr<process_t>;
 using process_list_t = std::vector<process_ptr_t>;
 class parser_t;
+
+struct RustFFIProcList {
+    process_ptr_t *procs;
+    size_t count;
+};
 
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t : noncopyable_t {
@@ -382,6 +399,9 @@ class job_t : noncopyable_t {
    public:
     job_t(const properties_t &props, wcstring command_str);
     ~job_t();
+
+    /// Autocxx needs to see this.
+    job_t(const job_t &) = delete;
 
     /// Returns the command as a wchar_t *. */
     const wchar_t *command_wcstr() const { return command_str.c_str(); }
@@ -439,6 +459,9 @@ class job_t : noncopyable_t {
 
     /// A non-user-visible, never-recycled job ID.
     const internal_job_id_t internal_job_id;
+
+    /// Getter to enable ffi.
+    internal_job_id_t get_internal_job_id() const { return internal_job_id; }
 
     /// Flags associated with the job.
     struct flags_t {
@@ -522,8 +545,25 @@ class job_t : noncopyable_t {
 
     /// \returns the statuses for this job.
     maybe_t<statuses_t> get_statuses() const;
+
+    /// autocxx junk.
+    RustFFIProcList ffi_processes() const;
+
+    /// autocxx junk.
+    const job_group_t &ffi_group() const;
+
+    /// autocxx junk.
+    /// The const is a lie and is only necessary since at the moment cxx's SharedPtr doesn't support
+    /// getting a mutable reference.
+    bool ffi_resume() const;
 };
 using job_ref_t = std::shared_ptr<job_t>;
+
+// Helper junk for autocxx.
+struct RustFFIJobList {
+    job_ref_t *jobs;
+    size_t count;
+};
 
 /// Whether this shell is attached to a tty.
 bool is_interactive_session();
@@ -540,7 +580,7 @@ bool no_exec();
 void mark_no_exec();
 
 // List of jobs.
-using job_list_t = std::deque<job_ref_t>;
+using job_list_t = std::vector<job_ref_t>;
 
 /// The current job control mode.
 ///
@@ -568,10 +608,6 @@ clock_ticks_t proc_get_jiffies(pid_t inpid);
 /// Update process time usage for all processes by calling the proc_get_jiffies function for every
 /// process of every job.
 void proc_update_jiffies(parser_t &parser);
-
-/// Perform a set of simple sanity checks on the job list. This includes making sure that only one
-/// job is in the foreground, that every process is in a valid state, etc.
-void proc_sanity_check(const parser_t &parser);
 
 /// Initializations.
 void proc_init();

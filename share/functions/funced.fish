@@ -157,7 +157,7 @@ function funced --description 'Edit function definition'
                         source "$writepath"
                     else
                         echo (_ "Saving to original location failed; saving to user configuration instead.")
-                        set writepath $__fish_config_dir/functions/(basename "$writepath")
+                        set writepath $__fish_config_dir/functions/(path basename "$writepath")
                         if cp $tmpname "$writepath"
                             printf (_ "Function saved to %s") "$writepath"
                             echo

@@ -91,7 +91,7 @@ searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special t
 
 ::
 
-   apt install "postgres-*"
+    apt install "postgres-*"
 
 installs all packages with a name starting with "postgres-", instead of looking through the current directory for files named "postgres-something".
 
@@ -237,6 +237,37 @@ will attempt to build ``fish``, and any errors will be shown using the ``less`` 
 As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. This is different from bash, which uses ``|&``.
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
+
+
+Combining pipes and redirections
+--------------------------------
+
+It is possible to use multiple redirections and a pipe at the same time. In that case, they are read in this order:
+
+1. First the pipe is set up.
+2. Then the redirections are evaluated from left-to-right.
+
+This is important when any redirections reference other file descriptors with the ``&N`` syntax. When you say ``>&2``, that will redirect stdout to where stderr is pointing to *at that time*.
+
+Consider this helper function::
+
+  # Just make a function that prints something to stdout and stderr
+  function print
+      echo out
+      echo err >&2
+  end
+
+Now let's see a few cases::
+
+  # Redirect both stderr and stdout to less
+  # (can also be spelt as `&|`)
+  print 2>&1 | less
+
+  # Show the "out" on stderr, silence the "err"
+  print >&2 2>/dev/null
+
+  # Silence both
+  print >/dev/null 2>&1
 
 .. _syntax-job-control:
 
@@ -398,11 +429,13 @@ This uses the :doc:`test <cmds/test>` command to see if the file /etc/os-release
 
 Unlike other shells, the condition command just ends after the first job, there is no ``then`` here. Combiners like ``and`` and ``or`` extend the condition.
 
-``if`` is commonly used with the :doc:`test <cmds/test>` command that can check conditions.::
+A more complicated example with a :ref:`command substitution <expand-command-substitution>`::
 
-  if test 5 -gt 2
-      echo "Yes, 5 is greater than 2"
+  if test "$(uname)" = Linux
+      echo I like penguins
   end
+
+Because ``test`` can be used for many different tests, it is important to quote variables and command substitutions. If the ``$(uname)`` was not quoted, and ``uname`` printed nothing it would run ``test = Linux``, which is an error.
 
 ``if`` can also take ``else if`` clauses with additional conditions and an  :doc:`else <cmds/else>` clause that is executed when everything else was false::
 
@@ -428,6 +461,13 @@ The :doc:`not <cmds/not>` keyword can be used to invert the status::
   else
       echo "You have fish!"
   end
+
+Other things commonly used in if-conditions:
+
+- :doc:`contains <cmds/contains>` - to see if a list contains a specific element (``if contains -- /usr/bin $PATH``)
+- :doc:`string <cmds/string>` - to e.g. match strings (``if string match -q -- '*-' $arg``)
+- :doc:`path <cmds/path>` - to check if paths of some criteria exist (``if path is -rf -- ~/.config/fish/config.fish``)
+- :doc:`type <cmds/type>` - to see if a command, function or builtin exists (``if type -q git``)
 
 The ``switch`` statement
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -503,7 +543,7 @@ Loops and blocks
 
 Like most programming language, fish also has the familiar :doc:`while <cmds/while>` and :doc:`for <cmds/for>` loops.
 
-``while`` works like a repeated :doc:`if <cmds/if>`::
+``while`` works like a repeated :ref:`if <syntax-if>`::
 
   while true
       echo Still running
@@ -652,7 +692,7 @@ Unlike all the other expansions, variable expansion also happens in double quote
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
-If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`cartesian product <cartesian-product>` section for more information.
+If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`Combining Lists <cartesian-product>` section for more information.
 
 Unlike other shells, fish doesn't do what is known as "Word Splitting". Once a variable is set to a particular set of elements, those elements expand as themselves. They aren't split on spaces or newlines or anything::
 
@@ -693,9 +733,50 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
     # 20
     # 30
 
-``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
+``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``".
 
 When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1..-1][5]`` (take all elements of ``$foo``, use them as variable names, then give the fifth element of those).
+
+Some more examples::
+
+  set listone 1 2 3
+  set listtwo 4 5 6
+  set var listone listtwo
+
+  echo $$var
+  # Output is 1 2 3 4 5 6
+
+  echo $$var[1]
+  # Output is 1 2 3
+
+  echo $$var[2][3]
+  # $var[1] is listtwo, third element of that is 6, output is 6
+
+  echo $$var[..][2]
+  # The second element of every variable, so output is
+  # 2 5
+
+Variables as command
+''''''''''''''''''''
+
+Like other shells, you can run the value of a variable as a command.
+
+::
+
+   > set -g EDITOR emacs
+   > $EDITOR foo # opens emacs, possibly the GUI version
+
+If you want to give the command an argument inside the variable it needs to be a separate element::
+
+   > set EDITOR emacs -nw
+   > $EDITOR foo # opens emacs in the terminal even if the GUI is installed
+   > set EDITOR "emacs -nw"
+   > $EDITOR foo # tries to find a command called "emacs -nw"
+
+Also like other shells, this only works with commands, builtins and functions - it will not work with keywords because they have syntactical importance.
+
+For instance ``set if $if`` won't allow you to make an if-block, and ``set cmd command`` won't allow you to use the :doc:`command <cmds/command>` decorator, but only uses like ``$cmd -q foo``.
+
 
 .. _expand-command-substitution:
 
@@ -781,7 +862,7 @@ If there is no "," or variable expansion between the curly braces, they will not
     > echo {{a,b}}
     {a} {b} # because the inner brace pair is expanded, but the outer isn't.
 
-If after expansion there is nothing between the braces, the argument will be removed (see :ref:`the cartesian product section <cartesian-product>`)::
+If after expansion there is nothing between the braces, the argument will be removed (see :ref:`the Combining Lists <cartesian-product>` section)::
 
     > echo foo-{$undefinedvar}
     # Output is an empty line, just like a bare `echo`.
@@ -795,49 +876,44 @@ To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 
 .. _cartesian-product:
 
-Combining lists (Cartesian Product)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Combining lists
+^^^^^^^^^^^^^^^
 
-When lists are expanded with other parts attached, they are expanded with these parts still attached. Even if two lists are attached to each other, they are expanded in all combinations. This is referred to as the "cartesian product" (like in mathematics), and works basically like :ref:`brace expansion <expand-brace>`.
+When lists are expanded with other parts attached, they are expanded with these parts still attached. That means any string before a list will be concatenated to each element, and two lists will be expanded in all combinations  - every element of the first with every element of the second.
+
+This works basically like :ref:`brace expansion <expand-brace>`.
 
 Examples::
 
     # Brace expansion is the most familiar:
-    # All elements in the brace combine with the parts outside of the braces
+    # All elements in the brace combine with
+    # the parts outside of the braces
     >_ echo {good,bad}" apples"
     good apples bad apples
 
     # The same thing happens with variable expansion.
-    >_ set -l a x y z
-    >_ set -l b 1 2 3
-
-    # $a is {x,y,z}, $b is {1,2,3},
-    # so this is `echo {x,y,z}{1,2,3}`
-    >_ echo $a$b
+    >_ set -l a x y z; set -l b 1 2 3
+    >_ echo $a$b # same as {x,y,z}{1,2,3}
     x1 y1 z1 x2 y2 z2 x3 y3 z3
 
-    # Same thing if something is between the lists
-    >_ echo $a"-"$b
-    x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3
+A result of this is that, if a list has no elements, this combines the string with no elements, which means the entire token is removed!
 
-    # Or a brace expansion and a variable
-    >_ echo {x,y,z}$b
-    x1 y1 z1 x2 y2 z2 x3 y3 z3
+::
 
-    # A combined brace-variable expansion
-    >_ echo {$b}word
-    1word 2word 3word
-
-    # Special case: If $c has no elements, this expands to nothing
+    >_ set -l c # <- this list is empty!
     >_ echo {$c}word
-    # Output is an empty line
+    # Output is an empty line - the "word" part is gone
+
+This can be quite useful. For example, if you want to go through all the files in all the directories in :envvar:`PATH`, use
+::
+
+    for file in $PATH/*
+
+Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in :envvar:`PATH`, the right answer here is to expand to no files.
 
 Sometimes this may be unwanted, especially that tokens can disappear after expansion. In those cases, you should double-quote variables - ``echo "$c"word``.
 
-This also happens after :ref:`command substitution <expand-command-substitution>`. To avoid tokens disappearing there, make the inner command return a trailing newline, or store the output in a variable and double-quote it.
-
-E.g.
-::
+This also happens after :ref:`command substitution <expand-command-substitution>`. To avoid tokens disappearing there, make the inner command return a trailing newline, or double-quote it::
 
     >_ set b 1 2 3
     >_ echo (echo x)$b
@@ -850,13 +926,8 @@ E.g.
     # so the command substitution expands to an empty string,
     # so this is `''banana`
     banana
-
-This can be quite useful. For example, if you want to go through all the files in all the directories in :envvar:`PATH`, use
-::
-
-    for file in $PATH/*
-
-Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in :envvar:`PATH`, the right answer here is to expand to no files.
+    >_ echo "$(printf '%s' '')"banana
+    # quotes mean this is one argument, the banana stays
 
 .. _expand-slices:
 
@@ -1009,7 +1080,37 @@ So you set a variable with ``set``, and use it with a ``$`` and the name.
 Variable Scope
 ^^^^^^^^^^^^^^
 
-There are four kinds of variables in fish: universal, global, function and local variables.
+All variables in fish have a scope. For example they can be global or local to a function or block::
+
+  # This variable is global, we can use it everywhere.
+  set --global name Patrick
+  # This variable is local, it will not be visible in a function we call from here.
+  set --local place "at the Krusty Krab"
+
+  function local
+      # This can find $name, but not $place
+      echo Hello this is $name $place
+
+      # This variable is local, it will not be available
+      # outside of this function
+      set --local instrument mayonnaise
+      echo My favorite instrument is $instrument
+      # This creates a local $name, and won't touch the global one
+      set --local name Spongebob
+      echo My best friend is $name
+  end
+
+  local
+  # Will print:
+  # Hello this is Patrick
+  # My favorite instrument is mayonnaise
+  # My best friend is Spongebob
+
+  echo $name, I am $place and my instrument is $instrument
+  # Will print:
+  # Patrick, I am at the Krusty Krab and my instrument is 
+
+There are four kinds of variable scopes in fish: universal, global, function and local variables.
 
 - Universal variables are shared between all fish sessions a user is running on one computer. They are stored on disk and persist even after reboot.
 - Global variables are specific to the current fish session. They can be erased by explicitly requesting ``set -e``.
@@ -1080,12 +1181,13 @@ Here is an example of local vs function-scoped variables::
           set gnu "In the beginning there was nothing, which exploded"
       end
 
-      echo $pirate
       # This will not output anything, since the pirate was local
+      echo $pirate
+      # This will output the good Captain's speech
+      # since $captain had function-scope.
       echo $captain
-      # This will output the good Captain's speech since $captain had function-scope.
+      # This will output Sir Terry's wisdom.
       echo $gnu
-      # Will output Sir Terry's wisdom.
   end
 
 When a function calls another, local variables aren't visible::
@@ -1122,7 +1224,8 @@ If you want to override a variable for a single command, you can use "var=val" s
 Unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
 
   set foo banana
-  foo=gagaga echo $foo # prints gagaga, while in other shells it might print "banana"
+  foo=gagaga echo $foo
+  # prints gagaga, while in other shells it might print "banana"
 
 Multiple elements can be given in a :ref:`brace expansion<expand-brace>`::
 
@@ -1299,10 +1402,14 @@ That covers the positional arguments, but commandline tools often get various op
 A more robust approach to option handling is :doc:`argparse <cmds/argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
 
   function mybetterfunction
-      # We tell argparse about -h/--help and -s/--second - these are short and long forms of the same option.
-      # The "--" here is mandatory, it tells it from where to read the arguments.
+      # We tell argparse about -h/--help and -s/--second
+      # - these are short and long forms of the same option.
+      # The "--" here is mandatory,
+      # it tells it from where to read the arguments.
       argparse h/help s/second -- $argv
-      # exit if argparse failed because it found an option it didn't recognize - it will print an error
+      # exit if argparse failed because
+      # it found an option it didn't recognize
+      # - it will print an error
       or return
 
       # If -h or --help is given, we print a little help text and return
@@ -1741,7 +1848,8 @@ Let's make up an example. This function will :ref:`glob <expand-wildcard>` the f
 
         # If there are more than 5 files
         if test (count $files) -gt 5
-            # and both stdin (for reading input) and stdout (for writing the prompt)
+            # and both stdin (for reading input)
+            # and stdout (for writing the prompt)
             # are terminals
             and isatty stdin
             and isatty stdout
@@ -1882,7 +1990,7 @@ To specify a signal handler for the WINCH signal, write::
         echo Got WINCH signal!
     end
 
-Fish already the following named events for the ``--on-event`` switch:
+Fish already has the following named events for the ``--on-event`` switch:
 
 - ``fish_prompt`` is emitted whenever a new fish prompt is about to be displayed.
 
@@ -1927,4 +2035,24 @@ To start a debug session simply insert the :doc:`builtin command <cmds/breakpoin
 
 Another way to debug script issues is to set the :envvar:`fish_trace` variable, e.g. ``fish_trace=1 fish_prompt`` to see which commands fish executes when running the :doc:`fish_prompt <cmds/fish_prompt>` function.
 
-If you specifically want to debug performance issues, :program:`fish` can be run with the ``--profile /path/to/profile.log`` option to save a profile to the specified path. This profile log includes a breakdown of how long each step in the execution took. See :doc:`fish <cmds/fish>` for more information.
+Profiling fish scripts
+^^^^^^^^^^^^^^^^^^^^^^
+
+If you specifically want to debug performance issues, :program:`fish` can be run with the ``--profile /path/to/profile.log`` option to save a profile to the specified path. This profile log includes a breakdown of how long each step in the execution took.
+
+For example::
+
+  > fish --profile /tmp/sleep.prof -ic 'sleep 3s'
+  > cat /tmp/sleep.prof
+  Time    Sum     Command
+  3003419 3003419 > sleep 3s
+
+This will show the time for each command itself in the first column, the time for the command and every subcommand (like any commands inside of a :ref:`function <syntax-function>` or :ref:`command substitutions <expand-command-substitution>`) in the second and the command itself in the third, separated with tabs.
+
+The time is given in microseconds.
+
+To see the slowest commands last, ``sort -nk2 /path/to/logfile`` is useful.
+
+For profiling fish's startup there is also ``--profile-startup /path/to/logfile``.
+
+See :doc:`fish <cmds/fish>` for more information.

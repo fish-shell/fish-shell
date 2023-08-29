@@ -1,5 +1,18 @@
 :root {
-  color-scheme: light dark; /* both supported */
+    color-scheme: light dark; /* both supported */
+    --link-color: #0030B3;
+    --visited-link-color: #6363bb;
+    --hover-link-color: #00A5F4;
+    --text-color: #222;
+    --main-background: #EEEEFA;
+    --secondary-background: #ddddea;
+    --outer-background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
+    --code-background: rgba(255,255,255, .2);
+    --code-border: #ac9;
+    --sidebar-border-color: #ccc;
+    --secondary-link-color: #444;
+    --highlight-background: #FFF;
+    --td-background: white;
 }
 
 html {
@@ -8,7 +21,10 @@ html {
 }
 
 body {
-    background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
+    background: var(--outer-background);
+}
+
+html, body, input {
     /* Pick a font.
        sans-serif is the Browser default. This is great because the user could change it.
        Unfortunately the defaults are decades old and e.g. on Windows still use Arial in Firefox and Edge,
@@ -29,8 +45,7 @@ body {
 body {
   /* These stay, assuming some browsers pick different defaults */
   font-size: 100%;
-  background-color: #eeeefa;
-  color: #000;
+  background-color: var(--main-background);
   margin: 0;
   padding: 0;
 }
@@ -97,7 +112,7 @@ div.sphinxsidebar ul ul, div.sphinxsidebar ul.want-points {
 div.sphinxsidebar ul {
   margin: 10px;
   padding: 0;
-  color: #444444;
+  color: var(--secondary-link-color);
   margin: 10px;
   list-style: none;
 }
@@ -132,7 +147,7 @@ div.sphinxsidebar h3 {
 }
 
 div.sphinxsidebar h4 {
-  color: #444444;
+  color: var(--secondary-link-color);
   font-size: 1.3em;
   font-weight: normal;
   margin: 5px 0 0 0;
@@ -162,7 +177,7 @@ a:hover, div.footer a {
 }
 
 div.related a, div.sphinxsidebar a {
-  color: #444444;
+  color: var(--secondary-link-color);
 }
 
 div.warning {
@@ -192,10 +207,6 @@ div.footer {
   font-size: 75%;
 }
 
-th, dl.field-list > dt {
-  background-color: #ede;
-}
-
 table.docutils {
   border-collapse: collapse;
 }
@@ -212,9 +223,9 @@ th > :first-child, td > :first-child {
 /* End of SPHINX IMPORT */
 
 div#fmain {
-    color: #222;
+    color: var(--text-color);
     padding: 1em 2em;
-    background-color: #EEEEFA;
+    background-color: var(--main-background);
     border-radius: 14px;
     position: relative;
     margin: 1em auto 1em;
@@ -227,7 +238,8 @@ div#fmain {
 div.related {
     margin-bottom: 0;
     padding: 0.5em 0;
-    border-top: 1px solid #ccc;
+    border-top: 1px solid;
+    border-color: var(--sidebar-border-color);
     margin-top: 0;
 }
 
@@ -243,15 +255,10 @@ div.section {
     width: 100%;
 }
 
-div.related a:hover,
-div.footer a:hover,
-div.sphinxsidebar a:hover {
-    color: #0095C4;
-}
-
 div.related:first-child {
     border-top: 0;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid;
+    border-color: var(--sidebar-border-color);
 }
 
 .inline-search {
@@ -265,7 +272,8 @@ form.inline-search input[type="submit"] {
 }
 
 div.sphinxsidebar {
-    border-right: 1px solid #ccc;
+    border-right: 1px solid;
+    border-color: var(--sidebar-border-color);
     border-radius: 0px;
     line-height: 1em;
     font-size: smaller;
@@ -314,18 +322,25 @@ ul li, div.body li {
     line-height: 2em;
 }
 
-ul.simple p {
+ul.simple p, ol.simple p {
   /* See "special features" list on index.html */
   margin-bottom: 0;
+  margin-top: 0;
 }
 
 ul.simple > li:not(:first-child) > p {
   margin-top: 0;
 }
 
+ul li dd {
+    /* nested lists will show up like this, the left margin is massive by default */
+    margin-left: 0;
+}
+
 form.inline-search input,
 div.sphinxsidebar input {
-    border: 1px solid #999999;
+    border: 1px solid;
+    border-color: var(--sidebar-border-color);
     font-size: smaller;
     border-radius: 3px;
 }
@@ -364,7 +379,8 @@ div.body hr {
 
 div.body pre, code {
     border-radius: 3px;
-    border: 1px solid #ac9;
+    border: 1px solid;
+    border-color: var(--code-border);
 }
 
 div.highlight {
@@ -399,28 +415,31 @@ div.body div.seealso {
     border: 1px solid #dddd66;
 }
 
-div.body a {
-    color: #0072aa;
+a {
+    color: var(--link-color);
 }
 
 div.body a:visited {
-    color: #6363bb;
+    color: var(--visited-link-color);
 }
 
+div.related a:hover,
+div.footer a:hover,
+div.sphinxsidebar a:hover,
 div.body a:hover {
-    color: #00B0E4;
+    color: var(--hover-link-color);
 }
 
 code {
     /* Make inline-code better visible */
-    background-color: rgba(20,20,80, .1);
+    background-color: var(--code-background);
     padding-left: 5px;
     padding-right: 5px;
     margin-left: 3px;
     margin-right: 3px;
 }
 
-tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command {
+tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command, button {
     /* Pick a monospace font.
        ui-monospace is the monospace version of system-ui - the system's monospace font.
        Unfortunately it's barely supported anywhere (at time of writing only Safari does!),
@@ -467,7 +486,8 @@ div.body tt.xref, div.body a tt, div.body code.xref, div.body a code {
 }
 
 table.docutils {
-    border: 1px solid #ddd;
+    border: 1px solid;
+    border-color: var(--sidebar-border-color);
     min-width: 20%;
     border-radius: 3px;
     margin-top: 1em;
@@ -478,7 +498,8 @@ table.docutils {
 }
 
 table.docutils td, table.docutils th {
-    border: 1px solid #ddd !important;
+    border: 1px solid;
+    border-color: var(--sidebar-border-color);
     border-radius: 3px;
 }
 
@@ -486,13 +507,13 @@ table p, table li {
     text-align: left !important;
 }
 
-table.docutils th {
-    background-color: #eee;
+th {
+    background-color: var(--secondary-background);
     padding: 0.3em 0.5em;
 }
 
 table.docutils td {
-    background-color: white;
+    background-color: var(--td-background);
     padding: 0.3em 0.5em;
 }
 
@@ -508,24 +529,12 @@ div.footer {
     margin-right: 10px;
 }
 
-.refcount {
-    color: #060;
-}
-
-.stableabi {
-    color: #229;
-}
-
 .highlight {
-    background: #FFF;
+    background: var(--highlight-background);
 }
 
 #synopsis p {
     font-size: 12pt;
-}
-
-dl {
-    margin-bottom: 1em;
 }
 
 dl.envvar, dl.describe {
@@ -552,6 +561,10 @@ aside.footnote > p {
     line-height: 1.5em;
 }
 
+div.documentwrapper {
+    width: 100%;
+}
+
 /* On screens that are less than 700px wide remove anything non-essential
    - the sidebar, the gradient background, ... */
 @media screen and (max-width: 700px) {
@@ -560,9 +573,6 @@ aside.footnote > p {
         width: 100%;
         height: auto;
         position: relative;
-    }
-    div.documentwrapper {
-        float: left;
     }
     div.bodywrapper {
         margin-left: 0;
@@ -606,6 +616,7 @@ aside.footnote > p {
 .gray { color: #777 }
 .purple { color: #551a8b; font-weight: bold; }
 .red { color: #FF0000; }
+.green { color: #00FF00; }
 
 /* Color based on the Name.Function (.nf) class from pygments.css. */
 .command { color: #005fd7 }
@@ -621,11 +632,10 @@ aside.footnote > p {
 .prompt { color: #8f7902; }
 
 kbd {
-  background-color: #f9f9f9;
-  border: 1px solid #aaa;
+  background-color: var(--td-background);
+  border: 1px solid;
+  border-color: var(--sidebar-border-color);
   border-radius: .2em;
-  box-shadow: 0.1em 0.1em 0.2em rgba(0,0,0,0.1);
-  color: #000;
   padding: 0.1em 0.3em;
 }
 
@@ -637,91 +647,38 @@ div.body .internal.reference:link {
     content: "$";
 }
 .footnote, .footnote-reference {
-    background-color: #ddddea;
+    background-color: var(--secondary-background);
     font-size: 90%;
 }
 
 @media (prefers-color-scheme: dark) {
-    body {
-        background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
+    :root {
+        --link-color: #5fb0fc;
+        --text-color: #DDD;
+        --main-background: #202028;
+        --secondary-background: #112;
+        --outer-background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
+        --code-background: rgba(20, 20, 25, .2);
+        --code-border: #536;
+        --sidebar-border-color: #666;
+        --secondary-link-color: #DDD;
+        --highlight-background: #000;
+        --td-background: #111;
     }
+
     div#fmain {
-        color: #DDD;
-        background-color: #202028;
         box-shadow: 0 0 5px 1px #000;
     }
 
-    div.body pre, code {
-        border: 1px solid #536;
-    }
-
-    .footnote, .footnote-reference {
-        background-color: #101020;
-    }
-
-    div.sphinxsidebar {
-        border-right: 1px solid #666;
-    }
-
-    div.related:first-child {
-        border-bottom: 1px solid #666;
-    }
-
-    div.related {
-        border-top: 1px solid #666;
-    }
-
-    div.sphinxsidebar a, div.footer {
-        color: #DDD;
-    }
-
-    div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3, div.footer a {
-        color: #DDD;
-    }
-    .highlight {
-        background: #000;
-    }
     kbd {
-        background-color: #111;
-        border: 1px solid #444;
         box-shadow: 0.1em 0.1em 0.2em rgba(100,100,100,0.1);
         color: #FFF;
-    }
-    table.docutils th {
-        background-color: #222;
     }
 
     table.docutils td {
         background-color: #111;
     }
-    input {
-        background-color: #222;
-        color: #DDD;
-    }
-
-    dt:target, span.highlighted {
-        background-color: #404060;
-    }
-    table.docutils {
-        border: 1px solid #222;
-    }
-
-    table.docutils td, table.docutils th {
-        border: 1px solid #222 !important;
-    }
-    div.body a {
-        color: #2092fa;
-    }
 
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
-
-    /* The table background on fishfish Beta r1 */
-    th, dl.field-list > dt {
-        background-color: #121;
-    }
-
-    code {
-        background-color: rgba(200, 200, 255, .2);
-    }
 }

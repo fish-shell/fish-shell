@@ -144,7 +144,9 @@ class editable_line_t {
 int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 
 /// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
+extern "C" {
 void reader_sighup();
+}
 
 /// Initialize the reader.
 void reader_init();
@@ -166,10 +168,16 @@ enum class cursor_selection_mode_t : uint8_t {
     inclusive,
 };
 
+#if INCLUDE_RUST_HEADERS
 void reader_change_cursor_selection_mode(cursor_selection_mode_t selection_mode);
+#else
+void reader_change_cursor_selection_mode(uint8_t selection_mode);
+#endif
 
+struct EnvDyn;
 /// Enable or disable autosuggestions based on the associated variable.
 void reader_set_autosuggestion_enabled(const env_stack_t &vars);
+void reader_set_autosuggestion_enabled_ffi(bool enabled);
 
 /// Write the title to the titlebar. This function is called just before a new application starts
 /// executing and just after it finishes.
@@ -254,7 +262,9 @@ void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t
 void reader_pop();
 
 /// The readers interrupt signal handler. Cancels all currently running blocks.
+extern "C" {
 void reader_handle_sigint();
+}
 
 /// \return whether fish is currently unwinding the stack in preparation to exit.
 bool fish_is_unwinding_for_exit();

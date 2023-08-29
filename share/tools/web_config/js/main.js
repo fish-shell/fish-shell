@@ -231,20 +231,24 @@ document.addEventListener("alpine:init", () => {
             this.savePromptButtonTitle = "Set Prompt";
         },
 
-        setNewPrompt(selectedPrompt) {
-            $http
-                .post("set_prompt/", { fish_prompt: selectedPrompt.function })
-                .then(function (arg) {
-                    // Update attributes of current prompt and select it
-                    this.samplePrompts[0].demo = selectedPrompt.demo;
-                    this.samplePrompts[0].right = selectedPrompt.right;
-                    this.samplePrompts[0].function = selectedPrompt.function;
-                    this.samplePrompts[0].font_size = selectedPrompt.font_size;
-                    this.selectedPrompt = this.samplePrompts[0];
+        async setNewPrompt(selectedPrompt) {
+            let postdata = { fish_prompt: selectedPrompt.function };
+            let resp = await fetch("set_prompt/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(postdata)
+            });
+            if (resp.ok) {
+                // Update attributes of current prompt and select it
+                this.samplePrompts[0].demo = selectedPrompt.demo;
+                this.samplePrompts[0].right = selectedPrompt.right;
+                this.samplePrompts[0].function = selectedPrompt.function;
+                this.samplePrompts[0].font_size = selectedPrompt.font_size;
+                this.selectedPrompt = this.samplePrompts[0];
 
-                    // Note that we set it
-                    this.savePromptButtonTitle = "Prompt Set!";
-                });
+                // Note that we set it
+                this.savePromptButtonTitle = "Prompt Set!";
+            };
         },
 
         setPrompt() {

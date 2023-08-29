@@ -199,10 +199,12 @@
                         <div class="prompt_demo_choice_label" style="color: #FFF;" x-text="selectedPrompt.name"></div>
                         <div style='display: flex'>
                             <div x-html='selectedPrompt.demo' style='flex-grow: 1' class="prompt_demo unbordered"></div>
-                            <div x-if='selectedPrompt.right' title="right prompt for {{selectedPrompt.name }}"
-                                x-html='selectedPrompt.right' class="prompt_demo unbordered"
-                                @click="selectPrompt(selectedPrompt)">
-                            </div>
+                            <template x-if="selectedPrompt.right">
+                                <div title="right prompt for {{selectedPrompt.name }}"
+                                     x-html='selectedPrompt.right' class="prompt_demo unbordered"
+                                     @click="selectPrompt(selectedPrompt)">
+                                </div>
+                            </template>
                         </div>
                         <div style="position: absolute; right: 5px; bottom: 5px;">
                             <button class="save_button" x-show="showSaveButton" style="color: #CCC" @click="setPrompt()"

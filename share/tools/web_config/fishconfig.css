@@ -632,7 +632,7 @@ img.delete_icon {
         color: #DDD;
     }
 
-    div#ancestor {
+    #ancestor {
         box-shadow: 0 0 5px 1px #000;
     }
     .tab {

@@ -240,7 +240,7 @@ static void process_input(bool continuous_mode, bool verbose) {
         if (reader_test_and_clear_interrupted()) {
             evt = char_event_t{shell_modes.c_cc[VINTR]};
         } else {
-            evt = queue.readch_timed();
+            evt = queue.readch_timed_esc();
         }
         if (!evt || !evt->is_char()) {
             output_bind_command(bind_chars);

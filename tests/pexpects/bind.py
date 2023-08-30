@@ -210,6 +210,26 @@ sleep(0.200)
 send("hhtTrN\r")
 expect_prompt("\r\nTENT\r\n", unmatched="Couldn't find expected output 'TENT'")
 
+# Test sequence key delay
+send("set -g fish_sequence_key_delay_ms 200\r")
+expect_prompt()
+send("bind -M insert jk 'commandline -i foo'\r")
+expect_prompt()
+send("echo jk")
+send("\r")
+expect_prompt("foo")
+send("echo j")
+sleep(0.300)
+send("k\r")
+expect_prompt("jk")
+send("set -e fish_sequence_key_delay_ms\r")
+expect_prompt()
+send("echo j")
+sleep(0.300)
+send("k\r")
+expect_prompt("foo")
+
+
 # Test '~' (togglecase-char)
 # HACK: Deactivated because it keeps failing on CI
 # send("\033")

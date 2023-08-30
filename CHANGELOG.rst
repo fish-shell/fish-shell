@@ -18,6 +18,8 @@ We have tried to keep these to a minimum, but in some cases it is unavoidable.
 
 Notable improvements and fixes
 ------------------------------
+- A new variable, :envvar:`fish_sequence_key_delay_ms`, can now be set to let bound key sequences time out.
+  This is useful e.g. to bind ``jk`` to switch modes in vi-mode while still being able to type "j". (:issue:`7401`, :issue:`9926`)
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 
 Deprecations and removed features

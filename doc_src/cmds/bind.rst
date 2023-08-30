@@ -368,11 +368,21 @@ Other keys don't have a direct encoding, and are sent as escape sequences. For e
 
 .. _cmd-bind-escape:
 
-Special Case: The Escape Character
-----------------------------------
+Key timeout
+-----------
 
-The escape key can be used standalone, for example, to switch from insertion mode to normal mode when using Vi keybindings. Escape can also be used as a "meta" key, to indicate the start of an escape sequence, like for function or arrow keys. Custom bindings can also be defined that begin with an escape character.
+When you've bound a sequence of multiple characters, there is always the possibility that fish has only seen a part of it, and then it needs to disambiguate between the full sequence and part of it.
+
+For example::
+
+  bind jk 'commandline -i foo'
+
+will bind the sequence ``jk`` to insert "foo" into the commandline. When you've only pressed "j", fish doesn't know if it should insert the "j" (because of the default self-insert), or wait for the "k".
+
+You can enable a timeout for this, by setting the :envvar:`fish_sequence_key_delay_ms` variable to the timeout in milliseconds. If the timeout elapses, fish will no longer wait for the sequence to be completed, and do what it can with the characters it already has.
+
+The escape key is a special case, because it can be used standalone as a real key or as part of a longer escape sequence, like function or arrow keys.
 
 Holding alt and something else also typically sends escape, for example holding alt+a will send an escape character and then an "a".
 
-fish waits for a period after receiving the escape character, to determine whether it is standalone or part of an escape sequence. While waiting, additional key presses make the escape key behave as a meta key. If no other key presses come in, it is handled as a standalone escape. The waiting period is set to 30 milliseconds (0.03 seconds). It can be configured by setting the ``fish_escape_delay_ms`` variable to a value between 10 and 5000 ms. This can be a universal variable that you set once from an interactive session.
+So the escape character has its own timeout configured with ``fish_escape_delay_ms``.

@@ -58,6 +58,7 @@ Completions
 - ``blender`` (:issue:`9905`).
 - ``gimp`` (:issue:`9904`).
 - ``horcrux`` (:issue:`9922`).
+- ``java_home`` (:issue:`9998`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

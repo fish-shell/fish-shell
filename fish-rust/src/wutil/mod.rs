@@ -457,6 +457,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
             unsafe {
                 std::ptr::copy(&buff[0], &mut accum[accumlen], buff.len());
             }
+            accumlen += buff.len();
             true
         } else {
             // Too much data to even fit, just write it immediately.

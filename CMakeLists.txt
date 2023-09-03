@@ -120,7 +120,7 @@ set(FISH_SRCS
     src/io.cpp
     src/null_terminated_array.cpp src/operation_context.cpp src/output.cpp
     src/pager.cpp src/parse_execution.cpp src/parse_util.cpp
-    src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
+    src/parser.cpp src/parser_keywords.cpp src/path.cpp
     src/proc.cpp src/reader.cpp src/screen.cpp
     src/signals.cpp src/utf8.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp

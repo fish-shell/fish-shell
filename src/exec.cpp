@@ -49,7 +49,6 @@
 #include "null_terminated_array.h"
 #include "parse_tree.h"
 #include "parser.h"
-#include "postfork.h"
 #include "proc.h"
 #include "reader.h"
 #include "redirection.h"
@@ -143,6 +142,22 @@ bool is_thompson_shell_script(const char *path) {
     }
     errno = e;
     return res;
+}
+
+// Implemented in postfork.rs. We don't use the FFI bridge to avoid the risk of allocations.
+extern "C" {
+void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
+                            const char *const *envv);
+
+int child_setup_process(pid_t claim_tty_from, const sigset_t *sigmask, bool is_forked,
+                        const dup2_list_t *dup2s);
+
+pid_t execute_fork();
+
+int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent);
+
+void report_setpgid_error(int err, bool is_parent, pid_t pid, pid_t desired_pgid, job_id_t job_id,
+                          const char *cmd, const char *argv0);
 }
 
 /// This function is executed by the child process created by a call to fork(). It should be called
@@ -244,10 +259,17 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
         return;
     }
 
+    sigset_t blocked_signals_storage;
+    sigemptyset(&blocked_signals_storage);
+    const sigset_t *blocked_signals = nullptr;
+    if (blocked_signals_for_job(*j, &blocked_signals_storage)) {
+        blocked_signals = &blocked_signals_storage;
+    }
+
     // child_setup_process makes sure signals are properly set up.
     dup2_list_t redirs = dup2_list_resolve_chain_shim(all_ios);
-    if (child_setup_process(false /* not claim_tty */, *j, false /* not is_forked */, redirs) ==
-        0) {
+    if (child_setup_process(false /* not claim_tty */, blocked_signals, false /* not is_forked */,
+                            &redirs) == 0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         if (is_interactive_session()) {
             auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
@@ -408,6 +430,20 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
     pid_t claim_tty_from =
         (p->leads_pgrp && job->group->wants_terminal()) ? getpgrp() : INVALID_PID;
 
+    // Decide if the job wants to set a custom sigmask.
+    sigset_t blocked_signals_storage;
+    sigemptyset(&blocked_signals_storage);
+    const sigset_t *blocked_signals = nullptr;
+    if (blocked_signals_for_job(*job, &blocked_signals_storage)) {
+        blocked_signals = &blocked_signals_storage;
+    }
+
+    // Narrow the command name for error reporting before fork,
+    // to avoid allocations in the forked child.
+    std::string narrow_cmd = wcs2string(job->command_wcstr());
+    std::string narrow_argv0 = wcs2string(p->argv0());
+    job_id_t job_id = job->job_id();
+
     pid_t pid = execute_fork();
     if (pid < 0) {
         return launch_result_t::failed;
@@ -420,18 +456,20 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
     if (p->leads_pgrp) {
         job->group->set_pgid(p->pid);
     }
+
     {
         auto pgid = job->group->get_pgid();
         if (pgid) {
             if (int err = execute_setpgid(p->pid, pgid->value, is_parent)) {
-                report_setpgid_error(err, is_parent, pgid->value, job.get(), p);
+                report_setpgid_error(err, is_parent, p->pid, pgid->value, job_id,
+                                     narrow_cmd.c_str(), narrow_argv0.c_str());
             }
         }
     }
 
     if (!is_parent) {
         // Child process.
-        child_setup_process(claim_tty_from, *job, true, dup2s);
+        child_setup_process(claim_tty_from, blocked_signals, true, &dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }
@@ -533,7 +571,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
     const char *actual_cmd = actual_cmd_str.c_str();
     filename_ref_t file = parser.libdata().current_filename;
 
-#if FISH_USE_POSIX_SPAWN
+#if HAVE_SPAWN_H
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
     if (can_use_posix_spawn_for_job(j, dup2s)) {
         ++s_fork_count;  // spawn counts as a fork+exec

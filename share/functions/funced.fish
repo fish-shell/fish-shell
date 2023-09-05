@@ -114,6 +114,7 @@ function funced --description 'Edit function definition'
                 set -l new_checksum (__funced_md5 "$tmpname")
                 if test "$new_checksum" = "$checksum"
                     echo (_ "Editor exited but the function was not modified")
+                    echo (_ "If the editor is still running, check if it waits for completion, maybe a '--wait' option?")
                     # Don't source or save an unmodified file.
                     break
                 end

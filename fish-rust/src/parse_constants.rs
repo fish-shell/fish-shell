@@ -1,8 +1,9 @@
 //! Constants used in the programmatic representation of fish code.
 
-use crate::ffi::{fish_wcswidth, fish_wcwidth, wcharz_t};
+use crate::fallback::{fish_wcswidth, fish_wcwidth};
 use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::prelude::*;
+use crate::wchar_ffi::wcharz_t;
 use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use bitflags::bitflags;
 use cxx::{type_id, ExternType};
@@ -475,7 +476,7 @@ impl ParseError {
                 // pretend it's a space. We only expect this to be at the end of the string.
                 caret_space_line += " ";
             } else {
-                let width = fish_wcwidth(wc.into()).0;
+                let width = fish_wcwidth(wc);
                 if width > 0 {
                     caret_space_line += " ".repeat(width as usize).as_str();
                 }
@@ -489,7 +490,7 @@ impl ParseError {
             // We do it like this
             //               ^~~^
             // With a "^" under the start and end, and squiggles in-between.
-            let width = fish_wcswidth(unsafe { src.as_ptr().add(start) }, len).0;
+            let width = fish_wcswidth(&src[start..start + len]);
             if width >= 2 {
                 // Subtract one for each of the carets - this is important in case
                 // the starting char has a width of > 1.

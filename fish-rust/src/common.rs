@@ -5,7 +5,8 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
-use crate::ffi::{self, fish_wcwidth};
+use crate::fallback::fish_wcwidth;
+use crate::ffi::{self};
 use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
@@ -1553,7 +1554,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             while pos < msg.len() && ![' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
-                let width = fish_wcwidth(msg.char_at(pos).into()).0 as isize;
+                let width = fish_wcwidth(msg.char_at(pos)) as isize;
                 if (tok_width + width) > (screen_width - 1) {
                     overflow = true;
                     break;

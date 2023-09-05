@@ -92,9 +92,6 @@ include_cpp! {
 
     generate!("log_extra_to_flog_file")
 
-    generate!("fish_wcwidth")
-    generate!("fish_wcswidth")
-
     generate!("wildcard_match")
     generate!("wgettext_ptr")
 

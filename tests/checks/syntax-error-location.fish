@@ -73,3 +73,8 @@ echo "bind -M" | $fish
 # CHECKERR: ^
 # CHECKERR: (Type 'help bind' for related documentation)
 
+$fish -c 'if -e; end'
+# CHECKERR: fish: Unknown command: -e
+# CHECKERR: fish:
+# CHECKERR: if -e; end
+# CHECKERR:    ^^

@@ -75,13 +75,13 @@ To change your login shell to fish:
 
 1. Add the shell to ``/etc/shells`` with::
 
-    > echo /usr/local/bin/fish | sudo tee -a /etc/shells
+    > echo $(which fish) | sudo tee -a /etc/shells
 
 2. Change your default shell with::
 
-    > chsh -s /usr/local/bin/fish
+    > chsh -s $(which fish)
 
-Again, substitute the path to fish for ``/usr/local/bin/fish`` - see ``command -s fish`` inside fish. To change it back to another shell, just substitute ``/usr/local/bin/fish`` with ``/bin/bash``, ``/bin/tcsh`` or ``/bin/zsh`` as appropriate in the steps above.
+If :command:`fish` was not installed in a directory included in your :envvar:`PATH`, substitute ``$(which fish)`` with its appropriate location. To change it back to another shell, just substitute ``$(which fish)`` with ``/bin/bash``, ``/bin/tcsh`` or ``/bin/zsh`` as appropriate in the steps above.
 
 Uninstalling
 ------------

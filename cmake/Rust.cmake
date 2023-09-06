@@ -67,10 +67,10 @@ corrosion_set_env_vars(${fish_rust_target}
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
     # Temporary hack to propogate CMake flags/options to build.rs.
     "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"
-    "DOCDIR=${DOCDIR}"
-    "DATADIR=${DATADIR}"
-    "SYSCONFDIR=${SYSCONFDIR}"
-    "BINDIR=${BINDIR}"
+    "DOCDIR=${CMAKE_INSTALL_FULL_DOCDIR}"
+    "DATADIR=${CMAKE_INSTALL_FULL_DATADIR}"
+    "SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDIR}"
+    "BINDIR=${CMAKE_INSTALL_FULL_BINDIR}"
 )
 
 # this needs an extra fish-rust due to the poor source placement

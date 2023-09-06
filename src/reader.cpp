@@ -3757,7 +3757,13 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             pager.set_search_field_shown(true);
             pager.set_prefix(MB_CUR_MAX > 1 ? L"► " : L"> ", false /* highlight */);
             // Update the search field, which triggers the actual history search.
-            insert_string(&pager.search_field_line, command_line.text());
+            if (!history_search.active() || history_search.search_string().empty()) {
+                insert_string(&pager.search_field_line, command_line.text());
+            } else {
+                // If we have an actual history search already going, reuse that term
+                // - this is if the user looks around a bit and decides to switch to the pager.
+                insert_string(&pager.search_field_line, history_search.search_string());
+            }
             break;
         }
         case rl::backward_char: {

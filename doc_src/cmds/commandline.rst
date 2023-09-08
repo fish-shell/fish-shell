@@ -74,6 +74,10 @@ The following options change the way ``commandline`` prints the current commandl
 
 **-c** or **--cut-at-cursor**
     Only print selection up until the current cursor position.
+    If combined with ``--tokenize``, this will print up until the last completed token - excluding the token the cursor is in.
+    This is typically what you would want for instance in completions.
+    To get both, use both ``commandline --cut-at-cursor --tokenize; commandline --cut-at-cursor --current-token``,
+    or ``commandline -co; commandline -ct`` for short.
 
 **-o** or **--tokenize**
     Tokenize the selection and print one string-type token per line.
@@ -120,8 +124,22 @@ The ``echo $flounder >&`` is the first process, ``less`` the second and ``and ec
 
 **$flounder** is the current token.
 
-More examples:
+The most common use for something like completions is
 
+::
+
+   set -l tokens (commandline -opc)
+
+which gives the current *process* (what is being completed), tokenized into separate entries, up to but excluding the currently being completed token
+
+If you are then also interested in the in-progress token, add
+
+::
+   set -l current (commandline -ct)
+
+Note that this makes it easy to render fish's infix matching moot - if possible it's best if the completions just print all possibilities and leave the matching to the current token up to fish's logic.
+
+More examples:
 
 ::
 

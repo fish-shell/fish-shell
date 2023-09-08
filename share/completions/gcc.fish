@@ -482,9 +482,7 @@ complete -c gcc -s c -d 'Compile or assemble the source files, but do not link.'
 complete -c gcc -s S -d 'Stop after the stage of compilation proper; do not assemble'
 complete -c gcc -s E -d 'Stop after the preprocessing stage; do not run the compiler proper'
 complete -c gcc -o llibrary -d 'Search the library named library when linking'
-for i in (ls /usr/lib/ | string match -r -g "^lib(.*?)\.so.*")
-	complete -c gcc -o "l$i"
-end
+complete -c gcc -a '-l(path basename /usr/lib/lib*.so* | string match -r -g "^lib(.*?)\.so.*")'
 complete -c gcc -s l -d 'Search the library named library when linking'
 complete -c gcc -o ldl -d 'Search the dynamic loader library when linking'
 complete -c gcc -o lm -d 'Search the math library when linking'

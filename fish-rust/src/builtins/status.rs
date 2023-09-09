@@ -1,7 +1,7 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{get_executable_path, str2wcstring};
+use crate::common::{get_executable_path, str2wcstring, PROGRAM_NAME};
 use crate::ffi::{
     get_job_control_mode, get_login, is_interactive_session, job_control_t, set_job_control_mode,
 };
@@ -537,8 +537,7 @@ pub fn status(
                     if !var.is_empty() {
                         streams.out.appendln(var);
                     } else {
-                        // FIXME: C++ used `program_name` here, no clue where it's from
-                        streams.out.appendln(L!("fish"));
+                        streams.out.appendln(PROGRAM_NAME.get().unwrap());
                     }
                 }
                 STATUS_CURRENT_COMMANDLINE => {

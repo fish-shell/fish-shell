@@ -44,6 +44,7 @@ mod ffi_tests;
 mod fish;
 mod fish_indent;
 mod flog;
+mod fork_exec;
 mod function;
 mod future_feature_flags;
 mod global_safety;

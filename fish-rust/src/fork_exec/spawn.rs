@@ -1,5 +1,6 @@
 //! Wrappers around posix_spawn.
 
+use super::blocked_signals_for_job;
 use crate::ffi::{self, job_t};
 use crate::redirection::Dup2List;
 use crate::signal::get_signals_with_handlers;
@@ -139,7 +140,7 @@ impl PosixSpawner {
             attr.set_sigdefault(&sigdefault)?;
         }
 
-        // No signals blocked.
+        // Potentially reset the sigmask.
         if reset_sigmask {
             let mut sigmask = unsafe { std::mem::zeroed() };
             unsafe { libc::sigemptyset(&mut sigmask) };
@@ -208,16 +209,6 @@ impl PosixSpawner {
             return Ok(pid);
         }
         Err(spawn_err)
-    }
-}
-
-fn blocked_signals_for_job(job: &job_t, sigmask: &mut libc::sigset_t) {
-    // Block some signals in background jobs for which job control is turned off (#6828).
-    if !job.is_foreground() && !job.wants_job_control() {
-        unsafe {
-            libc::sigaddset(sigmask, libc::SIGINT);
-            libc::sigaddset(sigmask, libc::SIGQUIT);
-        }
     }
 }
 

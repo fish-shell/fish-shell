@@ -69,7 +69,6 @@ mod reader;
 mod redirection;
 mod signal;
 mod smoke;
-mod spawn;
 mod termsize;
 mod threads;
 mod timer;

@@ -178,6 +178,7 @@ extern "C" fn fish_signal_handler(
 }
 
 /// Set all signal handlers to SIG_DFL.
+/// This is called after fork - it should be async signal safe.
 pub fn signal_reset_handlers() {
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
     unsafe { libc::sigemptyset(&mut act.sa_mask) };

@@ -60,7 +60,7 @@ mod redirection_ffi {
     /// A class representing a sequence of basic redirections.
     struct Dup2List {
         /// The list of actions.
-        actions: Vec<Dup2Action>,
+        pub actions: Vec<Dup2Action>,
     }
 
     extern "Rust" {

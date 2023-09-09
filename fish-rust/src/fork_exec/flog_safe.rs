@@ -92,7 +92,6 @@ pub fn flog_impl_async_safe(fd: i32, s: impl FloggableDisplayAsyncSafe) {
 /// Variant of FLOG which is async-safe to use after fork().
 /// This does not allocate or take locks. Only str and nul-terminated C-strings are supported.
 /// The arguments are NOT space-separated. Embed real spaces in your literals.
-#[allow(unused_macros)]
 macro_rules! FLOG_SAFE {
     ($category:ident, $($elem:expr),+ $(,)*) => {
         if crate::flog::categories::$category
@@ -100,7 +99,7 @@ macro_rules! FLOG_SAFE {
             .load(std::sync::atomic::Ordering::Relaxed)
         {
             #[allow(unused_imports)]
-            use crate::exec::flog_safe::{flog_impl_async_safe, FloggableDisplayAsyncSafe};
+            use crate::fork_exec::flog_safe::{flog_impl_async_safe, FloggableDisplayAsyncSafe};
             let fd = crate::flog::get_flog_file_fd();
             flog_impl_async_safe(fd, stringify!($category));
             flog_impl_async_safe(fd, ": ");
@@ -113,7 +112,6 @@ macro_rules! FLOG_SAFE {
     };
 }
 
-#[allow(unused_imports)]
 pub(crate) use FLOG_SAFE;
 
 #[cfg(test)]

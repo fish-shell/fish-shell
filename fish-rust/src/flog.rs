@@ -171,6 +171,7 @@ pub fn flog_impl(s: &str) {
     file.into_raw_fd();
 }
 
+/// The entry point for flogging.
 macro_rules! FLOG {
     ($category:ident, $($elem:expr),+ $(,)*) => {
         if crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
@@ -246,6 +247,7 @@ pub fn set_flog_file_fd(fd: c_int) {
     FLOG_FD.store(fd, Ordering::Relaxed);
 }
 
+#[inline]
 pub fn get_flog_file_fd() -> c_int {
     FLOG_FD.load(Ordering::Relaxed)
 }

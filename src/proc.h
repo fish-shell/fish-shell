@@ -294,6 +294,9 @@ class process_t {
     /// \return whether this process leads its process group.
     bool get_leads_pgrp() const { return leads_pgrp; }
 
+    /// \return our pid, or 0 if not an external process.
+    int get_pid() const { return pid; }
+
     /// \return the wait handle for the process, if it exists.
     rust::Box<WaitHandleRefFFI> *get_wait_handle_ffi() const;
 

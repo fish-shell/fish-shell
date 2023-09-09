@@ -8,22 +8,6 @@ linux_task:
           container: &step
               image: ghcr.io/fish-shell/fish-ci/alpine:latest
               memory: 4GB
-        - name: bionic
-          container:
-              <<: *step
-              image: ghcr.io/fish-shell/fish-ci/bionic:latest
-        - name: bionic-asan-clang
-          container:
-              <<: *step
-              image: ghcr.io/fish-shell/fish-ci/bionic-asan-clang:latest
-        - name: bionic-tsan
-          container:
-              <<: *step
-              image: ghcr.io/fish-shell/fish-ci/bionic-tsan:latest
-        - name: bionic-tsan-clang
-          container:
-              <<: *step
-              image: ghcr.io/fish-shell/fish-ci/bionic-tsan-clang:latest
         - name: centos7
           container:
               <<: *step
@@ -36,10 +20,6 @@ linux_task:
           container:
               <<: *step
               image: ghcr.io/fish-shell/fish-ci/focal-32bit:latest
-        - name: xenial
-          container:
-              <<: *step
-              image: ghcr.io/fish-shell/fish-ci/xenial:latest
 
     tests_script:
         # cirrus at times gives us 32 procs and 2 GB of RAM
@@ -78,15 +58,9 @@ linux_arm_task:
 
 freebsd_task:
     matrix:
-        - name: FreeBSD 14
-          freebsd_instance:
-              image_family: freebsd-14-0-snap
         - name: FreeBSD 13
           freebsd_instance:
-              image: freebsd-13-0-release-amd64
-        - name: FreeBSD 12.3
-          freebsd_instance:
-              image: freebsd-12-3-release-amd64
+              image: freebsd-13-2-release-amd64
     tests_script:
         - pkg install -y cmake devel/pcre2 devel/ninja misc/py-pexpect git
         # BSDs have the following behavior: root may open or access files even if

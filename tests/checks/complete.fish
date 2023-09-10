@@ -548,3 +548,7 @@ complete -C'dotty '
 # CHECK: .abc
 
 rm -r $tmpdir
+
+complete -C'complete --command=fish' | head -n 1 | string replace -rf '\t.*' ''
+# (one "--command=" is okay, we used to get "--command=--command="
+# CHECK: --command=fish

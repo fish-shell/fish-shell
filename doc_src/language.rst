@@ -687,24 +687,37 @@ For more on shell variables, read the :ref:`Shell variables <variables>` section
 Quoting variables
 '''''''''''''''''
 
+Variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (``:``) instead [#]_.
 
-Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (``:``) instead [#]_.
+Fish variables are all :ref:`lists <variables-lists>`, and they are split into elements when they are *set* - that means it is important to decide whether to use quotes or not with :doc:`set <cmds/set>`::
 
-Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
+  set foo 1 2 3 # a variable with three elements
+  rm $foo # runs the equivalent of `rm 1 2 3` - trying to delete three files: 1, 2 and 3.
+  rm "$foo" # runs `rm '1 2 3'` - trying to delete one file called '1 2 3'
+
+  set foo # an empty variable
+  rm $foo # runs `rm` without arguments
+  rm "$foo" # runs the equivalent of `rm ''`
+
+  set foo "1 2 3"
+  rm $foo # runs the equivalent of `rm '1 2 3'` - trying to delete one file
+  rm "$foo" # same thing
+
+This is unlike other shells, which do what is known as "Word Splitting", where they split the variable when it is *used* in an expansion. E.g. in bash:
+
+.. code-block:: sh
+
+   foo="1 2 3"
+   rm $foo # runs the equivalent of `rm 1 2 3`
+   rm "$foo" # runs the equivalent of `rm '1 2 3'`
+
+This is the cause of very common problems with filenames with spaces in bash scripts.
+
+In fish, unquoted variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
 If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`Combining Lists <cartesian-product>` section for more information.
 
-Unlike other shells, fish doesn't do what is known as "Word Splitting". Once a variable is set to a particular set of elements, those elements expand as themselves. They aren't split on spaces or newlines or anything::
-
-  > set foo one\nthing
-  > echo $foo
-  one
-  thing
-  > printf '|%s|\n' $foo
-  |one
-  thing|
-
-That means quoting isn't the absolute necessity it is in other shells. Most of the time, not quoting a variable is correct. The exception is when you need to ensure that the variable is passed as one element, even if it might be unset or have multiple elements. This happens often with :doc:`test <cmds/test>`::
+Most of the time, not quoting a variable is correct. The exception is when you need to ensure that the variable is passed as one element, even if it might be unset or have multiple elements. This happens often with :doc:`test <cmds/test>`::
 
   set -l foo one two three
   test -n $foo

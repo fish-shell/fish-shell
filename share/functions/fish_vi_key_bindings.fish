@@ -261,15 +261,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -s --preset -M visual k up-line
     bind -s --preset -M visual j down-line
-
     bind -s --preset -M visual b backward-word
     bind -s --preset -M visual B backward-bigword
-    bind -s --preset -M visual ge backward-word
-    bind -s --preset -M visual gE backward-bigword
-    bind -s --preset -M visual w forward-word
-    bind -s --preset -M visual W forward-bigword
-    bind -s --preset -M visual e forward-word
-    bind -s --preset -M visual E forward-bigword
+    bind -s --preset -M visual ge forward-single-char backward-word backward-word forward-word backward-char
+    bind -s --preset -M visual gE forward-single-char backward-bigword backward-bigword forward-bigword backward-char
+    bind -s --preset -M visual w forward-word forward-single-char
+    bind -s --preset -M visual W forward-bigword forward-single-char
+    bind -s --preset -M visual e forward-single-char forward-word backward-char
+    bind -s --preset -M visual E forward-single-char forward-bigword backward-char
     bind -s --preset -M visual o swap-selection-start-stop repaint-mode
 
     bind -s --preset -M visual f forward-jump

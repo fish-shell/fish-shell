@@ -533,6 +533,6 @@ end
 
 rm -r $tmpdir
 
-complete -C'complete --command=fish' | head -n 1 | string replace -rf '\t.*' ''
+complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mktemp'
 # (one "--command=" is okay, we used to get "--command=--command="
-# CHECK: --command=fish
+# CHECK: --command=mktemp

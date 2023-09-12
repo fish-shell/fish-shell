@@ -882,7 +882,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     expand_result_t::result_t try_expand_wildcard(wcstring wc, size_t pos, wcstring *result);
 
     void move_word(editable_line_t *el, bool move_right, bool erase, move_word_style_t style,
-                   bool newv);
+                   bool newv, bool skip_final_spacing = false);
 
     void run_input_command_scripts(const std::vector<wcstring> &cmds);
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
@@ -1753,6 +1753,8 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::backward_word:
         case rl::forward_bigword:
         case rl::backward_bigword:
+        case rl::forward_next_word:
+        case rl::forward_next_bigword:
         case rl::nextd_or_forward_word:
         case rl::prevd_or_backward_word:
         case rl::delete_char:
@@ -2702,8 +2704,9 @@ enum move_word_dir_t { MOVE_DIR_LEFT, MOVE_DIR_RIGHT };
 /// \param move_right true if moving right
 /// \param erase Whether to erase the characters along the way or only move past them.
 /// \param newv if the new kill item should be appended to the previous kill item or not.
+/// \param skip_final_spacing Whether to skip any spacing at the end of the movement, default false.
 void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
-                              move_word_style_t style, bool newv) {
+                              move_word_style_t style, bool newv, bool skip_final_spacing) {
     // Return if we are already at the edge.
     const size_t boundary = move_right ? el->size() : 0;
     if (el->position() == boundary) return;
@@ -2723,6 +2726,12 @@ void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
 
     // Always consume at least one character.
     if (buff_pos == start_buff_pos) buff_pos = (move_right ? buff_pos + 1 : buff_pos - 1);
+
+    if (skip_final_spacing) {
+        while (buff_pos != boundary && command_line[buff_pos] == ' ') {
+            buff_pos = (move_right ? buff_pos + 1 : buff_pos - 1);
+        }
+    }
 
     // If we are moving left, buff_pos-1 is the index of the first character we do not delete
     // (possibly -1). If we are moving right, then buff_pos is that index - possibly el->size().
@@ -3936,7 +3945,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::forward_word:
+        case rl::forward_next_word:
         case rl::forward_bigword:
+        case rl::forward_next_bigword:
         case rl::nextd_or_forward_word: {
             if (c == rl::nextd_or_forward_word && command_line.empty()) {
                 auto last_statuses = parser().get_last_statuses();
@@ -3947,12 +3958,13 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 break;
             }
 
-            auto move_style = (c != rl::forward_bigword)
+            auto move_style = (c != rl::forward_bigword && c != rl::forward_next_bigword)
                                   ? move_word_style_t::move_word_style_punctuation
                                   : move_word_style_t::move_word_style_whitespace;
             editable_line_t *el = active_edit_line();
             if (el->position() < el->size()) {
-                move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);
+                move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false,
+                        (c == rl::forward_next_word || c == rl::forward_next_bigword));
             } else {
                 accept_autosuggestion(false, false, move_style);
             }

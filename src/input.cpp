@@ -126,6 +126,8 @@ static constexpr const input_function_metadata_t input_function_metadata[] = {
     {L"forward-char", readline_cmd_t::forward_char},
     {L"forward-jump", readline_cmd_t::forward_jump},
     {L"forward-jump-till", readline_cmd_t::forward_jump_till},
+    {L"forward-next-bigword", readline_cmd_t::forward_next_bigword},
+    {L"forward-next-word", readline_cmd_t::forward_next_word},
     {L"forward-single-char", readline_cmd_t::forward_single_char},
     {L"forward-word", readline_cmd_t::forward_word},
     {L"history-pager", readline_cmd_t::history_pager},

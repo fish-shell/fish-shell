@@ -22,6 +22,8 @@ enum class readline_cmd_t {
     backward_word,
     forward_bigword,
     backward_bigword,
+    forward_next_word,
+    forward_next_bigword,
     nextd_or_forward_word,
     prevd_or_backward_word,
     history_search_backward,

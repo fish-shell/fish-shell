@@ -97,8 +97,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset j down-or-search
     bind -s --preset b backward-word
     bind -s --preset B backward-bigword
-    bind -s --preset ge forward-single-char backward-word backward-word forward-word backward-char
-    bind -s --preset gE forward-single-char backward-bigword backward-bigword forward-bigword backward-char
+    bind -s --preset ge forward-word backward-word backward-word forward-word backward-char
+    bind -s --preset gE forward-word backward-word backward-bigword forward-bigword backward-char
     bind -s --preset w forward-word forward-single-char
     bind -s --preset W forward-bigword forward-single-char
     bind -s --preset e forward-single-char forward-word backward-char
@@ -263,8 +263,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual j down-line
     bind -s --preset -M visual b backward-word
     bind -s --preset -M visual B backward-bigword
-    bind -s --preset -M visual ge forward-single-char backward-word backward-word forward-word backward-char
-    bind -s --preset -M visual gE forward-single-char backward-bigword backward-bigword forward-bigword backward-char
+    bind -s --preset -M visual ge forward-word backward-word backward-word forward-word backward-char
+    bind -s --preset -M visual gE forward-word backward-word backward-bigword forward-bigword backward-char
     bind -s --preset -M visual w forward-word forward-single-char
     bind -s --preset -M visual W forward-bigword forward-single-char
     bind -s --preset -M visual e forward-single-char forward-word backward-char

@@ -2515,7 +2515,7 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
     // Bummer, we are not in control of the terminal. Stop until parent has given us control of
     // it.
     //
-    // In theory, reseting signal handlers could cause us to miss signal deliveries. In
+    // In theory, resetting signal handlers could cause us to miss signal deliveries. In
     // practice, this code should only be run during startup, when we're not waiting for any
     // signals.
     signal_reset_handlers();
@@ -3086,7 +3086,7 @@ static bool selection_is_at_top(const reader_data_t *data) {
     if (row != 0 && row != PAGER_SELECTION_NONE) return false;
 
     size_t col = pager->get_selected_column(data->current_page_rendering);
-    return !(col != 0 && col != PAGER_SELECTION_NONE);
+    return col == 0 || col == PAGER_SELECTION_NONE;
 }
 
 void reader_data_t::update_commandline_state() const {
@@ -4406,7 +4406,7 @@ parser_test_error_bits_t reader_data_t::expand_for_execute() {
 }
 
 bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
-    // Evaluate. If the current command is unfinished, or if the charater is escaped
+    // Evaluate. If the current command is unfinished, or if the character is escaped
     // using a backslash, insert a newline.
     // If the user hits return while navigating the pager, it only clears the pager.
     if (is_navigating_pager_contents()) {
@@ -4848,8 +4848,8 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     }
 }
 
-int reader_read_ffi(parser_t &parser, int fd) { 
-    return reader_read(parser, fd, {}); 
+int reader_read_ffi(parser_t &parser, int fd) {
+    return reader_read(parser, fd, {});
 }
 
 int reader_read(parser_t &parser, int fd, const io_chain_t &io) {

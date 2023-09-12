@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "common.h"
+#include "env.h"
 #include "maybe.h"
 
 enum class readline_cmd_t {

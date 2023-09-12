@@ -163,7 +163,7 @@ class env_var_t {
 
     rust::Box<EnvVar> impl_;
 };
-typedef std::unordered_map<wcstring, env_var_t> var_table_t;
+using var_table_t = std::unordered_map<wcstring, env_var_t>;
 
 /// An environment is read-only access to variable values.
 class environment_t {

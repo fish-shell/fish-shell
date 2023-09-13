@@ -25,7 +25,7 @@ If both *NAME* and *VALUE* are provided, ``set`` assigns any values to variable 
 Variables in fish are :ref:`lists <variables-lists>`, multiple values are allowed.
 One or more variable *INDEX* can be specified including ranges (not for all options.)
 
-If no *VALUE* is given, the variable will be set to the empty list i.e. ``''``.
+If no *VALUE* is given, the variable will be set to the empty list.
 
 If ``set`` is ran without arguments, it prints the names and values of all shell variables in sorted order.
 Passing :ref:`scope <variables-scope>` or :ref:`export <variables-export>` flags allows filtering this to only matching variables, so ``set --local`` would only show local variables.
@@ -34,7 +34,7 @@ With ``--erase`` and optionally a scope flag ``set`` will erase the matching var
 
 With ``--show``, ``set`` will describe the given variable names, explaining how they have been defined - in which scope with which values and options.
 
-The following scope control variable scope:
+The following options control variable scope:
 
 **-U** or **--universal**
     Sets a universal variable.

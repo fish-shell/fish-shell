@@ -537,7 +537,7 @@ pub fn status(
                     if !var.is_empty() {
                         streams.out.appendln(var);
                     } else {
-                        streams.out.appendln(PROGRAM_NAME.get().unwrap());
+                        streams.out.appendln(*PROGRAM_NAME.get().unwrap());
                     }
                 }
                 STATUS_CURRENT_COMMANDLINE => {

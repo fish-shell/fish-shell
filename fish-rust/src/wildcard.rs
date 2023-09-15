@@ -325,6 +325,8 @@ fn file_get_desc(
         // Weird group permissions and other such issues make it non-trivial to find out if
         // we can actually execute a file using the result from stat. It is much safer to
         // use the access function, since it tells us exactly what we want to know.
+        //
+        // We skip this check in case the caller tells us the file is definitely executable.
         definitely_executable
             || (buf.mode() as mode_t & (S_IXUSR | S_IXGRP | S_IXOTH) != 0)
                 && waccess(filename, X_OK) == 0
@@ -447,6 +449,8 @@ fn wildcard_test_flags_then_complete(
 
     // Compute the description.
     let desc = if expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+        // If we have executables_only, we already checked waccess above,
+        // so we tell file_get_desc that this file is definitely executable so it can skip the check.
         let mut desc = file_get_desc(filename, lstat, stat, executables_only).to_owned();
 
         if !is_directory && !is_executable {

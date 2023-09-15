@@ -50,7 +50,6 @@ function ls --description "List contents of directory"
     __fish_set_lscolors
 
     isatty stdout
-    and set -a opt -F
 
     # Terminal.app doesn't set $COLORTERM or $CLICOLOR,
     # but the new FreeBSD ls requires either to be set,
@@ -61,5 +60,5 @@ function ls --description "List contents of directory"
     test "$TERM_PROGRAM" = Apple_Terminal
     and set -lx CLICOLOR 1
 
-    command $__fish_ls_command $__fish_ls_color_opt $opt $argv
+    command $__fish_ls_command $__fish_ls_color_opt -F $argv
 end

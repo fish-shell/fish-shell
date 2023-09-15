@@ -6,8 +6,7 @@ use super::*;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags};
 use crate::flog::FLOG;
 use crate::parse_util::parse_util_unescape_wildcards;
-use crate::wchar_ffi::WCharToFFI;
-use crate::wildcard::ANY_STRING;
+use crate::wildcard::{wildcard_match, ANY_STRING};
 
 #[derive(Default)]
 pub struct Match<'args> {
@@ -380,13 +379,11 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
     fn report_matches(&mut self, arg: &wstr, streams: &mut io_streams_t) {
         // Note: --all is a no-op for glob matching since the pattern is always matched
         // against the entire argument.
-        use crate::ffi::wildcard_match;
-
         let subject = match self.opts.ignore_case {
             true => arg.to_lowercase(),
             false => arg.to_owned(),
         };
-        let m = wildcard_match(&subject.to_ffi(), &self.pattern.to_ffi(), false);
+        let m = wildcard_match(subject, &self.pattern, false);
 
         if m ^ self.opts.invert_match {
             self.total_matched += 1;

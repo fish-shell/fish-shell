@@ -87,6 +87,7 @@ fn main() {
         "fish-rust/src/trace.rs",
         "fish-rust/src/util.rs",
         "fish-rust/src/wait_handle.rs",
+        "fish-rust/src/wildcard.rs",
     ];
     cxx_build::bridges(&source_files)
         .flag_if_supported("-std=c++11")

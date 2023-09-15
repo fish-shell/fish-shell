@@ -110,7 +110,7 @@ impl TryFrom<&wstr> for EscapeStringStyle {
 bitflags! {
     /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
     /// [`EscapeStringStyle::Script`].
-    #[derive(Default)]
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
     pub struct EscapeFlags: u32 {
         /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
         /// characters and backslashes.
@@ -153,7 +153,7 @@ impl TryFrom<&wstr> for UnescapeStringStyle {
 
 bitflags! {
     /// Flags for unescape_string functions.
-    #[derive(Default)]
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
     pub struct UnescapeFlags: u32 {
         /// escape special fish syntax characters like the semicolon
         const SPECIAL = 1 << 0;

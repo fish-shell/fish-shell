@@ -19,7 +19,7 @@ pub struct CompletionMode {
 pub const PROG_COMPLETE_SEP: char = '\t';
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
     pub struct CompleteFlags: u8 {
     /// Do not insert space afterwards if this is the only completion. (The default is to try insert
     /// a space).

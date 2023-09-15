@@ -15,6 +15,7 @@ pub const SOURCE_OFFSET_INVALID: usize = SourceOffset::MAX as _;
 pub const SOURCE_LOCATION_UNKNOWN: usize = usize::MAX;
 
 bitflags! {
+    #[derive(Copy, Clone, Default)]
     pub struct ParseTreeFlags: u8 {
         /// attempt to build a "parse tree" no matter what. this may result in a 'forest' of
         /// disconnected trees. this is intended to be used by syntax highlighting.
@@ -34,7 +35,7 @@ bitflags! {
 }
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Copy, Clone, Default, Eq, PartialEq)]
     pub struct ParserTestErrorBits: u8 {
         const ERROR = 1;
         const INCOMPLETE = 2;

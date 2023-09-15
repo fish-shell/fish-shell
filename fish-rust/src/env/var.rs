@@ -16,7 +16,7 @@ bitflags! {
     /// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
     /// The default is empty.
     #[repr(C)]
-    #[derive(Default)]
+    #[derive(Copy, Clone, Default, PartialEq, Eq)]
     pub struct EnvMode: u16 {
         /// Flag for local (to the current block) variable.
         const LOCAL = 1 << 0;
@@ -118,6 +118,7 @@ impl Default for Statuses {
 }
 
 bitflags! {
+    #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
     pub struct EnvVarFlags: u8 {
         const EXPORT = 1 << 0;    // whether the variable is exported
         const READ_ONLY = 1 << 1; // whether the variable is read only

@@ -174,8 +174,10 @@ impl CompletionReceiver {
     /// \return a new, empty receiver whose limit is our remaining capacity.
     /// This is useful for e.g. recursive calls when you want to act on the result before adding it.
     pub fn subreceiver(&self) -> Self {
-        // XXX: this should not need to be saturating, we have a faulty invariant
-        let remaining_capacity = self.limit.saturating_sub(self.completions.len());
+        let remaining_capacity = self
+            .limit
+            .checked_sub(self.completions.len())
+            .expect("length should never be larger than limit");
         Self::new(remaining_capacity)
     }
 }

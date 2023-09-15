@@ -69,13 +69,9 @@ fn resolve_description<'f>(
 ) -> WString {
     if let Some(complete_sep_loc) = completion.find_char(PROG_COMPLETE_SEP) {
         // This completion has an embedded description, do not use the generic description.
-        assert!(
-            completion.len() > complete_sep_loc,
-            "resolve_description lacks a length assumption"
-        );
-        let (comp, description) = completion.split_at(complete_sep_loc + 1);
-        *completion = comp;
-        return description.to_owned();
+        let description = completion[complete_sep_loc + 1..].to_owned();
+        *completion = &completion[..complete_sep_loc];
+        return description;
     }
 
     if let Some(f) = description_func {
@@ -143,7 +139,7 @@ fn wildcard_complete_internal(
 
         // If we're not allowing fuzzy match, then we require a prefix match.
         let needs_prefix_match = !params.expand_flags.contains(ExpandFlags::FUZZY_MATCH);
-        if needs_prefix_match && m.is_exact_or_prefix() {
+        if needs_prefix_match && !m.is_exact_or_prefix() {
             return WildcardResult::NoMatch;
         }
 
@@ -464,11 +460,11 @@ fn wildcard_test_flags_then_complete(
 
     // Append a / if this is a directory. Note this requirement may be the only reason we have to
     // call stat() in some cases.
-    let x = |_: &wstr| match desc.as_ref() {
+    let desc_func = |_: &wstr| match desc.as_ref() {
         Some(d) => d.to_owned(),
         None => WString::new(),
     };
-    let desc_func: Option<&dyn Fn(&wstr) -> WString> = Some(&x);
+    let desc_func: Option<&dyn Fn(&wstr) -> WString> = Some(&desc_func);
     if is_directory {
         return wildcard_complete(
             &(filename.to_owned() + L!("/")),
@@ -874,7 +870,7 @@ mod expander {
                     break;
                 };
 
-                if need_dir && entry.is_dir() {
+                if need_dir && !entry.is_dir() {
                     continue;
                 }
 

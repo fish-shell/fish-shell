@@ -160,12 +160,6 @@ impl CompletionReceiver {
         true
     }
 
-    /// Swap our completions with a new list.
-    pub fn swap(&mut self, lst: &mut Vec<Completion>) {
-        // XXX: This completly breaks our completions.len() <= self.limit invariant
-        std::mem::swap(&mut self.completions, lst);
-    }
-
     /// Clear the list of completions. This retains the storage inside completions_ which can be
     /// useful to prevent allocations.
     pub fn clear(&mut self) {

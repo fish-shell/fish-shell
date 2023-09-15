@@ -1,3 +1,6 @@
+#include "config.h"
+
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <term.h>
@@ -47,3 +50,12 @@ uint64_t C_MNT_LOCAL() {
     return 0;
 #endif
 }
+
+static const bool uvar_file_set_mtime_hack =
+#ifdef UVAR_FILE_SET_MTIME_HACK
+    true;
+#else
+    false;
+#endif
+#undef UVAR_FILE_SET_MTIME_HACK
+bool UVAR_FILE_SET_MTIME_HACK() { return uvar_file_set_mtime_hack; }

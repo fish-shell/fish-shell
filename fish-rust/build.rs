@@ -12,6 +12,11 @@ fn main() {
 
     cc::Build::new()
         .file("fish-rust/src/compat.c")
+        .include(
+            &std::env::var("FISH_BUILD_DIR")
+                // Add our default to potentially help tools that don't go through CMake.
+                .unwrap_or("./build".into()),
+        )
         .compile("libcompat.a");
 
     let rust_dir = env!("CARGO_MANIFEST_DIR");

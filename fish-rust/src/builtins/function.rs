@@ -356,16 +356,14 @@ pub fn function(
     for ed in &opts.events {
         match *ed {
             EventDescription::ProcessExit { pid } if pid != event::ANY_PID => {
-                if let Some(status) = parser
-                    .get_wait_handles()
-                    .get_by_pid(pid)
-                    .and_then(|wh| wh.status())
-                {
+                let wh = parser.get_wait_handles().get_by_pid(pid);
+                if let Some(status) = wh.and_then(|wh| wh.status()) {
                     event::fire(parser, event::Event::process_exit(pid, status));
                 }
             }
             EventDescription::JobExit { pid, .. } if pid != event::ANY_PID => {
-                if let Some(wh) = parser.get_wait_handles().get_by_pid(pid) {
+                let wh = parser.get_wait_handles().get_by_pid(pid);
+                if let Some(wh) = wh {
                     if wh.is_completed() {
                         event::fire(parser, event::Event::job_exit(pid, wh.internal_job_id));
                     }

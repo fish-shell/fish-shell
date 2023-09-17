@@ -2108,6 +2108,14 @@ impl ToCString for &[u8] {
     }
 }
 
+// test-only
+#[allow(unused_macros)]
+macro_rules! err {
+    ($format:expr $(, $args:expr)* $(,)? ) => {
+        println!($format $(, $args )*);
+    }
+}
+
 #[allow(unused_macros)]
 macro_rules! fwprintf {
     ($fd:expr, $format:literal $(, $arg:expr)*) => {

@@ -1065,7 +1065,9 @@ pub fn parse_util_detect_errors_in_ast(
             }
         } else if let Some(arg) = node.as_argument() {
             let arg_src = arg.source(buff_src);
-            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors);
+            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
+                .err()
+                .unwrap_or_default();
         } else if let Some(job) = node.as_job_pipeline() {
             // Disallow background in the following cases:
             //
@@ -1146,9 +1148,7 @@ pub fn parse_util_detect_errors_in_argument_list(
     let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);
-        if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors))
-            != ParserTestErrorBits::default()
-        {
+        if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
             return get_error_text(&errors);
         }
     }
@@ -1194,9 +1194,9 @@ pub fn parse_util_detect_errors_in_argument(
     arg: &ast::Argument,
     arg_src: &wstr,
     out_errors: &mut Option<&mut ParseErrorList>,
-) -> ParserTestErrorBits {
+) -> Result<(), ParserTestErrorBits> {
     let Some(source_range) = arg.try_source_range() else {
-        return ParserTestErrorBits::default();
+        return Ok(());
     };
 
     let source_start = source_range.start();
@@ -1292,7 +1292,7 @@ pub fn parse_util_detect_errors_in_argument(
             -1 => {
                 err |= ParserTestErrorBits::ERROR;
                 append_syntax_error!(out_errors, source_start, 1, "Mismatched parenthesis");
-                return err;
+                return Err(err);
             }
             0 => {
                 do_loop = false;
@@ -1305,6 +1305,11 @@ pub fn parse_util_detect_errors_in_argument(
                 );
                 assert!(paren_begin < paren_end, "Parens out of order?");
                 let mut subst_errors = ParseErrorList::new();
+                if let Err(subst_err) =
+                    parse_util_detect_errors(subst, Some(&mut subst_errors), false)
+                {
+                    err |= subst_err;
+                }
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
@@ -1323,7 +1328,11 @@ pub fn parse_util_detect_errors_in_argument(
 
     err |= check_subtoken(checked, arg_src.len(), out_errors);
 
-    err
+    if err.is_empty() {
+        Ok(())
+    } else {
+        Err(err)
+    }
 }
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.

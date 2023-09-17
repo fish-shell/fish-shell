@@ -23,6 +23,7 @@ mod tokenizer_ffi {
     }
 
     /// Token types. XXX Why this isn't ParseTokenType, I'm not really sure.
+    #[derive(Debug)]
     enum TokenType {
         /// Error reading token
         error,
@@ -44,6 +45,7 @@ mod tokenizer_ffi {
         comment,
     }
 
+    #[derive(Debug, Eq, PartialEq)]
     enum TokenizerError {
         none,
         unterminated_quote,
@@ -1146,7 +1148,7 @@ impl PipeOrRedir {
 
     // \return if we are "valid". Here "valid" means only that the source fd did not overflow.
     // For example 99999999999> is invalid.
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         self.fd >= 0
     }
 

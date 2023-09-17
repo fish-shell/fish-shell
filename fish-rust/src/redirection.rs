@@ -15,6 +15,7 @@ mod redirection_ffi {
         type wcharz_t = super::wcharz_t;
     }
 
+    #[derive(Debug)]
     enum RedirectionMode {
         overwrite, // normal redirection: > file.txt
         append,    // appending redirection: >> file.txt

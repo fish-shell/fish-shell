@@ -52,14 +52,14 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
         if !escaped {
             if ['\'', '"'].contains(&c) {
                 pos = quote_end(input, pos, c)?;
-            }
-        } else if c == openc {
-            bracket_count += 1;
-        } else if c == closec {
-            bracket_count -= 1;
-            if bracket_count == 0 {
-                // pos points at the closing ], so add 1.
-                return Some(pos + 1);
+            } else if c == openc {
+                bracket_count += 1;
+            } else if c == closec {
+                bracket_count -= 1;
+                if bracket_count == 0 {
+                    // pos points at the closing ], so add 1.
+                    return Some(pos + 1);
+                }
             }
         }
         if c == '\\' {
@@ -1013,8 +1013,8 @@ pub fn parse_util_detect_errors(
     if !parse_errors.is_empty() {
         if let Some(errors) = out_errors.as_mut() {
             errors.extend(parse_errors);
-            return Err(ParserTestErrorBits::ERROR);
         }
+        return Err(ParserTestErrorBits::ERROR);
     }
 
     // Defer to the tree-walking version.

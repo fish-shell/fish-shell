@@ -3503,20 +3503,27 @@ impl<'s> Populator<'s> {
             return got_error(self);
         }
 
-        // The only block-like builtin that takes any parameters is 'function'. So go to decorated
-        // statements if the subsequent token looks like '--'. The logic here is subtle:
+        // In some cases a block starter is a decorated statement instead, mostly if invoked with "--help".
+        // The logic here is subtle:
         //
-        // If we are 'begin', then we expect to be invoked with no arguments.
-        // If we are 'function', then we are a non-block if we are invoked with -h or --help
+        // If we are 'begin', it's only really a block if it has no arguments.
+        // If we are 'function' or another block starter, then we are a non-block if we are invoked with -h or --help
         // If we are anything else, we require an argument, so do the same thing if the subsequent
         // token is a statement terminator.
         if self.peek_token(0).typ == ParseTokenType::string {
-            // If we are a function, then look for help arguments. Otherwise, if the next token
+            // If we are one of these, then look for specifically help arguments. Otherwise, if the next token
             // looks like an option (starts with a dash), then parse it as a decorated statement.
-            if (self.peek_token(0).keyword == ParseKeyword::kw_function
+            let help_only_kws = [
+                ParseKeyword::kw_begin,
+                ParseKeyword::kw_function,
+                ParseKeyword::kw_if,
+                ParseKeyword::kw_switch,
+                ParseKeyword::kw_while,
+            ];
+            if (help_only_kws.contains(&self.peek_token(0).keyword)
                 && self.peek_token(1).is_help_argument)
-                || (self.peek_token(0).keyword != ParseKeyword::kw_function
-                    && self.peek_token(1).has_dash_prefix)
+                || (!help_only_kws.contains(&self.peek_token(0).keyword)
+                    && self.peek_token(1).is_dash_prefix_string())
             {
                 return new_decorated_statement(self);
             }

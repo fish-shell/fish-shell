@@ -73,3 +73,19 @@ echo "bind -M" | $fish
 # CHECKERR: ^
 # CHECKERR: (Type 'help bind' for related documentation)
 
+$fish -c 'if -e; end'
+# CHECKERR: fish: Unknown command: -e
+# CHECKERR: fish:
+# CHECKERR: if -e; end
+# CHECKERR:    ^^
+
+$fish -c 'begin --notanoption; end'
+# CHECKERR: fish: Unknown command: --notanoption
+# CHECKERR: fish:
+# CHECKERR: begin --notanoption; end
+# CHECKERR:       ^~~~~~~~~~~~^
+
+$fish -c 'begin --help'
+# CHECKERR: fish: begin: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help begin` will show an online version

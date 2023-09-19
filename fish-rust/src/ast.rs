@@ -3514,6 +3514,7 @@ impl<'s> Populator<'s> {
             // If we are one of these, then look for specifically help arguments. Otherwise, if the next token
             // looks like an option (starts with a dash), then parse it as a decorated statement.
             let help_only_kws = [
+                ParseKeyword::kw_begin,
                 ParseKeyword::kw_function,
                 ParseKeyword::kw_if,
                 ParseKeyword::kw_switch,

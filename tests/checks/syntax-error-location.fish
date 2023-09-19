@@ -78,3 +78,14 @@ $fish -c 'if -e; end'
 # CHECKERR: fish:
 # CHECKERR: if -e; end
 # CHECKERR:    ^^
+
+$fish -c 'begin --notanoption; end'
+# CHECKERR: fish: Unknown command: --notanoption
+# CHECKERR: fish:
+# CHECKERR: begin --notanoption; end
+# CHECKERR:       ^~~~~~~~~~~~^
+
+$fish -c 'begin --help'
+# CHECKERR: fish: begin: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help begin` will show an online version

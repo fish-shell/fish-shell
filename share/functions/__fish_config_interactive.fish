@@ -244,10 +244,10 @@ end" >$__fish_config_dir/config.fish
         # VTE reflows the text itself, so us doing it inevitably races against it.
         # Guidance from the VTE developers is to let them repaint.
         if set -q VTE_VERSION
-            # Same for alacritty
+            # Same for these terminals
             or string match -q -- 'alacritty*' $TERM
-            # Same for kitty
             or string match -q -- '*kitty' $TERM
+            or test "$TERM_PROGRAM" = WezTerm
             set -g fish_handle_reflow 0
         else if set -q KONSOLE_VERSION
             and test "$KONSOLE_VERSION" -ge 210400 2>/dev/null

@@ -1,4 +1,4 @@
-#loginctl (systemd 248)
+#loginctl (systemd 254)
 
 #variables
 set -l seen __fish_seen_subcommand_from
@@ -25,3 +25,23 @@ complete -c loginctl -x -n "not $seen $commands" -s P -d "Equivalent to --value 
 complete -c loginctl -x -n "not $seen $commands" -l signal -s s -d "Which signal to send"
 complete -c loginctl -f -n "not $seen $commands" -l value -d "When showing properties, only print the value"
 complete -c loginctl -f -n "not $seen $commands" -l version -d "Show package version"
+
+
+function list_sessions
+    loginctl list-sessions --no-legend --no-pager --output=short | awk '{print $1"\t"$3" at "$5}'
+end
+
+
+function list_users
+    loginctl list-users --no-legend --no-pager --output=short | awk '{print $1"\t"$2}'
+end
+
+
+function list_seats
+    loginctl list-seats --no-legend --no-pager --output=short
+end
+
+
+complete -f -c loginctl -n "$seen session-status show-session activate lock-session unlock-session terminate-session kill-session" -a '(list_sessions)'
+complete -f -c loginctl -n "$seen show-user show-user enable-linger disable-linger terminate-user kill-user" -a '(list_users)'
+complete -f -c loginctl -n "$seen show-seat show-seat attach terminate-seat" -a '(list_seats)'

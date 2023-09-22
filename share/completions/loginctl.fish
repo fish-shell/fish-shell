@@ -5,6 +5,8 @@ set -l seen __fish_seen_subcommand_from
 set -l commands activate attach disable-linger enable-linger flush-devices kill-session kill-user list-seats list-sessions list-users lock-session lock-sessions seat-status session-status show-seat show-session show-user terminate-seat terminate-session terminate-user unlock-session unlock-sessions user-status
 set -l output cat export json json-pretty json-seq json-sse short short-full short-iso short-iso-precise short-monotonic short-precise short-unix verbose with-unit
 
+complete -c loginctl -f
+
 #commands
 complete -c loginctl -x -n "not $seen $commands" -a "$commands"
 
@@ -27,21 +29,21 @@ complete -c loginctl -f -n "not $seen $commands" -l value -d "When showing prope
 complete -c loginctl -f -n "not $seen $commands" -l version -d "Show package version"
 
 
-function list_sessions
-    loginctl list-sessions --no-legend --no-pager --output=short | awk '{print $1"\t"$3" at "$5}'
+function __fish_loginctl_list_sessions
+    loginctl list-sessions --no-legend --no-pager --output=short | string replace -r '(\d+) \d+ (\S+) \S+ (\S+) .*' '$1\t$2 at $3'
 end
 
 
-function list_users
-    loginctl list-users --no-legend --no-pager --output=short | awk '{print $1"\t"$2}'
+function __fish_loginctl_list_users
+    loginctl list-users --no-legend --no-pager --output=short | string replace -r '(\d+) (\S+) .*' '$1\t$2'
 end
 
 
-function list_seats
+function __fish_loginctl_list_seats
     loginctl list-seats --no-legend --no-pager --output=short
 end
 
 
-complete -f -c loginctl -n "$seen session-status show-session activate lock-session unlock-session terminate-session kill-session" -a '(list_sessions)'
-complete -f -c loginctl -n "$seen show-user show-user enable-linger disable-linger terminate-user kill-user" -a '(list_users)'
-complete -f -c loginctl -n "$seen show-seat show-seat attach terminate-seat" -a '(list_seats)'
+complete -c loginctl -n "$seen session-status show-session activate lock-session unlock-session terminate-session kill-session" -a '(__fish_loginctl_list_sessions)'
+complete -c loginctl -n "$seen show-user show-user enable-linger disable-linger terminate-user kill-user" -a '(__fish_loginctl_list_users)'
+complete -c loginctl -n "$seen show-seat show-seat attach terminate-seat" -a '(__fish_loginctl_list_seats)'

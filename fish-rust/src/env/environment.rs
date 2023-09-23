@@ -70,13 +70,10 @@ pub trait Environment {
     fn get_pwd_slash(&self) -> WString {
         // Return "/" if PWD is missing.
         // See https://github.com/fish-shell/fish-shell/issues/5080
-        let Some(var) = self.get(L!("PWD")) else {
+        let Some(var) = self.get_unless_empty(L!("PWD")) else {
             return WString::from("/");
         };
-        let mut pwd = WString::new();
-        if var.is_empty() {
-            pwd = var.as_string();
-        }
+        let mut pwd = var.as_string();
         if !pwd.ends_with('/') {
             pwd.push('/');
         }

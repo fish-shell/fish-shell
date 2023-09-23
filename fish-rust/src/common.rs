@@ -1286,7 +1286,7 @@ pub fn format_size(mut sz: i64) -> WString {
 }
 
 /// Version of format_size that does not allocate memory.
-fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
+pub fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
     let buff_size = 128;
     let max_len = buff_size - 1; // need to leave room for a null terminator
     buff.fill(0);
@@ -1339,10 +1339,12 @@ fn format_safe_impl<CharT: From<u8>>(buff: &mut [CharT], size: usize, mut val: u
     let mut idx = 0;
     if val == 0 {
         buff[idx] = CharT::from(b'0');
+        idx += 1;
     } else {
         // Generate the string backwards, then reverse it.
         while val != 0 {
             buff[idx] = CharT::from((val % 10) as u8 + b'0');
+            idx += 1;
             val /= 10;
         }
         buff[..idx].reverse();
@@ -1363,10 +1365,11 @@ fn append_ull(buff: &mut [u8], val: &mut u64, inout_idx: &mut usize, max_len: us
 
 fn append_str(buff: &mut [u8], s: &str, inout_idx: &mut usize, max_len: usize) {
     let mut idx = *inout_idx;
-    let bytes = s.as_bytes();
-    while idx < bytes.len().min(max_len) {
-        buff[idx] = bytes[idx];
+    let mut bytes = s.as_bytes();
+    while !bytes.is_empty() && idx < max_len {
+        buff[idx] = bytes[0];
         idx += 1;
+        bytes = &bytes[1..];
     }
     *inout_idx = idx;
 }

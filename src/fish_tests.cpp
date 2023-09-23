@@ -367,38 +367,6 @@ static void test_enum_array() {
     do_test(es.at(test_enum::gamma) == "def");
 }
 
-static void test_format() {
-    say(L"Testing formatting functions");
-    struct {
-        unsigned long long val;
-        const char *expected;
-    } tests[] = {{0, "empty"},  {1, "1B"},       {2, "2B"},
-                 {1024, "1kB"}, {1870, "1.8kB"}, {4322911, "4.1MB"}};
-    for (const auto &test : tests) {
-        char buff[128];
-        format_size_safe(buff, test.val);
-        do_test(!std::strcmp(buff, test.expected));
-    }
-
-    for (int j = -129; j <= 129; j++) {
-        char buff1[128], buff2[128];
-        format_long_safe(buff1, j);
-        snprintf(buff2, 128, "%d", j);
-        do_test(!std::strcmp(buff1, buff2));
-
-        wchar_t wbuf1[128], wbuf2[128];
-        format_long_safe(wbuf1, j);
-        std::swprintf(wbuf2, 128, L"%d", j);
-        do_test(!std::wcscmp(wbuf1, wbuf2));
-    }
-
-    long q = LONG_MIN;
-    char buff1[128], buff2[128];
-    format_long_safe(buff1, q);
-    snprintf(buff2, 128, "%ld", q);
-    do_test(!std::strcmp(buff1, buff2));
-}
-
 /// Helper to convert a narrow string to a sequence of hex digits.
 static std::string str2hex(const std::string &input) {
     std::string output;
@@ -5383,7 +5351,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
     {TEST_GROUP("new_parser_errors"), test_new_parser_errors},
     {TEST_GROUP("error_messages"), test_error_messages},
-    {TEST_GROUP("format"), test_format},
     {TEST_GROUP("convert"), test_convert},
     {TEST_GROUP("convert"), test_convert_private_use},
     {TEST_GROUP("convert_ascii"), test_convert_ascii},

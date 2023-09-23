@@ -1,0 +1,1 @@
+doctl completion fish | source

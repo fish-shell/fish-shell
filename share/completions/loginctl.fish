@@ -45,5 +45,5 @@ end
 
 
 complete -c loginctl -n "$seen session-status show-session activate lock-session unlock-session terminate-session kill-session" -a '(__fish_loginctl_list_sessions)'
-complete -c loginctl -n "$seen show-user show-user enable-linger disable-linger terminate-user kill-user" -a '(__fish_loginctl_list_users)'
-complete -c loginctl -n "$seen show-seat show-seat attach terminate-seat" -a '(__fish_loginctl_list_seats)'
+complete -c loginctl -n "$seen user-status show-user enable-linger disable-linger terminate-user kill-user" -a '(__fish_loginctl_list_users)'
+complete -c loginctl -n "$seen seat-status show-seat attach terminate-seat" -a '(__fish_loginctl_list_seats)'

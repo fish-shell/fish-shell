@@ -133,8 +133,7 @@ fn tv_to_msec(tv: &libc::timeval) -> i64 {
 fn print_rusage_self() {
     let mut rs = MaybeUninit::uninit();
     if unsafe { libc::getrusage(libc::RUSAGE_SELF, rs.as_mut_ptr()) } != 0 {
-        let s = CString::new("getrusage").unwrap();
-        unsafe { libc::perror(s.as_ptr()) }
+        unsafe { libc::perror("getrusage\0".as_ptr() as _) }
         return;
     }
     let rs: libc::rusage = unsafe { rs.assume_init() };
@@ -536,9 +535,8 @@ fn main() -> i32 {
     signal_unblock_all();
 
     {
-        let s = CString::new("").unwrap();
         unsafe {
-            libc::setlocale(libc::LC_ALL, s.as_ptr());
+            libc::setlocale(libc::LC_ALL, "\0".as_ptr() as _);
         }
     }
 
@@ -570,13 +568,11 @@ fn main() -> i32 {
     let mut debug_output = std::ptr::null_mut();
     if let Some(debug_path) = opts.debug_output {
         let path = cstr_from_osstr(&debug_path);
-        let mode = CString::new("w").unwrap();
-        let debug_file = unsafe { libc::fopen(path.as_ptr(), mode.as_ptr()) };
+        let debug_file = unsafe { libc::fopen(path.as_ptr(), "w\0".as_ptr() as _) };
 
         if debug_file.is_null() {
             eprintln!("Could not open file {:?}", debug_output);
-            let s = CString::new("fopen").unwrap();
-            unsafe { libc::perror(s.as_ptr()) }
+            unsafe { libc::perror("fopen\0".as_ptr() as _) }
             std::process::exit(-1);
         }
 

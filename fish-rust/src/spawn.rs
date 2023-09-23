@@ -221,10 +221,11 @@ fn blocked_signals_for_job(job: &job_t, sigmask: &mut libc::sigset_t) {
     }
 }
 
-fn get_path_bshell() -> CString {
+#[inline(always)]
+fn get_path_bshell() -> &'static str {
     // TODO: this should really use _PATH_BSHELL, but this is only used in an edge case for posix_spawns
     // which fail to run Thompson shell scripts; we simply assume it is /bin/sh.
-    CString::new("/bin/sh").unwrap()
+    "/bin/sh\0"
 }
 
 /// Returns a Box<PosixSpawner>::into_raw(), or nullptr on error, in which case errno is set.

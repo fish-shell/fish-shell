@@ -1749,8 +1749,7 @@ pub fn fish_reserved_codepoint(c: char) -> bool {
 pub fn redirect_tty_output() {
     unsafe {
         let mut t: libc::termios = mem::zeroed();
-        let s = CString::new("/dev/null").unwrap();
-        let fd = libc::open(s.as_ptr(), O_WRONLY);
+        let fd = libc::open("/dev/null\0".as_ptr() as _, O_WRONLY);
         assert!(fd != -1, "Could not open /dev/null!");
         for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
             if libc::tcgetattr(stdfd, &mut t) == -1 && errno::errno().0 == EIO {

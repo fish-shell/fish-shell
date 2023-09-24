@@ -3272,7 +3272,6 @@ class history_tests_t {
     static void test_history_merge();
     static void test_history_path_detection();
     static void test_history_formats();
-    // static void test_history_speed(void);
     static void test_history_races();
     static void test_history_races_pound_on_history(size_t item_count, size_t idx);
 };
@@ -3832,35 +3831,6 @@ void history_tests_t::test_history_formats() {
         test_history->clear();
     }
 }
-
-#if 0
-// This test isn't run at this time. It was added by commit b9283d48 but not actually enabled.
-void history_tests_t::test_history_speed(void)
-{
-    say(L"Testing history speed (pid is %d)", getpid());
-    std::unique_ptr<history_t> hist = make_unique<history_t>(L"speed_test");
-    wcstring item = L"History Speed Test - X";
-
-    // Test for 10 seconds.
-    double start = timef();
-    double end = start + 10;
-    double stop = 0;
-    size_t count = 0;
-    for (;;)
-    {
-        item[item.size() - 1] = L'0' + (count % 10);
-        hist->add(item);
-        count++;
-
-        stop = timef();
-        if (stop >= end)
-            break;
-    }
-    std::fwprintf(stdout, L"%lu items - %.2f msec per item\n", (unsigned long)count,
-             (stop - start) * 1E6 / count);
-    hist->clear();
-}
-#endif
 
 static void test_new_parser_correctness() {
     say(L"Testing parser correctness");

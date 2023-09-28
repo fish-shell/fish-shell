@@ -630,6 +630,9 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir,
                                                       const wcstring &prefix) {
     std::string narrow;
     const dir_iter_t::entry_t *entry{};
+    // If we have an empty remainder (the glob ended in "/"),
+    // and we're not recursive, we're the last segment.
+    bool is_final = !*wc_remainder && wc_segment.find(ANY_STRING_RECURSIVE) == wcstring::npos;
     while (!interrupted_or_overflowed() && (entry = base_dir_iter.next())) {
         // Note that it's critical we ignore leading dots here, else we may descend into . and ..
         if (!wildcard_match(entry->name, wc_segment, true)) {
@@ -638,6 +641,15 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir,
         }
 
         if (!entry->is_dir()) {
+            continue;
+        }
+
+        if (is_final) {
+            // Let's still expand the final segment, so we get sorting and such,
+            // but there's no need to make a file_id, so we can skip the stat().
+            wcstring full_path = base_dir + entry->name;
+            full_path.push_back(L'/');
+            this->expand(full_path, wc_remainder, prefix + wc_segment + L'/');
             continue;
         }
 

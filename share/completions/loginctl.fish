@@ -30,7 +30,7 @@ complete -c loginctl -f -n "not $seen $commands" -l version -d "Show package ver
 
 
 function __fish_loginctl_list_sessions
-    loginctl list-sessions --no-legend --no-pager --output=short | string replace -r '(\d+) \d+ (\S+) \S+ (\S+) .*' '$1\t$2 at $3'
+    loginctl list-sessions --no-legend --no-pager --output=short | string replace -r '(\d+) \d+ (\S+) (\S*|\s+) (\S+) .*' '$1\t$2 at $4'
 end
 
 

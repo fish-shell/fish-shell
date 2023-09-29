@@ -118,6 +118,7 @@ pub struct Term {
     pub set_a_background: Option<CString>,
     pub set_background: Option<CString>,
     pub exit_attribute_mode: Option<CString>,
+    pub set_title: Option<CString>,
 
     // Number capabilities
     pub max_colors: Option<i32>,
@@ -145,6 +146,7 @@ impl Term {
             set_a_background: get_str_cap("AB"),
             set_background: get_str_cap("Sb"),
             exit_attribute_mode: get_str_cap("me"),
+            set_title: get_str_cap("ts"),
 
             // Number capabilities
             max_colors: get_num_cap("Co"),

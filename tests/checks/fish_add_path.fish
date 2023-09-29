@@ -36,6 +36,13 @@ fish_add_path -v $tmpdir/link
 echo $status
 # CHECK: 0
 
+# Relative paths are made absolute
+set -l oldpwd $PWD
+cd $tmpdir
+fish_add_path -nv sbin .
+# CHECK: set fish_user_paths /{{.*}}/sbin /{{.*}} /{{.*}}/link /{{.*}}/bin
+cd $oldpwd
+
 fish_add_path -a $tmpdir/sbin
 # Not printing anything because it's not verbose, the /sbin should be added at the end.
 string replace -- $tmpdir '' $fish_user_paths | string join ' '

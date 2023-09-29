@@ -60,6 +60,7 @@ Completions
 - ``horcrux`` (:issue:`9922`).
 - ``java_home`` (:issue:`9998`).
 - ``crc`` (:issue:`10034`).
+- ``oc`` (:issue:`10034`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

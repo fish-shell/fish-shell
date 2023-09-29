@@ -59,6 +59,7 @@ Completions
 - ``gimp`` (:issue:`9904`).
 - ``horcrux`` (:issue:`9922`).
 - ``java_home`` (:issue:`9998`).
+- ``crc`` (:issue:`10034`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

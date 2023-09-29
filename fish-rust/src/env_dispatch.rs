@@ -612,7 +612,7 @@ fn does_term_support_setting_title(vars: &EnvStack) -> bool {
     };
     let term: &wstr = term.as_ref();
 
-    if curses::term().is_some_and(|term| term.set_title.is_some()) {
+    if curses::term().map(|term| term.set_title.is_some()) == Some(true) {
         return true;
     }
 

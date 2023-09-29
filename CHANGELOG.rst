@@ -62,6 +62,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- Fish now checks for the ``ts`` capability in terminfo to determine if a terminal supports setting the window title.
 
 Other improvements
 ------------------

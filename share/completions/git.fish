@@ -347,7 +347,7 @@ function __fish_git_files
                 # Only do this if the filename isn't a simple child,
                 # or the current token starts with ":"
                 if set -ql colon[1]; or string match -q '../*' -- $file
-                    set -l fromroot (builtin realpath -- $file 2>/dev/null)
+                    set -l fromroot (path resolve -- $file 2>/dev/null)
                     # `:` starts pathspec "magic", and the second `:` terminates it.
                     # `/` is the magic letter for "from repo root".
                     # If we didn't terminate it we'd have to escape any special chars

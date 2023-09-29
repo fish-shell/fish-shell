@@ -1514,6 +1514,11 @@ You can change the settings of fish by changing the values of certain variables.
    If this is set to 1, fish will assume the terminal understands 256 colors, and won't translate matching colors down to the 16 color palette.
    This is usually autodetected.
 
+.. envvar:: fish_termtitle
+
+   If this is set to 1, fish will assume the terminal is capable of setting the window title.
+   This is usually autodetected.
+
 .. envvar:: fish_ambiguous_width
 
    controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal renders these characters as single-width (typical), or 2 if double-width.

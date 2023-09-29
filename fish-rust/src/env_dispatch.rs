@@ -601,6 +601,18 @@ fn apply_non_term_hacks(vars: &EnvStack) {
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
 fn does_term_support_setting_title(vars: &EnvStack) -> bool {
+    // If the user has told us their terminal supports setting the title then assume that it does
+    if let Some(fish_termtitle) = vars.get(L!("fish_termtitle")).map(|v| v.as_string()) {
+        // $fish_termtitle
+        if crate::wcstringutil::bool_from_string(&fish_termtitle) {
+            FLOG!(
+                term_support,
+                "$fish_termtitle set: assuming terminal can set title"
+            );
+            return true;
+        }
+    }
+
     #[rustfmt::skip]
     const TITLE_TERMS: &[&wstr] = &[
         L!("xterm"), L!("screen"),    L!("tmux"),    L!("nxterm"),

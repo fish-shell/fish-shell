@@ -63,6 +63,8 @@ Completions
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+- Add ``fish_termtitle`` variable to force fish to assume that the terminal is capable of setting the window title rather than relying on heuristics.
+
 Other improvements
 ------------------
 - A bug that prevented certain executables from being offered in tab-completions when root has been fixed (:issue:`9639`).

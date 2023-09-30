@@ -8,8 +8,7 @@ function __fish_watchexec_print_remaining_args
 
     # The remaining argv is the subcommand with all its options, which is what
     # we want.
-    echo "argv=$argv" >> argv
-    if test -n "$argv"
+    if set -q argv[1]
         and not string match -qr '^-.*' -- $argv[1]
         string join0 -- $argv
         return 0
@@ -20,13 +19,11 @@ end
 
 function __fish_watchexec_complete_subcommand
     set -l args (__fish_watchexec_print_remaining_args | string split0) 
-       complete -C "$args"
+    complete -C "$args"
 end
 
 function __fish_watchexec_at_argfile
-    set current (commandline -ct)
-    echo $current > current
-    echo (count (commandline -opc)) > count
+    set -l current (commandline -ct)
     if test (count (commandline -opc)) -eq 1 
         and string match -q '@*' -- $current
 

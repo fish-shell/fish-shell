@@ -883,8 +883,12 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
                 clear_remainder = prev_width > current_width;
             }
         }
+
+        // We unset the color even if we don't clear the line.
+        // This means that we switch background correctly on the next,
+        // including our weird implicit bolding.
+        set_color(highlight_spec_t{});
         if (clear_remainder && clr_eol) {
-            set_color(highlight_spec_t{});
             this->move(current_width, static_cast<int>(i));
             this->write_mbs(clr_eol);
         }

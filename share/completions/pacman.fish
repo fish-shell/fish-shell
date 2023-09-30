@@ -9,10 +9,14 @@ set -l listinstalled "(__fish_print_pacman_packages --installed)"
 set -l listall "(__fish_print_pacman_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
 set -l listgroups "(pacman -Sg)\t'Package Group'"
+# Theoretically, pacman reads packages in all formats that libarchive supports
+# In practice, it's going to be tar.xz, tar.gz, tar.zst, or just pkg.tar (uncompressed pkg)
+set -l listfiles '(__fish_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz pkg.tar)'
 
 set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s F database query sync remove upgrade deptest files'
 set -l database '__fish_contains_opt -s D database'
 set -l query '__fish_contains_opt -s Q query'
+set -l queryfile '__fish_contains_opt -s p file'
 set -l remove '__fish_contains_opt -s R remove'
 set -l sync '__fish_contains_opt -s S sync'
 set -l upgrade '__fish_contains_opt -s U upgrade'
@@ -120,7 +124,8 @@ complete -c $progname -n "$query" -s p -l file -d 'Query a package file instead 
 complete -c $progname -n "$query" -s s -l search -d 'Search locally-installed packages for regexp' -f
 complete -c $progname -n "$query" -s t -l unrequired -d 'List only unrequired packages [and optdepends]' -f
 complete -c $progname -n "$query" -s u -l upgrades -d 'List only out-of-date packages' -f
-complete -c $progname -n "$query" -d 'Installed package' -xa "$listinstalled"
+complete -c $progname -n "$query" -n "not $queryfile" -d 'Installed package' -xa "$listinstalled"
+complete -c $progname -n "$query" -n "$queryfile" -d 'Package file' -k -xa "$listfiles"
 
 # Remove options
 complete -c $progname -n "$remove" -s c -l cascade -d 'Also remove packages depending on PACKAGE' -f
@@ -139,6 +144,4 @@ complete -c $progname -n "$sync" -s w -l downloadonly -d 'Only download the targ
 complete -c $progname -n "$sync" -xa "$listall $listgroups"
 
 # Upgrade options
-# Theoretically, pacman reads packages in all formats that libarchive supports
-# In practice, it's going to be tar.xz, tar.gz, tar.zst, or just pkg.tar (uncompressed pkg)
-complete -c $progname -n "$upgrade" -k -xa '(__fish_complete_suffix pkg.tar.zst pkg.tar.xz pkg.tar.gz pkg.tar)' -d 'Package file'
+complete -c $progname -n "$upgrade" -k -xa "$listfiles" -d 'Package file'

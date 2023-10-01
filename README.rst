@@ -112,6 +112,17 @@ The following optional features also have specific requirements:
 -  ``colorls`` is used, if installed, to add color when running ``ls`` on platforms
    that do not have color support (such as OpenBSD)
 
+
+Test driving fish
+~~~~~~~~~~~~~~~~~
+
+If you want to try fish but want to have a fallback to your old workflow, you can use the following trick:
+Let assume without loss of generality that your default shell is bash. Just add``fish`` at the end of 
+your ``.bashrc`` file. Then, when you open a new terminal, you will be in fish. If you want to go back 
+to bash, press ``Ctrl-D``. This way all configuration from your ``.bashrc`` will be inherited by fish
+as well.
+
+
 Switching to fish
 ~~~~~~~~~~~~~~~~~
 
@@ -134,6 +145,7 @@ Use the following command if fish isn’t already added to ``/etc/shells`` to pe
 To switch your default shell back, you can run ``chsh -s /bin/bash``
 (substituting ``/bin/bash`` with ``/bin/tcsh`` or ``/bin/zsh`` as
 appropriate).
+
 
 Building
 --------

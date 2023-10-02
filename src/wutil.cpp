@@ -228,9 +228,12 @@ const dir_iter_t::entry_t *dir_iter_t::next() {
     entry_.inode = dent->d_ino;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
     auto type = dirent_type_to_entry_type(dent->d_type);
-    // Do not store symlinks as we will need to resolve them.
+    // Do not store symlinks as type as we will need to resolve them.
     if (type != dir_entry_type_t::lnk) {
         entry_.type_ = type;
+        // But store if we know it can't be a link.
+        // If it is unknown, it could still be a link.
+        entry_.possible_link_ = !type.has_value();
     }
 #endif
     return &entry_;

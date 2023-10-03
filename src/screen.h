@@ -335,5 +335,6 @@ maybe_t<size_t> escape_code_length(const wchar_t *code);
 // Always return a value, by moving checking of sequence start to the caller.
 long escape_code_length_ffi(const wchar_t *code);
 
+wcstring screen_clear();
 void screen_set_midnight_commander_hack();
 #endif

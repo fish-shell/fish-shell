@@ -107,6 +107,7 @@ static constexpr const input_function_metadata_t input_function_metadata[] = {
     {L"cancel", readline_cmd_t::cancel},
     {L"cancel-commandline", readline_cmd_t::cancel_commandline},
     {L"capitalize-word", readline_cmd_t::capitalize_word},
+    {L"clear-screen", readline_cmd_t::clear_screen_and_repaint},
     {L"complete", readline_cmd_t::complete},
     {L"complete-and-search", readline_cmd_t::complete_and_search},
     {L"delete-char", readline_cmd_t::delete_char},

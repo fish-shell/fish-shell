@@ -852,7 +852,7 @@ mod expander {
                     // TODO: justify this, tests do not exercise it yet.
                     if m.rank() > c.r#match.rank() {
                         // Our match is fuzzier.
-                        c.r#match = m.clone();
+                        c.r#match = m;
                     }
                 }
             }

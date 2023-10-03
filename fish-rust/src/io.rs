@@ -352,8 +352,8 @@ impl IoBufferfill {
             }
         }
         // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
-        let mut buffer = Arc::new(RwLock::new(IoBuffer::new(buffer_limit)));
-        begin_filling(&mut buffer, pipes.read);
+        let buffer = Arc::new(RwLock::new(IoBuffer::new(buffer_limit)));
+        begin_filling(&buffer, pipes.read);
         assert!(pipes.write.is_valid(), "fd is not valid");
         Some(Rc::new(IoBufferfill {
             target,
@@ -511,7 +511,7 @@ impl IoBuffer {
 }
 
 /// Begin the fill operation, reading from the given fd in the background.
-fn begin_filling(iobuffer: &mut Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
+fn begin_filling(iobuffer: &Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
     assert!(
         !iobuffer.read().unwrap().fillthread_running(),
         "Already have a fillthread"

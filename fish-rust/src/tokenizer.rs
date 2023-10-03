@@ -634,7 +634,7 @@ impl Tokenizer {
         fn process_opening_quote(
             this: &mut Tokenizer,
             quoted_cmdsubs: &mut Vec<usize>,
-            paran_offsets: &mut Vec<usize>,
+            paran_offsets: &Vec<usize>,
             quote: char,
         ) -> Result<(), usize> {
             if let Some(end) = quote_end(&this.start, this.token_cursor, quote) {
@@ -705,7 +705,7 @@ impl Tokenizer {
                     // The "$(" part of a quoted command substitution closes double quotes. To keep
                     // quotes balanced, act as if there was an invisible double quote after the ")".
                     if let Err(error_loc) =
-                        process_opening_quote(self, &mut quoted_cmdsubs, &mut paran_offsets, '"')
+                        process_opening_quote(self, &mut quoted_cmdsubs, &paran_offsets, '"')
                     {
                         if !self.accept_unfinished {
                             return self.call_error(
@@ -759,7 +759,7 @@ impl Tokenizer {
                 mode &= !TOK_MODE_ARRAY_BRACKETS;
             } else if c == '\'' || c == '"' {
                 if let Err(error_loc) =
-                    process_opening_quote(self, &mut quoted_cmdsubs, &mut paran_offsets, c)
+                    process_opening_quote(self, &mut quoted_cmdsubs, &paran_offsets, c)
                 {
                     if !self.accept_unfinished {
                         return self.call_error(

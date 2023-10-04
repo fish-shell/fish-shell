@@ -143,7 +143,7 @@ The following special input functions are available:
     make the current word begin with a capital letter
 
 ``clear-screen``
-    clears the screen and redraws the prompt. if the terminal doesn't support clearing the screen it does nothing.
+    clears the screen and redraws the prompt. if the terminal doesn't support clearing the screen it is the same as ``repaint``.
 
 ``complete``
     guess the remainder of the current token

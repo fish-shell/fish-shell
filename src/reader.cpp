@@ -4340,6 +4340,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::clear_screen_and_repaint: {
+            parser().libdata().is_repaint = true;
             auto clear = screen_clear();
             if (!clear.empty()) {
                 // Clear the screen if we can.
@@ -4349,15 +4350,14 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // while keeping the prompt up-to-date.
                 outputter_t &outp = stdoutput();
                 outp.writestr(clear.c_str());
-                parser().libdata().is_repaint = true;
                 screen.reset_line(true /* redraw prompt */);
                 this->layout_and_repaint(L"readline");
-                exec_prompt();
-                screen.reset_line(true /* redraw prompt */);
-                this->layout_and_repaint(L"readline");
-                force_exec_prompt_and_repaint = false;
-                parser().libdata().is_repaint = false;
             }
+            exec_prompt();
+            screen.reset_line(true /* redraw prompt */);
+            this->layout_and_repaint(L"readline");
+            force_exec_prompt_and_repaint = false;
+            parser().libdata().is_repaint = false;
             break;
         }
         // Some commands should have been handled internally by inputter_t::readch().

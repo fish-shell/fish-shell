@@ -262,7 +262,7 @@ class SpawnedProc(object):
         filename, lineno, code_context = get_callsite()
         fmtkeys["filename"] = filename
         fmtkeys["lineno"] = lineno
-        fmtkeys["code"] = "\n".join(code_context)
+        fmtkeys["code"] = "\n".join([n.strip() for n in code_context if n])
 
         if unmatched:
             print(
@@ -285,7 +285,10 @@ class SpawnedProc(object):
         print("{CYAN}<-------{RESET}".format(**colors))
         sys.stdout.write(self.spawn.before)
         sys.stdout.flush()
-        print("{RESET}\n{CYAN}------->{RESET}".format(**colors))
+        maybe_nl=""
+        if not self.spawn.before.endswith("\n"):
+            maybe_nl="\n{CYAN}(no trailing newline)".format(**colors)
+        print("{RESET}{maybe_nl}{CYAN}------->{RESET}".format(maybe_nl=maybe_nl, **colors))
 
         print("")
 

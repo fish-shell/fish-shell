@@ -866,7 +866,7 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
             last_type = std::mem::discriminant(&evt.desc);
             streams
                 .out
-                .append(&sprintf!(L!("Event %ls\n"), evt.desc.name()));
+                .append(sprintf!(L!("Event %ls\n"), evt.desc.name()));
         }
 
         match &evt.desc {
@@ -874,18 +874,18 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
                 let name: WString = signal.name().into();
                 streams
                     .out
-                    .append(&sprintf!(L!("%ls %ls\n"), name, evt.function_name));
+                    .append(sprintf!(L!("%ls %ls\n"), name, evt.function_name));
             }
             EventDescription::ProcessExit { .. } | EventDescription::JobExit { .. } => {}
             EventDescription::CallerExit { .. } => {
                 streams
                     .out
-                    .append(&sprintf!(L!("caller-exit %ls\n"), evt.function_name));
+                    .append(sprintf!(L!("caller-exit %ls\n"), evt.function_name));
             }
             EventDescription::Variable { name: param } | EventDescription::Generic { param } => {
                 streams
                     .out
-                    .append(&sprintf!(L!("%ls %ls\n"), param, evt.function_name));
+                    .append(sprintf!(L!("%ls %ls\n"), param, evt.function_name));
             }
             EventDescription::Any => unreachable!(),
         }

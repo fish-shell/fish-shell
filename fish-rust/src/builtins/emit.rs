@@ -23,7 +23,7 @@ pub fn emit(
     let Some(event_name) = argv.get(opts.optind) else {
         streams
             .err
-            .append(&sprintf!("%ls: expected event name\n"L, cmd));
+            .append(sprintf!("%ls: expected event name\n"L, cmd));
         return STATUS_INVALID_ARGS;
     };
 

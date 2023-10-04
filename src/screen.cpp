@@ -267,7 +267,10 @@ maybe_t<size_t> escape_code_length(const wchar_t *code) {
 }
 
 wcstring screen_clear() {
-    return str2wcstring(clear_screen);
+    if (clear_screen) {
+        return str2wcstring(clear_screen);
+    }
+    return wcstring{};
 }
 
 long escape_code_length_ffi(const wchar_t *code) {

@@ -698,7 +698,7 @@ impl<'a> builtin_printf_state_t<'a> {
         while !str.is_empty() {
             let c = str.char_at(0);
             if c == '\\' {
-                let consumed_minus_1 = self.print_esc(str, false);
+                let consumed_minus_1 = self.print_esc(str, true);
                 str = &str[consumed_minus_1..];
             } else {
                 self.append_output(c);

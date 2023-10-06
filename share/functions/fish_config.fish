@@ -293,7 +293,7 @@ function fish_config --description "Launch fish's web based configuration"
                                 # Cache the value from whatever scope currently defines it
                                 set -l value $$color
                                 set -eg $color
-                                set -U $color "$value"
+                                set -U $color $value
                             end
                         end
                     end

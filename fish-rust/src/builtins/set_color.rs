@@ -103,8 +103,8 @@ fn print_colors(
     streams.out.append(str2wcstring(contents));
 }
 
-const short_options: &wstr = L!(":b:hoidrcu");
-const long_options: &[woption] = &[
+const SHORT_OPTIONS: &wstr = L!(":b:hoidrcu");
+const LONG_OPTIONS: &[woption] = &[
     wopt(L!("background"), woption_argument_t::required_argument, 'b'),
     wopt(L!("help"), woption_argument_t::no_argument, 'h'),
     wopt(L!("bold"), woption_argument_t::no_argument, 'o'),
@@ -138,7 +138,7 @@ pub fn set_color(
     let mut reverse = false;
     let mut print = false;
 
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
+    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'b' => {

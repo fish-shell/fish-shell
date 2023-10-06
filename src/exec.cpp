@@ -1006,6 +1006,11 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
             return false;
         }
 
+        // Apply foo=bar variable assignments
+        for (const auto &assignment : j->processes.front()->variable_assignments) {
+            parser.vars().set(assignment.variable_name, ENV_LOCAL | ENV_EXPORT, assignment.values);
+        }
+
         internal_exec(parser.vars(), j.get(), block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.

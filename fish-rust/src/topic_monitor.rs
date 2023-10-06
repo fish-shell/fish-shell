@@ -56,10 +56,7 @@ mod topic_monitor_ffi {
 
     /// The list of topics which may be observed.
     #[repr(u8)]
-    // clippy 1.72 complains that the PartialOrd should be "{ Some(self.cmp(other)) }"
-    // but that requires us to implement PartialOrd ourselves.
-    #[allow(clippy::incorrect_partial_ord_impl_on_ord_type)]
-    #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord)]
     pub enum topic_t {
         sighupint,     // Corresponds to both SIGHUP and SIGINT signals.
         sigchld,       // Corresponds to SIGCHLD signal.
@@ -75,6 +72,14 @@ mod topic_monitor_ffi {
         fn current_generations(self: &topic_monitor_t) -> generation_list_t;
         fn generation_for_topic(self: &topic_monitor_t, topic: topic_t) -> u64;
         fn check(self: &topic_monitor_t, gens: *mut generation_list_t, wait: bool) -> bool;
+    }
+}
+
+// FIXME: #derive-ing this currently makes clippy complain
+// about https://rust-lang.github.io/rust-clippy/master/index.html#/incorrect_partial_ord_impl_on_ord_type
+impl PartialOrd for topic_t {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

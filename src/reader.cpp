@@ -3489,8 +3489,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             parser().libdata().is_repaint = true;
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
-                screen.reset_line(true /* redraw prompt */);
-                if (this->is_repaint_needed()) this->layout_and_repaint(L"mode");
+                if (this->is_repaint_needed()) {
+                    screen.reset_line(true /* redraw prompt */);
+                    this->layout_and_repaint(L"mode");
+                }
                 parser().libdata().is_repaint = false;
                 break;
             }

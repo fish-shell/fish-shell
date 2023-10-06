@@ -269,7 +269,7 @@ impl EventHandler {
     pub fn new(desc: EventDescription, name: Option<WString>) -> Self {
         Self {
             desc,
-            function_name: name.unwrap_or_else(WString::new),
+            function_name: name.unwrap_or_default(),
             removed: AtomicBool::new(false),
             fired: AtomicBool::new(false),
         }

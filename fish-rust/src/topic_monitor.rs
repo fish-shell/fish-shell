@@ -56,6 +56,9 @@ mod topic_monitor_ffi {
 
     /// The list of topics which may be observed.
     #[repr(u8)]
+    // clippy 1.72 complains that the PartialOrd should be "{ Some(self.cmp(other)) }"
+    // but that requires us to implement PartialOrd ourselves.
+    #[allow(clippy::incorrect_partial_ord_impl_on_ord_type)]
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub enum topic_t {
         sighupint,     // Corresponds to both SIGHUP and SIGINT signals.

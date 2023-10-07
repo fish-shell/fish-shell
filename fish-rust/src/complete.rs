@@ -663,7 +663,11 @@ impl<'ctx> Completer<'ctx> {
 
         // Hack: fix autosuggestion by removing prefixing "and"s #6249.
         if is_autosuggest {
-            tokens.retain(|token| !parser_keywords_is_subcommand(token.get_source(&cmdline)));
+            let prefixed_supercommand_count = tokens
+                .iter()
+                .take_while(|token| parser_keywords_is_subcommand(token.get_source(&cmdline)))
+                .count();
+            tokens.drain(..prefixed_supercommand_count);
         }
 
         // Consume variable assignments in tokens strictly before the cursor.

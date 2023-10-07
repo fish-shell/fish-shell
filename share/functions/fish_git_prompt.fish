@@ -292,7 +292,8 @@ function fish_git_prompt --description "Prompt function for Git"
                 and set untrackedfiles 1
             else if test "$dirty" = true; and not test "$untracked" = true
                 # Only dirty, diff is faster
-                command git -c core.fsmonitor= diff --quiet HEAD; or set dirtystate 1
+                command git -c core.fsmonitor= diff --quiet HEAD 2>/dev/null
+                test $status -eq 1; and set dirtystate 1
             else if test "$dirty" = true
                 # With both dirty and untracked, git status is ~10% faster.
                 # With just dirty, it's ~20%.

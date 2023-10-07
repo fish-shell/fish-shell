@@ -29,4 +29,6 @@ jobs:
       run: |
         cmake -B build
     - name: cargo clippy
-      run: cargo clippy --workspace --all-targets -- --deny=warnings
+      # This used to have --deny=warnings, but that turns rust release day
+      # into automatic CI failure day, so we don't do that.
+      run: cargo clippy --workspace --all-targets

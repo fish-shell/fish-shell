@@ -21,7 +21,8 @@ pub fn random(
     const longopts: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
 
     let mut w = wgetopter_t::new(shortopts, longopts, argv);
-    if let Some(c) = w.wgetopt_long() {
+    #[allow(clippy::never_loop)]
+    while let Some(c) = w.wgetopt_long() {
         match c {
             'h' => {
                 builtin_print_help(parser, streams, cmd);

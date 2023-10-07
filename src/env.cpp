@@ -148,6 +148,20 @@ void misc_init() {
     }
 }
 
+extern "C" {
+void env_cpp_init() {
+    // Temporary for the Rust port.
+    // path_get_config and path_get_data both inspect the environment stack to determine
+    // config paths, and then remember those paths in a static variable. This can lead to
+    // a deadlock if these functions are called while already holding the environment lock.
+    // Call them immediately to trigger the caching.
+    // This can be removed once path_get_config and path_get_data are removed.
+    wcstring dir;
+    path_get_config(dir);
+    path_get_data(dir);
+}
+}
+
 static std::map<wcstring, wcstring> inheriteds;
 
 const std::map<wcstring, wcstring> &env_get_inherited() { return inheriteds; }

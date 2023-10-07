@@ -520,6 +520,10 @@ fn setup_path() {
 /// This is a simple key->value map and not e.g. cut into paths.
 pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new();
 
+extern "C" {
+    fn env_cpp_init();
+}
+
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
     let vars = &PRINCIPAL_STACK;
 
@@ -584,6 +588,11 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
                 str2wcstring(scstr.as_os_str().as_bytes()),
             );
         }
+    }
+
+    // See the env_cpp_init() comment for this.
+    unsafe {
+        env_cpp_init();
     }
 
     // Set $USER, $HOME and $EUID

@@ -49,6 +49,7 @@ function ls --description "List contents of directory"
     # Set the colors to the default via `dircolors` if none is given.
     __fish_set_lscolors
 
+    set -l opt
     isatty stdout
     and set -a opt -F
 

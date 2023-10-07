@@ -175,13 +175,11 @@ void set_inheriteds_ffi() {
         const wcstring key_and_val = str2wcstring(envp[i]);
         size_t eql = key_and_val.find(L'=');
         if (eql == wcstring::npos) {
-            // PORTING: Should this not be key_and_val?
-            inheriteds[key] = L"";
-        } else {
-            key.assign(key_and_val, 0, eql);
-            val.assign(key_and_val, eql + 1, wcstring::npos);
-            inheriteds[key] = val;
+            continue;
         }
+        key.assign(key_and_val, 0, eql);
+        val.assign(key_and_val, eql + 1, wcstring::npos);
+        inheriteds[key] = val;
     }
 }
 

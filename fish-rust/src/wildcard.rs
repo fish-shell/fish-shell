@@ -819,8 +819,8 @@ mod expander {
             prefix: &wstr,
         ) {
             // Mark that we are fuzzy for the duration of this function
-            let mut this = scoped_push(self, |e| &mut e.has_fuzzy_ancestor, true);
-            while !this.interrupted_or_overflowed() {
+            let mut zelf = scoped_push(self, |e| &mut e.has_fuzzy_ancestor, true);
+            while !zelf.interrupted_or_overflowed() {
                 let Some(Ok(entry)) = base_dir_iter.next() else {
                     break;
                 };
@@ -851,12 +851,12 @@ mod expander {
                 let new_full_path: WString = base_dir.to_owned() + entry.name.as_utfstr() + L!("/");
 
                 // Ok, this directory matches. Recurse to it. Then mark each resulting completion as fuzzy.
-                let before = this.resolved_completions.len();
-                this.expand(&new_full_path, wc_remainder, &child_prefix);
-                let after = this.resolved_completions.len();
+                let before = zelf.resolved_completions.len();
+                zelf.expand(&new_full_path, wc_remainder, &child_prefix);
+                let after = zelf.resolved_completions.len();
 
                 assert!(before <= after);
-                for c in this.resolved_completions[before..after].iter_mut() {
+                for c in zelf.resolved_completions[before..after].iter_mut() {
                     // Mark the completion as replacing.
                     if !c.replaces_token() {
                         c.flags |= CompleteFlags::REPLACES_TOKEN;

@@ -367,7 +367,7 @@ fn fish_parse_opt(args: &mut [&wstr], opts: &mut FishCmdOpts) -> usize {
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
-    const PROFILE_STARTUP_ARG: char = 4 as char;
+    const PROFILE_STARTUP_ARG: char = 3 as char;
 
     const SHORT_OPTS: &wstr = L!("+hPilNnvc:C:p:d:f:D:o:");
     const LONG_OPTS: &[woption<'static>] = &[
@@ -483,7 +483,7 @@ fn fish_parse_opt(args: &mut [&wstr], opts: &mut FishCmdOpts) -> usize {
                 );
                 std::process::exit(1)
             }
-            _ => panic!("unexpected retval from wgetoptr_t"),
+            _ => panic!("unexpected retval from wgetopter_t"),
         }
     }
     let optind = w.woptind;
@@ -531,9 +531,9 @@ fn main() -> i32 {
     let mut res = 1;
     let mut my_optind;
 
+    signal_unblock_all();
     topic_monitor::topic_monitor_init();
     threads::init();
-    signal_unblock_all();
 
     {
         let s = CString::new("").unwrap();
@@ -546,6 +546,8 @@ fn main() -> i32 {
         args.push("fish".into());
     }
 
+    // Enable debug categories set in FISH_DEBUG.
+    // This is in *addition* to the ones given via --debug.
     if let Some(debug_categories) = env::var_os("FISH_DEBUG") {
         let s = str2wcstring(debug_categories.as_bytes());
         activate_flog_categories_by_pattern(&s);
@@ -612,6 +614,7 @@ fn main() -> i32 {
         */
     }
 
+    // No-exec is prohibited when in interactive mode.
     if opts.is_interactive_session && opts.no_exec {
         FLOG!(
             warning,
@@ -648,7 +651,11 @@ fn main() -> i32 {
         paths = Some(determine_config_directory_paths(OsString::from_vec(
             wcs2string(args[0]),
         )));
-        env_init(paths.as_ref(), !opts.no_config, opts.no_config);
+        env_init(
+            paths.as_ref(),
+            /* do uvars */ !opts.no_config,
+            /* default paths */ opts.no_config,
+        );
     }
 
     // Set features early in case other initialization depends on them.
@@ -824,12 +831,6 @@ fn main() -> i32 {
 }
 
 // https://github.com/fish-shell/fish-shell/issues/367
-//
-// With them the Seed of Wisdom did I sow,
-// And with my own hand labour'd it to grow:
-// And this was all the Harvest that I reap'd---
-// "I came like Water, and like Wind I go."
-
 fn escape_single_quoted_hack_hack_hack_hack(s: &wstr) -> OsString {
     let mut result = OsString::with_capacity(s.len() + 2);
     result.push("\'");

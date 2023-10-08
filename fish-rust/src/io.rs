@@ -916,7 +916,7 @@ impl BufferedOutputStream {
     }
 }
 
-pub struct IoStreams<'a> {
+pub struct NativeIoStreams<'a> {
     // Streams for out and err.
     pub out: &'a mut OutputStream,
     pub err: &'a mut OutputStream,
@@ -949,9 +949,9 @@ pub struct IoStreams<'a> {
     job_group: Option<Rc<JobGroup>>,
 }
 
-impl<'a> IoStreams<'a> {
+impl<'a> NativeIoStreams<'a> {
     pub fn new(out: &'a mut OutputStream, err: &'a mut OutputStream) -> Self {
-        IoStreams {
+        NativeIoStreams {
             out,
             err,
             stdin_fd: -1,

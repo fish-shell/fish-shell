@@ -1,9 +1,8 @@
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::prelude::*;
 use crate::wildcard::wildcard_match;
+use crate::wutil::write_to_fd;
 use libc::c_int;
-use std::io::Write;
-use std::os::unix::prelude::*;
 use std::sync::atomic::{AtomicI32, Ordering};
 
 #[rustfmt::skip::macros(category)]
@@ -165,10 +164,7 @@ pub fn flog_impl(s: &str) {
     if fd < 0 {
         return;
     }
-    let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
-    let _ = file.write(s.as_bytes());
-    // Ensure the file is not closed.
-    file.into_raw_fd();
+    let _ = write_to_fd(s.as_bytes(), fd);
 }
 
 /// The entry point for flogging.

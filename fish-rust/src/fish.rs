@@ -26,7 +26,7 @@ use crate::{
     },
     common::{
         escape, exit_without_destructors, get_executable_path, str2wcstring, wcs2string,
-        EscapeStringStyle, PROFILING_ACTIVE, PROGRAM_NAME,
+        PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},

@@ -133,6 +133,8 @@ pub mod categories {
         (path, "path", "Searching/using paths");
 
         (screen, "screen", "Screen repaints");
+
+        (refcell, "refcell", "Refcell dynamic borrowing");
     );
 }
 

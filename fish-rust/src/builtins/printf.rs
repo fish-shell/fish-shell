@@ -79,7 +79,7 @@ fn iswxdigit(c: char) -> bool {
 
 struct builtin_printf_state_t<'a> {
     // Out and err streams. Note this is a captured reference!
-    streams: &'a mut io_streams_t,
+    streams: &'a mut IoStreams,
 
     // The status of the operation.
     exit_code: c_int,
@@ -763,11 +763,7 @@ impl<'a> builtin_printf_state_t<'a> {
 }
 
 /// The printf builtin.
-pub fn printf(
-    _parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn printf(_parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let mut argc = argv.len();
 
     // Rebind argv as immutable slice (can't rearrange its elements), skipping the command name.

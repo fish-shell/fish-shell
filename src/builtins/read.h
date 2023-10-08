@@ -4,8 +4,8 @@
 
 #include "../maybe.h"
 
-class parser_t;
-struct io_streams_t;
+class Parser; using parser_t = Parser;
+class IoStreams; using io_streams_t = IoStreams;
 
 maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
 #endif

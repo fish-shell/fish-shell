@@ -16,7 +16,7 @@
 
 class autoload_file_cache_t;
 class environment_t;
-class parser_t;
+class Parser; using parser_t = Parser;
 struct autoload_tester_t;
 
 /// autoload_t is a class that knows how to autoload .fish files from a list of directories. This

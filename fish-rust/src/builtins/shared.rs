@@ -1,7 +1,7 @@
 use crate::builtins::{printf, wait};
 use crate::common::str2wcstring;
 use crate::ffi::separation_type_t;
-use crate::ffi::{self, parser_t, wcstring_list_ffi_t, Repin, RustBuiltin};
+use crate::ffi::{self, wcstring_list_ffi_t, Parser, Repin, RustBuiltin};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ffi::{c_str, empty_wstring, ToCppWString, WCharFromFFI};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
@@ -16,7 +16,7 @@ use std::io::{BufRead, BufReader, Read};
 use std::os::fd::{FromRawFd, RawFd};
 use std::pin::Pin;
 
-pub type BuiltinCmd = fn(&mut parser_t, &mut io_streams_t, &mut [&wstr]) -> Option<c_int>;
+pub type BuiltinCmd = fn(&mut Parser, &mut IoStreams, &mut [&wstr]) -> Option<c_int>;
 
 #[cxx::bridge]
 mod builtins_ffi {
@@ -27,14 +27,14 @@ mod builtins_ffi {
 
         type wcharz_t = crate::ffi::wcharz_t;
         type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
-        type parser_t = crate::ffi::parser_t;
-        type io_streams_t = crate::ffi::io_streams_t;
+        type Parser = crate::ffi::Parser;
+        type IoStreams = crate::ffi::IoStreams;
         type RustBuiltin = crate::ffi::RustBuiltin;
     }
     extern "Rust" {
         fn rust_run_builtin(
-            parser: Pin<&mut parser_t>,
-            streams: Pin<&mut io_streams_t>,
+            parser: Pin<&mut Parser>,
+            streams: Pin<&mut IoStreams>,
             cpp_args: &wcstring_list_ffi_t,
             builtin: RustBuiltin,
             status_code: &mut i32,
@@ -42,8 +42,8 @@ mod builtins_ffi {
     }
 }
 
-unsafe impl ExternType for io_streams_t {
-    type Id = type_id!("io_streams_t");
+unsafe impl ExternType for IoStreams {
+    type Id = type_id!("IoStreams");
     type Kind = cxx::kind::Opaque;
 }
 
@@ -143,23 +143,23 @@ impl output_stream_t {
     }
 }
 
-// Convenience wrappers around C++ io_streams_t.
-pub struct io_streams_t {
-    streams: *mut builtins_ffi::io_streams_t,
+// Convenience wrappers around C++ IoStreams.
+pub struct IoStreams {
+    streams: *mut builtins_ffi::IoStreams,
     pub out: output_stream_t,
     pub err: output_stream_t,
     pub out_is_redirected: bool,
     pub err_is_redirected: bool,
 }
 
-impl io_streams_t {
-    pub fn new(mut streams: Pin<&mut builtins_ffi::io_streams_t>) -> io_streams_t {
+impl IoStreams {
+    pub fn new(mut streams: Pin<&mut builtins_ffi::IoStreams>) -> IoStreams {
         let out = output_stream_t(streams.as_mut().get_out().unpin());
         let err = output_stream_t(streams.as_mut().get_err().unpin());
         let out_is_redirected = streams.as_mut().get_out_redirected();
         let err_is_redirected = streams.as_mut().get_err_redirected();
         let streams = streams.unpin();
-        io_streams_t {
+        IoStreams {
             streams,
             out,
             err,
@@ -168,11 +168,11 @@ impl io_streams_t {
         }
     }
 
-    pub fn ffi_pin(&mut self) -> Pin<&mut builtins_ffi::io_streams_t> {
+    pub fn ffi_pin(&mut self) -> Pin<&mut builtins_ffi::IoStreams> {
         unsafe { Pin::new_unchecked(&mut *self.streams) }
     }
 
-    pub fn ffi_ref(&self) -> &builtins_ffi::io_streams_t {
+    pub fn ffi_ref(&self) -> &builtins_ffi::IoStreams {
         unsafe { &*self.streams }
     }
 
@@ -209,15 +209,15 @@ pub fn truncate_args_on_nul(args: &[WString]) -> Vec<&wstr> {
 }
 
 fn rust_run_builtin(
-    parser: Pin<&mut parser_t>,
-    streams: Pin<&mut builtins_ffi::io_streams_t>,
+    parser: Pin<&mut Parser>,
+    streams: Pin<&mut builtins_ffi::IoStreams>,
     cpp_args: &wcstring_list_ffi_t,
     builtin: RustBuiltin,
     status_code: &mut i32,
 ) -> bool {
     let storage: Vec<WString> = cpp_args.from_ffi();
     let mut args: Vec<&wstr> = truncate_args_on_nul(&storage);
-    let streams = &mut io_streams_t::new(streams);
+    let streams = &mut IoStreams::new(streams);
 
     match run_builtin(parser.unpin(), streams, args.as_mut_slice(), builtin) {
         None => false,
@@ -229,8 +229,8 @@ fn rust_run_builtin(
 }
 
 pub fn run_builtin(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
     builtin: RustBuiltin,
 ) -> Option<c_int> {
@@ -267,8 +267,8 @@ pub fn run_builtin(
 // Covers of these functions that take care of the pinning, etc.
 // These all return STATUS_INVALID_ARGS.
 pub fn builtin_missing_argument(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     cmd: &wstr,
     opt: &wstr,
     print_hints: bool,
@@ -283,8 +283,8 @@ pub fn builtin_missing_argument(
 }
 
 pub fn builtin_unknown_option(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     cmd: &wstr,
     opt: &wstr,
     print_hints: bool,
@@ -298,7 +298,7 @@ pub fn builtin_unknown_option(
     );
 }
 
-pub fn builtin_print_help(parser: &mut parser_t, streams: &io_streams_t, cmd: &wstr) {
+pub fn builtin_print_help(parser: &mut Parser, streams: &IoStreams, cmd: &wstr) {
     ffi::builtin_print_help(
         parser.pin(),
         streams.ffi_ref(),
@@ -307,7 +307,7 @@ pub fn builtin_print_help(parser: &mut parser_t, streams: &io_streams_t, cmd: &w
     );
 }
 
-pub fn builtin_print_error_trailer(parser: &mut parser_t, streams: &mut io_streams_t, cmd: &wstr) {
+pub fn builtin_print_error_trailer(parser: &mut Parser, streams: &mut IoStreams, cmd: &wstr) {
     ffi::builtin_print_error_trailer(parser.pin(), streams.err.ffi(), c_str!(cmd));
 }
 
@@ -319,8 +319,8 @@ pub struct HelpOnlyCmdOpts {
 impl HelpOnlyCmdOpts {
     pub fn parse(
         args: &mut [&wstr],
-        parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        parser: &mut Parser,
+        streams: &mut IoStreams,
     ) -> Result<Self, Option<c_int>> {
         let cmd = args[0];
         let print_hints = true;
@@ -400,7 +400,7 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
     pub fn new(
         args: &'iter [&'args wstr],
         argidx: &'iter mut usize,
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams,
         chunk_size: usize,
     ) -> Self {
         let reader = streams.stdin_is_directly_redirected().then(|| {

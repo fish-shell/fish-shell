@@ -24,7 +24,7 @@ struct Options {
 }
 
 impl Options {
-    fn validate(&mut self, streams: &mut io_streams_t) -> bool {
+    fn validate(&mut self, streams: &mut IoStreams) -> bool {
         // Duplicate options?
         let mut cmds = vec![];
         if self.add {
@@ -124,7 +124,7 @@ fn join(list: &[&wstr], sep: &wstr) -> WString {
 }
 
 // Print abbreviations in a fish-script friendly way.
-fn abbr_show(streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
     let style = EscapeStringStyle::Script(Default::default());
 
     abbrs::with_abbrs(|abbrs| {
@@ -174,7 +174,7 @@ fn abbr_show(streams: &mut io_streams_t) -> Option<c_int> {
 }
 
 // Print the list of abbreviation names.
-fn abbr_list(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_list(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
     const subcmd: &wstr = L!("--list");
     if !opts.args.is_empty() {
         streams.err.append(wgettext_fmt!(
@@ -197,7 +197,7 @@ fn abbr_list(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
 }
 
 // Rename an abbreviation, deleting any existing one with the given name.
-fn abbr_rename(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
     const subcmd: &wstr = L!("--rename");
 
     if opts.args.len() != 2 {
@@ -271,7 +271,7 @@ fn abbr_query(opts: &Options) -> Option<c_int> {
 }
 
 // Add a named abbreviation.
-fn abbr_add(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
     const subcmd: &wstr = L!("--add");
 
     if opts.args.len() < 2 && opts.function.is_none() {
@@ -391,7 +391,7 @@ fn abbr_add(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
 }
 
 // Erase the named abbreviations.
-fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
+fn abbr_erase(opts: &Options, parser: &mut Parser) -> Option<c_int> {
     if opts.args.is_empty() {
         // This has historically been a silent failure.
         return STATUS_CMD_ERROR;
@@ -419,11 +419,7 @@ fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
     })
 }
 
-pub fn abbr(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 

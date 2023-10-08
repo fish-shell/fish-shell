@@ -56,7 +56,7 @@ fn print_modifiers(
 
 #[allow(clippy::too_many_arguments)]
 fn print_colors(
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
     args: &[&wstr],
     bold: bool,
     underline: bool,
@@ -117,8 +117,8 @@ const LONG_OPTIONS: &[woption] = &[
 
 /// set_color builtin.
 pub fn set_color(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     argv: &mut [&wstr],
 ) -> Option<c_int> {
     // Variables used for parsing the argument list.

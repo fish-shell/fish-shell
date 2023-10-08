@@ -28,12 +28,7 @@ macro_rules! path_error {
     };
 }
 
-fn path_unknown_option(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    subcmd: &wstr,
-    opt: &wstr,
-) {
+fn path_unknown_option(parser: &mut Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
     path_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
     builtin_print_error_trailer(parser, streams, L!("path"));
 }
@@ -46,7 +41,7 @@ const PATH_CHUNK_SIZE: usize = PATH_MAX as usize;
 fn arguments<'iter, 'args>(
     args: &'iter [&'args wstr],
     optind: &'iter mut usize,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Arguments<'args, 'iter> {
     Arguments::new(args, optind, streams, PATH_CHUNK_SIZE)
 }
@@ -160,7 +155,7 @@ struct Options<'args> {
 }
 
 #[inline]
-fn path_out(streams: &mut io_streams_t, opts: &Options<'_>, s: impl AsRef<wstr>) {
+fn path_out(streams: &mut IoStreams, opts: &Options<'_>, s: impl AsRef<wstr>) {
     let s = s.as_ref();
     if !opts.quiet {
         if !opts.null_out {
@@ -226,8 +221,8 @@ fn parse_opts<'args>(
     optind: &mut usize,
     n_req_args: usize,
     args: &mut [&'args wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = args[0];
     let mut args_read = Vec::with_capacity(args.len());
@@ -366,8 +361,8 @@ fn parse_opts<'args>(
 }
 
 fn path_transform(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
     func: impl Fn(&wstr) -> WString,
 ) -> Option<c_int> {
@@ -408,18 +403,14 @@ fn path_transform(
 }
 
 fn path_basename(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> Option<c_int> {
     path_transform(parser, streams, args, |s| wbasename(s).to_owned())
 }
 
-fn path_dirname(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+fn path_dirname(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     path_transform(parser, streams, args, |s| wdirname(s).to_owned())
 }
 
@@ -432,18 +423,14 @@ fn normalize_help(path: &wstr) -> WString {
 }
 
 fn path_normalize(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> Option<c_int> {
     path_transform(parser, streams, args, normalize_help)
 }
 
-fn path_mtime(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+fn path_mtime(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let mut opts = Options::default();
     opts.relative_valid = true;
     let mut optind = 0;
@@ -528,8 +515,8 @@ fn test_find_extension() {
 }
 
 fn path_extension(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> Option<c_int> {
     let mut opts = Options::default();
@@ -569,8 +556,8 @@ fn path_extension(
 }
 
 fn path_change_extension(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> Option<c_int> {
     let mut opts = Options::default();
@@ -617,11 +604,7 @@ fn path_change_extension(
     }
 }
 
-fn path_resolve(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+fn path_resolve(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let mut opts = Options::default();
     let mut optind = 0;
     let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
@@ -686,11 +669,7 @@ fn path_resolve(
     }
 }
 
-fn path_sort(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+fn path_sort(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let mut opts = Options::default();
     opts.reverse_valid = true;
     opts.unique_valid = true;
@@ -856,8 +835,8 @@ fn filter_path(opts: &Options, path: &wstr) -> bool {
 }
 
 fn path_filter_maybe_is(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
     is_is: bool,
 ) -> Option<c_int> {
@@ -915,24 +894,16 @@ fn path_filter_maybe_is(
     }
 }
 
-fn path_filter(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+fn path_filter(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     path_filter_maybe_is(parser, streams, args, false)
 }
 
-fn path_is(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr]) -> Option<c_int> {
+fn path_is(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     path_filter_maybe_is(parser, streams, args, true)
 }
 
 /// The path builtin, for handling paths.
-pub fn path(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn path(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
 

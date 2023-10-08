@@ -6,7 +6,7 @@ use crate::ast::{self, Node};
 use crate::common::{assert_sync, escape, valid_func_name, FilenameRef};
 use crate::env::{EnvStack, Environment};
 use crate::event::{self, EventDescription};
-use crate::ffi::{self, parser_t, Repin};
+use crate::ffi::{self, Parser, Repin};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_tree::{NodeRef, ParsedSourceRefFFI};
 use crate::parser_keywords::parser_keywords_is_reserved;
@@ -114,7 +114,7 @@ unsafe impl Send for FunctionSet {}
 
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded. Note this executes fish script code.
-fn load(name: &wstr, parser: &mut parser_t) -> bool {
+fn load(name: &wstr, parser: &mut Parser) -> bool {
     parser.assert_can_execute();
     let mut path_to_autoload: Option<WString> = None;
     // Note we can't autoload while holding the funcset lock.
@@ -219,7 +219,7 @@ pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
 }
 
 /// \return the properties for a function, or None, perhaps triggering autoloading.
-pub fn get_props_autoload(name: &wstr, parser: &mut parser_t) -> Option<Arc<FunctionProperties>> {
+pub fn get_props_autoload(name: &wstr, parser: &mut Parser) -> Option<Arc<FunctionProperties>> {
     parser.assert_can_execute();
     if parser_keywords_is_reserved(name) {
         return None;
@@ -230,7 +230,7 @@ pub fn get_props_autoload(name: &wstr, parser: &mut parser_t) -> Option<Arc<Func
 
 /// Returns true if the function named \p cmd exists.
 /// This may autoload.
-pub fn exists(cmd: &wstr, parser: &mut parser_t) -> bool {
+pub fn exists(cmd: &wstr, parser: &mut Parser) -> bool {
     parser.assert_can_execute();
     if !valid_func_name(cmd) {
         return false;
@@ -291,7 +291,7 @@ fn get_function_body_source(props: &FunctionProperties) -> &wstr {
 
 /// Sets the description of the function with the name \c name.
 /// This triggers autoloading.
-pub fn set_desc(name: &wstr, desc: WString, parser: &mut parser_t) {
+pub fn set_desc(name: &wstr, desc: WString, parser: &mut Parser) {
     parser.assert_can_execute();
     load(name, parser);
     let mut funcset = FUNCTION_SET.lock().unwrap();
@@ -306,7 +306,7 @@ pub fn set_desc(name: &wstr, desc: WString, parser: &mut parser_t) {
 
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.
-pub fn copy(name: &wstr, new_name: WString, parser: &parser_t) -> bool {
+pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     let filename = parser.current_filename_ffi().from_ffi();
     let lineno = parser.get_lineno();
 
@@ -588,7 +588,7 @@ fn function_get_props_ffi(name: &CxxWString) -> *mut FunctionPropertiesRefFFI {
 
 fn function_get_props_autoload_ffi(
     name: &CxxWString,
-    parser: Pin<&mut parser_t>,
+    parser: Pin<&mut Parser>,
 ) -> *mut FunctionPropertiesRefFFI {
     let props = get_props_autoload(name.as_wstr(), parser.unpin());
     if let Some(props) = props {
@@ -598,15 +598,15 @@ fn function_get_props_autoload_ffi(
     }
 }
 
-fn function_load_ffi(name: &CxxWString, parser: Pin<&mut parser_t>) -> bool {
+fn function_load_ffi(name: &CxxWString, parser: Pin<&mut Parser>) -> bool {
     load(name.as_wstr(), parser.unpin())
 }
 
-fn function_set_desc_ffi(name: &CxxWString, desc: &CxxWString, parser: Pin<&mut parser_t>) {
+fn function_set_desc_ffi(name: &CxxWString, desc: &CxxWString, parser: Pin<&mut Parser>) {
     set_desc(name.as_wstr(), desc.from_ffi(), parser.unpin());
 }
 
-fn function_exists_ffi(cmd: &CxxWString, parser: Pin<&mut parser_t>) -> bool {
+fn function_exists_ffi(cmd: &CxxWString, parser: Pin<&mut Parser>) -> bool {
     exists(cmd.as_wstr(), parser.unpin())
 }
 
@@ -621,7 +621,7 @@ fn function_get_names_ffi(get_hidden: bool, mut out: Pin<&mut wcstring_list_ffi_
     }
 }
 
-fn function_copy_ffi(name: &CxxWString, new_name: &CxxWString, parser: Pin<&mut parser_t>) -> bool {
+fn function_copy_ffi(name: &CxxWString, new_name: &CxxWString, parser: Pin<&mut Parser>) -> bool {
     copy(name.as_wstr(), new_name.from_ffi(), parser.unpin())
 }
 
@@ -632,7 +632,7 @@ mod function_ffi {
         include!("parse_tree.h");
         include!("parser.h");
         include!("wutil.h");
-        type parser_t = crate::ffi::parser_t;
+        type Parser = crate::ffi::Parser;
         type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
     }
 
@@ -675,17 +675,17 @@ mod function_ffi {
         #[cxx_name = "function_get_props_autoload_raw"]
         fn function_get_props_autoload_ffi(
             name: &CxxWString,
-            parser: Pin<&mut parser_t>,
+            parser: Pin<&mut Parser>,
         ) -> *mut FunctionPropertiesRefFFI;
 
         #[cxx_name = "function_load"]
-        fn function_load_ffi(name: &CxxWString, parser: Pin<&mut parser_t>) -> bool;
+        fn function_load_ffi(name: &CxxWString, parser: Pin<&mut Parser>) -> bool;
 
         #[cxx_name = "function_set_desc"]
-        fn function_set_desc_ffi(name: &CxxWString, desc: &CxxWString, parser: Pin<&mut parser_t>);
+        fn function_set_desc_ffi(name: &CxxWString, desc: &CxxWString, parser: Pin<&mut Parser>);
 
         #[cxx_name = "function_exists"]
-        fn function_exists_ffi(cmd: &CxxWString, parser: Pin<&mut parser_t>) -> bool;
+        fn function_exists_ffi(cmd: &CxxWString, parser: Pin<&mut Parser>) -> bool;
 
         #[cxx_name = "function_exists_no_autoload"]
         fn function_exists_no_autoload_ffi(cmd: &CxxWString) -> bool;
@@ -697,7 +697,7 @@ mod function_ffi {
         fn function_copy_ffi(
             name: &CxxWString,
             new_name: &CxxWString,
-            parser: Pin<&mut parser_t>,
+            parser: Pin<&mut Parser>,
         ) -> bool;
 
         #[cxx_name = "function_invalidate_path"]

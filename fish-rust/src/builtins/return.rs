@@ -11,8 +11,8 @@ struct Options {
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
 
@@ -46,11 +46,7 @@ fn parse_options(
 }
 
 /// Function for handling the return builtin.
-pub fn r#return(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn r#return(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let mut retval = match parse_return_value(args, parser, streams) {
         Ok(v) => v,
         Err(e) => return e,
@@ -84,8 +80,8 @@ pub fn r#return(
 
 pub fn parse_return_value(
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
 ) -> Result<i32, Option<c_int>> {
     let cmd = args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {

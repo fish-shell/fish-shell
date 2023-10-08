@@ -11,7 +11,7 @@
 #include "io.h"
 #include "proc.h"
 
-class parser_t;
+class Parser; using parser_t = Parser;
 
 /// Execute the processes specified by \p j in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for

@@ -9,10 +9,10 @@
 #include "maybe.h"
 #include "wutil.h"
 
-class parser_t;
+class Parser; using parser_t = Parser;
 class proc_status_t;
 class output_stream_t;
-struct io_streams_t;
+class IoStreams; using io_streams_t = IoStreams;
 using completion_list_t = std::vector<completion_t>;
 
 /// Data structure to describe a builtin.

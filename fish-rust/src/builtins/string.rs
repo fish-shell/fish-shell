@@ -31,12 +31,7 @@ macro_rules! string_error {
 }
 use string_error;
 
-fn string_unknown_option(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    subcmd: &wstr,
-    opt: &wstr,
-) {
+fn string_unknown_option(parser: &mut Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
     string_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
     builtin_print_error_trailer(parser, streams, L!("string"));
 }
@@ -56,8 +51,8 @@ trait StringSubCommand<'args> {
     fn parse_opts(
         &mut self,
         args: &mut [&'args wstr],
-        parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        parser: &mut Parser,
+        streams: &mut IoStreams,
     ) -> Result<usize, Option<c_int>> {
         let cmd = args[0];
         let mut args_read = Vec::with_capacity(args.len());
@@ -94,7 +89,7 @@ trait StringSubCommand<'args> {
         &mut self,
         optind: &mut usize,
         args: &[&'args wstr],
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams,
     ) -> Option<c_int> {
         STATUS_CMD_OK
     }
@@ -102,16 +97,16 @@ trait StringSubCommand<'args> {
     /// Perform the business logic of the command.
     fn handle(
         &mut self,
-        parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        parser: &mut Parser,
+        streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&'args wstr],
     ) -> Option<c_int>;
 
     fn run(
         &mut self,
-        parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        parser: &mut Parser,
+        streams: &mut IoStreams,
         args: &mut [&'args wstr],
     ) -> Option<c_int> {
         if args.len() >= 3 && (args[2] == "-h" || args[2] == "--help") {
@@ -155,7 +150,7 @@ enum RegexError {
 }
 
 impl RegexError {
-    fn print_error(&self, args: &[&wstr], streams: &mut io_streams_t) {
+    fn print_error(&self, args: &[&wstr], streams: &mut IoStreams) {
         let cmd = args[0];
         use RegexError::*;
         match self {
@@ -204,8 +199,8 @@ impl StringError {
     fn print_error(
         &self,
         args: &[&wstr],
-        parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        parser: &mut Parser,
+        streams: &mut IoStreams,
         optarg: Option<&wstr>,
         optind: usize,
     ) {
@@ -290,17 +285,13 @@ const STRING_CHUNK_SIZE: usize = 1024;
 fn arguments<'iter, 'args>(
     args: &'iter [&'args wstr],
     argidx: &'iter mut usize,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Arguments<'args, 'iter> {
     Arguments::new(args, argidx, streams, STRING_CHUNK_SIZE)
 }
 
 /// The string builtin, for manipulating strings.
-pub fn string(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn string(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
 

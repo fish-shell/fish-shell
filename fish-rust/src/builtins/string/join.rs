@@ -38,7 +38,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         &mut self,
         optind: &mut usize,
         args: &[&'args wstr],
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams,
     ) -> Option<libc::c_int> {
         if self.is_join0 {
             return STATUS_CMD_OK;
@@ -56,8 +56,8 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &mut Parser,
+        streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Option<libc::c_int> {

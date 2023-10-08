@@ -164,7 +164,7 @@ const LONG_OPTIONS: &[woption] = &[
 ];
 
 /// Print the features and their values.
-fn print_features(streams: &mut io_streams_t) {
+fn print_features(streams: &mut IoStreams) {
     // TODO: move this to features.rs
     let mut max_len = i32::MIN;
     for md in features::METADATA {
@@ -191,8 +191,8 @@ fn parse_cmd_opts(
     opts: &mut StatusCmdOpts,
     optind: &mut usize,
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = args[0];
 
@@ -305,11 +305,7 @@ fn parse_cmd_opts(
     return STATUS_CMD_OK;
 }
 
-pub fn status(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
 

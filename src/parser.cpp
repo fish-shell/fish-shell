@@ -40,7 +40,7 @@ static wcstring user_presentable_path(const wcstring &path, const environment_t 
     return replace_home_directory_with_tilde(path, vars);
 }
 
-parser_t::parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal)
+parser_t::Parser(std::shared_ptr<env_stack_t> vars, bool is_principal)
     : wait_handles(new_wait_handle_store_ffi()),
       variables(std::move(vars)),
       is_principal_(is_principal) {
@@ -54,7 +54,7 @@ parser_t::parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal)
 }
 
 // Out of line destructor to enable forward declaration of parse_execution_context_t
-parser_t::~parser_t() = default;
+parser_t::~Parser() = default;
 
 parser_t &parser_t::principal_parser() {
     static const std::shared_ptr<parser_t> principal{
@@ -590,7 +590,8 @@ eval_res_t parser_t::eval_with(const wcstring &cmd, const io_chain_t &io,
 
 eval_res_t parser_t::eval_string_ffi1(const wcstring &cmd) { return eval(cmd, io_chain_t()); }
 
-eval_res_t parser_t::eval_parsed_source_ffi1(const parsed_source_ref_t* ps, enum block_type_t block_type) {
+eval_res_t parser_t::eval_parsed_source_ffi1(const parsed_source_ref_t *ps,
+                                             enum block_type_t block_type) {
     return eval_parsed_source(*ps, io_chain_t(), {}, block_type);
 }
 
@@ -698,8 +699,8 @@ template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::
 template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::job_list_t &,
                                         const io_chain_t &, const job_group_ref_t &, block_type_t);
 
-void parser_t::get_backtrace_ffi(const wcstring &src, const parse_error_list_t* errors,
-                       wcstring &output) const {
+void parser_t::get_backtrace_ffi(const wcstring &src, const parse_error_list_t *errors,
+                                 wcstring &output) const {
     return get_backtrace(src, *errors, output);
 };
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,

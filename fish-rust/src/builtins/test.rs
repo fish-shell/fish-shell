@@ -82,7 +82,7 @@ mod test_expressions {
         }
 
         // Return true if the number is a tty().
-        fn isatty(&self, streams: &io_streams_t) -> bool {
+        fn isatty(&self, streams: &IoStreams) -> bool {
             fn istty(fd: libc::c_int) -> bool {
                 // Safety: isatty cannot crash.
                 unsafe { libc::isatty(fd) > 0 }
@@ -211,7 +211,7 @@ mod test_expressions {
     /// Base trait for expressions.
     pub(super) trait Expression {
         /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool;
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool;
 
         /// Return base.range.
         fn range(&self) -> Range;
@@ -264,7 +264,7 @@ mod test_expressions {
     }
 
     impl Expression for UnaryPrimary {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             unary_primary_evaluate(self.token, &self.arg, streams, errors)
         }
 
@@ -274,7 +274,7 @@ mod test_expressions {
     }
 
     impl Expression for BinaryPrimary {
-        fn evaluate(&self, _streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, _streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             binary_primary_evaluate(self.token, &self.arg_left, &self.arg_right, errors)
         }
 
@@ -284,7 +284,7 @@ mod test_expressions {
     }
 
     impl Expression for UnaryOperator {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             if self.token == Token::bang {
                 !self.subject.evaluate(streams, errors)
             } else {
@@ -299,7 +299,7 @@ mod test_expressions {
     }
 
     impl Expression for CombiningExpression {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             let _res = self.subjects[0].evaluate(streams, errors);
             if self.token == Token::combine_and || self.token == Token::combine_or {
                 assert!(!self.subjects.is_empty());
@@ -352,7 +352,7 @@ mod test_expressions {
     }
 
     impl Expression for ParentheticalExpression {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             self.contents.evaluate(streams, errors)
         }
 
@@ -886,7 +886,7 @@ mod test_expressions {
     fn unary_primary_evaluate(
         token: Token,
         arg: &wstr,
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams,
         errors: &mut Vec<WString>,
     ) -> bool {
         const S_ISGID: u32 = 0o2000;
@@ -1003,11 +1003,7 @@ mod test_expressions {
 /// Evaluate a conditional expression given the arguments. For POSIX conformance this
 /// supports a more limited range of functionality.
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-pub fn test(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn test(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
         return STATUS_INVALID_ARGS;

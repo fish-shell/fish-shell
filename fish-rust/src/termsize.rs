@@ -1,7 +1,7 @@
 // Support for exposing the terminal size.
 use crate::common::assert_sync;
 use crate::env::{EnvMode, EnvStackRefFFI, EnvVar, Environment};
-use crate::ffi::{parser_t, Repin};
+use crate::ffi::{Parser, Repin};
 use crate::flog::FLOG;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharToFFI;
@@ -179,7 +179,7 @@ impl TermsizeContainer {
     /// registered for COLUMNS and LINES.
     /// This requires a shared reference so it can work from a static.
     /// \return the updated termsize.
-    pub fn updating(&self, parser: &mut parser_t) -> Termsize {
+    pub fn updating(&self, parser: &mut Parser) -> Termsize {
         let new_size;
         let prev_size;
 
@@ -208,7 +208,7 @@ impl TermsizeContainer {
         new_size
     }
 
-    fn set_columns_lines_vars(&self, val: Termsize, parser: &mut parser_t) {
+    fn set_columns_lines_vars(&self, val: Termsize, parser: &mut Parser) {
         let saved = self.setting_env_vars.swap(true, Ordering::Relaxed);
         parser.pin().set_var_and_fire(
             &L!("COLUMNS").to_ffi(),
@@ -321,7 +321,7 @@ pub fn termsize_initialize_ffi(vars_ptr: *const u8) -> Termsize {
 /// Called to update termsize.
 pub fn termsize_update_ffi(parser_ptr: *mut u8) -> Termsize {
     assert!(!parser_ptr.is_null());
-    let parser: &mut parser_t = unsafe { &mut *(parser_ptr as *mut parser_t) };
+    let parser: &mut Parser = unsafe { &mut *(parser_ptr as *mut Parser) };
     SHARED_CONTAINER.updating(parser)
 }
 
@@ -337,7 +337,7 @@ pub fn termsize_invalidate_tty() {
 use crate::ffi_tests::add_test;
 add_test!("test_termsize", || {
     let env_global = EnvMode::GLOBAL;
-    let parser: &mut parser_t = unsafe { &mut *parser_t::principal_parser_ffi() };
+    let parser: &mut Parser = unsafe { &mut *Parser::principal_parser_ffi() };
     let vars = parser.get_vars();
 
     // Use a static variable so we can pretend we're the kernel exposing a terminal size.

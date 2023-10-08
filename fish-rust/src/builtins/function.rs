@@ -3,7 +3,7 @@ use crate::ast::BlockStatement;
 use crate::common::{valid_func_name, valid_var_name};
 use crate::env::environment::Environment;
 use crate::event::{self, EventDescription, EventHandler};
-use crate::ffi::io_streams_t as io_streams_ffi_t;
+use crate::ffi::IoStreams as io_streams_ffi_t;
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_tree::NodeRef;
@@ -58,7 +58,7 @@ const LONG_OPTIONS: &[woption] = &[
 
 /// \return the internal_job_id for a pid, or None if none.
 /// This looks through both active and finished jobs.
-fn job_id_for_pid(pid: i32, parser: &parser_t) -> Option<u64> {
+fn job_id_for_pid(pid: i32, parser: &Parser) -> Option<u64> {
     if let Some(job) = parser.job_get_from_pid(pid) {
         Some(job.get_internal_job_id())
     } else {
@@ -75,8 +75,8 @@ fn parse_cmd_opts(
     opts: &mut FunctionCmdOpts,
     optind: &mut usize,
     argv: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = L!("function");
     let print_hints = false;
@@ -219,7 +219,7 @@ fn validate_function_name(
     argv: &mut [&wstr],
     function_name: &mut WString,
     cmd: &wstr,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     if argv.len() < 2 {
         // This is currently impossible but let's be paranoid.
@@ -252,8 +252,8 @@ fn validate_function_name(
 /// function. Note this isn't strictly a "builtin": it is called directly from parse_execution.
 /// That is why its signature is different from the other builtins.
 pub fn function(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     c_args: &mut [&wstr],
     func_node: NodeRef<BlockStatement>,
 ) -> Option<c_int> {
@@ -377,7 +377,7 @@ pub fn function(
 }
 
 fn builtin_function_ffi(
-    parser: Pin<&mut parser_t>,
+    parser: Pin<&mut Parser>,
     streams: Pin<&mut io_streams_ffi_t>,
     c_args: &wcstring_list_ffi_t,
     source_u8: *const u8, // unowned ParsedSourceRefFFI
@@ -398,7 +398,7 @@ fn builtin_function_ffi(
     };
     function(
         parser.unpin(),
-        &mut io_streams_t::new(streams),
+        &mut IoStreams::new(streams),
         args.as_mut_slice(),
         node,
     )
@@ -411,8 +411,8 @@ mod builtin_function {
         include!("ast.h");
         include!("parser.h");
         include!("io.h");
-        type parser_t = crate::ffi::parser_t;
-        type io_streams_t = crate::ffi::io_streams_t;
+        type Parser = crate::ffi::Parser;
+        type IoStreams = crate::ffi::IoStreams;
         type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
 
         type BlockStatement = crate::ast::BlockStatement;
@@ -420,8 +420,8 @@ mod builtin_function {
 
     extern "Rust" {
         fn builtin_function_ffi(
-            parser: Pin<&mut parser_t>,
-            streams: Pin<&mut io_streams_t>,
+            parser: Pin<&mut Parser>,
+            streams: Pin<&mut IoStreams>,
             c_args: &wcstring_list_ffi_t,
             source: *const u8, // unowned ParsedSourceRefFFI
             func_node: &BlockStatement,

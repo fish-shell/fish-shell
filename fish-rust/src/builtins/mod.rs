@@ -36,7 +36,7 @@ mod prelude {
     pub use libc::c_int;
 
     pub(crate) use crate::{
-        ffi::{self, parser_t, separation_type_t, Repin},
+        ffi::{self, separation_type_t, Parser, Repin},
         wchar::prelude::*,
         wchar_ffi::{c_str, AsWstr, WCharFromFFI, WCharToFFI},
         wgetopt::{

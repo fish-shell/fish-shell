@@ -17,7 +17,7 @@
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 
-class parser_t;
+class Parser; using parser_t = Parser;
 
 /// Struct describing a resource limit.
 struct resource_t {

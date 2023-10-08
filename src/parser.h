@@ -29,7 +29,6 @@ class autoclose_fd_t;
 class io_chain_t;
 struct Event;
 struct job_group_t;
-class parser_t;
 
 /// Types of blocks.
 enum class block_type_t : uint8_t {
@@ -258,7 +257,10 @@ enum class parser_status_var_t : uint8_t {
     count_,
 };
 
-class parser_t : public std::enable_shared_from_this<parser_t> {
+class Parser;
+using parser_t = Parser;
+
+class Parser : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
    private:
@@ -310,12 +312,12 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     bool is_command_substitution() const;
 
     /// Create a parser
-    parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal = false);
+    Parser(std::shared_ptr<env_stack_t> vars, bool is_principal = false);
 
    public:
     // No copying allowed.
-    parser_t(const parser_t &) = delete;
-    parser_t &operator=(const parser_t &) = delete;
+    Parser(const parser_t &) = delete;
+    Parser &operator=(const parser_t &) = delete;
 
     /// Get the "principal" parser, whatever that is.
     static parser_t &principal_parser();
@@ -349,7 +351,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     eval_res_t eval_parsed_source(const parsed_source_ref_t &ps, const io_chain_t &io,
                                   const job_group_ref_t &job_group = {},
                                   block_type_t block_type = block_type_t::top);
-    eval_res_t eval_parsed_source_ffi1(const parsed_source_ref_t* ps, block_type_t block_type);
+    eval_res_t eval_parsed_source_ffi1(const parsed_source_ref_t *ps, block_type_t block_type);
     /// Evaluates a node.
     /// The node type must be ast_t::statement_t or ast::job_list_t.
     template <typename T>
@@ -466,8 +468,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Output profiling data to the given filename.
     void emit_profiling(const char *path) const;
 
-    void get_backtrace_ffi(const wcstring &src, const parse_error_list_t* errors,
-                       wcstring &output) const;
+    void get_backtrace_ffi(const wcstring &src, const parse_error_list_t *errors,
+                           wcstring &output) const;
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                        wcstring &output) const;
 
@@ -527,7 +529,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// autocxx junk.
     size_t ffi_blocks_size() const;
 
-    ~parser_t();
+    ~Parser();
 };
 
 #endif

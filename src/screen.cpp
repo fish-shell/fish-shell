@@ -266,6 +266,13 @@ maybe_t<size_t> escape_code_length(const wchar_t *code) {
     return found ? maybe_t<size_t>{esc_seq_len} : none();
 }
 
+wcstring screen_clear() {
+    if (clear_screen) {
+        return str2wcstring(clear_screen);
+    }
+    return wcstring{};
+}
+
 long escape_code_length_ffi(const wchar_t *code) {
     auto found = escape_code_length(code);
     return found.has_value() ? (long)*found : -1;

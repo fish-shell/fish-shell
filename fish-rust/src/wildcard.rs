@@ -759,6 +759,7 @@ mod expander {
             wc_remainder: &wstr,
             prefix: &wstr,
         ) {
+            let is_final = wc_remainder.is_empty() && !wc_segment.contains(ANY_STRING_RECURSIVE);
             while !self.interrupted_or_overflowed() {
                 let Some(Ok(entry)) = base_dir_iter.next() else {
                     break;
@@ -769,6 +770,20 @@ mod expander {
                     continue;
                 }
                 if !entry.is_dir() {
+                    continue;
+                }
+
+                // Fast path: If this entry can't be a link (we know via d_type),
+                // we don't need to protect against symlink loops.
+                // This is *not* deduplication, we just don't want a loop.
+                //
+                // We only do this when we are the last `*/` component,
+                // because we're a bit inconsistent on when we will enter loops.
+                if is_final && !entry.is_possible_link() {
+                    let full_path: WString = base_dir.to_owned() + entry.name.as_utfstr() + L!("/");
+                    let prefix: WString = prefix.to_owned() + wc_segment + L!("/");
+
+                    self.expand(&full_path, wc_remainder, &prefix);
                     continue;
                 }
 

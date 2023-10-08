@@ -45,6 +45,9 @@ pub struct DirEntry {
     // and the type is left as none(). Note this is an unavoidable race.
     typ: Cell<Option<DirEntryType>>,
 
+    // whether this could be a link, false if we know definitively it isn't.
+    possible_link: bool,
+
     // fd of the DIR*, used for fstatat().
     dirfd: Rc<DirFd>,
 }
@@ -71,6 +74,10 @@ impl DirEntry {
         self.check_type() == Some(DirEntryType::dir)
     }
 
+    /// \return false if we know this can't be a link via d_type, true if it could be.
+    pub fn is_possible_link(&self) -> bool {
+        self.possible_link
+    }
     /// \return the stat buff for this entry, invoking stat() if necessary.
     pub fn stat(&self) -> Option<libc::stat> {
         if self.stat.get().is_none() {
@@ -217,6 +224,7 @@ impl DirIter {
             stat: Cell::new(None),
             typ: Cell::new(None),
             dirfd: dir.clone(),
+            possible_link: false,
         };
         Ok(DirIter {
             withdot,
@@ -280,6 +288,8 @@ impl DirIter {
         if typ != Some(DirEntryType::lnk) {
             self.entry.typ.set(typ);
         }
+        // This entry could be a link if it is a link or unknown.
+        self.entry.possible_link = typ.unwrap_or(DirEntryType::lnk) == DirEntryType::lnk;
 
         Some(Ok(&self.entry))
     }

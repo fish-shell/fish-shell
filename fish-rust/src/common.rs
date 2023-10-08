@@ -1246,16 +1246,6 @@ pub fn should_suppress_stderr_for_tests() -> bool {
         .unwrap_or_default()
 }
 
-#[deprecated(note = "Use threads::assert_is_main_thread() instead")]
-pub fn assert_is_main_thread() {
-    crate::threads::assert_is_main_thread()
-}
-
-#[deprecated(note = "Use threads::assert_is_background_thread() instead")]
-pub fn assert_is_background_thread() {
-    crate::threads::assert_is_background_thread()
-}
-
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 #[widestrs]
 pub fn format_size(mut sz: i64) -> WString {

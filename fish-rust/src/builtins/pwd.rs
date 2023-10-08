@@ -2,7 +2,7 @@
 use errno::errno;
 
 use super::prelude::*;
-use crate::{env::EnvMode, wutil::wrealpath};
+use crate::{env::Environment, wutil::wrealpath};
 
 // The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");
@@ -12,7 +12,7 @@ const long_options: &[woption] = &[
     wopt(L!("physical"), no_argument, 'P'),
 ];
 
-pub fn pwd(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut resolve_symlinks = false;
@@ -41,11 +41,8 @@ pub fn pwd(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> 
     }
 
     let mut pwd = WString::new();
-    let tmp = parser
-        .vars1()
-        .get_or_null(&L!("PWD").to_ffi(), EnvMode::default().bits());
-    if !tmp.is_null() {
-        pwd = tmp.as_string().from_ffi();
+    if let Some(tmp) = parser.vars().get(L!("PWD")) {
+        pwd = tmp.as_string();
     }
     if resolve_symlinks {
         if let Some(real_pwd) = wrealpath(&pwd) {

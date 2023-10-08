@@ -9,18 +9,24 @@
 #include "maybe.h"
 #include "wutil.h"
 
-class Parser; using parser_t = Parser;
+struct Parser;
+struct IoStreams;
+
+using parser_t = Parser;
+using io_streams_t = IoStreams;
+
 class proc_status_t;
-class output_stream_t;
-class IoStreams; using io_streams_t = IoStreams;
-using completion_list_t = std::vector<completion_t>;
+struct OutputStreamFfi;
+using output_stream_t = OutputStreamFfi;
+struct CompletionListFfi;
+using completion_list_t = CompletionListFfi;
 
 /// Data structure to describe a builtin.
 struct builtin_data_t {
     // Name of the builtin.
     const wchar_t *name;
     // Function pointer to the builtin implementation.
-    maybe_t<int> (*func)(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+    maybe_t<int> (*func)(const parser_t &parser, io_streams_t &streams, const wchar_t **argv);
     // Description of what the builtin does.
     const wchar_t *desc;
 };
@@ -78,65 +84,8 @@ struct builtin_data_t {
 /// The send stuff to foreground message.
 #define FG_MSG _(L"Send job %d (%ls) to foreground\n")
 
-bool builtin_exists(const wcstring &cmd);
-
-proc_status_t builtin_run(parser_t &parser, const std::vector<wcstring> &argv,
-                          io_streams_t &streams);
-
-std::vector<wcstring> builtin_get_names();
-wcstring_list_ffi_t builtin_get_names_ffi();
-void builtin_get_names(completion_list_t *list);
-const wchar_t *builtin_get_desc(const wcstring &name);
-
-wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
-
-void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
-                        const wcstring &error_message = {});
 int builtin_count_args(const wchar_t *const *argv);
-
-void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                            const wchar_t *opt, bool print_hints = true);
-
-void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                              const wchar_t *opt, bool print_hints = true);
-
-void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wchar_t *cmd);
 
 void builtin_wperror(const wchar_t *program_name, io_streams_t &streams);
 
-struct help_only_cmd_opts_t {
-    bool print_help = false;
-};
-int parse_help_only_cmd_opts(help_only_cmd_opts_t &opts, int *optind, int argc,
-                             const wchar_t **argv, parser_t &parser, io_streams_t &streams);
-
-/// An enum of the builtins implemented in Rust.
-enum class RustBuiltin : int32_t {
-    Abbr,
-    Argparse,
-    Bg,
-    Block,
-    Builtin,
-    Cd,
-    Contains,
-    Command,
-    Count,
-    Echo,
-    Emit,
-    Exit,
-    Functions,
-    Math,
-    Path,
-    Printf,
-    Pwd,
-    Random,
-    Realpath,
-    Return,
-    SetColor,
-    Status,
-    String,
-    Test,
-    Type,
-    Wait,
-};
 #endif

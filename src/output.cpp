@@ -83,7 +83,8 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 
     bool next_is_background = false;
     wcstring color_name;
-    for (const wcstring &next : var.as_list()) {
+    auto vals = var.as_list();
+    for (const wcstring &next : vals) {
         color_name.clear();
         if (is_background) {
             if (color_name.empty() && next_is_background) {

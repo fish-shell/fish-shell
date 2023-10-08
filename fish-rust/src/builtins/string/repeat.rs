@@ -39,7 +39,7 @@ impl StringSubCommand<'_> for Repeat {
 
     fn handle(
         &mut self,
-        _parser: &mut Parser,
+        _parser: &Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],

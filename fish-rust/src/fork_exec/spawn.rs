@@ -1,7 +1,8 @@
 //! Wrappers around posix_spawn.
 
 use super::blocked_signals_for_job;
-use crate::ffi::{self, job_t};
+use crate::exec::is_thompson_shell_script;
+use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::get_signals_with_handlers;
 use errno::{self, set_errno, Errno};
@@ -96,15 +97,15 @@ pub struct PosixSpawner {
 }
 
 impl PosixSpawner {
-    pub fn new(j: &job_t, dup2s: &Dup2List) -> Result<PosixSpawner, Errno> {
+    pub fn new(j: &Job, dup2s: &Dup2List) -> Result<PosixSpawner, Errno> {
         let mut attr = Attr::new()?;
         let mut actions = FileActions::new()?;
 
         // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
         // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
-        let desired_pgid = if let Some(pgid) = j.get_job_group().get_pgid() {
+        let desired_pgid = if let Some(pgid) = j.get_pgid() {
             Some(pgid)
-        } else if j.get_procs()[0].as_ref().unwrap().get_leads_pgrp() {
+        } else if j.processes()[0].leads_pgrp {
             Some(0)
         } else {
             None
@@ -179,14 +180,15 @@ impl PosixSpawner {
         // the kernel won't run the binary we hand it off to the interpreter
         // after performing a binary safety check, recommended by POSIX: a
         // line needs to exist before the first \0 with a lowercase letter.
-        if spawn_err.0 == libc::ENOEXEC && ffi::is_thompson_shell_script(cmd) {
+        let cmdcstr = unsafe { CStr::from_ptr(cmd) };
+        if spawn_err.0 == libc::ENOEXEC && is_thompson_shell_script(cmdcstr) {
             // Create a new argv with /bin/sh prepended.
             let interp = get_path_bshell();
             let mut argv2 = vec![interp.as_ptr() as *mut c_char];
 
             // The command to call should use the full path,
             // not what we would pass as argv0.
-            let cmd2: CString = CString::new(unsafe { CStr::from_ptr(cmd).to_bytes() }).unwrap();
+            let cmd2: CString = CString::new(cmdcstr.to_bytes()).unwrap();
             argv2.push(cmd2.as_ptr() as *mut c_char);
             for i in 1.. {
                 let ptr = unsafe { argv.offset(i).read() };
@@ -218,20 +220,6 @@ fn get_path_bshell() -> CString {
     CString::new("/bin/sh").unwrap()
 }
 
-/// Returns a Box<PosixSpawner>::into_raw(), or nullptr on error, in which case errno is set.
-/// j is an unowned pointer to a job_t, dup2s is an unowned pointer to a Dup2List.
-fn new_spawner_ffi(j: *const u8, dup2s: *const u8) -> *mut PosixSpawner {
-    let j: &job_t = unsafe { &*j.cast() };
-    let dup2s: &Dup2List = unsafe { &*dup2s.cast() };
-    match PosixSpawner::new(j, dup2s) {
-        Ok(spawner) => Box::into_raw(Box::new(spawner)),
-        Err(err) => {
-            set_errno(err);
-            std::ptr::null_mut()
-        }
-    }
-}
-
 impl Drop for PosixSpawner {
     fn drop(&mut self) {
         // Necessary to define this for FFI purposes, to avoid link errors.
@@ -253,30 +241,5 @@ impl PosixSpawner {
                 -1
             }
         }
-    }
-}
-
-fn force_cxx_to_generate_box_do_not_call() -> Box<PosixSpawner> {
-    unimplemented!("Do not call, for linking help only");
-}
-
-#[cxx::bridge]
-mod posix_spawn_ffi {
-    extern "Rust" {
-        type PosixSpawner;
-
-        // Required to force cxx to generate a Box destructor, to avoid link errors.
-        fn force_cxx_to_generate_box_do_not_call() -> Box<PosixSpawner>;
-
-        #[cxx_name = "new_spawner"]
-        fn new_spawner_ffi(j: *const u8, dup2s: *const u8) -> *mut PosixSpawner;
-
-        #[cxx_name = "spawn"]
-        fn spawn_ffi(
-            &mut self,
-            cmd: *const c_char,
-            argv: *const *mut c_char,
-            envp: *const *mut c_char,
-        ) -> i32;
     }
 }

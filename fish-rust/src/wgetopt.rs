@@ -69,7 +69,7 @@ fn empty_wstr() -> &'static wstr {
 
 pub struct wgetopter_t<'opts, 'args, 'argarray> {
     /// Argv.
-    argv: &'argarray mut [&'args wstr],
+    pub argv: &'argarray mut [&'args wstr],
 
     /// For communication from `getopt` to the caller. When `getopt` finds an option that takes an
     /// argument, the argument value is returned here. Also, when `ordering` is RETURN_IN_ORDER, each

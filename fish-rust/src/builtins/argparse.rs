@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::prelude::*;
 
 use crate::env::{EnvMode, EnvStack};
+use crate::exec::exec_subshell;
 use crate::wcstringutil::split_string;
 use crate::wutil::fish_iswalnum;
 
@@ -80,29 +81,6 @@ const LONG_OPTIONS: &[woption] = &[
     wopt(L!("min-args"), woption_argument_t::required_argument, 'N'),
     wopt(L!("max-args"), woption_argument_t::required_argument, 'X'),
 ];
-
-fn exec_subshell(
-    cmd: &wstr,
-    parser: &mut Parser,
-    outputs: &mut Vec<WString>,
-    apply_exit_status: bool,
-) -> Option<c_int> {
-    use crate::ffi::exec_subshell_ffi;
-    use crate::wchar_ffi::wcstring_list_ffi_t;
-
-    let mut cmd_output: cxx::UniquePtr<wcstring_list_ffi_t> = wcstring_list_ffi_t::create();
-    let retval = Some(
-        exec_subshell_ffi(
-            cmd.to_ffi().as_ref().unwrap(),
-            parser.pin(),
-            cmd_output.pin_mut(),
-            apply_exit_status,
-        )
-        .into(),
-    );
-    *outputs = cmd_output.as_mut().unwrap().from_ffi();
-    retval
-}
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
@@ -499,7 +477,7 @@ fn parse_cmd_opts<'args>(
     optind: &mut usize,
     argc: usize,
     args: &mut [&'args wstr],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = args[0];
@@ -583,7 +561,7 @@ fn parse_cmd_opts<'args>(
         // If no name has been given, we default to the function name.
         // If any error happens, the backtrace will show which argparse it was.
         opts.name = parser
-            .get_func_name(1)
+            .get_function_name(1)
             .unwrap_or_else(|| L!("argparse").to_owned());
     }
 
@@ -624,7 +602,7 @@ fn populate_option_strings<'args>(
 }
 
 fn validate_arg<'opts>(
-    parser: &mut Parser,
+    parser: &Parser,
     opts_name: &wstr,
     opt_spec: &mut OptionSpec<'opts>,
     is_long_flag: bool,
@@ -636,7 +614,7 @@ fn validate_arg<'opts>(
         return STATUS_CMD_OK;
     }
 
-    let vars = parser.get_vars();
+    let vars = parser.vars();
     vars.push(true /* new_scope */);
 
     let env_mode = EnvMode::LOCAL | EnvMode::EXPORT;
@@ -659,13 +637,19 @@ fn validate_arg<'opts>(
 
     let mut cmd_output = Vec::new();
 
-    let retval = exec_subshell(opt_spec.validation_command, parser, &mut cmd_output, false);
+    let retval = exec_subshell(
+        opt_spec.validation_command,
+        parser,
+        Some(&mut cmd_output),
+        false,
+    );
 
     for output in cmd_output {
-        streams.err.appendln(output);
+        streams.err.append(output);
+        streams.err.append_char('\n');
     }
     vars.pop();
-    return retval;
+    Some(retval)
 }
 
 /// \return whether the option 'opt' is an implicit integer option.
@@ -681,7 +665,7 @@ fn is_implicit_int(opts: &ArgParseCmdOpts, val: &wstr) -> bool {
 
 // Store this value under the implicit int option.
 fn validate_and_store_implicit_int<'args>(
-    parser: &mut Parser,
+    parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     val: &'args wstr,
     w: &mut wgetopter_t,
@@ -705,7 +689,7 @@ fn validate_and_store_implicit_int<'args>(
 }
 
 fn handle_flag<'args>(
-    parser: &mut Parser,
+    parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     opt: char,
     is_long_flag: bool,
@@ -754,7 +738,7 @@ fn handle_flag<'args>(
 }
 
 fn argparse_parse_flags<'args>(
-    parser: &mut Parser,
+    parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     argc: usize,
     args: &mut [&'args wstr],
@@ -855,7 +839,7 @@ fn argparse_parse_args<'args>(
     opts: &mut ArgParseCmdOpts<'args>,
     args: &mut [&'args wstr],
     argc: usize,
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams,
 ) -> Option<c_int> {
     if argc <= 1 {
@@ -943,7 +927,7 @@ fn set_argparse_result_vars(vars: &EnvStack, opts: &ArgParseCmdOpts) {
 /// an external command also means its output has to be in a form that can be eval'd. Because our
 /// version is a builtin it can directly set variables local to the current scope (e.g., a
 /// function). It doesn't need to write anything to stdout that then needs to be eval'd.
-pub fn argparse(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn argparse(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
 
@@ -954,7 +938,7 @@ pub fn argparse(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
         // This is an error in argparse usage, so we append the error trailer with a stack trace.
         // The other errors are an error in using *the command* that is using argparse,
         // so our help doesn't apply.
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return retval;
     }
 
@@ -987,7 +971,7 @@ pub fn argparse(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
         return retval;
     }
 
-    set_argparse_result_vars(&parser.get_vars(), &opts);
+    set_argparse_result_vars(parser.vars(), &opts);
 
     return retval;
 }

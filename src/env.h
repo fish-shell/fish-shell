@@ -17,16 +17,22 @@
 #include "maybe.h"
 #include "wutil.h"
 
-struct event_list_ffi_t;
-struct function_properties_t;
-
 #if INCLUDE_RUST_HEADERS
 #include "env/env_ffi.rs.h"
 #else
 struct EnvVar;
 struct EnvNull;
+struct EnvStack;
 struct EnvStackRef;
+struct EnvDyn;
+enum class env_stack_set_result_t : uint8_t;
+struct Statuses;
 #endif
+
+struct event_list_ffi_t;
+struct function_properties_t;
+
+using statuses_t = Statuses;
 
 /// FFI helper for events.
 struct Event;
@@ -44,6 +50,16 @@ struct event_list_ffi_t {
 
 struct owning_null_terminated_array_t;
 
+#if INCLUDE_RUST_HEADERS
+#include "env/env_ffi.rs.h"
+#else
+struct EnvVar;
+struct EnvNull;
+struct EnvStackRef;
+#endif
+
+struct owning_null_terminated_array_t;
+
 extern "C" {
 extern bool CURSES_INITIALIZED;
 
@@ -52,6 +68,8 @@ extern bool TERM_HAS_XN;
 
 extern size_t READ_BYTE_LIMIT;
 }
+
+struct Event;
 
 // Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum : uint16_t {
@@ -83,31 +101,6 @@ using env_mode_flags_t = uint16_t;
 
 /// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
-
-/// A collection of status and pipestatus.
-struct statuses_t {
-    /// Status of the last job to exit.
-    int status{0};
-
-    /// Signal from the most recent process in the last job that was terminated by a signal.
-    /// 0 if all processes exited normally.
-    int kill_signal{0};
-
-    /// Pipestatus value.
-    std::vector<int> pipestatus{};
-
-    /// Return a statuses for a single process status.
-    static statuses_t just(int s) {
-        statuses_t result{};
-        result.status = s;
-        result.pipestatus.push_back(s);
-        return result;
-    }
-};
-
-/// Various things we need to initialize at run-time that don't really fit any of the other init
-/// routines.
-void misc_init();
 
 /// env_var_t is an immutable value-type data structure representing the value of an environment
 /// variable. This wraps the EnvVar type from Rust.
@@ -163,7 +156,6 @@ class env_var_t {
 
     rust::Box<EnvVar> impl_;
 };
-typedef std::unordered_map<wcstring, env_var_t> var_table_t;
 
 /// An environment is read-only access to variable values.
 class environment_t {
@@ -201,7 +193,7 @@ class null_environment_t : public environment_t {
 
 /// A mutable environment which allows scopes to be pushed and popped.
 class env_stack_t final : public environment_t {
-    friend class Parser;
+    friend struct Parser;
 
     /// \return whether we are the principal stack.
     bool is_principal() const;
@@ -209,6 +201,8 @@ class env_stack_t final : public environment_t {
    public:
     ~env_stack_t() override;
     env_stack_t(env_stack_t &&);
+    /* implicit */ env_stack_t(rust::Box<EnvStackRef> imp);
+    /* implicit */ env_stack_t(uint8_t *imp);
 
     /// Implementation of environment_t.
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
@@ -248,20 +242,11 @@ class env_stack_t final : public environment_t {
     /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
     void pop();
 
-    /// Returns an array containing all exported variables in a format suitable for execv.
-    std::shared_ptr<owning_null_terminated_array_t> export_arr();
-
     /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
     /// but globals are shared (i.e. changes to global will be visible to this snapshot). This
     /// returns a shared_ptr for convenience, since the most common reason to snapshot is because
     /// you want to read from another thread.
     std::shared_ptr<environment_t> snapshot() const;
-
-    /// Helpers to get and set the proc statuses.
-    /// These correspond to $status and $pipestatus.
-    statuses_t get_last_statuses() const;
-    int get_last_status() const;
-    void set_last_statuses(statuses_t s);
 
     /// Sets up argv as the given list of strings.
     void set_argv(std::vector<wcstring> argv);
@@ -275,15 +260,6 @@ class env_stack_t final : public environment_t {
         return environment_t::get_or_null(key, mode);
     }
 
-    /// Synchronizes universal variable changes.
-    /// If \p always is set, perform synchronization even if there's no pending changes from this
-    /// instance (that is, look for changes from other fish instances).
-    /// \return a list of events for changed variables.
-    std::vector<rust::Box<Event>> universal_sync(bool always);
-
-    /// Applies inherited variables in preparation for executing a function.
-    void apply_inherited_ffi(const function_properties_t &props);
-
     // Compatibility hack; access the "environment stack" from back when there was just one.
     static const std::shared_ptr<env_stack_t> &principal_ref();
     static env_stack_t &principal() { return *principal_ref(); }
@@ -294,11 +270,9 @@ class env_stack_t final : public environment_t {
 
     /// Access the underlying Rust implementation.
     /// This returns a const rust::Box<EnvStackRef> *, or in Rust terms, a *const Box<EnvStackRef>.
-    const void *get_impl_ffi() const { return &impl_; }
+    const EnvStackRef &get_impl_ffi() const;
 
    private:
-    env_stack_t(rust::Box<EnvStackRef> imp);
-
     /// The implementation. Do not access this directly.
     rust::Box<EnvStackRef> impl_;
 };
@@ -316,6 +290,32 @@ class env_dyn_t final : public environment_t {
    private:
     rust::Box<EnvDyn> impl_;
 };
+#endif
+
+/// A struct of configuration directories, determined in main() that fish will optionally pass to
+/// env_init.
+struct config_paths_t {
+    wcstring data;     // e.g., /usr/local/share
+    wcstring sysconf;  // e.g., /usr/local/etc
+    wcstring doc;      // e.g., /usr/local/share/doc/fish
+    wcstring bin;      // e.g., /usr/local/bin
+};
+
+/// Initialize environment variable data.
+void env_init(const struct config_paths_t *paths = nullptr, bool do_uvars = true,
+              bool default_paths = false);
+
+using env_var_flags_t = uint8_t;
+enum {
+    env_var_flag_export = 1 << 0,     // whether the variable is exported
+    env_var_flag_read_only = 1 << 1,  // whether the variable is read only
+    env_var_flag_pathvar = 1 << 2,    // whether the variable is a path variable
+};
+
+/// A mutable environment which allows scopes to be pushed and popped.
+
+#if INCLUDE_RUST_HEADERS
+struct EnvDyn;
 #endif
 
 /// Gets a path appropriate for runtime storage

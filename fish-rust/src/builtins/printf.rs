@@ -77,9 +77,9 @@ fn iswxdigit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
 
-struct builtin_printf_state_t<'a> {
+struct builtin_printf_state_t<'a, 'b> {
     // Out and err streams. Note this is a captured reference!
-    streams: &'a mut IoStreams,
+    streams: &'a mut IoStreams<'b>,
 
     // The status of the operation.
     exit_code: c_int,
@@ -203,7 +203,7 @@ fn modify_allowed_format_specifiers(ok: &mut [bool; 256], str: &str, flag: bool)
     }
 }
 
-impl<'a> builtin_printf_state_t<'a> {
+impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     #[allow(clippy::partialeq_to_none)]
     fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
@@ -579,7 +579,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         // We set the exit code to error, because one occurred,
@@ -603,7 +603,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         self.exit_code = STATUS_CMD_ERROR.unwrap();
@@ -763,7 +763,7 @@ impl<'a> builtin_printf_state_t<'a> {
 }
 
 /// The printf builtin.
-pub fn printf(_parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let mut argc = argv.len();
 
     // Rebind argv as immutable slice (can't rearrange its elements), skipping the command name.

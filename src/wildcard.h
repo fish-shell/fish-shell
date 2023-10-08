@@ -8,6 +8,9 @@
 #include "common.h"
 #include "complete.h"
 #include "expand.h"
+#if INCLUDE_RUST_HEADERS
+#include "wildcard.rs.h"
+#endif
 
 /// Description for generic executable.
 #define COMPLETE_EXEC_DESC _(L"command")
@@ -70,46 +73,5 @@ enum class wildcard_result_t {
     cancel,    /// Expansion was cancelled (e.g. control-C).
     overflow,  /// Expansion produced too many results.
 };
-wildcard_result_t wildcard_expand_string(const wcstring &wc, const wcstring &working_directory,
-                                         expand_flags_t flags,
-                                         const cancel_checker_t &cancel_checker,
-                                         completion_receiver_t *output);
-
-#if INCLUDE_RUST_HEADERS
-
-#include "wildcard.rs.h"
-
-#else
-/// Test whether the given wildcard matches the string. Does not perform any I/O.
-///
-/// \param str The string to test
-/// \param wc The wildcard to test against
-/// \param leading_dots_fail_to_match if set, strings with leading dots are assumed to be hidden
-/// files and are not matched
-///
-/// \return true if the wildcard matched
-bool wildcard_match_ffi(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match);
-
-// Check if the string has any unescaped wildcards (e.g. ANY_STRING).
-bool wildcard_has_internal(const wcstring &s);
-
-/// Check if the specified string contains wildcards (e.g. *).
-bool wildcard_has(const wcstring &s);
-
-#endif
-
-inline bool wildcard_match(const wcstring &str, const wcstring &wc,
-                    bool leading_dots_fail_to_match = false) {
-                        return wildcard_match_ffi(str, wc, leading_dots_fail_to_match);
-                    }
-
-inline bool wildcard_has(const wchar_t *s, size_t len) {
-    return wildcard_has(wcstring(s, len));
-};
-
-/// Test wildcard completion.
-wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,
-                                    const description_func_t &desc_func, completion_receiver_t *out,
-                                    expand_flags_t expand_flags, complete_flags_t flags);
 
 #endif

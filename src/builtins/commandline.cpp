@@ -23,6 +23,7 @@
 #include "../tokenizer.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "builtins/shared.rs.h"
 
 /// Which part of the comandbuffer are we operating on.
 enum {
@@ -109,25 +110,30 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 
             if (token->type_ == token_type_t::string) {
                 wcstring tmp = *tok->text_of(*token);
-                unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
-                out.append(tmp);
+                auto maybe_unescaped = unescape_string(tmp.c_str(), tmp.size(), UNESCAPE_INCOMPLETE,
+                                                       STRING_STYLE_SCRIPT);
+                assert(maybe_unescaped);
+                out.append(*maybe_unescaped);
                 out.push_back(L'\n');
             }
         }
 
-        streams.out.append(out);
+        streams.out()->append(out);
     } else {
         if (cut_at_cursor) {
-            streams.out.append(begin, pos);
+            streams.out()->append(wcstring{begin, pos});
         } else {
-            streams.out.append(begin, end - begin);
+            streams.out()->append(wcstring{begin, end});
         }
-        streams.out.push(L'\n');
+        streams.out()->push(L'\n');
     }
 }
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
-maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+int builtin_commandline(const void *_parser, void *_streams, void *_argv) {
+    const auto &parser = *static_cast<const parser_t *>(_parser);
+    auto &streams = *static_cast<io_streams_t *>(_streams);
+    auto argv = static_cast<const wchar_t **>(_argv);
     const commandline_state_t rstate = commandline_get_state();
     const wchar_t *cmd = argv[0];
     int buffer_part = 0;
@@ -268,11 +274,11 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 return STATUS_CMD_OK;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             case L'?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -287,13 +293,13 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         // Check for invalid switch combinations.
         if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode ||
             search_mode || paging_mode || selection_start_mode || selection_end_mode) {
-            streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            streams.err()->append(format_string(BUILTIN_ERR_COMBO, argv[0]));
+            builtin_print_error_trailer(parser, *streams.err(), cmd);
             return STATUS_INVALID_ARGS;
         }
 
         if (argc == w.woptind) {
-            builtin_missing_argument(parser, streams, cmd, argv[0]);
+            builtin_missing_argument(parser, streams, cmd, argv[0], true);
             return STATUS_INVALID_ARGS;
         }
 
@@ -303,7 +309,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 // Don't enqueue a repaint if we're currently in the middle of one,
                 // because that's an infinite loop.
                 if (mc == rl::repaint_mode || mc == rl::force_repaint || mc == rl::repaint) {
-                    if (ld.is_repaint) continue;
+                    if (ld.is_repaint()) continue;
                 }
 
                 // HACK: Execute these right here and now so they can affect any insertions/changes
@@ -318,8 +324,9 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                     reader_queue_ch(*mc);
                 }
             } else {
-                streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]);
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                streams.err()->append(
+                    format_string(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]));
+                builtin_print_error_trailer(parser, *streams.err(), cmd);
                 return STATUS_INVALID_ARGS;
             }
         }
@@ -329,22 +336,22 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     if (selection_mode) {
         if (rstate.selection) {
-            streams.out.append(rstate.text.c_str() + rstate.selection->start,
-                               rstate.selection->length);
+            streams.out()->append(
+                {rstate.text.c_str() + rstate.selection->start, rstate.selection->length});
         }
         return STATUS_CMD_OK;
     }
 
     // Check for invalid switch combinations.
     if ((selection_start_mode || selection_end_mode) && (argc - w.woptind)) {
-        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        streams.err()->append(format_string(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]));
+        builtin_print_error_trailer(parser, *streams.err(), cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc - w.woptind > 1)) {
-        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        streams.err()->append(format_string(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]));
+        builtin_print_error_trailer(parser, *streams.err(), cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -352,16 +359,16 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         (cursor_mode || line_mode || search_mode || paging_mode || paging_full_mode) &&
         // Special case - we allow to get/set cursor position relative to the process/job/token.
         !(buffer_part && cursor_mode)) {
-        streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        streams.err()->append(format_string(BUILTIN_ERR_COMBO, argv[0]));
+        builtin_print_error_trailer(parser, *streams.err(), cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if ((tokenize || cut_at_cursor) && (argc - w.woptind)) {
-        streams.err.append_format(
+        streams.err()->append(format_string(
             BUILTIN_ERR_COMBO2, cmd,
-            L"--cut-at-cursor and --tokenize can not be used when setting the commandline");
-        builtin_print_error_trailer(parser, streams.err, cmd);
+            L"--cut-at-cursor and --tokenize can not be used when setting the commandline"));
+        builtin_print_error_trailer(parser, *streams.err(), cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -380,7 +387,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if (line_mode) {
-        streams.out.append_format(L"%d\n", parse_util_lineno(rstate.text, rstate.cursor_pos));
+        streams.out()->append(
+            format_string(L"%d\n", parse_util_lineno(rstate.text, rstate.cursor_pos)));
         return STATUS_CMD_OK;
     }
 
@@ -402,7 +410,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             return STATUS_CMD_ERROR;
         }
         source_offset_t start = rstate.selection->start;
-        streams.out.append_format(L"%lu\n", static_cast<unsigned long>(start));
+        streams.out()->append(format_string(L"%lu\n", static_cast<unsigned long>(start)));
         return STATUS_CMD_OK;
     }
 
@@ -411,7 +419,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             return STATUS_CMD_ERROR;
         }
         source_offset_t end = rstate.selection->end();
-        streams.out.append_format(L"%lu\n", static_cast<unsigned long>(end));
+        streams.out()->append(format_string(L"%lu\n", static_cast<unsigned long>(end)));
         return STATUS_CMD_OK;
     }
 
@@ -425,8 +433,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     if (override_buffer) {
         current_buffer = override_buffer;
         current_cursor_pos = std::wcslen(current_buffer);
-    } else if (!ld.transient_commandlines.empty() && !cursor_mode) {
-        transient = ld.transient_commandlines.back();
+    } else if (!ld.transient_commandlines_empty() && !cursor_mode) {
+        transient = *ld.transient_commandlines_back();
         current_buffer = transient.c_str();
         current_cursor_pos = transient.size();
     } else if (rstate.initialized) {
@@ -436,9 +444,9 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         // There is no command line, either because we are not interactive, or because we are
         // interactive and are still reading init files (in which case we silently ignore this).
         if (!is_interactive_session()) {
-            streams.err.append(cmd);
-            streams.err.append(L": Can not set commandline in non-interactive mode\n");
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            streams.err()->append(cmd);
+            streams.err()->append(L": Can not set commandline in non-interactive mode\n");
+            builtin_print_error_trailer(parser, *streams.err(), cmd);
         }
         return STATUS_CMD_ERROR;
     }
@@ -481,8 +489,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         if (argc - w.woptind) {
             long new_pos = fish_wcstol(argv[w.woptind]) + (begin - current_buffer);
             if (errno) {
-                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]);
-                builtin_print_error_trailer(parser, streams.err, cmd);
+                streams.err()->append(format_string(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]));
+                builtin_print_error_trailer(parser, *streams.err(), cmd);
             }
 
             new_pos =
@@ -490,7 +498,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             commandline_set_buffer(current_buffer, static_cast<size_t>(new_pos));
         } else {
             size_t pos = current_cursor_pos - (begin - current_buffer);
-            streams.out.append_format(L"%lu\n", static_cast<unsigned long>(pos));
+            streams.out()->append(format_string(L"%lu\n", static_cast<unsigned long>(pos)));
         }
         return STATUS_CMD_OK;
     }

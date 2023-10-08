@@ -35,6 +35,15 @@ impl wcharz_t {
     }
 }
 
+/// W0String can be cheaply converted to a wcharz_t (but be mindful that W0String is kept alive).
+impl From<&W0String> for wcharz_t {
+    fn from(w0: &W0String) -> Self {
+        wcharz_t {
+            str_: w0.as_ptr() as *const wchar_t,
+        }
+    }
+}
+
 /// Convert wcharz_t to an WString.
 impl From<&wcharz_t> for WString {
     fn from(wcharz: &wcharz_t) -> Self {
@@ -67,6 +76,16 @@ macro_rules! wcharz {
             str_: crate::wchar_ffi::c_str!($string),
         }
     };
+}
+
+/// Convert a CxxVector of wcharz_t to a Vec<WString>.
+pub fn wcharzs_to_vec(wcharz_vec: cxx::UniquePtr<cxx::CxxVector<wcharz_t>>) -> Vec<WString> {
+    wcharz_vec
+        .as_ref()
+        .expect("UniquePtr was null")
+        .iter()
+        .map(|s| s.into())
+        .collect()
 }
 
 pub(crate) use c_str;
@@ -187,6 +206,12 @@ impl WCharFromFFI<Vec<u8>> for &cxx::UniquePtr<cxx::CxxString> {
 impl WCharFromFFI<Vec<u8>> for &cxx::SharedPtr<cxx::CxxString> {
     fn from_ffi(self) -> Vec<u8> {
         self.as_bytes().to_vec()
+    }
+}
+
+impl WCharFromFFI<WString> for &wcharz_t {
+    fn from_ffi(self) -> WString {
+        self.into()
     }
 }
 

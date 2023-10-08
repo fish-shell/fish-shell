@@ -110,6 +110,8 @@ class category_list_t {
     category_t screen{L"screen", L"Screen repaints"};
 
     category_t abbrs{L"abbrs", L"Abbreviation expansion"};
+
+    category_t refcell{L"refcell", L"Refcell dynamic borrowing"};
 };
 
 /// The class responsible for logging.

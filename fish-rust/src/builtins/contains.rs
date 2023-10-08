@@ -9,7 +9,7 @@ struct Options {
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
@@ -46,7 +46,7 @@ fn parse_options(
 
 /// Implementation of the builtin contains command, used to check if a specified string is part of
 /// a list.
-pub fn contains(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn contains(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
 
     let (opts, optind) = match parse_options(args, parser, streams) {

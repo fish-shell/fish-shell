@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
 
-pub fn random(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -47,7 +47,7 @@ pub fn random(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
         if arg_count == 1 {
             streams
                 .err
-                .append(wgettext_fmt!("%ls: nothing to choose from\n", cmd,));
+                .append(wgettext_fmt!("%ls: nothing to choose from\n", cmd));
             return STATUS_INVALID_ARGS;
         }
 

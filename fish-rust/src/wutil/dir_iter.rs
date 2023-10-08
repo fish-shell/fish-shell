@@ -139,7 +139,7 @@ fn dirent_type_to_entry_type(dt: u8) -> Option<DirEntryType> {
         DT_REG => Some(DirEntryType::reg),
         DT_LNK => Some(DirEntryType::lnk),
         DT_SOCK => Some(DirEntryType::sock),
-        // todo! whiteout
+        // todo!("whiteout")
         _ => None,
     }
 }
@@ -154,7 +154,7 @@ fn stat_mode_to_entry_type(m: libc::mode_t) -> Option<DirEntryType> {
         S_IFLNK => Some(DirEntryType::lnk),
         S_IFSOCK => Some(DirEntryType::sock),
         _ => {
-            // todo! whiteout
+            // todo!("whiteout")
             None
         }
     }

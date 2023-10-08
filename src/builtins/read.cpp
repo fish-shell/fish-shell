@@ -26,6 +26,7 @@
 #include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "builtins/shared.rs.h"
 
 namespace {
 struct read_cmd_opts_t {
@@ -75,7 +76,8 @@ static const struct woption long_options[] = {{L"array", no_argument, 'a'},
                                               {}};
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, const parser_t &parser,
+                          io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -95,9 +97,10 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case 'i': {
-                streams.err.append_format(_(L"%ls: usage of -i for --silent is deprecated. Please "
-                                            L"use -s or --silent instead.\n"),
-                                          cmd);
+                streams.err()->append(
+                    format_string(_(L"%ls: usage of -i for --silent is deprecated. Please "
+                                    L"use -s or --silent instead.\n"),
+                                  cmd));
                 return STATUS_INVALID_ARGS;
             }
             case L'f': {
@@ -124,14 +127,14 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 opts.nchars = fish_wcstoi(w.woptarg);
                 if (errno) {
                     if (errno == ERANGE) {
-                        streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"), cmd,
-                                                  w.woptarg);
-                        builtin_print_error_trailer(parser, streams.err, cmd);
+                        streams.err()->append(format_string(
+                            _(L"%ls: Argument '%ls' is out of range\n"), cmd, w.woptarg));
+                        builtin_print_error_trailer(parser, *streams.err(), cmd);
                         return STATUS_INVALID_ARGS;
                     }
 
-                    streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, w.woptarg);
-                    builtin_print_error_trailer(parser, streams.err, cmd);
+                    streams.err()->append(format_string(BUILTIN_ERR_NOT_NUMBER, cmd, w.woptarg));
+                    builtin_print_error_trailer(parser, *streams.err(), cmd);
                     return STATUS_INVALID_ARGS;
                 }
                 break;
@@ -177,11 +180,11 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             case L'?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -196,8 +199,8 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
 
 /// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and
 /// we weren't asked to split on null characters.
-static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool shell, bool silent,
-                            const wchar_t *prompt, const wchar_t *right_prompt,
+static int read_interactive(const parser_t &parser, wcstring &buff, int nchars, bool shell,
+                            bool silent, const wchar_t *prompt, const wchar_t *right_prompt,
                             const wchar_t *commandline, int in) {
     int exit_res = STATUS_CMD_OK;
 
@@ -224,7 +227,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     reader_push(parser, wcstring{}, std::move(conf));
 
     commandline_set_buffer(commandline, std::wcslen(commandline));
-    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
+    scoped_push<bool> interactive{&parser.libdata_pods_mut().is_interactive, true};
 
     auto mline = reader_readline(nchars);
     interactive.restore();
@@ -352,22 +355,24 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
 
 /// Validate the arguments given to `read` and provide defaults where needed.
 static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int argc,
-                              const wchar_t *const *argv, parser_t &parser, io_streams_t &streams) {
+                              const wchar_t *const *argv, const parser_t &parser,
+                              io_streams_t &streams) {
     if (opts.prompt && opts.prompt_str) {
-        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd,
-                                  L"-p", L"-P");
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        streams.err()->append(format_string(
+            _(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"-p", L"-P"));
+        builtin_print_error_trailer(parser, *streams.err(), cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.have_delimiter && opts.one_line) {
-        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd,
-                                  L"--delimiter", L"--line");
+        streams.err()->append(
+            format_string(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd,
+                          L"--delimiter", L"--line"));
         return STATUS_INVALID_ARGS;
     }
     if (opts.one_line && opts.split_null) {
-        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd,
-                                  L"-z", L"--line");
+        streams.err()->append(format_string(
+            _(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"-z", L"--line"));
         return STATUS_INVALID_ARGS;
     }
 
@@ -379,55 +384,57 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     }
 
     if ((opts.place & ENV_UNEXPORT) && (opts.place & ENV_EXPORT)) {
-        streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        streams.err()->append(format_string(BUILTIN_ERR_EXPUNEXP, cmd));
+        builtin_print_error_trailer(parser, *streams.err(), cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if ((opts.place & ENV_LOCAL ? 1 : 0) + (opts.place & ENV_FUNCTION ? 1 : 0) +
             (opts.place & ENV_GLOBAL ? 1 : 0) + (opts.place & ENV_UNIVERSAL ? 1 : 0) >
         1) {
-        streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        streams.err()->append(format_string(BUILTIN_ERR_GLOCAL, cmd));
+        builtin_print_error_trailer(parser, *streams.err(), cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if (!opts.array && argc < 1 && !opts.to_stdout) {
-        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc);
+        streams.err()->append(format_string(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.array && argc != 1) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc);
+        streams.err()->append(format_string(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.to_stdout && argc > 0) {
-        streams.err.append_format(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc);
+        streams.err()->append(format_string(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.tokenize && opts.have_delimiter) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd, L"--delimiter", L"--tokenize");
+        streams.err()->append(
+            format_string(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd, L"--delimiter", L"--tokenize"));
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.tokenize && opts.one_line) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd, L"--line", L"--tokenize");
+        streams.err()->append(
+            format_string(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd, L"--line", L"--tokenize"));
         return STATUS_INVALID_ARGS;
     }
 
     // Verify all variable names.
     for (int i = 0; i < argc; i++) {
         if (!valid_var_name(argv[i])) {
-            streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, argv[i]);
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            streams.err()->append(format_string(BUILTIN_ERR_VARNAME, cmd, argv[i]));
+            builtin_print_error_trailer(parser, *streams.err(), cmd);
             return STATUS_INVALID_ARGS;
         }
-        if (env_var_t::flags_for(argv[i]) & env_var_t::flag_read_only) {
-            streams.err.append_format(_(L"%ls: %ls: cannot overwrite read-only variable"), cmd,
-                                      argv[i]);
-            builtin_print_error_trailer(parser, streams.err, cmd);
+        if (env_flags_for(argv[i]) & env_var_flag_read_only) {
+            streams.err()->append(
+                format_string(_(L"%ls: %ls: cannot overwrite read-only variable"), cmd, argv[i]));
+            builtin_print_error_trailer(parser, *streams.err(), cmd);
             return STATUS_INVALID_ARGS;
         }
     }
@@ -436,9 +443,12 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
-maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
-    const wchar_t *cmd = argv[0];
+int builtin_read(const void *_parser, void *_streams, void *_argv) {
+    const auto &parser = *static_cast<const parser_t *>(_parser);
+    auto &streams = *static_cast<io_streams_t *>(_streams);
+    auto argv = static_cast<const wchar_t **>(_argv);
     int argc = builtin_count_args(argv);
+    const wchar_t *cmd = argv[0];
     wcstring buff;
     int exit_res = STATUS_CMD_OK;
     read_cmd_opts_t opts;
@@ -464,8 +474,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
     if (retval != STATUS_CMD_OK) return retval;
 
     // stdin may have been explicitly closed
-    if (streams.stdin_fd < 0) {
-        streams.err.append_format(_(L"%ls: stdin is closed\n"), cmd);
+    if (streams.stdin_fd() < 0) {
+        streams.err()->append(format_string(_(L"%ls: stdin is closed\n"), cmd));
         return STATUS_CMD_ERROR;
     }
 
@@ -481,7 +491,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
     auto vars_left = [&]() { return argv + argc - var_ptr; };
     auto clear_remaining_vars = [&]() {
         while (vars_left()) {
-            parser.vars().set_empty(*var_ptr, opts.place);
+            parser.vars().set(*var_ptr, opts.place, std::vector<wcstring>{});
             ++var_ptr;
         }
     };
@@ -492,19 +502,19 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
     do {
         buff.clear();
 
-        int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
+        int stream_stdin_is_a_tty = isatty(streams.stdin_fd());
         if (stream_stdin_is_a_tty && !opts.split_null) {
             // Read interactively using reader_readline(). This does not support splitting on null.
             exit_res =
                 read_interactive(parser, buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
-                                 opts.right_prompt, opts.commandline, streams.stdin_fd);
+                                 opts.right_prompt, opts.commandline, streams.stdin_fd());
         } else if (!opts.nchars && !stream_stdin_is_a_tty &&
                    // "one_line" is implemented as reading n-times to a new line,
                    // if we're chunking we could get multiple lines so we would have to advance
                    // more than 1 per run through the loop. Let's skip that for now.
                    !opts.one_line &&
-                   (streams.stdin_is_directly_redirected ||
-                    lseek(streams.stdin_fd, 0, SEEK_CUR) != -1)) {
+                   (streams.stdin_is_directly_redirected() ||
+                    lseek(streams.stdin_fd(), 0, SEEK_CUR) != -1)) {
             // We read in chunks when we either can seek (so we put the bytes back),
             // or we have the bytes to ourselves (because it's directly redirected).
             //
@@ -512,11 +522,11 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             // under the assumption that the stream will be closed soon anyway.
             // You don't rewind VHS tapes before throwing them in the trash.
             // TODO: Do this when nchars is set by seeking back.
-            exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null,
-                                      !streams.stdin_is_directly_redirected);
+            exit_res = read_in_chunks(streams.stdin_fd(), buff, opts.split_null,
+                                      !streams.stdin_is_directly_redirected());
         } else {
             exit_res =
-                read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);
+                read_one_char_at_a_time(streams.stdin_fd(), buff, opts.nchars, opts.split_null);
         }
 
         if (exit_res != STATUS_CMD_OK) {
@@ -525,7 +535,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
         }
 
         if (opts.to_stdout) {
-            streams.out.append(buff);
+            streams.out()->append(buff);
             return exit_res;
         }
 
@@ -536,7 +546,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 std::vector<wcstring> tokens;
                 while (auto t = tok->next()) {
                     auto text = *tok->text_of(*t);
-                    if (auto out = unescape_string(text, UNESCAPE_DEFAULT)) {
+                    if (auto out = unescape_string(text.c_str(), text.length(), UNESCAPE_DEFAULT,
+                                                   STRING_STYLE_SCRIPT)) {
                         tokens.push_back(*out);
                     } else {
                         tokens.push_back(text);
@@ -548,17 +559,21 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 std::unique_ptr<tok_t> t;
                 while ((vars_left() - 1 > 0) && (t = tok->next())) {
                     auto text = *tok->text_of(*t);
-                    if (auto out = unescape_string(text, UNESCAPE_DEFAULT)) {
-                        parser.set_var_and_fire(*var_ptr++, opts.place, *out);
+                    if (auto out = unescape_string(text.c_str(), text.length(), UNESCAPE_DEFAULT,
+                                                   STRING_STYLE_SCRIPT)) {
+                        parser.set_var_and_fire(*var_ptr++, opts.place,
+                                                std::vector<wcstring>{*out});
                     } else {
-                        parser.set_var_and_fire(*var_ptr++, opts.place, text);
+                        parser.set_var_and_fire(*var_ptr++, opts.place,
+                                                std::vector<wcstring>{text});
                     }
                 }
 
                 // If we still have tokens, set the last variable to them.
                 if ((t = tok->next())) {
                     wcstring rest = wcstring(buff, t->offset);
-                    parser.set_var_and_fire(*var_ptr++, opts.place, std::move(rest));
+                    parser.set_var_and_fire(*var_ptr++, opts.place,
+                                            std::vector<wcstring>{std::move(rest)});
                 }
             }
             // The rest of the loop is other split-modes, we don't care about those.
@@ -567,7 +582,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
 
         if (!opts.have_delimiter) {
             auto ifs = parser.vars().get_unless_empty(L"IFS");
-            if (ifs) opts.delimiter = ifs->as_string();
+            if (ifs) opts.delimiter = *ifs->as_string();
         }
 
         if (opts.delimiter.empty()) {
@@ -596,7 +611,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 // Not array mode: assign each char to a separate var with the remainder being
                 // assigned to the last var.
                 for (const auto &c : chars) {
-                    parser.set_var_and_fire(*var_ptr++, opts.place, c);
+                    parser.set_var_and_fire(*var_ptr++, opts.place, std::vector<wcstring>{c});
                 }
             }
         } else if (opts.array) {
@@ -630,7 +645,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                     if (val_idx < var_vals.size()) {
                         val = std::move(var_vals.at(val_idx++));
                     }
-                    parser.set_var_and_fire(*var_ptr++, opts.place, std::move(val));
+                    parser.set_var_and_fire(*var_ptr++, opts.place,
+                                            std::vector<wcstring>{std::move(val)});
                 }
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
@@ -641,7 +657,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                             &splits, argc - 1);
                 assert(splits.size() <= static_cast<size_t>(vars_left()));
                 for (const auto &split : splits) {
-                    parser.set_var_and_fire(*var_ptr++, opts.place, split);
+                    parser.set_var_and_fire(*var_ptr++, opts.place, std::vector<wcstring>{split});
                 }
             }
         }

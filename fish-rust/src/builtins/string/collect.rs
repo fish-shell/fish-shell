@@ -24,7 +24,7 @@ impl StringSubCommand<'_> for Collect {
 
     fn handle(
         &mut self,
-        _parser: &mut Parser,
+        _parser: &Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
@@ -43,7 +43,7 @@ impl StringSubCommand<'_> for Collect {
 
             streams
                 .out
-                .append_with_separation(arg, separation_type_t::explicitly, want_newline);
+                .append_with_separation(arg, SeparationType::explicitly, want_newline);
             appended += arg.len();
         }
 
@@ -54,7 +54,7 @@ impl StringSubCommand<'_> for Collect {
         if self.allow_empty && appended == 0 {
             streams.out.append_with_separation(
                 L!(""),
-                separation_type_t::explicitly,
+                SeparationType::explicitly,
                 true, /* historical behavior is to always print a newline */
             );
         }

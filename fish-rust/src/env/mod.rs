@@ -4,7 +4,7 @@ mod environment_impl;
 pub mod var;
 
 use crate::common::ToCString;
-pub use env_ffi::{EnvStackRefFFI, EnvStackSetResult};
+pub use env_ffi::{EnvDynFFI, EnvStackRefFFI, EnvStackSetResult};
 pub use environment::*;
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 pub use var::*;

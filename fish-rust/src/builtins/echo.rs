@@ -22,7 +22,7 @@ impl Default for Options {
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
@@ -135,7 +135,7 @@ where
 ///
 /// Bash only respects `-n` if it's the first argument. We'll do the same. We also support a new,
 /// fish specific, option `-s` to mean "no spaces".
-pub fn echo(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn echo(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,

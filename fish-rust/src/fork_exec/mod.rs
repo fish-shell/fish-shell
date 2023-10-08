@@ -5,16 +5,17 @@
 mod flog_safe;
 pub mod postfork;
 pub mod spawn;
-use crate::ffi::job_t;
+use crate::proc::Job;
+use libc::{SIGINT, SIGQUIT};
 
 /// Get the list of signals which should be blocked for a given job.
 /// Return true if at least one signal was set.
-fn blocked_signals_for_job(job: &job_t, sigmask: &mut libc::sigset_t) -> bool {
+pub fn blocked_signals_for_job(job: &Job, sigmask: &mut libc::sigset_t) -> bool {
     // Block some signals in background jobs for which job control is turned off (#6828).
     if !job.is_foreground() && !job.wants_job_control() {
         unsafe {
-            libc::sigaddset(sigmask, libc::SIGINT);
-            libc::sigaddset(sigmask, libc::SIGQUIT);
+            libc::sigaddset(sigmask, SIGINT);
+            libc::sigaddset(sigmask, SIGQUIT);
         }
         return true;
     }

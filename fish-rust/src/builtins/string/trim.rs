@@ -46,7 +46,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut Parser,
+        _parser: &Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],

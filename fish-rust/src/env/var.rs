@@ -52,30 +52,6 @@ impl From<EnvMode> for u16 {
     }
 }
 
-/// Return values for `env_stack_t::set()`.
-pub mod status {
-    pub const ENV_OK: i32 = 0;
-    pub const ENV_PERM: i32 = 1;
-    pub const ENV_SCOPE: i32 = 2;
-    pub const ENV_INVALID: i32 = 3;
-    pub const ENV_NOT_FOUND: i32 = 4;
-}
-
-/// Return values for `EnvStack::set()`.
-pub enum EnvStackSetResult {
-    ENV_OK,
-    ENV_PERM,
-    ENV_SCOPE,
-    ENV_INVALID,
-    ENV_NOT_FOUND,
-}
-
-impl Default for EnvStackSetResult {
-    fn default() -> Self {
-        EnvStackSetResult::ENV_OK
-    }
-}
-
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
 #[derive(Default)]

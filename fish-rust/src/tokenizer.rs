@@ -1153,7 +1153,7 @@ impl PipeOrRedir {
     }
 
     // \return the token type for this redirection.
-    fn token_type(&self) -> TokenType {
+    pub fn token_type(&self) -> TokenType {
         if self.is_pipe {
             TokenType::pipe
         } else {

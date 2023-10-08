@@ -1,9 +1,10 @@
 use crate::flog::FLOG;
-use std::cell::{Ref, RefMut};
+use std::cell::{Ref, RefCell, RefMut};
+use std::rc::{Rc, Weak};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::MutexGuard;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct RelaxedAtomicBool(AtomicBool);
 
 impl RelaxedAtomicBool {
@@ -24,6 +25,30 @@ impl RelaxedAtomicBool {
 impl Clone for RelaxedAtomicBool {
     fn clone(&self) -> Self {
         Self(AtomicBool::new(self.load()))
+    }
+}
+
+pub struct SharedFromThisBase<T> {
+    weak: RefCell<Weak<T>>,
+}
+
+impl<T> SharedFromThisBase<T> {
+    pub fn new() -> SharedFromThisBase<T> {
+        SharedFromThisBase {
+            weak: RefCell::new(Weak::new()),
+        }
+    }
+
+    pub fn initialize(&self, r: &Rc<T>) {
+        *self.weak.borrow_mut() = Rc::downgrade(r);
+    }
+}
+
+pub trait SharedFromThis<T> {
+    fn get_base(&self) -> &SharedFromThisBase<T>;
+
+    fn shared_from_this(&self) -> Rc<T> {
+        self.get_base().weak.borrow().upgrade().unwrap()
     }
 }
 

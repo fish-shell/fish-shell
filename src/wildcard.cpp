@@ -242,8 +242,8 @@ wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,
 /// \param is_dir Whether the file is a directory or not (might be behind a link)
 /// \param is_link Whether it's a link (that might point to a directory)
 /// \param definitely_executable Whether we know that it is executable, or don't know
-static const wchar_t *file_get_desc(const wcstring &filename, bool is_dir,
-                                    bool is_link, bool definitely_executable) {
+static const wchar_t *file_get_desc(const wcstring &filename, bool is_dir, bool is_link,
+                                    bool definitely_executable) {
     if (is_link) {
         if (is_dir) {
             return COMPLETE_DIRECTORY_SYMLINK_DESC;
@@ -267,7 +267,8 @@ static const wchar_t *file_get_desc(const wcstring &filename, bool is_dir,
 /// up. Note that the filename came from a readdir() call, so we know it exists.
 static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wcstring &filename,
                                               const wchar_t *wc, expand_flags_t expand_flags,
-                                              completion_receiver_t *out, const dir_iter_t::entry_t &entry) {
+                                              completion_receiver_t *out,
+                                              const dir_iter_t::entry_t &entry) {
     const bool executables_only = expand_flags & expand_flag::executables_only;
     const bool need_directory = expand_flags & expand_flag::directories_only;
     // Fast path: If we need directories, and we already know it is one,
@@ -322,7 +323,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         }
 
         // If we have executables_only, we already checked waccess above,
-        // so we tell file_get_desc that this file is definitely executable so it can skip the check.
+        // so we tell file_get_desc that this file is definitely executable so it can skip the
+        // check.
         desc = file_get_desc(filepath, entry.is_dir(), is_link, executables_only);
     }
 
@@ -553,7 +555,8 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
     }
 
     if (!(flags & expand_flag::for_completions)) {
-        // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file, we already know it exists!
+        // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file, we
+        // already know it exists!
         this->add_expansion_result(wcstring{base_dir});
     } else {
         // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.

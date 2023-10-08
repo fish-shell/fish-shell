@@ -164,7 +164,7 @@ const ESCAPE_TEST_COUNT: usize = 100_000;
 /// The average length of strings to unescape.
 const ESCAPE_TEST_LENGTH: usize = 100;
 /// The highest character number of character to try and escape.
-const ESCAPE_TEST_CHAR: usize = 4000;
+pub const ESCAPE_TEST_CHAR: usize = 4000;
 
 /// Helper to convert a narrow string to a sequence of hex digits.
 fn str2hex(input: &[u8]) -> String {

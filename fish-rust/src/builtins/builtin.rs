@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::ffi::{builtin_exists, builtin_get_names_ffi};
+use crate::builtins::shared::{builtin_exists, builtin_get_names};
 
 #[derive(Default)]
 struct builtin_cmd_opts_t {
@@ -7,11 +7,7 @@ struct builtin_cmd_opts_t {
     list_names: bool,
 }
 
-pub fn r#builtin(
-    parser: &mut Parser,
-    streams: &mut IoStreams,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -67,7 +63,7 @@ pub fn r#builtin(
     if opts.query {
         let optind = w.woptind;
         for arg in argv.iter().take(argc).skip(optind) {
-            if builtin_exists(&arg.to_ffi()) {
+            if builtin_exists(arg) {
                 return STATUS_CMD_OK;
             }
         }
@@ -76,7 +72,7 @@ pub fn r#builtin(
 
     if opts.list_names {
         // List is guaranteed to be sorted by name.
-        let names: Vec<WString> = builtin_get_names_ffi().from_ffi();
+        let names = builtin_get_names();
         for name in names {
             streams.out.appendln(name);
         }

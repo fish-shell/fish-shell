@@ -56,7 +56,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut Parser,
+        _parser: &Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
@@ -84,9 +84,9 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
         if nargs > 0 && !self.quiet {
             if self.is_join0 {
-                streams.out.append1('\0');
+                streams.out.append_char('\0');
             } else if print_trailing_newline {
-                streams.out.append1('\n');
+                streams.out.append_char('\n');
             }
         }
 

@@ -2,14 +2,13 @@ use crate::common::wcs2zstring;
 use crate::ffi;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
-use libc::EINTR;
-use libc::{fcntl, F_GETFL, F_SETFL, O_CLOEXEC, O_NONBLOCK};
+use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_CLOEXEC, O_NONBLOCK};
 use nix::unistd;
 use std::ffi::CStr;
 use std::io::{self, Read, Write};
 use std::os::unix::prelude::*;
 
-pub const PIPE_ERROR: &wstr = L!("An error occurred while setting up pipe");
+pub const PIPE_ERROR: &str = "An error occurred while setting up pipe";
 
 /// The first "high fd", which is considered outside the range of valid user-specified redirections
 /// (like >&5).
@@ -164,6 +163,27 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
     }
 }
 
+/// Sets CLO_EXEC on a given fd according to the value of \p should_set.
+pub fn set_cloexec(fd: RawFd, should_set: bool) -> c_int {
+    // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
+    // existing flags and modify them.
+    let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
+    if flags < 0 {
+        return -1;
+    }
+    let mut new_flags = flags;
+    if should_set {
+        new_flags |= FD_CLOEXEC;
+    } else {
+        new_flags &= !FD_CLOEXEC;
+    }
+    if flags == new_flags {
+        0
+    } else {
+        unsafe { libc::fcntl(fd, F_SETFD, new_flags) }
+    }
+}
+
 /// Wide character version of open() that also sets the close-on-exec flag (atomically when
 /// possible).
 pub fn wopen_cloexec(pathname: &wstr, flags: i32, mode: libc::c_int) -> RawFd {
@@ -190,12 +210,12 @@ pub fn exec_close(fd: RawFd) {
 
 /// Mark an fd as nonblocking
 pub fn make_fd_nonblocking(fd: RawFd) -> Result<(), io::Error> {
-    let flags = unsafe { fcntl(fd, F_GETFL, 0) };
+    let flags = unsafe { libc::fcntl(fd, F_GETFL, 0) };
     let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
     if !nonblocking {
-        match unsafe { fcntl(fd, F_SETFL, flags | O_NONBLOCK) } {
-            0 => return Ok(()),
-            _ => return Err(io::Error::last_os_error()),
+        match unsafe { libc::fcntl(fd, F_SETFL, flags | O_NONBLOCK) } {
+            -1 => return Err(io::Error::last_os_error()),
+            _ => return Ok(()),
         };
     }
     Ok(())
@@ -203,12 +223,12 @@ pub fn make_fd_nonblocking(fd: RawFd) -> Result<(), io::Error> {
 
 /// Mark an fd as blocking
 pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
-    let flags = unsafe { fcntl(fd, F_GETFL, 0) };
+    let flags = unsafe { libc::fcntl(fd, F_GETFL, 0) };
     let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
     if nonblocking {
-        match unsafe { fcntl(fd, F_SETFL, flags & !O_NONBLOCK) } {
-            0 => return Ok(()),
-            _ => return Err(io::Error::last_os_error()),
+        match unsafe { libc::fcntl(fd, F_SETFL, flags & !O_NONBLOCK) } {
+            -1 => return Err(io::Error::last_os_error()),
+            _ => return Ok(()),
         };
     }
     Ok(())

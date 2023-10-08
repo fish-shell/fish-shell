@@ -65,7 +65,7 @@ impl StringSubCommand<'_> for Pad {
 
     fn handle<'args>(
         &mut self,
-        _parser: &mut Parser,
+        _parser: &Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&'args wstr],

@@ -279,8 +279,9 @@ static void process_input(bool continuous_mode, bool verbose) {
     rust_init();
     rust_env_init(true);
     reader_init();
-    parser_t &parser = parser_t::principal_parser();
-    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
+    auto parser_box = parser_principal_parser();
+    const parser_t &parser = parser_box->deref();
+    scoped_push<bool> interactive{&parser.libdata_pods_mut().is_interactive, true};
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.

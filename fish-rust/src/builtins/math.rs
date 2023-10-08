@@ -17,7 +17,7 @@ struct Options {
 #[widestrs]
 fn parse_cmd_opts(
     args: &mut [&wstr],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
     const cmd: &wstr = "math"L;
@@ -219,7 +219,7 @@ const MATH_CHUNK_SIZE: usize = 1024;
 
 /// The math builtin evaluates math expressions.
 #[widestrs]
-pub fn math(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
 
     let (opts, mut optind) = match parse_cmd_opts(argv, parser, streams) {

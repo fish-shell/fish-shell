@@ -82,6 +82,9 @@ struct keyword_base_t;
 
 #endif
 
+using DecoratedStatement = ast::decorated_statement_t;
+using BlockStatement = ast::block_statement_t;
+
 namespace ast {
 using node_t = ::NodeFfi;
 }

@@ -16,7 +16,8 @@
 struct outputter_t;
 #endif
 
-class env_var_t;
+#include "env.h"
+
 rgb_color_t parse_color(const env_var_t &var, bool is_background);
 
 /// Sets what colors are supported.

@@ -25,7 +25,7 @@ use crate::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
     },
     common::{
-        escape_string, exit_without_destructors, get_executable_path, str2wcstring, wcs2string,
+        escape, exit_without_destructors, get_executable_path, str2wcstring, wcs2string,
         EscapeStringStyle, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
@@ -273,7 +273,7 @@ fn source_config_in_directory(parser: &mut ffi::parser_t, dir: &wstr) {
     // test and the execution of the 'source' command. However, that is not a security problem in
     // this context so we ignore it.
     let config_pathname = dir.to_owned() + L!("/config.fish");
-    let escaped_pathname = escape_string(dir, EscapeStringStyle::default()) + L!("/config.fish");
+    let escaped_pathname = escape(dir) + L!("/config.fish");
     if waccess(&config_pathname, libc::R_OK) != 0 {
         FLOGF!(
             config,

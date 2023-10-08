@@ -362,7 +362,7 @@ class process_t {
 
 using process_ptr_t = std::unique_ptr<process_t>;
 using process_list_t = std::vector<process_ptr_t>;
-class parser_t;
+class Parser; using parser_t = Parser;
 
 struct RustFFIProcList {
     process_ptr_t *procs;

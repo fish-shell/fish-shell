@@ -20,7 +20,7 @@
 #include "maybe.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-struct io_streams_t;
+class IoStreams; using io_streams_t = IoStreams;
 class env_stack_t;
 class environment_t;
 class operation_context_t;

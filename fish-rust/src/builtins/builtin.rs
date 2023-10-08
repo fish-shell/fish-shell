@@ -8,8 +8,8 @@ struct builtin_cmd_opts_t {
 }
 
 pub fn r#builtin(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     argv: &mut [&wstr],
 ) -> Option<c_int> {
     let cmd = argv[0];

@@ -22,7 +22,7 @@ class env_stack_t;
 class environment_t;
 class history_t;
 class io_chain_t;
-class parser_t;
+class Parser; using parser_t = Parser;
 
 /// An edit action that can be undone.
 struct edit_t {

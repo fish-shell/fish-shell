@@ -6,8 +6,8 @@ use super::prelude::*;
 
 /// Helper function for builtin_bg().
 fn send_to_bg(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     cmd: &wstr,
     job_pos: usize,
 ) -> Option<c_int> {
@@ -47,7 +47,7 @@ fn send_to_bg(
 }
 
 /// Builtin for putting a job in the background.
-pub fn bg(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr]) -> Option<c_int> {
+pub fn bg(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
         Ok(opts) => opts,
         Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,

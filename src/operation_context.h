@@ -8,7 +8,7 @@
 #include "common.h"
 
 class environment_t;
-class parser_t;
+class Parser; using parser_t = Parser;
 struct job_group_t;
 
 /// A common helper which always returns false.

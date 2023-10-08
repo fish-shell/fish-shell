@@ -2,11 +2,7 @@ use super::prelude::*;
 use super::r#return::parse_return_value;
 
 /// Function for handling the exit builtin.
-pub fn exit(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn exit(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let retval = match parse_return_value(args, parser, streams) {
         Ok(v) => v,
         Err(e) => return e,

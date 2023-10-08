@@ -17,7 +17,7 @@
 
 class block_t;
 class operation_context_t;
-class parser_t;
+class Parser; using parser_t = Parser;
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal

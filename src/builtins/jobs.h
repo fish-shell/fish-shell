@@ -8,7 +8,7 @@
 #include "../io.h"
 #include "../maybe.h"
 
-class parser_t;
+class Parser; using parser_t = Parser;
 
 maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
 #endif

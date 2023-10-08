@@ -68,8 +68,8 @@ fn parse_cmd_opts<'args>(
     opts: &mut FunctionsCmdOpts<'args>,
     optind: &mut usize,
     argv: &mut [&'args wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = L!("functions");
     let print_hints = false;
@@ -112,8 +112,8 @@ fn parse_cmd_opts<'args>(
 }
 
 pub fn functions(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &mut Parser,
+    streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> Option<c_int> {
     let cmd = args[0];

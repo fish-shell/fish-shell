@@ -8,11 +8,7 @@ use std::sync::Mutex;
 
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
 
-pub fn random(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn random(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -59,7 +55,7 @@ pub fn random(
         streams.out.appendln(argv[i + 1 + rand]);
         return STATUS_CMD_OK;
     }
-    fn parse_ll(streams: &mut io_streams_t, cmd: &wstr, num: &wstr) -> Result<i64, wutil::Error> {
+    fn parse_ll(streams: &mut IoStreams, cmd: &wstr, num: &wstr) -> Result<i64, wutil::Error> {
         let res = fish_wcstol(num);
         if res.is_err() {
             streams
@@ -68,7 +64,7 @@ pub fn random(
         }
         return res;
     }
-    fn parse_ull(streams: &mut io_streams_t, cmd: &wstr, num: &wstr) -> Result<u64, wutil::Error> {
+    fn parse_ull(streams: &mut IoStreams, cmd: &wstr, num: &wstr) -> Result<u64, wutil::Error> {
         let res = fish_wcstoul(num);
         if res.is_err() {
             streams

@@ -94,7 +94,7 @@ include_cpp! {
     generate!("wgettext_ptr")
 
     generate!("block_t")
-    generate!("parser_t")
+    generate!("Parser")
 
     generate!("job_t")
     generate!("job_control_t")
@@ -112,7 +112,7 @@ include_cpp! {
     generate!("proc_wait_any")
 
     generate!("output_stream_t")
-    generate!("io_streams_t")
+    generate!("IoStreams")
     generate!("make_null_io_streams_ffi")
     generate!("make_test_io_streams_ffi")
     generate!("get_test_output_ffi")
@@ -173,7 +173,7 @@ include_cpp! {
     generate!("is_thompson_shell_script")
 }
 
-impl parser_t {
+impl Parser {
     pub fn get_wait_handles_mut(&mut self) -> &mut WaitHandleStore {
         let ptr = self.get_wait_handles_void() as *mut Box<WaitHandleStoreFFI>;
         assert!(!ptr.is_null());
@@ -341,11 +341,11 @@ impl From<wcharz_t> for WString {
 
 /// A bogus trait for turning &mut Foo into Pin<&mut Foo>.
 /// autocxx enforces that non-const methods must be called through Pin,
-/// but this means we can't pass around mutable references to types like parser_t.
-/// We also don't want to assert that parser_t is Unpin.
+/// but this means we can't pass around mutable references to types like Parser.
+/// We also don't want to assert that Parser is Unpin.
 /// So we just allow constructing a pin from a mutable reference; none of the C++ code.
 /// It's worth considering disabling this in cxx; for now we use this trait.
-/// Eventually parser_t and io_streams_t will not require Pin so we just unsafe-it away.
+/// Eventually Parser and IoStreams will not require Pin so we just unsafe-it away.
 pub trait Repin {
     fn pin(&mut self) -> Pin<&mut Self> {
         unsafe { Pin::new_unchecked(self) }
@@ -361,10 +361,10 @@ impl Repin for autoload_t {}
 impl Repin for block_t {}
 impl Repin for env_stack_t {}
 impl Repin for env_universal_t {}
-impl Repin for io_streams_t {}
+impl Repin for IoStreams {}
 impl Repin for job_t {}
 impl Repin for output_stream_t {}
-impl Repin for parser_t {}
+impl Repin for Parser {}
 impl Repin for process_t {}
 impl Repin for wcstring_list_ffi_t {}
 

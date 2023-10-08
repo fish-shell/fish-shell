@@ -264,7 +264,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 }
 
 // Source the file config.fish in the given directory.
-fn source_config_in_directory(parser: &mut ffi::parser_t, dir: &wstr) {
+fn source_config_in_directory(parser: &mut ffi::Parser, dir: &wstr) {
     // If the config.fish file doesn't exist or isn't readable silently return. Fish versions up
     // thru 2.2.0 would instead try to source the file with stderr redirected to /dev/null to deal
     // with that possibility.
@@ -296,7 +296,7 @@ fn source_config_in_directory(parser: &mut ffi::parser_t, dir: &wstr) {
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
-fn read_init(parser: &mut ffi::parser_t, paths: &ConfigPaths) {
+fn read_init(parser: &mut ffi::Parser, paths: &ConfigPaths) {
     source_config_in_directory(parser, &str2wcstring(paths.data.as_os_str().as_bytes()));
     source_config_in_directory(parser, &str2wcstring(paths.sysconf.as_os_str().as_bytes()));
 
@@ -308,7 +308,7 @@ fn read_init(parser: &mut ffi::parser_t, paths: &ConfigPaths) {
     }
 }
 
-fn run_command_list(parser: &mut ffi::parser_t, cmds: &[OsString]) -> i32 {
+fn run_command_list(parser: &mut ffi::Parser, cmds: &[OsString]) -> i32 {
     let mut retval = STATUS_CMD_OK;
     for cmd in cmds {
         let cmd_wcs = str2wcstring(cmd.as_bytes());
@@ -671,7 +671,7 @@ fn main() -> i32 {
     ffi::misc_init();
     ffi::reader_init();
 
-    let parser = unsafe { &mut *ffi::parser_t::principal_parser_ffi() };
+    let parser = unsafe { &mut *ffi::Parser::principal_parser_ffi() };
     parser.pin().set_syncs_uvars(!opts.no_config);
 
     if !opts.no_exec && !opts.no_config {

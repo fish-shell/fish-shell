@@ -12,9 +12,9 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::builtins::shared::io_streams_t;
+use crate::builtins::shared::IoStreams;
 use crate::common::{escape_string, scoped_push, EscapeFlags, EscapeStringStyle, ScopeGuard};
-use crate::ffi::{self, block_t, parser_t, Repin};
+use crate::ffi::{self, block_t, Parser, Repin};
 use crate::flog::FLOG;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::signal::{signal_check_cancel, signal_handle, Signal};
@@ -29,8 +29,8 @@ mod event_ffi {
         include!("parser.h");
         include!("io.h");
         type wcharz_t = crate::ffi::wcharz_t;
-        type parser_t = crate::ffi::parser_t;
-        type io_streams_t = crate::ffi::io_streams_t;
+        type Parser = crate::ffi::Parser;
+        type IoStreams = crate::ffi::IoStreams;
     }
 
     enum event_type_t {
@@ -77,18 +77,18 @@ mod event_ffi {
         fn set_removed(self: &mut EventHandler);
 
         fn event_fire_generic_ffi(
-            parser: Pin<&mut parser_t>,
+            parser: Pin<&mut Parser>,
             name: &CxxWString,
             arguments: &CxxVector<wcharz_t>,
         );
         #[cxx_name = "event_get_desc"]
-        fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString>;
+        fn event_get_desc_ffi(parser: &Parser, evt: &Event) -> UniquePtr<CxxWString>;
         #[cxx_name = "event_fire_delayed"]
-        fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>);
+        fn event_fire_delayed_ffi(parser: Pin<&mut Parser>);
         #[cxx_name = "event_fire"]
-        fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event);
+        fn event_fire_ffi(parser: Pin<&mut Parser>, event: &Event);
         #[cxx_name = "event_print"]
-        fn event_print_ffi(streams: Pin<&mut io_streams_t>, type_filter: &CxxWString);
+        fn event_print_ffi(streams: Pin<&mut IoStreams>, type_filter: &CxxWString);
 
         #[cxx_name = "event_enqueue_signal"]
         fn enqueue_signal(signal: i32);
@@ -408,7 +408,7 @@ impl Event {
     }
 
     /// Test if specified event is blocked.
-    fn is_blocked(&self, parser: &mut parser_t) -> bool {
+    fn is_blocked(&self, parser: &mut Parser) -> bool {
         let mut i = 0;
         while let Some(block) = parser.get_block_at_index(i) {
             i += 1;
@@ -564,7 +564,7 @@ pub fn is_signal_observed(sig: libc::c_int) -> bool {
         .map_or(false, |s| s.load(Ordering::Relaxed) > 0)
 }
 
-pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
+pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
     let s = match &evt.desc {
         EventDescription::Signal { signal } => {
             format!("signal handler for {} ({})", signal.name(), signal.desc(),)
@@ -592,7 +592,7 @@ pub fn get_desc(parser: &parser_t, evt: &Event) -> WString {
     WString::from_str(&s)
 }
 
-fn event_get_desc_ffi(parser: &parser_t, evt: &Event) -> UniquePtr<CxxWString> {
+fn event_get_desc_ffi(parser: &Parser, evt: &Event) -> UniquePtr<CxxWString> {
     get_desc(parser, evt).to_ffi()
 }
 
@@ -661,7 +661,7 @@ fn event_get_function_handler_descs_ffi(name: &CxxWString) -> Vec<event_descript
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
-fn fire_internal(parser: &mut parser_t, event: &Event) {
+fn fire_internal(parser: &mut Parser, event: &Event) {
     assert!(
         parser.libdata_pod().is_event >= 0,
         "is_event should not be negative"
@@ -746,7 +746,7 @@ fn fire_internal(parser: &mut parser_t, event: &Event) {
 }
 
 /// Fire all delayed events attached to the given parser.
-pub fn fire_delayed(parser: &mut parser_t) {
+pub fn fire_delayed(parser: &mut Parser) {
     let ld = parser.libdata_pod();
 
     // Do not invoke new event handlers from within event handlers.
@@ -760,7 +760,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
 
     // We unfortunately can't keep this locked until we're done with it because the SIGWINCH handler
     // code might call back into here and we would delay processing of the events, leading to a test
-    // failure under CI. (Yes, the `&mut parser_t` is a lie.)
+    // failure under CI. (Yes, the `&mut Parser` is a lie.)
     let mut to_send = std::mem::take(&mut *BLOCKED_EVENTS.lock().expect("Mutex poisoned!"));
 
     // Append all signal events to to_send.
@@ -799,7 +799,7 @@ pub fn fire_delayed(parser: &mut parser_t) {
     }
 }
 
-fn event_fire_delayed_ffi(parser: Pin<&mut parser_t>) {
+fn event_fire_delayed_ffi(parser: Pin<&mut Parser>) {
     fire_delayed(parser.unpin())
 }
 
@@ -810,7 +810,7 @@ pub fn enqueue_signal(signal: libc::c_int) {
 }
 
 /// Fire the specified event event, executing it on `parser`.
-pub fn fire(parser: &mut parser_t, event: Event) {
+pub fn fire(parser: &mut Parser, event: Event) {
     // Fire events triggered by signals.
     fire_delayed(parser);
 
@@ -821,7 +821,7 @@ pub fn fire(parser: &mut parser_t, event: Event) {
     }
 }
 
-fn event_fire_ffi(parser: Pin<&mut parser_t>, event: &Event) {
+fn event_fire_ffi(parser: Pin<&mut Parser>, event: &Event) {
     fire(parser.unpin(), event.clone())
 }
 
@@ -837,7 +837,7 @@ pub const EVENT_FILTER_NAMES: [&wstr; 7] = [
 ];
 
 /// Print all events. If type_filter is not empty, only output events with that type.
-pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
+pub fn print(streams: &mut IoStreams, type_filter: &wstr) {
     let mut tmp = EVENT_HANDLERS
         .lock()
         .expect("event handler list should not be poisoned")
@@ -892,13 +892,13 @@ pub fn print(streams: &mut io_streams_t, type_filter: &wstr) {
     }
 }
 
-fn event_print_ffi(streams: Pin<&mut ffi::io_streams_t>, type_filter: &CxxWString) {
-    let mut streams = io_streams_t::new(streams);
+fn event_print_ffi(streams: Pin<&mut ffi::IoStreams>, type_filter: &CxxWString) {
+    let mut streams = IoStreams::new(streams);
     print(&mut streams, type_filter.as_wstr());
 }
 
 /// Fire a generic event with the specified name.
-pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString>) {
+pub fn fire_generic(parser: &mut Parser, name: WString, arguments: Vec<WString>) {
     fire(
         parser,
         Event {
@@ -909,7 +909,7 @@ pub fn fire_generic(parser: &mut parser_t, name: WString, arguments: Vec<WString
 }
 
 fn event_fire_generic_ffi(
-    parser: Pin<&mut parser_t>,
+    parser: Pin<&mut Parser>,
     name: &CxxWString,
     arguments: &CxxVector<wcharz_t>,
 ) {

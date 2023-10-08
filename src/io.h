@@ -473,7 +473,11 @@ class buffered_output_stream_t final : public output_stream_t {
     std::shared_ptr<io_buffer_t> buffer_;
 };
 
-struct io_streams_t : noncopyable_t {
+class IoStreams;
+using io_streams_t = IoStreams;
+
+class IoStreams : noncopyable_t {
+   public:
     // Streams for out and err.
     output_stream_t &out;
     output_stream_t &err;
@@ -505,13 +509,13 @@ struct io_streams_t : noncopyable_t {
     // FIXME: this is awkwardly placed.
     std::shared_ptr<job_group_t> job_group{};
 
-    io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
-    virtual ~io_streams_t() = default;
+    IoStreams(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
+    virtual ~IoStreams() = default;
 
     /// autocxx junk.
     output_stream_t &get_out() { return out; };
     output_stream_t &get_err() { return err; };
-    io_streams_t(const io_streams_t &) = delete;
+    IoStreams(const io_streams_t &) = delete;
     bool get_out_redirected() { return out_is_redirected; };
     bool get_err_redirected() { return err_is_redirected; };
     bool ffi_stdin_is_directly_redirected() const { return stdin_is_directly_redirected; };
@@ -519,7 +523,8 @@ struct io_streams_t : noncopyable_t {
 };
 
 /// FFI helper.
-struct owning_io_streams_t : io_streams_t {
+class owning_io_streams_t : public io_streams_t {
+   public:
     string_output_stream_t out_storage;
     null_output_stream_t err_storage;
     owning_io_streams_t() : io_streams_t(out_storage, err_storage) {}

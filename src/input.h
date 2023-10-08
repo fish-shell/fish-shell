@@ -18,7 +18,7 @@
 #define DEFAULT_BIND_MODE L"default"
 
 class event_queue_peeker_t;
-class parser_t;
+class Parser; using parser_t = Parser;
 
 wcstring describe_char(wint_t c);
 

@@ -1,7 +1,7 @@
 use crate::ffi_tests::add_test;
 
 add_test! {"test_string", || {
-    use crate::ffi::parser_t;
+    use crate::ffi::Parser;
     use crate::ffi;
     use crate::builtins::string::string;
     use crate::wchar_ffi::WCharFromFFI;
@@ -20,9 +20,9 @@ add_test! {"test_string", || {
 
     // TODO: these should be individual tests, not all in one, port when we can run these with `cargo test`
     fn string_test(mut args: Vec<&wstr>, expected_rc: Option<i32>, expected_out: &wstr) {
-        let parser: &mut parser_t = unsafe { &mut *parser_t::principal_parser_ffi() };
+        let parser: &mut Parser = unsafe { &mut *Parser::principal_parser_ffi() };
         let mut streams = ffi::make_test_io_streams_ffi();
-        let mut io = crate::builtins::shared::io_streams_t::new(streams.pin_mut());
+        let mut io = crate::builtins::shared::IoStreams::new(streams.pin_mut());
 
         let rc = string(parser, &mut io, args.as_mut_slice()).expect("string failed");
 

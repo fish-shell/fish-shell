@@ -1,7 +1,7 @@
 use libc::pid_t;
 
 use super::prelude::*;
-use crate::ffi::{job_t, parser_t, proc_wait_any};
+use crate::ffi::{job_t, proc_wait_any, Parser};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 use crate::wutil;
@@ -35,7 +35,7 @@ enum WaitHandleQuery<'a> {
 /// \return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
-    parser: &mut parser_t,
+    parser: &mut Parser,
     handles: &mut Vec<WaitHandleRef>,
 ) -> bool {
     // Has a job already completed?
@@ -72,7 +72,7 @@ fn find_wait_handles(
     matched
 }
 
-fn get_all_wait_handles(parser: &parser_t) -> Vec<WaitHandleRef> {
+fn get_all_wait_handles(parser: &Parser) -> Vec<WaitHandleRef> {
     // Get wait handles for reaped jobs.
     let mut result = parser.get_wait_handles().get_list();
 
@@ -99,7 +99,7 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 /// If \p any_flag is set, wait for the first one; otherwise wait for all.
 /// \return a status code.
 fn wait_for_completion(
-    parser: &mut parser_t,
+    parser: &mut Parser,
     whs: &[WaitHandleRef],
     any_flag: bool,
 ) -> Option<c_int> {
@@ -135,11 +135,7 @@ fn wait_for_completion(
 }
 
 #[widestrs]
-pub fn wait(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn wait(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option

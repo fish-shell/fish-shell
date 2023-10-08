@@ -29,7 +29,7 @@ struct completion_mode_t {
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
 
-class parser_t;
+class Parser; using parser_t = Parser;
 
 enum {
     /// Do not insert space afterwards if this is the only completion. (The default is to try insert

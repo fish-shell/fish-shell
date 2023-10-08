@@ -8,7 +8,7 @@
 #include "maybe.h"
 
 struct function_properties_t;
-class parser_t;
+class Parser; using parser_t = Parser;
 
 #if INCLUDE_RUST_HEADERS
 #include "function.rs.h"

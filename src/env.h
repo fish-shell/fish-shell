@@ -201,7 +201,7 @@ class null_environment_t : public environment_t {
 
 /// A mutable environment which allows scopes to be pushed and popped.
 class env_stack_t final : public environment_t {
-    friend class parser_t;
+    friend class Parser;
 
     /// \return whether we are the principal stack.
     bool is_principal() const;

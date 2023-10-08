@@ -331,5 +331,6 @@ class layout_cache_t : noncopyable_t {
 
 maybe_t<size_t> escape_code_length(const wchar_t *code);
 
+wcstring screen_clear();
 void screen_set_midnight_commander_hack();
 #endif

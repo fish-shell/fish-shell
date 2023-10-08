@@ -91,6 +91,8 @@ enum class readline_cmd_t {
     end_undo_group,
     repeat_jump,
     disable_mouse_tracking,
+    // ncurses uses the obvious name
+    clear_screen_and_repaint,
     // NOTE: This one has to be last.
     reverse_repeat_jump
 };

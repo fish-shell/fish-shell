@@ -266,6 +266,13 @@ maybe_t<size_t> escape_code_length(const wchar_t *code) {
     return found ? maybe_t<size_t>{esc_seq_len} : none();
 }
 
+wcstring screen_clear() {
+    if (clear_screen) {
+        return str2wcstring(clear_screen);
+    }
+    return wcstring{};
+}
+
 size_t layout_cache_t::escape_code_length(const wchar_t *code) {
     assert(code != nullptr);
     if (*code != L'\x1B') return 0;

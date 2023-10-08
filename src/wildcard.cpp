@@ -722,6 +722,7 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir,
                                                       const wcstring &prefix) {
     std::string narrow;
     const dir_iter_t::entry_t *entry{};
+    bool is_final = !*wc_remainder && wc_segment.find(ANY_STRING_RECURSIVE) == wcstring::npos;
     while (!interrupted_or_overflowed() && (entry = base_dir_iter.next())) {
         // Note that it's critical we ignore leading dots here, else we may descend into . and ..
         if (!wildcard_match(entry->name, wc_segment, true)) {
@@ -730,6 +731,22 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir,
         }
 
         if (!entry->is_dir()) {
+            continue;
+        }
+
+        // Fast path: If this entry can't be a link (we know via d_type),
+        // we don't need to protect against symlink loops.
+        // This is *not* deduplication, we just don't want a loop.
+        //
+        // We only do this when we are the last `*/` component,
+        // because we're a bit inconsistent on when we will enter loops.
+        if (is_final && !entry->is_possible_link()) {
+            // We made it through.
+            // Perform normal wildcard expansion on this new directory,
+            // starting at our tail_wc
+            wcstring full_path = base_dir + entry->name;
+            full_path.push_back(L'/');
+            this->expand(full_path, wc_remainder, prefix + wc_segment + L'/');
             continue;
         }
 
@@ -744,8 +761,7 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir,
             continue;
         }
 
-        // We made it through. Perform normal wildcard expansion on this new directory, starting at
-        // our tail_wc, which includes the ANY_STRING_RECURSIVE guy.
+        // (like the fast path above)
         wcstring full_path = base_dir + entry->name;
         full_path.push_back(L'/');
         this->expand(full_path, wc_remainder, prefix + wc_segment + L'/');

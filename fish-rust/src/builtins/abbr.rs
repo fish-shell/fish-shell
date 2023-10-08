@@ -1,8 +1,9 @@
 use super::prelude::*;
 use crate::abbrs::{self, Abbreviation, Position};
 use crate::common::{escape, escape_string, valid_func_name, EscapeStringStyle};
-use crate::env::status::{ENV_NOT_FOUND, ENV_OK};
-use crate::env::EnvMode;
+use crate::env::{EnvMode, EnvStackSetResult};
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::re::{regex_make_anchored, to_boxed_chars};
 use pcre2::utf32::{Regex, RegexBuilder};
 
@@ -391,7 +392,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
 }
 
 // Erase the named abbreviations.
-fn abbr_erase(opts: &Options, parser: &mut Parser) -> Option<c_int> {
+fn abbr_erase(opts: &Options, parser: &Parser) -> Option<c_int> {
     if opts.args.is_empty() {
         // This has historically been a silent failure.
         return STATUS_CMD_ERROR;
@@ -402,15 +403,15 @@ fn abbr_erase(opts: &Options, parser: &mut Parser) -> Option<c_int> {
         let mut result = STATUS_CMD_OK;
         for arg in &opts.args {
             if !abbrs.erase(arg) {
-                result = Some(ENV_NOT_FOUND);
+                result = Some(EnvStackSetResult::ENV_NOT_FOUND.into());
             }
             // Erase the old uvar - this makes `abbr -e` work.
             let esc_src = escape(arg);
             if !esc_src.is_empty() {
                 let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
-                let ret = parser.remove_var(&var_name, EnvMode::UNIVERSAL.into());
+                let ret = parser.vars().remove(&var_name, EnvMode::UNIVERSAL);
 
-                if ret == autocxx::c_int(ENV_OK) {
+                if ret == EnvStackSetResult::ENV_OK {
                     result = STATUS_CMD_OK
                 };
             }
@@ -419,7 +420,7 @@ fn abbr_erase(opts: &Options, parser: &mut Parser) -> Option<c_int> {
     })
 }
 
-pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 
@@ -539,7 +540,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     cmd,
                     argv_read[w.woptind - 1]
                 ));
-                builtin_print_error_trailer(parser, streams, cmd);
+                builtin_print_error_trailer(parser, streams.err, cmd);
             }
             'h' => {
                 builtin_print_help(parser, streams, cmd);

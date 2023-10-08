@@ -502,22 +502,6 @@ wcstring escape_string_for_double_quotes(wcstring in);
 maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
                                      bool unescape_special);
 
-/// Unescapes a string in-place. A true result indicates the string was unescaped, a false result
-/// indicates the string was unmodified.
-bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
-
-/// Reverse the effects of calling `escape_string`. Returns the unescaped value by reference. On
-/// failure, the output is set to an empty string.
-std::unique_ptr<wcstring> unescape_string(const wchar_t *input, unescape_flags_t escape_special,
-                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
-
-std::unique_ptr<wcstring> unescape_string(const wchar_t *input, size_t len,
-                                          unescape_flags_t escape_special,
-                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
-
-std::unique_ptr<wcstring> unescape_string(const wcstring &input, unescape_flags_t escape_special,
-                                          escape_string_style_t style = STRING_STYLE_SCRIPT);
-
 /// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
 /// the gettimeofday function and will have the same precision as that function.
 using timepoint_t = double;
@@ -693,5 +677,9 @@ const T *get_by_sorted_name(const wcstring &name, const T (&vals)[N]) {
 __attribute__((always_inline)) bool inline iswdigit(const wchar_t c) {
     return c >= L'0' && c <= L'9';
 }
+
+#if INCLUDE_RUST_HEADERS
+#include "common.rs.h"
+#endif
 
 #endif  // FISH_COMMON_H

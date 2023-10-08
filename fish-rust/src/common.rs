@@ -6,7 +6,7 @@ use crate::expand::{
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
 use crate::fallback::fish_wcwidth;
-use crate::ffi::{self};
+use crate::ffi;
 use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
@@ -1004,7 +1004,7 @@ fn debug_thread_error() {
 }
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
-pub fn exit_without_destructors(code: i32) -> ! {
+pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
 }
 
@@ -1074,7 +1074,8 @@ pub static EMPTY_STRING_LIST: Vec<WString> = vec![];
 
 /// A function type to check for cancellation.
 /// \return true if execution should cancel.
-pub type CancelChecker = dyn Fn() -> bool;
+/// todo!("Maybe remove the box? It is only needed for get_bg_context.")
+pub type CancelChecker = Box<dyn Fn() -> bool>;
 
 /// Converts the narrow character string \c in into its wide equivalent, and return it.
 ///
@@ -1200,6 +1201,7 @@ pub fn wcs2osstring(input: &wstr) -> OsString {
     OsString::from_vec(result)
 }
 
+/// Same as [`wcs2string`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
 pub fn wcs2zstring(input: &wstr) -> CString {
     if input.is_empty() {
         return CString::default();
@@ -1311,7 +1313,11 @@ pub fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
 }
 
 /// Writes out a long safely.
-pub fn format_llong_safe<CharT: From<u8>>(buff: &mut [CharT; 64], val: i64) {
+pub fn format_llong_safe<CharT: From<u8>, I64>(buff: &mut [CharT; 64], val: I64)
+where
+    i64: From<I64>,
+{
+    let val = i64::from(val);
     let uval = val.unsigned_abs();
     if val >= 0 {
         format_safe_impl(buff, 64, uval);
@@ -1659,6 +1665,10 @@ fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
     a.windows(b.len()).any(|aw| aw == b)
 }
 
+pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
+    a.windows(b.len()).position(|aw| aw == b)
+}
+
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
 ///
@@ -1898,6 +1908,22 @@ where
     ScopeGuard::new(ctx, restore_saved)
 }
 
+/// Similar to scoped_push but takes a function like "std::mem::replace" instead of a function
+/// that returns a mutable reference.
+pub fn scoped_push_replacer<Replacer, T>(
+    replacer: Replacer,
+    new_value: T,
+) -> impl ScopeGuarding<Target = ()>
+where
+    Replacer: Fn(T) -> T,
+{
+    let saved = replacer(new_value);
+    let restore_saved = move |_ctx: &mut ()| {
+        replacer(saved);
+    };
+    ScopeGuard::new((), restore_saved)
+}
+
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}
 
@@ -2119,11 +2145,10 @@ macro_rules! err {
     }
 }
 
-#[allow(unused_macros)]
 macro_rules! fwprintf {
-    ($fd:expr, $format:literal $(, $arg:expr)*) => {
+    ($fd:expr, $format:expr $(, $arg:expr)*) => {
         {
-            let wide = crate::wutil::sprintf!($format $(, $arg )*);
+            let wide = crate::wutil::sprintf!($format, $( $arg ),*);
             crate::wutil::wwrite_to_fd(&wide, $fd);
         }
     }
@@ -2141,7 +2166,7 @@ mod common_ffi {
         type escape_string_style_t = crate::ffi::escape_string_style_t;
     }
     extern "Rust" {
-        #[cxx_name = "rust_unescape_string"]
+        #[cxx_name = "unescape_string"]
         fn unescape_string_ffi(
             input: *const wchar_t,
             len: usize,
@@ -2149,17 +2174,17 @@ mod common_ffi {
             style: escape_string_style_t,
         ) -> UniquePtr<CxxWString>;
 
-        #[cxx_name = "rust_escape_string_script"]
+        #[cxx_name = "escape_string_script"]
         fn escape_string_script_ffi(
             input: *const wchar_t,
             len: usize,
             flags: u32,
         ) -> UniquePtr<CxxWString>;
 
-        #[cxx_name = "rust_escape_string_url"]
+        #[cxx_name = "escape_string_url"]
         fn escape_string_url_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
 
-        #[cxx_name = "rust_escape_string_var"]
+        #[cxx_name = "escape_string_var"]
         fn escape_string_var_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
 
     }

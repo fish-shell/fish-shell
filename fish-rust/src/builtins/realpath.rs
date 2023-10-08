@@ -3,6 +3,8 @@
 use errno::errno;
 
 use super::prelude::*;
+use crate::env::Environment;
+use crate::io::IoStreams;
 use crate::{
     path::path_apply_working_directory,
     wutil::{normalize_path, wrealpath},
@@ -22,7 +24,7 @@ const long_options: &[woption] = &[
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
@@ -53,7 +55,7 @@ fn parse_options(
 /// An implementation of the external realpath command. Doesn't support any options.
 /// In general scripts shouldn't invoke this directly. They should just use `realpath` which
 /// will fallback to this builtin if an external command cannot be found.
-pub fn realpath(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
@@ -105,7 +107,7 @@ pub fn realpath(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
         }
     } else {
         // We need to get the *physical* pwd here.
-        let realpwd = wrealpath(parser.vars1().get_pwd_slash().as_wstr());
+        let realpwd = wrealpath(&parser.vars().get_pwd_slash());
 
         if let Some(realpwd) = realpwd {
             let absolute_arg = if arg.starts_with(L!("/")) {

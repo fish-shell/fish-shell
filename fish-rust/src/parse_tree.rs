@@ -132,6 +132,15 @@ pub struct NodeRef<NodeType: Node> {
     node: *const NodeType,
 }
 
+impl<NodeType: Node> NodeRef<NodeType> {
+    pub fn new(parsed_source: ParsedSourceRef, node: *const NodeType) -> Self {
+        NodeRef {
+            parsed_source: Pin::new(parsed_source),
+            node,
+        }
+    }
+}
+
 impl<NodeType: Node> Clone for NodeRef<NodeType> {
     fn clone(&self) -> Self {
         NodeRef {
@@ -187,6 +196,11 @@ pub fn parse_source(
 }
 
 pub struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
+
+unsafe impl cxx::ExternType for ParsedSourceRefFFI {
+    type Id = cxx::type_id!("ParsedSourceRefFFI");
+    type Kind = cxx::kind::Opaque;
+}
 
 #[cxx::bridge]
 mod parse_tree_ffi {

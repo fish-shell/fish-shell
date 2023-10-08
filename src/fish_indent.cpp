@@ -129,9 +129,8 @@ static const char *highlight_role_to_string(highlight_role_t role) {
 // 3,7,command
 static std::string make_pygments_csv(const wcstring &src) {
     const size_t len = src.size();
-    std::vector<highlight_spec_t> colors;
-    highlight_shell(src, colors, operation_context_t::globals());
-    assert(colors.size() == len && "Colors and src should have same size");
+    auto colors = highlight_shell_ffi(src, *operation_context_globals(), false, {});
+    assert(colors->size() == len && "Colors and src should have same size");
 
     struct token_range_t {
         unsigned long start;
@@ -141,7 +140,7 @@ static std::string make_pygments_csv(const wcstring &src) {
 
     std::vector<token_range_t> token_ranges;
     for (size_t i = 0; i < len; i++) {
-        highlight_role_t role = colors.at(i).foreground;
+        highlight_role_t role = colors->at(i).foreground;
         // See if we can extend the last range.
         if (!token_ranges.empty()) {
             auto &last = token_ranges.back();
@@ -183,7 +182,7 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
 /// for the various colors.
 static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
 #define P(x) L"fish_color_" #x
-    switch (spec.foreground) {
+    switch (spec->foreground) {
         case highlight_role_t::normal: {
             return P(normal);
         }
@@ -450,8 +449,10 @@ int main(int argc, char *argv[]) {
 
         // Maybe colorize.
         std::vector<highlight_spec_t> colors;
+        maybe_t<rust::Box<HighlightSpecListFFI>> ffi_colors;
         if (output_type != output_type_plain_text) {
-            highlight_shell(output_wtext, colors, operation_context_t::globals());
+            highlight_shell(output_wtext, colors, *operation_context_globals());
+            ffi_colors = highlight_shell_ffi(output_wtext, *operation_context_globals(), false, {});
         }
 
         std::string colored_output;
@@ -473,7 +474,11 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case output_type_ansi: {
-                colored_output = colorize(output_wtext, colors, env_stack_t::globals());
+                auto ffi_colored =
+                    colorize(output_wtext, **ffi_colors, env_stack_t::globals().get_impl_ffi());
+                for (uint8_t c : ffi_colored) {
+                    colored_output.push_back(c);
+                }
                 break;
             }
             case output_type_html: {

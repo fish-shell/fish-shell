@@ -8,18 +8,24 @@ use crate::fds::{
 };
 use crate::flog::{should_flog, FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::job_group::JobGroup;
 use crate::path::path_apply_working_directory;
+use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
 use crate::topic_monitor::topic_t;
 use crate::wchar::prelude::*;
+use crate::wchar_ffi::WCharFromFFI;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
+use cxx::CxxWString;
 use errno::Errno;
-use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDERR_FILENO};
-use std::cell::UnsafeCell;
-use std::sync::{Arc, Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard};
-use std::{os::fd::RawFd, rc::Rc};
+use libc::{
+    EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDERR_FILENO,
+    STDOUT_FILENO,
+};
+use std::cell::{RefCell, UnsafeCell};
+use std::os::fd::RawFd;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
@@ -167,7 +173,7 @@ impl SeparatedBuffer {
 }
 
 /// Describes what type of IO operation an io_data_t represents.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum IoMode {
     file,
     pipe,
@@ -188,7 +194,28 @@ pub trait IoData {
     fn print(&self);
     // The address of the object, for comparison.
     fn as_ptr(&self) -> *const ();
+    fn as_bufferfill(&self) -> Option<&IoBufferfill> {
+        None
+    }
 }
+
+// todo!("this should be safe because of how it's used. Rationalize this better.")
+pub trait IoDataSync: IoData + Send + Sync {}
+unsafe impl Send for IoClose {}
+unsafe impl Send for IoFd {}
+unsafe impl Send for IoFile {}
+unsafe impl Send for IoPipe {}
+unsafe impl Send for IoBufferfill {}
+unsafe impl Sync for IoClose {}
+unsafe impl Sync for IoFd {}
+unsafe impl Sync for IoFile {}
+unsafe impl Sync for IoPipe {}
+unsafe impl Sync for IoBufferfill {}
+impl IoDataSync for IoClose {}
+impl IoDataSync for IoFd {}
+impl IoDataSync for IoFile {}
+impl IoDataSync for IoPipe {}
+impl IoDataSync for IoBufferfill {}
 
 pub struct IoClose {
     fd: RawFd,
@@ -327,14 +354,19 @@ pub struct IoBufferfill {
     write_fd: AutoCloseFd,
 
     /// The receiving buffer.
-    buffer: Arc<RwLock<IoBuffer>>,
+    buffer: Arc<IoBuffer>,
 }
 impl IoBufferfill {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
+    pub fn create() -> Option<Arc<IoBufferfill>> {
+        Self::create_opts(0, STDOUT_FILENO)
+    }
+    /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
+    /// \returns nullptr on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
-    pub fn create(buffer_limit: usize, target: RawFd) -> Option<Rc<IoBufferfill>> {
+    pub fn create_opts(buffer_limit: usize, target: RawFd) -> Option<Arc<IoBufferfill>> {
         assert!(target >= 0, "Invalid target fd");
 
         // Construct our pipes.
@@ -351,31 +383,33 @@ impl IoBufferfill {
             }
         }
         // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
-        let buffer = Arc::new(RwLock::new(IoBuffer::new(buffer_limit)));
+        let buffer = Arc::new(IoBuffer::new(buffer_limit));
         begin_filling(&buffer, pipes.read);
         assert!(pipes.write.is_valid(), "fd is not valid");
-        Some(Rc::new(IoBufferfill {
+        Some(Arc::new(IoBufferfill {
             target,
             write_fd: pipes.write,
             buffer,
         }))
     }
 
-    pub fn buffer(&self) -> RwLockReadGuard<'_, IoBuffer> {
-        self.buffer.read().unwrap()
+    pub fn buffer_ref(&self) -> &Arc<IoBuffer> {
+        &self.buffer
+    }
+
+    pub fn buffer(&self) -> &IoBuffer {
+        &self.buffer
     }
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. \return the buffer.
-    pub fn finish(filler: IoBufferfill) -> SeparatedBuffer {
+    pub fn finish(filler: Arc<IoBufferfill>) -> SeparatedBuffer {
         // The io filler is passed in. This typically holds the only instance of the write side of the
         // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
         // buffer out of the bufferfill and clear the shared_ptr; this will typically widow the pipe.
         // Then allow the buffer to finish.
         filler
             .buffer
-            .write()
-            .unwrap()
             .complete_background_fillthread_and_take_buffer()
     }
 }
@@ -400,6 +434,9 @@ impl IoData for IoBufferfill {
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
     }
+    fn as_bufferfill(&self) -> Option<&IoBufferfill> {
+        Some(self)
+    }
 }
 
 /// An io_buffer_t is a buffer which can populate itself by reading from an fd.
@@ -413,19 +450,24 @@ pub struct IoBuffer {
 
     /// A promise, allowing synchronization with the background fill operation.
     /// The operation has a reference to this as well, and fulfills this promise when it exits.
-    fill_waiter: Option<Arc<(Mutex<bool>, Condvar)>>,
+    #[allow(clippy::type_complexity)]
+    fill_waiter: RefCell<Option<Arc<(Mutex<bool>, Condvar)>>>,
 
     /// The item id of our background fillthread fd monitor item.
-    item_id: FdMonitorItemId,
+    item_id: AtomicU64,
 }
+
+// safety: todo!("rationalize why fill_waiter is safe")
+unsafe impl Send for IoBuffer {}
+unsafe impl Sync for IoBuffer {}
 
 impl IoBuffer {
     pub fn new(limit: usize) -> Self {
         IoBuffer {
             buffer: Mutex::new(SeparatedBuffer::new(limit)),
             shutdown_fillthread: RelaxedAtomicBool::new(false),
-            fill_waiter: None,
-            item_id: FdMonitorItemId::from(0),
+            fill_waiter: RefCell::new(None),
+            item_id: AtomicU64::new(0),
         }
     }
 
@@ -473,27 +515,28 @@ impl IoBuffer {
     }
 
     /// End the background fillthread operation, and return the buffer, transferring ownership.
-    pub fn complete_background_fillthread_and_take_buffer(&mut self) -> SeparatedBuffer {
+    pub fn complete_background_fillthread_and_take_buffer(&self) -> SeparatedBuffer {
         // Mark that our fillthread is done, then wake it up.
         assert!(self.fillthread_running(), "Should have a fillthread");
         assert!(
-            self.item_id != FdMonitorItemId::from(0),
+            self.item_id.load(Ordering::SeqCst) != 0,
             "Should have a valid item ID"
         );
         self.shutdown_fillthread.store(true);
-        fd_monitor().poke_item(self.item_id);
+        fd_monitor().poke_item(FdMonitorItemId::from(self.item_id.load(Ordering::SeqCst)));
 
         // Wait for the fillthread to fulfill its promise, and then clear the future so we know we no
         // longer have one.
 
-        let (mutex, condvar) = &**(self.fill_waiter.as_ref().unwrap());
+        let mut promise = self.fill_waiter.borrow_mut();
+        let (mutex, condvar) = &**promise.as_ref().unwrap();
         {
             let mut done = mutex.lock().unwrap();
             while !*done {
                 done = condvar.wait(done).unwrap();
             }
         }
-        self.fill_waiter = None;
+        *promise = None;
 
         // Return our buffer, transferring ownership.
         let mut locked_buff = self.buffer.lock().unwrap();
@@ -505,16 +548,13 @@ impl IoBuffer {
 
     /// Helper to return whether the fillthread is running.
     pub fn fillthread_running(&self) -> bool {
-        return self.fill_waiter.is_some();
+        return self.fill_waiter.borrow().is_some();
     }
 }
 
 /// Begin the fill operation, reading from the given fd in the background.
-fn begin_filling(iobuffer: &Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
-    assert!(
-        !iobuffer.read().unwrap().fillthread_running(),
-        "Already have a fillthread"
-    );
+fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
+    assert!(!iobuffer.fillthread_running(), "Already have a fillthread");
 
     // We want to fill buffer_ by reading from fd. fd is the read end of a pipe; the write end is
     // owned by another process, or something else writing in fish.
@@ -536,8 +576,7 @@ fn begin_filling(iobuffer: &Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
     // complete_background_fillthread(). Note that TSan complains if the promise's dtor races with
     // the future's call to wait(), so we store the promise, not just its future (#7681).
     let promise = Arc::new((Mutex::new(false), Condvar::new()));
-    iobuffer.write().unwrap().fill_waiter = Some(promise.clone());
-
+    iobuffer.fill_waiter.replace(Some(promise.clone()));
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'buffer' because 'this' waits for the promise in its dtor.
     let item_callback: Option<NativeCallback> = {
@@ -551,16 +590,14 @@ fn begin_filling(iobuffer: &Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
                 let mut done = false;
                 if reason == ItemWakeReason::Readable {
                     // select() reported us as readable; read a bit.
-                    let iobuf = iobuffer.write().unwrap();
-                    let mut buf = iobuf.buffer.lock().unwrap();
+                    let mut buf = iobuffer.buffer.lock().unwrap();
                     let ret = IoBuffer::read_once(fd.fd(), &mut buf);
                     done =
                         ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0));
-                } else if iobuffer.read().unwrap().shutdown_fillthread.load() {
+                } else if iobuffer.shutdown_fillthread.load() {
                     // Here our caller asked us to shut down; read while we keep getting data.
                     // This will stop when the fd is closed or if we get EAGAIN.
-                    let iobuf = iobuffer.write().unwrap();
-                    let mut buf = iobuf.buffer.lock().unwrap();
+                    let mut buf = iobuffer.buffer.lock().unwrap();
                     loop {
                         let ret = IoBuffer::read_once(fd.fd(), &mut buf);
                         if ret <= 0 {
@@ -572,33 +609,44 @@ fn begin_filling(iobuffer: &Arc<RwLock<IoBuffer>>, fd: AutoCloseFd) {
                 if done {
                     fd.close();
                     let (mutex, condvar) = &*promise;
-                    let mut done = mutex.lock().unwrap();
-                    *done = true;
+                    {
+                        let mut done = mutex.lock().unwrap();
+                        *done = true;
+                    }
                     condvar.notify_one();
                 }
             },
         ))
     };
 
-    iobuffer.write().unwrap().item_id =
-        fd_monitor().add(FdMonitorItem::new(fd, None, item_callback));
+    let item_id = fd_monitor().add(FdMonitorItem::new(fd, None, item_callback));
+    iobuffer.item_id.store(u64::from(item_id), Ordering::SeqCst);
 }
 
-pub type IoDataRef = Rc<dyn IoData>;
+pub type IoDataRef = Arc<dyn IoDataSync>;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct IoChain(pub Vec<IoDataRef>);
+
+unsafe impl cxx::ExternType for IoChain {
+    type Id = cxx::type_id!("IoChain");
+    type Kind = cxx::kind::Opaque;
+}
 
 impl IoChain {
     pub fn new() -> Self {
         Default::default()
     }
-    pub fn remove(&mut self, element: &IoDataRef) {
-        let element = Rc::as_ptr(element) as *const ();
+    pub fn remove(&mut self, element: &dyn IoDataSync) {
+        let element = element as *const _;
+        let element = element as *const ();
         self.0.retain(|e| {
-            let e = Rc::as_ptr(e) as *const ();
+            let e = Arc::as_ptr(e) as *const ();
             !std::ptr::eq(e, element)
         });
+    }
+    pub fn clear(&mut self) {
+        self.0.clear()
     }
     pub fn push(&mut self, element: IoDataRef) {
         self.0.push(element);
@@ -623,12 +671,12 @@ impl IoChain {
             match spec.mode {
                 RedirectionMode::fd => {
                     if spec.is_close() {
-                        self.push(Rc::new(IoClose::new(spec.fd)));
+                        self.push(Arc::new(IoClose::new(spec.fd)));
                     } else {
                         let target_fd = spec
                             .get_target_as_fd()
                             .expect("fd redirection should have been validated already");
-                        self.push(Rc::new(IoFd::new(spec.fd, target_fd)));
+                        self.push(Arc::new(IoFd::new(spec.fd, target_fd)));
                     }
                 }
                 _ => {
@@ -677,11 +725,11 @@ impl IoChain {
                         // If opening a file fails, insert a closed FD instead of the file redirection
                         // and return false. This lets execution potentially recover and at least gives
                         // the shell a chance to gracefully regain control of the shell (see #7038).
-                        self.push(Rc::new(IoClose::new(spec.fd)));
+                        self.push(Arc::new(IoClose::new(spec.fd)));
                         have_error = true;
                         continue;
                     }
-                    self.push(Rc::new(IoFile::new(spec.fd, file)));
+                    self.push(Arc::new(IoFile::new(spec.fd, file)));
                 }
             }
         }
@@ -916,7 +964,7 @@ impl BufferedOutputStream {
     }
 }
 
-pub struct NativeIoStreams<'a> {
+pub struct IoStreams<'a> {
     // Streams for out and err.
     pub out: &'a mut OutputStream,
     pub err: &'a mut OutputStream,
@@ -941,17 +989,22 @@ pub struct NativeIoStreams<'a> {
     pub err_is_redirected: bool,
 
     // Actual IO redirections. This is only used by the source builtin. Unowned.
-    io_chain: *const IoChain,
+    pub io_chain: *mut IoChain,
 
     // The job group of the job, if any. This enables builtins which run more code like eval() to
     // share pgid.
     // FIXME: this is awkwardly placed.
-    job_group: Option<Rc<JobGroup>>,
+    pub job_group: Option<JobGroupRef>,
 }
 
-impl<'a> NativeIoStreams<'a> {
+unsafe impl cxx::ExternType for IoStreams<'_> {
+    type Id = cxx::type_id!("IoStreams");
+    type Kind = cxx::kind::Opaque;
+}
+
+impl<'a> IoStreams<'a> {
     pub fn new(out: &'a mut OutputStream, err: &'a mut OutputStream) -> Self {
-        NativeIoStreams {
+        IoStreams {
             out,
             err,
             stdin_fd: -1,
@@ -960,9 +1013,12 @@ impl<'a> NativeIoStreams<'a> {
             err_is_piped: false,
             out_is_redirected: false,
             err_is_redirected: false,
-            io_chain: std::ptr::null(),
+            io_chain: std::ptr::null_mut(),
             job_group: None,
         }
+    }
+    pub fn out_is_terminal(&self) -> bool {
+        !self.out_is_redirected && unsafe { libc::isatty(STDOUT_FILENO) == 1 }
     }
 }
 
@@ -984,4 +1040,70 @@ fn fd_monitor() -> &'static mut FdMonitor {
     }
     let ptr: *mut FdMonitor = unsafe { (*FDM).get() };
     unsafe { &mut *ptr }
+}
+
+#[cxx::bridge]
+#[allow(clippy::needless_lifetimes)]
+mod io_ffi {
+    extern "Rust" {
+        type IoChain;
+        type IoStreams<'a>;
+        type OutputStreamFfi<'a>;
+
+        fn new_io_chain() -> Box<IoChain>;
+
+        #[cxx_name = "out"]
+        unsafe fn out_ffi<'a>(self: &'a mut IoStreams<'a>) -> Box<OutputStreamFfi<'a>>;
+        #[cxx_name = "err"]
+        unsafe fn err_ffi<'a>(self: &'a mut IoStreams<'a>) -> Box<OutputStreamFfi<'a>>;
+        #[cxx_name = "out_is_redirected"]
+        unsafe fn out_is_redirected_ffi<'a>(self: &IoStreams<'a>) -> bool;
+        #[cxx_name = "stdin_is_directly_redirected"]
+        unsafe fn stdin_is_directly_redirected_ffi<'a>(self: &IoStreams<'a>) -> bool;
+        #[cxx_name = "stdin_fd"]
+        unsafe fn stdin_fd_ffi<'a>(self: &IoStreams<'a>) -> i32;
+
+        #[cxx_name = "append"]
+        unsafe fn append_ffi<'a>(self: &mut OutputStreamFfi<'a>, s: &CxxWString) -> bool;
+        #[cxx_name = "push"]
+        unsafe fn push_ffi<'a>(self: &mut OutputStreamFfi<'a>, s: u32) -> bool;
+    }
+}
+
+impl<'a> IoStreams<'a> {
+    fn out_ffi(&'a mut self) -> Box<OutputStreamFfi<'a>> {
+        Box::new(OutputStreamFfi(self.out))
+    }
+    fn err_ffi(&'a mut self) -> Box<OutputStreamFfi<'a>> {
+        Box::new(OutputStreamFfi(self.err))
+    }
+    unsafe fn out_is_redirected_ffi(&self) -> bool {
+        self.out_is_redirected
+    }
+    unsafe fn stdin_is_directly_redirected_ffi(&self) -> bool {
+        self.stdin_is_directly_redirected
+    }
+    unsafe fn stdin_fd_ffi(&self) -> i32 {
+        self.stdin_fd
+    }
+}
+
+pub struct OutputStreamFfi<'a>(pub &'a mut OutputStream);
+
+unsafe impl cxx::ExternType for OutputStreamFfi<'_> {
+    type Id = cxx::type_id!("OutputStreamFfi");
+    type Kind = cxx::kind::Opaque;
+}
+
+impl<'a> OutputStreamFfi<'a> {
+    fn append_ffi(&mut self, s: &CxxWString) -> bool {
+        self.0.append(s.from_ffi())
+    }
+    fn push_ffi(&mut self, s: u32) -> bool {
+        self.0.append_char(char::from_u32(s).unwrap())
+    }
+}
+
+fn new_io_chain() -> Box<IoChain> {
+    Box::new(IoChain::new())
 }

@@ -1,10 +1,9 @@
 use crate::builtins::prelude::*;
 use crate::builtins::test::test as builtin_test;
-
-use crate::ffi::make_null_io_streams_ffi;
+use crate::io::OutputStream;
 
 fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
-    let parser: &mut Parser = unsafe { &mut *Parser::principal_parser_ffi() };
+    let parser = Parser::principal_parser();
     let mut argv = Vec::new();
     if bracket {
         argv.push(L!("[").to_owned());
@@ -20,9 +19,10 @@ fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> boo
 
     // Convert to &[&wstr].
     let mut argv = argv.iter().map(|s| s.as_ref()).collect::<Vec<_>>();
+    let mut out = OutputStream::Null;
+    let mut err = OutputStream::Null;
+    let mut streams = IoStreams::new(&mut out, &mut err);
 
-    let mut streams_ffi = make_null_io_streams_ffi();
-    let mut streams = IoStreams::new(streams_ffi.as_mut().unwrap());
     let result: Option<i32> = builtin_test(parser, &mut streams, &mut argv);
 
     if result != Some(expected) {
@@ -48,9 +48,11 @@ fn run_test_test(expected: i32, lst: &[&str]) -> bool {
 #[widestrs]
 fn test_test_brackets() {
     // Ensure [ knows it needs a ].
-    let parser: &mut Parser = unsafe { &mut *Parser::principal_parser_ffi() };
-    let mut streams_ffi = make_null_io_streams_ffi();
-    let mut streams = IoStreams::new(streams_ffi.as_mut().unwrap());
+    let parser = Parser::principal_parser();
+
+    let mut out = OutputStream::Null;
+    let mut err = OutputStream::Null;
+    let mut streams = IoStreams::new(&mut out, &mut err);
 
     let args1 = &mut ["["L, "foo"L];
     assert_eq!(

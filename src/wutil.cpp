@@ -40,6 +40,8 @@ using cstring = std::string;
 
 const file_id_t kInvalidFileID{};
 
+wcstring_list_ffi_t::~wcstring_list_ffi_t() = default;
+
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 

@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "common.h"
+#include "env.h"
 #include "maybe.h"
 
 enum class readline_cmd_t {
@@ -187,12 +188,11 @@ class char_event_t {
 };
 
 /// Adjust the escape timeout.
-class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
-void update_wait_on_escape_ms_ffi(std::unique_ptr<env_var_t> fish_escape_delay_ms);
+void update_wait_on_escape_ms_ffi(bool empty, const wcstring &fish_escape_delay_ms);
 
 void update_wait_on_sequence_key_ms(const environment_t &vars);
-void update_wait_on_sequence_key_ms_ffi(std::unique_ptr<env_var_t> fish_sequence_key_delay_ms);
+void update_wait_on_sequence_key_ms_ffi(bool empty, const wcstring &fish_sequence_key_delay_ms);
 
 /// A class which knows how to produce a stream of input events.
 /// This is a base class; you may subclass it for its override points.

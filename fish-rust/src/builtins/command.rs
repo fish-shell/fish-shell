@@ -8,11 +8,7 @@ struct command_cmd_opts_t {
     find_path: bool,
 }
 
-pub fn r#command(
-    parser: &mut Parser,
-    streams: &mut IoStreams,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -63,14 +59,13 @@ pub fn r#command(
     let optind = w.woptind;
     for arg in argv.iter().take(argc).skip(optind) {
         let paths = if opts.all {
-            path_get_paths(arg, &*parser.get_vars())
+            path_get_paths(arg, parser.vars())
         } else {
-            match path_get_path(arg, &*parser.get_vars()) {
+            match path_get_path(arg, parser.vars()) {
                 Some(p) => vec![p],
                 None => vec![],
             }
         };
-
         for path in paths.iter() {
             res = true;
             if opts.quiet {

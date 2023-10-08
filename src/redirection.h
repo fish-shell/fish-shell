@@ -17,7 +17,7 @@ enum class RedirectionMode {
     noclob,
 };
 struct Dup2Action;
-class Dup2List;
+struct Dup2List;
 struct RedirectionSpec;
 struct RedirectionSpecListFfi;
 

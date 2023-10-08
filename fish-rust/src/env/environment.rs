@@ -5,10 +5,12 @@ use super::environment_impl::{
 use super::{ConfigPaths, ElectricVar};
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
+use crate::compat::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
+use crate::env_universal_common::{CallbackDataList, EnvUniversal};
 use crate::event::Event;
-use crate::ffi::{self, env_universal_t, universal_notifier_t};
+use crate::ffi;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::null_terminated_array::OwningNullTerminatedArray;
@@ -16,21 +18,22 @@ use crate::path::{
     path_emit_config_directory_messages, path_get_config, path_get_data, path_make_canonical,
     paths_are_same_file,
 };
+use crate::proc::is_interactive_session;
 use crate::termsize;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharFromFFI};
 use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
+use std::sync::atomic::Ordering;
 
-use autocxx::WithinUniquePtr;
-use cxx::UniquePtr;
 use lazy_static::lazy_static;
-use libc::c_int;
+use libc::{c_int, STDOUT_FILENO, _IONBF};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::ffi::CStr;
+use std::io::Write;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 
 /// TODO: migrate to history once ported.
@@ -38,20 +41,11 @@ const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
 
 // Universal variables instance.
 lazy_static! {
-    static ref UVARS: Mutex<UniquePtr<env_universal_t>> = Mutex::new(env_universal_t::new_unique());
+    static ref UVARS: Mutex<EnvUniversal> = Mutex::new(EnvUniversal::new());
 }
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-/// Convert an EnvVar to an FFI env_var_t.
-pub fn env_var_to_ffi(var: Option<EnvVar>) -> cxx::UniquePtr<ffi::env_var_t> {
-    if let Some(var) = var {
-        ffi::env_var_t::new_ffi(Box::into_raw(Box::from(var)).cast()).within_unique_ptr()
-    } else {
-        cxx::UniquePtr::null()
-    }
-}
 
 /// An environment is read-only access to variable values.
 pub trait Environment {
@@ -114,6 +108,32 @@ impl Environment for EnvNull {
     }
 }
 
+/// A helper type for wrapping a type-erased Environment.
+pub struct EnvDyn {
+    inner: Box<dyn Environment + Send + Sync>,
+}
+
+impl EnvDyn {
+    // Exposed for testing.
+    pub fn new(inner: Box<dyn Environment + Send + Sync>) -> Self {
+        Self { inner }
+    }
+}
+
+impl Environment for EnvDyn {
+    fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
+        self.inner.getf(key, mode)
+    }
+
+    fn get_names(&self, flags: EnvMode) -> Vec<WString> {
+        self.inner.get_names(flags)
+    }
+
+    fn get_pwd_slash(&self) -> WString {
+        self.inner.get_pwd_slash()
+    }
+}
+
 /// An immutable environment, used in snapshots.
 pub struct EnvScoped {
     inner: EnvMutex<EnvScopedImpl>,
@@ -136,7 +156,7 @@ pub struct EnvStack {
 }
 
 impl EnvStack {
-    fn new() -> EnvStack {
+    pub fn new() -> EnvStack {
         EnvStack {
             inner: EnvStackImpl::new(),
         }
@@ -148,7 +168,7 @@ impl EnvStack {
 
     /// \return whether we are the principal stack.
     pub fn is_principal(&self) -> bool {
-        self as *const Self == Arc::as_ptr(&*PRINCIPAL_STACK)
+        std::ptr::eq(self, Self::principal().as_ref().get_ref())
     }
 
     /// Helpers to get and set the proc statuses.
@@ -279,9 +299,9 @@ impl EnvStack {
 
     /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
     /// but globals are shared (i.e. changes to global will be visible to this snapshot).
-    pub fn snapshot(&self) -> Box<dyn Environment> {
+    pub fn snapshot(&self) -> EnvDyn {
         let scoped = EnvScoped::from_impl(self.lock().base.snapshot());
-        Box::new(scoped)
+        EnvDyn::new(Box::new(scoped) as Box<dyn Environment + Send + Sync>)
     }
 
     /// Synchronizes universal variable changes.
@@ -289,7 +309,7 @@ impl EnvStack {
     /// instance (that is, look for changes from other fish instances).
     /// \return a list of events for changed variables.
     #[allow(clippy::vec_box)]
-    pub fn universal_sync(&self, always: bool) -> Vec<Box<Event>> {
+    pub fn universal_sync(&self, always: bool) -> Vec<Event> {
         if UVAR_SCOPE_IS_GLOBAL.load() {
             return Vec::new();
         }
@@ -298,25 +318,23 @@ impl EnvStack {
         }
         UVARS_LOCALLY_MODIFIED.store(false);
 
-        let mut unused = autocxx::c_int(0);
-        let sync_res_ptr = uvars().as_mut().unwrap().sync_ffi().within_unique_ptr();
-        let sync_res = sync_res_ptr.as_ref().unwrap();
-        if sync_res.get_changed() {
-            universal_notifier_t::default_notifier_ffi(std::pin::Pin::new(&mut unused))
-                .post_notification();
+        let mut callbacks = CallbackDataList::new();
+        let changed = uvars().sync(&mut callbacks);
+        if changed {
+            ffi::env_universal_notifier_t_default_notifier_post_notification_ffi();
         }
         // React internally to changes to special variables like LANG, and populate on-variable events.
         let mut result = Vec::new();
         #[allow(unreachable_code)]
-        for idx in 0..sync_res.count() {
-            let name = sync_res.get_key(idx).from_ffi();
+        for callback in callbacks {
+            let name = callback.key;
             env_dispatch_var_change(&name, self);
-            let evt = if sync_res.get_is_erase(idx) {
+            let evt = if callback.val.is_none() {
                 Event::variable_erase(name)
             } else {
                 Event::variable_set(name)
             };
-            result.push(Box::new(evt));
+            result.push(evt);
         }
         result
     }
@@ -330,6 +348,10 @@ impl EnvStack {
     /// Access the principal variable stack, associated with the principal parser.
     pub fn principal() -> &'static EnvStackRef {
         &PRINCIPAL_STACK
+    }
+
+    pub fn set_argv(&self, argv: Vec<WString>) {
+        self.set(L!("argv"), EnvMode::LOCAL, argv);
     }
 }
 
@@ -365,17 +387,17 @@ impl Environment for EnvStack {
     }
 }
 
-pub type EnvStackRef = Arc<EnvStack>;
+pub type EnvStackRef = Pin<Arc<EnvStack>>;
 
 // A variable stack that only represents globals.
 // Do not push or pop from this.
 lazy_static! {
-    static ref GLOBALS: EnvStackRef = Arc::new(EnvStack::new());
+    static ref GLOBALS: EnvStackRef = Arc::pin(EnvStack::new());
 }
 
 // Our singleton "principal" stack.
 lazy_static! {
-    static ref PRINCIPAL_STACK: EnvStackRef = Arc::new(EnvStack::new());
+    static ref PRINCIPAL_STACK: EnvStackRef = Arc::pin(EnvStack::new());
 }
 
 /// Some configuration path environment variables.
@@ -647,7 +669,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
     // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore
     // was not inherited from the environment.
-    if ffi::is_interactive_session() {
+    if is_interactive_session() {
         let nshlvl_str = if let Some(shlvl_var) = std::env::var_os("SHLVL") {
             // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a
             // diagnostic?
@@ -718,33 +740,23 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     if !do_uvars {
         UVAR_SCOPE_IS_GLOBAL.store(true);
     } else {
+        // let vars = EnvStack::principal();
+
         // Set up universal variables using the default path.
-        let callbacks = uvars()
-            .as_mut()
-            .unwrap()
-            .initialize_ffi()
-            .within_unique_ptr();
-        let vars = EnvStack::principal();
-        let callbacks = callbacks.as_ref().unwrap();
-        for idx in 0..callbacks.count() {
-            let name = callbacks.get_key(idx).from_ffi();
-            env_dispatch_var_change(&name, vars);
+        let mut callbacks = CallbackDataList::new();
+        uvars().initialize(&mut callbacks);
+        for callback in callbacks {
+            env_dispatch_var_change(&callback.key, vars);
         }
 
         // Do not import variables that have the same name and value as
         // an exported universal variable. See issues #5258 and #5348.
-        let mut table = uvars()
-            .as_ref()
-            .unwrap()
-            .get_table_ffi()
-            .within_unique_ptr();
-        for idx in 0..table.count() {
-            // autocxx gets confused when a value goes Rust -> Cxx -> Rust.
-            let uvar = table.as_mut().unwrap().get_var(idx).from_ffi();
+        let uvars_locked = uvars();
+        let table = uvars_locked.get_table();
+        for (name, uvar) in table {
             if !uvar.exports() {
                 continue;
             }
-            let name: &wstr = table.get_name(idx).as_wstr();
 
             // Look for a global exported variable with the same name.
             let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
@@ -759,15 +771,13 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         let prefix_len = prefix.char_count();
         let from_universal = true;
         let mut abbrs = abbrs_get_set();
-        for idx in 0..table.count() {
-            let name: &wstr = table.get_name(idx).as_wstr();
+        for (name, uvar) in table {
             if !name.starts_with(prefix) {
                 continue;
             }
             let escaped_name = name.slice_from(prefix_len);
             if let Some(name) = unescape_string(escaped_name, UnescapeStringStyle::Var) {
                 let key = name.clone();
-                let uvar = table.get_var(idx).from_ffi();
                 let replacement: WString = join_strings(uvar.as_list(), ' ');
                 abbrs.add(Abbreviation::new(
                     name,
@@ -779,4 +789,17 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
             }
         }
     }
+}
+
+/// Various things we need to initialize at run-time that don't really fit any of the other init
+/// routines.
+pub fn misc_init() {
+    // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
+    // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
+    // issue #3748.
+    if unsafe { libc::isatty(STDOUT_FILENO) } != 0 {
+        let _ = std::io::stdout().flush();
+        unsafe { libc::setvbuf(stdout_stream(), std::ptr::null_mut(), _IONBF, 0) };
+    }
+    _PATH_BSHELL.store(unsafe { C_PATH_BSHELL().cast_mut() }, Ordering::SeqCst);
 }

@@ -2,13 +2,22 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 #![allow(clippy::bool_assert_comparison)]
+#![allow(clippy::box_default)]
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::comparison_chain)]
 #![allow(clippy::derivable_impls)]
 #![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::if_same_then_else)]
 #![allow(clippy::manual_is_ascii_check)]
+#![allow(clippy::mut_from_ref)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::option_map_unit_fn)]
 #![allow(clippy::ptr_arg)]
+#![allow(clippy::redundant_slicing)]
+#![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]
+#![allow(clippy::unnecessary_to_owned)]
+#![allow(clippy::unnecessary_unwrap)]
 
 pub const BUILD_VERSION: &str = match option_env!("FISH_BUILD_VERSION") {
     Some(v) => v,
@@ -20,6 +29,7 @@ mod common;
 
 mod abbrs;
 mod ast;
+mod autoload;
 mod builtins;
 mod color;
 mod compat;
@@ -27,7 +37,9 @@ mod complete;
 mod curses;
 mod env;
 mod env_dispatch;
+mod env_universal_common;
 mod event;
+mod exec;
 mod expand;
 mod fallback;
 mod fd_monitor;
@@ -50,6 +62,8 @@ mod future_feature_flags;
 mod global_safety;
 mod highlight;
 mod history;
+mod input;
+mod input_common;
 mod io;
 mod job_group;
 mod kill;
@@ -59,11 +73,15 @@ mod null_terminated_array;
 mod operation_context;
 mod output;
 mod parse_constants;
+mod parse_execution;
 mod parse_tree;
 mod parse_util;
+mod parser;
 mod parser_keywords;
 mod path;
+mod pointer;
 mod print_help;
+mod proc;
 mod re;
 mod reader;
 mod redirection;
@@ -87,5 +105,6 @@ mod widecharwidth;
 mod wildcard;
 mod wutil;
 
-// Don't use `#[cfg(test)]` here to make sure ffi tests are built and tested
+#[cfg(any(test, feature = "fish-ffi-tests"))]
+#[allow(unused_imports)] // Easy way to suppress warnings while we have two testing modes.
 mod tests;

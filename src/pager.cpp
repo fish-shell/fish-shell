@@ -29,6 +29,19 @@
 using comp_t = pager_t::comp_t;
 using comp_info_list_t = std::vector<comp_t>;
 
+comp_t &comp_t::operator=(const comp_t &other) {
+    if (this == &other) return *this;
+    comp = other.comp;
+    desc = other.desc;
+    representative = other.representative->clone();
+    colors = other.colors;
+    comp_width = other.comp_width;
+    desc_width = other.desc_width;
+    return *this;
+}
+
+comp_t::comp_t(const comp_t &other) { *this = other; }
+
 /// The minimum width (in characters) the terminal must to show completions at all.
 #define PAGER_MIN_WIDTH 16
 
@@ -333,7 +346,7 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
 
         // Append the single completion string. We may later merge these into multiple.
         comp_info->comp.push_back(escape_string(
-            comp.completion, ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED | ESCAPE_SYMBOLIC));
+            *comp.completion(), ESCAPE_NO_PRINTABLES | ESCAPE_NO_QUOTED | ESCAPE_SYMBOLIC));
         if (comp.replaces_commandline()
             // HACK We want to render a full shell command, with syntax highlighting.  Above we
             // escape nonprintables, which might make the rendered command longer than the original
@@ -346,16 +359,16 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
             // then writing a variant of escape_string() that adjusts highlighting according
             // so it matches the escaped string.
             && MB_CUR_MAX > 1) {
-            highlight_shell(comp.completion, comp_info->colors, operation_context_t::empty());
+            highlight_shell(*comp.completion(), comp_info->colors, *empty_operation_context());
             assert(comp_info->comp.back().size() >= comp_info->colors.size());
         }
 
         // Append the mangled description.
-        comp_info->desc = comp.description;
+        comp_info->desc = std::move(*comp.description());
         mangle_1_completion_description(&comp_info->desc);
 
         // Set the representative completion.
-        comp_info->representative = comp;
+        comp_info->representative = comp.clone();
     }
     return result;
 }
@@ -578,7 +591,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
 
     // We limit the width to term_width - 1.
     highlight_spec_t underline{};
-    underline.force_underline = true;
+    underline->force_underline = true;
 
     size_t search_field_remaining = term_width - 1;
     search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_role_t::normal,
@@ -878,7 +891,7 @@ const completion_t *pager_t::selected_completion(const page_rendering_t &renderi
     const completion_t *result = nullptr;
     size_t idx = visual_selected_completion_index(rendering.rows, rendering.cols);
     if (idx != PAGER_SELECTION_NONE) {
-        result = &completion_infos.at(idx).representative;
+        result = &*completion_infos.at(idx).representative;
     }
     return result;
 }

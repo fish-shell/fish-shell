@@ -134,7 +134,8 @@ static dir_remoteness_t path_remoteness(const wcstring &path) {
 }
 
 std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
-                                        const environment_t &env_vars) {
+                                        // todo!("houd be environment_t")
+                                        const env_stack_t &env_vars) {
     std::vector<wcstring> paths;
     if (dir.at(0) == L'/') {
         // Absolute path.
@@ -174,7 +175,8 @@ std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
 }
 
 maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
-                                  const environment_t &env_vars) {
+                                  // todo!("should be environment_t")
+                                  const env_stack_t &env_vars) {
     int err = ENOENT;
     if (dir.empty()) return none();
     assert(!wd.empty() && wd.back() == L'/');
@@ -195,7 +197,8 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
 }
 
 maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
-                                      const environment_t &vars) {
+                                      // todo!("should be environment_t")
+                                      const env_stack_t &vars) {
     wcstring exp_path = path;
     expand_tilde(exp_path, vars);
     if (string_prefixes_string(L"/", exp_path) || string_prefixes_string(L"./", exp_path) ||

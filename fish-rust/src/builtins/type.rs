@@ -1,6 +1,8 @@
 use super::prelude::*;
-use crate::ffi::{builtin_exists, colorize_shell};
+use crate::builtins::shared::builtin_exists;
+use crate::common::str2wcstring;
 use crate::function;
+use crate::highlight::{colorize, highlight_shell};
 
 use crate::path::{path_get_path, path_get_paths};
 
@@ -16,7 +18,7 @@ struct type_cmd_opts_t {
     query: bool,
 }
 
-pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -87,7 +89,7 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
 
                     if path.is_empty() {
                         comment.push_utfstr(&wgettext_fmt!("Defined interactively"));
-                    } else if path == "-" {
+                    } else if path == L!("-") {
                         comment.push_utfstr(&wgettext_fmt!("Defined via `source`"));
                     } else {
                         let lineno: i32 = props.definition_lineno();
@@ -102,10 +104,10 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
                         let path = props.copy_definition_file().unwrap_or(L!(""));
                         if path.is_empty() {
                             comment.push_utfstr(&wgettext_fmt!(", copied interactively"));
-                        } else if path == "-" {
+                        } else if path == L!("-") {
                             comment.push_utfstr(&wgettext_fmt!(", copied via `source`"));
                         } else {
-                            let lineno: i32 = props.copy_definition_lineno();
+                            let lineno = props.copy_definition_lineno();
                             comment.push_utfstr(&wgettext_fmt!(
                                 ", copied in %ls @ line %d",
                                 path,
@@ -130,7 +132,15 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
                         ));
 
                         if streams.out_is_terminal() {
-                            let col = colorize_shell(&def.to_ffi(), parser.pin()).from_ffi();
+                            let mut color = vec![];
+                            highlight_shell(
+                                &def,
+                                &mut color,
+                                &parser.context(),
+                                /*io_ok=*/ false,
+                                /*cursor=*/ None,
+                            );
+                            let col = str2wcstring(&colorize(&def, &color, parser.vars()));
                             streams.out.append(col);
                         } else {
                             streams.out.append(def);
@@ -140,7 +150,7 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
                         streams.out.append(wgettext_fmt!(" (%ls)\n", comment));
                     }
                 } else if opts.get_type {
-                    streams.out.appendln("function");
+                    streams.out.appendln(L!("function"));
                 }
                 if !opts.all {
                     continue;
@@ -148,7 +158,7 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
             }
         }
 
-        if !opts.force_path && builtin_exists(&arg.to_ffi()) {
+        if !opts.force_path && builtin_exists(arg) {
             found += 1;
             res = true;
             if opts.query {
@@ -165,9 +175,9 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
         }
 
         let paths = if opts.all {
-            path_get_paths(arg, &*parser.get_vars())
+            path_get_paths(arg, parser.vars())
         } else {
-            match path_get_path(arg, &*parser.get_vars()) {
+            match path_get_path(arg, parser.vars()) {
                 Some(p) => vec![p],
                 None => vec![],
             }
@@ -186,7 +196,7 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
                     streams.out.append(wgettext_fmt!("%ls is %ls\n", arg, path));
                 }
             } else if opts.get_type {
-                streams.out.appendln("file");
+                streams.out.appendln(L!("file"));
                 break;
             }
             if !opts.all {

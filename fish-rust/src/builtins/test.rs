@@ -82,7 +82,7 @@ mod test_expressions {
         }
 
         // Return true if the number is a tty().
-        fn isatty(&self, streams: &IoStreams) -> bool {
+        fn isatty(&self, streams: &mut IoStreams) -> bool {
             fn istty(fd: libc::c_int) -> bool {
                 // Safety: isatty cannot crash.
                 unsafe { libc::isatty(fd) > 0 }
@@ -92,7 +92,10 @@ mod test_expressions {
             }
             let bint = self.base as i32;
             if bint == 0 {
-                streams.stdin_fd().map(istty).unwrap_or(false)
+                match streams.stdin_fd {
+                    -1 => false,
+                    fd => istty(fd),
+                }
             } else if bint == 1 {
                 !streams.out_is_redirected && istty(libc::STDOUT_FILENO)
             } else if bint == 2 {
@@ -1003,7 +1006,7 @@ mod test_expressions {
 /// Evaluate a conditional expression given the arguments. For POSIX conformance this
 /// supports a more limited range of functionality.
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-pub fn test(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
         return STATUS_INVALID_ARGS;
@@ -1025,7 +1028,7 @@ pub fn test(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             streams
                 .err
                 .appendln(wgettext!("[: the last argument must be ']'"));
-            builtin_print_error_trailer(parser, streams, program_name);
+            builtin_print_error_trailer(parser, streams.err, program_name);
             return STATUS_INVALID_ARGS;
         }
     }
@@ -1053,7 +1056,7 @@ pub fn test(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let expr = test_expressions::TestParser::parse_args(args, &mut err, program_name);
     let Some(expr) = expr else {
         streams.err.append(err);
-        streams.err.append(parser.pin().current_line().as_wstr());
+        streams.err.append(parser.current_line());
         return STATUS_CMD_ERROR;
     };
 
@@ -1062,11 +1065,11 @@ pub fn test(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     if !eval_errors.is_empty() {
         if !common::should_suppress_stderr_for_tests() {
             for eval_error in eval_errors {
-                streams.err.appendln(eval_error);
+                streams.err.appendln(&eval_error);
             }
             // Add a backtrace but not the "see help" message
             // because this isn't about passing the wrong options.
-            streams.err.append(parser.pin().current_line().as_wstr());
+            streams.err.append(parser.current_line());
         }
         return STATUS_INVALID_ARGS;
     }

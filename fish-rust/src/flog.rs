@@ -191,7 +191,7 @@ macro_rules! FLOG {
 
 macro_rules! FLOGF {
     ($category:ident, $fmt: expr, $($elem:expr),+ $(,)*) => {
-        crate::flog::FLOG!($category, sprintf!($fmt, $($elem),*));
+        crate::flog::FLOG!($category, crate::wutil::sprintf!($fmt, $($elem),*))
     }
 }
 

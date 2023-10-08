@@ -129,7 +129,7 @@ pub use test as feature_test;
 
 /// Set a flag.
 #[cfg(any(test, feature = "fish-ffi-tests"))]
-fn set(flag: FeatureFlag, value: bool) {
+pub fn set(flag: FeatureFlag, value: bool) {
     LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).set(flag, value));
 }
 

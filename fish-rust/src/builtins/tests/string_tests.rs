@@ -1,11 +1,11 @@
+use super::super::prelude::*;
+use crate::common::escape;
 use crate::ffi_tests::add_test;
+use crate::io::{OutputStream, StringOutputStream};
 
 add_test! {"test_string", || {
-    use crate::ffi::Parser;
-    use crate::ffi;
+    use crate::parser::Parser;
     use crate::builtins::string::string;
-    use crate::wchar_ffi::WCharFromFFI;
-    use crate::common::{EscapeStringStyle, escape_string};
     use crate::wchar::wstr;
     use crate::wchar::L;
     use crate::builtins::shared::{STATUS_CMD_ERROR,STATUS_CMD_OK, STATUS_INVALID_ARGS};
@@ -20,17 +20,18 @@ add_test! {"test_string", || {
 
     // TODO: these should be individual tests, not all in one, port when we can run these with `cargo test`
     fn string_test(mut args: Vec<&wstr>, expected_rc: Option<i32>, expected_out: &wstr) {
-        let parser: &mut Parser = unsafe { &mut *Parser::principal_parser_ffi() };
-        let mut streams = ffi::make_test_io_streams_ffi();
-        let mut io = crate::builtins::shared::IoStreams::new(streams.pin_mut());
+        let parser: &Parser = Parser::principal_parser();
+        let mut outs = OutputStream::String(StringOutputStream::new());
+        let mut errs = OutputStream::Null;
+        let mut streams = IoStreams::new(&mut outs, &mut errs);
+        streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
 
-        let rc = string(parser, &mut io, args.as_mut_slice()).expect("string failed");
+        let rc = string(parser, &mut streams, args.as_mut_slice()).expect("string failed");
 
         assert_eq!(expected_rc.unwrap(), rc, "string builtin returned unexpected return code");
 
-        let string_stream_contents = &ffi::get_test_output_ffi(&streams);
-        let actual = escape_string(&string_stream_contents.from_ffi(), EscapeStringStyle::default());
-        let expected = escape_string(expected_out, EscapeStringStyle::default());
+        let actual = escape(outs.contents());
+        let expected = escape(expected_out);
         assert_eq!(expected, actual, "string builtin returned unexpected output");
     }
 

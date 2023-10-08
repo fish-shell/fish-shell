@@ -16,7 +16,6 @@
 #include <utility>
 
 #include "ast.h"
-#include "builtin.h"
 #include "common.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -40,9 +39,6 @@
 
 /// Error message for arguments to 'end'
 #define END_ARG_ERR_MSG _(L"'end' does not take arguments. Did you forget a ';'?")
-
-/// Error message when 'time' is in a pipeline.
-#define TIME_IN_PIPELINE_ERR_MSG _(L"The 'time' command may only be at the beginning of a pipeline")
 
 /// Maximum length of a variable name to show in error reports before truncation
 static constexpr int var_err_len = 16;
@@ -616,13 +612,6 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
     return true;
 }
 
-/// Returns true if the specified command is a builtin that may not be used in a pipeline.
-static const wchar_t *const forbidden_pipe_commands[] = {L"exec", L"case", L"break", L"return",
-                                                         L"continue"};
-static bool parser_is_pipe_forbidden(const wcstring &word) {
-    return contains(forbidden_pipe_commands, word);
-}
-
 bool parse_util_argument_is_help(const wcstring &s) { return s == L"-h" || s == L"--help"; }
 
 // \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
@@ -751,7 +740,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
     parser_test_error_bits_t err = 0;
 
     auto check_subtoken = [&arg_src, &out_errors, source_start](size_t begin, size_t end) -> int {
-        auto maybe_unesc = unescape_string(arg_src.c_str() + begin, end - begin, UNESCAPE_SPECIAL);
+        auto maybe_unesc = unescape_string(arg_src.c_str() + begin, end - begin, UNESCAPE_SPECIAL,
+                                           STRING_STYLE_SCRIPT);
         if (!maybe_unesc) {
             if (out_errors) {
                 const wchar_t *fmt = L"Invalid token '%ls'";
@@ -898,165 +888,6 @@ static bool detect_errors_in_backgrounded_job(const ast::job_pipeline_t &job,
     return errored;
 }
 
-/// Given a source buffer \p buff_src and decorated statement \p dst within it, return true if there
-/// is an error and false if not. \p storage may be used to reduce allocations.
-static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
-                                                 const ast::decorated_statement_t &dst,
-                                                 wcstring *storage,
-                                                 parse_error_list_t *parse_errors) {
-    using namespace ast;
-    bool errored = false;
-    auto source_start = dst.source_range().start;
-    auto source_length = dst.source_range().length;
-    const statement_decoration_t decoration = dst.decoration();
-
-    // Determine if the first argument is help.
-    bool first_arg_is_help = false;
-    if (const auto *arg = get_first_arg(dst.args_or_redirs())) {
-        wcstring arg_src = *arg->source(buff_src);
-        *storage = arg_src;
-        first_arg_is_help = parse_util_argument_is_help(arg_src);
-    }
-
-    // Get the statement we are part of.
-    const statement_t &st = dst.ptr()->parent()->as_statement();
-
-    // Walk up to the job.
-    const ast::job_pipeline_t *job = nullptr;
-    for (auto cursor = dst.ptr()->parent(); job == nullptr; cursor = cursor->parent()) {
-        assert(cursor->has_value() && "Reached root without finding a job");
-        job = cursor->try_as_job_pipeline();
-    }
-    assert(job && "Should have found the job");
-
-    // Check our pipeline position.
-    pipeline_position_t pipe_pos;
-    if (job->continuation().empty()) {
-        pipe_pos = pipeline_position_t::none;
-    } else if (&job->statement() == &st) {
-        pipe_pos = pipeline_position_t::first;
-    } else {
-        pipe_pos = pipeline_position_t::subsequent;
-    }
-
-    // Check that we don't try to pipe through exec.
-    bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
-    if (is_in_pipeline && decoration == statement_decoration_t::exec) {
-        errored = append_syntax_error(parse_errors, source_start, source_length,
-                                      INVALID_PIPELINE_CMD_ERR_MSG, L"exec");
-    }
-
-    // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
-    // beginning. We can't disallow them as commands entirely because we need to support 'and
-    // --help', etc.
-    if (pipe_pos == pipeline_position_t::subsequent) {
-        // We only reject it if we have no decoration.
-        // `echo foo | command time something`
-        // is entirely fair and valid.
-        // Other current decorations like "exec"
-        // are already forbidden.
-        const auto &deco = dst.decoration();
-        if (deco == statement_decoration_t::none) {
-            // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
-            // commands.
-            wcstring command = *dst.command().source(buff_src);
-            *storage = command;
-            if (command == L"and" || command == L"or") {
-                errored = append_syntax_error(parse_errors, source_start, source_length,
-                                              INVALID_PIPELINE_CMD_ERR_MSG, command.c_str());
-            }
-
-            // Similarly for time (#8841).
-            if (command == L"time") {
-                errored = append_syntax_error(parse_errors, source_start, source_length,
-                                              TIME_IN_PIPELINE_ERR_MSG);
-            }
-        }
-    }
-
-    // $status specifically is invalid as a command,
-    // to avoid people trying `if $status`.
-    // We see this surprisingly regularly.
-    wcstring com = *dst.command().source(buff_src);
-    *storage = com;
-    if (com == L"$status") {
-        errored =
-            append_syntax_error(parse_errors, source_start, source_length,
-                                _(L"$status is not valid as a command. See `help conditions`"));
-    }
-
-    wcstring unexp_command = *dst.command().source(buff_src);
-    *storage = unexp_command;
-    if (!unexp_command.empty()) {
-        // Check that we can expand the command.
-        // Make a new error list so we can fix the offset for just those, then append later.
-        wcstring command;
-        auto new_errors = new_parse_error_list();
-        if (expand_to_command_and_args(unexp_command, operation_context_t::empty(), &command,
-                                       nullptr, &*new_errors,
-                                       true /* skip wildcards */) == expand_result_t::error) {
-            errored = true;
-        }
-
-        // Check that pipes are sound.
-        if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
-            errored = append_syntax_error(parse_errors, source_start, source_length,
-                                          INVALID_PIPELINE_CMD_ERR_MSG, command.c_str());
-        }
-
-        // Check that we don't break or continue from outside a loop.
-        if (!errored && (command == L"break" || command == L"continue") && !first_arg_is_help) {
-            // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
-            // stop the search; we can't break an outer loop from inside a function.
-            // This is a little funny because we can't tell if it's a 'for' or 'while'
-            // loop from the ancestor alone; we need the header. That is, we hit a
-            // block_statement, and have to check its header.
-            bool found_loop = false;
-            for (auto ancestor = dst.ptr(); ancestor->has_value(); ancestor = ancestor->parent()) {
-                const auto *block = ancestor->try_as_block_statement();
-                if (!block) continue;
-                if (block->header().ptr()->typ() == type_t::for_header ||
-                    block->header().ptr()->typ() == type_t::while_header) {
-                    // This is a loop header, so we can break or continue.
-                    found_loop = true;
-                    break;
-                } else if (block->header().ptr()->typ() == type_t::function_header) {
-                    // This is a function header, so we cannot break or
-                    // continue. We stop our search here.
-                    found_loop = false;
-                    break;
-                }
-            }
-
-            if (!found_loop) {
-                errored = append_syntax_error(
-                    parse_errors, source_start, source_length,
-                    (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
-            }
-        }
-
-        // Check that we don't do an invalid builtin (issue #1252).
-        if (!errored && decoration == statement_decoration_t::builtin) {
-            wcstring command = unexp_command;
-            if (expand_one(command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
-                           parse_errors) &&
-                !builtin_exists(unexp_command)) {
-                errored = append_syntax_error(parse_errors, source_start, source_length,
-                                              UNKNOWN_BUILTIN_ERR_MSG, unexp_command.c_str());
-            }
-        }
-
-        if (parse_errors) {
-            // The expansion errors here go from the *command* onwards,
-            // so we need to offset them by the *command* offset,
-            // excluding the decoration.
-            new_errors->offset_source_start(dst.command().source_range().start);
-            parse_errors->append(&*new_errors);
-        }
-    }
-    return errored;
-}
-
 // Given we have a trailing argument_or_redirection_list, like `begin; end > /dev/null`, verify that
 // there are no arguments in the list.
 static bool detect_errors_in_block_redirection_list(
@@ -1068,8 +899,9 @@ static bool detect_errors_in_block_redirection_list(
     return false;
 }
 
-parser_test_error_bits_t parse_util_detect_errors_ffi(const ast::ast_t* ast, const wcstring &buff_src,
-                                                  parse_error_list_t *out_errors) {
+parser_test_error_bits_t parse_util_detect_errors_ffi(const ast::ast_t *ast,
+                                                      const wcstring &buff_src,
+                                                      parse_error_list_t *out_errors) {
     return parse_util_detect_errors(*ast, buff_src, out_errors);
 }
 
@@ -1130,7 +962,8 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
                 errored |= detect_errors_in_backgrounded_job(*job, out_errors);
             }
         } else if (const auto *stmt = node->try_as_decorated_statement()) {
-            errored |= detect_errors_in_decorated_statement(buff_src, *stmt, &storage, out_errors);
+            errored |=
+                detect_errors_in_decorated_statement(buff_src, (size_t)stmt, (size_t)out_errors);
         } else if (const auto *block = node->try_as_block_statement()) {
             // If our 'end' had no source, we are unsourced.
             if (!block->end().ptr()->has_source()) has_unclosed_block = true;

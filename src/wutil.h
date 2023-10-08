@@ -44,7 +44,9 @@ struct wcstring_list_ffi_t {
 
     wcstring_list_ffi_t() = default;
     /* implicit */ wcstring_list_ffi_t(std::vector<wcstring> vals) : vals(std::move(vals)) {}
+    ~wcstring_list_ffi_t();
 
+    bool empty() const { return vals.empty(); }
     size_t size() const { return vals.size(); }
     const wcstring &at(size_t idx) const { return vals.at(idx); }
     void clear() { vals.clear(); }
@@ -61,6 +63,16 @@ struct wcstring_list_ffi_t {
     static wcstring_list_ffi_t get_test_data();
     static void check_test_data(wcstring_list_ffi_t data);
 };
+
+/// Convert an iterable of strings to a list of wcharz_t.
+template <typename T>
+std::vector<wcharz_t> wcstring_list_to_ffi(const T &list) {
+    std::vector<wcharz_t> result;
+    for (const wcstring &str : list) {
+        result.push_back(str.c_str());
+    }
+    return result;
+}
 
 class autoclose_fd_t;
 

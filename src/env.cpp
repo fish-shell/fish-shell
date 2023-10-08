@@ -3,40 +3,12 @@
 
 #include "env.h"
 
-#include <errno.h>
 #include <pwd.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
-#include <algorithm>
-#include <map>
-#include <mutex>
-#include <set>
-#include <utility>
-#include <vector>
-
-#include "abbrs.h"
-#include "common.h"
-#include "env_dispatch.rs.h"
-#include "env_universal_common.h"
-#include "event.h"
-#include "fallback.h"  // IWYU pragma: keep
-#include "fish_version.h"
-#include "flog.h"
-#include "global_safety.h"
 #include "history.h"
-#include "input.h"
-#include "null_terminated_array.h"
 #include "path.h"
-#include "proc.h"
 #include "reader.h"
-#include "termsize.h"
-#include "threads.rs.h"
-#include "wcstringutil.h"
-#include "wutil.h"  // IWYU pragma: keep
 
 /// At init, we read all the environment variables from this array.
 extern char **environ;
@@ -136,17 +108,7 @@ std::vector<wcstring> null_environment_t::get_names(env_mode_flags_t flags) cons
     return std::move(names.vals);
 }
 
-/// Various things we need to initialize at run-time that don't really fit any of the other init
-/// routines.
-void misc_init() {
-    // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
-    // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
-    // issue #3748.
-    if (isatty(STDOUT_FILENO)) {
-        fflush(stdout);
-        setvbuf(stdout, nullptr, _IONBF, 0);
-    }
-}
+bool env_stack_t::is_principal() const { return impl_->is_principal(); }
 
 extern "C" {
 void env_cpp_init() {
@@ -181,34 +143,6 @@ void set_inheriteds_ffi() {
         val.assign(key_and_val, eql + 1, wcstring::npos);
         inheriteds[key] = val;
     }
-}
-
-bool env_stack_t::is_principal() const { return impl_->is_principal(); }
-
-std::vector<rust::Box<Event>> env_stack_t::universal_sync(bool always) {
-    event_list_ffi_t result;
-    impl_->universal_sync(always, result);
-    return std::move(result.events);
-}
-
-void env_stack_t::apply_inherited_ffi(const function_properties_t &props) {
-    impl_->apply_inherited_ffi(props);
-}
-
-statuses_t env_stack_t::get_last_statuses() const {
-    auto statuses_ffi = impl_->get_last_statuses();
-    statuses_t res{};
-    res.status = statuses_ffi->get_status();
-    res.kill_signal = statuses_ffi->get_kill_signal();
-    auto &pipestatus = statuses_ffi->get_pipestatus();
-    res.pipestatus.assign(pipestatus.begin(), pipestatus.end());
-    return res;
-}
-
-int env_stack_t::get_last_status() const { return get_last_statuses().status; }
-
-void env_stack_t::set_last_statuses(statuses_t s) {
-    return impl_->set_last_statuses(s.status, s.kill_signal, s.pipestatus);
 }
 
 /// Update the PWD variable directory from the result of getcwd().
@@ -249,15 +183,6 @@ int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode) {
 
 int env_stack_t::remove(const wcstring &key, int mode) {
     return static_cast<int>(impl_->remove(key, mode));
-}
-
-std::shared_ptr<owning_null_terminated_array_t> env_stack_t::export_arr() {
-    // export_array() returns a rust::Box<OwningNullTerminatedArrayRefFFI>.
-    // Acquire ownership.
-    OwningNullTerminatedArrayRefFFI *ptr = impl_->export_array();
-    assert(ptr && "Null pointer");
-    return std::make_shared<owning_null_terminated_array_t>(
-        rust::Box<OwningNullTerminatedArrayRefFFI>::from_raw(ptr));
 }
 
 maybe_t<env_var_t> env_dyn_t::get(const wcstring &key, env_mode_flags_t mode) const {
@@ -302,6 +227,8 @@ const std::shared_ptr<env_stack_t> &env_stack_t::principal_ref() {
 env_stack_t::~env_stack_t() = default;
 env_stack_t::env_stack_t(env_stack_t &&) = default;
 env_stack_t::env_stack_t(rust::Box<EnvStackRef> imp) : impl_(std::move(imp)) {}
+env_stack_t::env_stack_t(uint8_t *imp)
+    : impl_(rust::Box<EnvStackRef>::from_raw(reinterpret_cast<EnvStackRef *>(imp))) {}
 
 #if defined(__APPLE__) || defined(__CYGWIN__)
 static int check_runtime_path(const char *path) {
@@ -385,7 +312,7 @@ void unsetenv_lock(const char *name) {
 
 wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val) {
     wcstring_list_ffi_t out{};
-    std::shared_ptr<history_t> history = commandline_get_state().history;
+    maybe_t<rust::Box<HistorySharedPtr>> history = commandline_get_state().history;
     if (!history) {
         // Effective duplication of history_session_id().
         wcstring session_id{};
@@ -402,18 +329,12 @@ wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_v
             // Valid session.
             session_id = fish_history_val;
         }
-        history = history_t::with_name(session_id);
+        history = history_with_name(session_id);
     }
     if (history) {
-        history->get_history(out.vals);
+        out = *(*history)->get_history();
     }
     return out;
 }
 
-event_list_ffi_t::event_list_ffi_t() = default;
-
-void event_list_ffi_t::push(void *event_vp) {
-    auto event = static_cast<Event *>(event_vp);
-    assert(event && "Null event");
-    events.push_back(rust::Box<Event>::from_raw(event));
-}
+const EnvStackRef &env_stack_t::get_impl_ffi() const { return *impl_; }

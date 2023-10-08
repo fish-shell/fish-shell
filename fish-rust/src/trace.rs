@@ -1,6 +1,7 @@
+use crate::parser::Parser;
 use crate::{
     common::escape,
-    ffi::{self, wcharz_t, wcstring_list_ffi_t, Parser},
+    ffi::{self, wcharz_t, wcstring_list_ffi_t},
     global_safety::RelaxedAtomicBool,
     wchar::prelude::*,
     wchar_ffi::{WCharFromFFI, WCharToFFI},
@@ -13,7 +14,7 @@ mod trace_ffi {
         include!("parser.h");
         type wcstring_list_ffi_t = super::wcstring_list_ffi_t;
         type wcharz_t = super::wcharz_t;
-        type Parser = super::Parser;
+        type Parser = crate::parser::Parser;
     }
 
     extern "Rust" {
@@ -32,7 +33,7 @@ pub fn trace_set_enabled(do_enable: bool) {
 
 /// return whether tracing is enabled.
 pub fn trace_enabled(parser: &Parser) -> bool {
-    let ld = parser.ffi_libdata_pod_const();
+    let ld = &parser.libdata().pods;
     if ld.suppress_fish_trace {
         return false;
     }
@@ -67,8 +68,21 @@ pub fn trace_argv<S: AsRef<wstr>>(parser: &Parser, command: &wstr, args: &[S]) {
     ffi::log_extra_to_flog_file(&trace_text.to_ffi());
 }
 
-/// Convenience helper to trace a single string if tracing is enabled.
-pub fn trace_if_enabled<S: AsRef<wstr>>(parser: &Parser, command: &wstr, args: &[S]) {
+pub fn trace_if_enabled_ffi<S: AsRef<wstr>>(parser: &Parser, command: &wstr, args: &[S]) {
+    if trace_enabled(parser) {
+        trace_argv(parser, command, args);
+    }
+}
+
+/// Convenience helper to trace a single command if tracing is enabled.
+pub fn trace_if_enabled(parser: &Parser, command: &wstr) {
+    if trace_enabled(parser) {
+        let argv: &[&'static wstr] = &[];
+        trace_argv(parser, command, argv);
+    }
+}
+/// Convenience helper to trace a single command and arguments if tracing is enabled.
+pub fn trace_if_enabled_with_args<S: AsRef<wstr>>(parser: &Parser, command: &wstr, args: &[S]) {
     if trace_enabled(parser) {
         trace_argv(parser, command, args);
     }

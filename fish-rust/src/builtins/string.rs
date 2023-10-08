@@ -1,7 +1,6 @@
 use crate::wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
 use super::prelude::*;
-use crate::ffi::separation_type_t;
 
 mod collect;
 mod escape;
@@ -31,9 +30,9 @@ macro_rules! string_error {
 }
 use string_error;
 
-fn string_unknown_option(parser: &mut Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
+fn string_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr, opt: &wstr) {
     string_error!(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
-    builtin_print_error_trailer(parser, streams, L!("string"));
+    builtin_print_error_trailer(parser, streams.err, L!("string"));
 }
 
 trait StringSubCommand<'args> {
@@ -51,7 +50,7 @@ trait StringSubCommand<'args> {
     fn parse_opts(
         &mut self,
         args: &mut [&'args wstr],
-        parser: &mut Parser,
+        parser: &Parser,
         streams: &mut IoStreams,
     ) -> Result<usize, Option<c_int>> {
         let cmd = args[0];
@@ -97,7 +96,7 @@ trait StringSubCommand<'args> {
     /// Perform the business logic of the command.
     fn handle(
         &mut self,
-        parser: &mut Parser,
+        parser: &Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&'args wstr],
@@ -105,7 +104,7 @@ trait StringSubCommand<'args> {
 
     fn run(
         &mut self,
-        parser: &mut Parser,
+        parser: &Parser,
         streams: &mut IoStreams,
         args: &mut [&'args wstr],
     ) -> Option<c_int> {
@@ -127,7 +126,7 @@ trait StringSubCommand<'args> {
             return retval;
         }
 
-        if streams.stdin_is_directly_redirected() && args.len() > optind {
+        if streams.stdin_is_directly_redirected && args.len() > optind {
             string_error!(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, args[0]);
             return STATUS_INVALID_ARGS;
         }
@@ -199,7 +198,7 @@ impl StringError {
     fn print_error(
         &self,
         args: &[&wstr],
-        parser: &mut Parser,
+        parser: &Parser,
         streams: &mut IoStreams,
         optarg: Option<&wstr>,
         optind: usize,
@@ -291,7 +290,7 @@ fn arguments<'iter, 'args>(
 }
 
 /// The string builtin, for manipulating strings.
-pub fn string(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
 
@@ -299,7 +298,7 @@ pub fn string(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -320,13 +319,11 @@ pub fn string(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
             cmd.run(parser, streams, args)
         }
         "length" => length::Length::default().run(parser, streams, args),
-        "lower" => {
-            let mut cmd = transform::Transform {
-                quiet: false,
-                func: wstr::to_lowercase,
-            };
-            cmd.run(parser, streams, args)
+        "lower" => transform::Transform {
+            quiet: false,
+            func: wstr::to_lowercase,
         }
+        .run(parser, streams, args),
         "match" => r#match::Match::default().run(parser, streams, args),
         "pad" => pad::Pad::default().run(parser, streams, args),
         "repeat" => repeat::Repeat::default().run(parser, streams, args),
@@ -341,19 +338,17 @@ pub fn string(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         "sub" => sub::Sub::default().run(parser, streams, args),
         "trim" => trim::Trim::default().run(parser, streams, args),
         "unescape" => unescape::Unescape::default().run(parser, streams, args),
-        "upper" => {
-            let mut cmd = transform::Transform {
-                quiet: false,
-                func: wstr::to_uppercase,
-            };
-            cmd.run(parser, streams, args)
+        "upper" => transform::Transform {
+            quiet: false,
+            func: wstr::to_uppercase,
         }
+        .run(parser, streams, args),
         _ => {
             streams
                 .err
-                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
-            builtin_print_error_trailer(parser, streams, cmd);
-            STATUS_INVALID_ARGS
+                .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
         }
     }
 }

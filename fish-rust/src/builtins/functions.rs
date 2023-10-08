@@ -1,11 +1,14 @@
 use super::prelude::*;
 use crate::common::escape_string;
 use crate::common::reformat_for_screen;
+use crate::common::str2wcstring;
 use crate::common::valid_func_name;
 use crate::common::{EscapeFlags, EscapeStringStyle};
 use crate::event::{self};
-use crate::ffi::colorize_shell;
 use crate::function;
+use crate::highlight::colorize;
+use crate::highlight::highlight_shell;
+use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::termsize::termsize_last;
 
@@ -68,7 +71,7 @@ fn parse_cmd_opts<'args>(
     opts: &mut FunctionsCmdOpts<'args>,
     optind: &mut usize,
     argv: &mut [&'args wstr],
-    parser: &mut Parser,
+    parser: &Parser,
     streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = L!("functions");
@@ -111,11 +114,7 @@ fn parse_cmd_opts<'args>(
     STATUS_CMD_OK
 }
 
-pub fn functions(
-    parser: &mut Parser,
-    streams: &mut IoStreams,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
 
     let mut opts = FunctionsCmdOpts::default();
@@ -128,7 +127,7 @@ pub fn functions(
     let args = &args[optind..];
 
     if opts.print_help {
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -140,13 +139,13 @@ pub fn functions(
         > 1
     {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if opts.report_metadata && opts.no_metadata {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -164,7 +163,7 @@ pub fn functions(
                 "%ls: Expected exactly one function name\n",
                 cmd
             ));
-            builtin_print_error_trailer(parser, streams, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
         let current_func = args[0];
@@ -175,7 +174,7 @@ pub fn functions(
                 cmd,
                 current_func
             ));
-            builtin_print_error_trailer(parser, streams, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
 
@@ -304,7 +303,7 @@ pub fn functions(
                 "%ls: Expected exactly two names (current function name, and new function name)\n",
                 cmd
             ));
-            builtin_print_error_trailer(parser, streams, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
         let current_func = args[0];
@@ -316,7 +315,7 @@ pub fn functions(
                 cmd,
                 current_func
             ));
-            builtin_print_error_trailer(parser, streams, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
 
@@ -326,7 +325,7 @@ pub fn functions(
                 cmd,
                 new_func
             ));
-            builtin_print_error_trailer(parser, streams, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
 
@@ -337,7 +336,7 @@ pub fn functions(
                 new_func,
                 current_func
             ));
-            builtin_print_error_trailer(parser, streams, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
         if function::copy(current_func, new_func.into(), parser) {
@@ -410,8 +409,11 @@ pub fn functions(
         }
 
         if streams.out_is_terminal() {
-            let col = colorize_shell(&def.to_ffi(), parser.pin()).from_ffi();
-            streams.out.append(col);
+            let mut colors = vec![];
+            highlight_shell(&def, &mut colors, &parser.context(), false, None);
+            streams
+                .out
+                .append(str2wcstring(&colorize(&def, &colors, parser.vars())));
         } else {
             streams.out.append(def);
         }

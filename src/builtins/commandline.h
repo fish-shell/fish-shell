@@ -4,8 +4,10 @@
 
 #include "../maybe.h"
 
-class Parser; using parser_t = Parser;
-class IoStreams; using io_streams_t = IoStreams;
+struct Parser;
+using parser_t = Parser;
+struct IoStreams;
+using io_streams_t = IoStreams;
 
-maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+int builtin_commandline(const void *parser, void *streams, void *argv);
 #endif

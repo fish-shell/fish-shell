@@ -1,13 +1,14 @@
 use self::ffi::pgid_t;
-use crate::common::{assert_send, assert_sync};
 use crate::global_safety::RelaxedAtomicBool;
+use crate::proc::JobGroupRef;
 use crate::signal::Signal;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::WCharToFFI;
 use cxx::{CxxWString, UniquePtr};
+use std::cell::RefCell;
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 #[cxx::bridge]
 mod ffi {
@@ -42,34 +43,15 @@ mod ffi {
         // a SharedPtr/UniquePtr/Box and won't let us pass/return them by value/reference, either.
         unsafe fn get_modes_ffi(&self, size: usize) -> *const u8; /* actually `* const libc::termios` */
         unsafe fn set_modes_ffi(&mut self, modes: *const u8, size: usize); /* actually `* const libc::termios` */
-
-        // The C++ code uses `shared_ptr<JobGroup>` but cxx bridge doesn't support returning a
-        // `SharedPtr<OpaqueRustType>` nor does it implement `Arc<T>` so we return a box and then
-        // convert `rust::box<T>` to `std::shared_ptr<T>` with `box_to_shared_ptr()` (from ffi.h).
-        fn create_job_group_ffi(command: &CxxWString, wants_job_id: bool) -> Box<JobGroup>;
-        fn create_job_group_with_job_control_ffi(
-            command: &CxxWString,
-            wants_term: bool,
-        ) -> Box<JobGroup>;
     }
 }
 
-fn create_job_group_ffi(command: &CxxWString, wants_job_id: bool) -> Box<JobGroup> {
-    let job_group = JobGroup::create(command.from_ffi(), wants_job_id);
-    Box::new(job_group)
-}
-
-fn create_job_group_with_job_control_ffi(command: &CxxWString, wants_term: bool) -> Box<JobGroup> {
-    let job_group = JobGroup::create_with_job_control(command.from_ffi(), wants_term);
-    Box::new(job_group)
-}
-
 /// A job id, corresponding to what is printed by `jobs`. 1 is the first valid job id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub struct JobId(NonZeroU32);
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct MaybeJobId(pub Option<JobId>);
 
 impl std::ops::Deref for MaybeJobId {
@@ -80,30 +62,27 @@ impl std::ops::Deref for MaybeJobId {
     }
 }
 
+impl MaybeJobId {
+    pub fn as_num(&self) -> i64 {
+        self.0.map(|j| i64::from(u32::from(j.0))).unwrap_or(-1)
+    }
+}
+
 impl std::fmt::Display for MaybeJobId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .fmt(f)
+        self.as_num().fmt(f)
     }
 }
 
 impl ToWString for MaybeJobId {
     fn to_wstring(&self) -> WString {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .to_wstring()
+        self.as_num().to_wstring()
     }
 }
 
 impl<'a> printf_compat::args::ToArg<'a> for MaybeJobId {
     fn to_arg(self) -> printf_compat::args::Arg<'a> {
-        self.0
-            .map(|j| i64::from(u32::from(j.0)))
-            .unwrap_or(-1)
-            .to_arg()
+        self.as_num().to_arg()
     }
 }
 
@@ -120,7 +99,7 @@ impl<'a> printf_compat::args::ToArg<'a> for MaybeJobId {
 pub struct JobGroup {
     /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
     /// the terminal to the same state when resuming a stopped job.
-    pub tmodes: Option<libc::termios>,
+    pub tmodes: RefCell<Option<libc::termios>>,
     /// Whether job control is enabled in this `JobGroup` or not.
     ///
     /// If this is set, then the first process in the root job must be external, as it will become
@@ -133,7 +112,7 @@ pub struct JobGroup {
     pub is_foreground: RelaxedAtomicBool,
     /// The pgid leading our group. This is only ever set if [`job_control`](Self::JobControl) is
     /// true. We ensure the value (when set) is always non-negative.
-    pgid: Option<libc::pid_t>,
+    pgid: RefCell<Option<libc::pid_t>>,
     /// The original command which produced this job tree.
     pub command: WString,
     /// Our job id, if any. `None` here should evaluate to `-1` for ffi purposes.
@@ -144,8 +123,9 @@ pub struct JobGroup {
     signal: AtomicI32,
 }
 
-const _: () = assert_send::<JobGroup>();
-const _: () = assert_sync::<JobGroup>();
+// safety: all fields without interior mutabillity are only written to once
+unsafe impl Send for JobGroup {}
+unsafe impl Sync for JobGroup {}
 
 impl JobGroup {
     /// Whether this job wants job control.
@@ -223,26 +203,26 @@ impl JobGroup {
     ///
     /// As such, this method takes `&mut self` rather than `&self` to enforce that this operation is
     /// only available during initial construction/initialization.
-    pub fn set_pgid(&mut self, pgid: libc::pid_t) {
+    pub fn set_pgid(&self, pgid: libc::pid_t) {
         assert!(
             self.wants_job_control(),
             "Should not set a pgid for a group that doesn't want job control!"
         );
         assert!(pgid >= 0, "Invalid pgid!");
-        assert!(self.pgid.is_none(), "JobGroup::pgid already set!");
+        assert!(self.pgid.borrow().is_none(), "JobGroup::pgid already set!");
 
-        self.pgid = Some(pgid);
+        self.pgid.replace(Some(pgid));
     }
 
     /// Returns the value of [`JobGroup::pgid`]. This is never fish's own pgid!
     pub fn get_pgid(&self) -> Option<libc::pid_t> {
-        self.pgid
+        *self.pgid.borrow()
     }
 
     /// Returns the value of [`JobGroup::pgid`] in a `UniquePtr<T>` to take the place of an
     /// `Option<T>` for ffi purposes. A null `UniquePtr` is equivalent to `None`.
     pub fn get_pgid_ffi(&self) -> cxx::UniquePtr<pgid_t> {
-        match self.pgid {
+        match *self.pgid.borrow() {
             Some(value) => UniquePtr::new(pgid_t { value }),
             None => UniquePtr::null(),
         }
@@ -257,6 +237,7 @@ impl JobGroup {
         );
 
         self.tmodes
+            .borrow()
             .as_ref()
             // Really cool that type inference works twice in a row here. The first `_` is deduced
             // from the left and the second `_` is deduced from the right (the return type).
@@ -279,9 +260,9 @@ impl JobGroup {
 
         let modes = modes as *const libc::termios;
         if modes.is_null() {
-            self.tmodes = None;
+            self.tmodes.replace(None);
         } else {
-            self.tmodes = Some(*modes);
+            self.tmodes.replace(Some(*modes));
         }
     }
 }
@@ -294,7 +275,7 @@ impl JobGroup {
 static CONSUMED_JOB_IDS: Mutex<Vec<JobId>> = Mutex::new(Vec::new());
 
 impl JobId {
-    const NONE: MaybeJobId = MaybeJobId(None);
+    pub const NONE: MaybeJobId = MaybeJobId(None);
 
     pub fn new(value: NonZeroU32) -> Self {
         JobId(value)
@@ -346,18 +327,18 @@ impl JobGroup {
             job_control,
             wants_term,
             command,
-            tmodes: None,
+            tmodes: RefCell::default(),
             signal: 0.into(),
             is_foreground: RelaxedAtomicBool::new(false),
-            pgid: None,
+            pgid: RefCell::default(),
         }
     }
 
     /// Return a new `JobGroup` with the provided `command`. The `JobGroup` is only assigned a
     /// `JobId` if `wants_job_id` is true and is created with job control disabled and
     /// [`JobGroup::wants_term`] set to false.
-    pub fn create(command: WString, wants_job_id: bool) -> JobGroup {
-        JobGroup::new(
+    pub fn create(command: WString, wants_job_id: bool) -> JobGroupRef {
+        Arc::new(JobGroup::new(
             command,
             if wants_job_id {
                 MaybeJobId(Some(JobId::acquire()))
@@ -366,19 +347,19 @@ impl JobGroup {
             },
             false, /* job_control */
             false, /* wants_term */
-        )
+        ))
     }
 
     /// Return a new `JobGroup` with the provided `command` with job control enabled. A [`JobId`] is
     /// automatically acquired and assigned. If `wants_term` is true then [`JobGroup::wants_term`]
     /// is also set to `true` accordingly.
-    pub fn create_with_job_control(command: WString, wants_term: bool) -> JobGroup {
-        JobGroup::new(
+    pub fn create_with_job_control(command: WString, wants_term: bool) -> JobGroupRef {
+        Arc::new(JobGroup::new(
             command,
             MaybeJobId(Some(JobId::acquire())),
             true, /* job_control */
             wants_term,
-        )
+        ))
     }
 }
 

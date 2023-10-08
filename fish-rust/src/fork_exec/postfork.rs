@@ -50,7 +50,7 @@ pub fn report_setpgid_error(
     is_parent: bool,
     pid: pid_t,
     desired_pgid: pid_t,
-    job_id: c_int,
+    job_id: i64,
     command_str: *const c_char,
     argv0_str: *const c_char,
 ) {
@@ -100,7 +100,7 @@ pub fn report_setpgid_error(
 
 /// Execute setpgid, moving pid into the given pgroup.
 /// Return the result of setpgid.
-fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
+pub fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
     // There is a comment "Historically we have looped here to support WSL."
     // TODO: stop looping.
     let mut eperm_count = 0;
@@ -145,7 +145,7 @@ fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
 }
 
 /// Set up redirections and signal handling in the child process.
-fn child_setup_process(
+pub fn child_setup_process(
     claim_tty_from: pid_t,
     sigmask: Option<&libc::sigset_t>,
     is_forked: bool,
@@ -204,7 +204,7 @@ fn child_setup_process(
 /// This function is a wrapper around fork. If the fork calls fails with EAGAIN, it is retried
 /// FORK_LAPS times, with a very slight delay between each lap. If fork fails even then, the process
 /// will exit with an error message.
-fn execute_fork() -> pid_t {
+pub fn execute_fork() -> pid_t {
     let mut err = 0;
     for i in 0..FORK_LAPS {
         let pid = unsafe { libc::fork() };
@@ -242,7 +242,7 @@ fn execute_fork() -> pid_t {
     exit_without_destructors(1)
 }
 
-fn safe_report_exec_error(
+pub fn safe_report_exec_error(
     err: i32,
     actual_cmd: *const c_char,
     argvv: *const *const c_char,
@@ -596,7 +596,7 @@ mod ffi {
             is_parent,
             pid,
             desired_pgid,
-            job_id,
+            job_id.try_into().unwrap(),
             command_str,
             argv0_str,
         )

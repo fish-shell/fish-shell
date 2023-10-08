@@ -28,8 +28,9 @@
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-void event_fire_generic(parser_t &parser, const wcstring &name, const std::vector<wcstring> &args) {
-    std::vector<wcharz_t> ffi_args;
-    for (const auto &arg : args) ffi_args.push_back(arg.c_str());
+void event_fire_generic(const parser_t &parser, const wcstring &name,
+                        const std::vector<wcstring> &args) {
+    wcstring_list_ffi_t ffi_args;
+    for (const auto &arg : args) ffi_args.push(arg);
     event_fire_generic_ffi(parser, name, ffi_args);
 }

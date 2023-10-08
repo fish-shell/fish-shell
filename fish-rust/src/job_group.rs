@@ -1,11 +1,12 @@
 use self::ffi::pgid_t;
 use crate::common::{assert_send, assert_sync};
+use crate::global_safety::RelaxedAtomicBool;
 use crate::signal::Signal;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use cxx::{CxxWString, UniquePtr};
 use std::num::NonZeroU32;
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
+use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::Mutex;
 
 #[cxx::bridge]
@@ -129,7 +130,7 @@ pub struct JobGroup {
     /// via [`Self::wants_terminal()`] only.
     wants_term: bool,
     /// Whether we are in the foreground, meaning the user is waiting for this job to complete.
-    pub is_foreground: AtomicBool,
+    pub is_foreground: RelaxedAtomicBool,
     /// The pgid leading our group. This is only ever set if [`job_control`](Self::JobControl) is
     /// true. We ensure the value (when set) is always non-negative.
     pgid: Option<libc::pid_t>,
@@ -161,12 +162,12 @@ impl JobGroup {
     /// Whether we are the currently the foreground group. Should never be true for more than one
     /// `JobGroup` at any given moment.
     pub fn is_foreground(&self) -> bool {
-        self.is_foreground.load(Ordering::Relaxed)
+        self.is_foreground.load()
     }
 
     /// Mark whether we are in the foreground.
     pub fn set_is_foreground(&self, in_foreground: bool) {
-        self.is_foreground.store(in_foreground, Ordering::Relaxed);
+        self.is_foreground.store(in_foreground);
     }
 
     /// Return the command which produced this job tree.
@@ -347,7 +348,7 @@ impl JobGroup {
             command,
             tmodes: None,
             signal: 0.into(),
-            is_foreground: false.into(),
+            is_foreground: RelaxedAtomicBool::new(false),
             pgid: None,
         }
     }

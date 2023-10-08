@@ -24,8 +24,7 @@
 
 # for linguist; let github identify our project as C++ instead of C due to pcre2
 pcre2/** linguist-vendored
-angular.js linguist-vendored
-angular-*.js linguist-vendored
+alpine.js linguist-vendored
 doc_src/** linguist-documentation
 *.fish linguist-language=fish
 src/*.h linguist-language=c++

@@ -17,8 +17,8 @@ Copyright: 2001-2017 Python Software Foundation
            2020-2023 fish-shell contributors
 License: Python
 
-Files: share/tools/web_config/js/angular*.js
-Copyright: 2010-2020 Google LLC
+Files: share/tools/web_config/js/alpine.js
+Copyright: 2019-2021 Caleb Porzio and contributors
 License: MIT
 
 Files: share/tools/web_config/themes/Dracula.theme

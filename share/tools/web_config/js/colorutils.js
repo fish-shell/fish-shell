@@ -1,5 +1,3 @@
-/* TODO: Write an angularjs service to wrap these methods */
-
 term_256_colors =
     [
       // 247

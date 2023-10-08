@@ -1,14 +1,14 @@
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
-#![allow(clippy::needless_return)]
-#![allow(clippy::manual_is_ascii_check)]
 #![allow(clippy::bool_assert_comparison)]
-#![allow(clippy::uninlined_format_args)]
 #![allow(clippy::derivable_impls)]
+#![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::manual_is_ascii_check)]
+#![allow(clippy::needless_return)]
 #![allow(clippy::option_map_unit_fn)]
 #![allow(clippy::ptr_arg)]
-#![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::uninlined_format_args)]
 
 pub const BUILD_VERSION: &str = match option_env!("FISH_BUILD_VERSION") {
     Some(v) => v,

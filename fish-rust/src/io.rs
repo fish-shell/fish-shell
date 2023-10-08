@@ -430,7 +430,7 @@ impl IoBuffer {
     }
 
     /// Append a string to the buffer.
-    pub fn append(&mut self, data: &[u8], typ: SeparationType) -> bool {
+    pub fn append(&self, data: &[u8], typ: SeparationType) -> bool {
         self.buffer.lock().unwrap().append(data, typ)
     }
 
@@ -714,54 +714,91 @@ impl IoChain {
 
 /// Base class representing the output that a builtin can generate.
 /// This has various subclasses depending on the ultimate output destination.
-pub trait OutputStream {
-    /// Required override point. The output stream receives a string \p s with \p amt chars.
-    fn append(&mut self, s: &wstr) -> bool;
+pub enum OutputStream {
+    /// A null output stream which ignores all writes.
+    Null,
+    Fd(FdOutputStream),
+    String(StringOutputStream),
+    Buffered(BufferedOutputStream),
+}
 
+impl OutputStream {
     /// \return any internally buffered contents.
     /// This is only implemented for a string_output_stream; others flush data to their underlying
     /// receiver (fd, or separated buffer) immediately and so will return an empty string here.
-    fn contents(&self) -> &wstr {
-        &EMPTY_STRING
+    pub fn contents(&self) -> &wstr {
+        match self {
+            OutputStream::String(stream) => stream.contents(),
+            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => &EMPTY_STRING,
+        }
     }
 
     /// Flush any unwritten data to the underlying device, and return an error code.
     /// A 0 code indicates success. The base implementation returns 0.
-    fn flush_and_check_error(&mut self) -> libc::c_int {
-        STATUS_CMD_OK.unwrap()
+    pub fn flush_and_check_error(&mut self) -> libc::c_int {
+        match self {
+            OutputStream::Fd(stream) => stream.flush_and_check_error(),
+            OutputStream::Buffered(stream) => stream.flush_and_check_error(),
+            OutputStream::Null | OutputStream::String(_) => STATUS_CMD_OK.unwrap(),
+        }
+    }
+
+    /// Append a &wstr or WString.
+    pub fn append<Str: AsRef<wstr>>(&mut self, s: Str) -> bool {
+        let s = &s.as_ref();
+        match self {
+            OutputStream::Null => true,
+            OutputStream::Fd(stream) => stream.append(s),
+            OutputStream::String(stream) => stream.append(s),
+            OutputStream::Buffered(stream) => stream.append(s),
+        }
     }
 
     /// An optional override point. This is for explicit separation.
     /// \param want_newline this is true if the output item should be ended with a newline. This
     /// is only relevant if we are printing the output to a stream,
-    fn append_with_separation(
+    pub fn append_with_separation(
         &mut self,
         s: &wstr,
         typ: SeparationType,
         want_newline: bool,
     ) -> bool {
-        if typ == SeparationType::explicitly && want_newline {
-            // Try calling "append" less - it might write() to an fd
-            let mut buf = s.to_owned();
-            buf.push('\n');
-            self.append(&buf)
-        } else {
-            self.append(s)
+        match self {
+            OutputStream::Buffered(stream) => stream.append_with_separation(s, typ, want_newline),
+            OutputStream::Fd(_) | OutputStream::Null | OutputStream::String(_) => {
+                if typ == SeparationType::explicitly && want_newline {
+                    // Try calling "append" less - it might write() to an fd
+                    let mut buf = s.to_owned();
+                    buf.push('\n');
+                    self.append(buf)
+                } else {
+                    self.append(s)
+                }
+            }
         }
     }
 
-    fn append_char(&mut self, c: char) -> bool {
+    /// Append a &wstr or WString with a newline
+    pub fn appendln(&mut self, s: impl Into<WString>) -> bool {
+        let s = s.into() + L!("\n");
+        self.append(s)
+    }
+
+    pub fn append_char(&mut self, c: char) -> bool {
         self.append(wstr::from_char_slice(&[c]))
     }
-    fn push_back(&mut self, c: char) -> bool {
+    pub fn append1(&mut self, c: char) -> bool {
         self.append_char(c)
     }
-    fn push(&mut self, c: char) -> bool {
+    pub fn push_back(&mut self, c: char) -> bool {
+        self.append_char(c)
+    }
+    pub fn push(&mut self, c: char) -> bool {
         self.append(wstr::from_char_slice(&[c]))
     }
 
     // Append data from a narrow buffer, widening it.
-    fn append_narrow_buffer(&mut self, buffer: &SeparatedBuffer) -> bool {
+    pub fn append_narrow_buffer(&mut self, buffer: &SeparatedBuffer) -> bool {
         for rhs_elem in buffer.elements() {
             if !self.append_with_separation(
                 &str2wcstring(&rhs_elem.contents),
@@ -771,15 +808,6 @@ pub trait OutputStream {
                 return false;
             }
         }
-        true
-    }
-}
-
-/// A null output stream which ignores all writes.
-pub struct NullOutputStream {}
-
-impl OutputStream for NullOutputStream {
-    fn append(&mut self, _s: &wstr) -> bool {
         true
     }
 }
@@ -806,8 +834,7 @@ impl FdOutputStream {
             errored: false,
         }
     }
-}
-impl OutputStream for FdOutputStream {
+
     fn append(&mut self, s: &wstr) -> bool {
         if self.errored {
             return false;
@@ -847,7 +874,10 @@ impl OutputStream for FdOutputStream {
 pub struct StringOutputStream {
     contents: WString,
 }
-impl OutputStream for StringOutputStream {
+impl StringOutputStream {
+    pub fn new() -> Self {
+        Default::default()
+    }
     fn append(&mut self, s: &wstr) -> bool {
         self.contents.push_utfstr(s);
         true
@@ -861,19 +891,14 @@ impl OutputStream for StringOutputStream {
 /// An output stream for builtins which writes into a separated buffer.
 pub struct BufferedOutputStream {
     /// The buffer we are filling.
-    buffer: Arc<RwLock<IoBuffer>>,
+    buffer: Arc<IoBuffer>,
 }
 impl BufferedOutputStream {
-    pub fn new(buffer: Arc<RwLock<IoBuffer>>) -> Self {
+    pub fn new(buffer: Arc<IoBuffer>) -> Self {
         Self { buffer }
     }
-}
-impl OutputStream for BufferedOutputStream {
     fn append(&mut self, s: &wstr) -> bool {
-        self.buffer
-            .write()
-            .unwrap()
-            .append(&wcs2string(s), SeparationType::inferred)
+        self.buffer.append(&wcs2string(s), SeparationType::inferred)
     }
     fn append_with_separation(
         &mut self,
@@ -881,10 +906,10 @@ impl OutputStream for BufferedOutputStream {
         typ: SeparationType,
         _want_newline: bool,
     ) -> bool {
-        self.buffer.write().unwrap().append(&wcs2string(s), typ)
+        self.buffer.append(&wcs2string(s), typ)
     }
     fn flush_and_check_error(&mut self) -> libc::c_int {
-        if self.buffer.read().unwrap().discarded() {
+        if self.buffer.discarded() {
             return STATUS_READ_TOO_MUCH.unwrap();
         }
         0
@@ -893,8 +918,8 @@ impl OutputStream for BufferedOutputStream {
 
 pub struct IoStreams<'a> {
     // Streams for out and err.
-    pub out: &'a dyn OutputStream,
-    pub err: &'a dyn OutputStream,
+    pub out: &'a mut OutputStream,
+    pub err: &'a mut OutputStream,
 
     // fd representing stdin. This is not closed by the destructor.
     // Note: if stdin is explicitly closed by `<&-` then this is -1!
@@ -925,7 +950,7 @@ pub struct IoStreams<'a> {
 }
 
 impl<'a> IoStreams<'a> {
-    pub fn new(out: &'a dyn OutputStream, err: &'a dyn OutputStream) -> Self {
+    pub fn new(out: &'a mut OutputStream, err: &'a mut OutputStream) -> Self {
         IoStreams {
             out,
             err,

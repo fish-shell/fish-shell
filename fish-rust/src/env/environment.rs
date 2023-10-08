@@ -548,8 +548,8 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
             if key != "fish_user_paths" {
                 vars.set(&key, EnvMode::EXPORT | EnvMode::GLOBAL, vec![val.clone()]);
             }
-            inherited_vars.insert(key, val);
         }
+        inherited_vars.insert(key, val);
     }
 
     INHERITED_VARS

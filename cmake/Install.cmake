@@ -100,7 +100,6 @@ fish_create_dirs(${rel_datadir}/fish ${rel_datadir}/fish/completions
                  ${rel_datadir}/fish/man/man1 ${rel_datadir}/fish/tools
                  ${rel_datadir}/fish/tools/web_config
                  ${rel_datadir}/fish/tools/web_config/js
-                 ${rel_datadir}/fish/tools/web_config/partials
                  ${rel_datadir}/fish/tools/web_config/sample_prompts
                  ${rel_datadir}/fish/tools/web_config/themes
                  )

@@ -101,7 +101,7 @@ pub fn wgetcwd() -> WString {
         error,
         "getcwd() failed with errno %d/%s",
         errno::errno().0,
-        "errno::errno"
+        errno::errno().to_string()
     );
     WString::new()
 }

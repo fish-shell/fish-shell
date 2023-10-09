@@ -426,17 +426,31 @@ fn wildcard_test_flags_then_complete(
         stat = None;
     }
 
-    let (file_size, is_directory, is_executable) = if let Some(Ok(md)) = &stat {
-        (md.len(), md.is_dir(), md.is_file())
+    let (file_size, is_directory, is_regular_file, perms) = if let Some(Ok(md)) = &stat {
+        (
+            md.len(),
+            md.is_dir(),
+            md.is_file(),
+            md.permissions().mode() as mode_t,
+        )
     } else {
-        (0, false, false)
+        (0, false, false, 0)
     };
 
     if need_directory && !is_directory {
         return false;
     }
 
-    if executables_only && (!is_executable || waccess(filepath, X_OK) != 0) {
+    // If the file has all executable bits set, we assume it is executable.
+    // This does not account for:
+    // 1. Capabilities (but neither does access!)
+    // 2. noexec filesystems (but then why add those to $PATH?)
+    // 3. MAC (SELinux etc)
+    // 4. ACLs
+    // Since this is for completions, that's fine.
+    let assume_executable = perms & (S_IXUSR | S_IXGRP | S_IXOTH) == (S_IXUSR | S_IXGRP | S_IXOTH);
+    if executables_only && !assume_executable && (!is_regular_file || waccess(filepath, X_OK) != 0)
+    {
         return false;
     }
 
@@ -453,7 +467,7 @@ fn wildcard_test_flags_then_complete(
         // so we tell file_get_desc that this file is definitely executable so it can skip the check.
         let mut desc = file_get_desc(filename, lstat, stat, executables_only).to_owned();
 
-        if !is_directory && !is_executable {
+        if !is_directory && !is_regular_file {
             if !desc.is_empty() {
                 desc.push_utfstr(L!(", "));
             }

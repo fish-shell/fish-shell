@@ -336,12 +336,19 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     const long long file_size = stat_res == 0 ? stat_buf.st_size : 0;
     const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
     const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
+    const bool definitely_executable = is_executable && (stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) ==  (S_IXUSR | S_IXGRP | S_IXOTH);
 
     if (need_directory && !is_directory) {
         return false;
     }
 
-    if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
+    // If the file has all executable bits set, we assume it is executable.
+    // This does not account for:
+    // 1. Capabilities (but neither does access!)
+    // 2. noexec filesystems (but then why add those to $PATH?)
+    // 3. MAC (SELinux etc)
+    // Since this is for completions, that's fine.
+    if (executables_only && !definitely_executable && (!is_executable || waccess(filepath, X_OK) != 0)) {
         return false;
     }
 

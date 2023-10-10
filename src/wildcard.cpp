@@ -335,8 +335,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
 
     const long long file_size = stat_res == 0 ? stat_buf.st_size : 0;
     const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
-    const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
-    const bool definitely_executable = is_executable && (stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) ==  (S_IXUSR | S_IXGRP | S_IXOTH);
+    const bool is_regular_file = stat_res == 0 && S_ISREG(stat_buf.st_mode);
+    const bool assume_executable = is_regular_file && (stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) ==  (S_IXUSR | S_IXGRP | S_IXOTH);
 
     if (need_directory && !is_directory) {
         return false;
@@ -347,8 +347,9 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     // 1. Capabilities (but neither does access!)
     // 2. noexec filesystems (but then why add those to $PATH?)
     // 3. MAC (SELinux etc)
+    // 4. ACLs
     // Since this is for completions, that's fine.
-    if (executables_only && !definitely_executable && (!is_executable || waccess(filepath, X_OK) != 0)) {
+    if (executables_only && !assume_executable && (!is_regular_file || waccess(filepath, X_OK) != 0)) {
         return false;
     }
 
@@ -364,7 +365,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         // so we tell file_get_desc that this file is definitely executable so it can skip the check.
         desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno, executables_only);
 
-        if (!is_directory && !is_executable && file_size >= 0) {
+        if (!is_directory && !is_regular_file && file_size >= 0) {
             if (!desc.empty()) desc.append(L", ");
             desc.append(format_size(file_size));
         }

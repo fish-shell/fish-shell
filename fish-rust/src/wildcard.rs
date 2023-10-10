@@ -427,7 +427,12 @@ fn wildcard_test_flags_then_complete(
     }
 
     let (file_size, is_directory, is_regular_file, perms) = if let Some(Ok(md)) = &stat {
-        (md.len(), md.is_dir(), md.is_file(), md.permissions().mode())
+        (
+            md.len(),
+            md.is_dir(),
+            md.is_file(),
+            md.permissions().mode() as mode_t,
+        )
     } else {
         (0, false, false, 0)
     };

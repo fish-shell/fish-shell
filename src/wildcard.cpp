@@ -333,7 +333,6 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         }
     }
 
-    const long long file_size = stat_res == 0 ? stat_buf.st_size : 0;
     const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
     const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
 
@@ -356,11 +355,6 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         // If we have executables_only, we already checked waccess above,
         // so we tell file_get_desc that this file is definitely executable so it can skip the check.
         desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno, executables_only);
-
-        if (!is_directory && !is_executable && file_size >= 0) {
-            if (!desc.empty()) desc.append(L", ");
-            desc.append(format_size(file_size));
-        }
     }
 
     // Append a / if this is a directory. Note this requirement may be the only reason we have to

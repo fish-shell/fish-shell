@@ -1,13 +1,10 @@
 // Enumeration of all wildcard types.
 
+use cxx::CxxWString;
+use libc::X_OK;
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::io::ErrorKind;
-use std::os::unix::prelude::*;
-use std::{fs, io};
-
-use cxx::CxxWString;
-use libc::{mode_t, ELOOP, S_IXGRP, S_IXOTH, S_IXUSR, X_OK};
+use std::fs;
 
 use crate::common::{
     char_offset, is_windows_subsystem_for_linux, unescape_string, UnescapeFlags,
@@ -23,7 +20,8 @@ use crate::wchar_ffi::WCharFromFFI;
 use crate::wcstringutil::{
     string_fuzzy_match_string, string_suffixes_string_case_insensitive, CaseFold,
 };
-use crate::wutil::{lwstat, waccess, wstat};
+use crate::wutil::dir_iter::DirEntryType;
+use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
 use once_cell::sync::Lazy;
 
 static COMPLETE_EXEC_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("command"));
@@ -303,73 +301,37 @@ pub fn wildcard_complete<'f>(
 
 /// Obtain a description string for the file specified by the filename.
 ///
+/// It assumes the file exists and won't run stat() to confirm.
 /// The returned value is a string constant and should not be free'd.
 ///
 /// \param filename The file for which to find a description string
-/// \param lstat_res The result of calling lstat on the file
-/// \param lbuf The struct buf output of calling lstat on the file
-/// \param stat_res The result of calling stat on the file
-/// \param buf The struct buf output of calling stat on the file
-/// \param err The errno value after a failed stat call on the file.
+/// \param is_dir Whether the file is a directory or not (might be behind a link)
+/// \param is_link Whether it's a link (that might point to a directory)
+/// \param definitely_executable Whether we know that it is executable, or don't know
 fn file_get_desc(
     filename: &wstr,
-    lstat: Option<fs::Metadata>,
-    stat: Option<io::Result<fs::Metadata>>,
+    is_dir: bool,
+    is_link: bool,
     definitely_executable: bool,
 ) -> &'static wstr {
-    let Some(lstat) = lstat else {
-        return *COMPLETE_FILE_DESC;
-    };
+    let is_executable =
+        |filename: &wstr| -> bool { definitely_executable || waccess(filename, X_OK) == 0 };
 
-    let is_executable = |buf: &fs::Metadata, filename: &wstr| -> bool {
-        // Weird group permissions and other such issues make it non-trivial to find out if
-        // we can actually execute a file using the result from stat. It is much safer to
-        // use the access function, since it tells us exactly what we want to know.
-        //
-        // We skip this check in case the caller tells us the file is definitely executable.
-        definitely_executable
-            || (buf.mode() as mode_t & (S_IXUSR | S_IXGRP | S_IXOTH) != 0)
-                && waccess(filename, X_OK) == 0
-    };
-
-    // stat was only queried if lstat succeeded
-    let stat = stat.unwrap();
-    if lstat.is_symlink() {
-        return match stat {
-            Ok(stat) if stat.is_dir() => *COMPLETE_DIRECTORY_SYMLINK_DESC,
-            Ok(stat) if is_executable(&stat, filename) => *COMPLETE_EXEC_LINK_DESC,
-            Ok(_) => *COMPLETE_SYMLINK_DESC,
-            Err(e) if e.kind() == ErrorKind::NotFound => *COMPLETE_BROKEN_SYMLINK_DESC,
-            Err(e) if e.raw_os_error().unwrap() == ELOOP => *COMPLETE_LOOP_SYMLINK_DESC,
-            _ => {
-                // On unknown errors we do nothing. The file will be given the default 'File'
-                // description or one based on the suffix.
-                *COMPLETE_FILE_DESC
-            }
-        };
-    }
-
-    let Ok(stat) = stat else {
-        // Assuming that the metadata was zero if stat-call failed
-        return *COMPLETE_FILE_DESC;
-    };
-
-    let ft = stat.file_type();
-    if ft.is_char_device() {
-        *COMPLETE_CHAR_DESC
-    } else if ft.is_block_device() {
-        *COMPLETE_BLOCK_DESC
-    } else if ft.is_fifo() {
-        *COMPLETE_FIFO_DESC
-    } else if ft.is_socket() {
-        *COMPLETE_SOCKET_DESC
-    } else if ft.is_dir() {
+    return if is_link {
+        if is_dir {
+            *COMPLETE_DIRECTORY_SYMLINK_DESC
+        } else if is_executable(filename) {
+            *COMPLETE_EXEC_LINK_DESC
+        } else {
+            *COMPLETE_SYMLINK_DESC
+        }
+    } else if is_dir {
         *COMPLETE_DIRECTORY_DESC
-    } else if is_executable(&stat, filename) {
+    } else if is_executable(filename) {
         *COMPLETE_EXEC_DESC
     } else {
         *COMPLETE_FILE_DESC
-    }
+    };
 }
 
 /// Test if the given file is an executable (if executables_only) or directory (if
@@ -381,7 +343,7 @@ fn wildcard_test_flags_then_complete(
     wc: &wstr,
     expand_flags: ExpandFlags,
     out: &mut CompletionReceiver,
-    known_dir: bool,
+    entry: &DirEntry,
 ) -> bool {
     let executables_only = expand_flags.contains(ExpandFlags::EXECUTABLES_ONLY);
     let need_directory = expand_flags.contains(ExpandFlags::DIRECTORIES_ONLY);
@@ -389,7 +351,8 @@ fn wildcard_test_flags_then_complete(
     // and we don't need to do anything else, just return it.
     // This is a common case for cd completions, and removes the `stat` entirely in case the system
     // supports it.
-    if known_dir && !executables_only && !expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+    if entry.is_dir() && !executables_only && !expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS)
+    {
         return wildcard_complete(
             &(filename.to_owned() + L!("/")),
             wc,
@@ -412,40 +375,16 @@ fn wildcard_test_flags_then_complete(
         return false;
     }
 
-    let lstat: Option<fs::Metadata> = lwstat(filepath).ok();
-    let stat: Option<io::Result<fs::Metadata>>;
-    if let Some(md) = &lstat {
-        if md.is_symlink() {
-            // In order to differentiate between e.g. broken symlinks and symlink loops, we also
-            // need to know the error status of wstat.
-            stat = Some(wstat(filepath));
-        } else {
-            stat = Some(Ok(md.clone()));
-        }
-    } else {
-        stat = None;
-    }
-
-    let (is_directory, is_regular_file, perms) = if let Some(Ok(md)) = &stat {
-        (md.is_dir(), md.is_file(), md.permissions().mode() as mode_t)
-    } else {
-        (false, false, 0)
-    };
-
-    if need_directory && !is_directory {
+    if need_directory && !entry.is_dir() {
         return false;
     }
 
-    // If the file has all executable bits set, we assume it is executable.
-    // This does not account for:
-    // 1. Capabilities (but neither does access!)
-    // 2. noexec filesystems (but then why add those to $PATH?)
-    // 3. MAC (SELinux etc)
-    // 4. ACLs
-    // Since this is for completions, that's fine.
-    let assume_executable = perms & (S_IXUSR | S_IXGRP | S_IXOTH) == (S_IXUSR | S_IXGRP | S_IXOTH);
-    if executables_only && !assume_executable && (!is_regular_file || waccess(filepath, X_OK) != 0)
-    {
+    // regular file *excludes* broken links - we have no use for them as commands.
+    let is_regular_file = entry
+        .check_type()
+        .map(|x| x == DirEntryType::reg)
+        .unwrap_or(false);
+    if executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0) {
         return false;
     }
 
@@ -457,10 +396,26 @@ fn wildcard_test_flags_then_complete(
     }
 
     // Compute the description.
+    // This is effectively only for command completions,
+    // because we disable descriptions for regular file completions.
     let desc = if expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+        let is_link: bool = match entry.is_possible_link() {
+            Some(n) => n,
+            None => {
+                // We do not know it's a link from the d_type,
+                // so we will have to do an lstat().
+                let lstat: Option<fs::Metadata> = lwstat(filepath).ok();
+                if let Some(md) = &lstat {
+                    md.is_symlink()
+                } else {
+                    // This file is no longer be usable, skip it.
+                    return false;
+                }
+            }
+        };
         // If we have executables_only, we already checked waccess above,
         // so we tell file_get_desc that this file is definitely executable so it can skip the check.
-        Some(file_get_desc(filename, lstat, stat, executables_only).to_owned())
+        Some(file_get_desc(filename, entry.is_dir(), is_link, executables_only).to_owned())
     } else {
         None
     };
@@ -472,7 +427,7 @@ fn wildcard_test_flags_then_complete(
         None => WString::new(),
     };
     let desc_func: Option<&dyn Fn(&wstr) -> WString> = Some(&desc_func);
-    if is_directory {
+    if entry.is_dir() {
         return wildcard_complete(
             &(filename.to_owned() + L!("/")),
             wc,
@@ -741,7 +696,7 @@ mod expander {
                         &entry.name,
                         L!(""),
                         prefix,
-                        known_dir,
+                        entry,
                     );
                 }
             }
@@ -884,7 +839,6 @@ mod expander {
             wc: &wstr,
             prefix: &wstr,
         ) {
-            let is_dir = false;
             let need_dir = self.flags.contains(ExpandFlags::DIRECTORIES_ONLY);
 
             while !self.interrupted_or_overflowed() {
@@ -902,7 +856,7 @@ mod expander {
                         &entry.name,
                         wc,
                         prefix,
-                        is_dir,
+                        entry,
                     );
                 } else {
                     // Normal wildcard expansion, not for completions.
@@ -997,7 +951,7 @@ mod expander {
             filename: &wstr,
             wildcard: &wstr,
             prefix: &wstr,
-            known_dir: bool,
+            entry: &DirEntry,
         ) {
             // This function is only for the completions case.
             assert!(self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
@@ -1017,7 +971,7 @@ mod expander {
                 wildcard,
                 self.flags,
                 self.resolved_completions,
-                known_dir,
+                entry,
             ) {
                 // Hack. We added this completion result based on the last component of the wildcard.
                 // Prepend our prefix to each wildcard that replaces its token.

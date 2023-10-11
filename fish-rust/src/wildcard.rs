@@ -793,7 +793,7 @@ mod expander {
                 //
                 // We only do this when we are the last `*/` component,
                 // because we're a bit inconsistent on when we will enter loops.
-                if is_final && !entry.is_possible_link() {
+                if is_final && !entry.is_possible_link().unwrap_or(true) {
                     let full_path: WString = base_dir.to_owned() + entry.name.as_utfstr() + L!("/");
                     let prefix: WString = prefix.to_owned() + wc_segment + L!("/");
 

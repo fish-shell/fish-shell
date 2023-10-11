@@ -379,19 +379,19 @@ fn wildcard_test_flags_then_complete(
         return false;
     }
 
+    if executables_only
+        && is_windows_subsystem_for_linux()
+        && string_suffixes_string_case_insensitive(L!(".dll"), filename)
+    {
+        return false;
+    }
+
     // regular file *excludes* broken links - we have no use for them as commands.
     let is_regular_file = entry
         .check_type()
         .map(|x| x == DirEntryType::reg)
         .unwrap_or(false);
     if executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0) {
-        return false;
-    }
-
-    if executables_only
-        && is_windows_subsystem_for_linux()
-        && string_suffixes_string_case_insensitive(L!(".dll"), filename)
-    {
         return false;
     }
 

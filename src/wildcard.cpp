@@ -287,14 +287,14 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
-    // regular file *excludes* broken links - we have no use for them as commands.
-    const bool is_regular_file = entry.check_type() == dir_entry_type_t::reg;
-    if (executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0)) {
+    if (executables_only && is_windows_subsystem_for_linux() &&
+        string_suffixes_string_case_insensitive(L".dll", filename)) {
         return false;
     }
 
-    if (executables_only && is_windows_subsystem_for_linux() &&
-        string_suffixes_string_case_insensitive(L".dll", filename)) {
+    // regular file *excludes* broken links - we have no use for them as commands.
+    const bool is_regular_file = entry.check_type() == dir_entry_type_t::reg;
+    if (executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0)) {
         return false;
     }
 

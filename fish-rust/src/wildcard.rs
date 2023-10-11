@@ -10,7 +10,7 @@ use cxx::CxxWString;
 use libc::{mode_t, ELOOP, S_IXGRP, S_IXOTH, S_IXUSR, X_OK};
 
 use crate::common::{
-    char_offset, format_size, is_windows_subsystem_for_linux, unescape_string, UnescapeFlags,
+    char_offset, is_windows_subsystem_for_linux, unescape_string, UnescapeFlags,
     UnescapeStringStyle, WILDCARD_RESERVED_BASE,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
@@ -426,15 +426,10 @@ fn wildcard_test_flags_then_complete(
         stat = None;
     }
 
-    let (file_size, is_directory, is_regular_file, perms) = if let Some(Ok(md)) = &stat {
-        (
-            md.len(),
-            md.is_dir(),
-            md.is_file(),
-            md.permissions().mode() as mode_t,
-        )
+    let (is_directory, is_regular_file, perms) = if let Some(Ok(md)) = &stat {
+        (md.is_dir(), md.is_file(), md.permissions().mode() as mode_t)
     } else {
-        (0, false, false, 0)
+        (false, false, 0)
     };
 
     if need_directory && !is_directory {
@@ -465,16 +460,7 @@ fn wildcard_test_flags_then_complete(
     let desc = if expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
         // If we have executables_only, we already checked waccess above,
         // so we tell file_get_desc that this file is definitely executable so it can skip the check.
-        let mut desc = file_get_desc(filename, lstat, stat, executables_only).to_owned();
-
-        if !is_directory && !is_regular_file {
-            if !desc.is_empty() {
-                desc.push_utfstr(L!(", "));
-            }
-            desc.push_utfstr(&format_size(file_size.try_into().unwrap()));
-        }
-
-        Some(desc)
+        Some(file_get_desc(filename, lstat, stat, executables_only).to_owned())
     } else {
         None
     };

@@ -235,6 +235,7 @@ wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,
 
 /// Obtain a description string for the file specified by the filename.
 ///
+/// It assumes the file exists and won't run stat() to confirm.
 /// The returned value is a string constant and should not be free'd.
 ///
 /// \param filename The file for which to find a description string
@@ -248,11 +249,6 @@ static const wchar_t *file_get_desc(const wcstring &filename, bool is_dir,
             return COMPLETE_DIRECTORY_SYMLINK_DESC;
         }
         if (definitely_executable || waccess(filename, X_OK) == 0) {
-            // Weird group permissions and other such issues make it non-trivial to find out if
-            // we can actually execute a file using the result from stat. It is much safer to
-            // use the access function, since it tells us exactly what we want to know.
-            //
-            // We skip this check in case the caller tells us the file is definitely executable.
             return COMPLETE_EXEC_LINK_DESC;
         }
 
@@ -291,6 +287,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
+    // regular file *excludes* broken links - we have no use for them as commands.
     const bool is_regular_file = entry.check_type() == dir_entry_type_t::reg;
     if (executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0)) {
         return false;
@@ -303,7 +300,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
 
     // Compute the description.
     // This is effectively only for command completions,
-    // because we disable completions for regular file description.
+    // because we disable descriptions for regular file completions.
     wcstring desc;
     if (expand_flags & expand_flag::gen_descriptions) {
         bool is_link = false;
@@ -314,6 +311,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
             struct stat lstat_buf = {};
             int lstat_res = lwstat(filepath, &lstat_buf);
             if (lstat_res < 0) {
+                // This file is no longer be usable, skip it.
                 return false;
             }
             if (S_ISLNK(lstat_buf.st_mode)) {

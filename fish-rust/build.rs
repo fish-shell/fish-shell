@@ -10,6 +10,7 @@ fn main() {
         }
     }
 
+    rsconf::rebuild_if_path_changed("fish-rust/src/cfg/compat.c");
     cc::Build::new()
         .file("fish-rust/src/compat.c")
         .include(

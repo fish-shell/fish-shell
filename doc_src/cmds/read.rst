@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``read`` reads from standard input and either writes the result back to standard output (for use in command substitution), or stores the result in one or more shell variables.
+``read`` reads from standard input and stores the result in shell variables. In an alternative mode, it can also print to its own standard output, for example for use in command substitutions.
 
 By default, ``read`` reads a single line and splits it into variables on spaces or tabs. Alternatively, a null character or a maximum number of characters can be used to terminate the input, and other delimiters can be given.
 

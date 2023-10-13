@@ -410,6 +410,12 @@ impl ParseError {
             }
         }
 
+        // HACK: If we haven't added anything, remove our default "fish: " line.
+        // This would be easier to fix if we didn't generate the errors above.
+        if self.text.is_empty() && prefix == "fish: " && result == prefix {
+            result = L!("").to_owned();
+        }
+
         let mut start = self.source_start;
         let mut len = self.source_length;
         if start >= src.len() {

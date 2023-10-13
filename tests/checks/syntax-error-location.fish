@@ -52,7 +52,6 @@ $fish -c "set -g fish_function_path $(string escape $TMPDIR); this_should_be_an_
 # CHECKERR: from sourcing file ~/temp/this_should_be_an_error.fish
 # CHECKERR: source: Error while reading file '{{.*}}/this_should_be_an_error.fish'
 # CHECKERR: fish: Unknown command: this_should_be_an_error
-# CHECKERR: fish:
 # CHECKERR: set -g fish_function_path {{.*}}; this_should_be_an_error
 # CHECKERR:                                   ^~~~~~~~~~~~~~~~~~~~~~^
 
@@ -75,13 +74,11 @@ echo "bind -M" | $fish
 
 $fish -c 'if -e; end'
 # CHECKERR: fish: Unknown command: -e
-# CHECKERR: fish:
 # CHECKERR: if -e; end
 # CHECKERR:    ^^
 
 $fish -c 'begin --notanoption; end'
 # CHECKERR: fish: Unknown command: --notanoption
-# CHECKERR: fish:
 # CHECKERR: begin --notanoption; end
 # CHECKERR:       ^~~~~~~~~~~~^
 

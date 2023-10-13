@@ -666,6 +666,23 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             case STATUS_NOT_EXECUTABLE:
                 err = L"Command not executable";
                 break;
+            case STATUS_INVALID_ARGS:
+                // TODO: Also overused
+                // This is sent for:
+                // invalid redirections or pipes (like `<&foo`),
+                // invalid variables (invalid name or read-only) for for-loops,
+                // switch $foo if $foo expands to more than one argument
+                // time in a background job.
+                err = L"Invalid arguments";
+                break;
+            case STATUS_EXPAND_ERROR:
+                // Sent in `for $foo in ...` if $foo expands to more than one word
+                err = L"Expansion error";
+                break;
+            case STATUS_UNMATCHED_WILDCARD:
+                // Sent in `for $foo in ...` if $foo expands to more than one word
+                err = L"Unmatched wildcard";
+                break;
             default:
                 err = L"Unknown error while evaluating command substitution";
                 break;

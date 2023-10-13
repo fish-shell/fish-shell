@@ -228,7 +228,6 @@ operation_context_t parser_t::context() {
 /// Append stack trace info for the block \p b to \p trace.
 static void append_block_description_to_stack_trace(const parser_t &parser, const block_t &b,
                                                     wcstring &trace) {
-    bool print_call_site = false;
     switch (b.type()) {
         case block_type_t::function_call:
         case block_type_t::function_call_no_shadow: {
@@ -249,27 +248,22 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
                 // TODO: Escape these.
                 append_format(trace, _(L" with arguments '%ls'"), args_str.c_str());
             }
-            trace.push_back('\n');
-            print_call_site = true;
             break;
         }
         case block_type_t::subst: {
-            append_format(trace, _(L"in command substitution\n"));
-            print_call_site = true;
+            append_format(trace, _(L"in command substitution"));
             break;
         }
         case block_type_t::source: {
             const filename_ref_t &source_dest = b.sourced_file;
-            append_format(trace, _(L"from sourcing file %ls\n"),
+            append_format(trace, _(L"from sourcing file %ls"),
                           user_presentable_path(*source_dest, parser.vars()).c_str());
-            print_call_site = true;
             break;
         }
         case block_type_t::event: {
             assert(b.event && "Should have an event");
             wcstring description = *event_get_desc(parser, **b.event);
-            append_format(trace, _(L"in event handler: %ls\n"), description.c_str());
-            print_call_site = true;
+            append_format(trace, _(L"in event handler: %ls"), description.c_str());
             break;
         }
 
@@ -281,19 +275,20 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
         case block_type_t::if_block:
         case block_type_t::breakpoint:
         case block_type_t::variable_assignment:
-            break;
+            // No message, skip
+            return;
     }
 
-    if (print_call_site) {
-        // Print where the function is called.
-        const auto &file = b.src_filename;
-        if (file) {
-            append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
-                          user_presentable_path(*file, parser.vars()).c_str());
-        } else if (parser.libdata().within_fish_init) {
-            append_format(trace, _(L"\tcalled during startup\n"));
-        }
+    // Print where the function is called.
+    const auto &file = b.src_filename;
+    if (file) {
+        append_format(trace, _(L" called on line %d of file %ls"), b.src_lineno,
+                      user_presentable_path(*file, parser.vars()).c_str());
+    } else if (parser.libdata().within_fish_init) {
+        append_format(trace, _(L" called during startup"));
     }
+
+    trace.push_back(L'\n');
 }
 
 wcstring parser_t::stack_trace() const {

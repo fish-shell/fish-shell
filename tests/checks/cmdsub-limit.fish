@@ -54,10 +54,8 @@ set --show c
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
 #CHECKERR:     set -l x (string repeat -n $argv x)
 #CHECKERR:              ^~~~~~~~~~~~~~~~~~~~~~~~~^
-#CHECKERR: in function 'subme' with arguments '513'
-#CHECKERR: called on line {{.*}}
-#CHECKERR: in command substitution
-#CHECKERR: called on line {{.*}}
+#CHECKERR: in function 'subme' with arguments '513' called on line {{.*}}
+#CHECKERR: in command substitution called on line {{.*}}
 
 # Make sure output from builtins outside of command substitution is not affected
 string repeat --max 513 a

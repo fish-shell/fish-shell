@@ -10,8 +10,7 @@ begin
     # CHECKERR: ~//fish/config.fish (line {{\d+}}):
     # CHECKERR: syntax-error
     # CHECKERR: ^~~~~~~~~~~^
-    # CHECKERR: from sourcing file ~//fish/config.fish
-    # CHECKERR: called during startup
+    # CHECKERR: from sourcing file ~//fish/config.fish called during startup
 
     $fish -c "echo normal command" -C "echo init"
     # CHECK: broken

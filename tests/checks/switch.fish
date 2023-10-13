@@ -111,8 +111,7 @@ begin
     # CHECKERR: checks/switch.fish (line {{\d+}}):
     # CHECKERR: doesnotexist
     # CHECKERR: ^~~~~~~~~~~^
-    # CHECKERR: in command substitution
-    # CHECKERR: {{\t}}called on line {{\d+}} of file checks/switch.fish
+    # CHECKERR: in command substitution called on line {{\d+}} of file checks/switch.fish
     # CHECKERR: checks/switch.fish (line {{\d+}}): Unknown command
     # CHECKERR: switch (doesnotexist)
     # CHECKERR:        ^~~~~~~~~~~~~^

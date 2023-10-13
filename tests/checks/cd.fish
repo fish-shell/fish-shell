@@ -134,8 +134,7 @@ cd nonexistent
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
-#CHECKERR: in function 'cd' with arguments 'nonexistent'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: in function 'cd' with arguments 'nonexistent' called on line {{\d+}} of file {{.*}}/cd.fish
 
 touch file
 cd file
@@ -143,8 +142,7 @@ cd file
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
-#CHECKERR: in function 'cd' with arguments 'file'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: in function 'cd' with arguments 'file' called on line {{\d+}} of file {{.*}}/cd.fish
 
 # a directory that isn't executable
 mkdir bad-perms
@@ -154,8 +152,7 @@ cd bad-perms
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
-#CHECKERR: in function 'cd' with arguments 'bad-perms'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: in function 'cd' with arguments 'bad-perms' called on line {{\d+}} of file {{.*}}/cd.fish
 
 cd $old_path
 mkdir -p cdpath-dir/bad-perms
@@ -188,8 +185,7 @@ cd bad-perms
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
-#CHECKERR: in function 'cd' with arguments 'bad-perms'
-#CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+#CHECKERR: in function 'cd' with arguments 'bad-perms' called on line {{\d+}} of file {{.*}}/cd.fish
 cd $old_path
 cd file
 cd $old_path
@@ -229,8 +225,7 @@ cd ""
 # CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 # CHECKERR: builtin cd $argv
 # CHECKERR: ^
-# CHECKERR: in function 'cd' with arguments '""'
-# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+# CHECKERR: in function 'cd' with arguments '""' called on line {{\d+}} of file {{.*}}/cd.fish
 echo $status
 # CHECK: 1
 
@@ -244,8 +239,7 @@ end
 # CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 # CHECKERR: builtin cd $argv
 # CHECKERR: ^
-# CHECKERR: in function 'cd' with arguments 'broken-symbolic-link'
-# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+# CHECKERR: in function 'cd' with arguments 'broken-symbolic-link' called on line {{\d+}} of file {{.*}}/cd.fish
 
 # Make sure that "broken symlink" is reported over "no such file or directory".
 begin
@@ -256,8 +250,7 @@ end
 # CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 # CHECKERR: builtin cd $argv
 # CHECKERR: ^
-# CHECKERR: in function 'cd' with arguments 'broken-symbolic-link'
-# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+# CHECKERR: in function 'cd' with arguments 'broken-symbolic-link' called on line {{\d+}} of file {{.*}}/cd.fish
 
 begin
     mkdir -p foo/bar/muf

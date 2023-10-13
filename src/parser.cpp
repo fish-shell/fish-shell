@@ -245,8 +245,14 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
                 }
             }
             if (!args_str.empty()) {
-                // TODO: Escape these.
-                append_format(trace, _(L" with arguments '%ls'"), args_str.c_str());
+                // If the arguments are under 30 columns wide put them in-line,
+                // otherwise put them on their own line.
+                if (fish_wcswidth(args_str) < 30) {
+                    append_format(trace, _(L" with arguments '%ls'"), args_str.c_str());
+                } else {
+                    trace.append(_(L" with arguments:"));
+                    append_format(trace, L"\n'%ls'\n", args_str.c_str());
+                }
             }
             break;
         }

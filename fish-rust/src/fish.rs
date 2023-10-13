@@ -856,7 +856,7 @@ fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[&wstr]) 
         // We're going to construct a new command that starts with exec, and then has the
         // remaining arguments escaped.
         let mut new_cmd = OsString::from("exec");
-        for arg in args {
+        for arg in &args[1..] {
             new_cmd.push(" ");
             new_cmd.push(escape_single_quoted_hack_hack_hack_hack(arg));
         }

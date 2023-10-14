@@ -1460,7 +1460,7 @@ pub fn fish_setlocale() {
 
 /// Test if the character can be encoded using the current locale.
 fn can_be_encoded(wc: char) -> bool {
-    let mut converted: [libc::c_char; AT_LEAST_MB_LEN_MAX] = [0; AT_LEAST_MB_LEN_MAX];
+    let mut converted = [0 as libc::c_char; AT_LEAST_MB_LEN_MAX];
     let mut state = zero_mbstate();
     unsafe {
         wcrtomb(converted.as_mut_ptr(), wc as libc::wchar_t, &mut state) != 0_usize.wrapping_sub(1)

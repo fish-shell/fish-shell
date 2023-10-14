@@ -246,7 +246,7 @@ class dir_iter_t : noncopyable_t {
         bool is_dir() const { return check_type() == dir_entry_type_t::dir; }
 
         /// \return false if we know this can't be a link via d_type, true if it could be.
-        bool is_possible_link() const { return possible_link_; }
+        maybe_t<bool> is_possible_link() const { return possible_link_; }
 
         /// \return the stat buff for this entry, invoking stat() if necessary.
         const maybe_t<struct stat> &stat() const;
@@ -267,7 +267,7 @@ class dir_iter_t : noncopyable_t {
         mutable maybe_t<dir_entry_type_t> type_{};
 
         /// whether this entry could be a link, false if we know definitively it isn't.
-        bool possible_link_ = true;
+        mutable maybe_t<bool> possible_link_{};
 
         // fd of the DIR*, used for fstatat().
         int dirfd_{-1};

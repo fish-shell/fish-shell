@@ -235,58 +235,27 @@ wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,
 
 /// Obtain a description string for the file specified by the filename.
 ///
+/// It assumes the file exists and won't run stat() to confirm.
 /// The returned value is a string constant and should not be free'd.
 ///
 /// \param filename The file for which to find a description string
-/// \param lstat_res The result of calling lstat on the file
-/// \param lbuf The struct buf output of calling lstat on the file
-/// \param stat_res The result of calling stat on the file
-/// \param buf The struct buf output of calling stat on the file
-/// \param err The errno value after a failed stat call on the file.
-static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
-                                    const struct stat &lbuf, int stat_res, const struct stat &buf,
-                                    int err, bool definitely_executable) {
-    if (lstat_res) {
-        return COMPLETE_FILE_DESC;
-    }
-
-    if (S_ISLNK(lbuf.st_mode)) {
-        if (!stat_res) {
-            if (S_ISDIR(buf.st_mode)) {
-                return COMPLETE_DIRECTORY_SYMLINK_DESC;
-            }
-            if (definitely_executable || (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0)) {
-                // Weird group permissions and other such issues make it non-trivial to find out if
-                // we can actually execute a file using the result from stat. It is much safer to
-                // use the access function, since it tells us exactly what we want to know.
-                //
-                // We skip this check in case the caller tells us the file is definitely executable.
-                return COMPLETE_EXEC_LINK_DESC;
-            }
-
-            return COMPLETE_SYMLINK_DESC;
+/// \param is_dir Whether the file is a directory or not (might be behind a link)
+/// \param is_link Whether it's a link (that might point to a directory)
+/// \param definitely_executable Whether we know that it is executable, or don't know
+static const wchar_t *file_get_desc(const wcstring &filename, bool is_dir,
+                                    bool is_link, bool definitely_executable) {
+    if (is_link) {
+        if (is_dir) {
+            return COMPLETE_DIRECTORY_SYMLINK_DESC;
+        }
+        if (definitely_executable || waccess(filename, X_OK) == 0) {
+            return COMPLETE_EXEC_LINK_DESC;
         }
 
-        if (err == ENOENT) return COMPLETE_BROKEN_SYMLINK_DESC;
-        if (err == ELOOP) return COMPLETE_LOOP_SYMLINK_DESC;
-        // On unknown errors we do nothing. The file will be given the default 'File'
-        // description or one based on the suffix.
-    } else if (S_ISCHR(buf.st_mode)) {
-        return COMPLETE_CHAR_DESC;
-    } else if (S_ISBLK(buf.st_mode)) {
-        return COMPLETE_BLOCK_DESC;
-    } else if (S_ISFIFO(buf.st_mode)) {
-        return COMPLETE_FIFO_DESC;
-    } else if (S_ISSOCK(buf.st_mode)) {
-        return COMPLETE_SOCKET_DESC;
-    } else if (S_ISDIR(buf.st_mode)) {
+        return COMPLETE_SYMLINK_DESC;
+    } else if (is_dir) {
         return COMPLETE_DIRECTORY_DESC;
-    } else if (definitely_executable || (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0)) {
-        // Weird group permissions and other such issues make it non-trivial to find out if we can
-        // actually execute a file using the result from stat. It is much safer to use the access
-        // function, since it tells us exactly what we want to know.
-        //
-        // We skip this check in case the caller tells us the file is definitely executable.
+    } else if (definitely_executable || waccess(filename, X_OK) == 0) {
         return COMPLETE_EXEC_DESC;
     }
 
@@ -298,14 +267,14 @@ static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
 /// up. Note that the filename came from a readdir() call, so we know it exists.
 static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wcstring &filename,
                                               const wchar_t *wc, expand_flags_t expand_flags,
-                                              completion_receiver_t *out, bool known_dir) {
+                                              completion_receiver_t *out, const dir_iter_t::entry_t &entry) {
     const bool executables_only = expand_flags & expand_flag::executables_only;
     const bool need_directory = expand_flags & expand_flag::directories_only;
     // Fast path: If we need directories, and we already know it is one,
     // and we don't need to do anything else, just return it.
     // This is a common case for cd completions, and removes the `stat` entirely in case the system
     // supports it.
-    if (known_dir && !executables_only && !(expand_flags & expand_flag::gen_descriptions)) {
+    if (entry.is_dir() && !executables_only && !(expand_flags & expand_flag::gen_descriptions)) {
         return wildcard_complete(filename + L'/', wc, const_desc(L""), out, expand_flags,
                                  COMPLETE_NO_SPACE) == wildcard_result_t::match;
     }
@@ -314,34 +283,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
-    struct stat lstat_buf = {}, stat_buf = {};
-    int stat_res = -1;
-    int stat_errno = 0;
-    int lstat_res = lwstat(filepath, &lstat_buf);
-    if (lstat_res >= 0) {
-        if (S_ISLNK(lstat_buf.st_mode)) {
-            stat_res = wstat(filepath, &stat_buf);
-
-            if (stat_res < 0) {
-                // In order to differentiate between e.g. broken symlinks and symlink loops, we also
-                // need to know the error status of wstat.
-                stat_errno = errno;
-            }
-        } else {
-            stat_buf = lstat_buf;
-            stat_res = lstat_res;
-        }
-    }
-
-    const long long file_size = stat_res == 0 ? stat_buf.st_size : 0;
-    const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
-    const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
-
-    if (need_directory && !is_directory) {
-        return false;
-    }
-
-    if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
+    if (need_directory && !entry.is_dir()) {
         return false;
     }
 
@@ -350,23 +292,44 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
+    // regular file *excludes* broken links - we have no use for them as commands.
+    const bool is_regular_file = entry.check_type() == dir_entry_type_t::reg;
+    if (executables_only && (!is_regular_file || waccess(filepath, X_OK) != 0)) {
+        return false;
+    }
+
     // Compute the description.
+    // This is effectively only for command completions,
+    // because we disable descriptions for regular file completions.
     wcstring desc;
     if (expand_flags & expand_flag::gen_descriptions) {
+        bool is_link = false;
+
+        if (!entry.is_possible_link().has_value()) {
+            // We do not know it's a link from the d_type,
+            // so we will have to do an lstat().
+            struct stat lstat_buf = {};
+            int lstat_res = lwstat(filepath, &lstat_buf);
+            if (lstat_res < 0) {
+                // This file is no longer be usable, skip it.
+                return false;
+            }
+            if (S_ISLNK(lstat_buf.st_mode)) {
+                is_link = true;
+            }
+        } else {
+            is_link = entry.is_possible_link().value();
+        }
+
         // If we have executables_only, we already checked waccess above,
         // so we tell file_get_desc that this file is definitely executable so it can skip the check.
-        desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno, executables_only);
-
-        if (!is_directory && !is_executable && file_size >= 0) {
-            if (!desc.empty()) desc.append(L", ");
-            desc.append(format_size(file_size));
-        }
+        desc = file_get_desc(filepath, entry.is_dir(), is_link, executables_only);
     }
 
     // Append a / if this is a directory. Note this requirement may be the only reason we have to
     // call stat() in some cases.
     auto desc_func = const_desc(desc);
-    if (is_directory) {
+    if (entry.is_dir()) {
         return wildcard_complete(filename + L'/', wc, desc_func, out, expand_flags,
                                  COMPLETE_NO_SPACE) == wildcard_result_t::match;
     }
@@ -500,7 +463,7 @@ class wildcard_expander_t {
 
     void try_add_completion_result(const wcstring &filepath, const wcstring &filename,
                                    const wcstring &wildcard, const wcstring &prefix,
-                                   bool known_dir) {
+                                   const dir_iter_t::entry_t &entry) {
         // This function is only for the completions case.
         assert(this->flags & expand_flag::for_completions);
 
@@ -512,7 +475,7 @@ class wildcard_expander_t {
 
         size_t before = this->resolved_completions->size();
         if (wildcard_test_flags_then_complete(abs_path, filename, wildcard.c_str(), this->flags,
-                                              this->resolved_completions, known_dir)) {
+                                              this->resolved_completions, entry)) {
             // Hack. We added this completion result based on the last component of the wildcard.
             // Prepend our prefix to each wildcard that replaces its token.
             // Note that prepend_token_prefix is a no-op unless COMPLETE_REPLACES_TOKEN is set
@@ -616,7 +579,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
                 if (need_dir && !known_dir) continue;
                 if (!entry->name.empty() && entry->name.at(0) != L'.') {
                     this->try_add_completion_result(base_dir + entry->name, entry->name, L"",
-                                                    prefix, known_dir);
+                                                    prefix, *entry);
                 }
             }
         }
@@ -648,7 +611,7 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir,
         //
         // We only do this when we are the last `*/` component,
         // because we're a bit inconsistent on when we will enter loops.
-        if (is_final && !entry->is_possible_link()) {
+        if (is_final && !entry->is_possible_link().value_or(true)) {
             // We made it through.
             // Perform normal wildcard expansion on this new directory,
             // starting at our tail_wc
@@ -734,7 +697,6 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
 
 void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, dir_iter_t &base_dir_iter,
                                               const wcstring &wc, const wcstring &prefix) {
-    bool is_dir = false;
     bool need_dir = flags & expand_flag::directories_only;
 
     const dir_iter_t::entry_t *entry{};
@@ -742,7 +704,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, dir_iter
         if (need_dir && !entry->is_dir()) continue;
         if (flags & expand_flag::for_completions) {
             this->try_add_completion_result(base_dir + entry->name, entry->name, wc, prefix,
-                                            is_dir);
+                                            *entry);
         } else {
             // Normal wildcard expansion, not for completions.
             if (wildcard_match(entry->name, wc, true /* skip files with leading dots */)) {

@@ -231,9 +231,15 @@ const dir_iter_t::entry_t *dir_iter_t::next() {
     // Do not store symlinks as type as we will need to resolve them.
     if (type != dir_entry_type_t::lnk) {
         entry_.type_ = type;
+    } else {
+        entry_.type_ = none();
     }
     // This entry could be a link if it is a link or unknown.
-    entry_.possible_link_ = !type.has_value() || type == dir_entry_type_t::lnk;
+    if (type.has_value()) {
+        entry_.possible_link_ = type == dir_entry_type_t::lnk;
+    } else {
+        entry_.possible_link_ = none();
+    }
 #endif
     return &entry_;
 }

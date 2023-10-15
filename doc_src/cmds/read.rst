@@ -26,7 +26,7 @@ The following options, like the corresponding ones in :doc:`set`, control variab
 
 **-U** or **--universal**
     Sets a universal variable.
-    The variable will be immediately available to all the user's ``fish`` instances on the machine, and will be persist across restarts of the shell.
+    The variable will be immediately available to all the user's ``fish`` instances on the machine, and will be persisted across restarts of the shell.
 
 **-f** or **--function**
     Sets a variable scoped to the executing function.

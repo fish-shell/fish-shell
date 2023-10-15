@@ -200,9 +200,8 @@
                         <div style='display: flex'>
                             <div x-html='selectedPrompt.demo' style='flex-grow: 1' class="prompt_demo unbordered"></div>
                             <template x-if="selectedPrompt.right">
-                                <div title="right prompt for {{selectedPrompt.name }}"
-                                     x-html='selectedPrompt.right' class="prompt_demo unbordered"
-                                     @click="selectPrompt(selectedPrompt)">
+                                <div title="right prompt for {{selectedPrompt.name }}" x-html='selectedPrompt.right'
+                                    class="prompt_demo unbordered" @click="selectPrompt(selectedPrompt)">
                                 </div>
                             </template>
                         </div>
@@ -284,15 +283,16 @@
                     <div id="table_filter_container">
                         <table class="paginator">
                             <tr>
-                                <td :class="{disabled: currentPage == 0}" class="prev">
-                                    <button type="button" @click="prevPage">« Prev</a>
+                                <td class="prev">
+                                    <button type="button" @click="prevPage" :disabled="currentPage == 0">« Prev</button>
                                 </td>
                                 <td class="desc" x-text="currentPageDescription"></td>
-                                <td :class="{disabled: currentPage * itemsPerPage >= filteredItems.length}"
-                                    class="next">
-                                    <button type="button" @click="nextPage">Next »</a>
+                                <td class="next">
+                                    <button type="button" @click="nextPage"
+                                        :disabled="(currentPage+1)*itemsPerPage >= filteredItems.length">Next »</button>
                                 </td>
                             </tr>
+
                         </table>
 
                         <input id="table_filter_text_box" class="filter_text_box text_box_transient"
@@ -307,8 +307,8 @@
                                 <td :class="{'history_text': true, 'no_overflow': selectedItems.indexOf(item) < 0}"
                                     @click="selectItem(item)" x-text="item"></td>
                                 <td class="history_delete">
-                                    <button type="button" class="delete_icon"
-                                        @click="deleteHistoryItem(item)">❌</button>
+                                    <button type="button" class="delete_button" title="Delete"
+                                        @click="deleteHistoryItem(item)">&times;</button>
                                 </td>
                             </tr>
                         </template>

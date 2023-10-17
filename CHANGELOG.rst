@@ -1,3 +1,84 @@
+fish 3.7.0 (released ???)
+====================================
+
+This release of fish contains a number of fixes for problems identified in fish 3.6.1, as well as some enhancements.
+
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+- 
+
+Scripting improvements
+----------------------
+- Running ``exit`` with a negative number no longer crashes fish by hitting an assert() (:issue:`9659`).
+- ``fish -c`` will now return a non-zero status if parsing failed (:issue:`9888`).
+- Globbing will now use fewer system calls in some cases, especially with a trailing slash (``/path/a*/``), and for searching for commands.
+  Some of this requires filesystem support - the d_type field in the dirent struct returned by readdir(3).
+  This improves performance for command completions and globbing, especially on slow filesystems like NFS (:issue:`9891`, :issue:`9931`, :issue:`10032`, :issue:`10052`).
+- The ``jobs`` builtin will now escape the commands it prints (:issue:`9875`, :issue:`9808`).
+- ``string repeat`` no longer overflows if the count is a multiple of the chunk size (:issue:`9900`).
+- The ``builtin`` builtin will now properly error out with invalid arguments instead of doing nothing and returning true (:issue:`9942`).
+- ``command time`` in a pipeline is allowed again, as is ``command and`` and ``command or`` (:issue:`9985`).
+- ``exec`` will now also apply variable overrides, so ``FOO=bar exec`` will now set $FOO correctly (:issue:`9995`).
+
+Interactive improvements
+------------------------
+- The :kbd:`Alt`\ +\ :kbd:`s` binding now also checks ``please`` in addition to ``sudo`` and ``doas``
+- The history pager will now also attempt subsequence matches (:issue:`9476`), so you can find a commandline like ``git log 3.6.1..Integration_3.7.0`` by searching for ``gitInt``.
+- Closing the history pager with enter will now copy the search text to the commandline if there was no match, so you can continue editing the command you tried to find right away (:issue:`9934`).
+- Opening the history pager will now fill the search field with a search string if you're already in a search (:issue:`10005`). This makes it nicer to search something with up-arrow and then later decide to switch to the full pager.
+- ``read`` no longer enables bracketed paste so it doesn't stay enabled in combined commandlines like ``mysql -p(read --silent)`` (:issue:`8285`).
+- Vi-mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`, :issue:`9565`).
+- Vi-mode cursor shaping is now enabled in iterm2 (:issue:`9698`).
+- Completing commands as root now finds commands not owned by root again (:issue:`9699`).
+- Selection now uses fish_color_selection for the foreground as well (:issue:`9717`).
+- The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9812`, :issue:`9833`).
+- The interactive ``history delete`` now allows specifying index ranges like "1..5" (:issue:`9736`).
+- Command completion will now call the stock manpath on macOS instead of a potential homebrew version. This prevents awkward error messages (:issue:`9817`).
+- A new bind function ``history-pager-delete`` will delete the current history pager item from history (:issue:`9454`, :issue:`9515`).
+- ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
+- Fish can now wait for a timeout for a key sequence to complete instead of waiting indefinitely. This makes e.g. binding ``kj`` to switching modes in vi-mode possible.
+  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`, :issue:`9926`), and may be set by default in future versions.
+- ``open`` no longer works around an xdg-open bug that was finally fixed and can be used to launch terminal programs again (:issue:`10045`).
+- The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes alt+something bindings in vi-mode (:issue:`7910`).
+- A new ``clear-screen`` bind function is used for :kbd:`Alt`\ +\ :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
+  so it eliminates visible flicker unless the terminal is very slow (:issue:`10044`).
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+- The default theme now only uses named colors, so it will track the terminal's palette (:issue:`9913`).
+- The Dracula theme has now been synced with upstream (:issue:`9807`).
+- ``fish_vcs_prompt`` now also supports fossil (:issue:`9497`, :issue:`9500`, :issue:`9528`).
+
+Completions
+^^^^^^^^^^^
+- Added completions for:
+  - ``apkanalyzer`` (:issue:`9558`)
+  - ``neovim`` (:issue:`9543`)
+  - ``otool``
+  - ``pre-commit`` (:issue:`9521`)
+  - ``proxychains`` (:issue:`9486`)
+  - ``scrypt`` (:issue:`9583`)
+  - ``stow`` (:issue:`9571`)
+  - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
+  - ``ssh-copy-id`` (:issue:`9675`)
+- The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
+- The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).
+- Improvements to many completions.
+- The manpage completion generator will no longer sometimes parse a manpage of the same name in two different directories (:issue:`9787`).
+- The manpage completion generator won't cause up-to-date python versions to spew SyntaxWarnings about invalid backslash sequences anymore (:issue:`9814`)
+- The manpage completion generator will replace a few more roff escapes (:issue:`9961`).
+
+Other improvements
+------------------
+- Improvements and corrections to the documentation.
+
+For distributors
+----------------
+- Fish will now also look for libterminfo, which is what NetBSD curses calls libtinfo (:issue:`9794`).
+
 fish 3.6.1 (released March 25, 2022)
 ====================================
 

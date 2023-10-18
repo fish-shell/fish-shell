@@ -137,7 +137,7 @@ Delimiters given via "-d" are taken as one string::
     echo $first # outputs "a b", $second is empty
 
     echo 'a"foo bar"b (command echo wurst)*" "{a,b}' | read -lt -l a b c
-    echo $a # outputs 'afoo bar' (without the quotes)
+    echo $a # outputs 'afoo barb' (without the quotes)
     echo $b # outputs '(command echo wurst)* {a,b}' (without the quotes)
     echo $c # nothing
 

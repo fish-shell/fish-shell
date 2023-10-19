@@ -22,6 +22,8 @@ Unlike other shells, there is no default variable (such as :envvar:`REPLY`) for 
 When ``read`` reaches the end-of-file (EOF) instead of the terminator, the exit status is set to 1.
 Otherwise, it is set to 0.
 
+If ``read`` sets a variable and you don't specify a scope, it will use the same rules that :doc:`set` does - if the variable exists, it will use it (in the lowest scope). If it doesn't, it will use an unexported function-scoped variable.
+
 The following options, like the corresponding ones in :doc:`set`, control variable scope or attributes:
 
 **-U** or **--universal**

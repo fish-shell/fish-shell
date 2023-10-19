@@ -8,6 +8,7 @@ function funcsave --description "Save the current definition of all specified fu
         return 0
     end
 
+    set -l funcdir
     if set -q _flag_directory
         set funcdir $_flag_directory
     else

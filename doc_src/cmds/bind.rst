@@ -388,4 +388,6 @@ The escape key is a special case, because it can be used standalone as a real ke
 
 Holding alt and something else also typically sends escape, for example holding alt+a will send an escape character and then an "a".
 
-So the escape character has its own timeout configured with ``fish_escape_delay_ms``.
+So the escape character has its own timeout configured with :envvar:`fish_escape_delay_ms`.
+
+See also :ref:`Key sequences`.

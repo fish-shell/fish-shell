@@ -537,6 +537,12 @@ If you change your mind on a binding and want to go back to fish's default, you 
 
 Fish remembers its preset bindings and so it will take effect again. This saves you from having to remember what it was before and add it again yourself.
 
+If you use :ref:`vi bindings <vi-mode>`, note that ``bind`` will by default bind keys in :ref:`command mode <vi-mode-command>`. To bind something in :ref:`insert mode <vi-mode-insert>`::
+
+  bind --mode insert \cc 'commandline -r ""'
+
+.. _interactive-key-sequences:
+
 Key sequences
 """""""""""""
 
@@ -553,13 +559,24 @@ In these cases, :doc:`fish_key_reader <cmds/fish_key_reader>` can tell you how t
   Press a key:
   bind \e\[C 'do something'
 
-Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about.
+Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them.
 
-Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the ``fish_escape_delay_ms`` variable.
+Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the :envvar:`fish_escape_delay_ms` variable.
 
 If you want to be able to press :kbd:`Escape` and then a character and have it count as :kbd:`Alt`\ +\ that character, set it to a higher value, e.g.::
 
   set -g fish_escape_delay_ms 100
+
+Similarly, to disambiguate *other* keypresses where you've bound a subsequence and a longer sequence, fish has :envvar:`fish_sequence_key_delay_ms`::
+
+  # This binds "jk" to switch to normal mode in vi-mode.
+  # If you kept it like that, every time you press "j",
+  # fish would wait for a "k" or other key to disambiguate
+  bind -M insert -m default jk cancel repaint-mode
+
+  # After setting this, fish only waits 200ms for the "k",
+  # or decides to treat the "j" as a separate sequence, inserting it.
+  set -g fish_sequence_key_delay_ms 200
 
 .. _killring:
 

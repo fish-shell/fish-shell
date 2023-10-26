@@ -22,7 +22,11 @@ complete -c find -o regextype -d "Specify regular expression type" -a "emacs pos
 complete -c find -o version -l version -d "Display version and exit"
 complete -c find -o warn -d "Turn warnings on"
 complete -c find -o nowarn -d "Turn warnings off"
-
+complete -c find -o O0 -d "Equivalent to optimisation level 1."
+complete -c find -o O1 -d "Default optimisation level and corresponds to the traditional behaviour."
+complete -c find -o O2 -d "Any -type or -xtype tests are performed after any tests based only on the names of files."
+complete -c find -o O3 -d "The full cost-based query optimiser is enabled."
+complete -c find -s D -d "Print diagnostic information." -x -a "exec opt rates search stat time tree all help"
 
 # Tests
 

@@ -390,4 +390,4 @@ Holding alt and something else also typically sends escape, for example holding 
 
 So the escape character has its own timeout configured with :envvar:`fish_escape_delay_ms`.
 
-See also :ref:`Key sequences`.
+See also :ref:`Key sequences <interactive-key-sequences>`.

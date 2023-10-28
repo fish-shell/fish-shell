@@ -1,6 +1,6 @@
 function __fish_preview_current_file --description "Open the file at the cursor in a pager"
-    set -l pager less --
-    set -q PAGER && echo $PAGER | read -at pager
+    set -l pager (__fish_anypager)
+    or set pager cat
 
     # commandline -t will never return an empty list. However, the token
     # could comprise multiple lines, so join them into a single string.

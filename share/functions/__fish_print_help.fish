@@ -125,15 +125,10 @@ function __fish_print_help --description "Print help message for the specified f
         end
     end | string replace -ra '^       ' '' |
         begin
-            set -l pager less
-            # Try both PAGER and MANPAGER, last one wins
-            set -q PAGER
-            and echo -- $PAGER | read -at pager
-            set -q MANPAGER
-            and echo -- $MANPAGER | read -at pager
+            set -l pager (__fish_anypager --with-manpager)
+            and isatty stdout
+            or set pager cat # cannot use a builtin here
 
-            not isatty stdout
-            and set pager cat # cannot use a builtin here
             # similar to man, but add -F to quit paging when the help output is brief (#6227)
             # Also set -X for less < v530, see #8157.
             set -l lessopts isRF

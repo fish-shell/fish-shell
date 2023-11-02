@@ -15,6 +15,8 @@ We have tried to keep these to a minimum, but in some cases it is unavoidable.
 - ``functions --handlers`` will now list handlers in a different order.
   Now it is definition order, first to last, where before it was last to first.
   This was never specifically defined, and we recommend not relying on a specific order (:issue:`9944`).
+- ``LS_COLORS`` is no longer set automatically by ``ls`` (:issue:`10080`). Users
+  that set ``.dircolors`` should manually import it using other means.
 
 Notable improvements and fixes
 ------------------------------

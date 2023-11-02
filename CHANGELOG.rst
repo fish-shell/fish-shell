@@ -5,6 +5,8 @@ This release of fish contains a number of fixes for problems identified in fish 
 
 Notable improvements and fixes
 ------------------------------
+- ``LS_COLORS`` is no longer set automatically by ``ls`` (:issue:`10080`). Users
+  that set ``.dircolors`` should manually import it using other means.
 
 Deprecations and removed features
 ---------------------------------

@@ -1875,6 +1875,7 @@ complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do eve
 complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
 complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'
 complete -f -c git -n '__fish_git_using_command push' -l force-with-lease -d 'Force update of remote refs, stopping if other\'s changes would be overwritten'
+complete -f -c git -n '__fish_git_using_command push' -l force-if-includes -d 'Force an update only if the tip of the remote-tracking ref has been integrated locally'
 complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream -d 'Add upstream (tracking) reference'
 complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Be verbose'

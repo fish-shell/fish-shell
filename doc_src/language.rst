@@ -1836,7 +1836,13 @@ Configuration files are run in the following order:
 
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
   - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d/``)
-  - Directories for others to ship configuration snippets for their software. Fish searches the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_conf.d`` directory; if not defined, the default value of ``XDG_DATA_DIRS`` is ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``, unless your distribution customized this. These directories are also accessible in ``$__fish_vendor_confdirs``. Note that changing them in a running fish won't do anything as by that point the directories have already been read.
+  - Directories for others to ship configuration snippets for their software:
+
+    - the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable)
+    - a ``fish/vendor_conf.d`` directory in the directories listed in ``$XDG_DATA_DIRS`` (default ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``)
+
+    These directories are also accessible in ``$__fish_vendor_confdirs``.
+    Note that changing that in a running fish won't do anything as by that point the directories have already been read.
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").

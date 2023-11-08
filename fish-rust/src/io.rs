@@ -8,6 +8,7 @@ use crate::fds::{
 };
 use crate::flog::{should_flog, FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
+use crate::nix::isatty;
 use crate::path::path_apply_working_directory;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
@@ -1018,7 +1019,7 @@ impl<'a> IoStreams<'a> {
         }
     }
     pub fn out_is_terminal(&self) -> bool {
-        !self.out_is_redirected && unsafe { libc::isatty(STDOUT_FILENO) == 1 }
+        !self.out_is_redirected && isatty(STDOUT_FILENO)
     }
 }
 

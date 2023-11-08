@@ -7,6 +7,7 @@ use crate::event::{self, EventDescription, EventHandler};
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::io::IoStreams;
+use crate::nix::getpid;
 use crate::parse_tree::NodeRef;
 use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
@@ -148,8 +149,7 @@ fn parse_cmd_opts(
                     }
                     e = EventDescription::CallerExit { caller_id };
                 } else if opt == 'p' && woptarg == "%self" {
-                    // Safety: getpid() is always successful.
-                    let pid = unsafe { libc::getpid() };
+                    let pid: i32 = getpid();
                     e = EventDescription::ProcessExit { pid };
                 } else {
                     let pid = fish_wcstoi(woptarg);

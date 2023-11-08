@@ -15,6 +15,7 @@ use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::ffi;
+use crate::nix::isatty;
 use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
@@ -592,7 +593,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     loop {
         buff.clear();
 
-        let stream_stdin_is_a_tty = unsafe { libc::isatty(streams.stdin_fd) } != 0;
+        let stream_stdin_is_a_tty = isatty(streams.stdin_fd);
         if stream_stdin_is_a_tty && !opts.split_null {
             // Read interactively using reader_readline(). This does not support splitting on null.
             exit_res = read_interactive(

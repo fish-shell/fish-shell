@@ -13,6 +13,7 @@ use crate::event::Event;
 use crate::ffi;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::nix::{geteuid, getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
     path_emit_config_directory_messages, path_get_config, path_get_data, path_make_canonical,
@@ -26,7 +27,7 @@ use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 use std::sync::atomic::Ordering;
 
 use lazy_static::lazy_static;
-use libc::{c_int, STDOUT_FILENO, _IONBF};
+use libc::{c_int, uid_t, STDOUT_FILENO, _IONBF};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::ffi::CStr;
@@ -433,7 +434,7 @@ fn get_hostname_identifier() -> Option<WString> {
 
 /// Set up the USER and HOME variable.
 fn setup_user(vars: &EnvStack) {
-    let uid = unsafe { libc::geteuid() };
+    let uid: uid_t = geteuid();
     let user_var = vars.get_unless_empty(L!("USER"));
 
     let mut userinfo: MaybeUninit<libc::passwd> = MaybeUninit::uninit();
@@ -619,11 +620,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
     // Set $USER, $HOME and $EUID
     // This involves going to passwd and stuff.
-    vars.set_one(
-        L!("EUID"),
-        EnvMode::GLOBAL,
-        unsafe { libc::geteuid() }.to_wstring(),
-    );
+    vars.set_one(L!("EUID"), EnvMode::GLOBAL, geteuid().to_wstring());
     setup_user(vars);
 
     let user_config_dir = path_get_config();
@@ -657,11 +654,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     vars.set_one(L!("FISH_VERSION"), EnvMode::GLOBAL, version);
 
     // Set the $fish_pid variable.
-    vars.set_one(
-        L!("fish_pid"),
-        EnvMode::GLOBAL,
-        unsafe { libc::getpid() }.to_wstring(),
-    );
+    vars.set_one(L!("fish_pid"), EnvMode::GLOBAL, getpid().to_wstring());
 
     // Set the $hostname variable
     let hostname: WString = get_hostname_identifier().unwrap_or("fish".into());
@@ -797,7 +790,7 @@ pub fn misc_init() {
     // If stdout is open on a tty ensure stdio is unbuffered. That's because those functions might
     // be intermixed with `write()` calls and we need to ensure the writes are not reordered. See
     // issue #3748.
-    if unsafe { libc::isatty(STDOUT_FILENO) } != 0 {
+    if isatty(STDOUT_FILENO) {
         let _ = std::io::stdout().flush();
         unsafe { libc::setvbuf(stdout_stream(), std::ptr::null_mut(), _IONBF, 0) };
     }

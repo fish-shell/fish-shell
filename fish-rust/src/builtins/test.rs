@@ -84,8 +84,7 @@ mod test_expressions {
         // Return true if the number is a tty().
         fn isatty(&self, streams: &mut IoStreams) -> bool {
             fn istty(fd: libc::c_int) -> bool {
-                // Safety: isatty cannot crash.
-                unsafe { libc::isatty(fd) > 0 }
+                crate::nix::isatty(fd)
             }
             if self.delta != 0.0 || self.base > i32::MAX as i64 || self.base < i32::MIN as i64 {
                 return false;
@@ -928,8 +927,7 @@ mod test_expressions {
             }
             Token::filetype_G => {
                 // "-G", for check effective group id
-                // Safety: getegid cannot fail.
-                stat_and(arg, |buf| unsafe { libc::getegid() } == buf.gid())
+                stat_and(arg, |buf| crate::nix::getegid() == buf.gid())
             }
             Token::filetype_g => {
                 // "-g", for set-group-id
@@ -946,10 +944,9 @@ mod test_expressions {
             }
             Token::filetype_O => {
                 // "-O", for check effective user id
-                stat_and(
-                    arg,
-                    |buf: std::fs::Metadata| unsafe { libc::geteuid() } == buf.uid(),
-                )
+                stat_and(arg, |buf: std::fs::Metadata| {
+                    crate::nix::geteuid() == buf.uid()
+                })
             }
             Token::filetype_p => {
                 // "-p", for FIFO

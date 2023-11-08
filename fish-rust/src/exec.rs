@@ -30,6 +30,7 @@ use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
 };
+use crate::nix::isatty;
 use crate::null_terminated_array::{
     null_terminated_array_length, AsNullTerminatedArray, OwningNullTerminatedArray,
 };
@@ -54,7 +55,7 @@ use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
 use libc::c_int;
 use libc::{
-    c_char, isatty, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, O_NOCTTY,
+    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, O_NOCTTY,
     O_RDONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
 };
 use std::ffi::CStr;
@@ -1383,7 +1384,7 @@ fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
     // Compare run counts, so we only warn once.
     let current_run_count = reader_run_count();
     let last_exec_run_count = &mut parser.libdata_mut().pods.last_exec_run_counter;
-    if unsafe { isatty(STDIN_FILENO) } != 0 && current_run_count - 1 != *last_exec_run_count {
+    if isatty(STDIN_FILENO) && current_run_count - 1 != *last_exec_run_count {
         print_exit_warning_for_jobs(&bgs);
         *last_exec_run_count = current_run_count;
         false

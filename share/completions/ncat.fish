@@ -8,6 +8,7 @@ complete -c ncat -s 6 -d "IPv6 only"
 complete -c ncat -s U -l unixsock -d "Use Unix domain sockets"
 complete -c ncat -s u -l udp -d "Use UDP"
 complete -c ncat -l sctp -d "Use SCTP"
+complete -c ncat -l vsock -d "Use AF_VSOCK sockets"
 
 # CONNECT MODE OPTIONS
 complete -c ncat -s g -x -d "Loose source routing"
@@ -35,12 +36,14 @@ function __fish_complete_openssl_ciphers
     end
 end
 complete -c ncat -l ssl-ciphers -x -a "(__fish_complete_list : __fish_complete_openssl_ciphers)" -d "Specify SSL ciphersuites"
+complete -c ncat -l ssl-servername -x -a "(__fish_print_hostnames)" -d "Request distinct server name"
 complete -c ncat -l ssl-alpn -x -d "Specify ALPN protocol list"
 
 # PROXY OPTIONS
 complete -c ncat -l proxy -x -d "Specify proxy address"
-complete -c ncat -l proxy-type -x -d "Specify proxy protocol"
+complete -c ncat -l proxy-type -x -a "http socks4 socks5" -d "Specify proxy protocol"
 complete -c ncat -l proxy-auth -x -d "Specify proxy credentials"
+complete -c ncat -l proxy-dns -x -a "local remote both none" -d "Specify where to resolve proxy destination"
 
 # COMMAND EXECUTION OPTIONS
 complete -c ncat -s e -l exec -r -d "Execute command"
@@ -67,8 +70,10 @@ complete -c ncat -s v -l verbose -d "Be verbose"
 # MISC OPTIONS
 complete -c ncat -s C -l crlf -d "Use CRLF as EOL"
 complete -c ncat -s h -l help -d "Help screen"
-complete -c ncat -l -recv-only -d "Only receive data"
+complete -c ncat -l recv-only -d "Only receive data"
 complete -c ncat -l send-only -d "Only send data"
 complete -c ncat -l no-shutdown -d "Do not shutdown into half-duplex mode"
+complete -c ncat -s n -l nodns -d "Do not resolve hostnames"
 complete -c ncat -s t -l telnet -d "Answer Telnet negotiations"
 complete -c ncat -l version -d "Display version"
+complete -c ncat -s z -d "Report connection status only"

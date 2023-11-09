@@ -731,7 +731,7 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
     STATUS_CMD_OK
 }
 
-fn filter_path(opts: &Options, path: &wstr) -> bool {
+fn filter_path(opts: &Options, path: &wstr, uid: Option<u32>, gid: Option<u32>) -> bool {
     // TODO: Add moar stuff:
     // fifos, sockets, size greater than zero, setuid, ...
     // Nothing to check, file existence is checked elsewhere.
@@ -791,7 +791,8 @@ fn filter_path(opts: &Options, path: &wstr) -> bool {
         }
         // access returns 0 on success,
         // -1 on failure. Yes, C can't even keep its bools straight.
-        if waccess(path, amode) != 0 {
+        // Skip this if we don't have a mode to check - the stat can do existence too.
+        if amode != 0 && waccess(path, amode) != 0 {
             return false;
         }
 
@@ -809,9 +810,9 @@ fn filter_path(opts: &Options, path: &wstr) -> bool {
                 return false;
             } else if perm.contains(PermFlags::SGID) && (md.mode() as mode_t & S_ISGID) == 0 {
                 return false;
-            } else if perm.contains(PermFlags::USER) && geteuid() != md.uid() {
+            } else if perm.contains(PermFlags::USER) && uid != Some(md.uid()) {
                 return false;
-            } else if perm.contains(PermFlags::GROUP) && getegid() != md.gid() {
+            } else if perm.contains(PermFlags::GROUP) && gid != Some(md.gid()) {
                 return false;
             }
         }
@@ -847,8 +848,22 @@ fn path_filter_maybe_is(
         true => SplitBehavior::Null,
         false => SplitBehavior::InferNull,
     });
+
+    // If we're looking for the owner/group, get our euid/egid here once.
+    let uid = if opts.perms.unwrap_or_default().contains(PermFlags::USER) {
+        Some(geteuid())
+    } else {
+        None
+    };
+    let gid = if opts.perms.unwrap_or_default().contains(PermFlags::GROUP) {
+        Some(getegid())
+    } else {
+        None
+    };
+
     for (arg, _) in arguments.filter(|(f, _)| {
-        (opts.perms.is_none() && opts.types.is_none()) || (filter_path(&opts, f) != opts.invert)
+        (opts.perms.is_none() && opts.types.is_none())
+            || (filter_path(&opts, f, uid, gid) != opts.invert)
     }) {
         // If we don't have filters, check if it exists.
         if opts.perms.is_none() && opts.types.is_none() {

@@ -21,7 +21,7 @@ function __dnf_list_available_packages
         # This schema is bad, there is only a "pkg" field with the full
         #    packagename-version-release.fedorarelease.architecture
         # tuple. We are only interested in the packagename.
-        set results (sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE \"$tok%\"" 2>/dev/null |
+        set results (sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE '$tok%'" 2>/dev/null |
             string replace -r -- '-[^-]*-[^-]*$' '')
     else
         # In some cases dnf will ask for input (e.g. to accept gpg keys).

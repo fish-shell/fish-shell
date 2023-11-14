@@ -59,15 +59,24 @@ __fish_apt_option list -l all-versions -d 'Show all versions of any package'
 # Search
 __fish_apt_subcommand search -r -d 'Search for packages'
 
-# Search
+# Show
 __fish_apt_subcommand show -r -d 'Show package information'
+
+# Showsrc
+__fish_apt_subcommand showsrc -r -d 'Show source package information'
+
+# Source
+__fish_apt_subcommand source -r -d 'Download source package'
 
 # Install
 __fish_apt_subcommand install -r -d 'Install packages'
 __fish_apt_option install -l reinstall -d 'Reinstall package'
 
+# Reinstall
+__fish_apt_subcommand reinstall -r -d 'Reinstall packages'
+
 # Remove
-__fish_apt_subcommand remove -r -d 'Remove packages'
+__fish_apt_subcommand remove -x -d 'Remove packages'
 
 # Edit sources
 __fish_apt_subcommand edit-sources -d 'Edit sources list'
@@ -80,6 +89,7 @@ __fish_apt_subcommand upgrade -r -d 'Upgrade packages'
 
 # Full Upgrade
 __fish_apt_subcommand full-upgrade -r -d 'Upgrade packages, removing others when needed'
+__fish_apt_subcommand dist-upgrade -r -d 'Upgrade packages, removing others when needed'
 
 # Purge
 __fish_apt_subcommand purge -x -d 'Remove packages and delete their config files'
@@ -90,6 +100,15 @@ __fish_apt_subcommand changelog -r -d 'Download and display package changelog'
 # Autoremove
 __fish_apt_subcommand autoremove -d 'Remove packages no longer needed as dependencies'
 
+# Autoremove
+__fish_apt_subcommand autopurge -d 'Remove packages no longer needed as dependencies and delete their config files'
+
+# Clean
+__fish_apt_subcommand clean -d 'Remove downloaded packages from cache'
+
+# Autoclean
+__fish_apt_subcommand autoclean -d 'Remove obsolete packages from cache'
+
 # Policy
 __fish_apt_subcommand policy -x -d 'Display source or package priorities'
 
@@ -98,5 +117,14 @@ __fish_apt_subcommand depends -r -d 'List package dependencies'
 
 # Rdepends
 __fish_apt_subcommand rdepends -r -d 'List package reverse dependencies'
+
+# Download
+__fish_apt_subcommand download -x -d 'Download packages'
+
+# Build-dep
+__fish_apt_subcommand build-dep -x -d 'Install packages needed to build the given package'
+
+# Help
+__fish_apt_subcommand help -d 'Print help page'
 
 functions -e __fish_apt_subcommand __fish_apt_option

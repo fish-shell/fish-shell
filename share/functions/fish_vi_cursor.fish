@@ -1,6 +1,6 @@
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
-    # If we're not interactive, there is effectively no bind mode.
-    if not status is-interactive
+    # if stdin is not a tty, there is effectively no bind mode.
+    if not test -t 0
         return
     end
 

@@ -1,5 +1,6 @@
 use crate::env::environment::Environment;
 use std::cmp::Ordering;
+use std::fs::Metadata;
 use std::os::unix::prelude::{FileTypeExt, MetadataExt};
 use std::time::SystemTime;
 
@@ -739,6 +740,9 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<u32>, gid: Option<u32>) 
         return true;
     }
 
+    // We keep the metadata around for other checks if we have it.
+    let mut metadata: Option<Metadata> = None;
+
     if let Some(t) = opts.types {
         let mut type_ok = false;
         if t.contains(TypeFlags::LINK) {
@@ -765,6 +769,7 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<u32>, gid: Option<u32>) 
         if !type_ok {
             return false;
         }
+        metadata = Some(md);
     }
 
     if let Some(perm) = opts.perms {
@@ -792,17 +797,23 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<u32>, gid: Option<u32>) 
         // access returns 0 on success,
         // -1 on failure. Yes, C can't even keep its bools straight.
         // Skip this if we don't have a mode to check - the stat can do existence too.
+        // It's tempting to check metadata here if we have it,
+        // e.g. see if any read-bit is set for READ.
+        // That won't work for root.
         if amode != 0 && waccess(path, amode) != 0 {
             return false;
         }
 
         // Permissions that require special handling
         if perm.is_special() {
-            let Ok(md) = wstat(path) else {
-                // Does not exist, even though we just checked we can access it
-                // likely some kind of race condition
-                // We might want to warn the user about this?
-                return false;
+            let md = match metadata {
+                Some(n) => n,
+                _ => {
+                    let Ok(md) = wstat(path) else {
+                        return false;
+                    };
+                    md
+                }
             };
 
             #[allow(clippy::if_same_then_else)]

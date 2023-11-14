@@ -50,19 +50,20 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added or improved completions for:
-  - ``ar`` (:issue:`9719`)
-- ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
-- ``qdbus`` completions now properly handle tags (:issue:`9776`).
-- ``age`` (:issue:`9813`).
-- ``age-keygen`` (:issue:`9813`).
-- ``curl`` (:issue:`9863`).
-- ``krita`` (:issue:`9903`).
-- ``blender`` (:issue:`9905`).
-- ``gimp`` (:issue:`9904`).
-- ``horcrux`` (:issue:`9922`).
-- ``java_home`` (:issue:`9998`).
-- ``crc`` (:issue:`10034`).
-- ``oc`` (:issue:`10034`).
+ - ``ar`` (:issue:`9719`)
+ - ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
+ - ``qdbus`` completions now properly handle tags (:issue:`9776`).
+ - ``age`` (:issue:`9813`).
+ - ``age-keygen`` (:issue:`9813`).
+ - ``curl`` (:issue:`9863`).
+ - ``krita`` (:issue:`9903`).
+ - ``blender`` (:issue:`9905`).
+ - ``gimp`` (:issue:`9904`).
+ - ``horcrux`` (:issue:`9922`).
+ - ``java_home`` (:issue:`9998`).
+ - ``crc`` (:issue:`10034`).
+ - ``oc`` (:issue:`10034`).
+ - ``apt``
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

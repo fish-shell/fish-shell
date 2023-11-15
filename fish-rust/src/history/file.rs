@@ -304,8 +304,6 @@ fn unescape_yaml_fish_2_0(s: &mut Vec<u8>) {
         // character.
         cursor = backslash + 1;
     }
-
-    debug_assert!(std::str::from_utf8(s).is_ok());
 }
 
 /// Read one line, stripping off any newline, returning the number of bytes consumed.

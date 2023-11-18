@@ -774,7 +774,7 @@ pub fn fire_delayed(parser: &Parser) {
     for event in to_send {
         if event.is_blocked(parser) {
             if blocked_events.is_none() {
-                blocked_events = Some(BLOCKED_EVENTS.lock().expect("Mutex posioned"));
+                blocked_events = Some(BLOCKED_EVENTS.lock().expect("Mutex poisoned"));
             }
             blocked_events.as_mut().unwrap().push(event);
         } else {

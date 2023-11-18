@@ -28,7 +28,7 @@ The following ``argparse`` options are available:
     The option being defined will only allow the long flag name to be used. The short flag name must still be defined (i.e., **--short** must be specified) but it cannot be used when parsing arguments using this option specification.
 
 **-o** or **--optional-val**
-    Tthe option being defined can take a value, but it is optional rather than required. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will zero elements if no value was given with the option else it will have exactly one element.
+    The option being defined can take a value, but it is optional rather than required. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will zero elements if no value was given with the option else it will have exactly one element.
 
 **-r** or **--required-val**
     The option being defined requires a value. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will have exactly one element.

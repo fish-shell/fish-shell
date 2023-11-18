@@ -1416,7 +1416,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             let pid = unsafe {
                 libc::waitpid(proc.pid(), &mut statusv, WNOHANG | WUNTRACED | WCONTINUED)
             };
-            assert!(pid <= 0 || pid == proc.pid(), "Unexpcted waitpid() return");
+            assert!(pid <= 0 || pid == proc.pid(), "Unexpected waitpid() return");
             if pid <= 0 {
                 continue;
             }

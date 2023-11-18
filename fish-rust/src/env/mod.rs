@@ -9,7 +9,7 @@ pub use environment::*;
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 pub use var::*;
 
-/// Limit `read` to 100 MiB (bytes, not wide chars) by default. This can be overriden with the
+/// Limit `read` to 100 MiB (bytes, not wide chars) by default. This can be overridden with the
 /// `fish_read_limit` variable.
 pub const DEFAULT_READ_BYTE_LIMIT: usize = 100 * 1024 * 1024;
 

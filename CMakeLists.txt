@@ -121,7 +121,6 @@ set(FISH_SRCS
     src/highlight.cpp
     src/input_common.cpp
     src/input.cpp
-    src/null_terminated_array.cpp
     src/output.cpp
     src/pager.cpp
     src/parse_util.cpp

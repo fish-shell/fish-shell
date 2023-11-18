@@ -80,7 +80,6 @@
 #include "kill.rs.h"
 #include "lru.h"
 #include "maybe.h"
-#include "null_terminated_array.h"
 #include "operation_context.h"
 #include "pager.h"
 #include "parse_constants.h"

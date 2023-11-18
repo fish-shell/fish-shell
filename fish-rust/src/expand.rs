@@ -1347,7 +1347,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                             self.errors,
                             start,
                             end,
-                            "command substitutions not allowed here"
+                            "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
                         );
                     }
                     return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());

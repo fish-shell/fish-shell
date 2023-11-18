@@ -25,7 +25,7 @@ FOO=BAR (true one)
 # more things
 ' | $fish 2>| string replace -r '(.*)' '<$1>'
 
-# CHECK: <fish: command substitutions not allowed here>
+# CHECK: <fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...>
 # CHECK: <FOO=BAR (true one)>
 # CHECK: <        ^~~~~~~~~^>
 

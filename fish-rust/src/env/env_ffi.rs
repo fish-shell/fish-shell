@@ -2,11 +2,9 @@ use super::environment::{self, EnvDyn, EnvNull, EnvStack, EnvStackRef, Environme
 use super::var::{ElectricVar, EnvVar, EnvVarFlags, Statuses};
 use crate::env::EnvMode;
 use crate::ffi::{wchar_t, wcharz_t, wcstring_list_ffi_t};
-use crate::null_terminated_array::OwningNullTerminatedArrayRefFFI;
 use crate::signal::Signal;
 use crate::wchar_ffi::WCharToFFI;
 use crate::wchar_ffi::{AsWstr, WCharFromFFI};
-use core::ffi::c_char;
 use cxx::{CxxVector, CxxWString, UniquePtr};
 use lazy_static::lazy_static;
 use std::ffi::c_int;
@@ -148,10 +146,6 @@ mod env_ffi {
 
         fn push(&self, new_scope: bool);
         fn pop(&self);
-
-        // Returns a Box<OwningNullTerminatedArrayRefFFI>.into_raw() cast to a void*.
-        // This is because we can't use the same C++ bindings to a Rust type from two different bridges.
-        fn export_array(&self) -> *mut c_char;
 
         fn snapshot(&self) -> Box<EnvDynFFI>;
 
@@ -339,13 +333,6 @@ impl EnvStackRefFFI {
     fn remove(&self, name: &CxxWString, flags: u16) -> EnvStackSetResult {
         let mode = EnvMode::from_bits(flags).expect("Invalid mode bits");
         self.0.remove(name.as_wstr(), mode)
-    }
-
-    fn export_array(&self) -> *mut c_char {
-        Box::into_raw(Box::new(OwningNullTerminatedArrayRefFFI(
-            self.0.export_array(),
-        )))
-        .cast()
     }
 
     fn snapshot(&self) -> Box<EnvDynFFI> {

@@ -88,7 +88,6 @@ fn main() {
         "fish-rust/src/io.rs",
         "fish-rust/src/job_group.rs",
         "fish-rust/src/kill.rs",
-        "fish-rust/src/null_terminated_array.rs",
         "fish-rust/src/operation_context.rs",
         "fish-rust/src/output.rs",
         "fish-rust/src/parse_constants.rs",

@@ -101,7 +101,7 @@ struct CachedLineno {
 }
 
 impl ParseExecutionContext {
-    pub fn swap(left: &Self, right: Box<Self>) -> Box<Self> {
+    pub fn swap(left: &Self, right: Self) -> Self {
         left.pstree.swap(&right.pstree);
         left.cancel_signal.swap(&right.cancel_signal);
         left.executing_job_node.swap(&right.executing_job_node);

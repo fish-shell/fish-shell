@@ -308,7 +308,7 @@ pub struct Parser {
     base: SharedFromThisBase<Parser>,
 
     /// The current execution context.
-    execution_context: RefCell<Option<Box<ParseExecutionContext>>>,
+    execution_context: RefCell<Option<ParseExecutionContext>>,
 
     /// The jobs associated with this parser.
     job_list: RefCell<JobList>,
@@ -381,7 +381,7 @@ impl Parser {
         result
     }
 
-    fn execution_context(&self) -> Ref<'_, Option<Box<ParseExecutionContext>>> {
+    fn execution_context(&self) -> Ref<'_, Option<ParseExecutionContext>> {
         self.execution_context.borrow()
     }
 
@@ -579,10 +579,7 @@ impl Parser {
                     ))
                 }
             },
-            Some(Box::new(ParseExecutionContext::new(
-                ps.clone(),
-                block_io.clone(),
-            ))),
+            Some(ParseExecutionContext::new(ps.clone(), block_io.clone())),
         );
 
         // Check the exec count so we know if anything got executed.

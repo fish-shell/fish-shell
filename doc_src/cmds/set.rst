@@ -63,7 +63,7 @@ These options modify how variables operate:
     Causes the specified shell variable to NOT be exported to child processes.
 
 **--path**
-    Treat specified variable as a :ref:`path variable <variables-path>`; variable will be split on colons (``:``) and will be displayed joined by colons colons when quoted (``echo "$PATH"``) or exported.
+    Treat specified variable as a :ref:`path variable <variables-path>`; variable will be split on colons (``:``) and will be displayed joined by colons when quoted (``echo "$PATH"``) or exported.
 
 **--unpath**
      Causes variable to no longer be treated as a :ref:`path variable <variables-path>`.

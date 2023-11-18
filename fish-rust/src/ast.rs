@@ -770,7 +770,7 @@ macro_rules! implement_acceptor_for_branch {
     }
 }
 
-/// Visit the given fields in order, returning whether the visitation succeded.
+/// Visit the given fields in order, returning whether the visitation succeeded.
 macro_rules! visitor_accept_field {
     (
         $Self:ident,

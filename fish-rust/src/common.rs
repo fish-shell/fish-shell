@@ -1249,24 +1249,23 @@ pub fn should_suppress_stderr_for_tests() -> bool {
 }
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
-#[widestrs]
 pub fn format_size(mut sz: i64) -> WString {
     let mut result = WString::new();
-    const sz_names: [&wstr; 8] = ["kB"L, "MB"L, "GB"L, "TB"L, "PB"L, "EB"L, "ZB"L, "YB"L];
+    const sz_names: [&str; 8] = ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
     if sz < 0 {
-        result += "unknown"L;
+        result += "unknown";
     } else if sz == 0 {
         result += wgettext!("empty");
     } else if sz < 1024 {
-        result += &sprintf!("%lldB"L, sz)[..];
+        result += &sprintf!("%lldB", sz)[..];
     } else {
         for (i, sz_name) in sz_names.iter().enumerate() {
             if sz < (1024 * 1024) || i == sz_names.len() - 1 {
                 let isz = sz / 1024;
                 if isz > 9 {
-                    result += &sprintf!("%ld%ls"L, isz, *sz_name)[..];
+                    result += &sprintf!("%ld%ls", isz, *sz_name)[..];
                 } else {
-                    result += &sprintf!("%.1f%ls"L, sz as f64 / 1024.0, *sz_name)[..];
+                    result += &sprintf!("%.1f%ls", sz as f64 / 1024.0, *sz_name)[..];
                 }
                 break;
             }

@@ -664,7 +664,6 @@ impl IoChain {
 
     /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
     /// \return true on success, false on error, in which case an error will have been printed.
-    #[widestrs]
     pub fn append_from_specs(&mut self, specs: &RedirectionSpecList, pwd: &wstr) -> bool {
         let mut have_error = false;
         for spec in specs {
@@ -703,15 +702,11 @@ impl IoChain {
                                             if !md.is_dir() {
                                                 FLOGF!(
                                                     warning,
-                                                    "Path '%ls' is not a directory"L,
+                                                    "Path '%ls' is not a directory",
                                                     next
                                                 );
                                             } else {
-                                                FLOGF!(
-                                                    warning,
-                                                    "Path '%ls' does not exist"L,
-                                                    dname
-                                                );
+                                                FLOGF!(warning, "Path '%ls' does not exist", dname);
                                             }
                                             break;
                                         }

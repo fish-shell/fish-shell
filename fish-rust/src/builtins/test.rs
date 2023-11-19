@@ -4,6 +4,7 @@ use crate::common;
 mod test_expressions {
     use super::*;
 
+    use crate::nix::isatty;
     use crate::wutil::{
         file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,
         Error, Options,
@@ -83,10 +84,6 @@ mod test_expressions {
 
         // Return true if the number is a tty().
         fn isatty(&self, streams: &mut IoStreams) -> bool {
-            fn istty(fd: libc::c_int) -> bool {
-                // Safety: isatty cannot crash.
-                unsafe { libc::isatty(fd) > 0 }
-            }
             if self.delta != 0.0 || self.base > i32::MAX as i64 || self.base < i32::MIN as i64 {
                 return false;
             }
@@ -94,14 +91,14 @@ mod test_expressions {
             if bint == 0 {
                 match streams.stdin_fd {
                     -1 => false,
-                    fd => istty(fd),
+                    fd => isatty(fd),
                 }
             } else if bint == 1 {
-                !streams.out_is_redirected && istty(libc::STDOUT_FILENO)
+                !streams.out_is_redirected && isatty(libc::STDOUT_FILENO)
             } else if bint == 2 {
-                !streams.err_is_redirected && istty(libc::STDERR_FILENO)
+                !streams.err_is_redirected && isatty(libc::STDERR_FILENO)
             } else {
-                istty(bint)
+                isatty(bint)
             }
         }
     }
@@ -928,8 +925,7 @@ mod test_expressions {
             }
             Token::filetype_G => {
                 // "-G", for check effective group id
-                // Safety: getegid cannot fail.
-                stat_and(arg, |buf| unsafe { libc::getegid() } == buf.gid())
+                stat_and(arg, |buf| crate::nix::getegid() == buf.gid())
             }
             Token::filetype_g => {
                 // "-g", for set-group-id
@@ -946,10 +942,9 @@ mod test_expressions {
             }
             Token::filetype_O => {
                 // "-O", for check effective user id
-                stat_and(
-                    arg,
-                    |buf: std::fs::Metadata| unsafe { libc::geteuid() } == buf.uid(),
-                )
+                stat_and(arg, |buf: std::fs::Metadata| {
+                    crate::nix::geteuid() == buf.uid()
+                })
             }
             Token::filetype_p => {
                 // "-p", for FIFO

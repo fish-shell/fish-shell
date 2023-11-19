@@ -2,6 +2,7 @@ use std::num::NonZeroI32;
 
 use crate::common::{exit_without_destructors, restore_term_foreground_process_group_for_exit};
 use crate::event::{enqueue_signal, is_signal_observed};
+use crate::nix::getpid;
 use crate::reader::{reader_handle_sigint, reader_sighup};
 use crate::termsize::TermsizeContainer;
 use crate::topic_monitor::{generation_t, topic_monitor_principal, topic_t, GenerationsList};
@@ -77,9 +78,7 @@ static MAIN_PID: AtomicI32 = AtomicI32::new(0);
 /// and re-raise the signal. \return whether we re-raised the signal.
 fn reraise_if_forked_child(sig: i32) -> bool {
     // Don't use is_forked_child: it relies on atfork handlers which may have not yet run.
-    // Safety: getpid() is async-signal-safe.
-    let pid = unsafe { libc::getpid() };
-    if pid == MAIN_PID.load(Ordering::Relaxed) {
+    if getpid() == MAIN_PID.load(Ordering::Relaxed) {
         return false;
     }
 
@@ -250,7 +249,7 @@ fn set_interactive_handlers() {
 /// Set signal handlers to fish default handlers.
 pub fn signal_set_handlers(interactive: bool) {
     // Mark our main pid.
-    MAIN_PID.store(unsafe { libc::getpid() }, Ordering::Relaxed);
+    MAIN_PID.store(getpid(), Ordering::Relaxed);
 
     use libc::SIG_IGN;
     let nullptr = std::ptr::null_mut();
@@ -294,7 +293,7 @@ pub fn signal_set_handlers(interactive: bool) {
         // The workaround is to send ourselves a SIGCHLD signal now, to force the allocation to happen.
         // As no child is associated with this signal, it is OK if it is dropped, so long as the
         // allocation happens.
-        unsafe { libc::kill(libc::getpid(), libc::SIGCHLD) };
+        unsafe { libc::kill(getpid(), libc::SIGCHLD) };
     }
 }
 

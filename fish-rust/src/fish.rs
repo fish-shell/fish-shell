@@ -39,6 +39,7 @@ use crate::{
     function, future_feature_flags as features, history,
     history::start_private_mode,
     io::IoChain,
+    nix::{getpid, isatty},
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
     parse_util::parse_util_detect_errors_in_ast,
@@ -472,10 +473,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
     // --interactive options also force interactive mode.
-    if opts.batch_cmds.is_empty()
-        && optind == args.len()
-        && unsafe { libc::isatty(libc::STDIN_FILENO) != 0 }
-    {
+    if opts.batch_cmds.is_empty() && optind == args.len() && isatty(libc::STDIN_FILENO) {
         set_interactive_session(true);
     }
 
@@ -708,7 +706,7 @@ fn main() -> i32 {
         parser.libdata_mut().pods.exit_current_script = false;
     } else if my_optind == args.len() {
         // Implicitly interactive mode.
-        if opts.no_exec && unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
+        if opts.no_exec && isatty(libc::STDIN_FILENO) {
             FLOG!(
                 error,
                 "no-execute mode enabled and no script given. Exiting"
@@ -776,10 +774,7 @@ fn main() -> i32 {
         parser.get_last_status()
     };
 
-    event::fire(
-        parser,
-        Event::process_exit(unsafe { libc::getpid() }, exit_status),
-    );
+    event::fire(parser, Event::process_exit(getpid(), exit_status));
 
     // Trigger any exit handlers.
     event::fire_generic(

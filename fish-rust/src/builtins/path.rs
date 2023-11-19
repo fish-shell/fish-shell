@@ -4,6 +4,7 @@ use std::os::unix::prelude::{FileTypeExt, MetadataExt};
 use std::time::SystemTime;
 
 use super::prelude::*;
+use crate::nix::{getegid, geteuid};
 use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
 use crate::wcstringutil::split_string_tok;
@@ -12,7 +13,7 @@ use crate::wutil::{
     INVALID_FILE_ID,
 };
 use bitflags::bitflags;
-use libc::{getegid, geteuid, mode_t, uid_t, F_OK, PATH_MAX, R_OK, S_ISGID, S_ISUID, W_OK, X_OK};
+use libc::{mode_t, F_OK, PATH_MAX, R_OK, S_ISGID, S_ISUID, W_OK, X_OK};
 
 use super::shared::BuiltinCmd;
 
@@ -808,11 +809,9 @@ fn filter_path(opts: &Options, path: &wstr) -> bool {
                 return false;
             } else if perm.contains(PermFlags::SGID) && (md.mode() as mode_t & S_ISGID) == 0 {
                 return false;
-            } else if perm.contains(PermFlags::USER) && (unsafe { geteuid() } != md.uid() as uid_t)
-            {
+            } else if perm.contains(PermFlags::USER) && geteuid() != md.uid() {
                 return false;
-            } else if perm.contains(PermFlags::GROUP) && (unsafe { getegid() } != md.gid() as uid_t)
-            {
+            } else if perm.contains(PermFlags::GROUP) && getegid() != md.gid() {
                 return false;
             }
         }

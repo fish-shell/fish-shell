@@ -6,6 +6,7 @@ use crate::complete::{complete_add_wrapper, complete_remove_wrapper, CompletionR
 use crate::ffi;
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
+use crate::nix::isatty;
 use crate::parse_constants::ParseErrorList;
 use crate::parse_util::parse_util_detect_errors_in_argument_list;
 use crate::parse_util::{parse_util_detect_errors, parse_util_token_extent};
@@ -201,7 +202,7 @@ fn builtin_complete_print(cmd: &wstr, streams: &mut IoStreams, parser: &Parser) 
     let repr = complete_print(cmd);
 
     // colorize if interactive
-    if !streams.out_is_redirected && unsafe { libc::isatty(STDOUT_FILENO) } != 0 {
+    if !streams.out_is_redirected && isatty(STDOUT_FILENO) {
         let mut colors = vec![];
         highlight_shell(&repr, &mut colors, &parser.context(), false, None);
         streams

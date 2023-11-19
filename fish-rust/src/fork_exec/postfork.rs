@@ -3,6 +3,7 @@
 // That means no locking, no allocating, no freeing memory, etc!
 use super::flog_safe::FLOG_SAFE;
 use crate::common::exit_without_destructors;
+use crate::nix::getpid;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use libc::{c_char, c_int, pid_t};
@@ -189,7 +190,7 @@ pub fn child_setup_process(
         unsafe {
             libc::signal(libc::SIGTTIN, libc::SIG_IGN);
             libc::signal(libc::SIGTTOU, libc::SIG_IGN);
-            let _ = libc::tcsetpgrp(libc::STDIN_FILENO, libc::getpid());
+            let _ = libc::tcsetpgrp(libc::STDIN_FILENO, getpid());
         }
     }
     if let Some(sigmask) = sigmask {

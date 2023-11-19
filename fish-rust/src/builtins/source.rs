@@ -3,6 +3,7 @@ use crate::{
     fds::{wopen_cloexec, AutoCloseFd},
     ffi::reader_read_ffi,
     io::IoChain,
+    nix::isatty,
     parser::Block,
 };
 use libc::{c_int, O_RDONLY, S_IFMT, S_IFREG};
@@ -41,7 +42,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             return STATUS_CMD_ERROR;
         }
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
-        if argc == optind && unsafe { libc::isatty(streams.stdin_fd) } != 0 {
+        if argc == optind && isatty(streams.stdin_fd) {
             // Don't implicitly read from the terminal.
             return STATUS_CMD_ERROR;
         }

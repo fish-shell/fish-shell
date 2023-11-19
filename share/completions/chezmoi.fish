@@ -1,1 +1,0 @@
-chezmoi completion fish | source

@@ -664,6 +664,7 @@ impl IoChain {
 
     /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
     /// \return true on success, false on error, in which case an error will have been printed.
+    #[allow(clippy::collapsible_else_if)]
     pub fn append_from_specs(&mut self, specs: &RedirectionSpecList, pwd: &wstr) -> bool {
         let mut have_error = false;
         for spec in specs {
@@ -679,7 +680,7 @@ impl IoChain {
                     }
                 }
                 _ => {
-                    // We have a path-based redireciton. Resolve it to a file.
+                    // We have a path-based redirection. Resolve it to a file.
                     // Mark it as CLO_EXEC because we don't want it to be open in any child.
                     let path = path_apply_working_directory(&spec.target, pwd);
                     let oflags = spec.oflags();

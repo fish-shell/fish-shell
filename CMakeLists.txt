@@ -128,7 +128,6 @@ set(FISH_SRCS
     src/reader.cpp
     src/rustffi.cpp
     src/screen.cpp
-    src/utf8.cpp
     src/wcstringutil.cpp
     src/wgetopt.cpp
     src/wutil.cpp

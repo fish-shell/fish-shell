@@ -40,7 +40,6 @@
 #include "fd_readable_set.rs.h"
 #include "flog.h"
 #include "path.h"
-#include "utf8.h"
 #include "util.h"  // IWYU pragma: keep
 #include "wcstringutil.h"
 #include "wutil.h"

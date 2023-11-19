@@ -231,18 +231,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 ----
 
-**License for UTF8**
-
-``fish`` also contains small amounts of code under the ISC license, namely the UTF-8 conversion functions. This code is copyright © 2007 Alexey Vatchenko \<av@bsdua.org>.
-
-The ISC license agreement follows.
-
-Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-----
-
 **License for flock**
 
 ``fish`` also contains small amounts of code from NetBSD, namely the ``flock`` fallback function. This code is copyright 2001 The NetBSD Foundation, Inc., and derived from software contributed to The NetBSD Foundation by Todd Vierling.

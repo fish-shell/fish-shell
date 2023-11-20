@@ -19,6 +19,14 @@ function fish_config --description "Launch fish's web based configuration"
         set -lx __fish_bin_dir $__fish_bin_dir
         if set -l python (__fish_anypython)
             $python "$__fish_data_dir/tools/web_config/webconfig.py" $argv
+
+            # If the execution of 'webconfig.py' fails, display python location and return.
+            if test $status -ne 0
+                echo "Please check if Python has been installed successfully."
+                echo "You can find the location of Python by executing the 'command -s $python' command."
+                return 1
+            end
+
         else
             echo (set_color $fish_color_error)Cannot launch the web configuration tool:(set_color normal)
             echo (set_color -o)"fish_config browse"(set_color normal) requires Python.

@@ -82,6 +82,11 @@ def is_wsl():
     return False
 
 
+def is_windows():
+    """Return whether we are running under the Windows"""
+    return sys.platform.startswith("win")
+
+
 def is_sailfish_os():
     """Return whether we are running on Sailfish OS"""
     if "linux" in platform.system().lower() and os.access(
@@ -583,7 +588,8 @@ def get_special_ansi_escapes():
                     val = curses.tparm(key)
                 if val:
                     val = val.decode("utf-8")
-                return val
+                # Use an empty string instead of None.
+                return "" if val is None else val
 
             # Just a few for now
             g_special_escapes_dict["exit_attribute_mode"] = get_tparm("sgr0")
@@ -1583,9 +1589,13 @@ redirect_template_html = """
 # find fish
 fish_bin_dir = os.environ.get("__fish_bin_dir")
 fish_bin_path = None
+
+# only need the '.exe' extension on Windows
+fish_bin_name = "fish.exe" if is_windows() else "fish"
+
 if not fish_bin_dir:
     print("The $__fish_bin_dir environment variable is not set. " "Looking in $PATH...")
-    fish_bin_path = find_executable("fish")
+    fish_bin_path = find_executable(fish_bin_name)
     if not fish_bin_path:
         print("fish could not be found. Is fish installed correctly?")
         sys.exit(-1)
@@ -1593,7 +1603,7 @@ if not fish_bin_dir:
         print("fish found at '%s'" % fish_bin_path)
 
 else:
-    fish_bin_path = os.path.join(fish_bin_dir, "fish")
+    fish_bin_path = os.path.join(fish_bin_dir, fish_bin_name)
 
 if not os.access(fish_bin_path, os.X_OK):
     print(
@@ -1664,14 +1674,27 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
 # CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
-f = tempfile.NamedTemporaryFile(prefix="web_config", suffix=".html", mode="w")
+f = tempfile.NamedTemporaryFile(
+    prefix="web_config",
+    suffix=".html",
+    mode="w",
+    delete=True,
+    # If on Windows, the file needs to be closed after writing, otherwise, the browser won't be able to open it."
+    delete_on_close=not is_windows(),
+)
 
 f.write(redirect_template_html % (url, url))
 f.flush()
 
+if is_windows():
+    f.close()
+
 # Open temporary file as URL
 # Use open on macOS >= 10.12.5 to work around #4035.
 fileurl = "file://" + f.name
+
+if is_windows():
+    fileurl = fileurl.replace("\\", "/")
 
 esc = get_special_ansi_escapes()
 print(
@@ -1717,13 +1740,55 @@ httpd.daemon_threads = True
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()
-try:
+
+
+def create_socket(start_port, end_port):
+    """Attempt to create a socket from a range of ports."""
+    for port in range(start_port, end_port + 1):
+        try:
+            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sck.bind(("localhost", port))
+            sck.listen()
+            return (sck, port)
+        except socket.error:
+            pass
+    print("Unable to find an open port between {} and {}.".format(start_port, end_port))
+    sys.exit(-1)
+
+
+def capture_enter(port):
+    """Read keyboard events and establish a socket connection when pressing the Enter."""
+    import msvcrt
+
     while True:
-        ready_read = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
-        if ready_read[0][0] < 1:
+        if msvcrt.kbhit():
+            key = msvcrt.getch().decode()
+            if key == "\r" or key == "\n":
+                break
+    sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sck.connect(("localhost", port))
+
+
+def get_windows_signal():
+    """Using socket as a replacement for stdin on Windows."""
+    (sig, sig_port) = create_socket(8000, 9000)
+    threading.Thread(target=capture_enter, args=(sig_port,)).start()
+    return sig
+
+
+try:
+    httpd_fileno = httpd.fileno()
+    sig = get_windows_signal() if is_windows() else sys.stdin
+    sig_fileno = sig.fileno()
+    while True:
+        ready_read = select.select([sig_fileno, httpd_fileno], [], [])
+        if ready_read[0][0] != httpd_fileno:
             print("Shutting down.")
-            # Consume the newline so it doesn't get printed by the caller
-            sys.stdin.readline()
+
+            # On windows the newline has already been consumed by the capture_enter function.
+            if not is_windows():
+                # Consume the newline so it doesn't get printed by the caller
+                sys.stdin.readline()
             break
         else:
             httpd.handle_request()
@@ -1731,5 +1796,8 @@ except KeyboardInterrupt:
     print("\nShutting down.")
 
 # Clean up temporary file
-f.close()
+# If on Windows, the file already closed
+if not is_windows():
+    f.close()
+
 thread.join()

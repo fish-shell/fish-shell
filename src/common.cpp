@@ -572,14 +572,6 @@ ssize_t write_loop(int fd, const char *buff, size_t count) {
     return static_cast<ssize_t>(out_cum);
 }
 
-ssize_t read_loop(int fd, void *buff, size_t count) {
-    ssize_t result;
-    do {
-        result = read(fd, buff, count);
-    } while (result < 0 && (errno == EAGAIN || errno == EINTR));
-    return result;
-}
-
 /// Hack to not print error messages in the tests. Do not call this from functions in this module
 /// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
@@ -645,20 +637,6 @@ void format_ullong_safe(wchar_t buff[64], unsigned long long val) {
     return format_safe_impl(buff, 64, val);
 }
 
-void narrow_string_safe(char buff[64], const wchar_t *s) {
-    size_t idx = 0;
-    for (size_t widx = 0; s[widx] != L'\0'; widx++) {
-        wchar_t c = s[widx];
-        if (c <= 127) {
-            buff[idx++] = char(c);
-            if (idx + 1 == 64) {
-                break;
-            }
-        }
-    }
-    buff[idx] = '\0';
-}
-
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 static void escape_string_url(const wcstring &in, wcstring &out) {
     auto result = escape_string_url(in.c_str(), in.size());
@@ -673,22 +651,6 @@ static void escape_string_var(const wcstring &in, wcstring &out) {
     if (result) {
         out = *result;
     }
-}
-
-wcstring escape_string_for_double_quotes(wcstring in) {
-    // We need to escape backslashes, double quotes, and dollars only.
-    wcstring result = std::move(in);
-    size_t idx = result.size();
-    while (idx--) {
-        switch (result[idx]) {
-            case L'\\':
-            case L'$':
-            case L'"':
-                result.insert(idx, 1, L'\\');
-                break;
-        }
-    }
-    return result;
 }
 
 /// Escape a string in a fashion suitable for using in fish script. Store the result in out_str.
@@ -785,228 +747,6 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_s
     return result;
 }
 
-/// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
-/// appending to result. Return the number of characters consumed, or none on error.
-maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
-                                     bool unescape_special) {
-    assert(input[0] == L'\\' && "Not an escape");
-
-    // Here's the character we'll ultimately append, or none. Note that L'\0' is a
-    // valid thing to append.
-    maybe_t<wchar_t> result_char_or_none = none();
-
-    bool errored = false;
-    size_t in_pos = 1;  // in_pos always tracks the next character to read (and therefore the number
-                        // of characters read so far)
-
-    // For multibyte \X sequences.
-    std::string byte_buff;
-    while (true) {
-        const wchar_t c = input[in_pos++];
-        switch (c) {
-                // A null character after a backslash is an error.
-            case L'\0': {
-                // Adjust in_pos to only include the backslash.
-                assert(in_pos > 0);
-                in_pos--;
-
-                // It's an error, unless we're allowing incomplete escapes.
-                if (!allow_incomplete) errored = true;
-                break;
-            }
-                // Numeric escape sequences. No prefix means octal escape, otherwise hexadecimal.
-            case L'0':
-            case L'1':
-            case L'2':
-            case L'3':
-            case L'4':
-            case L'5':
-            case L'6':
-            case L'7':
-            case L'u':
-            case L'U':
-            case L'x':
-            case L'X': {
-                long long res = 0;
-                size_t chars = 2;
-                int base = 16;
-                bool byte_literal = false;
-                wchar_t max_val = ASCII_MAX;
-
-                switch (c) {
-                    case L'u': {
-                        chars = 4;
-                        max_val = UCS2_MAX;
-                        break;
-                    }
-                    case L'U': {
-                        chars = 8;
-                        max_val = WCHAR_MAX;
-
-                        // Don't exceed the largest Unicode code point - see #1107.
-                        if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
-                        break;
-                    }
-                    case L'x':
-                    case L'X': {
-                        byte_literal = true;
-                        max_val = BYTE_MAX;
-                        break;
-                    }
-                    default: {
-                        base = 8;
-                        chars = 3;
-                        // Note that in_pos currently is just after the first post-backslash
-                        // character; we want to start our escape from there.
-                        assert(in_pos > 0);
-                        in_pos--;
-                        break;
-                    }
-                }
-
-                for (size_t i = 0; i < chars; i++) {
-                    long d = convert_digit(input[in_pos], base);
-                    if (d < 0) {
-                        // If we have no digit, this is a tokenizer error.
-                        if (i == 0) errored = true;
-                        break;
-                    }
-
-                    res = (res * base) + d;
-                    in_pos++;
-                }
-
-                if (!errored && res <= max_val) {
-                    if (byte_literal) {
-                        // Multibyte encodings necessitate that we keep adjacent byte escapes.
-                        // - `\Xc3\Xb6` is "ö", but only together.
-                        // (this assumes a valid codepoint can't consist of multiple bytes
-                        // that are valid on their own, which is true for UTF-8)
-                        byte_buff.push_back(static_cast<char>(res));
-                        result_char_or_none = none();
-                        if (input[in_pos] == L'\\' &&
-                            (input[in_pos + 1] == L'X' || input[in_pos + 1] == L'x')) {
-                            in_pos++;
-                            continue;
-                        }
-                    } else {
-                        result_char_or_none = static_cast<wchar_t>(res);
-                    }
-                } else {
-                    errored = true;
-                }
-
-                break;
-            }
-                // \a means bell (alert).
-            case L'a': {
-                result_char_or_none = L'\a';
-                break;
-            }
-                // \b means backspace.
-            case L'b': {
-                result_char_or_none = L'\b';
-                break;
-            }
-                // \cX means control sequence X.
-            case L'c': {
-                const wchar_t sequence_char = input[in_pos++];
-                if (sequence_char >= L'a' && sequence_char <= (L'a' + 32)) {
-                    result_char_or_none = sequence_char - L'a' + 1;
-                } else if (sequence_char >= L'A' && sequence_char <= (L'A' + 32)) {
-                    result_char_or_none = sequence_char - L'A' + 1;
-                } else {
-                    errored = true;
-                }
-                break;
-            }
-                // \x1B means escape.
-            case L'e': {
-                result_char_or_none = L'\x1B';
-                break;
-            }
-                // \f means form feed.
-            case L'f': {
-                result_char_or_none = L'\f';
-                break;
-            }
-                // \n means newline.
-            case L'n': {
-                result_char_or_none = L'\n';
-                break;
-            }
-                // \r means carriage return.
-            case L'r': {
-                result_char_or_none = L'\r';
-                break;
-            }
-                // \t means tab.
-            case L't': {
-                result_char_or_none = L'\t';
-                break;
-            }
-                // \v means vertical tab.
-            case L'v': {
-                result_char_or_none = L'\v';
-                break;
-            }
-                // If a backslash is followed by an actual newline, swallow them both.
-            case L'\n': {
-                result_char_or_none = none();
-                break;
-            }
-            default: {
-                if (unescape_special) result->push_back(INTERNAL_SEPARATOR);
-                result_char_or_none = c;
-                break;
-            }
-        }
-
-        if (errored) return none();
-
-        if (!byte_buff.empty()) {
-            result->append(str2wcstring(byte_buff));
-        }
-
-        break;
-    }
-
-    if (result_char_or_none.has_value()) {
-        result->push_back(*result_char_or_none);
-    }
-
-    return in_pos;
-}
-
-wcstring format_size(long long sz) {
-    wcstring result;
-    const wchar_t *sz_name[] = {L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", nullptr};
-
-    if (sz < 0) {
-        result.append(L"unknown");
-    } else if (sz < 1) {
-        result.append(_(L"empty"));
-    } else if (sz < 1024) {
-        result.append(format_string(L"%lldB", sz));
-    } else {
-        int i;
-
-        for (i = 0; sz_name[i]; i++) {
-            if (sz < (1024 * 1024) || !sz_name[i + 1]) {
-                long isz = (static_cast<long>(sz)) / 1024;
-                if (isz > 9)
-                    result.append(format_string(L"%ld%ls", isz, sz_name[i]));
-                else
-                    result.append(
-                        format_string(L"%.1f%ls", static_cast<double>(sz) / 1024, sz_name[i]));
-                break;
-            }
-            sz /= 1024;
-        }
-    }
-    return result;
-}
-
 /// Crappy function to extract the most significant digit of an unsigned long long value.
 static char extract_most_significant_digit(unsigned long long *xp) {
     unsigned long long place_value = 1;
@@ -1017,53 +757,6 @@ static char extract_most_significant_digit(unsigned long long *xp) {
     }
     *xp -= (place_value * x);
     return x + '0';
-}
-
-static void append_ull(char *buff, unsigned long long val, size_t *inout_idx, size_t max_len) {
-    size_t idx = *inout_idx;
-    while (val > 0 && idx < max_len) buff[idx++] = extract_most_significant_digit(&val);
-    *inout_idx = idx;
-}
-
-static void append_str(char *buff, const char *str, size_t *inout_idx, size_t max_len) {
-    size_t idx = *inout_idx;
-    while (*str && idx < max_len) buff[idx++] = *str++;
-    *inout_idx = idx;
-}
-
-void format_size_safe(char buff[128], unsigned long long sz) {
-    const size_t buff_size = 128;
-    const size_t max_len = buff_size - 1;  // need to leave room for a null terminator
-    std::memset(buff, 0, buff_size);
-    size_t idx = 0;
-    const char *const sz_name[] = {"kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", nullptr};
-    if (sz < 1) {
-        strcpy(buff, "empty");
-    } else if (sz < 1024) {
-        append_ull(buff, sz, &idx, max_len);
-        append_str(buff, "B", &idx, max_len);
-    } else {
-        for (size_t i = 0; sz_name[i]; i++) {
-            if (sz < (1024 * 1024) || !sz_name[i + 1]) {
-                unsigned long long isz = sz / 1024;
-                if (isz > 9) {
-                    append_ull(buff, isz, &idx, max_len);
-                } else {
-                    append_ull(buff, isz, &idx, max_len);
-
-                    // Maybe append a single fraction digit.
-                    unsigned long long remainder = sz % 1024;
-                    if (remainder > 0) {
-                        char tmp[3] = {'.', extract_most_significant_digit(&remainder), 0};
-                        append_str(buff, tmp, &idx, max_len);
-                    }
-                }
-                append_str(buff, sz_name[i], &idx, max_len);
-                break;
-            }
-            sz /= 1024;
-        }
-    }
 }
 
 double timef() {
@@ -1146,75 +839,6 @@ bool valid_var_name(const wchar_t *str) {
         if (!valid_var_name_char(str[i])) return false;
     }
     return true;
-}
-
-/// Test if the string is a valid function name.
-bool valid_func_name(const wcstring &str) {
-    if (str.empty()) return false;
-    if (str.at(0) == L'-') return false;
-    // A function name needs to be a valid path, so no / and no NULL.
-    if (str.find_first_of(L'/') != wcstring::npos) return false;
-    if (str.find_first_of(L'\0') != wcstring::npos) return false;
-    return true;
-}
-
-/// Return the path to the current executable. This needs to be realpath'd.
-std::string get_executable_path(const char *argv0) {
-    char buff[PATH_MAX];
-
-#ifdef __APPLE__
-    // On OS X use it's proprietary API to get the path to the executable.
-    // This is basically grabbing exec_path after argc, argv, envp, ...: for us
-    // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
-    uint32_t buffSize = sizeof buff;
-    if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
-#elif defined(__BSD__) && defined(KERN_PROC_PATHNAME)
-    // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
-    // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1
-    // returns the value for the current process.
-    size_t buff_size = sizeof buff;
-#if defined(__NetBSD__)
-    int name[] = {CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_PATHNAME};
-#else
-    int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
-#endif
-    int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
-    if (result != 0) {
-        wperror(L"sysctl KERN_PROC_PATHNAME");
-    } else {
-        return std::string(buff);
-    }
-#else
-    // On other unixes, fall back to the Linux-ish /proc/ directory
-    ssize_t len;
-    len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
-    if (len == -1) {
-        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // other BSDs
-        if (len == -1) {
-            len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
-        }
-    }
-    if (len > 0) {
-        buff[len] = '\0';
-        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
-        // then linux adds a " (deleted)" suffix.
-        // If that's not a valid path, let's remove that awkward suffix.
-        std::string buffstr{buff};
-        if (access(buff, F_OK)) {
-            auto dellen = const_strlen(" (deleted)");
-            if (buffstr.size() > dellen &&
-                buffstr.compare(buffstr.size() - dellen, dellen, " (deleted)") == 0) {
-                buffstr = buffstr.substr(0, buffstr.size() - dellen);
-            }
-        }
-        return buffstr;
-    }
-#endif
-
-    // Just return argv0, which probably won't work (i.e. it's not an absolute path or a path
-    // relative to the working directory, but instead something the caller found via $PATH). We'll
-    // eventually fall back to the compile time paths.
-    return std::string(argv0 ? argv0 : "");
 }
 
 /// Return a path to a directory where we can store temporary files.

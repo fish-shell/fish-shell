@@ -45,17 +45,6 @@ wcstring_list_ffi_t::~wcstring_list_ffi_t() = default;
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 
-wcstring wgetcwd() {
-    char cwd[PATH_MAX];
-    char *res = getcwd(cwd, sizeof(cwd));
-    if (res) {
-        return str2wcstring(res);
-    }
-
-    FLOGF(error, _(L"getcwd() failed with errno %d/%s"), errno, std::strerror(errno));
-    return wcstring();
-}
-
 DIR *wopendir(const wcstring &name) {
     const cstring tmp = wcs2zstring(name);
     return opendir(tmp.c_str());
@@ -261,11 +250,6 @@ int waccess(const wcstring &file_name, int mode) {
     return access(tmp.c_str(), mode);
 }
 
-int wunlink(const wcstring &file_name) {
-    const cstring tmp = wcs2zstring(file_name);
-    return unlink(tmp.c_str());
-}
-
 void wperror(wcharz_t s) {
     int e = errno;
     if (s.str[0] != L'\0') {
@@ -292,59 +276,6 @@ int make_fd_blocking(int fd) {
         err = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
     }
     return err == -1 ? errno : 0;
-}
-
-/// Wide character realpath. The last path component does not need to be valid. If an error occurs,
-/// wrealpath() returns none() and errno is likely set.
-maybe_t<wcstring> wrealpath(const wcstring &pathname) {
-    if (pathname.empty()) return none();
-
-    cstring real_path;
-    cstring narrow_path = wcs2zstring(pathname);
-
-    // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
-    while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
-        narrow_path.erase(narrow_path.size() - 1, 1);
-    }
-
-    char tmpbuf[PATH_MAX];
-    char *narrow_res = realpath(narrow_path.c_str(), tmpbuf);
-
-    if (narrow_res) {
-        real_path.append(narrow_res);
-    } else {
-        // Check if everything up to the last path component is valid.
-        size_t pathsep_idx = narrow_path.rfind('/');
-
-        if (pathsep_idx == 0) {
-            // If the only pathsep is the first character then it's an absolute path with a
-            // single path component and thus doesn't need conversion.
-            real_path = narrow_path;
-        } else {
-            // Only call realpath() on the portion up to the last component.
-            errno = 0;
-
-            if (pathsep_idx == cstring::npos) {
-                // If there is no "/", this is a file in $PWD, so give the realpath to that.
-                narrow_res = realpath(".", tmpbuf);
-            } else {
-                errno = 0;
-                // Only call realpath() on the portion up to the last component.
-                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuf);
-            }
-
-            if (!narrow_res) return none();
-
-            pathsep_idx++;
-            real_path.append(narrow_res);
-
-            // This test is to deal with cases such as /../../x => //x.
-            if (real_path.size() > 1) real_path.append("/");
-
-            real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
-        }
-    }
-    return str2wcstring(real_path);
 }
 
 wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes) {
@@ -512,12 +443,6 @@ const wchar_t *wgettext_ptr(const wchar_t *in) { return wgettext(in).c_str(); }
 int wmkdir(const wcstring &name, int mode) {
     cstring name_narrow = wcs2zstring(name);
     return mkdir(name_narrow.c_str(), mode);
-}
-
-int wrename(const wcstring &old, const wcstring &newv) {
-    cstring old_narrow = wcs2zstring(old);
-    cstring new_narrow = wcs2zstring(newv);
-    return rename(old_narrow.c_str(), new_narrow.c_str());
 }
 
 ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
@@ -739,24 +664,6 @@ file_id_t file_id_for_fd(int fd) {
 }
 
 file_id_t file_id_for_fd(const autoclose_fd_t &fd) { return file_id_for_fd(fd.fd()); }
-
-file_id_t file_id_for_path(const wcstring &path) {
-    file_id_t result = kInvalidFileID;
-    struct stat buf = {};
-    if (0 == wstat(path, &buf)) {
-        result = file_id_t::from_stat(buf);
-    }
-    return result;
-}
-
-file_id_t file_id_for_path(const std::string &path) {
-    file_id_t result = kInvalidFileID;
-    struct stat buf = {};
-    if (0 == stat(path.c_str(), &buf)) {
-        result = file_id_t::from_stat(buf);
-    }
-    return result;
-}
 
 bool file_id_t::operator==(const file_id_t &rhs) const { return this->compare_file_id(rhs) == 0; }
 

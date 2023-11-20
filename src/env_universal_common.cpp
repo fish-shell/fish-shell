@@ -5,8 +5,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-// We need the sys/file.h for the flock() declaration on Linux but not OS X.
-#include <sys/file.h>  // IWYU pragma: keep
 // We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
 // on a Linux system.
 #include <netinet/in.h>  // IWYU pragma: keep

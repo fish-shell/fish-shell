@@ -16,9 +16,6 @@
 /* Define to 1 if you have the <execinfo.h> header file. */
 #cmakedefine HAVE_EXECINFO_H 1
 
-/* Define to 1 if you have the `flock' function. */
-#cmakedefine HAVE_FLOCK 1
-
 /* Define to 1 if you have the `getpwent' function. */
 #cmakedefine HAVE_GETPWENT 1
 

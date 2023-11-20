@@ -321,20 +321,11 @@ bool should_suppress_stderr_for_tests();
 #define likely(x) __builtin_expect(bool(x), 1)
 #define unlikely(x) __builtin_expect(bool(x), 0)
 
-/// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
-wcstring format_size(long long sz);
-
-/// Version of format_size that does not allocate memory.
-void format_size_safe(char buff[128], unsigned long long sz);
-
 /// Writes out a long safely.
 void format_long_safe(char buff[64], long val);
 void format_long_safe(wchar_t buff[64], long val);
 void format_llong_safe(wchar_t buff[64], long long val);
 void format_ullong_safe(wchar_t buff[64], unsigned long long val);
-
-/// "Narrows" a wide character string. This just grabs any ASCII characters and truncates.
-void narrow_string_safe(char buff[64], const wchar_t *s);
 
 /// Stored in blocks to reference the file which created the block.
 using filename_ref_t = std::shared_ptr<wcstring>;
@@ -475,10 +466,6 @@ long read_blocked(int fd, void *buf, size_t count);
 /// error.
 ssize_t write_loop(int fd, const char *buff, size_t count);
 
-/// Loop a read request while failure is non-critical. Return -1 and set errno in case of critical
-/// error.
-ssize_t read_loop(int fd, void *buff, size_t count);
-
 /// Replace special characters with backslash escape sequences. Newline is replaced with \n, etc.
 ///
 /// \param in The string to be escaped
@@ -489,18 +476,9 @@ wcstring escape_string(const wchar_t *in, escape_flags_t flags = 0,
 wcstring escape_string(const wcstring &in, escape_flags_t flags = 0,
                        escape_string_style_t style = STRING_STYLE_SCRIPT);
 
-/// Escape a string so that it may be inserted into a double-quoted string.
-/// This permits ownership transfer.
-wcstring escape_string_for_double_quotes(wcstring in);
-
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also
 /// optionally change the wildcards, the tilde character and a few more into constants which are
 /// defined in a private use area of Unicode. This assumes wchar_t is a unicode character set.
-
-/// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
-/// appending to result. Return the number of characters consumed, or none() on error.
-maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
-                                     bool unescape_special);
 
 /// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
 /// the gettimeofday function and will have the same precision as that function.
@@ -552,7 +530,6 @@ std::string get_path_to_tmp_dir();
 bool valid_var_name_char(wchar_t chr);
 bool valid_var_name(const wcstring &str);
 bool valid_var_name(const wchar_t *str);
-bool valid_func_name(const wcstring &str);
 
 // Return values (`$status` values for fish scripts) for various situations.
 enum {
@@ -609,9 +586,6 @@ struct hash<const wcstring> {
 };
 }  // namespace std
 #endif
-
-/// Get the absolute path to the fish executable itself
-std::string get_executable_path(const char *argv0);
 
 /// A RAII wrapper for resources that don't recur, so we don't have to create a separate RAII
 /// wrapper for each function. Avoids needing to call "return cleanup()" or similar / everywhere.

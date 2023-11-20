@@ -18,11 +18,6 @@
 struct Tok;
 using tok_t = Tok;
 
-/// Handles slices: the square brackets in an expression like $foo[5..4]
-/// \return the length of the slice starting at \p in, or 0 if there is no slice, or -1 on error.
-/// This never accepts incomplete slices.
-long parse_util_slice_length(const wchar_t *in);
-
 /// Alternative API. Iterate over command substitutions.
 ///
 /// \param str the string to search for subshells
@@ -100,9 +95,6 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 /// Return the given string, unescaping wildcard characters but not performing any other character
 /// transformation.
 wcstring parse_util_unescape_wildcards(const wcstring &str);
-
-/// Checks if the specified string is a help option.
-bool parse_util_argument_is_help(const wcstring &s);
 
 /// Calculates information on the parameter at the specified index.
 ///

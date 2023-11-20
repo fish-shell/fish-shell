@@ -204,48 +204,6 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
     return 1;
 }
 
-long parse_util_slice_length(const wchar_t *in) {
-    assert(in && "null parameter");
-    const wchar_t openc = L'[';
-    const wchar_t closec = L']';
-    bool escaped = false;
-
-    // Check for initial opening [
-    if (*in != openc) return 0;
-    int bracket_count = 1;
-
-    assert(in && "null parameter");
-    for (const wchar_t *pos = in + 1; *pos; pos++) {
-        if (!escaped) {
-            if (*pos == L'\'' || *pos == L'"') {
-                const wchar_t *q_end = quote_end(pos, *pos);
-                if (q_end && *q_end) {
-                    pos = q_end;
-                } else {
-                    break;
-                }
-            } else {
-                if (*pos == openc) {
-                    bracket_count++;
-                } else if (*pos == closec) {
-                    bracket_count--;
-                    if (bracket_count == 0) {
-                        // pos points at the closing ], so add 1.
-                        return pos - in + 1;
-                    }
-                }
-            }
-        }
-        if (*pos == '\\') {
-            escaped = !escaped;
-        } else {
-            escaped = false;
-        }
-    }
-    assert(bracket_count > 0 && "Should have unclosed brackets");
-    return -1;
-}
-
 int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
                                      wcstring *out_contents, size_t *out_start, size_t *out_end,
                                      bool accept_incomplete, bool *inout_is_quoted,
@@ -611,8 +569,6 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
     errors->push_back(std::move(error));
     return true;
 }
-
-bool parse_util_argument_is_help(const wcstring &s) { return s == L"-h" || s == L"--help"; }
 
 // \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
 // there are no arguments.

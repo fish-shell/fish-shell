@@ -221,8 +221,6 @@ class env_stack_t final : public environment_t {
     int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
 
     /// Sets the variable with the specified name to no values.
-    int set_empty(const wcstring &key, env_mode_flags_t mode);
-
     /// Update the PWD variable based on the result of getcwd.
     void set_pwd_from_getcwd();
 
@@ -247,9 +245,6 @@ class env_stack_t final : public environment_t {
     /// returns a shared_ptr for convenience, since the most common reason to snapshot is because
     /// you want to read from another thread.
     std::shared_ptr<environment_t> snapshot() const;
-
-    /// Sets up argv as the given list of strings.
-    void set_argv(std::vector<wcstring> argv);
 
     /// Slightly optimized implementation.
     wcstring get_pwd_slash() const override;

@@ -259,34 +259,6 @@ std::vector<wcstring> split_string(const wcstring &val, wchar_t sep) {
     return out;
 }
 
-std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps,
-                                       size_t max_results) {
-    std::vector<wcstring> out;
-    size_t end = val.size();
-    size_t pos = 0;
-    while (pos < end && out.size() + 1 < max_results) {
-        // Skip leading seps.
-        pos = val.find_first_not_of(seps, pos);
-        if (pos == wcstring::npos) break;
-
-        // Find next sep.
-        size_t next_sep = val.find_first_of(seps, pos);
-        if (next_sep == wcstring::npos) {
-            next_sep = end;
-        }
-        out.emplace_back(val, pos, next_sep - pos);
-        // Note we skip exactly one sep here. This is because on the last iteration we retain all
-        // but the first leading separators. This is historical.
-        pos = next_sep + 1;
-    }
-    if (pos < end && max_results > 0) {
-        assert(out.size() + 1 == max_results && "Should have split the max");
-        out.emplace_back(val, pos);
-    }
-    assert(out.size() <= max_results && "Got too many results");
-    return out;
-}
-
 static wcstring join_strings_impl(const std::vector<wcstring> &vals, const wchar_t *sep,
                                   size_t seplen) {
     if (vals.empty()) return wcstring{};

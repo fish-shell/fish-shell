@@ -177,10 +177,6 @@ int env_stack_t::set_one(const wcstring &key, env_mode_flags_t mode, wcstring va
     return set(key, mode, std::move(vals));
 }
 
-int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode) {
-    return set(key, mode, {});
-}
-
 int env_stack_t::remove(const wcstring &key, int mode) {
     return static_cast<int>(impl_->remove(key, mode));
 }
@@ -202,8 +198,6 @@ std::shared_ptr<environment_t> env_stack_t::snapshot() const {
     auto res = std::make_shared<env_dyn_t>(impl_->snapshot());
     return std::static_pointer_cast<environment_t>(res);
 }
-
-void env_stack_t::set_argv(std::vector<wcstring> argv) { set(L"argv", ENV_LOCAL, std::move(argv)); }
 
 wcstring env_stack_t::get_pwd_slash() const {
     std::unique_ptr<wcstring> res = impl_->get_pwd_slash();

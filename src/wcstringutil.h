@@ -130,16 +130,6 @@ inline maybe_t<string_fuzzy_match_t> string_fuzzy_match_string(const wcstring &s
 /// Split a string by a separator character.
 std::vector<wcstring> split_string(const wcstring &val, wchar_t sep);
 
-/// Split a string by runs of any of the separator characters provided in \p seps.
-/// Note the delimiters are the characters in \p seps, not \p seps itself.
-/// \p seps may contain the NUL character.
-/// Do not output more than \p max_results results. If we are to output exactly that much,
-/// the last output is the the remainder of the input, including leading delimiters,
-/// except for the first. This is historical behavior.
-/// Example: split_string_tok(" a  b   c ", " ", 3) -> {"a", "b", "  c  "}
-std::vector<wcstring> split_string_tok(const wcstring &val, const wcstring &seps,
-                                       size_t max_results = std::numeric_limits<size_t>::max());
-
 /// Join a list of strings by a separator character or string.
 wcstring join_strings(const std::vector<wcstring> &vals, wchar_t sep);
 wcstring join_strings(const std::vector<wcstring> &vals, const wchar_t *sep);

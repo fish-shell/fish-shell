@@ -89,18 +89,8 @@ int lwstat(const wcstring &file_name, struct stat *buf);
 /// Wide character version of access().
 int waccess(const wcstring &file_name, int mode);
 
-/// Wide character version of unlink().
-int wunlink(const wcstring &file_name);
-
 /// Wide character version of perror().
 void wperror(wcharz_t s);
-
-/// Wide character version of getcwd().
-wcstring wgetcwd();
-
-/// Wide character version of realpath function.
-/// \returns the canonicalized path, or none if the path is invalid.
-maybe_t<wcstring> wrealpath(const wcstring &pathname);
 
 /// Given an input path, "normalize" it:
 /// 1. Collapse multiple /s into a single /, except maybe at the beginning.
@@ -129,9 +119,6 @@ const wchar_t *wgettext_ptr(const wchar_t *in);
 
 /// Wide character version of mkdir.
 int wmkdir(const wcstring &name, int mode);
-
-/// Wide character version of rename.
-int wrename(const wcstring &oldName, const wcstring &newv);
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.
 /// This does NOT retry on EINTR or EAGAIN, it simply returns.
@@ -317,8 +304,6 @@ struct hash<file_id_t> {
 
 file_id_t file_id_for_fd(int fd);
 file_id_t file_id_for_fd(const autoclose_fd_t &fd);
-file_id_t file_id_for_path(const wcstring &path);
-file_id_t file_id_for_path(const std::string &path);
 
 extern const file_id_t kInvalidFileID;
 

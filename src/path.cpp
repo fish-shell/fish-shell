@@ -83,15 +83,6 @@ static get_path_result_t path_get_path_core(const wcstring &cmd,
     return best;
 }
 
-maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars) {
-    auto result = path_try_get_path(cmd, vars);
-    if (result.err != 0) {
-        return none();
-    }
-    wcstring path = std::move(result.path);
-    return path;
-}
-
 get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &vars) {
     auto pathvar = vars.get(L"PATH");
     return path_get_path_core(cmd, pathvar ? pathvar->as_list() : kDefaultPath);
@@ -196,81 +187,6 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
     return none();
 }
 
-maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
-                                      // todo!("should be environment_t")
-                                      const env_stack_t &vars) {
-    wcstring exp_path = path;
-    expand_tilde(exp_path, vars);
-    if (string_prefixes_string(L"/", exp_path) || string_prefixes_string(L"./", exp_path) ||
-        string_prefixes_string(L"../", exp_path) || string_suffixes_string(L"/", exp_path) ||
-        exp_path == L"..") {
-        // These paths can be implicit cd, so see if you cd to the path. Note that a single period
-        // cannot (that's used for sourcing files anyways).
-        return path_get_cdpath(exp_path, wd, vars);
-    }
-    return none();
-}
-
-// If the given path looks like it's relative to the working directory, then prepend that working
-// directory. This operates on unescaped paths only (so a ~ means a literal ~).
-wcstring path_apply_working_directory(const wcstring &path, const wcstring &working_directory) {
-    if (path.empty() || working_directory.empty()) return path;
-
-    // We're going to make sure that if we want to prepend the wd, that the string has no leading
-    // "/".
-    bool prepend_wd = path.at(0) != L'/' && path.at(0) != HOME_DIRECTORY;
-    if (!prepend_wd) {
-        // No need to prepend the wd, so just return the path we were given.
-        return path;
-    }
-
-    // Remove up to one "./".
-    wcstring path_component = path;
-    if (string_prefixes_string(L"./", path_component)) {
-        path_component.erase(0, 2);
-    }
-
-    // Removing leading /s.
-    while (string_prefixes_string(L"/", path_component)) {
-        path_component.erase(0, 1);
-    }
-
-    // Construct and return a new path.
-    wcstring new_path = working_directory;
-    append_path_component(new_path, path_component);
-    return new_path;
-}
-
-/// We separate this from path_create() for two reasons. First it's only caused if there is a
-/// problem, and thus is not central to the behavior of that function. Second, we only want to issue
-/// the message once. If the current shell starts a new fish shell (e.g., by running `fish -c` from
-/// a function) we don't want that subshell to issue the same warnings.
-static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &custom_error_msg,
-                                     bool using_xdg, const wcstring &xdg_var, const wcstring &path,
-                                     int saved_errno, env_stack_t &vars) {
-    wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    if (vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT)) {
-        return;
-    }
-    vars.set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
-
-    FLOG(error, custom_error_msg.c_str());
-    if (path.empty()) {
-        FLOGF(warning_path, _(L"Unable to locate the %ls directory."), which_dir.c_str());
-        FLOGF(warning_path,
-              _(L"Please set the %ls or HOME environment variable before starting fish."),
-              xdg_var.c_str());
-    } else {
-        const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";
-        FLOGF(warning_path, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."),
-              which_dir.c_str(), env_var, path.c_str());
-        FLOGF(warning_path, _(L"The error was '%s'."), std::strerror(saved_errno));
-        FLOGF(warning_path, _(L"Please set $%ls to a directory where you have write access."),
-              env_var);
-    }
-    ignore_result(write(STDERR_FILENO, "\n", 1));
-}
-
 /// Make sure the specified directory exists. If needed, try to create it and any currently not
 /// existing parent directories, like mkdir -p,.
 ///
@@ -350,27 +266,6 @@ static const base_directory_t &get_config_directory() {
     return s_dir;
 }
 
-void path_emit_config_directory_messages(env_stack_t &vars) {
-    const auto &data = get_data_directory();
-    if (!data.success()) {
-        maybe_issue_path_warning(L"data", _(L"can not save history"), data.used_xdg,
-                                 L"XDG_DATA_HOME", data.path, data.err, vars);
-    }
-    if (data.remoteness == dir_remoteness_t::remote) {
-        FLOG(path, "data path appears to be on a network volume");
-    }
-
-    const auto &config = get_config_directory();
-    if (!config.success()) {
-        maybe_issue_path_warning(L"config", _(L"can not save universal variables or functions"),
-                                 config.used_xdg, L"XDG_CONFIG_HOME", config.path, config.err,
-                                 vars);
-    }
-    if (config.remoteness == dir_remoteness_t::remote) {
-        FLOG(path, "config path appears to be on a network volume");
-    }
-}
-
 bool path_get_config(wcstring &path) {
     const auto &dir = get_config_directory();
     path = dir.success() ? dir.path : L"";
@@ -382,10 +277,6 @@ bool path_get_data(wcstring &path) {
     path = dir.success() ? dir.path : L"";
     return dir.success();
 }
-
-dir_remoteness_t path_get_data_remoteness() { return get_data_directory().remoteness; }
-
-dir_remoteness_t path_get_config_remoteness() { return get_config_directory().remoteness; }
 
 bool paths_are_equivalent(const wcstring &p1, const wcstring &p2) {
     if (p1 == p2) return true;
@@ -415,38 +306,6 @@ bool paths_are_equivalent(const wcstring &p1, const wcstring &p2) {
 
     // We matched if we consumed all of the characters in both strings.
     return idx1 == len1 && idx2 == len2;
-}
-
-bool path_is_valid(const wcstring &path, const wcstring &working_directory) {
-    bool path_is_valid;
-    // Some special paths are always valid.
-    if (path.empty()) {
-        path_is_valid = false;
-    } else if (path == L"." || path == L"./") {
-        path_is_valid = true;
-    } else if (path == L".." || path == L"../") {
-        path_is_valid = (!working_directory.empty() && working_directory != L"/");
-    } else if (path.at(0) != '/') {
-        // Prepend the working directory. Note that we know path is not empty here.
-        wcstring tmp = working_directory;
-        tmp.append(path);
-        path_is_valid = (0 == waccess(tmp, F_OK));
-    } else {
-        // Simple check.
-        path_is_valid = (0 == waccess(path, F_OK));
-    }
-    return path_is_valid;
-}
-
-bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
-    if (paths_are_equivalent(path1, path2)) return true;
-
-    struct stat s1, s2;
-    if (wstat(path1, &s1) == 0 && wstat(path2, &s2) == 0) {
-        return s1.st_ino == s2.st_ino && s1.st_dev == s2.st_dev;
-    }
-
-    return false;
 }
 
 void append_path_component(wcstring &path, const wcstring &component) {

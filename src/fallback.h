@@ -23,11 +23,6 @@ extern int32_t FISH_EMOJI_WIDTH;
 int fish_wcwidth(wchar_t wc);
 int fish_wcswidth(const wchar_t *str, size_t n);
 
-// Replacement for mkostemp(str, O_CLOEXEC)
-// This uses mkostemp if available,
-// otherwise it uses mkstemp followed by fcntl
-int fish_mkstemp_cloexec(char *);
-
 /// thread_local support.
 #if HAVE_CX11_THREAD_LOCAL
 #define FISH_THREAD_LOCAL thread_local
@@ -113,18 +108,6 @@ char *fish_textdomain(const char *domainname);
 #ifndef HAVE_KILLPG
 /// Send specified signal to specified process group.
 int killpg(int pgr, int sig);
-#endif
-
-#ifndef HAVE_FLOCK
-/// Fallback implementation of flock in terms of fcntl.
-/// Danger! The semantics of flock and fcntl locking are very different.
-/// Use with caution.
-int flock(int fd, int op);
-
-#define LOCK_SH 1  // Shared lock.
-#define LOCK_EX 2  // Exclusive lock.
-#define LOCK_UN 8  // Unlock.
-#define LOCK_NB 4  // Don't block when locking.
 #endif
 
 #endif  // FISH_FALLBACK_H

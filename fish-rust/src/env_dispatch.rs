@@ -595,6 +595,7 @@ fn does_term_support_setting_title(vars: &EnvStack) -> bool {
     const TITLE_TERMS: &[&wstr] = &[
         L!("xterm"), L!("screen"),    L!("tmux"),    L!("nxterm"),
         L!("rxvt"),  L!("alacritty"), L!("wezterm"), L!("rio"),
+        L!("foot"),
     ];
 
     let Some(term) = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string()) else {

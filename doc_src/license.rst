@@ -109,7 +109,7 @@ The precise terms and conditions for copying, distribution and modification foll
 License for PCRE2
 -----------------
 
-``fish`` contains code from the [PCRE2](http://www.pcre.org) library to support regular expressions. This code, created by Philip Hazel, is distributed under the terms of the BSD license. Copyright © 1997-2015 University of Cambridge.
+``fish`` contains code from the `PCRE2 <http://www.pcre.org>`_ library to support regular expressions. This code, created by Philip Hazel, is distributed under the terms of the BSD license. Copyright © 1997-2015 University of Cambridge.
 
 The BSD license follows.
 
@@ -180,7 +180,7 @@ Agreement.
 
 **License for CMake**
 
-The ``fish`` source code contains files from [CMake](https://cmake.org) to support the build system.
+The ``fish`` source code contains files from `CMake <https://cmake.org>`_ to support the build system.
 This code is distributed under the terms of a BSD-style license. Copyright 2000-2017 Kitware, Inc.
 and Contributors.
 
@@ -221,7 +221,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **License for code derived from tmux**
 
-``fish`` contains code from [tmux](http://tmux.sourceforge.net), copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and made available under the OpenBSD license.
+``fish`` contains code from `tmux <http://tmux.sourceforge.net>`_, copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and made available under the OpenBSD license.
 
 The OpenBSD license is included below.
 

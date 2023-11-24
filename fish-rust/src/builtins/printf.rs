@@ -77,9 +77,9 @@ fn iswxdigit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
 
-struct builtin_printf_state_t<'a> {
+struct builtin_printf_state_t<'a, 'b> {
     // Out and err streams. Note this is a captured reference!
-    streams: &'a mut io_streams_t,
+    streams: &'a mut IoStreams<'b>,
 
     // The status of the operation.
     exit_code: c_int,
@@ -203,7 +203,7 @@ fn modify_allowed_format_specifiers(ok: &mut [bool; 256], str: &str, flag: bool)
     }
 }
 
-impl<'a> builtin_printf_state_t<'a> {
+impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     #[allow(clippy::partialeq_to_none)]
     fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
@@ -579,7 +579,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         // We set the exit code to error, because one occurred,
@@ -603,7 +603,7 @@ impl<'a> builtin_printf_state_t<'a> {
 
         self.streams.err.append(errstr);
         if !errstr.ends_with('\n') {
-            self.streams.err.append1('\n');
+            self.streams.err.push('\n');
         }
 
         self.exit_code = STATUS_CMD_ERROR.unwrap();
@@ -698,7 +698,7 @@ impl<'a> builtin_printf_state_t<'a> {
         while !str.is_empty() {
             let c = str.char_at(0);
             if c == '\\' {
-                let consumed_minus_1 = self.print_esc(str, false);
+                let consumed_minus_1 = self.print_esc(str, true);
                 str = &str[consumed_minus_1..];
             } else {
                 self.append_output(c);
@@ -763,11 +763,7 @@ impl<'a> builtin_printf_state_t<'a> {
 }
 
 /// The printf builtin.
-pub fn printf(
-    _parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let mut argc = argv.len();
 
     // Rebind argv as immutable slice (can't rearrange its elements), skipping the command name.

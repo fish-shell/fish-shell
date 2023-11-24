@@ -64,8 +64,8 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Option<libc::c_int> {
@@ -100,7 +100,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                     Direction::Left => splits.last(),
                 }
                 .unwrap();
-                s.push_utfstr(self.ellipsis);
+                s.push_utfstr(&self.ellipsis);
                 let width = width_without_escapes(&s, 0);
 
                 if width > 0 && width < min_width {
@@ -125,7 +125,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // truncating instead.
             (L!(""), 0)
         } else {
-            (self.ellipsis, self.ellipsis_width)
+            (&self.ellipsis[..], self.ellipsis_width)
         };
 
         let mut nsub = 0usize;

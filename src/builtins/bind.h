@@ -4,8 +4,11 @@
 
 #include "../maybe.h"
 
-class parser_t;
-struct io_streams_t;
-maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+struct Parser;
+struct IoStreams;
+using parser_t = Parser;
+using io_streams_t = IoStreams;
+
+int builtin_bind(const void *parser, void *streams, void *argv);
 
 #endif

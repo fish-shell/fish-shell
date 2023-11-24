@@ -4,8 +4,10 @@
 
 #include "../maybe.h"
 
-class parser_t;
-struct io_streams_t;
+struct Parser;
+struct IoStreams;
+using parser_t = Parser;
+using io_streams_t = IoStreams;
 
-maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+int builtin_ulimit(const void *parser, void *streams, void *argv);
 #endif

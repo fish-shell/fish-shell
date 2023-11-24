@@ -1,5 +1,10 @@
+use crate::flog::FLOG;
+use std::cell::{Ref, RefCell, RefMut};
+use std::rc::{Rc, Weak};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::MutexGuard;
 
+#[derive(Debug, Default)]
 pub struct RelaxedAtomicBool(AtomicBool);
 
 impl RelaxedAtomicBool {
@@ -20,5 +25,129 @@ impl RelaxedAtomicBool {
 impl Clone for RelaxedAtomicBool {
     fn clone(&self) -> Self {
         Self(AtomicBool::new(self.load()))
+    }
+}
+
+pub struct SharedFromThisBase<T> {
+    weak: RefCell<Weak<T>>,
+}
+
+impl<T> SharedFromThisBase<T> {
+    pub fn new() -> SharedFromThisBase<T> {
+        SharedFromThisBase {
+            weak: RefCell::new(Weak::new()),
+        }
+    }
+
+    pub fn initialize(&self, r: &Rc<T>) {
+        *self.weak.borrow_mut() = Rc::downgrade(r);
+    }
+}
+
+pub trait SharedFromThis<T> {
+    fn get_base(&self) -> &SharedFromThisBase<T>;
+
+    fn shared_from_this(&self) -> Rc<T> {
+        self.get_base().weak.borrow().upgrade().unwrap()
+    }
+}
+
+pub struct DebugRef<'a, T>(Ref<'a, T>);
+
+impl<'a, T> DebugRef<'a, T> {
+    pub fn new(r: Ref<'a, T>) -> Self {
+        FLOG!(
+            refcell,
+            "CREATE DebugRef",
+            std::backtrace::Backtrace::capture()
+        );
+        Self(r)
+    }
+}
+
+impl<'a, T> Drop for DebugRef<'a, T> {
+    fn drop(&mut self) {
+        FLOG!(
+            refcell,
+            "DROP DebugRef",
+            std::backtrace::Backtrace::capture()
+        );
+    }
+}
+
+impl<'a, T> std::ops::Deref for DebugRef<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub struct DebugRefMut<'a, T>(RefMut<'a, T>);
+
+impl<'a, T> DebugRefMut<'a, T> {
+    pub fn new(r: RefMut<'a, T>) -> Self {
+        FLOG!(
+            refcell,
+            "CREATE DebugRefMut",
+            std::backtrace::Backtrace::capture()
+        );
+        Self(r)
+    }
+}
+
+impl<'a, T> Drop for DebugRefMut<'a, T> {
+    fn drop(&mut self) {
+        FLOG!(
+            refcell,
+            "DROP DebugRefMut",
+            std::backtrace::Backtrace::capture()
+        );
+    }
+}
+impl<'a, T> std::ops::Deref for DebugRefMut<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a, T> std::ops::DerefMut for DebugRefMut<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+pub struct DebugMutexGuard<'a, T>(MutexGuard<'a, T>);
+
+impl<'a, T> DebugMutexGuard<'a, T> {
+    pub fn new(r: MutexGuard<'a, T>) -> Self {
+        FLOG!(
+            refcell,
+            "CREATE DebugMutexGuard",
+            std::backtrace::Backtrace::capture()
+        );
+        Self(r)
+    }
+}
+
+impl<'a, T> Drop for DebugMutexGuard<'a, T> {
+    fn drop(&mut self) {
+        FLOG!(
+            refcell,
+            "DROP DebugMutexGuard",
+            std::backtrace::Backtrace::capture()
+        );
+    }
+}
+
+impl<'a, T> std::ops::Deref for DebugMutexGuard<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl<'a, T> std::ops::DerefMut for DebugMutexGuard<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }

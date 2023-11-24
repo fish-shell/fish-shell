@@ -114,7 +114,7 @@ const _: () = assert_send::<ParsedSource>();
 const _: () = assert_sync::<ParsedSource>();
 
 impl ParsedSource {
-    fn new(src: WString, ast: Ast) -> Self {
+    pub fn new(src: WString, ast: Ast) -> Self {
         let src_ffi = src.to_ffi();
         ParsedSource { src, src_ffi, ast }
     }
@@ -130,6 +130,15 @@ pub struct NodeRef<NodeType: Node> {
 
     /// The node itself. This points into the parsed source.
     node: *const NodeType,
+}
+
+impl<NodeType: Node> NodeRef<NodeType> {
+    pub fn new(parsed_source: ParsedSourceRef, node: *const NodeType) -> Self {
+        NodeRef {
+            parsed_source: Pin::new(parsed_source),
+            node,
+        }
+    }
 }
 
 impl<NodeType: Node> Clone for NodeRef<NodeType> {
@@ -187,6 +196,11 @@ pub fn parse_source(
 }
 
 pub struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
+
+unsafe impl cxx::ExternType for ParsedSourceRefFFI {
+    type Id = cxx::type_id!("ParsedSourceRefFFI");
+    type Kind = cxx::kind::Opaque;
+}
 
 #[cxx::bridge]
 mod parse_tree_ffi {

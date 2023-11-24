@@ -22,11 +22,11 @@
 #include <vector>
 
 #include "common.h"
+#include "env.h"
 #include "highlight.h"
 #include "maybe.h"
 #include "wcstringutil.h"
 
-class environment_t;
 class pager_t;
 class page_rendering_t;
 
@@ -149,8 +149,10 @@ class screen_t {
     void write(const wcstring &left_prompt, const wcstring &right_prompt,
                const wcstring &commandline, size_t explicit_len,
                const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
-               size_t cursor_pos, const environment_t &vars, pager_t &pager,
-               page_rendering_t &page_rendering, bool cursor_is_within_pager);
+               size_t cursor_pos,
+               // todo!("this should be environment_t")
+               const env_stack_t &vars, pager_t &pager, page_rendering_t &page_rendering,
+               bool cursor_is_within_pager);
 
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
     /// optionally repainting the prompt as well.
@@ -238,7 +240,8 @@ class screen_t {
 
     /// Update the screen to match the desired output.
     void update(const wcstring &left_prompt, const wcstring &right_prompt,
-                const environment_t &vars);
+                // todo!("this should be environment_t")
+                const env_stack_t &vars);
 };
 
 /// Issues an immediate clr_eos.
@@ -335,5 +338,6 @@ maybe_t<size_t> escape_code_length(const wchar_t *code);
 // Always return a value, by moving checking of sequence start to the caller.
 long escape_code_length_ffi(const wchar_t *code);
 
+wcstring screen_clear();
 void screen_set_midnight_commander_hack();
 #endif

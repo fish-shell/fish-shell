@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::prelude::*;
 
 use crate::env::{EnvMode, EnvStack};
+use crate::exec::exec_subshell;
 use crate::wcstringutil::split_string;
 use crate::wutil::fish_iswalnum;
 
@@ -81,34 +82,11 @@ const LONG_OPTIONS: &[woption] = &[
     wopt(L!("max-args"), woption_argument_t::required_argument, 'X'),
 ];
 
-fn exec_subshell(
-    cmd: &wstr,
-    parser: &mut parser_t,
-    outputs: &mut Vec<WString>,
-    apply_exit_status: bool,
-) -> Option<c_int> {
-    use crate::ffi::exec_subshell_ffi;
-    use crate::wchar_ffi::wcstring_list_ffi_t;
-
-    let mut cmd_output: cxx::UniquePtr<wcstring_list_ffi_t> = wcstring_list_ffi_t::create();
-    let retval = Some(
-        exec_subshell_ffi(
-            cmd.to_ffi().as_ref().unwrap(),
-            parser.pin(),
-            cmd_output.pin_mut(),
-            apply_exit_status,
-        )
-        .into(),
-    );
-    *outputs = cmd_output.as_mut().unwrap().from_ffi();
-    retval
-}
-
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
 fn check_for_mutually_exclusive_flags(
     opts: &ArgParseCmdOpts,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     for opt_spec in opts.options.values() {
         if opt_spec.num_seen == 0 {
@@ -178,7 +156,7 @@ fn check_for_mutually_exclusive_flags(
 
 // This should be called after all the option specs have been parsed. At that point we have enough
 // information to parse the values associated with any `--exclusive` flags.
-fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut io_streams_t) -> Option<c_int> {
+fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> Option<c_int> {
     for raw_xflags in &opts.raw_exclusive_flags {
         let xflags = split_string(raw_xflags, ',');
         if xflags.len() < 2 {
@@ -220,7 +198,7 @@ fn parse_flag_modifiers<'args>(
     opt_spec: &mut OptionSpec<'args>,
     option_spec: &wstr,
     opt_spec_str: &mut &'args wstr,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> bool {
     let mut s = *opt_spec_str;
 
@@ -286,7 +264,7 @@ fn parse_option_spec_sep<'args>(
     option_spec: &'args wstr,
     opt_spec_str: &mut &'args wstr,
     counter: &mut u32,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> bool {
     let mut s = *opt_spec_str;
     let mut i = 1usize;
@@ -379,7 +357,7 @@ fn parse_option_spec<'args>(
     opts: &mut ArgParseCmdOpts<'args>,
     option_spec: &'args wstr,
     counter: &mut u32,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> bool {
     if option_spec.is_empty() {
         streams.err.append(wgettext_fmt!(
@@ -452,7 +430,7 @@ fn collect_option_specs<'args>(
     optind: &mut usize,
     argc: usize,
     args: &[&'args wstr],
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd: &wstr = args[0];
 
@@ -499,8 +477,8 @@ fn parse_cmd_opts<'args>(
     optind: &mut usize,
     argc: usize,
     args: &mut [&'args wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = args[0];
 
@@ -583,7 +561,7 @@ fn parse_cmd_opts<'args>(
         // If no name has been given, we default to the function name.
         // If any error happens, the backtrace will show which argparse it was.
         opts.name = parser
-            .get_func_name(1)
+            .get_function_name(1)
             .unwrap_or_else(|| L!("argparse").to_owned());
     }
 
@@ -624,19 +602,19 @@ fn populate_option_strings<'args>(
 }
 
 fn validate_arg<'opts>(
-    parser: &mut parser_t,
+    parser: &Parser,
     opts_name: &wstr,
     opt_spec: &mut OptionSpec<'opts>,
     is_long_flag: bool,
     woptarg: &'opts wstr,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     // Obviously if there is no arg validation command we assume the arg is okay.
     if opt_spec.validation_command.is_empty() {
         return STATUS_CMD_OK;
     }
 
-    let vars = parser.get_vars();
+    let vars = parser.vars();
     vars.push(true /* new_scope */);
 
     let env_mode = EnvMode::LOCAL | EnvMode::EXPORT;
@@ -659,13 +637,19 @@ fn validate_arg<'opts>(
 
     let mut cmd_output = Vec::new();
 
-    let retval = exec_subshell(opt_spec.validation_command, parser, &mut cmd_output, false);
+    let retval = exec_subshell(
+        opt_spec.validation_command,
+        parser,
+        Some(&mut cmd_output),
+        false,
+    );
 
     for output in cmd_output {
-        streams.err.appendln(output);
+        streams.err.append(output);
+        streams.err.append_char('\n');
     }
     vars.pop();
-    return retval;
+    Some(retval)
 }
 
 /// \return whether the option 'opt' is an implicit integer option.
@@ -681,12 +665,12 @@ fn is_implicit_int(opts: &ArgParseCmdOpts, val: &wstr) -> bool {
 
 // Store this value under the implicit int option.
 fn validate_and_store_implicit_int<'args>(
-    parser: &mut parser_t,
+    parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     val: &'args wstr,
     w: &mut wgetopter_t,
     is_long_flag: bool,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let opt_spec = opts.options.get_mut(&opts.implicit_int_flag).unwrap();
     let retval = validate_arg(parser, &opts.name, opt_spec, is_long_flag, val, streams);
@@ -705,12 +689,12 @@ fn validate_and_store_implicit_int<'args>(
 }
 
 fn handle_flag<'args>(
-    parser: &mut parser_t,
+    parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     opt: char,
     is_long_flag: bool,
     woptarg: Option<&'args wstr>,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let opt_spec = opts.options.get_mut(&opt).unwrap();
 
@@ -754,12 +738,12 @@ fn handle_flag<'args>(
 }
 
 fn argparse_parse_flags<'args>(
-    parser: &mut parser_t,
+    parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     argc: usize,
     args: &mut [&'args wstr],
     optind: &mut usize,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
@@ -855,8 +839,8 @@ fn argparse_parse_args<'args>(
     opts: &mut ArgParseCmdOpts<'args>,
     args: &mut [&'args wstr],
     argc: usize,
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     if argc <= 1 {
         return STATUS_CMD_OK;
@@ -880,7 +864,7 @@ fn argparse_parse_args<'args>(
 
 fn check_min_max_args_constraints(
     opts: &ArgParseCmdOpts,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = &opts.name;
 
@@ -943,11 +927,7 @@ fn set_argparse_result_vars(vars: &EnvStack, opts: &ArgParseCmdOpts) {
 /// an external command also means its output has to be in a form that can be eval'd. Because our
 /// version is a builtin it can directly set variables local to the current scope (e.g., a
 /// function). It doesn't need to write anything to stdout that then needs to be eval'd.
-pub fn argparse(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn argparse(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
 
@@ -958,7 +938,7 @@ pub fn argparse(
         // This is an error in argparse usage, so we append the error trailer with a stack trace.
         // The other errors are an error in using *the command* that is using argparse,
         // so our help doesn't apply.
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return retval;
     }
 
@@ -991,7 +971,7 @@ pub fn argparse(
         return retval;
     }
 
-    set_argparse_result_vars(&parser.get_vars(), &opts);
+    set_argparse_result_vars(parser.vars(), &opts);
 
     return retval;
 }

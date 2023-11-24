@@ -5,7 +5,8 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
-use crate::ffi::{self, fish_wcwidth};
+use crate::fallback::fish_wcwidth;
+use crate::ffi;
 use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
@@ -21,14 +22,13 @@ use core::slice;
 use cxx::{CxxWString, UniquePtr};
 use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use num_traits::ToPrimitive;
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use std::env;
 use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, TryLockError};
 use std::time;
@@ -110,7 +110,7 @@ impl TryFrom<&wstr> for EscapeStringStyle {
 bitflags! {
     /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
     /// [`EscapeStringStyle::Script`].
-    #[derive(Default)]
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
     pub struct EscapeFlags: u32 {
         /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
         /// characters and backslashes.
@@ -153,7 +153,7 @@ impl TryFrom<&wstr> for UnescapeStringStyle {
 
 bitflags! {
     /// Flags for unescape_string functions.
-    #[derive(Default)]
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
     pub struct UnescapeFlags: u32 {
         /// escape special fish syntax characters like the semicolon
         const SPECIAL = 1 << 0;
@@ -1004,7 +1004,7 @@ fn debug_thread_error() {
 }
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.
-pub fn exit_without_destructors(code: i32) -> ! {
+pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
 }
 
@@ -1048,7 +1048,7 @@ pub fn get_obfuscation_read_char() -> char {
 pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
-pub static mut PROGRAM_NAME: Lazy<&'static wstr> = Lazy::new(|| L!(""));
+pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
 
 /// MS Windows tty devices do not currently have either a read or write timestamp - those respective
 /// fields of `struct stat` are always set to the current time, which means we can't rely on them.
@@ -1074,7 +1074,8 @@ pub static EMPTY_STRING_LIST: Vec<WString> = vec![];
 
 /// A function type to check for cancellation.
 /// \return true if execution should cancel.
-pub type CancelChecker = dyn Fn() -> bool;
+/// todo!("Maybe remove the box? It is only needed for get_bg_context.")
+pub type CancelChecker = Box<dyn Fn() -> bool>;
 
 /// Converts the narrow character string \c in into its wide equivalent, and return it.
 ///
@@ -1200,6 +1201,7 @@ pub fn wcs2osstring(input: &wstr) -> OsString {
     OsString::from_vec(result)
 }
 
+/// Same as [`wcs2string`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
 pub fn wcs2zstring(input: &wstr) -> CString {
     if input.is_empty() {
         return CString::default();
@@ -1240,38 +1242,30 @@ pub const TESTS_PROGRAM_NAME: &wstr = "(ignore)"L;
 /// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 pub fn should_suppress_stderr_for_tests() -> bool {
-    unsafe { !PROGRAM_NAME.is_empty() && *PROGRAM_NAME != TESTS_PROGRAM_NAME }
-}
-
-#[deprecated(note = "Use threads::assert_is_main_thread() instead")]
-pub fn assert_is_main_thread() {
-    crate::threads::assert_is_main_thread()
-}
-
-#[deprecated(note = "Use threads::assert_is_background_thread() instead")]
-pub fn assert_is_background_thread() {
-    crate::threads::assert_is_background_thread()
+    PROGRAM_NAME
+        .get()
+        .map(|p| p == TESTS_PROGRAM_NAME)
+        .unwrap_or_default()
 }
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
-#[widestrs]
-fn format_size(mut sz: i64) -> WString {
+pub fn format_size(mut sz: i64) -> WString {
     let mut result = WString::new();
-    const sz_names: [&wstr; 8] = ["kB"L, "MB"L, "GB"L, "TB"L, "PB"L, "EB"L, "ZB"L, "YB"L];
+    const sz_names: [&str; 8] = ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
     if sz < 0 {
-        result += "unknown"L;
+        result += "unknown";
     } else if sz == 0 {
         result += wgettext!("empty");
     } else if sz < 1024 {
-        result += &sprintf!("%lldB"L, sz)[..];
+        result += &sprintf!("%lldB", sz)[..];
     } else {
         for (i, sz_name) in sz_names.iter().enumerate() {
             if sz < (1024 * 1024) || i == sz_names.len() - 1 {
                 let isz = sz / 1024;
                 if isz > 9 {
-                    result += &sprintf!("%ld%ls"L, isz, *sz_name)[..];
+                    result += &sprintf!("%ld%ls", isz, *sz_name)[..];
                 } else {
-                    result += &sprintf!("%.1f%ls"L, sz as f64 / 1024.0, *sz_name)[..];
+                    result += &sprintf!("%.1f%ls", sz as f64 / 1024.0, *sz_name)[..];
                 }
                 break;
             }
@@ -1283,7 +1277,7 @@ fn format_size(mut sz: i64) -> WString {
 }
 
 /// Version of format_size that does not allocate memory.
-fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
+pub fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
     let buff_size = 128;
     let max_len = buff_size - 1; // need to leave room for a null terminator
     buff.fill(0);
@@ -1318,7 +1312,11 @@ fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
 }
 
 /// Writes out a long safely.
-pub fn format_llong_safe<CharT: From<u8>>(buff: &mut [CharT; 64], val: i64) {
+pub fn format_llong_safe<CharT: From<u8>, I64>(buff: &mut [CharT; 64], val: I64)
+where
+    i64: From<I64>,
+{
+    let val = i64::from(val);
     let uval = val.unsigned_abs();
     if val >= 0 {
         format_safe_impl(buff, 64, uval);
@@ -1336,10 +1334,12 @@ fn format_safe_impl<CharT: From<u8>>(buff: &mut [CharT], size: usize, mut val: u
     let mut idx = 0;
     if val == 0 {
         buff[idx] = CharT::from(b'0');
+        idx += 1;
     } else {
         // Generate the string backwards, then reverse it.
         while val != 0 {
             buff[idx] = CharT::from((val % 10) as u8 + b'0');
+            idx += 1;
             val /= 10;
         }
         buff[..idx].reverse();
@@ -1360,10 +1360,11 @@ fn append_ull(buff: &mut [u8], val: &mut u64, inout_idx: &mut usize, max_len: us
 
 fn append_str(buff: &mut [u8], s: &str, inout_idx: &mut usize, max_len: usize) {
     let mut idx = *inout_idx;
-    let bytes = s.as_bytes();
-    while idx < bytes.len().min(max_len) {
-        buff[idx] = bytes[idx];
+    let mut bytes = s.as_bytes();
+    while !bytes.is_empty() && idx < max_len {
+        buff[idx] = bytes[0];
         idx += 1;
+        bytes = &bytes[1..];
     }
     *inout_idx = idx;
 }
@@ -1464,10 +1465,10 @@ pub fn fish_setlocale() {
 
 /// Test if the character can be encoded using the current locale.
 fn can_be_encoded(wc: char) -> bool {
-    let mut converted = [0_i8; AT_LEAST_MB_LEN_MAX];
+    let mut converted = [0 as libc::c_char; AT_LEAST_MB_LEN_MAX];
     let mut state = zero_mbstate();
     unsafe {
-        wcrtomb(&mut converted[0], wc as libc::wchar_t, &mut state) != 0_usize.wrapping_sub(1)
+        wcrtomb(converted.as_mut_ptr(), wc as libc::wchar_t, &mut state) != 0_usize.wrapping_sub(1)
     }
 }
 
@@ -1551,7 +1552,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             while pos < msg.len() && ![' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
-                let width = fish_wcwidth(msg.char_at(pos).into()).0 as isize;
+                let width = fish_wcwidth(msg.char_at(pos)) as isize;
                 if (tok_width + width) > (screen_width - 1) {
                     overflow = true;
                     break;
@@ -1663,24 +1664,41 @@ fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
     a.windows(b.len()).any(|aw| aw == b)
 }
 
-#[cfg(target_os = "linux")]
-static IS_WINDOWS_SUBSYSTEM_FOR_LINUX: once_cell::race::OnceBool = once_cell::race::OnceBool::new();
+pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
+    a.windows(b.len()).position(|aw| aw == b)
+}
 
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
+///
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+#[cfg(not(target_os = "linux"))]
 pub fn is_windows_subsystem_for_linux() -> bool {
-    // We are purposely not using std::call_once as it may invoke locking, which is an unnecessary
-    // overhead since there's no actual race condition here - even if multiple threads call this
-    // routine simultaneously the first time around, we just end up needlessly querying uname(2) one
-    // more time.
-    #[cfg(not(target_os = "linux"))]
-    {
-        false
+    false
+}
+
+/// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
+/// some known limitations and/or bugs.
+///
+/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+#[cfg(target_os = "linux")]
+pub fn is_windows_subsystem_for_linux() -> bool {
+    static RESULT: once_cell::race::OnceBool = once_cell::race::OnceBool::new();
+
+    // This is called post-fork from [`report_setpgid_error()`], so the fast path must not involve
+    // any allocations or mutexes. We can't rely on all the std functions to be alloc-free in both
+    // Debug and Release modes, so we just mandate that the result already be available.
+    //
+    // is_wsl() is called by has_working_timestamps() which is called by `screen.cpp` in the main
+    // process. If that's not good enough, we can call is_wsl() manually at shell startup.
+    if crate::threads::is_forked_child() {
+        debug_assert!(
+            RESULT.get().is_some(),
+            "is_wsl() should be called by main before forking!"
+        );
     }
 
-    #[cfg(target_os = "linux")]
-    IS_WINDOWS_SUBSYSTEM_FOR_LINUX.get_or_init(|| {
+    RESULT.get_or_init(|| {
         let mut info: libc::utsname = unsafe { mem::zeroed() };
         let release: &[u8] = unsafe {
             libc::uname(&mut info);
@@ -1769,7 +1787,7 @@ pub fn valid_var_name(s: &wstr) -> bool {
 }
 
 /// Get the absolute path to the fish executable itself
-pub fn get_executable_path(argv0: &str) -> PathBuf {
+pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
     if let Ok(path) = std::env::current_exe() {
         if path.exists() {
             return path;
@@ -1791,7 +1809,7 @@ pub fn get_executable_path(argv0: &str) -> PathBuf {
         }
         return path;
     }
-    PathBuf::from_str(argv0).unwrap()
+    argv0.as_ref().to_owned()
 }
 
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a
@@ -1887,6 +1905,22 @@ where
         *accessor(ctx) = saved;
     };
     ScopeGuard::new(ctx, restore_saved)
+}
+
+/// Similar to scoped_push but takes a function like "std::mem::replace" instead of a function
+/// that returns a mutable reference.
+pub fn scoped_push_replacer<Replacer, T>(
+    replacer: Replacer,
+    new_value: T,
+) -> impl ScopeGuarding<Target = ()>
+where
+    Replacer: Fn(T) -> T,
+{
+    let saved = replacer(new_value);
+    let restore_saved = move |_ctx: &mut ()| {
+        replacer(saved);
+    };
+    ScopeGuard::new((), restore_saved)
 }
 
 pub const fn assert_send<T: Send>() {}
@@ -2102,11 +2136,18 @@ impl ToCString for &[u8] {
     }
 }
 
+// test-only
 #[allow(unused_macros)]
+macro_rules! err {
+    ($format:expr $(, $args:expr)* $(,)? ) => {
+        println!($format $(, $args )*);
+    }
+}
+
 macro_rules! fwprintf {
-    ($fd:expr, $format:literal $(, $arg:expr)*) => {
+    ($fd:expr, $format:expr $(, $arg:expr)*) => {
         {
-            let wide = crate::wutil::sprintf!($format $(, $arg )*);
+            let wide = crate::wutil::sprintf!($format, $( $arg ),*);
             crate::wutil::wwrite_to_fd(&wide, $fd);
         }
     }
@@ -2124,7 +2165,7 @@ mod common_ffi {
         type escape_string_style_t = crate::ffi::escape_string_style_t;
     }
     extern "Rust" {
-        #[cxx_name = "rust_unescape_string"]
+        #[cxx_name = "unescape_string"]
         fn unescape_string_ffi(
             input: *const wchar_t,
             len: usize,
@@ -2132,17 +2173,17 @@ mod common_ffi {
             style: escape_string_style_t,
         ) -> UniquePtr<CxxWString>;
 
-        #[cxx_name = "rust_escape_string_script"]
+        #[cxx_name = "escape_string_script"]
         fn escape_string_script_ffi(
             input: *const wchar_t,
             len: usize,
             flags: u32,
         ) -> UniquePtr<CxxWString>;
 
-        #[cxx_name = "rust_escape_string_url"]
+        #[cxx_name = "escape_string_url"]
         fn escape_string_url_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
 
-        #[cxx_name = "rust_escape_string_var"]
+        #[cxx_name = "escape_string_var"]
         fn escape_string_var_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
 
     }

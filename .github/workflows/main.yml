@@ -15,11 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: SetupRust
-      uses: ATiltedTree/setup-rust@v1
-      with:
-        rust-version: 1.67
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@1.67
     - name: Install deps
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -45,12 +42,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: SetupRust
-      uses: ATiltedTree/setup-rust@v1
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@1.67
       with:
-        rust-version: 1.67
-        targets: "i686-unknown-linux-gnu" # setup-rust wants this space-separated
+        targets: "i686-unknown-linux-gnu" # rust-toolchain wants this comma-separated
     - name: Install deps
       run: |
         sudo apt update
@@ -83,13 +78,12 @@ jobs:
         # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
 
     steps:
-    - uses: actions/checkout@v3
-    - name: SetupRust
-      uses: ATiltedTree/setup-rust@v1
+    - uses: actions/checkout@v4
+    # All -Z options require running nightly
+    - uses: dtolnay/rust-toolchain@nightly
       with:
-        # All -Z options require running nightly
-        rust-version: nightly
         # ASAN uses `cargo build -Zbuild-std` which requires the rust-src component
+        # this is comma-separated
         components: rust-src
     - name: Install deps
       run: |
@@ -134,11 +128,8 @@ jobs:
   #   runs-on: ubuntu-latest
   #
   #   steps:
-  #   - uses: actions/checkout@v3
-  #   - name: SetupRust
-  #     uses: ATiltedTree/setup-rust@v1
-  #     with:
-  #       rust-version: 1.67
+  #   - uses: actions/checkout@v4
+  #   - uses: dtolnay/rust-toolchain@1.67
   #   - name: Install deps
   #     run: |
   #       sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
@@ -164,11 +155,8 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: SetupRust
-      uses: ATiltedTree/setup-rust@v1
-      with:
-        rust-version: 1.67
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@1.67
     - name: Install deps
       run: |
         sudo pip3 install pexpect

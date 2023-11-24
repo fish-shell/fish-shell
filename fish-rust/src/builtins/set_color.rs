@@ -56,7 +56,7 @@ fn print_modifiers(
 
 #[allow(clippy::too_many_arguments)]
 fn print_colors(
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
     args: &[&wstr],
     bold: bool,
     underline: bool,
@@ -103,8 +103,8 @@ fn print_colors(
     streams.out.append(str2wcstring(contents));
 }
 
-const short_options: &wstr = L!(":b:hoidrcu");
-const long_options: &[woption] = &[
+const SHORT_OPTIONS: &wstr = L!(":b:hoidrcu");
+const LONG_OPTIONS: &[woption] = &[
     wopt(L!("background"), woption_argument_t::required_argument, 'b'),
     wopt(L!("help"), woption_argument_t::no_argument, 'h'),
     wopt(L!("bold"), woption_argument_t::no_argument, 'o'),
@@ -116,11 +116,7 @@ const long_options: &[woption] = &[
 ];
 
 /// set_color builtin.
-pub fn set_color(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     // Variables used for parsing the argument list.
     let argc = argv.len();
 
@@ -138,7 +134,7 @@ pub fn set_color(
     let mut reverse = false;
     let mut print = false;
 
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
+    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'b' => {

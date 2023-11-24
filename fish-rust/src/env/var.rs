@@ -5,6 +5,7 @@ use bitflags::bitflags;
 use lazy_static::lazy_static;
 use libc::c_int;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
@@ -15,7 +16,7 @@ bitflags! {
     /// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
     /// The default is empty.
     #[repr(C)]
-    #[derive(Default)]
+    #[derive(Copy, Clone, Default, PartialEq, Eq)]
     pub struct EnvMode: u16 {
         /// Flag for local (to the current block) variable.
         const LOCAL = 1 << 0;
@@ -51,37 +52,14 @@ impl From<EnvMode> for u16 {
     }
 }
 
-/// Return values for `env_stack_t::set()`.
-pub mod status {
-    pub const ENV_OK: i32 = 0;
-    pub const ENV_PERM: i32 = 1;
-    pub const ENV_SCOPE: i32 = 2;
-    pub const ENV_INVALID: i32 = 3;
-    pub const ENV_NOT_FOUND: i32 = 4;
-}
-
-/// Return values for `EnvStack::set()`.
-pub enum EnvStackSetResult {
-    ENV_OK,
-    ENV_PERM,
-    ENV_SCOPE,
-    ENV_INVALID,
-    ENV_NOT_FOUND,
-}
-
-impl Default for EnvStackSetResult {
-    fn default() -> Self {
-        EnvStackSetResult::ENV_OK
-    }
-}
-
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
+#[derive(Default)]
 pub struct ConfigPaths {
-    pub data: WString,    // e.g., /usr/local/share
-    pub sysconf: WString, // e.g., /usr/local/etc
-    pub doc: WString,     // e.g., /usr/local/share/doc/fish
-    pub bin: WString,     // e.g., /usr/local/bin
+    pub data: PathBuf,    // e.g., /usr/local/share
+    pub sysconf: PathBuf, // e.g., /usr/local/etc
+    pub doc: PathBuf,     // e.g., /usr/local/share/doc/fish
+    pub bin: PathBuf,     // e.g., /usr/local/bin
 }
 
 /// A collection of status and pipestatus.
@@ -116,6 +94,7 @@ impl Default for Statuses {
 }
 
 bitflags! {
+    #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
     pub struct EnvVarFlags: u8 {
         const EXPORT = 1 << 0;    // whether the variable is exported
         const READ_ONLY = 1 << 1; // whether the variable is read only

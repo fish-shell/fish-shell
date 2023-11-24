@@ -1,4 +1,7 @@
-use crate::common::{scoped_push, ScopeGuard, ScopeGuarding};
+use crate::common::{
+    cstr2wcstring, format_llong_safe, format_size_safe, scoped_push, ScopeGuard, ScopeGuarding,
+};
+use crate::wchar::prelude::*;
 
 #[test]
 fn test_scoped_push() {
@@ -72,4 +75,60 @@ fn test_assert_is_locked() {
     let lock = std::sync::Mutex::new(());
     let _guard = lock.lock().unwrap();
     assert_is_locked!(&lock);
+}
+
+#[test]
+fn test_format() {
+    // Testing formatting functions
+    struct Test {
+        val: u64,
+        expected: &'static str,
+    }
+    let tests = [
+        Test {
+            val: 0,
+            expected: "empty",
+        },
+        Test {
+            val: 1,
+            expected: "1B",
+        },
+        Test {
+            val: 2,
+            expected: "2B",
+        },
+        Test {
+            val: 1024,
+            expected: "1kB",
+        },
+        Test {
+            val: 1870,
+            expected: "1.8kB",
+        },
+        Test {
+            val: 4322911,
+            expected: "4.1MB",
+        },
+    ];
+
+    for test in tests {
+        let mut buff = [0_u8; 128];
+        format_size_safe(&mut buff, test.val);
+        assert_eq!(cstr2wcstring(&buff), WString::from_str(test.expected));
+    }
+
+    for j in -129..=129 {
+        let mut buff1 = [0_u8; 64];
+        let mut buff2 = [0_u8; 64];
+        format_llong_safe(&mut buff1, j);
+        unsafe { libc::snprintf(buff2.as_mut_ptr().cast(), 64, "%d\0".as_ptr().cast(), j) };
+        assert_eq!(cstr2wcstring(&buff1), cstr2wcstring(&buff2));
+    }
+
+    let q = i64::MIN;
+    let mut buff1 = [0_u8; 64];
+    let mut buff2 = [0_u8; 64];
+    format_llong_safe(&mut buff1, q);
+    unsafe { libc::snprintf(buff2.as_mut_ptr().cast(), 128, "%ld\0".as_ptr().cast(), q) };
+    assert_eq!(cstr2wcstring(&buff1), cstr2wcstring(&buff2));
 }

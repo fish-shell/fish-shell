@@ -6,8 +6,7 @@ use super::*;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags};
 use crate::flog::FLOG;
 use crate::parse_util::parse_util_unescape_wildcards;
-use crate::wchar_ffi::WCharToFFI;
-use crate::wildcard::ANY_STRING;
+use crate::wildcard::{wildcard_match, ANY_STRING};
 
 #[derive(Default)]
 pub struct Match<'args> {
@@ -54,7 +53,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         &mut self,
         optind: &mut usize,
         args: &[&'args wstr],
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams,
     ) -> Option<libc::c_int> {
         let cmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
@@ -68,8 +67,8 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
 
     fn handle(
         &mut self,
-        parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        parser: &Parser,
+        streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Option<libc::c_int> {
@@ -126,7 +125,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             ..
         }) = matcher
         {
-            let vars = parser.get_vars();
+            let vars = parser.vars();
             for (name, vals) in first_match_captures.into_iter() {
                 vars.set(&WString::from(name), EnvMode::default(), vals);
             }
@@ -173,11 +172,7 @@ impl<'opts, 'args> StringMatcher<'opts, 'args> {
         }
     }
 
-    fn report_matches(
-        &mut self,
-        arg: &wstr,
-        streams: &mut io_streams_t,
-    ) -> Result<(), pcre2::Error> {
+    fn report_matches(&mut self, arg: &wstr, streams: &mut IoStreams) -> Result<(), pcre2::Error> {
         match self {
             Self::Regex(m) => m.report_matches(arg, streams)?,
             Self::WildCard(m) => m.report_matches(arg, streams),
@@ -231,11 +226,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         return Ok(m);
     }
 
-    fn report_matches(
-        &mut self,
-        arg: &wstr,
-        streams: &mut io_streams_t,
-    ) -> Result<(), pcre2::Error> {
+    fn report_matches(&mut self, arg: &wstr, streams: &mut IoStreams) -> Result<(), pcre2::Error> {
         let mut iter = self.regex.captures_iter(arg.as_char_slice());
         let cg = iter.next().transpose()?;
         let rc = self.report_match(arg, cg, streams);
@@ -308,7 +299,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         &self,
         arg: &'a wstr,
         cg: Option<Captures<'a>>,
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams,
     ) -> MatchResult<'a> {
         let Some(cg) = cg else {
             if self.opts.invert_match && !self.opts.quiet {
@@ -377,16 +368,14 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
         }
     }
 
-    fn report_matches(&mut self, arg: &wstr, streams: &mut io_streams_t) {
+    fn report_matches(&mut self, arg: &wstr, streams: &mut IoStreams) {
         // Note: --all is a no-op for glob matching since the pattern is always matched
         // against the entire argument.
-        use crate::ffi::wildcard_match;
-
         let subject = match self.opts.ignore_case {
             true => arg.to_lowercase(),
             false => arg.to_owned(),
         };
-        let m = wildcard_match(&subject.to_ffi(), &self.pattern.to_ffi(), false);
+        let m = wildcard_match(subject, &self.pattern, false);
 
         if m ^ self.opts.invert_match {
             self.total_matched += 1;

@@ -3,7 +3,6 @@ use std::ffi::{c_char, CStr, CString};
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::ptr;
-use std::sync::Arc;
 
 pub trait NulTerminatedString {
     type CharType: Copy;
@@ -20,6 +19,31 @@ impl NulTerminatedString for CStr {
     }
 }
 
+pub trait AsNullTerminatedArray {
+    type CharType;
+    fn get(&self) -> *mut *const Self::CharType;
+    fn iter(&self) -> NullTerminatedArrayIterator<Self::CharType> {
+        NullTerminatedArrayIterator { ptr: self.get() }
+    }
+}
+
+// TODO This should expose strings as CStr.
+pub struct NullTerminatedArrayIterator<CharType> {
+    ptr: *mut *const CharType,
+}
+impl<CharType> Iterator for NullTerminatedArrayIterator<CharType> {
+    type Item = *const CharType;
+    fn next(&mut self) -> Option<*const CharType> {
+        let result = unsafe { *self.ptr };
+        if result.is_null() {
+            None
+        } else {
+            self.ptr = unsafe { self.ptr.add(1) };
+            Some(result)
+        }
+    }
+}
+
 /// This supports the null-terminated array of NUL-terminated strings consumed by exec.
 /// Given a list of strings, construct a vector of pointers to those strings contents.
 /// This is used for building null-terminated arrays of null-terminated strings.
@@ -28,7 +52,8 @@ pub struct NullTerminatedArray<'p, T: NulTerminatedString + ?Sized> {
     _phantom: PhantomData<&'p T>,
 }
 
-impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
+impl<'p, Str: NulTerminatedString + ?Sized> AsNullTerminatedArray for NullTerminatedArray<'p, Str> {
+    type CharType = Str::CharType;
     /// Return the list of pointers, appropriate for envp or argv.
     /// Note this returns a mutable array of const strings. The caller may rearrange the strings but
     /// not modify their contents.
@@ -42,7 +67,8 @@ impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
         );
         self.pointers.as_ptr() as *mut *const Str::CharType
     }
-
+}
+impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
     /// Construct from a list of "strings".
     /// This holds pointers into the strings.
     pub fn new<S: AsRef<Str>>(strs: &'p [S]) -> Self {
@@ -76,12 +102,18 @@ pub struct OwningNullTerminatedArray {
 const _: () = assert_send::<OwningNullTerminatedArray>();
 const _: () = assert_sync::<OwningNullTerminatedArray>();
 
-impl OwningNullTerminatedArray {
+impl AsNullTerminatedArray for OwningNullTerminatedArray {
+    type CharType = c_char;
     /// Cover over null_terminated_array.get().
     fn get(&self) -> *mut *const c_char {
         self.null_terminated_array.get()
     }
+}
 
+impl OwningNullTerminatedArray {
+    pub fn get_mut(&self) -> *mut *mut c_char {
+        self.get().cast()
+    }
     /// Construct, taking ownership of a list of strings.
     pub fn new(strs: Vec<CString>) -> Self {
         let strings = strs.into_boxed_slice();
@@ -107,51 +139,13 @@ pub fn null_terminated_array_length<T>(mut arr: *const *const T) -> usize {
     len
 }
 
-/// FFI bits.
-/// We often work in Arc<OwningNullTerminatedArray>.
-/// Expose this to C++.
-pub struct OwningNullTerminatedArrayRefFFI(pub Arc<OwningNullTerminatedArray>);
-impl OwningNullTerminatedArrayRefFFI {
-    fn get(&self) -> *mut *const c_char {
-        self.0.get()
-    }
-}
-
-unsafe impl cxx::ExternType for OwningNullTerminatedArrayRefFFI {
-    type Id = cxx::type_id!("OwningNullTerminatedArrayRefFFI");
-    type Kind = cxx::kind::Opaque;
-}
-
 /// Convert a CxxString to a CString, truncating at the first NUL.
-use cxx::{CxxString, CxxVector};
+use cxx::CxxString;
 fn cxxstring_to_cstring(s: &CxxString) -> CString {
     let bytes: &[u8] = s.as_bytes();
     let nul_pos = bytes.iter().position(|&b| b == 0);
     let slice = &bytes[..nul_pos.unwrap_or(bytes.len())];
     CString::new(slice).unwrap()
-}
-
-fn new_owning_null_terminated_array_ffi(
-    strs: &CxxVector<CxxString>,
-) -> Box<OwningNullTerminatedArrayRefFFI> {
-    let cstrs = strs.iter().map(cxxstring_to_cstring).collect();
-    Box::new(OwningNullTerminatedArrayRefFFI(Arc::new(
-        OwningNullTerminatedArray::new(cstrs),
-    )))
-}
-
-#[cxx::bridge]
-mod null_terminated_array_ffi {
-    extern "Rust" {
-        type OwningNullTerminatedArrayRefFFI;
-
-        fn get(&self) -> *mut *const c_char;
-
-        #[cxx_name = "new_owning_null_terminated_array"]
-        fn new_owning_null_terminated_array_ffi(
-            strs: &CxxVector<CxxString>,
-        ) -> Box<OwningNullTerminatedArrayRefFFI>;
-    }
 }
 
 #[test]
@@ -173,6 +167,15 @@ fn test_null_terminated_array() {
         assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
         assert_eq!(*ptr.offset(2), ptr::null());
     }
+}
+#[test]
+fn test_null_terminated_array_iter() {
+    let owned_strs = &[CString::new("foo").unwrap(), CString::new("bar").unwrap()];
+    let strs: Vec<_> = owned_strs.iter().map(|s| s.as_c_str()).collect();
+    let arr = NullTerminatedArray::new(&strs);
+    let v1: Vec<_> = arr.iter().collect();
+    let v2: Vec<_> = owned_strs.iter().map(|s| s.as_ptr()).collect();
+    assert_eq!(v1, v2);
 }
 
 #[test]

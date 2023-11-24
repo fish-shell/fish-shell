@@ -7,6 +7,7 @@
 #include <string>
 
 #include "common.h"
+#include "env.h"
 #include "maybe.h"
 #include "parser.h"
 #include "wutil.h"
@@ -41,12 +42,10 @@ dir_remoteness_t path_get_data_remoteness();
 /// Like path_get_data_remoteness but for the config directory.
 dir_remoteness_t path_get_config_remoteness();
 
-class env_stack_t;
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 void path_emit_config_directory_messages(env_stack_t &vars);
 
-class environment_t;
 /// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
 /// \returns the path if found, none if not.
 maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars);
@@ -75,16 +74,17 @@ get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &va
 /// \param vars The environment variables to use (for the CDPATH variable)
 /// \return the command, or none() if it could not be found.
 maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
-                                  const environment_t &vars);
+                                  // todo!("should be environment_t")
+                                  const env_stack_t &vars);
 
 /// Returns the given directory with all CDPATH components applied.
 std::vector<wcstring> path_apply_cdpath(const wcstring &dir, const wcstring &wd,
-                                        const environment_t &env_vars);
+                                        const env_stack_t &env_vars);
 
 /// Returns the path resolved as an implicit cd command, or none() if none. This requires it to
 /// start with one of the allowed prefixes (., .., ~) and resolve to a directory.
 maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
-                                      const environment_t &vars);
+                                      const env_stack_t &vars);
 
 /// Check if two paths are equivalent, which means to ignore runs of multiple slashes (or trailing
 /// slashes).

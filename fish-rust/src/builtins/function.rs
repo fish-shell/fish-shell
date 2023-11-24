@@ -1,17 +1,17 @@
 use super::prelude::*;
 use crate::ast::BlockStatement;
 use crate::common::{valid_func_name, valid_var_name};
+use crate::complete::complete_add_wrapper;
 use crate::env::environment::Environment;
 use crate::event::{self, EventDescription, EventHandler};
-use crate::ffi::io_streams_t as io_streams_ffi_t;
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::io::IoStreams;
+use crate::nix::getpid;
 use crate::parse_tree::NodeRef;
-use crate::parse_tree::ParsedSourceRefFFI;
+use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::signal::Signal;
-use crate::wchar_ffi::{wcstring_list_ffi_t, WCharFromFFI, WCharToFFI};
-use std::pin::Pin;
 use std::sync::Arc;
 
 struct FunctionCmdOpts {
@@ -58,9 +58,9 @@ const LONG_OPTIONS: &[woption] = &[
 
 /// \return the internal_job_id for a pid, or None if none.
 /// This looks through both active and finished jobs.
-fn job_id_for_pid(pid: i32, parser: &parser_t) -> Option<u64> {
+fn job_id_for_pid(pid: i32, parser: &Parser) -> Option<u64> {
     if let Some(job) = parser.job_get_from_pid(pid) {
-        Some(job.get_internal_job_id())
+        Some(job.internal_job_id)
     } else {
         parser
             .get_wait_handles()
@@ -75,8 +75,8 @@ fn parse_cmd_opts(
     opts: &mut FunctionCmdOpts,
     optind: &mut usize,
     argv: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = L!("function");
     let print_hints = false;
@@ -134,9 +134,9 @@ fn parse_cmd_opts(
                 let woptarg = w.woptarg.unwrap();
                 let e: EventDescription;
                 if opt == 'j' && woptarg == "caller" {
-                    let libdata = parser.ffi_libdata_pod_const();
-                    let caller_id = if libdata.is_subshell {
-                        libdata.caller_id
+                    let libdata = parser.libdata();
+                    let caller_id = if libdata.pods.is_subshell {
+                        libdata.pods.caller_id
                     } else {
                         0
                     };
@@ -149,8 +149,7 @@ fn parse_cmd_opts(
                     }
                     e = EventDescription::CallerExit { caller_id };
                 } else if opt == 'p' && woptarg == "%self" {
-                    // Safety: getpid() is always successful.
-                    let pid = unsafe { libc::getpid() };
+                    let pid: i32 = getpid();
                     e = EventDescription::ProcessExit { pid };
                 } else {
                     let pid = fish_wcstoi(woptarg);
@@ -219,7 +218,7 @@ fn validate_function_name(
     argv: &mut [&wstr],
     function_name: &mut WString,
     cmd: &wstr,
-    streams: &mut io_streams_t,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     if argv.len() < 2 {
         // This is currently impossible but let's be paranoid.
@@ -252,8 +251,8 @@ fn validate_function_name(
 /// function. Note this isn't strictly a "builtin": it is called directly from parse_execution.
 /// That is why its signature is different from the other builtins.
 pub fn function(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
     c_args: &mut [&wstr],
     func_node: NodeRef<BlockStatement>,
 ) -> Option<c_int> {
@@ -281,7 +280,7 @@ pub fn function(
     }
 
     if opts.print_help {
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -308,8 +307,7 @@ pub fn function(
     }
 
     // Extract the current filename.
-    let definition_file = unsafe { parser.pin().libdata().get_current_filename().as_ref() }
-        .map(|s| Arc::new(s.from_ffi()));
+    let definition_file = parser.libdata().current_filename.clone();
 
     // Ensure inherit_vars is unique and then populate it.
     opts.inherit_vars.sort_unstable();
@@ -319,7 +317,7 @@ pub fn function(
         .inherit_vars
         .into_iter()
         .filter_map(|name| {
-            let vals = parser.get_vars().get(&name)?.as_list().to_vec();
+            let vals = parser.vars().get(&name)?.as_list().to_vec();
             Some((name, vals))
         })
         .collect();
@@ -343,7 +341,7 @@ pub fn function(
 
     // Handle wrap targets by creating the appropriate completions.
     for wt in opts.wrap_targets.into_iter() {
-        ffi::complete_add_wrapper(&function_name.to_ffi(), &wt.to_ffi());
+        complete_add_wrapper(function_name.clone(), wt.clone());
     }
 
     // Add any event handlers.
@@ -356,16 +354,14 @@ pub fn function(
     for ed in &opts.events {
         match *ed {
             EventDescription::ProcessExit { pid } if pid != event::ANY_PID => {
-                if let Some(status) = parser
-                    .get_wait_handles()
-                    .get_by_pid(pid)
-                    .and_then(|wh| wh.status())
-                {
+                let wh = parser.get_wait_handles().get_by_pid(pid);
+                if let Some(status) = wh.and_then(|wh| wh.status()) {
                     event::fire(parser, event::Event::process_exit(pid, status));
                 }
             }
             EventDescription::JobExit { pid, .. } if pid != event::ANY_PID => {
-                if let Some(wh) = parser.get_wait_handles().get_by_pid(pid) {
+                let wh = parser.get_wait_handles().get_by_pid(pid);
+                if let Some(wh) = wh {
                     if wh.is_completed() {
                         event::fire(parser, event::Event::job_exit(pid, wh.internal_job_id));
                     }
@@ -376,57 +372,4 @@ pub fn function(
     }
 
     STATUS_CMD_OK
-}
-
-fn builtin_function_ffi(
-    parser: Pin<&mut parser_t>,
-    streams: Pin<&mut io_streams_ffi_t>,
-    c_args: &wcstring_list_ffi_t,
-    source_u8: *const u8, // unowned ParsedSourceRefFFI
-    func_node: &BlockStatement,
-) -> i32 {
-    let storage = c_args.from_ffi();
-    let mut args = truncate_args_on_nul(&storage);
-    let node = unsafe {
-        let source_ref: &ParsedSourceRefFFI = &*(source_u8.cast());
-        NodeRef::from_parts(
-            source_ref
-                .0
-                .as_ref()
-                .expect("Should have parsed source")
-                .clone(),
-            func_node,
-        )
-    };
-    function(
-        parser.unpin(),
-        &mut io_streams_t::new(streams),
-        args.as_mut_slice(),
-        node,
-    )
-    .expect("function builtin should always return a non-None status")
-}
-
-#[cxx::bridge]
-mod builtin_function {
-    extern "C++" {
-        include!("ast.h");
-        include!("parser.h");
-        include!("io.h");
-        type parser_t = crate::ffi::parser_t;
-        type io_streams_t = crate::ffi::io_streams_t;
-        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
-
-        type BlockStatement = crate::ast::BlockStatement;
-    }
-
-    extern "Rust" {
-        fn builtin_function_ffi(
-            parser: Pin<&mut parser_t>,
-            streams: Pin<&mut io_streams_t>,
-            c_args: &wcstring_list_ffi_t,
-            source: *const u8, // unowned ParsedSourceRefFFI
-            func_node: &BlockStatement,
-        ) -> i32;
-    }
 }

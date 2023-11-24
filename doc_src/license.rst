@@ -109,7 +109,7 @@ The precise terms and conditions for copying, distribution and modification foll
 License for PCRE2
 -----------------
 
-``fish`` contains code from the [PCRE2](http://www.pcre.org) library to support regular expressions. This code, created by Philip Hazel, is distributed under the terms of the BSD license. Copyright © 1997-2015 University of Cambridge.
+``fish`` contains code from the `PCRE2 <http://www.pcre.org>`_ library to support regular expressions. This code, created by Philip Hazel, is distributed under the terms of the BSD license. Copyright © 1997-2015 University of Cambridge.
 
 The BSD license follows.
 
@@ -180,7 +180,7 @@ Agreement.
 
 **License for CMake**
 
-The ``fish`` source code contains files from [CMake](https://cmake.org) to support the build system.
+The ``fish`` source code contains files from `CMake <https://cmake.org>`_ to support the build system.
 This code is distributed under the terms of a BSD-style license. Copyright 2000-2017 Kitware, Inc.
 and Contributors.
 
@@ -221,23 +221,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **License for code derived from tmux**
 
-``fish`` contains code from [tmux](http://tmux.sourceforge.net), copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and made available under the OpenBSD license.
+``fish`` contains code from `tmux <http://tmux.sourceforge.net>`_, copyrighted by Nicholas Marriott <nicm@users.sourceforge.net> (2007), and made available under the OpenBSD license.
 
 The OpenBSD license is included below.
 
 Permission to use, copy, modify, and distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-----
-
-**License for UTF8**
-
-``fish`` also contains small amounts of code under the ISC license, namely the UTF-8 conversion functions. This code is copyright © 2007 Alexey Vatchenko \<av@bsdua.org>.
-
-The ISC license agreement follows.
-
-Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -275,7 +263,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 **MIT License**
 
-``fish`` includes a copy of AngularJS, which is copyright 2010-2012 Google, Inc. and licensed under the MIT License. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and is licensed under the same license.
+``fish`` includes a copy of Alpine.js, which is copyright 2019-2021 Caleb Porzio and contributors, and licensed under the MIT License. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and is licensed under the same license.
 
 The MIT license follows.
 

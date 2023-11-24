@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Mutex;
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Copy, Clone, Default)]
     pub struct ColorSupport: u8 {
         const TERM_256COLOR = 1<<0;
         const TERM_24BIT = 1<<1;
@@ -523,7 +523,7 @@ pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
 /// TODO: This code should be refactored to enable sharing with builtin_set_color.
 ///       In particular, the argument parsing still isn't fully capable.
 #[allow(clippy::collapsible_else_if)]
-fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
+pub fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
     let mut is_bold = false;
     let mut is_underline = false;
     let mut is_italics = false;
@@ -604,7 +604,7 @@ fn make_buffering_outputter_ffi() -> Box<Outputter> {
     Box::new(Outputter::new_buffering())
 }
 
-type RgbColorFFI = crate::ffi::rgb_color_t;
+pub type RgbColorFFI = crate::ffi::rgb_color_t;
 use crate::wchar_ffi::AsWstr;
 impl Outputter {
     fn set_color_ffi(&mut self, fg: &RgbColorFFI, bg: &RgbColorFFI) {

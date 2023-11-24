@@ -1,8 +1,9 @@
 use super::prelude::*;
 use crate::abbrs::{self, Abbreviation, Position};
 use crate::common::{escape, escape_string, valid_func_name, EscapeStringStyle};
-use crate::env::status::{ENV_NOT_FOUND, ENV_OK};
-use crate::env::EnvMode;
+use crate::env::{EnvMode, EnvStackSetResult};
+use crate::io::IoStreams;
+use crate::parser::Parser;
 use crate::re::{regex_make_anchored, to_boxed_chars};
 use pcre2::utf32::{Regex, RegexBuilder};
 
@@ -24,7 +25,7 @@ struct Options {
 }
 
 impl Options {
-    fn validate(&mut self, streams: &mut io_streams_t) -> bool {
+    fn validate(&mut self, streams: &mut IoStreams) -> bool {
         // Duplicate options?
         let mut cmds = vec![];
         if self.add {
@@ -124,7 +125,7 @@ fn join(list: &[&wstr], sep: &wstr) -> WString {
 }
 
 // Print abbreviations in a fish-script friendly way.
-fn abbr_show(streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
     let style = EscapeStringStyle::Script(Default::default());
 
     abbrs::with_abbrs(|abbrs| {
@@ -174,7 +175,7 @@ fn abbr_show(streams: &mut io_streams_t) -> Option<c_int> {
 }
 
 // Print the list of abbreviation names.
-fn abbr_list(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_list(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
     const subcmd: &wstr = L!("--list");
     if !opts.args.is_empty() {
         streams.err.append(wgettext_fmt!(
@@ -197,7 +198,7 @@ fn abbr_list(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
 }
 
 // Rename an abbreviation, deleting any existing one with the given name.
-fn abbr_rename(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
     const subcmd: &wstr = L!("--rename");
 
     if opts.args.len() != 2 {
@@ -271,7 +272,7 @@ fn abbr_query(opts: &Options) -> Option<c_int> {
 }
 
 // Add a named abbreviation.
-fn abbr_add(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
+fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
     const subcmd: &wstr = L!("--add");
 
     if opts.args.len() < 2 && opts.function.is_none() {
@@ -391,7 +392,7 @@ fn abbr_add(opts: &Options, streams: &mut io_streams_t) -> Option<c_int> {
 }
 
 // Erase the named abbreviations.
-fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
+fn abbr_erase(opts: &Options, parser: &Parser) -> Option<c_int> {
     if opts.args.is_empty() {
         // This has historically been a silent failure.
         return STATUS_CMD_ERROR;
@@ -402,15 +403,15 @@ fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
         let mut result = STATUS_CMD_OK;
         for arg in &opts.args {
             if !abbrs.erase(arg) {
-                result = Some(ENV_NOT_FOUND);
+                result = Some(EnvStackSetResult::ENV_NOT_FOUND.into());
             }
             // Erase the old uvar - this makes `abbr -e` work.
             let esc_src = escape(arg);
             if !esc_src.is_empty() {
                 let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
-                let ret = parser.remove_var(&var_name, EnvMode::UNIVERSAL.into());
+                let ret = parser.vars().remove(&var_name, EnvMode::UNIVERSAL);
 
-                if ret == autocxx::c_int(ENV_OK) {
+                if ret == EnvStackSetResult::ENV_OK {
                     result = STATUS_CMD_OK
                 };
             }
@@ -419,11 +420,7 @@ fn abbr_erase(opts: &Options, parser: &mut parser_t) -> Option<c_int> {
     })
 }
 
-pub fn abbr(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 
@@ -543,7 +540,7 @@ pub fn abbr(
                     cmd,
                     argv_read[w.woptind - 1]
                 ));
-                builtin_print_error_trailer(parser, streams, cmd);
+                builtin_print_error_trailer(parser, streams.err, cmd);
             }
             'h' => {
                 builtin_print_help(parser, streams, cmd);

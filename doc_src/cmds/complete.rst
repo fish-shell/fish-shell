@@ -57,6 +57,9 @@ The following options are available:
 **-x** or **--exclusive**
     Short for **-r** and **-f**.
 
+**-d** or **--description** *DESCRIPTION*
+    Add a description for this completion, to be shown in the completion pager.
+
 **-w** or **--wraps** *WRAPPED_COMMAND*
     Causes the specified command to inherit completions from *WRAPPED_COMMAND* (see below for details).
 

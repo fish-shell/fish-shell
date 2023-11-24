@@ -11,8 +11,8 @@ struct Options {
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
 
@@ -46,17 +46,13 @@ fn parse_options(
 }
 
 /// Function for handling the return builtin.
-pub fn r#return(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let mut retval = match parse_return_value(args, parser, streams) {
         Ok(v) => v,
         Err(e) => return e,
     };
 
-    let has_function_block = parser.ffi_has_funtion_block();
+    let has_function_block = parser.blocks().iter().any(|b| b.is_function_call());
 
     // *nix does not support negative return values, but our `return` builtin happily accepts being
     // called with negative literals (e.g. `return -1`).
@@ -69,7 +65,7 @@ pub fn r#return(
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
-        let ld = parser.libdata_pod();
+        let ld = &mut parser.libdata_mut().pods;
         if !ld.is_interactive {
             ld.exit_current_script = true;
         }
@@ -77,15 +73,15 @@ pub fn r#return(
     }
 
     // Mark a return in the libdata.
-    parser.libdata_pod().returning = true;
+    parser.libdata_mut().pods.returning = true;
 
     return Some(retval);
 }
 
 pub fn parse_return_value(
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
 ) -> Result<i32, Option<c_int>> {
     let cmd = args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
@@ -101,11 +97,11 @@ pub fn parse_return_value(
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
-        builtin_print_error_trailer(parser, streams, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     }
     if optind == args.len() {
-        Ok(parser.get_last_status().into())
+        Ok(parser.get_last_status())
     } else {
         match fish_wcstoi(args[optind]) {
             Ok(i) => Ok(i),
@@ -113,7 +109,7 @@ pub fn parse_return_value(
                 streams
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
-                builtin_print_error_trailer(parser, streams, cmd);
+                builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_INVALID_ARGS);
             }
         }

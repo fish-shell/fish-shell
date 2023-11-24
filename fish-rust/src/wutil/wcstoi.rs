@@ -311,7 +311,7 @@ pub fn fish_wcstoul(mut src: &wstr) -> Result<u64, Error> {
     };
     let mut consumed = 0;
     let result = wcstoi_partial(src, options, &mut consumed)?;
-    // Skip trailling whitespace.
+    // Skip trailing whitespace.
     src = src.slice_from(consumed);
     while !src.is_empty() && src.char_at(0).is_whitespace() {
         src = src.slice_from(1);

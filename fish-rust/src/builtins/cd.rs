@@ -9,10 +9,11 @@ use crate::{
 };
 use errno::{self, Errno};
 use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, O_RDONLY};
+use std::sync::Arc;
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
-pub fn cd(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr]) -> Option<c_int> {
+pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
 
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
@@ -26,7 +27,7 @@ pub fn cd(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
         return STATUS_CMD_OK;
     }
 
-    let vars = parser.get_vars();
+    let vars = parser.vars();
     let tmpstr;
 
     let dir_in: &wstr = if args.len() > opts.optind {
@@ -54,14 +55,14 @@ pub fn cd(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
             dir_in
         ));
         if !parser.is_interactive() {
-            streams.err.append(parser.pin().current_line().from_ffi());
+            streams.err.append(parser.current_line());
         };
         return STATUS_CMD_ERROR;
     }
 
     let pwd = vars.get_pwd_slash();
 
-    let dirs = path_apply_cdpath(dir_in, &pwd, vars.as_ref());
+    let dirs = path_apply_cdpath(dir_in, &pwd, vars);
     if dirs.is_empty() {
         streams.err.append(wgettext_fmt!(
             "%ls: The directory '%ls' does not exist\n",
@@ -70,7 +71,7 @@ pub fn cd(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
         ));
 
         if !parser.is_interactive() {
-            streams.err.append(parser.pin().current_line().from_ffi());
+            streams.err.append(parser.current_line());
         }
 
         return STATUS_CMD_ERROR;
@@ -86,7 +87,7 @@ pub fn cd(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
         errno::set_errno(Errno(0));
 
         // We need to keep around the fd for this directory, in the parser.
-        let mut dir_fd = AutoCloseFd::new(wopen_cloexec(&norm_dir, O_RDONLY, 0));
+        let dir_fd = Arc::new(AutoCloseFd::new(wopen_cloexec(&norm_dir, O_RDONLY, 0)));
 
         if !(dir_fd.is_valid() && unsafe { fchdir(dir_fd.fd()) } == 0) {
             // Some errors we skip and only report if nothing worked.
@@ -113,13 +114,9 @@ pub fn cd(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
         }
 
         // Stash the fd for the cwd in the parser.
-        parser.pin().set_cwd_fd(autocxx::c_int(dir_fd.acquire()));
+        parser.libdata_mut().cwd_fd = Some(dir_fd);
 
-        parser.pin().set_var_and_fire(
-            &L!("PWD").to_ffi(),
-            EnvMode::EXPORT.bits() | EnvMode::GLOBAL.bits(),
-            norm_dir,
-        );
+        parser.set_var_and_fire(L!("PWD"), EnvMode::EXPORT | EnvMode::GLOBAL, vec![norm_dir]);
         return STATUS_CMD_OK;
     }
 
@@ -165,7 +162,7 @@ pub fn cd(parser: &mut parser_t, streams: &mut io_streams_t, args: &mut [&wstr])
     }
 
     if !parser.is_interactive() {
-        streams.err.append(parser.pin().current_line().from_ffi());
+        streams.err.append(parser.current_line());
     }
 
     return STATUS_CMD_ERROR;

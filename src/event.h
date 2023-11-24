@@ -14,9 +14,9 @@
 #include "common.h"
 #include "cxx.h"
 #include "global_safety.h"
+#include "parser.h"
 #include "wutil.h"
 
-class parser_t;
 #if INCLUDE_RUST_HEADERS
 #include "event.rs.h"
 #else
@@ -32,9 +32,7 @@ struct Event;
 // TODO: Remove after porting functions.cpp
 extern const wchar_t *const event_filter_names[];
 
-class parser_t;
-
-void event_fire_generic(parser_t &parser, const wcstring &name,
+void event_fire_generic(const parser_t &parser, const wcstring &name,
                         const std::vector<wcstring> &args = g_empty_string_list);
 
 #endif

@@ -1,3 +1,5 @@
+use std::sync::atomic::Ordering;
+
 // Implementation of the block builtin.
 use super::prelude::*;
 
@@ -23,8 +25,8 @@ struct Options {
 
 fn parse_options(
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
 
@@ -71,11 +73,7 @@ fn parse_options(
 }
 
 /// The block builtin, used for temporarily blocking events.
-pub fn block(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
 
     let opts = match parse_options(args, parser, streams) {
@@ -98,49 +96,52 @@ pub fn block(
             return STATUS_INVALID_ARGS;
         }
 
-        if parser.ffi_global_event_blocks() == 0 {
+        if parser.global_event_blocks.load(Ordering::Relaxed) == 0 {
             streams
                 .err
                 .append(wgettext_fmt!("%ls: No blocks defined\n", cmd));
             return STATUS_CMD_ERROR;
         }
-        parser.pin().ffi_decr_global_event_blocks();
+        parser.global_event_blocks.fetch_sub(1, Ordering::Relaxed);
         return STATUS_CMD_OK;
     }
 
     let mut block_idx = 0;
-    let mut block = unsafe { parser.pin().block_at_index1(block_idx).as_mut() };
+    let have_block = {
+        let mut block = parser.block_at_index(block_idx);
 
-    match opts.scope {
-        Scope::Local => {
-            // If this is the outermost block, then we're global
-            if block_idx + 1 >= parser.ffi_blocks_size() {
+        match opts.scope {
+            Scope::Local => {
+                // If this is the outermost block, then we're global
+                if block_idx + 1 >= parser.blocks_size() {
+                    block = None;
+                }
+            }
+            Scope::Global => {
                 block = None;
             }
-        }
-        Scope::Global => {
-            block = None;
-        }
-        Scope::Unset => {
-            loop {
-                block = if let Some(block) = block.as_mut() {
-                    if !block.is_function_call() {
+            Scope::Unset => {
+                loop {
+                    block = if let Some(block) = block.as_mut() {
+                        if !block.is_function_call() {
+                            break;
+                        }
+                        // Set it in function scope
+                        block_idx += 1;
+                        parser.block_at_index(block_idx)
+                    } else {
                         break;
                     }
-                    // Set it in function scope
-                    block_idx += 1;
-                    unsafe { parser.pin().block_at_index1(block_idx).as_mut() }
-                } else {
-                    break;
                 }
             }
         }
-    }
+        block.is_some()
+    };
 
-    if let Some(block) = block.as_mut() {
-        block.pin().ffi_incr_event_blocks();
+    if have_block {
+        parser.block_at_index_mut(block_idx).unwrap().event_blocks += 1;
     } else {
-        parser.pin().ffi_incr_global_event_blocks();
+        parser.global_event_blocks.fetch_add(1, Ordering::Relaxed);
     }
 
     return STATUS_CMD_OK;

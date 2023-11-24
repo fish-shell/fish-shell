@@ -43,7 +43,7 @@ function isolated-tmux-start
 
     # Loop a bit, until we get an initial prompt.
     for i in (seq 25)
-        if string match -q '*prompt*' (isolated-tmux capture-pane -p)
+        if string match -q '*prompt*' -- (isolated-tmux capture-pane -p)
             break
         end
         sleep .2

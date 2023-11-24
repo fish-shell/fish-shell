@@ -25,7 +25,7 @@ FOO=BAR (true one)
 # more things
 ' | $fish 2>| string replace -r '(.*)' '<$1>'
 
-# CHECK: <fish: command substitutions not allowed here>
+# CHECK: <fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...>
 # CHECK: <FOO=BAR (true one)>
 # CHECK: <        ^~~~~~~~~^>
 
@@ -73,3 +73,65 @@ echo "bind -M" | $fish
 # CHECKERR: ^
 # CHECKERR: (Type 'help bind' for related documentation)
 
+$fish -c 'if -e; end'
+# CHECKERR: fish: Unknown command: -e
+# CHECKERR: fish:
+# CHECKERR: if -e; end
+# CHECKERR:    ^^
+
+$fish -c 'begin --notanoption; end'
+# CHECKERR: fish: Unknown command: --notanoption
+# CHECKERR: fish:
+# CHECKERR: begin --notanoption; end
+# CHECKERR:       ^~~~~~~~~~~~^
+
+$fish -c 'begin --help'
+# CHECKERR: fish: begin: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help begin` will show an online version
+
+$fish -c 'echo (for status in foo; end)'
+# CHECKERR: fish: for: status: cannot overwrite read-only variable
+# CHECKERR: for status in foo; end
+# CHECKERR: ^~~~~^
+# CHECKERR: in command substitution
+# CHECKERR: fish: Invalid arguments
+# CHECKERR: echo (for status in foo; end)
+# CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~^
+
+$fish -c 'echo (echo <&foo)'
+# CHECKERR: fish: Requested redirection to 'foo', which is not a valid file descriptor
+# CHECKERR: echo <&foo
+# CHECKERR: ^~~~^
+# CHECKERR: in command substitution
+# CHECKERR: fish: Invalid arguments
+# CHECKERR: echo (echo <&foo)
+# CHECKERR: ^~~~~~~~~~~^
+
+
+$fish -c 'echo (time echo foo &)'
+# CHECKERR: fish: 'time' is not supported for background jobs. Consider using 'command time'.
+# CHECKERR: time echo foo &
+# CHECKERR: ^~~~~~~~~~~~~~^
+# CHECKERR: in command substitution
+# CHECKERR: fish: Invalid arguments
+# CHECKERR: echo (time echo foo &)
+# CHECKERR: ^~~~~~~~~~~~~~~~^
+
+$fish -c 'echo (set -l foo 1 2 3; for $foo in foo; end)'
+# CHECKERR: fish: Unable to expand variable name ''
+# CHECKERR: set -l foo 1 2 3; for $foo in foo; end
+# CHECKERR: ^~~^
+# CHECKERR: in command substitution
+# CHECKERR: fish: Expansion error
+# CHECKERR: echo (set -l foo 1 2 3; for $foo in foo; end)
+# CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+
+$fish -c 'echo (echo *nosuchname*)'
+# CHECKERR: fish: No matches for wildcard '*nosuchname*'. See `help wildcards-globbing`.
+# CHECKERR: echo *nosuchname*
+# CHECKERR: ^~~~~~~~~~~^
+# CHECKERR: in command substitution
+# CHECKERR: fish: Unmatched wildcard
+# CHECKERR: echo (echo *nosuchname*)
+# CHECKERR: ^~~~~~~~~~~~~~~~~~^

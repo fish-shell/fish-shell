@@ -172,6 +172,21 @@ void activate_flog_categories_by_pattern(wcstring wc) {
     }
 }
 
+// autocxx fails with FILE*
+void set_flog_output_file_ffi(void* fp) {
+    auto f = static_cast<FILE *>(fp);
+    set_flog_output_file(f);
+}
+
+// Rust libc does not contain setlinebuf
+void flog_setlinebuf_ffi(void *f) {
+    auto fp = static_cast<FILE *>(f);
+    if (fp == nullptr) {
+        return;
+    }
+    setlinebuf(fp); 
+}
+
 void set_flog_output_file(FILE *f) {
     assert(f && "Null file");
     g_logger.acquire()->set_file(f);

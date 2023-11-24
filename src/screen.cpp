@@ -266,6 +266,13 @@ maybe_t<size_t> escape_code_length(const wchar_t *code) {
     return found ? maybe_t<size_t>{esc_seq_len} : none();
 }
 
+wcstring screen_clear() {
+    if (clear_screen) {
+        return str2wcstring(clear_screen);
+    }
+    return wcstring{};
+}
+
 long escape_code_length_ffi(const wchar_t *code) {
     auto found = escape_code_length(code);
     return found.has_value() ? (long)*found : -1;
@@ -699,12 +706,15 @@ bool screen_t::handle_soft_wrap(int x, int y) {
 
 /// Update the screen to match the desired output.
 void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
-                      const environment_t &vars) {
+                      const env_stack_t &vars) {
     // Helper function to set a resolved color, using the caching resolver.
-    highlight_color_resolver_t color_resolver{};
+    auto color_resolver = new_highlight_color_resolver();
     auto set_color = [&](highlight_spec_t c) {
-        this->outp().set_color(color_resolver.resolve_spec(c, false, vars),
-                               color_resolver.resolve_spec(c, true, vars));
+        rgb_color_t fg;
+        rgb_color_t bg;
+        color_resolver->resolve_spec(c, false, vars.get_impl_ffi(), fg);
+        color_resolver->resolve_spec(c, true, vars.get_impl_ffi(), bg);
+        this->outp().set_color(fg, bg);
     };
 
     layout_cache_t &cached_layouts = layout_cache_t::shared;
@@ -883,8 +893,12 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
                 clear_remainder = prev_width > current_width;
             }
         }
+
+        // We unset the color even if we don't clear the line.
+        // This means that we switch background correctly on the next,
+        // including our weird implicit bolding.
+        set_color(highlight_spec_t{});
         if (clear_remainder && clr_eol) {
-            set_color(highlight_spec_t{});
             this->move(current_width, static_cast<int>(i));
             this->write_mbs(clr_eol);
         }
@@ -1130,8 +1144,10 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
                      const wcstring &commandline, size_t explicit_len,
                      const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
-                     size_t cursor_pos, const environment_t &vars, pager_t &pager,
-                     page_rendering_t &page_rendering, bool cursor_is_within_pager) {
+                     size_t cursor_pos,
+                     // todo!("should be environment_t")
+                     const env_stack_t &vars, pager_t &pager, page_rendering_t &page_rendering,
+                     bool cursor_is_within_pager) {
     termsize_t curr_termsize = termsize_last();
     int screen_width = curr_termsize.width;
     static relaxed_atomic_t<uint32_t> s_repaints{0};

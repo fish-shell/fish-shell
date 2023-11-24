@@ -150,7 +150,8 @@ end
 # Set the locale if it isn't explicitly set. Allowing the lack of locale env vars to imply the
 # C/POSIX locale causes too many problems. Do this before reading the snippets because they might be
 # in UTF-8 (with non-ASCII characters).
-__fish_set_locale
+not set -q LANG # (fast path - no need to load the file if we have $LANG)
+and __fish_set_locale
 
 #
 # Some things should only be done for login terminals

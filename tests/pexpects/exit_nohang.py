@@ -31,7 +31,7 @@ exe_path = os.environ.get("fish_test_helper")
 sp.sendline(exe_path + " nohup_wait")
 
 # We expect it to transfer tty ownership to fish_test_helper.
-sleep(0.1)
+sleep(1)
 tty_owner = os.tcgetpgrp(sp.spawn.child_fd)
 if fish_pid == tty_owner:
     os.kill(fish_pid, signal.SIGKILL)

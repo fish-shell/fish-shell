@@ -72,7 +72,7 @@ pub fn path_get_config_remoteness() -> DirRemoteness {
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 #[widestrs]
-pub fn path_emit_config_directory_messages(vars: &mut EnvStack) {
+pub fn path_emit_config_directory_messages(vars: &EnvStack) {
     let data = get_data_directory();
     if !data.success() {
         maybe_issue_path_warning(
@@ -118,7 +118,7 @@ fn maybe_issue_path_warning(
     xdg_var: &wstr,
     path: &wstr,
     saved_errno: libc::c_int,
-    vars: &mut EnvStack,
+    vars: &EnvStack,
 ) {
     let warning_var_name = "_FISH_WARNED_"L.to_owned() + which_dir;
     if vars
@@ -185,12 +185,12 @@ pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
 
 // PREFIX is defined at build time.
 #[widestrs]
-static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
+pub static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
     [
-        "/bin"L.to_owned(),
-        "/usr/bin"L.to_owned(),
         // TODO This should use env!. The fallback is only to appease "cargo test" for now.
         WString::from_str(option_env!("PREFIX").unwrap_or("/usr/local")) + "/bin"L,
+        "/usr/bin"L.to_owned(),
+        "/bin"L.to_owned(),
     ]
 });
 
@@ -201,8 +201,8 @@ static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
 /// If no candidate path is found, path will be empty and err will be set to ENOENT.
 /// Possible err values are taken from access().
 pub struct GetPathResult {
-    err: Option<Errno>,
-    path: WString,
+    pub err: Option<Errno>,
+    pub path: WString,
 }
 impl GetPathResult {
     fn new(err: Option<Errno>, path: WString) -> Self {
@@ -218,16 +218,18 @@ pub fn path_try_get_path(cmd: &wstr, vars: &dyn Environment) -> GetPathResult {
     }
 }
 
-fn path_is_executable(path: &wstr) -> bool {
-    let narrow = wcs2zstring(path);
-    if unsafe { libc::access(narrow.as_ptr(), X_OK) } != 0 {
-        return false;
+fn path_check_executable(path: &wstr) -> Result<(), std::io::Error> {
+    if waccess(path, X_OK) != 0 {
+        return Err(std::io::Error::last_os_error());
     }
-    let narrow: Vec<u8> = narrow.into();
-    let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else {
-        return false;
-    };
-    md.is_file()
+
+    let buff = wstat(path)?;
+
+    if buff.file_type().is_file() {
+        Ok(())
+    } else {
+        Err(ErrorKind::PermissionDenied.into())
+    }
 }
 
 /// Return all the paths that match the given command.
@@ -237,7 +239,7 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for matching commands in the PATH var.
-    if cmd.contains('/') && path_is_executable(cmd) {
+    if cmd.contains('/') && path_check_executable(cmd).is_ok() {
         paths.push(cmd.to_owned());
         return paths;
     }
@@ -251,7 +253,7 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
         }
         let mut path = path.clone();
         append_path_component(&mut path, cmd);
-        if path_is_executable(&path) {
+        if path_check_executable(&path).is_ok() {
             paths.push(path);
         }
     }

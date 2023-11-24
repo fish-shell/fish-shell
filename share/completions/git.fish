@@ -347,7 +347,7 @@ function __fish_git_files
                 # Only do this if the filename isn't a simple child,
                 # or the current token starts with ":"
                 if set -ql colon[1]; or string match -q '../*' -- $file
-                    set -l fromroot (builtin realpath -- $file 2>/dev/null)
+                    set -l fromroot (path resolve -- $file 2>/dev/null)
                     # `:` starts pathspec "magic", and the second `:` terminates it.
                     # `/` is the magic letter for "from repo root".
                     # If we didn't terminate it we'd have to escape any special chars
@@ -1912,6 +1912,7 @@ complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do eve
 complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
 complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'
 complete -f -c git -n '__fish_git_using_command push' -l force-with-lease -d 'Force update of remote refs, stopping if other\'s changes would be overwritten'
+complete -f -c git -n '__fish_git_using_command push' -l force-if-includes -d 'Force an update only if the tip of the remote-tracking ref has been integrated locally'
 complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream -d 'Add upstream (tracking) reference'
 complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Be verbose'

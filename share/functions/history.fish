@@ -86,9 +86,9 @@ function history --description "display or manipulate interactive command histor
             and set search_mode --contains
 
             if isatty stdout
-                set -l pager less
-                set -q PAGER
-                and echo $PAGER | read -at pager
+                set -l pager (__fish_anypager)
+                and isatty stdout
+                or set pager cat
 
                 # If the user hasn't preconfigured less with the $LESS environment variable,
                 # we do so to have it behave like cat if output fits on one screen.

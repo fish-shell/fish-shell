@@ -1,11 +1,11 @@
 use std::os::unix::prelude::*;
 
 use super::prelude::*;
-use crate::common::{get_executable_path, str2wcstring};
-use crate::ffi::{
-    get_job_control_mode, get_login, is_interactive_session, job_control_t, set_job_control_mode,
-};
+use crate::common::{get_executable_path, str2wcstring, PROGRAM_NAME};
 use crate::future_feature_flags::{self as features, feature_test};
+use crate::proc::{
+    get_job_control_mode, get_login, is_interactive_session, set_job_control_mode, JobControl,
+};
 use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
 use libc::F_OK;
 use nix::errno::Errno;
@@ -114,7 +114,7 @@ enum TestFeatureRetVal {
 
 struct StatusCmdOpts {
     level: i32,
-    new_job_control_mode: Option<job_control_t>,
+    new_job_control_mode: Option<JobControl>,
     status_cmd: Option<StatusCmd>,
     print_help: bool,
 }
@@ -164,7 +164,7 @@ const LONG_OPTIONS: &[woption] = &[
 ];
 
 /// Print the features and their values.
-fn print_features(streams: &mut io_streams_t) {
+fn print_features(streams: &mut IoStreams) {
     // TODO: move this to features.rs
     let mut max_len = i32::MIN;
     for md in features::METADATA {
@@ -191,8 +191,8 @@ fn parse_cmd_opts(
     opts: &mut StatusCmdOpts,
     optind: &mut usize,
     args: &mut [&wstr],
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
+    parser: &Parser,
+    streams: &mut IoStreams,
 ) -> Option<c_int> {
     let cmd = args[0];
 
@@ -305,11 +305,7 @@ fn parse_cmd_opts(
     return STATUS_CMD_OK;
 }
 
-pub fn status(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    args: &mut [&wstr],
-) -> Option<c_int> {
+pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
 
@@ -361,14 +357,14 @@ pub fn status(
             streams.out.append(wgettext!("This is not a login shell\n"));
         }
         let job_control_mode = match get_job_control_mode() {
-            job_control_t::interactive => wgettext!("Only on interactive jobs"),
-            job_control_t::none => wgettext!("Never"),
-            job_control_t::all => wgettext!("Always"),
+            JobControl::interactive => wgettext!("Only on interactive jobs"),
+            JobControl::none => wgettext!("Never"),
+            JobControl::all => wgettext!("Always"),
         };
         streams
             .out
             .append(wgettext_fmt!("Job control: %ls\n", job_control_mode));
-        streams.out.append(parser.stack_trace().as_wstr());
+        streams.out.append(parser.stack_trace());
 
         return STATUS_CMD_OK;
     };
@@ -451,17 +447,18 @@ pub fn status(
             }
             match s {
                 STATUS_BASENAME | STATUS_DIRNAME | STATUS_FILENAME => {
-                    let res = parser.current_filename_ffi().from_ffi();
-                    let f = match (res.is_empty(), s) {
-                        (false, STATUS_DIRNAME) => wdirname(&res),
-                        (false, STATUS_BASENAME) => wbasename(&res),
+                    let res = parser.current_filename();
+                    let function = res.unwrap_or_default();
+                    let f = match (function.is_empty(), s) {
+                        (false, STATUS_DIRNAME) => wdirname(&function),
+                        (false, STATUS_BASENAME) => wbasename(&function),
                         (true, _) => wgettext!("Standard input"),
-                        (false, _) => &res,
+                        (false, _) => &function,
                     };
                     streams.out.appendln(f);
                 }
                 STATUS_FUNCTION => {
-                    let f = match parser.get_func_name(opts.level) {
+                    let f = match parser.get_function_name(opts.level) {
                         Some(f) => f,
                         None => wgettext!("Not a function").to_owned(),
                     };
@@ -471,7 +468,9 @@ pub fn status(
                     // TBD is how to interpret the level argument when fetching the line number.
                     // See issue #4161.
                     // streams.out.append_format(L"%d\n", parser.get_lineno(opts.level));
-                    streams.out.appendln(parser.get_lineno().0.to_wstring());
+                    streams
+                        .out
+                        .appendln(parser.get_lineno().unwrap_or(0).to_wstring());
                 }
                 STATUS_IS_INTERACTIVE => {
                     if is_interactive_session() {
@@ -481,7 +480,7 @@ pub fn status(
                     }
                 }
                 STATUS_IS_COMMAND_SUB => {
-                    if parser.libdata_pod().is_subshell {
+                    if parser.libdata().pods.is_subshell {
                         return STATUS_CMD_OK;
                     } else {
                         return STATUS_CMD_ERROR;
@@ -509,45 +508,42 @@ pub fn status(
                     }
                 }
                 STATUS_IS_FULL_JOB_CTRL => {
-                    if get_job_control_mode() == job_control_t::all {
+                    if get_job_control_mode() == JobControl::all {
                         return STATUS_CMD_OK;
                     } else {
                         return STATUS_CMD_ERROR;
                     }
                 }
                 STATUS_IS_INTERACTIVE_JOB_CTRL => {
-                    if get_job_control_mode() == job_control_t::interactive {
+                    if get_job_control_mode() == JobControl::interactive {
                         return STATUS_CMD_OK;
                     } else {
                         return STATUS_CMD_ERROR;
                     }
                 }
                 STATUS_IS_NO_JOB_CTRL => {
-                    if get_job_control_mode() == job_control_t::none {
+                    if get_job_control_mode() == JobControl::none {
                         return STATUS_CMD_OK;
                     } else {
                         return STATUS_CMD_ERROR;
                     }
                 }
                 STATUS_STACK_TRACE => {
-                    streams.out.append(parser.stack_trace().as_wstr());
+                    streams.out.append(parser.stack_trace());
                 }
                 STATUS_CURRENT_CMD => {
-                    let var = parser.pin().libdata().get_status_vars_command().from_ffi();
-                    if !var.is_empty() {
-                        streams.out.appendln(var);
+                    let command = &parser.libdata().status_vars.command;
+                    if !command.is_empty() {
+                        streams.out.append(command);
                     } else {
-                        // FIXME: C++ used `program_name` here, no clue where it's from
-                        streams.out.appendln(L!("fish"));
+                        streams.out.appendln(*PROGRAM_NAME.get().unwrap());
                     }
+                    streams.out.append_char('\n');
                 }
                 STATUS_CURRENT_COMMANDLINE => {
-                    let var = parser
-                        .pin()
-                        .libdata()
-                        .get_status_vars_commandline()
-                        .from_ffi();
-                    streams.out.appendln(var);
+                    let commandline = &parser.libdata().status_vars.commandline;
+                    streams.out.append(commandline);
+                    streams.out.append_char('\n');
                 }
                 STATUS_FISH_PATH => {
                     let path = get_executable_path("fish");
@@ -568,7 +564,8 @@ pub fn status(
                             _ => path,
                         };
 
-                        streams.out.appendln(real);
+                        streams.out.append(real);
+                        streams.out.append_char('\n');
                     } else {
                         // This is a relative path, we can't canonicalize it
                         let path = str2wcstring(path.as_os_str().as_bytes());

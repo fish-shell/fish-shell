@@ -1,16 +1,14 @@
-use crate::ffi::wildcard_match;
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharToFFI;
+use crate::wildcard::wildcard_match;
+use crate::wutil::write_to_fd;
 use libc::c_int;
-use std::io::Write;
-use std::os::unix::prelude::*;
 use std::sync::atomic::{AtomicI32, Ordering};
 
 #[rustfmt::skip::macros(category)]
-#[widestrs]
 pub mod categories {
     use super::wstr;
+    use crate::wchar::L;
     use std::sync::atomic::AtomicBool;
 
     pub struct category_t {
@@ -23,11 +21,11 @@ pub mod categories {
     /// with the given name and description, and optionally enabled by default.
     macro_rules! declare_category {
         (
-            ($var:ident, $name:expr, $description:expr, $enabled:expr)
+            ($var:ident, $name:literal, $description:literal, $enabled:expr)
         ) => {
             pub static $var: category_t = category_t {
-                name: $name,
-                description: $description,
+                name: L!($name),
+                description: L!($description),
                 enabled: AtomicBool::new($enabled),
             };
         };
@@ -40,10 +38,10 @@ pub mod categories {
 
     /// Macro to extract the variable name for a category.
     macro_rules! category_name {
-        (($var:ident, $name:expr, $description:expr, $enabled:expr)) => {
+        (($var:ident, $name:literal, $description:literal, $enabled:expr)) => {
             $var
         };
-        (($var:ident, $name:expr, $description:expr)) => {
+        (($var:ident, $name:literal, $description:literal)) => {
             $var
         };
     }
@@ -73,68 +71,70 @@ pub mod categories {
     }
 
     categories!(
-        (error, "error"L, "Serious unexpected errors (on by default)"L, true);
+        (error, "error", "Serious unexpected errors (on by default)", true);
 
-        (debug, "debug"L, "Debugging aid (on by default)"L, true);
+        (debug, "debug", "Debugging aid (on by default)", true);
 
-        (warning, "warning"L, "Warnings (on by default)"L, true);
+        (warning, "warning", "Warnings (on by default)", true);
 
-        (warning_path, "warning-path"L, "Warnings about unusable paths for config/history (on by default)"L, true);
+        (warning_path, "warning-path", "Warnings about unusable paths for config/history (on by default)", true);
 
-        (config, "config"L, "Finding and reading configuration"L);
+        (config, "config", "Finding and reading configuration");
 
-        (event, "event"L, "Firing events"L);
+        (event, "event", "Firing events");
 
-        (exec, "exec"L, "Errors reported by exec (on by default)"L, true);
+        (exec, "exec", "Errors reported by exec (on by default)", true);
 
-        (exec_job_status, "exec-job-status"L, "Jobs changing status"L);
+        (exec_job_status, "exec-job-status", "Jobs changing status");
 
-        (exec_job_exec, "exec-job-exec"L, "Jobs being executed"L);
+        (exec_job_exec, "exec-job-exec", "Jobs being executed");
 
-        (exec_fork, "exec-fork"L, "Calls to fork()"L);
+        (exec_fork, "exec-fork", "Calls to fork()");
 
-        (output_invalid, "output-invalid"L, "Trying to print invalid output"L);
-        (ast_construction, "ast-construction"L, "Parsing fish AST"L);
+        (output_invalid, "output-invalid", "Trying to print invalid output");
+        (ast_construction, "ast-construction", "Parsing fish AST");
 
-        (proc_job_run, "proc-job-run"L, "Jobs getting started or continued"L);
+        (proc_job_run, "proc-job-run", "Jobs getting started or continued");
 
-        (proc_termowner, "proc-termowner"L, "Terminal ownership events"L);
+        (proc_termowner, "proc-termowner", "Terminal ownership events");
 
-        (proc_internal_proc, "proc-internal-proc"L, "Internal (non-forked) process events"L);
+        (proc_internal_proc, "proc-internal-proc", "Internal (non-forked) process events");
 
-        (proc_reap_internal, "proc-reap-internal"L, "Reaping internal (non-forked) processes"L);
+        (proc_reap_internal, "proc-reap-internal", "Reaping internal (non-forked) processes");
 
-        (proc_reap_external, "proc-reap-external"L, "Reaping external (forked) processes"L);
-        (proc_pgroup, "proc-pgroup"L, "Process groups"L);
+        (proc_reap_external, "proc-reap-external", "Reaping external (forked) processes");
+        (proc_pgroup, "proc-pgroup", "Process groups");
 
-        (env_locale, "env-locale"L, "Changes to locale variables"L);
+        (env_locale, "env-locale", "Changes to locale variables");
 
-        (env_export, "env-export"L, "Changes to exported variables"L);
+        (env_export, "env-export", "Changes to exported variables");
 
-        (env_dispatch, "env-dispatch"L, "Reacting to variables"L);
+        (env_dispatch, "env-dispatch", "Reacting to variables");
 
-        (uvar_file, "uvar-file"L, "Writing/reading the universal variable store"L);
-        (uvar_notifier, "uvar-notifier"L, "Notifications about universal variable changes"L);
+        (uvar_file, "uvar-file", "Writing/reading the universal variable store");
+        (uvar_notifier, "uvar-notifier", "Notifications about universal variable changes");
 
-        (topic_monitor, "topic-monitor"L, "Internal details of the topic monitor"L);
-        (char_encoding, "char-encoding"L, "Character encoding issues"L);
+        (topic_monitor, "topic-monitor", "Internal details of the topic monitor");
+        (char_encoding, "char-encoding", "Character encoding issues");
 
-        (history, "history"L, "Command history events"L);
-        (history_file, "history-file"L, "Reading/Writing the history file"L);
+        (history, "history", "Command history events");
+        (history_file, "history-file", "Reading/Writing the history file");
 
-        (profile_history, "profile-history"L, "History performance measurements"L);
+        (profile_history, "profile-history", "History performance measurements");
 
-        (iothread, "iothread"L, "Background IO thread events"L);
-        (fd_monitor, "fd-monitor"L, "FD monitor events"L);
+        (iothread, "iothread", "Background IO thread events");
+        (fd_monitor, "fd-monitor", "FD monitor events");
 
-        (term_support, "term-support"L, "Terminal feature detection"L);
+        (term_support, "term-support", "Terminal feature detection");
 
-        (reader, "reader"L, "The interactive reader/input system"L);
-        (reader_render, "reader-render"L, "Rendering the command line"L);
-        (complete, "complete"L, "The completion system"L);
-        (path, "path"L, "Searching/using paths"L);
+        (reader, "reader", "The interactive reader/input system");
+        (reader_render, "reader-render", "Rendering the command line");
+        (complete, "complete", "The completion system");
+        (path, "path", "Searching/using paths");
 
-        (screen, "screen"L, "Screen repaints"L);
+        (screen, "screen", "Screen repaints");
+
+        (refcell, "refcell", "Refcell dynamic borrowing");
     );
 }
 
@@ -166,12 +166,10 @@ pub fn flog_impl(s: &str) {
     if fd < 0 {
         return;
     }
-    let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
-    let _ = file.write(s.as_bytes());
-    // Ensure the file is not closed.
-    file.into_raw_fd();
+    let _ = write_to_fd(s.as_bytes(), fd);
 }
 
+/// The entry point for flogging.
 macro_rules! FLOG {
     ($category:ident, $($elem:expr),+ $(,)*) => {
         if crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
@@ -193,7 +191,7 @@ macro_rules! FLOG {
 
 macro_rules! FLOGF {
     ($category:ident, $fmt: expr, $($elem:expr),+ $(,)*) => {
-        crate::flog::FLOG!($category, sprintf!($fmt, $($elem),*));
+        crate::flog::FLOG!($category, crate::wutil::sprintf!($fmt, $($elem),*))
     }
 }
 
@@ -212,7 +210,7 @@ fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
     let wc = parse_util_unescape_wildcards(wc_esc);
     let mut match_found = false;
     for cat in categories::all_categories() {
-        if wildcard_match(&cat.name.to_ffi(), &wc.to_ffi(), false) {
+        if wildcard_match(cat.name, &wc, false) {
             cat.enabled.store(sense, Ordering::Relaxed);
             match_found = true;
         }
@@ -247,6 +245,7 @@ pub fn set_flog_file_fd(fd: c_int) {
     FLOG_FD.store(fd, Ordering::Relaxed);
 }
 
+#[inline]
 pub fn get_flog_file_fd() -> c_int {
     FLOG_FD.load(Ordering::Relaxed)
 }

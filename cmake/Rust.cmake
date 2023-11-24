@@ -59,18 +59,26 @@ if(DEFINED WITH_GETTEXT AND NOT "${WITH_GETTEXT}")
     set(CMAKE_WITH_GETTEXT "0")
 endif()
 
+# CMAKE_BINARY_DIR can include symlinks, since we want to compare this to the dir fish is executed in we need to canonicalize it.
+file(REAL_PATH "${CMAKE_BINARY_DIR}" fish_binary_dir)
+
 # Tell Cargo where our build directory is so it can find config.h.
 corrosion_set_env_vars(${fish_rust_target}
-    "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}"
+    "FISH_BUILD_DIR=${fish_binary_dir}"
     "FISH_AUTOCXX_GEN_DIR=${fish_autocxx_gen_dir}"
     "FISH_RUST_TARGET_DIR=${rust_target_dir}"
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
     # Temporary hack to propogate CMake flags/options to build.rs.
     "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"
+    "DOCDIR=${CMAKE_INSTALL_FULL_DOCDIR}"
+    "DATADIR=${CMAKE_INSTALL_FULL_DATADIR}"
+    "SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDIR}"
+    "BINDIR=${CMAKE_INSTALL_FULL_BINDIR}"
 )
 
+# this needs an extra fish-rust due to the poor source placement
 target_include_directories(${fish_rust_target} INTERFACE
-    "${rust_target_dir}/cxxbridge/${fish_rust_target}/src/"
+    "${rust_target_dir}/cxxbridge/${fish_rust_target}/fish-rust/src/"
     "${fish_autocxx_gen_dir}/include/"
 )
 

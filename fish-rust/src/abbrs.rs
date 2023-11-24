@@ -194,9 +194,11 @@ impl Abbreviation {
 }
 
 /// The result of an abbreviation expansion.
+#[derive(Debug, Eq, PartialEq)]
 pub struct Replacer {
     /// The string to use to replace the incoming token, either literal or as a function name.
-    replacement: WString,
+    /// Exposed for testing.
+    pub replacement: WString,
 
     /// If true, treat 'replacement' as the name of a function.
     is_function: bool,

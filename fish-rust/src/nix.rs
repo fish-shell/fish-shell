@@ -22,3 +22,18 @@ impl TimevalExt for libc::timeval {
         timeval_to_duration(self)
     }
 }
+
+pub fn geteuid() -> u32 {
+    unsafe { libc::geteuid() }
+}
+pub fn getegid() -> u32 {
+    unsafe { libc::getegid() }
+}
+pub fn getpid() -> i32 {
+    unsafe { libc::getpid() }
+}
+pub fn isatty(fd: i32) -> bool {
+    // This returns false if the fd is valid but not a tty, or is invalid.
+    // No place we currently call it really cares about the difference.
+    return unsafe { libc::isatty(fd) } == 1;
+}

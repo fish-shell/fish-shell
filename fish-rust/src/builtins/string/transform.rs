@@ -18,8 +18,8 @@ impl StringSubCommand<'_> for Transform {
 
     fn handle(
         &mut self,
-        _parser: &mut parser_t,
-        streams: &mut io_streams_t,
+        _parser: &Parser,
+        streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Option<libc::c_int> {
@@ -31,7 +31,7 @@ impl StringSubCommand<'_> for Transform {
                 n_transformed += 1;
             }
             if !self.quiet {
-                streams.out.append(&transformed);
+                streams.out.append(transformed);
                 if want_newline {
                     streams.out.append1('\n');
                 }

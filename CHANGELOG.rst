@@ -15,9 +15,13 @@ We have tried to keep these to a minimum, but in some cases it is unavoidable.
 - ``functions --handlers`` will now list handlers in a different order.
   Now it is definition order, first to last, where before it was last to first.
   This was never specifically defined, and we recommend not relying on a specific order (:issue:`9944`).
+- ``LS_COLORS`` is no longer set automatically by ``ls`` (:issue:`10080`). Users
+  that set ``.dircolors`` should manually import it using other means.
 
 Notable improvements and fixes
 ------------------------------
+- A new variable, :envvar:`fish_sequence_key_delay_ms`, can now be set to let bound key sequences time out.
+  This is useful e.g. to bind ``jk`` to switch modes in vi-mode while still being able to type "j". (:issue:`7401`, :issue:`9926`)
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 
 Deprecations and removed features
@@ -57,9 +61,13 @@ Completions
 - ``gimp`` (:issue:`9904`).
 - ``horcrux`` (:issue:`9922`).
 - ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
+- ``java_home`` (:issue:`9998`).
+- ``crc`` (:issue:`10034`).
+- ``oc`` (:issue:`10034`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- Fish now checks for the ``ts`` capability in terminfo to determine if a terminal supports setting the window title.
 
 Other improvements
 ------------------

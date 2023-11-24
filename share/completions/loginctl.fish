@@ -1,9 +1,11 @@
-#loginctl (systemd 248)
+#loginctl (systemd 254)
 
 #variables
 set -l seen __fish_seen_subcommand_from
 set -l commands activate attach disable-linger enable-linger flush-devices kill-session kill-user list-seats list-sessions list-users lock-session lock-sessions seat-status session-status show-seat show-session show-user terminate-seat terminate-session terminate-user unlock-session unlock-sessions user-status
 set -l output cat export json json-pretty json-seq json-sse short short-full short-iso short-iso-precise short-monotonic short-precise short-unix verbose with-unit
+
+complete -c loginctl -f
 
 #commands
 complete -c loginctl -x -n "not $seen $commands" -a "$commands"
@@ -25,3 +27,23 @@ complete -c loginctl -x -n "not $seen $commands" -s P -d "Equivalent to --value 
 complete -c loginctl -x -n "not $seen $commands" -l signal -s s -d "Which signal to send"
 complete -c loginctl -f -n "not $seen $commands" -l value -d "When showing properties, only print the value"
 complete -c loginctl -f -n "not $seen $commands" -l version -d "Show package version"
+
+
+function __fish_loginctl_list_sessions
+    loginctl list-sessions --no-legend --no-pager --output=short | string replace -r '^\s*(\d+)\s+\d+\s+(\S+)\s+(\S+\s+)?(\S+\d+).*' '$1\t$2 at $4'
+end
+
+
+function __fish_loginctl_list_users
+    loginctl list-users --no-legend --no-pager --output=short | string replace -r '(\d+) (\S+) .*' '$1\t$2'
+end
+
+
+function __fish_loginctl_list_seats
+    loginctl list-seats --no-legend --no-pager --output=short
+end
+
+
+complete -c loginctl -n "$seen session-status show-session activate lock-session unlock-session terminate-session kill-session" -a '(__fish_loginctl_list_sessions)'
+complete -c loginctl -n "$seen user-status show-user enable-linger disable-linger terminate-user kill-user" -a '(__fish_loginctl_list_users)'
+complete -c loginctl -n "$seen seat-status show-seat attach terminate-seat" -a '(__fish_loginctl_list_seats)'

@@ -23,6 +23,7 @@ mod tokenizer_ffi {
     }
 
     /// Token types. XXX Why this isn't ParseTokenType, I'm not really sure.
+    #[derive(Debug)]
     enum TokenType {
         /// Error reading token
         error,
@@ -44,6 +45,7 @@ mod tokenizer_ffi {
         comment,
     }
 
+    #[derive(Debug, Eq, PartialEq)]
     enum TokenizerError {
         none,
         unterminated_quote,
@@ -632,7 +634,7 @@ impl Tokenizer {
         fn process_opening_quote(
             this: &mut Tokenizer,
             quoted_cmdsubs: &mut Vec<usize>,
-            paran_offsets: &mut Vec<usize>,
+            paran_offsets: &Vec<usize>,
             quote: char,
         ) -> Result<(), usize> {
             if let Some(end) = quote_end(&this.start, this.token_cursor, quote) {
@@ -703,7 +705,7 @@ impl Tokenizer {
                     // The "$(" part of a quoted command substitution closes double quotes. To keep
                     // quotes balanced, act as if there was an invisible double quote after the ")".
                     if let Err(error_loc) =
-                        process_opening_quote(self, &mut quoted_cmdsubs, &mut paran_offsets, '"')
+                        process_opening_quote(self, &mut quoted_cmdsubs, &paran_offsets, '"')
                     {
                         if !self.accept_unfinished {
                             return self.call_error(
@@ -757,7 +759,7 @@ impl Tokenizer {
                 mode &= !TOK_MODE_ARRAY_BRACKETS;
             } else if c == '\'' || c == '"' {
                 if let Err(error_loc) =
-                    process_opening_quote(self, &mut quoted_cmdsubs, &mut paran_offsets, c)
+                    process_opening_quote(self, &mut quoted_cmdsubs, &paran_offsets, c)
                 {
                     if !self.accept_unfinished {
                         return self.call_error(
@@ -1146,12 +1148,12 @@ impl PipeOrRedir {
 
     // \return if we are "valid". Here "valid" means only that the source fd did not overflow.
     // For example 99999999999> is invalid.
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         self.fd >= 0
     }
 
     // \return the token type for this redirection.
-    fn token_type(&self) -> TokenType {
+    pub fn token_type(&self) -> TokenType {
         if self.is_pipe {
             TokenType::pipe
         } else {

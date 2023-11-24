@@ -40,6 +40,8 @@ using cstring = std::string;
 
 const file_id_t kInvalidFileID{};
 
+wcstring_list_ffi_t::~wcstring_list_ffi_t() = default;
+
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 
@@ -228,9 +230,17 @@ const dir_iter_t::entry_t *dir_iter_t::next() {
     entry_.inode = dent->d_ino;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
     auto type = dirent_type_to_entry_type(dent->d_type);
-    // Do not store symlinks as we will need to resolve them.
+    // Do not store symlinks as type as we will need to resolve them.
     if (type != dir_entry_type_t::lnk) {
         entry_.type_ = type;
+    } else {
+        entry_.type_ = none();
+    }
+    // This entry could be a link if it is a link or unknown.
+    if (type.has_value()) {
+        entry_.possible_link_ = type == dir_entry_type_t::lnk;
+    } else {
+        entry_.possible_link_ = none();
     }
 #endif
     return &entry_;

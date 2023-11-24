@@ -76,6 +76,17 @@ class rgb_color_t {
     /// Returns whether the color is the normal special color.
     bool is_normal(void) const { return type == type_normal; }
 
+    void set_is_named() { type = type_named; }
+    void set_is_rgb() { type = type_rgb; }
+    void set_is_normal() { type = type_normal; }
+    void set_is_reset() { type = type_reset; }
+    void set_name_idx(uint8_t idx) { data.name_idx = idx; }
+    void set_color(uint8_t r, uint8_t g, uint8_t b) {
+        data.color.rgb[0] = r;
+        data.color.rgb[1] = g;
+        data.color.rgb[2] = b;
+    }
+
     /// Returns whether the color is the reset special color.
     bool is_reset(void) const { return type == type_reset; }
 

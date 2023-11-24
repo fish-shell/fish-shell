@@ -21,6 +21,7 @@
 #include "../parser.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "builtins/shared.rs.h"
 
 enum { BIND_INSERT, BIND_ERASE, BIND_KEY_NAMES, BIND_FUNCTION_NAMES };
 struct bind_cmd_opts_t {
@@ -42,7 +43,7 @@ struct bind_cmd_opts_t {
 namespace {
 class builtin_bind_t {
    public:
-    maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+    maybe_t<int> builtin_bind(const parser_t &parser, io_streams_t &streams, const wchar_t **argv);
 
     builtin_bind_t() : input_mappings_(input_mappings()) {}
 
@@ -54,7 +55,7 @@ class builtin_bind_t {
     /// lock again.
     acquired_lock<input_mapping_set_t> input_mappings_;
 
-    void list(const wchar_t *bind_mode, bool user, parser_t &parser, io_streams_t &streams);
+    void list(const wchar_t *bind_mode, bool user, const parser_t &parser, io_streams_t &streams);
     void key_names(bool all, io_streams_t &streams);
     void function_names(io_streams_t &streams);
     bool add(const wcstring &seq, const wchar_t *const *cmds, size_t cmds_len, const wchar_t *mode,
@@ -62,19 +63,19 @@ class builtin_bind_t {
     bool erase(const wchar_t *const *seq, bool all, const wchar_t *mode, bool use_terminfo,
                bool user, io_streams_t &streams);
     bool get_terminfo_sequence(const wcstring &seq, wcstring *out_seq, io_streams_t &streams) const;
-    bool insert(int optind, int argc, const wchar_t **argv, parser_t &parser,
+    bool insert(int optind, int argc, const wchar_t **argv, const parser_t &parser,
                 io_streams_t &streams);
     void list_modes(io_streams_t &streams);
-    bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, parser_t &parser,
+    bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, const parser_t &parser,
                   io_streams_t &streams);
     bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool preset,
-                  parser_t &parser, io_streams_t &streams);
+                  const parser_t &parser, io_streams_t &streams);
 };
 
 /// List a single key binding.
 /// Returns false if no binding with that sequence and mode exists.
 bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
-                              parser_t &parser, io_streams_t &streams) {
+                              const parser_t &parser, io_streams_t &streams) {
     std::vector<wcstring> ecmds;
     wcstring sets_mode, out;
 
@@ -117,12 +118,13 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
     }
     out.push_back(L'\n');
 
-    if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
-        std::vector<highlight_spec_t> colors;
-        highlight_shell(out, colors, parser.context());
-        streams.out.append(str2wcstring(colorize(out, colors, parser.vars())));
+    if (!streams.out_is_redirected() && isatty(STDOUT_FILENO)) {
+        auto ffi_colors = highlight_shell_ffi(out, *parser_context(parser), false, {});
+        auto ffi_colored = colorize(out, *ffi_colors, parser.vars());
+        std::string colored{ffi_colored.begin(), ffi_colored.end()};
+        streams.out()->append(str2wcstring(std::move(colored)));
     } else {
-        streams.out.append(out);
+        streams.out()->append(out);
     }
 
     return true;
@@ -131,7 +133,7 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
 // Overload with both kinds of bindings.
 // Returns false only if neither exists.
 bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
-                              bool preset, parser_t &parser, io_streams_t &streams) {
+                              bool preset, const parser_t &parser, io_streams_t &streams) {
     bool retval = false;
     if (preset) {
         retval |= list_one(seq, bind_mode, false, parser, streams);
@@ -143,7 +145,7 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
 }
 
 /// List all current key bindings.
-void builtin_bind_t::list(const wchar_t *bind_mode, bool user, parser_t &parser,
+void builtin_bind_t::list(const wchar_t *bind_mode, bool user, const parser_t &parser,
                           io_streams_t &streams) {
     const std::vector<input_mapping_name_t> lst = input_mappings_->get_names(user);
 
@@ -163,8 +165,8 @@ void builtin_bind_t::list(const wchar_t *bind_mode, bool user, parser_t &parser,
 void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
     const std::vector<wcstring> names = input_terminfo_get_names(!all);
     for (const wcstring &name : names) {
-        streams.out.append(name);
-        streams.out.push(L'\n');
+        streams.out()->append(name);
+        streams.out()->push(L'\n');
     }
 }
 
@@ -174,7 +176,7 @@ void builtin_bind_t::function_names(io_streams_t &streams) {
 
     for (const auto &name : names) {
         auto seq = name.c_str();
-        streams.out.append_format(L"%ls\n", seq);
+        streams.out()->append(format_string(L"%ls\n", seq));
     }
 }
 
@@ -188,14 +190,15 @@ bool builtin_bind_t::get_terminfo_sequence(const wcstring &seq, wcstring *out_se
     wcstring eseq = escape_string(seq, ESCAPE_NO_PRINTABLES);
     if (!opts->silent) {
         if (errno == ENOENT) {
-            streams.err.append_format(_(L"%ls: No key with name '%ls' found\n"), L"bind",
-                                      eseq.c_str());
+            streams.err()->append(
+                format_string(_(L"%ls: No key with name '%ls' found\n"), L"bind", eseq.c_str()));
         } else if (errno == EILSEQ) {
-            streams.err.append_format(_(L"%ls: Key with name '%ls' does not have any mapping\n"),
-                                      L"bind", eseq.c_str());
+            streams.err()->append(format_string(
+                _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", eseq.c_str()));
         } else {
-            streams.err.append_format(_(L"%ls: Unknown error trying to bind to key named '%ls'\n"),
-                                      L"bind", eseq.c_str());
+            streams.err()->append(
+                format_string(_(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind",
+                              eseq.c_str()));
         }
     }
     return false;
@@ -258,7 +261,7 @@ bool builtin_bind_t::erase(const wchar_t *const *seq, bool all, const wchar_t *m
     return res;
 }
 
-bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, parser_t &parser,
+bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, const parser_t &parser,
                             io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
@@ -272,7 +275,8 @@ bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, parser_t
     } else {
         // Inserting both on the other hand makes no sense.
         if (opts->have_preset && opts->have_user) {
-            streams.err.append_format(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd, L"--preset", "--user");
+            streams.err()->append(
+                format_string(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd, L"--preset", "--user"));
             return true;
         }
     }
@@ -301,11 +305,11 @@ bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, parser_t
             wcstring eseq = escape_string(argv[optind], ESCAPE_NO_PRINTABLES);
             if (!opts->silent) {
                 if (opts->use_terminfo) {
-                    streams.err.append_format(_(L"%ls: No binding found for key '%ls'\n"), cmd,
-                                              eseq.c_str());
+                    streams.err()->append(format_string(_(L"%ls: No binding found for key '%ls'\n"),
+                                                        cmd, eseq.c_str()));
                 } else {
-                    streams.err.append_format(_(L"%ls: No binding found for sequence '%ls'\n"), cmd,
-                                              eseq.c_str());
+                    streams.err()->append(format_string(
+                        _(L"%ls: No binding found for sequence '%ls'\n"), cmd, eseq.c_str()));
                 }
             }
             return true;
@@ -338,12 +342,13 @@ void builtin_bind_t::list_modes(io_streams_t &streams) {
         modes.insert(binding.mode);
     }
     for (const auto &mode : modes) {
-        streams.out.append_format(L"%ls\n", mode.c_str());
+        streams.out()->append(format_string(L"%ls\n", mode.c_str()));
     }
 }
 
 static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, const parser_t &parser,
+                          io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":aehkKfM:Lm:s";
     static const struct woption long_options[] = {{L"all", no_argument, 'a'},
@@ -394,7 +399,7 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             }
             case L'M': {
                 if (!valid_var_name(w.woptarg)) {
-                    streams.err.append_format(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg);
+                    streams.err()->append(format_string(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg));
                     return STATUS_INVALID_ARGS;
                 }
                 opts.bind_mode = w.woptarg;
@@ -403,7 +408,7 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             }
             case L'm': {
                 if (!valid_var_name(w.woptarg)) {
-                    streams.err.append_format(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg);
+                    streams.err()->append(format_string(BUILTIN_ERR_BIND_MODE, cmd, w.woptarg));
                     return STATUS_INVALID_ARGS;
                 }
                 opts.sets_bind_mode = w.woptarg;
@@ -424,11 +429,11 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 break;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             case L'?': {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             default: {
@@ -444,7 +449,7 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
 }  // namespace
 
 /// The bind builtin, used for setting character sequences.
-maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams,
+maybe_t<int> builtin_bind_t::builtin_bind(const parser_t &parser, io_streams_t &streams,
                                           const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
@@ -499,7 +504,7 @@ maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &stream
             break;
         }
         default: {
-            streams.err.append_format(_(L"%ls: Invalid state\n"), cmd);
+            streams.err()->append(format_string(_(L"%ls: Invalid state\n"), cmd));
             return STATUS_CMD_ERROR;
         }
     }
@@ -507,7 +512,10 @@ maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &stream
     return STATUS_CMD_OK;
 }
 
-maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+int builtin_bind(const void *_parser, void *_streams, void *_argv) {
+    const auto &parser = *static_cast<const parser_t *>(_parser);
+    auto &streams = *static_cast<io_streams_t *>(_streams);
+    auto argv = static_cast<const wchar_t **>(_argv);
     builtin_bind_t bind;
-    return bind.builtin_bind(parser, streams, argv);
+    return *bind.builtin_bind(parser, streams, argv);
 }

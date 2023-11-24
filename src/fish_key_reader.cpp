@@ -22,6 +22,7 @@
 #include "common.h"
 #include "cxxgen.h"
 #include "env.h"
+#include "env/env_ffi.rs.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "ffi_baggage.h"
 #include "ffi_init.rs.h"
@@ -35,8 +36,6 @@
 #include "reader.h"
 #include "signals.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-struct config_paths_t determine_config_directory_paths(const char *argv0);
 
 static const wchar_t *ctrl_symbolic_names[] = {
     nullptr, nullptr, nullptr, nullptr, nullptr,  nullptr, nullptr, nullptr,
@@ -240,7 +239,7 @@ static void process_input(bool continuous_mode, bool verbose) {
         if (reader_test_and_clear_interrupted()) {
             evt = char_event_t{shell_modes.c_cc[VINTR]};
         } else {
-            evt = queue.readch_timed();
+            evt = queue.readch_timed_esc();
         }
         if (!evt || !evt->is_char()) {
             output_bind_command(bind_chars);
@@ -278,10 +277,11 @@ static void process_input(bool continuous_mode, bool verbose) {
 [[noreturn]] static void setup_and_process_keys(bool continuous_mode, bool verbose) {
     set_interactive_session(true);
     rust_init();
-    env_init();
+    rust_env_init(true);
     reader_init();
-    parser_t &parser = parser_t::principal_parser();
-    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
+    auto parser_box = parser_principal_parser();
+    const parser_t &parser = parser_box->deref();
+    scoped_push<bool> interactive{&parser.libdata_pods_mut().is_interactive, true};
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.

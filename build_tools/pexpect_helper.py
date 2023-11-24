@@ -22,6 +22,7 @@ import re
 import sys
 import time
 import pexpect
+from signal import Signals
 
 # Default timeout for failing to match.
 TIMEOUT_SECS = 5
@@ -246,15 +247,22 @@ class SpawnedProc(object):
         Report it to stdout, along with the offending call site.
         If 'unmatched' is set, print it to stdout.
         """
+        # Close the process so we can get the status
+        self.spawn.close()
         colors = self.colors()
         failtype = pexpect_error_type(err)
+        # If we get an EOF, we check if the process exited with a signal.
+        # This shows us e.g. if it crashed
+        if failtype == 'EOF' and self.spawn.signalstatus != 0:
+            failtype = "SIGNAL " + Signals(self.spawn.signalstatus).name
+
         fmtkeys = {"failtype": failtype, "pat": escape(pat)}
         fmtkeys.update(**colors)
 
         filename, lineno, code_context = get_callsite()
         fmtkeys["filename"] = filename
         fmtkeys["lineno"] = lineno
-        fmtkeys["code"] = "\n".join(code_context)
+        fmtkeys["code"] = "\n".join([n.strip() for n in code_context if n])
 
         if unmatched:
             print(
@@ -277,7 +285,10 @@ class SpawnedProc(object):
         print("{CYAN}<-------{RESET}".format(**colors))
         sys.stdout.write(self.spawn.before)
         sys.stdout.flush()
-        print("{RESET}\n{CYAN}------->{RESET}".format(**colors))
+        maybe_nl=""
+        if not self.spawn.before.endswith("\n"):
+            maybe_nl="\n{CYAN}(no trailing newline)".format(**colors)
+        print("{RESET}{maybe_nl}{CYAN}------->{RESET}".format(maybe_nl=maybe_nl, **colors))
 
         print("")
 

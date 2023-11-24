@@ -548,3 +548,7 @@ complete -C'dotty '
 # CHECK: .abc
 
 rm -r $tmpdir
+
+complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mktemp'
+# (one "--command=" is okay, we used to get "--command=--command="
+# CHECK: --command=mktemp

@@ -91,5 +91,5 @@ To force true-color support on or off, set :envvar:`fish_term24bit` to "1" for o
 
 To debug color palette problems, ``tput colors`` may be useful to see the number of colors in terminfo for a terminal. Fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
 
-The ``set_color`` command uses the terminfo database to look up how to change terminal colors on whatever terminal is in use. Some systems have old and incomplete terminfo databases, and lack color information for terminals that support it. Fish assumes that all terminals can use the [ANSI X3.64](https://en.wikipedia.org/wiki/ANSI_escape_code) escape sequences if the terminfo definition indicates a color below 16 is not supported.
+The ``set_color`` command uses the terminfo database to look up how to change terminal colors on whatever terminal is in use. Some systems have old and incomplete terminfo databases, and lack color information for terminals that support it. Fish assumes that all terminals can use the `ANSI X3.64 <https://en.wikipedia.org/wiki/ANSI_escape_code>`_ escape sequences if the terminfo definition indicates a color below 16 is not supported.
 

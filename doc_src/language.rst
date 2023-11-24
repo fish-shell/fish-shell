@@ -687,24 +687,37 @@ For more on shell variables, read the :ref:`Shell variables <variables>` section
 Quoting variables
 '''''''''''''''''
 
+Variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (``:``) instead [#]_.
 
-Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (``:``) instead [#]_.
+Fish variables are all :ref:`lists <variables-lists>`, and they are split into elements when they are *set* - that means it is important to decide whether to use quotes or not with :doc:`set <cmds/set>`::
 
-Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
+  set foo 1 2 3 # a variable with three elements
+  rm $foo # runs the equivalent of `rm 1 2 3` - trying to delete three files: 1, 2 and 3.
+  rm "$foo" # runs `rm '1 2 3'` - trying to delete one file called '1 2 3'
+
+  set foo # an empty variable
+  rm $foo # runs `rm` without arguments
+  rm "$foo" # runs the equivalent of `rm ''`
+
+  set foo "1 2 3"
+  rm $foo # runs the equivalent of `rm '1 2 3'` - trying to delete one file
+  rm "$foo" # same thing
+
+This is unlike other shells, which do what is known as "Word Splitting", where they split the variable when it is *used* in an expansion. E.g. in bash:
+
+.. code-block:: sh
+
+   foo="1 2 3"
+   rm $foo # runs the equivalent of `rm 1 2 3`
+   rm "$foo" # runs the equivalent of `rm '1 2 3'`
+
+This is the cause of very common problems with filenames with spaces in bash scripts.
+
+In fish, unquoted variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
 If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`Combining Lists <cartesian-product>` section for more information.
 
-Unlike other shells, fish doesn't do what is known as "Word Splitting". Once a variable is set to a particular set of elements, those elements expand as themselves. They aren't split on spaces or newlines or anything::
-
-  > set foo one\nthing
-  > echo $foo
-  one
-  thing
-  > printf '|%s|\n' $foo
-  |one
-  thing|
-
-That means quoting isn't the absolute necessity it is in other shells. Most of the time, not quoting a variable is correct. The exception is when you need to ensure that the variable is passed as one element, even if it might be unset or have multiple elements. This happens often with :doc:`test <cmds/test>`::
+Most of the time, not quoting a variable is correct. The exception is when you need to ensure that the variable is passed as one element, even if it might be unset or have multiple elements. This happens often with :doc:`test <cmds/test>`::
 
   set -l foo one two three
   test -n $foo
@@ -1525,6 +1538,10 @@ You can change the settings of fish by changing the values of certain variables.
 
    sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
 
+.. envvar:: fish_sequence_key_delay_ms
+
+   sets how long fish waits for another key after seeing a key that is part of a longer sequence, to disambiguate. For instance if you had bound ``\cx\ce`` to open an editor, fish would wait for this long in milliseconds to see a ctrl-e after a ctrl-x. If the time elapses, it will handle it as a ctrl-x (by default this would copy the current commandline to the clipboard). See also :ref:`Key sequences <interactive-key-sequences>`.
+
 .. envvar:: fish_complete_path
 
    determines where fish looks for completion. When trying to complete for a command, fish looks for files in the directories in this variable.
@@ -1909,7 +1926,13 @@ Configuration files are run in the following order:
 
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
   - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d/``)
-  - Directories for others to ship configuration snippets for their software. Fish searches the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_conf.d`` directory; if not defined, the default value of ``XDG_DATA_DIRS`` is ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``, unless your distribution customized this.
+  - Directories for others to ship configuration snippets for their software:
+
+    - the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable)
+    - a ``fish/vendor_conf.d`` directory in the directories listed in ``$XDG_DATA_DIRS`` (default ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``)
+
+    These directories are also accessible in ``$__fish_vendor_confdirs``.
+    Note that changing that in a running fish won't do anything as by that point the directories have already been read.
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
@@ -1922,6 +1945,8 @@ Configuration files are run in the following order:
 These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command ``status --is-interactive`` to determine if the shell is interactive. If you want to run a command only when using a login shell, use ``status --is-login`` instead. This will speed up the starting of non-interactive or non-login shells.
 
 If you are developing another program, you may want to add configuration for all users of fish on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells won't benefit from the fish-specific configuration. However, if they are required, you can install them to the "vendor" configuration directory. As this path may vary from system to system, ``pkg-config`` should be used to discover it: ``pkg-config --variable confdir fish``.
+
+For system integration, fish also ships a file called ``__fish_build_paths.fish``. This can be customized during build, for instance because your system requires special paths to be used.
 
 .. _featureflags:
 

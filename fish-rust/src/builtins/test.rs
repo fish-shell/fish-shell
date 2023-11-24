@@ -4,6 +4,7 @@ use crate::common;
 mod test_expressions {
     use super::*;
 
+    use crate::nix::isatty;
     use crate::wutil::{
         file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,
         Error, Options,
@@ -82,23 +83,22 @@ mod test_expressions {
         }
 
         // Return true if the number is a tty().
-        fn isatty(&self, streams: &io_streams_t) -> bool {
-            fn istty(fd: libc::c_int) -> bool {
-                // Safety: isatty cannot crash.
-                unsafe { libc::isatty(fd) > 0 }
-            }
+        fn isatty(&self, streams: &mut IoStreams) -> bool {
             if self.delta != 0.0 || self.base > i32::MAX as i64 || self.base < i32::MIN as i64 {
                 return false;
             }
             let bint = self.base as i32;
             if bint == 0 {
-                streams.stdin_fd().map(istty).unwrap_or(false)
+                match streams.stdin_fd {
+                    -1 => false,
+                    fd => isatty(fd),
+                }
             } else if bint == 1 {
-                !streams.out_is_redirected && istty(libc::STDOUT_FILENO)
+                !streams.out_is_redirected && isatty(libc::STDOUT_FILENO)
             } else if bint == 2 {
-                !streams.err_is_redirected && istty(libc::STDERR_FILENO)
+                !streams.err_is_redirected && isatty(libc::STDERR_FILENO)
             } else {
-                istty(bint)
+                isatty(bint)
             }
         }
     }
@@ -211,7 +211,7 @@ mod test_expressions {
     /// Base trait for expressions.
     pub(super) trait Expression {
         /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool;
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool;
 
         /// Return base.range.
         fn range(&self) -> Range;
@@ -264,7 +264,7 @@ mod test_expressions {
     }
 
     impl Expression for UnaryPrimary {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             unary_primary_evaluate(self.token, &self.arg, streams, errors)
         }
 
@@ -274,7 +274,7 @@ mod test_expressions {
     }
 
     impl Expression for BinaryPrimary {
-        fn evaluate(&self, _streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, _streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             binary_primary_evaluate(self.token, &self.arg_left, &self.arg_right, errors)
         }
 
@@ -284,7 +284,7 @@ mod test_expressions {
     }
 
     impl Expression for UnaryOperator {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             if self.token == Token::bang {
                 !self.subject.evaluate(streams, errors)
             } else {
@@ -299,7 +299,7 @@ mod test_expressions {
     }
 
     impl Expression for CombiningExpression {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             let _res = self.subjects[0].evaluate(streams, errors);
             if self.token == Token::combine_and || self.token == Token::combine_or {
                 assert!(!self.subjects.is_empty());
@@ -352,7 +352,7 @@ mod test_expressions {
     }
 
     impl Expression for ParentheticalExpression {
-        fn evaluate(&self, streams: &mut io_streams_t, errors: &mut Vec<WString>) -> bool {
+        fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             self.contents.evaluate(streams, errors)
         }
 
@@ -886,7 +886,7 @@ mod test_expressions {
     fn unary_primary_evaluate(
         token: Token,
         arg: &wstr,
-        streams: &mut io_streams_t,
+        streams: &mut IoStreams,
         errors: &mut Vec<WString>,
     ) -> bool {
         const S_ISGID: u32 = 0o2000;
@@ -925,8 +925,7 @@ mod test_expressions {
             }
             Token::filetype_G => {
                 // "-G", for check effective group id
-                // Safety: getegid cannot fail.
-                stat_and(arg, |buf| unsafe { libc::getegid() } == buf.gid())
+                stat_and(arg, |buf| crate::nix::getegid() == buf.gid())
             }
             Token::filetype_g => {
                 // "-g", for set-group-id
@@ -943,10 +942,9 @@ mod test_expressions {
             }
             Token::filetype_O => {
                 // "-O", for check effective user id
-                stat_and(
-                    arg,
-                    |buf: std::fs::Metadata| unsafe { libc::geteuid() } == buf.uid(),
-                )
+                stat_and(arg, |buf: std::fs::Metadata| {
+                    crate::nix::geteuid() == buf.uid()
+                })
             }
             Token::filetype_p => {
                 // "-p", for FIFO
@@ -1003,11 +1001,7 @@ mod test_expressions {
 /// Evaluate a conditional expression given the arguments. For POSIX conformance this
 /// supports a more limited range of functionality.
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-pub fn test(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
         return STATUS_INVALID_ARGS;
@@ -1029,7 +1023,7 @@ pub fn test(
             streams
                 .err
                 .appendln(wgettext!("[: the last argument must be ']'"));
-            builtin_print_error_trailer(parser, streams, program_name);
+            builtin_print_error_trailer(parser, streams.err, program_name);
             return STATUS_INVALID_ARGS;
         }
     }
@@ -1057,7 +1051,7 @@ pub fn test(
     let expr = test_expressions::TestParser::parse_args(args, &mut err, program_name);
     let Some(expr) = expr else {
         streams.err.append(err);
-        streams.err.append(parser.pin().current_line().as_wstr());
+        streams.err.append(parser.current_line());
         return STATUS_CMD_ERROR;
     };
 
@@ -1066,11 +1060,11 @@ pub fn test(
     if !eval_errors.is_empty() {
         if !common::should_suppress_stderr_for_tests() {
             for eval_error in eval_errors {
-                streams.err.appendln(eval_error);
+                streams.err.appendln(&eval_error);
             }
             // Add a backtrace but not the "see help" message
             // because this isn't about passing the wrong options.
-            streams.err.append(parser.pin().current_line().as_wstr());
+            streams.err.append(parser.current_line());
         }
         return STATUS_INVALID_ARGS;
     }

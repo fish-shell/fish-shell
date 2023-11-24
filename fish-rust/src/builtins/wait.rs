@@ -1,13 +1,13 @@
 use libc::pid_t;
 
 use super::prelude::*;
-use crate::ffi::{job_t, parser_t, proc_wait_any};
+use crate::proc::{proc_wait_any, Job};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 use crate::wutil;
 
 /// \return true if we can wait on a job.
-fn can_wait_on_job(j: &cxx::SharedPtr<job_t>) -> bool {
+fn can_wait_on_job(j: &Job) -> bool {
     j.is_constructed() && !j.is_foreground() && !j.is_stopped()
 }
 
@@ -35,13 +35,13 @@ enum WaitHandleQuery<'a> {
 /// \return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
-    parser: &mut parser_t,
+    parser: &Parser,
     handles: &mut Vec<WaitHandleRef>,
 ) -> bool {
     // Has a job already completed?
     // TODO: we can avoid traversing this list if searching by pid.
     let mut matched = false;
-    let wait_handles: &mut WaitHandleStore = parser.get_wait_handles_mut();
+    let wait_handles: &mut WaitHandleStore = &mut parser.mut_wait_handles();
     for wh in wait_handles.iter() {
         if wait_handle_matches(query, wh) {
             handles.push(wh.clone());
@@ -50,15 +50,12 @@ fn find_wait_handles(
     }
 
     // Is there a running job match?
-    for j in parser.get_jobs() {
+    for j in &*parser.jobs() {
         // We want to set 'matched' to true if we could have matched, even if the job was stopped.
         let provide_handle = can_wait_on_job(j);
-        for proc in j.get_procs() {
-            let wh = proc
-                .pin_mut()
-                .unpin()
-                .make_wait_handle(j.get_internal_job_id());
-            let Some(wh) = wh else {
+        let internal_job_id = j.internal_job_id;
+        for proc in j.processes().iter() {
+            let Some(wh) = proc.make_wait_handle(internal_job_id) else {
                 continue;
             };
             if wait_handle_matches(query, &wh) {
@@ -72,18 +69,18 @@ fn find_wait_handles(
     matched
 }
 
-fn get_all_wait_handles(parser: &parser_t) -> Vec<WaitHandleRef> {
+fn get_all_wait_handles(parser: &Parser) -> Vec<WaitHandleRef> {
     // Get wait handles for reaped jobs.
     let mut result = parser.get_wait_handles().get_list();
 
     // Get wait handles for running jobs.
-    for j in parser.get_jobs() {
+    for j in &*parser.jobs() {
         if !can_wait_on_job(j) {
             continue;
         }
-        for proc_ptr in j.get_procs().iter_mut() {
-            let proc = proc_ptr.pin_mut().unpin();
-            if let Some(wh) = proc.make_wait_handle(j.get_internal_job_id()) {
+        let internal_job_id = j.internal_job_id;
+        for proc in j.processes().iter() {
+            if let Some(wh) = proc.make_wait_handle(internal_job_id) {
                 result.push(wh);
             }
         }
@@ -98,11 +95,7 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 /// Wait for the given wait handles to be marked as completed.
 /// If \p any_flag is set, wait for the first one; otherwise wait for all.
 /// \return a status code.
-fn wait_for_completion(
-    parser: &mut parser_t,
-    whs: &[WaitHandleRef],
-    any_flag: bool,
-) -> Option<c_int> {
+fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> Option<c_int> {
     if whs.is_empty() {
         return Some(0);
     }
@@ -119,7 +112,7 @@ fn wait_for_completion(
             // Remove completed wait handles (at most 1 if any_flag is set).
             for wh in whs {
                 if is_completed(wh) {
-                    parser.get_wait_handles_mut().remove(wh);
+                    parser.mut_wait_handles().remove(wh);
                     if any_flag {
                         break;
                     }
@@ -130,16 +123,12 @@ fn wait_for_completion(
         if sigint.check() {
             return Some(128 + libc::SIGINT);
         }
-        proc_wait_any(parser.pin());
+        proc_wait_any(parser);
     }
 }
 
 #[widestrs]
-pub fn wait(
-    parser: &mut parser_t,
-    streams: &mut io_streams_t,
-    argv: &mut [&wstr],
-) -> Option<c_int> {
+pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option
@@ -162,11 +151,11 @@ pub fn wait(
                 print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, &argv[w.woptind - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, &argv[w.woptind - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {

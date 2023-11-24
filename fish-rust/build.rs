@@ -1,20 +1,45 @@
 use rsconf::{LinkType, Target};
+use std::env;
 use std::error::Error;
 
 fn main() {
-    cc::Build::new().file("src/compat.c").compile("libcompat.a");
+    for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR"] {
+        if let Ok(val) = env::var(key) {
+            // Forward some CMake config
+            println!("cargo:rustc-env={key}={val}");
+        }
+    }
 
-    let rust_dir = std::env::var("CARGO_MANIFEST_DIR").expect("Env var CARGO_MANIFEST_DIR missing");
+    rsconf::rebuild_if_path_changed("fish-rust/src/cfg/compat.c");
+    cc::Build::new()
+        .file("fish-rust/src/compat.c")
+        .include(
+            &std::env::var("FISH_BUILD_DIR")
+                // Add our default to potentially help tools that don't go through CMake.
+                .unwrap_or("./build".into()),
+        )
+        .compile("libcompat.a");
+
+    if compiles("fish-rust/src/cfg/w_exitcode.cpp") {
+        println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");
+    }
+
+    if compiles("fish-rust/src/cfg/spawn.c") {
+        println!("cargo:rustc-cfg=FISH_USE_POSIX_SPAWN");
+    }
+
+    let rust_dir = env!("CARGO_MANIFEST_DIR");
     let target_dir =
-        std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/../{}", rust_dir, "target/"));
-    let fish_src_dir = format!("{}/{}", rust_dir, "../src/");
+        std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));
+    let cpp_fish_src_dir = format!("{}/{}", rust_dir, "src/");
 
     // Where cxx emits its header.
     let cxx_include_dir = format!("{}/{}", target_dir, "cxxbridge/rust/");
 
-    // If FISH_BUILD_DIR is given by CMake, then use it; otherwise assume it's at ../build.
+    // If FISH_BUILD_DIR is given by CMake, then use it; otherwise assume it's at build.
     let fish_build_dir =
-        std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{}/{}", rust_dir, "../build/"));
+        std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{}/{}", rust_dir, "build/"));
+    println!("cargo:rustc-env=FISH_BUILD_DIR={}", fish_build_dir);
 
     // Where autocxx should put its stuff.
     let autocxx_gen_dir = std::env::var("FISH_AUTOCXX_GEN_DIR")
@@ -38,47 +63,54 @@ fn main() {
     // This allows "Rust to be used from C++"
     // This must come before autocxx so that cxx can emit its cxx.h header.
     let source_files = vec![
-        "src/abbrs.rs",
-        "src/ast.rs",
-        "src/builtins/shared.rs",
-        "src/builtins/function.rs",
-        "src/common.rs",
-        "src/env/env_ffi.rs",
-        "src/env_dispatch.rs",
-        "src/event.rs",
-        "src/fd_monitor.rs",
-        "src/fd_readable_set.rs",
-        "src/fds.rs",
-        "src/ffi_init.rs",
-        "src/ffi_tests.rs",
-        "src/fish_indent.rs",
-        "src/function.rs",
-        "src/future_feature_flags.rs",
-        "src/highlight.rs",
-        "src/job_group.rs",
-        "src/kill.rs",
-        "src/null_terminated_array.rs",
-        "src/output.rs",
-        "src/parse_constants.rs",
-        "src/parse_tree.rs",
-        "src/parse_util.rs",
-        "src/print_help.rs",
-        "src/redirection.rs",
-        "src/signal.rs",
-        "src/smoke.rs",
-        "src/spawn.rs",
-        "src/termsize.rs",
-        "src/threads.rs",
-        "src/timer.rs",
-        "src/tokenizer.rs",
-        "src/topic_monitor.rs",
-        "src/trace.rs",
-        "src/util.rs",
-        "src/wait_handle.rs",
+        "fish-rust/src/abbrs.rs",
+        "fish-rust/src/ast.rs",
+        "fish-rust/src/builtins/shared.rs",
+        "fish-rust/src/common.rs",
+        "fish-rust/src/complete.rs",
+        "fish-rust/src/env_dispatch.rs",
+        "fish-rust/src/env/env_ffi.rs",
+        "fish-rust/src/env_universal_common.rs",
+        "fish-rust/src/event.rs",
+        "fish-rust/src/exec.rs",
+        "fish-rust/src/expand.rs",
+        "fish-rust/src/fd_monitor.rs",
+        "fish-rust/src/fd_readable_set.rs",
+        "fish-rust/src/fds.rs",
+        "fish-rust/src/ffi_init.rs",
+        "fish-rust/src/ffi_tests.rs",
+        "fish-rust/src/fish_indent.rs",
+        "fish-rust/src/fish.rs",
+        "fish-rust/src/function.rs",
+        "fish-rust/src/future_feature_flags.rs",
+        "fish-rust/src/highlight.rs",
+        "fish-rust/src/history.rs",
+        "fish-rust/src/io.rs",
+        "fish-rust/src/job_group.rs",
+        "fish-rust/src/kill.rs",
+        "fish-rust/src/operation_context.rs",
+        "fish-rust/src/output.rs",
+        "fish-rust/src/parse_constants.rs",
+        "fish-rust/src/parser.rs",
+        "fish-rust/src/parse_tree.rs",
+        "fish-rust/src/parse_util.rs",
+        "fish-rust/src/print_help.rs",
+        "fish-rust/src/proc.rs",
+        "fish-rust/src/reader.rs",
+        "fish-rust/src/redirection.rs",
+        "fish-rust/src/signal.rs",
+        "fish-rust/src/smoke.rs",
+        "fish-rust/src/termsize.rs",
+        "fish-rust/src/threads.rs",
+        "fish-rust/src/timer.rs",
+        "fish-rust/src/tokenizer.rs",
+        "fish-rust/src/trace.rs",
+        "fish-rust/src/util.rs",
+        "fish-rust/src/wildcard.rs",
     ];
     cxx_build::bridges(&source_files)
         .flag_if_supported("-std=c++11")
-        .include(&fish_src_dir)
+        .include(&cpp_fish_src_dir)
         .include(&fish_build_dir) // For config.h
         .include(&cxx_include_dir) // For cxx.h
         .flag("-Wno-comment")
@@ -86,8 +118,8 @@ fn main() {
 
     // Emit autocxx junk.
     // This allows "C++ to be used from Rust."
-    let include_paths = [&fish_src_dir, &fish_build_dir, &cxx_include_dir];
-    let mut builder = autocxx_build::Builder::new("src/ffi.rs", include_paths);
+    let include_paths = [&cpp_fish_src_dir, &fish_build_dir, &cxx_include_dir];
+    let mut builder = autocxx_build::Builder::new("fish-rust/src/ffi.rs", include_paths);
     // Use autocxx's custom output directory unless we're being called by `rust-analyzer` and co.,
     // in which case stick to the default target directory so code intelligence continues to work.
     if std::env::var("RUSTC_WRAPPER").map_or(true, |wrapper| {
@@ -128,6 +160,16 @@ fn detect_features(target: Target) {
             Ok(false) => (),
         }
     }
+}
+
+fn compiles(file: &str) -> bool {
+    rsconf::rebuild_if_path_changed(file);
+    let mut command = cc::Build::new()
+        .flag("-fsyntax-only")
+        .get_compiler()
+        .to_command();
+    command.arg(file);
+    command.status().unwrap().success()
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with

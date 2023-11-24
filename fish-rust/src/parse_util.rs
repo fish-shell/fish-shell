@@ -1,5 +1,6 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
 use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor};
+use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
     EscapeStringStyle, UnescapeFlags, UnescapeStringStyle,
@@ -8,24 +9,23 @@ use crate::expand::{
     expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, BRACE_BEGIN, BRACE_END,
     BRACE_SEP, INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
 };
-use crate::ffi;
 use crate::ffi_tests::add_test;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
-    parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, StatementDecoration,
-    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
-    ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
-    ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
-    INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
+    parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
+    ParseKeyword, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition,
+    StatementDecoration, ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1,
+    ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
+    ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG,
+    INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
 };
 use crate::tokenizer::{
     comment_end, is_token_delimiter, quote_end, Tok, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
+use crate::wchar_ffi::{AsWstr, WCharFromFFI};
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use cxx::CxxWString;
@@ -52,14 +52,14 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
         if !escaped {
             if ['\'', '"'].contains(&c) {
                 pos = quote_end(input, pos, c)?;
-            }
-        } else if c == openc {
-            bracket_count += 1;
-        } else if c == closec {
-            bracket_count -= 1;
-            if bracket_count == 0 {
-                // pos points at the closing ], so add 1.
-                return Some(pos + 1);
+            } else if c == openc {
+                bracket_count += 1;
+            } else if c == closec {
+                bracket_count -= 1;
+                if bracket_count == 0 {
+                    // pos points at the closing ], so add 1.
+                    return Some(pos + 1);
+                }
             }
         }
         if c == '\\' {
@@ -90,7 +90,7 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
 pub fn parse_util_locate_cmdsubst_range<'a>(
     s: &'a wstr,
     inout_cursor_offset: &mut usize,
-    mut out_contents: Option<&'a wstr>,
+    mut out_contents: Option<&mut &'a wstr>,
     out_start: &mut usize,
     out_end: &mut usize,
     accept_incomplete: bool,
@@ -98,7 +98,7 @@ pub fn parse_util_locate_cmdsubst_range<'a>(
     out_has_dollar: Option<&mut bool>,
 ) -> i32 {
     // Clear the return values.
-    out_contents.as_mut().map(|s| *s = L!(""));
+    out_contents.as_mut().map(|s| **s = L!(""));
     *out_start = 0;
     *out_end = s.len();
 
@@ -121,9 +121,11 @@ pub fn parse_util_locate_cmdsubst_range<'a>(
         return ret;
     }
 
+    // Assign the substring to the out_contents.
+    let interior_begin = *out_start + 1;
     out_contents
         .as_mut()
-        .map(|contents| *contents = &s[*out_start..*out_end]);
+        .map(|contents| **contents = &s[interior_begin..*out_end]);
 
     // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
     // overflow is not likely.
@@ -200,7 +202,6 @@ fn parse_util_locate_cmdsub(
     let mut last_dollar = None;
     let mut paran_begin = None;
     let mut paran_end = None;
-
     fn process_opening_quote(
         input: &[char],
         inout_is_quoted: &mut Option<&mut bool>,
@@ -269,7 +270,7 @@ fn parse_util_locate_cmdsub(
                     paran_begin = Some(pos);
                     out_has_dollar
                         .as_mut()
-                        .map(|has_dollar| **has_dollar = last_dollar == Some(pos - 1));
+                        .map(|has_dollar| **has_dollar = last_dollar == Some(pos.wrapping_sub(1)));
                 }
 
                 paran_count += 1;
@@ -968,7 +969,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
 pub fn parse_util_detect_errors(
     buff_src: &wstr,
     mut out_errors: Option<&mut ParseErrorList>,
-    allow_incomplete: bool,
+    allow_incomplete: bool, /*=false*/
 ) -> Result<(), ParserTestErrorBits> {
     // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
     // allow_incomplete is set.
@@ -1013,8 +1014,8 @@ pub fn parse_util_detect_errors(
     if !parse_errors.is_empty() {
         if let Some(errors) = out_errors.as_mut() {
             errors.extend(parse_errors);
-            return Err(ParserTestErrorBits::ERROR);
         }
+        return Err(ParserTestErrorBits::ERROR);
     }
 
     // Defer to the tree-walking version.
@@ -1054,7 +1055,7 @@ pub fn parse_util_detect_errors_in_ast(
         if let Some(jc) = node.as_job_continuation() {
             // Somewhat clumsy way of checking for a statement without source in a pipeline.
             // See if our pipe has source but our statement does not.
-            if jc.pipe.has_source() && jc.statement.try_source_range().is_some() {
+            if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
                 has_unclosed_pipe = true;
             }
         } else if let Some(jcc) = node.as_job_conjunction_continuation() {
@@ -1065,7 +1066,9 @@ pub fn parse_util_detect_errors_in_ast(
             }
         } else if let Some(arg) = node.as_argument() {
             let arg_src = arg.source(buff_src);
-            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors);
+            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
+                .err()
+                .unwrap_or_default();
         } else if let Some(job) = node.as_job_pipeline() {
             // Disallow background in the following cases:
             //
@@ -1146,9 +1149,7 @@ pub fn parse_util_detect_errors_in_argument_list(
     let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);
-        if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors))
-            != ParserTestErrorBits::default()
-        {
+        if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
             return get_error_text(&errors);
         }
     }
@@ -1194,9 +1195,9 @@ pub fn parse_util_detect_errors_in_argument(
     arg: &ast::Argument,
     arg_src: &wstr,
     out_errors: &mut Option<&mut ParseErrorList>,
-) -> ParserTestErrorBits {
+) -> Result<(), ParserTestErrorBits> {
     let Some(source_range) = arg.try_source_range() else {
-        return ParserTestErrorBits::default();
+        return Ok(());
     };
 
     let source_start = source_range.start();
@@ -1271,7 +1272,7 @@ pub fn parse_util_detect_errors_in_argument(
 
     let mut cursor = 0;
     let mut checked = 0;
-    let subst = L!("");
+    let mut subst = L!("");
 
     let mut do_loop = true;
     let mut is_quoted = false;
@@ -1282,7 +1283,7 @@ pub fn parse_util_detect_errors_in_argument(
         match parse_util_locate_cmdsubst_range(
             arg_src,
             &mut cursor,
-            Some(subst),
+            Some(&mut subst),
             &mut paren_begin,
             &mut paren_end,
             false,
@@ -1292,7 +1293,7 @@ pub fn parse_util_detect_errors_in_argument(
             -1 => {
                 err |= ParserTestErrorBits::ERROR;
                 append_syntax_error!(out_errors, source_start, 1, "Mismatched parenthesis");
-                return err;
+                return Err(err);
             }
             0 => {
                 do_loop = false;
@@ -1305,6 +1306,11 @@ pub fn parse_util_detect_errors_in_argument(
                 );
                 assert!(paren_begin < paren_end, "Parens out of order?");
                 let mut subst_errors = ParseErrorList::new();
+                if let Err(subst_err) =
+                    parse_util_detect_errors(subst, Some(&mut subst_errors), false)
+                {
+                    err |= subst_err;
+                }
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
@@ -1323,7 +1329,11 @@ pub fn parse_util_detect_errors_in_argument(
 
     err |= check_subtoken(checked, arg_src.len(), out_errors);
 
-    err
+    if err.is_empty() {
+        Ok(())
+    } else {
+        Err(err)
+    }
 }
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
@@ -1499,7 +1509,7 @@ fn detect_errors_in_decorated_statement(
             &OperationContext::empty(),
             &mut command,
             None,
-            &mut new_errors,
+            Some(&mut new_errors),
             true, /* skip wildcards */
         ) == ExpandResultCode::error
         {
@@ -1574,7 +1584,7 @@ fn detect_errors_in_decorated_statement(
                     Some(pe) => Some(pe),
                     None => None,
                 },
-            ) && !ffi::builtin_exists(&unexp_command.to_ffi())
+            ) && !builtin_exists(unexp_command)
             {
                 errored = append_syntax_error!(
                     parse_errors,
@@ -1973,11 +1983,55 @@ add_test!("test_indents", || {
 
 #[cxx::bridge]
 mod parse_util_ffi {
+    extern "C++" {
+        include!("parse_constants.h");
+        include!("parse_tree.h");
+        include!("ast.h");
+        type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
+        type DecoratedStatement = crate::ast::DecoratedStatement;
+    }
     extern "Rust" {
         fn parse_util_compute_indents_ffi(src: &CxxWString) -> Vec<i32>;
+        #[cxx_name = "detect_errors_in_decorated_statement"]
+        // Getting weird linker errors when using pointers.
+        fn detect_errors_in_decorated_statement_ffi(
+            buff_src: &CxxWString,
+            dst: usize,
+            out_errors: usize,
+        ) -> bool;
     }
+}
+
+fn detect_errors_in_decorated_statement_ffi(
+    buff_src: &CxxWString,
+    dst: usize,
+    out_errors: usize,
+) -> bool {
+    let dst = unsafe { &*(dst as *const ast::DecoratedStatement) };
+    let out_errors = out_errors as *mut ParseErrorListFfi;
+    let mut out_errors = if out_errors.is_null() {
+        None
+    } else {
+        Some(unsafe { &mut (*out_errors).0 })
+    };
+    detect_errors_in_decorated_statement(buff_src.as_wstr(), dst, &mut out_errors)
 }
 
 fn parse_util_compute_indents_ffi(src: &CxxWString) -> Vec<i32> {
     parse_util_compute_indents(&src.from_ffi())
+}
+
+fn parse_util_detect_errors_ffi(
+    buff_src: &CxxWString,
+    out_errors: *mut ParseErrorListFfi,
+    allow_incomplete: bool,
+) -> u8 {
+    let out_errors = if out_errors.is_null() {
+        None
+    } else {
+        Some(unsafe { &mut (*out_errors).0 })
+    };
+    parse_util_detect_errors(buff_src.as_wstr(), out_errors, allow_incomplete)
+        .err()
+        .map_or(0, |error_bits| error_bits.bits())
 }

@@ -44,7 +44,9 @@ struct wcstring_list_ffi_t {
 
     wcstring_list_ffi_t() = default;
     /* implicit */ wcstring_list_ffi_t(std::vector<wcstring> vals) : vals(std::move(vals)) {}
+    ~wcstring_list_ffi_t();
 
+    bool empty() const { return vals.empty(); }
     size_t size() const { return vals.size(); }
     const wcstring &at(size_t idx) const { return vals.at(idx); }
     void clear() { vals.clear(); }
@@ -61,6 +63,16 @@ struct wcstring_list_ffi_t {
     static wcstring_list_ffi_t get_test_data();
     static void check_test_data(wcstring_list_ffi_t data);
 };
+
+/// Convert an iterable of strings to a list of wcharz_t.
+template <typename T>
+std::vector<wcharz_t> wcstring_list_to_ffi(const T &list) {
+    std::vector<wcharz_t> result;
+    for (const wcstring &str : list) {
+        result.push_back(str.c_str());
+    }
+    return result;
+}
 
 class autoclose_fd_t;
 
@@ -245,6 +257,9 @@ class dir_iter_t : noncopyable_t {
         /// \return whether this is a directory. This may call stat().
         bool is_dir() const { return check_type() == dir_entry_type_t::dir; }
 
+        /// \return false if we know this can't be a link via d_type, true if it could be.
+        maybe_t<bool> is_possible_link() const { return possible_link_; }
+
         /// \return the stat buff for this entry, invoking stat() if necessary.
         const maybe_t<struct stat> &stat() const;
 
@@ -262,6 +277,9 @@ class dir_iter_t : noncopyable_t {
         // on some filesystems, or later via stat(). If stat() fails, the error is silently ignored
         // and the type is left as none(). Note this is an unavoidable race.
         mutable maybe_t<dir_entry_type_t> type_{};
+
+        /// whether this entry could be a link, false if we know definitively it isn't.
+        mutable maybe_t<bool> possible_link_{};
 
         // fd of the DIR*, used for fstatat().
         int dirfd_{-1};

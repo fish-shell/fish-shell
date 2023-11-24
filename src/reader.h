@@ -14,15 +14,16 @@
 
 #include "common.h"
 #include "complete.h"
+#include "env.h"
 #include "highlight.h"
+#include "io.h"
 #include "maybe.h"
 #include "parse_constants.h"
+#include "parser.h"
 
-class env_stack_t;
-class environment_t;
-class history_t;
-class io_chain_t;
-class parser_t;
+#if INCLUDE_RUST_HEADERS
+#include "reader.rs.h"
+#endif
 
 /// An edit action that can be undone.
 struct edit_t {
@@ -87,10 +88,7 @@ class editable_line_t {
     const wcstring &text() const { return text_; }
 
     const std::vector<highlight_spec_t> &colors() const { return colors_; }
-    void set_colors(std::vector<highlight_spec_t> colors) {
-        assert(colors.size() == size());
-        colors_ = std::move(colors);
-    }
+    void set_colors(std::vector<highlight_spec_t> colors);
 
     size_t position() const { return position_; }
     void set_position(size_t position) { position_ = position; }
@@ -139,14 +137,10 @@ class editable_line_t {
     uint32_t edit_group_id_ = -1;
 };
 
+int reader_read_ffi(const void *parser, int fd, const void *io_chain);
 /// Read commands from \c fd until encountering EOF.
 /// The fd is not closed.
-int reader_read(parser_t &parser, int fd, const io_chain_t &io);
-
-/// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
-extern "C" {
-void reader_sighup();
-}
+int reader_read(const parser_t &parser, int fd, const io_chain_t &io);
 
 /// Initialize the reader.
 void reader_init();
@@ -185,7 +179,10 @@ void reader_set_autosuggestion_enabled_ffi(bool enabled);
 /// \param cmd Command line string passed to \c fish_title if is defined.
 /// \param parser The parser to use for autoloading fish_title.
 /// \param reset_cursor_position If set, issue a \r so the line driver knows where we are
-void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position = true);
+void reader_write_title(const wcstring &cmd, const parser_t &parser,
+                        bool reset_cursor_position = true);
+
+void reader_write_title_ffi(const wcstring &cmd, const void *parser, bool reset_cursor_position);
 
 /// Tell the reader that it needs to re-exec the prompt and repaint.
 /// This may be called in response to e.g. a color variable change.
@@ -194,15 +191,6 @@ void reader_schedule_prompt_repaint();
 /// Enqueue an event to the back of the reader's input queue.
 class char_event_t;
 void reader_queue_ch(const char_event_t &ch);
-
-/// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
-/// was set. In practice this will return 0 or SIGINT.
-int reader_test_and_clear_interrupted();
-
-/// Clear the interrupted flag unconditionally without handling anything. The flag could have been
-/// set e.g. when an interrupt arrived just as we were ending an earlier \c reader_readline
-/// invocation but before the \c is_interactive_read flag was cleared.
-void reader_reset_interrupted();
 
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set. If the current reader is interruptible, call \c reader_exit().
@@ -214,6 +202,8 @@ int reader_reading_interrupted();
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
 maybe_t<wcstring> reader_readline(int nchars);
+
+bool reader_readline_ffi(wcstring &line, int nchars);
 
 /// Configuration that we provide to a reader.
 struct reader_config_t {
@@ -256,15 +246,12 @@ bool check_exit_loop_maybe_warning(reader_data_t *data);
 
 /// Push a new reader environment controlled by \p conf, using the given history name.
 /// If \p history_name is empty, then save history in-memory only; do not write it to disk.
-void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t &&conf);
+void reader_push(const parser_t &parser, const wcstring &history_name, reader_config_t &&conf);
+
+void reader_push_ffi(const void *parser, const wcstring &history_name, const void *conf);
 
 /// Return to previous reader environment.
 void reader_pop();
-
-/// The readers interrupt signal handler. Cancels all currently running blocks.
-extern "C" {
-void reader_handle_sigint();
-}
 
 /// \return whether fish is currently unwinding the stack in preparation to exit.
 bool fish_is_unwinding_for_exit();
@@ -281,7 +268,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 struct abbrs_replacement_t;
 maybe_t<abbrs_replacement_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline,
                                                                   size_t cursor_pos,
-                                                                  parser_t &parser);
+                                                                  const parser_t &parser);
 
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,
@@ -290,22 +277,28 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
 
 /// Snapshotted state from the reader.
 struct commandline_state_t {
-    wcstring text;                         // command line text, or empty if not interactive
-    size_t cursor_pos{0};                  // position of the cursor, may be as large as text.size()
-    maybe_t<source_range_t> selection{};   // visual selection, or none if none
-    std::shared_ptr<history_t> history{};  // current reader history, or null if not interactive
-    bool pager_mode{false};                // pager is visible
-    bool pager_fully_disclosed{false};     // pager already shows everything if possible
-    bool search_mode{false};               // pager is visible and search is active
-    bool initialized{false};               // if false, the reader has not yet been entered
+    wcstring text;                        // command line text, or empty if not interactive
+    size_t cursor_pos{0};                 // position of the cursor, may be as large as text.size()
+    maybe_t<source_range_t> selection{};  // visual selection, or none if none
+    maybe_t<rust::Box<HistorySharedPtr>>
+        history{};                      // current reader history, or null if not interactive
+    bool pager_mode{false};             // pager is visible
+    bool pager_fully_disclosed{false};  // pager already shows everything if possible
+    bool search_mode{false};            // pager is visible and search is active
+    bool initialized{false};            // if false, the reader has not yet been entered
 };
 
 /// Get the command line state. This may be fetched on a background thread.
 commandline_state_t commandline_get_state();
 
+HistorySharedPtr *commandline_get_state_history_ffi();
+bool commandline_get_state_initialized_ffi();
+wcstring commandline_get_state_text_ffi();
+
 /// Set the command line text and position. This may be called on a background thread; the reader
 /// will pick it up when it is done executing.
 void commandline_set_buffer(wcstring text, size_t cursor_pos = -1);
+void commandline_set_buffer_ffi(const wcstring &text, size_t cursor_pos);
 
 /// Return the current interactive reads loop count. Useful for determining how many commands have
 /// been executed between invocations of code.
@@ -314,5 +307,8 @@ uint64_t reader_run_count();
 /// Returns the current "generation" of interactive status. Useful for determining whether the
 /// previous command produced a status.
 uint64_t reader_status_count();
+
+// For FFI
+uint32_t read_generation_count();
 
 #endif

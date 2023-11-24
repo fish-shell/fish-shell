@@ -625,7 +625,7 @@ end
 #                                                  but a command can be aliased multiple times)
 
 # Approximately duplicates the logic from https://github.com/git/git/blob/d486ca60a51c9cb1fe068803c3f540724e95e83a/contrib/completion/git-completion.bash#L1130
-# The Git script also finds aliases that reference other aliases via a loop but this is fine for a PoC
+# The bash script also finds aliases that reference other aliases via a loop but we handle that separately
 function __fish_git_aliased_command
     for word in (string split ' ' -- $argv)
         switch $word
@@ -648,6 +648,31 @@ git config -z --get-regexp 'alias\..*' | while read -lz alias cmdline
     # Git aliases can contain chars that variable names can't - escape them.
     set -l alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command $cmdline
+    set --append -g __fish_git_aliases $alias
+end
+
+# Resolve aliases that call another alias
+for alias in $__fish_git_aliases
+    set -l handled $alias
+
+    while true
+        set -l alias_varname __fish_git_alias_$alias
+        set -l aliased_command $$alias_varname[1][1]
+        set -l aliased_escaped (string escape --style=var -- $aliased_command)
+        set -l aliased_varname __fish_git_alias_$aliased_escaped
+        set -q $aliased_varname
+        or break
+
+        # stop infinite recursion
+        contains $aliased_escaped $handled
+        and break
+
+        # expand alias in cmdline
+        set -l aliased_cmdline $$alias_varname[1][2]
+        set -l aliased_cmdline (string replace " $aliased_command " " $$aliased_varname[1][2..-1] " -- " $aliased_cmdline ")
+        set -g $alias_varname $$aliased_varname[1][1] (string trim "$aliased_cmdline")
+        set --append handled $aliased_escaped
+    end
 end
 
 function __fish_git_using_command

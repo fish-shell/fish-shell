@@ -72,6 +72,7 @@ Completions
   - ``zabbix`` (:issue:`9647`)
 - The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
 - The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).
+- ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
 - Improvements to many completions.
 - Improvements to the manual page completion generator (:issue:`9787`, :issue:`9814`, :issue:`9961`).
 

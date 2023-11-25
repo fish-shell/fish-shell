@@ -740,7 +740,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     std::chrono::time_point<std::chrono::steady_clock> last_flash;
 
     /// The representation of the current screen contents.
-    screen_t screen;
+    rust::Box<Screen> screen;
 
     /// The source of input events.
     inputter_t inputter;
@@ -859,6 +859,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     reader_data_t(rust::Box<ParserRef> parser, HistorySharedPtr &hist, reader_config_t &&conf)
         : conf(std::move(conf)),
           parser_ref(std::move(parser)),
+          screen(new_screen()),
           inputter(parser_ref->deref(), conf.in),
           history(hist.clone()) {}
 
@@ -1239,10 +1240,12 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
     std::vector<int> indents = parse_util_compute_indents(cmd_line->text());
     indents.resize(full_line.size(), 0);
 
+    auto ffi_colors = new_highlight_spec_list();
+    for (auto color : colors) ffi_colors->push(color);
     // Prepend the mode prompt to the left prompt.
-    screen.write(mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
-                 cmd_line->size(), colors, indents, data.position, parser().vars_boxed(), pager,
-                 current_page_rendering, data.focused_on_pager);
+    screen->write(mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
+                  cmd_line->size(), *ffi_colors, indents, data.position, parser().vars_boxed(),
+                  pager, current_page_rendering, data.focused_on_pager);
 }
 
 /// Internal helper function for handling killing parts of text.
@@ -3052,7 +3055,7 @@ void reader_pop() {
         reader_interactive_destroy();
         *commandline_state_snapshot() = commandline_state_t{};
     } else {
-        new_reader->screen.reset_abandoning_line(termsize_last().width);
+        new_reader->screen->reset_abandoning_line(termsize_last().width);
         new_reader->update_commandline_state();
     }
 }
@@ -3434,7 +3437,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 
         if (last_exec_count != exec_count()) {
             last_exec_count = exec_count();
-            screen.save_status();
+            screen->save_status();
         }
     }
 
@@ -3453,7 +3456,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 
     if (last_exec_count != exec_count()) {
         last_exec_count = exec_count();
-        screen.save_status();
+        screen->save_status();
     }
 
     return event_needing_handling;
@@ -3512,7 +3515,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 outp.push_back('\n');
 
                 set_command_line_and_position(&command_line, L"", 0);
-                screen.reset_abandoning_line(termsize_last().width - command_line.size());
+                screen->reset_abandoning_line(termsize_last().width - command_line.size());
 
                 // Post fish_cancel.
                 event_fire_generic(parser(), L"fish_cancel");
@@ -3551,7 +3554,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
                 if (this->is_repaint_needed()) {
-                    screen.reset_line(true /* redraw prompt */);
+                    screen->reset_line(true /* redraw prompt */);
                     this->layout_and_repaint(L"mode");
                 }
                 parser().libdata_pods_mut().is_repaint = false;
@@ -3564,7 +3567,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::repaint: {
             parser().libdata_pods_mut().is_repaint = true;
             exec_prompt();
-            screen.reset_line(true /* redraw prompt */);
+            screen->reset_line(true /* redraw prompt */);
             this->layout_and_repaint(L"readline");
             force_exec_prompt_and_repaint = false;
             parser().libdata_pods_mut().is_repaint = false;
@@ -3734,7 +3737,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::execute: {
             if (!this->handle_execute(rls)) {
                 event_fire_generic(parser(), L"fish_posterror", {command_line.text()});
-                screen.reset_abandoning_line(termsize_last().width);
+                screen->reset_abandoning_line(termsize_last().width);
             }
             break;
         }
@@ -3776,7 +3779,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                     // Skip the autosuggestion in the history unless it was truncated.
                     const wcstring &suggest = autosuggestion.text;
-                    if (!suggest.empty() && !screen.autosuggestion_is_truncated &&
+                    if (!suggest.empty() && !screen->autosuggestion_is_truncated() &&
                         mode != reader_history_search_t::prefix) {
                         history_search.add_skip(suggest);
                     }
@@ -4326,7 +4329,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::clear_screen_and_repaint: {
             parser().libdata_pods_mut().is_repaint = true;
-            auto clear = screen_clear();
+            auto clear = *screen_clear();
             if (!clear.empty()) {
                 // Clear the screen if we can.
                 // This is subtle: We first clear, draw the old prompt,
@@ -4335,11 +4338,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // while keeping the prompt up-to-date.
                 outputter_t &outp = stdoutput();
                 outp.writestr(clear.c_str());
-                screen.reset_line(true /* redraw prompt */);
+                screen->reset_line(true /* redraw prompt */);
                 this->layout_and_repaint(L"readline");
             }
             exec_prompt();
-            screen.reset_line(true /* redraw prompt */);
+            screen->reset_line(true /* redraw prompt */);
             this->layout_and_repaint(L"readline");
             force_exec_prompt_and_repaint = false;
             parser().libdata_pods_mut().is_repaint = false;
@@ -4529,7 +4532,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     //
     // I can't see a good way around this.
     if (!first_prompt) {
-        screen.reset_abandoning_line(termsize_last().width);
+        screen->reset_abandoning_line(termsize_last().width);
     }
     first_prompt = false;
 
@@ -4662,7 +4665,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     // Emit a newline so that the output is on the line after the command.
     // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
-    if (!screen.cursor_is_wrapped_to_own_line()) {
+    if (!screen->cursor_is_wrapped_to_own_line()) {
         ignore_result(write(STDOUT_FILENO, "\n", 1));
     }
 

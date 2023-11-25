@@ -36,6 +36,7 @@ include_cpp! {
     #include "parser.h"
     #include "parse_util.h"
     #include "path.h"
+    #include "pager.h"
     #include "proc.h"
     #include "reader.h"
     #include "screen.h"
@@ -77,6 +78,7 @@ include_cpp! {
 
     generate_pod!("pipes_ffi_t")
 
+    generate!("shell_modes_ffi")
     generate!("make_pipes_ffi")
 
     generate!("log_extra_to_flog_file")
@@ -103,14 +105,16 @@ include_cpp! {
     generate!("commandline_get_state_text_ffi")
     generate!("completion_apply_to_command_line")
 
+    generate!("pager_t")
+    generate!("page_rendering_t")
+    generate!("pager_set_term_size_ffi")
+    generate!("pager_update_rendering_ffi")
+
     generate!("get_history_variable_text_ffi")
 
     generate_pod!("escape_string_style_t")
 
 
-    generate!("screen_set_midnight_commander_hack")
-    generate!("screen_clear_layout_cache_ffi")
-    generate!("escape_code_length_ffi")
     generate!("reader_schedule_prompt_repaint")
     generate!("reader_change_history")
     generate!("reader_change_cursor_selection_mode")
@@ -169,6 +173,8 @@ impl Repin for IoStreams<'_> {}
 impl Repin for wcstring_list_ffi_t {}
 impl Repin for rgb_color_t {}
 impl Repin for OutputStreamFfi<'_> {}
+impl Repin for pager_t {}
+impl Repin for page_rendering_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

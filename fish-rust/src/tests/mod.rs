@@ -12,6 +12,7 @@ mod history;
 mod parser;
 #[cfg(test)]
 mod redirection;
+mod screen;
 mod string_escape;
 #[cfg(test)]
 mod tokenizer;

@@ -98,6 +98,7 @@ fn main() {
         "fish-rust/src/proc.rs",
         "fish-rust/src/reader.rs",
         "fish-rust/src/redirection.rs",
+        "fish-rust/src/screen.rs",
         "fish-rust/src/signal.rs",
         "fish-rust/src/smoke.rs",
         "fish-rust/src/termsize.rs",

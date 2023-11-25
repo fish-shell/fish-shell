@@ -656,4 +656,6 @@ __attribute__((always_inline)) bool inline iswdigit(const wchar_t c) {
 #include "common.rs.h"
 #endif
 
+struct termios *shell_modes_ffi();
+
 #endif  // FISH_COMMON_H

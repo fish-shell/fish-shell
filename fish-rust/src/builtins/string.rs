@@ -1,4 +1,4 @@
-use crate::wcstringutil::fish_wcwidth_visible;
+use crate::{screen::escape_code_length, wcstringutil::fish_wcwidth_visible};
 // Forward some imports to make subcmd implementations easier
 use super::prelude::*;
 
@@ -265,16 +265,6 @@ fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
     // we subtracted less than we added
     debug_assert!(width >= 0, "line has negative width");
     return width as usize;
-}
-
-fn escape_code_length(code: &wstr) -> Option<usize> {
-    use crate::ffi::escape_code_length_ffi;
-    use crate::wchar_ffi::wstr_to_u32string;
-
-    match escape_code_length_ffi(wstr_to_u32string(code).as_ptr()).into() {
-        -1 => None,
-        n => Some(n as usize),
-    }
 }
 
 /// Empirically determined.

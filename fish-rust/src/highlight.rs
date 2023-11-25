@@ -130,11 +130,11 @@ pub struct HighlightColorResolver {
 /// It maintains a cache with no invalidation mechanism. The lifetime of these should typically be
 /// one screen redraw.
 impl HighlightColorResolver {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Default::default()
     }
     /// \return an RGB color for a given highlight spec.
-    fn resolve_spec(
+    pub fn resolve_spec(
         &mut self,
         highlight: &HighlightSpec,
         is_background: bool,
@@ -1718,6 +1718,7 @@ mod highlight_ffi {
     }
     extern "Rust" {
         type HighlightSpecListFFI;
+        fn new_highlight_spec_list() -> Box<HighlightSpecListFFI>;
         fn highlight_shell_ffi(
             bff: &CxxWString,
             ctx: &OperationContext<'_>,
@@ -1732,6 +1733,7 @@ mod highlight_ffi {
             colors: &HighlightSpecListFFI,
             vars: &EnvStackRefFFI,
         ) -> Vec<u8>;
+        fn push(&mut self, highlight: &HighlightSpec);
     }
 }
 
@@ -1743,14 +1745,26 @@ fn colorize_ffi(
     colorize(text.as_wstr(), &colors.0, &*vars.0)
 }
 
-struct HighlightSpecListFFI(Vec<HighlightSpec>);
+#[derive(Default)]
+pub struct HighlightSpecListFFI(pub Vec<HighlightSpec>);
 
+unsafe impl cxx::ExternType for HighlightSpecListFFI {
+    type Id = cxx::type_id!("HighlightSpecListFFI");
+    type Kind = cxx::kind::Opaque;
+}
+
+fn new_highlight_spec_list() -> Box<HighlightSpecListFFI> {
+    Box::default()
+}
 impl HighlightSpecListFFI {
     fn size(&self) -> usize {
         self.0.len()
     }
     fn at(&self, index: usize) -> &HighlightSpec {
         &self.0[index]
+    }
+    fn push(&mut self, highlight: &HighlightSpec) {
+        self.0.push(*highlight)
     }
 }
 fn highlight_shell_ffi(

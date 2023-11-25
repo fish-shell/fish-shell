@@ -126,7 +126,6 @@ set(FISH_SRCS
     src/path.cpp
     src/reader.cpp
     src/rustffi.cpp
-    src/screen.cpp
     src/wcstringutil.cpp
     src/wgetopt.cpp
     src/wutil.cpp

@@ -6,7 +6,7 @@ use crate::env::EnvVar;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
 use std::cell::RefCell;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::io::{Result, Write};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU8, Ordering};
@@ -406,13 +406,13 @@ impl Outputter {
 
     /// Begins buffering. Output will not be automatically flushed until a corresponding
     /// end_buffering() call.
-    fn begin_buffering(&mut self) {
+    pub fn begin_buffering(&mut self) {
         self.buffer_count += 1;
         assert!(self.buffer_count > 0, "buffer_count overflow");
     }
 
     /// Balance a begin_buffering() call.
-    fn end_buffering(&mut self) {
+    pub fn end_buffering(&mut self) {
         assert!(self.buffer_count > 0, "buffer_count underflow");
         self.buffer_count -= 1;
         self.maybe_flush();
@@ -467,9 +467,9 @@ impl Outputter {
 
     /// Convenience cover over tputs, in recognition of the fact that our Term has Optional fields.
     /// If `str` is Some, write it with tputs and return true. Otherwise, return false.
-    pub fn tputs_if_some(&mut self, str: &Option<CString>) -> bool {
+    pub fn tputs_if_some(&mut self, str: &Option<impl AsRef<CStr>>) -> bool {
         if let Some(str) = str {
-            self.tputs(str);
+            self.tputs(str.as_ref());
             true
         } else {
             false

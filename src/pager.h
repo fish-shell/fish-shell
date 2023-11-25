@@ -28,8 +28,9 @@ class page_rendering_t {
     size_t row_start{0};
     size_t row_end{0};
     size_t selected_completion_idx{size_t(-1)};
-    screen_data_t screen_data{};
+    rust::Box<ScreenData> screen_data;
 
+    const screen_data_t *screen_data_ffi() const { return &*screen_data; }
     size_t remaining_to_disclose{0};
 
     bool search_field_shown{false};
@@ -37,6 +38,10 @@ class page_rendering_t {
 
     // Returns a rendering with invalid data, useful to indicate "no rendering".
     page_rendering_t();
+    page_rendering_t(const page_rendering_t &) = delete;
+    page_rendering_t(page_rendering_t &&) = default;
+    page_rendering_t &operator=(const page_rendering_t &) = delete;
+    page_rendering_t &operator=(page_rendering_t &&) = default;
 };
 
 enum class selection_motion_t {
@@ -87,8 +92,10 @@ class pager_t {
         std::vector<wcstring> comp{};
         /// The description.
         wcstring desc{};
+#if INCLUDE_RUST_HEADERS
         /// The representative completion.
         rust::Box<completion_t> representative = new_completion();
+#endif
         /// The per-character highlighting, used when this is a full shell command.
         std::vector<highlight_spec_t> colors{};
         /// On-screen width of the completion string.
@@ -144,9 +151,9 @@ class pager_t {
     void completion_print(size_t cols, const size_t *width_by_column, size_t row_start,
                           size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
-    line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,
-                                 size_t width, bool secondary, bool selected,
-                                 page_rendering_t *rendering) const;
+    rust::Box<Line> completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
+                                          size_t column, size_t width, bool secondary,
+                                          bool selected, page_rendering_t *rendering) const;
 
    public:
     // The text of the search field.
@@ -162,7 +169,7 @@ class pager_t {
     void set_prefix(const wcstring &pref, bool highlight = true);
 
     // Sets the terminal size.
-    void set_term_size(termsize_t ts);
+    void set_term_size(const termsize_t &ts);
 
     // Changes the selected completion in the given direction according to the layout of the given
     // rendering. Returns true if the selection changed.
@@ -217,5 +224,8 @@ class pager_t {
     pager_t();
     ~pager_t();
 };
+
+void pager_set_term_size_ffi(pager_t &pager, const void *ts);
+void pager_update_rendering_ffi(pager_t &pager, page_rendering_t &rendering);
 
 #endif

@@ -1008,8 +1008,15 @@ pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
 }
 
-/// Save the shell mode on startup so we can restore them on exit.
-static SHELL_MODES: Lazy<Mutex<libc::termios>> = Lazy::new(|| Mutex::new(unsafe { mem::zeroed() }));
+pub fn shell_modes() -> &'static libc::termios {
+    let modes = crate::ffi::shell_modes_ffi() as *const libc::termios;
+    unsafe { &*modes }
+}
+
+pub fn shell_modes_mut() -> &'static mut libc::termios {
+    let modes = crate::ffi::shell_modes_ffi() as *mut libc::termios;
+    unsafe { &mut *modes }
+}
 
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.

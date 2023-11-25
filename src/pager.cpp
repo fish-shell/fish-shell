@@ -134,14 +134,15 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
 }
 
 /// Print the specified item using at the specified amount of space.
-line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
-                                      size_t column, size_t width, bool secondary, bool selected,
-                                      page_rendering_t *rendering) const {
+rust::Box<Line> pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
+                                               size_t column, size_t width, bool secondary,
+                                               bool selected, page_rendering_t *rendering) const {
     UNUSED(column);
     UNUSED(row);
     UNUSED(rendering);
     size_t comp_width;
-    line_t line_data;
+    rust::Box<Line> line_data_box = new_line();
+    auto &line_data = *line_data_box;
 
     if (c->preferred_width() <= width) {
         // The entry fits, we give it as much space as it wants.
@@ -228,7 +229,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         print_max(wcstring(desc_remaining, L' '), bg, desc_remaining, false, &line_data);
     }
 
-    return line_data;
+    return line_data_box;
 }
 
 /// Print the specified part of the completion list, using the specified column offsets and quoting
@@ -261,16 +262,16 @@ void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_
             bool is_selected = (idx == effective_selected_idx);
 
             // Print this completion on its own "line".
-            line_t line = completion_print_item(prefix, el, row, col, width_by_column[col], row % 2,
-                                                is_selected, rendering);
+            auto line = completion_print_item(prefix, el, row, col, width_by_column[col], row % 2,
+                                              is_selected, rendering);
 
             // If there's more to come, append two spaces.
             if (col + 1 < cols) {
-                line.append(PAGER_SPACER_STRING, highlight_spec_t{});
+                line->append_str(PAGER_SPACER_STRING, highlight_spec_t{});
             }
 
             // Append this to the real line.
-            rendering->screen_data.create_line(row - row_start).append_line(line);
+            rendering->screen_data->create_line(row - row_start)->append_line(*line);
         }
     }
 }
@@ -447,9 +448,17 @@ void pager_t::set_prefix(const wcstring &pref, bool highlight) {
     highlight_prefix = highlight;
 }
 
-void pager_t::set_term_size(termsize_t ts) {
+void pager_t::set_term_size(const termsize_t &ts) {
     available_term_width = ts.width > 0 ? ts.width : 0;
     available_term_height = ts.height > 0 ? ts.height : 0;
+}
+
+void pager_set_term_size_ffi(pager_t &pager, const void *ts) {
+    pager.set_term_size(*reinterpret_cast<const termsize_t *>(ts));
+}
+
+void pager_update_rendering_ffi(pager_t &pager, page_rendering_t &rendering) {
+    pager.update_rendering(&rendering);
 }
 
 /// Try to print the list of completions lst with the prefix prefix using cols as the number of
@@ -571,7 +580,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     }
 
     if (!progress_text.empty()) {
-        line_t &line = rendering->screen_data.add_line();
+        line_t &line = rendering->screen_data->add_line();
         highlight_spec_t spec = {highlight_role_t::pager_progress,
                                  highlight_role_t::pager_progress};
         print_max(progress_text, spec, term_width, true /* has_more */, &line);
@@ -587,7 +596,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH) {
         search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
     }
-    line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
+    line_t *search_field = &rendering->screen_data->insert_line_at_index(0);
 
     // We limit the width to term_width - 1.
     highlight_spec_t underline{};
@@ -613,7 +622,7 @@ page_rendering_t pager_t::render() const {
 
     for (size_t cols = PAGER_MAX_COLS; cols > 0; cols--) {
         // Initially empty rendering.
-        rendering.screen_data.resize(0);
+        rendering.screen_data->resize(0);
 
         // Determine how many rows we would need if we had 'cols' columns. Then determine how many
         // columns we want from that. For example, say we had 19 completions. We can fit them into 6
@@ -645,9 +654,9 @@ page_rendering_t pager_t::render() const {
 bool pager_t::rendering_needs_update(const page_rendering_t &rendering) const {
     if (have_unrendered_completions) return true;
     // Common case is no pager.
-    if (this->empty() && rendering.screen_data.empty()) return false;
+    if (this->empty() && rendering.screen_data->empty()) return false;
 
-    return (this->empty() && !rendering.screen_data.empty()) ||     // Do update after clear().
+    return (this->empty() && !rendering.screen_data->empty()) ||    // Do update after clear().
            rendering.term_width != this->available_term_width ||    //
            rendering.term_height != this->available_term_height ||  //
            rendering.selected_completion_idx !=
@@ -956,4 +965,4 @@ size_t pager_t::cursor_position() const {
     return result;
 }
 
-page_rendering_t::page_rendering_t() = default;
+page_rendering_t::page_rendering_t() : screen_data(new_screen_data()) {}

@@ -113,18 +113,37 @@ pub struct Term {
     pub exit_underline_mode: Option<CString>,
     pub enter_reverse_mode: Option<CString>,
     pub enter_standout_mode: Option<CString>,
+    pub exit_standout_mode: Option<CString>,
+    pub enter_blink_mode: Option<CString>,
+    pub enter_protected_mode: Option<CString>,
+    pub enter_shadow_mode: Option<CString>,
+    pub exit_shadow_mode: Option<CString>,
+    pub enter_secure_mode: Option<CString>,
+    pub enter_alt_charset_mode: Option<CString>,
+    pub exit_alt_charset_mode: Option<CString>,
     pub set_a_foreground: Option<CString>,
     pub set_foreground: Option<CString>,
     pub set_a_background: Option<CString>,
     pub set_background: Option<CString>,
     pub exit_attribute_mode: Option<CString>,
     pub set_title: Option<CString>,
+    pub clear_screen: Option<CString>,
+    pub cursor_up: Option<CString>,
+    pub cursor_down: Option<CString>,
+    pub cursor_left: Option<CString>,
+    pub cursor_right: Option<CString>,
+    pub parm_left_cursor: Option<CString>,
+    pub parm_right_cursor: Option<CString>,
+    pub clr_eol: Option<CString>,
+    pub clr_eos: Option<CString>,
 
     // Number capabilities
     pub max_colors: Option<usize>,
+    pub init_tabs: Option<usize>,
 
     // Flag/boolean capabilities
     pub eat_newline_glitch: bool,
+    pub auto_right_margin: bool,
 }
 
 impl Term {
@@ -141,18 +160,37 @@ impl Term {
             exit_underline_mode: get_str_cap("ue"),
             enter_reverse_mode: get_str_cap("mr"),
             enter_standout_mode: get_str_cap("so"),
+            exit_standout_mode: get_str_cap("se"),
+            enter_blink_mode: get_str_cap("mb"),
+            enter_protected_mode: get_str_cap("mp"),
+            enter_shadow_mode: get_str_cap("ZM"),
+            exit_shadow_mode: get_str_cap("ZU"),
+            enter_secure_mode: get_str_cap("mk"),
+            enter_alt_charset_mode: get_str_cap("as"),
+            exit_alt_charset_mode: get_str_cap("ae"),
             set_a_foreground: get_str_cap("AF"),
             set_foreground: get_str_cap("Sf"),
             set_a_background: get_str_cap("AB"),
             set_background: get_str_cap("Sb"),
             exit_attribute_mode: get_str_cap("me"),
             set_title: get_str_cap("ts"),
+            clear_screen: get_str_cap("cl"),
+            cursor_up: get_str_cap("up"),
+            cursor_down: get_str_cap("do"),
+            cursor_left: get_str_cap("le"),
+            cursor_right: get_str_cap("nd"),
+            parm_left_cursor: get_str_cap("LE"),
+            parm_right_cursor: get_str_cap("RI"),
+            clr_eol: get_str_cap("ce"),
+            clr_eos: get_str_cap("cd"),
 
             // Number capabilities
             max_colors: get_num_cap("Co"),
+            init_tabs: get_num_cap("it"),
 
             // Flag/boolean capabilities
             eat_newline_glitch: get_flag_cap("xn"),
+            auto_right_margin: get_flag_cap("am"),
         }
     }
 }
@@ -265,6 +303,16 @@ const fn to_cstr_code(code: &str) -> [libc::c_char; 3] {
         panic!("Invalid termcap code provided");
     }
     [code[0] as c_char, code[1] as c_char, b'\0' as c_char]
+}
+
+/// Covers over tparm().
+pub fn tparm0(cap: &CStr) -> Option<CString> {
+    // Take the lock because tparm races with del_curterm, etc.
+    let _term: std::sync::MutexGuard<Option<Arc<Term>>> = TERM.lock().unwrap();
+    assert!(!cap.to_bytes().is_empty());
+    let cap_ptr = cap.as_ptr() as *mut libc::c_char;
+    // Safety: we're trusting tparm here.
+    unsafe { try_ptr_to_cstr(tparm(cap_ptr)) }
 }
 
 /// Covers over tparm().

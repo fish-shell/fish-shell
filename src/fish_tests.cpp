@@ -993,36 +993,6 @@ static void test_utility_functions() {
     test_const_strcmp();
 }
 
-// todo!("port this");
-static void test_escape_sequences() {
-    say(L"Testing escape_sequences");
-    layout_cache_t lc;
-    if (lc.escape_code_length(L"") != 0)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"abcd") != 0)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B[2J") != 4)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B[38;5;123mABC") != strlen("\x1B[38;5;123m"))
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B@") != 2)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-
-    // iTerm2 escape sequences.
-    if (lc.escape_code_length(L"\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE") != 25)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 28)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B]Pg4040ff\x1B\\NOT_PART_OF_SEQUENCE") != 12)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B]blahblahblah\x1B\\") != 16)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B]blahblahblah\x07") != 15)
-        err(L"test_escape_sequences failed on line %d\n", __LINE__);
-}
-
 class test_lru_t : public lru_cache_t<int> {
    public:
     static constexpr size_t test_capacity = 16;
@@ -1300,7 +1270,7 @@ struct pager_layout_testcase_t {
     void run(pager_t &pager) const {
         pager.set_term_size(termsize_t{this->width, 24});
         page_rendering_t rendering = pager.render();
-        const screen_data_t &sd = rendering.screen_data;
+        const screen_data_t &sd = *rendering.screen_data;
         do_test(sd.line_count() == 1);
         if (sd.line_count() > 0) {
             wcstring expected = this->expected;
@@ -1311,10 +1281,7 @@ struct pager_layout_testcase_t {
                 std::replace(expected.begin(), expected.end(), L'\x2026', ellipsis_char);
             }
 
-            wcstring text;
-            for (const auto &p : sd.line(0).text) {
-                text.push_back(p.character);
-            }
+            wcstring text = *(sd.line_ffi(0)->text_characters_ffi());
             if (text != expected) {
                 std::fwprintf(stderr, L"width %d got %zu<%ls>, expected %zu<%ls>\n", this->width,
                               text.length(), text.c_str(), expected.length(), expected.c_str());
@@ -2315,129 +2282,6 @@ void test_maybe() {
     do_test(c2.value_or("derp") == "derp");
 }
 
-// todo!("delete this")
-void test_layout_cache() {
-    layout_cache_t seqs;
-
-    // Verify escape code cache.
-    do_test(seqs.find_escape_code(L"abc") == 0);
-    seqs.add_escape_code(L"abc");
-    seqs.add_escape_code(L"abc");
-    do_test(seqs.esc_cache_size() == 1);
-    do_test(seqs.find_escape_code(L"abc") == 3);
-    do_test(seqs.find_escape_code(L"abcd") == 3);
-    do_test(seqs.find_escape_code(L"abcde") == 3);
-    do_test(seqs.find_escape_code(L"xabcde") == 0);
-    seqs.add_escape_code(L"ac");
-    do_test(seqs.find_escape_code(L"abcd") == 3);
-    do_test(seqs.find_escape_code(L"acbd") == 2);
-    seqs.add_escape_code(L"wxyz");
-    do_test(seqs.find_escape_code(L"abc") == 3);
-    do_test(seqs.find_escape_code(L"abcd") == 3);
-    do_test(seqs.find_escape_code(L"wxyz123") == 4);
-    do_test(seqs.find_escape_code(L"qwxyz123") == 0);
-    do_test(seqs.esc_cache_size() == 3);
-    seqs.clear();
-    do_test(seqs.esc_cache_size() == 0);
-    do_test(seqs.find_escape_code(L"abcd") == 0);
-
-    auto huge = std::numeric_limits<size_t>::max();
-
-    // Verify prompt layout cache.
-    for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
-        wcstring input = std::to_wstring(i);
-        do_test(!seqs.find_prompt_layout(input));
-        seqs.add_prompt_layout({input, huge, input, {{}, i, 0}});
-        do_test(seqs.find_prompt_layout(input)->layout.max_line_width == i);
-    }
-
-    size_t expected_evictee = 3;
-    for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
-        if (i != expected_evictee)
-            do_test(seqs.find_prompt_layout(std::to_wstring(i))->layout.max_line_width == i);
-    }
-
-    seqs.add_prompt_layout({L"whatever", huge, L"whatever", {{}, 100, 0}});
-    do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
-    do_test(seqs.find_prompt_layout(L"whatever", huge)->layout.max_line_width == 100);
-}
-
-// todo!("port this")
-void test_prompt_truncation() {
-    layout_cache_t cache;
-    wcstring trunc;
-    prompt_layout_t layout;
-
-    /// Helper to return 'layout' formatted as a string for easy comparison.
-    auto format_layout = [&] {
-        wcstring line_breaks;
-        bool first = true;
-        for (const size_t line_break : layout.line_breaks) {
-            if (!first) {
-                line_breaks.push_back(L',');
-            }
-            line_breaks.append(format_string(L"%lu", (unsigned long)line_break));
-            first = false;
-        }
-        return format_string(L"[%ls],%lu,%lu", line_breaks.c_str(),
-                             (unsigned long)layout.max_line_width,
-                             (unsigned long)layout.last_line_width);
-    };
-
-    /// Join some strings with newline.
-    auto join = [](std::initializer_list<wcstring> vals) { return join_strings(vals, L'\n'); };
-
-    wcstring ellipsis = {get_ellipsis_char()};
-
-    // No truncation.
-    layout = cache.calc_prompt_layout(L"abcd", &trunc);
-    do_test(format_layout() == L"[],4,4");
-    do_test(trunc == L"abcd");
-
-    // Line break calculation.
-    layout = cache.calc_prompt_layout(join({
-                                          L"0123456789ABCDEF",  //
-                                          L"012345",            //
-                                          L"0123456789abcdef",  //
-                                          L"xyz"                //
-                                      }),
-                                      &trunc, 80);
-    do_test(format_layout() == L"[16,23,40],16,3");
-
-    // Basic truncation.
-    layout = cache.calc_prompt_layout(L"0123456789ABCDEF", &trunc, 8);
-    do_test(format_layout() == L"[],8,8");
-    do_test(trunc == ellipsis + L"9ABCDEF");
-
-    // Multiline truncation.
-    layout = cache.calc_prompt_layout(join({
-                                          L"0123456789ABCDEF",  //
-                                          L"012345",            //
-                                          L"0123456789abcdef",  //
-                                          L"xyz"                //
-                                      }),
-                                      &trunc, 8);
-    do_test(format_layout() == L"[8,15,24],8,3");
-    do_test(trunc == join({ellipsis + L"9ABCDEF", L"012345", ellipsis + L"9abcdef", L"xyz"}));
-
-    // Escape sequences are not truncated.
-    layout =
-        cache.calc_prompt_layout(L"\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE", &trunc, 4);
-    do_test(format_layout() == L"[],4,4");
-    do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=test/foo\x07NCE");
-
-    // Newlines in escape sequences are skipped.
-    layout = cache.calc_prompt_layout(L"\x1B]50;CurrentDir=\ntest/foo\x07NOT_PART_OF_SEQUENCE",
-                                      &trunc, 4);
-    do_test(format_layout() == L"[],4,4");
-    do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=\ntest/foo\x07NCE");
-
-    // We will truncate down to one character if we have to.
-    layout = cache.calc_prompt_layout(L"Yay", &trunc, 1);
-    do_test(format_layout() == L"[],1,1");
-    do_test(trunc == ellipsis);
-}
-
 // todo!("already ported, delete this")
 void test_normalize_path() {
     say(L"Testing path normalization");
@@ -2649,7 +2493,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("autosuggestion"), test_autosuggestion_combining},
     {TEST_GROUP("new_parser_ll2"), test_new_parser_ll2},
     {TEST_GROUP("test_abbreviations"), test_abbreviations},
-    {TEST_GROUP("test_escape_sequences"), test_escape_sequences},
     {TEST_GROUP("new_parser_fuzzing"), test_new_parser_fuzzing},
     {TEST_GROUP("new_parser_correctness"), test_new_parser_correctness},
     {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
@@ -2676,8 +2519,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("illegal_command_exit_code"), test_illegal_command_exit_code},
     {TEST_GROUP("maybe"), test_maybe},
-    {TEST_GROUP("layout_cache"), test_layout_cache},
-    {TEST_GROUP("prompt"), test_prompt_truncation},
     {TEST_GROUP("normalize"), test_normalize_path},
     {TEST_GROUP("dirname"), test_dirname_basename},
     {TEST_GROUP("pipes"), test_pipes},

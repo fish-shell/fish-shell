@@ -8,6 +8,8 @@ use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
 use crate::output::ColorSupport;
 use crate::proc::is_interactive_session;
+use crate::screen::screen_set_midnight_commander_hack;
+use crate::screen::LAYOUT_CACHE_SHARED;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharToFFI;
 use crate::wutil::fish_wcstoi;
@@ -578,7 +580,7 @@ fn apply_non_term_hacks(vars: &EnvStack) {
     // broken if you do '\r' after it like we normally do.
     // See https://midnight-commander.org/ticket/4258.
     if vars.get(L!("MC_SID")).is_some() {
-        crate::ffi::screen_set_midnight_commander_hack();
+        screen_set_midnight_commander_hack();
     }
 }
 
@@ -686,7 +688,7 @@ fn init_curses(vars: &EnvStack) {
 
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
-    crate::ffi::screen_clear_layout_cache_ffi();
+    unsafe { LAYOUT_CACHE_SHARED.lock().unwrap() }.clear();
     CURSES_INITIALIZED.store(true, Ordering::Relaxed);
 }
 

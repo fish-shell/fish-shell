@@ -17,7 +17,6 @@
 void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
     wcstring s;
 
-    escape_code_length_ffi({});
     event_fire_generic(parser, {});
     event_fire_generic(parser, {}, {});
     expand_tilde(s, env_stack);
@@ -34,8 +33,6 @@ void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
     reader_status_count();
     restore_term_mode();
     rgb_color_t{};
-    screen_clear_layout_cache_ffi();
-    screen_set_midnight_commander_hack();
     setenv_lock({}, {}, {});
     set_inheriteds_ffi();
     term_copy_modes();

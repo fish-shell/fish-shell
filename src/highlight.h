@@ -28,6 +28,7 @@ struct highlight_spec_t;
 #else
 struct HighlightSpec;
 enum class HighlightRole : uint8_t;
+struct HighlightSpecListFFI;
 #endif
 
 using highlight_role_t = HighlightRole;

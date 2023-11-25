@@ -1,6 +1,7 @@
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
+use std::process::Stdio;
 
 fn main() {
     for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR"] {
@@ -169,6 +170,8 @@ fn compiles(file: &str) -> bool {
         .get_compiler()
         .to_command();
     command.arg(file);
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
     command.status().unwrap().success()
 }
 

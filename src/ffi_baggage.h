@@ -1,7 +1,6 @@
 #include "builtin.h"
 #include "builtins/bind.h"
 #include "builtins/commandline.h"
-#include "builtins/ulimit.h"
 #include "event.h"
 #include "fds.h"
 #include "fish_indent_common.h"
@@ -40,5 +39,4 @@ void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
 
     builtin_bind({}, {}, {});
     builtin_commandline({}, {}, {});
-    builtin_ulimit({}, {}, {});
 }

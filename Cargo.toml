@@ -51,7 +51,7 @@ lazy_static = "1.4.0"
 libc = "0.2.137"
 lru = "0.10.0"
 moveit = "0.5.1"
-nix = { version = "0.25.0", default-features = false, features = ["inotify"] }
+nix = { version = "0.25.0", default-features = false, features = ["inotify", "resource"] }
 num-traits = "0.2.15"
 # to make integer->enum conversion easier
 num-derive = "0.3.3"

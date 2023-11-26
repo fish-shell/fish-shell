@@ -101,7 +101,6 @@ endif()
 set(FISH_BUILTIN_SRCS
     src/builtins/bind.cpp
     src/builtins/commandline.cpp
-    src/builtins/ulimit.cpp
 )
 # List of other sources.
 set(FISH_SRCS

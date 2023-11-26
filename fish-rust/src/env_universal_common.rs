@@ -832,7 +832,7 @@ impl EnvUniversal {
 }
 
 /// \return the default variable path, or an empty string on failure.
-fn default_vars_path() -> WString {
+pub fn default_vars_path() -> WString {
     if let Some(mut path) = default_vars_path_directory() {
         path.push_str("/fish_variables");
         return path;

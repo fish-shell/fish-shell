@@ -4,6 +4,9 @@ use std::os::fd::RawFd;
 #[cfg(target_os = "macos")]
 mod notifyd;
 
+#[cfg(any(target_os = "android", target_os = "linux"))]
+mod inotify;
+
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal
 /// variable change notifications. These notifications do not contain the change, but merely
 /// indicate that the uvar file has changed. It is up to the uvar subsystem to re-read the file.
@@ -50,6 +53,12 @@ pub fn create_notifier() -> Box<dyn UniversalNotifier> {
             return Box::new(notifier);
         }
     }
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    {
+        if let Some(notifier) = inotify::InotifyNotifier::new() {
+            return Box::new(notifier);
+        }
+    }
     Box::new(NullNotifier)
 }
 
@@ -60,9 +69,13 @@ pub fn default_notifier() -> &'static dyn UniversalNotifier {
     DEFAULT_NOTIFIER.get_or_init(create_notifier).as_ref()
 }
 
-// Test a slice of notifiers.
 #[cfg(test)]
-pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier]) {
+use crate::wchar::prelude::*;
+
+// Test a slice of notifiers.
+// fish_variables_path is the path to the (simulated) fish_variables file.
+#[cfg(test)]
+pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier], fish_variables_path: Option<&wstr>) {
     let poll_notifier = |n: &dyn UniversalNotifier| -> bool {
         let Some(fd) = n.notification_fd() else {
             return false;
@@ -72,6 +85,22 @@ pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier]) {
         } else {
             false
         }
+    };
+
+    // Helper to simulate modifying a file, using the atomic rename() approach.
+    let modify_path = |path: &wstr| -> Result<(), std::io::Error> {
+        use crate::common::wcs2osstring;
+        use std::fs;
+        use std::io::Write;
+        let path = wcs2osstring(path);
+        let mut new_path = std::path::PathBuf::from(path.clone());
+        new_path.set_extension("new");
+
+        let mut file = fs::File::create(&new_path)?;
+        file.write_all(b"Random text")?;
+        std::mem::drop(file);
+        fs::rename(new_path, path)?;
+        Ok(())
     };
 
     // Nobody should poll yet.
@@ -86,6 +115,11 @@ pub fn test_notifiers(notifiers: &[&dyn UniversalNotifier]) {
     // Tweak each notifier. Verify that others see it.
     for (idx1, &n1) in notifiers.iter().enumerate() {
         n1.post_notification();
+
+        // If we're using inotify, simulate modifying the file.
+        if let Some(path) = fish_variables_path {
+            modify_path(path).expect("failed to modify file");
+        }
 
         // notifyd requires a round trip to the notifyd server, which means we have to wait a
         // little bit to receive it. In practice 40 ms seems to be enough.

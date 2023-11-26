@@ -10,6 +10,7 @@ use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
+use crate::universal_notifier::{default_notifier, UniversalNotifier};
 use crate::wchar::prelude::*;
 use crate::wchar::{wstr, WString};
 use crate::wcstringutil::{join_strings, split_string, string_suffixes_string, LineIterator};
@@ -837,67 +838,6 @@ fn default_vars_path() -> WString {
         return path;
     }
     WString::new()
-}
-
-pub enum NotifierStrategy {
-    // Poll on shared memory.
-    strategy_shmem_polling,
-
-    // Mac-specific notify(3) implementation.
-    strategy_notifyd,
-
-    // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require
-    // polling most of the time.
-    strategy_named_pipe,
-}
-
-/// The "universal notifier" is an object responsible for broadcasting and receiving universal
-/// variable change notifications. These notifications do not contain the change, but merely
-/// indicate that the uvar file has changed. It is up to the uvar subsystem to re-read the file.
-///
-/// We support a few notification strategies. Not all strategies are supported on all platforms.
-///
-/// Notifiers may request polling, and/or provide a file descriptor to be watched for readability in
-/// select().
-///
-/// To request polling, the notifier overrides usec_delay_between_polls() to return a positive
-/// value. That value will be used as the timeout in select(). When select returns, the loop invokes
-/// poll(). poll() should return true to indicate that the file may have changed.
-///
-/// To provide a file descriptor, the notifier overrides notification_fd() to return a non-negative
-/// fd. This will be added to the "read" file descriptor list in select(). If the fd is readable,
-/// notification_fd_became_readable() will be called; that function should be overridden to return
-/// true if the file may have changed.
-pub trait UniversalNotifier {
-    // Does a fast poll(). Returns true if changed.
-    fn poll(&self) -> bool;
-
-    // Triggers a notification.
-    fn post_notification(&self);
-
-    // Recommended delay between polls. A value of 0 means no polling required (so no timeout).
-    fn usec_delay_between_polls(&self) -> u64;
-
-    // Returns the fd from which to watch for events, or -1 if none.
-    fn notification_fd(&self) -> RawFd;
-
-    // The notification_fd is readable; drain it. Returns true if a notification is considered to
-    // have been posted.
-    fn notification_fd_became_readable(&self, fd: RawFd) -> bool;
-}
-
-fn resolve_default_strategy() -> NotifierStrategy {
-    todo!("universal notifier");
-}
-
-// Default instance. Other instances are possible for testing.
-pub fn default_notifier() -> &'static dyn UniversalNotifier {
-    todo!("universal notifier");
-}
-
-/// Factory constructor.
-fn new_notifier_for_strategy(_strat: NotifierStrategy, _test_path: Option<&wstr>) {
-    todo!("universal notifier");
 }
 
 /// Error message.

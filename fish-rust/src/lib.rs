@@ -94,6 +94,7 @@ mod tinyexpr;
 mod tokenizer;
 mod topic_monitor;
 mod trace;
+mod universal_notifier;
 mod util;
 mod wait_handle;
 mod wchar;

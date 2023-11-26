@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, mem::MaybeUninit};
 
-use libc::{rlim_t, rlimit, RLIM_INFINITY};
+use libc::{c_uint, rlim_t, rlimit, RLIM_INFINITY};
 use once_cell::sync::Lazy;
 
 use crate::{compat::*, fallback::*};
@@ -8,7 +8,7 @@ use crate::{compat::*, fallback::*};
 use super::prelude::*;
 
 /// Safe wrapper around getrlimit
-fn getrlimit(resource: u32) -> Result<rlimit, i32> {
+fn getrlimit(resource: c_uint) -> Result<rlimit, i32> {
     // TODO: better handle errno when using this function
 
     use libc::getrlimit;
@@ -23,7 +23,7 @@ fn getrlimit(resource: u32) -> Result<rlimit, i32> {
 }
 
 /// Safe wrapper around setrlimit
-fn setrlimit(resource: u32, rl: &rlimit) -> Result<(), i32> {
+fn setrlimit(resource: c_uint, rl: &rlimit) -> Result<(), i32> {
     use libc::setrlimit;
     let result = unsafe { setrlimit(resource, rl as *const rlimit) };
 
@@ -35,7 +35,7 @@ fn setrlimit(resource: u32, rl: &rlimit) -> Result<(), i32> {
 }
 
 /// Print the value of the specified resource limit.
-fn print(resource: u32, hard: bool, streams: &mut IoStreams) {
+fn print(resource: c_uint, hard: bool, streams: &mut IoStreams) {
     let l = get(resource, hard);
 
     if l == RLIM_INFINITY {
@@ -58,7 +58,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         let ls = getrlimit(resource.resource).unwrap();
         let l = if hard { ls.rlim_max } else { ls.rlim_cur };
 
-        let unit = if resource.resource == RLIMIT_CPU() as u32 {
+        let unit = if resource.resource == RLIMIT_CPU() as c_uint {
             "(seconds, "
         } else if get_multiplier(resource.resource) == 1 {
             "("
@@ -84,7 +84,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
     }
 }
 
-fn get_desc(what: u32) -> &'static wstr {
+fn get_desc(what: c_uint) -> &'static wstr {
     for resource in resource_arr.iter() {
         if resource.resource == what {
             return resource.desc;
@@ -94,7 +94,7 @@ fn get_desc(what: u32) -> &'static wstr {
 }
 
 fn set_limit(
-    resource: u32,
+    resource: c_uint,
     hard: bool,
     soft: bool,
     value: rlim_t,
@@ -131,16 +131,16 @@ fn set_limit(
 }
 
 /// Get the implicit multiplication factor for the specified resource limit.
-fn get_multiplier(what: u32) -> u64 {
+fn get_multiplier(what: c_uint) -> rlim_t {
     for resource in resource_arr.iter() {
         if resource.resource == what {
-            return resource.multiplier as u64;
+            return resource.multiplier as rlim_t;
         }
     }
     unreachable!()
 }
 
-fn get(resource: u32, hard: bool) -> rlim_t {
+fn get(resource: c_uint, hard: bool) -> rlim_t {
     let ls = getrlimit(resource).unwrap();
 
     if hard {
@@ -281,7 +281,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         return STATUS_INVALID_ARGS;
     }
 
-    let what = opts.what as u32;
+    let what = opts.what as c_uint; // Only negative value is RLIMIT_UNKNOWN
 
     let arg_count = argc - w.woptind;
     if arg_count == 0 {
@@ -318,7 +318,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     } else if wcscasecmp(args[w.woptind], L!("soft")) == Ordering::Equal {
         get(what, soft)
     } else if let Ok(limit) = fish_wcstol(args[w.woptind]) {
-        u64::try_from(limit).expect("Limit greater than i32::MAX") * get_multiplier(what)
+        limit as rlim_t * get_multiplier(what)
     } else {
         streams.err.append(wgettext_fmt!(
             "%ls: Invalid limit '%ls'\n",
@@ -334,14 +334,19 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
 /// Struct describing a resource limit.
 struct Resource {
-    resource: u32,       // resource ID
+    resource: c_uint,    // resource ID
     desc: &'static wstr, // description of resource
     switch_char: char,   // switch used on commandline to specify resource
-    multiplier: c_int,   // the implicit multiplier used when setting getting values
+    multiplier: c_uint,  // the implicit multiplier used when setting getting values
 }
 
 impl Resource {
-    fn new(resource: u32, desc: &'static wstr, switch_char: char, multiplier: c_int) -> Resource {
+    fn new(
+        resource: c_uint,
+        desc: &'static wstr,
+        switch_char: char,
+        multiplier: c_uint,
+    ) -> Resource {
         Resource {
             resource,
             desc,
@@ -463,7 +468,7 @@ static resource_arr: Lazy<Box<[Resource]>> = Lazy::new(|| {
         let (resource, desc, switch_char, multiplier) = resource;
         if resource != unknown {
             resources.push(Resource::new(
-                resource as u32,
+                resource as c_uint,
                 desc,
                 switch_char,
                 multiplier,

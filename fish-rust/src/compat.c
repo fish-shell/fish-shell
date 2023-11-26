@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/resource.h>
 #include <term.h>
 #include <unistd.h>
 
@@ -79,3 +80,130 @@ static const bool uvar_file_set_mtime_hack =
 #endif
 #undef UVAR_FILE_SET_MTIME_HACK
 bool UVAR_FILE_SET_MTIME_HACK() { return uvar_file_set_mtime_hack; }
+
+#ifndef RLIMIT_UNKNOWN
+#define RLIMIT_UNKNOWN -1
+#endif
+
+#define RLIMIT_SIMPLE_FN(NAME) \
+    int C_##NAME() { return NAME; }
+
+RLIMIT_SIMPLE_FN(RLIMIT_CORE)
+RLIMIT_SIMPLE_FN(RLIMIT_DATA)
+RLIMIT_SIMPLE_FN(RLIMIT_FSIZE)
+RLIMIT_SIMPLE_FN(RLIMIT_NOFILE)
+RLIMIT_SIMPLE_FN(RLIMIT_STACK)
+RLIMIT_SIMPLE_FN(RLIMIT_CPU)
+RLIMIT_SIMPLE_FN(RLIMIT_UNKNOWN)
+
+int C_RLIMIT_SBSIZE() {
+#ifdef RLIMIT_SBSIZE
+    return RLIMIT_SBSIZE;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_NICE() {
+#ifdef RLIMIT_NICE
+    return RLIMIT_NICE;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_SIGPENDING() {
+#ifdef RLIMIT_SIGPENDING
+    return RLIMIT_SIGPENDING;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_MEMLOCK() {
+#ifdef RLIMIT_MEMLOCK
+    return RLIMIT_MEMLOCK;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_RSS() {
+#ifdef RLIMIT_RSS
+    return RLIMIT_RSS;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_MSGQUEUE() {
+#ifdef RLIMIT_MSGQUEUE
+    return RLIMIT_MSGQUEUE;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_RTPRIO() {
+#ifdef RLIMIT_RTPRIO
+    return RLIMIT_RTPRIO;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_NPROC() {
+#ifdef RLIMIT_NPROC
+    return RLIMIT_NPROC;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_AS() {
+#ifdef RLIMIT_AS
+    return RLIMIT_AS;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_SWAP() {
+#ifdef RLIMIT_SWAP
+    return RLIMIT_SWAP;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_RTTIME() {
+#ifdef RLIMIT_RTTIME
+    return RLIMIT_RTTIME;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_KQUEUES() {
+#ifdef RLIMIT_KQUEUES
+    return RLIMIT_KQUEUES;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_NPTS() {
+#ifdef RLIMIT_NPTS
+    return RLIMIT_NPTS;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}
+
+int C_RLIMIT_NTHR() {
+#ifdef RLIMIT_NTHR
+    return RLIMIT_NTHR;
+#else
+    return RLIMIT_UNKNOWN;
+#endif
+}

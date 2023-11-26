@@ -1,16 +1,476 @@
+use std::{cmp::Ordering, mem::MaybeUninit};
+
+use libc::{rlim_t, rlimit, RLIM_INFINITY};
+use once_cell::sync::Lazy;
+
+use crate::{compat::*, fallback::*};
+
 use super::prelude::*;
 
+/// Safe wrapper around getrlimit
+fn getrlimit(resource: u32) -> Result<rlimit, i32> {
+    // TODO: better handle errno when using this function
+
+    use libc::getrlimit;
+    let mut rl: MaybeUninit<rlimit> = MaybeUninit::uninit();
+    let result = unsafe { getrlimit(resource, rl.as_mut_ptr()) };
+
+    if result == 0 {
+        Ok(unsafe { rl.assume_init() })
+    } else {
+        Err(result)
+    }
+}
+
+/// Safe wrapper around setrlimit
+fn setrlimit(resource: u32, rl: &rlimit) -> Result<(), i32> {
+    use libc::setrlimit;
+    let result = unsafe { setrlimit(resource, rl as *const rlimit) };
+
+    if result == 0 {
+        Ok(())
+    } else {
+        Err(result)
+    }
+}
+
+/// Print the value of the specified resource limit.
+fn print(resource: u32, hard: bool, streams: &mut IoStreams) {
+    let l = get(resource, hard);
+
+    if l == RLIM_INFINITY {
+        streams.out.append(wgettext_fmt!("unlimited\n"));
+    } else {
+        streams
+            .out
+            .append(wgettext_fmt!("%lu\n", l / get_multiplier(resource)));
+    }
+}
+
+/// Print values of all resource limits.
+fn print_all(hard: bool, streams: &mut IoStreams) {
+    let mut w = 0;
+
+    for resource in resource_arr.iter() {
+        w = w.max(fish_wcswidth(resource.desc));
+    }
+    for resource in resource_arr.iter() {
+        let ls = getrlimit(resource.resource).unwrap();
+        let l = if hard { ls.rlim_max } else { ls.rlim_cur };
+
+        let unit = if resource.resource == RLIMIT_CPU() as u32 {
+            "(seconds, "
+        } else if get_multiplier(resource.resource) == 1 {
+            "("
+        } else {
+            "(kB, "
+        };
+        streams.out.append(wgettext_fmt!(
+            "%-*ls %10ls-%lc) ",
+            w,
+            resource.desc,
+            unit,
+            resource.switch_char,
+        ));
+
+        if l == RLIM_INFINITY {
+            streams.out.append(wgettext_fmt!("unlimited\n"));
+        } else {
+            streams.out.append(wgettext_fmt!(
+                "%lu\n",
+                l / get_multiplier(resource.resource)
+            ));
+        }
+    }
+}
+
+fn get_desc(what: u32) -> &'static wstr {
+    for resource in resource_arr.iter() {
+        if resource.resource == what {
+            return resource.desc;
+        }
+    }
+    unreachable!()
+}
+
+fn set_limit(
+    resource: u32,
+    hard: bool,
+    soft: bool,
+    value: rlim_t,
+    streams: &mut IoStreams,
+) -> Option<c_int> {
+    let mut ls = getrlimit(resource).unwrap();
+
+    if hard {
+        ls.rlim_max = value;
+    }
+    if soft {
+        ls.rlim_cur = value;
+
+        // Do not attempt to set the soft limit higher than the hard limit.
+        if (value == RLIM_INFINITY && ls.rlim_max != RLIM_INFINITY)
+            || (value != RLIM_INFINITY && ls.rlim_max != RLIM_INFINITY && value > ls.rlim_max)
+        {
+            ls.rlim_cur = ls.rlim_max;
+        }
+    }
+
+    if let Err(errno) = setrlimit(resource, &ls) {
+        if errno == libc::EPERM {
+            streams.err.append(wgettext_fmt!(
+                "ulimit: Permission denied when changing resource of type '%ls'\n",
+                get_desc(resource)
+            ));
+        } else {
+            builtin_wperror(L!("ulimit"), streams);
+        }
+
+        STATUS_CMD_ERROR
+    } else {
+        STATUS_CMD_OK
+    }
+}
+
+/// Get the implicit multiplication factor for the specified resource limit.
+fn get_multiplier(what: u32) -> u64 {
+    for resource in resource_arr.iter() {
+        if resource.resource == what {
+            return resource.multiplier as u64;
+        }
+    }
+    unreachable!()
+}
+
+fn get(resource: u32, hard: bool) -> rlim_t {
+    let ls = getrlimit(resource).unwrap();
+
+    if hard {
+        ls.rlim_max
+    } else {
+        ls.rlim_cur
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Options {
+    what: c_int,
+    report_all: bool,
+    hard: bool,
+    soft: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Options {
+            what: RLIMIT_FSIZE(),
+            report_all: false,
+            hard: false,
+            soft: false,
+        }
+    }
+}
+
 pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    run_builtin_ffi(crate::ffi::builtin_ulimit, parser, streams, args)
+    let cmd = args[0];
+
+    let argc = args.len();
+
+    const SHORT_OPTS: &wstr = L!(":HSabcdefilmnqrstuvwyKPTh");
+
+    const LONG_OPTS: &[woption] = &[
+        wopt(L!("all"), woption_argument_t::no_argument, 'a'),
+        wopt(L!("hard"), woption_argument_t::no_argument, 'H'),
+        wopt(L!("soft"), woption_argument_t::no_argument, 'S'),
+        wopt(L!("socket-buffers"), woption_argument_t::no_argument, 'b'),
+        wopt(L!("core-size"), woption_argument_t::no_argument, 'c'),
+        wopt(L!("data-size"), woption_argument_t::no_argument, 'd'),
+        wopt(L!("nice"), woption_argument_t::no_argument, 'e'),
+        wopt(L!("file-size"), woption_argument_t::no_argument, 'f'),
+        wopt(L!("pending-signals"), woption_argument_t::no_argument, 'i'),
+        wopt(L!("lock-size"), woption_argument_t::no_argument, 'l'),
+        wopt(
+            L!("resident-set-size"),
+            woption_argument_t::no_argument,
+            'm',
+        ),
+        wopt(
+            L!("file-descriptor-count"),
+            woption_argument_t::no_argument,
+            'n',
+        ),
+        wopt(L!("queue-size"), woption_argument_t::no_argument, 'q'),
+        wopt(
+            L!("realtime-priority"),
+            woption_argument_t::no_argument,
+            'r',
+        ),
+        wopt(L!("stack-size"), woption_argument_t::no_argument, 's'),
+        wopt(L!("cpu-time"), woption_argument_t::no_argument, 't'),
+        wopt(L!("process-count"), woption_argument_t::no_argument, 'u'),
+        wopt(
+            L!("virtual-memory-size"),
+            woption_argument_t::no_argument,
+            'v',
+        ),
+        wopt(L!("swap-size"), woption_argument_t::no_argument, 'w'),
+        wopt(L!("realtime-maxtime"), woption_argument_t::no_argument, 'y'),
+        wopt(L!("kernel-queues"), woption_argument_t::no_argument, 'K'),
+        wopt(L!("ptys"), woption_argument_t::no_argument, 'P'),
+        wopt(L!("threads"), woption_argument_t::no_argument, 'T'),
+        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+    ];
+
+    let mut opts = Options::default();
+
+    let mut shim_args: Vec<&wstr> = args.to_vec();
+    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
+
+    while let Some(c) = w.wgetopt_long() {
+        match c {
+            'a' => opts.report_all = true,
+            'H' => opts.hard = true,
+            'S' => opts.soft = true,
+            'b' => opts.what = RLIMIT_SBSIZE(),
+            'c' => opts.what = RLIMIT_CORE(),
+            'd' => opts.what = RLIMIT_DATA(),
+            'e' => opts.what = RLIMIT_NICE(),
+            'f' => opts.what = RLIMIT_FSIZE(),
+            'i' => opts.what = RLIMIT_SIGPENDING(),
+            'l' => opts.what = RLIMIT_MEMLOCK(),
+            'm' => opts.what = RLIMIT_RSS(),
+            'n' => opts.what = RLIMIT_NOFILE(),
+            'q' => opts.what = RLIMIT_MSGQUEUE(),
+            'r' => opts.what = RLIMIT_RTPRIO(),
+            's' => opts.what = RLIMIT_STACK(),
+            't' => opts.what = RLIMIT_CPU(),
+            'u' => opts.what = RLIMIT_NPROC(),
+            'v' => opts.what = RLIMIT_AS(),
+            'w' => opts.what = RLIMIT_SWAP(),
+            'y' => opts.what = RLIMIT_RTTIME(),
+            'K' => opts.what = RLIMIT_KQUEUES(),
+            'P' => opts.what = RLIMIT_NPTS(),
+            'T' => opts.what = RLIMIT_NTHR(),
+            'h' => {
+                builtin_print_help(parser, streams, cmd);
+                return STATUS_CMD_OK;
+            }
+            ':' => {
+                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                return STATUS_INVALID_ARGS;
+            }
+            '?' => {
+                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], true);
+                return STATUS_INVALID_ARGS;
+            }
+            _ => {
+                panic!("unexpected retval from wgetopt_long");
+            }
+        }
+    }
+
+    if opts.report_all {
+        print_all(opts.hard, streams);
+    }
+
+    if opts.what == RLIMIT_UNKNOWN() {
+        streams.err.append(wgettext_fmt!(
+            "%ls: Resource limit not available on this operating system\n",
+            cmd
+        ));
+
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    let what = opts.what as u32;
+
+    let arg_count = argc - w.woptind;
+    if arg_count == 0 {
+        print(what, opts.hard, streams);
+        return STATUS_CMD_OK;
+    } else if arg_count != 1 {
+        streams
+            .err
+            .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
+
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    let mut hard = opts.hard;
+    let mut soft = opts.soft;
+    if !hard && !soft {
+        // Set both hard and soft limits if neither was specified.
+        hard = true;
+        soft = true;
+    }
+
+    let new_limit: rlim_t = if w.woptind == argc {
+        streams.err.append(wgettext_fmt!(
+            "%ls: New limit cannot be an empty string\n",
+            cmd
+        ));
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    } else if wcscasecmp(args[w.woptind], L!("unlimited")) == Ordering::Equal {
+        RLIM_INFINITY
+    } else if wcscasecmp(args[w.woptind], L!("hard")) == Ordering::Equal {
+        get(what, true)
+    } else if wcscasecmp(args[w.woptind], L!("soft")) == Ordering::Equal {
+        get(what, soft)
+    } else if let Ok(limit) = fish_wcstol(args[w.woptind]) {
+        u64::try_from(limit).expect("Limit greater than i32::MAX") * get_multiplier(what)
+    } else {
+        streams.err.append(wgettext_fmt!(
+            "%ls: Invalid limit '%ls'\n",
+            cmd,
+            args[w.woptind]
+        ));
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    };
+
+    set_limit(what, hard, soft, new_limit, streams)
 }
 
 /// Struct describing a resource limit.
 struct Resource {
-    resource: c_int,     // resource ID
+    resource: u32,       // resource ID
     desc: &'static wstr, // description of resource
     switch_char: char,   // switch used on commandline to specify resource
     multiplier: c_int,   // the implicit multiplier used when setting getting values
 }
 
+impl Resource {
+    fn new(resource: u32, desc: &'static wstr, switch_char: char, multiplier: c_int) -> Resource {
+        Resource {
+            resource,
+            desc,
+            switch_char,
+            multiplier,
+        }
+    }
+}
+
 /// Array of resource_t structs, describing all known resource types.
-const resource_arr: &[Resource] = &[];
+static resource_arr: Lazy<Box<[Resource]>> = Lazy::new(|| {
+    let resources_info = [
+        (
+            RLIMIT_SBSIZE(),
+            L!("Maximum size of socket buffers"),
+            'b',
+            1024,
+        ),
+        (
+            RLIMIT_CORE(),
+            L!("Maximum size of core files created"),
+            'c',
+            1024,
+        ),
+        (
+            RLIMIT_DATA(),
+            L!("Maximum size of a process’s data segment"),
+            'd',
+            1024,
+        ),
+        (
+            RLIMIT_NICE(),
+            L!("Control of maximum nice priority"),
+            'e',
+            1,
+        ),
+        (
+            RLIMIT_FSIZE(),
+            L!("Maximum size of files created by the shell"),
+            'f',
+            1024,
+        ),
+        (
+            RLIMIT_SIGPENDING(),
+            L!("Maximum number of pending signals"),
+            'i',
+            1,
+        ),
+        (
+            RLIMIT_MEMLOCK(),
+            L!("Maximum size that may be locked into memory"),
+            'l',
+            1024,
+        ),
+        (RLIMIT_RSS(), L!("Maximum resident set size"), 'm', 1024),
+        (
+            RLIMIT_NOFILE(),
+            L!("Maximum number of open file descriptors"),
+            'n',
+            1,
+        ),
+        (
+            RLIMIT_MSGQUEUE(),
+            L!("Maximum bytes in POSIX message queues"),
+            'q',
+            1024,
+        ),
+        (
+            RLIMIT_RTPRIO(),
+            L!("Maximum realtime scheduling priority"),
+            'r',
+            1,
+        ),
+        (RLIMIT_STACK(), L!("Maximum stack size"), 's', 1024),
+        (
+            RLIMIT_CPU(),
+            L!("Maximum amount of CPU time in seconds"),
+            't',
+            1,
+        ),
+        (
+            RLIMIT_NPROC(),
+            L!("Maximum number of processes available to current user"),
+            'u',
+            1,
+        ),
+        (
+            RLIMIT_AS(),
+            L!("Maximum amount of virtual memory available to each process"),
+            'v',
+            1024,
+        ),
+        (RLIMIT_SWAP(), L!("Maximum swap space"), 'w', 1024),
+        (
+            RLIMIT_RTTIME(),
+            L!("Maximum contiguous realtime CPU time"),
+            'y',
+            1,
+        ),
+        (RLIMIT_KQUEUES(), L!("Maximum number of kqueues"), 'K', 1),
+        (
+            RLIMIT_NPTS(),
+            L!("Maximum number of pseudo-terminals"),
+            'P',
+            1,
+        ),
+        (
+            RLIMIT_NTHR(),
+            L!("Maximum number of simultaneous threads"),
+            'T',
+            1,
+        ),
+    ];
+
+    let unknown = RLIMIT_UNKNOWN();
+
+    let mut resources = Vec::new();
+    for resource in resources_info {
+        let (resource, desc, switch_char, multiplier) = resource;
+        if resource != unknown {
+            resources.push(Resource::new(
+                resource as u32,
+                desc,
+                switch_char,
+                multiplier,
+            ));
+        }
+    }
+    resources.into_boxed_slice()
+});

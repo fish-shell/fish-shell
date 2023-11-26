@@ -1,14 +1,12 @@
-use super::super::prelude::*;
-use crate::common::escape;
 use crate::ffi_tests::add_test;
-use crate::io::{OutputStream, StringOutputStream};
 
 add_test! {"test_string", || {
     use crate::parser::Parser;
     use crate::builtins::string::string;
-    use crate::wchar::wstr;
-    use crate::wchar::L;
+    use crate::wchar::prelude::*;
+    use crate::common::escape;
     use crate::builtins::shared::{STATUS_CMD_ERROR,STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::io::{IoStreams, OutputStream, StringOutputStream};
 
     use crate::future_feature_flags::{scoped_test, FeatureFlag};
 

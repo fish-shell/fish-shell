@@ -61,7 +61,8 @@ using readb_result_t = int;
 
 static readb_result_t readb(int in_fd) {
     assert(in_fd >= 0 && "Invalid in fd");
-    universal_notifier_t& notifier = universal_notifier_t::default_notifier();
+    auto notifier_box = default_notifier();
+    const auto& notifier = *notifier_box;
     auto fdset_box = new_fd_readable_set();
     fd_readable_set_t& fdset = *fdset_box;
     for (;;) {
@@ -76,15 +77,8 @@ static readb_result_t readb(int in_fd) {
         int notifier_fd = notifier.notification_fd();
         fdset.add(notifier_fd);
 
-        // Get its suggested delay (possibly none).
-        // Note a 0 here means do not poll.
-        uint64_t timeout = kNoTimeout;
-        if (uint64_t usecs_delay = notifier.usec_delay_between_polls()) {
-            timeout = usecs_delay;
-        }
-
         // Here's where we call select().
-        int select_res = fdset.check_readable(timeout);
+        int select_res = fdset.check_readable(kNoTimeout);
         if (select_res < 0) {
             if (errno == EINTR || errno == EAGAIN) {
                 // A signal.
@@ -99,8 +93,7 @@ static readb_result_t readb(int in_fd) {
         // The priority order is: uvars, stdin, ioport.
         // Check to see if we want a universal variable barrier.
         // This may come about through readability, or through a call to poll().
-        if ((fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd)) ||
-            notifier.poll()) {
+        if (fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd)) {
             return readb_uvar_notified;
         }
 

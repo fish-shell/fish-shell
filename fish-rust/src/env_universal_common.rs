@@ -10,7 +10,6 @@ use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
-use crate::universal_notifier::{default_notifier, UniversalNotifier};
 use crate::wchar::prelude::*;
 use crate::wchar::{wstr, WString};
 use crate::wcstringutil::{join_strings, split_string, string_suffixes_string, LineIterator};
@@ -1041,42 +1040,4 @@ fn skip_spaces(mut s: &wstr) -> &wstr {
         s = &s[1..];
     }
     s
-}
-
-pub struct UniversalNotifierFFI(pub &'static dyn UniversalNotifier);
-
-#[cxx::bridge]
-mod env_universal_common_ffi {
-    extern "Rust" {
-        type UniversalNotifierFFI;
-        #[cxx_name = "default_notifier"]
-        fn ffi_default_notifier() -> Box<UniversalNotifierFFI>;
-        fn poll(&self) -> bool;
-        fn post_notification(&self);
-        fn usec_delay_between_polls(&self) -> u64;
-        fn notification_fd(&self) -> i32;
-        fn notification_fd_became_readable(&self, fd: i32) -> bool;
-    }
-}
-
-fn ffi_default_notifier() -> Box<UniversalNotifierFFI> {
-    Box::new(UniversalNotifierFFI(default_notifier()))
-}
-
-impl UniversalNotifierFFI {
-    fn poll(&self) -> bool {
-        todo!("universal notifier")
-    }
-    fn post_notification(&self) {
-        todo!("universal notifier")
-    }
-    fn usec_delay_between_polls(&self) -> u64 {
-        todo!("universal notifier")
-    }
-    fn notification_fd(&self) -> RawFd {
-        todo!("universal notifier")
-    }
-    fn notification_fd_became_readable(&self, _fd: RawFd) -> bool {
-        todo!("universal notifier")
-    }
 }

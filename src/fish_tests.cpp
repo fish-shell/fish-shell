@@ -1692,102 +1692,6 @@ static void test_undo() {
     do_test(line.text() == L"abc");
 }
 
-#define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
-
-// todo!("port this")
-bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
-    if (note->poll()) return true;
-
-    bool result = false;
-    int fd = note->notification_fd();
-    if (fd >= 0 && poll_fd_readable(fd)) {
-        result = note->notification_fd_became_readable(fd);
-    }
-    return result;
-}
-
-// todo!("port this")
-static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy) {
-    say(L"Testing universal notifiers with strategy %d", (int)strategy);
-    constexpr size_t notifier_count = 16;
-    std::unique_ptr<universal_notifier_t> notifiers[notifier_count];
-
-    // Populate array of notifiers.
-    for (auto &notifier : notifiers) {
-        notifier = universal_notifier_t::new_notifier_for_strategy(strategy, UVARS_TEST_PATH);
-    }
-
-    // Nobody should poll yet.
-    for (const auto &notifier : notifiers) {
-        if (poll_notifier(notifier)) {
-            err(L"Universal variable notifier polled true before any changes, with strategy %d",
-                (int)strategy);
-        }
-    }
-
-    // Tweak each notifier. Verify that others see it.
-    for (size_t post_idx = 0; post_idx < notifier_count; post_idx++) {
-        notifiers[post_idx]->post_notification();
-
-        if (strategy == universal_notifier_t::strategy_notifyd) {
-            // notifyd requires a round trip to the notifyd server, which means we have to wait a
-            // little bit to receive it. In practice 40 ms seems to be enough.
-            usleep(40000);
-        }
-
-        for (size_t i = 0; i < notifier_count; i++) {
-            bool polled = poll_notifier(notifiers[i]);
-
-            // We aren't concerned with the one who posted. Poll from it (to drain it), and then
-            // skip it.
-            if (i == post_idx) {
-                continue;
-            }
-
-            if (!polled) {
-                err(L"Universal variable notifier (%lu) %p polled failed to notice changes, with "
-                    L"strategy %d",
-                    i, notifiers[i].get(), (int)strategy);
-                continue;
-            }
-            // It should not poll again immediately.
-            if (poll_notifier(notifiers[i])) {
-                err(L"Universal variable notifier (%lu) %p polled twice in a row with strategy %d",
-                    i, notifiers[i].get(), (int)strategy);
-            }
-        }
-
-        // Named pipes have special cleanup requirements.
-        if (strategy == universal_notifier_t::strategy_named_pipe) {
-            usleep(1000000 / 10);  // corresponds to NAMED_PIPE_FLASH_DURATION_USEC
-            // Have to clean up the posted one first, so that the others see the pipe become no
-            // longer readable.
-            poll_notifier(notifiers[post_idx]);
-            for (const auto &notifier : notifiers) {
-                poll_notifier(notifier);
-            }
-        }
-    }
-
-    // Nobody should poll now.
-    for (const auto &notifier : notifiers) {
-        if (poll_notifier(notifier)) {
-            err(L"Universal variable notifier polled true after all changes, with strategy %d",
-                (int)strategy);
-        }
-    }
-}
-
-// todo!("port this")
-static void test_universal_notifiers() {
-    if (system("mkdir -p test/fish_uvars_test/ && touch test/fish_uvars_test/varsfile.txt")) {
-        err(L"mkdir failed");
-    }
-
-    auto strategy = universal_notifier_t::resolve_default_strategy();
-    test_notifiers_with_strategy(strategy);
-}
-
 // todo!("port this")
 static void test_new_parser_correctness() {
     say(L"Testing parser correctness");
@@ -2769,7 +2673,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("colors"), test_colors},
     {TEST_GROUP("input"), test_input},
     {TEST_GROUP("undo"), test_undo},
-    {TEST_GROUP("universal"), test_universal_notifiers},
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("illegal_command_exit_code"), test_illegal_command_exit_code},
     {TEST_GROUP("maybe"), test_maybe},

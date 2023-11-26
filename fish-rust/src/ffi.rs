@@ -68,7 +68,6 @@ include_cpp! {
     generate!("save_term_foreground_process_group")
     generate!("restore_term_foreground_process_group_for_exit")
     generate!("set_cloexec")
-    generate!("env_universal_notifier_t_default_notifier_post_notification_ffi")
 
     generate!("builtin_bind")
     generate!("builtin_commandline")

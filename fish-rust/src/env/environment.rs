@@ -21,6 +21,7 @@ use crate::path::{
 };
 use crate::proc::is_interactive_session;
 use crate::termsize;
+use crate::universal_notifier::default_notifier;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
@@ -322,7 +323,7 @@ impl EnvStack {
         let mut callbacks = CallbackDataList::new();
         let changed = uvars().sync(&mut callbacks);
         if changed {
-            ffi::env_universal_notifier_t_default_notifier_post_notification_ffi();
+            default_notifier().post_notification();
         }
         // React internally to changes to special variables like LANG, and populate on-variable events.
         let mut result = Vec::new();

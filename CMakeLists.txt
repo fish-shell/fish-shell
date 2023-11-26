@@ -110,7 +110,6 @@ set(FISH_SRCS
     src/color.cpp
     src/common.cpp
     src/env.cpp
-    src/env_universal_common.cpp
     src/event.cpp
     src/expand.cpp
     src/fallback.cpp

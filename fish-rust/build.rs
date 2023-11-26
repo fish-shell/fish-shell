@@ -70,7 +70,6 @@ fn main() {
         "fish-rust/src/complete.rs",
         "fish-rust/src/env_dispatch.rs",
         "fish-rust/src/env/env_ffi.rs",
-        "fish-rust/src/env_universal_common.rs",
         "fish-rust/src/event.rs",
         "fish-rust/src/exec.rs",
         "fish-rust/src/expand.rs",
@@ -106,6 +105,7 @@ fn main() {
         "fish-rust/src/tokenizer.rs",
         "fish-rust/src/trace.rs",
         "fish-rust/src/util.rs",
+        "fish-rust/src/universal_notifier/mod.rs",
         "fish-rust/src/wildcard.rs",
     ];
     cxx_build::bridges(&source_files)

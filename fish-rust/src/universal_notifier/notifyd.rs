@@ -145,5 +145,5 @@ fn test_notifyd_notifiers() {
         .iter()
         .map(|n| n as &dyn UniversalNotifier)
         .collect::<Vec<_>>();
-    super::test_notifiers(&notifiers, None);
+    super::test_helpers::test_notifiers(&notifiers, None);
 }

@@ -88,7 +88,7 @@ fn test_inotify_notifiers() {
         .iter()
         .map(|n| n as &dyn UniversalNotifier)
         .collect::<Vec<_>>();
-    super::test_notifiers(&notifiers, Some(&fake_uvars_path));
+    super::test_helpers::test_notifiers(&notifiers, Some(&fake_uvars_path));
 
     let _ = remove_dir_all(PathBuf::from(wcs2osstring(&fake_uvars_dir)));
 }

@@ -1,37 +1,27 @@
-use std::{cmp::Ordering, mem::MaybeUninit};
+use std::cmp::Ordering;
 
-use libc::{c_uint, rlim_t, rlimit, RLIM_INFINITY};
+use libc::{c_uint, rlim_t, RLIM_INFINITY};
+use nix::errno::Errno;
 use once_cell::sync::Lazy;
 
 use crate::{compat::*, fallback::*};
 
 use super::prelude::*;
 
-/// Safe wrapper around getrlimit
-fn getrlimit(resource: c_uint) -> Result<rlimit, i32> {
-    // TODO: better handle errno when using this function
-
-    use libc::getrlimit;
-    let mut rl: MaybeUninit<rlimit> = MaybeUninit::uninit();
-    let result = unsafe { getrlimit(resource, rl.as_mut_ptr()) };
-
-    if result == 0 {
-        Ok(unsafe { rl.assume_init() })
-    } else {
-        Err(result)
-    }
+fn getrlimit(resource: c_uint) -> Result<(rlim_t, rlim_t), Errno> {
+    use nix::sys::resource;
+    let resource: i32 = resource.try_into().unwrap();
+    resource::getrlimit(unsafe { std::mem::transmute(resource) }) // Resource is #[repr(i32)] so this is ok
 }
 
-/// Safe wrapper around setrlimit
-fn setrlimit(resource: c_uint, rl: &rlimit) -> Result<(), i32> {
-    use libc::setrlimit;
-    let result = unsafe { setrlimit(resource, rl as *const rlimit) };
-
-    if result == 0 {
-        Ok(())
-    } else {
-        Err(result)
-    }
+fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(), Errno> {
+    use nix::sys::resource;
+    let resource: i32 = resource.try_into().unwrap();
+    resource::setrlimit(
+        unsafe { std::mem::transmute(resource) }, // Resource is #[repr(i32)] so this is ok
+        rlim_cur,
+        rlim_max,
+    )
 }
 
 /// Print the value of the specified resource limit.
@@ -55,8 +45,8 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         w = w.max(fish_wcswidth(resource.desc));
     }
     for resource in resource_arr.iter() {
-        let ls = getrlimit(resource.resource).unwrap();
-        let l = if hard { ls.rlim_max } else { ls.rlim_cur };
+        let (rlim_cur, rlim_max) = getrlimit(resource.resource).unwrap();
+        let l = if hard { rlim_max } else { rlim_cur };
 
         let unit = if resource.resource == RLIMIT_CPU() as c_uint {
             "(seconds, "
@@ -100,22 +90,21 @@ fn set_limit(
     value: rlim_t,
     streams: &mut IoStreams,
 ) -> Option<c_int> {
-    let mut ls = getrlimit(resource).unwrap();
-
+    let (mut rlim_cur, mut rlim_max) = getrlimit(resource).unwrap();
     if hard {
-        ls.rlim_max = value;
+        rlim_max = value;
     }
     if soft {
-        ls.rlim_cur = value;
+        rlim_cur = value;
 
         // Do not attempt to set the soft limit higher than the hard limit.
-        if (value > ls.rlim_max || value == RLIM_INFINITY) && ls.rlim_max != RLIM_INFINITY {
-            ls.rlim_cur = ls.rlim_max;
+        if (value > rlim_max || value == RLIM_INFINITY) && rlim_max != RLIM_INFINITY {
+            rlim_cur = rlim_max;
         }
     }
 
-    if let Err(errno) = setrlimit(resource, &ls) {
-        if errno == libc::EPERM {
+    if let Err(errno) = setrlimit(resource, rlim_cur, rlim_max) {
+        if errno == Errno::EPERM {
             streams.err.append(wgettext_fmt!(
                 "ulimit: Permission denied when changing resource of type '%ls'\n",
                 get_desc(resource)
@@ -141,12 +130,12 @@ fn get_multiplier(what: c_uint) -> rlim_t {
 }
 
 fn get(resource: c_uint, hard: bool) -> rlim_t {
-    let ls = getrlimit(resource).unwrap();
+    let (rlim_cur, rlim_max) = getrlimit(resource).unwrap();
 
     if hard {
-        ls.rlim_max
+        rlim_max
     } else {
-        ls.rlim_cur
+        rlim_cur
     }
 }
 

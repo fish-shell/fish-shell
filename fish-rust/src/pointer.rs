@@ -17,10 +17,9 @@ impl<T> Default for ConstPointer<T> {
     }
 }
 
-#[allow(clippy::incorrect_clone_impl_on_copy_type)]
 impl<T> Clone for ConstPointer<T> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 

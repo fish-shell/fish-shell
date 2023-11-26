@@ -109,9 +109,7 @@ fn set_limit(
         ls.rlim_cur = value;
 
         // Do not attempt to set the soft limit higher than the hard limit.
-        if (value == RLIM_INFINITY && ls.rlim_max != RLIM_INFINITY)
-            || (value != RLIM_INFINITY && ls.rlim_max != RLIM_INFINITY && value > ls.rlim_max)
-        {
+        if (value > ls.rlim_max || value == RLIM_INFINITY) && ls.rlim_max != RLIM_INFINITY {
             ls.rlim_cur = ls.rlim_max;
         }
     }

@@ -747,18 +747,6 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_s
     return result;
 }
 
-/// Crappy function to extract the most significant digit of an unsigned long long value.
-static char extract_most_significant_digit(unsigned long long *xp) {
-    unsigned long long place_value = 1;
-    unsigned long long x = *xp;
-    while (x >= 10) {
-        x /= 10;
-        place_value *= 10;
-    }
-    *xp -= (place_value * x);
-    return x + '0';
-}
-
 double timef() {
     struct timeval tv;
     assert_with_errno(gettimeofday(&tv, nullptr) != -1);

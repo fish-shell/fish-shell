@@ -91,8 +91,8 @@ include_cpp! {
 
     generate_pod!("escape_string_style_t")
 
-
     generate!("reader_schedule_prompt_repaint")
+    generate!("reader_reading_interrupted")
     generate!("reader_change_history")
     generate!("reader_change_cursor_selection_mode")
     generate!("reader_set_autosuggestion_enabled_ffi")

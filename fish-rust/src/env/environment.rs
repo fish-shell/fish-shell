@@ -326,7 +326,6 @@ impl EnvStack {
         }
         // React internally to changes to special variables like LANG, and populate on-variable events.
         let mut result = Vec::new();
-        #[allow(unreachable_code)]
         for callback in callbacks {
             let name = callback.key;
             env_dispatch_var_change(&name, self);

@@ -2032,8 +2032,6 @@ impl HistorySearch {
                 return false;
             };
 
-            assert!(!item.is_empty());
-
             // Look for an item that matches and (if deduping) that we haven't seen before.
             if !item.matches_search(&self.canon_term, self.search_type, !self.ignores_case()) {
                 continue;

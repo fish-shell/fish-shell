@@ -1166,7 +1166,7 @@ macro_rules! append_syntax_error {
         {
             append_syntax_error_formatted!(
                 $errors, $source_location, $source_length,
-                wgettext_fmt!($fmt $(, $arg)*))
+                wgettext_maybe_fmt!($fmt $(, $arg)*))
         }
     }
 }

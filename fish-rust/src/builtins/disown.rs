@@ -105,9 +105,11 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                     if let Some(j) = parser.job_get_from_pid(pid) {
                         jobs.push(j);
                     } else {
-                        streams
-                            .err
-                            .append(wgettext_fmt!("%ls: Could not find job '%d'\n", cmd, pid));
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: Could not find job '%d'\n",
+                            cmd,
+                            pid
+                        ));
                     }
                 }
             }

@@ -107,7 +107,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                     } else {
                         streams
                             .err
-                            .append(wgettext_fmt!("%ls: Could not find job '%d'\n"));
+                            .append(wgettext_fmt!("%ls: Could not find job '%d'\n", cmd, pid));
                     }
                 }
             }

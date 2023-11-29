@@ -130,3 +130,6 @@ function thud --on-job-exit $truepid
     echo "thud called"
 end
 # CHECK: thud called
+
+disown 252
+# CHECKERR: disown: Could not find job '252'

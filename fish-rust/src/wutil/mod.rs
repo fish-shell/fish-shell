@@ -19,7 +19,7 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
 use errno::errno;
-pub(crate) use gettext::{wgettext, wgettext_fmt, wgettext_str};
+pub(crate) use gettext::{wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str};
 pub(crate) use printf::sprintf;
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};

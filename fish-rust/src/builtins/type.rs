@@ -88,9 +88,9 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                     let mut comment = WString::new();
 
                     if path.is_empty() {
-                        comment.push_utfstr(&wgettext_fmt!("Defined interactively"));
+                        comment.push_utfstr(&wgettext!("Defined interactively"));
                     } else if path == L!("-") {
-                        comment.push_utfstr(&wgettext_fmt!("Defined via `source`"));
+                        comment.push_utfstr(&wgettext!("Defined via `source`"));
                     } else {
                         let lineno: i32 = props.definition_lineno();
                         comment.push_utfstr(&wgettext_fmt!(
@@ -103,9 +103,9 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                     if props.is_copy() {
                         let path = props.copy_definition_file().unwrap_or(L!(""));
                         if path.is_empty() {
-                            comment.push_utfstr(&wgettext_fmt!(", copied interactively"));
+                            comment.push_utfstr(&wgettext!(", copied interactively"));
                         } else if path == L!("-") {
-                            comment.push_utfstr(&wgettext_fmt!(", copied via `source`"));
+                            comment.push_utfstr(&wgettext!(", copied via `source`"));
                         } else {
                             let lineno = props.copy_definition_lineno();
                             comment.push_utfstr(&wgettext_fmt!(

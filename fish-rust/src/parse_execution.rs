@@ -49,7 +49,7 @@ use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wildcard::wildcard_match;
-use crate::wutil::{wgettext, wgettext_fmt};
+use crate::wutil::{wgettext, wgettext_maybe_fmt};
 use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
 use std::cell::RefCell;
 use std::io::ErrorKind;
@@ -115,7 +115,7 @@ impl ParseExecutionContext {
 // 'end_execution_reason_t::error'.
 macro_rules! report_error {
     ( $self:ident, $ctx:expr, $status:expr, $node:expr, $fmt:expr $(, $arg:expr )* $(,)? ) => {
-        report_error_formatted!($self, $ctx, $status, $node, wgettext_fmt!($fmt $(, $arg )*))
+        report_error_formatted!($self, $ctx, $status, $node, wgettext_maybe_fmt!($fmt $(, $arg )*))
     };
 }
 macro_rules! report_error_formatted {

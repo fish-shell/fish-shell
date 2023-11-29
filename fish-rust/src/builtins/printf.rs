@@ -234,7 +234,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 // Do it if the unconverted digit is a valid hex digit,
                 // because it could also be an "0x" -> "0" typo.
                 if s.char_at(0) == '0' && iswxdigit(end.char_at(0)) {
-                    self.nonfatal_error(wgettext_fmt!(
+                    self.nonfatal_error(wgettext!(
                         "Hint: a leading '0' without an 'x' indicates an octal number"
                     ));
                 }

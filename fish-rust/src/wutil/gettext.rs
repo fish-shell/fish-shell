@@ -45,6 +45,19 @@ pub(crate) use wgettext_expr;
 /// The result is a WString.
 macro_rules! wgettext_fmt {
     (
+    $string:expr, // format string
+    $($args:expr),+ // list of expressions
+    $(,)?   // optional trailing comma
+    ) => {
+        crate::wutil::sprintf!(&crate::wutil::wgettext!($string), $($args),+)
+    };
+}
+pub(crate) use wgettext_fmt;
+
+/// Like wgettext_fmt, but doesn't require an argument to format.
+/// For use in macros.
+macro_rules! wgettext_maybe_fmt {
+    (
     $string:expr // format string
     $(, $args:expr)* // list of expressions
     $(,)?   // optional trailing comma
@@ -52,7 +65,7 @@ macro_rules! wgettext_fmt {
         crate::wutil::sprintf!(&crate::wutil::wgettext!($string), $($args),*)
     };
 }
-pub(crate) use wgettext_fmt;
+pub(crate) use wgettext_maybe_fmt;
 
 use crate::ffi_tests::add_test;
 add_test!("test_untranslated", || {

@@ -376,13 +376,13 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                         props.definition_lineno()
                     ));
                 }
-                None => comment.push_utfstr(&wgettext_fmt!("Defined interactively")),
+                None => comment.push_utfstr(&wgettext!("Defined interactively")),
             }
 
             if props.is_copy() {
                 match props.copy_definition_file() {
                     Some(path) if path == "-" => {
-                        comment.push_utfstr(&wgettext_fmt!(", copied via `source`"))
+                        comment.push_utfstr(&wgettext!(", copied via `source`"))
                     }
                     Some(path) => {
                         comment.push_utfstr(&wgettext_fmt!(
@@ -391,7 +391,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                             props.copy_definition_lineno()
                         ));
                     }
-                    None => comment.push_utfstr(&wgettext_fmt!(", copied interactively")),
+                    None => comment.push_utfstr(&wgettext!(", copied interactively")),
                 }
             }
         }

@@ -154,9 +154,11 @@ fn parse_cmd_opts(
                 } else {
                     let pid = fish_wcstoi(woptarg);
                     if pid.is_err() || pid.unwrap() < 0 {
-                        streams
-                            .err
-                            .append(wgettext_fmt!("%ls: %ls: invalid process id", cmd, woptarg));
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: %ls: invalid process id",
+                            cmd,
+                            woptarg
+                        ));
                         return STATUS_INVALID_ARGS;
                     }
                     let pid = pid.unwrap();

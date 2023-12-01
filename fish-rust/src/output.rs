@@ -35,10 +35,10 @@ extern "C" fn output_set_color_support(val: u8) {
 }
 
 /// Returns true if we think tparm can handle outputting a color index.
-fn term_supports_color_natively(term: &Term, c: i32) -> bool {
+fn term_supports_color_natively(term: &Term, c: u8) -> bool {
     #[allow(clippy::int_plus_one)]
     if let Some(max_colors) = term.max_colors {
-        max_colors >= c + 1
+        max_colors >= usize::try_from(c).unwrap() + 1
     } else {
         false
     }
@@ -61,7 +61,7 @@ fn index_for_color(c: RgbColor) -> u8 {
 }
 
 fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u8, is_fg: bool) {
-    if term_supports_color_natively(term, idx.into()) {
+    if term_supports_color_natively(term, idx) {
         // Use tparm to emit color escape.
         outp.tputs_if_some(&tparm1(todo, idx.into()));
     } else {

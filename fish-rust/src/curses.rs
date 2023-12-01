@@ -121,7 +121,7 @@ pub struct Term {
     pub set_title: Option<CString>,
 
     // Number capabilities
-    pub max_colors: Option<i32>,
+    pub max_colors: Option<usize>,
 
     // Flag/boolean capabilities
     pub eat_newline_glitch: bool,
@@ -241,11 +241,11 @@ fn get_str_cap(code: &str) -> Option<CString> {
 
 /// Return a number capability from termcap, or None if missing.
 /// Panics if the given code string does not contain exactly two bytes.
-fn get_num_cap(code: &str) -> Option<i32> {
+fn get_num_cap(code: &str) -> Option<usize> {
     let code = to_cstr_code(code);
     match unsafe { sys::tgetnum(code.as_ptr()) } {
         -1 => None,
-        n => Some(n),
+        n => Some(usize::try_from(n).unwrap()),
     }
 }
 

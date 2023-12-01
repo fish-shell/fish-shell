@@ -162,4 +162,9 @@ end
 
 rm -r $tmpdir
 
+function foo -p bar; end
+# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: bar: invalid process id
+# CHECKERR: function foo -p bar; end
+# CHECKERR: ^~~~~~~~~~~~~~~~~~~^
+
 exit 0

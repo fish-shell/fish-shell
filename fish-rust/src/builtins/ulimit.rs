@@ -42,10 +42,10 @@ fn print(resource: c_uint, hard: bool, streams: &mut IoStreams) {
 fn print_all(hard: bool, streams: &mut IoStreams) {
     let mut w = 0;
 
-    for resource in resource_arr.iter() {
+    for resource in RESOURCE_ARR.iter() {
         w = w.max(fish_wcswidth(resource.desc));
     }
-    for resource in resource_arr.iter() {
+    for resource in RESOURCE_ARR.iter() {
         let (rlim_cur, rlim_max) = getrlimit(resource.resource).unwrap();
         let l = if hard { rlim_max } else { rlim_cur };
 
@@ -77,7 +77,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
 
 /// Returns the description for the specified resource limit.
 fn get_desc(what: c_uint) -> &'static wstr {
-    for resource in resource_arr.iter() {
+    for resource in RESOURCE_ARR.iter() {
         if resource.resource == what {
             return resource.desc;
         }
@@ -125,7 +125,7 @@ fn set_limit(
 
 /// Get the implicit multiplication factor for the specified resource limit.
 fn get_multiplier(what: c_uint) -> rlim_t {
-    for resource in resource_arr.iter() {
+    for resource in RESOURCE_ARR.iter() {
         if resource.resource == what {
             return resource.multiplier as rlim_t;
         }
@@ -350,7 +350,7 @@ impl Resource {
 }
 
 /// Array of resource_t structs, describing all known resource types.
-static resource_arr: Lazy<Box<[Resource]>> = Lazy::new(|| {
+static RESOURCE_ARR: Lazy<Box<[Resource]>> = Lazy::new(|| {
     let resources_info = [
         (
             RLIMIT_SBSIZE(),

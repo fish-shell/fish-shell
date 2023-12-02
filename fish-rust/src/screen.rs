@@ -7,9 +7,11 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
+use crate::pager::{PageRendering, Pager};
 use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
 use std::io::Write;
+use std::pin::Pin;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 
@@ -24,7 +26,6 @@ use crate::common::{
 use crate::curses::{term, tparm0, tparm1};
 use crate::env::{EnvStackRef, Environment, TERM_HAS_XN};
 use crate::fallback::fish_wcwidth;
-use crate::ffi::{self, Repin};
 use crate::flog::FLOGF;
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
@@ -35,7 +36,6 @@ use crate::wchar::prelude::*;
 use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::string_prefixes_string;
 use crate::{highlight::HighlightSpec, wcstringutil::fish_wcwidth_visible};
-use std::pin::Pin;
 
 #[derive(Clone, Default)]
 pub struct HighlightedChar {
@@ -53,7 +53,7 @@ pub struct Line {
 }
 
 impl Line {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Default::default()
     }
 
@@ -148,10 +148,11 @@ impl ScreenData {
         self.line_datas.resize(size, Default::default())
     }
 
-    pub fn create_line(&mut self, idx: usize) {
+    pub fn create_line(&mut self, idx: usize) -> &mut Line {
         if idx >= self.line_datas.len() {
             self.line_datas.resize(idx + 1, Default::default())
         }
+        self.line_mut(idx)
     }
 
     pub fn insert_line_at_index(&mut self, idx: usize) -> &mut Line {
@@ -256,8 +257,8 @@ impl Screen {
         indent: &[usize],
         cursor_pos: usize,
         vars: &dyn Environment,
-        pager: Pin<&mut ffi::pager_t>,
-        page_rendering: Pin<&mut ffi::page_rendering_t>,
+        pager: &mut Pager,
+        page_rendering: &mut PageRendering,
         cursor_is_within_pager: bool,
     ) {
         let curr_termsize = termsize_last();
@@ -362,25 +363,19 @@ impl Screen {
 
         // Re-render our completions page if necessary. Limit the term size of the pager to the true
         // term size, minus the number of lines consumed by our string.
-        let pager = pager.unpin();
-        let page_rendering = page_rendering.unpin();
-        crate::ffi::pager_set_term_size_ffi(
-            pager.pin(),
-            &Termsize::new(
-                std::cmp::max(1, curr_termsize.width),
-                std::cmp::max(
-                    1,
-                    curr_termsize
-                        .height
-                        .saturating_sub_unsigned(full_line_count),
-                ),
-            ) as *const Termsize as *const autocxx::c_void,
-        );
+        pager.set_term_size(&Termsize::new(
+            std::cmp::max(1, curr_termsize.width),
+            std::cmp::max(
+                1,
+                curr_termsize
+                    .height
+                    .saturating_sub_unsigned(full_line_count),
+            ),
+        ));
 
-        crate::ffi::pager_update_rendering_ffi(pager.pin(), page_rendering.pin());
+        pager.update_rendering(page_rendering);
         // Append pager_data (none if empty).
-        self.desired
-            .append_lines(unsafe { &*(page_rendering.screen_data_ffi() as *const ScreenData) });
+        self.desired.append_lines(&page_rendering.screen_data);
 
         self.update(&layout.left_prompt, &layout.right_prompt, vars);
         self.save_status();
@@ -1848,11 +1843,14 @@ fn compute_layout(
 mod screen_ffi {
     extern "C++" {
         include!("screen.h");
+        include!("pager.h");
         include!("highlight.h");
         pub type HighlightSpec = crate::highlight::HighlightSpec;
         pub type HighlightSpecListFFI = crate::highlight::HighlightSpecListFFI;
-        pub type pager_t = crate::ffi::pager_t;
-        pub type page_rendering_t = crate::ffi::page_rendering_t;
+        // pub type pager_t = crate::ffi::pager_t;
+        // pub type page_rendering_t = crate::ffi::page_rendering_t;
+        pub type Pager = crate::pager::Pager;
+        pub type PageRendering = crate::pager::PageRendering;
         pub type highlight_spec_t = crate::ffi::highlight_spec_t;
     }
     extern "Rust" {
@@ -1891,8 +1889,8 @@ mod screen_ffi {
             indent: &CxxVector<i32>,
             cursor_pos: usize,
             vars: *mut u8,
-            pager: Pin<&mut pager_t>,
-            page_rendering: Pin<&mut page_rendering_t>,
+            pager: Pin<&mut Pager>,
+            page_rendering: Pin<&mut PageRendering>,
             cursor_is_within_pager: bool,
         );
         fn reset_abandoning_line(&mut self, screen_width: usize);
@@ -1956,8 +1954,8 @@ impl Screen {
         indent: &CxxVector<i32>,
         cursor_pos: usize,
         vars: *mut u8,
-        pager: Pin<&mut ffi::pager_t>,
-        page_rendering: Pin<&mut ffi::page_rendering_t>,
+        pager: Pin<&mut Pager>,
+        page_rendering: Pin<&mut PageRendering>,
         cursor_is_within_pager: bool,
     ) {
         let vars = unsafe { Box::from_raw(vars as *mut EnvStackRef) };
@@ -1974,8 +1972,8 @@ impl Screen {
             &my_indent,
             cursor_pos,
             vars.as_ref().as_ref().get_ref(),
-            pager,
-            page_rendering,
+            pager.get_mut(),
+            page_rendering.get_mut(),
             cursor_is_within_pager,
         );
     }

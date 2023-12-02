@@ -249,7 +249,7 @@ impl StringFuzzyMatch {
 pub fn string_fuzzy_match_string(
     string: &wstr,
     match_against: &wstr,
-    anchor_start: bool,
+    anchor_start: bool, /* = false */
 ) -> Option<StringFuzzyMatch> {
     StringFuzzyMatch::try_create(string, match_against, anchor_start)
 }

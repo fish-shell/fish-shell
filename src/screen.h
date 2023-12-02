@@ -2,8 +2,10 @@
 #define FISH_SCREEN_H
 #include "config.h"  // IWYU pragma: keep
 
-class pager_t;
-class page_rendering_t;
+struct PageRendering;
+struct Pager;
+using page_rendering_t = PageRendering;
+using pager_t = Pager;
 
 #if INCLUDE_RUST_HEADERS
 #include "screen.rs.h"

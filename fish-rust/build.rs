@@ -91,6 +91,7 @@ fn main() {
         "fish-rust/src/kill.rs",
         "fish-rust/src/operation_context.rs",
         "fish-rust/src/output.rs",
+        "fish-rust/src/pager.rs",
         "fish-rust/src/parse_constants.rs",
         "fish-rust/src/parser.rs",
         "fish-rust/src/parse_tree.rs",

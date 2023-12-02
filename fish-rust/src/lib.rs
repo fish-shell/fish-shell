@@ -74,6 +74,7 @@ mod nix;
 mod null_terminated_array;
 mod operation_context;
 mod output;
+mod pager;
 mod parse_constants;
 mod parse_execution;
 mod parse_tree;

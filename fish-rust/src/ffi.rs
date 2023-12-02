@@ -105,11 +105,6 @@ include_cpp! {
     generate!("commandline_get_state_text_ffi")
     generate!("completion_apply_to_command_line")
 
-    generate!("pager_t")
-    generate!("page_rendering_t")
-    generate!("pager_set_term_size_ffi")
-    generate!("pager_update_rendering_ffi")
-
     generate!("get_history_variable_text_ffi")
 
     generate_pod!("escape_string_style_t")
@@ -173,8 +168,6 @@ impl Repin for IoStreams<'_> {}
 impl Repin for wcstring_list_ffi_t {}
 impl Repin for rgb_color_t {}
 impl Repin for OutputStreamFfi<'_> {}
-impl Repin for pager_t {}
-impl Repin for page_rendering_t {}
 
 pub use autocxx::c_int;
 pub use ffi::*;

@@ -1635,6 +1635,7 @@ impl Default for HighlightSpec {
 mod highlight_ffi {
     /// Describes the role of a span of text.
     #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+    #[repr(u8)]
     pub enum HighlightRole {
         normal,  // normal text
         error,   // error

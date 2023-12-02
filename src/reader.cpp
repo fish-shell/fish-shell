@@ -548,9 +548,10 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// The current autosuggestion.
     autosuggestion_t autosuggestion;
     /// Current pager.
-    pager_t pager;
+    rust::Box<pager_t> pager_box = new_pager();
+    pager_t &pager = *pager_box;
     /// The output of the pager.
-    page_rendering_t current_page_rendering;
+    rust::Box<page_rendering_t> current_page_rendering = new_page_rendering();
     /// When backspacing, we temporarily suppress autosuggestions.
     bool suppress_autosuggestion{false};
 
@@ -626,7 +627,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// field.
     const editable_line_t *active_edit_line() const {
         if (this->is_navigating_pager_contents() && this->pager.is_search_field_shown()) {
-            return &this->pager.search_field_line;
+            return this->pager.search_field_line();
         }
         return &this->command_line;
     }
@@ -985,7 +986,7 @@ bool reader_data_t::is_repaint_needed(const std::vector<highlight_spec_t> *mcolo
         return val;
     };
 
-    bool focused_on_pager = active_edit_line() == &pager.search_field_line;
+    bool focused_on_pager = active_edit_line() == pager.search_field_line();
     const layout_data_t &last = this->rendered_layout;
     return check(force_exec_prompt_and_repaint, L"forced") ||
            check(*command_line.text() != last.text, L"text") ||
@@ -999,12 +1000,12 @@ bool reader_data_t::is_repaint_needed(const std::vector<highlight_spec_t> *mcolo
            check(left_prompt_buff != last.left_prompt_buff, L"left_prompt") ||
            check(mode_prompt_buff != last.mode_prompt_buff, L"mode_prompt") ||
            check(right_prompt_buff != last.right_prompt_buff, L"right_prompt") ||
-           check(pager.rendering_needs_update(current_page_rendering), L"pager");
+           check(pager.rendering_needs_update(*current_page_rendering), L"pager");
 }
 
 layout_data_t reader_data_t::make_layout_data() const {
     layout_data_t result{};
-    bool focused_on_pager = active_edit_line() == &pager.search_field_line;
+    bool focused_on_pager = active_edit_line() == pager.search_field_line();
     result.text = *command_line.text();
     for (auto &color : editable_line_colors(command_line)) {
         result.colors.push_back(color);
@@ -1012,7 +1013,7 @@ layout_data_t reader_data_t::make_layout_data() const {
     assert(result.text.size() == result.colors.size());
     result.position = focused_on_pager ? pager.cursor_position() : command_line.position();
     result.selection = selection;
-    result.focused_on_pager = (active_edit_line() == &pager.search_field_line);
+    result.focused_on_pager = (active_edit_line() == pager.search_field_line());
     result.history_search_range = history_search.search_range_if_active();
     result.autosuggestion = autosuggestion.text;
     result.left_prompt_buff = left_prompt_buff;
@@ -1073,7 +1074,7 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
     // Prepend the mode prompt to the left prompt.
     screen->write(mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
                   cmd_line->size(), *ffi_colors, indents, data.position, parser().vars_boxed(),
-                  pager, current_page_rendering, data.focused_on_pager);
+                  pager, *current_page_rendering, data.focused_on_pager);
 }
 
 /// Internal helper function for handling killing parts of text.
@@ -1103,7 +1104,7 @@ void reader_data_t::command_line_changed(const editable_line_t *el) {
     if (el == &this->command_line) {
         // Update the gen count.
         s_generation.store(1 + read_generation_count(), std::memory_order_relaxed);
-    } else if (el == &this->pager.search_field_line) {
+    } else if (el == this->pager.search_field_line()) {
         if (history_pager_active) {
             fill_history_pager(history_pager_invocation_t::Anew,
                                history_search_direction_t::Backward);
@@ -1117,7 +1118,7 @@ void reader_data_t::command_line_changed(const editable_line_t *el) {
 }
 
 void reader_data_t::maybe_refilter_pager(const editable_line_t *el) {
-    if (el == &this->pager.search_field_line) {
+    if (el == this->pager.search_field_line()) {
         command_line_changed(el);
     }
 }
@@ -1185,14 +1186,14 @@ void reader_data_t::fill_history_pager(history_pager_invocation_t why,
             old_pager_index = pager.selected_completion_index();
             break;
     }
-    const wcstring search_term = *pager.search_field_line.text();
+    const wcstring search_term = *pager.search_field_line()->text();
     auto shared_this = this->shared_from_this();
     std::function<history_pager_result_t()> func = [=]() {
         return history_pager_search(**shared_this->history, direction, index, search_term);
     };
     std::function<void(const history_pager_result_t &)> completion =
         [=](const history_pager_result_t &result) {
-            if (search_term != *shared_this->pager.search_field_line.text())
+            if (search_term != *shared_this->pager.search_field_line()->text())
                 return;  // Stale request.
             if (result.matched_commands->empty() && why == history_pager_invocation_t::Advance) {
                 // No more matches, keep the existing ones and flash.
@@ -1207,8 +1208,8 @@ void reader_data_t::fill_history_pager(history_pager_invocation_t why,
                 shared_this->history_pager_history_index_start = index;
                 shared_this->history_pager_history_index_end = result.final_index;
             }
-            shared_this->pager.extra_progress_text =
-                result.have_more_results ? _(L"Search again for more results") : L"";
+            shared_this->pager.set_extra_progress_text(
+                result.have_more_results ? _(L"Search again for more results") : L"");
             shared_this->pager.set_completions(*result.matched_commands);
             if (why == history_pager_invocation_t::Refresh) {
                 pager.set_selected_completion_index(*old_pager_index);
@@ -1226,7 +1227,7 @@ void reader_data_t::fill_history_pager(history_pager_invocation_t why,
 void reader_data_t::pager_selection_changed() {
     ASSERT_IS_MAIN_THREAD();
 
-    const completion_t *completion = this->pager.selected_completion(this->current_page_rendering);
+    const completion_t *completion = this->pager.selected_completion(*this->current_page_rendering);
 
     // Update the cursor and command line.
     size_t cursor_pos = this->cycle_cursor_pos;
@@ -2036,7 +2037,8 @@ void reader_data_t::clear_pager() {
 
 void reader_data_t::select_completion_in_direction(selection_motion_t dir,
                                                    bool force_selection_change) {
-    bool selection_changed = pager.select_next_completion_in_direction(dir, current_page_rendering);
+    bool selection_changed =
+        pager.select_next_completion_in_direction(dir, *current_page_rendering);
     if (force_selection_change || selection_changed) {
         pager_selection_changed();
     }
@@ -2288,7 +2290,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     }
 
     // Update the pager data.
-    pager.set_prefix(prefix);
+    pager.set_prefix(prefix, true);
     pager.set_completions(surviving_completions);
     // Modify the command line to reflect the new pager.
     pager_selection_changed();
@@ -2953,10 +2955,10 @@ bool check_exit_loop_maybe_warning(reader_data_t *data) {
 
 static bool selection_is_at_top(const reader_data_t *data) {
     const pager_t *pager = &data->pager;
-    size_t row = pager->get_selected_row(data->current_page_rendering);
+    size_t row = pager->get_selected_row(*data->current_page_rendering);
     if (row != 0 && row != PAGER_SELECTION_NONE) return false;
 
-    size_t col = pager->get_selected_column(data->current_page_rendering);
+    size_t col = pager->get_selected_column(*data->current_page_rendering);
     return !(col != 0 && col != PAGER_SELECTION_NONE);
 }
 
@@ -2969,7 +2971,7 @@ void reader_data_t::update_commandline_state() const {
     }
     snapshot->selection = this->get_selection();
     snapshot->pager_mode = !this->pager.empty();
-    snapshot->pager_fully_disclosed = this->current_page_rendering.remaining_to_disclose == 0;
+    snapshot->pager_fully_disclosed = this->current_page_rendering->remaining_to_disclose() == 0;
     snapshot->search_mode = this->history_search.active();
     snapshot->initialized = true;
 }
@@ -3420,7 +3422,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 (!rls.comp->empty() && !rls.complete_did_insert && rls.last_cmd == rl::complete)) {
                 // The user typed complete more than once in a row. If we are not yet fully
                 // disclosed, then become so; otherwise cycle through our available completions.
-                if (current_page_rendering.remaining_to_disclose > 0) {
+                if (current_page_rendering->remaining_to_disclose() > 0) {
                     pager.set_fully_disclosed();
                 } else {
                     select_completion_in_direction(c == rl::complete ? selection_motion_t::next
@@ -3670,11 +3672,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             pager.set_prefix(MB_CUR_MAX > 1 ? L"► " : L"> ", false /* highlight */);
             // Update the search field, which triggers the actual history search.
             if (!history_search.active() || history_search.search_string().empty()) {
-                insert_string(&pager.search_field_line, *command_line.text());
+                insert_string(pager.search_field_line(), *command_line.text());
             } else {
                 // If we have an actual history search already going, reuse that term
                 // - this is if the user looks around a bit and decides to switch to the pager.
-                insert_string(&pager.search_field_line, history_search.search_string());
+                insert_string(pager.search_field_line(), history_search.search_string());
             }
             break;
         }
@@ -3684,7 +3686,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 break;
             }
             inputter.function_set_status(true);
-            if (auto completion = pager.selected_completion(current_page_rendering)) {
+            if (auto completion = pager.selected_completion(*current_page_rendering)) {
                 (*history)->remove(*completion->completion());
                 (*history)->save();
                 fill_history_pager(history_pager_invocation_t::Refresh,
@@ -4268,9 +4270,9 @@ bool reader_data_t::handle_execute(readline_loop_state_t &rls) {
         if (this->history_pager_active &&
             this->pager.selected_completion_index() == PAGER_SELECTION_NONE) {
             command_line.push_edit(
-                new_edit(0, command_line.size(), *this->pager.search_field_line.text()),
+                new_edit(0, command_line.size(), *this->pager.search_field_line()->text()),
                 /* allow_coalesce */ false);
-            command_line.set_position(this->pager.search_field_line.position());
+            command_line.set_position(this->pager.search_field_line()->position());
         }
         clear_pager();
         return true;
@@ -4455,7 +4457,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             }
 
             // Clear the pager if necessary.
-            bool focused_on_search_field = (active_edit_line() == &pager.search_field_line);
+            bool focused_on_search_field = (active_edit_line() == pager.search_field_line());
             if (!history_search.active() &&
                 command_ends_paging(readline_cmd, focused_on_search_field)) {
                 clear_pager();

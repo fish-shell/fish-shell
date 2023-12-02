@@ -2639,6 +2639,10 @@ unsafe impl cxx::ExternType for CompletionListFfi {
     type Id = cxx::type_id!("CompletionListFfi");
     type Kind = cxx::kind::Opaque;
 }
+unsafe impl cxx::ExternType for Completion {
+    type Id = cxx::type_id!("Completion");
+    type Kind = cxx::kind::Opaque;
+}
 
 fn new_completion() -> Box<Completion> {
     Box::new(Completion::new(

@@ -1,6 +1,9 @@
 use std::{iter, slice};
 
-use crate::wchar::{wstr, WString};
+use crate::{
+    common::subslice_position,
+    wchar::{wstr, WString},
+};
 use widestring::utfstr::CharsUtf32;
 
 /// Helpers to convert things to widestring.
@@ -235,6 +238,19 @@ pub trait WExt {
         }
 
         inner(self.as_char_slice(), search.as_ref())
+    }
+
+    /// Replaces all matches of a pattern with another string.
+    fn replace(&self, from: impl AsRef<[char]>, to: &wstr) -> WString {
+        let from = from.as_ref();
+        let mut s = self.as_char_slice().to_vec();
+        let mut offset = 0;
+        while let Some(relpos) = subslice_position(&s[offset..], from) {
+            offset += relpos;
+            s.splice(offset..(offset + from.len()), to.chars());
+            offset += to.len();
+        }
+        WString::from_chars(s)
     }
 
     /// \return the index of the first occurrence of the given char, or None.

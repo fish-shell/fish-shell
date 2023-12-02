@@ -121,7 +121,6 @@ set(FISH_SRCS
     src/input_common.cpp
     src/input.cpp
     src/output.cpp
-    src/pager.cpp
     src/parse_util.cpp
     src/path.cpp
     src/reader.cpp

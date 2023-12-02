@@ -6,7 +6,7 @@ use crate::ast;
 use crate::common::{
     charptr2wcstring, escape, fputws, redirect_tty_output, scoped_push_replacer, timef, Timepoint,
 };
-use crate::compat::cur_term;
+use crate::curses::term;
 use crate::env::Statuses;
 use crate::event::{self, Event};
 use crate::flog::{FLOG, FLOGF};
@@ -1709,7 +1709,7 @@ fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool
 
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)
-    let interactive = allow_interactive && cur_term();
+    let interactive = allow_interactive && term().is_some();
 
     // Remove all disowned jobs.
     remove_disowned_jobs(&mut parser.jobs_mut());

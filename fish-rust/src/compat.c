@@ -12,8 +12,6 @@
 
 size_t C_MB_CUR_MAX() { return MB_CUR_MAX; }
 
-int has_cur_term() { return cur_term != NULL; }
-
 uint64_t C_ST_LOCAL() {
 #if defined(ST_LOCAL)
     return ST_LOCAL;

@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "complete.h"
+#include "editable_line.rs.h"
 #include "fallback.h"
 #include "highlight.h"
 #include "maybe.h"
@@ -400,7 +401,7 @@ bool pager_t::completion_info_passes_filter(const comp_t &info) const {
     // If we have no filter, everything passes.
     if (!search_field_shown || this->search_field_line.empty()) return true;
 
-    const wcstring &needle = this->search_field_line.text();
+    const wcstring needle = *this->search_field_line.text();
 
     // Match against the description.
     if (string_fuzzy_match_string(needle, info.desc)) {
@@ -591,7 +592,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     }
 
     // Add the search field.
-    wcstring search_field_text = search_field_line.text();
+    wcstring search_field_text = *search_field_line.text();
     // Append spaces to make it at least the required width.
     if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH) {
         search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
@@ -618,7 +619,7 @@ page_rendering_t pager_t::render() const {
     rendering.term_width = this->available_term_width;
     rendering.term_height = this->available_term_height;
     rendering.search_field_shown = this->search_field_shown;
-    rendering.search_field_line = this->search_field_line;
+    rendering.search_field_line = this->search_field_line.clone();
 
     for (size_t cols = PAGER_MAX_COLS; cols > 0; cols--) {
         // Initially empty rendering.
@@ -660,10 +661,10 @@ bool pager_t::rendering_needs_update(const page_rendering_t &rendering) const {
            rendering.term_width != this->available_term_width ||    //
            rendering.term_height != this->available_term_height ||  //
            rendering.selected_completion_idx !=
-               this->visual_selected_completion_index(rendering.rows, rendering.cols) ||    //
-           rendering.search_field_shown != this->search_field_shown ||                      //
-           rendering.search_field_line.text() != this->search_field_line.text() ||          //
-           rendering.search_field_line.position() != this->search_field_line.position() ||  //
+               this->visual_selected_completion_index(rendering.rows, rendering.cols) ||     //
+           rendering.search_field_shown != this->search_field_shown ||                       //
+           *rendering.search_field_line->text() != *this->search_field_line.text() ||        //
+           rendering.search_field_line->position() != this->search_field_line.position() ||  //
            (rendering.remaining_to_disclose > 0 && this->fully_disclosed);
 }
 
@@ -674,7 +675,7 @@ void pager_t::update_rendering(page_rendering_t *rendering) {
     }
 }
 
-pager_t::pager_t() = default;
+pager_t::pager_t() : search_field_line_box(new_editable_line()) {}
 pager_t::~pager_t() = default;
 
 bool pager_t::empty() const { return unfiltered_completion_infos.empty(); }
@@ -965,4 +966,5 @@ size_t pager_t::cursor_position() const {
     return result;
 }
 
-page_rendering_t::page_rendering_t() : screen_data(new_screen_data()) {}
+page_rendering_t::page_rendering_t()
+    : screen_data(new_screen_data()), search_field_line(new_editable_line()) {}

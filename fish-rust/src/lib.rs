@@ -35,6 +35,7 @@ mod color;
 mod compat;
 mod complete;
 mod curses;
+mod editable_line;
 mod env;
 mod env_dispatch;
 mod env_universal_common;

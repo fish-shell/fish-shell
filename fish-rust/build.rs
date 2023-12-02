@@ -69,6 +69,7 @@ fn main() {
         "fish-rust/src/builtins/shared.rs",
         "fish-rust/src/common.rs",
         "fish-rust/src/complete.rs",
+        "fish-rust/src/editable_line.rs",
         "fish-rust/src/env_dispatch.rs",
         "fish-rust/src/env/env_ffi.rs",
         "fish-rust/src/event.rs",

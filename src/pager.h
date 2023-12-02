@@ -34,7 +34,9 @@ class page_rendering_t {
     size_t remaining_to_disclose{0};
 
     bool search_field_shown{false};
-    editable_line_t search_field_line{};
+#if INCLUDE_RUST_HEADERS
+    rust::Box<editable_line_t> search_field_line;
+#endif
 
     // Returns a rendering with invalid data, useful to indicate "no rendering".
     page_rendering_t();
@@ -156,8 +158,11 @@ class pager_t {
                                           bool selected, page_rendering_t *rendering) const;
 
    public:
-    // The text of the search field.
-    editable_line_t search_field_line;
+// The text of the search field.
+#if INCLUDE_RUST_HEADERS
+    rust::Box<editable_line_t> search_field_line_box;
+    editable_line_t &search_field_line = *search_field_line_box;
+#endif
 
     // Extra text to display at the bottom of the pager.
     wcstring extra_progress_text{};

@@ -11,6 +11,7 @@ use crate::common::{
     EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::compat::_PC_CASE_SENSITIVE;
+use crate::editable_line::EditableLine;
 use crate::env::{EnvStackRefFFI, Environment};
 use crate::expand::{
     expand_one, expand_tilde, expand_to_command_and_args, ExpandFlags, ExpandResultCode,
@@ -1681,6 +1682,7 @@ mod highlight_ffi {
         #[cxx_name = "clone"]
         fn clone_ffi(self: &HighlightSpec) -> Box<HighlightSpec>;
         fn new_highlight_spec() -> Box<HighlightSpec>;
+        fn editable_line_colors(editable_line: &EditableLine) -> &[HighlightSpec];
     }
 
     extern "C++" {
@@ -1688,6 +1690,7 @@ mod highlight_ffi {
         include!("history.h");
         include!("color.h");
         include!("operation_context.h");
+        include!("editable_line.h");
         type HistoryItem = crate::history::HistoryItem;
         type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
         type rgb_color_t = crate::ffi::rgb_color_t;
@@ -1695,6 +1698,7 @@ mod highlight_ffi {
         type EnvDynFFI = crate::env::EnvDynFFI;
         #[cxx_name = "EnvStackRef"]
         type EnvStackRefFFI = crate::env::EnvStackRefFFI;
+        type EditableLine = crate::editable_line::EditableLine;
     }
     extern "Rust" {
         #[cxx_name = "autosuggest_validate_from_history"]
@@ -1837,4 +1841,11 @@ impl HighlightSpec {
 }
 fn new_highlight_spec() -> Box<HighlightSpec> {
     Box::default()
+}
+unsafe impl cxx::ExternType for EditableLine {
+    type Id = cxx::type_id!("EditableLine");
+    type Kind = cxx::kind::Opaque;
+}
+fn editable_line_colors(editable_line: &EditableLine) -> &[HighlightSpec] {
+    editable_line.colors()
 }

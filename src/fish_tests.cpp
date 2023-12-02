@@ -1110,7 +1110,17 @@ static void test_abbreviations() {
                 cmdline, cursor_pos.value_or(cmdline.size()), parser_principal_parser()->deref())) {
             wcstring cmdline_expanded = cmdline;
             std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
-            apply_edit(&cmdline_expanded, &colors, edit_t{replacement->range, *replacement->text});
+            auto ffi_colors = new_highlight_spec_list();
+            for (auto &c : colors) {
+                ffi_colors->push(c);
+            }
+            cmdline_expanded = *apply_edit(
+                cmdline_expanded, *ffi_colors,
+                new_edit(replacement->range.start, replacement->range.end(), *replacement->text));
+            colors.clear();
+            for (size_t i = 0; i < ffi_colors->size(); i++) {
+                colors.push_back(ffi_colors->at(i));
+            }
             return cmdline_expanded;
         }
         return none_t();
@@ -1602,61 +1612,6 @@ static void test_input() {
     } else if (evt.get_readline() != readline_cmd_t::down_line) {
         err(L"Expected to read char down_line");
     }
-}
-
-// todo!("port this")
-static void test_undo() {
-    say(L"Testing undo/redo setting and restoring text and cursor position.");
-
-    editable_line_t line;
-    do_test(!line.undo());  // nothing to undo
-    do_test(line.text().empty());
-    do_test(line.position() == 0);
-    line.push_edit(edit_t(0, 0, L"a b c"), true);
-    do_test(line.text() == L"a b c");
-    do_test(line.position() == 5);
-    line.set_position(2);
-    line.push_edit(edit_t(2, 1, L"B"), true);  // replacement right of cursor
-    do_test(line.text() == L"a B c");
-    line.undo();
-    do_test(line.text() == L"a b c");
-    do_test(line.position() == 2);
-    line.redo();
-    do_test(line.text() == L"a B c");
-    do_test(line.position() == 3);
-
-    do_test(!line.redo());  // nothing to redo
-
-    line.push_edit(edit_t(0, 2, L""), true);  // deletion left of cursor
-    do_test(line.text() == L"B c");
-    do_test(line.position() == 1);
-    line.undo();
-    do_test(line.text() == L"a B c");
-    do_test(line.position() == 3);
-    line.redo();
-    do_test(line.text() == L"B c");
-    do_test(line.position() == 1);
-
-    line.push_edit(edit_t(0, line.size(), L"a b c"), true);  // replacement left and right of cursor
-    do_test(line.text() == L"a b c");
-    do_test(line.position() == 5);
-
-    say(L"Testing undoing coalesced edits.");
-    line.clear();
-    line.push_edit(edit_t(line.position(), 0, L"a"), true);
-    line.push_edit(edit_t(line.position(), 0, L"b"), true);
-    line.push_edit(edit_t(line.position(), 0, L"c"), true);
-    line.push_edit(edit_t(line.position(), 0, L" "), true);
-    line.undo();
-    line.undo();
-    line.redo();
-    do_test(line.text() == L"abc");
-    // This removes the space insertion from the history, but does not coalesce with the first edit.
-    line.push_edit(edit_t(line.position(), 0, L"d"), true);
-    line.push_edit(edit_t(line.position(), 0, L"e"), true);
-    do_test(line.text() == L"abcde");
-    line.undo();
-    do_test(line.text() == L"abc");
 }
 
 // todo!("port this")
@@ -2515,7 +2470,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("word_motion"), test_word_motion},
     {TEST_GROUP("colors"), test_colors},
     {TEST_GROUP("input"), test_input},
-    {TEST_GROUP("undo"), test_undo},
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("illegal_command_exit_code"), test_illegal_command_exit_code},
     {TEST_GROUP("maybe"), test_maybe},

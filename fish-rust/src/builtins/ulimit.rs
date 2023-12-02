@@ -29,7 +29,7 @@ fn print(resource: c_uint, hard: bool, streams: &mut IoStreams) {
     let l = get(resource, hard);
 
     if l == RLIM_INFINITY {
-        streams.out.append(wgettext_fmt!("unlimited\n"));
+        streams.out.append(wgettext!("unlimited\n"));
     } else {
         streams
             .out
@@ -64,7 +64,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         ));
 
         if l == RLIM_INFINITY {
-            streams.out.append(wgettext_fmt!("unlimited\n"));
+            streams.out.append(wgettext!("unlimited\n"));
         } else {
             streams.out.append(wgettext_fmt!(
                 "%lu\n",

@@ -271,7 +271,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         return STATUS_INVALID_ARGS;
     }
 
-    let what = opts.what as c_uint; // Only negative value is RLIMIT_UNKNOWN
+    let what: c_uint = opts.what.try_into().unwrap(); // Only negative value is RLIMIT_UNKNOWN
 
     let argc = w.argv.len();
     let arg_count = argc - w.woptind;

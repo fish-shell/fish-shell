@@ -182,12 +182,12 @@ impl ScreenData {
 }
 
 /// The class representing the current and desired screen contents.
-pub struct Screen<'a> {
+pub struct Screen {
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
     pub autosuggestion_is_truncated: bool,
 
     /// Receiver for our output.
-    outp: &'a mut Outputter,
+    outp: &'static mut Outputter,
 
     /// The internal representation of the desired screen contents.
     desired: ScreenData,
@@ -216,7 +216,7 @@ pub struct Screen<'a> {
     prev_buff_2: libc::stat,
 }
 
-impl<'a> Screen<'a> {
+impl Screen {
     pub fn new() -> Self {
         Self {
             outp: Outputter::stdoutput().get_mut(),
@@ -638,29 +638,29 @@ impl<'a> Screen<'a> {
             return;
         }
 
-        let mut outp = ScopedBuffer::new(self.outp);
+        let mut zelf = self.scoped_buffer();
 
         // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We
         // don't know! We can fix it up though.
-        if self
+        if zelf
             .actual
             .screen_width
-            .is_some_and(|sw| self.actual.cursor.x == sw)
+            .is_some_and(|sw| zelf.actual.cursor.x == sw)
         {
             // Either issue a cr to go back to the beginning of this line, or a nl to go to the
             // beginning of the next one, depending on what we think is more efficient.
-            if new_y <= self.actual.cursor.y {
-                outp.push(b'\r');
+            if new_y <= zelf.actual.cursor.y {
+                zelf.outp.push(b'\r');
             } else {
-                outp.push(b'\n');
-                self.actual.cursor.y += 1;
+                zelf.outp.push(b'\n');
+                zelf.actual.cursor.y += 1;
             }
             // Either way we're not in the first column.
-            self.actual.cursor.x = 0;
+            zelf.actual.cursor.x = 0;
         }
 
         let y_steps =
-            isize::try_from(new_y).unwrap() - isize::try_from(self.actual.cursor.y).unwrap();
+            isize::try_from(new_y).unwrap() - isize::try_from(zelf.actual.cursor.y).unwrap();
 
         let Some(term) = term() else {
             return;
@@ -679,7 +679,7 @@ impl<'a> Screen<'a> {
                 // We could do:
                 // if (std::strcmp(cursor_up, "\x1B[A") == 0) str = "\x1B[B";
                 // else ... but that doesn't work for unknown reasons.
-                self.actual.cursor.x = 0;
+                zelf.actual.cursor.x = 0;
             }
             s
         } else {
@@ -687,13 +687,13 @@ impl<'a> Screen<'a> {
         };
 
         for _ in 0..y_steps.abs_diff(0) {
-            outp.tputs_if_some(&s);
+            zelf.outp.tputs_if_some(&s);
         }
 
         let mut x_steps =
-            isize::try_from(new_x).unwrap() - isize::try_from(self.actual.cursor.x).unwrap();
+            isize::try_from(new_x).unwrap() - isize::try_from(zelf.actual.cursor.x).unwrap();
         if x_steps != 0 && new_x == 0 {
-            outp.push(b'\r');
+            zelf.outp.push(b'\r');
             x_steps = 0;
         }
 
@@ -703,7 +703,7 @@ impl<'a> Screen<'a> {
             (term.cursor_right.as_ref(), term.parm_right_cursor.as_ref())
         };
 
-        // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
+        // Use the bulk ('multi') zelf.output for cursor movement if it is supported and it would be shorter
         // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
         let use_multi = multi_str.is_some_and(|ms| !ms.as_bytes().is_empty())
             && x_steps.abs_diff(0) * s.map_or(0, |s| s.as_bytes().len())
@@ -713,33 +713,33 @@ impl<'a> Screen<'a> {
                 multi_str.as_ref().unwrap(),
                 i32::try_from(x_steps.abs_diff(0)).unwrap(),
             );
-            outp.tputs_if_some(&multi_param);
+            zelf.outp.tputs_if_some(&multi_param);
         } else {
             for _ in 0..x_steps.abs_diff(0) {
-                outp.tputs_if_some(&s);
+                zelf.outp.tputs_if_some(&s);
             }
         }
 
-        self.actual.cursor.x = new_x;
-        self.actual.cursor.y = new_y;
+        zelf.actual.cursor.x = new_x;
+        zelf.actual.cursor.y = new_y;
     }
 
     /// Convert a wide character to a multibyte string and append it to the buffer.
     fn write_char(&mut self, c: char, width: isize) {
-        let mut outp = ScopedBuffer::new(self.outp);
-        self.actual.cursor.x = self.actual.cursor.x.wrapping_add(width as usize);
-        outp.writech(c);
-        if Some(self.actual.cursor.x) == self.actual.screen_width && allow_soft_wrap() {
-            self.soft_wrap_location = Some(Cursor {
+        let mut zelf = self.scoped_buffer();
+        zelf.actual.cursor.x = zelf.actual.cursor.x.wrapping_add(width as usize);
+        zelf.outp.writech(c);
+        if Some(zelf.actual.cursor.x) == zelf.actual.screen_width && allow_soft_wrap() {
+            zelf.soft_wrap_location = Some(Cursor {
                 x: 0,
-                y: self.actual.cursor.y + 1,
+                y: zelf.actual.cursor.y + 1,
             });
 
             // Note that our cursor position may be a lie: Apple Terminal makes the right cursor stick
             // to the margin, while Ubuntu makes it "go off the end" (but still doesn't wrap). We rely
             // on s_move to fix this up.
         } else {
-            self.soft_wrap_location = None;
+            zelf.soft_wrap_location = None;
         }
     }
 
@@ -778,7 +778,7 @@ impl<'a> Screen<'a> {
         }
     }
 
-    fn scoped_buffer(&mut self) -> impl ScopeGuarding<Target = &mut Screen<'a>> {
+    fn scoped_buffer(&mut self) -> impl ScopeGuarding<Target = &mut Screen> {
         self.outp.begin_buffering();
         ScopeGuard::new(self, |zelf| {
             zelf.outp.end_buffering();
@@ -856,16 +856,16 @@ impl<'a> Screen<'a> {
             zelf.actual.cursor.x = left_prompt_width;
         }
 
-        fn o_line<'b>(zelf: &'b Screen<'_>, i: usize) -> &'b Line {
+        fn o_line(zelf: &Screen, i: usize) -> &Line {
             zelf.desired.line(i)
         }
-        fn o_line_mut<'b>(zelf: &'b mut Screen<'_>, i: usize) -> &'b mut Line {
+        fn o_line_mut(zelf: &mut Screen, i: usize) -> &mut Line {
             zelf.desired.line_mut(i)
         }
-        fn s_line<'b>(zelf: &'b Screen<'_>, i: usize) -> &'b Line {
+        fn s_line(zelf: &Screen, i: usize) -> &Line {
             zelf.actual.line(i)
         }
-        fn s_line_mut<'b>(zelf: &'b mut Screen<'_>, i: usize) -> &'b mut Line {
+        fn s_line_mut(zelf: &mut Screen, i: usize) -> &mut Line {
             zelf.actual.line_mut(i)
         }
 
@@ -1325,37 +1325,6 @@ pub fn screen_set_midnight_commander_hack() {
 
 /// The number of characters to indent new blocks.
 const INDENT_STEP: usize = 4;
-
-/// RAII class to begin and end buffering around an outputter.
-struct ScopedBuffer<'a> {
-    outp: &'a mut Outputter,
-}
-
-impl<'a> ScopedBuffer<'a> {
-    fn new(outp: &'a mut Outputter) -> Self {
-        outp.begin_buffering();
-        Self { outp }
-    }
-}
-impl<'a> Drop for ScopedBuffer<'a> {
-    fn drop(&mut self) {
-        self.outp.end_buffering()
-    }
-}
-
-impl<'a> std::ops::Deref for ScopedBuffer<'a> {
-    type Target = Outputter;
-
-    fn deref(&self) -> &Self::Target {
-        self.outp
-    }
-}
-
-impl<'a> std::ops::DerefMut for ScopedBuffer<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.outp
-    }
-}
 
 /// Tests if the specified narrow character sequence is present at the specified position of the
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
@@ -1909,8 +1878,8 @@ mod screen_ffi {
         fn line_ffi(&self, index: usize) -> *const Line;
     }
     extern "Rust" {
-        type Screen<'a>;
-        fn new_screen() -> Box<Screen<'static>>;
+        type Screen;
+        fn new_screen() -> Box<Screen>;
         #[cxx_name = "write"]
         fn write_ffi(
             &mut self,
@@ -1973,10 +1942,10 @@ impl ScreenData {
         self.line(index) as *const Line
     }
 }
-fn new_screen() -> Box<Screen<'static>> {
+fn new_screen() -> Box<Screen> {
     Box::new(Screen::new())
 }
-impl<'a> Screen<'a> {
+impl Screen {
     fn write_ffi(
         &mut self,
         left_prompt: &CxxWString,

@@ -75,6 +75,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
     }
 }
 
+/// Returns the description for the specified resource limit.
 fn get_desc(what: c_uint) -> &'static wstr {
     for resource in resource_arr.iter() {
         if resource.resource == what {
@@ -84,6 +85,8 @@ fn get_desc(what: c_uint) -> &'static wstr {
     unreachable!()
 }
 
+/// Set the new value of the specified resource limit. This function does _not_ multiply the limit
+/// value by the multiplier constant used by the commandline ulimit.
 fn set_limit(
     resource: c_uint,
     hard: bool,

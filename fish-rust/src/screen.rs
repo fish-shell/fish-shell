@@ -78,7 +78,7 @@ impl Line {
     }
 
     /// \return the number of characters.
-    pub fn size(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.text.len()
     }
 
@@ -944,7 +944,7 @@ impl Screen {
 
             // Skip over skip_remaining width worth of characters.
             let mut j = 0;
-            while j < o_line(&zelf, i).size() {
+            while j < o_line(&zelf, i).len() {
                 let width =
                     usize::try_from(fish_wcwidth_visible(o_line(&zelf, i).char_at(j))).unwrap();
                 if skip_remaining < width {
@@ -956,7 +956,7 @@ impl Screen {
             }
 
             // Skip over zero-width characters (e.g. combining marks at the end of the prompt).
-            while j < o_line(&zelf, i).size() {
+            while j < o_line(&zelf, i).len() {
                 let width = fish_wcwidth_visible(o_line(&zelf, i).char_at(j));
                 if width > 0 {
                     break;
@@ -966,7 +966,7 @@ impl Screen {
 
             // Now actually output stuff.
             loop {
-                let done = j >= o_line(&zelf, i).size();
+                let done = j >= o_line(&zelf, i).len();
                 // Clear the screen if we have not done so yet.
                 // If we are about to output into the last column, clear the screen first. If we clear
                 // the screen after we output into the last column, it can erase the last character due
@@ -1617,7 +1617,7 @@ fn calc_prompt_lines(prompt: &wstr) -> usize {
 /// in the prefix.
 fn line_shared_prefix(a: &Line, b: &Line) -> usize {
     let mut idx = 0;
-    let max = std::cmp::min(a.size(), b.size());
+    let max = std::cmp::min(a.len(), b.len());
     while idx < max {
         let ac = a.char_at(idx);
         let bc = b.char_at(idx);

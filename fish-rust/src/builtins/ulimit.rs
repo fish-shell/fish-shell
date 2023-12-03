@@ -6,13 +6,20 @@ use once_cell::sync::Lazy;
 
 use crate::compat::*;
 use crate::fallback::{fish_wcswidth, wcscasecmp};
+use crate::wutil::perror;
 
 use super::prelude::*;
 
-fn getrlimit(resource: c_uint) -> Result<(rlim_t, rlim_t), Errno> {
+/// Calls getrlimit. Returns (0, 0) if failed
+fn getrlimit(resource: c_uint) -> (rlim_t, rlim_t) {
     use nix::sys::resource;
     let resource: i32 = resource.try_into().unwrap();
-    resource::getrlimit(unsafe { std::mem::transmute(resource) }) // Resource is #[repr(i32)] so this is ok
+
+    // Resource is #[repr(i32)] so this is ok
+    resource::getrlimit(unsafe { std::mem::transmute(resource) }).unwrap_or_else(|e| {
+        perror("getrlimit");
+        (0, 0)
+    })
 }
 
 fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(), Errno> {
@@ -46,7 +53,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         w = w.max(fish_wcswidth(resource.desc));
     }
     for resource in RESOURCE_ARR.iter() {
-        let (rlim_cur, rlim_max) = getrlimit(resource.resource).unwrap();
+        let (rlim_cur, rlim_max) = getrlimit(resource.resource);
         let l = if hard { rlim_max } else { rlim_cur };
 
         let unit = if resource.resource == RLIMIT_CPU() as c_uint {
@@ -94,7 +101,7 @@ fn set_limit(
     value: rlim_t,
     streams: &mut IoStreams,
 ) -> Option<c_int> {
-    let (mut rlim_cur, mut rlim_max) = getrlimit(resource).unwrap();
+    let (mut rlim_cur, mut rlim_max) = getrlimit(resource);
     if hard {
         rlim_max = value;
     }
@@ -134,7 +141,7 @@ fn get_multiplier(what: c_uint) -> rlim_t {
 }
 
 fn get(resource: c_uint, hard: bool) -> rlim_t {
-    let (rlim_cur, rlim_max) = getrlimit(resource).unwrap();
+    let (rlim_cur, rlim_max) = getrlimit(resource);
 
     if hard {
         rlim_max

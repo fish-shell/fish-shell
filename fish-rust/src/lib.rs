@@ -32,6 +32,7 @@ mod ast;
 mod autoload;
 mod builtins;
 mod color;
+#[allow(non_snake_case)]
 mod compat;
 mod complete;
 mod curses;

@@ -164,7 +164,7 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
 }
 
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.
-pub fn set_cloexec(fd: RawFd, should_set: bool) -> c_int {
+pub fn set_cloexec(fd: RawFd, should_set: bool /* = true */) -> c_int {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
     // existing flags and modify them.
     let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };

@@ -113,7 +113,6 @@ set(FISH_SRCS
     src/expand.cpp
     src/fallback.cpp
     src/fds.cpp
-    src/fish_indent_common.cpp
     src/fish_version.cpp
     src/flog.cpp
     src/highlight.cpp

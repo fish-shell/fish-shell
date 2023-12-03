@@ -50,6 +50,7 @@ extern "C" {
     pub fn C_O_EXLOCK() -> c_int;
     pub fn stdout_stream() -> *mut libc::FILE;
     pub fn UVAR_FILE_SET_MTIME_HACK() -> bool;
+    pub fn setlinebuf(stream: *mut libc::FILE);
 }
 
 macro_rules! CVAR {

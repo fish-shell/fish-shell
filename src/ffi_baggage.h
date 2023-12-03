@@ -3,7 +3,6 @@
 #include "builtins/commandline.h"
 #include "event.h"
 #include "fds.h"
-#include "fish_indent_common.h"
 #include "highlight.h"
 #include "input.h"
 #include "parse_util.h"
@@ -23,7 +22,6 @@ void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
     highlight_spec_t{};
     init_input();
     make_pipes_ffi();
-    pretty_printer_t({}, {});
     reader_change_cursor_selection_mode(cursor_selection_mode_t::exclusive);
     reader_change_history({});
     reader_read_ffi({}, {}, {});

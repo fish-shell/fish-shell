@@ -24,7 +24,6 @@ include_cpp! {
     #include "exec.h"
     #include "fallback.h"
     #include "fds.h"
-    #include "fish_indent_common.h"
     #include "flog.h"
     #include "function.h"
     #include "highlight.h"
@@ -82,8 +81,6 @@ include_cpp! {
     generate!("log_extra_to_flog_file")
 
     generate!("wgettext_ptr")
-
-    generate!("pretty_printer_t")
 
     generate!("fd_event_signaller_t")
 

@@ -436,8 +436,6 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
             }
             'P' => opts.enable_private_mode = true,
             'v' => {
-                // FIXME: this was _(L"%s, version %s\n"), but rust-fwprintf! takes a literal instead of an expr
-                // and appears to not print anything
                 print!(
                     "{}",
                     wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, crate::BUILD_VERSION)

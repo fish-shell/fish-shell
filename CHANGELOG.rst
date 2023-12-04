@@ -1,3 +1,10 @@
+fish 3.6.3 (released December 4, 2023)
+======================================
+
+This release contains a fix for a test suite failure in fish 3.6.2.
+
+--------------
+
 fish 3.6.2 (released December 4, 2023)
 ======================================
 

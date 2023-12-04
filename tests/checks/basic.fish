@@ -592,8 +592,8 @@ $fish -c 'echo \ufdd2"fart"'
 # CHECKERR: echo \ufdd2"fart"
 # CHECKERR: ^~~~~~~~~~~^
 
-echo (sh -c 'printf \$\'\ufdd2foo\'') | string escape
-# CHECK: \$\\ufdd2foo
+echo (printf '\ufdd2foo') | string escape
+# CHECK: \Xef\Xb7\X92foo
 
 printf '%s\n' "#!/bin/sh" 'echo $0' > $tmpdir/argv0.sh
 chmod +x $tmpdir/argv0.sh

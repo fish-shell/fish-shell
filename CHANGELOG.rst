@@ -1,40 +1,18 @@
-fish 3.6.2 (released ???)
-=========================
+fish 3.6.2 (released December 4, 2023)
+======================================
 
-This release of fish contains a number of fixes for problems identified in fish 3.6.1, as well as some enhancements.
+This release of fish contains a security fix for CVE-2023-49284, a minor security problem identified
+in fish 3.6.1 and previous versions (thought to affect all released versions of fish).
 
-Notable improvements and fixes
-------------------------------
-???
+fish uses certain Unicode non-characters internally for marking wildcards and expansions. It
+incorrectly allowed these markers to be read on command substitution output, rather than
+transforming them into a safe internal representation.
 
-Deprecations and removed features
----------------------------------
-???
+For example, ``echo \UFDD2HOME`` has the same output as ``echo $HOME``.
 
-Scripting improvements
-----------------------
-???
-
-Interactive improvements
-------------------------
-???
-
-Improved prompts
-^^^^^^^^^^^^^^^^
-???
-
-Completions
-^^^^^^^^^^^
-- Added completions for:
-  - ???
-
-Other improvements
-------------------
-- Improvements and corrections to the documentation.
-
-For distributors
-----------------
-???
+While this may cause unexpected behavior with direct input, this may become a minor security problem
+if the output is being fed from an external program into a command substitution where this output
+may not be expected.
 
 --------------
 

@@ -77,6 +77,7 @@ Completions
   - ``userdel`` (:issue:`10056`)
   - ``watchexec`` (:issue:`10027`)
   - ``wpctl`` (:issue:`10043`)
+  - ``xxd`` (:issue:`10137`)
   - ``zabbix`` (:issue:`9647`)
 - The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
 - The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).

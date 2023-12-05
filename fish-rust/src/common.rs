@@ -1614,31 +1614,6 @@ pub fn timef() -> Timepoint {
     }
 }
 
-#[deprecated(note = "Use threads::is_main_thread() instead")]
-pub fn is_main_thread() -> bool {
-    crate::threads::is_main_thread()
-}
-
-/// Call the following function early in main to set the main thread. This is our replacement for
-/// pthread_main_np().
-#[deprecated(note = "This function is no longer called manually!")]
-pub fn set_main_thread() {
-    eprintln!("set_main_thread() is removed in favor of `main_thread_id()` and co. in threads.rs!")
-}
-
-#[deprecated(note = "Use threads::configure_thread_assertions_for_testing() instead")]
-pub fn configure_thread_assertions_for_testing() {
-    crate::threads::configure_thread_assertions_for_testing();
-}
-
-#[deprecated(note = "This should no longer be called manually")]
-pub fn setup_fork_guards() {}
-
-#[deprecated(note = "Use threads::is_forked_child() instead")]
-pub fn is_forked_child() -> bool {
-    crate::threads::is_forked_child()
-}
-
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
 static INITIAL_FG_PROCESS_GROUP: AtomicI32 = AtomicI32::new(-1); // HACK, should be pid_t

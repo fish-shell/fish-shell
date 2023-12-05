@@ -4,7 +4,7 @@
 
 use crate::ast;
 use crate::common::{
-    charptr2wcstring, escape, fputws, redirect_tty_output, scoped_push_replacer, timef, Timepoint,
+    charptr2wcstring, escape, redirect_tty_output, scoped_push_replacer, timef, Timepoint,
 };
 use crate::curses::term;
 use crate::env::Statuses;
@@ -25,9 +25,9 @@ use crate::wchar_ext::ToWString;
 use crate::wutil::{perror, wbasename, wgettext, wperror};
 use libc::{
     EBADF, EINVAL, ENOTTY, EPERM, EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
-    SIGINT, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO,
-    STDOUT_FILENO, WCONTINUED, WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED,
-    WNOHANG, WTERMSIG, WUNTRACED, _SC_CLK_TCK,
+    SIGINT, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO, WCONTINUED,
+    WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
+    _SC_CLK_TCK,
 };
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
@@ -1192,24 +1192,19 @@ pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
 /// jobs_requiring_warning_on_exit().
 #[widestrs]
 pub fn print_exit_warning_for_jobs(jobs: &JobList) {
-    fputws(wgettext!("There are still jobs active:\n"), STDOUT_FILENO);
-    fputws(wgettext!("\n   PID  Command\n"), STDOUT_FILENO);
+    printf!("%s", wgettext!("There are still jobs active:\n"));
+    printf!("%s", wgettext!("\n   PID  Command\n"));
     for j in jobs {
-        fwprintf!(
-            STDOUT_FILENO,
-            "%6d  %ls\n",
-            j.processes()[0].pid(),
-            j.command()
-        );
+        printf!("%6d  %ls\n", j.processes()[0].pid(), j.command());
     }
-    fputws("\n"L, STDOUT_FILENO);
-    fputws(
+    printf!("\n");
+    printf!(
+        "%s",
         wgettext!("A second attempt to exit will terminate them.\n"),
-        STDOUT_FILENO,
     );
-    fputws(
+    printf!(
+        "%s",
         wgettext!("Use 'disown PID' to remove jobs from the list without terminating them.\n"),
-        STDOUT_FILENO,
     );
     reader_schedule_prompt_repaint();
 }

@@ -5,7 +5,7 @@ use crate::reader::reader_write_title;
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
 use crate::{env::EnvMode, proc::TtyTransfer};
-use libc::{STDERR_FILENO, STDIN_FILENO, TCSADRAIN};
+use libc::{STDIN_FILENO, TCSADRAIN};
 
 use super::prelude::*;
 
@@ -126,11 +126,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
-        fwprintf!(
-            STDERR_FILENO,
-            "%s",
-            wgettext_fmt!(FG_MSG, job.job_id(), job.command())
-        );
+        eprintf!("%s", wgettext_fmt!(FG_MSG, job.job_id(), job.command()));
     }
 
     let ft = tok_command(job.command());

@@ -16,7 +16,7 @@ use crate::wchar_ffi::WCharToFFI;
 use crate::wcstringutil::wcs2string_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
-use crate::wutil::{fish_iswalnum, wwrite_to_fd};
+use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use core::slice;
 use cxx::{CxxWString, UniquePtr};
@@ -2143,16 +2143,31 @@ impl ToCString for &[u8] {
     }
 }
 
+#[allow(unused_macros)]
+#[deprecated = "use printf!, eprintf! or fprintf"]
+macro_rules! fwprintf {
+    ($args:tt) => {
+        panic!()
+    };
+}
+
+#[allow(unused_macros)]
+#[deprecated = "use printf!"]
+pub fn fputws(_s: &wstr, _fd: RawFd) {
+    panic!()
+}
+
 // test-only
 #[allow(unused_macros)]
+#[deprecated = "use printf!"]
 macro_rules! err {
     ($format:expr $(, $args:expr)* $(,)? ) => {
-        println!($format $(, $args )*);
+        printf!($format $(, $args )*);
     }
 }
 
-macro_rules! fwprintf {
-    ($fd:expr, $format:expr $(, $arg:expr)*) => {
+macro_rules! fprintf {
+    ($fd:expr, $format:expr $(, $arg:expr)* $(,)?) => {
         {
             let wide = crate::wutil::sprintf!($format, $( $arg ),*);
             crate::wutil::wwrite_to_fd(&wide, $fd);
@@ -2160,8 +2175,16 @@ macro_rules! fwprintf {
     }
 }
 
-pub fn fputws(s: &wstr, fd: RawFd) {
-    wwrite_to_fd(s, fd);
+macro_rules! printf {
+    ($format:expr $(, $arg:expr)* $(,)?) => {
+        fprintf!(libc::STDOUT_FILENO, $format $(, $arg)*)
+    }
+}
+
+macro_rules! eprintf {
+    ($format:expr $(, $arg:expr)* $(,)?) => {
+        fprintf!(libc::STDERR_FILENO, $format $(, $arg)*)
+    }
 }
 
 #[cxx::bridge]

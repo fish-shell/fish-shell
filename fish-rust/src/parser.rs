@@ -38,7 +38,7 @@ use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use cxx::{CxxWString, UniquePtr};
 use libc::c_int;
-use libc::{O_RDONLY, STDERR_FILENO};
+use libc::O_RDONLY;
 use once_cell::sync::Lazy;
 pub use parser_ffi::{library_data_pod_t, BlockType, LoopStatus};
 use printf_compat::sprintf;
@@ -467,7 +467,7 @@ impl Parser {
         let backtrace_and_desc = self.get_backtrace(cmd, &error_list);
 
         // Print it.
-        fwprintf!(STDERR_FILENO, "%ls\n", backtrace_and_desc);
+        eprintf!("%s\n", backtrace_and_desc);
 
         // Set a valid status.
         self.set_last_statuses(Statuses::just(STATUS_ILLEGAL_CMD.unwrap()));
@@ -962,7 +962,7 @@ impl Parser {
                 return;
             }
         };
-        fwprintf!(f.as_raw_fd(), "Time\tSum\tCommand\n");
+        fprintf!(f.as_raw_fd(), "Time\tSum\tCommand\n");
         print_profile(&self.profile_items.borrow(), f.as_raw_fd());
     }
 
@@ -1128,12 +1128,12 @@ fn print_profile(items: &[ProfileItem], out: RawFd) {
             }
         }
 
-        fwprintf!(out, "%lld\t%lld\t", self_time, total_time);
+        fprintf!(out, "%lld\t%lld\t", self_time, total_time);
         for _i in 0..item.level {
-            fwprintf!(out, "-");
+            fprintf!(out, "-");
         }
 
-        fwprintf!(out, "> %ls\n", item.cmd);
+        fprintf!(out, "> %ls\n", item.cmd);
     }
 }
 

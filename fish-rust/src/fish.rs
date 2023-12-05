@@ -55,7 +55,6 @@ use crate::{
     wchar::prelude::*,
     wutil::waccess,
 };
-use libc::STDERR_FILENO;
 use std::env;
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
@@ -331,7 +330,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
             retval = STATUS_CMD_OK;
         } else {
             let backtrace = parser.get_backtrace(&cmd_wcs, &errors);
-            fwprintf!(STDERR_FILENO, "%s", backtrace);
+            eprintf!("%s", backtrace);
             // XXX: Why is this the return for "unknown command"?
             retval = STATUS_CMD_UNKNOWN;
         }
@@ -436,8 +435,8 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
             }
             'P' => opts.enable_private_mode = true,
             'v' => {
-                print!(
-                    "{}",
+                printf!(
+                    "%s",
                     wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, crate::BUILD_VERSION)
                 );
                 std::process::exit(0);

@@ -19,10 +19,7 @@ use crate::wchar_ffi::WCharFromFFI;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use cxx::CxxWString;
 use errno::Errno;
-use libc::{
-    EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDERR_FILENO,
-    STDOUT_FILENO,
-};
+use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDOUT_FILENO};
 use std::cell::{RefCell, UnsafeCell};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -237,7 +234,7 @@ impl IoData for IoClose {
         -1
     }
     fn print(&self) {
-        fwprintf!(STDERR_FILENO, "close %d\n", self.fd)
+        eprintf!("close %d\n", self.fd)
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
@@ -266,7 +263,7 @@ impl IoData for IoFd {
         self.source_fd
     }
     fn print(&self) {
-        fwprintf!(STDERR_FILENO, "FD map %d -> %d\n", self.source_fd, self.fd)
+        eprintf!("FD map %d -> %d\n", self.source_fd, self.fd)
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
@@ -298,7 +295,7 @@ impl IoData for IoFile {
         self.file_fd.fd()
     }
     fn print(&self) {
-        fwprintf!(STDERR_FILENO, "file %d -> %d\n", self.file_fd.fd(), self.fd)
+        eprintf!("file %d -> %d\n", self.file_fd.fd(), self.fd)
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
@@ -334,8 +331,7 @@ impl IoData for IoPipe {
         self.pipe_fd.fd()
     }
     fn print(&self) {
-        fwprintf!(
-            STDERR_FILENO,
+        eprintf!(
             "pipe {%d} (input: %s) -> %d\n",
             self.source_fd(),
             if self.is_input { "yes" } else { "no" },
@@ -425,12 +421,7 @@ impl IoData for IoBufferfill {
         self.write_fd.fd()
     }
     fn print(&self) {
-        fwprintf!(
-            STDERR_FILENO,
-            "bufferfill %d -> %d\n",
-            self.write_fd.fd(),
-            self.fd()
-        )
+        eprintf!("bufferfill %d -> %d\n", self.write_fd.fd(), self.fd())
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
@@ -736,22 +727,20 @@ impl IoChain {
     /// Output debugging information to stderr.
     pub fn print(&self) {
         if self.0.is_empty() {
-            fwprintf!(
-                STDERR_FILENO,
+            eprintf!(
                 "Empty chain %s\n",
                 format!("{:p}", std::ptr::addr_of!(self))
             );
             return;
         }
 
-        fwprintf!(
-            STDERR_FILENO,
+        eprintf!(
             "Chain %s (%ld items):\n",
             format!("{:p}", std::ptr::addr_of!(self)),
             self.0.len()
         );
         for (i, io) in self.0.iter().enumerate() {
-            fwprintf!(STDERR_FILENO, "\t%lu: fd:%d, ", i, io.fd());
+            eprintf!("\t%lu: fd:%d, ", i, io.fd());
             io.print();
         }
     }

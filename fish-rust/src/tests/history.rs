@@ -304,20 +304,20 @@ add_test!("test_history_races", || {
             // Remove everything from this item on
             let removed = list.splice(position.., []);
             for line in removed.into_iter().rev() {
-                err!("Item dropped from history: {line}");
+                println!("Item dropped from history: {line}");
             }
 
             found = true;
             break;
         }
         if !found {
-            err!(
+            println!(
                 "Line '{}' found in history, but not found in some array",
                 item.str()
             );
             for list in &expected_lines {
                 if !list.is_empty() {
-                    fwprintf!(STDERR_FILENO, "\tRemaining: %ls\n", list.last().unwrap())
+                    printf!("\tRemaining: %ls\n", list.last().unwrap())
                 }
             }
         }

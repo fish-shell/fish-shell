@@ -297,7 +297,7 @@ impl<'a> ParseExecutionContext {
 
             // Print it.
             if !should_suppress_stderr_for_tests() {
-                fwprintf!(STDERR_FILENO, "%ls", backtrace_and_desc);
+                eprintf!("%s", backtrace_and_desc);
             }
 
             // Mark status.

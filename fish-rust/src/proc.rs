@@ -1772,7 +1772,7 @@ fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool
     }
 
     if printed {
-        let _ = std::io::stdout().lock().flush();
+        let _ = std::io::stdout().flush();
     }
 
     printed

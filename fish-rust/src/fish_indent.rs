@@ -10,7 +10,7 @@ use libc::{LC_ALL, STDOUT_FILENO};
 use crate::ast::{
     self, Ast, Category, Leaf, List, Node, NodeVisitor, SourceRangeList, Traversal, Type,
 };
-use crate::builtins::shared::STATUS_CMD_ERROR;
+use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
 use crate::common::{
     str2wcstring, unescape_string, wcs2string, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
     PROGRAM_NAME,
@@ -787,15 +787,21 @@ fn fish_indent_main() -> i32 {
     while let Some(c) = w.wgetopt_long() {
         match c {
             'P' => DUMP_PARSE_TREE.store(true),
-            'h' => print_help("fish_indent"),
-            'v' => printf!(
-                "%s",
-                wgettext_fmt!(
-                    "%s, version %s\n",
-                    PROGRAM_NAME.get().unwrap(),
-                    crate::BUILD_VERSION
-                )
-            ),
+            'h' => {
+                print_help("fish_indent");
+                return STATUS_CMD_OK.unwrap();
+            }
+            'v' => {
+                printf!(
+                    "%s",
+                    wgettext_fmt!(
+                        "%s, version %s\n",
+                        PROGRAM_NAME.get().unwrap(),
+                        crate::BUILD_VERSION
+                    )
+                );
+                return STATUS_CMD_OK.unwrap();
+            }
             'w' => output_type = OutputType::File,
             'i' => do_indent = false,
             '\x01' => output_type = OutputType::Html,

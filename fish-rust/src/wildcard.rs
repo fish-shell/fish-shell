@@ -60,11 +60,11 @@ pub enum WildcardResult {
 }
 
 // This does something horrible refactored from an even more horrible function.
-fn resolve_description<'f>(
+fn resolve_description(
     full_completion: &wstr,
     completion: &mut &wstr,
     expand_flags: ExpandFlags,
-    description_func: Option<&'f dyn Fn(&wstr) -> WString>,
+    description_func: Option<&dyn Fn(&wstr) -> WString>,
 ) -> WString {
     if let Some(complete_sep_loc) = completion.find_char(PROG_COMPLETE_SEP) {
         // This completion has an embedded description, do not use the generic description.
@@ -283,10 +283,10 @@ fn wildcard_complete_internal(
     }
 }
 
-pub fn wildcard_complete<'f>(
+pub fn wildcard_complete(
     s: &wstr,
     wc: &wstr,
-    desc_func: Option<&'f dyn Fn(&wstr) -> WString>,
+    desc_func: Option<&dyn Fn(&wstr) -> WString>,
     out: Option<&mut CompletionReceiver>,
     expand_flags: ExpandFlags,
     flags: CompleteFlags,

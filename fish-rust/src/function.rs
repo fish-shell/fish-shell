@@ -311,7 +311,7 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     let mut new_props = props.as_ref().clone();
     new_props.is_autoload.store(false);
     new_props.is_copy = true;
-    new_props.copy_definition_file = filename.clone();
+    new_props.copy_definition_file = filename;
     new_props.copy_definition_lineno = lineno.unwrap_or(0) as i32;
 
     // Note this will NOT overwrite an existing function with the new name.

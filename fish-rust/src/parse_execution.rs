@@ -878,7 +878,7 @@ impl<'a> ParseExecutionContext {
         let reason = self.determine_redirections(ctx, args_or_redirs, &mut redirections);
         if reason == EndExecutionReason::ok {
             proc.typ = ProcessType::block_node;
-            proc.block_node_source = Some(self.pstree().clone());
+            proc.block_node_source = Some(self.pstree());
             proc.internal_block_node = Some(statement.into());
             proc.set_redirection_specs(redirections);
         }
@@ -1633,7 +1633,7 @@ impl<'a> ParseExecutionContext {
             if props.wants_timing && props.initial_background {
                 return report_error!(
                     self,
-                    &ctx,
+                    ctx,
                     STATUS_INVALID_ARGS.unwrap(),
                     job_node,
                     ERROR_TIME_BACKGROUND

@@ -1,6 +1,7 @@
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
+#![allow(unstable_name_collisions)]
 #![allow(clippy::bool_assert_comparison)]
 #![allow(clippy::box_default)]
 #![allow(clippy::collapsible_if)]

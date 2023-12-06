@@ -5,7 +5,7 @@ function __fish_anypager --description "Print a pager to use"
     and echo $PAGER | read -at pager
 
     # or even $MANPAGER if we're allowed to
-    if test "$argv[1]" = "--with-manpager"
+    if test "$argv[1]" = --with-manpager
         set -q MANPAGER
         and echo $MANPAGER | read -at pager
     end

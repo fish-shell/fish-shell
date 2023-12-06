@@ -161,10 +161,10 @@ complete -c node -l randomize_hashes -d 'randomize hashes(w/ snapshots cannot ov
 complete -c node -l hash_seed -d 'Fix seed to hash prop. key(w/ snapshots no BI seed overr.)'
 complete -c node -l preemption -d 'activate a 100ms timer that switches between V8 threads'
 complete -c node -l regexp_optimization -d 'generate optimized regexp code'
-complete -c node -l testing_bool_flag -d 'testing_bool_flag'
-complete -c node -l testing_int_flag -d 'testing_int_flag'
-complete -c node -l testing_float_flag -d 'float-flag'
-complete -c node -l testing_string_flag -d 'string-flag'
+complete -c node -l testing_bool_flag -d testing_bool_flag
+complete -c node -l testing_int_flag -d testing_int_flag
+complete -c node -l testing_float_flag -d float-flag
+complete -c node -l testing_string_flag -d string-flag
 complete -c node -l testing_prng_seed -d 'Seed used for threading test randomness'
 complete -c node -l testing_serialization_file -d 'file in which to serialize heap'
 complete -c node -l help -d 'Print usage message, including flags, on console'

@@ -21,7 +21,7 @@ function __fish_prepend -a prefix
         housekeeper \
         "http poller" \
         "icmp pinger" \
-            "ipmi manager" \
+        "ipmi manager" \
         "ipmi poller" \
         "java poller" \
         poller \

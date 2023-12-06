@@ -26,4 +26,4 @@ complete -c gimp -l debug-handlers -d 'enable debug handlers'
 complete -c gimp -l stack-trace-mode -d 'whether generate stack-trace in case of fatal signals' -a 'never query always' -x
 complete -c gimp -l pdb-compat-mode -d 'whether PDB provides aliases for deprecated functions' -a 'off on warn' -x
 complete -c gimp -l batch-interpreter -d 'run procedure to use to process batch events' -r
-complete -c gimp -s b -l batch -d 'run command non-interactively' -a '-' -r
+complete -c gimp -s b -l batch -d 'run command non-interactively' -a - -r

@@ -18,13 +18,13 @@ function __fish_watchexec_print_remaining_args
 end
 
 function __fish_watchexec_complete_subcommand
-    set -l args (__fish_watchexec_print_remaining_args | string split0) 
+    set -l args (__fish_watchexec_print_remaining_args | string split0)
     complete -C "$args"
 end
 
 function __fish_watchexec_at_argfile
     set -l current (commandline -ct)
-    if test (count (commandline -opc)) -eq 1 
+    if test (count (commandline -opc)) -eq 1
         and string match -q '@*' -- $current
 
         set current (string sub -s 2 -- $current)
@@ -34,7 +34,7 @@ function __fish_watchexec_at_argfile
     return 1
 end
 
-complete -c watchexec -n "__fish_watchexec_at_argfile" -x -a "(__fish_watchexec_at_argfile)"
+complete -c watchexec -n __fish_watchexec_at_argfile -x -a "(__fish_watchexec_at_argfile)"
 
 complete -c watchexec -x -a "(__fish_watchexec_complete_subcommand)"
 

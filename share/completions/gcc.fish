@@ -263,8 +263,8 @@ complete -c gcc -o dumpmachine -d 'Print the compiler’s target machine (for ex
 complete -c gcc -o dumpversion -d 'Print the compiler version (for example, 3.0,6.3 or 7)---and don’t do anything else'
 complete -c gcc -o dumpspecs -d 'Print the compiler’s built-in specs---and don’t do anything else'
 complete -c gcc -o feliminate-unused-debug-types -d 'Normally, when producing DWARF2 output, GCC will emit debugging information for all types declared in a compilation unit, regardless of whether or not they are actually used in that compilation unit'
-complete -c gcc -o O -d 'Optimize'
-complete -c gcc -o O1 -d 'Optimize'
+complete -c gcc -o O -d Optimize
+complete -c gcc -o O1 -d Optimize
 complete -c gcc -o O2 -d 'Optimize even more'
 complete -c gcc -o O3 -d 'Optimize yet more'
 complete -c gcc -o O0 -d 'Do not optimize'

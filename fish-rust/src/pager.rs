@@ -11,6 +11,7 @@ use crate::compat::MB_CUR_MAX;
 use crate::complete::{Completion, CompletionListFfi};
 use crate::editable_line::EditableLine;
 use crate::fallback::{fish_wcswidth, fish_wcwidth};
+#[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::{highlight_shell, HighlightRole, HighlightSpec};
 use crate::operation_context::OperationContext;

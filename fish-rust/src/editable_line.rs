@@ -2,6 +2,7 @@ use std::pin::Pin;
 
 use cxx::{CxxWString, UniquePtr};
 
+#[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::{HighlightSpec, HighlightSpecListFFI};
 use crate::wchar::prelude::*;

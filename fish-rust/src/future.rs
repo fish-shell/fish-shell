@@ -24,6 +24,24 @@ impl<T> IsSomeAnd for Option<T> {
     }
 }
 
+pub trait IsOkAnd {
+    type Type;
+    type Error;
+    #[allow(clippy::wrong_self_convention)]
+    fn is_ok_and(self, s: impl FnOnce(Self::Type) -> bool) -> bool;
+}
+
+impl<T, E> IsOkAnd for Result<T, E> {
+    type Type = T;
+    type Error = E;
+    fn is_ok_and(self, f: impl FnOnce(T) -> bool) -> bool {
+        match self {
+            Ok(v) => f(v),
+            Err(_) => false,
+        }
+    }
+}
+
 pub trait IsSorted {
     type T;
     fn is_sorted_by(&self, pred: impl Fn(&Self::T, &Self::T) -> Option<std::cmp::Ordering>)

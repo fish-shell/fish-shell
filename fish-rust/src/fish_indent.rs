@@ -21,8 +21,8 @@ use crate::env::environment::Environment;
 use crate::env::EnvStack;
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::fds::set_cloexec;
-use crate::future::IsSomeAnd;
-use crate::future::IsSorted;
+#[allow(unused_imports)]
+use crate::future::{IsOkAnd, IsSomeAnd, IsSorted};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
 use crate::operation_context::OperationContext;

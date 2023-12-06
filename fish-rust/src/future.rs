@@ -7,7 +7,6 @@ pub trait IsSomeAnd {
     #[allow(clippy::wrong_self_convention)]
     fn is_none_or(self, s: impl FnOnce(Self::Type) -> bool) -> bool;
 }
-
 impl<T> IsSomeAnd for Option<T> {
     type Type = T;
     fn is_some_and(self, f: impl FnOnce(T) -> bool) -> bool {
@@ -30,7 +29,6 @@ pub trait IsOkAnd {
     #[allow(clippy::wrong_self_convention)]
     fn is_ok_and(self, s: impl FnOnce(Self::Type) -> bool) -> bool;
 }
-
 impl<T, E> IsOkAnd for Result<T, E> {
     type Type = T;
     type Error = E;
@@ -55,12 +53,6 @@ impl<T> IsSorted for &[T] {
     }
 }
 impl<T> IsSorted for Vec<T> {
-    type T = T;
-    fn is_sorted_by(&self, pred: impl Fn(&T, &T) -> Option<std::cmp::Ordering>) -> bool {
-        IsSorted::is_sorted_by(&self.as_slice(), pred)
-    }
-}
-impl<T> IsSorted for &Vec<T> {
     type T = T;
     fn is_sorted_by(&self, pred: impl Fn(&T, &T) -> Option<std::cmp::Ordering>) -> bool {
         IsSorted::is_sorted_by(&self.as_slice(), pred)

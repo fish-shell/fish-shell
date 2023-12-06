@@ -172,9 +172,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
         tok_ranges.push(SourceRange::new(self.state.source.len(), 0));
 
         // Our tokens should be sorted.
-        assert!(IsSorted::is_sorted_by(&tok_ranges, |x, y| Some(
-            range_compare(*x, *y)
-        )));
+        assert!(tok_ranges.is_sorted_by(|x, y| Some(range_compare(*x, *y))));
 
         // For each range, add a gap range between the previous range and this range.
         let mut gaps = vec![];
@@ -474,9 +472,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     fn range_contained_error(&self, r: SourceRange) -> bool {
         let errs = self.errors.as_ref().unwrap();
         let range_is_before = |x: SourceRange, y: SourceRange| x.end().cmp(&y.start());
-        assert!(IsSorted::is_sorted_by(errs, |&x, &y| Some(
-            range_is_before(x, y)
-        )));
+        assert!(errs.is_sorted_by(|&x, &y| Some(range_is_before(x, y))));
         errs.partition_point(|&range| range_is_before(range, r).is_lt()) != errs.len()
     }
 

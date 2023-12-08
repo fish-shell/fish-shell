@@ -1135,17 +1135,21 @@ static history_pager_result_t history_pager_search(const HistorySharedPtr &histo
     size_t page_size = std::max(termsize_last().height / 2 - 2, (rust::isize)12);
 
     rust::Box<completion_list_t> completions = new_completion_list();
+
     rust::Box<HistorySearch> search =
-        rust_history_search_new(history, search_string.c_str(), history_search_type_t::Contains,
+        rust_history_search_new(history, search_string.c_str(), history_search_type_t::ContainsGlob,
                                 smartcase_flags(search_string), history_index);
     bool next_match_found = search->go_to_next_match(direction);
-    if (!next_match_found) {
-        // If there were no matches, try again with subsequence search
+
+    if (!next_match_found && !parse_util_contains_wildcards(search_string)) {
+        // If there were no matches, and the user is not intending for
+        // wildcard search, try again with subsequence search.
         search = rust_history_search_new(history, search_string.c_str(),
                                          history_search_type_t::ContainsSubsequence,
                                          smartcase_flags(search_string), history_index);
         next_match_found = search->go_to_next_match(direction);
     }
+
     while (completions->size() < page_size && next_match_found) {
         const history_item_t &item = search->current_item();
         completions->push_back(*new_completion_with(
@@ -3671,7 +3675,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             pager.set_prefix(MB_CUR_MAX > 1 ? L"► " : L"> ", false /* highlight */);
             // Update the search field, which triggers the actual history search.
             if (!history_search.active() || history_search.search_string().empty()) {
-                insert_string(pager.search_field_line(), *command_line.text());
+                // Escape any wildcards the user may have in their input.
+                auto escaped_command_line = parse_util_escape_wildcards(*command_line.text());
+                insert_string(pager.search_field_line(), escaped_command_line);
             } else {
                 // If we have an actual history search already going, reuse that term
                 // - this is if the user looks around a bit and decides to switch to the pager.

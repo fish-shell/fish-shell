@@ -96,6 +96,14 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 /// transformation.
 wcstring parse_util_unescape_wildcards(const wcstring &str);
 
+/// Return if the given string contains wildcard characters.
+bool parse_util_contains_wildcards(const wcstring &str);
+
+/// Escape any wildcard characters in the given string. e.g. convert
+/// "a*b" to "a\*b".
+wcstring parse_util_escape_wildcards(const wcstring &str);
+
+
 /// Calculates information on the parameter at the specified index.
 ///
 /// \param cmd The command to be analyzed

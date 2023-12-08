@@ -31,6 +31,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
+- The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

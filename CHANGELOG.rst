@@ -81,7 +81,39 @@ For distributors
 ----------------
 - Fish will now also look for libterminfo, which is what NetBSD curses calls libtinfo (:issue:`9794`).
 
-fish 3.6.1 (released March 25, 2022)
+fish 3.6.4 (released December 5, 2023)
+======================================
+
+This release contains a complete fix for the test suite failure in fish 3.6.2 and 3.6.3.
+
+--------------
+
+fish 3.6.3 (released December 4, 2023)
+======================================
+
+This release contains a fix for a test suite failure in fish 3.6.2.
+
+--------------
+
+fish 3.6.2 (released December 4, 2023)
+======================================
+
+This release of fish contains a security fix for CVE-2023-49284, a minor security problem identified
+in fish 3.6.1 and previous versions (thought to affect all released versions of fish).
+
+fish uses certain Unicode non-characters internally for marking wildcards and expansions. It
+incorrectly allowed these markers to be read on command substitution output, rather than
+transforming them into a safe internal representation.
+
+For example, ``echo \UFDD2HOME`` has the same output as ``echo $HOME``.
+
+While this may cause unexpected behavior with direct input, this may become a minor security problem
+if the output is being fed from an external program into a command substitution where this output
+may not be expected.
+
+--------------
+
+fish 3.6.1 (released March 25, 2023)
 ====================================
 
 This release of fish contains a number of fixes for problems identified in fish 3.6.1, as well as some enhancements.

@@ -335,9 +335,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         } else {
             ret = std::mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
             // Determine whether to encode this character with our crazy scheme.
-            if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
-                use_encode_direct = true;
-            } else if (wc == INTERNAL_SEPARATOR) {
+            if (fish_reserved_codepoint(wc)) {
                 use_encode_direct = true;
             } else if (ret == static_cast<size_t>(-2)) {
                 // Incomplete sequence.
@@ -1313,6 +1311,9 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
     }
 
     if (result_char_or_none.has_value()) {
+        if (fish_reserved_codepoint(*result_char_or_none)) {
+            return none();
+        }
         result->push_back(*result_char_or_none);
     }
 

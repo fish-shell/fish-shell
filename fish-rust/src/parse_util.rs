@@ -570,6 +570,34 @@ pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
     result
 }
 
+/// Test if the given string contains any wildcard pattern
+pub fn parse_util_contains_wildcard(s: &wstr) -> bool {
+    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+
+    let mut i = 0;
+    while i < s.len() {
+        let c = s.char_at(i);
+        if c == '*' {
+            return true;
+        } else if c == '?' && unesc_qmark {
+            return true;
+        }
+
+        if (c == '\\' && s.char_at(i + 1) == '*')
+            || (unesc_qmark && c == '\\' && s.char_at(i + 1) == '?')
+        {
+            i += 2;
+        } else if c == '\\' && s.char_at(i + 1) == '\\' {
+            // Not a wildcard, but ensure the next iteration doesn't see this escaped backslash.
+            i += 2;
+        } else {
+            i += 1
+        }
+    }
+
+    false
+}
+
 /// Checks if the specified string is a help option.
 #[widestrs]
 pub fn parse_util_argument_is_help(s: &wstr) -> bool {

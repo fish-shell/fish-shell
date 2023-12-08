@@ -582,7 +582,7 @@ impl Pager {
     }
 
     // Sets the set of completions.
-    pub fn set_completions(&mut self, raw_completions: &[Completion]) {
+    pub fn set_completions(&mut self, raw_completions: &[Completion], enable_refilter: bool) {
         self.selected_completion_idx = None;
         // Get completion infos out of it.
         self.unfiltered_completion_infos = process_completions_into_infos(raw_completions);
@@ -596,7 +596,11 @@ impl Pager {
         self.measure_completion_infos();
 
         // Refilter them.
-        self.refilter_completions();
+        if enable_refilter {
+            self.refilter_completions();
+        } else {
+            self.completion_infos = self.unfiltered_completion_infos.clone();
+        }
         self.have_unrendered_completions = true;
     }
 
@@ -1254,7 +1258,7 @@ mod pager_ffi {
         fn rendering_needs_update(&self, rendering: &PageRendering) -> bool;
         fn search_field_line(&mut self) -> *mut EditableLine;
         #[cxx_name = "set_completions"]
-        fn set_completions_ffi(&mut self, completions: &CompletionListFfi);
+        fn set_completions_ffi(&mut self, completions: &CompletionListFfi, enable_refilter: bool);
         fn set_fully_disclosed(&mut self);
         #[cxx_name = "set_prefix"]
         fn set_prefix_ffi(&mut self, prefix: &CxxWString, highlight: bool);
@@ -1317,8 +1321,8 @@ impl Pager {
     fn set_extra_progress_text(&mut self, text: &CxxWString) {
         self.extra_progress_text = text.from_ffi();
     }
-    fn set_completions_ffi(&mut self, completions: &CompletionListFfi) {
-        self.set_completions(&completions.0)
+    fn set_completions_ffi(&mut self, completions: &CompletionListFfi, enable_refilter: bool) {
+        self.set_completions(&completions.0, enable_refilter)
     }
     fn selected_completion_index_ffi(&self) -> usize {
         self.selected_completion_idx.unwrap_or(PAGER_SELECTION_NONE)

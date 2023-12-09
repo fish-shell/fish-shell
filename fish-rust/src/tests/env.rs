@@ -1,6 +1,7 @@
 use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
 use crate::ffi_tests::add_test;
 use crate::parser::Parser;
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::wgetcwd;
 use std::collections::HashMap;
@@ -102,4 +103,72 @@ add_test!("test_env_vars", || {
     assert!(v1 == v2 && !(v1 != v2));
     assert!(v1 != v3 && !(v1 == v3));
     assert!(v1 != v4 && !(v1 == v4));
+});
+
+add_test!("test_env_snapshot", || {
+    std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
+    pushd("test/fish_env_snapshot_test/");
+    let vars = Parser::principal_parser().vars();
+    vars.push(true);
+    let before_pwd = vars.get(L!("PWD")).unwrap().as_string();
+    vars.set_one(
+        L!("test_env_snapshot_var"),
+        EnvMode::default(),
+        L!("before").to_owned(),
+    );
+    let snapshot = vars.snapshot();
+    vars.set_one(L!("PWD"), EnvMode::default(), L!("/newdir").to_owned());
+    vars.set_one(
+        L!("test_env_snapshot_var"),
+        EnvMode::default(),
+        L!("after").to_owned(),
+    );
+    vars.set_one(
+        L!("test_env_snapshot_var_2"),
+        EnvMode::default(),
+        L!("after").to_owned(),
+    );
+
+    // vars should be unaffected by the snapshot
+    assert_eq!(vars.get(L!("PWD")).unwrap().as_string(), L!("/newdir"));
+    assert_eq!(
+        vars.get(L!("test_env_snapshot_var")).unwrap().as_string(),
+        L!("after")
+    );
+    assert_eq!(
+        vars.get(L!("test_env_snapshot_var_2")).unwrap().as_string(),
+        L!("after")
+    );
+
+    // snapshot should have old values of vars
+    assert_eq!(snapshot.get(L!("PWD")).unwrap().as_string(), before_pwd);
+    assert_eq!(
+        snapshot
+            .get(L!("test_env_snapshot_var"))
+            .unwrap()
+            .as_string(),
+        L!("before")
+    );
+    assert_eq!(snapshot.get(L!("test_env_snapshot_var_2")), None);
+
+    // snapshots see global var changes except for perproc like PWD
+    vars.set_one(
+        L!("test_env_snapshot_var_3"),
+        EnvMode::GLOBAL,
+        L!("reallyglobal").to_owned(),
+    );
+    assert_eq!(
+        vars.get(L!("test_env_snapshot_var_3")).unwrap().as_string(),
+        L!("reallyglobal")
+    );
+    assert_eq!(
+        snapshot
+            .get(L!("test_env_snapshot_var_3"))
+            .unwrap()
+            .as_string(),
+        L!("reallyglobal")
+    );
+
+    vars.pop();
+    popd();
 });

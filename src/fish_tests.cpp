@@ -173,38 +173,6 @@ wcstring comma_join(const std::vector<wcstring> &lst) {
 
 static std::vector<std::string> pushed_dirs;
 
-/// Helper to chdir and then update $PWD.
-static bool pushd(const char *path) {
-    char cwd[PATH_MAX] = {};
-    if (getcwd(cwd, sizeof cwd) == nullptr) {
-        err(L"getcwd() from pushd() failed: errno = %d", errno);
-        return false;
-    }
-    pushed_dirs.emplace_back(cwd);
-
-    // We might need to create the directory. We don't care if this fails due to the directory
-    // already being present.
-    mkdir(path, 0770);
-
-    int ret = chdir(path);
-    if (ret != 0) {
-        err(L"chdir(\"%s\") from pushd() failed: errno = %d", path, errno);
-        return false;
-    }
-
-    env_stack_principal().set_pwd_from_getcwd();
-    return true;
-}
-
-static void popd() {
-    const std::string &old_cwd = pushed_dirs.back();
-    if (chdir(old_cwd.c_str()) == -1) {
-        err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd.c_str(), errno);
-    }
-    pushed_dirs.pop_back();
-    env_stack_principal().set_pwd_from_getcwd();
-}
-
 // Helper to return a string whose length greatly exceeds PATH_MAX.
 wcstring get_overlong_path() {
     wcstring longpath;
@@ -1099,39 +1067,6 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
     return strtol(ltime_str, &str_ptr, 10);
 }
 
-// todo!("port this")
-static void test_env_snapshot() {
-    if (system("mkdir -p test/fish_env_snapshot_test/")) err(L"mkdir failed");
-    bool pushed = pushd("test/fish_env_snapshot_test");
-    do_test(pushed);
-    env_stack_t vars{parser_principal_parser()->deref().vars_boxed()};
-    vars.push(true);
-    wcstring before_pwd = vars.get(L"PWD")->as_string();
-    vars.set(L"test_env_snapshot_var", 0, std::vector<wcstring>{L"before"});
-    const auto snapshot = vars.snapshot();
-    vars.set(L"PWD", 0, std::vector<wcstring>{L"/newdir"});
-    vars.set(L"test_env_snapshot_var", 0, std::vector<wcstring>{L"after"});
-    vars.set(L"test_env_snapshot_var_2", 0, std::vector<wcstring>{L"after"});
-
-    // vars should be unaffected by the snapshot
-    do_test(vars.get(L"PWD")->as_string() == L"/newdir");
-    do_test(vars.get(L"test_env_snapshot_var")->as_string() == L"after");
-    do_test(vars.get(L"test_env_snapshot_var_2")->as_string() == L"after");
-
-    // snapshot should have old values of vars
-    do_test(snapshot->get(L"PWD")->as_string() == before_pwd);
-    do_test(snapshot->get(L"test_env_snapshot_var")->as_string() == L"before");
-    do_test(snapshot->get(L"test_env_snapshot_var_2") == none());
-
-    // snapshots see global var changes except for perproc like PWD
-    vars.set(L"test_env_snapshot_var_3", ENV_GLOBAL, std::vector<wcstring>{L"reallyglobal"});
-    do_test(vars.get(L"test_env_snapshot_var_3")->as_string() == L"reallyglobal");
-    do_test(snapshot->get(L"test_env_snapshot_var_3")->as_string() == L"reallyglobal");
-
-    vars.pop();
-    popd();
-}
-
 // todo!("no need to port, delete this")
 void test_maybe() {
     say(L"Testing maybe_t");
@@ -1333,7 +1268,6 @@ struct test_comparator_t {
 static const test_t s_tests[]{
     {TEST_GROUP("utility_functions"), test_utility_functions},
     {TEST_GROUP("dir_iter"), test_dir_iter},
-    {TEST_GROUP("env"), test_env_snapshot},
     {TEST_GROUP("str_to_num"), test_str_to_num},
     {TEST_GROUP("enum"), test_enum_set},
     {TEST_GROUP("enum"), test_enum_array},

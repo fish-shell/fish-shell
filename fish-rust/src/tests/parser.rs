@@ -2,8 +2,9 @@ use crate::ast::{self, Ast, List, Node, Traversal};
 use crate::builtins::shared::{STATUS_CMD_OK, STATUS_UNMATCHED_WILDCARD};
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
-use crate::parse_constants::StatementDecoration;
-use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
+use crate::parse_constants::{
+    ParseErrorCode, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
+};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
 use crate::parser::Parser;
 use crate::reader::reader_reset_interrupted;
@@ -497,6 +498,64 @@ add_test!("test_new_parser_ll2", || {
     check_function_help!("function --help", ast::Type::decorated_statement);
     check_function_help!("function --foo; end", ast::Type::function_header);
     check_function_help!("function foo; end", ast::Type::function_header);
+});
+
+add_test!("test_new_parser_ad_hoc", || {
+    // Very ad-hoc tests for issues encountered.
+
+    // Ensure that 'case' terminates a job list.
+    let src = L!("switch foo ; case bar; case baz; end");
+    let ast = Ast::parse(src, ParseTreeFlags::default(), None);
+    assert!(!ast.errored());
+    // Expect two case_item_lists. The bug was that we'd
+    // try to run a command 'case'.
+    assert_eq!(
+        Traversal::new(ast.top())
+            .filter(|n| n.typ() == ast::Type::case_item)
+            .count(),
+        2
+    );
+
+    // Ensure that naked variable assignments don't hang.
+    // The bug was that "a=" would produce an error but not be consumed,
+    // leading to an infinite loop.
+
+    // By itself it should produce an error.
+    let ast = Ast::parse(L!("a="), ParseTreeFlags::default(), None);
+    assert!(ast.errored());
+
+    // If we are leaving things unterminated, this should not produce an error.
+    // i.e. when typing "a=" at the command line, it should be treated as valid
+    // because we don't want to color it as an error.
+    let ast = Ast::parse(L!("a="), ParseTreeFlags::LEAVE_UNTERMINATED, None);
+    assert!(!ast.errored());
+
+    let mut errors = vec![];
+    Ast::parse(
+        L!("begin; echo ("),
+        ParseTreeFlags::LEAVE_UNTERMINATED,
+        Some(&mut errors),
+    );
+    assert!(errors.len() == 1);
+    assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
+
+    errors.clear();
+    Ast::parse(
+        L!("for x in ("),
+        ParseTreeFlags::LEAVE_UNTERMINATED,
+        Some(&mut errors),
+    );
+    assert!(errors.len() == 1);
+    assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
+
+    errors.clear();
+    Ast::parse(
+        L!("begin; echo '"),
+        ParseTreeFlags::LEAVE_UNTERMINATED,
+        Some(&mut errors),
+    );
+    assert!(errors.len() == 1);
+    assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_quote);
 });
 
 add_test!("test_eval_recursion_detection", || {

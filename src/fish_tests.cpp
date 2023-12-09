@@ -1078,61 +1078,6 @@ static void test_input() {
 }
 
 // todo!("port this")
-static void test_new_parser_ad_hoc() {
-    using namespace ast;
-    // Very ad-hoc tests for issues encountered.
-    say(L"Testing new parser ad hoc tests");
-
-    // Ensure that 'case' terminates a job list.
-    const wcstring src = L"switch foo ; case bar; case baz; end";
-    auto ast = ast_parse(src);
-    if (ast->errored()) {
-        err(L"Parsing failed");
-    }
-
-    // Expect two case_item_lists. The bug was that we'd
-    // try to run a command 'case'.
-    int count = 0;
-    for (auto ast_traversal = new_ast_traversal(*ast->top());;) {
-        auto n = ast_traversal->next();
-        if (!n->has_value()) break;
-        count += (n->typ() == type_t::case_item);
-    }
-    if (count != 2) {
-        err(L"Expected 2 case item nodes, found %d", count);
-    }
-
-    // Ensure that naked variable assignments don't hang.
-    // The bug was that "a=" would produce an error but not be consumed,
-    // leading to an infinite loop.
-
-    // By itself it should produce an error.
-    ast = ast_parse(L"a=");
-    do_test(ast->errored());
-
-    // If we are leaving things unterminated, this should not produce an error.
-    // i.e. when typing "a=" at the command line, it should be treated as valid
-    // because we don't want to color it as an error.
-    ast = ast_parse(L"a=", parse_flag_leave_unterminated);
-    do_test(!ast->errored());
-
-    auto errors = new_parse_error_list();
-    ast = ast_parse(L"begin; echo (", parse_flag_leave_unterminated, &*errors);
-    do_test(errors->size() == 1 &&
-            errors->at(0)->code() == parse_error_code_t::tokenizer_unterminated_subshell);
-
-    errors->clear();
-    ast = ast_parse(L"for x in (", parse_flag_leave_unterminated, &*errors);
-    do_test(errors->size() == 1 &&
-            errors->at(0)->code() == parse_error_code_t::tokenizer_unterminated_subshell);
-
-    errors->clear();
-    ast = ast_parse(L"begin; echo '", parse_flag_leave_unterminated, &*errors);
-    do_test(errors->size() == 1 &&
-            errors->at(0)->code() == parse_error_code_t::tokenizer_unterminated_quote);
-}
-
-// todo!("port this")
 static void test_new_parser_errors() {
     say(L"Testing new parser error reporting");
     const struct {
@@ -1594,7 +1539,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("enum"), test_enum_array},
     {TEST_GROUP("autosuggestion"), test_autosuggestion_combining},
     {TEST_GROUP("test_abbreviations"), test_abbreviations},
-    {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
     {TEST_GROUP("new_parser_errors"), test_new_parser_errors},
     {TEST_GROUP("error_messages"), test_error_messages},
     {TEST_GROUP("convert"), test_convert},

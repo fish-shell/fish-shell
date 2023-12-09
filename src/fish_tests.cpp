@@ -426,34 +426,6 @@ static void perf_convert_ascii() {
     say(L"ASCII string conversion perf: %lu bytes in %llu usec", s.size(), usec);
 }
 
-// todo!("no need to port this, delete?");
-/// Verify correct behavior with embedded nulls.
-static void test_convert_nulls() {
-    say(L"Testing convert_nulls");
-    const wchar_t in[] = L"AAA\0BBB";
-    const size_t in_len = (sizeof in / sizeof *in) - 1;
-    const wcstring in_str = wcstring(in, in_len);
-    std::string out_str = wcs2string(in_str);
-    if (out_str.size() != in_len) {
-        err(L"Embedded nulls mishandled in wcs2string");
-    }
-    for (size_t i = 0; i < in_len; i++) {
-        if (in[i] != out_str.at(i)) {
-            err(L"Embedded nulls mishandled in wcs2string at index %lu", (unsigned long)i);
-        }
-    }
-
-    wcstring out_wstr = str2wcstring(out_str);
-    if (out_wstr.size() != in_len) {
-        err(L"Embedded nulls mishandled in str2wcstring");
-    }
-    for (size_t i = 0; i < in_len; i++) {
-        if (in[i] != out_wstr.at(i)) {
-            err(L"Embedded nulls mishandled in str2wcstring at index %lu", (unsigned long)i);
-        }
-    }
-}
-
 // todo!("already ported, delete this");
 static void test_iothread() {
     say(L"Testing iothreads");
@@ -1258,7 +1230,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("convert"), test_convert_private_use},
     {TEST_GROUP("convert_ascii"), test_convert_ascii},
     {TEST_GROUP("perf_convert_ascii"), perf_convert_ascii, true},
-    {TEST_GROUP("convert_nulls"), test_convert_nulls},
     {TEST_GROUP("iothread"), test_iothread},
     {TEST_GROUP("pthread"), test_pthread},
     {TEST_GROUP("lru"), test_lru},

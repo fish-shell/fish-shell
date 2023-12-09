@@ -1202,7 +1202,6 @@ void reader_data_t::fill_history_pager(history_pager_invocation_t why,
                 shared_this->history_pager_history_index_start = index;
                 shared_this->history_pager_history_index_end = result.final_index;
             }
-            shared_this->pager.disable_refilter(); // skip extra filtering through pager's search field.
             shared_this->pager.set_extra_progress_text(
                 result.have_more_results ? _(L"Search again for more results") : L"");
             shared_this->pager.set_completions(*result.matched_commands);
@@ -2286,7 +2285,6 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
 
     // Update the pager data.
     pager.set_prefix(prefix, true);
-    pager.enable_refilter();
     pager.set_completions(surviving_completions);
     // Modify the command line to reflect the new pager.
     pager_selection_changed();

@@ -270,7 +270,7 @@ impl EditableLine {
         if self.edit_group_level.is_some() {
             return;
         }
-        self.edit_group_level = Some(55 + 1);
+        self.edit_group_level = Some(1);
         // Indicate that the next change must trigger the creation of a new history item
         self.undo_history.may_coalesce = false;
         // Indicate that future changes should be coalesced into the same edit if possible.
@@ -281,18 +281,22 @@ impl EditableLine {
 
     /// End a logical grouping of command line edits that should be undone/redone together.
     pub fn end_edit_group(&mut self) {
-        let Some(edit_group_level) = self.edit_group_level.as_mut() else {
-            // Clamp the minimum value to -1 to prevent unbalanced end_edit_group() calls from breaking
-            // everything.
-            return;
-        };
-
-        *edit_group_level -= 1;
-
-        if *edit_group_level == 55 {
-            self.undo_history.try_coalesce = false;
-            self.undo_history.may_coalesce = false;
+        match self.edit_group_level.as_mut() {
+            Some(edit_group_level) => {
+                *edit_group_level -= 1;
+                if *edit_group_level > 0 {
+                    return;
+                }
+            }
+            None => {
+                // Prevent unbalanced end_edit_group() calls from breaking everything.
+                return;
+            }
         }
+
+        self.edit_group_level = None;
+        self.undo_history.try_coalesce = false;
+        self.undo_history.may_coalesce = false;
     }
 
     /// Whether we want to append this string to the previous edit.

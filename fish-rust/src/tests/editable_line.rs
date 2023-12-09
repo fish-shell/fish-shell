@@ -58,3 +58,16 @@ fn test_undo() {
     line.undo();
     assert_eq!(line.text(), L!("abc").to_owned());
 }
+
+#[test]
+fn test_undo_group() {
+    let mut line = EditableLine::default();
+    line.begin_edit_group();
+    line.push_edit(Edit::new(0..0, L!("a").to_owned()), true);
+    line.end_edit_group();
+    line.begin_edit_group();
+    line.push_edit(Edit::new(1..1, L!("b").to_owned()), true);
+    line.end_edit_group();
+    line.undo();
+    assert_eq!(line.text(), "a");
+}

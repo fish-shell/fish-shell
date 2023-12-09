@@ -1077,45 +1077,6 @@ static void test_input() {
     }
 }
 
-// todo!("port this")
-static void test_new_parser_correctness() {
-    say(L"Testing parser correctness");
-    const struct parser_test_t {
-        const wchar_t *src;
-        bool ok;
-    } parser_tests[] = {
-        {L"; ; ; ", true},
-        {L"if ; end", false},
-        {L"if true ; end", true},
-        {L"if true; end ; end", false},
-        {L"if end; end ; end", false},
-        {L"if end", false},
-        {L"end", false},
-        {L"for i i", false},
-        {L"for i in a b c ; end", true},
-        {L"begin end", true},
-        {L"begin; end", true},
-        {L"begin if true; end; end;", true},
-        {L"begin if true ; echo hi ; end; end", true},
-        {L"true && false || false", true},
-        {L"true || false; and true", true},
-        {L"true || ||", false},
-        {L"|| true", false},
-        {L"true || \n\n false", true},
-    };
-
-    for (const auto &test : parser_tests) {
-        auto ast = ast_parse(test.src);
-        bool success = !ast->errored();
-        if (success && !test.ok) {
-            err(L"\"%ls\" should NOT have parsed, but did", test.src);
-        } else if (!success && test.ok) {
-            err(L"\"%ls\" should have parsed, but failed", test.src);
-        }
-    }
-    say(L"Parse tests complete");
-}
-
 // Given that we have an array of 'fuzz_count' strings, we wish to enumerate all permutations of
 // 'len' values. We do this by incrementing an integer, interpreting it as "base fuzz_count".
 static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_count, size_t len,
@@ -1807,7 +1768,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("new_parser_ll2"), test_new_parser_ll2},
     {TEST_GROUP("test_abbreviations"), test_abbreviations},
     {TEST_GROUP("new_parser_fuzzing"), test_new_parser_fuzzing},
-    {TEST_GROUP("new_parser_correctness"), test_new_parser_correctness},
     {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
     {TEST_GROUP("new_parser_errors"), test_new_parser_errors},
     {TEST_GROUP("error_messages"), test_error_messages},

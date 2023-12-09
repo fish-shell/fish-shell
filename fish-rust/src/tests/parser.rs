@@ -293,6 +293,33 @@ add_test!("test_parser", || {
     );
 });
 
+add_test!("test_new_parser_correctness", || {
+    macro_rules! validate {
+        ($src:expr, $ok:expr) => {
+            let ast = Ast::parse(L!($src), ParseTreeFlags::default(), None);
+            assert_eq!(ast.errored(), !$ok);
+        };
+    }
+    validate!("; ; ; ", true);
+    validate!("if ; end", false);
+    validate!("if true ; end", true);
+    validate!("if true; end ; end", false);
+    validate!("if end; end ; end", false);
+    validate!("if end", false);
+    validate!("end", false);
+    validate!("for i i", false);
+    validate!("for i in a b c ; end", true);
+    validate!("begin end", true);
+    validate!("begin; end", true);
+    validate!("begin if true; end; end;", true);
+    validate!("begin if true ; echo hi ; end; end", true);
+    validate!("true && false || false", true);
+    validate!("true || false; and true", true);
+    validate!("true || ||", false);
+    validate!("|| true", false);
+    validate!("true || \n\n false", true);
+});
+
 add_test!("test_eval_recursion_detection", || {
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.

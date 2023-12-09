@@ -21,6 +21,7 @@ mod string_escape;
 #[cfg(test)]
 mod tokenizer;
 mod topic_monitor;
+mod wgetopt;
 
 mod prelude {
     use crate::env::EnvStack;

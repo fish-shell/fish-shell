@@ -2082,51 +2082,6 @@ static void test_fd_event_signaller() {
     do_test(!sema.try_consume());
 }
 
-// todo!("port this")
-void test_wgetopt() {
-    // Regression test for a crash.
-    const wchar_t *const short_options = L"-a";
-    const struct woption long_options[] = {
-        {L"add", no_argument, 'a'},
-        {},
-    };
-    const wchar_t *argv[] = {L"abbr", L"--add", L"emacsnw", L"emacs", L"-nw", nullptr};
-    int argc = builtin_count_args(argv);
-    wgetopter_t w;
-    int opt;
-    int a_count = 0;
-    std::vector<wcstring> arguments;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
-        switch (opt) {
-            case 'a': {
-                a_count += 1;
-                break;
-            }
-            case 1: {
-                // non-option argument
-                do_test(w.woptarg != nullptr);
-                arguments.push_back(w.woptarg);
-                break;
-            }
-            case '?': {
-                // unrecognized option
-                if (argv[w.woptind - 1]) {
-                    do_test(argv[w.woptind - 1] != nullptr);
-                    arguments.push_back(argv[w.woptind - 1]);
-                }
-                break;
-            }
-            default: {
-                err(L"Unexpected option '%d'", opt);
-                break;
-            }
-        }
-    }
-    do_test(a_count == 1);
-    do_test(arguments.size() == 3);
-    do_test(join_strings(arguments, L' ') == L"emacsnw emacs -nw");
-}
-
 void test_rust_smoke() {
     size_t x = rust::add(37, 5);
     do_test(x == 42);
@@ -2188,7 +2143,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("dirname"), test_dirname_basename},
     {TEST_GROUP("pipes"), test_pipes},
     {TEST_GROUP("fd_event"), test_fd_event_signaller},
-    {TEST_GROUP("wgetopt"), test_wgetopt},
     {TEST_GROUP("rust_smoke"), test_rust_smoke},
     {TEST_GROUP("rust_ffi"), test_rust_ffi},
 };

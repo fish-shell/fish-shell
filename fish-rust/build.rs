@@ -11,7 +11,6 @@ fn main() {
         }
     }
 
-    rsconf::rebuild_if_path_changed("fish-rust/src/cfg/compat.c");
     cc::Build::new()
         .file("fish-rust/src/compat.c")
         .include(
@@ -167,7 +166,6 @@ fn detect_features(target: Target) {
 }
 
 fn compiles(file: &str) -> bool {
-    rsconf::rebuild_if_path_changed(file);
     let mut command = cc::Build::new()
         .flag("-fsyntax-only")
         .get_compiler()

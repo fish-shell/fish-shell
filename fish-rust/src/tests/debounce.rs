@@ -113,7 +113,7 @@ add_test!("test_debounce_timeout", || {
     // Wait 75 msec, then enqueue something else; this should spawn a new thread.
     std::thread::sleep(timeout + timeout / 2);
     assert!(data.running.load(Ordering::Relaxed) == 1);
-    let token3 = data.db.perform(handler.clone());
+    let token3 = data.db.perform(handler);
     assert!(token3 > token2);
 
     // Release all the threads.

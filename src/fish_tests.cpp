@@ -1077,106 +1077,6 @@ static void test_input() {
     }
 }
 
-// Given a format string, returns a list of non-empty strings separated by format specifiers. The
-// format specifiers themselves are omitted.
-static std::vector<wcstring> separate_by_format_specifiers(const wchar_t *format) {
-    std::vector<wcstring> result;
-    const wchar_t *cursor = format;
-    const wchar_t *end = format + std::wcslen(format);
-    while (cursor < end) {
-        const wchar_t *next_specifier = std::wcschr(cursor, '%');
-        if (next_specifier == nullptr) {
-            next_specifier = end;
-        }
-        assert(next_specifier != nullptr);
-
-        // Don't return empty strings.
-        if (next_specifier > cursor) {
-            result.emplace_back(cursor, next_specifier - cursor);
-        }
-
-        // Walk over the format specifier (if any).
-        cursor = next_specifier;
-        if (*cursor != '%') {
-            continue;
-        }
-
-        cursor++;
-        // Flag
-        if (std::wcschr(L"#0- +'", *cursor)) cursor++;
-        // Minimum field width
-        while (iswdigit(*cursor)) cursor++;
-        // Precision
-        if (*cursor == L'.') {
-            cursor++;
-            while (iswdigit(*cursor)) cursor++;
-        }
-        // Length modifier
-        if (!std::wcsncmp(cursor, L"ll", 2) || !std::wcsncmp(cursor, L"hh", 2)) {
-            cursor += 2;
-        } else if (std::wcschr(L"hljtzqL", *cursor)) {
-            cursor++;
-        }
-        // The format specifier itself. We allow any character except NUL.
-        if (*cursor != L'\0') {
-            cursor += 1;
-        }
-        assert(cursor <= end);
-    }
-    return result;
-}
-
-// Given a format string 'format', return true if the string may have been produced by that format
-// string. We do this by splitting the format string around the format specifiers, and then ensuring
-// that each of the remaining chunks is found (in order) in the string.
-static bool string_matches_format(const wcstring &string, const wchar_t *format) {
-    bool result = true;
-    std::vector<wcstring> components = separate_by_format_specifiers(format);
-    size_t idx = 0;
-    for (const auto &component : components) {
-        size_t where = string.find(component, idx);
-        if (where == wcstring::npos) {
-            result = false;
-            break;
-        }
-        idx = where + component.size();
-        assert(idx <= string.size());
-    }
-    return result;
-}
-
-// todo!("port this")
-static void test_error_messages() {
-    say(L"Testing error messages");
-    const struct error_test_t {
-        const wchar_t *src;
-        const wchar_t *error_text_format;
-    } error_tests[] = {{L"echo $^", ERROR_BAD_VAR_CHAR1},
-                       {L"echo foo${a}bar", ERROR_BRACKETED_VARIABLE1},
-                       {L"echo foo\"${a}\"bar", ERROR_BRACKETED_VARIABLE_QUOTED1},
-                       {L"echo foo\"${\"bar", ERROR_BAD_VAR_CHAR1},
-                       {L"echo $?", ERROR_NOT_STATUS},
-                       {L"echo $$", ERROR_NOT_PID},
-                       {L"echo $#", ERROR_NOT_ARGV_COUNT},
-                       {L"echo $@", ERROR_NOT_ARGV_AT},
-                       {L"echo $*", ERROR_NOT_ARGV_STAR},
-                       {L"echo $", ERROR_NO_VAR_NAME},
-                       {L"echo foo\"$\"bar", ERROR_NO_VAR_NAME},
-                       {L"echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME},
-                       {L"echo foo $ bar", ERROR_NO_VAR_NAME}};
-
-    auto errors = new_parse_error_list();
-    for (const auto &test : error_tests) {
-        errors->clear();
-        parse_util_detect_errors(test.src, &*errors);
-        do_test(!errors->empty());
-        if (!errors->empty()) {
-            do_test1(string_matches_format(*errors->at(0)->text(), test.error_text_format),
-                     test.src);
-        }
-    }
-}
-
 // todo!("port this")
 static void test_wwrite_to_fd() {
     say(L"Testing wwrite_to_fd");
@@ -1487,7 +1387,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("enum"), test_enum_array},
     {TEST_GROUP("autosuggestion"), test_autosuggestion_combining},
     {TEST_GROUP("test_abbreviations"), test_abbreviations},
-    {TEST_GROUP("error_messages"), test_error_messages},
     {TEST_GROUP("convert"), test_convert},
     {TEST_GROUP("convert"), test_convert_private_use},
     {TEST_GROUP("convert_ascii"), test_convert_ascii},

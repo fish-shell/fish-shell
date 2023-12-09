@@ -13,6 +13,7 @@ mod fd_monitor;
 mod highlight;
 mod history;
 mod pager;
+mod parse_util;
 mod parser;
 #[cfg(test)]
 mod redirection;

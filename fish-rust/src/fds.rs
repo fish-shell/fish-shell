@@ -233,3 +233,22 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
     }
     Ok(())
 }
+
+crate::ffi_tests::add_test!("test_pipes", || {
+    // Here we just test that each pipe has CLOEXEC set and is in the high range.
+    // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
+    let mut pipes = vec![];
+    for _i in 0..10 {
+        if let Some(pipe) = make_autoclose_pipes() {
+            pipes.push(pipe);
+        }
+    }
+    for pipe in pipes {
+        for fd in [pipe.read.fd(), pipe.write.fd()] {
+            assert!(fd >= FIRST_HIGH_FD);
+            let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
+            assert!(flags >= 0);
+            assert!(flags & FD_CLOEXEC != 0);
+        }
+    }
+});

@@ -2036,27 +2036,6 @@ void test_dirname_basename() {
 }
 
 // todo!("port this")
-static void test_pipes() {
-    say(L"Testing pipes");
-    // Here we just test that each pipe has CLOEXEC set and is in the high range.
-    // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
-    std::vector<autoclose_pipes_t> pipes;
-    for (int i = 0; i < 10; i++) {
-        if (auto pipe = make_autoclose_pipes()) {
-            pipes.push_back(pipe.acquire());
-        }
-    }
-    for (const auto &pipe : pipes) {
-        for (int fd : {pipe.read.fd(), pipe.write.fd()}) {
-            do_test(fd >= k_first_high_fd);
-            int flags = fcntl(fd, F_GETFD, 0);
-            do_test(flags >= 0);
-            do_test(bool(flags & FD_CLOEXEC));
-        }
-    }
-}
-
-// todo!("port this")
 static void test_fd_event_signaller() {
     say(L"Testing fd event signaller");
     fd_event_signaller_t sema;
@@ -2141,7 +2120,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("maybe"), test_maybe},
     {TEST_GROUP("normalize"), test_normalize_path},
     {TEST_GROUP("dirname"), test_dirname_basename},
-    {TEST_GROUP("pipes"), test_pipes},
     {TEST_GROUP("fd_event"), test_fd_event_signaller},
     {TEST_GROUP("rust_smoke"), test_rust_smoke},
     {TEST_GROUP("rust_ffi"), test_rust_ffi},

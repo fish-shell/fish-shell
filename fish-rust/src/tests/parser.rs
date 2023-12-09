@@ -1,4 +1,5 @@
 use crate::ast::{Ast, List, Node};
+use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
@@ -288,6 +289,45 @@ add_test!("test_parser", || {
         detect_errors!("true || \n") == Err(ParserTestErrorBits::INCOMPLETE),
         "unterminated conjunction not reported properly"
     );
+});
+
+add_test!("test_eval_recursion_detection", || {
+    // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
+    // the principal parser because we cannot yet execute jobs on other parsers.
+    let parser = Parser::principal_parser().shared();
+    parser.eval(
+        L!("function recursive ; recursive ; end ; recursive; "),
+        &IoChain::new(),
+    );
+
+    parser.eval(
+        L!(concat!(
+            "function recursive1 ; recursive2 ; end ; ",
+            "function recursive2 ; recursive1 ; end ; recursive1; ",
+        )),
+        &IoChain::new(),
+    );
+});
+
+add_test!("test_eval_empty_function_name", || {
+    let parser = Parser::principal_parser().shared();
+    parser.eval(
+        L!("function '' ; echo fail; exit 42 ; end ; ''"),
+        &IoChain::new(),
+    );
+});
+
+add_test!("test_expand_argument_list", || {
+    let parser = Parser::principal_parser().shared();
+    let comps: Vec<WString> = Parser::expand_argument_list(
+        L!("alpha 'beta gamma' delta"),
+        ExpandFlags::default(),
+        &parser.context(),
+    )
+    .into_iter()
+    .map(|c| c.completion)
+    .collect();
+    assert_eq!(comps, &[L!("alpha"), L!("beta gamma"), L!("delta"),]);
 });
 
 fn test_1_cancellation(src: &wstr) {

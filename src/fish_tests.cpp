@@ -1597,45 +1597,6 @@ static void test_env_snapshot() {
     popd();
 }
 
-// todo!("port this")
-static void test_illegal_command_exit_code() {
-    say(L"Testing illegal command exit code");
-
-    // We need to be in an empty directory so that none of the wildcards match a file that might be
-    // in the fish source tree. In particular we need to ensure that "?" doesn't match a file
-    // named by a single character. See issue #3852.
-    if (!pushd("test/temp")) return;
-
-    struct command_result_tuple_t {
-        const wchar_t *txt;
-        int result;
-    };
-
-    const command_result_tuple_t tests[] = {
-        {L"echo -n", STATUS_CMD_OK},
-        {L"pwd", STATUS_CMD_OK},
-        {L"UNMATCHABLE_WILDCARD*", STATUS_UNMATCHED_WILDCARD},
-        {L"UNMATCHABLE_WILDCARD**", STATUS_UNMATCHED_WILDCARD},
-        {L"?", STATUS_UNMATCHED_WILDCARD},
-        {L"abc?def", STATUS_UNMATCHED_WILDCARD},
-    };
-
-    auto empty_ios = new_io_chain();
-    const parser_t &parser = parser_principal_parser()->deref();
-
-    for (const auto &test : tests) {
-        parser.eval(test.txt, *empty_ios);
-
-        int exit_status = parser.get_last_status();
-        if (exit_status != test.result) {
-            err(L"command '%ls': expected exit code %d, got %d", test.txt, test.result,
-                exit_status);
-        }
-    }
-
-    popd();
-}
-
 // todo!("no need to port, delete this")
 void test_maybe() {
     say(L"Testing maybe_t");
@@ -1863,7 +1824,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("colors"), test_colors},
     {TEST_GROUP("input"), test_input},
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
-    {TEST_GROUP("illegal_command_exit_code"), test_illegal_command_exit_code},
     {TEST_GROUP("maybe"), test_maybe},
     {TEST_GROUP("normalize"), test_normalize_path},
     {TEST_GROUP("dirname"), test_dirname_basename},

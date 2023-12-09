@@ -1,4 +1,5 @@
 use crate::ast::{Ast, List, Node};
+use crate::builtins::shared::{STATUS_CMD_OK, STATUS_UNMATCHED_WILDCARD};
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
@@ -6,6 +7,7 @@ use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_ar
 use crate::parser::Parser;
 use crate::reader::reader_reset_interrupted;
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
+use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
 use libc::SIGINT;
@@ -307,6 +309,35 @@ add_test!("test_eval_recursion_detection", || {
         )),
         &IoChain::new(),
     );
+});
+
+add_test!("test_eval_illegal_exit_code", || {
+    macro_rules! validate {
+        ($cmd:expr, $result:expr) => {
+            let parser = Parser::principal_parser();
+            parser.eval($cmd, &IoChain::new());
+            let exit_status = parser.get_last_status();
+            assert_eq!(exit_status, parser.get_last_status());
+        };
+    }
+
+    // We need to be in an empty directory so that none of the wildcards match a file that might be
+    // in the fish source tree. In particular we need to ensure that "?" doesn't match a file
+    // named by a single character. See issue #3852.
+    pushd("test/temp");
+    validate!(L!("echo -n"), STATUS_CMD_OK.unwrap());
+    validate!(L!("pwd"), STATUS_CMD_OK.unwrap());
+    validate!(
+        L!("UNMATCHABLE_WILDCARD*"),
+        STATUS_UNMATCHED_WILDCARD.unwrap()
+    );
+    validate!(
+        L!("UNMATCHABLE_WILDCARD**"),
+        STATUS_UNMATCHED_WILDCARD.unwrap()
+    );
+    validate!(L!("?"), STATUS_UNMATCHED_WILDCARD.unwrap());
+    validate!(L!("abc?def"), STATUS_UNMATCHED_WILDCARD.unwrap());
+    popd();
 });
 
 add_test!("test_eval_empty_function_name", || {

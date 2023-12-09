@@ -1077,58 +1077,6 @@ static void test_input() {
     }
 }
 
-// todo!("port this")
-static void test_new_parser_errors() {
-    say(L"Testing new parser error reporting");
-    const struct {
-        const wchar_t *src;
-        parse_error_code_t code;
-    } tests[] = {
-        {L"echo 'abc", parse_error_code_t::tokenizer_unterminated_quote},
-        {L"'", parse_error_code_t::tokenizer_unterminated_quote},
-        {L"echo (abc", parse_error_code_t::tokenizer_unterminated_subshell},
-
-        {L"end", parse_error_code_t::unbalancing_end},
-        {L"echo hi ; end", parse_error_code_t::unbalancing_end},
-
-        {L"else", parse_error_code_t::unbalancing_else},
-        {L"if true ; end ; else", parse_error_code_t::unbalancing_else},
-
-        {L"case", parse_error_code_t::unbalancing_case},
-        {L"if true ; case ; end", parse_error_code_t::generic},
-
-        {L"true | and", parse_error_code_t::andor_in_pipeline},
-
-        {L"a=", parse_error_code_t::bare_variable_assignment},
-    };
-
-    for (const auto &test : tests) {
-        const wcstring src = test.src;
-        parse_error_code_t expected_code = test.code;
-
-        auto errors = new_parse_error_list();
-        auto ast = ast_parse(src, parse_flag_none, &*errors);
-        if (!ast->errored()) {
-            err(L"Source '%ls' was expected to fail to parse, but succeeded", src.c_str());
-        }
-
-        if (errors->size() != 1) {
-            err(L"Source '%ls' was expected to produce 1 error, but instead produced %lu errors",
-                src.c_str(), errors->size());
-            for (size_t i = 0; i < errors->size(); i++) {
-                fprintf(stderr, "%ls\n", errors->at(i)->describe(src, false)->c_str());
-            }
-        } else if (errors->at(0)->code() != expected_code) {
-            err(L"Source '%ls' was expected to produce error code %lu, but instead produced error "
-                L"code %lu",
-                src.c_str(), expected_code, (unsigned long)errors->at(0)->code());
-            for (size_t i = 0; i < errors->size(); i++) {
-                err(L"\t\t%ls", errors->at(i)->describe(src, true)->c_str());
-            }
-        }
-    }
-}
-
 // Given a format string, returns a list of non-empty strings separated by format specifiers. The
 // format specifiers themselves are omitted.
 static std::vector<wcstring> separate_by_format_specifiers(const wchar_t *format) {
@@ -1539,7 +1487,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("enum"), test_enum_array},
     {TEST_GROUP("autosuggestion"), test_autosuggestion_combining},
     {TEST_GROUP("test_abbreviations"), test_abbreviations},
-    {TEST_GROUP("new_parser_errors"), test_new_parser_errors},
     {TEST_GROUP("error_messages"), test_error_messages},
     {TEST_GROUP("convert"), test_convert},
     {TEST_GROUP("convert"), test_convert_private_use},

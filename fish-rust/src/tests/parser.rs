@@ -558,6 +558,37 @@ add_test!("test_new_parser_ad_hoc", || {
     assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_quote);
 });
 
+add_test!("test_new_parser_errors", || {
+    macro_rules! validate {
+        ($src:expr, $expected_code:expr) => {
+            let mut errors = vec![];
+            let ast = Ast::parse(L!($src), ParseTreeFlags::default(), Some(&mut errors));
+            assert!(ast.errored());
+            assert_eq!(
+                errors.into_iter().map(|e| e.code).collect::<Vec<_>>(),
+                vec![$expected_code],
+            );
+        };
+    }
+
+    validate!("echo 'abc", ParseErrorCode::tokenizer_unterminated_quote);
+    validate!("'", ParseErrorCode::tokenizer_unterminated_quote);
+    validate!("echo (abc", ParseErrorCode::tokenizer_unterminated_subshell);
+
+    validate!("end", ParseErrorCode::unbalancing_end);
+    validate!("echo hi ; end", ParseErrorCode::unbalancing_end);
+
+    validate!("else", ParseErrorCode::unbalancing_else);
+    validate!("if true ; end ; else", ParseErrorCode::unbalancing_else);
+
+    validate!("case", ParseErrorCode::unbalancing_case);
+    validate!("if true ; case ; end", ParseErrorCode::generic);
+
+    validate!("true | and", ParseErrorCode::andor_in_pipeline);
+
+    validate!("a=", ParseErrorCode::bare_variable_assignment);
+});
+
 add_test!("test_eval_recursion_detection", || {
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.

@@ -66,23 +66,17 @@ include_cpp! {
     generate!("activate_flog_categories_by_pattern")
     generate!("save_term_foreground_process_group")
     generate!("restore_term_foreground_process_group_for_exit")
-    generate!("set_cloexec")
 
     generate!("builtin_bind")
     generate!("builtin_commandline")
 
     generate!("init_input")
 
-    generate_pod!("pipes_ffi_t")
-
     generate!("shell_modes_ffi")
-    generate!("make_pipes_ffi")
 
     generate!("log_extra_to_flog_file")
 
     generate!("wgettext_ptr")
-
-    generate!("fd_event_signaller_t")
 
     generate!("highlight_role_t")
     generate!("highlight_spec_t")

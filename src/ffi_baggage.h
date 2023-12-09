@@ -21,7 +21,6 @@ void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
     get_history_variable_text_ffi({});
     highlight_spec_t{};
     init_input();
-    make_pipes_ffi();
     reader_change_cursor_selection_mode(cursor_selection_mode_t::exclusive);
     reader_change_history({});
     reader_read_ffi({}, {}, {});

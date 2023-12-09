@@ -303,7 +303,6 @@ struct hash<file_id_t> {
 #endif
 
 file_id_t file_id_for_fd(int fd);
-file_id_t file_id_for_fd(const autoclose_fd_t &fd);
 
 extern const file_id_t kInvalidFileID;
 

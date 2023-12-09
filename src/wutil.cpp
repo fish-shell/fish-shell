@@ -258,16 +258,6 @@ void wperror(wcharz_t s) {
     std::fwprintf(stderr, L"%s\n", std::strerror(e));
 }
 
-int make_fd_nonblocking(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
-    int err = 0;
-    bool nonblocking = flags & O_NONBLOCK;
-    if (!nonblocking) {
-        err = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-    }
-    return err == -1 ? errno : 0;
-}
-
 int make_fd_blocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     int err = 0;
@@ -662,8 +652,6 @@ file_id_t file_id_for_fd(int fd) {
     }
     return result;
 }
-
-file_id_t file_id_for_fd(const autoclose_fd_t &fd) { return file_id_for_fd(fd.fd()); }
 
 bool file_id_t::operator==(const file_id_t &rhs) const { return this->compare_file_id(rhs) == 0; }
 

@@ -1,17 +1,23 @@
 use std::os::unix::prelude::*;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 
 pub use self::fd_monitor_ffi::ItemWakeReason;
-pub use self::fd_monitor_ffi::{new_fd_event_signaller, FdEventSignaller};
+use crate::common::exit_without_destructors;
 use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
 use crate::ffi::void_ptr;
 use crate::flog::FLOG;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
-use cxx::SharedPtr;
+use errno::errno;
+use libc::{self, c_void, EAGAIN, EINTR, EWOULDBLOCK};
+
+#[cfg(not(HAVE_EVENTFD))]
+use crate::fds::{make_autoclose_pipes, make_fd_nonblocking};
+#[cfg(HAVE_EVENTFD)]
+use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
 
 #[cxx::bridge]
 mod fd_monitor_ffi {
@@ -28,22 +34,6 @@ mod fd_monitor_ffi {
         Poke,
     }
 
-    unsafe extern "C++" {
-        include!("fds.h");
-
-        /// An event signaller implemented using a file descriptor, so it can plug into
-        /// [`select()`](libc::select).
-        ///
-        /// This is like a binary semaphore. A call to [`post()`](FdEventSignaller::post) will
-        /// signal an event, making the fd readable.  Multiple calls to `post()` may be coalesced.
-        /// On Linux this uses [`eventfd()`](libc::eventfd), on other systems this uses a pipe.
-        /// [`try_consume()`](FdEventSignaller::try_consume) may be used to consume the event.
-        /// Importantly this is async signal safe. Of course it is `CLO_EXEC` as well.
-        #[rust_name = "FdEventSignaller"]
-        type fd_event_signaller_t = crate::ffi::fd_event_signaller_t;
-        #[rust_name = "new_fd_event_signaller"]
-        fn ffi_new_fd_event_signaller_t() -> SharedPtr<FdEventSignaller>;
-    }
     extern "Rust" {
         #[cxx_name = "fd_monitor_item_id_t"]
         type FdMonitorItemId;
@@ -86,9 +76,151 @@ mod fd_monitor_ffi {
     }
 }
 
-// TODO: Remove once we're no longer using the FFI variant of FdEventSignaller
-unsafe impl Sync for FdEventSignaller {}
-unsafe impl Send for FdEventSignaller {}
+/// An event signaller implemented using a file descriptor, so it can plug into
+/// [`select()`](libc::select).
+///
+/// This is like a binary semaphore. A call to [`post()`](FdEventSignaller::post) will
+/// signal an event, making the fd readable.  Multiple calls to `post()` may be coalesced.
+/// On Linux this uses [`eventfd()`](libc::eventfd), on other systems this uses a pipe.
+/// [`try_consume()`](FdEventSignaller::try_consume) may be used to consume the event.
+/// Importantly this is async signal safe. Of course it is `CLO_EXEC` as well.
+pub struct FdEventSignaller {
+    // Always the read end of the fd; maybe the write end as well.
+    fd: AutoCloseFd,
+    #[cfg(not(HAVE_EVENTFD))]
+    write: AutoCloseFd,
+}
+
+impl FdEventSignaller {
+    /// The default constructor will abort on failure (fd exhaustion).
+    /// This should only be used during startup.
+    pub fn new() -> Self {
+        #[cfg(HAVE_EVENTFD)]
+        {
+            // Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.
+            let fd = unsafe { libc::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK) };
+            if fd < 0 {
+                perror("eventfd");
+                exit_without_destructors(1);
+            }
+            Self {
+                fd: AutoCloseFd::new(fd),
+            }
+        }
+        #[cfg(not(HAVE_EVENTFD))]
+        {
+            // Implementation using pipes.
+            let Some(pipes) = make_autoclose_pipes() else {
+                perror("pipe");
+                exit_without_destructors(1);
+            };
+            make_fd_nonblocking(pipes.read.fd()).unwrap();
+            make_fd_nonblocking(pipes.write.fd()).unwrap();
+            Self {
+                fd: pipes.read,
+                write: pipes.write,
+            }
+        }
+    }
+
+    /// \return the fd to read from, for notification.
+    pub fn read_fd(&self) -> RawFd {
+        self.fd.fd()
+    }
+
+    /// If an event is signalled, consume it; otherwise return.
+    /// This does not block.
+    /// This retries on EINTR.
+    pub fn try_consume(&self) -> bool {
+        // If we are using eventfd, we want to read a single uint64.
+        // If we are using pipes, read a lot; note this may leave data on the pipe if post has been
+        // called many more times. In no case do we care about the data which is read.
+        #[cfg(HAVE_EVENTFD)]
+        let mut buff = [0_u64; 1];
+        #[cfg(not(HAVE_EVENTFD))]
+        let mut buff = [0_u8; 1024];
+        let mut ret;
+        loop {
+            ret = unsafe {
+                libc::read(
+                    self.read_fd(),
+                    &mut buff as *mut _ as *mut c_void,
+                    std::mem::size_of_val(&buff),
+                )
+            };
+            if ret >= 0 || errno().0 != EINTR {
+                break;
+            }
+        }
+        if ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno().0) {
+            perror("read");
+        }
+        ret > 0
+    }
+
+    /// Mark that an event has been received. This may be coalesced.
+    /// This retries on EINTR.
+    pub fn post(&self) {
+        // eventfd writes uint64; pipes write 1 byte.
+        #[cfg(HAVE_EVENTFD)]
+        let c = 1_u64;
+        #[cfg(not(HAVE_EVENTFD))]
+        let c = 1_u8;
+        let mut ret;
+        loop {
+            ret = unsafe {
+                libc::write(
+                    self.write_fd(),
+                    &c as *const _ as *const c_void,
+                    std::mem::size_of_val(&c),
+                )
+            };
+            if ret >= 0 || errno().0 != EINTR {
+                break;
+            }
+        }
+        // EAGAIN occurs if either the pipe buffer is full or the eventfd overflows (very unlikely).
+        if ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno().0) {
+            perror("write");
+        }
+    }
+
+    /// Perform a poll to see if an event is received.
+    /// If \p wait is set, wait until it is readable; this does not consume the event
+    /// but guarantees that the next call to wait() will not block.
+    /// \return true if readable, false if not readable, or not interrupted by a signal.
+    pub fn poll(&self, wait: bool /* = false */) -> bool {
+        let mut timeout = libc::timeval {
+            tv_sec: 0,
+            tv_usec: 0,
+        };
+        let mut fds: libc::fd_set = unsafe { std::mem::zeroed() };
+        unsafe { libc::FD_ZERO(&mut fds) };
+        unsafe { libc::FD_SET(self.read_fd(), &mut fds) };
+        let res = unsafe {
+            libc::select(
+                self.read_fd() + 1,
+                &mut fds,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                if wait {
+                    std::ptr::null_mut()
+                } else {
+                    &mut timeout
+                },
+            )
+        };
+        res > 0
+    }
+
+    /// \return the fd to write to.
+    fn write_fd(&self) -> RawFd {
+        #[cfg(HAVE_EVENTFD)]
+        return self.fd.fd();
+        #[cfg(not(HAVE_EVENTFD))]
+        return self.write.fd();
+    }
+}
 
 /// Each item added to fd_monitor_t is assigned a unique ID, which is not recycled. Items may have
 /// their callback triggered immediately by passing the ID. Zero is a sentinel.
@@ -301,7 +433,7 @@ fn new_fd_monitor_item_ffi(
 pub struct FdMonitor {
     /// Our self-signaller. When this is written to, it means there are new items pending, new items
     /// in the poke list, or terminate has been set.
-    change_signaller: SharedPtr<FdEventSignaller>,
+    change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
     data: Arc<Mutex<SharedData>>,
     /// The last ID assigned or `0` if none.
@@ -337,7 +469,7 @@ struct BackgroundFdMonitor {
     items: Vec<FdMonitorItem>,
     /// Our self-signaller. When this is written to, it means there are new items pending, new items
     /// in the poke list, or terminate has been set.
-    change_signaller: SharedPtr<FdEventSignaller>,
+    change_signaller: Weak<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
     data: Arc<Mutex<SharedData>>,
 }
@@ -377,7 +509,7 @@ impl FdMonitor {
             FLOG!(fd_monitor, "Thread starting");
             let background_monitor = BackgroundFdMonitor {
                 data: Arc::clone(&self.data),
-                change_signaller: SharedPtr::clone(&self.change_signaller),
+                change_signaller: Arc::downgrade(&self.change_signaller),
                 items: Vec::new(),
             };
             crate::threads::spawn(move || {
@@ -441,7 +573,7 @@ impl FdMonitor {
                 running: false,
                 terminate: false,
             })),
-            change_signaller: new_fd_event_signaller(),
+            change_signaller: Arc::new(FdEventSignaller::new()),
             last_id: AtomicU64::new(0),
         }
     }
@@ -465,7 +597,7 @@ impl BackgroundFdMonitor {
             fds.clear();
 
             // Our change_signaller is special-cased
-            let change_signal_fd = self.change_signaller.read_fd().into();
+            let change_signal_fd = self.change_signaller.upgrade().unwrap().read_fd();
             fds.add(change_signal_fd);
 
             let mut now = Instant::now();
@@ -535,7 +667,7 @@ impl BackgroundFdMonitor {
             let change_signalled = fds.test(change_signal_fd);
             if change_signalled || is_wait_lap {
                 // Clear the change signaller before processing incoming changes
-                self.change_signaller.try_consume();
+                self.change_signaller.upgrade().unwrap().try_consume();
                 let mut data = self.data.lock().expect("Mutex poisoned!");
 
                 // Move from `pending` to the end of `items`

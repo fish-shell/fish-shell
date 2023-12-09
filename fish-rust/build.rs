@@ -23,7 +23,12 @@ fn main() {
     if compiles("fish-rust/src/cfg/w_exitcode.cpp") {
         println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");
     }
-
+    if compiles("fish-rust/src/cfg/eventfd.c") {
+        println!("cargo:rustc-cfg=HAVE_EVENTFD");
+    }
+    if compiles("fish-rust/src/cfg/pipe2.c") {
+        println!("cargo:rustc-cfg=HAVE_PIPE2");
+    }
     if compiles("fish-rust/src/cfg/spawn.c") {
         println!("cargo:rustc-cfg=FISH_USE_POSIX_SPAWN");
     }

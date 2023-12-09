@@ -34,6 +34,7 @@ use crate::{
         ConfigPaths, EnvMode,
     },
     event::{self, Event},
+    fds::set_cloexec,
     ffi::{self},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
     function, future_feature_flags as features, history,
@@ -550,7 +551,7 @@ fn main() -> i32 {
             std::process::exit(-1);
         }
 
-        unsafe { ffi::set_cloexec(c_int(libc::fileno(debug_file)), true) };
+        set_cloexec(unsafe { libc::fileno(debug_file) }, true);
         ffi::flog_setlinebuf_ffi(debug_file as *mut _);
         ffi::set_flog_output_file_ffi(debug_file as *mut _);
         set_flog_file_fd(unsafe { libc::fileno(debug_file) });

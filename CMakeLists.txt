@@ -112,7 +112,6 @@ set(FISH_SRCS
     src/event.cpp
     src/expand.cpp
     src/fallback.cpp
-    src/fds.cpp
     src/fish_version.cpp
     src/flog.cpp
     src/highlight.cpp

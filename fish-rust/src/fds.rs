@@ -1,8 +1,11 @@
 use crate::common::wcs2zstring;
-use crate::ffi;
+use crate::flog::FLOG;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
-use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_CLOEXEC, O_NONBLOCK};
+use libc::{
+    c_int, EINTR, FD_CLOEXEC, F_DUPFD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_CLOEXEC,
+    O_NONBLOCK,
+};
 use nix::unistd;
 use std::ffi::CStr;
 use std::io::{self, Read, Write};
@@ -59,11 +62,15 @@ mod autoclose_fd_t {
         #[cxx_name = "autoclose_fd_t2"]
         type AutoCloseFd;
 
+        fn new_autoclose_fd(fd: i32) -> Box<AutoCloseFd>;
         #[cxx_name = "valid"]
         fn is_valid(&self) -> bool;
         fn close(&mut self);
         fn fd(&self) -> i32;
     }
+}
+fn new_autoclose_fd(fd: i32) -> Box<AutoCloseFd> {
+    Box::new(AutoCloseFd::new(fd))
 }
 
 impl AutoCloseFd {
@@ -149,18 +156,69 @@ pub struct AutoClosePipes {
 /// Construct a pair of connected pipes, set to close-on-exec.
 /// \return None on fd exhaustion.
 pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
-    let pipes = ffi::make_pipes_ffi();
+    let mut pipes: [c_int; 2] = [-1, -1];
 
-    let readp = AutoCloseFd::new(pipes.read);
-    let writep = AutoCloseFd::new(pipes.write);
-    if !readp.is_valid() || !writep.is_valid() {
-        None
-    } else {
-        Some(AutoClosePipes {
-            read: readp,
-            write: writep,
-        })
+    let already_cloexec = false;
+    #[cfg(HAVE_PIPE2)]
+    {
+        if unsafe { libc::pipe2(&mut pipes[0], O_CLOEXEC) } < 0 {
+            FLOG!(warning, PIPE_ERROR);
+            perror("pipe2");
+            return None;
+        }
+        already_cloexec = true;
     }
+    #[cfg(not(HAVE_PIPE2))]
+    if unsafe { libc::pipe(&mut pipes[0]) } < 0 {
+        FLOG!(warning, PIPE_ERROR);
+        perror("pipe2");
+        return None;
+    }
+
+    let readp = AutoCloseFd::new(pipes[0]);
+    let writep = AutoCloseFd::new(pipes[1]);
+
+    // Ensure our fds are out of the user range.
+    let readp = heightenize_fd(readp, already_cloexec);
+    if !readp.is_valid() {
+        return None;
+    }
+
+    let writep = heightenize_fd(writep, already_cloexec);
+    if !writep.is_valid() {
+        return None;
+    }
+
+    Some(AutoClosePipes {
+        read: readp,
+        write: writep,
+    })
+}
+
+/// If the given fd is in the "user range", move it to a new fd in the "high range".
+/// zsh calls this movefd().
+/// \p input_has_cloexec describes whether the input has CLOEXEC already set, so we can avoid
+/// setting it again.
+/// \return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
+/// which case an error will have been printed, and the input fd closed.
+fn heightenize_fd(fd: AutoCloseFd, input_has_cloexec: bool) -> AutoCloseFd {
+    // Check if the fd is invalid or already in our high range.
+    if !fd.is_valid() {
+        return fd;
+    }
+    if fd.fd() >= FIRST_HIGH_FD {
+        if !input_has_cloexec {
+            set_cloexec(fd.fd(), true);
+        }
+        return fd;
+    }
+    // Here we are asking the kernel to give us a cloexec fd.
+    let newfd = unsafe { libc::fcntl(fd.fd(), F_DUPFD_CLOEXEC, FIRST_HIGH_FD) };
+    if newfd < 0 {
+        perror("fcntl");
+        return AutoCloseFd::default();
+    }
+    return AutoCloseFd::new(newfd);
 }
 
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.

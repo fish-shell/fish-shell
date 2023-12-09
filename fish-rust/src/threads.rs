@@ -38,16 +38,8 @@ const IO_WAIT_FOR_WORK_DURATION: Duration = Duration::from_millis(500);
 static IO_THREAD_POOL: OnceBox<Mutex<ThreadPool>> = OnceBox::new();
 
 /// The event signaller singleton used for completions and queued main thread requests.
-static NOTIFY_SIGNALLER: once_cell::sync::Lazy<&'static crate::fd_monitor::FdEventSignaller> =
-    once_cell::sync::Lazy::new(|| unsafe {
-        // This is leaked to avoid C++-side destructors. When ported fully to rust, we won't need to
-        // leak anything.
-        let signaller = crate::fd_monitor::new_fd_event_signaller();
-        let signaller_ref: &crate::fd_monitor::FdEventSignaller = signaller.as_ref().unwrap();
-        let result = std::mem::transmute(signaller_ref);
-        std::mem::forget(signaller);
-        result
-    });
+static NOTIFY_SIGNALLER: once_cell::sync::Lazy<crate::fd_monitor::FdEventSignaller> =
+    once_cell::sync::Lazy::new(crate::fd_monitor::FdEventSignaller::new);
 
 #[cxx::bridge]
 mod ffi {
@@ -557,7 +549,7 @@ pub fn iothread_perform_cant_wait(f: impl FnOnce() + 'static + Send) {
 }
 
 pub fn iothread_port() -> i32 {
-    i32::from(NOTIFY_SIGNALLER.read_fd())
+    NOTIFY_SIGNALLER.read_fd()
 }
 
 pub fn iothread_service_main_with_timeout(timeout: Duration) {

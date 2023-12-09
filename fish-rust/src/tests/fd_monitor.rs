@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use crate::fd_monitor::{FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason};
+use crate::fd_monitor::{
+    FdEventSignaller, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason,
+};
 use crate::fds::{make_autoclose_pipes, AutoCloseFd};
 use crate::ffi_tests::add_test;
 
@@ -188,3 +190,28 @@ add_test!("fd_monitor_items", || {
     assert_eq!(item_pokee.total_calls.load(Ordering::Relaxed), 1);
     assert_eq!(item_pokee.pokes.load(Ordering::Relaxed), 1);
 });
+
+#[test]
+fn test_fd_event_signaller() {
+    let sema = FdEventSignaller::new();
+    assert!(!sema.try_consume());
+    assert!(!sema.poll(false));
+
+    // Post once.
+    sema.post();
+    assert!(sema.poll(false));
+    assert!(sema.poll(false));
+    assert!(sema.try_consume());
+    assert!(!sema.poll(false));
+    assert!(!sema.try_consume());
+
+    // Posts are coalesced.
+    sema.post();
+    sema.post();
+    sema.post();
+    assert!(sema.poll(false));
+    assert!(sema.poll(false));
+    assert!(sema.try_consume());
+    assert!(!sema.poll(false));
+    assert!(!sema.try_consume());
+}

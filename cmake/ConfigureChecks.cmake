@@ -152,8 +152,6 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 check_include_files("sys/types.h;sys/sysctl.h" HAVE_SYS_SYSCTL_H)
 SET(CMAKE_C_FLAGS "${OLD_CMAKE_C_FLAGS}")
 
-check_cxx_symbol_exists(eventfd sys/eventfd.h HAVE_EVENTFD)
-check_cxx_symbol_exists(pipe2 unistd.h HAVE_PIPE2)
 check_cxx_symbol_exists(wcscasecmp wchar.h HAVE_WCSCASECMP)
 check_cxx_symbol_exists(wcsncasecmp wchar.h HAVE_WCSNCASECMP)
 
@@ -293,4 +291,3 @@ IF (APPLE)
         SET(HAVE_BROKEN_MBRTOWC_UTF8 1)
     ENDIF()
 ENDIF()
-

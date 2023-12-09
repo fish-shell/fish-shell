@@ -921,7 +921,7 @@ class test_lru_t : public lru_cache_t<int> {
     }
 };
 
-// todo!("port this");
+// todo!("no need to port this, delete this");
 static void test_lru() {
     say(L"Testing LRU cache");
 

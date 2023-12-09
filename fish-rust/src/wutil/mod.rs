@@ -5,6 +5,7 @@ pub mod fileid;
 pub mod gettext;
 pub mod printf;
 #[cfg(test)]
+#[allow(unused_imports)] // Easy way to suppress warnings while we have two testing modes.
 mod tests;
 pub mod wcstod;
 pub mod wcstoi;

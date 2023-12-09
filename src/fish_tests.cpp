@@ -1077,53 +1077,6 @@ static void test_input() {
     }
 }
 
-// todo!("port this")
-static void test_wwrite_to_fd() {
-    say(L"Testing wwrite_to_fd");
-    char t[] = "/tmp/fish_test_wwrite.XXXXXX";
-    autoclose_fd_t tmpfd{mkstemp(t)};
-    if (!tmpfd.valid()) {
-        err(L"Unable to create temporary file");
-        return;
-    }
-    tmpfd.close();
-
-    size_t sizes[] = {0, 1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2};
-    for (size_t size : sizes) {
-        autoclose_fd_t fd{open(t, O_RDWR | O_TRUNC | O_CREAT, 0666)};
-        if (!fd.valid()) {
-            wperror(L"open");
-            err(L"Unable to open temporary file");
-            return;
-        }
-        wcstring input{};
-        for (size_t i = 0; i < size; i++) {
-            input.push_back(wchar_t(random()));
-        }
-
-        ssize_t amt = wwrite_to_fd(input, fd.fd());
-        if (amt < 0) {
-            wperror(L"write");
-            err(L"Unable to write to temporary file");
-            return;
-        }
-        std::string narrow = wcs2string(input);
-        size_t expected_size = narrow.size();
-        do_test(static_cast<size_t>(amt) == expected_size);
-
-        if (lseek(fd.fd(), 0, SEEK_SET) < 0) {
-            wperror(L"seek");
-            err(L"Unable to seek temporary file");
-            return;
-        }
-
-        std::string contents(expected_size, '\0');
-        ssize_t read_amt = read(fd.fd(), &contents[0], expected_size);
-        do_test(read_amt >= 0 && static_cast<size_t>(read_amt) == expected_size);
-    }
-    (void)remove(t);
-}
-
 /// Helper for test_timezone_env_vars().
 long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
     env_stack_t vars{parser_principal_parser()->deref().vars_boxed()};
@@ -1380,7 +1333,6 @@ struct test_comparator_t {
 static const test_t s_tests[]{
     {TEST_GROUP("utility_functions"), test_utility_functions},
     {TEST_GROUP("dir_iter"), test_dir_iter},
-    {TEST_GROUP("wwrite_to_fd"), test_wwrite_to_fd},
     {TEST_GROUP("env"), test_env_snapshot},
     {TEST_GROUP("str_to_num"), test_str_to_num},
     {TEST_GROUP("enum"), test_enum_set},

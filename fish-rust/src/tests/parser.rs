@@ -1,7 +1,8 @@
-use crate::ast::{Ast, List, Node};
+use crate::ast::{self, Ast, List, Node, Traversal};
 use crate::builtins::shared::{STATUS_CMD_OK, STATUS_UNMATCHED_WILDCARD};
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
+use crate::parse_constants::StatementDecoration;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
 use crate::parser::Parser;
@@ -10,6 +11,7 @@ use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handl
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
+use crate::wcstringutil::join_strings;
 use libc::SIGINT;
 use std::time::Duration;
 
@@ -373,6 +375,128 @@ add_test!("test_new_parser_correctness", || {
             Ast::parse(&src, ParseTreeFlags::default(), None);
         }
     }
+});
+
+// Test the LL2 (two token lookahead) nature of the parser by exercising the special builtin and
+// command handling. In particular, 'command foo' should be a decorated statement 'foo' but 'command
+// -help' should be an undecorated statement 'command' with argument '--help', and NOT attempt to
+// run a command called '--help'.
+add_test!("test_new_parser_ll2", || {
+    // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
+    // true if successful.
+    fn test_1_parse_ll2(src: &wstr) -> Option<(WString, WString, StatementDecoration)> {
+        let ast = Ast::parse(src, ParseTreeFlags::default(), None);
+        if ast.errored() {
+            return None;
+        }
+
+        // Get the statement. Should only have one.
+        let mut statement = None;
+        for n in Traversal::new(ast.top()) {
+            if let Some(tmp) = n.as_decorated_statement() {
+                assert!(
+                    statement.is_none(),
+                    "More than one decorated statement found in '{}'",
+                    src
+                );
+                statement = Some(tmp);
+            }
+        }
+        let statement = statement.expect("No decorated statement found");
+
+        // Return its decoration and command.
+        let out_deco = statement.decoration();
+        let out_cmd = statement.command.source(src).to_owned();
+
+        // Return arguments separated by spaces.
+        let out_joined_args = join_strings(
+            &statement
+                .args_or_redirs
+                .iter()
+                .filter(|a| a.is_argument())
+                .map(|a| a.source(src))
+                .collect::<Vec<_>>(),
+            ' ',
+        );
+
+        Some((out_cmd, out_joined_args, out_deco))
+    }
+    macro_rules! validate {
+        ($src:expr, $cmd:expr, $args:expr, $deco:expr) => {
+            let (cmd, args, deco) = test_1_parse_ll2(L!($src)).unwrap();
+            assert_eq!(cmd, L!($cmd));
+            assert_eq!(args, L!($args));
+            assert_eq!(deco, $deco);
+        };
+    }
+
+    validate!("echo hello", "echo", "hello", StatementDecoration::none);
+    validate!(
+        "command echo hello",
+        "echo",
+        "hello",
+        StatementDecoration::command
+    );
+    validate!(
+        "exec echo hello",
+        "echo",
+        "hello",
+        StatementDecoration::exec
+    );
+    validate!(
+        "command command hello",
+        "command",
+        "hello",
+        StatementDecoration::command
+    );
+    validate!(
+        "builtin command hello",
+        "command",
+        "hello",
+        StatementDecoration::builtin
+    );
+    validate!(
+        "command --help",
+        "command",
+        "--help",
+        StatementDecoration::none
+    );
+    validate!("command -h", "command", "-h", StatementDecoration::none);
+    validate!("command", "command", "", StatementDecoration::none);
+    validate!("command -", "command", "-", StatementDecoration::none);
+    validate!("command --", "command", "--", StatementDecoration::none);
+    validate!(
+        "builtin --names",
+        "builtin",
+        "--names",
+        StatementDecoration::none
+    );
+    validate!("function", "function", "", StatementDecoration::none);
+    validate!(
+        "function --help",
+        "function",
+        "--help",
+        StatementDecoration::none
+    );
+
+    // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
+    // not (issue #1240).
+    macro_rules! check_function_help {
+        ($src:expr, $typ:expr) => {
+            let ast = Ast::parse(L!($src), ParseTreeFlags::default(), None);
+            assert!(!ast.errored());
+            assert_eq!(
+                Traversal::new(ast.top())
+                    .filter(|n| n.typ() == $typ)
+                    .count(),
+                1
+            );
+        };
+    }
+    check_function_help!("function -h", ast::Type::decorated_statement);
+    check_function_help!("function --help", ast::Type::decorated_statement);
+    check_function_help!("function --foo; end", ast::Type::function_header);
+    check_function_help!("function foo; end", ast::Type::function_header);
 });
 
 add_test!("test_eval_recursion_detection", || {

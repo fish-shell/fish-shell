@@ -1078,126 +1078,6 @@ static void test_input() {
 }
 
 // todo!("port this")
-// Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
-// true if successful.
-static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *out_joined_args,
-                             statement_decoration_t *out_deco) {
-    using namespace ast;
-    out_cmd->clear();
-    out_joined_args->clear();
-    *out_deco = statement_decoration_t::none;
-
-    auto ast = ast_parse(src);
-    if (ast->errored()) return false;
-
-    // Get the statement. Should only have one.
-    const decorated_statement_t *statement = nullptr;
-    for (auto ast_traversal = new_ast_traversal(*ast->top());;) {
-        auto n = ast_traversal->next();
-        if (!n->has_value()) break;
-        if (const auto *tmp = n->try_as_decorated_statement()) {
-            if (statement) {
-                say(L"More than one decorated statement found in '%ls'", src.c_str());
-                return false;
-            }
-            statement = tmp;
-        }
-    }
-    if (!statement) {
-        say(L"No decorated statement found in '%ls'", src.c_str());
-        return false;
-    }
-
-    // Return its decoration and command.
-    *out_deco = statement->decoration();
-    *out_cmd = *statement->command().source(src);
-
-    // Return arguments separated by spaces.
-    bool first = true;
-    for (size_t i = 0; i < statement->args_or_redirs().count(); i++) {
-        const ast::argument_or_redirection_t &arg = *statement->args_or_redirs().at(i);
-        if (!arg.is_argument()) continue;
-        if (!first) out_joined_args->push_back(L' ');
-        out_joined_args->append(*arg.ptr()->source(src));
-        first = false;
-    }
-
-    return true;
-}
-
-// Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
-// not (issue #1240).
-template <ast::type_t Type>
-static void check_function_help(const wchar_t *src) {
-    using namespace ast;
-    auto ast = ast_parse(src);
-    if (ast->errored()) {
-        err(L"Failed to parse '%ls'", src);
-    }
-
-    int count = 0;
-    for (auto ast_traversal = new_ast_traversal(*ast->top());;) {
-        auto node = ast_traversal->next();
-        if (!node->has_value()) break;
-        count += (node->typ() == Type);
-    }
-    if (count == 0) {
-        err(L"Failed to find node of type '%ls'", ast_type_to_string(Type));
-    } else if (count > 1) {
-        err(L"Found too many nodes of type '%ls'", ast_type_to_string(Type));
-    }
-}
-
-// todo!("port this")
-// Test the LL2 (two token lookahead) nature of the parser by exercising the special builtin and
-// command handling. In particular, 'command foo' should be a decorated statement 'foo' but 'command
-// -help' should be an undecorated statement 'command' with argument '--help', and NOT attempt to
-// run a command called '--help'.
-static void test_new_parser_ll2() {
-    say(L"Testing parser two-token lookahead");
-
-    const struct {
-        wcstring src;
-        wcstring cmd;
-        wcstring args;
-        statement_decoration_t deco;
-    } tests[] = {{L"echo hello", L"echo", L"hello", statement_decoration_t::none},
-                 {L"command echo hello", L"echo", L"hello", statement_decoration_t::command},
-                 {L"exec echo hello", L"echo", L"hello", statement_decoration_t::exec},
-                 {L"command command hello", L"command", L"hello", statement_decoration_t::command},
-                 {L"builtin command hello", L"command", L"hello", statement_decoration_t::builtin},
-                 {L"command --help", L"command", L"--help", statement_decoration_t::none},
-                 {L"command -h", L"command", L"-h", statement_decoration_t::none},
-                 {L"command", L"command", L"", statement_decoration_t::none},
-                 {L"command -", L"command", L"-", statement_decoration_t::none},
-                 {L"command --", L"command", L"--", statement_decoration_t::none},
-                 {L"builtin --names", L"builtin", L"--names", statement_decoration_t::none},
-                 {L"function", L"function", L"", statement_decoration_t::none},
-                 {L"function --help", L"function", L"--help", statement_decoration_t::none}};
-
-    for (const auto &test : tests) {
-        wcstring cmd, args;
-        statement_decoration_t deco = statement_decoration_t::none;
-        bool success = test_1_parse_ll2(test.src, &cmd, &args, &deco);
-        if (!success) err(L"Parse of '%ls' failed on line %ld", test.cmd.c_str(), (long)__LINE__);
-        if (cmd != test.cmd)
-            err(L"When parsing '%ls', expected command '%ls' but got '%ls' on line %ld",
-                test.src.c_str(), test.cmd.c_str(), cmd.c_str(), (long)__LINE__);
-        if (args != test.args)
-            err(L"When parsing '%ls', expected args '%ls' but got '%ls' on line %ld",
-                test.src.c_str(), test.args.c_str(), args.c_str(), (long)__LINE__);
-        if (deco != test.deco)
-            err(L"When parsing '%ls', expected decoration %d but got %d on line %ld",
-                test.src.c_str(), (int)test.deco, (int)deco, (long)__LINE__);
-    }
-
-    check_function_help<ast::type_t::decorated_statement>(L"function -h");
-    check_function_help<ast::type_t::decorated_statement>(L"function --help");
-    check_function_help<ast::type_t::function_header>(L"function --foo; end");
-    check_function_help<ast::type_t::function_header>(L"function foo; end");
-}
-
-// todo!("port this")
 static void test_new_parser_ad_hoc() {
     using namespace ast;
     // Very ad-hoc tests for issues encountered.
@@ -1713,7 +1593,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("enum"), test_enum_set},
     {TEST_GROUP("enum"), test_enum_array},
     {TEST_GROUP("autosuggestion"), test_autosuggestion_combining},
-    {TEST_GROUP("new_parser_ll2"), test_new_parser_ll2},
     {TEST_GROUP("test_abbreviations"), test_abbreviations},
     {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
     {TEST_GROUP("new_parser_errors"), test_new_parser_errors},

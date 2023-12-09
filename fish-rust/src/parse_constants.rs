@@ -110,7 +110,7 @@ mod parse_constants_ffi {
     }
 
     // Statement decorations like 'command' or 'exec'.
-    #[derive(Clone, Copy, Eq, PartialEq)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub enum StatementDecoration {
         none,
         command,

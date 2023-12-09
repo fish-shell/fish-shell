@@ -102,6 +102,9 @@ pub struct Pager {
     // Whether we show the search field.
     pub search_field_shown: bool,
 
+    // Whether or not the pager should refilter the supplied completions.
+    pub refilter_disabled: bool,
+
     // The filtered list of completion infos.
     completion_infos: Vec<PagerComp>,
 
@@ -958,6 +961,15 @@ impl Pager {
 
     // Updates the completions list per the filter.
     pub fn refilter_completions(&mut self) {
+        // the result is already considered as filtered, we don't need
+        // to refine it again.
+        if self.refilter_disabled {
+            self.completion_infos = self.unfiltered_completion_infos.clone();
+            return;
+        }
+
+        // otherwise we need to filter through the completions
+        // according to the search field.
         self.completion_infos.clear();
         for i in 0..self.unfiltered_completion_infos.len() {
             if self.completion_info_passes_filter(&self.unfiltered_completion_infos[i]) {
@@ -1263,6 +1275,8 @@ mod pager_ffi {
         #[cxx_name = "set_completions"]
         fn set_completions_ffi(&mut self, completions: &CompletionListFfi);
         fn set_fully_disclosed(&mut self);
+        fn enable_refilter(&mut self);
+        fn disable_refilter(&mut self);
         #[cxx_name = "set_prefix"]
         fn set_prefix_ffi(&mut self, prefix: &CxxWString, highlight: bool);
         fn set_search_field_shown(&mut self, flag: bool);
@@ -1308,6 +1322,12 @@ impl Pager {
             Some(completion) => completion as *const Completion,
             None => std::ptr::null(),
         }
+    }
+    pub fn enable_refilter(&mut self) {
+        self.refilter_disabled = false;
+    }
+    pub fn disable_refilter(&mut self) {
+        self.refilter_disabled = true;
     }
     fn set_prefix_ffi(&mut self, prefix: &CxxWString, highlight: bool) {
         self.set_prefix(prefix.as_wstr(), highlight);

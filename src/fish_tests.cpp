@@ -905,25 +905,6 @@ static void test_word_motion() {
                        L"^a-b-c^\n\nd-e-f^ ");
 }
 
-// todo!("port this?")
-static void test_wcstod() {
-    say(L"Testing fish_wcstod");
-    auto tod_test = [](const wchar_t *a, const char *b) {
-        char *narrow_end = nullptr;
-        wchar_t *wide_end = nullptr;
-        double val1 = fish_wcstod(a, &wide_end);
-        double val2 = strtod(b, &narrow_end);
-        do_test((std::isnan(val1) && std::isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
-        do_test(wide_end - a == narrow_end - b);
-    };
-    tod_test(L"", "");
-    tod_test(L"1.2", "1.2");
-    tod_test(L"1.5", "1.5");
-    tod_test(L"-1000", "-1000");
-    tod_test(L"0.12345", "0.12345");
-    tod_test(L"nope", "nope");
-}
-
 // todo!("already ported, delete this")
 /// Testing colors.
 static void test_colors() {
@@ -1281,7 +1262,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("iothread"), test_iothread},
     {TEST_GROUP("pthread"), test_pthread},
     {TEST_GROUP("lru"), test_lru},
-    {TEST_GROUP("wcstod"), test_wcstod},
     {TEST_GROUP("word_motion"), test_word_motion},
     {TEST_GROUP("colors"), test_colors},
     {TEST_GROUP("input"), test_input},

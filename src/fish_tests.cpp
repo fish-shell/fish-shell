@@ -1077,58 +1077,6 @@ static void test_input() {
     }
 }
 
-// Given that we have an array of 'fuzz_count' strings, we wish to enumerate all permutations of
-// 'len' values. We do this by incrementing an integer, interpreting it as "base fuzz_count".
-static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_count, size_t len,
-                                          size_t permutation, wcstring *out_str) {
-    out_str->clear();
-
-    size_t remaining_permutation = permutation;
-    for (size_t i = 0; i < len; i++) {
-        size_t idx = remaining_permutation % fuzz_count;
-        remaining_permutation /= fuzz_count;
-
-        out_str->append(fuzzes[idx]);
-        out_str->push_back(L' ');
-    }
-    // Return false if we wrapped.
-    return remaining_permutation == 0;
-}
-
-// todo!("port this")
-static void test_new_parser_fuzzing() {
-    say(L"Fuzzing parser");
-    const wcstring fuzzes[] = {
-        L"if",      L"else", L"for", L"in",  L"while", L"begin", L"function",
-        L"switch",  L"case", L"end", L"and", L"or",    L"not",   L"command",
-        L"builtin", L"foo",  L"|",   L"^",   L"&",     L";",
-    };
-
-    // Generate a list of strings of all keyword / token combinations.
-    wcstring src;
-    src.reserve(128);
-
-    auto errors = new_parse_error_list();
-
-    double start = timef();
-    bool log_it = true;
-    unsigned long max_len = 5;
-    for (unsigned long len = 0; len < max_len; len++) {
-        if (log_it) std::fwprintf(stderr, L"%lu / %lu...", len, max_len);
-
-        // We wish to look at all permutations of 4 elements of 'fuzzes' (with replacement).
-        // Construct an int and keep incrementing it.
-        unsigned long permutation = 0;
-        while (string_for_permutation(fuzzes, sizeof fuzzes / sizeof *fuzzes, len, permutation++,
-                                      &src)) {
-            ast_parse(src);
-        }
-        if (log_it) std::fwprintf(stderr, L"done (%lu)\n", permutation);
-    }
-    double end = timef();
-    if (log_it) say(L"All fuzzed in %.2f seconds!", end - start);
-}
-
 // todo!("port this")
 // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
 // true if successful.
@@ -1767,7 +1715,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("autosuggestion"), test_autosuggestion_combining},
     {TEST_GROUP("new_parser_ll2"), test_new_parser_ll2},
     {TEST_GROUP("test_abbreviations"), test_abbreviations},
-    {TEST_GROUP("new_parser_fuzzing"), test_new_parser_fuzzing},
     {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
     {TEST_GROUP("new_parser_errors"), test_new_parser_errors},
     {TEST_GROUP("error_messages"), test_error_messages},

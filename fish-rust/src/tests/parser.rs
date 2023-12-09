@@ -320,6 +320,61 @@ add_test!("test_new_parser_correctness", || {
     validate!("true || \n\n false", true);
 });
 
+add_test!("test_new_parser_correctness", || {
+    let fuzzes = [
+        L!("if"),
+        L!("else"),
+        L!("for"),
+        L!("in"),
+        L!("while"),
+        L!("begin"),
+        L!("function"),
+        L!("switch"),
+        L!("case"),
+        L!("end"),
+        L!("and"),
+        L!("or"),
+        L!("not"),
+        L!("command"),
+        L!("builtin"),
+        L!("foo"),
+        L!("|"),
+        L!("^"),
+        L!("&"),
+        L!(";"),
+    ];
+
+    // Generate a list of strings of all keyword / token combinations.
+    let mut src = WString::new();
+    src.reserve(128);
+
+    // Given that we have an array of 'fuzz_count' strings, we wish to enumerate all permutations of
+    // 'len' values. We do this by incrementing an integer, interpreting it as "base fuzz_count".
+    fn string_for_permutation(fuzzes: &[&wstr], len: usize, permutation: usize) -> Option<WString> {
+        let mut remaining_permutation = permutation;
+        let mut out_str = WString::new();
+        for _i in 0..len {
+            let idx = remaining_permutation % fuzzes.len();
+            remaining_permutation /= fuzzes.len();
+            out_str.push_utfstr(fuzzes[idx]);
+            out_str.push(' ');
+        }
+        // Return false if we wrapped.
+        (remaining_permutation == 0).then_some(out_str)
+    }
+
+    let max_len = 5;
+    for len in 0..max_len {
+        // We wish to look at all permutations of 4 elements of 'fuzzes' (with replacement).
+        // Construct an int and keep incrementing it.
+        let mut permutation = 0;
+        while let Some(src) = string_for_permutation(&fuzzes, len, permutation) {
+            permutation += 1;
+            Ast::parse(&src, ParseTreeFlags::default(), None);
+        }
+    }
+});
+
 add_test!("test_eval_recursion_detection", || {
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.

@@ -370,7 +370,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
             required_argument,
             PROFILE_STARTUP_ARG,
         ),
-        wopt(L!("private"), required_argument, 'P'),
+        wopt(L!("private"), no_argument, 'P'),
         wopt(L!("help"), no_argument, 'h'),
         wopt(L!("version"), no_argument, 'v'),
     ];

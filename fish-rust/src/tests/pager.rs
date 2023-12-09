@@ -24,7 +24,7 @@ add_test!("test_pager_navigation", || {
     }
 
     let mut pager = Pager::default();
-    pager.set_completions(&completions);
+    pager.set_completions(&completions, true);
     pager.set_term_size(&Termsize::defaults());
     let mut render = pager.render();
 
@@ -136,7 +136,7 @@ add_test!("test_pager_layout", || {
         StringFuzzyMatch::exact_match(),
         CompleteFlags::default(),
     )];
-    pager.set_completions(&c1s);
+    pager.set_completions(&c1s, true);
 
     validate!(&mut pager, 26, L!("abcdefghij  (1234567890)"));
     validate!(&mut pager, 25, L!("abcdefghij  (1234567890)"));
@@ -157,7 +157,7 @@ add_test!("test_pager_layout", || {
         StringFuzzyMatch::exact_match(),
         CompleteFlags::default(),
     )];
-    pager.set_completions(&c2s);
+    pager.set_completions(&c2s, true);
     validate!(&mut pager, 26, L!("abcdefghijklmnopqrs  (1)"));
     validate!(&mut pager, 25, L!("abcdefghijklmnopqrs  (1)"));
     validate!(&mut pager, 24, L!("abcdefghijklmnopqrs  (1)"));
@@ -177,7 +177,7 @@ add_test!("test_pager_layout", || {
         StringFuzzyMatch::exact_match(),
         CompleteFlags::default(),
     )];
-    pager.set_completions(&c3s);
+    pager.set_completions(&c3s, true);
     validate!(&mut pager, 26, L!("abcdefghijklmnopqrst"));
     validate!(&mut pager, 25, L!("abcdefghijklmnopqrst"));
     validate!(&mut pager, 24, L!("abcdefghijklmnopqrst"));

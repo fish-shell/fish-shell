@@ -1204,7 +1204,7 @@ void reader_data_t::fill_history_pager(history_pager_invocation_t why,
             }
             shared_this->pager.set_extra_progress_text(
                 result.have_more_results ? _(L"Search again for more results") : L"");
-            shared_this->pager.set_completions(*result.matched_commands);
+            shared_this->pager.set_completions(*result.matched_commands, false);
             if (why == history_pager_invocation_t::Refresh) {
                 pager.set_selected_completion_index(*old_pager_index);
                 pager_selection_changed();
@@ -2285,7 +2285,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
 
     // Update the pager data.
     pager.set_prefix(prefix, true);
-    pager.set_completions(surviving_completions);
+    pager.set_completions(surviving_completions, true);
     // Modify the command line to reflect the new pager.
     pager_selection_changed();
     return false;

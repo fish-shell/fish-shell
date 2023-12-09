@@ -3,6 +3,7 @@ use crate::wchar::prelude::*;
 #[cfg(test)]
 mod common;
 mod complete;
+mod debounce;
 #[cfg(test)]
 mod editable_line;
 mod env;

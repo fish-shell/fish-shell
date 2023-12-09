@@ -524,102 +524,6 @@ static void test_pthread() {
     do_test(val == 5);
 }
 
-// todo!("port this");
-static void test_debounce() {
-    say(L"Testing debounce");
-    // Run 8 functions using a condition variable.
-    // Only the first and last should run.
-    auto db = new_debounce_t(0);
-    constexpr size_t count = 8;
-    std::array<bool, count> handler_ran = {};
-    std::array<bool, count> completion_ran = {};
-
-    bool ready_to_go = false;
-    std::mutex m;
-    std::condition_variable cv;
-
-    // "Enqueue" all functions. Each one waits until ready_to_go.
-    for (size_t idx = 0; idx < count; idx++) {
-        do_test(handler_ran[idx] == false);
-        std::function<size_t()> performer = [&, idx] {
-            std::unique_lock<std::mutex> lock(m);
-            cv.wait(lock, [&] { return ready_to_go; });
-            handler_ran[idx] = true;
-            return idx;
-        };
-        std::function<void(size_t)> completer = [&](size_t idx) { completion_ran[idx] = true; };
-        debounce_perform_with_completion(*db, std::move(performer), std::move(completer));
-    }
-
-    // We're ready to go.
-    {
-        std::unique_lock<std::mutex> lock(m);
-        ready_to_go = true;
-    }
-    cv.notify_all();
-
-    // Wait until the last completion is done.
-    while (!completion_ran.back()) {
-        iothread_service_main();
-    }
-    iothread_drain_all();
-
-    // Each perform() call may displace an existing queued operation.
-    // Each operation waits until all are queued.
-    // Therefore we expect the last perform() to have run, and at most one more.
-
-    do_test(handler_ran.back());
-    do_test(completion_ran.back());
-
-    size_t total_ran = 0;
-    for (size_t idx = 0; idx < count; idx++) {
-        total_ran += (handler_ran[idx] ? 1 : 0);
-        do_test(handler_ran[idx] == completion_ran[idx]);
-    }
-    do_test(total_ran <= 2);
-}
-
-// todo!("port this");
-static void test_debounce_timeout() {
-    using namespace std::chrono;
-    say(L"Testing debounce timeout");
-
-    // Verify that debounce doesn't wait forever.
-    // Use a shared_ptr so we don't have to join our threads.
-    const long timeout_ms = 500;
-    struct data_t {
-        rust::box<debounce_t> db = new_debounce_t(timeout_ms);
-        bool exit_ok = false;
-        std::mutex m;
-        std::condition_variable cv;
-        relaxed_atomic_t<uint32_t> running{0};
-    };
-    auto data = std::make_shared<data_t>();
-
-    // Our background handler. Note this just blocks until exit_ok is set.
-    std::function<void()> handler = [data] {
-        data->running++;
-        std::unique_lock<std::mutex> lock(data->m);
-        data->cv.wait(lock, [&] { return data->exit_ok; });
-    };
-
-    // Spawn the handler twice. This should not modify the thread token.
-    uint64_t token1 = debounce_perform(*data->db, handler);
-    uint64_t token2 = debounce_perform(*data->db, handler);
-    do_test(token1 == token2);
-
-    // Wait 75 msec, then enqueue something else; this should spawn a new thread.
-    std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms + timeout_ms / 2));
-    do_test(data->running == 1);
-    uint64_t token3 = debounce_perform(*data->db, handler);
-    do_test(token3 > token2);
-
-    // Release all the threads.
-    std::unique_lock<std::mutex> lock(data->m);
-    data->exit_ok = true;
-    data->cv.notify_all();
-}
-
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
     using namespace ast;
     auto ast = ast_parse_argument_list(src, parse_flag_none);
@@ -2271,8 +2175,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("convert_nulls"), test_convert_nulls},
     {TEST_GROUP("iothread"), test_iothread},
     {TEST_GROUP("pthread"), test_pthread},
-    {TEST_GROUP("debounce"), test_debounce},
-    {TEST_GROUP("debounce"), test_debounce_timeout},
     {TEST_GROUP("parser"), test_parser},
     {TEST_GROUP("lru"), test_lru},
     {TEST_GROUP("wcstod"), test_wcstod},

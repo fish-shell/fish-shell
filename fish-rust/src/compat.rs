@@ -1,6 +1,6 @@
 use std::sync::atomic::AtomicPtr;
 
-use libc::c_int;
+use libc::{c_char, c_int};
 use once_cell::sync::Lazy;
 
 pub fn MB_CUR_MAX() -> usize {
@@ -33,7 +33,7 @@ extern "C" {
 
 pub static _PATH_BSHELL: AtomicPtr<i8> = AtomicPtr::new(std::ptr::null_mut());
 extern "C" {
-    pub fn C_PATH_BSHELL() -> *const i8;
+    pub fn C_PATH_BSHELL() -> *const c_char;
 }
 
 pub static _PC_CASE_SENSITIVE: Lazy<c_int> = Lazy::new(|| unsafe { C_PC_CASE_SENSITIVE() });

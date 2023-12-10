@@ -78,6 +78,7 @@ path = "fish-rust/src/lib.rs"
 # These tests are run by fish_tests().
 default = ["fish-ffi-tests"]
 fish-ffi-tests = ["inventory"]
+benchmark = []
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []

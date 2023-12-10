@@ -408,24 +408,6 @@ static void test_convert_private_use() {
     }
 }
 
-// todo!("port this");
-static void perf_convert_ascii() {
-    std::string s(128 * 1024, '\0');
-    for (size_t i = 0; i < s.size(); i++) {
-        s[i] = (i % 10) + '0';
-    }
-    (void)str2wcstring(s);
-
-    double start = timef();
-    const int iters = 1024;
-    for (int i = 0; i < iters; i++) {
-        (void)str2wcstring(s);
-    }
-    double end = timef();
-    auto usec = static_cast<unsigned long long>(((end - start) * 1E6) / iters);
-    say(L"ASCII string conversion perf: %lu bytes in %llu usec", s.size(), usec);
-}
-
 // todo!("already ported, delete this");
 static void test_iothread() {
     say(L"Testing iothreads");
@@ -1203,7 +1185,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("convert"), test_convert},
     {TEST_GROUP("convert"), test_convert_private_use},
     {TEST_GROUP("convert_ascii"), test_convert_ascii},
-    {TEST_GROUP("perf_convert_ascii"), perf_convert_ascii, true},
     {TEST_GROUP("iothread"), test_iothread},
     {TEST_GROUP("pthread"), test_pthread},
     {TEST_GROUP("lru"), test_lru},

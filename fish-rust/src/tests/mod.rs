@@ -6,6 +6,7 @@ mod complete;
 mod debounce;
 #[cfg(test)]
 mod editable_line;
+#[cfg(test)]
 mod encoding;
 mod env;
 mod env_universal_common;

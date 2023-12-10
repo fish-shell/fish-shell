@@ -2170,8 +2170,13 @@ complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_usin
 complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command show' -ka '(__fish_git_complete_stashes)'
 
 complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -a '(__fish_git_files modified deleted modified-staged-deleted)'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s a -l all -d 'Stash ignored and untracked files'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s k -l keep-index -d 'Keep changes in index intact'
 complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s p -l patch -d 'Interactively select hunks'
 complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s m -l message -d 'Add a description'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -l no-keep-index -d 'Don\'t keep changes in index intact'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s S -l staged -d 'Stash only staged changes'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command push' -s u -l include-untracked -d 'Stash untracked files'
 
 ### config
 complete -f -c git -n __fish_git_needs_command -a config -d 'Set and read git configuration variables'

@@ -61,6 +61,7 @@ Completions
 - ``gimp`` (:issue:`9904`).
 - ``horcrux`` (:issue:`9922`).
 - ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
+- ``git stash push`` completions now support additional options.
 - ``java_home`` (:issue:`9998`).
 - ``crc`` (:issue:`10034`).
 - ``oc`` (:issue:`10034`).

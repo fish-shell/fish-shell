@@ -523,10 +523,8 @@ impl IoBuffer {
         let mut promise = self.fill_waiter.borrow_mut();
         let (mutex, condvar) = &**promise.as_ref().unwrap();
         {
-            let mut done = mutex.lock().unwrap();
-            while !*done {
-                done = condvar.wait(done).unwrap();
-            }
+            let done_guard = mutex.lock().unwrap();
+            let _done_guard = condvar.wait_while(done_guard, |done| !*done).unwrap();
         }
         *promise = None;
 

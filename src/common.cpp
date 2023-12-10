@@ -328,11 +328,9 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         } else {
             ret = std::mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
             // Determine whether to encode this character with our crazy scheme.
-            if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
+            if (fish_reserved_codepoint(wc)) {
                 use_encode_direct = true;
             } else if ((wc >= 0xD800 && wc <= 0xDFFF) || static_cast<uint32_t>(wc) >= 0x110000) {
-                use_encode_direct = true;
-            } else if (wc == INTERNAL_SEPARATOR) {
                 use_encode_direct = true;
             } else if (ret == static_cast<size_t>(-2)) {
                 // Incomplete sequence.

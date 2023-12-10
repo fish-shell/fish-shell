@@ -979,6 +979,9 @@ pub fn read_unquoted_escape(
     }
 
     if let Some(c) = result_char_or_none {
+        if fish_reserved_codepoint(c) {
+            return None;
+        }
         result.push(c);
     }
 
@@ -1134,9 +1137,7 @@ pub fn str2wcstring(inp: &[u8]) -> WString {
                 Some(codepoint) => {
                     c = codepoint;
                     // Determine whether to encode this character with our crazy scheme.
-                    (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END)
-                    ||
-                    c == INTERNAL_SEPARATOR
+                    fish_reserved_codepoint(c)
                     ||
                     // Incomplete sequence.
                     ret == 0_usize.wrapping_sub(2)

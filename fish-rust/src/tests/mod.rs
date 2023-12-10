@@ -22,6 +22,8 @@ mod redirection;
 mod screen;
 mod string_escape;
 #[cfg(test)]
+mod threads;
+#[cfg(test)]
 mod tokenizer;
 mod topic_monitor;
 mod wgetopt;

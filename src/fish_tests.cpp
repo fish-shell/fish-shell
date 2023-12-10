@@ -432,20 +432,6 @@ static void test_iothread() {
     }
 }
 
-// todo!("port this");
-static void test_pthread() {
-    say(L"Testing pthreads");
-    std::atomic<int> val{3};
-    std::promise<void> promise;
-    bool made = make_detached_pthread([&]() {
-        val = val + 2;
-        promise.set_value();
-    });
-    do_test(made);
-    promise.get_future().wait();
-    do_test(val == 5);
-}
-
 static void test_const_strlen() {
     do_test(const_strlen("") == 0);
     do_test(const_strlen(L"") == 0);
@@ -1186,7 +1172,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("convert"), test_convert_private_use},
     {TEST_GROUP("convert_ascii"), test_convert_ascii},
     {TEST_GROUP("iothread"), test_iothread},
-    {TEST_GROUP("pthread"), test_pthread},
     {TEST_GROUP("lru"), test_lru},
     {TEST_GROUP("word_motion"), test_word_motion},
     {TEST_GROUP("colors"), test_colors},

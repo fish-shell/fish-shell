@@ -39,7 +39,7 @@ function __fish_git_commits
     # that happens for 3 commits out of 600k.
     # For fish, at the time of writing, out of 12200 commits, 7 commits need 8 characters.
     # And since this takes about 1/3rd of the time that disambiguating takes...
-    __fish_git log --pretty=tformat:"%H"\t"%<(64,trunc)%s" --all --max-count=1000 2>/dev/null \
+    __fish_git log --no-show-signature --pretty=tformat:"%H"\t"%<(64,trunc)%s" --all --max-count=1000 2>/dev/null \
         | string replace -r '^([0-9a-f]{10})[0-9a-f]*\t(.*)' '$1\t$2'
 end
 
@@ -47,7 +47,7 @@ function __fish_git_recent_commits
     # Like __fish_git_commits, but not on all branches and limited to
     # the last 50 commits. Used for fixup, where only the current branch
     # and the latest commits make sense.
-    __fish_git log --pretty=tformat:"%h"\t"%<(64,trunc)%s" --max-count=50 $argv 2>/dev/null
+    __fish_git log --no-show-signature --pretty=tformat:"%h"\t"%<(64,trunc)%s" --max-count=50 $argv 2>/dev/null
 end
 
 function __fish_git_branches

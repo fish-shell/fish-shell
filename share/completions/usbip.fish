@@ -13,7 +13,7 @@ function __fish_usbip_remote -d 'List remote usbip host'
 end
 
 function __fish_usbip_busid -d 'List usbip busid'
-    set -l remote (commandline -opc | string match -r '([0-9]{1,3}\.){3}[0-9]{1,3}')
+    set -l remote (commandline -opc | string match -r '(?<=-r)(emote)?=?\s*(\S+)' | string trim)
     set -l busids (usbip list -r $remote 2> /dev/null | string match -r '\d+-\d+')
     printf '%s\n' $busids
 end

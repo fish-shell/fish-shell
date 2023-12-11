@@ -1,125 +1,175 @@
-function __blender_list_scenes -a file
-    blender --background $file --python-expr 'import bpy
-
-for name in [scene.name for scene in list(bpy.data.scenes)]:
-    print(f"\t{name}")' |
-        string replace -r -f '^\s+' ''
-end
-
-function __blender_list_addons
-    path basename /usr/share/blender/scripts/addons/*.py |
-        path change-extension ''
-end
-
-function __blender_list_engines
-    blender --background --engine help | string replace -r -f '^\s+' ''
+function __blender_player -d 'Check if -a option has been used, to run animation player'
+    return (__fish_contains_opt -s a; and not __fish_contains_opt -s b background)
 end
 
 function __blender_echo_input_file_name
-    echo $argv |
-        string split -n ' ' |
-        string match -r -v '^-' |
-        head --lines=1
+    # Find last argument ending in .blend (or .blend1, etc.)
+    # This is because a Blender invocation can open multiple blend file
+    # sequentially, so we need to find the last one up to this point.
+    set -l path (commandline -poc |
+        string match -r '.*\\.blend[0-9]*$' |
+        tail --lines=1)
+    # Using eval to expand ~ and variables specified on the commandline.
+    eval echo $path
 end
 
-function __blender_complete_addon_list
-    set -l previous_token (commandline -oc)[-1]
-    set -l current_token (commandline -t)
-
-    if test "$previous_token" = --addons
-        __blender_list_addons |
-            string replace -r '^' $current_token |
-            string replace -r '$' ','
-    end
+function __blender_list_scenes
+    blender --background (__blender_echo_input_file_name) --python-expr 'import bpy
+for scene in bpy.data.scenes:
+    print(f"\t{scene.name}")' |
+        string replace -r -f '^\t' ''
 end
 
-complete -c blender -s h -l help -d 'show help'
-complete -c blender -s v -l version -d 'show version'
+function __blender_list_texts
+    blender --background (__blender_echo_input_file_name) --python-expr 'import bpy
+for text in bpy.data.texts:
+    print(f"\t{text.name}")' |
+        string replace -r -f '^\t' ''
+end
 
-complete -c blender -s b -l background -d 'hide UI'
-complete -c blender -s a -l render-anim -d 'specify render frames' -r
-complete -c blender -s S -l scene -a '(__blender_list_scenes (commandline -poc))' -n 'test -n (__blender_echo_input_file_name (commandline -poc))' -d 'specify scene' -x
-complete -c blender -s s -l frame-start -d 'specify start frame' -x
-complete -c blender -s e -l end-start -d 'specify end frame' -x
-complete -c blender -s j -l frame-jump -d 'skip frame count' -x
-complete -c blender -s o -l render-output -d 'specify render output' -r
-complete -c blender -s E -l engine -a '(__blender_list_engines)' -d 'render engine' -x
-complete -c blender -s t -l threads -d 'specify thread count'
+function __blender_list_engines
+    blender --background --engine help | string replace -r -f '^\t' ''
+end
 
-complete -c blender -s F -l render-format -a 'TGA RAWTGA JPEG IRIS IRIZ AVIRAW AVIJPEG PNG BMP' -d 'specify render format' -x
-complete -c blender -s x -l use-extension -a 'true false' -d 'whether add a file extension to an end of a file' -x
+function __blender_list_addons
+    blender --background --python-expr 'import addon_utils
+for mod in addon_utils.modules():
+    print(f"\t{mod.__name__}")' |
+        string replace -r -f '^\t' ''
+end
 
-complete -c blender -s a -d 'animation playback options' -x
+complete -c blender -n 'not __blender_player' -o h -l help -d 'Show help'
+complete -c blender -n 'not __blender_player' -o v -l version -d 'Show version'
 
-complete -c blender -s w -l window-border -d 'show window borders'
-complete -c blender -s W -l window-fullscreen -d 'show in fullscreen'
-complete -c blender -s p -l window-geometry -d 'specify position and size' -x
-complete -c blender -s M -l window-maximized -d 'maximize window'
-complete -c blender -o con -l start-console -d 'open console'
-complete -c blender -l no-native-pixels -d 'do not use native pixel size'
-complete -c blender -l no-native-pixels -d 'open unfocused'
+# Render Options:
+complete -c blender -n 'not __blender_player' -o b -l background -d 'Hide UI'
+complete -c blender -n 'not __blender_player' -o a -l render-anim -d 'Render animation'
+complete -c blender -n 'not __blender_player; and test -e (__blender_echo_input_file_name)' -o S -l scene -a '(__blender_list_scenes)' -d 'Specify scene' -x
+complete -c blender -n 'not __blender_player' -o f -l render-frame -d 'Render specified frame(s)' -x
 
-complete -c blender -s y -l enable-autoexec -d 'enable Python scripts automatic execution'
-complete -c blender -s Y -l disable-autoexec -d 'disable Python scripts automatic execution'
-complete -c blender -s P -l python -d 'specify Python script' -r
-complete -c blender -l python-text -d 'specify Python text block' -x
-complete -c blender -l python-expr -d 'specify Python expression' -x
-complete -c blender -l python-console -d 'open interactive console'
-complete -c blender -l python-exit-code -d 'specify Python exit code on exception'
-complete -c blender -l addons -a '(__blender_complete_addon_list)' -d 'specify addons' -x
+complete -c blender -n 'not __blender_player' -o s -l frame-start -d 'Specify start frame' -x
+complete -c blender -n 'not __blender_player' -o e -l frame-end -d 'Specify end frame' -x
+complete -c blender -n 'not __blender_player' -o j -l frame-jump -d 'Skip frame count' -x
+complete -c blender -n 'not __blender_player' -o o -l render-output -d 'Specify render output' -r
+complete -c blender -n 'not __blender_player' -o E -l engine -a '(__blender_list_engines)' -d 'Render engine' -x
+complete -c blender -n 'not __blender_player' -o t -l threads -d 'Specify thread count'
 
-complete -c blender -l log -d 'enable logging categories' -x
-complete -c blender -l log-level -d 'specify log level' -x
-complete -c blender -l log-show-basename -d 'hide file leading path'
-complete -c blender -l log-show-backtrace -d 'show backtrace'
-complete -c blender -l log-show-timestamp -d 'show timestamp'
-complete -c blender -l log-file -d 'specify log file' -r
+# Format Options:
+complete -c blender -n 'not __blender_player' -o F -l render-format -a 'TGA\tTarga
+RAWTGA\tTarga\ Raw
+JPEG\tJPEG
+IRIS\tIRIS
+AVIRAW\tAVI\ Raw
+AVIJPEG\tAVI\ with\ JPEG\ codec
+PNG\tPNG
+BMP\tBMP
+HDR\tHDR
+TIFF\tTIFF
+OPEN_EXR\tOpenEXR
+OPEN_EXR_MULTILAYER\tOpenEXR\ Multilayer
+FFMPEG\tFFmpeg\ Video
+CINEON\tCineon
+DPX\tDPX
+JP2\tJPEG\ 2000
+WEBP\tWebP' -d 'Specify render format' -x
+complete -c blender -n 'not __blender_player' -o x -l use-extension -a '0\tfalse
+1\ttrue' -d 'Whether to add a file extension to an end of a file' -x
 
-complete -c blender -s d -l debug -d 'enable debugging'
-complete -c blender -l debug-value -d 'specify debug value'
-complete -c blender -l debug-events -d 'enable debug messages'
-complete -c blender -l debug-ffmpeg -d 'enable debug messages from FFmpeg library'
-complete -c blender -l debug-handlers -d 'enable debug messages for event handling'
-complete -c blender -l debug-libmv -d 'enable debug messages for libmv library'
-complete -c blender -l debug-cycles -d 'enable debug messages for Cycles'
-complete -c blender -l debug-memory -d 'enable fully guarded memory allocation and debugging'
-complete -c blender -l debug-jobs -d 'enable time profiling for background jobs'
-complete -c blender -l debug-python -d 'enable debug messages for Python'
-complete -c blender -l debug-depsgraph -d 'enable all debug messages for dependency graph'
-complete -c blender -l debug-depsgraph-evel -d 'enable debug messages for dependency graph related on evalution'
-complete -c blender -l debug-depsgraph-build -d 'enable debug messages for dependency graph related on its construction'
-complete -c blender -l debug-depsgraph-tag -d 'enable debug messages for dependency graph related on tagging'
-complete -c blender -l debug-depsgraph-no-threads -d 'enable single treaded evaluation for dependency graph'
-complete -c blender -l debug-depsgraph-time -d 'enable debug messages for dependency graph related on timing'
-complete -c blender -l debug-depsgraph-time -d 'enable colors for dependency graph debug messages'
-complete -c blender -l debug-depsgraph-uuid -d 'enable virefication for dependency graph session-wide identifiers'
-complete -c blender -l debug-ghost -d 'enable debug messages for Ghost'
-complete -c blender -l debug-wintab -d 'enable debug messages for Wintab'
-complete -c blender -l debug-gpu -d 'enable GPU debug context and infromation for OpenGL'
-complete -c blender -l debug-gpu-force-workarounds -d 'enable workarounds for typical GPU issues'
-complete -c blender -l debug-gpu-disable-ssbo -d 'disable shader storage buffer objects'
-complete -c blender -l debug-gpu-renderdoc -d 'enable Renderdoc integration'
-complete -c blender -l debug-wm -d 'enable debug messages for window manager'
-complete -c blender -l debug-xr -d 'enable debug messages for virtual reality contexts'
-complete -c blender -l debug-xr-time -d 'enable debug messages for virtual reality frame rendering times'
-complete -c blender -l debug-all -d 'enable all debug messages'
-complete -c blender -l debug-io -d 'enable debug for I/O'
-complete -c blender -l debug-exit-on-error -d 'whether exit on internal error'
-complete -c blender -l disable-crash-handler -d 'disable crash handler'
-complete -c blender -l disable-abort-handler -d 'disable abort handler'
-complete -c blender -l verbose -d 'specify logging verbosity level' -x
+# Animation Playback Options:
+complete -c blender -n 'not __blender_player' -o a -d 'Run as animation player'
 
-complete -c blender -l gpu-backend -a 'vulkan metal opengl' -d 'specify GPI backend' -x
+complete -c blender -n '__blender_player' -o p -x -d 'Specify position and size'
+complete -c blender -n '__blender_player' -o m -d 'Read from disk (do not buffer)'
+complete -c blender -n '__blender_player' -o f -x -d 'Specify FPS to start with'
+complete -c blender -n '__blender_player' -o j -x -d 'Specify frame step'
+complete -c blender -n '__blender_player' -o s -x -d 'Specify start frame'
+complete -c blender -n '__blender_player' -o e -x -d 'Specify end frame'
+complete -c blender -n '__blender_player' -o c -x -d 'Memory in MB for cache'
 
-complete -c blender -l open-last -d 'open the most recent .blend file'
-complete -c blender -l open-last -a 'default' -d 'specify app template' -r
-complete -c blender -l factory-startup -d 'do not read startup.blend'
-complete -c blender -l enable-event-simulate -d 'enable event simulation'
-complete -c blender -l env-system-datafiles -d 'set BLENDER_SYSTEM_DATAFILES variable'
-complete -c blender -l env-system-scripts -d 'set BLENDER_SYSTEM_SCRIPTS variable'
-complete -c blender -l env-system-python -d 'set BLENDER_SYSTEM_PYTHON variable'
-complete -c blender -o noaudio -d 'disable sound'
-complete -c blender -o setaudio -a 'None SDL OpenAL CoreAudio JACK PulseAudio WASAPI' -d 'specify sound device' -x
-complete -c blender -s R -d 'register .blend extension'
-complete -c blender -s r -d 'silently register .blend extension'
+# Window Options:
+complete -c blender -n 'not __blender_player' -o w -l window-border -d 'Show window borders'
+complete -c blender -n 'not __blender_player' -o W -l window-fullscreen -d 'Show in fullscreen'
+complete -c blender -n 'not __blender_player' -o p -l window-geometry -d 'Specify position and size' -x
+complete -c blender -n 'not __blender_player' -o M -l window-maximized -d 'Maximize window'
+complete -c blender -n 'not __blender_player' -o con -l start-console -d 'Open console'
+complete -c blender -n 'not __blender_player' -l no-native-pixels -d 'Do not use native pixel size'
+complete -c blender -n 'not __blender_player' -l no-window-focus -d 'Open unfocused'
 
+# Python Options:
+complete -c blender -n 'not __blender_player' -o y -l enable-autoexec -d 'Enable Python scripts automatic execution'
+complete -c blender -n 'not __blender_player' -o Y -l disable-autoexec -d 'Disable Python scripts automatic execution'
+
+complete -c blender -n 'not __blender_player' -o P -l python -d 'Specify Python script' -r
+complete -c blender -n 'not __blender_player; and test -e (__blender_echo_input_file_name)' -l python-text -a '(__blender_list_texts)' -d 'Specify Python text block' -x
+complete -c blender -n 'not __blender_player' -l python-expr -d 'Specify Python expression' -x
+complete -c blender -n 'not __blender_player' -l python-console -d 'Open interactive console'
+complete -c blender -n 'not __blender_player' -l python-exit-code -d 'Specify Python exit code on exception'
+complete -c blender -n 'not __blender_player' -l python-use-system-env -d 'Use system env vars and user site-packages'
+complete -c blender -n 'not __blender_player' -l addons -a '(__fish_append , (__blender_list_addons))' -d 'Specify addons' -x
+
+# Logging Options:
+complete -c blender -n 'not __blender_player' -l log -d 'Enable logging categories' -x
+complete -c blender -n 'not __blender_player' -l log-level -d 'Specify log level' -x
+complete -c blender -n 'not __blender_player' -l log-show-basename -d 'Hide file leading path'
+complete -c blender -n 'not __blender_player' -l log-show-backtrace -d 'Show backtrace'
+complete -c blender -n 'not __blender_player' -l log-show-timestamp -d 'Show timestamp'
+complete -c blender -n 'not __blender_player' -l log-file -d 'Specify log file' -r
+
+# Debug Options:
+complete -c blender -n 'not __blender_player' -o d -l debug -d 'Enable debugging'
+complete -c blender -n 'not __blender_player' -l debug-value -d 'Specify debug value'
+
+complete -c blender -n 'not __blender_player' -l debug-events -d 'Enable debug messages from the event system'
+complete -c blender -n 'not __blender_player' -l debug-ffmpeg -d 'Enable debug messages from FFmpeg library'
+complete -c blender -n 'not __blender_player' -l debug-handlers -d 'Enable debug messages for event handling'
+complete -c blender -n 'not __blender_player' -l debug-libmv -d 'Enable debug messages for libmv library'
+complete -c blender -n 'not __blender_player' -l debug-cycles -d 'Enable debug messages for Cycles'
+complete -c blender -n 'not __blender_player' -l debug-memory -d 'Enable fully guarded memory allocation and debugging'
+complete -c blender -n 'not __blender_player' -l debug-jobs -d 'Enable time profiling for background jobs'
+complete -c blender -n 'not __blender_player' -l debug-python -d 'Enable debug messages for Python'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph -d 'Enable all debug messages for dependency graph'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph-eval -d 'Enable debug messages for dependency graph related on evalution'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph-build -d 'Enable debug messages for dependency graph related on its construction'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph-tag -d 'Enable debug messages for dependency graph related on tagging'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph-no-threads -d 'Enable single treaded evaluation for dependency graph'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph-time -d 'Enable debug messages for dependency graph related on timing'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph-pretty -d 'Enable colors for dependency graph debug messages'
+complete -c blender -n 'not __blender_player' -l debug-depsgraph-uuid -d 'Enable virefication for dependency graph session-wide identifiers'
+complete -c blender -n 'not __blender_player' -l debug-ghost -d 'Enable debug messages for Ghost'
+complete -c blender -n 'not __blender_player' -l debug-wintab -d 'Enable debug messages for Wintab'
+complete -c blender -n 'not __blender_player' -l debug-gpu -d 'Enable GPU debug context and infromation for OpenGL'
+complete -c blender -n 'not __blender_player' -l debug-gpu-force-workarounds -d 'Enable workarounds for typical GPU issues'
+complete -c blender -n 'not __blender_player' -l debug-wm -d 'Enable debug messages for window manager'
+complete -c blender -n 'not __blender_player' -l debug-xr -d 'Enable debug messages for virtual reality contexts'
+complete -c blender -n 'not __blender_player' -l debug-xr-time -d 'Enable debug messages for virtual reality frame rendering times'
+complete -c blender -n 'not __blender_player' -l debug-all -d 'Enable all debug messages'
+complete -c blender -n 'not __blender_player' -l debug-io -d 'Enable debug for I/O'
+complete -c blender -n 'not __blender_player' -l debug-fpe -d 'Enable floating point exceptions'
+complete -c blender -n 'not __blender_player' -l debug-exit-on-error -d 'Exit on internal error'
+complete -c blender -n 'not __blender_player' -l debug-freestyle -d 'Enable debug messages for Freestyle'
+complete -c blender -n 'not __blender_player' -l disable-crash-handler -d 'Disable crash handler'
+complete -c blender -n 'not __blender_player' -l disable-abort-handler -d 'Disable abort handler'
+complete -c blender -n 'not __blender_player' -l verbose -d 'Specify logging verbosity level' -x
+
+# GPU Options:
+complete -c blender -n 'not __blender_player' -l gpu-backend -a 'vulkan metal opengl' -d 'Specify GPU backend' -x
+
+# Misc Options:
+complete -c blender -n 'not __blender_player' -l open-last -d 'Open the most recent .blend file'
+complete -c blender -n 'not __blender_player' -l app-template -a default -d 'Specify app template' -x
+complete -c blender -n 'not __blender_player' -l factory-startup -d 'Do not read startup.blend'
+complete -c blender -n 'not __blender_player' -l enable-event-simulate -d 'Enable event simulation'
+
+complete -c blender -n 'not __blender_player' -l env-system-datafiles -d 'Set BLENDER_SYSTEM_DATAFILES variable' -r
+complete -c blender -n 'not __blender_player' -l env-system-scripts -d 'Set BLENDER_SYSTEM_SCRIPTS variable' -r
+complete -c blender -n 'not __blender_player' -l env-system-python -d 'Set BLENDER_SYSTEM_PYTHON variable' -r
+
+complete -c blender -n 'not __blender_player' -o noaudio -d 'Disable sound'
+complete -c blender -n 'not __blender_player' -o setaudio -a 'None SDL OpenAL CoreAudio JACK PulseAudio WASAPI' -d 'Specify sound device' -x
+
+complete -c blender -n 'not __blender_player' -o r -l register -d 'Register .blend extension for current user'
+complete -c blender -n 'not __blender_player' -l register-allusers -d 'Register .blend extension for all users'
+complete -c blender -n 'not __blender_player' -l unregister -d 'Unregister .blend extension for current user'
+complete -c blender -n 'not __blender_player' -l unregister-allusers -d 'Unregister .blend extension for all users'
+
+complete -c blender -n 'not __blender_player' -o - -d 'End option processing, following arguments passed to python'

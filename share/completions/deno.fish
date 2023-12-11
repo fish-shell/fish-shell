@@ -2,6 +2,7 @@ deno completions fish | source
 
 # complete deno task
 set searchForDenoFilesCode '
+import * as JSONC from "https://deno.land/std@0.208.0/jsonc/mod.ts";
 // order matters
 const denoFile = ["deno.json", "deno.jsonc", "package.json"];
 for (const file of denoFile) {
@@ -10,7 +11,7 @@ for (const file of denoFile) {
     // file exists
     const props = file === "package.json" ? "scripts" : "tasks";
     console.log(
-      Object.keys(JSON.parse(Deno.readTextFileSync(file))[props]).join("\n"),
+      Object.keys(JSONC.parse(Deno.readTextFileSync(file))[props]).join("\n"),
     );
     break;
   } catch {}

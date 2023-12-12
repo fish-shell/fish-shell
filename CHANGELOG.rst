@@ -57,7 +57,7 @@ Completions
 - ``age-keygen`` (:issue:`9813`).
 - ``curl`` (:issue:`9863`).
 - ``krita`` (:issue:`9903`).
-- ``blender`` (:issue:`9905`).
+- ``blender`` (:issue:`9905`, :issue:`10150`).
 - ``gimp`` (:issue:`9904`).
 - ``horcrux`` (:issue:`9922`).
 - ``git`` completions now support aliases that reference other aliases (:issue:`9992`).

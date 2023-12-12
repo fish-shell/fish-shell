@@ -13,6 +13,7 @@ end
 
 function __fish_print_ninja_targets
     __fish_ninja -t targets 2>/dev/null | string replace -r ':.*' ''
+    __fish_ninja -t targets all 2>/dev/null | string replace -r ':.*' '' | string match -e -r '\.(?:o|so|a)$'
 end
 complete -c ninja -f -a '(__fish_print_ninja_targets)' -d target
 complete -x -c ninja -s t -x -a "(__fish_print_ninja_tools)" -d subtool

@@ -49,7 +49,7 @@ complete -c blender -o v -l version -d 'show version'
 complete -c blender -o b -l background -d 'hide UI'
 complete -c blender -o a -l render-anim -d 'specify render frames' -r
 complete -c blender -o S -l scene -n 'test -e (__blender_echo_input_file_name)' -a '(__blender_list_scenes)' -d 'specify scene' -x
-complete -c blender -o f -l render-frame -d "render specified frame(s)" -x
+complete -c blender -o f -l render-frame -d 'render specified frame(s)' -x
 
 complete -c blender -o s -l frame-start -d 'specify start frame' -x
 complete -c blender -o e -l end-start -d 'specify end frame' -x
@@ -163,9 +163,9 @@ complete -c blender -l env-system-python -d 'set BLENDER_SYSTEM_PYTHON variable'
 complete -c blender -o noaudio -d 'disable sound'
 complete -c blender -o setaudio -a 'None SDL OpenAL CoreAudio JACK PulseAudio WASAPI' -d 'specify sound device' -x
 
-complete -c blender -o r -l register -d "register .blend extension for current user"
-complete -c blender -l register-allusers -d "register .blend extension for all users"
-complete -c blender -l unregister -d "unregister .blend extension for current user"
-complete -c blender -l unregister-allusers -d "unregister .blend extension for all users"
+complete -c blender -o r -l register -d 'register .blend extension for current user'
+complete -c blender -l register-allusers -d 'register .blend extension for all users'
+complete -c blender -l unregister -d 'unregister .blend extension for current user'
+complete -c blender -l unregister-allusers -d 'unregister .blend extension for all users'
 
-complete -c blender -o - -d "end option processing, following arguments passed to python"
+complete -c blender -o - -d 'end option processing, following arguments passed to python'

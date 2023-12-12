@@ -37,8 +37,8 @@ end
 function __blender_complete_addon_list
     set -l current_token (commandline -t | string replace -r '[^,]*$' '')
     set -l addons (__blender_list_addons)
-    for a in $addons;
-        echo "$current_token$a,";
+    for a in $addons
+        echo "$current_token$a,"
     end
 end
 

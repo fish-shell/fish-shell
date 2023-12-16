@@ -129,7 +129,7 @@ Use the following command if fish isn’t already added to ``/etc/shells`` to pe
 
 ::
 
-   echo (command -s fish) | sudo tee -a /etc/shells
+   command -s fish | sudo tee -a /etc/shells
 
 To switch your default shell back, you can run ``chsh -s /bin/bash``
 (substituting ``/bin/bash`` with ``/bin/tcsh`` or ``/bin/zsh`` as

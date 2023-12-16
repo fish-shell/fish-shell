@@ -52,7 +52,7 @@ complete -c blender -o S -l scene -n 'test -e (__blender_echo_input_file_name)' 
 complete -c blender -o f -l render-frame -d 'render specified frame(s)' -x
 
 complete -c blender -o s -l frame-start -d 'specify start frame' -x
-complete -c blender -o e -l end-start -d 'specify end frame' -x
+complete -c blender -o e -l frame-end -d 'specify end frame' -x
 complete -c blender -o j -l frame-jump -d 'skip frame count' -x
 complete -c blender -o o -l render-output -d 'specify render output' -r
 complete -c blender -o E -l engine -a '(__blender_list_engines)' -d 'render engine' -x

@@ -89,7 +89,7 @@ complete -c blender -o p -l window-geometry -d 'specify position and size' -x
 complete -c blender -o M -l window-maximized -d 'maximize window'
 complete -c blender -o con -l start-console -d 'open console'
 complete -c blender -l no-native-pixels -d 'do not use native pixel size'
-complete -c blender -l no-native-pixels -d 'open unfocused'
+complete -c blender -l no-window-focus -d 'open unfocused'
 
 # Python Options:
 complete -c blender -o y -l enable-autoexec -d 'enable Python scripts automatic execution'

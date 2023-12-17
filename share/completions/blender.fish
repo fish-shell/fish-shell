@@ -51,7 +51,7 @@ complete -c blender -n 'not __blender_player' -o v -l version -d 'Show version'
 
 # Render Options:
 complete -c blender -n 'not __blender_player' -o b -l background -d 'Hide UI'
-complete -c blender -n 'not __blender_player' -o a -l render-anim -d 'Specify render frames' -r
+complete -c blender -n 'not __blender_player' -o a -l render-anim -d 'Render animation'
 complete -c blender -n 'not __blender_player; and test -e (__blender_echo_input_file_name)' -o S -l scene -a '(__blender_list_scenes)' -d 'Specify scene' -x
 complete -c blender -n 'not __blender_player' -o f -l render-frame -d 'Render specified frame(s)' -x
 

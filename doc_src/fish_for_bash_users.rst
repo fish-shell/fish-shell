@@ -299,7 +299,7 @@ Both ``*`` and ``x`` are valid ways to spell multiplication, but ``*`` needs to 
 Prompts
 -------
 
-Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the :doc:`fish_prompt <cmds/fish_prompt>` function, plus the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function if vi-mode is enabled and the :doc:`fish_right_prompt <cmds/fish_right_prompt>` function for the right prompt.
+Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the :doc:`fish_prompt <cmds/fish_prompt>` function, plus the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function if :ref:`vi mode <vi-mode>` is enabled. The output of the :doc:`fish_right_prompt <cmds/fish_right_prompt>` function is used for the right-sided prompt.
 
 As an example, here's a relatively simple bash prompt:
 

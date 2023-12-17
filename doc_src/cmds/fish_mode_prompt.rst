@@ -20,11 +20,11 @@ Synopsis
 Description
 -----------
 
-The ``fish_mode_prompt`` function outputs the mode indicator for use in vi-mode.
+The ``fish_mode_prompt`` function outputs the mode indicator for use in vi mode.
 
-The default ``fish_mode_prompt`` function will output indicators about the current Vi editor mode displayed to the left of the regular prompt. Define your own function to customize the appearance of the mode indicator. The ``$fish_bind_mode variable`` can be used to determine the current mode. It will be one of ``default``, ``insert``, ``replace_one``, or ``visual``.
+The default ``fish_mode_prompt`` function will output indicators about the current vi editor mode displayed to the left of the regular prompt. Define your own function to customize the appearance of the mode indicator. The ``$fish_bind_mode variable`` can be used to determine the current mode. It will be one of ``default``, ``insert``, ``replace_one``, or ``visual``.
 
-You can also define an empty ``fish_mode_prompt`` function to remove the Vi mode indicators::
+You can also define an empty ``fish_mode_prompt`` function to remove the vi mode indicators::
 
     function fish_mode_prompt; end
     funcsave fish_mode_prompt

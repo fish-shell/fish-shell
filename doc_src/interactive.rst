@@ -40,7 +40,7 @@ Tab Completion
 
 Tab completion is a time saving feature of any modern shell. When you type :kbd:`Tab`, fish tries to guess the rest of the word under the cursor. If it finds just one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
 
-The pager can be navigated with the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Shift`\ +\ :kbd:`Tab`. Pressing :kbd:`Control`\ +\ :kbd:`S` (the ``pager-toggle-search`` binding - :kbd:`/` in vi-mode) opens up a search menu that you can use to filter the list.
+The pager can be navigated with the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Shift`\ +\ :kbd:`Tab`. Pressing :kbd:`Control`\ +\ :kbd:`S` (the ``pager-toggle-search`` binding - :kbd:`/` in vi mode) opens up a search menu that you can use to filter the list.
 
 Fish provides some general purpose completions, like for commands, variable names, usernames or files.
 
@@ -215,7 +215,7 @@ When it is fish's turn to ask for input (like after it started or the command en
 This prompt is determined by running the :doc:`fish_prompt <cmds/fish_prompt>` and :doc:`fish_right_prompt <cmds/fish_right_prompt>` functions.
 
 The output of the former is displayed on the left and the latter's output on the right side of the terminal.
-For :ref:`vi-mode <vi-mode>`, the output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left.
+For :ref:`vi mode <vi-mode>`, the output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left.
 
 Fish ships with a few prompts which you can see with :doc:`fish_config <cmds/fish_config>`. If you run just ``fish_config`` it will open a web interface [#]_ where you'll be shown the prompts and can pick which one you want. ``fish_config prompt show`` will show you the prompts right in your terminal.
 
@@ -274,7 +274,7 @@ Command line editor
 
 The fish editor features copy and paste, a :ref:`searchable history <history-search>` and many editor functions that can be bound to special keyboard shortcuts.
 
-Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the Vi text editor. The default editing mode is Emacs. You can switch to Vi mode by running :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>` and switch back with :doc:`fish_default_key_bindings <cmds/fish_default_key_bindings>`. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
+Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the vi text editor. The default editing mode is Emacs. You can switch to vi mode by running :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>` and switch back with :doc:`fish_default_key_bindings <cmds/fish_default_key_bindings>`. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
 
 
     function fish_hybrid_key_bindings --description \
@@ -293,7 +293,7 @@ While the key bindings included with fish include many of the shortcuts popular 
 Shared bindings
 ^^^^^^^^^^^^^^^
 
-Some bindings are common across Emacs and Vi mode, because they aren't text editing bindings, or because what Vi/Vim does for a particular key doesn't make sense for a shell.
+Some bindings are common across Emacs and vi mode, because they aren't text editing bindings, or because what vi/Vim does for a particular key doesn't make sense for a shell.
 
 - :kbd:`Tab` :ref:`completes <tab-completion>` the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode. :kbd:`Tab` is the same as :kbd:`Control`\ +\ :kbd:`I`.
 
@@ -343,7 +343,7 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Alt`\ +\ :kbd:`S` Prepends ``sudo`` to the current commandline. If the commandline is empty, prepend ``sudo`` to the last commandline.
 
-- :kbd:`Control`\ +\ :kbd:`Space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. For vi-mode this only applies to insert-mode.
+- :kbd:`Control`\ +\ :kbd:`Space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. For vi mode, this only applies to insert-mode.
 
 .. _emacs-mode:
 
@@ -393,10 +393,10 @@ You can change these key bindings using the :doc:`bind <cmds/bind>` builtin.
 Vi mode commands
 ^^^^^^^^^^^^^^^^
 
-Vi mode allows for the use of Vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
+Vi mode allows for the use of vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
 
 To enable vi mode, use :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>`.
-It is also possible to add all emacs-mode bindings to vi-mode by using something like::
+It is also possible to add all Emacs mode bindings to vi mode by using something like::
 
 
     function fish_user_key_bindings
@@ -411,11 +411,11 @@ It is also possible to add all emacs-mode bindings to vi-mode by using something
     end
 
 
-When in vi-mode, the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function will display a mode indicator to the left of the prompt. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
+When in vi mode, the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function will display a mode indicator to the left of the prompt. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
 
 When a binding switches the mode, it will repaint the mode-prompt if it exists, and the rest of the prompt only if it doesn't. So if you want a mode-indicator in your ``fish_prompt``, you need to erase ``fish_mode_prompt`` e.g. by adding an empty file at ``~/.config/fish/functions/fish_mode_prompt.fish``. (Bindings that change the mode are supposed to call the `repaint-mode` bind function, see :doc:`bind <cmds/bind>`)
 
-The ``fish_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. The following snippet can be used to manually configure cursors after enabling vi-mode::
+The ``fish_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. The following snippet can be used to manually configure cursors after enabling vi mode::
 
    # Emulates vim's cursor shape behavior
    # Set the normal and visual mode cursors to a block
@@ -576,7 +576,7 @@ If you want to be able to press :kbd:`Escape` and then a character and have it c
 
 Similarly, to disambiguate *other* keypresses where you've bound a subsequence and a longer sequence, fish has :envvar:`fish_sequence_key_delay_ms`::
 
-  # This binds "jk" to switch to normal mode in vi-mode.
+  # This binds "jk" to switch to normal mode in vi mode.
   # If you kept it like that, every time you press "j",
   # fish would wait for a "k" or other key to disambiguate
   bind -M insert -m default jk cancel repaint-mode

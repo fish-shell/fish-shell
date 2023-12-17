@@ -36,7 +36,7 @@ To find out what sequence a key combination sends, you can use :doc:`fish_key_re
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given ``MODE``) are printed. If ``SEQUENCE`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 
-Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
+Key bindings may use "modes", which mimics vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
 
 To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
@@ -266,7 +266,7 @@ The following special input functions are available:
     reexecutes the prompt functions and redraws the prompt (also ``force-repaint`` for backwards-compatibility)
 
 ``repaint-mode``
-    reexecutes the :doc:`fish_mode_prompt <fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
+    reexecutes the :doc:`fish_mode_prompt <fish_mode_prompt>` and redraws the prompt. This is useful for vi mode. If no ``fish_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
 
 ``self-insert``
     inserts the matching sequence into the command line
@@ -346,7 +346,7 @@ Perform a history search when :kbd:`Page Up` is pressed::
 
     bind -k ppage history-search-backward
 
-Turn on :ref:`Vi key bindings <vi-mode>` and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
+Turn on :ref:`vi key bindings <vi-mode>` and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
 
     set -g fish_key_bindings fish_vi_key_bindings
     bind -M insert \cc kill-whole-line repaint

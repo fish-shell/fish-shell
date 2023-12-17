@@ -15,7 +15,7 @@ Unlike other shells, fish's prompt is built by running a function - :doc:`fish_p
 
 - :doc:`fish_prompt <cmds/fish_prompt>`, which is the main prompt function
 - :doc:`fish_right_prompt <cmds/fish_right_prompt>`, which is shown on the right side of the terminal.
-- :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`, which is shown if :ref:`vi-mode <vi-mode>` is used.
+- :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`, which is shown if :ref:`vi mode <vi-mode>` is used.
 
 These functions are run, and whatever they print is displayed as the prompt (minus one trailing newline).
 
@@ -161,7 +161,7 @@ We have now built a simple but working and usable prompt, but of course more can
    - ``prompt_login`` to describe the user/hostname/container or ``prompt_hostname`` to describe just the host
    - ``fish_is_root_user`` to help with changing the symbol for root.
    - ``fish_vcs_prompt`` to show version control information (or ``fish_git_prompt`` / ``fish_hg_prompt`` / ``fish_svn_prompt`` to limit it to specific systems)
-- You can add a right prompt by changing :doc:`fish_right_prompt <cmds/fish_right_prompt>` or a vi-mode prompt by changing :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`.
+- You can add a right prompt by changing :doc:`fish_right_prompt <cmds/fish_right_prompt>` or a vi mode prompt by changing :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`.
 - Some prompts have interesting or advanced features
    - Add the time when the prompt was printed
    - Show various integrations like python's venv

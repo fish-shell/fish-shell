@@ -24,7 +24,7 @@ The following parameters are available:
 **--no-erase**
     Does not clear previous set bindings
 
-Further information on how to use :ref:`vi-mode <vi-mode>`.
+Further information on how to use :ref:`vi mode <vi-mode>`.
 
 Examples
 --------

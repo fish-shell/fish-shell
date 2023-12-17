@@ -71,6 +71,7 @@ mod highlight;
 mod history;
 mod input;
 mod input_common;
+mod input_ffi;
 mod io;
 mod job_group;
 mod kill;

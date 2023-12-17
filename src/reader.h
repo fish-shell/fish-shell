@@ -20,6 +20,7 @@
 #include "maybe.h"
 #include "parse_constants.h"
 #include "parser.h"
+#include "wutil.h"
 
 #if INCLUDE_RUST_HEADERS
 #include "reader.rs.h"
@@ -79,8 +80,9 @@ void reader_write_title_ffi(const wcstring &cmd, const void *parser, bool reset_
 void reader_schedule_prompt_repaint();
 
 /// Enqueue an event to the back of the reader's input queue.
-class char_event_t;
-void reader_queue_ch(const char_event_t &ch);
+struct CharEvent;
+using char_event_t = CharEvent;
+void reader_queue_ch(rust::Box<char_event_t> ch);
 
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set. If the current reader is interruptible, call \c reader_exit().

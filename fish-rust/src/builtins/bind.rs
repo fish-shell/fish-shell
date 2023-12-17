@@ -1,6 +1,19 @@
 //! Implementation of the bind builtin.
 
 use super::prelude::*;
+use crate::common::{
+    escape, escape_string, str2wcstring, valid_var_name, EscapeFlags, EscapeStringStyle,
+};
+use crate::highlight::{colorize, highlight_shell};
+use crate::input::{
+    input_function_get_names, input_mappings, input_terminfo_get_name, input_terminfo_get_names,
+    input_terminfo_get_sequence, InputMappingSet,
+};
+use crate::nix::isatty;
+use nix::errno::Errno;
+use std::sync::MutexGuard;
+
+const DEFAULT_BIND_MODE: &wstr = L!("default");
 
 const BIND_INSERT: c_int = 0;
 const BIND_ERASE: c_int = 1;
@@ -19,10 +32,553 @@ struct Options {
     have_preset: bool,
     preset: bool,
     mode: c_int,
-    bind_mode: &'static wstr,
-    sets_bind_mode: &'static wstr,
+    bind_mode: WString,
+    sets_bind_mode: WString,
+}
+
+impl Options {
+    fn new() -> Options {
+        Options {
+            all: false,
+            bind_mode_given: false,
+            list_modes: false,
+            print_help: false,
+            silent: false,
+            use_terminfo: false,
+            have_user: false,
+            user: false,
+            have_preset: false,
+            preset: false,
+            mode: BIND_INSERT,
+            bind_mode: DEFAULT_BIND_MODE.to_owned(),
+            sets_bind_mode: WString::new(),
+        }
+    }
+}
+
+struct BuiltinBind {
+    /// Note that BuiltinBind holds the singleton lock.
+    /// It must not call out to anything which can execute fish shell code or attempt to acquire the
+    /// lock again.
+    input_mappings: MutexGuard<'static, InputMappingSet>,
+    opts: Options,
+}
+
+impl BuiltinBind {
+    fn new() -> BuiltinBind {
+        BuiltinBind {
+            input_mappings: input_mappings(),
+            opts: Options::new(),
+        }
+    }
+
+    /// List a single key binding.
+    /// Returns false if no binding with that sequence and mode exists.
+    fn list_one(
+        &self,
+        seq: &wstr,
+        bind_mode: &wstr,
+        user: bool,
+        parser: &Parser,
+        streams: &mut IoStreams,
+    ) -> bool {
+        let mut ecmds = Vec::new();
+        let mut sets_mode = WString::new();
+        let mut out = WString::new();
+        if !self
+            .input_mappings
+            .get(seq, bind_mode, &mut ecmds, user, &mut sets_mode)
+        {
+            return false;
+        }
+
+        out.push_str("bind");
+
+        // Append the mode flags if applicable.
+        if !user {
+            out.push_str(" --preset");
+        }
+        if bind_mode != DEFAULT_BIND_MODE {
+            out.push_str(" -M ");
+            out.push_utfstr(&escape(bind_mode));
+        }
+        if !sets_mode.is_empty() && sets_mode != bind_mode {
+            out.push_str(" -m ");
+            out.push_utfstr(&escape(&sets_mode));
+        }
+
+        // Append the name.
+        if let Some(tname) = input_terminfo_get_name(seq) {
+            // Note that we show -k here because we have an input key name.
+            out.push_str(" -k ");
+            out.push_utfstr(&tname);
+        } else {
+            // No key name, so no -k; we show the escape sequence directly.
+            let eseq = escape(seq);
+            out.push(' ');
+            out.push_utfstr(&eseq);
+        }
+
+        // Now show the list of commands.
+        for ecmd in ecmds {
+            out.push(' ');
+            out.push_utfstr(&escape(&ecmd));
+        }
+        out.push('\n');
+
+        if !streams.out_is_redirected && isatty(libc::STDOUT_FILENO) {
+            let mut colors = Vec::new();
+            highlight_shell(&out, &mut colors, &parser.context(), false, None);
+            let colored = colorize(&out, &colors, parser.vars());
+            streams.out.append(str2wcstring(&colored));
+        } else {
+            streams.out.append(out);
+        }
+
+        true
+    }
+
+    // Overload with both kinds of bindings.
+    // Returns false only if neither exists.
+    fn list_one_user_andor_preset(
+        &self,
+        seq: &wstr,
+        bind_mode: &wstr,
+        user: bool,
+        preset: bool,
+        parser: &Parser,
+        streams: &mut IoStreams,
+    ) -> bool {
+        let mut retval = false;
+        if preset {
+            retval |= self.list_one(seq, bind_mode, false, parser, streams);
+        }
+        if user {
+            retval |= self.list_one(seq, bind_mode, true, parser, streams);
+        }
+        retval
+    }
+
+    /// List all current key bindings.
+    fn list(&self, bind_mode: Option<&wstr>, user: bool, parser: &Parser, streams: &mut IoStreams) {
+        let lst = self.input_mappings.get_names(user);
+        for binding in lst {
+            if bind_mode.is_some() && bind_mode.unwrap() != binding.mode {
+                continue;
+            }
+
+            self.list_one(&binding.seq, &binding.mode, user, parser, streams);
+        }
+    }
+
+    /// Print terminfo key binding names to string buffer used for standard output.
+    ///
+    /// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
+    /// are defined for this terminal are printed.
+    fn key_names(&self, all: bool, streams: &mut IoStreams) {
+        let names = input_terminfo_get_names(!all);
+        for name in names {
+            streams.out.appendln(name);
+        }
+    }
+
+    /// Print all the special key binding functions to string buffer used for standard output.
+    fn function_names(&self, streams: &mut IoStreams) {
+        let names = input_function_get_names();
+        for name in names {
+            streams.out.appendln(name);
+        }
+    }
+
+    /// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
+    fn get_terminfo_sequence(&self, seq: &wstr, streams: &mut IoStreams) -> Option<WString> {
+        let mut tseq = WString::new();
+        if input_terminfo_get_sequence(seq, &mut tseq) {
+            return Some(tseq);
+        }
+        let err = Errno::last();
+
+        if !self.opts.silent {
+            let eseq = escape_string(seq, EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES));
+            if err == Errno::ENOENT {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: No key with name '%ls' found\n",
+                    "bind",
+                    eseq
+                ));
+            } else if err == Errno::EILSEQ {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: Key with name '%ls' does not have any mapping\n",
+                    "bind",
+                    eseq
+                ));
+            } else {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: Unknown error trying to bind to key named '%ls'\n",
+                    "bind",
+                    eseq
+                ));
+            }
+        }
+        None
+    }
+
+    /// Add specified key binding.
+    fn add(
+        &mut self,
+        seq: &wstr,
+        cmds: &[&wstr],
+        mode: WString,
+        sets_mode: WString,
+        terminfo: bool,
+        user: bool,
+        streams: &mut IoStreams,
+    ) -> bool {
+        let cmds = cmds.iter().map(|&s| s.to_owned()).collect();
+        if terminfo {
+            if let Some(seq2) = self.get_terminfo_sequence(seq, streams) {
+                self.input_mappings.add(seq2, cmds, mode, sets_mode, user);
+            } else {
+                return true;
+            }
+        } else {
+            self.input_mappings
+                .add(seq.to_owned(), cmds, mode, sets_mode, user)
+        }
+        false
+    }
+
+    /// Erase specified key bindings
+    ///
+    /// @param  seq
+    ///    an array of all key bindings to erase
+    /// @param  all
+    ///    if specified, _all_ key bindings will be erased
+    /// @param  mode
+    ///    if specified, only bindings from that mode will be erased. If not given
+    ///    and @c all is @c false, @c DEFAULT_BIND_MODE will be used.
+    /// @param  use_terminfo
+    ///    Whether to look use terminfo -k name
+    ///
+    fn erase(
+        &mut self,
+        seq: &[&wstr],
+        all: bool,
+        mode: Option<&wstr>,
+        use_terminfo: bool,
+        user: bool,
+        streams: &mut IoStreams,
+    ) -> bool {
+        if all {
+            self.input_mappings.clear(mode, user);
+            return false;
+        }
+
+        let mut res = false;
+        let mode = mode.unwrap_or(DEFAULT_BIND_MODE);
+
+        for s in seq {
+            if use_terminfo {
+                if let Some(seq2) = self.get_terminfo_sequence(s, streams) {
+                    self.input_mappings.erase(&seq2, mode, user);
+                } else {
+                    res = true;
+                }
+            } else {
+                self.input_mappings.erase(s, mode, user);
+            }
+        }
+        res
+    }
+
+    fn insert(
+        &mut self,
+        optind: usize,
+        argv: &[&wstr],
+        parser: &Parser,
+        streams: &mut IoStreams,
+    ) -> bool {
+        let argc = argv.len();
+        let cmd = argv[0];
+        let arg_count = argc - optind;
+        if arg_count < 2 {
+            // If we get both or neither preset/user, we list both.
+            if !self.opts.have_preset && !self.opts.have_user {
+                self.opts.preset = true;
+                self.opts.user = true;
+            }
+        } else {
+            // Inserting both on the other hand makes no sense.
+            if self.opts.have_preset && self.opts.have_user {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                    cmd,
+                    "--preset",
+                    "--user"
+                ));
+                return true;
+            }
+        }
+
+        if arg_count == 0 {
+            // We don't overload this with user and def because we want them to be grouped.
+            // First the presets, then the users (because of scrolling).
+            let bind_mode = if self.opts.bind_mode_given {
+                Some(self.opts.bind_mode.as_utfstr())
+            } else {
+                None
+            };
+            if self.opts.preset {
+                self.list(bind_mode, false, parser, streams);
+            }
+            if self.opts.user {
+                self.list(bind_mode, true, parser, streams);
+            }
+        } else if arg_count == 1 {
+            let seq = if self.opts.use_terminfo {
+                let Some(seq2) = self.get_terminfo_sequence(argv[optind], streams) else {
+                    // get_terminfo_sequence already printed the error.
+                    return true;
+                };
+                seq2
+            } else {
+                argv[optind].to_owned()
+            };
+
+            if !self.list_one_user_andor_preset(
+                &seq,
+                &self.opts.bind_mode,
+                self.opts.user,
+                self.opts.preset,
+                parser,
+                streams,
+            ) {
+                let eseq = escape_string(
+                    argv[optind],
+                    EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES),
+                );
+                if !self.opts.silent {
+                    if self.opts.use_terminfo {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: No binding found for key '%ls'\n",
+                            cmd,
+                            eseq
+                        ));
+                    } else {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: No binding found for sequence '%ls'\n",
+                            cmd,
+                            eseq
+                        ));
+                    }
+                }
+                return true;
+            }
+        } else {
+            // Actually insert!
+            if self.add(
+                argv[optind],
+                &argv[optind + 1..],
+                self.opts.bind_mode.to_owned(),
+                self.opts.sets_bind_mode.to_owned(),
+                self.opts.use_terminfo,
+                self.opts.user,
+                streams,
+            ) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// List all current bind modes.
+    fn list_modes(&mut self, streams: &mut IoStreams) {
+        // List all known modes, even if they are only in preset bindings.
+        let lst = self.input_mappings.get_names(true);
+        let preset_lst = self.input_mappings.get_names(false);
+
+        // Extract the bind modes, uniqueize, and sort.
+        let mut modes: Vec<WString> = lst.into_iter().chain(preset_lst).map(|m| m.mode).collect();
+        modes.sort_unstable();
+        modes.dedup();
+
+        for mode in modes {
+            streams.out.appendln(mode);
+        }
+    }
+}
+
+fn parse_cmd_opts(
+    opts: &mut Options,
+    optind: &mut usize,
+    argv: &mut [&wstr],
+    parser: &Parser,
+    streams: &mut IoStreams,
+) -> Option<i32> {
+    let cmd = argv[0];
+    let short_options = L!(":aehkKfM:Lm:s");
+    const long_options: &[woption] = &[
+        wopt(L!("all"), no_argument, 'a'),
+        wopt(L!("erase"), no_argument, 'e'),
+        wopt(L!("function-names"), no_argument, 'f'),
+        wopt(L!("help"), no_argument, 'h'),
+        wopt(L!("key"), no_argument, 'k'),
+        wopt(L!("key-names"), no_argument, 'K'),
+        wopt(L!("list-modes"), no_argument, 'L'),
+        wopt(L!("mode"), required_argument, 'M'),
+        wopt(L!("preset"), no_argument, 'p'),
+        wopt(L!("sets-mode"), required_argument, 'm'),
+        wopt(L!("silent"), no_argument, 's'),
+        wopt(L!("user"), no_argument, 'u'),
+    ];
+
+    let mut w = wgetopter_t::new(short_options, long_options, argv);
+    while let Some(c) = w.wgetopt_long() {
+        match c {
+            'a' => opts.all = true,
+            'e' => opts.mode = BIND_ERASE,
+            'f' => opts.mode = BIND_FUNCTION_NAMES,
+            'h' => opts.print_help = true,
+            'k' => opts.use_terminfo = true,
+            'K' => opts.mode = BIND_KEY_NAMES,
+            'L' => {
+                opts.list_modes = true;
+                return STATUS_CMD_OK;
+            }
+            'M' => {
+                if !valid_var_name(w.woptarg.unwrap()) {
+                    streams.err.append(wgettext_fmt!(
+                        BUILTIN_ERR_BIND_MODE,
+                        cmd,
+                        w.woptarg.unwrap()
+                    ));
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.bind_mode = w.woptarg.unwrap().to_owned();
+                opts.bind_mode_given = true;
+            }
+            'm' => {
+                if !valid_var_name(w.woptarg.unwrap()) {
+                    streams.err.append(wgettext_fmt!(
+                        BUILTIN_ERR_BIND_MODE,
+                        cmd,
+                        w.woptarg.unwrap()
+                    ));
+                    return STATUS_INVALID_ARGS;
+                }
+                opts.sets_bind_mode = w.woptarg.unwrap().to_owned();
+            }
+            'p' => {
+                opts.have_preset = true;
+                opts.preset = true;
+            }
+            's' => opts.silent = true,
+            'u' => {
+                opts.have_user = true;
+                opts.user = true;
+            }
+            ':' => {
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                return STATUS_INVALID_ARGS;
+            }
+            '?' => {
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
+                return STATUS_INVALID_ARGS;
+            }
+            _ => {
+                panic!("unexpected retval from wgetopt_long")
+            }
+        }
+    }
+    *optind = w.woptind;
+    return STATUS_CMD_OK;
+}
+
+impl BuiltinBind {
+    /// The bind builtin, used for setting character sequences.
+    pub fn bind(
+        &mut self,
+        parser: &Parser,
+        streams: &mut IoStreams,
+        argv: &mut [&wstr],
+    ) -> Option<c_int> {
+        let cmd = argv[0];
+        let mut optind = 0;
+        let retval = parse_cmd_opts(&mut self.opts, &mut optind, argv, parser, streams);
+        if retval != STATUS_CMD_OK {
+            return retval;
+        }
+
+        if self.opts.list_modes {
+            self.list_modes(streams);
+            return STATUS_CMD_OK;
+        }
+
+        if self.opts.print_help {
+            builtin_print_help(parser, streams, cmd);
+            return STATUS_CMD_OK;
+        }
+
+        // Default to user mode
+        if !self.opts.have_preset && !self.opts.have_user {
+            self.opts.user = true;
+        }
+
+        match self.opts.mode {
+            BIND_ERASE => {
+                // TODO: satisfy the borrow checker here.
+                let storage;
+                let bind_mode = if self.opts.bind_mode_given {
+                    storage = self.opts.bind_mode.clone();
+                    Some(storage.as_utfstr())
+                } else {
+                    None
+                };
+                // If we get both, we erase both.
+                if self.opts.user {
+                    if self.erase(
+                        &argv[optind..],
+                        self.opts.all,
+                        bind_mode,
+                        self.opts.use_terminfo,
+                        true, /* user */
+                        streams,
+                    ) {
+                        return STATUS_CMD_ERROR;
+                    }
+                }
+                if self.opts.preset {
+                    if self.erase(
+                        &argv[optind..],
+                        self.opts.all,
+                        bind_mode,
+                        self.opts.use_terminfo,
+                        false, /* user */
+                        streams,
+                    ) {
+                        return STATUS_CMD_ERROR;
+                    }
+                }
+            }
+            BIND_INSERT => {
+                if self.insert(optind, argv, parser, streams) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
+            BIND_KEY_NAMES => self.key_names(self.opts.all, streams),
+            BIND_FUNCTION_NAMES => self.function_names(streams),
+            _ => {
+                streams
+                    .err
+                    .append(wgettext_fmt!("%ls: Invalid state\n", cmd));
+                return STATUS_CMD_ERROR;
+            }
+        }
+        STATUS_CMD_OK
+    }
 }
 
 pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    run_builtin_ffi(crate::ffi::builtin_bind, parser, streams, args)
+    BuiltinBind::new().bind(parser, streams, args)
 }

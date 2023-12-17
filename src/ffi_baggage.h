@@ -1,10 +1,8 @@
 #include "builtin.h"
-#include "builtins/bind.h"
 #include "builtins/commandline.h"
 #include "event.h"
 #include "fds.h"
 #include "highlight.h"
-#include "input.h"
 #include "parse_util.h"
 #include "reader.h"
 #include "screen.h"
@@ -20,7 +18,6 @@ void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
     expand_tilde(s, env_stack);
     get_history_variable_text_ffi({});
     highlight_spec_t{};
-    init_input();
     reader_change_cursor_selection_mode(cursor_selection_mode_t::exclusive);
     reader_change_history({});
     reader_read_ffi({}, {}, {});
@@ -34,6 +31,5 @@ void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
     term_copy_modes();
     unsetenv_lock({});
 
-    builtin_bind({}, {}, {});
     builtin_commandline({}, {}, {});
 }

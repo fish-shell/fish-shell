@@ -25,8 +25,6 @@ include_cpp! {
     #include "flog.h"
     #include "function.h"
     #include "io.h"
-    #include "input_common.h"
-    #include "input.h"
     #include "parse_constants.h"
     #include "parser.h"
     #include "parse_util.h"
@@ -38,7 +36,6 @@ include_cpp! {
     #include "tokenizer.h"
     #include "wutil.h"
 
-    #include "builtins/bind.h"
     #include "builtins/commandline.h"
 
     safety!(unsafe_ffi)
@@ -54,17 +51,13 @@ include_cpp! {
     generate!("reader_read_ffi")
     generate!("fish_is_unwinding_for_exit")
     generate!("restore_term_mode")
-    generate!("update_wait_on_escape_ms_ffi")
     generate!("read_generation_count")
     generate!("set_flog_output_file_ffi")
     generate!("flog_setlinebuf_ffi")
     generate!("activate_flog_categories_by_pattern")
     generate!("restore_term_foreground_process_group_for_exit")
 
-    generate!("builtin_bind")
     generate!("builtin_commandline")
-
-    generate!("init_input")
 
     generate!("shell_modes_ffi")
 
@@ -96,7 +89,6 @@ include_cpp! {
     generate!("reader_change_history")
     generate!("reader_change_cursor_selection_mode")
     generate!("reader_set_autosuggestion_enabled_ffi")
-    generate!("update_wait_on_sequence_key_ms_ffi")
 }
 
 /// Allow wcharz_t to be "into" wstr.

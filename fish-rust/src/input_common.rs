@@ -12,96 +12,11 @@ use std::os::fd::RawFd;
 use std::ptr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-#[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum ReadlineCmd {
-    BeginningOfLine,
-    EndOfLine,
-    ForwardChar,
-    BackwardChar,
-    ForwardSingleChar,
-    ForwardWord,
-    BackwardWord,
-    ForwardBigword,
-    BackwardBigword,
-    NextdOrForwardWord,
-    PrevdOrBackwardWord,
-    HistorySearchBackward,
-    HistorySearchForward,
-    HistoryPrefixSearchBackward,
-    HistoryPrefixSearchForward,
-    HistoryPager,
-    HistoryPagerDelete,
-    DeleteChar,
-    BackwardDeleteChar,
-    KillLine,
-    Yank,
-    YankPop,
-    Complete,
-    CompleteAndSearch,
-    PagerToggleSearch,
-    BeginningOfHistory,
-    EndOfHistory,
-    BackwardKillLine,
-    KillWholeLine,
-    KillInnerLine,
-    KillWord,
-    KillBigword,
-    BackwardKillWord,
-    BackwardKillPathComponent,
-    BackwardKillBigword,
-    HistoryTokenSearchBackward,
-    HistoryTokenSearchForward,
-    SelfInsert,
-    SelfInsertNotFirst,
-    TransposeChars,
-    TransposeWords,
-    UpcaseWord,
-    DowncaseWord,
-    CapitalizeWord,
-    TogglecaseChar,
-    TogglecaseSelection,
-    Execute,
-    BeginningOfBuffer,
-    EndOfBuffer,
-    RepaintMode,
-    Repaint,
-    ForceRepaint,
-    UpLine,
-    DownLine,
-    SuppressAutosuggestion,
-    AcceptAutosuggestion,
-    BeginSelection,
-    SwapSelectionStartStop,
-    EndSelection,
-    KillSelection,
-    InsertLineUnder,
-    InsertLineOver,
-    ForwardJump,
-    BackwardJump,
-    ForwardJumpTill,
-    BackwardJumpTill,
-    FuncAnd,
-    FuncOr,
-    ExpandAbbr,
-    DeleteOrExit,
-    Exit,
-    CancelCommandline,
-    Cancel,
-    Undo,
-    Redo,
-    BeginUndoGroup,
-    EndUndoGroup,
-    RepeatJump,
-    DisableMouseTracking,
-    // ncurses uses the obvious name
-    ClearScreenAndRepaint,
-    // NOTE: This one has to be last.
-    ReverseRepeatJump,
-}
-
 // The range of key codes for inputrc-style keyboard functions.
-pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
+pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump.repr as usize) + 1;
+
+// TODO: move CharInputStyle and ReadlineCmd here once they no longer must be exposed to C++.
+pub use crate::input_ffi::{CharInputStyle, ReadlineCmd};
 
 /// Represents an event on the character input stream.
 #[derive(Debug, Copy, Clone)]
@@ -118,17 +33,6 @@ pub enum CharEventType {
     /// An event was handled internally, or an interrupt was received. Check to see if the reader
     /// loop should exit.
     CheckExit,
-}
-
-/// Hackish: the input style, which describes how char events (only) are applied to the command
-/// line. Note this is set only after applying bindings; it is not set from readb().
-#[derive(Debug, Copy, Clone)]
-pub enum CharInputStyle {
-    // Insert characters normally.
-    Normal,
-
-    // Insert characters only if the cursor is not at the beginning. Otherwise, discard them.
-    NotFirst,
 }
 
 #[derive(Debug, Clone)]

@@ -1405,7 +1405,7 @@ void reader_write_title(const wcstring &cmd, const parser_t &parser, bool reset_
     cleanup_t noninteractive{[&] { parser.libdata_pods_mut().is_interactive = is_interactive; }};
     // todo!("use scoped push")
     bool suppress_fish_trace = parser.libdata_pods().suppress_fish_trace;
-    parser.libdata_pods_mut().suppress_fish_trace = false;
+    parser.libdata_pods_mut().suppress_fish_trace = true;
     cleanup_t in_title{
         [&] { parser.libdata_pods_mut().suppress_fish_trace = suppress_fish_trace; }};
 

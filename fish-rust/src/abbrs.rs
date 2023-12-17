@@ -83,20 +83,20 @@ mod abbrs_ffi {
     }
 }
 
-static abbrs: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
+static ABBRS: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
 
 pub fn with_abbrs<R>(cb: impl FnOnce(&AbbreviationSet) -> R) -> R {
-    let abbrs_g = abbrs.lock().unwrap();
+    let abbrs_g = ABBRS.lock().unwrap();
     cb(&abbrs_g)
 }
 
 pub fn with_abbrs_mut<R>(cb: impl FnOnce(&mut AbbreviationSet) -> R) -> R {
-    let mut abbrs_g = abbrs.lock().unwrap();
+    let mut abbrs_g = ABBRS.lock().unwrap();
     cb(&mut abbrs_g)
 }
 
 pub fn abbrs_get_set() -> MutexGuard<'static, AbbreviationSet> {
-    abbrs.lock().unwrap()
+    ABBRS.lock().unwrap()
 }
 
 /// Controls where in the command line abbreviations may expand.
@@ -235,7 +235,7 @@ impl Replacement {
     /// Construct a replacement from a replacer.
     /// The \p range is the range of the text matched by the replacer in the command line.
     /// The text is passed in separately as it may be the output of the replacer's function.
-    fn from(range: SourceRange, mut text: WString, set_cursor_marker: Option<WString>) -> Self {
+    fn new(range: SourceRange, mut text: WString, set_cursor_marker: Option<WString>) -> Self {
         let mut cursor = None;
         if let Some(set_cursor_marker) = set_cursor_marker {
             let matched = text
@@ -381,7 +381,7 @@ fn abbrs_list_ffi() -> Vec<abbreviation_t> {
 }
 
 fn abbrs_get_set_ffi<'a>() -> Box<GlobalAbbrs<'a>> {
-    let abbrs_g = abbrs.lock().unwrap();
+    let abbrs_g = ABBRS.lock().unwrap();
     Box::new(GlobalAbbrs { g: abbrs_g })
 }
 
@@ -397,7 +397,7 @@ fn abbrs_replacement_from_ffi(
         None
     };
 
-    let replacement = Replacement::from(range, text.from_ffi(), cursor_marker);
+    let replacement = Replacement::new(range, text.from_ffi(), cursor_marker);
 
     abbrs_replacement_t {
         range,

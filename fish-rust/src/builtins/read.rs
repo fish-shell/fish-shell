@@ -8,7 +8,6 @@ use crate::common::str2wcstring;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
 use crate::common::UnescapeStringStyle;
-use crate::common::EMPTY_STRING;
 use crate::compat::MB_CUR_MAX;
 use crate::env::EnvMode;
 use crate::env::Environment;
@@ -34,7 +33,6 @@ use std::sync::atomic::Ordering;
 struct Options {
     print_help: bool,
     place: EnvMode,
-    prompt_cmd: WString,
     prompt: Option<WString>,
     prompt_str: Option<WString>,
     right_prompt: WString,
@@ -444,8 +442,7 @@ fn validate_read_args(
     }
 
     if let Some(prompt_str) = opts.prompt_str.as_ref() {
-        opts.prompt_cmd = L!("echo ").to_owned() + &escape(prompt_str)[..];
-        opts.prompt = Some(prompt_str.clone());
+        opts.prompt = Some(L!("echo ").to_owned() + &escape(prompt_str)[..]);
     } else if opts.prompt.is_none() {
         opts.prompt = Some(DEFAULT_READ_PROMPT.to_owned());
     }
@@ -602,7 +599,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 opts.nchars,
                 opts.shell,
                 opts.silent,
-                opts.prompt.as_ref().unwrap_or(&EMPTY_STRING),
+                opts.prompt.as_ref().unwrap(),
                 &opts.right_prompt,
                 &opts.commandline,
                 streams.stdin_fd,

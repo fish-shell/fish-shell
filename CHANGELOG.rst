@@ -1,7 +1,7 @@
 fish 3.7.0 (released ???)
 ====================================
 
-This release of fish contains a number of fixes for problems identified in fish 3.6.1, as well as some enhancements.
+.. ignore: 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9926 9932
 
 Notable improvements and fixes
 ------------------------------
@@ -14,7 +14,7 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
-- Running ``exit`` with a negative number no longer crashes fish by hitting an assert() (:issue:`9659`).
+- Running ``exit`` with a negative number no longer crashes fish (:issue:`9659`).
 - ``fish -c`` will now return a non-zero status if parsing failed (:issue:`9888`).
 - Globbing will now use fewer system calls in some cases, especially with a trailing slash (``/path/a*/``), and for searching for commands.
   Some of this requires filesystem support - the d_type field in the dirent struct returned by readdir(3).
@@ -32,41 +32,36 @@ Interactive improvements
 - Closing the history pager with enter will now copy the search text to the commandline if there was no match, so you can continue editing the command you tried to find right away (:issue:`9934`).
 - Opening the history pager will now fill the search field with a search string if you're already in a search (:issue:`10005`). This makes it nicer to search something with up-arrow and then later decide to switch to the full pager.
 - ``read`` no longer enables bracketed paste so it doesn't stay enabled in combined commandlines like ``mysql -p(read --silent)`` (:issue:`8285`).
-- Vi-mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`, :issue:`9565`).
-- Vi-mode cursor shaping is now enabled in iterm2 (:issue:`9698`).
+- Vi mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`).
+- Vi mode cursor shaping is now enabled in iterm2 (:issue:`9698`).
 - Completing commands as root now finds commands not owned by root again (:issue:`9699`).
 - Selection now uses fish_color_selection for the foreground as well (:issue:`9717`).
 - The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9812`, :issue:`9833`).
 - The interactive ``history delete`` now allows specifying index ranges like "1..5" (:issue:`9736`).
 - Command completion will now call the stock manpath on macOS instead of a potential homebrew version. This prevents awkward error messages (:issue:`9817`).
-- A new bind function ``history-pager-delete`` will delete the current history pager item from history (:issue:`9454`, :issue:`9515`).
+- A new bind function ``history-pager-delete``, bound to :kbd:``Shift`` + :kbd:``Delete`` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
 - ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
-- Fish can now wait for a timeout for a key sequence to complete instead of waiting indefinitely. This makes e.g. binding ``kj`` to switching modes in vi-mode possible.
-  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`, :issue:`9926`), and may be set by default in future versions.
+- fish can now be configured to wait a specified amount of time for a multi-key sequence to be completed,  instead of waiting indefinitely. For example, this makes binding ``kj`` to switching modes in vi mode possible.
+  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`), and may be set by default in future versions.
 - ``open`` no longer works around an xdg-open bug that was finally fixed and can be used to launch terminal programs again (:issue:`10045`).
-- The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes alt+something bindings in vi-mode (:issue:`7910`).
+- The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes :kbd:`Alt` combination bindings in vi mode (:issue:`7910`).
 - A new ``clear-screen`` bind function is used for :kbd:`Alt`\ +\ :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
   so it eliminates visible flicker unless the terminal is very slow (:issue:`10044`).
-- A new variable, :envvar:`fish_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`fish_cursor_default` (:issue:`4656`).
+- The ``alias`` convenience function has better support for commands with unusual characters, like ``+`` (:issue:`8720`).
+- A longstanding issue where items in the pager would sometimes display without proper formatting has been fixed (:issue:`9617`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
 - The default theme now only uses named colors, so it will track the terminal's palette (:issue:`9913`).
 - The Dracula theme has now been synced with upstream (:issue:`9807`).
-- ``fish_vcs_prompt`` now also supports fossil (:issue:`9497`, :issue:`9500`, :issue:`9528`).
+- ``fish_vcs_prompt`` now also supports fossil (:issue:`9497`).
 
 Completions
 ^^^^^^^^^^^
 - Added completions for:
-  - ``apkanalyzer`` (:issue:`9558`)
-  - ``neovim`` (:issue:`9543`)
-  - ``otool``
-  - ``pre-commit`` (:issue:`9521`)
-  - ``proxychains`` (:issue:`9486`)
-  - ``scrypt`` (:issue:`9583`)
-  - ``stow`` (:issue:`9571`)
-  - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
-  - ``ssh-copy-id`` (:issue:`9675`)
+  - ``iwctl`` (:issue:`6884`)
+  - ``rpm-ostool`` (:issue:``9669``)
+  - ``zabbix`` (:issue:`9647`)
 - The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
 - The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).
 - Improvements to many completions.

@@ -15,7 +15,6 @@ use crate::fallback::{fish_wcswidth, fish_wcwidth};
 use crate::future::IsSomeAnd;
 use crate::highlight::{highlight_shell, HighlightRole, HighlightSpec};
 use crate::operation_context::OperationContext;
-use crate::parse_util::parse_util_contains_wildcard;
 use crate::screen::{Line, ScreenData};
 use crate::termsize::Termsize;
 use crate::wchar::prelude::*;
@@ -379,11 +378,6 @@ impl Pager {
         }
 
         let needle = self.search_field_line.text();
-
-        // Bypass glob pattern
-        if parse_util_contains_wildcard(needle) {
-            return true;
-        }
 
         // Match against the description.
         if string_fuzzy_match_string(needle, &info.desc, false).is_some() {

@@ -3676,7 +3676,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             pager.set_prefix(MB_CUR_MAX > 1 ? L"► " : L"> ", false /* highlight */);
             // Update the search field, which triggers the actual history search.
             if (!history_search.active() || history_search.search_string().empty()) {
-                insert_string(pager.search_field_line(), *command_line.text());
+                // Escape any wildcards the user may have in their input.
+                auto escaped_command_line = parse_util_escape_wildcards(*command_line.text());
+                insert_string(pager.search_field_line(), escaped_command_line);
             } else {
                 // If we have an actual history search already going, reuse that term
                 // - this is if the user looks around a bit and decides to switch to the pager.

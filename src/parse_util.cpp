@@ -487,6 +487,26 @@ bool parse_util_contains_wildcards(const wcstring &str) {
     return false;
 }
 
+wcstring parse_util_escape_wildcards(const wcstring &str) {
+    wcstring result;
+    result.reserve(str.size());
+    bool unesc_qmark = !feature_test(feature_flag_t::qmark_noglob);
+
+    const wchar_t *const cs = str.c_str();
+    for (size_t i = 0; cs[i] != L'\0'; i++) {
+        if (cs[i] == L'*') {
+            result.append(L"\\*");
+        } else if (cs[i] == L'?' && unesc_qmark) {
+            result.append(L"\\?");
+        } else if (cs[i] == L'\\') {
+            result.append(L"\\\\");
+        } else {
+            result.push_back(cs[i]);
+        }
+    }
+    return result;
+}
+
 
 /// Find the outermost quoting style of current token. Returns 0 if token is not quoted.
 static wchar_t get_quote(const wcstring &cmd_str, size_t len) {

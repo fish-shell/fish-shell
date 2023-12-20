@@ -1489,6 +1489,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     "fish_color_autosuggestion",
                     "fish_color_cwd",
                     "fish_color_user",
+                    "fish_color_at",
                     "fish_color_host",
                     "fish_color_host_remote",
                     "fish_color_cancel",

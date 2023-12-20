@@ -51,6 +51,7 @@ Completions
 ^^^^^^^^^^^
 - Added or improved completions for:
   - ``ar`` (:issue:`9719`)
+- ``bws`` (:issue:`????`).
 - ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
 - ``qdbus`` completions now properly handle tags (:issue:`9776`).
 - ``age`` (:issue:`9813`).

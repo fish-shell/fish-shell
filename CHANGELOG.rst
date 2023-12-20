@@ -61,6 +61,7 @@ Completions
   - ``age`` and ``age-keygen`` (:issue:`9813`)
   - ``ar`` (:issue:`9720`)
   - ``blender`` (:issue:`9905`)
+  - ``bws`` (:issue:`10165`).
   - ``crc`` (:issue:`10034`)
   - ``gimp`` (:issue:`9904`)
   - ``gojq`` (:issue:`9740`)

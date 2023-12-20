@@ -466,6 +466,28 @@ wcstring parse_util_unescape_wildcards(const wcstring &str) {
     return result;
 }
 
+bool parse_util_contains_wildcards(const wcstring &str) {
+    bool unesc_qmark = !feature_test(feature_flag_t::qmark_noglob);
+
+    const wchar_t *const cs = str.c_str();
+    for (size_t i = 0; cs[i] != L'\0'; i++) {
+        if (cs[i] == L'*') {
+            return true;
+        } else if (cs[i] == L'?' && unesc_qmark) {
+            return true;
+        } else if (cs[i] == L'\\' && cs[i + 1] == L'*') {
+            i += 1;
+        } else if (cs[i] == L'\\' && cs[i + 1] == L'?' && unesc_qmark) {
+            i += 1;
+        } else if (cs[i] == L'\\' && cs[i + 1] == L'\\') {
+            // Not a wildcard, but ensure the next iteration doesn't see this escaped backslash.
+            i += 1;
+        }
+    }
+    return false;
+}
+
+
 /// Find the outermost quoting style of current token. Returns 0 if token is not quoted.
 static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
     size_t i = 0;

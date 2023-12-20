@@ -1141,6 +1141,16 @@ static history_pager_result_t history_pager_search(const HistorySharedPtr &histo
         rust_history_search_new(history, search_string.c_str(), history_search_type_t::ContainsGlob,
                                 smartcase_flags(search_string), history_index);
     bool next_match_found = search->go_to_next_match(direction);
+
+    if (!next_match_found && !parse_util_contains_wildcards(search_string)) {
+        // If there were no matches, and the user is not intending for
+        // wildcard search, try again with subsequence search.
+        search = rust_history_search_new(history, search_string.c_str(),
+                                         history_search_type_t::ContainsSubsequence,
+                                         smartcase_flags(search_string), history_index);
+        next_match_found = search->go_to_next_match(direction);
+    }
+
     while (completions->size() < page_size && next_match_found) {
         const history_item_t &item = search->current_item();
         completions->push_back(*new_completion_with(

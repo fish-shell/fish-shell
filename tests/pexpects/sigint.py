@@ -21,6 +21,7 @@ expect_str("Here we go")
 expect_prompt()
 sendline("echo $status")
 expect_str("130")
+expect_prompt()
 
 sendline("echo it worked")
 expect_str("it worked")

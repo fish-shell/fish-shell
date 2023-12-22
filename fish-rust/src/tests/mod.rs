@@ -1,5 +1,6 @@
 use crate::wchar::prelude::*;
 
+mod abbrs;
 #[cfg(test)]
 mod common;
 mod complete;
@@ -17,6 +18,8 @@ mod history;
 mod pager;
 mod parse_util;
 mod parser;
+#[cfg(test)]
+mod reader;
 #[cfg(test)]
 mod redirection;
 mod screen;

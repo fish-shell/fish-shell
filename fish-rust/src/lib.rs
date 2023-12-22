@@ -93,6 +93,7 @@ mod print_help;
 mod proc;
 mod re;
 mod reader;
+mod reader_history_search;
 mod redirection;
 mod screen;
 mod signal;

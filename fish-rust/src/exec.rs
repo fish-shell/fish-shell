@@ -16,7 +16,7 @@ use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
 use crate::fds::{make_autoclose_pipes, open_cloexec, AutoCloseFd, AutoClosePipes, PIPE_ERROR};
-use crate::ffi::{self, wcstring_list_ffi_t};
+use crate::ffi::wcstring_list_ffi_t;
 use crate::flog::FLOGF;
 use crate::fork_exec::blocked_signals_for_job;
 use crate::fork_exec::postfork::{
@@ -40,7 +40,7 @@ use crate::proc::{
     print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
     TtyTransfer, INVALID_PID,
 };
-use crate::reader::reader_run_count;
+use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::timer::push_timer;
@@ -444,7 +444,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
-    ffi::restore_term_mode();
+    restore_term_mode();
     // Bounce to launch_process. This never returns.
     safe_launch_process(p, &actual_cmd, &argv, &*envp);
 }

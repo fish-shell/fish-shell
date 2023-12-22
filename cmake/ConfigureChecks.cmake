@@ -114,7 +114,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux|Android")
     endif()
 endif()
 
-check_cxx_symbol_exists(ctermid_r stdio.h HAVE_CTERMID_R)
 check_struct_has_member("struct dirent" d_type dirent.h HAVE_STRUCT_DIRENT_D_TYPE LANGUAGE CXX)
 check_cxx_symbol_exists(dirfd "sys/types.h;dirent.h" HAVE_DIRFD)
 check_include_file_cxx(execinfo.h HAVE_EXECINFO_H)

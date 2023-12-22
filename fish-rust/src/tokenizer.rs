@@ -300,6 +300,9 @@ impl Tok {
     pub fn set_length(&mut self, value: usize) {
         self.length = value.try_into().unwrap();
     }
+    pub fn end(&self) -> usize {
+        self.offset() + self.length()
+    }
     pub fn set_error_offset_within_token(&mut self, value: usize) {
         self.error_offset_within_token = value.try_into().unwrap();
     }

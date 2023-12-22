@@ -1,5 +1,4 @@
 #include "builtin.h"
-#include "builtins/commandline.h"
 #include "event.h"
 #include "fds.h"
 #include "highlight.h"
@@ -16,20 +15,11 @@ void mark_as_used(const parser_t& parser, env_stack_t& env_stack) {
     event_fire_generic(parser, {});
     event_fire_generic(parser, {}, {});
     expand_tilde(s, env_stack);
-    get_history_variable_text_ffi({});
     highlight_spec_t{};
-    reader_change_cursor_selection_mode(cursor_selection_mode_t::exclusive);
-    reader_change_history({});
-    reader_read_ffi({}, {}, {});
-    reader_schedule_prompt_repaint();
-    reader_set_autosuggestion_enabled_ffi({});
-    reader_status_count();
-    restore_term_mode();
     rgb_color_t{};
     setenv_lock({}, {}, {});
     set_inheriteds_ffi();
-    term_copy_modes();
     unsetenv_lock({});
-
-    builtin_commandline({}, {}, {});
+    rgb_color_t::white();
+    rgb_color_t{};
 }

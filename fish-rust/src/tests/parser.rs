@@ -1,5 +1,6 @@
 use crate::ast::{self, Ast, List, Node, Traversal};
 use crate::builtins::shared::{STATUS_CMD_OK, STATUS_UNMATCHED_WILDCARD};
+use crate::common::ScopeGuard;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{
@@ -7,7 +8,9 @@ use crate::parse_constants::{
 };
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
 use crate::parser::Parser;
-use crate::reader::reader_reset_interrupted;
+use crate::reader::{
+    reader_current_data, reader_pop, reader_push, reader_reset_interrupted, ReaderConfig,
+};
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
@@ -681,11 +684,14 @@ fn test_1_cancellation(src: &wstr) {
     );
     assert!(res.status.signal_exited() && res.status.signal_code() == SIGINT);
     unsafe {
-        iothread_drain_all();
+        iothread_drain_all(reader_current_data().unwrap());
     }
 }
 
 add_test!("test_cancellation", || {
+    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let _pop = ScopeGuard::new((), |()| reader_pop());
+
     println!("Testing Ctrl-C cancellation. If this hangs, that's a bug!");
 
     // Enable fish's signal handling here.

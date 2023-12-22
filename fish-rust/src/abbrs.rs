@@ -201,10 +201,10 @@ pub struct Replacer {
     pub replacement: WString,
 
     /// If true, treat 'replacement' as the name of a function.
-    is_function: bool,
+    pub is_function: bool,
 
     /// If set, the cursor should be moved to the first instance of this string in the expansion.
-    set_cursor_marker: Option<WString>,
+    pub set_cursor_marker: Option<WString>,
 }
 
 impl From<Replacer> for abbrs_replacer_t {
@@ -219,23 +219,23 @@ impl From<Replacer> for abbrs_replacer_t {
     }
 }
 
-struct Replacement {
+pub struct Replacement {
     /// The original range of the token in the command line.
-    range: SourceRange,
+    pub range: SourceRange,
 
     /// The string to replace with.
-    text: WString,
+    pub text: WString,
 
     /// The new cursor location, or none to use the default.
     /// This is relative to the original range.
-    cursor: Option<usize>,
+    pub cursor: Option<usize>,
 }
 
 impl Replacement {
     /// Construct a replacement from a replacer.
     /// The \p range is the range of the text matched by the replacer in the command line.
     /// The text is passed in separately as it may be the output of the replacer's function.
-    fn new(range: SourceRange, mut text: WString, set_cursor_marker: Option<WString>) -> Self {
+    pub fn new(range: SourceRange, mut text: WString, set_cursor_marker: Option<WString>) -> Self {
         let mut cursor = None;
         if let Some(set_cursor_marker) = set_cursor_marker {
             let matched = text
@@ -353,6 +353,12 @@ impl AbbreviationSet {
 
 /// \return the list of replacers for an input token, in priority order, using the global set.
 /// The \p position is given to describe where the token was found.
+pub fn abbrs_match(token: &wstr, position: Position) -> Vec<Replacer> {
+    with_abbrs(|set| set.r#match(token, position))
+        .into_iter()
+        .collect()
+}
+
 fn abbrs_match_ffi(token: &CxxWString, position: abbrs_position_t) -> Vec<abbrs_replacer_t> {
     with_abbrs(|set| set.r#match(token.as_wstr(), position.into()))
         .into_iter()

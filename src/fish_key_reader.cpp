@@ -230,14 +230,14 @@ static void process_input(bool continuous_mode, bool verbose) {
     std::vector<wchar_t> bind_chars;
 
     std::fwprintf(stderr, L"Press a key:\n");
-    while (!check_exit_loop_maybe_warning(nullptr)) {
-        maybe_t<rust::Box<char_event_t>> evt{};
+    while (!check_exit_loop_maybe_warning()) {
+        maybe_t<rust::Box<CharEvent>> evt{};
         if (reader_test_and_clear_interrupted()) {
             evt = char_event_from_char(shell_modes.c_cc[VINTR]);
         } else {
-            char_event_t *evt_raw = queue->readch_timed_esc();
+            CharEvent *evt_raw = queue->readch_timed_esc();
             if (evt_raw) {
-                evt = rust::Box<char_event_t>::from_raw(evt_raw);
+                evt = rust::Box<CharEvent>::from_raw(evt_raw);
             }
         }
         if (!evt || !(*evt)->is_char()) {

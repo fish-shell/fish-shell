@@ -1,8 +1,8 @@
 //! Implementation of the history builtin.
 
-use crate::ffi::{self};
+use crate::history::in_private_mode;
 use crate::history::{self, history_session_id, History};
-use crate::history::{in_private_mode, HistorySharedPtr};
+use crate::reader::commandline_get_state;
 
 use super::prelude::*;
 
@@ -243,17 +243,9 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
 
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
-    let history = ffi::commandline_get_state_history_ffi();
-    let history = if history.is_null() {
-        History::with_name(&history_session_id(parser.vars()))
-    } else {
-        {
-            *unsafe {
-                Box::from_raw(ffi::commandline_get_state_history_ffi() as *mut HistorySharedPtr)
-            }
-        }
-        .0
-    };
+    let history = commandline_get_state()
+        .history
+        .unwrap_or_else(|| History::with_name(&history_session_id(parser.vars())));
 
     // If a history command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.

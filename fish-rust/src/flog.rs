@@ -134,6 +134,8 @@ pub mod categories {
 
         (screen, "screen", "Screen repaints");
 
+        (abbrs, "abbrs", "Abbreviation expansion");
+
         (refcell, "refcell", "Refcell dynamic borrowing");
     );
 }

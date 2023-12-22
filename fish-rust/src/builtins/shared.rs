@@ -1,13 +1,13 @@
 use super::prelude::*;
 use crate::builtins::*;
 use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
-use crate::ffi;
 use crate::ffi::Repin;
 use crate::io::{IoChain, IoFd, OutputStream, OutputStreamFfi};
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{Block, BlockType, LoopStatus};
 use crate::proc::{no_exec, ProcStatus};
+use crate::reader::reader_read;
 use crate::wchar::{wstr, WString, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use cxx::CxxWString;
@@ -951,11 +951,7 @@ fn builtin_breakpoint(
     } else {
         unsafe { &mut *streams.io_chain }
     };
-    ffi::reader_read_ffi(
-        parser as *const Parser as *const autocxx::c_void,
-        autocxx::c_int(STDIN_FILENO),
-        &io_chain as *const _ as *const autocxx::c_void,
-    );
+    reader_read(parser, STDIN_FILENO, io_chain);
     parser.pop_block(bpb);
     Some(parser.get_last_status())
 }

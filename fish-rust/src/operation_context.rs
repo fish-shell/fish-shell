@@ -6,6 +6,8 @@ use crate::proc::JobGroupRef;
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 
+use crate::reader::read_generation_count;
+
 /// A common helper which always returns false.
 pub fn no_cancel() -> bool {
     false
@@ -146,7 +148,7 @@ impl<'a> OperationContext<'a> {
 pub fn get_bg_context(env: &EnvDyn, generation_count: u32) -> OperationContext {
     let cancel_checker = move || {
         // Cancel if the generation count changed.
-        generation_count != crate::ffi::read_generation_count()
+        generation_count != read_generation_count()
     };
     OperationContext::background_with_cancel_checker(
         env,

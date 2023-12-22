@@ -61,7 +61,10 @@ pub fn subsequence_in_string(needle: &wstr, haystack: &wstr) -> bool {
 /// expanded to include symbolic characters (#3584).
 /// \return the offset of the first case-insensitive matching instance of `needle` within
 /// `haystack`, or `string::npos()` if no results were found.
-pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool) -> Option<usize> {
+pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Option<usize> {
+    if needle.is_empty() {
+        return Some(0);
+    }
     haystack
         .as_char_slice()
         .windows(needle.len())

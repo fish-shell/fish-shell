@@ -1,7 +1,7 @@
 use crate::common::{
     cstr2wcstring, is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string,
 };
-use crate::env::EnvDyn;
+use crate::env::{EnvDyn, Environment};
 use crate::fds::{wopen_cloexec, AutoCloseFd};
 use crate::ffi_tests::add_test;
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
@@ -456,7 +456,7 @@ add_test!("test_history_path_detection", || {
     let mut test_vars = TestEnvironment::default();
     test_vars.vars.insert(L!("PWD").to_owned(), tmpdir.clone());
     test_vars.vars.insert(L!("HOME").to_owned(), tmpdir.clone());
-    let vars = || EnvDyn::new(Box::new(test_vars.clone()));
+    let vars = || EnvDyn::new(Box::new(test_vars.clone()) as Box<dyn Environment + Send + Sync>);
 
     let history = History::with_name(L!("path_detection"));
     history.clear();

@@ -28,6 +28,8 @@ pub trait IsOkAnd {
     type Error;
     #[allow(clippy::wrong_self_convention)]
     fn is_ok_and(self, s: impl FnOnce(Self::Type) -> bool) -> bool;
+    #[allow(clippy::wrong_self_convention)]
+    fn is_err_and(self, s: impl FnOnce(Self::Error) -> bool) -> bool;
 }
 impl<T, E> IsOkAnd for Result<T, E> {
     type Type = T;
@@ -36,6 +38,12 @@ impl<T, E> IsOkAnd for Result<T, E> {
         match self {
             Ok(v) => f(v),
             Err(_) => false,
+        }
+    }
+    fn is_err_and(self, f: impl FnOnce(E) -> bool) -> bool {
+        match self {
+            Ok(_) => false,
+            Err(e) => f(e),
         }
     }
 }

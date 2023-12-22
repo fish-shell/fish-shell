@@ -35,28 +35,16 @@ include_cpp! {
     #include "tokenizer.h"
     #include "wutil.h"
 
-    #include "builtins/commandline.h"
-
     safety!(unsafe_ffi)
 
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
     generate!("set_inheriteds_ffi")
 
-    generate!("reader_init")
-    generate!("reader_run_count")
-    generate!("term_copy_modes")
     generate!("set_profiling_active")
-    generate!("reader_read_ffi")
-    generate!("fish_is_unwinding_for_exit")
-    generate!("restore_term_mode")
-    generate!("read_generation_count")
     generate!("set_flog_output_file_ffi")
     generate!("flog_setlinebuf_ffi")
     generate!("activate_flog_categories_by_pattern")
-    generate!("restore_term_foreground_process_group_for_exit")
-
-    generate!("builtin_commandline")
 
     generate!("shell_modes_ffi")
 
@@ -68,26 +56,9 @@ include_cpp! {
 
     generate!("rgb_color_t")
     generate_pod!("color24_t")
-    generate!("reader_status_count")
-    generate!("reader_write_title_ffi")
-    generate!("reader_push_ffi")
-    generate!("reader_readline_ffi")
-    generate!("reader_pop")
-    generate!("commandline_get_state_history_ffi")
-    generate!("commandline_set_buffer_ffi")
-    generate!("commandline_get_state_initialized_ffi")
-    generate!("commandline_get_state_text_ffi")
-    generate!("completion_apply_to_command_line")
-
-    generate!("get_history_variable_text_ffi")
 
     generate_pod!("escape_string_style_t")
 
-    generate!("reader_schedule_prompt_repaint")
-    generate!("reader_reading_interrupted")
-    generate!("reader_change_history")
-    generate!("reader_change_cursor_selection_mode")
-    generate!("reader_set_autosuggestion_enabled_ffi")
 }
 
 /// Allow wcharz_t to be "into" wstr.

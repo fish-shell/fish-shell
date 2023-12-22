@@ -97,10 +97,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
-# List of sources for builtin functions.
-set(FISH_BUILTIN_SRCS
-    src/builtins/commandline.cpp
-)
 # List of other sources.
 set(FISH_SRCS
     src/ast.cpp
@@ -117,7 +113,6 @@ set(FISH_SRCS
     src/output.cpp
     src/parse_util.cpp
     src/path.cpp
-    src/reader.cpp
     src/rustffi.cpp
     src/wcstringutil.cpp
     src/wgetopt.cpp
@@ -178,7 +173,7 @@ function(FISH_LINK_DEPS_AND_SIGN target)
 endfunction(FISH_LINK_DEPS_AND_SIGN)
 
 # Define libfish.a.
-add_library(fishlib STATIC ${FISH_SRCS} ${FISH_BUILTIN_SRCS})
+add_library(fishlib STATIC ${FISH_SRCS})
 target_sources(fishlib PRIVATE ${FISH_HEADERS})
 target_link_libraries(fishlib
   fish-rust

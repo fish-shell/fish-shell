@@ -16,7 +16,7 @@
 //! 5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can
 //! trigger race conditions. This is useful for testing.
 
-use crate::{common::cstr2wcstring, wcstringutil::trim};
+use crate::{common::cstr2wcstring, env::EnvVar, wcstringutil::trim};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet, VecDeque},
@@ -46,7 +46,7 @@ use crate::{
         str2wcstring, unescape_string, valid_var_name, wcs2zstring, write_loop, CancelChecker,
         UnescapeStringStyle,
     },
-    env::{EnvDyn, EnvMode, EnvStack, EnvStackRefFFI, Environment},
+    env::{AsEnvironment, EnvMode, EnvStack, EnvStackRefFFI, Environment},
     expand::{expand_one, ExpandFlags},
     fallback::fish_mkstemp_cloexec,
     fds::{wopen_cloexec, AutoCloseFd},
@@ -66,7 +66,7 @@ use crate::{
     util::find_subslice,
     wchar::prelude::*,
     wchar_ext::WExt,
-    wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI},
+    wchar_ffi::{WCharFromFFI, WCharToFFI},
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
     wutil::{
@@ -127,12 +127,6 @@ mod history_ffi {
     pub enum SearchDirection {
         Forward,
         Backward,
-    }
-
-    pub enum HistoryPagerInvocation {
-        Anew,
-        Advance,
-        Refresh,
     }
 
     extern "Rust" {
@@ -205,13 +199,6 @@ mod history_ffi {
         fn item_at_index(&self, idx: usize) -> Box<HistoryItem>;
         fn size(&self) -> usize;
         fn clone(&self) -> Box<HistorySharedPtr>;
-        #[cxx_name = "add_pending_with_file_detection"]
-        fn add_pending_with_file_detection_ffi(
-            &self,
-            s: &CxxWString,
-            vars: &EnvStackRefFFI,
-            persist_mode: PersistenceMode,
-        );
     }
 
     extern "Rust" {
@@ -1701,7 +1688,7 @@ impl History {
     pub fn add_pending_with_file_detection(
         self: Arc<Self>,
         s: &wstr,
-        vars: EnvDyn,
+        vars: impl AsEnvironment + Send + Sync + 'static,
         persist_mode: PersistenceMode, /*=disk*/
     ) {
         // We use empty items as sentinels to indicate the end of history.
@@ -1760,7 +1747,8 @@ impl History {
             drop(imp);
             iothread_perform(move || {
                 // Don't hold the lock while we perform this file detection.
-                let validated_paths = expand_and_detect_paths(potential_paths, &vars);
+                let validated_paths =
+                    expand_and_detect_paths(potential_paths, vars.as_environment());
                 let mut imp = self.imp();
                 imp.set_valid_file_paths(validated_paths, identifier);
                 imp.enable_automatic_saving();
@@ -2096,10 +2084,13 @@ pub fn save_all() {
 
 /// Return the prefix for the files to be used for command and read history.
 pub fn history_session_id(vars: &dyn Environment) -> WString {
-    let Some(var) = vars.get(L!("fish_history")) else {
+    history_session_id_from_var(vars.get(L!("fish_history")))
+}
+
+pub fn history_session_id_from_var(history_name_var: Option<EnvVar>) -> WString {
+    let Some(var) = history_name_var else {
         return DFLT_FISH_HISTORY_SESSION_ID.to_owned();
     };
-
     let session_id = var.as_string();
     if session_id.is_empty() || valid_var_name(&session_id) {
         session_id
@@ -2334,18 +2325,6 @@ impl HistorySharedPtr {
     }
     fn clone(&self) -> Box<Self> {
         Box::new(Self(Arc::clone(&self.0)))
-    }
-    fn add_pending_with_file_detection_ffi(
-        &self,
-        s: &CxxWString,
-        vars: &EnvStackRefFFI,
-        persist_mode: PersistenceMode,
-    ) {
-        Arc::clone(&self.0).add_pending_with_file_detection(
-            s.as_wstr(),
-            vars.0.snapshot(),
-            persist_mode,
-        )
     }
 }
 

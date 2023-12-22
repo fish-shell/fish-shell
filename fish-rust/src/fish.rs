@@ -17,15 +17,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-use autocxx::prelude::*;
-
 use crate::{
     ast::Ast,
     builtins::shared::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
     },
     common::{
-        escape, exit_without_destructors, get_executable_path, save_term_foreground_process_group,
+        escape, exit_without_destructors, get_executable_path,
+        restore_term_foreground_process_group_for_exit, save_term_foreground_process_group,
         scoped_push_replacer, str2wcstring, wcs2string, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::Statuses,
@@ -50,6 +49,7 @@ use crate::{
         get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session,
     },
+    reader::{reader_init, reader_read, restore_term_mode, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self, asan_maybe_exit},
     topic_monitor,
@@ -637,7 +637,7 @@ fn main() -> i32 {
     features::set_from_string(opts.features.as_utfstr());
     proc_init();
     crate::env::misc_init();
-    ffi::reader_init();
+    reader_init();
 
     let parser = Parser::principal_parser();
     parser.set_syncs_uvars(!opts.no_config);
@@ -659,7 +659,7 @@ fn main() -> i32 {
     }
 
     // Re-read the terminal modes after config, it might have changed them.
-    ffi::term_copy_modes();
+    term_copy_modes();
 
     // Stomp the exit status of any initialization commands (issue #635).
     parser.set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
@@ -712,12 +712,7 @@ fn main() -> i32 {
             // above line should always exit
             return libc::EXIT_FAILURE;
         }
-        res = ffi::reader_read_ffi(
-            parser as *const Parser as *const autocxx::c_void,
-            c_int(libc::STDIN_FILENO),
-            &IoChain::new() as *const _ as *const autocxx::c_void,
-        )
-        .into();
+        res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {
         // C++ had not converted at this point, we must undo
         let n = wcs2string(&args[my_optind]);
@@ -749,12 +744,7 @@ fn main() -> i32 {
                     },
                     Some(Arc::new(rel_filename.to_owned())),
                 );
-                res = ffi::reader_read_ffi(
-                    parser as *const Parser as *const autocxx::c_void,
-                    c_int(f.as_raw_fd()),
-                    &IoChain::new() as *const _ as *const autocxx::c_void,
-                )
-                .into();
+                res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
                 if res != 0 {
                     FLOGF!(
                         warning,
@@ -781,9 +771,9 @@ fn main() -> i32 {
         vec![exit_status.to_wstring()],
     );
 
-    ffi::restore_term_mode();
+    restore_term_mode();
     // this is ported, but not adopted
-    ffi::restore_term_foreground_process_group_for_exit();
+    restore_term_foreground_process_group_for_exit();
 
     if let Some(profile_output) = opts.profile_output {
         let s = cstr_from_osstr(&profile_output);

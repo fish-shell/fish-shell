@@ -1906,6 +1906,21 @@ where
     ScopeGuard::new((), restore_saved)
 }
 
+pub fn scoped_push_replacer_ctx<Context, Replacer, T>(
+    mut ctx: Context,
+    replacer: Replacer,
+    new_value: T,
+) -> impl ScopeGuarding<Target = Context>
+where
+    Replacer: Fn(&mut Context, T) -> T,
+{
+    let saved = replacer(&mut ctx, new_value);
+    let restore_saved = move |ctx: &mut Context| {
+        replacer(ctx, saved);
+    };
+    ScopeGuard::new(ctx, restore_saved)
+}
+
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}
 

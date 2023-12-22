@@ -2,6 +2,7 @@ use crate::common::{is_windows_subsystem_for_linux, read_blocked};
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
 use crate::flog::FLOG;
+use crate::reader::reader_current_data;
 use crate::threads::{iothread_port, iothread_service_main};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::prelude::*;
@@ -307,7 +308,7 @@ pub trait InputEventQueuer {
                 }
 
                 ReadbResult::IOPortNotified => {
-                    iothread_service_main();
+                    iothread_service_main(reader_current_data().unwrap());
                 }
 
                 ReadbResult::Byte(read_byte) => {

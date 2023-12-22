@@ -485,10 +485,6 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags = 0,
 using timepoint_t = double;
 timepoint_t timef();
 
-/// Save the value of tcgetpgrp so we can restore it on exit.
-void save_term_foreground_process_group();
-void restore_term_foreground_process_group_for_exit();
-
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997

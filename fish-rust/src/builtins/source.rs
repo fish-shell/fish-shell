@@ -1,10 +1,10 @@
 use crate::{
     common::{escape, scoped_push_replacer, FilenameRef},
     fds::{wopen_cloexec, AutoCloseFd},
-    ffi::reader_read_ffi,
     io::IoChain,
     nix::isatty,
     parser::Block,
+    reader::reader_read,
 };
 use libc::{c_int, O_RDONLY, S_IFMT, S_IFREG};
 
@@ -103,16 +103,15 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     parser.vars().set_argv(argv_list);
 
     let empty_io_chain = IoChain::new();
-    let retval = reader_read_ffi(
-        parser as *const Parser as *const autocxx::c_void,
-        unsafe { std::mem::transmute(fd) },
+    let mut retval = reader_read(
+        parser,
+        fd,
         if !streams.io_chain.is_null() {
             unsafe { &*streams.io_chain }
         } else {
             &empty_io_chain
-        } as *const _ as *const autocxx::c_void,
+        },
     );
-    let mut retval: c_int = unsafe { std::mem::transmute(retval) };
 
     parser.pop_block(sb);
 

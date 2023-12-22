@@ -1,7 +1,11 @@
 use crate::redirection::RedirectionMode;
-use crate::tokenizer::{PipeOrRedir, TokFlags, TokenType, Tokenizer, TokenizerError};
+use crate::tokenizer::{
+    MoveWordStateMachine, MoveWordStyle, PipeOrRedir, TokFlags, TokenType, Tokenizer,
+    TokenizerError,
+};
 use crate::wchar::prelude::*;
 use libc::{STDERR_FILENO, STDOUT_FILENO};
+use std::collections::HashSet;
 
 #[test]
 fn test_tokenizer() {
@@ -138,4 +142,167 @@ fn test_tokenizer() {
     assert_eq!(get_redir_mode!("2>&3"), RedirectionMode::fd);
     assert_eq!(get_redir_mode!("3<&0"), RedirectionMode::fd);
     assert_eq!(get_redir_mode!("3</tmp/filetxt"), RedirectionMode::input);
+}
+
+/// Test word motion (forward-word, etc.). Carets represent cursor stops.
+#[test]
+fn test_word_motion() {
+    #[derive(Eq, PartialEq)]
+    pub enum Direction {
+        Left,
+        Right,
+    }
+
+    macro_rules! validate {
+        ($direction:expr, $style:expr, $line:expr) => {
+            let mut command = WString::new();
+            let mut stops = HashSet::new();
+
+            // Carets represent stops and should be cut out of the command.
+            for c in $line.chars() {
+                if c == '^' {
+                    stops.insert(command.len());
+                } else {
+                    command.push(c);
+                }
+            }
+
+            let (mut idx, end) = if $direction == Direction::Left {
+                (stops.iter().max().unwrap().clone(), 0)
+            } else {
+                (stops.iter().min().unwrap().clone(), command.len())
+            };
+            stops.remove(&idx);
+
+            let mut sm = MoveWordStateMachine::new($style);
+            while idx != end {
+                let char_idx = if $direction == Direction::Left {
+                    idx - 1
+                } else {
+                    idx
+                };
+                let c = command.as_char_slice()[char_idx];
+                let will_stop = !sm.consume_char(c);
+                let expected_stop = stops.contains(&idx);
+                assert_eq!(will_stop, expected_stop);
+                // We don't expect to stop here next time.
+                if expected_stop {
+                    stops.remove(&idx);
+                    sm.reset();
+                } else {
+                    if $direction == Direction::Left {
+                        idx -= 1;
+                    } else {
+                        idx += 1;
+                    }
+                }
+            }
+        };
+    }
+
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_punctuation,
+        "^echo ^hello_^world.^txt^"
+    );
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_punctuation,
+        "^echo^ hello^_world^.txt^"
+    );
+
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_punctuation,
+        "echo ^foo_^foo_^foo/^/^/^/^/^    ^"
+    );
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_punctuation,
+        "^echo^ foo^_foo^_foo^/^/^/^/^/    ^"
+    );
+
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^/^foo/^bar/^baz/^"
+    );
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^echo ^--foo ^--bar^"
+    );
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^echo ^hi ^> ^/^dev/^null^"
+    );
+
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^echo ^/^foo/^bar{^aaa,^bbb,^ccc}^bak/^"
+    );
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^echo ^bak ^///^"
+    );
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^aaa ^@ ^@^aaa^"
+    );
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^aaa ^a ^@^aaa^"
+    );
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^aaa ^@@@ ^@@^aa^"
+    );
+    validate!(
+        Direction::Left,
+        MoveWordStyle::move_word_style_path_components,
+        "^aa^@@  ^aa@@^a^"
+    );
+
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_punctuation,
+        "^a^ bcd^"
+    );
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_punctuation,
+        "a^b^ cde^"
+    );
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_punctuation,
+        "^ab^ cde^"
+    );
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_punctuation,
+        "^ab^&cd^ ^& ^e^ f^&"
+    );
+
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_whitespace,
+        "^^a-b-c^ d-e-f"
+    );
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_whitespace,
+        "^a-b-c^\n d-e-f^ "
+    );
+    validate!(
+        Direction::Right,
+        MoveWordStyle::move_word_style_whitespace,
+        "^a-b-c^\n\nd-e-f^ "
+    );
 }

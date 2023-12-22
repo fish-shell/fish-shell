@@ -4,14 +4,14 @@ use crate::env::{
     ELECTRIC_VARIABLES, PATH_ARRAY_SEP,
 };
 use crate::env_universal_common::EnvUniversal;
-use crate::ffi;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::history::{history_session_id_from_var, History};
 use crate::kill::kill_entries;
 use crate::null_terminated_array::OwningNullTerminatedArray;
+use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wutil::fish_wcstol_radix;
 
 use lazy_static::lazy_static;
@@ -40,11 +40,6 @@ pub fn uvars() -> MutexGuard<'static, EnvUniversal> {
 
 /// Whether we were launched with no_config; in this case setting a uvar instead sets a global.
 pub static UVAR_SCOPE_IS_GLOBAL: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-/// Helper to get the history for a session ID.
-fn get_history_var_text(history_session_id: &wstr) -> Vec<WString> {
-    ffi::get_history_variable_text_ffi(&history_session_id.to_ffi()).from_ffi()
-}
 
 /// Apply the pathvar behavior, splitting about colons.
 pub fn colon_split<T: AsRef<wstr>>(val: &[T]) -> Vec<WString> {
@@ -362,15 +357,12 @@ impl EnvScopedImpl {
             if (!is_main_thread()) {
                 return None;
             }
-            let fish_history_var = self
-                .getf(L!("fish_history"), EnvMode::default())
-                .map(|v| v.as_string());
-            let history_session_id = fish_history_var
-                .as_ref()
-                .map(WString::as_utfstr)
-                .unwrap_or(DFLT_FISH_HISTORY_SESSION_ID);
-            let vals = get_history_var_text(history_session_id);
-            return Some(EnvVar::new_from_name_vec("history"L, vals));
+            let history = commandline_get_state().history.unwrap_or_else(|| {
+                let fish_history_var = self.getf(L!("fish_history"), EnvMode::default());
+                let session_id = history_session_id_from_var(fish_history_var);
+                History::with_name(&session_id)
+            });
+            return Some(EnvVar::new_from_name_vec("history"L, history.get_history()));
         } else if key == "fish_killring"L {
             Some(EnvVar::new_from_name_vec("fish_killring"L, kill_entries()))
         } else if key == "pipestatus"L {
@@ -385,7 +377,7 @@ impl EnvScopedImpl {
             let js = &self.perproc_data.statuses;
             Some(EnvVar::new_from_name("status"L, js.status.to_wstring()))
         } else if key == "status_generation"L {
-            let status_generation = ffi::reader_status_count();
+            let status_generation = reader_status_count();
             Some(EnvVar::new_from_name(
                 "status_generation"L,
                 status_generation.to_wstring(),

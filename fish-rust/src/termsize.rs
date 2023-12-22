@@ -280,7 +280,7 @@ pub fn handle_columns_lines_var_change(vars: &dyn Environment) {
     SHARED_CONTAINER.handle_columns_lines_var_change(vars);
 }
 
-fn termsize_update(parser: &Parser) -> Termsize {
+pub fn termsize_update(parser: &Parser) -> Termsize {
     SHARED_CONTAINER.updating(parser)
 }
 

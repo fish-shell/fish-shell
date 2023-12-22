@@ -1,8 +1,11 @@
 use crate::common::wcs2osstring;
+use crate::common::ScopeGuard;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
 use crate::ffi_tests::add_test;
 use crate::flog::FLOG;
+use crate::parser::Parser;
+use crate::reader::{reader_current_data, reader_pop, reader_push, ReaderConfig};
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
 use crate::wutil::file_id_for_path;
@@ -37,11 +40,14 @@ add_test!("test_universal", || {
     let _ = std::fs::remove_dir_all("test/fish_uvars_test/");
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
 
+    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let _pop = ScopeGuard::new((), |()| reader_pop());
+
     let threads = 1;
     for i in 0..threads {
         iothread_perform(move || test_universal_helper(i));
     }
-    unsafe { iothread_drain_all() };
+    unsafe { iothread_drain_all(reader_current_data().unwrap()) };
 
     let mut uvars = EnvUniversal::new();
     let mut callbacks = CallbackDataList::new();

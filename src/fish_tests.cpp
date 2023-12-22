@@ -614,114 +614,6 @@ static void test_lru() {
     do_test(cache.size() == 0);
 }
 
-// todo!("port this")
-static void test_abbreviations() {
-    say(L"Testing abbreviations");
-    {
-        auto abbrs = abbrs_get_set();
-        abbrs->add(L"gc", L"gc", L"git checkout", abbrs_position_t::command, false);
-        abbrs->add(L"foo", L"foo", L"bar", abbrs_position_t::command, false);
-        abbrs->add(L"gx", L"gx", L"git checkout", abbrs_position_t::command, false);
-        abbrs->add(L"yin", L"yin", L"yang", abbrs_position_t::anywhere, false);
-    }
-
-    // Helper to expand an abbreviation, enforcing we have no more than one result.
-    auto abbr_expand_1 = [](const wcstring &token, abbrs_position_t pos) -> maybe_t<wcstring> {
-        auto result = abbrs_match(token, pos);
-        if (result.size() > 1) {
-            err(L"abbreviation expansion for %ls returned more than 1 result", token.c_str());
-        }
-        if (result.empty()) {
-            return none();
-        }
-        return *result.front().replacement;
-    };
-
-    auto cmd = abbrs_position_t::command;
-    if (abbr_expand_1(L"", cmd)) err(L"Unexpected success with empty abbreviation");
-    if (abbr_expand_1(L"nothing", cmd)) err(L"Unexpected success with missing abbreviation");
-
-    auto mresult = abbr_expand_1(L"gc", cmd);
-    if (!mresult) err(L"Unexpected failure with gc abbreviation");
-    if (*mresult != L"git checkout") err(L"Wrong abbreviation result for gc");
-
-    mresult = abbr_expand_1(L"foo", cmd);
-    if (!mresult) err(L"Unexpected failure with foo abbreviation");
-    if (*mresult != L"bar") err(L"Wrong abbreviation result for foo");
-
-    maybe_t<wcstring> result;
-    auto expand_abbreviation_in_command = [](const wcstring &cmdline,
-                                             maybe_t<size_t> cursor_pos = {}) -> maybe_t<wcstring> {
-        if (auto replacement = reader_expand_abbreviation_at_cursor(
-                cmdline, cursor_pos.value_or(cmdline.size()), parser_principal_parser()->deref())) {
-            wcstring cmdline_expanded = cmdline;
-            std::vector<highlight_spec_t> colors{cmdline_expanded.size()};
-            auto ffi_colors = new_highlight_spec_list();
-            for (auto &c : colors) {
-                ffi_colors->push(c);
-            }
-            cmdline_expanded = *apply_edit(
-                cmdline_expanded, *ffi_colors,
-                new_edit(replacement->range.start, replacement->range.end(), *replacement->text));
-            colors.clear();
-            for (size_t i = 0; i < ffi_colors->size(); i++) {
-                colors.push_back(ffi_colors->at(i));
-            }
-            return cmdline_expanded;
-        }
-        return none_t();
-    };
-    result = expand_abbreviation_in_command(L"just a command", 3);
-    if (result) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
-    result = expand_abbreviation_in_command(L"gc somebranch", 0);
-    if (!result) err(L"Command not expanded on line %ld", (long)__LINE__);
-
-    result = expand_abbreviation_in_command(L"gc somebranch", const_strlen(L"gc"));
-    if (!result) err(L"gc not expanded");
-    if (result != L"git checkout somebranch")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
-
-    // Space separation.
-    result = expand_abbreviation_in_command(L"gx somebranch", const_strlen(L"gc"));
-    if (!result) err(L"gx not expanded");
-    if (result != L"git checkout somebranch")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
-
-    result =
-        expand_abbreviation_in_command(L"echo hi ; gc somebranch", const_strlen(L"echo hi ; g"));
-    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
-    if (result != L"echo hi ; git checkout somebranch")
-        err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
-
-    result = expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ",
-                                            const_strlen(L"echo (echo (echo (echo (gc"));
-    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
-    if (result != L"echo (echo (echo (echo (git checkout ")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
-
-    // If commands should be expanded.
-    result = expand_abbreviation_in_command(L"if gc");
-    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
-    if (result != L"if git checkout")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
-
-    // Others should not be.
-    result = expand_abbreviation_in_command(L"of gc");
-    if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
-
-    // Others should not be.
-    result = expand_abbreviation_in_command(L"command gc");
-    if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
-
-    // yin/yang expands everywhere.
-    result = expand_abbreviation_in_command(L"command yin");
-    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
-    if (result != L"command yang") {
-        err(L"command yin incorrectly expanded on line %ld to '%ls'", (long)__LINE__,
-            result->c_str());
-    }
-}
-
 // todo!("already ported, delete this")
 /// Testing colors.
 static void test_colors() {
@@ -740,79 +632,6 @@ static void test_colors() {
 }
 
 // todo!("port this")
-static void test_1_completion(wcstring line, const wcstring &completion, complete_flags_t flags,
-                              bool append_only, wcstring expected, long source_line) {
-    // str is given with a caret, which we use to represent the cursor position. Find it.
-    const size_t in_cursor_pos = line.find(L'^');
-    do_test(in_cursor_pos != wcstring::npos);
-    line.erase(in_cursor_pos, 1);
-
-    const size_t out_cursor_pos = expected.find(L'^');
-    do_test(out_cursor_pos != wcstring::npos);
-    expected.erase(out_cursor_pos, 1);
-
-    size_t cursor_pos = in_cursor_pos;
-    wcstring result =
-        completion_apply_to_command_line(completion, flags, line, &cursor_pos, append_only);
-    if (result != expected) {
-        std::fwprintf(stderr, L"line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line,
-                      line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
-    }
-    do_test(result == expected);
-    do_test(cursor_pos == out_cursor_pos);
-}
-
-// todo!("port this")
-static void test_completion_insertions() {
-#define TEST_1_COMPLETION(a, b, c, d, e) test_1_completion(a, b, c, d, e, __LINE__)
-    say(L"Testing completion insertions");
-    TEST_1_COMPLETION(L"foo^", L"bar", 0, false, L"foobar ^");
-    // An unambiguous completion of a token that is already trailed by a space character.
-    // After completing, the cursor moves on to the next token, suggesting to the user that the
-    // current token is finished.
-    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, false, L"foobar ^baz");
-    TEST_1_COMPLETION(L"'foo^", L"bar", 0, false, L"'foobar' ^");
-    TEST_1_COMPLETION(L"'foo'^", L"bar", 0, false, L"'foobar' ^");
-    TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, false, L"'foo\\'bar' ^");
-    TEST_1_COMPLETION(L"foo\\'^", L"bar", 0, false, L"foo\\'bar ^");
-
-    // Test append only.
-    TEST_1_COMPLETION(L"foo^", L"bar", 0, true, L"foobar ^");
-    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, true, L"foobar ^baz");
-    TEST_1_COMPLETION(L"'foo^", L"bar", 0, true, L"'foobar' ^");
-    TEST_1_COMPLETION(L"'foo'^", L"bar", 0, true, L"'foo'bar ^");
-    TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, true, L"'foo\\'bar' ^");
-    TEST_1_COMPLETION(L"foo\\'^", L"bar", 0, true, L"foo\\'bar ^");
-
-    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_NO_SPACE, false, L"foobar^");
-    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_NO_SPACE, false, L"'foobar^");
-    TEST_1_COMPLETION(L"'foo'^", L"bar", COMPLETE_NO_SPACE, false, L"'foobar'^");
-    TEST_1_COMPLETION(L"'foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"'foo\\'bar^");
-    TEST_1_COMPLETION(L"foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"foo\\'bar^");
-
-    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
-    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
-
-    // See #6130
-    TEST_1_COMPLETION(L": (:^ ''", L"", 0, false, L": (: ^''");
-}
-
-// todo!("port this")
-static void test_autosuggestion_combining() {
-    say(L"Testing autosuggestion combining");
-    do_test(combine_command_and_autosuggestion(L"alpha", L"alphabeta") == L"alphabeta");
-
-    // When the last token contains no capital letters, we use the case of the autosuggestion.
-    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHABETA") == L"ALPHABETA");
-
-    // When the last token contains capital letters, we use its case.
-    do_test(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
-
-    // If autosuggestion is not longer than input, use the input's case.
-    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHAA") == L"ALPHAA");
-    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
-}
-
 /// Helper for test_timezone_env_vars().
 long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
     env_stack_t vars{parser_principal_parser()->deref().vars_boxed()};
@@ -1013,15 +832,12 @@ static const test_t s_tests[]{
     {TEST_GROUP("str_to_num"), test_str_to_num},
     {TEST_GROUP("enum"), test_enum_set},
     {TEST_GROUP("enum"), test_enum_array},
-    {TEST_GROUP("autosuggestion"), test_autosuggestion_combining},
-    {TEST_GROUP("test_abbreviations"), test_abbreviations},
     {TEST_GROUP("convert"), test_convert},
     {TEST_GROUP("convert"), test_convert_private_use},
     {TEST_GROUP("convert_ascii"), test_convert_ascii},
     {TEST_GROUP("iothread"), test_iothread},
     {TEST_GROUP("lru"), test_lru},
     {TEST_GROUP("colors"), test_colors},
-    {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("maybe"), test_maybe},
     {TEST_GROUP("normalize"), test_normalize_path},
     {TEST_GROUP("dirname"), test_dirname_basename},

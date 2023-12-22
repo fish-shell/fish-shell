@@ -321,10 +321,6 @@ void setenv_lock(const char *name, const char *value, int overwrite);
 void unsetenv_lock(const char *name);
 }
 
-/// Populate the values in the "$history" variable.
-/// fish_history_val is the value of the "$fish_history" variable, or "fish" if not set.
-wcstring_list_ffi_t get_history_variable_text_ffi(const wcstring &fish_history_val);
-
 void set_inheriteds_ffi();
 
 #endif

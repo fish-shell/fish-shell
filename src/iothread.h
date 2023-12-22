@@ -27,53 +27,6 @@ inline void iothread_perform_cantwait(std::function<void()> &&func) {
     iothread_perform_cantwait(callback);
 }
 
-inline uint64_t debounce_perform(const debounce_t &debouncer, const std::function<void()> &func) {
-    std::shared_ptr<callback_t> callback = std::make_shared<callback_t>([=](const void *) {
-        func();
-        return nullptr;
-    });
-
-    return debouncer.perform(callback);
-}
-
-template <typename R>
-inline void debounce_perform_with_completion(const debounce_t &debouncer, std::function<R()> &&func,
-                                             std::function<void(R)> &&completion) {
-    std::shared_ptr<callback_t> callback2 = std::make_shared<callback_t>([=](const void *r) {
-        assert(r != nullptr && "callback1 result was null!");
-        const R *result = (const R *)r;
-        completion(*result);
-        return nullptr;
-    });
-
-    std::shared_ptr<callback_t> callback1 = std::make_shared<callback_t>([=](const void *) {
-        const R *result = new R(func());
-        callback2->cleanups.push_back([result]() { delete result; });
-        return (void *)result;
-    });
-
-    debouncer.perform_with_completion(callback1, callback2);
-}
-
-template <typename R>
-inline void debounce_perform_with_completion(const debounce_t &debouncer, std::function<R()> &&func,
-                                             std::function<void(const R &)> &&completion) {
-    std::shared_ptr<callback_t> callback2 = std::make_shared<callback_t>([=](const void *r) {
-        assert(r != nullptr && "callback1 result was null!");
-        const R *result = (const R *)r;
-        completion(*result);
-        return nullptr;
-    });
-
-    std::shared_ptr<callback_t> callback1 = std::make_shared<callback_t>([=](const void *) {
-        const R *result = new R(func());
-        callback2->cleanups.push_back([result]() { delete result; });
-        return (void *)result;
-    });
-
-    debouncer.perform_with_completion(callback1, callback2);
-}
-
 inline bool make_detached_pthread(const std::function<void()> &func) {
     std::shared_ptr<callback_t> callback = std::make_shared<callback_t>([=](const void *) {
         func();

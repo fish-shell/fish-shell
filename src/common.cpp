@@ -757,22 +757,6 @@ void exit_without_destructors(int code) { _exit(code); }
 
 extern "C" void debug_thread_error();
 
-void save_term_foreground_process_group() { initial_fg_process_group = tcgetpgrp(STDIN_FILENO); }
-
-void restore_term_foreground_process_group_for_exit() {
-    // We wish to restore the tty to the initial owner. There's two ways this can go wrong:
-    //  1. We may steal the tty from someone else (#7060).
-    //  2. The call to tcsetpgrp may deliver SIGSTOP to us, and we will not exit.
-    // Hanging on exit seems worse, so ensure that SIGTTOU is ignored so we do not get SIGSTOP.
-    // Note initial_fg_process_group == 0 is possible with Linux pid namespaces.
-    // This is called during shutdown and from a signal handler. We don't bother to complain on
-    // failure because doing so is unlikely to be noticed.
-    if (initial_fg_process_group > 0 && initial_fg_process_group != getpgrp()) {
-        (void)signal(SIGTTOU, SIG_IGN);
-        (void)tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
-    }
-}
-
 /// Test if the specified character is in a range that fish uses internally to store special tokens.
 ///
 /// NOTE: This is used when tokenizing the input. It is also used when reading input, before

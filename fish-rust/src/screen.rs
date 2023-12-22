@@ -255,7 +255,7 @@ impl Screen {
         commandline: &wstr,
         explicit_len: usize,
         colors: &[HighlightSpec],
-        indent: &[usize],
+        indent: &[i32],
         cursor_pos: usize,
         vars: &dyn Environment,
         pager: &mut Pager,
@@ -336,7 +336,7 @@ impl Screen {
             self.desired_append_char(
                 effective_commandline.as_char_slice()[i],
                 colors[i],
-                indent[i],
+                usize::try_from(indent[i]).unwrap(),
                 first_line_prompt_space,
                 usize::try_from(fish_wcwidth_visible(
                     effective_commandline.as_char_slice()[i],
@@ -1960,17 +1960,13 @@ impl Screen {
         cursor_is_within_pager: bool,
     ) {
         let vars = unsafe { Box::from_raw(vars as *mut EnvStackRef) };
-        let mut my_indent = vec![];
-        for n in indent.as_slice() {
-            my_indent.push(usize::try_from(*n).unwrap());
-        }
         self.write(
             left_prompt.as_wstr(),
             right_prompt.as_wstr(),
             commandline.as_wstr(),
             explicit_len,
             &colors.0,
-            &my_indent,
+            indent.as_slice(),
             cursor_pos,
             vars.as_ref().as_ref().get_ref(),
             pager.get_mut(),

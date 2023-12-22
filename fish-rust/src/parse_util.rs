@@ -399,10 +399,10 @@ fn job_or_process_extent(
             {
                 if tok_begin >= pos {
                     finished = true;
-                    result.start = tok_begin;
+                    result.end = tok_begin;
                 } else {
                     // Statement at cursor might start after this token.
-                    result.end = tok_begin + token.length();
+                    result.start = tok_begin + token.length();
                     out_tokens.as_mut().map(|tokens| tokens.clear());
                 }
                 continue; // Do not add this to tokens
@@ -490,7 +490,7 @@ pub fn parse_util_lineno(s: &wstr, offset: usize) -> usize {
     }
 
     let end = offset.min(s.len());
-    s.chars().take(end).filter(|c| *c == '\n').count()
+    s.chars().take(end).filter(|c| *c == '\n').count() + 1
 }
 
 /// Calculate the line number of the specified cursor position.
@@ -566,6 +566,52 @@ pub fn parse_util_unescape_wildcards(s: &wstr) -> WString {
             result.push(c);
         }
         i += 1;
+    }
+    result
+}
+
+/// Return if the given string contains wildcard characters.
+pub fn parse_util_contains_wildcards(s: &wstr) -> bool {
+    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+
+    let mut i = 0;
+    while i < s.len() {
+        let c = s.as_char_slice()[i];
+        if c == '*' {
+            return true;
+        } else if unesc_qmark && c == '?' {
+            return true;
+        } else if c == '\\' {
+            if s.char_at(i + 1) == '*' {
+                i += 1;
+            } else if unesc_qmark && s.char_at(i + 1) == '?' {
+                i += 1;
+            } else if s.char_at(i + 1) == '\\' {
+                // Not a wildcard, but ensure the next iteration doesn't see this escaped backslash.
+                i += 1;
+            }
+        }
+        i += 1;
+    }
+    false
+}
+
+/// Escape any wildcard characters in the given string. e.g. convert
+/// "a*b" to "a\*b".
+pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
+    let mut result = WString::with_capacity(s.len());
+    let unesc_qmark = !feature_test(FeatureFlag::qmark_noglob);
+
+    for c in s.chars() {
+        if c == '*' {
+            result.push_str("\\*");
+        } else if unesc_qmark && c == '?' {
+            result.push_str("\\?");
+        } else if c == '\\' {
+            result.push_str("\\\\");
+        } else {
+            result.push(c);
+        }
     }
     result
 }

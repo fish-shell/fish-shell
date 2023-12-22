@@ -8,10 +8,13 @@ use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
 use crate::output::ColorSupport;
 use crate::proc::is_interactive_session;
+use crate::reader::{
+    reader_change_cursor_selection_mode, reader_change_history, reader_schedule_prompt_repaint,
+    reader_set_autosuggestion_enabled,
+};
 use crate::screen::screen_set_midnight_commander_hack;
 use crate::screen::LAYOUT_CACHE_SHARED;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharToFFI;
 use crate::wutil::fish_wcstoi;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -222,7 +225,7 @@ pub fn env_dispatch_var_change(key: &wstr, vars: &EnvStack) {
 
 fn handle_fish_term_change(vars: &EnvStack) {
     update_fish_color_support(vars);
-    crate::ffi::reader_schedule_prompt_repaint();
+    reader_schedule_prompt_repaint();
 }
 
 fn handle_change_ambiguous_width(vars: &EnvStack) {
@@ -243,7 +246,7 @@ fn handle_term_size_change(vars: &EnvStack) {
 
 fn handle_fish_history_change(vars: &EnvStack) {
     let session_id = crate::history::history_session_id(vars);
-    crate::ffi::reader_change_history(&session_id.to_ffi());
+    reader_change_history(&session_id);
 }
 
 fn handle_fish_cursor_selection_mode_change(vars: &EnvStack) {
@@ -261,16 +264,11 @@ fn handle_fish_cursor_selection_mode_change(vars: &EnvStack) {
         CursorSelectionMode::Exclusive
     };
 
-    let mode = mode as u8;
-    crate::ffi::reader_change_cursor_selection_mode(mode);
+    reader_change_cursor_selection_mode(mode);
 }
 
 fn handle_autosuggestion_change(vars: &EnvStack) {
-    // TODO: This was a call to reader_set_autosuggestion_enabled(vars) and
-    // reader::check_autosuggestion_enabled() should be private to the `reader` module.
-    crate::ffi::reader_set_autosuggestion_enabled_ffi(crate::reader::check_autosuggestion_enabled(
-        vars,
-    ));
+    reader_set_autosuggestion_enabled(vars);
 }
 
 fn handle_function_path_change(_: &EnvStack) {

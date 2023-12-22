@@ -173,7 +173,7 @@ impl Completion {
     pub fn new(
         completion: WString,
         description: WString,
-        r#match: StringFuzzyMatch,
+        r#match: StringFuzzyMatch, /* = exact_match */
         flags: CompleteFlags,
     ) -> Self {
         let flags = resolve_auto_space(&completion, flags);

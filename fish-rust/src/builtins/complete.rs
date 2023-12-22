@@ -3,13 +3,13 @@ use crate::common::{
     unescape_string, unescape_string_in_place, ScopeGuard, UnescapeFlags, UnescapeStringStyle,
 };
 use crate::complete::{complete_add_wrapper, complete_remove_wrapper, CompletionRequestOptions};
-use crate::ffi;
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
 use crate::nix::isatty;
 use crate::parse_constants::ParseErrorList;
 use crate::parse_util::parse_util_detect_errors_in_argument_list;
 use crate::parse_util::{parse_util_detect_errors, parse_util_token_extent};
+use crate::reader::{commandline_get_state, completion_apply_to_command_line};
 use crate::wcstringutil::string_suffixes_string;
 use crate::{
     common::str2wcstring,
@@ -485,13 +485,14 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         let do_complete_param = match do_complete_param {
             None => {
                 // No argument given, try to use the current commandline.
-                if !ffi::commandline_get_state_initialized_ffi() {
+                let commandline_state = commandline_get_state();
+                if !commandline_state.initialized {
                     // This corresponds to using 'complete -C' in non-interactive mode.
                     // See #2361    .
                     builtin_missing_argument(parser, streams, cmd, L!("-C"), true);
                     return STATUS_INVALID_ARGS;
                 }
-                ffi::commandline_get_state_text_ffi().from_ffi()
+                commandline_state.text
             }
             Some(param) => param,
         };
@@ -536,14 +537,13 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 // Make a fake commandline, and then apply the completion to it.
                 let faux_cmdline = &do_complete_param[token.clone()];
                 let mut tmp_cursor = faux_cmdline.len();
-                let mut faux_cmdline_with_completion = ffi::completion_apply_to_command_line(
-                    &next.completion.to_ffi(),
-                    unsafe { std::mem::transmute(next.flags) },
-                    &faux_cmdline.to_ffi(),
+                let mut faux_cmdline_with_completion = completion_apply_to_command_line(
+                    &next.completion,
+                    next.flags,
+                    faux_cmdline,
                     &mut tmp_cursor,
                     false,
-                )
-                .from_ffi();
+                );
 
                 // completion_apply_to_command_line will append a space unless COMPLETE_NO_SPACE
                 // is set. We don't want to set COMPLETE_NO_SPACE because that won't close

@@ -4,8 +4,11 @@ use std::sync::{
 };
 use std::time::Duration;
 
+use crate::common::ScopeGuard;
 use crate::ffi_tests::add_test;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::parser::Parser;
+use crate::reader::{reader_current_data, reader_pop, reader_push, ReaderConfig, ReaderData};
 use crate::threads::{iothread_drain_all, iothread_service_main, Debounce};
 use crate::wchar::prelude::*;
 
@@ -43,7 +46,7 @@ add_test!("test_debounce", || {
         };
         let completer = {
             let ctx = ctx.clone();
-            move |idx: usize| {
+            move |_ctx: &mut ReaderData, idx: usize| {
                 ctx.completion_ran[idx].store(true);
             }
         };
@@ -55,10 +58,13 @@ add_test!("test_debounce", || {
     ctx.cv.notify_all();
 
     // Wait until the last completion is done.
+    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let _pop = ScopeGuard::new((), |()| reader_pop());
+    let reader_data = reader_current_data().unwrap();
     while !ctx.completion_ran.last().unwrap().load() {
-        iothread_service_main();
+        iothread_service_main(reader_data);
     }
-    unsafe { iothread_drain_all() };
+    unsafe { iothread_drain_all(reader_data) };
 
     // Each perform() call may displace an existing queued operation.
     // Each operation waits until all are queued.

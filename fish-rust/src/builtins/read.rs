@@ -14,8 +14,8 @@ use crate::env::EnvMode;
 use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
-use crate::ffi;
 use crate::nix::isatty;
+use crate::reader::commandline_set_buffer;
 use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
@@ -241,7 +241,7 @@ fn read_interactive(
 
     // Keep in-memory history only.
     reader_push(parser, L!(""), conf);
-    ffi::commandline_set_buffer_ffi(&commandline.to_ffi(), usize::MAX);
+    commandline_set_buffer(commandline.to_owned(), None);
 
     let mline = {
         let _interactive = scoped_push_replacer(

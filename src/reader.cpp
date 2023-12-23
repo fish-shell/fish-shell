@@ -754,9 +754,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_t result);
     void update_autosuggestion();
-    void accept_autosuggestion(
-        bool full, bool single = false,
-        move_word_style_t style = move_word_style_t::move_word_style_punctuation);
+    void accept_autosuggestion(bool full, bool single = false,
+                               move_word_style_t style = move_word_style_t::Punctuation);
     void super_highlight_me_plenty();
 
     /// Finish up any outstanding syntax highlighting, before execution.
@@ -3729,10 +3728,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword: {
             move_word_style_t style =
-                (c == rl::backward_kill_bigword ? move_word_style_t::move_word_style_whitespace
-                 : c == rl::backward_kill_path_component
-                     ? move_word_style_t::move_word_style_path_components
-                     : move_word_style_t::move_word_style_punctuation);
+                (c == rl::backward_kill_bigword          ? move_word_style_t::Whitespace
+                 : c == rl::backward_kill_path_component ? move_word_style_t::PathComponents
+                                                         : move_word_style_t::Punctuation);
             // Is this the same killring item as the last kill?
             bool newv = (rls.last_cmd != rl::backward_kill_word &&
                          rls.last_cmd != rl::backward_kill_path_component &&
@@ -3744,8 +3742,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::kill_bigword: {
             // The "bigword" functions differ only in that they move to the next whitespace, not
             // punctuation.
-            auto move_style = (c == rl::kill_word) ? move_word_style_t::move_word_style_punctuation
-                                                   : move_word_style_t::move_word_style_whitespace;
+            auto move_style = (c == rl::kill_word) ? move_word_style_t::Punctuation
+                                                   : move_word_style_t::Whitespace;
             move_word(active_edit_line(), MOVE_DIR_RIGHT, true /* erase */, move_style,
                       rls.last_cmd != c /* same kill item if same movement */);
             break;
@@ -3762,9 +3760,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 break;
             }
 
-            auto move_style = (c != rl::backward_bigword)
-                                  ? move_word_style_t::move_word_style_punctuation
-                                  : move_word_style_t::move_word_style_whitespace;
+            auto move_style = (c != rl::backward_bigword) ? move_word_style_t::Punctuation
+                                                          : move_word_style_t::Whitespace;
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
                       false);
             break;
@@ -3781,9 +3778,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 break;
             }
 
-            auto move_style = (c != rl::forward_bigword)
-                                  ? move_word_style_t::move_word_style_punctuation
-                                  : move_word_style_t::move_word_style_whitespace;
+            auto move_style = (c != rl::forward_bigword) ? move_word_style_t::Punctuation
+                                                         : move_word_style_t::Whitespace;
             editable_line_t *el = active_edit_line();
             if (el->position() < el->size()) {
                 move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);
@@ -4006,8 +4002,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // We apply the operation from the current location to the end of the word.
             size_t pos = el->position();
             size_t init_pos = pos;
-            move_word(el, MOVE_DIR_RIGHT, false, move_word_style_t::move_word_style_punctuation,
-                      false);
+            move_word(el, MOVE_DIR_RIGHT, false, move_word_style_t::Punctuation, false);
             wcstring replacement;
             for (; pos < el->position(); pos++) {
                 wchar_t chr = el->text()->at(pos);

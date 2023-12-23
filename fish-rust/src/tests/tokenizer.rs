@@ -202,107 +202,95 @@ fn test_word_motion() {
 
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_punctuation,
+        MoveWordStyle::Punctuation,
         "^echo ^hello_^world.^txt^"
     );
     validate!(
         Direction::Right,
-        MoveWordStyle::move_word_style_punctuation,
+        MoveWordStyle::Punctuation,
         "^echo^ hello^_world^.txt^"
     );
 
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_punctuation,
+        MoveWordStyle::Punctuation,
         "echo ^foo_^foo_^foo/^/^/^/^/^    ^"
     );
     validate!(
         Direction::Right,
-        MoveWordStyle::move_word_style_punctuation,
+        MoveWordStyle::Punctuation,
         "^echo^ foo^_foo^_foo^/^/^/^/^/    ^"
     );
 
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^/^foo/^bar/^baz/^"
     );
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^echo ^--foo ^--bar^"
     );
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^echo ^hi ^> ^/^dev/^null^"
     );
 
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^echo ^/^foo/^bar{^aaa,^bbb,^ccc}^bak/^"
     );
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^echo ^bak ^///^"
     );
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^aaa ^@ ^@^aaa^"
     );
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^aaa ^a ^@^aaa^"
     );
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^aaa ^@@@ ^@@^aa^"
     );
     validate!(
         Direction::Left,
-        MoveWordStyle::move_word_style_path_components,
+        MoveWordStyle::PathComponents,
         "^aa^@@  ^aa@@^a^"
     );
 
+    validate!(Direction::Right, MoveWordStyle::Punctuation, "^a^ bcd^");
+    validate!(Direction::Right, MoveWordStyle::Punctuation, "a^b^ cde^");
+    validate!(Direction::Right, MoveWordStyle::Punctuation, "^ab^ cde^");
     validate!(
         Direction::Right,
-        MoveWordStyle::move_word_style_punctuation,
-        "^a^ bcd^"
-    );
-    validate!(
-        Direction::Right,
-        MoveWordStyle::move_word_style_punctuation,
-        "a^b^ cde^"
-    );
-    validate!(
-        Direction::Right,
-        MoveWordStyle::move_word_style_punctuation,
-        "^ab^ cde^"
-    );
-    validate!(
-        Direction::Right,
-        MoveWordStyle::move_word_style_punctuation,
+        MoveWordStyle::Punctuation,
         "^ab^&cd^ ^& ^e^ f^&"
     );
 
     validate!(
         Direction::Right,
-        MoveWordStyle::move_word_style_whitespace,
+        MoveWordStyle::Whitespace,
         "^^a-b-c^ d-e-f"
     );
     validate!(
         Direction::Right,
-        MoveWordStyle::move_word_style_whitespace,
+        MoveWordStyle::Whitespace,
         "^a-b-c^\n d-e-f^ "
     );
     validate!(
         Direction::Right,
-        MoveWordStyle::move_word_style_whitespace,
+        MoveWordStyle::Whitespace,
         "^a-b-c^\n\nd-e-f^ "
     );
 }

@@ -138,9 +138,12 @@ mod tokenizer_ffi {
     }
 
     enum MoveWordStyle {
-        move_word_style_punctuation,     // stop at punctuation
-        move_word_style_path_components, // stops at path components
-        move_word_style_whitespace,      // stops at whitespace
+        /// stop at punctuation
+        Punctuation,
+        /// stops at path components
+        PathComponents,
+        /// stops at whitespace
+        Whitespace,
     }
 
     /// Our state machine that implements "one word" movement or erasure.
@@ -1188,9 +1191,9 @@ impl MoveWordStateMachine {
 
     pub fn consume_char(&mut self, c: char) -> bool {
         match self.style {
-            MoveWordStyle::move_word_style_punctuation => self.consume_char_punctuation(c),
-            MoveWordStyle::move_word_style_path_components => self.consume_char_path_components(c),
-            MoveWordStyle::move_word_style_whitespace => self.consume_char_whitespace(c),
+            MoveWordStyle::Punctuation => self.consume_char_punctuation(c),
+            MoveWordStyle::PathComponents => self.consume_char_path_components(c),
+            MoveWordStyle::Whitespace => self.consume_char_whitespace(c),
             _ => panic!(),
         }
     }

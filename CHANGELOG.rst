@@ -1,16 +1,16 @@
 fish 3.7.0 (released ???)
 ====================================
 
-.. ignore: 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9926 9932
+.. ignore: 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9926 9932
 
 Notable improvements and fixes
 ------------------------------
-- ``LS_COLORS`` is no longer set automatically by ``ls`` (:issue:`10080`). Users
-  that set ``.dircolors`` should manually import it using other means.
+
 
 Deprecations and removed features
 ---------------------------------
-- 
+- ``LS_COLORS`` is no longer set automatically by the ``ls`` function (:issue:`10080`). Users
+  that set ``.dircolors`` should manually import it using other means.
 
 Scripting improvements
 ----------------------
@@ -33,11 +33,12 @@ Interactive improvements
 - Opening the history pager will now fill the search field with a search string if you're already in a search (:issue:`10005`). This makes it nicer to search something with up-arrow and then later decide to switch to the full pager.
 - ``read`` no longer enables bracketed paste so it doesn't stay enabled in combined commandlines like ``mysql -p(read --silent)`` (:issue:`8285`).
 - Vi mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`).
-- Vi mode cursor shaping is now enabled in iterm2 (:issue:`9698`).
-- Completing commands as root now finds commands not owned by root again (:issue:`9699`).
-- Selection now uses fish_color_selection for the foreground as well (:issue:`9717`).
+- Vi mode cursor shaping is now enabled in iTerm2 (:issue:`9698`).
+- Working directory reporting is enabled for iTerm2 (:issue:`9955`).
+- Completing commands as root includes commands not owned by root, fixing a regression introduced in fish 3.2.0 (:issue:`9699`).
+- Selection uses ``fish_color_selection`` for the foreground and background colors, as intended, rather than just the background (:issue:`9717`).
 - The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9812`, :issue:`9833`).
-- The interactive ``history delete`` now allows specifying index ranges like "1..5" (:issue:`9736`).
+- The interactive ``history delete`` interface now allows specifying index ranges like "1..5" (:issue:`9736`).
 - Command completion will now call the stock manpath on macOS instead of a potential homebrew version. This prevents awkward error messages (:issue:`9817`).
 - A new bind function ``history-pager-delete``, bound to :kbd:``Shift`` + :kbd:``Delete`` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
 - ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
@@ -59,15 +60,17 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+  - ``ar`` (:issue:`9720`)
+  - ``gojq`` (:issue:`9740`)
   - ``iwctl`` (:issue:`6884`)
-  - ``rpm-ostool`` (:issue:``9669``)
+  - ``qjs`` (:issue:`9723`)
+  - ``qjsc`` (:issue:`9731`)
+  - ``rpm-ostool`` (:issue:`9669`)
   - ``zabbix`` (:issue:`9647`)
 - The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
 - The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).
 - Improvements to many completions.
-- The manpage completion generator will no longer sometimes parse a manpage of the same name in two different directories (:issue:`9787`).
-- The manpage completion generator won't cause up-to-date python versions to spew SyntaxWarnings about invalid backslash sequences anymore (:issue:`9814`)
-- The manpage completion generator will replace a few more roff escapes (:issue:`9961`).
+- Improvements to the manual page completion generator (:issue:`9787`, :issue:`9814`, :issue:`9961`).
 
 Other improvements
 ------------------

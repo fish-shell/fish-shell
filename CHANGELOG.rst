@@ -1,4 +1,4 @@
-fish 3.7.0 (released ???)
+fish 3.8.0 (released ???)
 ===================================
 
 .. ignore: 9439 9440 9442 9452 9469 9480 9482
@@ -15,13 +15,9 @@ We have tried to keep these to a minimum, but in some cases it is unavoidable.
 - ``functions --handlers`` will now list handlers in a different order.
   Now it is definition order, first to last, where before it was last to first.
   This was never specifically defined, and we recommend not relying on a specific order (:issue:`9944`).
-- ``LS_COLORS`` is no longer set automatically by ``ls`` (:issue:`10080`). Users
-  that set ``.dircolors`` should manually import it using other means.
 
 Notable improvements and fixes
 ------------------------------
-- A new variable, :envvar:`fish_sequence_key_delay_ms`, can now be set to let bound key sequences time out.
-  This is useful e.g. to bind ``jk`` to switch modes in vi-mode while still being able to type "j". (:issue:`7401`, :issue:`9926`)
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 
 Deprecations and removed features
@@ -34,11 +30,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-- The history pager now shows fuzzy (subsequence) matches in the absence of exact substring matches (:issue:`9476`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
-- A new variable, :envvar:`fish_cursor_external`, can be used to specify to cursor shape when a command is launched. When unspecified, the value defaults to the value of :envvar:`fish_cursor_default` (:issue:`4656`).
-- Selected text (for example, in vi visual mode) now respects the foreground color and other options such as bold (:issue:`9717`).
-- An issue where the pager would not show the last item after pressing the up arrow key has been fixed (:issue:`9833`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -50,9 +42,6 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added or improved completions for:
-  - ``ar`` (:issue:`9719`)
-- ``gcc`` completion descriptions have been clarified and shortened (:issue:`9722`).
-- ``qdbus`` completions now properly handle tags (:issue:`9776`).
 - ``age`` (:issue:`9813`).
 - ``age-keygen`` (:issue:`9813`).
 - ``curl`` (:issue:`9863`).
@@ -60,7 +49,6 @@ Completions
 - ``blender`` (:issue:`9905`).
 - ``gimp`` (:issue:`9904`).
 - ``horcrux`` (:issue:`9922`).
-- ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
 - ``java_home`` (:issue:`9998`).
 - ``crc`` (:issue:`10034`).
 - ``oc`` (:issue:`10034`).
@@ -71,12 +59,9 @@ Improved terminal support
 
 Other improvements
 ------------------
-- A bug that prevented certain executables from being offered in tab-completions when root has been fixed (:issue:`9639`).
-- Builin `jobs` will print commands with non-printable chars escaped (:issue:`9808`)
-- An integer overflow in `string repeat` leading to a near-infinite loop has been fixed (:issue:`9899`).
-- `string shorten` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
-- `string pad` no longer allows non-printable characters as padding. (:issue:`9854`)
-- PWD reporting via OSC 7 is now enabled by default for iTerm2.
+- An integer overflow in ``string repeat`` leading to a near-infinite loop has been fixed (:issue:`9899`).
+- ``string shorten`` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
+- ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
 
 For distributors
 ----------------

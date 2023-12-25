@@ -45,7 +45,7 @@ function prompt_pwd --description 'short CWD for the prompt'
                 continue
             end
 
-            string join / (string replace -ar '(\.?[^/]{'"$fish_prompt_pwd_dir_length"'})[^/]*/' '$1/' $tmp) $full
+            string join / -- (string replace -ar -- '(\.?[^/]{'"$fish_prompt_pwd_dir_length"'})[^/]*/' '$1/' $tmp) $full
         end
     end
 end

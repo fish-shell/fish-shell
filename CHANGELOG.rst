@@ -1,11 +1,11 @@
 fish 3.7.0 (released ???)
 ====================================
 
-.. ignore: 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9926 9932
+.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9804 9812 9825 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932
 
 Notable improvements and fixes
 ------------------------------
-
+- Performance improvements for command completions and globbing, where supported by the operating system, especially on slow filesystems such as NFS (:issue:`9891`, :issue:`9931`, :issue:`10032`, :issue:`10052`).
 
 Deprecations and removed features
 ---------------------------------
@@ -15,11 +15,8 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - Running ``exit`` with a negative number no longer crashes fish (:issue:`9659`).
-- ``fish -c`` will now return a non-zero status if parsing failed (:issue:`9888`).
-- Globbing will now use fewer system calls in some cases, especially with a trailing slash (``/path/a*/``), and for searching for commands.
-  Some of this requires filesystem support - the d_type field in the dirent struct returned by readdir(3).
-  This improves performance for command completions and globbing, especially on slow filesystems like NFS (:issue:`9891`, :issue:`9931`, :issue:`10032`, :issue:`10052`).
-- The ``jobs`` builtin will now escape the commands it prints (:issue:`9875`, :issue:`9808`).
+- ``fish --command`` will now return a non-zero status if parsing failed (:issue:`9888`).
+- The ``jobs`` builtin will now escape the commands it prints (:issue:`9808`).
 - ``string repeat`` no longer overflows if the count is a multiple of the chunk size (:issue:`9900`).
 - The ``builtin`` builtin will now properly error out with invalid arguments instead of doing nothing and returning true (:issue:`9942`).
 - ``command time`` in a pipeline is allowed again, as is ``command and`` and ``command or`` (:issue:`9985`).
@@ -37,9 +34,9 @@ Interactive improvements
 - Working directory reporting is enabled for iTerm2 (:issue:`9955`).
 - Completing commands as root includes commands not owned by root, fixing a regression introduced in fish 3.2.0 (:issue:`9699`).
 - Selection uses ``fish_color_selection`` for the foreground and background colors, as intended, rather than just the background (:issue:`9717`).
-- The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9812`, :issue:`9833`).
+- The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9833`).
 - The interactive ``history delete`` interface now allows specifying index ranges like "1..5" (:issue:`9736`).
-- Command completion will now call the stock manpath on macOS instead of a potential homebrew version. This prevents awkward error messages (:issue:`9817`).
+- Command completion will now call the stock ``manpath`` on macOS, instead of a potential Homebrew version. This prevents awkward error messages (:issue:`9817`).
 - A new bind function ``history-pager-delete``, bound to :kbd:``Shift`` + :kbd:``Delete`` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
 - ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
 - fish can now be configured to wait a specified amount of time for a multi-key sequence to be completed,  instead of waiting indefinitely. For example, this makes binding ``kj`` to switching modes in vi mode possible.
@@ -54,15 +51,20 @@ Interactive improvements
 Improved prompts
 ^^^^^^^^^^^^^^^^
 - The default theme now only uses named colors, so it will track the terminal's palette (:issue:`9913`).
-- The Dracula theme has now been synced with upstream (:issue:`9807`).
+- The Dracula theme has now been synced with upstream (:issue:`9807`); use ``fish_config`` to re-apply it to pick up the changes.
 - ``fish_vcs_prompt`` now also supports fossil (:issue:`9497`).
 
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+  - ``age`` and ``age-keygen`` (:issue:`9813`)
   - ``ar`` (:issue:`9720`)
+  - ``blender`` (:issue:`9905`)
+  - ``gimp`` (:issue:`9904`)
   - ``gojq`` (:issue:`9740`)
+  - ``horcrux`` (:issue:`9922`)
   - ``iwctl`` (:issue:`6884`)
+  - ``krita`` (:issue:`9903`)
   - ``qjs`` (:issue:`9723`)
   - ``qjsc`` (:issue:`9731`)
   - ``rpm-ostool`` (:issue:`9669`)
@@ -75,10 +77,12 @@ Completions
 Other improvements
 ------------------
 - Improvements and corrections to the documentation.
+- The Web-based configuration now uses a more readable style when printed, such as for a keybinding reference (:issue:`9828`)
+- Updates to the German translations (:issue:`9824`)
 
 For distributors
 ----------------
-- Fish will now also look for libterminfo, which is what NetBSD curses calls libtinfo (:issue:`9794`).
+- The CMake configure step will now also look for libterminfo as an alternative name for libtinfo, as used in NetBSD curses (:issue:`9794`).
 
 fish 3.6.4 (released December 5, 2023)
 ======================================

@@ -1,7 +1,7 @@
 fish 3.7.0 (released ???)
 ====================================
 
-.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9804 9812 9825 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932
+.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9804 9812 9825 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983
 
 Notable improvements and fixes
 ------------------------------
@@ -43,10 +43,11 @@ Interactive improvements
   The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`), and may be set by default in future versions.
 - ``open`` no longer works around an xdg-open bug that was finally fixed and can be used to launch terminal programs again (:issue:`10045`).
 - The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes :kbd:`Alt` combination bindings in vi mode (:issue:`7910`).
-- A new ``clear-screen`` bind function is used for :kbd:`Alt`\ +\ :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
+- A new ``clear-screen`` bind function is used for :kbd:`Ctrl`\ +\ :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
   so it eliminates visible flicker unless the terminal is very slow (:issue:`10044`).
 - The ``alias`` convenience function has better support for commands with unusual characters, like ``+`` (:issue:`8720`).
 - A longstanding issue where items in the pager would sometimes display without proper formatting has been fixed (:issue:`9617`).
+- The :kbd:`Alt` +\ :kbd:`l` binding, which lists the directory of the token under the cursor, correctly expands tilde (``~``) to the home directory (:issue:`9954`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

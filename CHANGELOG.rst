@@ -43,13 +43,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added or improved completions for:
-- ``age`` (:issue:`9813`).
-- ``age-keygen`` (:issue:`9813`).
 - ``curl`` (:issue:`9863`).
-- ``krita`` (:issue:`9903`).
-- ``blender`` (:issue:`9905`).
-- ``gimp`` (:issue:`9904`).
-- ``horcrux`` (:issue:`9922`).
 - ``java_home`` (:issue:`9998`).
 - ``crc`` (:issue:`10034`).
 - ``oc`` (:issue:`10034`).
@@ -66,6 +60,7 @@ Other improvements
 
 For distributors
 ----------------
+- Xcode support has been removed (:issue:`9924`).
 - *Placeholder to fix Sphinx warning*
 
 --------------

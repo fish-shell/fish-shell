@@ -1,8 +1,8 @@
 function __fish_complete_setxkbmap --description 'Complete setxkb options' --argument-names what
-    sed -e "1,/! $what/d" -e '/^\s*$/,$d' /usr/share/X11/xkb/rules/xorg.lst | sed -r 's/\s+(\S+)\s+(.+)/\1\t\2/'
+    sed -e "1,/! $what/d" -e '/^[[:space:]]*$/,$d' /usr/share/X11/xkb/rules/xorg.lst | sed -r 's/[[:space:]]+([^[:space:]]+)[[:space:]]+(.+)/\1\t\2/'
 end
 
-set -l filter '"s/\S+\s\S+\s(.+)\((.+)\)/\1\t\2/;"'
+set -l filter '"s/[^[:space:]]+[[:space:]][^[:space:]]+[[:space:]](.+)\((.+)\)/\1\t\2/;"'
 
 complete -c setxkbmap -o '?' -o help -d 'Print this message'
 complete -c setxkbmap -o compat -d 'Specifies compatibility map component name' -xa "(sed -r $filter /usr/share/X11/xkb/compat.dir)"

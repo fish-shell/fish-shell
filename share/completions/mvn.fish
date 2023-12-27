@@ -88,7 +88,7 @@ function __fish_mvn_profiles
 end
 
 function __fish_mvn_projects
-    grep "<module>" pom.xml 2>/dev/null | sed 's/\s*<[^<]*>\(.*\)<[^<]*>/\1/'
+    grep "<module>" pom.xml 2>/dev/null | sed 's/[[:space:]]*<[^<]*>\(.*\)<[^<]*>/\1/'
 end
 
 complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles)" -d "Comma-delimited list of profiles to activate"

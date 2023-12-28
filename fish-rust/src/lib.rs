@@ -61,6 +61,7 @@ mod ffi_init;
 mod ffi_tests;
 mod fish;
 mod fish_indent;
+mod fish_key_reader;
 mod flog;
 mod fork_exec;
 mod function;

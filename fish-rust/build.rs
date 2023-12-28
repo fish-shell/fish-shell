@@ -85,6 +85,7 @@ fn main() {
         "fish-rust/src/ffi_init.rs",
         "fish-rust/src/ffi_tests.rs",
         "fish-rust/src/fish_indent.rs",
+        "fish-rust/src/fish_key_reader.rs",
         "fish-rust/src/fish.rs",
         "fish-rust/src/function.rs",
         "fish-rust/src/future_feature_flags.rs",

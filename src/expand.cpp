@@ -881,6 +881,9 @@ wcstring replace_home_directory_with_tilde(const wcstring &str, const environmen
     if (string_prefixes_string(L"/", result)) {
         wcstring home_directory = L"~";
         expand_tilde(home_directory, vars);
+        // If we can't get a home directory, don't replace anything.
+        // This is the case e.g. with --no-execute.
+        if (home_directory.empty()) return result;
         if (!string_suffixes_string(L"/", home_directory)) {
             home_directory.push_back(L'/');
         }

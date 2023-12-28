@@ -23,5 +23,14 @@ echo "begin; echo oops" | $fish -n
 echo $status
 #CHECK: 127
 
+echo "begin" > broken
+$fish -n $PWD/broken
+#CHECKERR: /{{.*}}broken (line 1): Missing end to balance this begin
+#CHECKERR: begin
+#CHECKERR: ^~~~^
+#CHECKERR: warning: Error while reading file /{{.*}}broken
+
+rm broken
+
 # Littlecheck assumes a status of 127 means the shebang was invalid.
 exit 0

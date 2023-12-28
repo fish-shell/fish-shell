@@ -72,7 +72,7 @@ use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
 use crate::operation_context::{get_bg_context, OperationContext};
-use crate::output::{parse_color, Outputter};
+use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
@@ -2060,35 +2060,10 @@ impl ReaderData {
                 if self.command_line.is_empty() {
                     return;
                 }
-                let outp = Outputter::stdoutput().get_mut();
-                // Move cursor to the end of the line.
-                let end = self.command_line.len();
-                self.update_buff_pos(EditableLineTag::Commandline, Some(end));
-                self.autosuggestion.clear();
-                // Repaint also changes the actual cursor position
-                if self.is_repaint_needed(None) {
-                    self.layout_and_repaint(L!("cancel"));
-                }
-
-                if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
-                    outp.set_color(
-                        parse_color(&fish_color_cancel, false),
-                        parse_color(&fish_color_cancel, true),
-                    );
-                }
-                outp.write_wstr(L!("^C"));
-                outp.set_color(RgbColor::RESET, RgbColor::RESET);
-
-                // We print a newline last so the prompt_sp hack doesn't get us.
-                outp.push(b'\n');
-
-                self.set_command_line_and_position(
+                self.push_edit(
                     EditableLineTag::Commandline,
-                    L!("").to_owned(),
-                    0,
+                    Edit::new(0..self.command_line.len(), L!("").to_owned()),
                 );
-                self.screen
-                    .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
 
                 // Post fish_cancel.
                 event::fire_generic(self.parser(), L!("fish_cancel").to_owned(), vec![]);

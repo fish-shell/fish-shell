@@ -307,6 +307,11 @@ pub fn replace_home_directory_with_tilde(s: &wstr, vars: &dyn Environment) -> WS
     if result.starts_with("/"L) {
         let mut home_directory = "~"L.to_owned();
         expand_tilde(&mut home_directory, vars);
+        // If we can't get a home directory, don't replace anything.
+        // This is the case e.g. with --no-execute
+        if home_directory.is_empty() {
+            return result;
+        }
         if !home_directory.ends_with("/"L) {
             home_directory.push('/');
         }

@@ -597,7 +597,7 @@ mod ffi {
             is_parent,
             pid,
             desired_pgid,
-            job_id.try_into().unwrap(),
+            job_id.into(),
             command_str,
             argv0_str,
         )

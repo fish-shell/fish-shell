@@ -38,7 +38,7 @@ extern "C" fn output_set_color_support(val: u8) {
 fn term_supports_color_natively(term: &Term, c: u8) -> bool {
     #[allow(clippy::int_plus_one)]
     if let Some(max_colors) = term.max_colors {
-        max_colors >= usize::try_from(c).unwrap() + 1
+        max_colors >= usize::from(c) + 1
     } else {
         false
     }

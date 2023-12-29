@@ -9,6 +9,7 @@
 #![allow(clippy::comparison_chain)]
 #![allow(clippy::derivable_impls)]
 #![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::get_first)]
 #![allow(clippy::if_same_then_else)]
 #![allow(clippy::manual_is_ascii_check)]
 #![allow(clippy::mut_from_ref)]

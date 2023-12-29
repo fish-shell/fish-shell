@@ -64,7 +64,7 @@ pub fn fish_wcwidth(c: char) -> i32 {
     // Check for Emoji_Modifier property. Only the Fitzpatrick modifiers have this, in range
     // 1F3FB..1F3FF. This is a hack because such an emoji appearing on its own would be drawn as
     // width 2, but that's unlikely to be useful. See #8275.
-    if ('\u{F3FB}'..='\u{1F3FF}').contains(&c) {
+    if ('\u{1F3FB}'..='\u{1F3FF}').contains(&c) {
         return 0;
     }
 

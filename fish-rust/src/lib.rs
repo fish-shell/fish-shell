@@ -54,6 +54,7 @@ mod fds;
 #[allow(clippy::new_ret_no_self)]
 #[allow(clippy::wrong_self_convention)]
 #[allow(clippy::needless_lifetimes)]
+#[allow(unused_imports)]
 mod ffi;
 mod ffi_init;
 mod ffi_tests;

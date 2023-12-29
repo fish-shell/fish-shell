@@ -1,4 +1,3 @@
-use super::wcstoi;
 use super::wopendir;
 use crate::common::{cstr2wcstring, wcs2zstring};
 use crate::wchar::{wstr, WString};
@@ -13,7 +12,6 @@ use std::os::fd::RawFd;
 use std::ptr::NonNull;
 use std::rc::Rc;
 use std::slice;
-pub use wcstoi::*;
 
 /// Types of files that may be in a directory.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -4,7 +4,6 @@ use crate::wchar;
 use ::std::pin::Pin;
 #[rustfmt::skip]
 use ::std::slice;
-pub use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::WCharFromFFI;
 use autocxx::prelude::*;
@@ -16,7 +15,6 @@ include_cpp! {
     #include "autoload.h"
     #include "color.h"
     #include "common.h"
-    #include "complete.h"
     #include "env.h"
     #include "env_dispatch.h"
     #include "env_universal_common.h"
@@ -26,8 +24,6 @@ include_cpp! {
     #include "fds.h"
     #include "flog.h"
     #include "function.h"
-    #include "highlight.h"
-    #include "history.h"
     #include "io.h"
     #include "input_common.h"
     #include "input.h"
@@ -49,7 +45,6 @@ include_cpp! {
 
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
-    generate!("wperror")
     generate!("set_inheriteds_ffi")
 
     generate!("reader_init")
@@ -64,7 +59,6 @@ include_cpp! {
     generate!("set_flog_output_file_ffi")
     generate!("flog_setlinebuf_ffi")
     generate!("activate_flog_categories_by_pattern")
-    generate!("save_term_foreground_process_group")
     generate!("restore_term_foreground_process_group_for_exit")
 
     generate!("builtin_bind")
@@ -78,7 +72,6 @@ include_cpp! {
 
     generate!("wgettext_ptr")
 
-    generate!("highlight_role_t")
     generate!("highlight_spec_t")
 
     generate!("rgb_color_t")
@@ -158,9 +151,7 @@ impl Repin for wcstring_list_ffi_t {}
 impl Repin for rgb_color_t {}
 impl Repin for OutputStreamFfi<'_> {}
 
-pub use autocxx::c_int;
 pub use ffi::*;
-pub use libc::c_char;
 
 /// A version of [`* const core::ffi::c_void`] (or [`* const libc::c_void`], if you prefer) that
 /// implements `Copy` and `Clone`, because those two don't. Used to represent a `void *` ptr for ffi

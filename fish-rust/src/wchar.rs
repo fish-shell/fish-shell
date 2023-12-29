@@ -8,7 +8,7 @@ use crate::common::{ENCODE_DIRECT_BASE, ENCODE_DIRECT_END};
 pub use widestring::{Utf32Str as wstr, Utf32String as WString};
 
 /// Pull in our extensions.
-pub use crate::wchar_ext::{IntoCharIter, WExt};
+pub use crate::wchar_ext::IntoCharIter;
 
 pub(crate) mod prelude {
     pub(crate) use crate::{

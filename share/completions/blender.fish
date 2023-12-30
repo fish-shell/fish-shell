@@ -38,14 +38,6 @@ for mod in addon_utils.modules():
         string replace -r -f '^\t' ''
 end
 
-function __blender_complete_addon_list
-    set -l current_token (commandline -t | string replace -r '[^,]*$' '')
-    set -l addons (__blender_list_addons)
-    for a in $addons
-        echo "$current_token$a,"
-    end
-end
-
 complete -c blender -n 'not __blender_player' -o h -l help -d 'Show help'
 complete -c blender -n 'not __blender_player' -o v -l version -d 'Show version'
 
@@ -113,7 +105,7 @@ complete -c blender -n 'not __blender_player' -l python-expr -d 'Specify Python 
 complete -c blender -n 'not __blender_player' -l python-console -d 'Open interactive console'
 complete -c blender -n 'not __blender_player' -l python-exit-code -d 'Specify Python exit code on exception'
 complete -c blender -n 'not __blender_player' -l python-use-system-env -d 'Use system env vars and user site-packages'
-complete -c blender -n 'not __blender_player' -l addons -a '(__blender_complete_addon_list)' -d 'Specify addons' -x
+complete -c blender -n 'not __blender_player' -l addons -a '(__fish_append , (__blender_list_addons))' -d 'Specify addons' -x
 
 # Logging Options:
 complete -c blender -n 'not __blender_player' -l log -d 'Enable logging categories' -x

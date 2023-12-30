@@ -388,7 +388,9 @@ function fish_git_prompt --description "Prompt function for Git"
     end
 
     # Formatting
-    if test -n "$f"
+    # If we have state, a bare repo or upstream difference, add a separator.
+    # merging is already separate.
+    if test -n "$f$c$p"
         set f "$space$f"
     end
     set -l format $argv[1]

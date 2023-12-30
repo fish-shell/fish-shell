@@ -3,14 +3,13 @@
 # invalid flags, mode names, etc. are caught as well as to verify that valid
 # ones are allowed.
 
-# Verify that an invalid bind mode is rejected. >&2
+# Verify that an invalid bind mode is rejected.
 bind -m 'bad bind mode' \cX true
 # CHECKERR: bind: bad bind mode: invalid mode name. See `help identifiers`
 
-# Verify that an invalid bind mode target is rejected. >&2
+# Verify that an invalid bind mode target is rejected.
 bind -M bind-mode \cX true
 # CHECKERR: bind: bind-mode: invalid mode name. See `help identifiers`
-# CHECKERR: bind: No binding found for sequence '\t'
 
 # This should succeed and result in a success, zero, status.
 bind -M bind_mode \cX true
@@ -108,8 +107,9 @@ bind | string match -v '*backward-delete-char'
 bind --erase \t
 bind \t
 bind \t 'echo wurst'
+# CHECK: bind --preset \t complete
 bind --erase --user --preset \t
 bind \t
-# CHECK: bind --preset \t complete
+# CHECKERR: bind: No binding found for sequence '\t'
 
 exit 0

@@ -7,6 +7,7 @@ use crate::common::scoped_push_replacer;
 use crate::common::str2wcstring;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
+use crate::common::ScopeGuard;
 use crate::common::UnescapeStringStyle;
 use crate::compat::MB_CUR_MAX;
 use crate::env::EnvMode;
@@ -25,7 +26,9 @@ use crate::wutil;
 use crate::wutil::encoding::mbrtowc;
 use crate::wutil::encoding::zero_mbstate;
 use crate::wutil::perror;
+use crate::wutil::write_to_fd;
 use libc::SEEK_CUR;
+use libc::STDOUT_FILENO;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
 
@@ -584,13 +587,21 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         }
     };
 
+    let stream_stdin_is_a_tty = isatty(streams.stdin_fd);
+
+    let _maybe_disable_bracketed_paste = stream_stdin_is_a_tty.then(|| {
+        let _ = write_to_fd(b"\x1b[?2004h", STDOUT_FILENO);
+        ScopeGuard::new((), |()| {
+            let _ = write_to_fd(b"\x1b[?2004l", STDOUT_FILENO);
+        })
+    });
+
     // Normally, we either consume a line of input or all available input. But if we are reading a
     // line at a time, we need a middle ground where we only consume as many lines as we need to
     // fill the given vars.
     loop {
         buff.clear();
 
-        let stream_stdin_is_a_tty = isatty(streams.stdin_fd);
         if stream_stdin_is_a_tty && !opts.split_null {
             // Read interactively using reader_readline(). This does not support splitting on null.
             exit_res = read_interactive(

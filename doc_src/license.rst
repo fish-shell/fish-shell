@@ -176,9 +176,8 @@ products or services of Licensee, or any third party.
 agrees to be bound by the terms and conditions of this License
 Agreement.
 
-----
-
-**License for CMake**
+License for CMake
+-----------------
 
 The ``fish`` source code contains files from `CMake <https://cmake.org>`_ to support the build system.
 This code is distributed under the terms of a BSD-style license. Copyright 2000-2017 Kitware, Inc.
@@ -217,9 +216,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-----
-
-**MIT License**
+MIT License
+-----------
 
 ``fish`` includes a copy of Alpine.js, which is copyright 2019-2021 Caleb Porzio and contributors, and licensed under the MIT License. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and the Nord theme, which is copyright 2016-present Sven Greb. These themes are also used under the MIT license.
 

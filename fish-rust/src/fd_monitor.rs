@@ -517,6 +517,9 @@ impl FdMonitor {
             });
         }
 
+        // Tickle our signaller.
+        self.change_signaller.post();
+
         item_id
     }
 

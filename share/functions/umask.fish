@@ -39,7 +39,8 @@ set __fish_umask_set_table 6 5 4 3 2 1 0
 function __fish_umask_set
     set -l to_set $argv[1]
     if test $to_set -eq 0
-        return 7
+        echo 7
+        return
     end
     echo $__fish_umask_set_table[$to_set]
 end

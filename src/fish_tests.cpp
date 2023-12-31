@@ -159,18 +159,6 @@ static void err(const wchar_t *blah, ...) {
     std::fwprintf(stdout, L"\n");
 }
 
-/// Joins a std::vector<wcstring> via commas.
-wcstring comma_join(const std::vector<wcstring> &lst) {
-    wcstring result;
-    for (size_t i = 0; i < lst.size(); i++) {
-        if (i > 0) {
-            result.push_back(L',');
-        }
-        result.append(lst.at(i));
-    }
-    return result;
-}
-
 static std::vector<std::string> pushed_dirs;
 
 // Helper to return a string whose length greatly exceeds PATH_MAX.

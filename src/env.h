@@ -313,9 +313,6 @@ enum {
 struct EnvDyn;
 #endif
 
-/// Gets a path appropriate for runtime storage
-wcstring env_get_runtime_path();
-
 /// A wrapper around setenv() and unsetenv() which use a lock.
 /// In general setenv() and getenv() are highly incompatible with threads. This makes it only
 /// slightly safer.
@@ -323,10 +320,6 @@ extern "C" {
 void setenv_lock(const char *name, const char *value, int overwrite);
 void unsetenv_lock(const char *name);
 }
-
-/// Returns the originally inherited variables and their values.
-/// This is a simple key->value map and not e.g. cut into paths.
-const std::map<wcstring, wcstring> &env_get_inherited();
 
 /// Populate the values in the "$history" variable.
 /// fish_history_val is the value of the "$fish_history" variable, or "fish" if not set.

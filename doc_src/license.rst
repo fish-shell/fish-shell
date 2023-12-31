@@ -233,7 +233,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 **MIT License**
 
-``fish`` includes a copy of Alpine.js, which is copyright 2019-2021 Caleb Porzio and contributors, and licensed under the MIT License. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and is licensed under the same license.
+``fish`` includes a copy of Alpine.js, which is copyright 2019-2021 Caleb Porzio and contributors, and licensed under the MIT License. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and the Nord theme, which is copyright 2016-present Sven Greb. These themes are also used under the MIT license.
 
 The MIT license follows.
 

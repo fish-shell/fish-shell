@@ -1,7 +1,7 @@
 fish 3.7.0 (released ???)
 ====================================
 
-.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9799 9800 9804 9812 9825 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983 9994 10007 10008 10011 10020 10023 10029 10038 10039 10051 10055 10059 10062 10073 10079 10081 10082 10084 10086 10089 10096 10097 10113
+.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9799 9800 9804 9812 9825 9841 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983 9994 10007 10008 10011 10020 10023 10029 10038 10039 10051 10055 10059 10062 10073 10079 10081 10082 10084 10086 10089 10096 10097 10113 10120 10130 10133 10144 10147 10149 10150 10152 10163 10171
 
 Notable improvements and fixes
 ------------------------------
@@ -25,11 +25,12 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - The :kbd:`Alt`\ +\ :kbd:`s` binding now also checks ``please`` in addition to ``sudo`` and ``doas``
-- The history pager will now also attempt subsequence matches (:issue:`9476`), so you can find a commandline like ``git log 3.6.1..Integration_3.7.0`` by searching for ``gitInt``.
+- The history pager will now also attempt subsequence matches (:issue:`9476`), so you can find a command line like ``git log 3.6.1..Integration_3.7.0`` by searching for ``gitInt``.
 - Closing the history pager with enter will now copy the search text to the commandline if there was no match, so you can continue editing the command you tried to find right away (:issue:`9934`).
 - Opening the history pager will now fill the search field with a search string if you're already in a search (:issue:`10005`). This makes it nicer to search something with :kbd:`↑` and then later decide to switch to the full pager.
 - ``read`` no longer enables bracketed paste so it doesn't stay enabled in combined commandlines like ``mysql -p(read --silent)`` (:issue:`8285`).
 - Vi mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`).
+- Opening the history search in Vi mode switches to insert mode correctly (:issue:`10141`).
 - Vi mode cursor shaping is now enabled in iTerm2 (:issue:`9698`).
 - Working directory reporting is enabled for iTerm2 (:issue:`9955`).
 - Completing commands as root includes commands not owned by root, fixing a regression introduced in fish 3.2.0 (:issue:`9699`).
@@ -48,7 +49,7 @@ Interactive improvements
 - The ``alias`` convenience function has better support for commands with unusual characters, like ``+`` (:issue:`8720`).
 - A longstanding issue where items in the pager would sometimes display without proper formatting has been fixed (:issue:`9617`).
 - The :kbd:`Alt` +\ :kbd:`l` binding, which lists the directory of the token under the cursor, correctly expands tilde (``~``) to the home directory (:issue:`9954`).
-- Various fish utilities that use an external pager will now try a selection of common pagers if the :envvar:`PAGER` environment variable is not set, or write the output to the screen without a pager if there is not one available (:issue:`10074`)
+- Various fish utilities that use an external pager will now try a selection of common pagers if the :envvar:`PAGER` environment variable is not set, or write the output to the screen without a pager if there is not one available (:issue:`10074`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 
 Improved prompts
@@ -56,6 +57,7 @@ Improved prompts
 - The default theme now only uses named colors, so it will track the terminal's palette (:issue:`9913`).
 - The Dracula theme has now been synced with upstream (:issue:`9807`); use ``fish_config`` to re-apply it to pick up the changes.
 - ``fish_vcs_prompt`` now also supports fossil (:issue:`9497`).
+- Prompts which display the working directory using the ``prompt_pwd`` function correctly display directories beginning with dashes (:issue:`10169`).
 
 Completions
 ^^^^^^^^^^^
@@ -65,8 +67,10 @@ Completions
   - ``ar`` (:issue:`9720`)
   - ``blender`` (:issue:`9905`)
   - ``bws`` (:issue:`10165`)
+  - ``calendar`` (:issue:`10138`)
   - ``checkinstall`` (:issue:`10106`)
   - ``crc`` (:issue:`10034`)
+  - ``doctl``
   - ``gimp`` (:issue:`9904`)
   - ``gojq`` (:issue:`9740`)
   - ``horcrux`` (:issue:`9922`)
@@ -77,7 +81,9 @@ Completions
   - ``oc`` (:issue:`10034`)
   - ``qjs`` (:issue:`9723`)
   - ``qjsc`` (:issue:`9731`)
+  - ``rename`` (:issue:`10136`)
   - ``rpm-ostool`` (:issue:`9669`)
+  - ``smerge`` (:issue:`10135`)
   - ``userdel`` (:issue:`10056`)
   - ``watchexec`` (:issue:`10027`)
   - ``wpctl`` (:issue:`10043`)
@@ -86,6 +92,7 @@ Completions
 - The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
 - The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).
 - ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
+- The ``gw`` and ``gradlew`` completions are loaded properly (:issue:`10127`).
 - Improvements to many other completions.
 - Improvements to the manual page completion generator (:issue:`9787`, :issue:`9814`, :issue:`9961`).
 

@@ -1,7 +1,7 @@
 fish 3.7.0 (released ???)
 ====================================
 
-.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9800 9804 9812 9825 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983 9994 10007 10008 10011 10020 10023 10029 10038 10039 10051 10055 10059 10062
+.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9799 9800 9804 9812 9825 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983 9994 10007 10008 10011 10020 10023 10029 10038 10039 10051 10055 10059 10062 10073 10079 10081 10082 10084 10086 10089 10096 10097 10113
 
 Notable improvements and fixes
 ------------------------------
@@ -35,7 +35,7 @@ Interactive improvements
 - Completing commands as root includes commands not owned by root, fixing a regression introduced in fish 3.2.0 (:issue:`9699`).
 - Selection uses ``fish_color_selection`` for the foreground and background colors, as intended, rather than just the background (:issue:`9717`).
 - The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9833`).
-- The interactive ``history delete`` interface now allows specifying index ranges like "1..5" (:issue:`9736`).
+- The interactive ``history delete`` interface now allows specifying index ranges like "1..5" (:issue:`9736`), and ``history delete --exact`` now properly saves the history (:issue:`10066`).
 - Command completion will now call the stock ``manpath`` on macOS, instead of a potential Homebrew version. This prevents awkward error messages (:issue:`9817`).
 - A new bind function ``history-pager-delete``, bound to :kbd:``Shift`` + :kbd:``Delete`` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
 - ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
@@ -48,6 +48,7 @@ Interactive improvements
 - The ``alias`` convenience function has better support for commands with unusual characters, like ``+`` (:issue:`8720`).
 - A longstanding issue where items in the pager would sometimes display without proper formatting has been fixed (:issue:`9617`).
 - The :kbd:`Alt` +\ :kbd:`l` binding, which lists the directory of the token under the cursor, correctly expands tilde (``~``) to the home directory (:issue:`9954`).
+- Various fish utilities that use an external pager will now try a selection of common pagers if the :envvar:`PAGER` environment variable is not set, or write the output to the screen without a pager if there is not one available (:issue:`10074`)
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -59,9 +60,11 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
   - ``age`` and ``age-keygen`` (:issue:`9813`)
+  - ``airmon-ng`` (:issue:`10116`)
   - ``ar`` (:issue:`9720`)
   - ``blender`` (:issue:`9905`)
-  - ``bws`` (:issue:`10165`).
+  - ``bws`` (:issue:`10165`)
+  - ``checkinstall`` (:issue:`10106`)
   - ``crc`` (:issue:`10034`)
   - ``gimp`` (:issue:`9904`)
   - ``gojq`` (:issue:`9740`)

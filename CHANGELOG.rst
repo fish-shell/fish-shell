@@ -27,6 +27,7 @@ Scripting improvements
 - The ``builtin`` builtin will now properly error out with invalid arguments instead of doing nothing and returning true (:issue:`9942`).
 - ``command time`` in a pipeline is allowed again, as is ``command and`` and ``command or`` (:issue:`9985`).
 - ``exec`` will now also apply variable overrides, so ``FOO=bar exec`` will now set ``$FOO`` correctly (:issue:`9995`).
+- ``umask`` will now handle empty symbolic modes correctly, like ``umask u=,g=rwx,o=`` (:issue:`10177`).
 
 Interactive improvements
 ------------------------

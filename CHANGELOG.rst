@@ -3,7 +3,7 @@ fish 3.7.0 (released ???)
 
 .. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9799 9800 9804 9812 9825 9841 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983 9994 10007 10008 10011 10020 10023 10029 10038 10039 10051 10055 10059 10062 10073 10079 10081 10082 10084 10086 10089 10096 10097 10107 10113 10120 10130 10133 10144 10147 10149 10150 10152 10163 10171 
 
-This release of fish includes a number of improvements over fish 3.6.4, detailed below. Although work continues on the porting of fish internals to the Rust programming language, that work is not included in this release.
+This release of fish includes a number of improvements over fish 3.6.4, detailed below. Although work continues on the porting of fish internals to the Rust programming language, that work is not included in this release. This release includes some of the improvements that accrued during the porting work, but is still 100% C++, and any possible future releases in the 3.7.x track will remain C++.
 
 Notable improvements and fixes
 ------------------------------
@@ -12,11 +12,13 @@ Notable improvements and fixes
   - Opening the history pager will now fill the search field with a search string if you're already in a search (:issue:`10005`). This makes it nicer to search something with :kbd:`↑` and then later decide to switch to the full pager.
   - Closing the history pager with enter will now copy the search text to the commandline if there was no match, so you can continue editing the command you tried to find right away (:issue:`9934`).
 - Performance improvements for command completions and globbing, where supported by the operating system, especially on slow filesystems such as NFS (:issue:`9891`, :issue:`9931`, :issue:`10032`, :issue:`10052`).
+- fish can now be configured to wait a specified amount of time for a multi-key sequence to be completed,  instead of waiting indefinitely. For example, this makes binding ``kj`` to switching modes in vi mode possible.
+  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`), and may be set by default in future versions.
 
 Deprecations and removed features
 ---------------------------------
 - ``LS_COLORS`` is no longer set automatically by the ``ls`` function (:issue:`10080`). Users
-  that set ``.dircolors`` should manually import it using other means.
+  that set ``.dircolors`` should manually import it using other means. Typically this would be ``set -gx LS_COLORS (dircolors -c .dircolors | string split ' ')[3]``
 
 Scripting improvements
 ----------------------
@@ -28,6 +30,7 @@ Scripting improvements
 - ``command time`` in a pipeline is allowed again, as is ``command and`` and ``command or`` (:issue:`9985`).
 - ``exec`` will now also apply variable overrides, so ``FOO=bar exec`` will now set ``$FOO`` correctly (:issue:`9995`).
 - ``umask`` will now handle empty symbolic modes correctly, like ``umask u=,g=rwx,o=`` (:issue:`10177`).
+- Improved error messages for errors occurring in command substitutions (:issue:`10054`).
 
 Interactive improvements
 ------------------------
@@ -44,8 +47,6 @@ Interactive improvements
 - Command completion will now call the stock ``manpath`` on macOS, instead of a potential Homebrew version. This prevents awkward error messages (:issue:`9817`).
 - A new bind function ``history-pager-delete``, bound to :kbd:``Shift`` + :kbd:``Delete`` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
 - ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
-- fish can now be configured to wait a specified amount of time for a multi-key sequence to be completed,  instead of waiting indefinitely. For example, this makes binding ``kj`` to switching modes in vi mode possible.
-  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`), and may be set by default in future versions.
 - ``open`` can be used to launch terminal programs again, as an ``xdg-open`` bug has been fixed and a workaround has been removed  (:issue:`10045`).
 - The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes :kbd:`Alt` combination bindings in vi mode (:issue:`7910`).
 - A new ``clear-screen`` bind function is used for :kbd:`Ctrl`\ +\ :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
@@ -105,7 +106,6 @@ Other improvements
 - Improvements and corrections to the documentation.
 - The Web-based configuration now uses a more readable style when printed, such as for a keybinding reference (:issue:`9828`).
 - Updates to the German translations (:issue:`9824`).
-- Improved error messages for errors occurring in command substitutions (:issue:`10054`).
 - The colors of the Nord theme better match their official style (:issue:`10168`).
 
 For distributors

@@ -89,3 +89,10 @@ umask
 umask -S
 #CHECK: 0222
 #CHECK: u=rx,g=rx,o=rx
+
+umask u=rwx,g=rwx,o=
+umask
+#CHECK: 0007
+umask u=rwx,g=,o=rwx
+umask
+#CHECK: 0070

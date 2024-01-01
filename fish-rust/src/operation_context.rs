@@ -1,5 +1,5 @@
 use crate::common::CancelChecker;
-use crate::env::{EnvDyn, EnvDynFFI};
+use crate::env::EnvDyn;
 use crate::env::{EnvStack, EnvStackRef, Environment};
 use crate::parser::{Parser, ParserRef};
 use crate::proc::JobGroupRef;
@@ -155,53 +155,4 @@ pub fn get_bg_context(env: &EnvDyn, generation_count: u32) -> OperationContext {
         Box::new(cancel_checker),
         EXPANSION_LIMIT_BACKGROUND,
     )
-}
-
-#[cxx::bridge]
-#[allow(clippy::needless_lifetimes)]
-mod operation_context_ffi {
-    extern "C++" {
-        include!("env_fwd.h");
-        include!("parser.h");
-        #[cxx_name = "EnvStackRef"]
-        type EnvStackRefFFI = crate::env::EnvStackRefFFI;
-        #[cxx_name = "EnvDyn"]
-        type EnvDynFFI = crate::env::EnvDynFFI;
-        type Parser = crate::parser::Parser;
-    }
-    extern "Rust" {
-        type OperationContext<'a>;
-
-        fn empty_operation_context() -> Box<OperationContext<'static>>;
-        fn operation_context_globals() -> Box<OperationContext<'static>>;
-        fn check_cancel(&self) -> bool;
-
-        #[cxx_name = "get_bg_context"]
-        unsafe fn get_bg_context_ffi(
-            env: &EnvDynFFI,
-            generation_count: u32,
-        ) -> Box<OperationContext<'_>>;
-        #[cxx_name = "parser_context"]
-        fn parser_context_ffi(parser: &Parser) -> Box<OperationContext<'static>>;
-    }
-}
-
-fn get_bg_context_ffi(env: &EnvDynFFI, generation_count: u32) -> Box<OperationContext<'_>> {
-    Box::new(get_bg_context(&env.0, generation_count))
-}
-
-fn parser_context_ffi(parser: &Parser) -> Box<OperationContext<'static>> {
-    Box::new(parser.context())
-}
-
-unsafe impl cxx::ExternType for OperationContext<'_> {
-    type Id = cxx::type_id!("OperationContext");
-    type Kind = cxx::kind::Opaque;
-}
-
-fn empty_operation_context() -> Box<OperationContext<'static>> {
-    Box::new(OperationContext::empty())
-}
-fn operation_context_globals() -> Box<OperationContext<'static>> {
-    Box::new(OperationContext::globals())
 }

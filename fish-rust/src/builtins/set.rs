@@ -337,7 +337,6 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
                 key
             ));
         }
-        _ => panic!("unexpected vars.set() ret val"),
     }
 }
 
@@ -822,7 +821,6 @@ fn env_result_to_status(retval: EnvStackSetResult) -> Option<c_int> {
         EnvStackSetResult::ENV_SCOPE => 2,
         EnvStackSetResult::ENV_INVALID => 3,
         EnvStackSetResult::ENV_NOT_FOUND => 4,
-        _ => panic!(),
     })
 }
 

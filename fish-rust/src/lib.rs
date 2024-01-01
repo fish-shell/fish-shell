@@ -50,12 +50,6 @@ mod fallback;
 mod fd_monitor;
 mod fd_readable_set;
 mod fds;
-#[allow(rustdoc::broken_intra_doc_links)]
-#[allow(clippy::module_inception)]
-#[allow(clippy::new_ret_no_self)]
-#[allow(clippy::wrong_self_convention)]
-#[allow(clippy::needless_lifetimes)]
-#[allow(unused_imports)]
 mod ffi;
 mod ffi_init;
 mod fish;
@@ -71,7 +65,6 @@ mod highlight;
 mod history;
 mod input;
 mod input_common;
-mod input_ffi;
 mod io;
 mod job_group;
 mod kill;
@@ -109,7 +102,6 @@ mod util;
 mod wait_handle;
 mod wchar;
 mod wchar_ext;
-mod wchar_ffi;
 mod wcstringutil;
 mod wgetopt;
 mod widecharwidth;

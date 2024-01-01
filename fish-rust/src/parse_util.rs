@@ -12,12 +12,12 @@ use crate::expand::{
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
-    parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
-    ParseKeyword, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition,
-    StatementDecoration, ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1,
-    ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
-    ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG,
-    INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
+    parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
+    ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, StatementDecoration,
+    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
+    ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
+    ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
+    INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
 };
 #[cfg(test)]
 use crate::tests::prelude::*;
@@ -26,10 +26,8 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharFromFFI};
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use cxx::CxxWString;
 use std::ops;
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
@@ -2035,59 +2033,4 @@ fn test_indents() {
             0, "\nend"
         );
     })();
-}
-
-#[cxx::bridge]
-mod parse_util_ffi {
-    extern "C++" {
-        include!("parse_constants.h");
-        include!("parse_tree.h");
-        include!("ast.h");
-        type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
-        type DecoratedStatement = crate::ast::DecoratedStatement;
-    }
-    extern "Rust" {
-        fn parse_util_compute_indents_ffi(src: &CxxWString) -> Vec<i32>;
-        #[cxx_name = "detect_errors_in_decorated_statement"]
-        // Getting weird linker errors when using pointers.
-        fn detect_errors_in_decorated_statement_ffi(
-            buff_src: &CxxWString,
-            dst: usize,
-            out_errors: usize,
-        ) -> bool;
-    }
-}
-
-fn detect_errors_in_decorated_statement_ffi(
-    buff_src: &CxxWString,
-    dst: usize,
-    out_errors: usize,
-) -> bool {
-    let dst = unsafe { &*(dst as *const ast::DecoratedStatement) };
-    let out_errors = out_errors as *mut ParseErrorListFfi;
-    let mut out_errors = if out_errors.is_null() {
-        None
-    } else {
-        Some(unsafe { &mut (*out_errors).0 })
-    };
-    detect_errors_in_decorated_statement(buff_src.as_wstr(), dst, &mut out_errors)
-}
-
-fn parse_util_compute_indents_ffi(src: &CxxWString) -> Vec<i32> {
-    parse_util_compute_indents(&src.from_ffi())
-}
-
-fn parse_util_detect_errors_ffi(
-    buff_src: &CxxWString,
-    out_errors: *mut ParseErrorListFfi,
-    allow_incomplete: bool,
-) -> u8 {
-    let out_errors = if out_errors.is_null() {
-        None
-    } else {
-        Some(unsafe { &mut (*out_errors).0 })
-    };
-    parse_util_detect_errors(buff_src.as_wstr(), out_errors, allow_incomplete)
-        .err()
-        .map_or(0, |error_bits| error_bits.bits())
 }

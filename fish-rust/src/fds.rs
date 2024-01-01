@@ -58,19 +58,6 @@ impl Write for AutoCloseFd {
     }
 }
 
-#[cxx::bridge]
-mod autoclose_fd_t {
-    extern "Rust" {
-        #[cxx_name = "autoclose_fd_t2"]
-        type AutoCloseFd;
-
-        fn new_autoclose_fd(fd: i32) -> Box<AutoCloseFd>;
-        #[cxx_name = "valid"]
-        fn is_valid(&self) -> bool;
-        fn close(&mut self);
-        fn fd(&self) -> i32;
-    }
-}
 fn new_autoclose_fd(fd: i32) -> Box<AutoCloseFd> {
     Box::new(AutoCloseFd::new(fd))
 }

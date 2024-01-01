@@ -17,15 +17,6 @@
 use std::io::Write;
 use std::time::{Duration, Instant};
 
-#[cxx::bridge]
-mod timer_ffi {
-    extern "Rust" {
-        type PrintElapsedOnDropFfi;
-        #[cxx_name = "push_timer"]
-        fn push_timer_ffi(enabled: bool) -> Box<PrintElapsedOnDropFfi>;
-    }
-}
-
 enum Unit {
     Minutes,
     Seconds,
@@ -49,22 +40,6 @@ pub fn push_timer(enabled: bool) -> Option<PrintElapsedOnDrop> {
 
     Some(PrintElapsedOnDrop {
         start: TimerSnapshot::take(),
-    })
-}
-
-/// cxx bridge does not support UniquePtr<NativeRustType> so we can't use a null UniquePtr to
-/// represent a None, and cxx bridge does not support Box<Option<NativeRustType>> so we need to make
-/// our own wrapper type that incorporates the Some/None states directly into it.
-#[allow(clippy::large_enum_variant)]
-enum PrintElapsedOnDropFfi {
-    Some(PrintElapsedOnDrop),
-    None,
-}
-
-fn push_timer_ffi(enabled: bool) -> Box<PrintElapsedOnDropFfi> {
-    Box::new(match push_timer(enabled) {
-        Some(t) => PrintElapsedOnDropFfi::Some(t),
-        None => PrintElapsedOnDropFfi::None,
     })
 }
 

@@ -71,39 +71,3 @@ static DEFAULT_NOTIFIER: OnceCell<Box<dyn UniversalNotifier>> = OnceCell::new();
 pub fn default_notifier() -> &'static dyn UniversalNotifier {
     DEFAULT_NOTIFIER.get_or_init(create_notifier).as_ref()
 }
-
-struct UniversalNotifierFFI(&'static dyn UniversalNotifier);
-fn default_notifier_ffi() -> Box<UniversalNotifierFFI> {
-    Box::new(UniversalNotifierFFI(default_notifier()))
-}
-
-impl UniversalNotifierFFI {
-    fn post_notification(&self) {
-        self.0.post_notification();
-    }
-
-    fn notification_fd_ffi(&self) -> i32 {
-        self.0.notification_fd().unwrap_or(-1)
-    }
-
-    fn notification_fd_became_readable_ffi(&self, fd: i32) -> bool {
-        self.0.notification_fd_became_readable(fd)
-    }
-}
-
-#[cxx::bridge]
-mod ffi {
-    extern "Rust" {
-        type UniversalNotifierFFI;
-        #[cxx_name = "default_notifier"]
-        fn default_notifier_ffi() -> Box<UniversalNotifierFFI>;
-
-        fn post_notification(&self);
-
-        #[cxx_name = "notification_fd"]
-        fn notification_fd_ffi(&self) -> i32;
-
-        #[cxx_name = "notification_fd_became_readable"]
-        fn notification_fd_became_readable_ffi(&self, fd: i32) -> bool;
-    }
-}

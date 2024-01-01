@@ -16,7 +16,6 @@ use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
 use crate::fds::{make_autoclose_pipes, open_cloexec, AutoCloseFd, AutoClosePipes, PIPE_ERROR};
-use crate::ffi::wcstring_list_ffi_t;
 use crate::flog::FLOGF;
 use crate::fork_exec::blocked_signals_for_job;
 use crate::fork_exec::postfork::{
@@ -47,13 +46,9 @@ use crate::timer::push_timer;
 use crate::trace::trace_if_enabled_with_args;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
-use crate::wchar_ffi::AsWstr;
-use crate::wchar_ffi::WCharToFFI;
 use crate::wutil::{fish_wcstol, perror};
 use crate::wutil::{wgettext, wgettext_fmt};
-use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
-use libc::c_int;
 use libc::{
     c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, O_NOCTTY,
     O_RDONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
@@ -1500,35 +1495,4 @@ fn exec_subshell_internal(
     }
     *break_expand = false;
     eval_res.status.status_value()
-}
-
-#[cxx::bridge]
-mod exec_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        include!("parser.h");
-        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
-        type Parser = crate::parser::Parser;
-    }
-    extern "Rust" {
-        #[cxx_name = "exec_subshell"]
-        fn exec_subshell_ffi(
-            cmd: &CxxWString,
-            parser: &Parser,
-            outputs: &mut UniquePtr<wcstring_list_ffi_t>,
-            apply_exit_status: bool,
-        ) -> i32;
-    }
-}
-
-fn exec_subshell_ffi(
-    cmd: &CxxWString,
-    parser: &Parser,
-    outputs: &mut UniquePtr<wcstring_list_ffi_t>,
-    apply_exit_status: bool,
-) -> c_int {
-    let mut tmp = vec![];
-    let ret = exec_subshell(cmd.as_wstr(), parser, Some(&mut tmp), apply_exit_status);
-    *outputs = tmp.to_ffi();
-    ret
 }

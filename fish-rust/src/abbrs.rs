@@ -5,85 +5,12 @@ use std::{
 };
 
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
-use cxx::CxxWString;
 use once_cell::sync::Lazy;
 
-use crate::abbrs::abbrs_ffi::abbrs_replacer_t;
 use crate::parse_constants::SourceRange;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use pcre2::utf32::Regex;
-
-use self::abbrs_ffi::{abbreviation_t, abbrs_position_t, abbrs_replacement_t};
-
-#[cxx::bridge]
-mod abbrs_ffi {
-    extern "C++" {
-        include!("parse_constants.h");
-
-        type SourceRange = crate::parse_constants::SourceRange;
-    }
-
-    enum abbrs_position_t {
-        command,
-        anywhere,
-    }
-
-    struct abbrs_replacer_t {
-        replacement: UniquePtr<CxxWString>,
-        is_function: bool,
-        set_cursor_marker: UniquePtr<CxxWString>,
-        has_cursor_marker: bool,
-    }
-
-    struct abbrs_replacement_t {
-        range: SourceRange,
-        text: UniquePtr<CxxWString>,
-        cursor: usize,
-        has_cursor: bool,
-    }
-
-    struct abbreviation_t {
-        key: UniquePtr<CxxWString>,
-        replacement: UniquePtr<CxxWString>,
-        is_regex: bool,
-    }
-
-    extern "Rust" {
-        type GlobalAbbrs<'a>;
-
-        #[cxx_name = "abbrs_list"]
-        fn abbrs_list_ffi() -> Vec<abbreviation_t>;
-
-        #[cxx_name = "abbrs_match"]
-        fn abbrs_match_ffi(token: &CxxWString, position: abbrs_position_t)
-            -> Vec<abbrs_replacer_t>;
-
-        #[cxx_name = "abbrs_has_match"]
-        fn abbrs_has_match_ffi(token: &CxxWString, position: abbrs_position_t) -> bool;
-
-        #[cxx_name = "abbrs_replacement_from"]
-        fn abbrs_replacement_from_ffi(
-            range: SourceRange,
-            text: &CxxWString,
-            set_cursor_marker: &CxxWString,
-            has_cursor_marker: bool,
-        ) -> abbrs_replacement_t;
-
-        #[cxx_name = "abbrs_get_set"]
-        unsafe fn abbrs_get_set_ffi<'a>() -> Box<GlobalAbbrs<'a>>;
-        unsafe fn add<'a>(
-            self: &mut GlobalAbbrs<'_>,
-            name: &CxxWString,
-            key: &CxxWString,
-            replacement: &CxxWString,
-            position: abbrs_position_t,
-            from_universal: bool,
-        );
-        unsafe fn erase<'a>(self: &mut GlobalAbbrs<'_>, name: &CxxWString);
-    }
-}
 
 static ABBRS: Lazy<Mutex<AbbreviationSet>> = Lazy::new(|| Mutex::new(Default::default()));
 
@@ -106,16 +33,6 @@ pub fn abbrs_get_set() -> MutexGuard<'static, AbbreviationSet> {
 pub enum Position {
     Command,  // expand in command position
     Anywhere, // expand in any token
-}
-
-impl From<abbrs_position_t> for Position {
-    fn from(value: abbrs_position_t) -> Self {
-        match value {
-            abbrs_position_t::anywhere => Position::Anywhere,
-            abbrs_position_t::command => Position::Command,
-            _ => panic!("invalid abbrs_position_t"),
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -207,18 +124,6 @@ pub struct Replacer {
 
     /// If set, the cursor should be moved to the first instance of this string in the expansion.
     pub set_cursor_marker: Option<WString>,
-}
-
-impl From<Replacer> for abbrs_replacer_t {
-    fn from(value: Replacer) -> Self {
-        let has_cursor_marker = value.set_cursor_marker.is_some();
-        Self {
-            replacement: value.replacement.to_ffi(),
-            is_function: value.is_function,
-            set_cursor_marker: value.set_cursor_marker.unwrap_or_default().to_ffi(),
-            has_cursor_marker,
-        }
-    }
 }
 
 pub struct Replacement {
@@ -361,86 +266,10 @@ pub fn abbrs_match(token: &wstr, position: Position) -> Vec<Replacer> {
         .collect()
 }
 
-fn abbrs_match_ffi(token: &CxxWString, position: abbrs_position_t) -> Vec<abbrs_replacer_t> {
-    with_abbrs(|set| set.r#match(token.as_wstr(), position.into()))
-        .into_iter()
-        .map(|r| r.into())
-        .collect()
-}
-
-fn abbrs_has_match_ffi(token: &CxxWString, position: abbrs_position_t) -> bool {
-    with_abbrs(|set| set.has_match(token.as_wstr(), position.into()))
-}
-
-fn abbrs_list_ffi() -> Vec<abbreviation_t> {
-    with_abbrs(|set| -> Vec<abbreviation_t> {
-        let list = set.list();
-        let mut result = Vec::with_capacity(list.len());
-        for abbr in list {
-            result.push(abbreviation_t {
-                key: abbr.key.to_ffi(),
-                replacement: abbr.replacement.to_ffi(),
-                is_regex: abbr.is_regex(),
-            })
-        }
-
-        result
-    })
-}
-
-fn abbrs_get_set_ffi<'a>() -> Box<GlobalAbbrs<'a>> {
-    let abbrs_g = ABBRS.lock().unwrap();
-    Box::new(GlobalAbbrs { g: abbrs_g })
-}
-
-fn abbrs_replacement_from_ffi(
-    range: SourceRange,
-    text: &CxxWString,
-    set_cursor_marker: &CxxWString,
-    has_cursor_marker: bool,
-) -> abbrs_replacement_t {
-    let cursor_marker = if has_cursor_marker {
-        Some(set_cursor_marker.from_ffi())
-    } else {
-        None
-    };
-
-    let replacement = Replacement::new(range, text.from_ffi(), cursor_marker);
-
-    abbrs_replacement_t {
-        range,
-        text: replacement.text.to_ffi(),
-        cursor: replacement.cursor.unwrap_or_default(),
-        has_cursor: replacement.cursor.is_some(),
-    }
-}
-
 pub struct GlobalAbbrs<'a> {
     g: MutexGuard<'a, AbbreviationSet>,
 }
 
-impl<'a> GlobalAbbrs<'a> {
-    fn add(
-        &mut self,
-        name: &CxxWString,
-        key: &CxxWString,
-        replacement: &CxxWString,
-        position: abbrs_position_t,
-        from_universal: bool,
-    ) {
-        self.g.add(Abbreviation::new(
-            name.from_ffi(),
-            key.from_ffi(),
-            replacement.from_ffi(),
-            position.into(),
-            from_universal,
-        ));
-    }
-
-    fn erase(&mut self, name: &CxxWString) {
-        self.g.erase(name.as_wstr());
-    }
-}
 #[test]
 #[serial]
 fn rename_abbrs() {

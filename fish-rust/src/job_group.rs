@@ -1,50 +1,11 @@
-use self::ffi::pgid_t;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::proc::JobGroupRef;
 use crate::signal::Signal;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharToFFI;
-use cxx::{CxxWString, UniquePtr};
 use std::cell::RefCell;
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
-
-#[cxx::bridge]
-mod ffi {
-    // Not only does cxx bridge not recognize libc::pid_t, it doesn't even recognize i32 as a POD
-    // type! :sadface:
-    struct pgid_t {
-        value: i32,
-    }
-
-    extern "Rust" {
-        #[cxx_name = "job_group_t"]
-        type JobGroup;
-
-        fn wants_job_control(&self) -> bool;
-        fn wants_terminal(&self) -> bool;
-        fn is_foreground(&self) -> bool;
-        fn set_is_foreground(&self, value: bool);
-        #[cxx_name = "get_command"]
-        fn get_command_ffi(&self) -> UniquePtr<CxxWString>;
-        #[cxx_name = "get_job_id"]
-        fn get_job_id_ffi(&self) -> i32;
-        #[cxx_name = "get_cancel_signal"]
-        fn get_cancel_signal_ffi(&self) -> i32;
-        #[cxx_name = "cancel_with_signal"]
-        fn cancel_with_signal_ffi(&self, signal: i32);
-        fn set_pgid(&mut self, pgid: i32);
-        #[cxx_name = "get_pgid"]
-        fn get_pgid_ffi(&self) -> UniquePtr<pgid_t>;
-        fn has_job_id(&self) -> bool;
-
-        // cxx bridge doesn't recognize `libc::*` as being POD types, so it won't let us use them in
-        // a SharedPtr/UniquePtr/Box and won't let us pass/return them by value/reference, either.
-        unsafe fn get_modes_ffi(&self, size: usize) -> *const u8; /* actually `* const libc::termios` */
-        unsafe fn set_modes_ffi(&mut self, modes: *const u8, size: usize); /* actually `* const libc::termios` */
-    }
-}
 
 /// A job id, corresponding to what is printed by `jobs`. 1 is the first valid job id.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -150,16 +111,6 @@ impl JobGroup {
         self.is_foreground.store(in_foreground);
     }
 
-    /// Return the command which produced this job tree.
-    pub fn get_command_ffi(&self) -> UniquePtr<CxxWString> {
-        self.command.to_ffi()
-    }
-
-    /// Return the job id or -1 if none.
-    pub fn get_job_id_ffi(&self) -> i32 {
-        self.job_id.map(|j| u32::from(j.0) as i32).unwrap_or(-1)
-    }
-
     /// Returns whether we have valid job id. "Simple block" groups like function calls do not.
     pub fn has_job_id(&self) -> bool {
         self.job_id.is_some()
@@ -173,12 +124,6 @@ impl JobGroup {
         }
     }
 
-    /// Gets the cancellation signal or `0` if none.
-    pub fn get_cancel_signal_ffi(&self) -> i32 {
-        // Legacy C++ code expects a zero in case of no signal.
-        self.get_cancel_signal().map(|s| s.code()).unwrap_or(0)
-    }
-
     /// Mark that a process in this group got a signal and should cancel.
     pub fn cancel_with_signal(&self, signal: Signal) {
         // We only assign the signal if one hasn't yet been assigned. This means the first signal to
@@ -186,11 +131,6 @@ impl JobGroup {
         self.signal
             .compare_exchange(0, signal.code(), Ordering::Relaxed, Ordering::Relaxed)
             .ok();
-    }
-
-    /// Mark that a process in this group got a signal and should cancel
-    pub fn cancel_with_signal_ffi(&self, signal: i32) {
-        self.cancel_with_signal(Signal::new(signal))
     }
 
     /// Set the pgid for this job group, latching it to this value. This should only be called if
@@ -217,53 +157,6 @@ impl JobGroup {
     /// Returns the value of [`JobGroup::pgid`]. This is never fish's own pgid!
     pub fn get_pgid(&self) -> Option<libc::pid_t> {
         *self.pgid.borrow()
-    }
-
-    /// Returns the value of [`JobGroup::pgid`] in a `UniquePtr<T>` to take the place of an
-    /// `Option<T>` for ffi purposes. A null `UniquePtr` is equivalent to `None`.
-    pub fn get_pgid_ffi(&self) -> cxx::UniquePtr<pgid_t> {
-        match *self.pgid.borrow() {
-            Some(value) => UniquePtr::new(pgid_t { value }),
-            None => UniquePtr::null(),
-        }
-    }
-
-    /// Returns the current terminal modes associated with the `JobGroup` for ffi purposes.
-    unsafe fn get_modes_ffi(&self, size: usize) -> *const u8 {
-        assert_eq!(
-            size,
-            core::mem::size_of::<libc::termios>(),
-            "Mismatch between expected and actual ffi size of struct termios!"
-        );
-
-        self.tmodes
-            .borrow()
-            .as_ref()
-            // Really cool that type inference works twice in a row here. The first `_` is deduced
-            // from the left and the second `_` is deduced from the right (the return type).
-            .map(|val| val as *const _ as *const _)
-            .unwrap_or(core::ptr::null())
-    }
-
-    /// Sets the current terminal modes associated with the `JobGroup`. Only use for ffi.
-    ///
-    /// Unlike `set_pgid()`, this isn't documented in the C++ codebase as being only called at
-    /// initialization but as the underlying [`self.tmodes`] wasn't wrapped in any sort of
-    /// thread-safe marshalling struct, we'll assume it can only be called from one thread and use
-    /// `&mut self` for safety.
-    unsafe fn set_modes_ffi(&mut self, modes: *const u8, size: usize) {
-        assert_eq!(
-            size,
-            core::mem::size_of::<libc::termios>(),
-            "Mismatch between expected and actual ffi size of struct termios!"
-        );
-
-        let modes = modes as *const libc::termios;
-        if modes.is_null() {
-            self.tmodes.replace(None);
-        } else {
-            self.tmodes.replace(Some(*modes));
-        }
     }
 }
 

@@ -4,97 +4,28 @@
 //! defined when these functions produce output or perform memory allocations, since such functions
 //! may not be safely called by signal handlers.
 
-use crate::ffi::wcstring_list_ffi_t;
-use cxx::{CxxWString, UniquePtr};
 use libc::pid_t;
-use std::num::NonZeroU32;
-use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
 use crate::common::{escape, scoped_push_replacer, ScopeGuard};
 use crate::flog::FLOG;
 use crate::io::{IoChain, IoStreams};
-use crate::job_group::{JobId, MaybeJobId};
+use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
 use crate::signal::{signal_check_cancel, signal_handle, Signal};
 use crate::termsize;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{wcharz_t, AsWstr, WCharFromFFI, WCharToFFI};
 
-#[cxx::bridge]
-mod event_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        include!("parser.h");
-        include!("io.h");
-        type wcharz_t = crate::ffi::wcharz_t;
-        type Parser = crate::parser::Parser;
-        type IoStreams<'a> = crate::io::IoStreams<'a>;
-        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
-    }
-
-    enum event_type_t {
-        any,
-        signal,
-        variable,
-        process_exit,
-        job_exit,
-        caller_exit,
-        generic,
-    }
-
-    struct event_description_t {
-        typ: event_type_t,
-        signal: i32,
-        pid: i32,
-        internal_job_id: u64,
-        caller_id: u64,
-        str_param1: UniquePtr<CxxWString>,
-    }
-
-    extern "Rust" {
-        type EventHandler;
-        type Event;
-
-        fn new_event_generic(desc: wcharz_t) -> Box<Event>;
-        fn new_event_variable_erase(name: &CxxWString) -> Box<Event>;
-        fn new_event_variable_set(name: &CxxWString) -> Box<Event>;
-        fn new_event_process_exit(pid: i32, status: i32) -> Box<Event>;
-        fn new_event_job_exit(pgid: i32, jid: u64) -> Box<Event>;
-        fn new_event_caller_exit(internal_job_id: u64, job_id: i32) -> Box<Event>;
-        #[cxx_name = "clone"]
-        fn clone_ffi(self: &Event) -> Box<Event>;
-
-        #[cxx_name = "event_add_handler"]
-        fn event_add_handler_ffi(desc: &event_description_t, name: &CxxWString);
-        #[cxx_name = "event_remove_function_handlers"]
-        fn event_remove_function_handlers_ffi(name: &CxxWString) -> usize;
-        #[cxx_name = "event_get_function_handler_descs"]
-        fn event_get_function_handler_descs_ffi(name: &CxxWString) -> Vec<event_description_t>;
-
-        fn desc(self: &EventHandler) -> event_description_t;
-        fn function_name(self: &EventHandler) -> UniquePtr<CxxWString>;
-        fn set_removed(self: &mut EventHandler);
-
-        fn event_fire_generic_ffi(
-            parser: &Parser,
-            name: &CxxWString,
-            arguments: &wcstring_list_ffi_t,
-        );
-        #[cxx_name = "event_fire_delayed"]
-        fn fire_delayed(parser: &Parser);
-        #[cxx_name = "event_print"]
-        fn event_print_ffi(streams: Pin<&mut IoStreams>, type_filter: &CxxWString);
-
-        #[cxx_name = "event_enqueue_signal"]
-        fn enqueue_signal(signal: i32);
-        #[cxx_name = "event_is_signal_observed"]
-        fn is_signal_observed(sig: i32) -> bool;
-    }
+pub enum event_type_t {
+    any,
+    signal,
+    variable,
+    process_exit,
+    job_exit,
+    caller_exit,
+    generic,
 }
-
-pub use event_ffi::{event_description_t, event_type_t};
 
 pub const ANY_PID: pid_t = 0;
 
@@ -191,64 +122,6 @@ impl From<&EventDescription> for event_type_t {
     }
 }
 
-impl From<&event_description_t> for EventDescription {
-    fn from(desc: &event_description_t) -> Self {
-        match desc.typ {
-            event_type_t::any => EventDescription::Any,
-            event_type_t::signal => EventDescription::Signal {
-                signal: Signal::new(desc.signal),
-            },
-            event_type_t::variable => EventDescription::Variable {
-                name: desc.str_param1.from_ffi(),
-            },
-            event_type_t::process_exit => EventDescription::ProcessExit { pid: desc.pid },
-            event_type_t::job_exit => EventDescription::JobExit {
-                pid: desc.pid,
-                internal_job_id: desc.internal_job_id,
-            },
-            event_type_t::caller_exit => EventDescription::CallerExit {
-                caller_id: desc.caller_id,
-            },
-            event_type_t::generic => EventDescription::Generic {
-                param: desc.str_param1.from_ffi(),
-            },
-            _ => panic!("invalid event description"),
-        }
-    }
-}
-
-impl From<&EventDescription> for event_description_t {
-    fn from(desc: &EventDescription) -> Self {
-        let mut result = event_description_t {
-            typ: desc.into(),
-            signal: Default::default(),
-            pid: Default::default(),
-            internal_job_id: Default::default(),
-            caller_id: Default::default(),
-            str_param1: match desc.str_param1() {
-                Some(param) => param.to_ffi(),
-                None => UniquePtr::null(),
-            },
-        };
-        match *desc {
-            EventDescription::Any => (),
-            EventDescription::Signal { signal } => result.signal = signal.code(),
-            EventDescription::Variable { .. } => (),
-            EventDescription::ProcessExit { pid } => result.pid = pid,
-            EventDescription::JobExit {
-                pid,
-                internal_job_id,
-            } => {
-                result.pid = pid;
-                result.internal_job_id = internal_job_id;
-            }
-            EventDescription::CallerExit { caller_id } => result.caller_id = caller_id,
-            EventDescription::Generic { .. } => (),
-        }
-        result
-    }
-}
-
 #[derive(Debug)]
 pub struct EventHandler {
     /// Properties of the event to match.
@@ -327,12 +200,6 @@ impl EventHandler {
 type EventHandlerList = Vec<Arc<EventHandler>>;
 
 impl EventHandler {
-    fn desc(&self) -> event_description_t {
-        (&self.desc).into()
-    }
-    fn function_name(self: &EventHandler) -> UniquePtr<CxxWString> {
-        self.function_name.to_ffi()
-    }
     fn set_removed(self: &mut EventHandler) {
         self.removed.store(true, Ordering::Relaxed);
     }
@@ -414,49 +281,6 @@ impl Event {
 
         parser.global_event_blocks.load(Ordering::Relaxed) != 0
     }
-}
-
-fn new_event_generic(desc: wcharz_t) -> Box<Event> {
-    Box::new(Event::generic(desc.into()))
-}
-
-fn new_event_variable_erase(name: &CxxWString) -> Box<Event> {
-    Box::new(Event::variable_erase(name.from_ffi()))
-}
-
-fn new_event_variable_set(name: &CxxWString) -> Box<Event> {
-    Box::new(Event::variable_set(name.from_ffi()))
-}
-
-fn new_event_process_exit(pid: i32, status: i32) -> Box<Event> {
-    Box::new(Event::process_exit(pid, status))
-}
-
-fn new_event_job_exit(pgid: i32, jid: u64) -> Box<Event> {
-    Box::new(Event::job_exit(pgid, jid))
-}
-
-fn new_event_caller_exit(internal_job_id: u64, job_id: i32) -> Box<Event> {
-    Box::new(Event::caller_exit(
-        internal_job_id,
-        MaybeJobId(if job_id == -1 {
-            None
-        } else {
-            Some(JobId::new(
-                NonZeroU32::new(u32::try_from(job_id).unwrap()).unwrap(),
-            ))
-        }),
-    ))
-}
-
-impl Event {
-    fn clone_ffi(&self) -> Box<Event> {
-        Box::new(self.clone())
-    }
-}
-
-fn event_add_handler_ffi(desc: &event_description_t, name: &CxxWString) {
-    add_handler(EventHandler::new(desc.into(), Some(name.from_ffi())));
 }
 
 /// All the signals we are interested in are in the 1-32 range (with 32 being the typical SIGRTMAX),
@@ -623,10 +447,6 @@ pub fn remove_function_handlers(name: &wstr) -> usize {
     remove_handlers_if(|h| h.function_name == name)
 }
 
-fn event_remove_function_handlers_ffi(name: &CxxWString) -> usize {
-    remove_function_handlers(name.as_wstr())
-}
-
 /// Return all event handlers for the given function.
 pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
     EVENT_HANDLERS
@@ -635,13 +455,6 @@ pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
         .iter()
         .filter(|h| h.function_name == name)
         .cloned()
-        .collect()
-}
-
-fn event_get_function_handler_descs_ffi(name: &CxxWString) -> Vec<event_description_t> {
-    get_function_handlers(name.as_wstr())
-        .iter()
-        .map(|h| event_description_t::from(&h.desc))
         .collect()
 }
 
@@ -869,10 +682,6 @@ pub fn print(streams: &mut IoStreams, type_filter: &wstr) {
     }
 }
 
-fn event_print_ffi(streams: Pin<&mut IoStreams>, type_filter: &CxxWString) {
-    print(streams.get_mut(), type_filter.as_wstr());
-}
-
 /// Fire a generic event with the specified name.
 pub fn fire_generic(parser: &Parser, name: WString, arguments: Vec<WString>) {
     fire(
@@ -882,8 +691,4 @@ pub fn fire_generic(parser: &Parser, name: WString, arguments: Vec<WString>) {
             arguments,
         },
     )
-}
-
-fn event_fire_generic_ffi(parser: &Parser, name: &CxxWString, arguments: &wcstring_list_ffi_t) {
-    fire_generic(parser, name.from_ffi(), arguments.from_ffi());
 }

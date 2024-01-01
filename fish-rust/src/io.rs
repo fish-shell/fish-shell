@@ -15,9 +15,7 @@ use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
 use crate::topic_monitor::topic_t;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharFromFFI;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
-use cxx::CxxWString;
 use errno::Errno;
 use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDOUT_FILENO};
 use std::cell::{RefCell, UnsafeCell};
@@ -618,11 +616,6 @@ pub type IoDataRef = Arc<dyn IoDataSync>;
 #[derive(Clone, Default)]
 pub struct IoChain(pub Vec<IoDataRef>);
 
-unsafe impl cxx::ExternType for IoChain {
-    type Id = cxx::type_id!("IoChain");
-    type Kind = cxx::kind::Opaque;
-}
-
 impl IoChain {
     pub fn new() -> Self {
         Default::default()
@@ -981,11 +974,6 @@ pub struct IoStreams<'a> {
     pub job_group: Option<JobGroupRef>,
 }
 
-unsafe impl cxx::ExternType for IoStreams<'_> {
-    type Id = cxx::type_id!("IoStreams");
-    type Kind = cxx::kind::Opaque;
-}
-
 impl<'a> IoStreams<'a> {
     pub fn new(out: &'a mut OutputStream, err: &'a mut OutputStream) -> Self {
         IoStreams {
@@ -1024,70 +1012,4 @@ fn fd_monitor() -> &'static mut FdMonitor {
     }
     let ptr: *mut FdMonitor = unsafe { (*FDM).get() };
     unsafe { &mut *ptr }
-}
-
-#[cxx::bridge]
-#[allow(clippy::needless_lifetimes)]
-mod io_ffi {
-    extern "Rust" {
-        type IoChain;
-        type IoStreams<'a>;
-        type OutputStreamFfi<'a>;
-
-        fn new_io_chain() -> Box<IoChain>;
-
-        #[cxx_name = "out"]
-        unsafe fn out_ffi<'a>(self: &'a mut IoStreams<'a>) -> Box<OutputStreamFfi<'a>>;
-        #[cxx_name = "err"]
-        unsafe fn err_ffi<'a>(self: &'a mut IoStreams<'a>) -> Box<OutputStreamFfi<'a>>;
-        #[cxx_name = "out_is_redirected"]
-        unsafe fn out_is_redirected_ffi<'a>(self: &IoStreams<'a>) -> bool;
-        #[cxx_name = "stdin_is_directly_redirected"]
-        unsafe fn stdin_is_directly_redirected_ffi<'a>(self: &IoStreams<'a>) -> bool;
-        #[cxx_name = "stdin_fd"]
-        unsafe fn stdin_fd_ffi<'a>(self: &IoStreams<'a>) -> i32;
-
-        #[cxx_name = "append"]
-        unsafe fn append_ffi<'a>(self: &mut OutputStreamFfi<'a>, s: &CxxWString) -> bool;
-        #[cxx_name = "push"]
-        unsafe fn push_ffi<'a>(self: &mut OutputStreamFfi<'a>, s: u32) -> bool;
-    }
-}
-
-impl<'a> IoStreams<'a> {
-    fn out_ffi(&'a mut self) -> Box<OutputStreamFfi<'a>> {
-        Box::new(OutputStreamFfi(self.out))
-    }
-    fn err_ffi(&'a mut self) -> Box<OutputStreamFfi<'a>> {
-        Box::new(OutputStreamFfi(self.err))
-    }
-    unsafe fn out_is_redirected_ffi(&self) -> bool {
-        self.out_is_redirected
-    }
-    unsafe fn stdin_is_directly_redirected_ffi(&self) -> bool {
-        self.stdin_is_directly_redirected
-    }
-    unsafe fn stdin_fd_ffi(&self) -> i32 {
-        self.stdin_fd
-    }
-}
-
-pub struct OutputStreamFfi<'a>(pub &'a mut OutputStream);
-
-unsafe impl cxx::ExternType for OutputStreamFfi<'_> {
-    type Id = cxx::type_id!("OutputStreamFfi");
-    type Kind = cxx::kind::Opaque;
-}
-
-impl<'a> OutputStreamFfi<'a> {
-    fn append_ffi(&mut self, s: &CxxWString) -> bool {
-        self.0.append(s.from_ffi())
-    }
-    fn push_ffi(&mut self, s: u32) -> bool {
-        self.0.append_char(char::from_u32(s).unwrap())
-    }
-}
-
-fn new_io_chain() -> Box<IoChain> {
-    Box::new(IoChain::new())
 }

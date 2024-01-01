@@ -13,13 +13,12 @@ use libc::{
     PROT_WRITE, SEEK_END, SEEK_SET,
 };
 
+use super::{HistoryItem, PersistenceMode};
 use crate::{
     common::{str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
     path::{path_get_config_remoteness, DirRemoteness},
 };
-
-use super::{history_ffi::PersistenceMode, HistoryItem};
 
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

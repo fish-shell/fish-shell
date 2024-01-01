@@ -1,42 +1,25 @@
 //! Flags to enable upcoming features
 
-use crate::ffi::wcharz_t;
 use crate::wchar::prelude::*;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
-#[cxx::bridge]
-mod future_feature_flags_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        type wcharz_t = super::wcharz_t;
-    }
+/// The list of flags.
+#[repr(u8)]
+#[derive(Clone, Copy)]
+pub enum FeatureFlag {
+    /// Whether ^ is supported for stderr redirection.
+    stderr_nocaret,
 
-    /// The list of flags.
-    #[repr(u8)]
-    enum FeatureFlag {
-        /// Whether ^ is supported for stderr redirection.
-        stderr_nocaret,
+    /// Whether ? is supported as a glob.
+    qmark_noglob,
 
-        /// Whether ? is supported as a glob.
-        qmark_noglob,
+    /// Whether string replace -r double-unescapes the replacement.
+    string_replace_backslash,
 
-        /// Whether string replace -r double-unescapes the replacement.
-        string_replace_backslash,
-
-        /// Whether "&" is not-special if followed by a word character.
-        ampersand_nobg_in_token,
-    }
-
-    extern "Rust" {
-        #[cxx_name = "feature_test"]
-        fn test(flag: FeatureFlag) -> bool;
-        #[cxx_name = "feature_set_from_string"]
-        fn set_from_string(str: wcharz_t);
-    }
+    /// Whether "&" is not-special if followed by a word character.
+    ampersand_nobg_in_token,
 }
-
-pub use future_feature_flags_ffi::FeatureFlag;
 
 struct Features {
     // Values for the flags.
@@ -165,11 +148,11 @@ impl Features {
     }
 
     fn test(&self, flag: FeatureFlag) -> bool {
-        self.values[flag.repr as usize].load(Ordering::SeqCst)
+        self.values[flag as usize].load(Ordering::SeqCst)
     }
 
     fn set(&self, flag: FeatureFlag, value: bool) {
-        self.values[flag.repr as usize].store(value, Ordering::SeqCst)
+        self.values[flag as usize].store(value, Ordering::SeqCst)
     }
 
     #[widestrs]
@@ -244,14 +227,14 @@ fn test_feature_flags() {
     // Ensure every metadata is represented once.
     let mut counts: [usize; METADATA.len()] = [0; METADATA.len()];
     for md in METADATA {
-        counts[md.flag.repr as usize] += 1;
+        counts[md.flag as usize] += 1;
     }
     for count in counts {
         assert_eq!(count, 1);
     }
 
     assert_eq!(
-        METADATA[FeatureFlag::stderr_nocaret.repr as usize].name,
+        METADATA[FeatureFlag::stderr_nocaret as usize].name,
         "stderr-nocaret"L
     );
 }

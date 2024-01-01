@@ -1,80 +1,35 @@
 //! This file supports specifying and applying redirections.
 
-use crate::ffi::wcharz_t;
 use crate::io::IoChain;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharToFFI;
 use crate::wutil::fish_wcstoi;
-use cxx::{CxxVector, CxxWString, SharedPtr, UniquePtr};
 use libc::{c_int, O_APPEND, O_CREAT, O_EXCL, O_RDONLY, O_TRUNC, O_WRONLY};
 use std::os::fd::RawFd;
 
-#[cxx::bridge]
-mod redirection_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        type wcharz_t = super::wcharz_t;
-    }
-
-    #[derive(Debug)]
-    enum RedirectionMode {
-        overwrite, // normal redirection: > file.txt
-        append,    // appending redirection: >> file.txt
-        input,     // input redirection: < file.txt
-        fd,        // fd redirection: 2>&1
-        noclob,    // noclobber redirection: >? file.txt
-    }
-
-    extern "Rust" {
-        type RedirectionSpec;
-
-        fn is_close(self: &RedirectionSpec) -> bool;
-        #[cxx_name = "get_target_as_fd"]
-        fn get_target_as_fd_ffi(self: &RedirectionSpec) -> SharedPtr<i32>;
-        fn oflags(self: &RedirectionSpec) -> i32;
-
-        fn fd(self: &RedirectionSpec) -> i32;
-        fn mode(self: &RedirectionSpec) -> RedirectionMode;
-        fn target(self: &RedirectionSpec) -> UniquePtr<CxxWString>;
-        fn new_redirection_spec(
-            fd: i32,
-            mode: RedirectionMode,
-            target: wcharz_t,
-        ) -> Box<RedirectionSpec>;
-
-        type RedirectionSpecListFfi;
-        fn new_redirection_spec_list() -> Box<RedirectionSpecListFfi>;
-        fn size(self: &RedirectionSpecListFfi) -> usize;
-        fn at(self: &RedirectionSpecListFfi, offset: usize) -> *const RedirectionSpec;
-        fn push_back(self: &mut RedirectionSpecListFfi, spec: Box<RedirectionSpec>);
-        fn clone(self: &RedirectionSpecListFfi) -> Box<RedirectionSpecListFfi>;
-    }
-
-    /// A type that represents the action dup2(src, target).
-    /// If target is negative, this represents close(src).
-    /// Note none of the fds here are considered 'owned'.
-    #[derive(Clone, Copy)]
-    struct Dup2Action {
-        src: i32,
-        target: i32,
-    }
-
-    /// A class representing a sequence of basic redirections.
-    #[derive(Default)]
-    struct Dup2List {
-        /// The list of actions.
-        pub actions: Vec<Dup2Action>,
-    }
-
-    extern "Rust" {
-        fn get_actions(self: &Dup2List) -> &[Dup2Action];
-        #[cxx_name = "dup2_list_resolve_chain"]
-        fn dup2_list_resolve_chain_ffi(io_chain: &CxxVector<Dup2Action>) -> Dup2List;
-        fn fd_for_target_fd(self: &Dup2List, target: i32) -> i32;
-    }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RedirectionMode {
+    overwrite, // normal redirection: > file.txt
+    append,    // appending redirection: >> file.txt
+    input,     // input redirection: < file.txt
+    fd,        // fd redirection: 2>&1
+    noclob,    // noclobber redirection: >? file.txt
 }
 
-pub use redirection_ffi::{Dup2Action, Dup2List, RedirectionMode};
+/// A type that represents the action dup2(src, target).
+/// If target is negative, this represents close(src).
+/// Note none of the fds here are considered 'owned'.
+#[derive(Clone, Copy)]
+pub struct Dup2Action {
+    pub src: i32,
+    pub target: i32,
+}
+
+/// A class representing a sequence of basic redirections.
+#[derive(Default)]
+pub struct Dup2List {
+    /// The list of actions.
+    pub actions: Vec<Dup2Action>,
+}
 
 impl RedirectionMode {
     /// The open flags for this redirection mode.
@@ -126,12 +81,6 @@ impl RedirectionSpec {
     pub fn get_target_as_fd(&self) -> Option<RawFd> {
         fish_wcstoi(&self.target).ok()
     }
-    fn get_target_as_fd_ffi(&self) -> SharedPtr<i32> {
-        match self.get_target_as_fd() {
-            Some(fd) => SharedPtr::new(fd),
-            None => SharedPtr::null(),
-        }
-    }
 
     /// \return the open flags for this redirection.
     pub fn oflags(&self) -> c_int {
@@ -148,43 +97,9 @@ impl RedirectionSpec {
     fn mode(&self) -> RedirectionMode {
         self.mode
     }
-
-    fn target(&self) -> UniquePtr<CxxWString> {
-        self.target.to_ffi()
-    }
-}
-
-fn new_redirection_spec(fd: i32, mode: RedirectionMode, target: wcharz_t) -> Box<RedirectionSpec> {
-    Box::new(RedirectionSpec {
-        fd,
-        mode,
-        target: target.into(),
-    })
 }
 
 pub type RedirectionSpecList = Vec<RedirectionSpec>;
-
-struct RedirectionSpecListFfi(RedirectionSpecList);
-
-fn new_redirection_spec_list() -> Box<RedirectionSpecListFfi> {
-    Box::new(RedirectionSpecListFfi(Vec::new()))
-}
-
-impl RedirectionSpecListFfi {
-    fn size(&self) -> usize {
-        self.0.len()
-    }
-    fn at(&self, offset: usize) -> *const RedirectionSpec {
-        &self.0[offset]
-    }
-    #[allow(clippy::boxed_local)]
-    fn push_back(&mut self, spec: Box<RedirectionSpec>) {
-        self.0.push(*spec)
-    }
-    fn clone(&self) -> Box<RedirectionSpecListFfi> {
-        Box::new(RedirectionSpecListFfi(self.0.clone()))
-    }
-}
 
 /// Produce a dup_fd_list_t from an io_chain. This may not be called before fork().
 /// The result contains the list of fd actions (dup2 and close), as well as the list
@@ -196,18 +111,6 @@ pub fn dup2_list_resolve_chain(io_chain: &IoChain) -> Dup2List {
             result.add_close(io.fd())
         } else {
             result.add_dup2(io.source_fd(), io.fd())
-        }
-    }
-    result
-}
-
-fn dup2_list_resolve_chain_ffi(io_chain: &CxxVector<Dup2Action>) -> Dup2List {
-    let mut result = Dup2List { actions: vec![] };
-    for io in io_chain {
-        if io.src < 0 {
-            result.add_close(io.target)
-        } else {
-            result.add_dup2(io.src, io.target)
         }
     }
     result

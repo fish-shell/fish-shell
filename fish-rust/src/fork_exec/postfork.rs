@@ -6,7 +6,7 @@ use crate::common::exit_without_destructors;
 use crate::nix::getpid;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
-use libc::{c_char, c_int, pid_t};
+use libc::{c_char, pid_t};
 use std::ffi::CStr;
 
 /// The number of times to try to call fork() before giving up.
@@ -545,61 +545,4 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
         return None;
     };
     Some(CStr::from_bytes_with_nul(&buffer[offset..idx.max(offset)]).unwrap())
-}
-
-/// Set up redirections and signal handling in the child process.
-mod ffi {
-    use super::*;
-    #[no_mangle]
-    pub extern "C" fn child_setup_process(
-        claim_tty_from: pid_t,
-        sigmask: *const libc::sigset_t,
-        is_forked: bool,
-        dup2s: *const Dup2List,
-    ) -> i32 {
-        let sigmask = unsafe { sigmask.as_ref() };
-        let dup2s = unsafe { &*dup2s };
-        super::child_setup_process(claim_tty_from, sigmask, is_forked, dup2s)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn safe_report_exec_error(
-        err: i32,
-        actual_cmd: *const c_char,
-        argvv: *const *const c_char,
-        envv: *const *const c_char,
-    ) {
-        super::safe_report_exec_error(err, actual_cmd, argvv, envv)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn execute_fork() -> pid_t {
-        super::execute_fork()
-    }
-
-    #[no_mangle]
-    pub extern "C" fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
-        super::execute_setpgid(pid, pgroup, is_parent)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn report_setpgid_error(
-        err: i32,
-        is_parent: bool,
-        pid: pid_t,
-        desired_pgid: pid_t,
-        job_id: c_int,
-        command_str: *const c_char,
-        argv0_str: *const c_char,
-    ) {
-        super::report_setpgid_error(
-            err,
-            is_parent,
-            pid,
-            desired_pgid,
-            job_id.into(),
-            command_str,
-            argv0_str,
-        )
-    }
 }

@@ -1,8 +1,7 @@
 use super::prelude::*;
 use crate::builtins::*;
 use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
-use crate::ffi::Repin;
-use crate::io::{IoChain, IoFd, OutputStream, OutputStreamFfi};
+use crate::io::{IoChain, IoFd, OutputStream};
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{Block, BlockType, LoopStatus};
@@ -10,7 +9,6 @@ use crate::proc::{no_exec, ProcStatus};
 use crate::reader::reader_read;
 use crate::wchar::{wstr, WString, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use cxx::CxxWString;
 use errno::errno;
 use libc::{c_int, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 
@@ -18,7 +16,6 @@ use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::os::fd::FromRawFd;
-use std::pin::Pin;
 use std::sync::Arc;
 use widestring_suffix::widestrs;
 
@@ -969,141 +966,4 @@ fn builtin_gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         streams.out.append(wgettext_str(arg));
     }
     STATUS_CMD_OK
-}
-
-#[cxx::bridge]
-#[allow(clippy::needless_lifetimes)]
-mod builtins_ffi {
-    extern "C++" {
-        include!("io.h");
-        include!("parser.h");
-        type IoStreams<'a> = crate::io::IoStreams<'a>;
-        type OutputStreamFfi<'a> = crate::io::OutputStreamFfi<'a>;
-        type Parser = crate::parser::Parser;
-    }
-    extern "Rust" {
-        #[cxx_name = "builtin_print_help"]
-        unsafe fn builtin_print_help_ffi<'a>(
-            parser: &Parser,
-            streams: Pin<&mut IoStreams<'a>>,
-            name: &CxxWString,
-        );
-        #[cxx_name = "builtin_print_help_error"]
-        unsafe fn builtin_print_help_error_ffi<'a>(
-            parser: &Parser,
-            streams: Pin<&mut IoStreams<'a>>,
-            name: &CxxWString,
-            error_message: &CxxWString,
-        );
-        #[cxx_name = "builtin_unknown_option"]
-        unsafe fn builtin_unknown_option_ffi<'a>(
-            parser: &Parser,
-            streams: Pin<&mut IoStreams<'a>>,
-            cmd: &CxxWString,
-            opt: &CxxWString,
-            print_hints: bool,
-        );
-        #[cxx_name = "builtin_missing_argument"]
-        fn builtin_missing_argument_ffi(
-            parser: &Parser,
-            streams: Pin<&mut IoStreams>,
-            cmd: &CxxWString,
-            opt: &CxxWString,
-            print_hints: bool,
-        );
-        #[cxx_name = "builtin_print_error_trailer"]
-        unsafe fn builtin_print_error_trailer_ffi<'a>(
-            parser: &Parser,
-            b: Pin<&mut OutputStreamFfi<'a>>,
-            cmd: &CxxWString,
-        );
-    }
-}
-
-pub fn run_builtin_ffi(
-    builtin_fn: fn(
-        *const autocxx::c_void,
-        *mut autocxx::c_void,
-        *mut autocxx::c_void,
-    ) -> autocxx::c_int,
-    parser: &Parser,
-    streams: &mut IoStreams,
-    args: &mut [&wstr],
-) -> Option<c_int> {
-    let mut zstrings = vec![];
-    for arg in args {
-        let mut zstring: Vec<char> = arg.chars().collect();
-        zstring.push('\0');
-        zstrings.push(zstring);
-    }
-    let mut zstrs = vec![];
-    for zstring in &zstrings {
-        zstrs.push(zstring.as_ptr());
-    }
-    zstrs.push(std::ptr::null());
-    let args = zstrs.as_mut_ptr();
-    let ret = (builtin_fn)(
-        parser as *const Parser as *const autocxx::c_void,
-        streams as *mut IoStreams as *mut autocxx::c_void,
-        args.cast(),
-    );
-    Some(i32::from(ret))
-}
-
-fn builtin_print_help_ffi(parser: &Parser, streams: Pin<&mut IoStreams>, name: &CxxWString) {
-    builtin_print_help(parser, streams.unpin(), name.as_wstr())
-}
-
-fn builtin_print_help_error_ffi(
-    parser: &Parser,
-    streams: Pin<&mut IoStreams>,
-    name: &CxxWString,
-    error_message: &CxxWString,
-) {
-    builtin_print_help_error(
-        parser,
-        streams.unpin(),
-        name.as_wstr(),
-        error_message.as_wstr(),
-    )
-}
-
-fn builtin_unknown_option_ffi(
-    parser: &Parser,
-    streams: Pin<&mut IoStreams>,
-    cmd: &CxxWString,
-    opt: &CxxWString,
-    print_hints: bool,
-) {
-    builtin_unknown_option(
-        parser,
-        streams.unpin(),
-        cmd.as_wstr(),
-        opt.as_wstr(),
-        print_hints,
-    );
-}
-
-fn builtin_missing_argument_ffi(
-    parser: &Parser,
-    streams: Pin<&mut IoStreams>,
-    cmd: &CxxWString,
-    opt: &CxxWString,
-    print_hints: bool,
-) {
-    builtin_missing_argument(
-        parser,
-        streams.unpin(),
-        cmd.as_wstr(),
-        opt.as_wstr(),
-        print_hints,
-    );
-}
-
-fn builtin_print_error_trailer_ffi(
-    parser: &Parser,
-    b: Pin<&mut OutputStreamFfi>,
-    cmd: &CxxWString,
-) {
-    builtin_print_error_trailer(parser, b.unpin().0, cmd.as_wstr())
 }

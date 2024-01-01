@@ -21,7 +21,7 @@ use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet, VecDeque},
     ffi::CString,
-    io::{BufRead, BufReader, Read, Write},
+    io::{BufRead, Read, Write},
     mem,
     num::NonZeroUsize,
     ops::ControlFlow,
@@ -31,7 +31,6 @@ use std::{
 };
 
 use bitflags::bitflags;
-use cxx::{CxxWString, UniquePtr};
 use libc::{
     fchmod, fchown, flock, fstat, ftruncate, lseek, LOCK_EX, LOCK_SH, LOCK_UN, O_APPEND, O_CREAT,
     O_RDONLY, O_WRONLY, SEEK_SET,
@@ -41,32 +40,29 @@ use rand::Rng;
 use widestring_suffix::widestrs;
 
 use crate::{
-    ast::{ast_ffi::StatementDecoration, Ast, Node},
+    ast::{Ast, Node},
     common::{
         str2wcstring, unescape_string, valid_var_name, wcs2zstring, write_loop, CancelChecker,
         UnescapeStringStyle,
     },
-    env::{EnvMode, EnvStack, EnvStackRefFFI, Environment},
+    env::{EnvMode, EnvStack, Environment},
     expand::{expand_one, ExpandFlags},
     fallback::fish_mkstemp_cloexec,
     fds::{wopen_cloexec, AutoCloseFd},
-    ffi::wcstring_list_ffi_t,
     flog::{FLOG, FLOGF},
     global_safety::RelaxedAtomicBool,
     history::file::{append_history_item_to_buffer, HistoryFileContents},
     io::IoStreams,
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
-    parse_constants::ParseTreeFlags,
+    parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
     path::{
         path_get_config, path_get_data, path_get_data_remoteness, path_is_valid, DirRemoteness,
     },
-    signal::signal_check_cancel,
     threads::{assert_is_background_thread, iothread_perform},
     util::find_subslice,
     wchar::prelude::*,
     wchar_ext::WExt,
-    wchar_ffi::{WCharFromFFI, WCharToFFI},
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
     wutil::{
@@ -77,152 +73,42 @@ use crate::{
 
 mod file;
 
-#[cxx::bridge]
-mod history_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        include!("io.h");
-        include!("env.h");
-        include!("operation_context.h");
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SearchType {
+    /// Search for commands exactly matching the given string.
+    Exact,
+    /// Search for commands containing the given string.
+    Contains,
+    /// Search for commands starting with the given string.
+    Prefix,
+    /// Search for commands containing the given glob pattern.
+    ContainsGlob,
+    /// Search for commands starting with the given glob pattern.
+    PrefixGlob,
+    /// Search for commands containing the given string as a subsequence
+    ContainsSubsequence,
+    /// Matches everything.
+    MatchEverything,
+}
 
-        type IoStreams<'a> = crate::io::IoStreams<'a>;
-        #[cxx_name = "EnvDyn"]
-        type EnvDynFFI = crate::env::EnvDynFFI;
-        #[cxx_name = "EnvStackRef"]
-        type EnvStackRefFFI = crate::env::EnvStackRefFFI;
-        type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
-        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
-    }
+/// Ways that a history item may be written to disk (or omitted).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PersistenceMode {
+    /// The history item is written to disk normally
+    Disk,
+    /// The history item is stored in-memory only, not written to disk
+    Memory,
+    /// The history item is stored in-memory and deleted when a new item is added
+    Ephemeral,
+}
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    enum SearchType {
-        /// Search for commands exactly matching the given string.
-        Exact,
-        /// Search for commands containing the given string.
-        Contains,
-        /// Search for commands starting with the given string.
-        Prefix,
-        /// Search for commands containing the given glob pattern.
-        ContainsGlob,
-        /// Search for commands starting with the given glob pattern.
-        PrefixGlob,
-        /// Search for commands containing the given string as a subsequence
-        ContainsSubsequence,
-        /// Matches everything.
-        MatchEverything,
-    }
-
-    /// Ways that a history item may be written to disk (or omitted).
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    enum PersistenceMode {
-        /// The history item is written to disk normally
-        Disk,
-        /// The history item is stored in-memory only, not written to disk
-        Memory,
-        /// The history item is stored in-memory and deleted when a new item is added
-        Ephemeral,
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum SearchDirection {
-        Forward,
-        Backward,
-    }
-
-    extern "Rust" {
-        #[cxx_name = "history_save_all"]
-        fn save_all();
-        #[cxx_name = "history_session_id"]
-        fn rust_session_id(vars: &EnvStackRefFFI) -> UniquePtr<CxxWString>;
-        fn rust_expand_and_detect_paths(
-            paths: &wcstring_list_ffi_t,
-            vars: &EnvStackRefFFI,
-        ) -> UniquePtr<wcstring_list_ffi_t>;
-        fn rust_all_paths_are_valid(
-            paths: &wcstring_list_ffi_t,
-            ctx: &OperationContext<'_>,
-        ) -> bool;
-        #[rust_name = "start_private_mode_ffi"]
-        fn start_private_mode(vars: &EnvStackRefFFI);
-        #[rust_name = "in_private_mode_ffi"]
-        fn in_private_mode(vars: &EnvStackRefFFI) -> bool;
-        #[cxx_name = "all_paths_are_valid"]
-        fn all_paths_are_valid_ffi(paths: &wcstring_list_ffi_t, ctx: &OperationContext<'_>)
-            -> bool;
-    }
-
-    extern "Rust" {
-        type ItemIndexes;
-
-        fn get(&self, index: usize) -> UniquePtr<CxxWString>;
-    }
-
-    extern "Rust" {
-        type HistoryItem;
-
-        fn rust_history_item_new(
-            s: &CxxWString,
-            when: i64,
-            ident: u64,
-            persist_mode: PersistenceMode,
-        ) -> Box<HistoryItem>;
-        #[rust_name = "str_ffi"]
-        fn str(&self) -> UniquePtr<CxxWString>;
-        fn is_empty(&self) -> bool;
-        #[rust_name = "matches_search_ffi"]
-        fn matches_search(&self, term: &CxxWString, typ: SearchType, case_sensitive: bool) -> bool;
-        #[rust_name = "timestamp_ffi"]
-        fn timestamp(&self) -> i64;
-        fn should_write_to_disk(&self) -> bool;
-        #[rust_name = "get_required_paths_ffi"]
-        fn get_required_paths(&self) -> UniquePtr<wcstring_list_ffi_t>;
-        #[rust_name = "set_required_paths_ffi"]
-        fn set_required_paths(&mut self, paths: &wcstring_list_ffi_t);
-    }
-
-    extern "Rust" {
-        type HistorySharedPtr;
-        fn history_with_name(name: &CxxWString) -> Box<HistorySharedPtr>;
-        fn is_default(&self) -> bool;
-        fn is_empty(&self) -> bool;
-        fn remove(&self, s: &CxxWString);
-        fn remove_ephemeral_items(&self);
-        fn resolve_pending(&self);
-        fn save(&self);
-        fn clear(&self);
-        fn clear_session(&self);
-        fn populate_from_config_path(&self);
-        fn populate_from_bash(&self, filename: &CxxWString);
-        fn incorporate_external_changes(&self);
-        fn get_history(&self) -> UniquePtr<wcstring_list_ffi_t>;
-        fn items_at_indexes(&self, indexes: &[isize]) -> Box<ItemIndexes>;
-        fn item_at_index(&self, idx: usize) -> Box<HistoryItem>;
-        fn size(&self) -> usize;
-        fn clone(&self) -> Box<HistorySharedPtr>;
-    }
-
-    extern "Rust" {
-        type HistorySearch;
-        fn rust_history_search_new(
-            hist: &HistorySharedPtr,
-            s: &CxxWString,
-            search_type: SearchType,
-            flags: u32,
-            starting_index: usize,
-        ) -> Box<HistorySearch>;
-        #[rust_name = "original_term_ffi"]
-        fn original_term(&self) -> UniquePtr<CxxWString>;
-        fn go_to_next_match(&mut self, direction: SearchDirection) -> bool;
-        fn current_item(&self) -> &HistoryItem;
-        #[rust_name = "current_string_ffi"]
-        fn current_string(&self) -> UniquePtr<CxxWString>;
-        fn current_index(&self) -> usize;
-        fn ignores_case(&self) -> bool;
-    }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SearchDirection {
+    Forward,
+    Backward,
 }
 
 use self::file::time_to_seconds;
-pub use self::history_ffi::{PersistenceMode, SearchDirection, SearchType};
 
 // Our history format is intended to be valid YAML. Here it is:
 //
@@ -375,10 +261,6 @@ impl HistoryItem {
         &self.contents
     }
 
-    fn str_ffi(&self) -> UniquePtr<CxxWString> {
-        self.str().to_ffi()
-    }
-
     /// Returns whether the text is empty.
     pub fn is_empty(&self) -> bool {
         self.contents.is_empty()
@@ -419,30 +301,12 @@ impl HistoryItem {
             }
             SearchType::ContainsSubsequence => subsequence_in_string(term, &content_to_match),
             SearchType::MatchEverything => true,
-            _ => unreachable!("invalid SearchType"),
         }
-    }
-
-    fn matches_search_ffi(&self, term: &CxxWString, typ: SearchType, case_sensitive: bool) -> bool {
-        self.matches_search(&term.from_ffi(), typ, case_sensitive)
     }
 
     /// Returns the timestamp for creating this history item.
     pub fn timestamp(&self) -> SystemTime {
         self.creation_timestamp
-    }
-
-    fn timestamp_ffi(&self) -> i64 {
-        match self.timestamp().duration_since(UNIX_EPOCH) {
-            Ok(d) => {
-                // after epoch
-                i64::try_from(d.as_secs()).unwrap()
-            }
-            Err(e) => {
-                // before epoch
-                -i64::try_from(e.duration().as_secs()).unwrap()
-            }
-        }
     }
 
     /// Returns whether this item should be persisted (written to disk).
@@ -456,18 +320,10 @@ impl HistoryItem {
         &self.required_paths
     }
 
-    fn get_required_paths_ffi(&self) -> UniquePtr<wcstring_list_ffi_t> {
-        self.get_required_paths().to_ffi()
-    }
-
     /// Set the list of arguments which referred to files.
     /// This is used for autosuggestion hinting.
     pub fn set_required_paths(&mut self, paths: Vec<WString>) {
         self.required_paths = paths;
-    }
-
-    fn set_required_paths_ffi(&mut self, paths: &wcstring_list_ffi_t) {
-        self.set_required_paths(paths.from_ffi())
     }
 
     /// We can merge two items if they are the same command. We use the more recent timestamp, more
@@ -1986,16 +1842,11 @@ impl HistorySearch {
         &self.orig_term
     }
 
-    fn original_term_ffi(&self) -> UniquePtr<CxxWString> {
-        self.original_term().to_ffi()
-    }
-
     /// Finds the next search result. Returns `true` if one was found.
     pub fn go_to_next_match(&mut self, direction: SearchDirection) -> bool {
         let invalid_index = match direction {
             SearchDirection::Backward => usize::MAX,
             SearchDirection::Forward => 0,
-            _ => unreachable!(),
         };
 
         if self.current_index == invalid_index {
@@ -2008,7 +1859,6 @@ impl HistorySearch {
             match direction {
                 SearchDirection::Backward => index += 1,
                 SearchDirection::Forward => index -= 1,
-                _ => unreachable!(),
             };
 
             if self.current_index == invalid_index {
@@ -2053,10 +1903,6 @@ impl HistorySearch {
     /// This function panics if there is no current item.
     pub fn current_string(&self) -> &wstr {
         self.current_item().str()
-    }
-
-    fn current_string_ffi(&self) -> UniquePtr<CxxWString> {
-        self.current_string().to_ffi()
     }
 
     /// Returns the index of the current history item.
@@ -2172,10 +2018,6 @@ pub fn all_paths_are_valid<P: IntoIterator<Item = WString>>(
     true
 }
 
-fn all_paths_are_valid_ffi(paths: &wcstring_list_ffi_t, ctx: &OperationContext<'_>) -> bool {
-    all_paths_are_valid(paths.from_ffi(), ctx)
-}
-
 /// Sets private mode on. Once in private mode, it cannot be turned off.
 pub fn start_private_mode(vars: &EnvStack) {
     vars.set_one(L!("fish_history"), EnvMode::GLOBAL, L!("").to_owned());
@@ -2193,185 +2035,3 @@ static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 /// Whether we're in maximum chaos mode, useful for testing.
 /// This causes things like locks to fail.
 pub static CHAOS_MODE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-// ========
-// FFI crud
-// ========
-
-struct ItemIndexes(HashMap<usize, WString>);
-
-impl ItemIndexes {
-    fn get(&self, index: usize) -> UniquePtr<CxxWString> {
-        self.0
-            .get(&index)
-            .map(|s| s.to_ffi())
-            .unwrap_or_else(UniquePtr::null)
-    }
-}
-
-fn rust_history_item_new(
-    s: &CxxWString,
-    when: i64,
-    ident: u64,
-    persist_mode: PersistenceMode,
-) -> Box<HistoryItem> {
-    let s = s.from_ffi();
-    let when = if when < 0 {
-        UNIX_EPOCH - Duration::from_secs(u64::try_from(-when).unwrap())
-    } else {
-        UNIX_EPOCH + Duration::from_secs(u64::try_from(when).unwrap())
-    };
-    Box::new(HistoryItem::new(s, when, ident, persist_mode))
-}
-
-pub struct HistorySharedPtr(pub Arc<History>);
-
-impl HistorySharedPtr {
-    fn is_default(&self) -> bool {
-        self.0.is_default()
-    }
-    fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-    fn remove(&self, s: &CxxWString) {
-        self.0.remove(s.from_ffi())
-    }
-    fn remove_ephemeral_items(&self) {
-        self.0.remove_ephemeral_items()
-    }
-    fn resolve_pending(&self) {
-        self.0.resolve_pending()
-    }
-    fn save(&self) {
-        self.0.save()
-    }
-    #[allow(clippy::too_many_arguments)]
-    fn search(
-        &self,
-        search_type: SearchType,
-        search_args: &wcstring_list_ffi_t,
-        show_time_format: &UniquePtr<CxxWString>,
-        max_items: usize,
-        case_sensitive: bool,
-        null_terminate: bool,
-        reverse: bool,
-        cancel_on_signal: bool,
-        streams: &mut IoStreams,
-    ) -> bool {
-        let show_time_format = if show_time_format.is_null() {
-            None
-        } else {
-            Some(show_time_format.from_ffi().to_string())
-        };
-        let search_args = search_args.from_ffi();
-        let search_args: Vec<&wstr> = search_args.iter().map(|s| s.as_ref()).collect();
-        let cancel_checker = move || {
-            if cancel_on_signal {
-                signal_check_cancel() != 0
-            } else {
-                false
-            }
-        };
-        Arc::clone(&self.0).search(
-            search_type,
-            &search_args,
-            show_time_format.as_deref(),
-            max_items,
-            case_sensitive,
-            null_terminate,
-            reverse,
-            &{ Box::new(cancel_checker) as _ },
-            streams,
-        )
-    }
-    fn clear(&self) {
-        self.0.clear()
-    }
-    fn clear_session(&self) {
-        self.0.clear_session()
-    }
-    fn populate_from_config_path(&self) {
-        self.0.populate_from_config_path()
-    }
-    fn populate_from_bash(&self, filename: &CxxWString) {
-        let file = AutoCloseFd::new(wopen_cloexec(&filename.from_ffi(), O_RDONLY, 0));
-        if !file.is_valid() {
-            return;
-        }
-        self.0.populate_from_bash(BufReader::new(file))
-    }
-    fn incorporate_external_changes(&self) {
-        self.0.incorporate_external_changes()
-    }
-    fn get_history(&self) -> UniquePtr<wcstring_list_ffi_t> {
-        self.0.get_history().to_ffi()
-    }
-    fn items_at_indexes(&self, indexes: &[isize]) -> Box<ItemIndexes> {
-        Box::new(ItemIndexes(self.0.items_at_indexes(
-            indexes.iter().filter_map(|&n| n.try_into().ok()),
-        )))
-    }
-    fn item_at_index(&self, idx: usize) -> Box<HistoryItem> {
-        Box::new(self.0.item_at_index(idx).unwrap_or_else(|| HistoryItem {
-            contents: WString::new(),
-            creation_timestamp: UNIX_EPOCH,
-            required_paths: vec![],
-            identifier: 0,
-            persist_mode: PersistenceMode::Disk,
-        }))
-    }
-    fn size(&self) -> usize {
-        self.0.size()
-    }
-    fn clone(&self) -> Box<Self> {
-        Box::new(Self(Arc::clone(&self.0)))
-    }
-}
-
-fn history_with_name(name: &CxxWString) -> Box<HistorySharedPtr> {
-    Box::new(HistorySharedPtr(History::with_name(&name.from_ffi())))
-}
-
-fn rust_history_search_new(
-    hist: &HistorySharedPtr,
-    s: &CxxWString,
-    search_type: SearchType,
-    flags: u32,
-    starting_index: usize,
-) -> Box<HistorySearch> {
-    Box::new(HistorySearch::new_with(
-        Arc::clone(&hist.0),
-        s.from_ffi(),
-        search_type,
-        SearchFlags::from_bits(flags).unwrap(),
-        starting_index,
-    ))
-}
-
-fn rust_session_id(vars: &EnvStackRefFFI) -> UniquePtr<CxxWString> {
-    history_session_id(&*vars.0).to_ffi()
-}
-
-fn rust_expand_and_detect_paths(
-    paths: &wcstring_list_ffi_t,
-    vars: &EnvStackRefFFI,
-) -> UniquePtr<wcstring_list_ffi_t> {
-    expand_and_detect_paths(paths.from_ffi(), &*vars.0).to_ffi()
-}
-
-fn rust_all_paths_are_valid(paths: &wcstring_list_ffi_t, ctx: &OperationContext<'_>) -> bool {
-    all_paths_are_valid(paths.from_ffi(), ctx)
-}
-
-fn start_private_mode_ffi(vars: &EnvStackRefFFI) {
-    start_private_mode(&vars.0)
-}
-
-fn in_private_mode_ffi(vars: &EnvStackRefFFI) -> bool {
-    in_private_mode(&*vars.0)
-}
-
-unsafe impl cxx::ExternType for HistoryItem {
-    type Id = cxx::type_id!("HistoryItem");
-    type Kind = cxx::kind::Opaque;
-}

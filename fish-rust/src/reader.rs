@@ -2988,7 +2988,6 @@ impl ReaderData {
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 panic!("should have been handled by inputter_t::readch");
             }
-            _ => panic!("unhandled readline command {c:?}"),
         }
     }
 }
@@ -4188,7 +4187,6 @@ impl ReaderData {
                 index = match direction {
                     SearchDirection::Forward => self.history_pager_history_index_start,
                     SearchDirection::Backward => self.history_pager_history_index_end,
-                    _ => unreachable!(),
                 }
             }
             HistoryPagerInvocation::Refresh => {
@@ -4227,7 +4225,6 @@ impl ReaderData {
                     zelf.history_pager_history_index_start = index;
                     zelf.history_pager_history_index_end = result.final_index;
                 }
-                _ => unreachable!(),
             };
             zelf.pager.extra_progress_text = if result.have_more_results {
                 wgettext!("Search again for more results")
@@ -5105,7 +5102,6 @@ impl ReaderData {
                 );
                 return;
             }
-            _ => unreachable!(),
         }
 
         // Construct a copy of the string from the beginning of the command substitution
@@ -5366,29 +5362,4 @@ fn event_is_normal_char(evt: &CharEvent) -> bool {
     }
     let c = evt.get_char();
     !fish_reserved_codepoint(c) && c > char::from(31) && c != char::from(127)
-}
-
-#[cxx::bridge]
-mod reader_ffi {
-    extern "Rust" {
-        #[cxx_name = "check_exit_loop_maybe_warning"]
-        fn check_exit_loop_maybe_warning_ffi() -> bool;
-        fn reader_test_and_clear_interrupted() -> i32;
-        fn reader_init();
-        fn restore_term_mode();
-        fn reader_schedule_prompt_repaint();
-        fn reader_reading_interrupted() -> i32;
-        fn reader_reset_interrupted();
-        #[cxx_name = "reader_current_data"]
-        fn reader_current_data_ffi() -> *mut u8;
-    }
-}
-
-fn check_exit_loop_maybe_warning_ffi() -> bool {
-    check_exit_loop_maybe_warning(None)
-}
-
-fn reader_current_data_ffi() -> *mut u8 {
-    let data = current_data().unwrap();
-    data as *mut ReaderData as *mut u8
 }

@@ -11,11 +11,9 @@ use crate::pager::{PageRendering, Pager};
 use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
 use std::io::Write;
-use std::pin::Pin;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 
-use cxx::{CxxVector, CxxWString, UniquePtr};
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
 
 use crate::common::{
@@ -24,17 +22,16 @@ use crate::common::{
     ScopeGuarding,
 };
 use crate::curses::{term, tparm0, tparm1};
-use crate::env::{EnvStackRef, Environment, TERM_HAS_XN};
+use crate::env::{Environment, TERM_HAS_XN};
 use crate::fallback::fish_wcwidth;
 use crate::flog::FLOGF;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{HighlightColorResolver, HighlightSpecListFFI};
+use crate::highlight::HighlightColorResolver;
 use crate::output::Outputter;
 use crate::termsize::{termsize_last, Termsize};
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::string_prefixes_string;
 use crate::{highlight::HighlightSpec, wcstringutil::fish_wcwidth_visible};
 
@@ -1837,147 +1834,4 @@ fn compute_layout(
     result.left_prompt_space = left_prompt_width;
     result.autosuggestion = autosuggestion.to_owned();
     result
-}
-
-#[allow(clippy::needless_lifetimes)] // add odds with cxx
-#[cxx::bridge]
-mod screen_ffi {
-    extern "C++" {
-        include!("screen.h");
-        include!("pager.h");
-        include!("highlight.h");
-        pub type HighlightSpec = crate::highlight::HighlightSpec;
-        pub type HighlightSpecListFFI = crate::highlight::HighlightSpecListFFI;
-        // pub type pager_t = crate::ffi::pager_t;
-        // pub type page_rendering_t = crate::ffi::page_rendering_t;
-        pub type Pager = crate::pager::Pager;
-        pub type PageRendering = crate::pager::PageRendering;
-        pub type highlight_spec_t = crate::ffi::highlight_spec_t;
-    }
-    extern "Rust" {
-        type Line;
-        fn new_line() -> Box<Line>;
-        #[cxx_name = "append"]
-        fn append_ffi(&mut self, character: u32, highlight: &HighlightSpec);
-        #[cxx_name = "append_str"]
-        fn append_str_ffi(&mut self, txt: &CxxWString, highlight: &HighlightSpec);
-        fn append_line(&mut self, line: &Line);
-        fn text_characters_ffi(&self) -> UniquePtr<CxxWString>;
-    }
-    extern "Rust" {
-        type ScreenData;
-        fn new_screen_data() -> Box<ScreenData>;
-        #[cxx_name = "create_line"]
-        fn create_line_ffi(&mut self, index: usize) -> *mut Line;
-        fn add_line(&mut self) -> &mut Line;
-        fn insert_line_at_index(&mut self, index: usize) -> &mut Line;
-        fn empty(&self) -> bool;
-        fn resize(&mut self, size: usize);
-        fn line_count(&self) -> usize;
-        fn line_ffi(&self, index: usize) -> *const Line;
-    }
-    extern "Rust" {
-        type Screen;
-        fn new_screen() -> Box<Screen>;
-        #[cxx_name = "write"]
-        fn write_ffi(
-            &mut self,
-            left_prompt: &CxxWString,
-            right_prompt: &CxxWString,
-            commandline: &CxxWString,
-            explicit_len: usize,
-            colors: &HighlightSpecListFFI,
-            indent: &CxxVector<i32>,
-            cursor_pos: usize,
-            vars: *mut u8,
-            pager: Pin<&mut Pager>,
-            page_rendering: Pin<&mut PageRendering>,
-            cursor_is_within_pager: bool,
-        );
-        fn reset_abandoning_line(&mut self, screen_width: usize);
-        fn cursor_is_wrapped_to_own_line(&self) -> bool;
-        fn save_status(&mut self);
-        fn reset_line(&mut self, repaint_prompt: bool);
-        fn autosuggestion_is_truncated(&self) -> bool;
-    }
-    extern "Rust" {
-        type PromptLayout;
-    }
-    extern "Rust" {
-        type LayoutCache;
-    }
-    extern "Rust" {
-        #[cxx_name = "screen_clear"]
-        fn screen_clear_ffi() -> UniquePtr<CxxWString>;
-        fn screen_force_clear_to_end();
-    }
-}
-fn new_line() -> Box<Line> {
-    Box::new(Line::new())
-}
-impl Line {
-    fn append_ffi(&mut self, character: u32, highlight: &HighlightSpec) {
-        self.append(char::try_from(character).unwrap(), *highlight)
-    }
-    fn append_str_ffi(&mut self, txt: &CxxWString, highlight: &HighlightSpec) {
-        self.append_str(&txt.from_ffi(), *highlight)
-    }
-    fn text_characters_ffi(&self) -> UniquePtr<CxxWString> {
-        WString::from_iter(self.text.iter().map(|hc| hc.character)).to_ffi()
-    }
-}
-fn new_screen_data() -> Box<ScreenData> {
-    Box::new(ScreenData::new())
-}
-impl ScreenData {
-    fn create_line_ffi(&mut self, index: usize) -> *mut Line {
-        self.create_line(index);
-        self.line_mut(index) as *mut Line
-    }
-    fn empty(&self) -> bool {
-        self.is_empty()
-    }
-    fn line_ffi(&self, index: usize) -> *const Line {
-        self.line(index) as *const Line
-    }
-}
-fn new_screen() -> Box<Screen> {
-    Box::new(Screen::new())
-}
-impl Screen {
-    fn write_ffi(
-        &mut self,
-        left_prompt: &CxxWString,
-        right_prompt: &CxxWString,
-        commandline: &CxxWString,
-        explicit_len: usize,
-        colors: &HighlightSpecListFFI,
-        indent: &CxxVector<i32>,
-        cursor_pos: usize,
-        vars: *mut u8,
-        pager: Pin<&mut Pager>,
-        page_rendering: Pin<&mut PageRendering>,
-        cursor_is_within_pager: bool,
-    ) {
-        let vars = unsafe { Box::from_raw(vars as *mut EnvStackRef) };
-        self.write(
-            left_prompt.as_wstr(),
-            right_prompt.as_wstr(),
-            commandline.as_wstr(),
-            explicit_len,
-            &colors.0,
-            indent.as_slice(),
-            cursor_pos,
-            vars.as_ref().as_ref().get_ref(),
-            pager.get_mut(),
-            page_rendering.get_mut(),
-            cursor_is_within_pager,
-        );
-    }
-    fn autosuggestion_is_truncated(&self) -> bool {
-        self.autosuggestion_is_truncated
-    }
-}
-fn screen_clear_ffi() -> UniquePtr<CxxWString> {
-    screen_clear().to_ffi()
 }

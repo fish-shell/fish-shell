@@ -139,15 +139,6 @@ pub fn null_terminated_array_length<T>(mut arr: *const *const T) -> usize {
     len
 }
 
-/// Convert a CxxString to a CString, truncating at the first NUL.
-use cxx::CxxString;
-fn cxxstring_to_cstring(s: &CxxString) -> CString {
-    let bytes: &[u8] = s.as_bytes();
-    let nul_pos = bytes.iter().position(|&b| b == 0);
-    let slice = &bytes[..nul_pos.unwrap_or(bytes.len())];
-    CString::new(slice).unwrap()
-}
-
 #[test]
 fn test_null_terminated_array_length() {
     let arr = [&1, &2, &3, std::ptr::null()];

@@ -5,14 +5,13 @@ use crate::ast::{
     Leaf, List, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
-use crate::color::{self, RgbColor};
+use crate::color::RgbColor;
 use crate::common::{
     unescape_string_in_place, valid_var_name, valid_var_name_char, UnescapeFlags, ASCII_MAX,
     EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::compat::_PC_CASE_SENSITIVE;
-use crate::editable_line::EditableLine;
-use crate::env::{EnvStackRefFFI, Environment};
+use crate::env::Environment;
 use crate::expand::{
     expand_one, expand_tilde, expand_to_command_and_args, ExpandFlags, ExpandResultCode,
     HOME_DIRECTORY, PROCESS_EXPAND_SELF_STR,
@@ -21,7 +20,6 @@ use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
     VARIABLE_EXPAND_SINGLE,
 };
-use crate::ffi::rgb_color_t;
 use crate::function;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::history::{all_paths_are_valid, HistoryItem};
@@ -40,7 +38,6 @@ use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
-use crate::wchar_ffi::AsWstr;
 use crate::wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
@@ -50,12 +47,10 @@ use crate::wutil::fish_wcstoi;
 use crate::wutil::{normalize_path, waccess, wstat};
 use crate::wutil::{wbasename, wdirname};
 use bitflags::bitflags;
-use cxx::{CxxWString, SharedPtr};
 use libc::{ENOENT, PATH_MAX, R_OK, W_OK};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::os::fd::RawFd;
-use std::pin::Pin;
 
 impl HighlightSpec {
     pub fn new() -> Self {
@@ -1120,7 +1115,6 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::kw_exclam
             | ParseKeyword::kw_time => role = HighlightRole::operat,
             ParseKeyword::none => (),
-            _ => panic!(),
         };
         self.color_node(node.leaf_as_node(), HighlightSpec::with_fg(role));
     }
@@ -1306,7 +1300,6 @@ impl<'s> Highlighter<'s> {
                         target_is_valid = file_is_writable
                             && !(file_exists && oper.mode == RedirectionMode::noclob);
                     }
-                    _ => panic!(),
                 }
             }
             self.color_node(
@@ -1537,7 +1530,6 @@ fn get_highlight_var_name(role: HighlightRole) -> &'static wstr {
         HighlightRole::pager_selected_prefix => L!("fish_pager_color_selected_prefix"),
         HighlightRole::pager_selected_completion => L!("fish_pager_color_selected_completion"),
         HighlightRole::pager_selected_description => L!("fish_pager_color_selected_description"),
-        _ => unreachable!(),
     }
 }
 
@@ -1576,7 +1568,6 @@ fn get_fallback(role: HighlightRole) -> HighlightRole {
             HighlightRole::pager_description
         }
         HighlightRole::pager_selected_background => HighlightRole::search_match,
-        _ => unreachable!(),
     }
 }
 
@@ -1612,8 +1603,6 @@ fn fs_is_case_insensitive(
     result
 }
 
-pub use highlight_ffi::{HighlightRole, HighlightSpec};
-
 impl Default for HighlightRole {
     fn default() -> Self {
         Self::normal
@@ -1631,222 +1620,48 @@ impl Default for HighlightSpec {
     }
 }
 
-#[cxx::bridge]
-mod highlight_ffi {
-    /// Describes the role of a span of text.
-    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-    #[repr(u8)]
-    pub enum HighlightRole {
-        normal,  // normal text
-        error,   // error
-        command, // command
-        keyword,
-        statement_terminator, // process separator
-        param,                // command parameter (argument)
-        option,               // argument starting with "-", up to a "--"
-        comment,              // comment
-        search_match,         // search match
-        operat,               // operator
-        escape,               // escape sequences
-        quote,                // quoted string
-        redirection,          // redirection
-        autosuggestion,       // autosuggestion
-        selection,
+/// Describes the role of a span of text.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[repr(u8)]
+pub enum HighlightRole {
+    normal,  // normal text
+    error,   // error
+    command, // command
+    keyword,
+    statement_terminator, // process separator
+    param,                // command parameter (argument)
+    option,               // argument starting with "-", up to a "--"
+    comment,              // comment
+    search_match,         // search match
+    operat,               // operator
+    escape,               // escape sequences
+    quote,                // quoted string
+    redirection,          // redirection
+    autosuggestion,       // autosuggestion
+    selection,
 
-        // Pager support.
-        // NOTE: pager.cpp relies on these being in this order.
-        pager_progress,
-        pager_background,
-        pager_prefix,
-        pager_completion,
-        pager_description,
-        pager_secondary_background,
-        pager_secondary_prefix,
-        pager_secondary_completion,
-        pager_secondary_description,
-        pager_selected_background,
-        pager_selected_prefix,
-        pager_selected_completion,
-        pager_selected_description,
-    }
-
-    /// Simply value type describing how a character should be highlighted..
-    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-    pub struct HighlightSpec {
-        pub foreground: HighlightRole,
-        pub background: HighlightRole,
-        pub valid_path: bool,
-        pub force_underline: bool,
-    }
-
-    extern "Rust" {
-        #[cxx_name = "clone"]
-        fn clone_ffi(self: &HighlightSpec) -> Box<HighlightSpec>;
-        fn new_highlight_spec() -> Box<HighlightSpec>;
-        fn editable_line_colors(editable_line: &EditableLine) -> &[HighlightSpec];
-    }
-
-    extern "C++" {
-        include!("highlight.h");
-        include!("history.h");
-        include!("color.h");
-        include!("operation_context.h");
-        include!("editable_line.h");
-        type HistoryItem = crate::history::HistoryItem;
-        type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
-        type rgb_color_t = crate::ffi::rgb_color_t;
-        #[cxx_name = "EnvDyn"]
-        type EnvDynFFI = crate::env::EnvDynFFI;
-        #[cxx_name = "EnvStackRef"]
-        type EnvStackRefFFI = crate::env::EnvStackRefFFI;
-        type EditableLine = crate::editable_line::EditableLine;
-    }
-    extern "Rust" {
-        #[cxx_name = "autosuggest_validate_from_history"]
-        fn autosuggest_validate_from_history_ffi(
-            item: &HistoryItem,
-            working_directory: &CxxWString,
-            ctx: &OperationContext<'static>,
-        ) -> bool;
-    }
-    extern "Rust" {
-        type HighlightColorResolver;
-        fn new_highlight_color_resolver() -> Box<HighlightColorResolver>;
-        #[cxx_name = "resolve_spec"]
-        fn resolve_spec_ffi(
-            &mut self,
-            highlight: &HighlightSpec,
-            is_background: bool,
-            vars: &EnvStackRefFFI,
-            out: Pin<&mut rgb_color_t>,
-        );
-    }
-    extern "Rust" {
-        type HighlightSpecListFFI;
-        fn new_highlight_spec_list() -> Box<HighlightSpecListFFI>;
-        fn highlight_shell_ffi(
-            bff: &CxxWString,
-            ctx: &OperationContext<'_>,
-            io_ok: bool,
-            cursor: SharedPtr<usize>,
-        ) -> Box<HighlightSpecListFFI>;
-        fn size(&self) -> usize;
-        fn at(&self, index: usize) -> &HighlightSpec;
-        #[cxx_name = "colorize"]
-        fn colorize_ffi(
-            text: &CxxWString,
-            colors: &HighlightSpecListFFI,
-            vars: &EnvStackRefFFI,
-        ) -> Vec<u8>;
-        fn push(&mut self, highlight: &HighlightSpec);
-    }
+    // Pager support.
+    // NOTE: pager.cpp relies on these being in this order.
+    pager_progress,
+    pager_background,
+    pager_prefix,
+    pager_completion,
+    pager_description,
+    pager_secondary_background,
+    pager_secondary_prefix,
+    pager_secondary_completion,
+    pager_secondary_description,
+    pager_selected_background,
+    pager_selected_prefix,
+    pager_selected_completion,
+    pager_selected_description,
 }
 
-fn colorize_ffi(
-    text: &CxxWString,
-    colors: &HighlightSpecListFFI,
-    vars: &EnvStackRefFFI,
-) -> Vec<u8> {
-    colorize(text.as_wstr(), &colors.0, &*vars.0)
-}
-
-#[derive(Default)]
-pub struct HighlightSpecListFFI(pub Vec<HighlightSpec>);
-
-unsafe impl cxx::ExternType for HighlightSpecListFFI {
-    type Id = cxx::type_id!("HighlightSpecListFFI");
-    type Kind = cxx::kind::Opaque;
-}
-
-fn new_highlight_spec_list() -> Box<HighlightSpecListFFI> {
-    Box::default()
-}
-impl HighlightSpecListFFI {
-    fn size(&self) -> usize {
-        self.0.len()
-    }
-    fn at(&self, index: usize) -> &HighlightSpec {
-        &self.0[index]
-    }
-    fn push(&mut self, highlight: &HighlightSpec) {
-        self.0.push(*highlight)
-    }
-}
-fn highlight_shell_ffi(
-    buff: &CxxWString,
-    ctx: &OperationContext<'_>,
-    io_ok: bool,
-    cursor: SharedPtr<usize>,
-) -> Box<HighlightSpecListFFI> {
-    let cursor = cursor.as_ref().cloned();
-    let mut color = vec![];
-    highlight_shell(buff.as_wstr(), &mut color, ctx, io_ok, cursor);
-    Box::new(HighlightSpecListFFI(color))
-}
-
-impl HighlightColorResolver {
-    fn resolve_spec_ffi(
-        &mut self,
-        highlight: &HighlightSpec,
-        is_background: bool,
-        vars: &EnvStackRefFFI,
-        mut out: Pin<&mut rgb_color_t>,
-    ) {
-        let color = self.resolve_spec(highlight, is_background, &*vars.0);
-        match color.typ {
-            color::Type::None => (),
-            color::Type::Named { idx } => {
-                out.as_mut().set_is_named();
-                out.as_mut().set_name_idx(idx);
-            }
-            color::Type::Rgb(color) => {
-                out.as_mut().set_is_rgb();
-                out.as_mut().set_color(color.r, color.g, color.b);
-            }
-            color::Type::Normal => out.as_mut().set_is_normal(),
-            color::Type::Reset => out.as_mut().set_is_reset(),
-        }
-        if color.flags.bold {
-            out.as_mut().set_bold(true);
-        }
-        if color.flags.underline {
-            out.as_mut().set_underline(true);
-        }
-        if color.flags.italics {
-            out.as_mut().set_italics(true);
-        }
-        if color.flags.dim {
-            out.as_mut().set_dim(true);
-        }
-        if color.flags.reverse {
-            out.as_mut().set_reverse(true);
-        }
-    }
-}
-
-fn autosuggest_validate_from_history_ffi(
-    item: &HistoryItem,
-    working_directory: &CxxWString,
-    ctx: &OperationContext<'static>,
-) -> bool {
-    autosuggest_validate_from_history(item, working_directory.as_wstr(), ctx)
-}
-
-fn new_highlight_color_resolver() -> Box<HighlightColorResolver> {
-    Box::new(HighlightColorResolver::new())
-}
-impl HighlightSpec {
-    fn clone_ffi(&self) -> Box<HighlightSpec> {
-        Box::new(*self)
-    }
-}
-fn new_highlight_spec() -> Box<HighlightSpec> {
-    Box::default()
-}
-unsafe impl cxx::ExternType for EditableLine {
-    type Id = cxx::type_id!("EditableLine");
-    type Kind = cxx::kind::Opaque;
-}
-fn editable_line_colors(editable_line: &EditableLine) -> &[HighlightSpec] {
-    editable_line.colors()
+/// Simply value type describing how a character should be highlighted..
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct HighlightSpec {
+    pub foreground: HighlightRole,
+    pub background: HighlightRole,
+    pub valid_path: bool,
+    pub force_underline: bool,
 }

@@ -428,38 +428,6 @@ fn term256_color_for_rgb(color: Color24) -> u8 {
     (16 + convert_color(color, COLORS)).try_into().unwrap()
 }
 
-/// FFI junk.
-use crate::ffi::rgb_color_t;
-impl rgb_color_t {
-    /// Convert from a C++ rgb_color_t to a Rust RgbColor.
-    #[allow(clippy::wrong_self_convention)]
-    pub fn from_ffi(&self) -> RgbColor {
-        let typ = if self.is_normal() {
-            Type::Normal
-        } else if self.is_reset() {
-            Type::Reset
-        } else if self.is_none() {
-            Type::None
-        } else if self.is_named() {
-            let idx = self.to_name_index();
-            Type::Named { idx }
-        } else if self.is_rgb() {
-            let [r, g, b] = self.to_color24().rgb;
-            Type::Rgb(Color24 { r, g, b })
-        } else {
-            unreachable!("Unknown color type")
-        };
-        let flags = Flags {
-            bold: self.is_bold(),
-            underline: self.is_underline(),
-            italics: self.is_italics(),
-            dim: self.is_dim(),
-            reverse: self.is_reverse(),
-        };
-        RgbColor { typ, flags }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::color::{Color24, Flags, RgbColor, Type};

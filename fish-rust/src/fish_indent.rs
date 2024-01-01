@@ -994,7 +994,6 @@ fn highlight_role_to_string(role: HighlightRole) -> &'static wstr {
         HighlightRole::pager_selected_prefix => L!("pager_selected_prefix"),
         HighlightRole::pager_selected_completion => L!("pager_selected_completion"),
         HighlightRole::pager_selected_description => L!("pager_selected_description"),
-        _ => unreachable!(),
     }
 }
 

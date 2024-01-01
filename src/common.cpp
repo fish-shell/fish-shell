@@ -58,8 +58,6 @@
 
 struct termios shell_modes;
 
-struct termios *shell_modes_ffi() { return &shell_modes; }
-
 const wcstring g_empty_string{};
 const std::vector<wcstring> g_empty_string_list{};
 

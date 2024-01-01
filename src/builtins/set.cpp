@@ -244,7 +244,7 @@ static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts, int
     }
 
     if (argc == 0 && opts.erase) {
-        streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[-1]);
+        streams.err.append_format(BUILTIN_ERR_MISSING, cmd, L"--erase");
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }

@@ -62,7 +62,7 @@ Instructions for other distributions may be found at
 Windows
 ~~~~~~~
 
--  On Windows 10, fish can be installed under the WSL Windows Subsystem
+-  On Windows 10/11, fish can be installed under the WSL Windows Subsystem
    for Linux with the instructions for the appropriate distribution
    listed above under “Packages for Linux”, or from source with the
    instructions below.

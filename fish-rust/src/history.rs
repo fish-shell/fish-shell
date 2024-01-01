@@ -46,7 +46,7 @@ use crate::{
         str2wcstring, unescape_string, valid_var_name, wcs2zstring, write_loop, CancelChecker,
         UnescapeStringStyle,
     },
-    env::{AsEnvironment, EnvMode, EnvStack, EnvStackRefFFI, Environment},
+    env::{EnvMode, EnvStack, EnvStackRefFFI, Environment},
     expand::{expand_one, ExpandFlags},
     fallback::fish_mkstemp_cloexec,
     fds::{wopen_cloexec, AutoCloseFd},
@@ -1688,7 +1688,7 @@ impl History {
     pub fn add_pending_with_file_detection(
         self: Arc<Self>,
         s: &wstr,
-        vars: impl AsEnvironment + Send + Sync + 'static,
+        vars: &EnvStack,
         persist_mode: PersistenceMode, /*=disk*/
     ) {
         // We use empty items as sentinels to indicate the end of history.
@@ -1745,10 +1745,10 @@ impl History {
             // Don't hold the lock while we perform this file detection.
             imp.add(item, /*pending=*/ true, /*do_save=*/ true);
             drop(imp);
+            let vars_snapshot = vars.snapshot();
             iothread_perform(move || {
                 // Don't hold the lock while we perform this file detection.
-                let validated_paths =
-                    expand_and_detect_paths(potential_paths, vars.as_environment());
+                let validated_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
                 let mut imp = self.imp();
                 imp.set_valid_file_paths(validated_paths, identifier);
                 imp.enable_automatic_saving();

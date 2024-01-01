@@ -1,7 +1,7 @@
 use crate::common::{
     cstr2wcstring, is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string,
 };
-use crate::env::{EnvDyn, Environment};
+use crate::env::{EnvDyn, EnvMode, EnvStack, Environment};
 use crate::fds::{wopen_cloexec, AutoCloseFd};
 use crate::ffi_tests::add_test;
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
@@ -453,57 +453,56 @@ add_test!("test_history_path_detection", || {
     let filename = L!("testfile");
     std::fs::write(wcs2osstring(&(tmpdir.clone() + &filename[..])), []).unwrap();
 
-    let mut test_vars = TestEnvironment::default();
-    test_vars.vars.insert(L!("PWD").to_owned(), tmpdir.clone());
-    test_vars.vars.insert(L!("HOME").to_owned(), tmpdir.clone());
-    let vars = || EnvDyn::new(Box::new(test_vars.clone()) as Box<dyn Environment + Send + Sync>);
+    let test_vars = EnvStack::new();
+    test_vars.set_one(L!("PWD"), EnvMode::GLOBAL, tmpdir.clone());
+    test_vars.set_one(L!("HOME"), EnvMode::GLOBAL, tmpdir.clone());
 
     let history = History::with_name(L!("path_detection"));
     history.clear();
     assert_eq!(history.size(), 0);
     history.clone().add_pending_with_file_detection(
         L!("cmd0 not/a/valid/path"),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         &(L!("cmd1 ").to_owned() + filename),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         &(L!("cmd2 ").to_owned() + &tmpdir[..] + L!("/") + filename),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         &(L!("cmd3  $HOME/").to_owned() + filename),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         L!("cmd4  $HOME/notafile"),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         &(L!("cmd5  ~/").to_owned() + filename),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         L!("cmd6  ~/notafile"),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         L!("cmd7  ~/*f*"),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.clone().add_pending_with_file_detection(
         L!("cmd8  ~/*zzz*"),
-        vars(),
+        &test_vars,
         history::PersistenceMode::Disk,
     );
     history.resolve_pending();

@@ -12,7 +12,6 @@ use autocxx::prelude::*;
 pub type wchar_t = u32;
 
 include_cpp! {
-    #include "autoload.h"
     #include "color.h"
     #include "common.h"
     #include "env.h"

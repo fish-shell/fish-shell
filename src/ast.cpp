@@ -9,7 +9,6 @@
 #include <string>
 
 #include "common.h"
-#include "enum_map.h"
 #include "flog.h"
 #include "parse_constants.h"
 #include "parse_tree.h"

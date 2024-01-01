@@ -51,7 +51,6 @@
 
 #include "abbrs.h"
 #include "ast.h"
-#include "autoload.h"
 #include "color.h"
 #include "common.h"
 #include "complete.h"

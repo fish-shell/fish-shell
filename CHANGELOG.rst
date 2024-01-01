@@ -1,7 +1,5 @@
-fish 3.7.0 (released ???)
-====================================
-
-.. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9799 9800 9804 9812 9825 9841 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983 9994 10007 10008 10011 10020 10023 10029 10038 10039 10051 10055 10059 10062 10073 10079 10081 10082 10084 10086 10089 10096 10097 10107 10113 10120 10130 10133 10144 10147 10149 10150 10152 10163 10171 
+fish 3.7.0 (released January 1, 2024)
+=====================================
 
 This release of fish includes a number of improvements over fish 3.6.4, detailed below. Although work continues on the porting of fish internals to the Rust programming language, that work is not included in this release. fish 3.7.0 and any future releases in the 3.7 series remain C++ programs.
 
@@ -15,7 +13,7 @@ Notable improvements and fixes
 
 - Performance improvements for command completions and globbing, where supported by the operating system, especially on slow filesystems such as NFS (:issue:`9891`, :issue:`9931`, :issue:`10032`, :issue:`10052`).
 - fish can now be configured to wait a specified amount of time for a multi-key sequence to be completed,  instead of waiting indefinitely. For example, this makes binding ``kj`` to switching modes in vi mode possible.
-  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`), and may be set by default in future versions.
+  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` variable (:issue:`7401`), and may be set by default in future versions.
 
 Deprecations and removed features
 ---------------------------------

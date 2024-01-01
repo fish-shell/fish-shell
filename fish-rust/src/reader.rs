@@ -136,6 +136,10 @@ pub fn check_autosuggestion_enabled(vars: &dyn Environment) -> bool {
         .unwrap_or(true)
 }
 
+pub fn reader_reading_interrupted() -> i32 {
+    crate::ffi::reader_reading_interrupted().0
+}
+
 pub fn reader_schedule_prompt_repaint() {
     crate::ffi::reader_schedule_prompt_repaint()
 }

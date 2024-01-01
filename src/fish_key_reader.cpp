@@ -27,8 +27,7 @@
 #include "ffi_baggage.h"
 #include "ffi_init.rs.h"
 #include "fish_version.h"
-#include "input.h"
-#include "input_common.h"
+#include "input_ffi.rs.h"
 #include "maybe.h"
 #include "parser.h"
 #include "print_help.rs.h"
@@ -85,7 +84,7 @@ static maybe_t<wcstring> sequence_name(wchar_t wc) {
     for (size_t i = 0; i < recent_chars.size(); i++) {
         wcstring out_name;
         wcstring seq = str2wcstring(recent_chars.substr(i));
-        if (input_terminfo_get_name(seq, &out_name)) {
+        if (input_terminfo_get_name(seq, out_name)) {
             return out_name;
         }
     }
@@ -230,18 +229,21 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen, bool
 static void process_input(bool continuous_mode, bool verbose) {
     bool first_char_seen = false;
     double prev_tstamp = 0.0;
-    input_event_queue_t queue;
+    auto queue = make_input_event_queue(STDIN_FILENO);
     std::vector<wchar_t> bind_chars;
 
     std::fwprintf(stderr, L"Press a key:\n");
     while (!check_exit_loop_maybe_warning(nullptr)) {
-        maybe_t<char_event_t> evt{};
+        maybe_t<rust::Box<char_event_t>> evt{};
         if (reader_test_and_clear_interrupted()) {
-            evt = char_event_t{shell_modes.c_cc[VINTR]};
+            evt = char_event_from_char(shell_modes.c_cc[VINTR]);
         } else {
-            evt = queue.readch_timed_esc();
+            char_event_t *evt_raw = queue->readch_timed_esc();
+            if (evt_raw) {
+                evt = rust::Box<char_event_t>::from_raw(evt_raw);
+            }
         }
-        if (!evt || !evt->is_char()) {
+        if (!evt || !(*evt)->is_char()) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
                 return;
@@ -249,7 +251,7 @@ static void process_input(bool continuous_mode, bool verbose) {
             continue;
         }
 
-        wchar_t wc = evt->get_char();
+        wchar_t wc = (*evt)->get_char();
         prev_tstamp = output_elapsed_time(prev_tstamp, first_char_seen, verbose);
         // Hack for #3189. Do not suggest \c@ as the binding for nul, because a string containing
         // nul cannot be passed to builtin_bind since it uses C strings. We'll output the name of

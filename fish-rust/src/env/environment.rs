@@ -13,6 +13,7 @@ use crate::event::Event;
 use crate::ffi;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::input::init_input;
 use crate::nix::{geteuid, getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
@@ -722,7 +723,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     // Allow changes to variables to produce events.
     env_dispatch_init(vars);
 
-    ffi::init_input();
+    init_input();
 
     // Complain about invalid config paths.
     // HACK: Assume the defaults are correct (in practice this is only --no-config anyway).

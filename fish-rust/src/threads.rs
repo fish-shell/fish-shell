@@ -102,6 +102,7 @@ mod ffi {
     }
 }
 
+pub use ffi::CppCallback;
 unsafe impl Send for ffi::CppCallback {}
 unsafe impl Sync for ffi::CppCallback {}
 

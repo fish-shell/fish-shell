@@ -90,6 +90,7 @@ fn main() {
         "fish-rust/src/future_feature_flags.rs",
         "fish-rust/src/highlight.rs",
         "fish-rust/src/history.rs",
+        "fish-rust/src/input_ffi.rs",
         "fish-rust/src/io.rs",
         "fish-rust/src/job_group.rs",
         "fish-rust/src/kill.rs",

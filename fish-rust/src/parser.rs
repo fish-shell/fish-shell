@@ -772,6 +772,11 @@ impl Parser {
         &self.variables
     }
 
+    /// Get the variables as an Arc.
+    pub fn vars_ref(&self) -> Arc<EnvStack> {
+        Pin::into_inner(Pin::clone(&self.variables))
+    }
+
     /// Get the library data.
     pub fn libdata(&self) -> Ref<'_, LibraryData> {
         self.library_data.borrow()

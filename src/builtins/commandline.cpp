@@ -11,8 +11,6 @@
 #include "../builtin.h"
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
-#include "../input.h"
-#include "../input_common.h"
 #include "../io.h"
 #include "../maybe.h"
 #include "../parse_constants.h"
@@ -24,6 +22,7 @@
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
 #include "builtins/shared.rs.h"
+#include "input_ffi.rs.h"
 
 /// Which part of the comandbuffer are we operating on.
 enum {
@@ -305,10 +304,12 @@ int builtin_commandline(const void *_parser, void *_streams, void *_argv) {
 
         using rl = readline_cmd_t;
         for (i = w.woptind; i < argc; i++) {
-            if (auto mc = input_function_get_code(argv[i])) {
+            int mci = input_function_get_code(argv[i]);
+            if (mci >= 0) {
+                readline_cmd_t mc = static_cast<readline_cmd_t>(mci);
                 // Don't enqueue a repaint if we're currently in the middle of one,
                 // because that's an infinite loop.
-                if (mc == rl::repaint_mode || mc == rl::force_repaint || mc == rl::repaint) {
+                if (mc == rl::RepaintMode || mc == rl::ForceRepaint || mc == rl::Repaint) {
                     if (ld.is_repaint()) continue;
                 }
 
@@ -317,11 +318,11 @@ int builtin_commandline(const void *_parser, void *_streams, void *_argv) {
                 // insert/replace operations into readline functions with associated data, so that
                 // all queued `commandline` operations - including buffer modifications - are
                 // executed in order
-                if (mc == rl::begin_undo_group || mc == rl::end_undo_group) {
-                    reader_handle_command(*mc);
+                if (mc == rl::BeginUndoGroup || mc == rl::EndUndoGroup) {
+                    reader_handle_command(mc);
                 } else {
                     // Inserts the readline function at the back of the queue.
-                    reader_queue_ch(*mc);
+                    reader_queue_ch(char_event_from_readline(mc));
                 }
             } else {
                 streams.err()->append(

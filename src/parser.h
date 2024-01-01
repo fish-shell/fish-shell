@@ -16,6 +16,7 @@
 
 struct Parser;
 using parser_t = Parser;
+struct ParserRef;
 
 #if INCLUDE_RUST_HEADERS
 #include "parser.rs.h"

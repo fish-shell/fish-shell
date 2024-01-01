@@ -73,8 +73,7 @@
 #include "global_safety.h"
 #include "highlight.h"
 #include "history.h"
-#include "input.h"
-#include "input_common.h"
+#include "input_ffi.rs.h"
 #include "io.h"
 #include "iothread.h"
 #include "kill.rs.h"
@@ -815,36 +814,6 @@ static void test_autosuggestion_combining() {
     do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
 }
 
-// todo!("port this")
-static void test_input() {
-    say(L"Testing input");
-    inputter_t input{parser_principal_parser()->deref()};
-    // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
-    // of the second, and then emit the second key list. The second binding should be invoked, not
-    // the first!
-    wcstring prefix_binding = L"qqqqqqqa";
-    wcstring desired_binding = prefix_binding + L'a';
-
-    {
-        auto input_mapping = input_mappings();
-        input_mapping->add(prefix_binding, L"up-line");
-        input_mapping->add(desired_binding, L"down-line");
-    }
-
-    // Push the desired binding to the queue.
-    for (wchar_t c : desired_binding) {
-        input.queue_char(c);
-    }
-
-    // Now test.
-    auto evt = input.read_char();
-    if (!evt.is_readline()) {
-        err(L"Event is not a readline");
-    } else if (evt.get_readline() != readline_cmd_t::down_line) {
-        err(L"Expected to read char down_line");
-    }
-}
-
 /// Helper for test_timezone_env_vars().
 long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
     env_stack_t vars{parser_principal_parser()->deref().vars_boxed()};
@@ -1053,7 +1022,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("iothread"), test_iothread},
     {TEST_GROUP("lru"), test_lru},
     {TEST_GROUP("colors"), test_colors},
-    {TEST_GROUP("input"), test_input},
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("maybe"), test_maybe},
     {TEST_GROUP("normalize"), test_normalize_path},

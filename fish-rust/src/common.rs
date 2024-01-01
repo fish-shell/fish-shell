@@ -6,20 +6,17 @@ use crate::expand::{
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
 use crate::fallback::fish_wcwidth;
-use crate::ffi;
 use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
-use crate::wchar_ffi::WCharToFFI;
 use crate::wcstringutil::wcs2string_callback;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use core::slice;
-use cxx::{CxxWString, UniquePtr};
 use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use num_traits::ToPrimitive;
 use once_cell::sync::{Lazy, OnceCell};
@@ -2161,81 +2158,4 @@ macro_rules! eprintf {
     ($format:expr $(, $arg:expr)* $(,)?) => {
         fprintf!(libc::STDERR_FILENO, $format $(, $arg)*)
     }
-}
-
-#[cxx::bridge]
-mod common_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        include!("common.h");
-        type escape_string_style_t = crate::ffi::escape_string_style_t;
-    }
-    extern "Rust" {
-        #[cxx_name = "unescape_string"]
-        fn unescape_string_ffi(
-            input: *const wchar_t,
-            len: usize,
-            escape_special: u32,
-            style: escape_string_style_t,
-        ) -> UniquePtr<CxxWString>;
-
-        #[cxx_name = "escape_string_script"]
-        fn escape_string_script_ffi(
-            input: *const wchar_t,
-            len: usize,
-            flags: u32,
-        ) -> UniquePtr<CxxWString>;
-
-        #[cxx_name = "escape_string_url"]
-        fn escape_string_url_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
-
-        #[cxx_name = "escape_string_var"]
-        fn escape_string_var_ffi(input: *const wchar_t, len: usize) -> UniquePtr<CxxWString>;
-
-    }
-}
-
-fn unescape_string_ffi(
-    input: *const ffi::wchar_t,
-    len: usize,
-    escape_special: u32,
-    style: ffi::escape_string_style_t,
-) -> UniquePtr<CxxWString> {
-    let style = match style {
-        ffi::escape_string_style_t::STRING_STYLE_SCRIPT => {
-            UnescapeStringStyle::Script(UnescapeFlags::from_bits(escape_special).unwrap())
-        }
-        ffi::escape_string_style_t::STRING_STYLE_URL => UnescapeStringStyle::Url,
-        ffi::escape_string_style_t::STRING_STYLE_VAR => UnescapeStringStyle::Var,
-        _ => panic!(),
-    };
-    let input = unsafe { slice::from_raw_parts(input, len) };
-    let input = wstr::from_slice(input).unwrap();
-    match unescape_string(input, style) {
-        Some(result) => result.to_ffi(),
-        None => UniquePtr::null(),
-    }
-}
-
-fn escape_string_script_ffi(
-    input: *const ffi::wchar_t,
-    len: usize,
-    flags: u32,
-) -> UniquePtr<CxxWString> {
-    let input = unsafe { slice::from_raw_parts(input, len) };
-    escape_string_script(
-        wstr::from_slice(input).unwrap(),
-        EscapeFlags::from_bits(flags).unwrap(),
-    )
-    .to_ffi()
-}
-
-fn escape_string_var_ffi(input: *const ffi::wchar_t, len: usize) -> UniquePtr<CxxWString> {
-    let input = unsafe { slice::from_raw_parts(input, len) };
-    escape_string_var(wstr::from_slice(input).unwrap()).to_ffi()
-}
-
-fn escape_string_url_ffi(input: *const ffi::wchar_t, len: usize) -> UniquePtr<CxxWString> {
-    let input = unsafe { slice::from_raw_parts(input, len) };
-    escape_string_url(wstr::from_slice(input).unwrap()).to_ffi()
 }

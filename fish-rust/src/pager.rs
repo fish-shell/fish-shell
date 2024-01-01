@@ -1,6 +1,5 @@
 //! Pager support.
 
-use cxx::{CxxWString, UniquePtr};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
@@ -8,7 +7,7 @@ use crate::common::{
     escape_string, get_ellipsis_char, get_ellipsis_str, EscapeFlags, EscapeStringStyle,
 };
 use crate::compat::MB_CUR_MAX;
-use crate::complete::{Completion, CompletionListFfi};
+use crate::complete::Completion;
 use crate::editable_line::EditableLine;
 use crate::fallback::{fish_wcswidth, fish_wcwidth};
 #[allow(unused_imports)]
@@ -18,7 +17,6 @@ use crate::operation_context::OperationContext;
 use crate::screen::{Line, ScreenData};
 use crate::termsize::Termsize;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::string_fuzzy_match_string;
 
 /// Represents rendering from the pager.
@@ -485,17 +483,16 @@ impl Pager {
             assert!(comp_width <= width);
         }
 
-        let modify_role = |mut role: HighlightRole| {
-            let mut base = role.repr;
+        let modify_role = |role: HighlightRole| {
+            let mut base = role as u8;
             if selected {
-                base += HighlightRole::pager_selected_background.repr
-                    - HighlightRole::pager_background.repr;
+                base += HighlightRole::pager_selected_background as u8
+                    - HighlightRole::pager_background as u8;
             } else if secondary {
-                base += HighlightRole::pager_secondary_background.repr
-                    - HighlightRole::pager_background.repr;
+                base += HighlightRole::pager_secondary_background as u8
+                    - HighlightRole::pager_background as u8;
             }
-            role.repr = base;
-            role
+            unsafe { std::mem::transmute(base) }
         };
 
         let bg_role = modify_role(HighlightRole::pager_background);
@@ -1219,153 +1216,14 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
     result
 }
 
-#[cxx::bridge]
-mod pager_ffi {
-    extern "C++" {
-        include!("complete.h");
-        include!("editable_line.h");
-        type CompletionListFfi = crate::complete::CompletionListFfi;
-        type Completion = crate::complete::Completion;
-        type EditableLine = crate::editable_line::EditableLine;
-    }
-    enum selection_motion_t {
-        north,
-        east,
-        south,
-        west,
-        page_north,
-        page_south,
-        next,
-        prev,
-        deselect,
-    }
-    extern "Rust" {
-        type PageRendering;
-        fn new_page_rendering() -> Box<PageRendering>;
-        fn remaining_to_disclose(&self) -> usize;
-    }
-    extern "Rust" {
-        type Pager;
-        fn new_pager() -> Box<Pager>;
-        fn clear(&mut self);
-        fn cursor_position(&self) -> usize;
-        fn empty(&self) -> bool;
-        fn extra_progress_text(&self) -> UniquePtr<CxxWString>;
-        fn set_extra_progress_text(&mut self, text: &CxxWString);
-        fn is_navigating_contents(&self) -> bool;
-        fn is_search_field_shown(&self) -> bool;
-        fn refilter_completions(&mut self);
-        fn rendering_needs_update(&self, rendering: &PageRendering) -> bool;
-        fn search_field_line(&mut self) -> *mut EditableLine;
-        #[cxx_name = "set_completions"]
-        fn set_completions_ffi(&mut self, completions: &CompletionListFfi, enable_refilter: bool);
-        fn set_fully_disclosed(&mut self);
-        #[cxx_name = "set_prefix"]
-        fn set_prefix_ffi(&mut self, prefix: &CxxWString, highlight: bool);
-        fn set_search_field_shown(&mut self, flag: bool);
-        #[cxx_name = "selected_completion"]
-        fn selected_completion_ffi(&self, rendering: &PageRendering) -> *const Completion;
-        #[cxx_name = "get_selected_row"]
-        fn get_selected_row_ffi(&self, rendering: &PageRendering) -> usize;
-        #[cxx_name = "get_selected_column"]
-        fn get_selected_column_ffi(&self, rendering: &PageRendering) -> usize;
-        #[cxx_name = "select_next_completion_in_direction"]
-        fn select_next_completion_in_direction_ffi(
-            &mut self,
-            direction: selection_motion_t,
-            rendering: &PageRendering,
-        ) -> bool;
-        #[cxx_name = "selected_completion_index"]
-        fn selected_completion_index_ffi(&self) -> usize;
-        #[cxx_name = "set_selected_completion_index"]
-        fn set_selected_completion_index_ffi(&mut self, new_index: usize);
-    }
-}
-fn new_page_rendering() -> Box<PageRendering> {
-    Box::default()
-}
-impl PageRendering {
-    fn remaining_to_disclose(&self) -> usize {
-        self.remaining_to_disclose
-    }
-}
-fn new_pager() -> Box<Pager> {
-    Box::default()
-}
-impl Pager {
-    fn select_next_completion_in_direction_ffi(
-        &mut self,
-        direction: selection_motion_t,
-        rendering: &PageRendering,
-    ) -> bool {
-        self.select_next_completion_in_direction(direction.from_ffi(), rendering)
-    }
-    fn selected_completion_ffi(&self, rendering: &PageRendering) -> *const Completion {
-        match self.selected_completion(rendering) {
-            Some(completion) => completion as *const Completion,
-            None => std::ptr::null(),
-        }
-    }
-    fn set_prefix_ffi(&mut self, prefix: &CxxWString, highlight: bool) {
-        self.set_prefix(prefix.as_wstr(), highlight);
-    }
-    fn search_field_line(&mut self) -> *mut EditableLine {
-        &mut self.search_field_line as *mut EditableLine
-    }
-    fn empty(&self) -> bool {
-        self.is_empty()
-    }
-    fn extra_progress_text(&self) -> UniquePtr<CxxWString> {
-        self.extra_progress_text.to_ffi()
-    }
-    fn set_extra_progress_text(&mut self, text: &CxxWString) {
-        self.extra_progress_text = text.from_ffi();
-    }
-    fn set_completions_ffi(&mut self, completions: &CompletionListFfi, enable_refilter: bool) {
-        self.set_completions(&completions.0, enable_refilter)
-    }
-    fn selected_completion_index_ffi(&self) -> usize {
-        self.selected_completion_idx.unwrap_or(PAGER_SELECTION_NONE)
-    }
-    fn set_selected_completion_index_ffi(&mut self, new_index: usize) {
-        self.set_selected_completion_index(if new_index == PAGER_SELECTION_NONE {
-            None
-        } else {
-            Some(new_index)
-        });
-    }
-    fn get_selected_row_ffi(&self, rendering: &PageRendering) -> usize {
-        self.get_selected_row(rendering)
-            .unwrap_or(PAGER_SELECTION_NONE)
-    }
-    fn get_selected_column_ffi(&self, rendering: &PageRendering) -> usize {
-        self.get_selected_column(rendering)
-            .unwrap_or(PAGER_SELECTION_NONE)
-    }
-}
-use pager_ffi::selection_motion_t;
-impl selection_motion_t {
-    #[allow(clippy::wrong_self_convention)]
-    fn from_ffi(self) -> SelectionMotion {
-        match self {
-            selection_motion_t::north => SelectionMotion::North,
-            selection_motion_t::east => SelectionMotion::East,
-            selection_motion_t::south => SelectionMotion::South,
-            selection_motion_t::west => SelectionMotion::West,
-            selection_motion_t::page_north => SelectionMotion::PageNorth,
-            selection_motion_t::page_south => SelectionMotion::PageSouth,
-            selection_motion_t::next => SelectionMotion::Next,
-            selection_motion_t::prev => SelectionMotion::Prev,
-            selection_motion_t::deselect => SelectionMotion::Deselect,
-            _ => unreachable!(),
-        }
-    }
-}
-unsafe impl cxx::ExternType for Pager {
-    type Id = cxx::type_id!("Pager");
-    type Kind = cxx::kind::Opaque;
-}
-unsafe impl cxx::ExternType for PageRendering {
-    type Id = cxx::type_id!("PageRendering");
-    type Kind = cxx::kind::Opaque;
+pub enum selection_motion_t {
+    north,
+    east,
+    south,
+    west,
+    page_north,
+    page_south,
+    next,
+    prev,
+    deselect,
 }

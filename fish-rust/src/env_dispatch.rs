@@ -22,15 +22,6 @@ use std::ffi::{CStr, CString};
 use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-#[cxx::bridge]
-mod env_dispatch_ffi {
-    extern "Rust" {
-        fn env_dispatch_init_ffi();
-        fn term_supports_setting_title() -> bool;
-        fn use_posix_spawn() -> bool;
-    }
-}
-
 /// List of all locale environment variable names that might trigger (re)initializing of the locale
 /// subsystem. These are only the variables we're possibly interested in.
 #[rustfmt::skip]
@@ -352,11 +343,6 @@ pub fn env_dispatch_init(vars: &EnvStack) {
     // env_dispatch_var_change() purposely supresses change notifications until the dispatch table
     // was initialized elsewhere (either explicitly as below or via deref of VAR_DISPATCH_TABLE).
     Lazy::force(&VAR_DISPATCH_TABLE);
-}
-
-pub fn env_dispatch_init_ffi() {
-    let vars = EnvStack::principal();
-    env_dispatch_init(vars);
 }
 
 /// Runs the subset of dispatch functions that need to be called at startup.

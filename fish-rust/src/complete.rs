@@ -3,7 +3,6 @@ use std::{
     cmp::Ordering,
     collections::{BTreeMap, HashMap, HashSet},
     mem,
-    pin::Pin,
     sync::{
         atomic::{self, AtomicUsize},
         Mutex,
@@ -11,13 +10,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{
-    common::charptr2wcstring,
-    util::wcsfilecmp,
-    wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI},
-};
+use crate::{common::charptr2wcstring, util::wcsfilecmp};
 use bitflags::bitflags;
-use cxx::{CxxWString, UniquePtr};
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use widestring::U32CString;
@@ -2533,90 +2527,14 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
     wrappers.get(command).cloned().unwrap_or_default()
 }
 
-pub struct CompletionListFfi(pub CompletionList);
-
-pub use complete_ffi::CompletionRequestOptions;
-
-#[cxx::bridge]
-mod complete_ffi {
-    extern "C++" {
-        include!("complete.h");
-        include!("parser.h");
-        type Parser = crate::parser::Parser;
-        type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
-        type wcstring_list_ffi_t = crate::ffi::wcstring_list_ffi_t;
-    }
-    extern "Rust" {
-        type Completion;
-        type CompletionListFfi;
-
-        fn new_completion() -> Box<Completion>;
-        fn new_completion_with(
-            completion: &CxxWString,
-            description: &CxxWString,
-            flags: u8,
-        ) -> Box<Completion>;
-        fn completion(self: &Completion) -> UniquePtr<CxxWString>;
-        fn description(self: &Completion) -> UniquePtr<CxxWString>;
-        fn flags(self: &Completion) -> u8;
-        fn set_flags(self: &mut Completion, value: u8);
-        fn replaces_commandline(self: &Completion) -> bool;
-        fn match_is_exact_or_prefix(self: &Completion) -> bool;
-        fn completion_erase(self: &mut Completion, begin: usize, end: usize);
-        fn rank(self: &Completion) -> u32;
-        #[cxx_name = "clone"]
-        fn clone_ffi(self: &Completion) -> Box<Completion>;
-
-        fn new_completion_list() -> Box<CompletionListFfi>;
-        fn size(self: &CompletionListFfi) -> usize;
-        fn empty(self: &CompletionListFfi) -> bool;
-        fn at(self: &CompletionListFfi, i: usize) -> &Completion;
-        fn at_mut(self: &mut CompletionListFfi, i: usize) -> &mut Completion;
-        fn clear(self: &mut CompletionListFfi);
-        fn complete_invalidate_path();
-        fn reverse(self: &mut CompletionListFfi);
-        fn push_back(self: &mut CompletionListFfi, completion: &Completion);
-        fn sort_and_prioritize(self: &mut CompletionListFfi, flags: CompletionRequestOptions);
-        #[cxx_name = "complete_load"]
-        fn complete_load_ffi(cmd: &CxxWString, parser: &Parser) -> bool;
-        #[cxx_name = "complete"]
-        fn complete_ffi(
-            search_string: &CxxWString,
-            complete_flags: CompletionRequestOptions,
-            ctx: &OperationContext<'static>,
-            needs_load: &mut UniquePtr<wcstring_list_ffi_t>,
-        ) -> Box<CompletionListFfi>;
-        #[cxx_name = "append_completion"]
-        fn append_completion_ffi(completions: Pin<&mut CompletionListFfi>, comp: &CxxWString);
-    }
-
-    #[derive(Clone, Copy)]
-    pub struct CompletionRequestOptions {
-        /// Requesting autosuggestion
-        pub autosuggestion: bool,
-        /// Make descriptions
-        pub descriptions: bool,
-        /// If set, we do not require a prefix match
-        pub fuzzy_match: bool,
-    }
-
-    extern "Rust" {
-        fn completion_request_options_autosuggest() -> CompletionRequestOptions;
-        fn completion_request_options_normal() -> CompletionRequestOptions;
-    }
-}
-
-fn complete_ffi(
-    search_string: &CxxWString,
-    complete_flags: CompletionRequestOptions,
-    ctx: &OperationContext<'static>,
-    needs_load: &mut UniquePtr<crate::ffi::wcstring_list_ffi_t>,
-) -> Box<CompletionListFfi> {
-    let (completions, to_load) = complete(search_string.as_wstr(), complete_flags, ctx);
-    if !needs_load.is_null() {
-        *needs_load = to_load.to_ffi();
-    }
-    Box::new(CompletionListFfi(completions))
+#[derive(Clone, Copy)]
+pub struct CompletionRequestOptions {
+    /// Requesting autosuggestion
+    pub autosuggestion: bool,
+    /// Make descriptions
+    pub descriptions: bool,
+    /// If set, we do not require a prefix match
+    pub fuzzy_match: bool,
 }
 
 fn completion_request_options_autosuggest() -> CompletionRequestOptions {
@@ -2636,62 +2554,12 @@ impl Default for CompletionRequestOptions {
     }
 }
 
-unsafe impl cxx::ExternType for CompletionListFfi {
-    type Id = cxx::type_id!("CompletionListFfi");
-    type Kind = cxx::kind::Opaque;
-}
-unsafe impl cxx::ExternType for Completion {
-    type Id = cxx::type_id!("Completion");
-    type Kind = cxx::kind::Opaque;
-}
-
-fn new_completion() -> Box<Completion> {
-    Box::new(Completion::new(
-        "".into(),
-        "".into(),
-        StringFuzzyMatch::exact_match(),
-        CompleteFlags::default(),
-    ))
-}
-fn new_completion_with(
-    completion: &CxxWString,
-    description: &CxxWString,
-    flags: u8,
-) -> Box<Completion> {
-    Box::new(Completion::new(
-        completion.from_ffi(),
-        description.from_ffi(),
-        StringFuzzyMatch::exact_match(),
-        CompleteFlags::from_bits(flags).unwrap(),
-    ))
-}
-fn new_completion_list() -> Box<CompletionListFfi> {
-    Box::new(CompletionListFfi(CompletionList::new()))
-}
-fn append_completion_ffi(completions: Pin<&mut CompletionListFfi>, comp: &CxxWString) {
-    completions.get_mut().0.push(Completion::new(
-        comp.from_ffi(),
-        "".into(),
-        StringFuzzyMatch::exact_match(),
-        CompleteFlags::default(),
-    ));
-}
-
 impl Completion {
-    fn completion(&self) -> UniquePtr<CxxWString> {
-        self.completion.to_ffi()
-    }
-    fn description(&self) -> UniquePtr<CxxWString> {
-        self.description.to_ffi()
-    }
     fn flags(&self) -> u8 {
         self.flags.bits()
     }
     fn set_flags(&mut self, value: u8) {
         self.flags = CompleteFlags::from_bits(value).unwrap();
-    }
-    fn clone_ffi(&self) -> Box<Completion> {
-        Box::new(self.clone())
     }
     fn match_is_exact_or_prefix(&self) -> bool {
         self.r#match.is_exact_or_prefix()
@@ -2699,34 +2567,4 @@ impl Completion {
     fn completion_erase(&mut self, begin: usize, end: usize) {
         self.completion.replace_range(begin..end, L!(""))
     }
-}
-impl CompletionListFfi {
-    fn size(&self) -> usize {
-        self.0.len()
-    }
-    fn empty(&self) -> bool {
-        self.0.is_empty()
-    }
-    fn at(&self, i: usize) -> &Completion {
-        &self.0[i]
-    }
-    fn at_mut(&mut self, i: usize) -> &mut Completion {
-        &mut self.0[i]
-    }
-    fn reverse(&mut self) {
-        self.0.reverse();
-    }
-    fn clear(&mut self) {
-        self.0.clear();
-    }
-    fn push_back(&mut self, completion: &Completion) {
-        self.0.push(completion.clone());
-    }
-    fn sort_and_prioritize(&mut self, flags: CompletionRequestOptions) {
-        sort_and_prioritize(&mut self.0, flags);
-    }
-}
-
-fn complete_load_ffi(cmd: &CxxWString, parser: &Parser) -> bool {
-    complete_load(cmd.as_wstr(), parser)
 }

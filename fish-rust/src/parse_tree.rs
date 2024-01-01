@@ -7,13 +7,11 @@ use std::sync::Arc;
 use crate::ast::{Ast, Node};
 use crate::common::{assert_send, assert_sync};
 use crate::parse_constants::{
-    token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseErrorListFfi,
-    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, SOURCE_OFFSET_INVALID,
+    token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseKeyword,
+    ParseTokenType, ParseTreeFlags, SourceOffset, SourceRange, SOURCE_OFFSET_INVALID,
 };
 use crate::tokenizer::TokenizerError;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
-use cxx::{CxxWString, UniquePtr};
 
 /// A struct representing the token type that we use internally.
 #[derive(Clone, Copy)]
@@ -102,7 +100,6 @@ impl From<TokenizerError> for ParseErrorCode {
 /// A type wrapping up a parse tree and the original source behind it.
 pub struct ParsedSource {
     pub src: WString,
-    src_ffi: UniquePtr<CxxWString>,
     pub ast: Ast,
 }
 
@@ -115,8 +112,7 @@ const _: () = assert_sync::<ParsedSource>();
 
 impl ParsedSource {
     pub fn new(src: WString, ast: Ast) -> Self {
-        let src_ffi = src.to_ffi();
-        ParsedSource { src, src_ffi, ast }
+        ParsedSource { src, ast }
     }
 }
 
@@ -192,81 +188,5 @@ pub fn parse_source(
         None
     } else {
         Some(Arc::new(ParsedSource::new(src, ast)))
-    }
-}
-
-pub struct ParsedSourceRefFFI(pub Option<ParsedSourceRef>);
-
-unsafe impl cxx::ExternType for ParsedSourceRefFFI {
-    type Id = cxx::type_id!("ParsedSourceRefFFI");
-    type Kind = cxx::kind::Opaque;
-}
-
-#[cxx::bridge]
-mod parse_tree_ffi {
-    extern "C++" {
-        include!("ast.h");
-        pub type Ast = crate::ast::Ast;
-        pub type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
-    }
-    extern "Rust" {
-        type ParsedSourceRefFFI;
-        fn empty_parsed_source_ref() -> Box<ParsedSourceRefFFI>;
-        fn has_value(&self) -> bool;
-        fn new_parsed_source_ref(src: &CxxWString, ast: Pin<&mut Ast>) -> Box<ParsedSourceRefFFI>;
-        #[cxx_name = "parse_source"]
-        fn parse_source_ffi(
-            src: &CxxWString,
-            flags: u8,
-            errors: *mut ParseErrorListFfi,
-        ) -> Box<ParsedSourceRefFFI>;
-        fn clone(self: &ParsedSourceRefFFI) -> Box<ParsedSourceRefFFI>;
-        fn src(self: &ParsedSourceRefFFI) -> &CxxWString;
-        fn ast(self: &ParsedSourceRefFFI) -> &Ast;
-    }
-}
-
-impl ParsedSourceRefFFI {
-    fn has_value(&self) -> bool {
-        self.0.is_some()
-    }
-}
-
-fn empty_parsed_source_ref() -> Box<ParsedSourceRefFFI> {
-    Box::new(ParsedSourceRefFFI(None))
-}
-
-fn new_parsed_source_ref(src: &CxxWString, ast: Pin<&mut Ast>) -> Box<ParsedSourceRefFFI> {
-    let mut stolen_ast = Ast::default();
-    std::mem::swap(&mut stolen_ast, ast.get_mut());
-    Box::new(ParsedSourceRefFFI(Some(Arc::new(ParsedSource::new(
-        src.from_ffi(),
-        stolen_ast,
-    )))))
-}
-fn parse_source_ffi(
-    src: &CxxWString,
-    flags: u8,
-    errors: *mut ParseErrorListFfi,
-) -> Box<ParsedSourceRefFFI> {
-    Box::new(ParsedSourceRefFFI(parse_source(
-        src.from_ffi(),
-        ParseTreeFlags::from_bits(flags).unwrap(),
-        if errors.is_null() {
-            None
-        } else {
-            Some(unsafe { &mut (*errors).0 })
-        },
-    )))
-}
-impl ParsedSourceRefFFI {
-    fn clone(&self) -> Box<ParsedSourceRefFFI> {
-        Box::new(ParsedSourceRefFFI(self.0.clone()))
-    }
-    fn src(&self) -> &CxxWString {
-        &self.0.as_ref().unwrap().src_ffi
-    }
-    fn ast(&self) -> &Ast {
-        &self.0.as_ref().unwrap().ast
     }
 }

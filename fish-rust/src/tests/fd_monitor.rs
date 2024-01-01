@@ -85,7 +85,6 @@ impl ItemMaker {
                 self.length_read.fetch_add(amt as usize, Ordering::Relaxed);
                 was_closed = amt == 0;
             }
-            _ => unreachable!(),
         }
 
         self.total_calls.fetch_add(1, Ordering::Relaxed);

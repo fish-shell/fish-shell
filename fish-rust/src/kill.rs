@@ -3,33 +3,11 @@
 //! Works like the killring in emacs and readline. The killring is cut and paste with a memory of
 //! previous cuts.
 
-use cxx::{CxxWString, UniquePtr};
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
-use crate::ffi::wcstring_list_ffi_t;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
-
-#[cxx::bridge]
-mod kill_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        type wcstring_list_ffi_t = super::wcstring_list_ffi_t;
-    }
-
-    extern "Rust" {
-        #[cxx_name = "kill_add"]
-        fn kill_add_ffi(new_entry: &CxxWString);
-        #[cxx_name = "kill_replace"]
-        fn kill_replace_ffi(old_entry: &CxxWString, new_entry: &CxxWString);
-        #[cxx_name = "kill_yank_rotate"]
-        fn kill_yank_rotate_ffi() -> UniquePtr<CxxWString>;
-        #[cxx_name = "kill_yank"]
-        fn kill_yank_ffi() -> UniquePtr<CxxWString>;
-    }
-}
 
 struct KillRing(VecDeque<WString>);
 
@@ -102,22 +80,6 @@ pub fn kill_yank() -> WString {
 
 pub fn kill_entries() -> Vec<WString> {
     KILL_RING.lock().unwrap().entries()
-}
-
-fn kill_add_ffi(new_entry: &CxxWString) {
-    kill_add(new_entry.from_ffi());
-}
-
-fn kill_replace_ffi(old_entry: &CxxWString, new_entry: &CxxWString) {
-    kill_replace(old_entry.as_wstr(), new_entry.from_ffi())
-}
-
-fn kill_yank_ffi() -> UniquePtr<CxxWString> {
-    kill_yank().to_ffi()
-}
-
-fn kill_yank_rotate_ffi() -> UniquePtr<CxxWString> {
-    kill_yank_rotate().to_ffi()
 }
 
 #[cfg(test)]

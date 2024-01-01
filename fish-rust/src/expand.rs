@@ -13,7 +13,7 @@ use crate::common::{
     EXPAND_RESERVED_END,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
-use crate::env::{EnvStackRefFFI, EnvVar, Environment};
+use crate::env::{EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
 use crate::history::{history_session_id, History};
 use crate::operation_context::OperationContext;
@@ -22,13 +22,11 @@ use crate::parse_util::{parse_util_expand_variable_error, parse_util_locate_cmds
 use crate::path::path_apply_working_directory;
 use crate::util::wcsfilecmp_glob;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 use crate::wcstringutil::{join_strings, trim};
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wildcard::{WildcardResult, ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::{normalize_path, wcstoi_partial, Options};
 use bitflags::bitflags;
-use cxx::{CxxWString, UniquePtr};
 
 bitflags! {
     /// Set of flags controlling expansions.
@@ -98,8 +96,6 @@ const _: () = assert!(
     EXPAND_RESERVED_END as u32 > VARIABLE_EXPAND_EMPTY as u32,
     "Characters used in expansions must stay within private use area"
 );
-
-pub use expand_ffi::{ExpandResult, ExpandResultCode};
 
 impl ExpandResult {
     pub fn new(result: ExpandResultCode) -> Self {
@@ -1571,59 +1567,28 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     }
 }
 
-#[cxx::bridge]
-mod expand_ffi {
-    extern "C++" {
-        include!("operation_context.h");
-        include!("parse_constants.h");
-        include!("env.h");
-        include!("complete.h");
-        type OperationContext<'a> = crate::operation_context::OperationContext<'a>;
-        type ParseErrorListFfi = crate::parse_constants::ParseErrorListFfi;
-        #[cxx_name = "EnvDyn"]
-        type EnvDynFFI = crate::env::EnvDynFFI;
-        #[cxx_name = "EnvStackRef"]
-        type EnvStackRefFFI = crate::env::EnvStackRefFFI;
-        type CompletionListFfi = crate::complete::CompletionListFfi;
-    }
-
-    #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-    pub enum ExpandResultCode {
-        /// There was an error, for example, unmatched braces.
-        error,
-        /// Expansion succeeded.
-        ok,
-        /// Expansion was cancelled (e.g. control-C).
-        cancel,
-        /// Expansion succeeded, but a wildcard in the string matched no files,
-        /// so the output is empty.
-        wildcard_no_match,
-    }
-
-    /// These are the possible return values for expand_string.
-    #[must_use]
-    #[derive(Debug)]
-    pub struct ExpandResult {
-        /// The result of expansion.
-        pub result: ExpandResultCode,
-
-        /// If expansion resulted in an error, this is an appropriate value with which to populate
-        /// $status.
-        // todo!("should be c_int?");
-        pub status: i32,
-    }
-
-    extern "Rust" {
-        #[cxx_name = "expand_home_directory"]
-        fn expand_home_directory_ffi(
-            input: &CxxWString,
-            vars: &EnvStackRefFFI,
-        ) -> UniquePtr<CxxWString>;
-    }
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ExpandResultCode {
+    /// There was an error, for example, unmatched braces.
+    error,
+    /// Expansion succeeded.
+    ok,
+    /// Expansion was cancelled (e.g. control-C).
+    cancel,
+    /// Expansion succeeded, but a wildcard in the string matched no files,
+    /// so the output is empty.
+    wildcard_no_match,
 }
 
-fn expand_home_directory_ffi(input: &CxxWString, vars: &EnvStackRefFFI) -> UniquePtr<CxxWString> {
-    let mut s = input.from_ffi();
-    expand_home_directory(&mut s, &*vars.0);
-    s.to_ffi()
+/// These are the possible return values for expand_string.
+#[must_use]
+#[derive(Debug)]
+pub struct ExpandResult {
+    /// The result of expansion.
+    pub result: ExpandResultCode,
+
+    /// If expansion resulted in an error, this is an appropriate value with which to populate
+    /// $status.
+    // todo!("should be c_int?");
+    pub status: i32,
 }

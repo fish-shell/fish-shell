@@ -3,11 +3,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 
-pub use self::fd_monitor_ffi::ItemWakeReason;
 use crate::common::exit_without_destructors;
 use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
-use crate::ffi::void_ptr;
 use crate::flog::FLOG;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
@@ -19,61 +17,15 @@ use crate::fds::{make_autoclose_pipes, make_fd_nonblocking};
 #[cfg(HAVE_EVENTFD)]
 use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
 
-#[cxx::bridge]
-mod fd_monitor_ffi {
-    /// Reason for waking an item
-    #[repr(u8)]
-    #[cxx_name = "item_wake_reason_t"]
-    #[derive(PartialEq, Eq)]
-    enum ItemWakeReason {
-        /// The fd became readable (or was HUP'd)
-        Readable,
-        /// The requested timeout was hit
-        Timeout,
-        /// The item was "poked" (woken up explicitly)
-        Poke,
-    }
-
-    extern "Rust" {
-        #[cxx_name = "fd_monitor_item_id_t"]
-        type FdMonitorItemId;
-    }
-
-    extern "Rust" {
-        #[cxx_name = "fd_monitor_item_t"]
-        type FdMonitorItem;
-
-        #[cxx_name = "make_fd_monitor_item_t"]
-        fn new_fd_monitor_item_ffi(
-            fd: i32,
-            timeout_usecs: u64,
-            callback: *const u8,
-            param: *const u8,
-        ) -> Box<FdMonitorItem>;
-    }
-
-    extern "Rust" {
-        #[cxx_name = "fd_monitor_t"]
-        type FdMonitor;
-
-        #[cxx_name = "make_fd_monitor_t"]
-        fn new_fd_monitor_ffi() -> Box<FdMonitor>;
-
-        #[cxx_name = "add_item"]
-        fn add_item_ffi(
-            &mut self,
-            fd: i32,
-            timeout_usecs: u64,
-            callback: *const u8,
-            param: *const u8,
-        ) -> u64;
-
-        #[cxx_name = "poke_item"]
-        fn poke_item_ffi(&self, item_id: u64);
-
-        #[cxx_name = "add"]
-        pub fn add_ffi(&mut self, item: Box<FdMonitorItem>) -> u64;
-    }
+/// Reason for waking an item
+#[derive(PartialEq, Eq)]
+pub enum ItemWakeReason {
+    /// The fd became readable (or was HUP'd)
+    Readable,
+    /// The requested timeout was hit
+    Timeout,
+    /// The item was "poked" (woken up explicitly)
+    Poke,
 }
 
 /// An event signaller implemented using a file descriptor, so it can plug into
@@ -239,7 +191,6 @@ impl From<u64> for FdMonitorItemId {
     }
 }
 
-type FfiCallback = extern "C" fn(*mut AutoCloseFd, u8, void_ptr);
 pub type NativeCallback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>;
 
 /// The callback type used by [`FdMonitorItem`]. It is passed a mutable reference to the
@@ -254,7 +205,6 @@ pub type NativeCallback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + 
 enum FdMonitorCallback {
     None,
     Native(NativeCallback),
-    Ffi(FfiCallback /* fn ptr */, void_ptr /* param */),
 }
 
 /// An item containing an fd and callback, which can be monitored to watch when it becomes readable
@@ -321,12 +271,6 @@ impl FdMonitorItem {
             match &self.callback {
                 FdMonitorCallback::None => panic!("Callback not assigned!"),
                 FdMonitorCallback::Native(callback) => (callback)(&mut self.fd, reason),
-                FdMonitorCallback::Ffi(callback, param) => {
-                    // Safety: identical objects are generated on both sides by cxx bridge as
-                    // integers of the same size (minimum size to fit the enum).
-                    let reason = unsafe { std::mem::transmute(reason) };
-                    (callback)(&mut self.fd as *mut _, reason, *param)
-                }
             }
             if !self.fd.is_valid() {
                 result = ItemAction::Remove;
@@ -345,12 +289,6 @@ impl FdMonitorItem {
         match &self.callback {
             FdMonitorCallback::None => panic!("Callback not assigned!"),
             FdMonitorCallback::Native(callback) => (callback)(&mut self.fd, ItemWakeReason::Poke),
-            FdMonitorCallback::Ffi(callback, param) => {
-                // Safety: identical objects are generated on both sides by cxx bridge as
-                // integers of the same size (minimum size to fit the enum).
-                let reason = unsafe { std::mem::transmute(ItemWakeReason::Poke) };
-                (callback)(&mut self.fd as *mut _, reason, *param)
-            }
         }
         // Return `ItemAction::Remove` if the callback closed the fd
         match self.fd.is_valid() {
@@ -379,15 +317,6 @@ impl FdMonitorItem {
     pub fn set_callback(&mut self, callback: NativeCallback) {
         self.callback = FdMonitorCallback::Native(callback);
     }
-
-    fn set_callback_ffi(&mut self, callback: *const u8, param: *const u8) {
-        // Safety: we are just marshalling our function pointers with identical definitions on both
-        // sides of the ffi bridge as void pointers to keep cxx bridge happy. Whether we invoke the
-        // raw function as a void pointer or as a typed fn that helps us keep track of what we're
-        // doing is unsafe in all cases, so might as well make the best of it.
-        let callback = unsafe { std::mem::transmute(callback) };
-        self.callback = FdMonitorCallback::Ffi(callback, param.into());
-    }
 }
 
 impl Default for FdMonitorItem {
@@ -400,32 +329,6 @@ impl Default for FdMonitorItem {
             item_id: FdMonitorItemId(0),
         }
     }
-}
-
-// cxx bridge does not support "static member functions" in C++ or rust, so we need a top-level fn.
-fn new_fd_monitor_ffi() -> Box<FdMonitor> {
-    Box::new(FdMonitor::new())
-}
-
-// cxx bridge does not support "static member functions" in C++ or rust, so we need a top-level fn.
-fn new_fd_monitor_item_ffi(
-    fd: RawFd,
-    timeout_usecs: u64,
-    callback: *const u8,
-    param: *const u8,
-) -> Box<FdMonitorItem> {
-    // Safety: we are just marshalling our function pointers with identical definitions on both
-    // sides of the ffi bridge as void pointers to keep cxx bridge happy. Whether we invoke the
-    // raw function as a void pointer or as a typed fn that helps us keep track of what we're
-    // doing is unsafe in all cases, so might as well make the best of it.
-    let callback = unsafe { std::mem::transmute(callback) };
-    let mut item = FdMonitorItem::default();
-    item.fd.reset(fd);
-    item.callback = FdMonitorCallback::Ffi(callback, param.into());
-    if timeout_usecs != FdReadableSet::kNoTimeout {
-        item.timeout = Some(Duration::from_micros(timeout_usecs));
-    }
-    return Box::new(item);
 }
 
 /// A thread-safe class which can monitor a set of fds, invoking a callback when any becomes
@@ -475,11 +378,6 @@ struct BackgroundFdMonitor {
 }
 
 impl FdMonitor {
-    #[allow(clippy::boxed_local)]
-    pub fn add_ffi(&self, item: Box<FdMonitorItem>) -> u64 {
-        self.add(*item).0
-    }
-
     /// Add an item to the monitor. Returns the [`FdMonitorItemId`] assigned to the item.
     pub fn add(&self, mut item: FdMonitorItem) -> FdMonitorItemId {
         assert!(item.fd.is_valid());
@@ -523,29 +421,6 @@ impl FdMonitor {
         item_id
     }
 
-    /// Avoid requiring a separate UniquePtr for each item C++ wants to add to the set by giving an
-    /// all-in-one entry point that can initialize the item on our end and insert it to the set.
-    fn add_item_ffi(
-        &mut self,
-        fd: RawFd,
-        timeout_usecs: u64,
-        callback: *const u8,
-        param: *const u8,
-    ) -> u64 {
-        // Safety: we are just marshalling our function pointers with identical definitions on both
-        // sides of the ffi bridge as void pointers to keep cxx bridge happy. Whether we invoke the
-        // raw function as a void pointer or as a typed fn that helps us keep track of what we're
-        // doing is unsafe in all cases, so might as well make the best of it.
-        let callback = unsafe { std::mem::transmute(callback) };
-        let mut item = FdMonitorItem::default();
-        item.fd.reset(fd);
-        item.callback = FdMonitorCallback::Ffi(callback, param.into());
-        if timeout_usecs != FdReadableSet::kNoTimeout {
-            item.timeout = Some(Duration::from_micros(timeout_usecs));
-        }
-        self.add(item).0
-    }
-
     /// Mark that the item with the given ID needs to be woken up explicitly.
     pub fn poke_item(&self, item_id: FdMonitorItemId) {
         assert!(item_id.0 > 0, "Invalid item id!");
@@ -562,10 +437,6 @@ impl FdMonitor {
         if needs_notification {
             self.change_signaller.post();
         }
-    }
-
-    fn poke_item_ffi(&self, item_id: u64) {
-        self.poke_item(FdMonitorItemId(item_id))
     }
 
     pub fn new() -> Self {

@@ -1,12 +1,8 @@
 //! Constants used in the programmatic representation of fish code.
 
 use crate::fallback::{fish_wcswidth, fish_wcwidth};
-use crate::ffi::wcharz_t;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use bitflags::bitflags;
-use cxx::{type_id, ExternType};
-use cxx::{CxxWString, UniquePtr};
 
 pub type SourceOffset = u32;
 
@@ -41,168 +37,100 @@ bitflags! {
     }
 }
 
-#[cxx::bridge]
-mod parse_constants_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        type wcharz_t = super::wcharz_t;
-    }
-
-    /// A range of source code.
-    #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-    pub struct SourceRange {
-        start: u32,
-        length: u32,
-    }
-
-    extern "Rust" {
-        #[cxx_name = "end"]
-        fn end_ffi(self: &SourceRange) -> u32;
-        #[cxx_name = "contains_inclusive"]
-        fn contains_inclusive_ffi(self: &SourceRange, loc: u32) -> bool;
-    }
-
-    #[derive(Clone, Copy, Debug)]
-    pub enum ParseTokenType {
-        invalid = 1,
-
-        // Terminal types.
-        string,
-        pipe,
-        redirection,
-        background,
-        andand,
-        oror,
-        end,
-        // Special terminal type that means no more tokens forthcoming.
-        terminate,
-        // Very special terminal types that don't appear in the production list.
-        error,
-        tokenizer_error,
-        comment,
-    }
-
-    #[repr(u8)]
-    #[derive(Clone, Copy, Debug)]
-    pub enum ParseKeyword {
-        // 'none' is not a keyword, it is a sentinel indicating nothing.
-        none,
-
-        kw_and,
-        kw_begin,
-        kw_builtin,
-        kw_case,
-        kw_command,
-        kw_else,
-        kw_end,
-        kw_exclam,
-        kw_exec,
-        kw_for,
-        kw_function,
-        kw_if,
-        kw_in,
-        kw_not,
-        kw_or,
-        kw_switch,
-        kw_time,
-        kw_while,
-    }
-
-    // Statement decorations like 'command' or 'exec'.
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-    pub enum StatementDecoration {
-        none,
-        command,
-        builtin,
-        exec,
-    }
-
-    // Parse error code list.
-    #[derive(Debug)]
-    pub enum ParseErrorCode {
-        none,
-
-        // Matching values from enum parser_error.
-        syntax,
-        cmdsubst,
-
-        generic, // unclassified error types
-
-        // Tokenizer errors.
-        tokenizer_unterminated_quote,
-        tokenizer_unterminated_subshell,
-        tokenizer_unterminated_slice,
-        tokenizer_unterminated_escape,
-        tokenizer_other,
-
-        unbalancing_end,          // end outside of block
-        unbalancing_else,         // else outside of if
-        unbalancing_case,         // case outside of switch
-        bare_variable_assignment, // a=b without command
-        andor_in_pipeline,        // "and" or "or" after a pipe
-    }
-
-    struct parse_error_t {
-        text: UniquePtr<CxxWString>,
-        code: ParseErrorCode,
-        source_start: usize,
-        source_length: usize,
-    }
-
-    extern "Rust" {
-        type ParseError;
-        fn code(self: &ParseError) -> ParseErrorCode;
-        fn source_start(self: &ParseError) -> usize;
-        fn text(self: &ParseError) -> UniquePtr<CxxWString>;
-
-        #[cxx_name = "describe"]
-        fn describe_ffi(
-            self: &ParseError,
-            src: &CxxWString,
-            is_interactive: bool,
-        ) -> UniquePtr<CxxWString>;
-        #[cxx_name = "describe_with_prefix"]
-        fn describe_with_prefix_ffi(
-            self: &ParseError,
-            src: &CxxWString,
-            prefix: &CxxWString,
-            is_interactive: bool,
-            skip_caret: bool,
-        ) -> UniquePtr<CxxWString>;
-
-        fn describe_with_prefix(
-            self: &parse_error_t,
-            src: &CxxWString,
-            prefix: &CxxWString,
-            is_interactive: bool,
-            skip_caret: bool,
-        ) -> UniquePtr<CxxWString>;
-
-        type ParseErrorListFfi;
-        fn new_parse_error_list() -> Box<ParseErrorListFfi>;
-        #[cxx_name = "offset_source_start"]
-        fn offset_source_start_ffi(self: &mut ParseErrorListFfi, amt: usize);
-        fn size(self: &ParseErrorListFfi) -> usize;
-        fn at(self: &ParseErrorListFfi, offset: usize) -> *const ParseError;
-        fn empty(self: &ParseErrorListFfi) -> bool;
-        fn push_back(self: &mut ParseErrorListFfi, error: &parse_error_t);
-        fn append(self: &mut ParseErrorListFfi, other: *mut ParseErrorListFfi);
-        fn erase(self: &mut ParseErrorListFfi, index: usize);
-        fn clear(self: &mut ParseErrorListFfi);
-    }
-
-    // The location of a pipeline.
-    pub enum PipelinePosition {
-        none,       // not part of a pipeline
-        first,      // first command in a pipeline
-        subsequent, // second or further command in a pipeline
-    }
+/// A range of source code.
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub struct SourceRange {
+    pub start: u32,
+    pub length: u32,
 }
 
-pub use parse_constants_ffi::{
-    parse_error_t, ParseErrorCode, ParseKeyword, ParseTokenType, PipelinePosition, SourceRange,
-    StatementDecoration,
-};
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ParseTokenType {
+    invalid = 1,
+
+    // Terminal types.
+    string,
+    pipe,
+    redirection,
+    background,
+    andand,
+    oror,
+    end,
+    // Special terminal type that means no more tokens forthcoming.
+    terminate,
+    // Very special terminal types that don't appear in the production list.
+    error,
+    tokenizer_error,
+    comment,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ParseKeyword {
+    // 'none' is not a keyword, it is a sentinel indicating nothing.
+    none,
+
+    kw_and,
+    kw_begin,
+    kw_builtin,
+    kw_case,
+    kw_command,
+    kw_else,
+    kw_end,
+    kw_exclam,
+    kw_exec,
+    kw_for,
+    kw_function,
+    kw_if,
+    kw_in,
+    kw_not,
+    kw_or,
+    kw_switch,
+    kw_time,
+    kw_while,
+}
+
+// Statement decorations like 'command' or 'exec'.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StatementDecoration {
+    none,
+    command,
+    builtin,
+    exec,
+}
+
+// Parse error code list.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ParseErrorCode {
+    none,
+
+    // Matching values from enum parser_error.
+    syntax,
+    cmdsubst,
+
+    generic, // unclassified error types
+
+    // Tokenizer errors.
+    tokenizer_unterminated_quote,
+    tokenizer_unterminated_subshell,
+    tokenizer_unterminated_slice,
+    tokenizer_unterminated_escape,
+    tokenizer_other,
+
+    unbalancing_end,          // end outside of block
+    unbalancing_else,         // else outside of if
+    unbalancing_case,         // case outside of switch
+    bare_variable_assignment, // a=b without command
+    andor_in_pipeline,        // "and" or "or" after a pipe
+}
+
+// The location of a pipeline.
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum PipelinePosition {
+    none,       // not part of a pipeline
+    first,      // first command in a pipeline
+    subsequent, // second or further command in a pipeline
+}
 
 impl SourceRange {
     pub fn new(start: usize, length: usize) -> Self {
@@ -236,16 +164,9 @@ impl SourceRange {
         }
     }
 
-    fn end_ffi(&self) -> u32 {
-        self.start.checked_add(self.length).expect("Overflow")
-    }
-
     // \return true if a location is in this range, including one-past-the-end.
     pub fn contains_inclusive(&self, loc: usize) -> bool {
         self.start() <= loc && loc - self.start() <= self.length()
-    }
-    fn contains_inclusive_ffi(&self, loc: u32) -> bool {
-        self.start <= loc && loc - self.start <= self.length
     }
 }
 
@@ -278,7 +199,6 @@ impl ParseTokenType {
             ParseTokenType::oror => "ParseTokenType::oror"L,
             ParseTokenType::terminate => "ParseTokenType::terminate"L,
             ParseTokenType::invalid => "ParseTokenType::invalid"L,
-            _ => "unknown token type"L,
         }
     }
 }
@@ -482,57 +402,12 @@ impl ParseError {
     }
 }
 
-impl From<&parse_error_t> for ParseError {
-    fn from(error: &parse_error_t) -> Self {
-        ParseError {
-            text: error.text.from_ffi(),
-            code: error.code,
-            source_start: error.source_start,
-            source_length: error.source_length,
-        }
-    }
-}
-
-impl parse_error_t {
-    fn describe_with_prefix(
-        self: &parse_error_t,
-        src: &CxxWString,
-        prefix: &CxxWString,
-        is_interactive: bool,
-        skip_caret: bool,
-    ) -> UniquePtr<CxxWString> {
-        ParseError::from(self).describe_with_prefix_ffi(src, prefix, is_interactive, skip_caret)
-    }
-}
-
 impl ParseError {
     fn code(&self) -> ParseErrorCode {
         self.code
     }
     fn source_start(&self) -> usize {
         self.source_start
-    }
-    fn text(&self) -> UniquePtr<CxxWString> {
-        self.text.to_ffi()
-    }
-
-    fn describe_ffi(
-        self: &ParseError,
-        src: &CxxWString,
-        is_interactive: bool,
-    ) -> UniquePtr<CxxWString> {
-        self.describe(src.as_wstr(), is_interactive).to_ffi()
-    }
-
-    fn describe_with_prefix_ffi(
-        self: &ParseError,
-        src: &CxxWString,
-        prefix: &CxxWString,
-        is_interactive: bool,
-        skip_caret: bool,
-    ) -> UniquePtr<CxxWString> {
-        self.describe_with_prefix(src.as_wstr(), prefix.as_wstr(), is_interactive, skip_caret)
-            .to_ffi()
     }
 }
 
@@ -562,14 +437,6 @@ pub fn token_type_user_presentable_description(
 
 pub type ParseErrorList = Vec<ParseError>;
 
-#[derive(Clone)]
-pub struct ParseErrorListFfi(pub ParseErrorList);
-
-unsafe impl ExternType for ParseErrorListFfi {
-    type Id = type_id!("ParseErrorListFfi");
-    type Kind = cxx::kind::Opaque;
-}
-
 /// Helper function to offset error positions by the given amount. This is used when determining
 /// errors in a substring of a larger source buffer.
 pub fn parse_error_offset_source_start(errors: &mut ParseErrorList, amt: usize) {
@@ -580,44 +447,6 @@ pub fn parse_error_offset_source_start(errors: &mut ParseErrorList, amt: usize) 
                 error.source_start += amt;
             }
         }
-    }
-}
-
-fn new_parse_error_list() -> Box<ParseErrorListFfi> {
-    Box::new(ParseErrorListFfi(Vec::new()))
-}
-
-impl ParseErrorListFfi {
-    fn offset_source_start_ffi(&mut self, amt: usize) {
-        parse_error_offset_source_start(&mut self.0, amt)
-    }
-
-    fn size(&self) -> usize {
-        self.0.len()
-    }
-
-    fn at(&self, offset: usize) -> *const ParseError {
-        &self.0[offset]
-    }
-
-    fn empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    fn push_back(&mut self, error: &parse_error_t) {
-        self.0.push(error.into())
-    }
-
-    fn append(&mut self, other: *mut ParseErrorListFfi) {
-        self.0.append(&mut (unsafe { &*other }.0.clone()));
-    }
-
-    fn erase(&mut self, index: usize) {
-        self.0.remove(index);
-    }
-
-    fn clear(&mut self) {
-        self.0.clear()
     }
 }
 

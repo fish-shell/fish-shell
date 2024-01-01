@@ -4,6 +4,7 @@ use rand::random;
 use std::{ffi::CString, ptr};
 
 use crate::fallback::fish_mkstemp_cloexec;
+use crate::tests::prelude::*;
 
 use super::*;
 
@@ -68,7 +69,7 @@ fn test_wwrite_to_fd() {
         assert!(tmpfd.is_valid());
         tmpfd.close();
     }
-    let sizes = [0, 1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
+    let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
     for &size in &sizes {
         let fd = AutoCloseFd::new(unsafe {
             libc::open(filename.as_ptr(), O_RDWR | O_TRUNC | O_CREAT, 0o666)

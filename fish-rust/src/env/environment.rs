@@ -6,7 +6,7 @@ use super::{ConfigPaths, ElectricVar};
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::compat::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
-use crate::env::{EnvMode, EnvStackSetResult, EnvVar, Statuses};
+use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal};
 use crate::event::Event;
@@ -48,6 +48,34 @@ lazy_static! {
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+/// Return values for `EnvStack::set()`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum EnvStackSetResult {
+    ENV_OK,
+    ENV_PERM,
+    ENV_SCOPE,
+    ENV_INVALID,
+    ENV_NOT_FOUND,
+}
+
+impl Default for EnvStackSetResult {
+    fn default() -> Self {
+        EnvStackSetResult::ENV_OK
+    }
+}
+
+impl From<EnvStackSetResult> for c_int {
+    fn from(r: EnvStackSetResult) -> Self {
+        match r {
+            EnvStackSetResult::ENV_OK => 0,
+            EnvStackSetResult::ENV_PERM => 1,
+            EnvStackSetResult::ENV_SCOPE => 2,
+            EnvStackSetResult::ENV_INVALID => 3,
+            EnvStackSetResult::ENV_NOT_FOUND => 4,
+        }
+    }
+}
 
 /// An environment is read-only access to variable values.
 pub trait Environment {

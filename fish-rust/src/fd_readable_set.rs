@@ -3,20 +3,6 @@ use std::os::unix::prelude::*;
 
 pub use fd_readable_set_t as FdReadableSet;
 
-#[cxx::bridge]
-mod fd_readable_set_ffi {
-    extern "Rust" {
-        type fd_readable_set_t;
-        fn new_fd_readable_set() -> Box<fd_readable_set_t>;
-        fn clear(&mut self);
-        fn add(&mut self, fd: i32);
-        fn test(&self, fd: i32) -> bool;
-        fn check_readable(&mut self, timeout_usec: u64) -> i32;
-        fn is_fd_readable(fd: i32, timeout_usec: u64) -> bool;
-        fn poll_fd_readable(fd: i32) -> bool;
-    }
-}
-
 /// Create a new fd_readable_set_t.
 pub fn new_fd_readable_set() -> Box<fd_readable_set_t> {
     Box::new(fd_readable_set_t::new())

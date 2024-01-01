@@ -1,6 +1,5 @@
 // Enumeration of all wildcard types.
 
-use cxx::CxxWString;
 use libc::X_OK;
 use std::cmp::Ordering;
 use std::collections::HashSet;
@@ -16,7 +15,6 @@ use crate::fallback::wcscasecmp;
 use crate::future_feature_flags::feature_test;
 use crate::future_feature_flags::FeatureFlag;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharFromFFI;
 use crate::wcstringutil::{
     string_fuzzy_match_string, string_suffixes_string_case_insensitive, CaseFold,
 };
@@ -1233,38 +1231,4 @@ mod tests {
             assert!(!wildcard_has(L!("\\?")));
         });
     }
-}
-
-#[cxx::bridge]
-mod ffi {
-    extern "C++" {
-        include!("wutil.h");
-    }
-
-    extern "Rust" {
-        #[cxx_name = "wildcard_match"]
-        fn wildcard_match_ffi(str: &CxxWString, wc: &CxxWString) -> bool;
-
-        #[cxx_name = "wildcard_has"]
-        fn wildcard_has_ffi(s: &CxxWString) -> bool;
-
-        #[cxx_name = "wildcard_has_internal"]
-        fn wildcard_has_internal_ffi(s: &CxxWString) -> bool;
-    }
-}
-
-fn wildcard_match_ffi(str: &CxxWString, wc: &CxxWString) -> bool {
-    wildcard_match(
-        str.from_ffi(),
-        wc.from_ffi(),
-        /*leading_dots_fail_to_match*/ false,
-    )
-}
-
-fn wildcard_has_ffi(s: &CxxWString) -> bool {
-    wildcard_has(s.from_ffi())
-}
-
-fn wildcard_has_internal_ffi(s: &CxxWString) -> bool {
-    wildcard_has_internal(s.from_ffi())
 }

@@ -1,25 +1,8 @@
 //! Generic utilities library.
 
-use crate::ffi::wcharz_t;
 use crate::wchar::prelude::*;
 use std::cmp::Ordering;
 use std::time;
-
-#[cxx::bridge]
-mod ffi {
-    extern "C++" {
-        include!("wutil.h");
-        type wcharz_t = super::wcharz_t;
-    }
-
-    extern "Rust" {
-        #[cxx_name = "wcsfilecmp"]
-        fn wcsfilecmp_ffi(a: wcharz_t, b: wcharz_t) -> i32;
-        #[cxx_name = "wcsfilecmp_glob"]
-        fn wcsfilecmp_glob_ffi(a: wcharz_t, b: wcharz_t) -> i32;
-        fn get_time() -> i64;
-    }
-}
 
 fn ordering_to_int(ord: Ordering) -> i32 {
     match ord {
@@ -27,14 +10,6 @@ fn ordering_to_int(ord: Ordering) -> i32 {
         Ordering::Equal => 0,
         Ordering::Greater => 1,
     }
-}
-
-fn wcsfilecmp_glob_ffi(a: wcharz_t, b: wcharz_t) -> i32 {
-    ordering_to_int(wcsfilecmp_glob(a.into(), b.into()))
-}
-
-fn wcsfilecmp_ffi(a: wcharz_t, b: wcharz_t) -> i32 {
-    ordering_to_int(wcsfilecmp(a.into(), b.into()))
 }
 
 /// Compares two wide character strings with an (arguably) intuitive ordering. This function tries

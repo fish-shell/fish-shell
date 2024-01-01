@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "common.h"
-#include "ffi_baggage.h"
 #include "fish_key_reader.rs.h"
 
 int main() { return fish_key_reader_main(); }

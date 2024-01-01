@@ -54,7 +54,6 @@ mod prelude {
         io::{IoStreams, SeparationType},
         parser::Parser,
         wchar::prelude::*,
-        wchar_ffi::{c_str, AsWstr, WCharFromFFI, WCharToFFI},
         wgetopt::{
             wgetopter_t, wopt, woption,
             woption_argument_t::{self, *},

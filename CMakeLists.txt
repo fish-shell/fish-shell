@@ -102,24 +102,7 @@ endif()
 
 # List of other sources.
 set(FISH_SRCS
-    src/ast.cpp
-    src/builtin.cpp
-    src/color.cpp
-    src/common.cpp
-    src/env.cpp
-    src/event.cpp
-    src/expand.cpp
-    src/fallback.cpp
-    src/fish_version.cpp
-    src/flog.cpp
-    src/highlight.cpp
-    src/output.cpp
-    src/parse_util.cpp
-    src/path.cpp
-    src/rustffi.cpp
-    src/wcstringutil.cpp
-    src/wgetopt.cpp
-    src/wutil.cpp
+    src/empty.cpp
 )
 
 # Header files are just globbed.

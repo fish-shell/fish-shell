@@ -1,12 +1,7 @@
-use std::pin::Pin;
-
-use cxx::{CxxWString, UniquePtr};
-
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
-use crate::highlight::{HighlightSpec, HighlightSpecListFFI};
+use crate::highlight::HighlightSpec;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{WCharFromFFI, WCharToFFI};
 
 /// An edit action that can be undone.
 #[derive(Clone, Eq, PartialEq)]
@@ -343,89 +338,4 @@ fn cursor_position_after_edit(edit: &Edit) -> usize {
     let cursor = edit.cursor_position_before_edit + edit.replacement.len();
     let removed = chars_deleted_left_of_cursor(edit);
     cursor.saturating_sub(removed)
-}
-
-#[cxx::bridge]
-mod editable_line_ffi {
-    extern "C++" {
-        include!("editable_line.h");
-        include!("highlight.h");
-        pub type HighlightSpec = crate::highlight::HighlightSpec;
-        pub type HighlightSpecListFFI = crate::highlight::HighlightSpecListFFI;
-    }
-    extern "Rust" {
-        type Edit;
-        fn new_edit(start: usize, end: usize, replacement: &CxxWString) -> Box<Edit>;
-        #[cxx_name = "apply_edit"]
-        fn apply_edit_ffi(
-            target: &CxxWString,
-            mut colors: Pin<&mut HighlightSpecListFFI>,
-            edit: Box<Edit>,
-        ) -> UniquePtr<CxxWString>;
-    }
-    extern "Rust" {
-        type UndoHistory;
-    }
-    extern "Rust" {
-        type EditableLine;
-        fn new_editable_line() -> Box<EditableLine>;
-        fn empty(&self) -> bool;
-        #[cxx_name = "text"]
-        fn text_ffi(&self) -> UniquePtr<CxxWString>;
-        #[cxx_name = "clone"]
-        fn clone_ffi(&self) -> Box<EditableLine>;
-        fn position(&self) -> usize;
-        fn set_position(&mut self, position: usize);
-        fn clear(&mut self);
-        fn undo(&mut self) -> bool;
-        fn redo(&mut self) -> bool;
-        fn size(&self) -> usize;
-        #[cxx_name = "push_edit"]
-        fn push_edit_ffi(&mut self, edit: Box<Edit>, allow_coalesce: bool);
-        fn begin_edit_group(&mut self);
-        fn end_edit_group(&mut self);
-        #[cxx_name = "at"]
-        fn at_ffi(&self, index: usize) -> u32;
-        #[cxx_name = "set_colors"]
-        fn set_colors_ffi(&mut self, colors: &HighlightSpecListFFI);
-    }
-}
-fn new_edit(start: usize, end: usize, replacement: &CxxWString) -> Box<Edit> {
-    Box::new(Edit::new(start..end, replacement.from_ffi()))
-}
-fn new_editable_line() -> Box<EditableLine> {
-    Box::default()
-}
-impl EditableLine {
-    fn empty(&self) -> bool {
-        self.is_empty()
-    }
-    fn text_ffi(&self) -> UniquePtr<CxxWString> {
-        self.text().to_ffi()
-    }
-    fn clone_ffi(&self) -> Box<Self> {
-        Box::new(self.clone())
-    }
-    fn size(&self) -> usize {
-        self.len()
-    }
-    #[allow(clippy::boxed_local)]
-    fn push_edit_ffi(&mut self, edit: Box<Edit>, allow_coalesce: bool) {
-        self.push_edit(*edit, allow_coalesce);
-    }
-    fn at_ffi(&self, index: usize) -> u32 {
-        self.at(index) as _
-    }
-    fn set_colors_ffi(&mut self, colors: &HighlightSpecListFFI) {
-        self.set_colors(colors.0.clone())
-    }
-}
-fn apply_edit_ffi(
-    target: &CxxWString,
-    mut colors: Pin<&mut HighlightSpecListFFI>,
-    edit: Box<Edit>,
-) -> UniquePtr<CxxWString> {
-    let mut target = target.from_ffi();
-    apply_edit(&mut target, &mut colors.0, &edit);
-    target.to_ffi()
 }

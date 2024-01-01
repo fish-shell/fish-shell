@@ -7,67 +7,9 @@ use crate::reader::{reader_handle_sigint, reader_sighup};
 use crate::termsize::TermsizeContainer;
 use crate::topic_monitor::{generation_t, topic_monitor_principal, topic_t, GenerationsList};
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{AsWstr, WCharToFFI};
 use crate::wutil::{fish_wcstoi, perror};
-use cxx::{CxxWString, UniquePtr};
 use errno::{errno, set_errno};
 use std::sync::atomic::{AtomicI32, Ordering};
-
-#[cxx::bridge]
-mod signal_ffi {
-    extern "Rust" {
-        fn signal_set_handlers(interactive: bool);
-        fn signal_set_handlers_once(interactive: bool);
-        #[cxx_name = "signal_handle"]
-        fn signal_handle_ffi(sig: i32);
-        fn signal_unblock_all();
-
-        #[cxx_name = "sig2wcs"]
-        fn sig2wcs_ffi(sig: i32) -> UniquePtr<CxxWString>;
-
-        #[cxx_name = "wcs2sig"]
-        fn wcs2sig_ffi(sig: &CxxWString) -> i32;
-
-        #[cxx_name = "signal_get_desc"]
-        fn signal_get_desc_ffi(sig: i32) -> UniquePtr<CxxWString>;
-
-        fn signal_check_cancel() -> i32;
-        fn signal_clear_cancel();
-        fn signal_reset_handlers();
-
-    }
-    extern "Rust" {
-        type SigChecker;
-        fn new_sighupint_checker() -> Box<SigChecker>;
-        fn check(&mut self) -> bool;
-    }
-}
-
-fn sig2wcs_ffi(sig: i32) -> UniquePtr<CxxWString> {
-    Signal::new(sig).name().to_ffi()
-}
-
-fn wcs2sig_ffi(sig: &CxxWString) -> i32 {
-    if let Some(sig) = Signal::parse(sig.as_wstr()) {
-        sig.code()
-    } else {
-        -1
-    }
-}
-
-fn signal_get_desc_ffi(sig: i32) -> UniquePtr<CxxWString> {
-    Signal::new(sig).desc().to_ffi()
-}
-
-fn signal_handle_ffi(sig: i32) {
-    signal_handle(Signal::new(sig));
-}
-
-// This is extern "C" for FFI purposes, as this is used after fork().
-#[no_mangle]
-pub extern "C" fn get_signals_with_handlers_ffi(set: *mut libc::sigset_t) {
-    get_signals_with_handlers(unsafe { &mut *set });
-}
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
 static MAIN_PID: AtomicI32 = AtomicI32::new(0);

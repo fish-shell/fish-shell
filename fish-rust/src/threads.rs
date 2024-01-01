@@ -45,72 +45,6 @@ static IO_THREAD_POOL: OnceBox<Mutex<ThreadPool>> = OnceBox::new();
 static NOTIFY_SIGNALLER: once_cell::sync::Lazy<crate::fd_monitor::FdEventSignaller> =
     once_cell::sync::Lazy::new(crate::fd_monitor::FdEventSignaller::new);
 
-#[cxx::bridge]
-mod ffi {
-    unsafe extern "C++" {
-        include!("callback.h");
-
-        #[rust_name = "CppCallback"]
-        type callback_t;
-        fn invoke(&self) -> *const u8;
-        fn invoke_with_param(&self, param: *const u8) -> *const u8;
-    }
-
-    extern "Rust" {
-        #[cxx_name = "ASSERT_IS_MAIN_THREAD"]
-        fn assert_is_main_thread();
-        #[cxx_name = "ASSERT_IS_BACKGROUND_THREAD"]
-        fn assert_is_background_thread();
-        #[cxx_name = "ASSERT_IS_NOT_FORKED_CHILD"]
-        fn assert_is_not_forked_child();
-        fn configure_thread_assertions_for_testing();
-        fn is_main_thread() -> bool;
-        fn is_forked_child() -> bool;
-    }
-
-    extern "Rust" {
-        #[cxx_name = "make_detached_pthread"]
-        fn spawn_ffi(callback: &SharedPtr<CppCallback>) -> bool;
-        fn asan_before_exit();
-        fn asan_maybe_exit(code: i32);
-    }
-
-    extern "Rust" {
-        fn iothread_port() -> i32;
-        #[cxx_name = "iothread_service_main"]
-        fn iothread_service_main_ffi(ctx: *mut u8);
-        #[cxx_name = "iothread_perform"]
-        fn iothread_perform_ffi(callback: &SharedPtr<CppCallback>);
-        #[cxx_name = "iothread_perform_cantwait"]
-        fn iothread_perform_cant_wait_ffi(callback: &SharedPtr<CppCallback>);
-    }
-}
-
-fn iothread_service_main_ffi(ctx: *mut u8) {
-    let ctx = unsafe { &mut *(ctx as *mut ReaderData) };
-    iothread_service_main(ctx);
-}
-
-pub use ffi::CppCallback;
-unsafe impl Send for ffi::CppCallback {}
-unsafe impl Sync for ffi::CppCallback {}
-
-fn iothread_perform_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) {
-    let callback = callback.clone();
-
-    iothread_perform(move || {
-        callback.invoke();
-    });
-}
-
-fn iothread_perform_cant_wait_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) {
-    let callback = callback.clone();
-
-    iothread_perform_cant_wait(move || {
-        callback.invoke();
-    });
-}
-
 /// A [`ThreadPool`] work request.
 type WorkItem = Box<dyn FnOnce() + 'static + Send>;
 
@@ -193,10 +127,6 @@ pub fn assert_is_background_thread() {
     }
 }
 
-pub fn configure_thread_assertions_for_testing() {
-    THREAD_ASSERTS_CFG_FOR_TESTING.store(true, Ordering::Relaxed);
-}
-
 pub fn is_forked_child() -> bool {
     IS_FORKED_PROC.load(Ordering::Relaxed)
 }
@@ -276,13 +206,6 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     };
 
     result
-}
-
-fn spawn_ffi(callback: &cxx::SharedPtr<ffi::CppCallback>) -> bool {
-    let callback = callback.clone();
-    spawn(move || {
-        callback.invoke();
-    })
 }
 
 /// Exits calling onexit handlers if running under ASAN, otherwise does nothing.

@@ -5,7 +5,7 @@ use crate::exec::is_thompson_shell_script;
 use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::get_signals_with_handlers;
-use errno::{self, set_errno, Errno};
+use errno::{self, Errno};
 use libc::{self, c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
 use std::ffi::{CStr, CString};
 
@@ -218,28 +218,4 @@ fn get_path_bshell() -> CString {
     // TODO: this should really use _PATH_BSHELL, but this is only used in an edge case for posix_spawns
     // which fail to run Thompson shell scripts; we simply assume it is /bin/sh.
     CString::new("/bin/sh").unwrap()
-}
-
-impl Drop for PosixSpawner {
-    fn drop(&mut self) {
-        // Necessary to define this for FFI purposes, to avoid link errors.
-    }
-}
-
-impl PosixSpawner {
-    /// Returns a pid, or -1, in which case errno is set.
-    fn spawn_ffi(
-        &mut self,
-        cmd: *const c_char,
-        argv: *const *mut c_char,
-        envp: *const *mut c_char,
-    ) -> i32 {
-        match self.spawn(cmd, argv, envp) {
-            Ok(pid) => pid,
-            Err(err) => {
-                set_errno(err);
-                -1
-            }
-        }
-    }
 }

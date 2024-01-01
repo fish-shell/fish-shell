@@ -2,6 +2,7 @@
 use crate::common::assert_sync;
 use crate::env::{EnvMode, EnvVar, Environment};
 use crate::flog::FLOG;
+use crate::parser::Parser;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -9,36 +10,16 @@ use crate::wutil::fish_wcstoi;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Mutex;
 
-#[cxx::bridge]
-mod termsize_ffi {
-    #[cxx_name = "termsize_t"]
-    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-    pub struct Termsize {
-        /// Width of the terminal, in columns.
-        // TODO: Change to u32
-        pub width: isize,
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Termsize {
+    /// Width of the terminal, in columns.
+    // TODO: Change to u32
+    pub width: isize,
 
-        /// Height of the terminal, in rows.
-        // TODO: Change to u32
-        pub height: isize,
-    }
-
-    extern "C++" {
-        include!("env.h");
-        include!("parser.h");
-        #[cxx_name = "EnvStackRef"]
-        type EnvStackRefFFI = crate::env::EnvStackRefFFI;
-        type Parser = crate::parser::Parser;
-    }
-
-    extern "Rust" {
-        pub fn termsize_default() -> Termsize;
-        pub fn termsize_last() -> Termsize;
-        pub fn termsize_invalidate_tty();
-        pub fn termsize_update(parser: &Parser) -> Termsize;
-    }
+    /// Height of the terminal, in rows.
+    // TODO: Change to u32
+    pub height: isize,
 }
-pub use termsize_ffi::Termsize;
 
 // A counter which is incremented every SIGWINCH, or when the tty is otherwise invalidated.
 static TTY_TERMSIZE_GEN_COUNT: AtomicU32 = AtomicU32::new(0);
@@ -290,7 +271,6 @@ pub fn termsize_invalidate_tty() {
     TermsizeContainer::invalidate_tty();
 }
 
-use self::termsize_ffi::Parser;
 #[test]
 #[serial]
 fn test_termsize() {

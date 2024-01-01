@@ -2,172 +2,110 @@
 //! extended to support marks, tokenizing multiple strings and disposing of unused string segments.
 
 use crate::common::valid_var_name_char;
-use crate::ffi::wcharz_t;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::redirection::RedirectionMode;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::{wchar_t, AsWstr, WCharToFFI};
-use cxx::{CxxWString, SharedPtr, UniquePtr};
 use libc::{c_int, STDIN_FILENO, STDOUT_FILENO};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 use std::os::fd::RawFd;
 
-#[cxx::bridge]
-mod tokenizer_ffi {
-    extern "C++" {
-        include!("wutil.h");
-        include!("redirection.h");
-        type wcharz_t = super::wcharz_t;
-        type RedirectionMode = super::RedirectionMode;
-    }
-
-    /// Token types. XXX Why this isn't ParseTokenType, I'm not really sure.
-    #[derive(Debug)]
-    enum TokenType {
-        /// Error reading token
-        error,
-        /// String token
-        string,
-        /// Pipe token
-        pipe,
-        /// && token
-        andand,
-        /// || token
-        oror,
-        /// End token (semicolon or newline, not literal end)
-        end,
-        /// redirection token
-        redirect,
-        /// send job to bg token
-        background,
-        /// comment token
-        comment,
-    }
-
-    #[derive(Debug, Eq, PartialEq)]
-    enum TokenizerError {
-        none,
-        unterminated_quote,
-        unterminated_subshell,
-        unterminated_slice,
-        unterminated_escape,
-        invalid_redirect,
-        invalid_pipe,
-        invalid_pipe_ampersand,
-        closing_unopened_subshell,
-        illegal_slice,
-        closing_unopened_brace,
-        unterminated_brace,
-        expected_pclose_found_bclose,
-        expected_bclose_found_pclose,
-    }
-
-    extern "Rust" {
-        fn tokenizer_get_error_message(err: TokenizerError) -> UniquePtr<CxxWString>;
-    }
-
-    struct Tok {
-        // Offset of the token.
-        offset: u32,
-        // Length of the token.
-        length: u32,
-
-        // If an error, this is the offset of the error within the token. A value of 0 means it occurred
-        // at 'offset'.
-        error_offset_within_token: u32,
-        error_length: u32,
-
-        // If an error, this is the error code.
-        error: TokenizerError,
-
-        // The type of the token.
-        type_: TokenType,
-    }
-    // TODO static_assert(sizeof(Tok) <= 32, "Tok expected to be 32 bytes or less");
-
-    extern "Rust" {
-        fn location_in_or_at_end_of_source_range(self: &Tok, loc: usize) -> bool;
-        #[cxx_name = "get_source"]
-        fn get_source_ffi(self: &Tok, str: &CxxWString) -> UniquePtr<CxxWString>;
-    }
-
-    extern "Rust" {
-        type Tokenizer;
-        fn new_tokenizer(start: wcharz_t, flags: u8) -> Box<Tokenizer>;
-        #[cxx_name = "next"]
-        fn next_ffi(self: &mut Tokenizer) -> UniquePtr<Tok>;
-        #[cxx_name = "text_of"]
-        fn text_of_ffi(self: &Tokenizer, tok: &Tok) -> UniquePtr<CxxWString>;
-        #[cxx_name = "is_token_delimiter"]
-        fn is_token_delimiter_ffi(c: wchar_t, next: SharedPtr<wchar_t>) -> bool;
-    }
-
-    extern "Rust" {
-        #[cxx_name = "tok_command"]
-        fn tok_command_ffi(str: &CxxWString) -> UniquePtr<CxxWString>;
-    }
-
-    /// Struct wrapping up a parsed pipe or redirection.
-    struct PipeOrRedir {
-        // The redirected fd, or -1 on overflow.
-        // In the common case of a pipe, this is 1 (STDOUT_FILENO).
-        // For example, in the case of "3>&1" this will be 3.
-        fd: i32,
-
-        // Whether we are a pipe (true) or redirection (false).
-        is_pipe: bool,
-
-        // The redirection mode if the type is redirect.
-        // Ignored for pipes.
-        mode: RedirectionMode,
-
-        // Whether, in addition to this redirection, stderr should also be dup'd to stdout
-        // For example &| or &>
-        stderr_merge: bool,
-
-        // Number of characters consumed when parsing the string.
-        consumed: usize,
-    }
-
-    extern "Rust" {
-        fn pipe_or_redir_from_string(buff: wcharz_t) -> UniquePtr<PipeOrRedir>;
-        fn is_valid(self: &PipeOrRedir) -> bool;
-        fn oflags(self: &PipeOrRedir) -> i32;
-        fn token_type(self: &PipeOrRedir) -> TokenType;
-    }
-
-    enum MoveWordStyle {
-        /// stop at punctuation
-        Punctuation,
-        /// stops at path components
-        PathComponents,
-        /// stops at whitespace
-        Whitespace,
-    }
-
-    /// Our state machine that implements "one word" movement or erasure.
-    struct MoveWordStateMachine {
-        state: u8,
-        style: MoveWordStyle,
-    }
-
-    extern "Rust" {
-        fn new_move_word_state_machine(syl: MoveWordStyle) -> Box<MoveWordStateMachine>;
-        #[cxx_name = "consume_char"]
-        fn consume_char_ffi(self: &mut MoveWordStateMachine, c: wchar_t) -> bool;
-        fn reset(self: &mut MoveWordStateMachine);
-    }
-
-    extern "Rust" {
-        #[cxx_name = "variable_assignment_equals_pos"]
-        fn variable_assignment_equals_pos_ffi(txt: &CxxWString) -> SharedPtr<usize>;
-    }
+/// Token types. XXX Why this isn't ParseTokenType, I'm not really sure.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TokenType {
+    /// Error reading token
+    error,
+    /// String token
+    string,
+    /// Pipe token
+    pipe,
+    /// && token
+    andand,
+    /// || token
+    oror,
+    /// End token (semicolon or newline, not literal end)
+    end,
+    /// redirection token
+    redirect,
+    /// send job to bg token
+    background,
+    /// comment token
+    comment,
 }
 
-pub use tokenizer_ffi::{
-    MoveWordStateMachine, MoveWordStyle, PipeOrRedir, Tok, TokenType, TokenizerError,
-};
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum TokenizerError {
+    none,
+    unterminated_quote,
+    unterminated_subshell,
+    unterminated_slice,
+    unterminated_escape,
+    invalid_redirect,
+    invalid_pipe,
+    invalid_pipe_ampersand,
+    closing_unopened_subshell,
+    illegal_slice,
+    closing_unopened_brace,
+    unterminated_brace,
+    expected_pclose_found_bclose,
+    expected_bclose_found_pclose,
+}
+
+pub struct Tok {
+    // Offset of the token.
+    pub offset: u32,
+    // Length of the token.
+    pub length: u32,
+
+    // If an error, this is the offset of the error within the token. A value of 0 means it occurred
+    // at 'offset'.
+    pub error_offset_within_token: u32,
+    pub error_length: u32,
+
+    // If an error, this is the error code.
+    pub error: TokenizerError,
+
+    // The type of the token.
+    pub type_: TokenType,
+}
+// TODO static_assert(sizeof(Tok) <= 32, "Tok expected to be 32 bytes or less");
+
+/// Struct wrapping up a parsed pipe or redirection.
+pub struct PipeOrRedir {
+    // The redirected fd, or -1 on overflow.
+    // In the common case of a pipe, this is 1 (STDOUT_FILENO).
+    // For example, in the case of "3>&1" this will be 3.
+    pub fd: i32,
+
+    // Whether we are a pipe (true) or redirection (false).
+    pub is_pipe: bool,
+
+    // The redirection mode if the type is redirect.
+    // Ignored for pipes.
+    pub mode: RedirectionMode,
+
+    // Whether, in addition to this redirection, stderr should also be dup'd to stdout
+    // For example &| or &>
+    pub stderr_merge: bool,
+
+    // Number of characters consumed when parsing the string.
+    pub consumed: usize,
+}
+
+pub enum MoveWordStyle {
+    /// stop at punctuation
+    Punctuation,
+    /// stops at path components
+    PathComponents,
+    /// stops at whitespace
+    Whitespace,
+}
+
+/// Our state machine that implements "one word" movement or erasure.
+pub struct MoveWordStateMachine {
+    state: u8,
+    style: MoveWordStyle,
+}
 
 #[derive(Clone, Copy)]
 pub struct TokFlags(pub u8);
@@ -203,12 +141,6 @@ pub const TOK_SHOW_BLANK_LINES: TokFlags = TokFlags(4);
 
 /// Make an effort to continue after an error.
 pub const TOK_CONTINUE_AFTER_ERROR: TokFlags = TokFlags(8);
-
-/// Get the error message for an error \p err.
-pub fn tokenizer_get_error_message(err: TokenizerError) -> UniquePtr<CxxWString> {
-    let s: &'static wstr = err.into();
-    s.to_ffi()
-}
 
 impl From<TokenizerError> for &'static wstr {
     #[widestrs]
@@ -254,9 +186,6 @@ impl From<TokenizerError> for &'static wstr {
             TokenizerError::expected_bclose_found_pclose => {
                 wgettext!("Unexpected ')' found, expecting '}'")
             }
-            _ => {
-                panic!("Unexpected tokenizer error");
-            }
         }
     }
 }
@@ -284,9 +213,6 @@ impl Tok {
     }
     pub fn get_source<'a, 'b>(self: &'a Tok, str: &'b wstr) -> &'b wstr {
         &str[self.offset as usize..(self.offset + self.length) as usize]
-    }
-    fn get_source_ffi(self: &Tok, str: &CxxWString) -> UniquePtr<CxxWString> {
-        self.get_source(str.as_wstr()).to_ffi()
     }
     pub fn set_offset(&mut self, value: usize) {
         self.offset = value.try_into().unwrap();
@@ -357,10 +283,6 @@ impl Tokenizer {
             continue_line_after_comment: false,
         }
     }
-}
-
-fn new_tokenizer(start: wcharz_t, flags: u8) -> Box<Tokenizer> {
-    Box::new(Tokenizer::new(start.into(), TokFlags(flags)))
 }
 
 impl Iterator for Tokenizer {
@@ -557,14 +479,6 @@ impl Iterator for Tokenizer {
         }
     }
 }
-impl Tokenizer {
-    fn next_ffi(&mut self) -> UniquePtr<Tok> {
-        match self.next() {
-            Some(tok) => UniquePtr::new(tok),
-            None => UniquePtr::null(),
-        }
-    }
-}
 
 /// Test if a character is whitespace. Differs from iswspace in that it does not consider a
 /// newline to be whitespace.
@@ -580,9 +494,6 @@ impl Tokenizer {
     /// Returns the text of a token, as a string.
     pub fn text_of(&self, tok: &Tok) -> &wstr {
         tok.get_source(&self.start)
-    }
-    fn text_of_ffi(&self, tok: &Tok) -> UniquePtr<CxxWString> {
-        self.text_of(tok).to_ffi()
     }
 
     /// Return an error token and mark that we no longer have a next token.
@@ -950,14 +861,7 @@ pub fn is_token_delimiter(c: char, next: Option<char>) -> bool {
     c == '(' || !tok_is_string_character(c, next)
 }
 
-fn is_token_delimiter_ffi(c: wchar_t, next: SharedPtr<wchar_t>) -> bool {
-    is_token_delimiter(
-        c.try_into().unwrap(),
-        next.as_ref().map(|c| (*c).try_into().unwrap()),
-    )
-}
-
-/// \return the_ffi first token from the string, skipping variable assignments like A=B.
+/// \return the first token from the string, skipping variable assignments like A=B.
 pub fn tok_command(str: &wstr) -> WString {
     let mut t = Tokenizer::new(str, TokFlags(0));
     while let Some(token) = t.next() {
@@ -971,9 +875,6 @@ pub fn tok_command(str: &wstr) -> WString {
         return text.to_owned();
     }
     WString::new()
-}
-fn tok_command_ffi(str: &CxxWString) -> UniquePtr<CxxWString> {
-    tok_command(str.as_wstr()).to_ffi()
 }
 
 impl TryFrom<&wstr> for PipeOrRedir {
@@ -1139,13 +1040,6 @@ impl TryFrom<&wstr> for PipeOrRedir {
     }
 }
 
-fn pipe_or_redir_from_string(buff: wcharz_t) -> UniquePtr<PipeOrRedir> {
-    match PipeOrRedir::try_from(Into::<&wstr>::into(buff)) {
-        Ok(p) => UniquePtr::new(p),
-        Err(()) => UniquePtr::null(),
-    }
-}
-
 impl PipeOrRedir {
     /// \return the oflags (as in open(2)) for this redirection.
     pub fn oflags(&self) -> c_int {
@@ -1197,11 +1091,7 @@ impl MoveWordStateMachine {
             MoveWordStyle::Punctuation => self.consume_char_punctuation(c),
             MoveWordStyle::PathComponents => self.consume_char_path_components(c),
             MoveWordStyle::Whitespace => self.consume_char_whitespace(c),
-            _ => panic!(),
         }
-    }
-    pub fn consume_char_ffi(&mut self, c: wchar_t) -> bool {
-        self.consume_char(c.try_into().unwrap())
     }
 
     pub fn reset(&mut self) {
@@ -1410,11 +1300,4 @@ pub fn variable_assignment_equals_pos(txt: &wstr) -> Option<usize> {
         }
     }
     None
-}
-
-fn variable_assignment_equals_pos_ffi(txt: &CxxWString) -> SharedPtr<usize> {
-    match variable_assignment_equals_pos(txt.as_wstr()) {
-        Some(p) => SharedPtr::new(p),
-        None => SharedPtr::null(),
-    }
 }

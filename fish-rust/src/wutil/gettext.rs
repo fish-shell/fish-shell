@@ -6,11 +6,11 @@ use std::pin::Pin;
 use std::sync::Mutex;
 
 use crate::common::{charptr2wcstring, wcs2zstring};
+use crate::ffi::wchar_t;
 use crate::fish::PACKAGE_NAME;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::wchar_t;
 use errno::{errno, set_errno};
 use once_cell::sync::{Lazy, OnceCell};
 use widestring::U32CString;

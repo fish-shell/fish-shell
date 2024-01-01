@@ -362,11 +362,6 @@ unsafe impl Sync for topic_monitor_t {}
 /// Do not attempt to move this into a lazy_static, it must be accessed from a signal handler.
 static mut s_principal: *const topic_monitor_t = std::ptr::null();
 
-/// Create a new topic monitor. Exposed for the FFI.
-pub fn new_topic_monitor() -> Box<topic_monitor_t> {
-    Box::default()
-}
-
 impl topic_monitor_t {
     /// Initialize the principal monitor, and return it.
     /// This should be called only on the main thread.
@@ -374,7 +369,7 @@ impl topic_monitor_t {
         unsafe {
             if s_principal.is_null() {
                 // We simply leak.
-                s_principal = Box::into_raw(new_topic_monitor());
+                s_principal = Box::into_raw(Box::default());
             }
             &*s_principal
         }

@@ -28,16 +28,15 @@ use crate::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
 use crate::parse_util::parse_util_compute_indents;
+use crate::print_help::print_help;
 use crate::threads;
 use crate::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS};
 use crate::topic_monitor::topic_monitor_init;
 use crate::wchar::prelude::*;
-use crate::wchar_ffi::WCharToFFI;
 use crate::wcstringutil::count_preceding_backslashes;
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use crate::wutil::perror;
 use crate::wutil::{fish_iswalnum, write_to_fd};
-use crate::{ffi, print_help::print_help};
 use crate::{
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd},
     future_feature_flags,
@@ -805,7 +804,6 @@ fn fish_indent_main() -> i32 {
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
             'd' => {
-                ffi::activate_flog_categories_by_pattern(w.woptarg.unwrap().to_ffi());
                 activate_flog_categories_by_pattern(w.woptarg.unwrap());
                 for cat in flog::categories::all_categories() {
                     if cat.enabled.load(Ordering::Relaxed) {

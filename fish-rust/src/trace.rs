@@ -1,10 +1,11 @@
+use crate::flog::log_extra_to_flog_file;
 use crate::parser::Parser;
 use crate::{
     common::escape,
-    ffi::{self, wcharz_t, wcstring_list_ffi_t},
+    ffi::{wcharz_t, wcstring_list_ffi_t},
     global_safety::RelaxedAtomicBool,
     wchar::prelude::*,
-    wchar_ffi::{WCharFromFFI, WCharToFFI},
+    wchar_ffi::WCharFromFFI,
 };
 
 #[cxx::bridge]
@@ -65,7 +66,7 @@ pub fn trace_argv<S: AsRef<wstr>>(parser: &Parser, command: &wstr, args: &[S]) {
         trace_text.push_utfstr(&escape(arg.as_ref()));
     }
     trace_text.push('\n');
-    ffi::log_extra_to_flog_file(&trace_text.to_ffi());
+    log_extra_to_flog_file(&trace_text);
 }
 
 pub fn trace_if_enabled_ffi<S: AsRef<wstr>>(parser: &Parser, command: &wstr, args: &[S]) {

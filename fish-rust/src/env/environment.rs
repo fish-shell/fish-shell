@@ -10,7 +10,6 @@ use crate::env::{EnvMode, EnvStackSetResult, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal};
 use crate::event::Event;
-use crate::ffi;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::init_input;
@@ -576,7 +575,6 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     INHERITED_VARS
         .set(inherited_vars)
         .expect("env_init is being called multiple times");
-    ffi::set_inheriteds_ffi();
 
     if let Some(paths) = paths {
         vars.set_one(

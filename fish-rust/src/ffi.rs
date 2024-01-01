@@ -39,14 +39,6 @@ include_cpp! {
 
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
-    generate!("set_inheriteds_ffi")
-
-    generate!("set_profiling_active")
-    generate!("set_flog_output_file_ffi")
-    generate!("flog_setlinebuf_ffi")
-    generate!("activate_flog_categories_by_pattern")
-
-    generate!("log_extra_to_flog_file")
 
     generate!("wgettext_ptr")
 

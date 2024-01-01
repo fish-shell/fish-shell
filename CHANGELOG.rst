@@ -3,14 +3,16 @@ fish 3.7.0 (released ???)
 
 .. ignore: 3443 5319 7375 9500 9515 9528 9538 9565 9667 9681 9690 9692 9704 9706 9707 9713 9718 9719 9721 9722 9728 9732 9734 9738 9741 9742 9743 9753 9759 9776 9783 9799 9800 9804 9812 9825 9841 9848 9850 9871 9875 9878 9880 9882 9899 9910 9914 9915 9919 9926 9932 9939 9943 9956 9960 9965 9970 9972 9975 9976 9977 9982 9983 9994 10007 10008 10011 10020 10023 10029 10038 10039 10051 10055 10059 10062 10073 10079 10081 10082 10084 10086 10089 10096 10097 10107 10113 10120 10130 10133 10144 10147 10149 10150 10152 10163 10171 
 
-This release of fish includes a number of improvements over fish 3.6.4, detailed below. Although work continues on the porting of fish internals to the Rust programming language, that work is not included in this release. This release includes some of the improvements that accrued during the porting work, but is still 100% C++, and any possible future releases in the 3.7.x track will remain C++.
+This release of fish includes a number of improvements over fish 3.6.4, detailed below. Although work continues on the porting of fish internals to the Rust programming language, that work is not included in this release. fish 3.7.0 and any future releases in the 3.7 series remain C++ programs.
 
 Notable improvements and fixes
 ------------------------------
 - Improvements to the history pager, including:
+
   - The history pager will now also attempt subsequence matches (:issue:`9476`), so you can find a command line like ``git log 3.6.1..Integration_3.7.0`` by searching for ``gitInt``.
   - Opening the history pager will now fill the search field with a search string if you're already in a search (:issue:`10005`). This makes it nicer to search something with :kbd:`↑` and then later decide to switch to the full pager.
   - Closing the history pager with enter will now copy the search text to the commandline if there was no match, so you can continue editing the command you tried to find right away (:issue:`9934`).
+
 - Performance improvements for command completions and globbing, where supported by the operating system, especially on slow filesystems such as NFS (:issue:`9891`, :issue:`9931`, :issue:`10032`, :issue:`10052`).
 - fish can now be configured to wait a specified amount of time for a multi-key sequence to be completed,  instead of waiting indefinitely. For example, this makes binding ``kj`` to switching modes in vi mode possible.
   The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` (:issue:`7401`), and may be set by default in future versions.
@@ -34,7 +36,6 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-- The :kbd:`Alt`\ +\ :kbd:`s` binding now also checks ``please`` in addition to ``sudo`` and ``doas``.
 - ``read`` no longer enables bracketed paste so it doesn't stay enabled in combined commandlines like ``mysql -p(read --silent)`` (:issue:`8285`).
 - Vi mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`).
 - Opening the history search in vi mode switches to insert mode correctly (:issue:`10141`).
@@ -45,15 +46,15 @@ Interactive improvements
 - The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9833`).
 - The interactive ``history delete`` interface now allows specifying index ranges like "1..5" (:issue:`9736`), and ``history delete --exact`` now properly saves the history (:issue:`10066`).
 - Command completion will now call the stock ``manpath`` on macOS, instead of a potential Homebrew version. This prevents awkward error messages (:issue:`9817`).
-- A new bind function ``history-pager-delete``, bound to :kbd:``Shift`` + :kbd:``Delete`` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
+- A new bind function ``history-pager-delete``, bound to :kbd:`Shift` + :kbd:`Delete` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
 - ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
 - ``open`` can be used to launch terminal programs again, as an ``xdg-open`` bug has been fixed and a workaround has been removed  (:issue:`10045`).
 - The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes :kbd:`Alt` combination bindings in vi mode (:issue:`7910`).
-- A new ``clear-screen`` bind function is used for :kbd:`Ctrl`\ +\ :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
+- A new ``clear-screen`` bind function is used for :kbd:`Ctrl` + :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
   so it eliminates visible flicker unless the terminal is very slow (:issue:`10044`).
 - The ``alias`` convenience function has better support for commands with unusual characters, like ``+`` (:issue:`8720`).
 - A longstanding issue where items in the pager would sometimes display without proper formatting has been fixed (:issue:`9617`).
-- The :kbd:`Alt` +\ :kbd:`l` binding, which lists the directory of the token under the cursor, correctly expands tilde (``~``) to the home directory (:issue:`9954`).
+- The :kbd:`Alt` + :kbd:`l` binding, which lists the directory of the token under the cursor, correctly expands tilde (``~``) to the home directory (:issue:`9954`).
 - Various fish utilities that use an external pager will now try a selection of common pagers if the :envvar:`PAGER` environment variable is not set, or write the output to the screen without a pager if there is not one available (:issue:`10074`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 
@@ -67,6 +68,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+
   - ``age`` and ``age-keygen`` (:issue:`9813`)
   - ``airmon-ng`` (:issue:`10116`)
   - ``ar`` (:issue:`9720`)
@@ -94,6 +96,7 @@ Completions
   - ``wpctl`` (:issue:`10043`)
   - ``xxd`` (:issue:`10137`)
   - ``zabbix`` (:issue:`9647`)
+
 - The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
 - The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).
 - ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
@@ -112,6 +115,8 @@ For distributors
 ----------------
 - The licensing information for some of the derived code distributed with fish was incomplete. Though the license information was present in the source distribution, it was not present in the documentation. This has been corrected (:issue:`10162`).
 - The CMake configure step will now also look for libterminfo as an alternative name for libtinfo, as used in NetBSD curses (:issue:`9794`).
+
+----
 
 fish 3.6.4 (released December 5, 2023)
 ======================================
@@ -192,6 +197,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+
   - ``apkanalyzer`` (:issue:`9558`)
   - ``neovim`` (:issue:`9543`)
   - ``otool``
@@ -201,6 +207,7 @@ Completions
   - ``stow`` (:issue:`9571`)
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
   - ``ssh-copy-id`` (:issue:`9675`)
+
 - Improvements to many completions, including the speed of completing directories in WSL 2 (:issue:`9574`).
 - Completions using ``__fish_complete_suffix`` are now offered in the correct order, fixing a regression in 3.6.0 (:issue:`8924`).
 - ``git`` completions for ``git-foo``-style commands was restored, fixing a regression in 3.6.0 (:issue:`9457`).

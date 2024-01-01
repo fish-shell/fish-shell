@@ -27,6 +27,7 @@ use crate::{
         restore_term_foreground_process_group_for_exit, save_term_foreground_process_group,
         scoped_push_replacer, str2wcstring, wcs2string, PROFILING_ACTIVE, PROGRAM_NAME,
     },
+    compat::setlinebuf,
     env::Statuses,
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -34,7 +35,6 @@ use crate::{
     },
     event::{self, Event},
     fds::set_cloexec,
-    ffi::{self},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
     function, future_feature_flags as features, history,
     history::start_private_mode,
@@ -387,7 +387,6 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
                 .postconfig_cmds
                 .push(OsString::from_vec(wcs2string(w.woptarg.unwrap()))),
             'd' => {
-                ffi::activate_flog_categories_by_pattern(w.woptarg.unwrap());
                 activate_flog_categories_by_pattern(w.woptarg.unwrap());
                 for cat in flog::categories::all_categories() {
                     if cat.enabled.load(Ordering::Relaxed) {
@@ -432,7 +431,6 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
                 opts.profile_startup_output =
                     Some(OsString::from_vec(wcs2string(w.woptarg.unwrap())));
                 PROFILING_ACTIVE.store(true);
-                ffi::set_profiling_active(true);
             }
             'P' => opts.enable_private_mode = true,
             'v' => {
@@ -525,7 +523,6 @@ fn main() -> i32 {
     if let Some(debug_categories) = env::var_os("FISH_DEBUG") {
         let s = str2wcstring(debug_categories.as_bytes());
         activate_flog_categories_by_pattern(&s);
-        ffi::activate_flog_categories_by_pattern(s);
     }
 
     let mut opts = FishCmdOpts::default();
@@ -552,8 +549,7 @@ fn main() -> i32 {
         }
 
         set_cloexec(unsafe { libc::fileno(debug_file) }, true);
-        ffi::flog_setlinebuf_ffi(debug_file as *mut _);
-        ffi::set_flog_output_file_ffi(debug_file as *mut _);
+        unsafe { setlinebuf(debug_file) };
         set_flog_file_fd(unsafe { libc::fileno(debug_file) });
 
         debug_output = debug_file;
@@ -675,7 +671,6 @@ fn main() -> i32 {
     }
 
     PROFILING_ACTIVE.store(opts.profile_output.is_some());
-    ffi::set_profiling_active(opts.profile_output.is_some());
 
     // Run post-config commands specified as arguments, if any.
     if !opts.postconfig_cmds.is_empty() {

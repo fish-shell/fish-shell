@@ -1,7 +1,7 @@
-use crate::parse_util::parse_util_unescape_wildcards;
 use crate::wchar::prelude::*;
 use crate::wildcard::wildcard_match;
 use crate::wutil::write_to_fd;
+use crate::{parse_util::parse_util_unescape_wildcards, wutil::wwrite_to_fd};
 use libc::c_int;
 use std::sync::atomic::{AtomicI32, Ordering};
 
@@ -250,4 +250,8 @@ pub fn set_flog_file_fd(fd: c_int) {
 #[inline]
 pub fn get_flog_file_fd() -> c_int {
     FLOG_FD.load(Ordering::Relaxed)
+}
+
+pub fn log_extra_to_flog_file(s: &wstr) {
+    wwrite_to_fd(s, get_flog_file_fd());
 }

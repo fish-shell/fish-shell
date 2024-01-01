@@ -199,7 +199,7 @@ impl Options {
             return Err(STATUS_CMD_OK);
         }
 
-        Self::validate(&opts, cmd, args, parser, streams)?;
+        Self::validate(&opts, cmd, args, optind, parser, streams)?;
 
         Ok((opts, optind))
     }
@@ -208,6 +208,7 @@ impl Options {
         opts: &Self,
         cmd: &wstr,
         args: &[&wstr],
+        optind: usize,
         parser: &Parser,
         streams: &mut IoStreams,
     ) -> Result<(), Option<c_int>> {
@@ -277,8 +278,10 @@ impl Options {
             return Err(STATUS_INVALID_ARGS);
         }
 
-        if args.is_empty() && opts.erase {
-            streams.err.append(wgettext_fmt!(BUILTIN_ERR_MISSING, cmd));
+        if args.len() == optind && opts.erase {
+            streams
+                .err
+                .append(wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, L!("--erase")));
             builtin_print_error_trailer(parser, streams.err, cmd);
             return Err(STATUS_INVALID_ARGS);
         }

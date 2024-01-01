@@ -938,3 +938,12 @@ begin
 end
 echo $secret
 # CHECK: global 4 23 42
+
+set -e
+# CHECKERR: set: --erase: option requires an argument
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set -e
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+exit 0

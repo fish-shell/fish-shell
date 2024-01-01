@@ -74,6 +74,7 @@ corrosion_set_env_vars(${fish_rust_target}
     "DATADIR=${CMAKE_INSTALL_FULL_DATADIR}"
     "SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDIR}"
     "BINDIR=${CMAKE_INSTALL_FULL_BINDIR}"
+    "LOCALEDIR=${CMAKE_INSTALL_FULL_LOCALEDIR}"
 )
 
 # this needs an extra fish-rust due to the poor source placement

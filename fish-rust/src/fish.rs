@@ -68,7 +68,7 @@ use std::sync::Arc;
 // FIXME: when the crate is actually called fish and not fish-rust, read this from cargo
 // See: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
 // for reference
-const PACKAGE_NAME: &str = "fish"; // env!("CARGO_PKG_NAME");
+pub const PACKAGE_NAME: &str = "fish"; // env!("CARGO_PKG_NAME");
 
 // FIXME: the following should just use env!(), this is to make `cargo test` work without CMake for now
 const DOC_DIR: &str = {

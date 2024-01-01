@@ -4,7 +4,7 @@ use std::error::Error;
 use std::process::Stdio;
 
 fn main() {
-    for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR"] {
+    for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR", "LOCALEDIR"] {
         if let Ok(val) = env::var(key) {
             // Forward some CMake config
             println!("cargo:rustc-env={key}={val}");

@@ -40,8 +40,6 @@ include_cpp! {
     generate_pod!("wcharz_t")
     generate!("wcstring_list_ffi_t")
 
-    generate!("wgettext_ptr")
-
     generate!("highlight_spec_t")
 
     generate!("rgb_color_t")

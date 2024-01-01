@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     cmp::Ordering,
     collections::{BTreeMap, HashMap, HashSet},
     mem,
@@ -80,11 +81,11 @@ fn C_(s: &wstr) -> &'static wstr {
     if s.is_empty() {
         L!("")
     } else {
-        wgettext_impl_do_not_use_directly(
+        wgettext_impl_do_not_use_directly(Cow::Owned(
             U32CString::from_ustr(s)
                 .expect("translation string without NUL bytes")
-                .as_slice_with_nul(),
-        )
+                .into_vec_with_nul(),
+        ))
     }
 }
 

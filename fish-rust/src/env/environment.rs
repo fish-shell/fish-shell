@@ -116,16 +116,6 @@ pub struct EnvDyn {
     inner: Box<dyn Environment + Send + Sync>,
 }
 
-pub trait AsEnvironment {
-    fn as_environment(&self) -> &(dyn Environment + Send + Sync);
-}
-
-impl AsEnvironment for EnvDyn {
-    fn as_environment(&self) -> &(dyn Environment + Send + Sync) {
-        &*self.inner
-    }
-}
-
 impl EnvDyn {
     // Exposed for testing.
     pub fn new(inner: Box<dyn Environment + Send + Sync>) -> Self {
@@ -401,12 +391,6 @@ impl Environment for EnvStack {
 
 // TODO Remove Pin?
 pub type EnvStackRef = Pin<Arc<EnvStack>>;
-
-impl AsEnvironment for EnvStackRef {
-    fn as_environment(&self) -> &(dyn Environment + Send + Sync) {
-        Pin::get_ref(Pin::as_ref(self))
-    }
-}
 
 // A variable stack that only represents globals.
 // Do not push or pop from this.

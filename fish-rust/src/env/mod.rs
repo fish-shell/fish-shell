@@ -6,7 +6,10 @@ pub mod var;
 use crate::common::ToCString;
 pub use env_ffi::{EnvDynFFI, EnvStackRefFFI, EnvStackSetResult};
 pub use environment::*;
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::{
+    atomic::{AtomicBool, AtomicUsize},
+    Mutex,
+};
 pub use var::*;
 
 /// Limit `read` to 100 MiB (bytes, not wide chars) by default. This can be overridden with the
@@ -26,14 +29,16 @@ pub static CURSES_INITIALIZED: AtomicBool = AtomicBool::new(false);
 #[no_mangle]
 pub static TERM_HAS_XN: AtomicBool = AtomicBool::new(false);
 
+static SETENV_LOCK: Mutex<()> = Mutex::new(());
+
 mod ffi {
     extern "C" {
-        pub fn setenv_lock(
+        pub fn setenv(
             name: *const libc::c_char,
             value: *const libc::c_char,
             overwrite: libc::c_int,
         );
-        pub fn unsetenv_lock(name: *const libc::c_char);
+        pub fn unsetenv(name: *const libc::c_char);
     }
 }
 
@@ -45,16 +50,18 @@ mod ffi {
 pub fn setenv_lock<S1: ToCString, S2: ToCString>(name: S1, value: S2, overwrite: bool) {
     let name = name.to_cstring();
     let value = value.to_cstring();
+    let _lock = SETENV_LOCK.lock();
     unsafe {
-        self::ffi::setenv_lock(name.as_ptr(), value.as_ptr(), libc::c_int::from(overwrite));
+        self::ffi::setenv(name.as_ptr(), value.as_ptr(), libc::c_int::from(overwrite));
     }
 }
 
 /// Unsets an environment variable after obtaining a lock, to try and improve the safety of
 /// environment variables.
 pub fn unsetenv_lock<S: ToCString>(name: S) {
+    let name = name.to_cstring();
+    let _lock = SETENV_LOCK.lock();
     unsafe {
-        let name = name.to_cstring();
-        self::ffi::unsetenv_lock(name.as_ptr());
+        self::ffi::unsetenv(name.as_ptr());
     }
 }

@@ -44,13 +44,14 @@ fn should_exit(recent_chars: &mut Vec<u8>, c: char) -> bool {
     recent_chars.push(c);
 
     for evt in [VINTR, VEOF] {
-        if c == shell_modes().c_cc[evt] {
-            if recent_chars.iter().rev().nth(1) == Some(&shell_modes().c_cc[evt]) {
+        let modes = shell_modes();
+        if c == modes.c_cc[evt] {
+            if recent_chars.iter().rev().nth(1) == Some(&modes.c_cc[evt]) {
                 return true;
             }
             eprintf!(
                 "Press [ctrl-%c] again to exit\n",
-                char::from(shell_modes().c_cc[evt] + 0x40)
+                char::from(modes.c_cc[evt] + 0x40)
             );
             return false;
         }
@@ -286,15 +287,16 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> ! {
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
-    unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, shell_modes()) };
+    unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) };
 
     if continuous_mode {
         eprintf!("\n");
         eprintf!("To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        let modes = shell_modes();
         eprintf!(
             "or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
-            char::from(shell_modes().c_cc[VINTR] + 0x40),
-            char::from(shell_modes().c_cc[VEOF] + 0x40)
+            char::from(modes.c_cc[VINTR] + 0x40),
+            char::from(modes.c_cc[VEOF] + 0x40)
         );
         eprintf!("\n");
     }

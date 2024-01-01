@@ -39,8 +39,8 @@ use crate::color::RgbColor;
 use crate::common::{
     escape, escape_string, exit_without_destructors, fish_reserved_codepoint, get_ellipsis_char,
     get_obfuscation_read_char, redirect_tty_output, scoped_push_replacer, scoped_push_replacer_ctx,
-    shell_modes, shell_modes_mut, str2wcstring, wcs2string, write_loop, EscapeFlags,
-    EscapeStringStyle, ScopeGuard, PROGRAM_NAME, UTF8_BOM_WCHAR,
+    shell_modes, str2wcstring, wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard,
+    PROGRAM_NAME, UTF8_BOM_WCHAR,
 };
 use crate::compat::MB_CUR_MAX;
 use crate::complete::{
@@ -125,6 +125,9 @@ enum ExitState {
 }
 
 static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
+
+pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
+    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode on startup, which we restore on exit.
 static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
@@ -756,9 +759,9 @@ pub fn reader_init() {
     tty_modes_for_external_cmds.c_iflag &= !IXOFF;
 
     // Set the mode used for the terminal, initialized to the current mode.
-    *shell_modes_mut() = *tty_modes_for_external_cmds;
+    *shell_modes() = *tty_modes_for_external_cmds;
 
-    term_fix_modes(shell_modes_mut());
+    term_fix_modes(&mut shell_modes());
 
     drop(terminal_mode_on_startup);
     drop(tty_modes_for_external_cmds);
@@ -1695,7 +1698,7 @@ impl ReaderData {
         }
 
         // Set the new modes.
-        if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, shell_modes()) } == -1 {
+        if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, &*shell_modes()) } == -1 {
             let err = errno().0;
             if err == EIO {
                 redirect_tty_output();
@@ -1926,7 +1929,7 @@ impl ReaderData {
         // tty alone, run the commands in shell mode, and then restore shell modes.
         let mut res;
         loop {
-            res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, shell_modes_mut()) };
+            res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) };
             if res >= 0 || errno().0 != EINTR {
                 break;
             }
@@ -3323,21 +3326,21 @@ pub fn term_copy_modes() {
 
     // Copy flow control settings to shell modes.
     if (tty_modes_for_external_cmds.c_iflag & IXON) != 0 {
-        shell_modes_mut().c_iflag |= IXON;
+        shell_modes().c_iflag |= IXON;
     } else {
-        shell_modes_mut().c_iflag &= !IXON;
+        shell_modes().c_iflag &= !IXON;
     }
     if (tty_modes_for_external_cmds.c_iflag & IXOFF) != 0 {
-        shell_modes_mut().c_iflag |= IXOFF;
+        shell_modes().c_iflag |= IXOFF;
     } else {
-        shell_modes_mut().c_iflag &= !IXOFF;
+        shell_modes().c_iflag &= !IXOFF;
     }
 }
 
 /// Grab control of terminal.
 fn term_steal() {
     term_copy_modes();
-    while unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, shell_modes()) } == -1 {
+    while unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
         if errno().0 == EIO {
             redirect_tty_output();
         }
@@ -3484,7 +3487,7 @@ fn reader_interactive_init(parser: &Parser) {
         }
 
         // Configure terminal attributes
-        if unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, shell_modes_mut()) } == -1 {
+        if unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
             if errno().0 == EIO {
                 redirect_tty_output();
             }

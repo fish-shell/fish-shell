@@ -46,8 +46,6 @@ include_cpp! {
     generate!("flog_setlinebuf_ffi")
     generate!("activate_flog_categories_by_pattern")
 
-    generate!("shell_modes_ffi")
-
     generate!("log_extra_to_flog_file")
 
     generate!("wgettext_ptr")

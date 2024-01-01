@@ -30,7 +30,7 @@ use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, TryLockError};
+use std::sync::{Arc, Mutex, MutexGuard, TryLockError};
 use std::time;
 
 // Highest legal ASCII value.
@@ -1011,14 +1011,8 @@ pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
 }
 
-pub fn shell_modes() -> &'static libc::termios {
-    let modes = crate::ffi::shell_modes_ffi() as *const libc::termios;
-    unsafe { &*modes }
-}
-
-pub fn shell_modes_mut() -> &'static mut libc::termios {
-    let modes = crate::ffi::shell_modes_ffi() as *mut libc::termios;
-    unsafe { &mut *modes }
+pub fn shell_modes() -> MutexGuard<'static, libc::termios> {
+    crate::reader::SHELL_MODES.lock().unwrap()
 }
 
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $

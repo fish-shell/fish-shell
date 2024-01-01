@@ -254,9 +254,6 @@ impl BuiltinBind {
     ///    an array of all key bindings to erase
     /// @param  all
     ///    if specified, _all_ key bindings will be erased
-    /// @param  mode
-    ///    if specified, only bindings from that mode will be erased. If not given
-    ///    and @c all is @c false, @c DEFAULT_BIND_MODE will be used.
     /// @param  use_terminfo
     ///    Whether to look use terminfo -k name
     ///
@@ -264,11 +261,16 @@ impl BuiltinBind {
         &mut self,
         seq: &[&wstr],
         all: bool,
-        mode: Option<&wstr>,
         use_terminfo: bool,
         user: bool,
         streams: &mut IoStreams,
     ) -> bool {
+        let mode = if self.opts.bind_mode_given {
+            Some(self.opts.bind_mode.as_utfstr())
+        } else {
+            None
+        };
+
         if all {
             self.input_mappings.clear(mode, user);
             return false;
@@ -527,20 +529,11 @@ impl BuiltinBind {
 
         match self.opts.mode {
             BIND_ERASE => {
-                // TODO: satisfy the borrow checker here.
-                let storage;
-                let bind_mode = if self.opts.bind_mode_given {
-                    storage = self.opts.bind_mode.clone();
-                    Some(storage.as_utfstr())
-                } else {
-                    None
-                };
                 // If we get both, we erase both.
                 if self.opts.user {
                     if self.erase(
                         &argv[optind..],
                         self.opts.all,
-                        bind_mode,
                         self.opts.use_terminfo,
                         true, /* user */
                         streams,
@@ -552,7 +545,6 @@ impl BuiltinBind {
                     if self.erase(
                         &argv[optind..],
                         self.opts.all,
-                        bind_mode,
                         self.opts.use_terminfo,
                         false, /* user */
                         streams,

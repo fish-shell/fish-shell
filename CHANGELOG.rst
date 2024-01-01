@@ -61,10 +61,160 @@ For distributors
 
 --------------
 
+fish 3.7.0 (released January 1, 2024)
+=====================================
+
+This release of fish includes a number of improvements over fish 3.6.4, detailed below. Although work continues on the porting of fish internals to the Rust programming language, that work is not included in this release. fish 3.7.0 and any future releases in the 3.7 series remain C++ programs.
+
+Notable improvements and fixes
+------------------------------
+- Improvements to the history pager, including:
+
+  - The history pager will now also attempt subsequence matches (:issue:`9476`), so you can find a command line like ``git log 3.6.1..Integration_3.7.0`` by searching for ``gitInt``.
+  - Opening the history pager will now fill the search field with a search string if you're already in a search (:issue:`10005`). This makes it nicer to search something with :kbd:`↑` and then later decide to switch to the full pager.
+  - Closing the history pager with enter will now copy the search text to the commandline if there was no match, so you can continue editing the command you tried to find right away (:issue:`9934`).
+
+- Performance improvements for command completions and globbing, where supported by the operating system, especially on slow filesystems such as NFS (:issue:`9891`, :issue:`9931`, :issue:`10032`, :issue:`10052`).
+- fish can now be configured to wait a specified amount of time for a multi-key sequence to be completed,  instead of waiting indefinitely. For example, this makes binding ``kj`` to switching modes in vi mode possible.
+  The timeout can be set via the new :envvar:`fish_sequence_key_delay_ms` variable (:issue:`7401`), and may be set by default in future versions.
+
+Deprecations and removed features
+---------------------------------
+- ``LS_COLORS`` is no longer set automatically by the ``ls`` function (:issue:`10080`). Users
+  that set ``.dircolors`` should manually import it using other means. Typically this would be ``set -gx LS_COLORS (dircolors -c .dircolors | string split ' ')[3]``
+
+Scripting improvements
+----------------------
+- Running ``exit`` with a negative number no longer crashes fish (:issue:`9659`).
+- ``fish --command`` will now return a non-zero status if parsing failed (:issue:`9888`).
+- The ``jobs`` builtin will now escape the commands it prints (:issue:`9808`).
+- ``string repeat`` no longer overflows if the count is a multiple of the chunk size (:issue:`9900`).
+- The ``builtin`` builtin will now properly error out with invalid arguments instead of doing nothing and returning true (:issue:`9942`).
+- ``command time`` in a pipeline is allowed again, as is ``command and`` and ``command or`` (:issue:`9985`).
+- ``exec`` will now also apply variable overrides, so ``FOO=bar exec`` will now set ``$FOO`` correctly (:issue:`9995`).
+- ``umask`` will now handle empty symbolic modes correctly, like ``umask u=,g=rwx,o=`` (:issue:`10177`).
+- Improved error messages for errors occurring in command substitutions (:issue:`10054`).
+
+Interactive improvements
+------------------------
+- ``read`` no longer enables bracketed paste so it doesn't stay enabled in combined commandlines like ``mysql -p(read --silent)`` (:issue:`8285`).
+- Vi mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`).
+- Opening the history search in vi mode switches to insert mode correctly (:issue:`10141`).
+- Vi mode cursor shaping is now enabled in iTerm2 (:issue:`9698`).
+- Working directory reporting is enabled for iTerm2 (:issue:`9955`).
+- Completing commands as root includes commands not owned by root, fixing a regression introduced in fish 3.2.0 (:issue:`9699`).
+- Selection uses ``fish_color_selection`` for the foreground and background colors, as intended, rather than just the background (:issue:`9717`).
+- The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9833`).
+- The interactive ``history delete`` interface now allows specifying index ranges like "1..5" (:issue:`9736`), and ``history delete --exact`` now properly saves the history (:issue:`10066`).
+- Command completion will now call the stock ``manpath`` on macOS, instead of a potential Homebrew version. This prevents awkward error messages (:issue:`9817`).
+- A new bind function ``history-pager-delete``, bound to :kbd:`Shift` + :kbd:`Delete` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
+- ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
+- ``open`` can be used to launch terminal programs again, as an ``xdg-open`` bug has been fixed and a workaround has been removed  (:issue:`10045`).
+- The ``repaint-mode`` binding will now only move the cursor if there is repainting to be done. This fixes :kbd:`Alt` combination bindings in vi mode (:issue:`7910`).
+- A new ``clear-screen`` bind function is used for :kbd:`Ctrl` + :kbd:`l` by default. This clears the screen and repaints the existing prompt at first,
+  so it eliminates visible flicker unless the terminal is very slow (:issue:`10044`).
+- The ``alias`` convenience function has better support for commands with unusual characters, like ``+`` (:issue:`8720`).
+- A longstanding issue where items in the pager would sometimes display without proper formatting has been fixed (:issue:`9617`).
+- The :kbd:`Alt` + :kbd:`l` binding, which lists the directory of the token under the cursor, correctly expands tilde (``~``) to the home directory (:issue:`9954`).
+- Various fish utilities that use an external pager will now try a selection of common pagers if the :envvar:`PAGER` environment variable is not set, or write the output to the screen without a pager if there is not one available (:issue:`10074`).
+- Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+- The default theme now only uses named colors, so it will track the terminal's palette (:issue:`9913`).
+- The Dracula theme has now been synced with upstream (:issue:`9807`); use ``fish_config`` to re-apply it to pick up the changes.
+- ``fish_vcs_prompt`` now also supports fossil (:issue:`9497`).
+- Prompts which display the working directory using the ``prompt_pwd`` function correctly display directories beginning with dashes (:issue:`10169`).
+
+Completions
+^^^^^^^^^^^
+- Added completions for:
+
+  - ``age`` and ``age-keygen`` (:issue:`9813`)
+  - ``airmon-ng`` (:issue:`10116`)
+  - ``ar`` (:issue:`9720`)
+  - ``blender`` (:issue:`9905`)
+  - ``bws`` (:issue:`10165`)
+  - ``calendar`` (:issue:`10138`)
+  - ``checkinstall`` (:issue:`10106`)
+  - ``crc`` (:issue:`10034`)
+  - ``doctl``
+  - ``gimp`` (:issue:`9904`)
+  - ``gojq`` (:issue:`9740`)
+  - ``horcrux`` (:issue:`9922`)
+  - ``ibmcloud`` (:issue:`10004`)
+  - ``iwctl`` (:issue:`6884`)
+  - ``java_home`` (:issue:`9998`)
+  - ``krita`` (:issue:`9903`)
+  - ``oc`` (:issue:`10034`)
+  - ``qjs`` (:issue:`9723`)
+  - ``qjsc`` (:issue:`9731`)
+  - ``rename`` (:issue:`10136`)
+  - ``rpm-ostool`` (:issue:`9669`)
+  - ``smerge`` (:issue:`10135`)
+  - ``userdel`` (:issue:`10056`)
+  - ``watchexec`` (:issue:`10027`)
+  - ``wpctl`` (:issue:`10043`)
+  - ``xxd`` (:issue:`10137`)
+  - ``zabbix`` (:issue:`9647`)
+
+- The ``zfs`` completions no longer print errors about setting a read-only variable (:issue:`9705`).
+- The ``kitty`` completions have been removed in favor of keeping them upstream (:issue:`9750`).
+- ``git`` completions now support aliases that reference other aliases (:issue:`9992`).
+- The ``gw`` and ``gradlew`` completions are loaded properly (:issue:`10127`).
+- Improvements to many other completions.
+- Improvements to the manual page completion generator (:issue:`9787`, :issue:`9814`, :issue:`9961`).
+
+Other improvements
+------------------
+- Improvements and corrections to the documentation.
+- The Web-based configuration now uses a more readable style when printed, such as for a keybinding reference (:issue:`9828`).
+- Updates to the German translations (:issue:`9824`).
+- The colors of the Nord theme better match their official style (:issue:`10168`).
+
+For distributors
+----------------
+- The licensing information for some of the derived code distributed with fish was incomplete. Though the license information was present in the source distribution, it was not present in the documentation. This has been corrected (:issue:`10162`).
+- The CMake configure step will now also look for libterminfo as an alternative name for libtinfo, as used in NetBSD curses (:issue:`9794`).
+
+----
+
+fish 3.6.4 (released December 5, 2023)
+======================================
+
+This release contains a complete fix for the test suite failure in fish 3.6.2 and 3.6.3.
+
+--------------
+
+fish 3.6.3 (released December 4, 2023)
+======================================
+
+This release contains a fix for a test suite failure in fish 3.6.2.
+
+--------------
+
+fish 3.6.2 (released December 4, 2023)
+======================================
+
+This release of fish contains a security fix for CVE-2023-49284, a minor security problem identified
+in fish 3.6.1 and previous versions (thought to affect all released versions of fish).
+
+fish uses certain Unicode non-characters internally for marking wildcards and expansions. It
+incorrectly allowed these markers to be read on command substitution output, rather than
+transforming them into a safe internal representation.
+
+For example, ``echo \UFDD2HOME`` has the same output as ``echo $HOME``.
+
+While this may cause unexpected behavior with direct input, this may become a minor security problem
+if the output is being fed from an external program into a command substitution where this output
+may not be expected.
+
+--------------
+
 fish 3.6.1 (released March 25, 2023)
 ====================================
 
-This release of fish contains a number of fixes for problems identified in fish 3.6.0, as well as some enhancements.
+This release of fish contains a number of fixes for problems identified in fish 3.6.1, as well as some enhancements.
 
 Notable improvements and fixes
 ------------------------------
@@ -108,6 +258,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+
   - ``apkanalyzer`` (:issue:`9558`)
   - ``neovim`` (:issue:`9543`)
   - ``otool``
@@ -117,6 +268,7 @@ Completions
   - ``stow`` (:issue:`9571`)
   - ``trash`` and helper utilities ``trash-empty``, ``trash-list``, ``trash-put``, ``trash-restore`` (:issue:`9560`)
   - ``ssh-copy-id`` (:issue:`9675`)
+
 - Improvements to many completions, including the speed of completing directories in WSL 2 (:issue:`9574`).
 - Completions using ``__fish_complete_suffix`` are now offered in the correct order, fixing a regression in 3.6.0 (:issue:`8924`).
 - ``git`` completions for ``git-foo``-style commands was restored, fixing a regression in 3.6.0 (:issue:`9457`).

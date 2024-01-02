@@ -80,13 +80,10 @@ static maybe_t<wcstring> sequence_name(wchar_t wc) {
         recent_chars.erase(recent_chars.begin());
     }
 
-    // Check all nonempty substrings extending to the end.
-    for (size_t i = 0; i < recent_chars.size(); i++) {
-        wcstring out_name;
-        wcstring seq = str2wcstring(recent_chars.substr(i));
-        if (input_terminfo_get_name(seq, out_name)) {
-            return out_name;
-        }
+    // The entire sequence needs to match the sequence, or else we would output substrings.
+    wcstring out_name;
+    if (input_terminfo_get_name(str2wcstring(recent_chars), out_name)) {
+        return out_name;
     }
     return none();
 }

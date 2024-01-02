@@ -174,9 +174,9 @@ expect_prompt()
 
 send("echo fail: lengthened escape timeout")
 send("\033")
-sleep(0.300)
+sleep(0.400)
 send("ddi")
-sleep(0.15)
+sleep(0.25)
 send("echo success: lengthened escape timeout\r")
 expect_prompt(
     "\r\nsuccess: lengthened escape timeout\r\n",

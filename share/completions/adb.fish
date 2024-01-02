@@ -74,7 +74,7 @@ function __fish_adb_list_files
     end
 
     # Return list of directories suffixed with '/'
-    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type d 2\>/dev/null | awk '{print $0"/"}'
+    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type d 2\>/dev/null | string -r '$' /
     # Return list of files
     __fish_adb_run_command find -H "$token*" -maxdepth 0 -type f 2\>/dev/null
 end

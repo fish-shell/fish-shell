@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     set
-    set (-f | --function) (-l | local) (-g | --global) (-U | --universal)
+    set (-f | --function) (-l | --local) (-g | --global) (-U | --universal)
     set [-Uflg] NAME [VALUE ...]
     set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
     set (-a | --append) [-flgU] NAME VALUE ...

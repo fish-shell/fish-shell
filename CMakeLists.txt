@@ -24,6 +24,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
 endif()
 
+include(cmake/ConfigureChecks.cmake)
+include(cmake/gettext.cmake)
+
 include(cmake/Rust.cmake)
 
 # Error out when linking statically, it doesn't work.
@@ -123,8 +126,6 @@ set(FISH_SRCS
 file(GLOB FISH_HEADERS src/*.h)
 
 # Set up config.h
-include(cmake/ConfigureChecks.cmake)
-include(cmake/gettext.cmake)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

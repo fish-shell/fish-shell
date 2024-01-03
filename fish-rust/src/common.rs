@@ -1454,15 +1454,6 @@ pub fn fish_setlocale() {
         );
     }
     PROFILING_ACTIVE.store(true);
-
-    // Until no C++ code uses the variables init in the C++ version of fish_setlocale(), we need to
-    // also call that one or otherwise we'll segfault trying to read those uninit values.
-    extern "C" {
-        fn fish_setlocale_ffi();
-    }
-    unsafe {
-        fish_setlocale_ffi();
-    }
 }
 
 /// Test if the character can be encoded using the current locale.

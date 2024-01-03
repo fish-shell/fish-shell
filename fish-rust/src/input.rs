@@ -2,7 +2,6 @@ use crate::common::{get_by_sorted_name, shell_modes, str2wcstring, Named};
 use crate::curses;
 use crate::env::{EnvMode, Environment, CURSES_INITIALIZED};
 use crate::event;
-use crate::ffi_tests::add_test;
 use crate::flog::FLOG;
 use crate::input_common::{
     CharEvent, CharEventType, CharInputStyle, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
@@ -13,6 +12,8 @@ use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
 };
 use crate::signal::signal_clear_cancel;
+#[cfg(test)]
+use crate::tests::prelude::*;
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
 use errno::{set_errno, Errno};
@@ -1191,7 +1192,10 @@ pub fn input_function_get_code(name: &wstr) -> Option<ReadlineCmd> {
     get_by_sorted_name(name, INPUT_FUNCTION_METADATA).map(|md| md.code)
 }
 
-add_test!("test_input", || {
+#[test]
+#[serial]
+fn test_input() {
+    test_init();
     use crate::env::EnvStack;
     let parser = Parser::new(Arc::pin(EnvStack::new()), false);
     let mut input = Inputter::new(parser, libc::STDIN_FILENO);
@@ -1233,4 +1237,4 @@ add_test!("test_input", || {
     } else if evt.get_readline() != ReadlineCmd::DownLine {
         panic!("Expected to read char down_line");
     }
-});
+}

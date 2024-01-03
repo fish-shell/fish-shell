@@ -11,6 +11,8 @@ use once_cell::sync::Lazy;
 
 use crate::abbrs::abbrs_ffi::abbrs_replacer_t;
 use crate::parse_constants::SourceRange;
+#[cfg(test)]
+use crate::tests::prelude::*;
 use pcre2::utf32::Regex;
 
 use self::abbrs_ffi::{abbreviation_t, abbrs_position_t, abbrs_replacement_t};
@@ -439,8 +441,10 @@ impl<'a> GlobalAbbrs<'a> {
         self.g.erase(name.as_wstr());
     }
 }
-use crate::ffi_tests::add_test;
-add_test!("rename_abbrs", || {
+#[test]
+#[serial]
+fn rename_abbrs() {
+    test_init();
     use crate::abbrs::{Abbreviation, Position};
     use crate::wchar::prelude::*;
 
@@ -473,4 +477,4 @@ add_test!("rename_abbrs", || {
         assert!(abbrs_g.erase(L!("gcc")));
         assert!(!abbrs_g.erase(L!("gcc")));
     })
-});
+}

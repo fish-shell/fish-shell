@@ -40,7 +40,7 @@ pub mod r#type;
 pub mod ulimit;
 pub mod wait;
 
-// Note these tests will NOT run with cfg(test).
+#[cfg(test)]
 mod tests;
 
 mod prelude {

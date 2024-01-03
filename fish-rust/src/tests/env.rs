@@ -1,5 +1,4 @@
 use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
-use crate::ffi_tests::add_test;
 use crate::parser::Parser;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -89,7 +88,10 @@ fn test_timezone_env_vars() {
 }
 
 // Verify that setting special env vars have the expected effect on the current shell process.
-add_test!("test_env_vars", || {
+#[test]
+#[serial]
+fn test_env_vars() {
+    test_init();
     test_timezone_env_vars();
     // TODO: Add tests for the locale and ncurses vars.
 
@@ -103,9 +105,12 @@ add_test!("test_env_vars", || {
     assert!(v1 == v2 && !(v1 != v2));
     assert!(v1 != v3 && !(v1 == v3));
     assert!(v1 != v4 && !(v1 == v4));
-});
+}
 
-add_test!("test_env_snapshot", || {
+#[test]
+#[serial]
+fn test_env_snapshot() {
+    test_init();
     std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
     pushd("test/fish_env_snapshot_test/");
     let vars = Parser::principal_parser().vars();
@@ -171,4 +176,4 @@ add_test!("test_env_snapshot", || {
 
     vars.pop();
     popd();
-});
+}

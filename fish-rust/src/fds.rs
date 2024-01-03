@@ -1,5 +1,7 @@
 use crate::common::wcs2zstring;
 use crate::flog::FLOG;
+#[cfg(test)]
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use libc::{
@@ -292,7 +294,10 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
     Ok(())
 }
 
-crate::ffi_tests::add_test!("test_pipes", || {
+#[test]
+#[serial]
+fn test_pipes() {
+    test_init();
     // Here we just test that each pipe has CLOEXEC set and is in the high range.
     // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
     let mut pipes = vec![];
@@ -309,4 +314,4 @@ crate::ffi_tests::add_test!("test_pipes", || {
             assert!(flags & FD_CLOEXEC != 0);
         }
     }
-});
+}

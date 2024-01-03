@@ -18,6 +18,8 @@ use crate::parse_constants::{
     SOURCE_OFFSET_INVALID,
 };
 use crate::parse_tree::ParseToken;
+#[cfg(test)]
+use crate::tests::prelude::*;
 use crate::tokenizer::{
     variable_assignment_equals_pos, TokFlags, TokenType, Tokenizer, TokenizerError,
     TOK_ACCEPT_UNFINISHED, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
@@ -4011,12 +4013,14 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
     result
 }
 
-use crate::ffi_tests::add_test;
-add_test!("test_ast_parse", || {
+#[test]
+#[serial]
+fn test_ast_parse() {
+    test_init();
     let src = L!("echo");
     let ast = Ast::parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);
-});
+}
 
 pub use ast_ffi::{Category, Type};
 

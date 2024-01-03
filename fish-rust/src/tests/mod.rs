@@ -1,13 +1,10 @@
 use crate::wchar::prelude::*;
 
 mod abbrs;
-#[cfg(test)]
 mod common;
 mod complete;
 mod debounce;
-#[cfg(test)]
 mod editable_line;
-#[cfg(test)]
 mod encoding;
 mod env;
 mod env_universal_common;
@@ -18,15 +15,11 @@ mod history;
 mod pager;
 mod parse_util;
 mod parser;
-#[cfg(test)]
 mod reader;
-#[cfg(test)]
 mod redirection;
 mod screen;
 mod string_escape;
-#[cfg(test)]
 mod threads;
-#[cfg(test)]
 mod tokenizer;
 mod topic_monitor;
 mod wgetopt;
@@ -87,4 +80,6 @@ pub mod prelude {
             EnvStack::principal().set_pwd_from_getcwd();
         });
     }
+
+    pub use serial_test::serial;
 }

@@ -1,4 +1,4 @@
-use crate::ffi_tests::add_test;
+use crate::tests::prelude::*;
 use libc::{c_void, O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
 use rand::random;
 use std::{ffi::CString, ptr};
@@ -57,7 +57,10 @@ fn test_wdirname_wbasename() {
     assert_eq!(wbasename(&longpath), "overlong"L);
 }
 
-add_test!("test_wwrite_to_fd", || {
+#[test]
+#[serial]
+fn test_wwrite_to_fd() {
+    test_init();
     let (fd, filename) =
         fish_mkstemp_cloexec(CString::new("/tmp/fish_test_wwrite.XXXXXX").unwrap());
     {
@@ -98,4 +101,4 @@ add_test!("test_wwrite_to_fd", || {
         assert_eq!(&contents, &narrow);
     }
     unsafe { libc::remove(filename.as_ptr()) };
-});
+}

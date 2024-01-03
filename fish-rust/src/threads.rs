@@ -23,7 +23,10 @@ impl FloggableDebug for ThreadId {}
 /// The thread id of the main thread, as set by [`init()`] at startup.
 static mut MAIN_THREAD_ID: Option<ThreadId> = None;
 /// Used to bypass thread assertions when testing.
+#[cfg(not(test))]
 static THREAD_ASSERTS_CFG_FOR_TESTING: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+static THREAD_ASSERTS_CFG_FOR_TESTING: AtomicBool = AtomicBool::new(true);
 /// This allows us to notice when we've forked.
 static IS_FORKED_PROC: AtomicBool = AtomicBool::new(false);
 

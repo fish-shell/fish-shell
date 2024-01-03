@@ -1,14 +1,20 @@
-use crate::ffi_tests::add_test;
+use crate::tests::prelude::*;
+use crate::wchar::prelude::*;
 
-add_test! {"test_string", || {
-    use crate::parser::Parser;
+#[test]
+#[serial]
+fn test_string() {
+    test_init();
+    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::builtins::string::string;
-    use crate::wchar::prelude::*;
     use crate::common::escape;
-    use crate::builtins::shared::{STATUS_CMD_ERROR,STATUS_CMD_OK, STATUS_INVALID_ARGS};
-    use crate::io::{IoStreams, OutputStream, StringOutputStream};
-
     use crate::future_feature_flags::{scoped_test, FeatureFlag};
+    use crate::io::{IoStreams, OutputStream, StringOutputStream};
+    use crate::parser::Parser;
+    use crate::tests::prelude::*;
+    use crate::wchar::prelude::*;
+
+    test_init();
 
     // avoid 1.3k L!()'s
     macro_rules! test_cases {
@@ -26,13 +32,21 @@ add_test! {"test_string", || {
 
         let rc = string(parser, &mut streams, args.as_mut_slice()).expect("string failed");
 
-        assert_eq!(expected_rc.unwrap(), rc, "string builtin returned unexpected return code");
+        assert_eq!(
+            expected_rc.unwrap(),
+            rc,
+            "string builtin returned unexpected return code"
+        );
 
         let actual = escape(outs.contents());
         let expected = escape(expected_out);
-        assert_eq!(expected, actual, "string builtin returned unexpected output");
+        assert_eq!(
+            expected, actual,
+            "string builtin returned unexpected output"
+        );
     }
 
+    #[rustfmt::skip]
     let tests = test_cases![
         (["string", "escape"], STATUS_CMD_ERROR, ""),
         (["string", "escape", ""], STATUS_CMD_OK, "''\n"),
@@ -269,6 +283,7 @@ add_test! {"test_string", || {
         string_test(cmd, expected_status, expected_stdout);
     }
 
+    #[rustfmt::skip]
     let qmark_noglob_tests = test_cases![
         (["string", "match", "a*b?c", "axxb?c"], STATUS_CMD_OK, "axxb?c\n"),
         (["string", "match", "*?", "a"], STATUS_CMD_ERROR, ""),
@@ -284,6 +299,7 @@ add_test! {"test_string", || {
         }
     });
 
+    #[rustfmt::skip]
     let qmark_glob_tests = test_cases![
         (["string", "match", "a*b?c", "axxbyc"], STATUS_CMD_OK, "axxbyc\n"),
         (["string", "match", "*?", "a"], STATUS_CMD_OK, "a\n"),
@@ -298,5 +314,4 @@ add_test! {"test_string", || {
             string_test(cmd, expected_status, expected_stdout);
         }
     });
-
-}}
+}

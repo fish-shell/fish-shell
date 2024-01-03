@@ -5,13 +5,13 @@ use crate::complete::{
     CompletionList, CompletionMode, CompletionRequestOptions,
 };
 use crate::env::{EnvMode, Environment};
-use crate::ffi_tests::add_test;
 use crate::io::IoChain;
 use crate::operation_context::{
     no_cancel, OperationContext, EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT,
 };
 use crate::parser::Parser;
 use crate::reader::completion_apply_to_command_line;
+use crate::tests::prelude::*;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
@@ -23,7 +23,10 @@ fn comma_join(lst: Vec<WString>) -> WString {
     join_strings(&lst, ',')
 }
 
-add_test!("test_complete", || {
+#[test]
+#[serial]
+fn test_complete() {
+    test_init();
     let vars = PwdEnvironment {
         parent: TestEnvironment {
             vars: HashMap::from([
@@ -424,11 +427,14 @@ add_test!("test_complete", || {
     complete_remove_wrapper(L!("cdwrap1").into(), L!("cd"));
     complete_remove_wrapper(L!("cdwrap2").into(), L!("cdwrap1"));
     popd();
-});
+}
 
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
 // backslashes.
-add_test!("test_autosuggest_suggest_special", || {
+#[test]
+#[serial]
+fn test_autosuggest_suggest_special() {
+    test_init();
     macro_rules! perform_one_autosuggestion_cd_test {
         ($command:literal, $expected:literal, $vars:expr) => {
             let mut comps = complete(
@@ -593,9 +599,12 @@ add_test!("test_autosuggest_suggest_special", || {
         .vars()
         .remove(L!("HOME"), EnvMode::LOCAL | EnvMode::EXPORT);
     popd();
-});
+}
 
-add_test!("test_autosuggestion_ignores", || {
+#[test]
+#[serial]
+fn test_autosuggestion_ignores() {
+    test_init();
     // Testing scenarios that should produce no autosuggestions
     macro_rules! perform_one_autosuggestion_should_ignore_test {
         ($command:literal) => {
@@ -613,4 +622,4 @@ add_test!("test_autosuggestion_ignores", || {
     perform_one_autosuggestion_should_ignore_test!("echo PIPE_TEST&");
     perform_one_autosuggestion_should_ignore_test!("echo PIPE_TEST#comment");
     perform_one_autosuggestion_should_ignore_test!("echo PIPE_TEST;");
-});
+}

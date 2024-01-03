@@ -13,14 +13,17 @@ use crate::reader::{
 };
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
 use crate::tests::prelude::*;
+use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use libc::SIGINT;
 use std::time::Duration;
 
-use crate::ffi_tests::add_test;
-add_test!("test_parser", || {
+#[test]
+#[serial]
+fn test_parser() {
+    test_init();
     macro_rules! detect_errors {
         ($src:literal) => {
             parse_util_detect_errors(L!($src), None, true /* accept incomplete */)
@@ -297,9 +300,12 @@ add_test!("test_parser", || {
         detect_errors!("true || \n") == Err(ParserTestErrorBits::INCOMPLETE),
         "unterminated conjunction not reported properly"
     );
-});
+}
 
-add_test!("test_new_parser_correctness", || {
+#[test]
+#[serial]
+fn test_new_parser_correctness() {
+    test_init();
     macro_rules! validate {
         ($src:expr, $ok:expr) => {
             let ast = Ast::parse(L!($src), ParseTreeFlags::default(), None);
@@ -324,9 +330,12 @@ add_test!("test_new_parser_correctness", || {
     validate!("true || ||", false);
     validate!("|| true", false);
     validate!("true || \n\n false", true);
-});
+}
 
-add_test!("test_new_parser_correctness", || {
+#[test]
+#[serial]
+fn test_new_parser_correctness_by_fuzzing() {
+    test_init();
     let fuzzes = [
         L!("if"),
         L!("else"),
@@ -379,13 +388,16 @@ add_test!("test_new_parser_correctness", || {
             Ast::parse(&src, ParseTreeFlags::default(), None);
         }
     }
-});
+}
 
 // Test the LL2 (two token lookahead) nature of the parser by exercising the special builtin and
 // command handling. In particular, 'command foo' should be a decorated statement 'foo' but 'command
 // -help' should be an undecorated statement 'command' with argument '--help', and NOT attempt to
 // run a command called '--help'.
-add_test!("test_new_parser_ll2", || {
+#[test]
+#[serial]
+fn test_new_parser_ll2() {
+    test_init();
     // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
     // true if successful.
     fn test_1_parse_ll2(src: &wstr) -> Option<(WString, WString, StatementDecoration)> {
@@ -501,9 +513,12 @@ add_test!("test_new_parser_ll2", || {
     check_function_help!("function --help", ast::Type::decorated_statement);
     check_function_help!("function --foo; end", ast::Type::function_header);
     check_function_help!("function foo; end", ast::Type::function_header);
-});
+}
 
-add_test!("test_new_parser_ad_hoc", || {
+#[test]
+#[serial]
+fn test_new_parser_ad_hoc() {
+    test_init();
     // Very ad-hoc tests for issues encountered.
 
     // Ensure that 'case' terminates a job list.
@@ -559,9 +574,12 @@ add_test!("test_new_parser_ad_hoc", || {
     );
     assert!(errors.len() == 1);
     assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_quote);
-});
+}
 
-add_test!("test_new_parser_errors", || {
+#[test]
+#[serial]
+fn test_new_parser_errors() {
+    test_init();
     macro_rules! validate {
         ($src:expr, $expected_code:expr) => {
             let mut errors = vec![];
@@ -590,9 +608,12 @@ add_test!("test_new_parser_errors", || {
     validate!("true | and", ParseErrorCode::andor_in_pipeline);
 
     validate!("a=", ParseErrorCode::bare_variable_assignment);
-});
+}
 
-add_test!("test_eval_recursion_detection", || {
+#[test]
+#[serial]
+fn test_eval_recursion_detection() {
+    test_init();
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.
     let parser = Parser::principal_parser().shared();
@@ -608,9 +629,12 @@ add_test!("test_eval_recursion_detection", || {
         )),
         &IoChain::new(),
     );
-});
+}
 
-add_test!("test_eval_illegal_exit_code", || {
+#[test]
+#[serial]
+fn test_eval_illegal_exit_code() {
+    test_init();
     macro_rules! validate {
         ($cmd:expr, $result:expr) => {
             let parser = Parser::principal_parser();
@@ -637,17 +661,23 @@ add_test!("test_eval_illegal_exit_code", || {
     validate!(L!("?"), STATUS_UNMATCHED_WILDCARD.unwrap());
     validate!(L!("abc?def"), STATUS_UNMATCHED_WILDCARD.unwrap());
     popd();
-});
+}
 
-add_test!("test_eval_empty_function_name", || {
+#[test]
+#[serial]
+fn test_eval_empty_function_name() {
+    test_init();
     let parser = Parser::principal_parser().shared();
     parser.eval(
         L!("function '' ; echo fail; exit 42 ; end ; ''"),
         &IoChain::new(),
     );
-});
+}
 
-add_test!("test_expand_argument_list", || {
+#[test]
+#[serial]
+fn test_expand_argument_list() {
+    test_init();
     let parser = Parser::principal_parser().shared();
     let comps: Vec<WString> = Parser::expand_argument_list(
         L!("alpha 'beta gamma' delta"),
@@ -658,7 +688,7 @@ add_test!("test_expand_argument_list", || {
     .map(|c| c.completion)
     .collect();
     assert_eq!(comps, &[L!("alpha"), L!("beta gamma"), L!("delta"),]);
-});
+}
 
 fn test_1_cancellation(src: &wstr) {
     let filler = IoBufferfill::create().unwrap();
@@ -688,7 +718,10 @@ fn test_1_cancellation(src: &wstr) {
     }
 }
 
-add_test!("test_cancellation", || {
+#[test]
+#[serial]
+fn test_cancellation() {
+    test_init();
     reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
@@ -717,4 +750,4 @@ add_test!("test_cancellation", || {
     // Ensure that we don't think we should cancel.
     reader_reset_interrupted();
     signal_clear_cancel();
-});
+}

@@ -1,7 +1,7 @@
 use crate::ffi_tests::add_test;
 use libc::{c_void, O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
 use rand::random;
-use std::ffi::CString;
+use std::{ffi::CString, ptr};
 
 use crate::fallback::fish_mkstemp_cloexec;
 
@@ -86,7 +86,11 @@ add_test!("test_wwrite_to_fd", || {
         let read_amt = unsafe {
             libc::read(
                 fd.fd(),
-                (&mut contents[0]) as *mut u8 as *mut c_void,
+                if size == 0 {
+                    ptr::null_mut()
+                } else {
+                    (&mut contents[0]) as *mut u8 as *mut c_void
+                },
                 narrow.len(),
             )
         };

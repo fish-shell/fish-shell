@@ -26,22 +26,22 @@ echo $status
 # CHECKERR:      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 
 $fish -c 'exit -5'
-# CHECKERR: warning: builtin exit returned invalid exit code 251
+# CHECKERR: warning: builtin exit returned invalid exit code -5
 echo $status
 # CHECK: 251
 
 $fish -c 'exit -1'
-# CHECKERR: warning: builtin exit returned invalid exit code 255
+# CHECKERR: warning: builtin exit returned invalid exit code -1
 echo $status
 # CHECK: 255
 
 # (we avoid 0, so this is turned into 255 again)
 $fish -c 'exit -256'
-# CHECKERR: warning: builtin exit returned invalid exit code 255
+# CHECKERR: warning: builtin exit returned invalid exit code -256
 echo $status
 # CHECK: 255
 
 $fish -c 'exit -512'
-# CHECKERR: warning: builtin exit returned invalid exit code 255
+# CHECKERR: warning: builtin exit returned invalid exit code -512
 echo $status
 # CHECK: 255

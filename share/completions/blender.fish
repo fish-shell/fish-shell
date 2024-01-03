@@ -16,25 +16,25 @@ end
 function __blender_list_scenes
     blender --background (__blender_echo_input_file_name) --python-expr 'import bpy
 for scene in bpy.data.scenes:
-    print(f"\t{scene.name}")' |
+    print(f"\t{scene.name}")' 2>/dev/null |
         string replace -r -f '^\t' ''
 end
 
 function __blender_list_texts
     blender --background (__blender_echo_input_file_name) --python-expr 'import bpy
 for text in bpy.data.texts:
-    print(f"\t{text.name}")' |
+    print(f"\t{text.name}")' 2>/dev/null |
         string replace -r -f '^\t' ''
 end
 
 function __blender_list_engines
-    blender --background --engine help | string replace -r -f '^\t' ''
+    blender --background --engine help 2>/dev/null | string replace -r -f '^\t' ''
 end
 
 function __blender_list_addons
     blender --background --python-expr 'import addon_utils
 for mod in addon_utils.modules():
-    print(f"\t{mod.__name__}")' |
+    print(f"\t{mod.__name__}")' 2>/dev/null |
         string replace -r -f '^\t' ''
 end
 

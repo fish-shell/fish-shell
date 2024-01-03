@@ -3,9 +3,9 @@ use crate::common::{
 };
 use crate::env::{EnvDyn, EnvMode, EnvStack, Environment};
 use crate::fds::{wopen_cloexec, AutoCloseFd};
-use crate::ffi_tests::add_test;
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
 use crate::path::path_get_data;
+use crate::tests::prelude::*;
 use crate::tests::prelude::*;
 use crate::tests::string_escape::ESCAPE_TEST_CHAR;
 use crate::wchar::prelude::*;
@@ -43,7 +43,10 @@ fn random_string() -> WString {
     result
 }
 
-add_test!("test_history", || {
+#[test]
+#[serial]
+fn test_history() {
+    test_init();
     macro_rules! test_history_matches {
         ($search:expr, $expected:expr) => {
             let expected: Vec<&wstr> = $expected;
@@ -199,7 +202,7 @@ add_test!("test_history", || {
 
     // Clean up after our tests.
     history.clear();
-});
+}
 
 // Wait until the next second.
 fn time_barrier() {
@@ -226,6 +229,7 @@ fn generate_history_lines(item_count: usize, idx: usize) -> Vec<WString> {
 }
 
 fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
+    test_init();
     // Called in child thread to modify history.
     let hist = History::new(L!("race_test"));
     let hist_lines = generate_history_lines(item_count, idx);
@@ -235,7 +239,10 @@ fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
     }
 }
 
-add_test!("test_history_races", || {
+#[test]
+#[serial]
+fn test_history_races() {
+    test_init();
     // This always fails under WSL
     if is_windows_subsystem_for_linux() {
         return;
@@ -331,9 +338,12 @@ add_test!("test_history_races", || {
         assert_eq!(list, Vec::<WString>::new(), "Lines still left in the array");
     }
     hist.clear();
-});
+}
 
-add_test!("test_history_merge", || {
+#[test]
+#[serial]
+fn test_history_merge() {
+    test_init();
     // In a single fish process, only one history is allowed to exist with the given name But it's
     // common to have multiple history instances with the same name active in different processes,
     // e.g. when you have multiple shells open. We try to get that right and merge all their history
@@ -437,9 +447,12 @@ add_test!("test_history_merge", || {
         }
     }
     everything.clear();
-});
+}
 
-add_test!("test_history_path_detection", || {
+#[test]
+#[serial]
+fn test_history_path_detection() {
+    test_init();
     // Regression test for #7582.
     let tmpdirbuff = CString::new("/tmp/fish_test_history.XXXXXX").unwrap();
     let tmpdir = unsafe { libc::mkdtemp(tmpdirbuff.into_raw()) };
@@ -541,7 +554,7 @@ add_test!("test_history_path_detection", || {
         std::thread::sleep(std::time::Duration::from_millis(2));
     }
     history.clear();
-});
+}
 
 fn install_sample_history(name: &wstr) {
     let path = path_get_data().expect("Failed to get data directory");
@@ -552,7 +565,10 @@ fn install_sample_history(name: &wstr) {
     .unwrap();
 }
 
-add_test!("test_history_formats", || {
+#[test]
+#[serial]
+fn test_history_formats() {
+    test_init();
     // Test inferring and reading legacy and bash history formats.
     let name = L!("history_sample_fish_2_0");
     install_sample_history(name);
@@ -598,4 +614,4 @@ add_test!("test_history_formats", || {
     ];
     assert_eq!(test_history_imported_from_corrupted.get_history(), expected);
     test_history_imported_from_corrupted.clear();
-});
+}

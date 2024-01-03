@@ -58,7 +58,6 @@ mod fds;
 #[allow(unused_imports)]
 mod ffi;
 mod ffi_init;
-mod ffi_tests;
 mod fish;
 mod fish_indent;
 mod fish_key_reader;
@@ -98,7 +97,6 @@ mod reader_history_search;
 mod redirection;
 mod screen;
 mod signal;
-mod smoke;
 mod termsize;
 mod threads;
 mod timer;
@@ -118,6 +116,6 @@ mod widecharwidth;
 mod wildcard;
 mod wutil;
 
-#[cfg(any(test, feature = "fish-ffi-tests"))]
+#[cfg(test)]
 #[allow(unused_imports)] // Easy way to suppress warnings while we have two testing modes.
 mod tests;

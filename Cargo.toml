@@ -46,7 +46,6 @@ autocxx = "0.23.1"
 bitflags = "2.4.0"
 cxx = "1.0"
 errno = "0.2.8"
-inventory = { version = "0.3.3", optional = true}
 lazy_static = "1.4.0"
 libc = "0.2.137"
 lru = "0.10.0"
@@ -62,6 +61,9 @@ widestring = "1.0.2"
 rand_pcg = "0.3.1"
 git-version = "0.3"
 
+[dev-dependencies]
+serial_test = "0.4.0"
+
 [build-dependencies]
 autocxx-build = "0.23.1"
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
@@ -74,10 +76,7 @@ crate-type = ["staticlib"]
 path = "fish-rust/src/lib.rs"
 
 [features]
-# The fish-ffi-tests feature causes tests to be built which need to use the FFI.
-# These tests are run by fish_tests().
-default = ["fish-ffi-tests"]
-fish-ffi-tests = ["inventory"]
+default = []
 benchmark = []
 
 # The following features are auto-detected by the build-script and should not be enabled manually.

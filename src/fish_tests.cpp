@@ -66,7 +66,6 @@
 #include "fds.h"
 #include "ffi_baggage.h"
 #include "ffi_init.rs.h"
-#include "ffi_tests.rs.h"
 #include "function.h"
 #include "future_feature_flags.h"
 #include "global_safety.h"
@@ -90,7 +89,6 @@
 #include "redirection.h"
 #include "screen.h"
 #include "signals.h"
-#include "smoke.rs.h"
 #include "termsize.h"
 #include "threads.rs.h"
 #include "tokenizer.h"
@@ -801,13 +799,6 @@ void test_dirname_basename() {
     do_test(wbasename(longpath) == L"overlong");
 }
 
-void test_rust_smoke() {
-    size_t x = rust::add(37, 5);
-    do_test(x == 42);
-}
-
-void test_rust_ffi() { rust::run_ffi_tests(); }
-
 // typedef void (test_entry_point_t)();
 using test_entry_point_t = void (*)();
 struct test_t {
@@ -841,8 +832,6 @@ static const test_t s_tests[]{
     {TEST_GROUP("maybe"), test_maybe},
     {TEST_GROUP("normalize"), test_normalize_path},
     {TEST_GROUP("dirname"), test_dirname_basename},
-    {TEST_GROUP("rust_smoke"), test_rust_smoke},
-    {TEST_GROUP("rust_ffi"), test_rust_ffi},
 };
 
 void list_tests() {

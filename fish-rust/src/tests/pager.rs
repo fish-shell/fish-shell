@@ -1,13 +1,16 @@
 use crate::common::get_ellipsis_char;
 use crate::complete::{CompleteFlags, Completion};
-use crate::ffi_tests::add_test;
 use crate::pager::{Pager, SelectionMotion};
 use crate::termsize::Termsize;
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::StringFuzzyMatch;
 
-add_test!("test_pager_navigation", || {
+#[test]
+#[serial]
+fn test_pager_navigation() {
+    test_init();
     // Generate 19 strings of width 10. There's 2 spaces between completions, and our term size is
     // 80; these can therefore fit into 6 columns (6 * 12 - 2 = 70) or 5 columns (58) but not 7
     // columns (7 * 12 - 2 = 82).
@@ -92,9 +95,12 @@ add_test!("test_pager_navigation", || {
     validate!(pager, render, SelectionMotion::North, 2);
     validate!(pager, render, SelectionMotion::PageNorth, 0);
     validate!(pager, render, SelectionMotion::PageSouth, 3);
-});
+}
 
-add_test!("test_pager_layout", || {
+#[test]
+#[serial]
+fn test_pager_layout() {
+    test_init();
     // These tests are woefully incomplete
     // They only test the truncation logic for a single completion
 
@@ -189,4 +195,4 @@ add_test!("test_pager_layout", || {
     validate!(&mut pager, 18, L!("abcdefghijklmnopq…"));
     validate!(&mut pager, 17, L!("abcdefghijklmnop…"));
     validate!(&mut pager, 16, L!("abcdefghijklmno…"));
-});
+}

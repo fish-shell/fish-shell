@@ -9,7 +9,6 @@ use crate::expand::{
     expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, BRACE_BEGIN, BRACE_END,
     BRACE_SEP, INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
 };
-use crate::ffi_tests::add_test;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
@@ -20,6 +19,8 @@ use crate::parse_constants::{
     ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG,
     INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
 };
+#[cfg(test)]
+use crate::tests::prelude::*;
 use crate::tokenizer::{
     comment_end, is_token_delimiter, quote_end, Tok, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
@@ -1785,7 +1786,10 @@ const TIME_IN_PIPELINE_ERR_MSG: &str =
 /// Maximum length of a variable name to show in error reports before truncation
 const var_err_len: usize = 16;
 
-add_test!("test_parse_util_cmdsubst_extent", || {
+#[test]
+#[serial]
+fn test_parse_util_cmdsubst_extent() {
+    test_init();
     const a: &wstr = L!("echo (echo (echo hi");
     assert_eq!(parse_util_cmdsubst_extent(a, 0), 0..a.len());
     assert_eq!(parse_util_cmdsubst_extent(a, 1), 0..a.len());
@@ -1799,9 +1803,12 @@ add_test!("test_parse_util_cmdsubst_extent", || {
         parse_util_cmdsubst_extent(a, 17),
         "echo (echo (".chars().count()..a.len()
     );
-});
+}
 
-add_test!("test_escape_quotes", || {
+#[test]
+#[serial]
+fn test_escape_quotes() {
+    test_init();
     macro_rules! validate {
         ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
             assert_eq!(
@@ -1839,9 +1846,12 @@ add_test!("test_escape_quotes", || {
     validate!("~abc'def", Some('"'), true, "~abc'def");
     validate!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
     validate!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
-});
+}
 
-add_test!("test_indents", || {
+#[test]
+#[serial]
+fn test_indents() {
+    test_init();
     // A struct which is either text or a new indent.
     struct Segment {
         // The indent to set
@@ -2025,7 +2035,7 @@ add_test!("test_indents", || {
             0, "\nend"
         );
     })();
-});
+}
 
 #[cxx::bridge]
 mod parse_util_ffi {

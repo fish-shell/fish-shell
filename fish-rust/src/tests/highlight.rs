@@ -1,6 +1,5 @@
 use crate::common::ScopeGuard;
 use crate::env::EnvMode;
-use crate::ffi_tests::add_test;
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::parser::Parser;
 use crate::tests::prelude::*;
@@ -25,7 +24,10 @@ fn get_overlong_path() -> String {
     longpath
 }
 
-add_test!("test_is_potential_path", || {
+#[test]
+#[serial]
+fn test_is_potential_path() {
+    test_init();
     // Directories
     std::fs::create_dir_all("test/is_potential_path_test/alpha/").unwrap();
     std::fs::create_dir_all("test/is_potential_path_test/beta/").unwrap();
@@ -156,9 +158,12 @@ add_test!("test_is_potential_path", || {
         &ctx,
         PathFlags::PATH_REQUIRE_DIR
     ));
-});
+}
 
-add_test!("test_highlighting", || {
+#[test]
+#[serial]
+fn test_highlighting() {
+    test_init();
     // Testing syntax highlighting
     pushd("test/fish_highlight_test/");
     let _popd = ScopeGuard::new((), |_| popd());
@@ -634,4 +639,4 @@ add_test!("test_highlighting", || {
         (">", fg(HighlightRole::error)),
         ("echo", fg(HighlightRole::error)),
     );
-});
+}

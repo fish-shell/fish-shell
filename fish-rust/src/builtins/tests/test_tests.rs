@@ -1,6 +1,7 @@
 use crate::builtins::prelude::*;
 use crate::builtins::test::test as builtin_test;
 use crate::io::OutputStream;
+use crate::tests::prelude::*;
 
 fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
     let parser = Parser::principal_parser();
@@ -164,7 +165,10 @@ fn test_test() {
     assert!(run_test_test(2, &["1", "-eq", "-99999999999999999999999999.9"]));
 }
 
-crate::ffi_tests::add_test!("test_test_builtin", || {
+#[test]
+#[serial]
+fn test_test_builtin() {
+    test_init();
     test_test_brackets();
     test_test();
-});
+}

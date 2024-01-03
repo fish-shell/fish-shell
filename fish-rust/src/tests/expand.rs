@@ -4,10 +4,10 @@ use crate::abbrs::{with_abbrs, with_abbrs_mut};
 use crate::complete::{CompletionList, CompletionReceiver};
 use crate::env::{EnvMode, EnvStackSetResult};
 use crate::expand::{expand_to_receiver, ExpandResultCode};
-use crate::ffi_tests::add_test;
 use crate::operation_context::{no_cancel, EXPANSION_LIMIT_DEFAULT};
 use crate::parse_constants::ParseErrorList;
 use crate::parser::Parser;
+use crate::tests::prelude::*;
 use crate::tests::prelude::*;
 use crate::wildcard::ANY_STRING;
 use crate::{
@@ -63,7 +63,10 @@ fn expand_test_impl(
 }
 
 // Test globbing and other parameter expansion.
-add_test!("test_expand", || {
+#[test]
+#[serial]
+fn test_expand() {
+    test_init();
     /// Perform parameter expansion and test if the output equals the zero-terminated parameter list /// supplied.
     ///
     /// \param in the string to expand
@@ -342,9 +345,12 @@ add_test!("test_expand", || {
     expand_test!("l///n", fuzzy_comp, "lol///nub/", "Wrong fuzzy matching 6");
 
     popd();
-});
+}
 
-add_test!("test_expand_overflow", || {
+#[test]
+#[serial]
+fn test_expand_overflow() {
+    test_init();
     // Testing overflowing expansions
     // Ensure that we have sane limits on number of expansions - see #7497.
 
@@ -376,9 +382,12 @@ add_test!("test_expand_overflow", || {
     assert_eq!(res, ExpandResultCode::error);
 
     parser.vars().pop();
-});
+}
 
-add_test!("test_abbreviations", || {
+#[test]
+#[serial]
+fn test_abbreviations() {
+    test_init();
     // Testing abbreviations
 
     with_abbrs_mut(|abbrset| {
@@ -442,6 +451,4 @@ add_test!("test_abbreviations", || {
     );
 
     assert_eq!(abbr_expand_1(L!("foo"), cmd), Some(L!("bar").into()));
-
-    // todo!("port the rest");
-});
+}

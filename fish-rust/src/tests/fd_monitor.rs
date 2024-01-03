@@ -8,7 +8,7 @@ use crate::fd_monitor::{
     FdEventSignaller, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason,
 };
 use crate::fds::{make_autoclose_pipes, AutoCloseFd};
-use crate::ffi_tests::add_test;
+use crate::tests::prelude::*;
 
 /// Helper to make an item which counts how many times its callback was invoked.
 ///
@@ -104,7 +104,10 @@ impl ItemMaker {
     }
 }
 
-add_test!("fd_monitor_items", || {
+#[test]
+#[serial]
+fn fd_monitor_items() {
+    test_init();
     let monitor = FdMonitor::new();
 
     // Items which will never receive data or be called.
@@ -189,7 +192,7 @@ add_test!("fd_monitor_items", || {
     assert_eq!(item_pokee.length_read.load(Ordering::Relaxed), 0);
     assert_eq!(item_pokee.total_calls.load(Ordering::Relaxed), 1);
     assert_eq!(item_pokee.pokes.load(Ordering::Relaxed), 1);
-});
+}
 
 #[test]
 fn test_fd_event_signaller() {

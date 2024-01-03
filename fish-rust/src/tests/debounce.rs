@@ -5,14 +5,17 @@ use std::sync::{
 use std::time::Duration;
 
 use crate::common::ScopeGuard;
-use crate::ffi_tests::add_test;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::parser::Parser;
 use crate::reader::{reader_current_data, reader_pop, reader_push, ReaderConfig, ReaderData};
+use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_service_main, Debounce};
 use crate::wchar::prelude::*;
 
-add_test!("test_debounce", || {
+#[test]
+#[serial]
+fn test_debounce() {
+    test_init();
     // Run 8 functions using a condition variable.
     // Only the first and last should run.
     let db = Debounce::new(Duration::from_secs(0));
@@ -80,9 +83,12 @@ add_test!("test_debounce", || {
         assert_eq!(ctx.handler_ran[idx].load(), ctx.completion_ran[idx].load());
     }
     assert!(total_ran <= 2);
-});
+}
 
-add_test!("test_debounce_timeout", || {
+#[test]
+#[serial]
+fn test_debounce_timeout() {
+    test_init();
     // Verify that debounce doesn't wait forever.
     // Use a shared_ptr so we don't have to join our threads.
     let timeout = Duration::from_millis(500);
@@ -126,4 +132,4 @@ add_test!("test_debounce_timeout", || {
     let mut exit_ok = data.exit_ok.lock().unwrap();
     *exit_ok = true;
     data.cv.notify_all();
-});
+}

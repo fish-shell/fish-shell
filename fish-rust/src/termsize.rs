@@ -2,6 +2,8 @@
 use crate::common::assert_sync;
 use crate::env::{EnvMode, EnvVar, Environment};
 use crate::flog::FLOG;
+#[cfg(test)]
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
@@ -288,10 +290,11 @@ pub fn termsize_invalidate_tty() {
     TermsizeContainer::invalidate_tty();
 }
 
-use crate::ffi_tests::add_test;
-
 use self::termsize_ffi::Parser;
-add_test!("test_termsize", || {
+#[test]
+#[serial]
+fn test_termsize() {
+    test_init();
     let env_global = EnvMode::GLOBAL;
     let parser = Parser::principal_parser();
     let vars = parser.vars();
@@ -364,4 +367,4 @@ add_test!("test_termsize", || {
     assert_eq!(ts.last(), Termsize::new(83, 38));
     TermsizeContainer::handle_winch();
     assert_eq!(ts2.updating(parser), stubby_termsize().unwrap());
-});
+}

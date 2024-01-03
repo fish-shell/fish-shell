@@ -7,9 +7,13 @@ use crate::reader::{
     combine_command_and_autosuggestion, completion_apply_to_command_line,
     reader_expand_abbreviation_at_cursor,
 };
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 
-crate::ffi_tests::add_test!("test_abbreviations", || {
+#[test]
+#[serial]
+fn test_abbreviations() {
+    test_init();
     {
         let mut abbrs = abbrs_get_set();
         abbrs.add(Abbreviation::new(
@@ -136,4 +140,4 @@ crate::ffi_tests::add_test!("test_abbreviations", || {
 
     // yin/yang expands everywhere.
     validate!("command yin", None, "command yang");
-});
+}

@@ -1,16 +1,19 @@
 use pcre2::utf32::Regex;
 
-use crate::ffi_tests::add_test;
 use crate::parse_constants::{
     ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
     ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
     ERROR_NO_VAR_NAME,
 };
 use crate::parse_util::parse_util_detect_errors;
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 
-add_test!("test_error_messages", || {
+#[test]
+#[serial]
+fn test_error_messages() {
+    test_init();
     // Given a format string, returns a list of non-empty strings separated by format specifiers. The
     // format specifiers themselves are omitted.
     fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {
@@ -67,4 +70,4 @@ add_test!("test_error_messages", || {
     validate!("echo foo\"$\"bar", ERROR_NO_VAR_NAME);
     validate!("echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME);
     validate!("echo foo $ bar", ERROR_NO_VAR_NAME);
-});
+}

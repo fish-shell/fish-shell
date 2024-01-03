@@ -1,11 +1,14 @@
-use crate::ffi_tests::add_test;
+use crate::tests::prelude::*;
 use crate::topic_monitor::{topic_monitor_t, topic_t, GenerationsList};
 use std::sync::{
     atomic::{AtomicU32, AtomicU64, Ordering},
     Arc,
 };
 
-add_test!("test_topic_monitor", || {
+#[test]
+#[serial]
+fn test_topic_monitor() {
+    test_init();
     let monitor = topic_monitor_t::default();
     let gens = GenerationsList::new();
     let t = topic_t::sigchld;
@@ -26,9 +29,12 @@ add_test!("test_topic_monitor", || {
     let changed = monitor.check(&gens, true /* wait */);
     assert!(changed);
     assert_eq!(gens.sigchld.get(), 2);
-});
+}
 
-add_test!("test_topic_monitor_torture", || {
+#[test]
+#[serial]
+fn test_topic_monitor_torture() {
+    test_init();
     let monitor = Arc::new(topic_monitor_t::default());
     const THREAD_COUNT: usize = 64;
     let t1 = topic_t::sigchld;
@@ -68,4 +74,4 @@ add_test!("test_topic_monitor_torture", || {
     for t in threads {
         t.join().unwrap();
     }
-});
+}

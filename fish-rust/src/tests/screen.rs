@@ -1,10 +1,13 @@
 use crate::common::get_ellipsis_char;
-use crate::ffi_tests::add_test;
 use crate::screen::{LayoutCache, PromptCacheEntry, PromptLayout};
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 
-add_test!("test_complete", || {
+#[test]
+#[serial]
+fn test_complete() {
+    test_init();
     let mut lc = LayoutCache::new();
     assert_eq!(lc.escape_code_length(L!("")), 0);
     assert_eq!(lc.escape_code_length(L!("abcd")), 0);
@@ -34,9 +37,12 @@ add_test!("test_complete", || {
     );
     assert_eq!(lc.escape_code_length(L!("\x1B]blahblahblah\x1B\\")), 16);
     assert_eq!(lc.escape_code_length(L!("\x1B]blahblahblah\x07")), 15);
-});
+}
 
-add_test!("test_layout_cache", || {
+#[test]
+#[serial]
+fn test_layout_cache() {
+    test_init();
     let mut seqs = LayoutCache::new();
 
     // Verify escape code cache.
@@ -105,9 +111,12 @@ add_test!("test_layout_cache", || {
         seqs.prompt_cache.front().unwrap().layout.max_line_width,
         100
     );
-});
+}
 
-add_test!("test_prompt_truncation", || {
+#[test]
+#[serial]
+fn test_prompt_truncation() {
+    test_init();
     let mut cache = LayoutCache::new();
     let mut trunc = WString::new();
 
@@ -235,4 +244,4 @@ add_test!("test_prompt_truncation", || {
         },
     );
     assert_eq!(trunc, ellipsis());
-});
+}

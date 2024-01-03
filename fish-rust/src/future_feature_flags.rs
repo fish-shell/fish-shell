@@ -31,8 +31,6 @@ mod future_feature_flags_ffi {
     extern "Rust" {
         #[cxx_name = "feature_test"]
         fn test(flag: FeatureFlag) -> bool;
-        #[cxx_name = "feature_set"]
-        fn set(flag: FeatureFlag, value: bool);
         #[cxx_name = "feature_set_from_string"]
         fn set_from_string(str: wcharz_t);
     }
@@ -106,7 +104,7 @@ pub const METADATA: &[FeatureMetadata] = &[
 ];
 
 thread_local!(
-    #[cfg(any(test, feature = "fish-ffi-tests"))]
+    #[cfg(test)]
     static LOCAL_FEATURES: std::cell::RefCell<Option<Features>> = std::cell::RefCell::new(None);
 );
 
@@ -115,11 +113,11 @@ static FEATURES: Features = Features::new();
 
 /// Perform a feature test on the global set of features.
 pub fn test(flag: FeatureFlag) -> bool {
-    #[cfg(any(test, feature = "fish-ffi-tests"))]
+    #[cfg(test)]
     {
         LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).test(flag))
     }
-    #[cfg(not(any(test, feature = "fish-ffi-tests")))]
+    #[cfg(not(test))]
     {
         FEATURES.test(flag)
     }
@@ -128,7 +126,7 @@ pub fn test(flag: FeatureFlag) -> bool {
 pub use test as feature_test;
 
 /// Set a flag.
-#[cfg(any(test, feature = "fish-ffi-tests"))]
+#[cfg(test)]
 pub fn set(flag: FeatureFlag, value: bool) {
     LOCAL_FEATURES.with(|fc| fc.borrow().as_ref().unwrap_or(&FEATURES).set(flag, value));
 }
@@ -139,7 +137,7 @@ pub fn set(flag: FeatureFlag, value: bool) {
 /// Unknown features are silently ignored.
 pub fn set_from_string<'a>(str: impl Into<&'a wstr>) {
     let wstr: &wstr = str.into();
-    #[cfg(any(test, feature = "fish-ffi-tests"))]
+    #[cfg(test)]
     {
         LOCAL_FEATURES.with(|fc| {
             fc.borrow()
@@ -148,7 +146,7 @@ pub fn set_from_string<'a>(str: impl Into<&'a wstr>) {
                 .set_from_string(wstr)
         });
     }
-    #[cfg(not(any(test, feature = "fish-ffi-tests")))]
+    #[cfg(not(test))]
     {
         FEATURES.set_from_string(wstr)
     }
@@ -216,7 +214,7 @@ impl Features {
     }
 }
 
-#[cfg(any(test, feature = "fish-ffi-tests"))]
+#[cfg(test)]
 pub fn scoped_test(flag: FeatureFlag, value: bool, test_fn: impl FnOnce()) {
     LOCAL_FEATURES.with(|fc| {
         assert!(

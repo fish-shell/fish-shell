@@ -582,19 +582,20 @@ impl From<Signal> for NonZeroI32 {
 }
 
 // Need to use add_test for wgettext support.
-use crate::ffi_tests::add_test;
 
-add_test!("test_signal_name", || {
+#[test]
+fn test_signal_name() {
     let sig = Signal::new(libc::SIGINT);
     assert_eq!(sig.name(), "SIGINT");
-});
+}
 
 fn new_sighupint_checker() -> Box<SigChecker> {
     Box::new(SigChecker::new_sighupint())
 }
 
 #[rustfmt::skip]
-add_test!("test_signal_parse", || {
+#[test]
+fn test_signal_parse() {
     assert_eq!(Signal::parse(L!("SIGHUP")), Some(Signal::new(libc::SIGHUP)));
     assert_eq!(Signal::parse(L!("sigwinch")), Some(Signal::new(libc::SIGWINCH)));
     assert_eq!(Signal::parse(L!("TSTP")), Some(Signal::new(libc::SIGTSTP)));
@@ -609,7 +610,7 @@ add_test!("test_signal_parse", || {
     assert_eq!(Signal::parse(L!("0")), None);
     assert_eq!(Signal::parse(L!("-0")), None);
     assert_eq!(Signal::parse(L!("-1")), None);
-});
+}
 
 #[test]
 #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]

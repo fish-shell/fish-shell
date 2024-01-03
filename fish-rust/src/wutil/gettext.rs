@@ -7,6 +7,8 @@ use std::sync::Mutex;
 
 use crate::common::{charptr2wcstring, wcs2zstring};
 use crate::fish::PACKAGE_NAME;
+#[cfg(test)]
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::wchar_t;
 use errno::{errno, set_errno};
@@ -150,10 +152,12 @@ macro_rules! wgettext_maybe_fmt {
 }
 pub(crate) use wgettext_maybe_fmt;
 
-use crate::ffi_tests::add_test;
-add_test!("test_untranslated", || {
+#[test]
+#[serial]
+fn test_untranslated() {
+    test_init();
     let s: &'static wstr = wgettext!("abc");
     assert_eq!(s, "abc");
     let s2: &'static wstr = wgettext!("static");
     assert_eq!(s2, "static");
-});
+}

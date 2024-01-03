@@ -266,13 +266,11 @@ regressions in the future (i.e., we don’t reintroduce the bug).
 
 The tests can be found in three places:
 
-- src/fish_tests.cpp for tests to the core C++ code
+- fish-rust/src/tests for unit tests.
 - tests/checks for script tests, run by `littlecheck <https://github.com/ridiculousfish/littlecheck>`__
 - tests/pexpects for interactive tests using `pexpect <https://pexpect.readthedocs.io/en/stable/>`__
 
 When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests. The syntax is fairly self-explanatory. It's a fish script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
-
-fish_tests.cpp is mostly useful for unit tests - if you wish to test that a function does the correct thing for given input, use it.
 
 The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity. The runner is in build_tools/pexpect_helper.py, in case you need to modify something there.
 

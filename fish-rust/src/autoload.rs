@@ -4,6 +4,8 @@ use crate::common::{escape, ScopeGuard};
 use crate::env::Environment;
 use crate::io::IoChain;
 use crate::parser::Parser;
+#[cfg(test)]
+use crate::tests::prelude::*;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{file_id_for_path, FileId, INVALID_FILE_ID};
 use lru::LruCache;
@@ -315,9 +317,11 @@ impl AutoloadFileCache {
     }
 }
 
-use crate::ffi_tests::add_test;
 #[widestring_suffix::widestrs]
-add_test!("test_autoload", || {
+#[test]
+#[serial]
+fn test_autoload() {
+    test_init();
     use crate::common::{charptr2wcstring, wcs2zstring, write_loop};
     use crate::fds::wopen_cloexec;
     use crate::wutil::sprintf;
@@ -387,4 +391,4 @@ add_test!("test_autoload", || {
 
     run!("rm -Rf %ls"L, p1);
     run!("rm -Rf %ls"L, p2);
-});
+}

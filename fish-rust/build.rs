@@ -1,6 +1,7 @@
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
 fn main() {
@@ -11,13 +12,42 @@ fn main() {
         }
     }
 
+    let build_dir = PathBuf::from(
+        std::env::var("FISH_BUILD_DIR")
+            // Add our default to enable tools that don't go through CMake, like "cargo test"
+            // and the language server.
+            .unwrap_or("./build".into()),
+    );
+
+    let cached_curses_libnames = Path::join(&build_dir, "cached-curses-libnames");
+    let curses_libnames: Vec<String> = if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
+        let lib_paths = lib_path_list
+            .split(',')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let curses_libnames: Vec<_> = lib_paths
+            .map(|libpath| {
+                let stem = Path::new(&libpath).file_stem().unwrap().to_str().unwrap();
+                // Ubuntu-32bit-fetched-pcre2's ncurses doesn't have the "lib" prefix.
+                stem.strip_prefix("lib").unwrap_or(stem).to_owned()
+            })
+            .collect();
+        std::fs::write(cached_curses_libnames, curses_libnames.join("\n") + "\n").unwrap();
+        curses_libnames
+    } else {
+        let lib_cache = std::fs::read(cached_curses_libnames).unwrap_or_default();
+        let lib_cache = String::from_utf8(lib_cache).unwrap();
+        lib_cache
+            .split('\n')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_owned())
+            .collect()
+    };
+    rsconf::link_libraries(&curses_libnames, LinkType::Default);
+
     cc::Build::new()
         .file("fish-rust/src/compat.c")
-        .include(
-            &std::env::var("FISH_BUILD_DIR")
-                // Add our default to potentially help tools that don't go through CMake.
-                .unwrap_or("./build".into()),
-        )
+        .include(&build_dir)
         .compile("libcompat.a");
 
     if compiles("fish-rust/src/cfg/w_exitcode.cpp") {

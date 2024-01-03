@@ -255,10 +255,3 @@ impl AsWstr<'_> for wcharz_t {
         wstr::from_char_slice(self.chars())
     }
 }
-
-use crate::ffi_tests::add_test;
-add_test!("test_wcstring_list_ffi_t", || {
-    let data: Vec<WString> = wcstring_list_ffi_t::get_test_data().from_ffi();
-    assert_eq!(data, vec!["foo", "bar", "baz"]);
-    wcstring_list_ffi_t::check_test_data(data.to_ffi());
-});

@@ -31,11 +31,17 @@ mod tokenizer;
 mod topic_monitor;
 mod wgetopt;
 
-mod prelude {
-    use crate::env::EnvStack;
+pub mod prelude {
+    use crate::env::{env_init, misc_init};
+    use crate::reader::reader_init;
+    use crate::signal::signal_reset_handlers;
     pub use crate::tests::env::{PwdEnvironment, TestEnvironment};
+    use crate::topic_monitor::topic_monitor_init;
     use crate::wutil::wgetcwd;
+    use crate::{env::EnvStack, proc::proc_init};
     use once_cell::sync::Lazy;
+    use once_cell::sync::OnceCell;
+    use std::ffi::CString;
     use std::sync::Mutex;
 
     static PUSHED_DIRS: Lazy<Mutex<Vec<String>>> = Lazy::new(Mutex::default);
@@ -56,5 +62,29 @@ mod prelude {
         let old_cwd = PUSHED_DIRS.lock().unwrap().pop().unwrap();
         std::env::set_current_dir(old_cwd).unwrap();
         EnvStack::principal().set_pwd_from_getcwd();
+    }
+
+    pub fn test_init() {
+        static DONE: OnceCell<()> = OnceCell::new();
+        DONE.get_or_init(|| {
+            {
+                let s = CString::new("").unwrap();
+                unsafe {
+                    libc::setlocale(libc::LC_ALL, s.as_ptr());
+                }
+            }
+            topic_monitor_init();
+            crate::threads::init();
+            proc_init();
+            env_init(None, true, false);
+            misc_init();
+            reader_init();
+
+            // Set default signal handlers, so we can ctrl-C out of this.
+            signal_reset_handlers();
+
+            // Set PWD from getcwd - fixes #5599
+            EnvStack::principal().set_pwd_from_getcwd();
+        });
     }
 }

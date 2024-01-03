@@ -502,24 +502,3 @@ mod tests {
         }
     }
 }
-
-crate::ffi_tests::add_test!("test_colors_ffi", || {
-    use autocxx::WithinUniquePtr;
-    use moveit::moveit;
-    assert_eq!(RgbColor::WHITE, moveit!(rgb_color_t::white()).from_ffi());
-    assert_eq!(RgbColor::BLACK, moveit!(rgb_color_t::black()).from_ffi());
-    assert_eq!(RgbColor::RESET, moveit!(rgb_color_t::reset()).from_ffi());
-    assert_eq!(RgbColor::NORMAL, moveit!(rgb_color_t::normal()).from_ffi());
-    assert_eq!(RgbColor::NONE, moveit!(rgb_color_t::none()).from_ffi());
-
-    let mut cxx_color = rgb_color_t::black().within_unique_ptr();
-    cxx_color.as_mut().unwrap().set_bold(true);
-    cxx_color.as_mut().unwrap().set_dim(true);
-
-    let mut rust_color = RgbColor::BLACK;
-    assert_ne!(rust_color, cxx_color.as_ref().unwrap().from_ffi());
-    rust_color.set_bold(true);
-    assert_ne!(rust_color, cxx_color.as_ref().unwrap().from_ffi());
-    rust_color.set_dim(true);
-    assert_eq!(rust_color, cxx_color.as_ref().unwrap().from_ffi());
-});

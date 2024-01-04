@@ -14,7 +14,8 @@ use crate::flog::FLOG;
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseError, ParseErrorCode, ParseErrorList,
     ParseErrorListFfi, ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange,
-    StatementDecoration, INVALID_PIPELINE_CMD_ERR_MSG, SOURCE_OFFSET_INVALID,
+    StatementDecoration, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG,
+    SOURCE_OFFSET_INVALID,
 };
 use crate::parse_tree::ParseToken;
 use crate::tokenizer::{
@@ -3569,11 +3570,19 @@ impl<'s> Populator<'s> {
             // Here we have a variable assignment which we chose to not parse as a variable
             // assignment because there was no string after it.
             // Ensure we consume the token, so we don't get back here again at the same place.
+            let token = &self.consume_any_token();
+            let text = &self.tokens.src
+                [token.source_start()..token.source_start() + token.source_length()];
+            let equals_pos = variable_assignment_equals_pos(text).unwrap();
+            let variable = &text[..equals_pos];
+            let value = &text[equals_pos + 1..];
             parse_error!(
                 self,
-                self.consume_any_token(),
+                token,
                 ParseErrorCode::bare_variable_assignment,
-                ""
+                ERROR_BAD_COMMAND_ASSIGN_ERR_MSG,
+                variable,
+                value
             );
             return got_error(self);
         }

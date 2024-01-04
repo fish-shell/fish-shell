@@ -2,7 +2,6 @@
 
 use crate::fallback::{fish_wcswidth, fish_wcwidth};
 use crate::ffi::wcharz_t;
-use crate::tokenizer::variable_assignment_equals_pos;
 use crate::wchar::prelude::*;
 use crate::wchar_ffi::{AsWstr, WCharFromFFI, WCharToFFI};
 use bitflags::bitflags;
@@ -385,38 +384,10 @@ impl ParseError {
         skip_caret: bool,
     ) -> WString {
         let mut result = prefix.to_owned();
-        // Some errors don't have their message passed in, so we construct them here.
-        // This affects e.g. `eval "a=(foo)"`
-        match self.code {
-            ParseErrorCode::andor_in_pipeline => {
-                let context = wstr::from_char_slice(
-                    &src.as_char_slice()[self.source_start..self.source_start + self.source_length],
-                );
-                result += wstr::from_char_slice(
-                    wgettext_fmt!(INVALID_PIPELINE_CMD_ERR_MSG, context).as_char_slice(),
-                );
-            }
-            ParseErrorCode::bare_variable_assignment => {
-                let context = wstr::from_char_slice(
-                    &src.as_char_slice()[self.source_start..self.source_start + self.source_length],
-                );
-                let assignment_src = context;
-                #[allow(clippy::explicit_auto_deref)]
-                let equals_pos = variable_assignment_equals_pos(assignment_src).unwrap();
-                let variable = &assignment_src[..equals_pos];
-                let value = &assignment_src[equals_pos + 1..];
-                result += wstr::from_char_slice(
-                    wgettext_fmt!(ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, variable, value)
-                        .as_char_slice(),
-                );
-            }
-            _ => {
-                if skip_caret && self.text.is_empty() {
-                    return L!("").to_owned();
-                }
-                result += wstr::from_char_slice(self.text.as_char_slice());
-            }
+        if skip_caret && self.text.is_empty() {
+            return L!("").to_owned();
         }
+        result += wstr::from_char_slice(self.text.as_char_slice());
 
         let mut start = self.source_start;
         let mut len = self.source_length;

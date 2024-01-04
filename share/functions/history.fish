@@ -174,7 +174,7 @@ function history --description "display or manipulate interactive command histor
                     end
 
                     if string match -qr '^[1-9][0-9]*$' -- $i
-                        and test $i -lt $found_items_count
+                        and test $i -le $found_items_count
                         set -a choices $i
                     else
                         printf (_ "Ignoring invalid history entry ID \"%s\"\n") $i

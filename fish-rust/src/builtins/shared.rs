@@ -456,16 +456,16 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         // would assert() out, which is a terrible failure mode
         // So instead, what we do is we get a positive code,
         // and we avoid 0.
-        code = ((256 + code) % 256).abs();
-        if code == 0 {
-            code = 255;
-        }
         FLOGF!(
             warning,
             "builtin %ls returned invalid exit code %d",
             argv[0],
             code
         );
+        code = ((256 + code) % 256).abs();
+        if code == 0 {
+            code = 255;
+        }
     }
 
     ProcStatus::from_exit_code(code)

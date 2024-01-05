@@ -219,6 +219,7 @@ This release of fish contains a number of fixes for problems identified in fish 
 Notable improvements and fixes
 ------------------------------
 - ``abbr --erase`` now also erases the universal variables used by the old abbr function. That means::
+
     abbr --erase (abbr --list)
 
   can now be used to clean out all old abbreviations (:issue:`9468`).

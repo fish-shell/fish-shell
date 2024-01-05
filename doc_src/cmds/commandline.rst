@@ -135,6 +135,7 @@ which gives the current *process* (what is being completed), tokenized into sepa
 If you are then also interested in the in-progress token, add
 
 ::
+
    set -l current (commandline -ct)
 
 Note that this makes it easy to render fish's infix matching moot - if possible it's best if the completions just print all possibilities and leave the matching to the current token up to fish's logic.

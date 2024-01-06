@@ -19,8 +19,8 @@ use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
-use errno::errno;
 pub(crate) use gettext::{wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str};
+use nix::errno::Errno;
 pub(crate) use printf::sprintf;
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
@@ -68,13 +68,13 @@ pub fn wperror(s: &wstr) {
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
 pub fn perror(s: &str) {
-    let e = errno().0;
+    let e = Errno::last();
     let mut stderr = std::io::stderr().lock();
     if !s.is_empty() {
         let _ = write!(stderr, "{s}: ");
     }
     let slice = unsafe {
-        let msg = libc::strerror(e) as *const u8;
+        let msg = libc::strerror(e as i32) as *const u8;
         let len = libc::strlen(msg as *const _);
         std::slice::from_raw_parts(msg, len)
     };
@@ -102,8 +102,8 @@ pub fn wgetcwd() -> WString {
     FLOGF!(
         error,
         "getcwd() failed with errno %d/%s",
-        errno::errno().0,
-        errno::errno().to_string()
+        Errno::last() as i32,
+        Errno::last().desc()
     );
     WString::new()
 }

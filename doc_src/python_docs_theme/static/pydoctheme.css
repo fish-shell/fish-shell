@@ -611,6 +611,68 @@ div.documentwrapper {
     }
 }
 
+/* On print media remove anything non-essential. */
+@media print {
+    .inline-search {
+        display: none;
+    }
+
+    div.sphinxsidebar {
+        display: none;
+    }
+
+    div.bodywrapper {
+        margin-left: 0;
+    }
+
+    div.sphinxsidebar ul {
+        flex-basis: content;
+        flex-wrap: wrap;
+    }
+
+    div.sphinxsidebarwrapper {
+        display: flex;
+    }
+
+    div#searchbox {
+        display: none !important;
+    }
+
+    div.body {
+        padding: 1rem;
+    }
+
+    div#fmain {
+        border-radius: 0px;
+        margin: 0;
+        box-shadow: 0;
+        width: 100%;
+        padding: 0;
+        /* We have some padding/margins that would overflow - just remove it */
+        overflow: clip;
+    }
+
+    div.footer {
+        margin: 0;
+    }
+
+    /* Avoid splitting code blocks across multiple pages. */
+    pre {
+        page-break-inside: avoid;
+    }
+
+    /* Show section numbers. */
+    .body {
+        counter-reset: section;
+    }
+
+    h2::before {
+        counter-increment: section;
+        content: counter(section) ". ";
+        font-weight: normal;
+    }
+}
+
 .sphinxsidebar ul.current > li.current { font-weight: bold }
 
 .gray { color: #777 }

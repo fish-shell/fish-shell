@@ -17,10 +17,8 @@ use crate::wutil::{
     file_id_for_fd, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename, wstat,
     wunlink, FileId, INVALID_FILE_ID,
 };
-use errno::{errno, Errno};
-use libc::{
-    CLOCK_REALTIME, EINTR, ENOTSUP, EOPNOTSUPP, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR, UTIME_OMIT,
-};
+use libc::{CLOCK_REALTIME, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR, UTIME_OMIT};
+use nix::errno::Errno;
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -442,13 +440,14 @@ impl EnvUniversal {
             fd = AutoCloseFd::new(wopen_cloexec(&self.vars_path, flags, 0o644));
 
             if !fd.is_valid() {
-                let err = errno();
-                if err.0 == EINTR {
+                let err = Errno::last();
+                if err == Errno::EINTR {
                     continue; // signaled; try again
                 }
 
                 if O_EXLOCK != 0 {
-                    if (flags & O_EXLOCK) != 0 && [ENOTSUP, EOPNOTSUPP].contains(&err.0) {
+                    if (flags & O_EXLOCK) != 0 && [Errno::ENOTSUP, Errno::EOPNOTSUPP].contains(&err)
+                    {
                         // Filesystem probably does not support locking. Give up on locking.
                         // Note that on Linux the two errno symbols have the same value but on BSD they're
                         // different.
@@ -496,7 +495,7 @@ impl EnvUniversal {
         // This should almost always succeed on the first try.
         assert!(!string_suffixes_string(L!("/"), directory));
 
-        let mut saved_errno = Errno(0);
+        let mut saved_errno = Errno::from_i32(0);
         let tmp_name_template = directory.to_owned() + L!("/fishd.tmp.XXXXXX");
         let mut result = AutoCloseFd::empty();
         let mut narrow_str = CString::default();
@@ -507,7 +506,7 @@ impl EnvUniversal {
             let (fd, tmp_name) = fish_mkstemp_cloexec(wcs2zstring(&tmp_name_template));
             result.reset(fd);
             narrow_str = tmp_name;
-            saved_errno = errno();
+            saved_errno = Errno::last();
         }
         *out_path = str2wcstring(narrow_str.as_bytes());
 
@@ -529,7 +528,7 @@ impl EnvUniversal {
         let mut success = true;
         let contents = Self::serialize_with_vars(&self.vars);
         if let Err(err) = write_loop(&fd, &contents) {
-            let error = Errno(err.raw_os_error().unwrap());
+            let error = Errno::try_from(err).unwrap();
             FLOG!(
                 error,
                 wgettext_fmt!(
@@ -551,7 +550,7 @@ impl EnvUniversal {
     fn move_new_vars_file_into_place(&mut self, src: &wstr, dst: &wstr) -> bool {
         let ret = wrename(src, dst);
         if ret != 0 {
-            let error = errno();
+            let error = Errno::last();
             FLOG!(
                 error,
                 wgettext_fmt!(
@@ -1017,7 +1016,7 @@ fn encode_serialized(vals: &[WString]) -> WString {
 fn flock_uvar_file(fd: RawFd) -> bool {
     let start_time = timef();
     while unsafe { libc::flock(fd, LOCK_EX) } == -1 {
-        if errno().0 != EINTR {
+        if Errno::last() != Errno::EINTR {
             return false; // do nothing per issue #2149
         }
     }

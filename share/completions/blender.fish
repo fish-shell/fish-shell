@@ -9,8 +9,7 @@ function __blender_echo_input_file_name
     set -l path (commandline -poc |
         string match -r '.*\\.blend[0-9]*$' |
         tail --lines=1)
-    # Using eval to expand ~ and variables specified on the commandline.
-    eval echo $path
+    echo $path
 end
 
 function __blender_list_scenes

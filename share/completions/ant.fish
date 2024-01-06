@@ -8,7 +8,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
         for token in $argv[2..-1]
             switch $prev
                 case -buildfile -file -f
-                    set buildfile (eval echo $token)
+                    set buildfile echo $token
             end
             set prev $token
         end

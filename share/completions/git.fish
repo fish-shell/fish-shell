@@ -16,8 +16,7 @@ function __fish_git
         end
     end
     # Using 'command git' to avoid interactions for aliases from git to (e.g.) hub
-    # Using eval to expand ~ and variables specified on the commandline.
-    eval command git $global_args \$saved_args 2>/dev/null
+    command git $global_args $saved_args 2>/dev/null
 end
 
 # Print an optspec for argparse to handle git's options that are independent of any subcommand.
@@ -2462,11 +2461,11 @@ complete -c git -n __fish_git_needs_command -a '(__fish_git_custom_commands)' -d
 function __fish_git_complete_custom_command -a subcommand
     set -l cmd (commandline -opc)
     set -e cmd[1] # Drop "git".
-    set -l subcommand_args
+    set -lx subcommand_args
     if argparse -s (__fish_git_global_optspecs) -- $cmd
         set subcommand_args $argv[2..] # Drop the subcommand.
     end
-    complete -C "git-$subcommand $subcommand_args "(commandline -ct)
+    complete -C "git-$subcommand \$subcommand_args "(commandline -ct)
 end
 
 # source git-* commands' autocompletion file if exists

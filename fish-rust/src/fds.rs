@@ -5,9 +5,9 @@ use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use libc::{
-    c_int, EINTR, FD_CLOEXEC, F_DUPFD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_CLOEXEC,
-    O_NONBLOCK,
+    c_int, FD_CLOEXEC, F_DUPFD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_CLOEXEC, O_NONBLOCK,
 };
+use nix::errno::Errno;
 use nix::unistd;
 use std::ffi::CStr;
 use std::io::{self, Read, Write};
@@ -33,23 +33,13 @@ pub struct AutoCloseFd {
 
 impl Read for AutoCloseFd {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        unsafe {
-            match libc::read(self.as_raw_fd(), buf.as_mut_ptr() as *mut _, buf.len()) {
-                -1 => Err(std::io::Error::from_raw_os_error(errno::errno().0)),
-                bytes => Ok(bytes as usize),
-            }
-        }
+        unistd::read(self.as_raw_fd(), buf).map_err(std::io::Error::from)
     }
 }
 
 impl Write for AutoCloseFd {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        unsafe {
-            match libc::write(self.as_raw_fd(), buf.as_ptr() as *const _, buf.len()) {
-                -1 => Err(std::io::Error::from_raw_os_error(errno::errno().0)),
-                bytes => Ok(bytes as usize),
-            }
-        }
+        unistd::write(self.as_raw_fd(), buf).map_err(std::io::Error::from)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
@@ -247,8 +237,9 @@ pub fn open_cloexec(path: &CStr, flags: i32, mode: libc::c_int) -> RawFd {
 /// Close a file descriptor \p fd, retrying on EINTR.
 pub fn exec_close(fd: RawFd) {
     assert!(fd >= 0, "Invalid fd");
-    while unsafe { libc::close(fd) } == -1 {
-        if errno::errno().0 != EINTR {
+
+    while let Err(err) = unistd::close(fd) {
+        if err != Errno::EINTR {
             perror("close");
             break;
         }
@@ -260,10 +251,7 @@ pub fn make_fd_nonblocking(fd: RawFd) -> Result<(), io::Error> {
     let flags = unsafe { libc::fcntl(fd, F_GETFL, 0) };
     let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
     if !nonblocking {
-        match unsafe { libc::fcntl(fd, F_SETFL, flags | O_NONBLOCK) } {
-            -1 => return Err(io::Error::last_os_error()),
-            _ => return Ok(()),
-        };
+        Errno::result(unsafe { libc::fcntl(fd, F_SETFL, flags | O_NONBLOCK) })?;
     }
     Ok(())
 }
@@ -273,10 +261,7 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
     let flags = unsafe { libc::fcntl(fd, F_GETFL, 0) };
     let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
     if nonblocking {
-        match unsafe { libc::fcntl(fd, F_SETFL, flags & !O_NONBLOCK) } {
-            -1 => return Err(io::Error::last_os_error()),
-            _ => return Ok(()),
-        };
+        Errno::result(unsafe { libc::fcntl(fd, F_SETFL, flags & !O_NONBLOCK) })?;
     }
     Ok(())
 }

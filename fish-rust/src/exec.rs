@@ -41,6 +41,7 @@ use crate::proc::{
 };
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
+use crate::set_errno;
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::timer::push_timer;
 use crate::trace::trace_if_enabled_with_args;
@@ -48,11 +49,11 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstol, perror};
 use crate::wutil::{wgettext, wgettext_fmt};
-use errno::{errno, set_errno};
 use libc::{
-    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, O_NOCTTY,
-    O_RDONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
+    c_char, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, O_NOCTTY, O_RDONLY, STDERR_FILENO, STDIN_FILENO,
+    STDOUT_FILENO,
 };
+use nix::errno::Errno;
 use std::ffi::CStr;
 use std::io::{Read, Write};
 use std::os::fd::{FromRawFd, RawFd};
@@ -306,20 +307,20 @@ static FORK_COUNT: AtomicUsize = AtomicUsize::new(0);
 type LaunchResult = Result<(), ()>;
 
 /// Given an error \p err returned from either posix_spawn or exec, \return a process exit code.
-fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
-    assert!(err != 0, "Zero is success, not an error");
+fn exit_code_from_exec_error(err: Errno) -> libc::c_int {
+    assert!(err != Errno::from_i32(0), "Zero is success, not an error");
     match err {
-        ENOENT | ENOTDIR => {
+        Errno::ENOENT | Errno::ENOTDIR => {
             // This indicates either the command was not found, or a file redirection was not found.
             // We do not use posix_spawn file redirections so this is always command-not-found.
             STATUS_CMD_UNKNOWN.unwrap()
         }
-        EACCES | ENOEXEC => {
+        Errno::EACCES | Errno::ENOEXEC => {
             // The file is not executable for various reasons.
             STATUS_NOT_EXECUTABLE.unwrap()
         }
         #[cfg(target_os = "macos")]
-        libc::EBADARCH => {
+        Errno::EBADARCH => {
             // This is for e.g. running ARM app on Intel Mac.
             STATUS_NOT_EXECUTABLE.unwrap()
         }
@@ -365,7 +366,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     if path.to_bytes().ends_with(".fish".as_bytes()) {
         return false;
     }
-    let e = errno();
+    let e = Errno::last();
     let mut res = false;
     let fd = open_cloexec(path, O_RDONLY | O_NOCTTY, 0);
     if fd != -1 {
@@ -393,14 +394,14 @@ fn safe_launch_process(
     // This function never returns, so we take certain liberties with constness.
 
     unsafe { libc::execve(actual_cmd.as_ptr(), argv.get(), envv.get()) };
-    let err = errno();
+    let err = Errno::last();
 
     // The shebang wasn't introduced until UNIX Seventh Edition, so if
     // the kernel won't run the binary we hand it off to the interpreter
     // after performing a binary safety check, recommended by POSIX: a
     // line needs to exist before the first \0 with a lowercase letter
 
-    if err.0 == ENOEXEC && is_thompson_shell_script(actual_cmd) {
+    if err == Errno::ENOEXEC && is_thompson_shell_script(actual_cmd) {
         // Construct new argv.
         // We must not allocate memory, so only 128 args are supported.
         const maxargs: usize = 128;
@@ -421,8 +422,8 @@ fn safe_launch_process(
     }
 
     set_errno(err);
-    safe_report_exec_error(errno().0, actual_cmd.as_ptr(), argv.get(), envv.get());
-    exit_without_destructors(exit_code_from_exec_error(err.0));
+    safe_report_exec_error(err, actual_cmd.as_ptr(), argv.get(), envv.get());
+    exit_without_destructors(exit_code_from_exec_error(err));
 }
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
@@ -715,7 +716,7 @@ fn fork_child_for_process(
     {
         if let Some(pgid) = job.group().get_pgid() {
             let err = execute_setpgid(p.pid(), pgid, is_parent);
-            if err != 0 {
+            if let Some(err) = err {
                 report_setpgid_error(
                     err,
                     is_parent,
@@ -859,11 +860,9 @@ fn exec_external_command(
         let pid = match pid {
             Ok(pid) => pid,
             Err(err) => {
-                safe_report_exec_error(err.0, actual_cmd.as_ptr(), argv.get(), envv.get());
+                safe_report_exec_error(err, actual_cmd.as_ptr(), argv.get(), envv.get());
                 p.status
-                    .update(&ProcStatus::from_exit_code(exit_code_from_exec_error(
-                        err.0,
-                    )));
+                    .update(&ProcStatus::from_exit_code(exit_code_from_exec_error(err)));
                 return Err(());
             }
         };

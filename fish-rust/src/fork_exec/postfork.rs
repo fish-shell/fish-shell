@@ -7,6 +7,7 @@ use crate::nix::getpid;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use libc::{c_char, pid_t};
+use nix::errno::Errno;
 use std::ffi::CStr;
 
 /// The number of times to try to call fork() before giving up.
@@ -47,7 +48,7 @@ fn strlen_safe(s: *const libc::c_char) -> usize {
 
 /// Report the error code for a failed setpgid call.
 pub fn report_setpgid_error(
-    err: i32,
+    err: Errno,
     is_parent: bool,
     pid: pid_t,
     desired_pgid: pid_t,
@@ -82,9 +83,9 @@ pub fn report_setpgid_error(
     );
 
     match err {
-        libc::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid, " has already exec'd"),
-        libc::EINVAL => FLOG_SAFE!(error, "setpgid: pgid ", cur_group, " unsupported"),
-        libc::EPERM => {
+        Errno::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid, " has already exec'd"),
+        Errno::EINVAL => FLOG_SAFE!(error, "setpgid: pgid ", cur_group, " unsupported"),
+        Errno::EPERM => {
             FLOG_SAFE!(
                 error,
                 "setpgid: Process ",
@@ -94,30 +95,30 @@ pub fn report_setpgid_error(
                 " does not match"
             );
         }
-        libc::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid, " does not match"),
-        _ => FLOG_SAFE!(error, "setpgid: Unknown error number ", err),
+        Errno::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid, " does not match"),
+        _ => FLOG_SAFE!(error, "setpgid: Unknown error number ", err as i32),
     }
 }
 
 /// Execute setpgid, moving pid into the given pgroup.
 /// Return the result of setpgid.
-pub fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
+pub fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> Option<Errno> {
     // There is a comment "Historically we have looped here to support WSL."
     // TODO: stop looping.
     let mut eperm_count = 0;
     loop {
         if unsafe { libc::setpgid(pid, pgroup) } == 0 {
-            return 0;
+            return None;
         }
-        let err = errno::errno().0;
-        if err == libc::EACCES && is_parent {
+        let err = Errno::last();
+        if err == Errno::EACCES && is_parent {
             // We are the parent process and our child has called exec().
             // This is an unavoidable benign race.
-            return 0;
-        } else if err == libc::EINTR {
+            return None;
+        } else if err == Errno::EINTR {
             // Paranoia.
             continue;
-        } else if err == libc::EPERM && eperm_count < 100 {
+        } else if err == Errno::EPERM && eperm_count < 100 {
             eperm_count += 1;
             // The setpgid(2) man page says that EPERM is returned only if attempts are made
             // to move processes into groups across session boundaries (which can never be
@@ -134,14 +135,14 @@ pub fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
         // and returns ESRCH (process not found) instead of EACCES (child has called exec).
         // See https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=251227
         #[cfg(any(feature = "bsd", target_os = "macos"))]
-        if err == libc::ESRCH && is_parent {
+        if err == Errno::ESRCH && is_parent {
             // Handle this just like we would EACCES above, as we're virtually certain that
             // setpgid(2) was called against a process that was at least at one point in time a
             // valid child.
-            return 0;
+            return None;
         }
 
-        return err;
+        return Some(err);
     }
 }
 
@@ -206,14 +207,14 @@ pub fn child_setup_process(
 /// FORK_LAPS times, with a very slight delay between each lap. If fork fails even then, the process
 /// will exit with an error message.
 pub fn execute_fork() -> pid_t {
-    let mut err = 0;
+    let mut err = Errno::UnknownErrno;
     for i in 0..FORK_LAPS {
         let pid = unsafe { libc::fork() };
         if pid >= 0 {
             return pid;
         }
-        err = errno::errno().0;
-        if err != libc::EAGAIN {
+        err = Errno::last();
+        if err != Errno::EAGAIN {
             break;
         }
         let pollint = libc::timespec {
@@ -227,24 +228,24 @@ pub fn execute_fork() -> pid_t {
     }
 
     match err {
-        libc::EAGAIN => {
+        Errno::EAGAIN => {
             FLOG_SAFE!(
                 error,
                 "fork: Out of resources. Check RLIMIT_NPROC and pid_max."
             );
         }
-        libc::ENOMEM => {
+        Errno::ENOMEM => {
             FLOG_SAFE!(error, "fork: Out of memory.");
         }
         _ => {
-            FLOG_SAFE!(error, "fork: Unknown error number", err);
+            FLOG_SAFE!(error, "fork: Unknown error number", err as i32);
         }
     }
     exit_without_destructors(1)
 }
 
 pub fn safe_report_exec_error(
-    err: i32,
+    err: Errno,
     actual_cmd: *const c_char,
     argvv: *const *const c_char,
     envv: *const *const c_char,
@@ -252,7 +253,7 @@ pub fn safe_report_exec_error(
     // TODO: actual_cmd may be passed as a CStr.
     let actual_cmd: &CStr = unsafe { CStr::from_ptr(actual_cmd) };
     match err {
-        libc::E2BIG => {
+        Errno::E2BIG => {
             let mut sz = 0;
             let mut szenv = 0;
             unsafe {
@@ -317,7 +318,7 @@ pub fn safe_report_exec_error(
             }
         }
 
-        libc::ENOEXEC => {
+        Errno::ENOEXEC => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process: '",
@@ -340,7 +341,7 @@ pub fn safe_report_exec_error(
                 }
             }
         }
-        libc::EACCES | libc::ENOENT => {
+        Errno::EACCES | Errno::ENOENT => {
             // ENOENT is returned by exec() when the path fails, but also returned by posix_spawn if
             // an open file action fails. These cases appear to be impossible to distinguish. We
             // address this by not using posix_spawn for file redirections, so all the ENOENTs we
@@ -386,7 +387,7 @@ pub fn safe_report_exec_error(
                     actual_cmd,
                     "': The file exists and is executable. Check the interpreter or linker?"
                 );
-            } else if err == libc::ENOENT {
+            } else if err == Errno::ENOENT {
                 FLOG_SAFE!(
                     exec,
                     "Failed to execute process '",
@@ -403,11 +404,11 @@ pub fn safe_report_exec_error(
             }
         }
 
-        libc::ENOMEM => {
+        Errno::ENOMEM => {
             FLOG_SAFE!(exec, "Out of memory");
         }
 
-        libc::ETXTBSY => {
+        Errno::ETXTBSY => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -416,7 +417,7 @@ pub fn safe_report_exec_error(
             );
         }
 
-        libc::ELOOP => {
+        Errno::ELOOP => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -425,7 +426,7 @@ pub fn safe_report_exec_error(
             );
         }
 
-        libc::EINVAL => {
+        Errno::EINVAL => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -433,7 +434,7 @@ pub fn safe_report_exec_error(
                 "': Unsupported format."
             );
         }
-        libc::EISDIR => {
+        Errno::EISDIR => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -441,7 +442,7 @@ pub fn safe_report_exec_error(
                 "': File is a directory."
             );
         }
-        libc::ENOTDIR => {
+        Errno::ENOTDIR => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -450,7 +451,7 @@ pub fn safe_report_exec_error(
             );
         }
 
-        libc::EMFILE => {
+        Errno::EMFILE => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -458,7 +459,7 @@ pub fn safe_report_exec_error(
                 "': Too many open files in this process."
             );
         }
-        libc::ENFILE => {
+        Errno::ENFILE => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -466,7 +467,7 @@ pub fn safe_report_exec_error(
                 "': Too many open files on the system."
             );
         }
-        libc::ENAMETOOLONG => {
+        Errno::ENAMETOOLONG => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -474,7 +475,7 @@ pub fn safe_report_exec_error(
                 "': Name is too long."
             );
         }
-        libc::EPERM => {
+        Errno::EPERM => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -485,7 +486,7 @@ pub fn safe_report_exec_error(
         }
 
         #[cfg(target_os = "macos")]
-        libc::EBADARCH => {
+        Errno::EBADARCH => {
             FLOG_SAFE!(
                 exec,
                 "Failed to execute process '",
@@ -500,7 +501,7 @@ pub fn safe_report_exec_error(
                 "Failed to execute process '",
                 actual_cmd,
                 "', unknown error number ",
-                err,
+                err as i32,
             );
         }
     }

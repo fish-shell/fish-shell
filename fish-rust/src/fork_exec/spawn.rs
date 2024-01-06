@@ -5,8 +5,8 @@ use crate::exec::is_thompson_shell_script;
 use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::get_signals_with_handlers;
-use errno::{self, Errno};
 use libc::{self, c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
+use nix::errno::Errno;
 use std::ffi::{CStr, CString};
 
 // The posix_spawn family of functions is unusual in that it returns errno codes directly in the return value, not via errno.
@@ -14,7 +14,7 @@ use std::ffi::{CStr, CString};
 fn check_fail(res: i32) -> Result<(), Errno> {
     match res {
         0 => Ok(()),
-        err => Err(Errno(err)),
+        err => Err(Errno::from_i32(err)),
     }
 }
 
@@ -181,7 +181,7 @@ impl PosixSpawner {
         // after performing a binary safety check, recommended by POSIX: a
         // line needs to exist before the first \0 with a lowercase letter.
         let cmdcstr = unsafe { CStr::from_ptr(cmd) };
-        if spawn_err.0 == libc::ENOEXEC && is_thompson_shell_script(cmdcstr) {
+        if spawn_err == Errno::ENOEXEC && is_thompson_shell_script(cmdcstr) {
             // Create a new argv with /bin/sh prepended.
             let interp = get_path_bshell();
             let mut argv2 = vec![interp.as_ptr() as *mut c_char];

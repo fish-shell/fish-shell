@@ -552,3 +552,44 @@ rm -r $tmpdir
 complete -C'complete --command=mktemp' | string replace -rf '=mktemp\t.*' '=mktemp'
 # (one "--command=" is okay, we used to get "--command=--command="
 # CHECK: --command=mktemp
+
+## Test token expansion in commandline -x
+
+complete complete_make -f -a '(argparse C/directory= -- (commandline -xpc)[2..];
+                               echo Completing targets in directory $_flag_C)'
+var=path/to complete -C'complete_make -C "$var/build-directory" '
+# CHECK: Completing targets in directory path/to/build-directory
+var1=path complete -C'var2=to complete_make -C "$var1/$var2/other-build-directory" '
+# CHECK: Completing targets in directory path/to/other-build-directory
+
+complete complete_existing_argument -f -a '(commandline -xpc)[2..]'
+var=a_value complete -C'complete_existing_argument "1  2" $var \'quoted (foo bar)\' unquoted(baz qux) '
+# CHECK: 1  2
+# CHECK: a_value
+# CHECK: quoted (foo bar)
+# CHECK: unquoted(baz qux)
+
+complete complete_first_argument_and_count -f -a '(set -l args (commandline -xpc)[2..]
+                                        echo (count $args) arguments, first argument is $args[1])'
+list=arg(seq 10) begin
+    complete -C'complete_first_argument_and_count $list$list '
+    # CHECK: 100 arguments, first argument is arg1arg1
+    complete -C'complete_first_argument_and_count $list$list$list '
+    # CHECK: 1 arguments, first argument is $list$list$list
+end
+
+## Test commandline --tokens-raw
+complete complete_raw_tokens -f -ka '(commandline --tokens-raw)'
+complete -C'complete_raw_tokens "foo" bar\\ baz (qux) '
+# CHECK: complete_raw_tokens
+# CHECK: "foo"
+# CHECK: bar\ baz
+# CHECK: (qux)
+
+## Test deprecated commandline -o
+complete complete_unescaped_tokens -f -ka '(commandline -o)'
+complete -C'complete_unescaped_tokens "foo" bar\\ baz (qux) '
+# CHECK: complete_unescaped_tokens
+# CHECK: foo
+# CHECK: bar baz
+# CHECK: (qux)

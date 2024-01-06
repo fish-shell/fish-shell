@@ -30,10 +30,13 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 
+- ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell expressions, removing the need to use "eval" in custom completions (:issue:`10212`).
+
 Scripting improvements
 ----------------------
 - ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively``.
 - Stack trace now shows line numbers for copied functions.
+- New option ``commandline --tokens-raw`` prints a list of tokens without any unescaping (:issue:`10212`).
 
 Interactive improvements
 ------------------------

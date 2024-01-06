@@ -34,6 +34,8 @@ bitflags! {
     pub struct ExpandFlags : u16 {
         /// Fail expansion if there is a command substitution.
         const FAIL_ON_CMDSUBST = 1 << 0;
+        /// Skip command substitutions.
+        const SKIP_CMDSUBST = 1 << 14;
         /// Skip variable expansion.
         const SKIP_VARIABLES = 1 << 1;
         /// Skip wildcard expansion.
@@ -1309,6 +1311,12 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     }
 
     fn stage_cmdsubst(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
+        if self.flags.contains(ExpandFlags::SKIP_CMDSUBST) {
+            if !out.add(input) {
+                return append_overflow_error(self.errors, None);
+            }
+            return ExpandResult::ok();
+        }
         if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
             let mut cursor = 0;
             let mut start = 0;

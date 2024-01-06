@@ -5,7 +5,7 @@ Source: https://fishshell.com/
 
 Files: *
 Copyright: 2005-2009 Axel Liljencrantz <axel@liljencrantz.se>
-           2009-2023 fish-shell contributors
+           2009-2024 fish-shell contributors
 License: GPL-2
 
 Files: cmake/CheckIncludeFiles.cmake
@@ -14,7 +14,7 @@ License: BSD-3-clause
 
 Files: doc_src/python_docs_theme/*
 Copyright: 2001-2017 Python Software Foundation
-           2020-2023 fish-shell contributors
+           2020-2024 fish-shell contributors
 License: Python
 
 Files: share/tools/web_config/js/alpine.js
@@ -33,13 +33,13 @@ License: GPL-2+
 Files: src/env.cpp
 Copyright: 2005-2009 Axel Liljencrantz <axel@liljencrantz.se>
            2007 Nicholas Marriott <nicm@users.sourceforge.net>
-           2009-2023 fish-shell contributors
+           2009-2024 fish-shell contributors
 License: GPL-2 and OpenBSD
 
 Files: src/fallback.cpp
 Copyright: 2001 The NetBSD Foundation, Inc.
            2005-2009 Axel Liljencrantz <axel@liljencrantz.se>
-           2009-2023 fish-shell contributors
+           2009-2024 fish-shell contributors
 License: GPL-2 and NetBSD
 
 Files: src/utf8.c

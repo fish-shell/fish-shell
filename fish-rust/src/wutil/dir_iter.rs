@@ -2,10 +2,10 @@ use super::wopendir;
 use crate::common::{cstr2wcstring, wcs2zstring};
 use crate::wchar::{wstr, WString};
 use libc::{
-    DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
-    ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
-    S_IFSOCK,
+    DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO,
+    S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK,
 };
+use nix::errno::Errno;
 use std::cell::Cell;
 use std::io::{self};
 use std::os::fd::RawFd;
@@ -107,7 +107,8 @@ impl DirEntry {
             self.stat.set(Some(s));
             self.typ.set(stat_mode_to_entry_type(s.st_mode));
         } else {
-            match errno::errno().0 {
+            use Errno::*;
+            match Errno::last() {
                 ELOOP => {
                     self.typ.set(Some(DirEntryType::lnk));
                 }
@@ -245,15 +246,15 @@ impl DirIter {
     /// This returns an error if readir errors, or Ok(None) if there are no more entries; else an Ok entry.
     /// This is slightly more efficient than the Iterator version, as it avoids allocating.
     pub fn next(&mut self) -> Option<io::Result<&DirEntry>> {
-        errno::set_errno(errno::Errno(0));
+        Errno::clear();
         let dent = unsafe { libc::readdir(self.dir.dir()).as_ref() };
         let Some(dent) = dent else {
             // readdir distinguishes between EOF and error via errno.
-            let err = errno::errno().0;
-            if err == 0 {
+            let err = Errno::last();
+            if err == Errno::from_i32(0) {
                 return None;
             } else {
-                return Some(Err(io::Error::from_raw_os_error(err)));
+                return Some(Err(io::Error::from(err)));
             }
         };
 
@@ -373,8 +374,8 @@ fn test_dir_iter() {
     let Err(err) = baditer else {
         panic!("Expected error");
     };
-    let err = err.raw_os_error().expect("Should have an errno value");
-    assert!(err == ENOENT || err == EACCES);
+    let err = Errno::try_from(err).expect("Should have an errno value");
+    assert!(err == Errno::ENOENT || err == Errno::EACCES);
 
     let mut t1: [u8; 31] = *b"/tmp/fish_test_dir_iter.XXXXXX\0";
     let basepath_narrow = unsafe { libc::mkdtemp(t1.as_mut_ptr().cast()) };

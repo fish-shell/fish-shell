@@ -111,3 +111,9 @@ mod wutil;
 #[cfg(test)]
 #[allow(unused_imports)] // Easy way to suppress warnings while we have two testing modes.
 mod tests;
+
+// TODO: Remove once nix is updated to include set_errno
+// https://github.com/nix-rust/nix/pull/2283
+fn set_errno(errno: ::nix::errno::Errno) {
+    ::errno::set_errno(::errno::Errno(errno as i32))
+}

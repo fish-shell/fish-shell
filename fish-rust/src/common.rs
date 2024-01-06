@@ -17,7 +17,8 @@ use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use core::slice;
-use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use libc::{O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use nix::errno::Errno;
 use num_traits::ToPrimitive;
 use once_cell::sync::{Lazy, OnceCell};
 use std::env;
@@ -1467,7 +1468,7 @@ fn can_be_encoded(wc: char) -> bool {
 pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> isize {
     loop {
         let res = unsafe { libc::read(fd, buf.as_mut_ptr().cast(), buf.len()) };
-        if res < 0 && errno::errno().0 == EINTR {
+        if res < 0 && Errno::last() == Errno::EINTR {
             continue;
         }
         return res;
@@ -1494,11 +1495,11 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<usize> {
         let written =
             unsafe { libc::write(fd, buf[total..].as_ptr() as *const _, buf.len() - total) };
         if written < 0 {
-            let errno = errno::errno().0;
-            if matches!(errno, libc::EAGAIN | libc::EINTR) {
+            let errno = Errno::last();
+            if matches!(errno, Errno::EAGAIN | Errno::EINTR) {
                 continue;
             }
-            return Err(std::io::Error::from_raw_os_error(errno));
+            return Err(std::io::Error::from(errno));
         }
         total += written as usize;
     }
@@ -1514,11 +1515,11 @@ pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize>
     loop {
         let read = unsafe { libc::read(fd, buf.as_mut_ptr() as *mut _, buf.len()) };
         if read < 0 {
-            let errno = errno::errno().0;
-            if matches!(errno, libc::EAGAIN | libc::EINTR) {
+            let errno = Errno::last();
+            if matches!(errno, Errno::EAGAIN | Errno::EINTR) {
                 continue;
             }
-            return Err(std::io::Error::from_raw_os_error(errno));
+            return Err(std::io::Error::from(errno));
         }
         return Ok(read as usize);
     }
@@ -1733,7 +1734,7 @@ pub fn redirect_tty_output() {
         let fd = libc::open(s.as_ptr(), O_WRONLY);
         assert!(fd != -1, "Could not open /dev/null!");
         for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
-            if libc::tcgetattr(stdfd, &mut t) == -1 && errno::errno().0 == EIO {
+            if libc::tcgetattr(stdfd, &mut t) == -1 && Errno::last() == Errno::EIO {
                 libc::dup2(fd, stdfd);
             }
         }

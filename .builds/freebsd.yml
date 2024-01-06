@@ -1,26 +1,29 @@
 image: freebsd/latest
 packages:
-  - ncurses
+  - cmake
   - gcc
   - gettext
-  - cmake
   - gmake
+  - llvm
+  - ncurses
+  - ninja
   - pcre2
+  - py39-pexpect
   - python
-  - py38-pexpect
+  - rust
 sources:
-  - https://git.sr.ht/~faho/fish
+  - https://github.com/fish-shell/fish-shell
 tasks:
   - build: |
-          cd fish
-          mkdir build || :
+          cd fish-shell
+          mkdir build
           cd build
-          cmake .. \
-          -DCMAKE_INSTALL_PREFIX=/usr \
-          -DCMAKE_INSTALL_DATADIR=share \
-          -DCMAKE_INSTALL_DOCDIR=share/doc/fish \
-          -DCMAKE_INSTALL_SYSCONFDIR=/etc
-          gmake -j2
+          cmake -GNinja .. \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_INSTALL_DATADIR=share \
+            -DCMAKE_INSTALL_DOCDIR=share/doc/fish \
+            -DCMAKE_INSTALL_SYSCONFDIR=/etc
+          ninja
   - test: |
-          cd fish/build
-          gmake test
+          cd fish-shell/build
+          ninja test

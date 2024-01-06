@@ -832,7 +832,7 @@ checksum = "e5ea92a5b6195c6ef2a0295ea818b312502c6fc94dde986c5553242e18fd4ce2"
 [[package]]
 name = "rsconf"
 version = "0.1.0"
-source = "git+https://github.com/mqudsi/rsconf?branch=master#0790778ef5ec521bfc15a34a6b07caf25aa0a0db"
+source = "git+https://github.com/mqudsi/rsconf?branch=master#39b6841b373c5c32fcc5333fa17f01be42ad3217"
 dependencies = [
  "cc",
 ]

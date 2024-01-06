@@ -9,8 +9,8 @@ use crate::fds::AutoCloseFd;
 use crate::flog::FLOG;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
-use errno::errno;
-use libc::{self, c_void, EAGAIN, EINTR, EWOULDBLOCK};
+use libc::{self, c_void};
+use nix::errno::Errno;
 
 #[cfg(not(HAVE_EVENTFD))]
 use crate::fds::{make_autoclose_pipes, make_fd_nonblocking};
@@ -100,11 +100,11 @@ impl FdEventSignaller {
                     std::mem::size_of_val(&buff),
                 )
             };
-            if ret >= 0 || errno().0 != EINTR {
+            if ret >= 0 || Errno::last() != Errno::EINTR {
                 break;
             }
         }
-        if ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno().0) {
+        if ret < 0 && ![Errno::EAGAIN, Errno::EWOULDBLOCK].contains(&Errno::last()) {
             perror("read");
         }
         ret > 0
@@ -127,12 +127,12 @@ impl FdEventSignaller {
                     std::mem::size_of_val(&c),
                 )
             };
-            if ret >= 0 || errno().0 != EINTR {
+            if ret >= 0 || Errno::last() != Errno::EINTR {
                 break;
             }
         }
         // EAGAIN occurs if either the pipe buffer is full or the eventfd overflows (very unlikely).
-        if ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno().0) {
+        if ret < 0 && ![Errno::EAGAIN, Errno::EWOULDBLOCK].contains(&Errno::last()) {
             perror("write");
         }
     }
@@ -511,7 +511,7 @@ impl BackgroundFdMonitor {
                     .map(|duration| duration.as_micros() as u64)
                     .unwrap_or(FdReadableSet::kNoTimeout),
             );
-            if ret < 0 && errno::errno().0 != libc::EINTR {
+            if ret < 0 && Errno::last() != Errno::EINTR {
                 // Surprising error
                 perror("select");
             }

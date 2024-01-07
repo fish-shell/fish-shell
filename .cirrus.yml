@@ -48,7 +48,7 @@ linux_task:
         - (cat /proc/meminfo | grep MemTotal) || true
         - mkdir build && cd build
         - cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=6 ..
-        - ninja -j 6 fish fish_tests
+        - ninja -j 6 fish
         - ninja fish_run_tests
 
     # CI task disabled during RIIR transition
@@ -71,7 +71,7 @@ linux_arm_task:
         - (cat /proc/meminfo | grep MemTotal) || true
         - mkdir build && cd build
         - cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=6 ..
-        - ninja -j 6 fish fish_tests
+        - ninja -j 6 fish
         - file ./fish
         - ninja fish_run_tests
 
@@ -112,7 +112,7 @@ freebsd_task:
         # For some reason, this doesn't do the job:
         # - sudo -u fish-user sh -c 'echo source \$HOME/.cargo/env >> $HOME/.cshrc'
         - sudo -u fish-user -s cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=1 ..
-        - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja -j 6 fish fish_tests'
+        - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja -j 6 fish'
         - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja fish_run_tests'
 
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'

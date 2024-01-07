@@ -37,7 +37,7 @@ add_custom_target(fish_run_tests
           FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
-  DEPENDS fish_tests tests_buildroot_target
+  DEPENDS tests_dir funcs_dir tests_buildroot_target
   USES_TERMINAL
 )
 
@@ -50,25 +50,8 @@ if(POLICY CMP0037)
 endif()
 cmake_policy(POP)
 
-# Build the low-level tests code
-add_executable(fish_tests EXCLUDE_FROM_ALL
-               src/fish_tests.cpp)
-fish_link_deps_and_sign(fish_tests)
-
 # The "test" directory.
 set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)
-
-# CMake doesn't really support dynamic test discovery where a test harness is executed to list the
-# tests it contains, making fish_tests.cpp's tests opaque to CMake (whereas littlecheck tests can be
-# enumerated from the filesystem). We used to compile fish_tests.cpp without linking against
-# anything (-Wl,-undefined,dynamic_lookup,--unresolved-symbols=ignore-all) to get it to print its
-# tests at configuration time, but that's a little too much dark CMake magic.
-#
-# We now identify tests by checking against a magic regex that's #define'd as a no-op C-side.
-file(READ "${CMAKE_SOURCE_DIR}/src/fish_tests.cpp" FISH_TESTS_CPP)
-string(REGEX MATCHALL "TEST_GROUP\\( *\"([^\"]+)\"" "LOW_LEVEL_TESTS" "${FISH_TESTS_CPP}")
-string(REGEX REPLACE "TEST_GROUP\\( *\"([^\"]+)\"" "\\1" "LOW_LEVEL_TESTS" "${LOW_LEVEL_TESTS}")
-list(REMOVE_DUPLICATES LOW_LEVEL_TESTS)
 
 # The directory into which fish is installed.
 set(TEST_INSTALL_DIR ${TEST_DIR}/buildroot)
@@ -93,8 +76,6 @@ if(NOT FISH_IN_TREE_BUILD)
                        ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
                        COMMENT "Copying test files to binary dir"
                        VERBATIM)
-
-  add_dependencies(fish_tests tests_dir funcs_dir)
 endif()
 
 # Copy littlecheck.py
@@ -108,12 +89,12 @@ set(CMAKE_XCODE_GENERATE_SCHEME 0)
 
 # CMake being CMake, you can't just add a DEPENDS argument to add_test to make it depend on any of
 # your binaries actually being built before `make test` is executed (requiring `make all` first),
-# and the only dependency a test can have is on another test. So we make building fish and
-# `fish_tests` prerequisites to our entire top-level `test` target.
+# and the only dependency a test can have is on another test. So we make building fish
+# prerequisites to our entire top-level `test` target.
 function(add_test_target NAME)
   string(REPLACE "/" "-" NAME ${NAME})
   add_custom_target("test_${NAME}" COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^${NAME}$$"
-    DEPENDS fish_tests tests_buildroot_target USES_TERMINAL )
+    DEPENDS tests_dir funcs_dir tests_buildroot_target USES_TERMINAL )
 endfunction()
 
 add_custom_target(tests_buildroot_target
@@ -137,17 +118,6 @@ if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
 else()
   set(CMAKE_SKIPPED_HACK)
 endif()
-
-foreach(LTEST ${LOW_LEVEL_TESTS})
-  add_test(
-    NAME ${LTEST}
-    COMMAND sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_env.sh
-               ${CMAKE_BINARY_DIR}/fish_tests ${LTEST}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  )
-  set_tests_properties(${LTEST} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
-  add_test_target("${LTEST}")
-endforeach(LTEST)
 
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})

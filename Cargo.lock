@@ -357,7 +357,6 @@ dependencies = [
  "lazy_static",
  "libc",
  "lru",
- "moveit",
  "nix",
  "num-derive",
  "num-traits",

@@ -5,10 +5,11 @@ use crate::{
     env::{EnvMode, Environment},
     fds::{wopen_cloexec, AutoCloseFd},
     path::path_apply_cdpath,
+    set_errno,
     wutil::{normalize_path, wperror, wreadlink},
 };
-use errno::{self, Errno};
-use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, O_RDONLY};
+use libc::{fchdir, O_RDONLY};
+use nix::errno::Errno;
 use std::sync::Arc;
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
@@ -77,14 +78,14 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
         return STATUS_CMD_ERROR;
     }
 
-    let mut best_errno = 0;
+    let mut best_errno = Errno::from_i32(0);
     let mut broken_symlink = WString::new();
     let mut broken_symlink_target = WString::new();
 
     for dir in dirs {
         let norm_dir = normalize_path(&dir, true);
 
-        errno::set_errno(Errno(0));
+        Errno::clear();
 
         // We need to keep around the fd for this directory, in the parser.
         let dir_fd = Arc::new(AutoCloseFd::new(wopen_cloexec(&norm_dir, O_RDONLY, 0)));
@@ -94,22 +95,27 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
             // ENOENT in particular is very low priority
             // - if in another directory there was a *file* by the correct name
             // we prefer *that* error because it's more specific
-            if errno::errno().0 == ENOENT {
-                let tmp = wreadlink(&norm_dir);
-                // clippy doesn't like this is_some/unwrap pair, but using if let is harder to read IMO
-                #[allow(clippy::unnecessary_unwrap)]
-                if broken_symlink.is_empty() && tmp.is_some() {
-                    broken_symlink = norm_dir;
-                    broken_symlink_target = tmp.unwrap();
-                } else if best_errno == 0 {
-                    best_errno = errno::errno().0;
+            match Errno::last() {
+                Errno::ENOENT => {
+                    let tmp = wreadlink(&norm_dir);
+                    // clippy doesn't like this is_some/unwrap pair, but using if let is harder to read IMO
+                    #[allow(clippy::unnecessary_unwrap)]
+                    if broken_symlink.is_empty() && tmp.is_some() {
+                        broken_symlink = norm_dir;
+                        broken_symlink_target = tmp.unwrap();
+                    } else if best_errno == Errno::from_i32(0) {
+                        best_errno = Errno::last();
+                    }
+                    continue;
                 }
-                continue;
-            } else if errno::errno().0 == ENOTDIR {
-                best_errno = errno::errno().0;
-                continue;
+                Errno::ENOTDIR => {
+                    best_errno = Errno::ENOTDIR;
+                    continue;
+                }
+                _ => {}
             }
-            best_errno = errno::errno().0;
+
+            best_errno = Errno::last();
             break;
         }
 
@@ -120,45 +126,52 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
         return STATUS_CMD_OK;
     }
 
-    if best_errno == ENOTDIR {
-        streams.err.append(wgettext_fmt!(
-            "%ls: '%ls' is not a directory\n",
-            cmd,
-            dir_in
-        ));
-    } else if !broken_symlink.is_empty() {
-        streams.err.append(wgettext_fmt!(
-            "%ls: '%ls' is a broken symbolic link to '%ls'\n",
-            cmd,
-            broken_symlink,
-            broken_symlink_target
-        ));
-    } else if best_errno == ELOOP {
-        streams.err.append(wgettext_fmt!(
-            "%ls: Too many levels of symbolic links: '%ls'\n",
-            cmd,
-            dir_in
-        ));
-    } else if best_errno == ENOENT {
-        streams.err.append(wgettext_fmt!(
-            "%ls: The directory '%ls' does not exist\n",
-            cmd,
-            dir_in
-        ));
-    } else if best_errno == EACCES || best_errno == EPERM {
-        streams.err.append(wgettext_fmt!(
-            "%ls: Permission denied: '%ls'\n",
-            cmd,
-            dir_in
-        ));
-    } else {
-        errno::set_errno(Errno(best_errno));
-        wperror(L!("cd"));
-        streams.err.append(wgettext_fmt!(
-            "%ls: Unknown error trying to locate directory '%ls'\n",
-            cmd,
-            dir_in
-        ));
+    match best_errno {
+        Errno::ENOTDIR => {
+            streams.err.append(wgettext_fmt!(
+                "%ls: '%ls' is not a directory\n",
+                cmd,
+                dir_in
+            ));
+        }
+        _ if !broken_symlink.is_empty() => {
+            streams.err.append(wgettext_fmt!(
+                "%ls: '%ls' is a broken symbolic link to '%ls'\n",
+                cmd,
+                broken_symlink,
+                broken_symlink_target
+            ));
+        }
+        Errno::ELOOP => {
+            streams.err.append(wgettext_fmt!(
+                "%ls: Too many levels of symbolic links: '%ls'\n",
+                cmd,
+                dir_in
+            ));
+        }
+        Errno::ENOENT => {
+            streams.err.append(wgettext_fmt!(
+                "%ls: The directory '%ls' does not exist\n",
+                cmd,
+                dir_in
+            ));
+        }
+        Errno::EACCES | Errno::EPERM => {
+            streams.err.append(wgettext_fmt!(
+                "%ls: Permission denied: '%ls'\n",
+                cmd,
+                dir_in
+            ));
+        }
+        _ => {
+            set_errno(best_errno);
+            wperror(L!("cd"));
+            streams.err.append(wgettext_fmt!(
+                "%ls: Unknown error trying to locate directory '%ls'\n",
+                cmd,
+                dir_in
+            ));
+        }
     }
 
     if !parser.is_interactive() {

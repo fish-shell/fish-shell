@@ -8,6 +8,7 @@ use crate::universal_notifier::default_notifier;
 use crate::wchar::prelude::*;
 use crate::wutil::encoding::{mbrtowc, zero_mbstate};
 use crate::wutil::fish_wcstol;
+use nix::errno::Errno;
 use std::collections::VecDeque;
 use std::os::fd::RawFd;
 use std::ptr;
@@ -272,8 +273,8 @@ fn readb(in_fd: RawFd) -> ReadbResult {
         // Here's where we call select().
         let select_res = fdset.check_readable(FdReadableSet::kNoTimeout);
         if select_res < 0 {
-            let err = errno::errno().0;
-            if err == libc::EINTR || err == libc::EAGAIN {
+            let err = Errno::last();
+            if err == Errno::EINTR || err == Errno::EAGAIN {
                 // A signal.
                 return ReadbResult::Interrupted;
             } else {

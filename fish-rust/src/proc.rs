@@ -24,11 +24,11 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wutil::{perror, wbasename, wgettext, wperror};
 use libc::{
-    EBADF, EINVAL, ENOTTY, EPERM, EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
-    SIGINT, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO, WCONTINUED,
-    WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
-    _SC_CLK_TCK,
+    EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGPIPE, SIGQUIT,
+    SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO, WCONTINUED, WEXITSTATUS,
+    WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED, _SC_CLK_TCK,
 };
+use nix::errno::Errno;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use std::cell::{Cell, Ref, RefCell, RefMut};
@@ -353,7 +353,7 @@ impl TtyTransfer {
             let mut tmodes: libc::termios = unsafe { std::mem::zeroed() };
             if unsafe { libc::tcgetattr(STDIN_FILENO, &mut tmodes) } == 0 {
                 owner.tmodes.replace(Some(tmodes));
-            } else if errno::errno().0 != ENOTTY {
+            } else if Errno::last() != Errno::ENOTTY {
                 perror("tcgetattr");
             }
         }
@@ -410,7 +410,7 @@ impl TtyTransfer {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while unsafe { libc::tcsetpgrp(STDIN_FILENO, pgid) } != 0 {
-            FLOGF!(proc_termowner, "tcsetpgrp failed: %d", errno::errno().0);
+            FLOGF!(proc_termowner, "tcsetpgrp failed: %d", Errno::last() as i32);
 
             // Before anything else, make sure that it's even necessary to call tcsetpgrp.
             // Since it usually _is_ necessary, we only check in case it fails so as to avoid the
@@ -418,13 +418,13 @@ impl TtyTransfer {
             // a significant cost when running process groups in quick succession.
             let getpgrp_res = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
             if getpgrp_res < 0 {
-                match errno::errno().0 {
-                    ENOTTY => {
+                match Errno::last() {
+                    Errno::ENOTTY => {
                         // stdin is not a tty. This may come about if job control is enabled but we are
                         // not a tty - see #6573.
                         return false;
                     }
-                    EBADF => {
+                    Errno::EBADF => {
                         // stdin has been closed. Workaround a glibc bug - see #3644.
                         redirect_tty_output();
                         return false;
@@ -445,46 +445,52 @@ impl TtyTransfer {
             }
 
             let pgroup_terminated;
-            if errno::errno().0 == EINVAL {
-                // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
-                // too. Unlike EPERM below, EINVAL can only happen if the process group has
-                // terminated.
-                pgroup_terminated = true;
-            } else if errno::errno().0 == EPERM {
-                // Retry so long as this isn't because the process group is dead.
-                let mut result: libc::c_int = 0;
-                let wait_result = unsafe { libc::waitpid(-pgid, &mut result, WNOHANG) };
-                if wait_result == -1 {
-                    // Note that -1 is technically an "error" for waitpid in the sense that an
-                    // invalid argument was specified because no such process group exists any
-                    // longer. This is the observed behavior on Linux 4.4.0. a "success" result
-                    // would mean processes from the group still exist but is still running in some
-                    // state or the other.
+
+            match Errno::last() {
+                Errno::EINVAL => {
+                    // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
+                    // too. Unlike EPERM below, EINVAL can only happen if the process group has
+                    // terminated.
                     pgroup_terminated = true;
-                } else {
-                    // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
-                    // then retry until not EPERM or the process group has exited.
+                }
+                Errno::EPERM => {
+                    // Retry so long as this isn't because the process group is dead.
+                    let mut result: libc::c_int = 0;
+                    let wait_result = unsafe { libc::waitpid(-pgid, &mut result, WNOHANG) };
+                    if wait_result == -1 {
+                        // Note that -1 is technically an "error" for waitpid in the sense that an
+                        // invalid argument was specified because no such process group exists any
+                        // longer. This is the observed behavior on Linux 4.4.0. a "success" result
+                        // would mean processes from the group still exist but is still running in some
+                        // state or the other.
+                        pgroup_terminated = true;
+                    } else {
+                        // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
+                        // then retry until not EPERM or the process group has exited.
+                        FLOGF!(
+                            proc_termowner,
+                            "terminal_give_to_job(): EPERM with pgid %d.",
+                            pgid
+                        );
+                        continue;
+                    }
+                }
+                Errno::ENOTTY => {
+                    // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
+                    // call's EBADF handler above.
+                    return false;
+                }
+                _ => {
                     FLOGF!(
-                        proc_termowner,
-                        "terminal_give_to_job(): EPERM with pgid %d.",
+                        warning,
+                        "Could not send job %d ('%ls') with pgid %d to foreground",
+                        jg.job_id.to_wstring(),
+                        jg.command,
                         pgid
                     );
-                    continue;
+                    perror("tcsetpgrp");
+                    return false;
                 }
-            } else if errno::errno().0 == ENOTTY {
-                // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
-                // call's EBADF handler above.
-                return false;
-            } else {
-                FLOGF!(
-                    warning,
-                    "Could not send job %d ('%ls') with pgid %d to foreground",
-                    jg.job_id.to_wstring(),
-                    jg.command,
-                    pgid
-                );
-                perror("tcsetpgrp");
-                return false;
             }
 
             if pgroup_terminated {

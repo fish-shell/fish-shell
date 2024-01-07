@@ -1,5 +1,5 @@
 //! Implementation of the pwd builtin.
-use errno::errno;
+use nix::errno::Errno;
 
 use super::prelude::*;
 use crate::{env::Environment, wutil::wrealpath};
@@ -51,7 +51,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
             streams.err.append(wgettext_fmt!(
                 "%ls: realpath failed: %s\n",
                 cmd,
-                errno().to_string()
+                Errno::last().desc()
             ));
             return STATUS_CMD_ERROR;
         }

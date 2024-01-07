@@ -3798,7 +3798,7 @@ fn get_autosuggestion_performer(
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing
         // stuff get spammed on the right while you go back to edit a line
-        let last_char = search_string.chars().last().unwrap();
+        let last_char = search_string.chars().next_back().unwrap();
         let cursor_at_end = cursor_pos == search_string.len();
         if !cursor_at_end && last_char.is_whitespace() {
             return nothing;
@@ -4693,7 +4693,7 @@ impl ReaderData {
 
         // Historical behavior is to trim trailing spaces, unless escape (#7661).
         let mut text = self.command_line.text().to_owned();
-        while text.chars().last() == Some(' ')
+        while text.chars().next_back() == Some(' ')
             && count_preceding_backslashes(&text, text.len() - 1) % 2 == 0
         {
             text.pop();

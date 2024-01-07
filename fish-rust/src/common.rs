@@ -545,7 +545,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                         // In general, this is ANY_STRING. But as a hack, if the last appended char
                         // is ANY_STRING, delete the last char and store ANY_STRING_RECURSIVE to
                         // reflect the fact that ** is the recursive wildcard.
-                        if result.chars().last() == Some(ANY_STRING) {
+                        if result.chars().next_back() == Some(ANY_STRING) {
                             assert!(!result.is_empty());
                             result.truncate(result.len() - 1);
                             to_append_or_none = Some(ANY_STRING_RECURSIVE);

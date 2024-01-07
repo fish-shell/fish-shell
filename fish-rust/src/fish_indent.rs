@@ -319,7 +319,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
     // \return whether we are at the start of a new line.
     fn at_line_start(&self) -> bool {
-        self.output.chars().last().is_none_or(|c| c == '\n')
+        self.output.chars().next_back().is_none_or(|c| c == '\n')
     }
 
     // \return whether we have a space before the output.

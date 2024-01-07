@@ -632,7 +632,7 @@ mod expander {
                 // ANY_STRING_RECURSIVE character is present in both the head and the tail.
                 let head_any = wc_segment.slice_to(asr_idx + 1);
                 let any_tail = wc.slice_from(asr_idx);
-                assert!(head_any.chars().last().unwrap() == ANY_STRING_RECURSIVE);
+                assert!(head_any.chars().next_back().unwrap() == ANY_STRING_RECURSIVE);
                 assert!(any_tail.chars().next().unwrap() == ANY_STRING_RECURSIVE);
 
                 dir.rewind();

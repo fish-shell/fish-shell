@@ -782,7 +782,7 @@ pub fn is_potential_path(
             return false;
         }
         let mut abs_path = path_apply_working_directory(&clean_potential_path_fragment, wd);
-        let must_be_full_dir = abs_path.chars().last() == Some('/');
+        let must_be_full_dir = abs_path.chars().next_back() == Some('/');
         if flags.contains(PathFlags::PATH_FOR_CD) {
             abs_path = normalize_path(&abs_path, /*allow_leading_double_slashes=*/ true);
         }

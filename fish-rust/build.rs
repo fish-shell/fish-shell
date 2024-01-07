@@ -98,7 +98,6 @@ fn main() {
     // This allows "Rust to be used from C++"
     // This must come before autocxx so that cxx can emit its cxx.h header.
     let source_files = vec![
-        "fish-rust/src/ffi_init.rs",
         "fish-rust/src/fish_key_reader.rs",
         "fish-rust/src/fish_indent.rs",
         "fish-rust/src/fish.rs",

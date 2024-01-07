@@ -51,7 +51,6 @@ mod fd_monitor;
 mod fd_readable_set;
 mod fds;
 mod ffi;
-mod ffi_init;
 mod fish;
 mod fish_indent;
 mod fish_key_reader;

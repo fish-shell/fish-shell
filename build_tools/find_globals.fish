@@ -22,7 +22,6 @@ set -g nm_regex '^([^ ]+) ([dDbB])'
 set -l total_globals 0
 set -l boring_files \
     fish_key_reader.cpp.o \
-    fish_tests.cpp.o \
     fish_indent.cpp.o
 
 # return if we should ignore the given symbol name

@@ -13,7 +13,7 @@ use crate::parse_tree::NodeRef;
 use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::wchar::prelude::*;
-use crate::wutil::{dir_iter::DirIter, gettext::wgettext_expr, sprintf};
+use crate::wutil::{dir_iter::DirIter, gettext::wgettext_str, sprintf};
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -347,7 +347,7 @@ impl FunctionProperties {
         if self.description.is_empty() {
             L!("")
         } else {
-            wgettext_expr!(&self.description)
+            wgettext_str(&self.description)
         }
     }
 

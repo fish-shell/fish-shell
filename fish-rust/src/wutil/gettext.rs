@@ -1,18 +1,14 @@
-use std::borrow::Cow;
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::ffi::CString;
-use std::pin::Pin;
 use std::sync::Mutex;
 
-use crate::common::{charptr2wcstring, wcs2zstring};
+use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring};
 use crate::fish::PACKAGE_NAME;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use errno::{errno, set_errno};
 use once_cell::sync::{Lazy, OnceCell};
-use widestring::U32CString;
 
 #[cfg(feature = "gettext")]
 mod internal {
@@ -63,67 +59,83 @@ fn wgettext_init_if_necessary() {
     INIT.get_or_init(wgettext_really_init);
 }
 
+/// A type that can be either a static or local string.
+enum MaybeStatic<'a> {
+    Static(&'static wstr),
+    Local(&'a wstr),
+}
+
 /// Implementation detail for wgettext!.
 /// Wide character wrapper around the gettext function. For historic reasons, unlike the real
 /// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
 /// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
 /// will be nothing more than a wrapper around gettext, like all other functions in this file.
-pub fn wgettext_impl_do_not_use_directly(text: Cow<'static, [u32]>) -> &'static wstr {
-    assert_eq!(text.last(), Some(&0), "should be nul-terminated");
+fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
     // Preserve errno across this since this is often used in printing error messages.
     let err = errno();
 
     wgettext_init_if_necessary();
-    #[allow(clippy::type_complexity)]
-    static WGETTEXT_MAP: Lazy<Mutex<HashMap<Cow<'static, [u32]>, Pin<Box<WString>>>>> =
+
+    let key = match text {
+        MaybeStatic::Static(s) => s,
+        MaybeStatic::Local(s) => s,
+    };
+
+    debug_assert!(
+        truncate_at_nul(key).len() == key.len(),
+        "key should not contain NUL"
+    );
+
+    // Note that because entries are immortal, we simply leak non-static keys, and all values.
+    static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
         Lazy::new(|| Mutex::new(HashMap::new()));
     let mut wmap = WGETTEXT_MAP.lock().unwrap();
-    let v = match wmap.entry(text) {
-        Entry::Occupied(v) => Pin::get_ref(Pin::as_ref(v.get())) as *const WString,
-        Entry::Vacant(v) => {
-            let key = wstr::from_slice(v.key()).unwrap();
+    let res = match wmap.get(key) {
+        Some(v) => *v,
+        None => {
             let mbs_in = wcs2zstring(key);
             let out = fish_gettext(&mbs_in);
             let out = charptr2wcstring(out);
-            let res = Pin::new(Box::new(out));
-            let value = v.insert(res);
-            Pin::get_ref(Pin::as_ref(value)) as *const WString
+            // Leak the value into the heap.
+            let value: &'static wstr = Box::leak(out.into_boxed_utfstr());
+
+            // Get a static key, perhaps leaking it into the heap as well.
+            let key: &'static wstr = match text {
+                MaybeStatic::Static(s) => s,
+                MaybeStatic::Local(s) => wstr::from_char_slice(Box::leak(s.as_char_slice().into())),
+            };
+
+            wmap.insert(key, value);
+            value
         }
     };
 
     set_errno(err);
 
-    // The returned string is stored in the map.
-    // TODO: If we want to shrink the map, this would be a problem.
-    unsafe { v.as_ref().unwrap() }.as_utfstr()
+    res
+}
+
+/// Get a (possibly translated) string from a literal.
+/// Note this assumes that the string does not contain interior NUL characters -
+/// this is checked in debug mode.
+pub fn wgettext_static_str(s: &'static wstr) -> &'static wstr {
+    wgettext_impl(MaybeStatic::Static(s))
 }
 
 /// Get a (possibly translated) string from a non-literal.
+/// This truncates at the first NUL character.
 pub fn wgettext_str(s: &wstr) -> &'static wstr {
-    let cstr: U32CString = U32CString::from_chars_truncate(s.as_char_slice());
-    wgettext_impl_do_not_use_directly(Cow::Owned(cstr.into_vec_with_nul()))
+    wgettext_impl(MaybeStatic::Local(truncate_at_nul(s)))
 }
 
 /// Get a (possibly translated) string from a string literal.
 /// This returns a &'static wstr.
 macro_rules! wgettext {
     ($string:expr) => {
-        crate::wutil::gettext::wgettext_impl_do_not_use_directly(std::borrow::Cow::Borrowed(
-            widestring::u32cstr!($string).as_slice_with_nul(),
-        ))
+        crate::wutil::gettext::wgettext_static_str(widestring::utf32str!($string))
     };
 }
 pub(crate) use wgettext;
-
-/// Like wgettext, but for non-literals.
-macro_rules! wgettext_expr {
-    ($string:expr) => {
-        crate::wutil::gettext::wgettext_impl_do_not_use_directly(std::borrow::Cow::Owned(
-            widestring::U32CString::from_ustr_truncate($string).into_vec_with_nul(),
-        ))
-    };
-}
-pub(crate) use wgettext_expr;
 
 /// Like wgettext, but applies a sprintf format string.
 /// The result is a WString.

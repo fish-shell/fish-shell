@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     cmp::Ordering,
     collections::{BTreeMap, HashMap, HashSet},
     mem,
@@ -14,7 +13,6 @@ use crate::{common::charptr2wcstring, util::wcsfilecmp};
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
-use widestring::U32CString;
 
 use crate::{
     abbrs::with_abbrs,
@@ -49,7 +47,7 @@ use crate::{
         StringFuzzyMatch,
     },
     wildcard::{wildcard_complete, wildcard_has, wildcard_match},
-    wutil::{gettext::wgettext_impl_do_not_use_directly, wgettext, wrealpath},
+    wutil::{gettext::wgettext_str, wgettext, wrealpath},
 };
 
 // Completion description strings, mostly for different types of files, such as sockets, block
@@ -75,11 +73,7 @@ fn C_(s: &wstr) -> &'static wstr {
     if s.is_empty() {
         L!("")
     } else {
-        wgettext_impl_do_not_use_directly(Cow::Owned(
-            U32CString::from_ustr(s)
-                .expect("translation string without NUL bytes")
-                .into_vec_with_nul(),
-        ))
+        wgettext_str(s)
     }
 }
 

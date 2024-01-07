@@ -5,7 +5,7 @@ end
 
 # Returns 0 if we're after `env` and all previous tokens have an equal sign
 function __fish_env_defining_vars
-    not string match -ev -- = (commandline -o)[2..-2] | string match -rq .
+    not string match -ev -- = (commandline -op)[2..-2] | string match -rq .
 end
 
 # Returns 0 if we're after `env` and all previous tokens have not yet contained an equal sign
@@ -17,7 +17,7 @@ end
 function __fish_env_redefine_vars
     set -l vars (set --names -x)
 
-    set cmdline "$(commandline -o)"
+    set cmdline "$(commandline -op)"
     for var in $vars
         if not string match -e -- $var= $cmdline
             echo $var=

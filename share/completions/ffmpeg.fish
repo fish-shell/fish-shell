@@ -290,7 +290,7 @@ function __fish_ffmpeg_complete_filter
 
     # echo -e "\n **** $filter_type **** \n" > /dev/tty
 
-    set -l filters_arg (commandline -o)[-1]
+    set -l filters_arg (commandline -op)[-1]
     if string match -rq -- '^-' $filters_arg
         # No filter name started
         __fish_ffmpeg_filters $filter_type

@@ -1,6 +1,6 @@
 //! Implementation of the realpath builtin.
 
-use errno::errno;
+use nix::errno::Errno;
 
 use super::prelude::*;
 use crate::env::Environment;
@@ -86,15 +86,15 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
         if let Some(real_path) = wrealpath(arg) {
             streams.out.append(real_path);
         } else {
-            let errno = errno();
-            if errno.0 != 0 {
+            let errno = Errno::last();
+            if errno != Errno::from_i32(0) {
                 // realpath() just couldn't do it. Report the error and make it clear
                 // this is an error from our builtin, not the system's realpath.
                 streams.err.append(wgettext_fmt!(
                     "builtin %ls: %ls: %s\n",
                     cmd,
                     arg,
-                    errno.to_string()
+                    errno.desc()
                 ));
             } else {
                 // Who knows. Probably a bug in our wrealpath() implementation.
@@ -120,7 +120,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             streams.err.append(wgettext_fmt!(
                 "builtin %ls: realpath failed: %s\n",
                 cmd,
-                errno().to_string()
+                Errno::last().desc()
             ));
             return STATUS_CMD_ERROR;
         }

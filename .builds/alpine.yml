@@ -1,25 +1,27 @@
 image: alpine/edge
 packages:
+  - cargo
+  - clang17-libclang
   - cmake
-  - ninja
   - ncurses-dev
+  - ninja
   - pcre2-dev
+  - py3-pexpect
   - python3
-  - py-pip
+  - rust
 sources:
-  - https://git.sr.ht/~faho/fish
+  - https://github.com/fish-shell/fish-shell
 tasks:
   - build: |
-          pip3 install pexpect
-          cd fish
-          mkdir build || :
+          cd fish-shell
+          mkdir build
           cd build
           cmake -G Ninja .. \
-          -DCMAKE_INSTALL_PREFIX=/usr \
-          -DCMAKE_INSTALL_DATADIR=share \
-          -DCMAKE_INSTALL_DOCDIR=share/doc/fish \
-          -DCMAKE_INSTALL_SYSCONFDIR=/etc
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_INSTALL_DATADIR=share \
+            -DCMAKE_INSTALL_DOCDIR=share/doc/fish \
+            -DCMAKE_INSTALL_SYSCONFDIR=/etc
           ninja
   - test: |
-          cd fish/build
+          cd fish-shell/build
           env ninja test

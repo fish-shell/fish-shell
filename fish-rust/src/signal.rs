@@ -4,11 +4,12 @@ use crate::common::{exit_without_destructors, restore_term_foreground_process_gr
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::nix::getpid;
 use crate::reader::{reader_handle_sigint, reader_sighup};
+use crate::set_errno;
 use crate::termsize::TermsizeContainer;
 use crate::topic_monitor::{generation_t, topic_monitor_principal, topic_t, GenerationsList};
 use crate::wchar::prelude::*;
 use crate::wutil::{fish_wcstoi, perror};
-use errno::{errno, set_errno};
+use nix::errno::Errno;
 use std::sync::atomic::{AtomicI32, Ordering};
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
@@ -57,7 +58,7 @@ extern "C" fn fish_signal_handler(
     _context: *mut libc::c_void,
 ) {
     // Ensure we preserve errno.
-    let saved_errno = errno();
+    let saved_errno = Errno::last();
 
     // Check if we are a forked child.
     if reraise_if_forked_child(sig) {

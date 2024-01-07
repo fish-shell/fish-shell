@@ -368,7 +368,6 @@ dependencies = [
  "rand_pcg",
  "rsconf",
  "serial_test",
- "unixstring",
  "widestring",
  "widestring-suffix",
 ]
@@ -1091,15 +1090,6 @@ name = "unicode-width"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
-
-[[package]]
-name = "unixstring"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "366c5c5657cbe7a684b3476acc7b96d4087e953bf750b1eab4dfbffeda32b2f3"
-dependencies = [
- "libc",
-]
 
 [[package]]
 name = "version_check"

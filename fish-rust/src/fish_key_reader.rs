@@ -348,7 +348,7 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
                     wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         "fish_key_reader",
-                        &w.argv[w.woptind - 1]
+                        w.argv[w.woptind - 1]
                     )
                 );
                 return false;

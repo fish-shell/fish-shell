@@ -797,7 +797,7 @@ impl<'a> ParseExecutionContext {
                             &external_cmd.path
                         },
                         statement,
-                        std::io::Error::from_raw_os_error(external_cmd.err.unwrap().into()),
+                        std::io::Error::from(external_cmd.err.unwrap()),
                     );
                 }
             };

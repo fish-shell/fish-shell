@@ -8,10 +8,11 @@ use crate::compat::{MNT_LOCAL, ST_LOCAL};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
+use crate::set_errno;
 use crate::wchar::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wmkdir, wstat};
-use errno::{errno, set_errno, Errno};
-use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
+use libc::{F_OK, X_OK};
+use nix::errno::Errno;
 use once_cell::sync::Lazy;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
@@ -117,7 +118,7 @@ fn maybe_issue_path_warning(
     using_xdg: bool,
     xdg_var: &wstr,
     path: &wstr,
-    saved_errno: libc::c_int,
+    saved_errno: Errno,
     vars: &EnvStack,
 ) {
     let warning_var_name = "_FISH_WARNED_"L.to_owned() + which_dir;
@@ -159,7 +160,7 @@ fn maybe_issue_path_warning(
         );
         FLOG!(
             warning_path,
-            wgettext_fmt!("The error was '%s'.", Errno(saved_errno).to_string())
+            wgettext_fmt!("The error was '%s'.", saved_errno.desc())
         );
         FLOG!(
             warning_path,
@@ -262,22 +263,22 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
 }
 
 fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult {
-    let noent_res = GetPathResult::new(Some(Errno(ENOENT)), WString::new());
+    let noent_res = GetPathResult::new(Some(Errno::ENOENT), WString::new());
     // Test if the given path can be executed.
     // \return 0 on success, an errno value on failure.
     let test_path = |path: &wstr| -> Result<(), Errno> {
         let narrow = wcs2zstring(path);
         if unsafe { libc::access(narrow.as_ptr(), X_OK) } != 0 {
-            return Err(errno());
+            return Err(Errno::last());
         }
         let narrow: Vec<u8> = narrow.into();
         let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else {
-            return Err(errno());
+            return Err(Errno::last());
         };
         if md.is_file() {
             Ok(())
         } else {
-            Err(Errno(EACCES))
+            Err(Errno::EACCES)
         }
     };
 
@@ -310,7 +311,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
                 return GetPathResult::new(None, proposed_path);
             }
             Err(err) => {
-                if err.0 != ENOENT && best.err == Some(Errno(ENOENT)) {
+                if err != Errno::ENOENT && best.err == Some(Errno::ENOENT) {
                     // Keep the first *interesting* error and path around.
                     // ENOENT isn't interesting because not having a file is the normal case.
                     // Ignore if the parent directory is already inaccessible.
@@ -336,7 +337,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
 /// \param vars The environment variables to use (for the CDPATH variable)
 /// \return the command, or none() if it could not be found.
 pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<WString> {
-    let mut err = ENOENT;
+    let mut err = Errno::ENOENT;
     if dir.is_empty() {
         return None;
     }
@@ -348,11 +349,11 @@ pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<
             if md.is_dir() {
                 return Some(a_dir);
             }
-            err = ENOTDIR;
+            err = Errno::ENOTDIR;
         }
     }
 
-    set_errno(Errno(err));
+    set_errno(err);
     None
 }
 
@@ -568,14 +569,14 @@ struct BaseDirectory {
     /// whether the dir is remote
     remoteness: DirRemoteness,
     /// the error code if creating the directory failed, or 0 on success.
-    err: libc::c_int,
+    err: Errno,
     /// whether an XDG variable was used in resolving the directory.
     used_xdg: bool,
 }
 
 impl BaseDirectory {
     fn success(&self) -> bool {
-        self.err == 0
+        self.err == Errno::from_i32(0)
     }
 }
 
@@ -601,15 +602,15 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         used_xdg = false;
     }
 
-    set_errno(Errno(0));
+    Errno::clear();
     let err;
     let mut remoteness = DirRemoteness::unknown;
     if path.is_empty() {
-        err = ENOENT;
+        err = Errno::ENOENT;
     } else if !create_directory(&path) {
-        err = errno().0;
+        err = Errno::last();
     } else {
-        err = 0;
+        err = Errno::from_i32(0);
         // Need to append a trailing slash to check the contents of the directory, not its parent.
         let mut tmp = path.clone();
         tmp.push('/');

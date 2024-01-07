@@ -1,13 +1,14 @@
 //! Wrappers around posix_spawn.
 
 use super::blocked_signals_for_job;
-use crate::exec::is_thompson_shell_script;
 use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::get_signals_with_handlers;
+use crate::{exec::is_thompson_shell_script, libc::_PATH_BSHELL};
 use errno::{self, Errno};
 use libc::{self, c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
 use std::ffi::{CStr, CString};
+use std::sync::atomic::Ordering;
 
 // The posix_spawn family of functions is unusual in that it returns errno codes directly in the return value, not via errno.
 // This converts to an error if nonzero.
@@ -183,8 +184,7 @@ impl PosixSpawner {
         let cmdcstr = unsafe { CStr::from_ptr(cmd) };
         if spawn_err.0 == libc::ENOEXEC && is_thompson_shell_script(cmdcstr) {
             // Create a new argv with /bin/sh prepended.
-            let interp = get_path_bshell();
-            let mut argv2 = vec![interp.as_ptr() as *mut c_char];
+            let mut argv2 = vec![_PATH_BSHELL.load(Ordering::Relaxed) as *mut c_char];
 
             // The command to call should use the full path,
             // not what we would pass as argv0.
@@ -201,7 +201,7 @@ impl PosixSpawner {
             check_fail(unsafe {
                 libc::posix_spawn(
                     &mut pid,
-                    interp.as_ptr(),
+                    _PATH_BSHELL.load(Ordering::Relaxed),
                     &self.actions.0,
                     &self.attr.0,
                     argv2.as_ptr(),
@@ -212,10 +212,4 @@ impl PosixSpawner {
         }
         Err(spawn_err)
     }
-}
-
-fn get_path_bshell() -> CString {
-    // TODO: this should really use _PATH_BSHELL, but this is only used in an edge case for posix_spawns
-    // which fail to run Thompson shell scripts; we simply assume it is /bin/sh.
-    CString::new("/bin/sh").unwrap()
 }

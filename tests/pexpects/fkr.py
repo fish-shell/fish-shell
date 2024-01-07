@@ -41,9 +41,9 @@ expect_str("char: \\c@\r\nbind -k nul 'do something'\r\n")
 # Ensure we only name the sequence if we match all of it.
 # Otherwise we end up calling escape+backspace "backspace"!
 send("\x1b\x7f")
-expect_str('char: \\e\r\n')
-expect_str('char: \\x7F')
-expect_str('''(aka "del")\r\nbind \\e\\x7F 'do something'\r\n''')
+expect_str("char: \\e\r\n")
+expect_str("char: \\x7F")
+expect_str("""(aka "del")\r\nbind \\e\\x7F 'do something'\r\n""")
 
 # Does it keep running if handed control sequences in the wrong order?
 send("\x03")

@@ -78,13 +78,13 @@ complete -c blender -n 'not __blender_player' -o x -l use-extension -a '0\tfalse
 # Animation Playback Options:
 complete -c blender -n 'not __blender_player' -o a -d 'Run as animation player'
 
-complete -c blender -n '__blender_player' -o p -x -d 'Specify position and size'
-complete -c blender -n '__blender_player' -o m -d 'Read from disk (do not buffer)'
-complete -c blender -n '__blender_player' -o f -x -d 'Specify FPS to start with'
-complete -c blender -n '__blender_player' -o j -x -d 'Specify frame step'
-complete -c blender -n '__blender_player' -o s -x -d 'Specify start frame'
-complete -c blender -n '__blender_player' -o e -x -d 'Specify end frame'
-complete -c blender -n '__blender_player' -o c -x -d 'Memory in MB for cache'
+complete -c blender -n __blender_player -o p -x -d 'Specify position and size'
+complete -c blender -n __blender_player -o m -d 'Read from disk (do not buffer)'
+complete -c blender -n __blender_player -o f -x -d 'Specify FPS to start with'
+complete -c blender -n __blender_player -o j -x -d 'Specify frame step'
+complete -c blender -n __blender_player -o s -x -d 'Specify start frame'
+complete -c blender -n __blender_player -o e -x -d 'Specify end frame'
+complete -c blender -n __blender_player -o c -x -d 'Memory in MB for cache'
 
 # Window Options:
 complete -c blender -n 'not __blender_player' -o w -l window-border -d 'Show window borders'

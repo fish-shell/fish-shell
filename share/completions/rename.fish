@@ -33,7 +33,7 @@ else if string match -q "*File::Rename*" $rename_version[1]
     complete -c rename -s u -l unicode -d 'Treat filenames as Unicode strings'
     complete -c rename -s e -x -d 'Perl expression'
     complete -c rename -s E -x -d 'Perl statement'
-else if test "$version_status" = "2"
+else if test "$version_status" = 2
     # `brew install rename`
     # http://plasmasturm.org/code/rename
     complete -c rename -s h -l help -d 'See a synopsis'

@@ -14,11 +14,6 @@ set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_neigh $ip_route
 function __fish_ip_commandwords
     set -l skip 0
     set -l cmd (commandline -opc)
-    # HACK: Handle and/or/not specially because they have hardcoded completion behavior
-    # that doesn't remove them from the commandline
-    if contains -- $cmd[1] and or not
-        set -e cmd[1]
-    end
     # Remove the first word because it's "ip" or an alias for it
     set -e cmd[1]
     set -l have_command 0

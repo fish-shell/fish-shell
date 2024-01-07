@@ -13,9 +13,9 @@
 //! end of the list is reached, at which point regular searching will commence.
 
 use libc::{
-    c_char, c_int, c_void, EAGAIN, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, EWOULDBLOCK,
-    ICANON, ICRNL, IEXTEN, INLCR, IXOFF, IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN,
-    STDIN_FILENO, STDOUT_FILENO, S_IFDIR, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
+    c_char, c_int, c_void, ECHO, ICANON, ICRNL, IEXTEN, INLCR, IXOFF, IXON, ONLCR, OPOST,
+    O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO, S_IFDIR, TCSANOW, VMIN,
+    VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
 };
 use once_cell::sync::Lazy;
 use std::cell::UnsafeCell;
@@ -30,7 +30,7 @@ use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU64, AtomicU8};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
-use errno::{errno, Errno};
+use nix::errno::Errno;
 
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Ast, Category, Traversal};
@@ -549,7 +549,9 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
         let a_tty = unsafe { libc::isatty(STDIN_FILENO) } != 0;
         if a_tty {
             interactive = true;
-        } else if unsafe { libc::tcgetattr(STDIN_FILENO, &mut t) } == -1 && errno().0 == EIO {
+        } else if unsafe { libc::tcgetattr(STDIN_FILENO, &mut t) } == -1
+            && Errno::last() == Errno::EIO
+        {
             redirect_tty_output();
             interactive = true;
         }
@@ -665,10 +667,10 @@ fn read_i(parser: &Parser) -> i32 {
 fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
     let mut buf: libc::stat = unsafe { std::mem::zeroed() };
     if unsafe { libc::fstat(fd, &mut buf) } == -1 {
-        let err = errno();
+        let err = Errno::last();
         FLOG!(
             error,
-            wgettext_fmt!("Unable to read input file: %s", err.to_string())
+            wgettext_fmt!("Unable to read input file: %s", err.desc())
         );
         return 1;
     }
@@ -679,7 +681,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
     if fd != STDIN_FILENO && (buf.st_mode & S_IFDIR) != 0 {
         FLOG!(
             error,
-            wgettext_fmt!("Unable to read input file: %s", Errno(EISDIR).to_string())
+            wgettext_fmt!("Unable to read input file: %s", Errno::EISDIR.desc())
         );
         return 1;
     }
@@ -696,17 +698,19 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
             break;
         } else {
             assert!(amt == -1);
-            let err = errno();
-            if err.0 == EINTR {
+            let err = Errno::last();
+            if err == Errno::EINTR {
                 continue;
-            } else if err.0 == EAGAIN || err.0 == EWOULDBLOCK && make_fd_blocking(fd).is_ok() {
+            } else if err == Errno::EAGAIN
+                || err == Errno::EWOULDBLOCK && make_fd_blocking(fd).is_ok()
+            {
                 // We succeeded in making the fd blocking, keep going.
                 continue;
             } else {
                 // Fatal error.
                 FLOG!(
                     error,
-                    wgettext_fmt!("Unable to read input file: %s", err.to_string())
+                    wgettext_fmt!("Unable to read input file: %s", err.desc())
                 );
                 return 1;
             }
@@ -787,7 +791,7 @@ pub fn restore_term_mode() {
             TCSANOW,
             &*TERMINAL_MODE_ON_STARTUP.lock().unwrap(),
         ) == -1
-    } && errno().0 == EIO
+    } && Errno::last() == Errno::EIO
     {
         redirect_tty_output();
     }
@@ -1693,21 +1697,23 @@ impl ReaderData {
 
         // Get the current terminal modes. These will be restored when the function returns.
         let mut old_modes: libc::termios = unsafe { std::mem::zeroed() };
-        if unsafe { libc::tcgetattr(zelf.conf.inputfd, &mut old_modes) } == -1 && errno().0 == EIO {
+        if unsafe { libc::tcgetattr(zelf.conf.inputfd, &mut old_modes) } == -1
+            && Errno::last() == Errno::EIO
+        {
             redirect_tty_output();
         }
 
         // Set the new modes.
         if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, &*shell_modes()) } == -1 {
-            let err = errno().0;
-            if err == EIO {
+            let err = Errno::last();
+            if err == Errno::EIO {
                 redirect_tty_output();
             }
 
             // This check is required to work around certain issues with fish's approach to
             // terminal control when launching interactive processes while in non-interactive
             // mode. See #4178 for one such example.
-            if err != ENOTTY || is_interactive_session() {
+            if err != Errno::ENOTTY || is_interactive_session() {
                 perror("tcsetattr");
             }
         }
@@ -1900,7 +1906,7 @@ impl ReaderData {
             if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, &old_modes) } == -1
                 && is_interactive_session()
             {
-                if errno().0 == EIO {
+                if Errno::last() == Errno::EIO {
                     redirect_tty_output();
                 }
                 perror("tcsetattr"); // return to previous mode
@@ -1930,7 +1936,7 @@ impl ReaderData {
         let mut res;
         loop {
             res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) };
-            if res >= 0 || errno().0 != EINTR {
+            if res >= 0 || Errno::last() != Errno::EINTR {
                 break;
             }
         }
@@ -3300,10 +3306,10 @@ fn term_donate(quiet: bool /* = false */) {
         )
     } == -1
     {
-        if errno().0 == EIO {
+        if Errno::last() == Errno::EIO {
             redirect_tty_output();
         }
-        if errno().0 != EINTR {
+        if Errno::last() != Errno::EINTR {
             if !quiet {
                 FLOG!(
                     warning,
@@ -3340,10 +3346,10 @@ pub fn term_copy_modes() {
 fn term_steal() {
     term_copy_modes();
     while unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
-        if errno().0 == EIO {
+        if Errno::last() == Errno::EIO {
             redirect_tty_output();
         }
-        if errno().0 != EINTR {
+        if Errno::last() != Errno::EINTR {
             FLOG!(warning, wgettext!("Could not set terminal mode for shell"));
             perror("tcsetattr");
             break;
@@ -3405,7 +3411,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             // avoid a second pass through this loop.
             owner = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
         }
-        if owner == -1 && errno().0 == ENOTTY {
+        if owner == -1 && Errno::last() == Errno::ENOTTY {
             if !is_interactive_session() {
                 // It's OK if we're not able to take control of the terminal. We handle
                 // the fallout from this in a few other places.
@@ -3465,7 +3471,7 @@ fn reader_interactive_init(parser: &Parser) {
             // don't apply as we passed our own pid.
             //
             // This should be harmless, so we ignore it.
-            if errno().0 != EPERM {
+            if Errno::last() != Errno::EPERM {
                 FLOG!(
                     error,
                     wgettext!("Failed to assign shell to its own process group")
@@ -3477,7 +3483,7 @@ fn reader_interactive_init(parser: &Parser) {
 
         // Take control of the terminal
         if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid) } == -1 {
-            if errno().0 == ENOTTY {
+            if Errno::last() == Errno::ENOTTY {
                 redirect_tty_output();
             }
             FLOG!(error, wgettext!("Failed to take control of the terminal"));
@@ -3487,7 +3493,7 @@ fn reader_interactive_init(parser: &Parser) {
 
         // Configure terminal attributes
         if unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
-            if errno().0 == EIO {
+            if Errno::last() == Errno::EIO {
                 redirect_tty_output();
             }
             FLOG!(warning, wgettext!("Failed to set startup terminal mode!"));
@@ -4541,7 +4547,10 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
     // Try kill-0'ing the process whose pid corresponds to our process group ID. It's possible this
     // will fail because we don't have permission to signal it. But more likely it will fail because
     // it no longer exists, and we are orphaned.
-    if loop_count % 64 == 0 && unsafe { libc::kill(shell_pgid, 0) } < 0 && errno().0 == ESRCH {
+    if loop_count % 64 == 0
+        && unsafe { libc::kill(shell_pgid, 0) } < 0
+        && Errno::last() == Errno::ESRCH
+    {
         we_think_we_are_orphaned = true;
     }
 
@@ -4572,7 +4581,7 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
                 1,
             )
         } < 0
-            && errno().0 == EIO
+            && Errno::last() == Errno::EIO
         {
             we_think_we_are_orphaned = true;
         }

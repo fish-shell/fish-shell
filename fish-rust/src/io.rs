@@ -16,8 +16,8 @@ use crate::signal::SigChecker;
 use crate::topic_monitor::topic_t;
 use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
-use errno::Errno;
-use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDOUT_FILENO};
+use libc::{O_EXCL, STDOUT_FILENO};
+use nix::errno::Errno;
 use std::cell::{RefCell, UnsafeCell};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -476,7 +476,7 @@ impl IoBuffer {
     /// set).
     pub fn read_once(fd: RawFd, buffer: &mut MutexGuard<'_, SeparatedBuffer>) -> isize {
         assert!(fd >= 0, "Invalid fd");
-        errno::set_errno(Errno(0));
+        Errno::clear();
         let mut bytes = [b'\0'; 4096 * 4];
 
         // We want to swallow EINTR only; in particular EAGAIN needs to be returned back to the caller.
@@ -488,12 +488,12 @@ impl IoBuffer {
                     std::mem::size_of_val(&bytes),
                 )
             };
-            if amt < 0 && errno::errno().0 == EINTR {
+            if amt < 0 && Errno::last() == Errno::EINTR {
                 continue;
             }
             break amt;
         };
-        if amt < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0) {
+        if amt < 0 && ![Errno::EAGAIN, Errno::EWOULDBLOCK].contains(&Errno::last()) {
             perror("read");
         } else if amt > 0 {
             buffer.append(
@@ -580,8 +580,9 @@ fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
                     // select() reported us as readable; read a bit.
                     let mut buf = iobuffer.buffer.lock().unwrap();
                     let ret = IoBuffer::read_once(fd.fd(), &mut buf);
-                    done =
-                        ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0));
+                    done = ret == 0
+                        || (ret < 0
+                            && ![Errno::EAGAIN, Errno::EWOULDBLOCK].contains(&Errno::last()));
                 } else if iobuffer.shutdown_fillthread.load() {
                     // Here our caller asked us to shut down; read while we keep getting data.
                     // This will stop when the fd is closed or if we get EAGAIN.
@@ -669,16 +670,16 @@ impl IoChain {
                     let oflags = spec.oflags();
                     let file = AutoCloseFd::new(wopen_cloexec(&path, oflags, OPEN_MASK));
                     if !file.is_valid() {
-                        if (oflags & O_EXCL) != 0 && errno::errno().0 == EEXIST {
+                        if (oflags & O_EXCL) != 0 && Errno::last() == Errno::EEXIST {
                             FLOGF!(warning, NOCLOB_ERROR, spec.target);
                         } else {
                             if should_flog!(warning) {
                                 FLOGF!(warning, FILE_ERROR, spec.target);
-                                let err = errno::errno().0;
+                                let err = Errno::last();
                                 // If the error is that the file doesn't exist
                                 // or there's a non-directory component,
                                 // find the first problematic component for a better message.
-                                if [ENOENT, ENOTDIR].contains(&err) {
+                                if [Errno::ENOENT, Errno::ENOTDIR].contains(&err) {
                                     let mut dname: &wstr = &spec.target;
                                     while !dname.is_empty() {
                                         let next: &wstr = wdirname(dname);
@@ -868,14 +869,14 @@ impl FdOutputStream {
             // Some of our builtins emit multiple screens worth of data sent to a pager (the primary
             // example being the `history` builtin) and receiving SIGINT should be considered normal and
             // non-exceptional (user request to abort via Ctrl-C), meaning we shouldn't print an error.
-            if errno::errno().0 == EINTR && self.sigcheck.check() {
+            if Errno::last() == Errno::EINTR && self.sigcheck.check() {
                 // We have two options here: we can either return false without setting errored_ to
                 // true (*this* write will be silently aborted but the onus is on the caller to check
                 // the return value and skip future calls to `append()`) or we can flag the entire
                 // output stream as errored, causing us to both return false and skip any future writes.
                 // We're currently going with the latter, especially seeing as no callers currently
                 // check the result of `append()` (since it was always a void function before).
-            } else if errno::errno().0 != EPIPE {
+            } else if Errno::last() != Errno::EPIPE {
                 perror("write");
             }
             self.errored = true;

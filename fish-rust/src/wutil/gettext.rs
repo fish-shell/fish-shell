@@ -6,7 +6,6 @@ use std::pin::Pin;
 use std::sync::Mutex;
 
 use crate::common::{charptr2wcstring, wcs2zstring};
-use crate::ffi::wchar_t;
 use crate::fish::PACKAGE_NAME;
 #[cfg(test)]
 use crate::tests::prelude::*;
@@ -69,14 +68,14 @@ fn wgettext_init_if_necessary() {
 /// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
 /// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
 /// will be nothing more than a wrapper around gettext, like all other functions in this file.
-pub fn wgettext_impl_do_not_use_directly(text: Cow<'static, [wchar_t]>) -> &'static wstr {
+pub fn wgettext_impl_do_not_use_directly(text: Cow<'static, [u32]>) -> &'static wstr {
     assert_eq!(text.last(), Some(&0), "should be nul-terminated");
     // Preserve errno across this since this is often used in printing error messages.
     let err = errno();
 
     wgettext_init_if_necessary();
     #[allow(clippy::type_complexity)]
-    static WGETTEXT_MAP: Lazy<Mutex<HashMap<Cow<'static, [wchar_t]>, Pin<Box<WString>>>>> =
+    static WGETTEXT_MAP: Lazy<Mutex<HashMap<Cow<'static, [u32]>, Pin<Box<WString>>>>> =
         Lazy::new(|| Mutex::new(HashMap::new()));
     let mut wmap = WGETTEXT_MAP.lock().unwrap();
     let v = match wmap.entry(text) {

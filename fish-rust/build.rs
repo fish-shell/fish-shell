@@ -64,21 +64,10 @@ fn main() {
     }
 
     let rust_dir = env!("CARGO_MANIFEST_DIR");
-    let target_dir =
-        std::env::var("FISH_RUST_TARGET_DIR").unwrap_or(format!("{}/{}", rust_dir, "target/"));
-    let cpp_fish_src_dir = format!("{}/{}", rust_dir, "src/");
-
-    // Where cxx emits its header.
-    let cxx_include_dir = format!("{}/{}", target_dir, "cxxbridge/rust/");
-
     // If FISH_BUILD_DIR is given by CMake, then use it; otherwise assume it's at build.
     let fish_build_dir =
         std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{}/{}", rust_dir, "build/"));
     println!("cargo:rustc-env=FISH_BUILD_DIR={fish_build_dir}");
-
-    // Where autocxx should put its stuff.
-    let autocxx_gen_dir = std::env::var("FISH_AUTOCXX_GEN_DIR")
-        .unwrap_or(format!("{}/{}", fish_build_dir, "fish-autocxx-gen/"));
 
     let mut build = cc::Build::new();
     // Add to the default library search path
@@ -86,47 +75,8 @@ fn main() {
     rsconf::add_library_search_path("/usr/local/lib");
     let mut detector = Target::new_from(build).unwrap();
     // Keep verbose mode on until we've ironed out rust build script stuff
-    // Note that if autocxx fails to compile any rust code, you'll see the full and unredacted
-    // stdout/stderr output, which will include things that LOOK LIKE compilation errors as rsconf
-    // tries to build various test files to try and figure out which libraries and symbols are
-    // available. IGNORE THESE and scroll to the very bottom of the build script output, past all
-    // these errors, to see the actual issue.
     detector.set_verbose(true);
     detect_features(detector);
-
-    // Emit cxx junk.
-    // This allows "Rust to be used from C++"
-    // This must come before autocxx so that cxx can emit its cxx.h header.
-    let source_files = vec![
-        "fish-rust/src/fish_key_reader.rs",
-        "fish-rust/src/fish_indent.rs",
-        "fish-rust/src/fish.rs",
-    ];
-    cxx_build::bridges(&source_files)
-        .flag_if_supported("-std=c++11")
-        .include(&cpp_fish_src_dir)
-        .include(&fish_build_dir) // For config.h
-        .include(&cxx_include_dir) // For cxx.h
-        .flag("-Wno-comment")
-        .compile("fish-rust");
-
-    // Emit autocxx junk.
-    // This allows "C++ to be used from Rust."
-    let include_paths = [&cpp_fish_src_dir, &fish_build_dir, &cxx_include_dir];
-    let mut builder = autocxx_build::Builder::new("fish-rust/src/ffi.rs", include_paths);
-    // Use autocxx's custom output directory unless we're being called by `rust-analyzer` and co.,
-    // in which case stick to the default target directory so code intelligence continues to work.
-    if std::env::var("RUSTC_WRAPPER").map_or(true, |wrapper| {
-        !(wrapper.contains("rust-analyzer") || wrapper.contains("intellij-rust-native-helper"))
-    }) {
-        // We need this reassignment because of how the builder pattern works
-        builder = builder.custom_gendir(autocxx_gen_dir.into());
-    }
-    let mut b = builder.build().unwrap();
-    b.flag_if_supported("-std=c++11")
-        .flag("-Wno-comment")
-        .compile("fish-rust-autocxx");
-    rsconf::rebuild_if_paths_changed(&source_files);
 }
 
 /// Dynamically enables certain features at build-time, without their having to be explicitly

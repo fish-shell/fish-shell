@@ -48,9 +48,6 @@ endif()
 # - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
 add_compile_options(-Wall -Wextra -Wno-comment -Wno-address)
 
-# Get extra C++ files from Rust.
-get_property(FISH_EXTRA_SOURCES TARGET fish-rust PROPERTY fish_extra_cpp_files)
-
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
   add_compile_options(-Wunused-template -Wunused-local-typedef -Wunused-macros)
 endif()
@@ -60,9 +57,6 @@ add_compile_options(-fno-exceptions)
 
 # Undefine NDEBUG to keep assert() in release builds.
 add_definitions(-UNDEBUG)
-
-# Allow including Rust headers in normal (not bindgen) builds.
-add_definitions(-DINCLUDE_RUST_HEADERS)
 
 # Enable large files on GNU.
 add_definitions(-D_LARGEFILE_SOURCE

@@ -41,11 +41,6 @@ bitflags! {
     }
 }
 
-impl From<EnvMode> for autocxx::c_int {
-    fn from(val: EnvMode) -> Self {
-        autocxx::c_int(i32::from(val.bits()))
-    }
-}
 impl From<EnvMode> for u16 {
     fn from(val: EnvMode) -> Self {
         val.bits()

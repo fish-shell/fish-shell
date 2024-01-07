@@ -48,7 +48,6 @@ mod fallback;
 mod fd_monitor;
 mod fd_readable_set;
 mod fds;
-mod ffi;
 mod fish;
 mod fish_indent;
 mod fish_key_reader;

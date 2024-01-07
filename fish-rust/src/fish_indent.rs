@@ -709,7 +709,8 @@ fn char_is_escaped(text: &wstr, idx: usize) -> bool {
     count_preceding_backslashes(text, idx) % 2 == 1
 }
 
-fn fish_indent_main() -> i32 {
+#[no_mangle]
+extern "C" fn fish_indent_main() -> i32 {
     PROGRAM_NAME.set(L!("fish_indent")).unwrap();
 
     topic_monitor_init();
@@ -1122,11 +1123,4 @@ fn html_colorize(text: &wstr, colors: &[HighlightSpec]) -> Vec<u8> {
 
 fn no_colorize(text: &wstr) -> Vec<u8> {
     wcs2string(text)
-}
-
-#[cxx::bridge]
-mod fish_indent_ffi {
-    extern "Rust" {
-        fn fish_indent_main() -> i32;
-    }
 }

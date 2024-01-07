@@ -10,21 +10,6 @@ edition = "2021"
 
 # TODO: Move fish-rust to src, make it the root package of this workspace
 
-[patch.crates-io]
-cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
-cxx = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
-cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
-autocxx = { git = "https://github.com/fish-shell/autocxx", branch = "fish" }
-autocxx-build = { git = "https://github.com/fish-shell/autocxx", branch = "fish" }
-autocxx-bindgen = { git = "https://github.com/fish-shell/autocxx-bindgen", branch = "fish" }
-
-[patch.'https://github.com/fish-shell/cxx']
-cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
-
-[patch.'https://github.com/fish-shell/autocxx']
-cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
-
-
 [profile.release]
 overflow-checks = true
 
@@ -42,9 +27,7 @@ fast-float = { git = "https://github.com/fish-shell/fast-float-rust", branch="fi
 hexponent = { git = "https://github.com/fish-shell/hexponent", branch="fish" }
 printf-compat = { git = "https://github.com/fish-shell/printf-compat.git", branch="fish" }
 
-autocxx = "0.23.1"
 bitflags = "2.4.0"
-cxx = "1.0"
 errno = "0.2.8"
 lazy_static = "1.4.0"
 libc = "0.2.137"
@@ -63,10 +46,7 @@ rand_pcg = "0.3.1"
 serial_test = "0.4.0"
 
 [build-dependencies]
-autocxx-build = "0.23.1"
 cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
-cxx-build = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
-cxx-gen = { git = "https://github.com/fish-shell/cxx", branch = "fish" }
 rsconf = { git = "https://github.com/mqudsi/rsconf", branch = "master" }
 
 [lib]

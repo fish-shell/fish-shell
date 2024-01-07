@@ -491,7 +491,8 @@ fn cstr_from_osstr(s: &OsStr) -> CString {
     .unwrap()
 }
 
-fn main() -> i32 {
+#[no_mangle]
+extern "C" fn fish_main() -> i32 {
     let mut args: Vec<WString> = env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
@@ -823,12 +824,4 @@ fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[WString]
         result = true;
     }
     return result;
-}
-
-#[cxx::bridge]
-mod fish_ffi {
-    extern "Rust" {
-        #[cxx_name = "rust_main"]
-        fn main() -> i32;
-    }
 }

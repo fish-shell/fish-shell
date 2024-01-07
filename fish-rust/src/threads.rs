@@ -3,6 +3,7 @@
 
 use crate::flog::{FloggableDebug, FLOG};
 use crate::reader::ReaderData;
+use nix::errno::Errno;
 use once_cell::race::OnceBox;
 use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -77,7 +78,7 @@ pub fn init() {
     }
     unsafe {
         let result = libc::pthread_atfork(None, None, Some(child_post_fork));
-        assert_eq!(result, 0, "pthread_atfork() failure: {}", errno::errno());
+        assert_eq!(result, 0, "pthread_atfork() failure: {}", Errno::last());
     }
 
     IO_THREAD_POOL

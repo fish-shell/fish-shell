@@ -1,0 +1,22 @@
+[licenses]
+# We want really high confidence when inferring licenses from text
+confidence-threshold = 0.93
+unused-allowed-license = "allow" # don't warn for unused licenses in this list
+allow = [
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "BSL-1.0",
+    "GPL-2.0",
+    "ISC",
+    "LGPL-2.0",
+    "MIT",
+    "MPL-2.0",
+    "PSF-2.0",
+    "Unicode-DFS-2016",
+    "WTFPL",
+    "Zlib",
+]
+
+[sources.allow-org]
+# 1 or more github.com organizations to allow git sources for
+github = ["fish-shell"]

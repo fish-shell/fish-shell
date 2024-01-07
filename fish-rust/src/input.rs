@@ -11,12 +11,13 @@ use crate::proc::job_reap;
 use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
 };
+use crate::set_errno;
 use crate::signal::signal_clear_cancel;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
-use errno::{set_errno, Errno};
+use nix::errno::Errno;
 use once_cell::sync::{Lazy, OnceCell};
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -1136,7 +1137,7 @@ pub fn input_terminfo_get_sequence(name: &wstr, out_seq: &mut WString) -> bool {
         if name == m.name {
             // Found the mapping.
             if m.seq.is_none() {
-                set_errno(Errno(libc::EILSEQ));
+                set_errno(Errno::EILSEQ);
                 return false;
             } else {
                 *out_seq = str2wcstring(m.seq.as_ref().unwrap());
@@ -1144,7 +1145,7 @@ pub fn input_terminfo_get_sequence(name: &wstr, out_seq: &mut WString) -> bool {
             }
         }
     }
-    set_errno(Errno(libc::ENOENT));
+    set_errno(Errno::ENOENT);
     false
 }
 

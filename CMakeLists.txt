@@ -208,20 +208,5 @@ if (CMAKE_CXX_FLAGS MATCHES ".*-fsanitize=thread.*")
   target_link_libraries(fish_test_helper "-fno-sanitize=all")
 endif()
 
-# Lint targets
-# This could be implemented as target properties, but the script has the useful feature of only
-# checking the currently-staged commands
-# The generator expressions below rebuild the command line for the fishlib targets
-# CMake does not support the "iquote" flag - https://gitlab.kitware.com/cmake/cmake/issues/15491
-set(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:fishlib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:fishlib,INCLUDE_DIRECTORIES>, -I>")
-add_custom_target(lint
-    COMMAND build_tools/lint.fish -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
-add_custom_target(lint-all
-    COMMAND build_tools/lint.fish --all -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
-
 include(FeatureSummary)
 feature_summary(WHAT ALL)

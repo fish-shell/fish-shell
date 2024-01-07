@@ -265,6 +265,8 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
     let mut state = zero_mbstate();
     let mut converted = [0_u8; AT_LEAST_MB_LEN_MAX];
 
+    let is_singlebyte_locale = MB_CUR_MAX() == 1;
+
     for c in input.chars() {
         // TODO: this doesn't seem sound.
         if c == INTERNAL_SEPARATOR {
@@ -274,7 +276,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
             if !func(&converted[..1]) {
                 return false;
             }
-        } else if MB_CUR_MAX() == 1 {
+        } else if is_singlebyte_locale {
             // single-byte locale (C/POSIX/ISO-8859)
             // If `c` contains a wide character we emit a question-mark.
             converted[0] = u8::try_from(u32::from(c)).unwrap_or(b'?');

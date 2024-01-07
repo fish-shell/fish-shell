@@ -7,11 +7,11 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use errno::errno;
 use libc::{
-    c_void, lseek, mmap, munmap, EINTR, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ,
-    PROT_WRITE, SEEK_END, SEEK_SET,
+    c_void, lseek, mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE,
+    SEEK_END, SEEK_SET,
 };
+use nix::errno::Errno;
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
@@ -237,7 +237,7 @@ fn read_from_fd(fd: RawFd, dest: &mut [u8]) -> bool {
         let amt =
             unsafe { libc::read(fd, (&mut dest[nread]) as *mut u8 as *mut c_void, remaining) };
         if amt < 0 {
-            if errno().0 != EINTR {
+            if Errno::last() != Errno::EINTR {
                 return false;
             }
         } else if amt == 0 {

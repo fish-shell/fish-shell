@@ -663,12 +663,12 @@ add_test!("test_expand_argument_list", || {
 fn test_1_cancellation(src: &wstr) {
     let filler = IoBufferfill::create().unwrap();
     let delay = Duration::from_millis(500);
-    let thread = unsafe { libc::pthread_self() };
+    let thread = unsafe { libc::pthread_self() } as usize;
     iothread_perform(move || {
         // Wait a while and then SIGINT the main thread.
         std::thread::sleep(delay);
         unsafe {
-            libc::pthread_kill(thread, SIGINT);
+            libc::pthread_kill(thread as libc::pthread_t, SIGINT);
         }
     });
     let mut io = IoChain::new();

@@ -4,8 +4,8 @@ use libc::{c_uint, rlim_t, RLIM_INFINITY};
 use nix::errno::Errno;
 use once_cell::sync::Lazy;
 
-use crate::compat::*;
 use crate::fallback::{fish_wcswidth, wcscasecmp};
+use crate::libc::*;
 use crate::wutil::perror;
 
 use super::prelude::*;

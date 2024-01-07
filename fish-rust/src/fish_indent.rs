@@ -15,7 +15,6 @@ use crate::common::{
     str2wcstring, unescape_string, wcs2string, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
     PROGRAM_NAME,
 };
-use crate::compat::setlinebuf;
 use crate::env::env_init;
 use crate::env::environment::Environment;
 use crate::env::EnvStack;
@@ -25,6 +24,7 @@ use crate::fds::set_cloexec;
 use crate::future::{IsOkAnd, IsSomeAnd, IsSorted};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
+use crate::libc::setlinebuf;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
 use crate::parse_util::parse_util_compute_indents;

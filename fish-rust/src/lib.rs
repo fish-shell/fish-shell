@@ -35,8 +35,6 @@ mod ast;
 mod autoload;
 mod builtins;
 mod color;
-#[allow(non_snake_case)]
-mod compat;
 mod complete;
 mod curses;
 mod editable_line;
@@ -67,6 +65,8 @@ mod input_common;
 mod io;
 mod job_group;
 mod kill;
+#[allow(non_snake_case)]
+mod libc;
 mod locale;
 mod nix;
 mod null_terminated_array;

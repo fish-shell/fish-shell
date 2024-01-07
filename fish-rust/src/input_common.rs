@@ -408,7 +408,7 @@ pub trait InputEventQueuer {
                 }
 
                 ReadbResult::Byte(read_byte) => {
-                    if crate::compat::MB_CUR_MAX() == 1 {
+                    if crate::libc::MB_CUR_MAX() == 1 {
                         // single-byte locale, all values are legal
                         // FIXME: this looks wrong, this falsely assumes that
                         // the single-byte locale is compatible with Unicode upper-ASCII.

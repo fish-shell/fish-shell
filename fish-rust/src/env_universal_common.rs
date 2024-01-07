@@ -2,12 +2,12 @@ use crate::common::{
     read_loop, str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, write_loop,
     UnescapeFlags, UnescapeStringStyle,
 };
-use crate::compat::{C_O_EXLOCK, UVAR_FILE_SET_MTIME_HACK};
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::fallback::fish_mkstemp_cloexec;
 use crate::fds::AutoCloseFd;
 use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
+use crate::libc::{C_O_EXLOCK, UVAR_FILE_SET_MTIME_HACK};
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::prelude::*;

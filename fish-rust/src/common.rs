@@ -1,6 +1,5 @@
 //! Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 
-use crate::compat::MB_CUR_MAX;
 use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
@@ -9,6 +8,7 @@ use crate::fallback::fish_wcwidth;
 use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
+use crate::libc::MB_CUR_MAX;
 use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
 use crate::wcstringutil::wcs2string_callback;

@@ -46,9 +46,9 @@ fn main() {
     rsconf::link_libraries(&curses_libnames, LinkType::Default);
 
     cc::Build::new()
-        .file("fish-rust/src/compat.c")
+        .file("fish-rust/src/libc.c")
         .include(&build_dir)
-        .compile("libcompat.a");
+        .compile("flibc.a");
 
     if compiles("fish-rust/src/cfg/w_exitcode.cpp") {
         println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");

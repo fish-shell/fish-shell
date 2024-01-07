@@ -42,7 +42,6 @@ use crate::common::{
     shell_modes, str2wcstring, wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard,
     PROGRAM_NAME, UTF8_BOM_WCHAR,
 };
-use crate::compat::MB_CUR_MAX;
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
     CompletionRequestOptions,
@@ -71,6 +70,7 @@ use crate::input::Inputter;
 use crate::input_common::{CharEvent, CharInputStyle, ReadlineCmd};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
+use crate::libc::MB_CUR_MAX;
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::{parse_color, Outputter};
 use crate::pager::{PageRendering, Pager, SelectionMotion};

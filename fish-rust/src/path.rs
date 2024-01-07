@@ -3,11 +3,11 @@
 //! path-related issues.
 
 use crate::common::wcs2zstring;
-#[cfg(not(target_os = "linux"))]
-use crate::compat::{MNT_LOCAL, ST_LOCAL};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
+#[cfg(not(target_os = "linux"))]
+use crate::libc::{MNT_LOCAL, ST_LOCAL};
 use crate::wchar::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wmkdir, wstat};
 use errno::{errno, set_errno, Errno};

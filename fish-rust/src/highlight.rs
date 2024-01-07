@@ -10,7 +10,6 @@ use crate::common::{
     unescape_string_in_place, valid_var_name, valid_var_name_char, UnescapeFlags, ASCII_MAX,
     EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
-use crate::compat::_PC_CASE_SENSITIVE;
 use crate::env::Environment;
 use crate::expand::{
     expand_one, expand_tilde, expand_to_command_and_args, ExpandFlags, ExpandResultCode,
@@ -23,6 +22,7 @@ use crate::expand::{
 use crate::function;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::history::{all_paths_are_valid, HistoryItem};
+use crate::libc::_PC_CASE_SENSITIVE;
 use crate::operation_context::OperationContext;
 use crate::output::{parse_color, Outputter};
 use crate::parse_constants::{

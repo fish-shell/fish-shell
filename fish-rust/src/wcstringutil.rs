@@ -1,10 +1,10 @@
 //! Helper functions for working with wcstring.
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
-use crate::compat::MB_CUR_MAX;
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::fallback::{fish_wcwidth, wcscasecmp};
 use crate::flog::FLOGF;
+use crate::libc::MB_CUR_MAX;
 use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 

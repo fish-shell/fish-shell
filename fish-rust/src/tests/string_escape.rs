@@ -18,13 +18,13 @@ fn setlocale() {
     const UTF8_LOCALES: &[&str] = &[
         "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
     ];
-    if crate::compat::MB_CUR_MAX() > 1 {
+    if crate::libc::MB_CUR_MAX() > 1 {
         return;
     }
     for locale in UTF8_LOCALES {
         let locale = std::ffi::CString::new(locale.to_owned()).unwrap();
         unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
-        if crate::compat::MB_CUR_MAX() > 1 {
+        if crate::libc::MB_CUR_MAX() > 1 {
             return;
         }
     }

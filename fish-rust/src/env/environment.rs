@@ -5,7 +5,6 @@ use super::environment_impl::{
 use super::{ConfigPaths, ElectricVar};
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
-use crate::compat::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal};
@@ -13,6 +12,7 @@ use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input::init_input;
+use crate::libc::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
 use crate::nix::{geteuid, getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
@@ -544,7 +544,7 @@ fn setup_user(vars: &EnvStack) {
 
 /// Make sure the PATH variable contains something.
 fn setup_path() {
-    use crate::compat::{confstr, _CS_PATH};
+    use crate::libc::{confstr, _CS_PATH};
 
     let vars = &GLOBALS;
     let path = vars.get_unless_empty(L!("PATH"));

@@ -726,7 +726,7 @@ fn init_locale(vars: &EnvStack) {
         .map(|allow_c| !crate::wcstringutil::bool_from_string(&allow_c))
         .unwrap_or(true);
 
-    if fix_locale && crate::compat::MB_CUR_MAX() == 1 {
+    if fix_locale && crate::libc::MB_CUR_MAX() == 1 {
         FLOG!(env_locale, "Have singlebyte locale, trying to fix.");
         for locale in UTF8_LOCALES {
             {
@@ -734,13 +734,13 @@ fn init_locale(vars: &EnvStack) {
                 // this can fail, that is fine
                 unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
             }
-            if crate::compat::MB_CUR_MAX() > 1 {
+            if crate::libc::MB_CUR_MAX() > 1 {
                 FLOG!(env_locale, "Fixed locale:", locale);
                 break;
             }
         }
 
-        if crate::compat::MB_CUR_MAX() == 1 {
+        if crate::libc::MB_CUR_MAX() == 1 {
             FLOG!(env_locale, "Failed to fix locale.");
         }
     }

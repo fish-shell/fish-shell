@@ -27,7 +27,6 @@ use crate::{
         restore_term_foreground_process_group_for_exit, save_term_foreground_process_group,
         scoped_push_replacer, str2wcstring, wcs2string, PROFILING_ACTIVE, PROGRAM_NAME,
     },
-    compat::setlinebuf,
     env::Statuses,
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -39,6 +38,7 @@ use crate::{
     function, future_feature_flags as features, history,
     history::start_private_mode,
     io::IoChain,
+    libc::setlinebuf,
     nix::{getpid, isatty},
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,

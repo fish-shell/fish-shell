@@ -11,7 +11,6 @@ use crate::common::{
     exit_without_destructors, scoped_push_replacer, str2wcstring, wcs2string, wcs2zstring,
     write_loop, ScopeGuard,
 };
-use crate::compat::_PATH_BSHELL;
 use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
@@ -29,6 +28,7 @@ use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
 };
+use crate::libc::_PATH_BSHELL;
 use crate::nix::isatty;
 use crate::null_terminated_array::{
     null_terminated_array_length, AsNullTerminatedArray, OwningNullTerminatedArray,

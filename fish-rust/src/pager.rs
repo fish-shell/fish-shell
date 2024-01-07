@@ -6,13 +6,13 @@ use std::collections::HashMap;
 use crate::common::{
     escape_string, get_ellipsis_char, get_ellipsis_str, EscapeFlags, EscapeStringStyle,
 };
-use crate::compat::MB_CUR_MAX;
 use crate::complete::Completion;
 use crate::editable_line::EditableLine;
 use crate::fallback::{fish_wcswidth, fish_wcwidth};
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::{highlight_shell, HighlightRole, HighlightSpec};
+use crate::libc::MB_CUR_MAX;
 use crate::operation_context::OperationContext;
 use crate::screen::{Line, ScreenData};
 use crate::termsize::Termsize;

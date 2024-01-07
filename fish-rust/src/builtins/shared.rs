@@ -9,8 +9,8 @@ use crate::proc::{no_exec, ProcStatus};
 use crate::reader::reader_read;
 use crate::wchar::{wstr, WString, L};
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use errno::errno;
 use libc::{c_int, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use nix::errno::Errno;
 
 use std::borrow::Cow;
 use std::fs::File;
@@ -638,11 +638,11 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
 /// This function works like perror, but it prints its result into the streams.err string instead
 /// to stderr. Used by the builtin commands.
 pub fn builtin_wperror(program_name: &wstr, streams: &mut IoStreams) {
-    let err = errno();
+    let err = Errno::last();
     streams.err.append(program_name);
     streams.err.append(L!(": "));
-    if err.0 != 0 {
-        let werr = WString::from_str(&err.to_string());
+    if err != Errno::from_i32(0) {
+        let werr = WString::from_str(&err.desc());
         streams.err.append(werr);
         streams.err.push('\n');
     }

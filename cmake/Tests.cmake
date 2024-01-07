@@ -157,18 +157,13 @@ if(DEFINED ASAN)
     set(cargo_target_opt "--target" ${Rust_CARGO_TARGET})
 endif()
 
-# cargo-test is failing to link w/ ASAN enabled. For some reason it is picking up autocxx ffi
-# dependencies, even though `carg test` is supposed to be for rust-only code w/ no ffi dependencies.
-# TODO: Figure this out and fix it.
-if(NOT DEFINED ASAN)
-    add_test(
-        NAME "cargo-test"
-        COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package fish-rust --target-dir ${rust_target_dir} ${cargo_target_opt}
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    )
-    set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
-    add_test_target("cargo-test")
-endif()
+add_test(
+    NAME "cargo-test"
+    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package fish-rust --target-dir ${rust_target_dir} ${cargo_target_opt}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
+add_test_target("cargo-test")
 
 add_test(
     NAME "cargo-test-widestring"

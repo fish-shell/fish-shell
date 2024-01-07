@@ -45,7 +45,7 @@ printf-compat = { git = "https://github.com/fish-shell/printf-compat.git", branc
 autocxx = "0.23.1"
 bitflags = "2.4.0"
 cxx = "1.0"
-errno = "0.2.8"
+_errno = { package="errno", version = "0.2.8" }
 lazy_static = "1.4.0"
 libc = "0.2.137"
 lru = "0.10.0"

@@ -1162,6 +1162,15 @@ pub fn str2wcstring(inp: &[u8]) -> WString {
     result
 }
 
+/// Given an input string, return a prefix of the string up to the first NUL character,
+/// or the entire string if there is no NUL character.
+pub fn truncate_at_nul(input: &wstr) -> &wstr {
+    match input.chars().position(|c| c == '\0') {
+        Some(nul_pos) => &input[..nul_pos],
+        None => input,
+    }
+}
+
 pub fn cstr2wcstring(input: &[u8]) -> WString {
     let strlen = input.iter().position(|c| *c == b'\0').unwrap();
     str2wcstring(&input[0..strlen])

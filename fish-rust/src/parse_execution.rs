@@ -5,13 +5,13 @@ use crate::ast::{
 };
 use crate::builtins;
 use crate::builtins::shared::{
-    builtin_exists, truncate_at_nul, BUILTIN_ERR_VARNAME, STATUS_CMD_ERROR, STATUS_CMD_OK,
-    STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS,
-    STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD,
+    builtin_exists, BUILTIN_ERR_VARNAME, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
+    STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE,
+    STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    escape, scoped_push_replacer, should_suppress_stderr_for_tests, valid_var_name, ScopeGuard,
-    ScopeGuarding,
+    escape, scoped_push_replacer, should_suppress_stderr_for_tests, truncate_at_nul,
+    valid_var_name, ScopeGuard, ScopeGuarding,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, Statuses};

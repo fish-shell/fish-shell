@@ -1,5 +1,6 @@
 use crate::common::{
-    cstr2wcstring, format_llong_safe, format_size_safe, scoped_push, ScopeGuard, ScopeGuarding,
+    cstr2wcstring, format_llong_safe, format_size_safe, scoped_push, truncate_at_nul, ScopeGuard,
+    ScopeGuarding,
 };
 use crate::wchar::prelude::*;
 
@@ -131,4 +132,11 @@ fn test_format() {
     format_llong_safe(&mut buff1, q);
     unsafe { libc::snprintf(buff2.as_mut_ptr().cast(), 128, "%ld\0".as_ptr().cast(), q) };
     assert_eq!(cstr2wcstring(&buff1), cstr2wcstring(&buff2));
+}
+
+#[test]
+fn test_truncate_at_nul() {
+    assert_eq!(truncate_at_nul(L!("abc\0def")), L!("abc"));
+    assert_eq!(truncate_at_nul(L!("abc")), L!("abc"));
+    assert_eq!(truncate_at_nul(L!("\0abc")), L!(""));
 }

@@ -370,14 +370,6 @@ impl Named for BuiltinData {
     }
 }
 
-/// Helper function to convert Vec<WString> to Vec<&wstr>, truncating on NUL.
-/// We truncate on NUL for backwards-compatibility reasons.
-/// This used to be passed as c-strings (`wchar_t *`),
-/// and so we act like it for now.
-pub fn truncate_at_nul(s: &wstr) -> &wstr {
-    &s[..s.chars().position(|c| c == '\x00').unwrap_or(s.len())]
-}
-
 fn builtin_lookup(name: &wstr) -> Option<&'static BuiltinData> {
     get_by_sorted_name(name, BUILTIN_DATAS)
 }

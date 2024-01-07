@@ -4,12 +4,12 @@
 // performed have been massive.
 
 use crate::builtins::shared::{
-    builtin_run, truncate_at_nul, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
-    STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
+    builtin_run, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE,
+    STATUS_READ_TOO_MUCH,
 };
 use crate::common::{
-    exit_without_destructors, scoped_push_replacer, str2wcstring, wcs2string, wcs2zstring,
-    write_loop, ScopeGuard,
+    exit_without_destructors, scoped_push_replacer, str2wcstring, truncate_at_nul, wcs2string,
+    wcs2zstring, write_loop, ScopeGuard,
 };
 use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 use crate::env_dispatch::use_posix_spawn;

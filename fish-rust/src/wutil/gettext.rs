@@ -8,10 +8,11 @@ use std::sync::Mutex;
 use crate::common::{charptr2wcstring, wcs2zstring};
 use crate::ffi::wchar_t;
 use crate::fish::PACKAGE_NAME;
+use crate::set_errno;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
-use errno::{errno, set_errno};
+use nix::errno::Errno;
 use once_cell::sync::{Lazy, OnceCell};
 use widestring::U32CString;
 
@@ -72,7 +73,7 @@ fn wgettext_init_if_necessary() {
 pub fn wgettext_impl_do_not_use_directly(text: Cow<'static, [wchar_t]>) -> &'static wstr {
     assert_eq!(text.last(), Some(&0), "should be nul-terminated");
     // Preserve errno across this since this is often used in printing error messages.
-    let err = errno();
+    let err = Errno::last();
 
     wgettext_init_if_necessary();
     #[allow(clippy::type_complexity)]

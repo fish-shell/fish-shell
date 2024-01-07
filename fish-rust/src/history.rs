@@ -36,6 +36,7 @@ use libc::{
     O_RDONLY, O_WRONLY, SEEK_SET,
 };
 use lru::LruCache;
+use nix::errno::Errno;
 use rand::Rng;
 use widestring_suffix::widestrs;
 
@@ -718,7 +719,7 @@ impl HistoryImpl {
                     FLOGF!(
                         history_file,
                         "Error %d when truncating temporary history file",
-                        errno::errno().0
+                        Errno::last() as i32,
                     );
                 }
             } else {
@@ -738,14 +739,14 @@ impl HistoryImpl {
                         FLOGF!(
                             history_file,
                             "Error %d when changing ownership of history file",
-                            errno::errno().0
+                            Errno::last() as i32,
                         );
                     }
                     if unsafe { fchmod(tmp_fd, sbuf.st_mode) } == -1 {
                         FLOGF!(
                             history_file,
                             "Error %d when changing mode of history file",
-                            errno::errno().0,
+                            Errno::last() as i32,
                         );
                     }
                 }
@@ -754,10 +755,7 @@ impl HistoryImpl {
                 if wrename(&tmp_name, &target_name) == -1 {
                     FLOG!(
                         error,
-                        wgettext_fmt!(
-                            "Error when renaming history file: %s",
-                            errno::errno().to_string()
-                        )
+                        wgettext_fmt!("Error when renaming history file: %s", Errno::last().desc())
                     );
                 }
 

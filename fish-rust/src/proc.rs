@@ -1323,7 +1323,7 @@ pub fn hup_jobs(jobs: &JobList) {
 /// Add a job to the list of PIDs/PGIDs we wait on even though they are not associated with any
 /// jobs. Used to avoid zombie processes after disown.
 pub fn add_disowned_job(j: &Job) {
-    let mut disowned_pids = unsafe { DISOWNED_PIDS.lock().unwrap() };
+    let mut disowned_pids = DISOWNED_PIDS.lock().unwrap();
     for process in j.processes().iter() {
         if process.has_pid() {
             disowned_pids.push(process.pid());
@@ -1333,7 +1333,7 @@ pub fn add_disowned_job(j: &Job) {
 
 // Reap any pids in our disowned list that have exited. This is used to avoid zombies.
 fn reap_disowned_pids() {
-    let mut disowned_pids = unsafe { DISOWNED_PIDS.lock().unwrap() };
+    let mut disowned_pids = DISOWNED_PIDS.lock().unwrap();
     // waitpid returns 0 iff the PID/PGID in question has not changed state; remove the pid/pgid
     // if it has changed or an error occurs (presumably ECHILD because the child does not exist)
     disowned_pids.retain(|pid| {
@@ -1348,7 +1348,7 @@ fn reap_disowned_pids() {
 
 /// A list of pids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
-static mut DISOWNED_PIDS: Mutex<Vec<libc::pid_t>> = Mutex::new(vec![]);
+static DISOWNED_PIDS: Mutex<Vec<libc::pid_t>> = Mutex::new(Vec::new());
 
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a

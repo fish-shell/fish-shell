@@ -798,7 +798,7 @@ fn escape_single_quoted_hack_hack_hack_hack(s: &wstr) -> OsString {
         result.push(c.to_string())
     }
     result.push("\'");
-    return result;
+    result
 }
 
 fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[WString]) -> bool {
@@ -820,5 +820,5 @@ fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[WString]
         cmds[0] = new_cmd;
         result = true;
     }
-    return result;
+    result
 }

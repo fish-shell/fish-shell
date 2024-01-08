@@ -1,7 +1,7 @@
 use crate::flog::FLOG;
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::{Rc, Weak};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 use std::sync::MutexGuard;
 
 #[derive(Debug, Default)]
@@ -25,6 +25,31 @@ impl RelaxedAtomicBool {
 impl Clone for RelaxedAtomicBool {
     fn clone(&self) -> Self {
         Self(AtomicBool::new(self.load()))
+    }
+}
+
+/// An atomic reference type, allowing &'static values to be stored.
+/// This uses relaxed ordering - it's intended for string literals.
+/// Note that because string literals are fat pointers, we can't store one
+/// directly in an AtomicPtr, so we store a pointer to the string literal instead!
+pub struct AtomicRef<T: ?Sized + 'static>(AtomicPtr<&'static T>);
+
+impl<T: ?Sized> AtomicRef<T> {
+    pub const fn new(value: &'static &'static T) -> Self {
+        Self(AtomicPtr::new(
+            value as *const &'static T as *mut &'static T,
+        ))
+    }
+
+    pub fn load(&self) -> &'static T {
+        unsafe { *self.0.load(Ordering::Relaxed) }
+    }
+
+    pub fn store(&self, value: &'static &'static T) {
+        self.0.store(
+            value as *const &'static T as *mut &'static T,
+            Ordering::Relaxed,
+        )
     }
 }
 

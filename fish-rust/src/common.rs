@@ -7,6 +7,7 @@ use crate::expand::{
 use crate::fallback::fish_wcwidth;
 use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::libc::MB_CUR_MAX;
 use crate::termsize::Termsize;
@@ -19,7 +20,7 @@ use bitflags::bitflags;
 use core::slice;
 use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use num_traits::ToPrimitive;
-use once_cell::sync::{Lazy, OnceCell};
+use once_cell::sync::OnceCell;
 use std::env;
 use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
@@ -1023,20 +1024,20 @@ static ELLIPSIS_CHAR: AtomicU32 = AtomicU32::new(0);
 /// The character or string to use where text has been truncated (ellipsis if possible, otherwise
 /// ...)
 pub fn get_ellipsis_str() -> &'static wstr {
-    unsafe { *ELLIPSIS_STRING }
+    ELLIPSIS_STRING.load()
 }
 
-static mut ELLIPSIS_STRING: Lazy<&'static wstr> = Lazy::new(|| L!(""));
+static ELLIPSIS_STRING: AtomicRef<wstr> = AtomicRef::new(&L!(""));
 
 /// Character representing an omitted newline at the end of text.
 pub fn get_omitted_newline_str() -> &'static wstr {
-    unsafe { &OMITTED_NEWLINE_STR }
+    OMITTED_NEWLINE_STR.load()
 }
 
-static mut OMITTED_NEWLINE_STR: Lazy<&'static wstr> = Lazy::new(|| L!(""));
+static OMITTED_NEWLINE_STR: AtomicRef<wstr> = AtomicRef::new(&L!(""));
 
 pub fn get_omitted_newline_width() -> usize {
-    unsafe { OMITTED_NEWLINE_STR.len() }
+    OMITTED_NEWLINE_STR.load().len()
 }
 
 static OBFUSCATION_READ_CHAR: AtomicU32 = AtomicU32::new(0);
@@ -1409,8 +1410,16 @@ pub type FilenameRef = Arc<WString>;
 
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.
-#[widestrs]
 pub fn fish_setlocale() {
+    // Helper to make a static reference to a static &'wstr, from a string literal.
+    // This is necessary to store them in global atomics, as these can't handle fat pointers.
+    macro_rules! LL {
+        ($s:literal) => {{
+            const S: &'static wstr = L!($s);
+            &S
+        }};
+    }
+
     // Use various Unicode symbols if they can be encoded using the current locale, else a simple
     // ASCII char alternative. All of the can_be_encoded() invocations should return the same
     // true/false value since the code points are in the BMP but we're going to be paranoid. This
@@ -1418,37 +1427,25 @@ pub fn fish_setlocale() {
     // can_be_encoded() will return false in that case.
     if can_be_encoded('\u{2026}') {
         ELLIPSIS_CHAR.store(u32::from('\u{2026}'), Ordering::Relaxed);
-        unsafe {
-            ELLIPSIS_STRING = Lazy::new(|| "\u{2026}"L);
-        }
+        ELLIPSIS_STRING.store(LL!("\u{2026}"));
     } else {
         ELLIPSIS_CHAR.store(u32::from('$'), Ordering::Relaxed); // "horizontal ellipsis"
-        unsafe {
-            ELLIPSIS_STRING = Lazy::new(|| "..."L);
-        }
+        ELLIPSIS_STRING.store(LL!("..."));
     }
 
     if is_windows_subsystem_for_linux() {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
-        unsafe {
-            OMITTED_NEWLINE_STR = Lazy::new(|| "\u{00b6}"L); // "pilcrow"
-        }
+        OMITTED_NEWLINE_STR.store(LL!("\u{00b6}")); // "pilcrow"
         OBFUSCATION_READ_CHAR.store(u32::from('\u{2022}'), Ordering::Relaxed); // "bullet"
     } else if is_console_session() {
-        unsafe {
-            OMITTED_NEWLINE_STR = Lazy::new(|| "^J"L);
-        }
+        OMITTED_NEWLINE_STR.store(LL!("^J"));
         OBFUSCATION_READ_CHAR.store(u32::from('*'), Ordering::Relaxed);
     } else {
         if can_be_encoded('\u{23CE}') {
-            unsafe {
-                OMITTED_NEWLINE_STR = Lazy::new(|| "\u{23CE}"L); // "return symbol" (⏎)
-            }
+            OMITTED_NEWLINE_STR.store(LL!("\u{23CE}")); // "return symbol" (⏎)
         } else {
-            unsafe {
-                OMITTED_NEWLINE_STR = Lazy::new(|| "^J"L);
-            }
+            OMITTED_NEWLINE_STR.store(LL!("^J"));
         }
         OBFUSCATION_READ_CHAR.store(
             u32::from(if can_be_encoded('\u{25CF}') {
@@ -1965,7 +1962,8 @@ pub(crate) use assert_is_locked;
 /// session. We err on the side of assuming it's not a console session. This approach isn't
 /// bullet-proof and that's OK.
 pub fn is_console_session() -> bool {
-    static IS_CONSOLE_SESSION: Lazy<bool> = Lazy::new(|| {
+    static IS_CONSOLE_SESSION: OnceCell<bool> = OnceCell::new();
+    *IS_CONSOLE_SESSION.get_or_init(|| {
         const PATH_MAX: usize = libc::PATH_MAX as usize;
         let mut tty_name = [0u8; PATH_MAX];
         unsafe {
@@ -1987,9 +1985,7 @@ pub fn is_console_session() -> bool {
             Some(term) => !term.as_bytes().contains(&b'-'),
             None => true,
         }
-    });
-
-    *IS_CONSOLE_SESSION
+    })
 }
 
 /// Asserts that a slice is alphabetically sorted by a [`&wstr`] `name` field.

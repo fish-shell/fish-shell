@@ -463,7 +463,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             const char *interpreter =
                 get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
             struct stat buf;
-            auto statret = stat(interpreter, &buf);
+            auto statret = !interpreter || stat(interpreter, &buf);
             if (interpreter && (0 != statret || access(interpreter, X_OK))) {
                 // Detect Windows line endings and complain specifically about them.
                 auto len = strlen(interpreter);

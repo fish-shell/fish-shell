@@ -788,7 +788,7 @@ impl Screen {
             zelf.outp.set_color(fg, bg);
         };
 
-        let mut cached_layouts = unsafe { LAYOUT_CACHE_SHARED.lock().unwrap() };
+        let mut cached_layouts = LAYOUT_CACHE_SHARED.lock().unwrap();
         let mut zelf = self.scoped_buffer();
 
         // Determine size of left and right prompt. Note these have already been truncated.
@@ -1122,7 +1122,7 @@ pub struct LayoutCache {
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
 // Note this is deliberately exported so that init_curses can clear it.
-pub static mut LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
+pub static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
 
 impl LayoutCache {
     pub const fn new() -> Self {
@@ -1596,7 +1596,9 @@ fn calc_prompt_lines(prompt: &wstr) -> usize {
     // calc_prompt_width_and_lines.
     let mut result = 1;
     if prompt.chars().any(|c| matches!(c, '\n' | '\x0C')) {
-        result = unsafe { LAYOUT_CACHE_SHARED.lock().unwrap() }
+        result = LAYOUT_CACHE_SHARED
+            .lock()
+            .unwrap()
             .calc_prompt_layout(prompt, None, usize::MAX)
             .line_breaks
             .len()
@@ -1696,14 +1698,14 @@ fn compute_layout(
 
     // Truncate both prompts to screen width (#904).
     let mut left_prompt = WString::new();
-    let left_prompt_layout = unsafe { LAYOUT_CACHE_SHARED.lock().unwrap() }.calc_prompt_layout(
+    let left_prompt_layout = LAYOUT_CACHE_SHARED.lock().unwrap().calc_prompt_layout(
         left_untrunc_prompt,
         Some(&mut left_prompt),
         screen_width,
     );
 
     let mut right_prompt = WString::new();
-    let right_prompt_layout = unsafe { LAYOUT_CACHE_SHARED.lock().unwrap() }.calc_prompt_layout(
+    let right_prompt_layout = LAYOUT_CACHE_SHARED.lock().unwrap().calc_prompt_layout(
         right_untrunc_prompt,
         Some(&mut right_prompt),
         screen_width,

@@ -672,7 +672,7 @@ fn init_curses(vars: &EnvStack) {
 
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
-    unsafe { LAYOUT_CACHE_SHARED.lock().unwrap() }.clear();
+    LAYOUT_CACHE_SHARED.lock().unwrap().clear();
     CURSES_INITIALIZED.store(true, Ordering::Relaxed);
 }
 

@@ -1317,7 +1317,8 @@ impl<'a> ParseExecutionContext {
         trace_if_enabled_with_args(ctx.parser(), L!("function"), &arguments);
         let mut outs = OutputStream::Null;
         let mut errs = OutputStream::String(StringOutputStream::new());
-        let mut streams = IoStreams::new(&mut outs, &mut errs);
+        let io_chain = IoChain::new();
+        let mut streams = IoStreams::new(&mut outs, &mut errs, &io_chain);
         let mut shim_arguments: Vec<&wstr> = arguments
             .iter()
             .map(|s| truncate_at_nul(s.as_ref()))

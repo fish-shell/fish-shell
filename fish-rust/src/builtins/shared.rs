@@ -934,12 +934,7 @@ fn builtin_breakpoint(
     }
 
     let bpb = parser.push_block(Block::breakpoint_block());
-    let mut empty_io_chain = IoChain::new();
-    let io_chain = if streams.io_chain.is_null() {
-        &mut empty_io_chain
-    } else {
-        unsafe { &mut *streams.io_chain }
-    };
+    let io_chain = &streams.io_chain;
     reader_read(parser, STDIN_FILENO, io_chain);
     parser.pop_block(bpb);
     Some(parser.get_last_status())

@@ -1,6 +1,6 @@
 use crate::builtins::prelude::*;
 use crate::builtins::test::test as builtin_test;
-use crate::io::OutputStream;
+use crate::io::{IoChain, OutputStream};
 use crate::tests::prelude::*;
 
 fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
@@ -22,7 +22,8 @@ fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> boo
     let mut argv = argv.iter().map(|s| s.as_ref()).collect::<Vec<_>>();
     let mut out = OutputStream::Null;
     let mut err = OutputStream::Null;
-    let mut streams = IoStreams::new(&mut out, &mut err);
+    let io_chain = IoChain::new();
+    let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
 
     let result: Option<i32> = builtin_test(parser, &mut streams, &mut argv);
 
@@ -53,7 +54,8 @@ fn test_test_brackets() {
 
     let mut out = OutputStream::Null;
     let mut err = OutputStream::Null;
-    let mut streams = IoStreams::new(&mut out, &mut err);
+    let io_chain = IoChain::new();
+    let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
 
     let args1 = &mut ["["L, "foo"L];
     assert_eq!(

@@ -1110,7 +1110,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
     // returned closure.
     let argv = p.argv().clone();
     let job_group = j.group.clone();
-    let mut io_chain = io_chain.clone();
+    let io_chain = io_chain.clone();
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
@@ -1139,7 +1139,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             }
 
             // Populate our IoStreams. This is a bag of information for the builtin.
-            let mut streams = IoStreams::new(output_stream, errput_stream);
+            let mut streams = IoStreams::new(output_stream, errput_stream, &io_chain);
             streams.job_group = job_group;
             streams.stdin_fd = local_builtin_stdin;
             streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
@@ -1151,7 +1151,6 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             streams.err_is_piped = err_io
                 .map(|io| io.io_mode() == IoMode::pipe)
                 .unwrap_or(false);
-            streams.io_chain = &mut io_chain;
 
             // Execute the builtin.
             let mut shim_argv: Vec<&wstr> =

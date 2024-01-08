@@ -15,7 +15,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opt
     let new_cmd = join_strings(&args[1..], ' ');
 
     // Copy the full io chain; we may append bufferfills.
-    let mut ios = unsafe { &*streams.io_chain }.clone();
+    let mut ios = streams.io_chain.clone();
 
     // If stdout is piped, then its output must go to the streams, not to the io_chain in our
     // streams, because the pipe may be intended to be consumed by a process which

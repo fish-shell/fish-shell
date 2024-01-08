@@ -1,3 +1,4 @@
+use crate::io::IoChain;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 
@@ -27,7 +28,8 @@ fn test_string() {
         let parser: &Parser = Parser::principal_parser();
         let mut outs = OutputStream::String(StringOutputStream::new());
         let mut errs = OutputStream::Null;
-        let mut streams = IoStreams::new(&mut outs, &mut errs);
+        let io_chain = IoChain::new();
+        let mut streams = IoStreams::new(&mut outs, &mut errs, &io_chain);
         streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
 
         let rc = string(parser, &mut streams, args.as_mut_slice()).expect("string failed");

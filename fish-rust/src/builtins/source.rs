@@ -1,7 +1,6 @@
 use crate::{
     common::{escape, scoped_push_replacer, FilenameRef},
     fds::{wopen_cloexec, AutoCloseFd},
-    io::IoChain,
     nix::isatty,
     parser::Block,
     reader::reader_read,
@@ -102,16 +101,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     }
     parser.vars().set_argv(argv_list);
 
-    let empty_io_chain = IoChain::new();
-    let mut retval = reader_read(
-        parser,
-        fd,
-        if !streams.io_chain.is_null() {
-            unsafe { &*streams.io_chain }
-        } else {
-            &empty_io_chain
-        },
-    );
+    let mut retval = reader_read(parser, fd, streams.io_chain);
 
     parser.pop_block(sb);
 

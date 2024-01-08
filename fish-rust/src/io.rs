@@ -965,8 +965,8 @@ pub struct IoStreams<'a> {
     pub out_is_redirected: bool,
     pub err_is_redirected: bool,
 
-    // Actual IO redirections. This is only used by the source builtin. Unowned.
-    pub io_chain: *mut IoChain,
+    // Actual IO redirections. This is only used by the source builtin.
+    pub io_chain: &'a IoChain,
 
     // The job group of the job, if any. This enables builtins which run more code like eval() to
     // share pgid.
@@ -975,7 +975,11 @@ pub struct IoStreams<'a> {
 }
 
 impl<'a> IoStreams<'a> {
-    pub fn new(out: &'a mut OutputStream, err: &'a mut OutputStream) -> Self {
+    pub fn new(
+        out: &'a mut OutputStream,
+        err: &'a mut OutputStream,
+        io_chain: &'a IoChain,
+    ) -> Self {
         IoStreams {
             out,
             err,
@@ -985,7 +989,7 @@ impl<'a> IoStreams<'a> {
             err_is_piped: false,
             out_is_redirected: false,
             err_is_redirected: false,
-            io_chain: std::ptr::null_mut(),
+            io_chain,
             job_group: None,
         }
     }

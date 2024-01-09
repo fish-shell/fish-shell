@@ -12,7 +12,7 @@ Keywords
 
 Core language keywords that make up the syntax, like
 
-- :doc:`if <cmds/if>` for conditions.
+- :doc:`if <cmds/if>` and :doc:`else <cmds/else>` for conditions.
 - :doc:`for <cmds/for>` and :doc:`while <cmds/while>` for loops.
 - :doc:`break <cmds/break>` and :doc:`continue <cmds/continue>` to control loops.
 - :doc:`function <cmds/function>` to define functions.
@@ -23,6 +23,7 @@ Core language keywords that make up the syntax, like
 - :doc:`command <cmds/command>` or :doc:`builtin <cmds/builtin>` to tell fish what sort of thing to execute
 - :doc:`time <cmds/time>` to time execution
 - :doc:`exec <cmds/exec>` tells fish to replace itself with a command.
+- :doc:`end <cmds/end>` to end a block
 
 Tools
 ^^^^^

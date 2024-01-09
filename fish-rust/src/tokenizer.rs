@@ -769,16 +769,9 @@ pub fn quote_end(s: &wstr, mut pos: usize, quote: char) -> Option<usize> {
     loop {
         pos += 1;
 
-        if pos == s.len() {
-            return None;
-        }
-
-        let c = s.char_at(pos);
+        let c = s.try_char_at(pos)?;
         if c == '\\' {
             pos += 1;
-            if pos == s.len() {
-                return None;
-            }
         } else if c == quote ||
                 // Command substitutions also end a double quoted string.  This is how we
                 // support command substitutions inside double quotes.

@@ -432,3 +432,6 @@ echo 'begin
 echo 'multiline-\\
 -word' | $fish_indent --check
 echo $status #CHECK: 0
+
+echo 'PATH={$PATH[echo " "' | $fish_indent --ansi
+# CHECK: PATH={$PATH[echo " "

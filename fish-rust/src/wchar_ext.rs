@@ -222,6 +222,18 @@ pub trait WExt {
         }
     }
 
+    /// Return the char at an index.
+    /// If the index is equal to the length, return '\0'.
+    /// If the index exceeds the length, return None.
+    fn try_char_at(&self, index: usize) -> Option<char> {
+        let chars = self.as_char_slice();
+        match index {
+            _ if index == chars.len() => Some('\0'),
+            _ if index > chars.len() => None,
+            _ => Some(chars[index]),
+        }
+    }
+
     /// \return an iterator over substrings, split by a given char.
     /// The split char is not included in the substrings.
     fn split(&self, c: char) -> WStrCharSplitIter {

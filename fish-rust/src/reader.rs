@@ -2648,10 +2648,11 @@ impl ReaderData {
 
                         let indent_old = indents[std::cmp::min(indents.len() - 1, base_pos_old)];
                         let indent_new = indents[std::cmp::min(indents.len() - 1, base_pos_new)];
-                        let indent_old = usize::try_from(indent_old).unwrap();
-                        let indent_new = usize::try_from(indent_new).unwrap();
+                        let indent_old = isize::try_from(indent_old).unwrap();
+                        let indent_new = isize::try_from(indent_new).unwrap();
 
-                        let line_offset_old = el.position() - base_pos_old;
+                        let line_offset_old =
+                            isize::try_from(el.position() - base_pos_old).unwrap();
                         let total_offset_new = parse_util_get_offset(
                             el.text(),
                             line_new,

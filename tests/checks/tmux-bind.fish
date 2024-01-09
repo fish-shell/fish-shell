@@ -9,3 +9,13 @@ tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 0> echo 12345
 # CHECK: echo abcde
+
+isolated-tmux send-keys C-c
+tmux-sleep
+isolated-tmux send-keys C-l
+isolated-tmux send-keys begin Enter 'echo 1' Enter e n d C-p 23
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 0> begin
+# CHECK: echo 123
+# CHECK: end

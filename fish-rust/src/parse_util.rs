@@ -528,10 +528,11 @@ pub fn parse_util_get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
 }
 
 /// Return the total offset of the buffer for the cursor position nearest to the specified position.
-pub fn parse_util_get_offset(s: &wstr, line: i32, mut line_offset: usize) -> Option<usize> {
+pub fn parse_util_get_offset(s: &wstr, line: i32, line_offset: isize) -> Option<usize> {
     let off = parse_util_get_offset_from_line(s, line)?;
     let off2 = parse_util_get_offset_from_line(s, line + 1).unwrap_or(s.len() + 1);
 
+    let mut line_offset = line_offset as usize;
     if line_offset >= off2 - off - 1 {
         line_offset = off2 - off - 1;
     }

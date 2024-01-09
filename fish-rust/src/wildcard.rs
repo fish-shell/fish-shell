@@ -667,8 +667,10 @@ mod expander {
             }
 
             if !self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
-                // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file, we already know it exists!
-                self.add_expansion_result(base_dir.to_owned());
+                // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file after checking it exists.
+                if waccess(base_dir, F_OK) == 0 {
+                    self.add_expansion_result(base_dir.to_owned());
+                }
                 return;
             }
             // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.

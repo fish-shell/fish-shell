@@ -24,6 +24,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
 endif()
 
+# Set up standard directories.
+include(GNUInstallDirs)
+add_definitions(-D_UNICODE=1)
+
 include(cmake/ConfigureChecks.cmake)
 include(cmake/gettext.cmake)
 
@@ -109,18 +113,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Pull in our src directory for headers searches, but only quoted ones.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -iquote ${CMAKE_CURRENT_SOURCE_DIR}/src")
-
-
-
-# Set up standard directories.
-include(GNUInstallDirs)
-add_definitions(-D_UNICODE=1
-                -DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
-                -DPREFIX=L"${CMAKE_INSTALL_PREFIX}"
-                -DDATADIR=L"${CMAKE_INSTALL_FULL_DATADIR}"
-                -DSYSCONFDIR=L"${CMAKE_INSTALL_FULL_SYSCONFDIR}"
-                -DBINDIR=L"${CMAKE_INSTALL_FULL_BINDIR}"
-                -DDOCDIR=L"${CMAKE_INSTALL_FULL_DOCDIR}")
 
 # Set up the machinery around FISH-BUILD-VERSION-FILE
 # This defines the FBVF variable.

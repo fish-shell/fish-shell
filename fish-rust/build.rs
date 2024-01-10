@@ -8,6 +8,9 @@ fn main() {
     for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR", "LOCALEDIR"] {
         if let Ok(val) = env::var(key) {
             // Forward some CMake config
+            if val.is_empty() {
+                panic!("{} is empty!", key);
+            }
             println!("cargo:rustc-env={key}={val}");
         }
     }

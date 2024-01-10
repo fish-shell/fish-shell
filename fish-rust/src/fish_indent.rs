@@ -471,8 +471,13 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     fn range_contained_error(&self, r: SourceRange) -> bool {
         let errs = self.errors.as_ref().unwrap();
         let range_is_before = |x: SourceRange, y: SourceRange| x.end().cmp(&y.start());
-        assert!(errs.is_sorted_by(|&x, &y| Some(range_is_before(x, y))));
-        errs.partition_point(|&range| range_is_before(range, r).is_lt()) != errs.len()
+        // FIXME: We want to have the errors sorted, but in some cases they aren't.
+        // I suspect this is when the ast is unwinding because the source is fudged up.
+        if errs.is_sorted_by(|&x, &y| Some(range_is_before(x, y))) {
+            errs.partition_point(|&range| range_is_before(range, r).is_lt()) != errs.len()
+        } else {
+            false
+        }
     }
 
     // Emit the gap text before a source range.
